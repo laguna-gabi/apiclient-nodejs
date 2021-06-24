@@ -21,4 +21,14 @@ describe('AppController (e2e)', () => {
       .expect(200)
       .expect('Hello World!');
   });
+
+  describe('member API', () => {
+    it('POST member', () => {
+      return request(app.getHttpServer()).post('/member').expect(201);
+    });
+
+    it('GET member', () => {
+      return request(app.getHttpServer()).get('/member').expect(200);
+    });
+  });
 });
