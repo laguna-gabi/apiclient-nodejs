@@ -33,7 +33,7 @@ describe('MemberResolver', () => {
       const member = mockGenerateMember();
       spyOnServiceInsert.mockImplementationOnce(async () => member);
 
-      const params = generateCreateMemberParams(member.primaryCoach._id);
+      const params = generateCreateMemberParams(member.primaryCoach.id);
       await resolver.createMember(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
@@ -45,9 +45,9 @@ describe('MemberResolver', () => {
       spyOnServiceInsert.mockImplementationOnce(async () => member);
 
       const additionalCoachId = new ObjectID().toString();
-      const params = generateCreateMemberParams(member.primaryCoach._id, [
+      const params = generateCreateMemberParams(member.primaryCoach.id, [
         additionalCoachId,
-        member.primaryCoach._id,
+        member.primaryCoach.id,
       ]);
 
       await resolver.createMember(params);
@@ -76,9 +76,7 @@ describe('MemberResolver', () => {
       const member = mockGenerateMember();
       spyOnServiceGet.mockImplementationOnce(async () => member);
 
-      const result = await resolver.getMember({
-        id: member._id,
-      });
+      const result = await resolver.getMember(member.id);
 
       expect(result).toEqual(member);
     });
@@ -87,9 +85,7 @@ describe('MemberResolver', () => {
       spyOnServiceGet.mockImplementationOnce(async () => null);
 
       const id = new ObjectID();
-      const result = await resolver.getMember({
-        id: id.toString(),
-      });
+      const result = await resolver.getMember(id.toString());
 
       expect(result).toBeNull();
     });

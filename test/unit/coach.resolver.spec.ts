@@ -68,9 +68,7 @@ describe('CoachResolver', () => {
       const coach = mockGenerateCoach();
       spyOnServiceGet.mockImplementationOnce(async () => coach);
 
-      const result = await resolver.getCoach({
-        id: coach._id,
-      });
+      const result = await resolver.getCoach(coach.id);
 
       expect(result).toEqual(coach);
     });
@@ -79,9 +77,7 @@ describe('CoachResolver', () => {
       spyOnServiceGet.mockImplementationOnce(async () => null);
 
       const id = new ObjectID();
-      const result = await resolver.getCoach({
-        id: id.toString(),
-      });
+      const result = await resolver.getCoach(id.toString());
 
       expect(result).toBeNull();
     });
