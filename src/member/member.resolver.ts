@@ -20,7 +20,6 @@ export class MemberResolver {
     return this.memberService.insert(createMemberParams);
   }
 
-  //TODO error handing -> no id
   @Query(() => Member, { nullable: true })
   async getMember(@Args('id', { type: () => String }) id: string) {
     return this.memberService.get(id);

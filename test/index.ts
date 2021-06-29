@@ -19,7 +19,7 @@ export const generateCreateCoachParams = (
 export const mockGenerateCoach = (): Coach => {
   const id = new ObjectID();
   return {
-    _id: id.toString(),
+    id: id.toString(),
     name: generateFullName(),
     role: CoachRole.coach,
     email: faker.internet.email(),
@@ -41,7 +41,7 @@ export const generateCreateMemberParams = (
 export const mockGenerateMember = (): Member => {
   const id = new ObjectID();
   return {
-    _id: id.toString(),
+    id: id.toString(),
     phoneNumber: faker.phone.phoneNumber(),
     name: generateFullName(),
     primaryCoach: mockGenerateCoach(),

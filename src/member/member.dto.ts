@@ -16,10 +16,10 @@ export class CreateMemberParams {
   @Field({ nullable: false })
   phoneNumber: string;
 
-  @Field((type) => String)
+  @Field(() => String)
   primaryCoachId: string;
 
-  @Field((type) => [String])
+  @Field(() => [String])
   coachIds: string[];
 }
 
@@ -54,9 +54,3 @@ export class Member extends Id {
  **********************************************************************************************************************/
 export type MemberDocument = Member & Document;
 export const MemberSchema = SchemaFactory.createForClass(Member);
-
-//TODO handle not existing sub doc of coach when insert a member
-//TODO _id -> id
-//TODO expose graphql
-//TODO integration/e2e graphql
-//TODO add class-validator import { IsMongoId, IsOptional, IsString } from "class-validator";

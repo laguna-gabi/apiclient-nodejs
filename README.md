@@ -39,8 +39,8 @@ $ yarn start:prod
 # unit tests
 $ yarn test
 
-# e2e tests
-$ yarn test:e2e
+# integration tests
+$ yarn test:integration
 
 # test coverage
 $ yarn test:cov
