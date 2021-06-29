@@ -1,11 +1,18 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { MemberModule } from './modules/member/member.module';
-import { DbModule } from './modules/db/db.module';
+import { DbModule } from './db/db.module';
+import { MemberModule } from './member/member.module';
+import { GraphQLModule } from '@nestjs/graphql';
+import { CoachModule } from './coach/coach.module';
 
 @Module({
-  imports: [MemberModule, DbModule],
+  imports: [
+    MemberModule,
+    CoachModule,
+    DbModule,
+    GraphQLModule.forRoot({ autoSchemaFile: 'schema.gql' }),
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
