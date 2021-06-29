@@ -9,7 +9,7 @@ import * as mongoose from 'mongoose';
 import { Id } from '../common';
 
 export enum CoachRole {
-  coach = 'Behaviour Coach',
+  coach = 'Coach',
   nurse = 'Nurse',
 }
 registerEnumType(CoachRole, { name: 'CoachRole' });
