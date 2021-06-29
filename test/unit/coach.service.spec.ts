@@ -51,7 +51,7 @@ describe('CoachService', () => {
       },
     );
 
-    it('should handling a coach that already exists', async () => {
+    it('should handle a coach that already exists', async () => {
       const coach = generateCreateCoachParams();
       await service.insert(coach);
 

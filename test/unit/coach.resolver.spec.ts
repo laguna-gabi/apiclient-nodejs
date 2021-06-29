@@ -2,7 +2,7 @@ import { CoachResolver } from '../../src/coach/coach.resolver';
 import { CoachService } from '../../src/coach/coach.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CoachModule } from '../../src/coach/coach.module';
-import { generateCoach, generateCreateCoachParams } from '../../test';
+import { mockGenerateCoach, generateCreateCoachParams } from '../../test';
 import { DbModule } from '../../src/db/db.module';
 import { Errors } from '../../src/common';
 import { ObjectID } from 'bson';
@@ -31,7 +31,9 @@ describe('CoachResolver', () => {
     });
 
     it('should create a coach', async () => {
-      spyOnServiceInsert.mockImplementationOnce(async () => generateCoach());
+      spyOnServiceInsert.mockImplementationOnce(async () =>
+        mockGenerateCoach(),
+      );
 
       const params = generateCreateCoachParams();
       await resolver.createCoach(params);
@@ -63,7 +65,7 @@ describe('CoachResolver', () => {
     });
 
     it('should get a coach for a given id', async () => {
-      const coach = generateCoach();
+      const coach = mockGenerateCoach();
       spyOnServiceGet.mockImplementationOnce(async () => coach);
 
       const result = await resolver.getCoach({

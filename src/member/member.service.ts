@@ -28,12 +28,9 @@ export class MemberService {
   }
 
   async get(getMemberParams: GetMemberParams): Promise<Member> {
-    const result = await this.memberModel
+    return this.memberModel
       .findOne({ _id: getMemberParams.id })
       .populate('coaches')
       .populate('primaryCoach');
-
-    console.log(result);
-    return result;
   }
 }

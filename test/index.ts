@@ -3,6 +3,7 @@ import * as faker from 'faker';
 import * as mongoose from 'mongoose';
 import * as config from 'config';
 import { ObjectID } from 'bson';
+import { CreateMemberParams, Member } from '../src/member/member.dto';
 
 export const generateCreateCoachParams = (
   role: CoachRole = CoachRole.coach,
@@ -15,13 +16,34 @@ export const generateCreateCoachParams = (
   };
 };
 
-export const generateCoach = (): Coach => {
+export const mockGenerateCoach = (): Coach => {
   const id = new ObjectID();
   return {
     _id: id.toString(),
     name: generateFullName(),
     role: CoachRole.coach,
     email: faker.internet.email(),
+  };
+};
+
+export const generateCreateMemberParams = (
+  primaryCoachId: string,
+  coachIds: string[] = [],
+): CreateMemberParams => {
+  return {
+    name: generateFullName(),
+    primaryCoachId,
+    coachIds,
+  };
+};
+
+export const mockGenerateMember = (): Member => {
+  const id = new ObjectID();
+  return {
+    _id: id.toString(),
+    name: generateFullName(),
+    primaryCoach: mockGenerateCoach(),
+    coaches: [],
   };
 };
 

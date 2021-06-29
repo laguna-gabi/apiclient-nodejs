@@ -13,6 +13,9 @@ export class CreateMemberParams {
   @Field()
   name: string;
 
+  // @Field({ nullable: false })
+  // phoneNumber: string;
+
   @Field((type) => String)
   primaryCoachId: string;
 
@@ -32,6 +35,12 @@ export class GetMemberParams {
 @ObjectType()
 @Schema({ versionKey: false })
 export class Member extends Id {
+  // @Prop({ unique: true })
+  // @Field(() => String)
+  // phoneNumber: string;
+
+  //TODO add phonen number
+
   @Prop()
   @Field(() => String, { description: 'name' })
   name: string;
@@ -43,12 +52,9 @@ export class Member extends Id {
   @Field(() => Coach, { description: 'primary coach' })
   primaryCoach: Coach;
 
-  @Prop({
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: Coach.name,
-  })
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: Coach.name }] })
   @Field(() => [Coach], { description: 'coaches reference object' })
-  coaches: [Coach];
+  coaches: Coach[];
 }
 
 /***********************************************************************************************************************

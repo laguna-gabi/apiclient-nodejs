@@ -1,9 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
 import * as mongoose from 'mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { ObjectID } from 'bson';
-import { connectToDb, generateCreateCoachParams } from '../index';
+import {
+  connectToDb,
+  generateCreateCoachParams,
+  generateCreateMemberParams,
+} from '../index';
 import { MemberService } from '../../src/member/member.service';
 import {
   CreateMemberParams,
@@ -12,8 +16,8 @@ import {
 } from '../../src/member/member.dto';
 import { MemberModule } from '../../src/member/member.module';
 import { Coach, CoachRole, CoachSchema } from '../../src/coach/coach.dto';
-import * as faker from 'faker';
 
+//TODO cleanup db
 describe('MemberService', () => {
   let service: MemberService;
   let model: Model<typeof MemberSchema>;
@@ -38,48 +42,76 @@ describe('MemberService', () => {
       expect(result).toBeNull();
     });
 
-    it.only('should return member and his/her coaches for an existing member', async () => {
+    it('should return member and his/her coaches for an existing member', async () => {
       const primaryCoachParams = generateCreateCoachParams();
       const nurseParams = generateCreateCoachParams(CoachRole.nurse);
       const coachParams = generateCreateCoachParams();
       const primaryCoach = await modelCoach.create(primaryCoachParams);
       const nurse = await modelCoach.create(nurseParams);
       const coach = await modelCoach.create(coachParams);
+      await modelCoach.create(generateCreateCoachParams()); //Another coach, to check if it doesn't return in member
 
-      const member: CreateMemberParams = {
-        name: 'name123',
-        primaryCoachId: primaryCoach._id,
-        coachIds: [coach._id, nurse._id],
-      };
+      const member: CreateMemberParams = generateCreateMemberParams(
+        primaryCoach._id,
+        [coach._id, nurse._id],
+      );
 
-      console.log(member);
+      const { _id } = await model.create({
+        name: member.name,
+        primaryCoach: new Types.ObjectId(member.primaryCoachId),
+        coaches: member.coachIds.map((item) => new Types.ObjectId(item)),
+      });
 
-      const { id } = await model.create(member);
+      const result = await service.get({ id: _id });
 
-      const result = await service.get({ id });
-      console.log('result', result);
-      expect(result).toEqual(expect.objectContaining(coach));
+      expect(result._id).toEqual(_id);
+      expect(result.name).toEqual(member.name);
+      compareCoach(result.primaryCoach, primaryCoach);
+      expect(result.coaches.length).toEqual(2);
+      compareCoach(result.coaches[0], coach);
+      compareCoach(result.coaches[1], nurse);
     });
+
+    const compareCoach = (resultCoach: Coach, coach) => {
+      expect(resultCoach._id).toEqual(coach._id);
+      expect(resultCoach.name).toEqual(coach['name']);
+      expect(resultCoach.email).toEqual(coach['email']);
+      expect(resultCoach.role).toEqual(coach['role']);
+      expect(resultCoach.photoUrl).toEqual(coach['photoUrl']);
+    };
   });
 
-  // describe.skip('insert', () => {
-  //   test.each([CoachRole.coach, CoachRole.nurse])(
-  //     'should insert a %p',
-  //     async (role) => {
-  //       const coach = generateCreateCoachParams(role);
-  //       const { _id } = await service.insert(coach);
-  //
-  //       expect(_id).not.toBeNull();
-  //     },
-  //   );
-  //
-  //   it('should handling a coach that already exists', async () => {
-  //     const coach = generateCreateCoachParams();
-  //     await service.insert(coach);
-  //
-  //     await expect(service.insert(coach)).rejects.toThrow(
-  //       `${Errors.coach.create.title} : ${Errors.coach.create.reasons.email}`,
-  //     );
-  //   });
-  // });
+  describe('insert', () => {
+    it('should insert a member with primaryCoach', async () => {
+      const primaryCoachParams = generateCreateCoachParams();
+      const primaryCoach = await modelCoach.create(primaryCoachParams);
+      const member: CreateMemberParams = generateCreateMemberParams(
+        primaryCoach._id,
+      );
+
+      const result = await service.insert(member);
+
+      expect(result._id).not.toBeUndefined();
+    });
+
+    it('should insert a member even with primaryCoach not exists', async () => {
+      const member: CreateMemberParams = generateCreateMemberParams(
+        new ObjectID().toString(),
+      );
+
+      const result = await service.insert(member);
+      expect(result._id).not.toBeUndefined();
+    });
+
+    //TODO
+    // it('should handle a member that already exists - phone number', async () => {
+    //   const primaryCoachParams = generateCreateCoachParams();
+    //   const primaryCoach = await modelCoach.create(primaryCoachParams);
+    //   await service.insert(coach);
+    //
+    //   await expect(service.insert(coach)).rejects.toThrow(
+    //     `${Errors.coach.create.title} : ${Errors.coach.create.reasons.email}`,
+    //   );
+    // });
+  });
 });
