@@ -32,22 +32,12 @@ export class CreateCoachParams {
   photoUrl?: string;
 }
 
-@InputType()
-export class GetCoachParams {
-  @Field()
-  id: string;
-}
-
 /***********************************************************************************************************************
  ******************************************** Return params for gql methods ********************************************
  **********************************************************************************************************************/
 @ObjectType()
 @Schema({ versionKey: false })
 export class Coach extends Id {
-  //TODO _id + id in mongodb
-  //TODO define prop which works with get/insert
-  //TODO add required
-
   @Prop()
   @Field(() => String, { description: 'name' })
   name: string;

@@ -1,6 +1,6 @@
 import { Resolver, Query, Args, Mutation } from '@nestjs/graphql';
 import { MemberService } from './member.service';
-import { CreateMemberParams, GetMemberParams, Member } from './member.dto';
+import { CreateMemberParams, Member } from './member.dto';
 import { Id } from '../common';
 import { camelCase, remove } from 'lodash';
 
@@ -22,10 +22,7 @@ export class MemberResolver {
 
   //TODO error handing -> no id
   @Query(() => Member, { nullable: true })
-  async getMember(
-    @Args(camelCase(GetMemberParams.name))
-    getMemberParams: GetMemberParams,
-  ) {
-    return this.memberService.get(getMemberParams);
+  async getMember(@Args('id', { type: () => String }) id: string) {
+    return this.memberService.get(id);
   }
 }

@@ -27,7 +27,7 @@ describe('CoachService', () => {
   describe('get', () => {
     it('should return null for non existing coach', async () => {
       const id = new ObjectID();
-      const result = await service.get({ id: id.toString() });
+      const result = await service.get(id.toString());
       expect(result).toBeNull();
     });
 
@@ -35,7 +35,7 @@ describe('CoachService', () => {
       const coach = generateCreateCoachParams();
       const { id } = await model.create(coach);
 
-      const result = await service.get({ id });
+      const result = await service.get(id);
       expect(result).toEqual(expect.objectContaining(coach));
     });
   });
@@ -45,9 +45,9 @@ describe('CoachService', () => {
       'should successfully insert a %p',
       async (role) => {
         const coach = generateCreateCoachParams(role);
-        const { _id } = await service.insert(coach);
+        const { id } = await service.insert(coach);
 
-        expect(_id).not.toBeNull();
+        expect(id).not.toBeNull();
       },
     );
 

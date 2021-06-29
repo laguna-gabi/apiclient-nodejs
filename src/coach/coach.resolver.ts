@@ -2,12 +2,7 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CoachService } from './coach.service';
 import { camelCase } from 'lodash';
 import { Errors } from '../common';
-import {
-  Coach,
-  CoachRole,
-  CreateCoachParams,
-  GetCoachParams,
-} from './coach.dto';
+import { Coach, CoachRole, CreateCoachParams } from './coach.dto';
 
 @Resolver(() => Coach)
 export class CoachResolver {
@@ -32,9 +27,7 @@ export class CoachResolver {
   }
 
   @Query(() => Coach, { nullable: true })
-  async getCoach(
-    @Args(camelCase(GetCoachParams.name)) getCoachParams: GetCoachParams,
-  ) {
-    return this.coachService.get(getCoachParams);
+  async getCoach(@Args('id', { type: () => String }) id: string) {
+    return this.coachService.get(id);
   }
 }

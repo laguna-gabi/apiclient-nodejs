@@ -23,12 +23,6 @@ export class CreateMemberParams {
   coachIds: string[];
 }
 
-@InputType()
-export class GetMemberParams {
-  @Field()
-  id: string;
-}
-
 /***********************************************************************************************************************
  ******************************************** Return params for gql methods ********************************************
  **********************************************************************************************************************/
@@ -65,4 +59,4 @@ export const MemberSchema = SchemaFactory.createForClass(Member);
 //TODO _id -> id
 //TODO expose graphql
 //TODO integration/e2e graphql
-//TODO add class-validator
+//TODO add class-validator import { IsMongoId, IsOptional, IsString } from "class-validator";

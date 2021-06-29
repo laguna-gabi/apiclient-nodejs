@@ -38,7 +38,7 @@ describe('MemberService', () => {
   describe('get', () => {
     it('should return null for non existing member', async () => {
       const id = new ObjectID();
-      const result = await service.get({ id: id.toString() });
+      const result = await service.get(id.toString());
       expect(result).toBeNull();
     });
 
@@ -63,9 +63,9 @@ describe('MemberService', () => {
         coaches: member.coachIds.map((item) => new Types.ObjectId(item)),
       });
 
-      const result = await service.get({ id: _id });
+      const result = await service.get(_id);
 
-      expect(result._id).toEqual(_id);
+      expect(result.id).toEqual(_id.toString());
       expect(result.name).toEqual(member.name);
       expect(result.phoneNumber).toEqual(member.phoneNumber);
       compareCoach(result.primaryCoach, primaryCoach);
@@ -75,7 +75,7 @@ describe('MemberService', () => {
     });
 
     const compareCoach = (resultCoach: Coach, coach) => {
-      expect(resultCoach._id).toEqual(coach._id);
+      expect(resultCoach.id).toEqual(coach._id.toString());
       expect(resultCoach.name).toEqual(coach['name']);
       expect(resultCoach.email).toEqual(coach['email']);
       expect(resultCoach.role).toEqual(coach['role']);
@@ -93,7 +93,7 @@ describe('MemberService', () => {
 
       const result = await service.insert(member);
 
-      expect(result._id).not.toBeUndefined();
+      expect(result.id).not.toBeUndefined();
     });
 
     it('should insert a member even with primaryCoach not exists', async () => {
@@ -102,7 +102,7 @@ describe('MemberService', () => {
       );
 
       const result = await service.insert(member);
-      expect(result._id).not.toBeUndefined();
+      expect(result.id).not.toBeUndefined();
     });
 
     it('should fail to insert an already existing member', async () => {

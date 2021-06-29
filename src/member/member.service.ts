@@ -2,12 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Errors, Id } from '../common';
-import {
-  CreateMemberParams,
-  GetMemberParams,
-  Member,
-  MemberDocument,
-} from './member.dto';
+import { CreateMemberParams, Member, MemberDocument } from './member.dto';
 
 @Injectable()
 export class MemberService {
@@ -26,7 +21,7 @@ export class MemberService {
           (item) => new Types.ObjectId(item),
         ),
       });
-      return { _id: result._id };
+      return { id: result._id };
     } catch (ex) {
       throw new Error(
         ex.code === 11000
@@ -36,9 +31,9 @@ export class MemberService {
     }
   }
 
-  async get(getMemberParams: GetMemberParams): Promise<Member> {
+  async get(id: string): Promise<Member> {
     return this.memberModel
-      .findOne({ _id: getMemberParams.id })
+      .findOne({ _id: id })
       .populate('coaches')
       .populate('primaryCoach');
   }
