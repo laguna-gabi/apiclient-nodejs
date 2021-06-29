@@ -6,6 +6,7 @@ import {
 } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
+import { Id } from '../common';
 
 export enum CoachRole {
   coach = 'Behaviour Coach',
@@ -42,16 +43,10 @@ export class GetCoachParams {
  **********************************************************************************************************************/
 @ObjectType()
 @Schema({ versionKey: false })
-export class Coach {
+export class Coach extends Id {
   //TODO _id + id in mongodb
   //TODO define prop which works with get/insert
   //TODO add required
-  //TODO add class-validator
-
-  @Field(() => String, { description: 'coach id' })
-  // @Prop({ type: mongoose.Types.ObjectId })
-  // @Prop()
-  _id: string;
 
   @Prop()
   @Field(() => String, { description: 'name' })

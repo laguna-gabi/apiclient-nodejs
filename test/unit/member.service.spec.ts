@@ -16,8 +16,8 @@ import {
 } from '../../src/member/member.dto';
 import { MemberModule } from '../../src/member/member.module';
 import { Coach, CoachRole, CoachSchema } from '../../src/coach/coach.dto';
+import { Errors } from '../../src/common';
 
-//TODO cleanup db
 describe('MemberService', () => {
   let service: MemberService;
   let model: Model<typeof MemberSchema>;
@@ -58,6 +58,7 @@ describe('MemberService', () => {
 
       const { _id } = await model.create({
         name: member.name,
+        phoneNumber: member.phoneNumber,
         primaryCoach: new Types.ObjectId(member.primaryCoachId),
         coaches: member.coachIds.map((item) => new Types.ObjectId(item)),
       });
@@ -66,6 +67,7 @@ describe('MemberService', () => {
 
       expect(result._id).toEqual(_id);
       expect(result.name).toEqual(member.name);
+      expect(result.phoneNumber).toEqual(member.phoneNumber);
       compareCoach(result.primaryCoach, primaryCoach);
       expect(result.coaches.length).toEqual(2);
       compareCoach(result.coaches[0], coach);
@@ -103,15 +105,13 @@ describe('MemberService', () => {
       expect(result._id).not.toBeUndefined();
     });
 
-    //TODO
-    // it('should handle a member that already exists - phone number', async () => {
-    //   const primaryCoachParams = generateCreateCoachParams();
-    //   const primaryCoach = await modelCoach.create(primaryCoachParams);
-    //   await service.insert(coach);
-    //
-    //   await expect(service.insert(coach)).rejects.toThrow(
-    //     `${Errors.coach.create.title} : ${Errors.coach.create.reasons.email}`,
-    //   );
-    // });
+    it('should fail to insert an already existing member', async () => {
+      const member = generateCreateMemberParams(new ObjectID().toString());
+      await service.insert(member);
+
+      await expect(service.insert(member)).rejects.toThrow(
+        `${Errors.member.create.title} : ${Errors.member.create.reasons.phoneNumber}`,
+      );
+    });
   });
 });

@@ -2,7 +2,7 @@ import { Resolver, Query, Args, Mutation } from '@nestjs/graphql';
 import { MemberService } from './member.service';
 import { CreateMemberParams, GetMemberParams, Member } from './member.dto';
 import { Id } from '../common';
-import { camelCase } from 'lodash';
+import { camelCase, remove } from 'lodash';
 
 @Resolver(() => Member)
 export class MemberResolver {
@@ -13,6 +13,10 @@ export class MemberResolver {
     @Args(camelCase(CreateMemberParams.name))
     createMemberParams: CreateMemberParams,
   ) {
+    remove(
+      createMemberParams.coachIds,
+      (i) => i === createMemberParams.primaryCoachId,
+    );
     return this.memberService.insert(createMemberParams);
   }
 

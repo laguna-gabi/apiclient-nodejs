@@ -39,6 +39,27 @@ describe('MemberResolver', () => {
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith(params);
     });
+
+    it('should remove coach from coaches list if it is already sent as primaryCoach', async () => {
+      const member = mockGenerateMember();
+      spyOnServiceInsert.mockImplementationOnce(async () => member);
+
+      const additionalCoachId = new ObjectID().toString();
+      const params = generateCreateMemberParams(member.primaryCoach._id, [
+        additionalCoachId,
+        member.primaryCoach._id,
+      ]);
+
+      await resolver.createMember(params);
+
+      expect(spyOnServiceInsert).toBeCalledTimes(1);
+      expect(spyOnServiceInsert).toBeCalledWith({
+        phoneNumber: params.phoneNumber,
+        name: params.name,
+        primaryCoachId: params.primaryCoachId,
+        coachIds: [additionalCoachId],
+      });
+    });
   });
 
   describe('getMember', () => {

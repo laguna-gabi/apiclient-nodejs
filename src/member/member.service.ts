@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Id } from '../common';
+import { Errors, Id } from '../common';
 import {
   CreateMemberParams,
   GetMemberParams,
@@ -17,14 +17,23 @@ export class MemberService {
   ) {}
 
   async insert(createMemberParams: CreateMemberParams): Promise<Id> {
-    const result = await this.memberModel.create({
-      name: createMemberParams.name,
-      primaryCoach: new Types.ObjectId(createMemberParams.primaryCoachId),
-      coaches: createMemberParams.coachIds.map(
-        (item) => new Types.ObjectId(item),
-      ),
-    });
-    return { _id: result._id };
+    try {
+      const result = await this.memberModel.create({
+        phoneNumber: createMemberParams.phoneNumber,
+        name: createMemberParams.name,
+        primaryCoach: new Types.ObjectId(createMemberParams.primaryCoachId),
+        coaches: createMemberParams.coachIds.map(
+          (item) => new Types.ObjectId(item),
+        ),
+      });
+      return { _id: result._id };
+    } catch (ex) {
+      throw new Error(
+        ex.code === 11000
+          ? `${Errors.member.create.title} : ${Errors.member.create.reasons.phoneNumber}`
+          : ex,
+      );
+    }
   }
 
   async get(getMemberParams: GetMemberParams): Promise<Member> {

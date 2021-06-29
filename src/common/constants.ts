@@ -8,4 +8,12 @@ export const Errors = {
       },
     },
   },
+  member: {
+    create: {
+      title: 'Failed to create a member',
+      reasons: {
+        phoneNumber: 'phone number already exists',
+      },
+    },
+  },
 };

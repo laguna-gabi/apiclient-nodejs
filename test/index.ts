@@ -31,6 +31,7 @@ export const generateCreateMemberParams = (
   coachIds: string[] = [],
 ): CreateMemberParams => {
   return {
+    phoneNumber: faker.phone.phoneNumber(),
     name: generateFullName(),
     primaryCoachId,
     coachIds,
@@ -41,6 +42,7 @@ export const mockGenerateMember = (): Member => {
   const id = new ObjectID();
   return {
     _id: id.toString(),
+    phoneNumber: faker.phone.phoneNumber(),
     name: generateFullName(),
     primaryCoach: mockGenerateCoach(),
     coaches: [],

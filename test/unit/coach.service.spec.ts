@@ -42,7 +42,7 @@ describe('CoachService', () => {
 
   describe('insert', () => {
     test.each([CoachRole.coach, CoachRole.nurse])(
-      'should insert a %p',
+      'should successfully insert a %p',
       async (role) => {
         const coach = generateCreateCoachParams(role);
         const { _id } = await service.insert(coach);
@@ -51,10 +51,11 @@ describe('CoachService', () => {
       },
     );
 
-    it('should handle a coach that already exists', async () => {
+    it('should fail to insert an already existing coach', async () => {
       const coach = generateCreateCoachParams();
       await service.insert(coach);
 
+      const a = 5;
       await expect(service.insert(coach)).rejects.toThrow(
         `${Errors.coach.create.title} : ${Errors.coach.create.reasons.email}`,
       );
