@@ -2,8 +2,8 @@ import { ObjectType, Field, InputType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import * as mongoose from 'mongoose';
-import { Coach } from '../coach/coach.dto';
-import { Id } from '../common';
+import { User } from '../user/user.schema';
+import { Identifier } from '../common';
 
 /***********************************************************************************************************************
  ******************************************** Input params for gql methods *********************************************
@@ -20,15 +20,15 @@ export class CreateMemberParams {
   primaryCoachId: string;
 
   @Field(() => [String])
-  coachIds: string[];
+  usersIds: string[];
 }
 
 /***********************************************************************************************************************
  ******************************************** Return params for gql methods ********************************************
  **********************************************************************************************************************/
 @ObjectType()
-@Schema({ versionKey: false })
-export class Member extends Id {
+@Schema({ versionKey: false, timestamps: true })
+export class Member extends Identifier {
   @Prop({ unique: true, index: true })
   @Field(() => String)
   phoneNumber: string;
@@ -39,14 +39,14 @@ export class Member extends Id {
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
-    ref: Coach.name,
+    ref: User.name,
   })
-  @Field(() => Coach, { description: 'primary coach' })
-  primaryCoach: Coach;
+  @Field(() => User, { description: 'primary user' })
+  primaryCoach: User;
 
-  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: Coach.name }] })
-  @Field(() => [Coach], { description: 'coaches reference object' })
-  coaches: Coach[];
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: User.name }] })
+  @Field(() => [User], { description: 'users reference object' })
+  users: User[];
 }
 
 /***********************************************************************************************************************

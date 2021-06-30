@@ -1,40 +1,42 @@
-import { Coach, CoachRole, CreateCoachParams } from '../src/coach/coach.dto';
+import { User, UserRole, CreateUserParams } from '../src/user/user.schema';
 import * as faker from 'faker';
 import * as mongoose from 'mongoose';
 import * as config from 'config';
 import { ObjectID } from 'bson';
-import { CreateMemberParams, Member } from '../src/member/member.dto';
+import { CreateMemberParams, Member } from '../src/member/member.schema';
 
-export const generateCreateCoachParams = (
-  role: CoachRole = CoachRole.coach,
-): CreateCoachParams => {
+export const generateCreateUserParams = (
+  role: UserRole = UserRole.coach,
+): CreateUserParams => {
+  const name = generateFullName();
   return {
-    name: generateFullName(),
+    name,
     role,
-    email: faker.internet.email(),
+    email: generateEmail(),
     photoUrl: faker.image.imageUrl(),
   };
 };
 
-export const mockGenerateCoach = (): Coach => {
+export const mockGenerateUser = (): User => {
   const id = new ObjectID();
+  const name = generateFullName();
   return {
     id: id.toString(),
-    name: generateFullName(),
-    role: CoachRole.coach,
-    email: faker.internet.email(),
+    name,
+    role: UserRole.coach,
+    email: generateEmail(),
   };
 };
 
 export const generateCreateMemberParams = (
   primaryCoachId: string,
-  coachIds: string[] = [],
+  usersIds: string[] = [],
 ): CreateMemberParams => {
   return {
     phoneNumber: faker.phone.phoneNumber(),
     name: generateFullName(),
     primaryCoachId,
-    coachIds,
+    usersIds,
   };
 };
 
@@ -44,13 +46,17 @@ export const mockGenerateMember = (): Member => {
     id: id.toString(),
     phoneNumber: faker.phone.phoneNumber(),
     name: generateFullName(),
-    primaryCoach: mockGenerateCoach(),
-    coaches: [],
+    primaryCoach: mockGenerateUser(),
+    users: [],
   };
 };
 
 const generateFullName = () => {
   return `${faker.name.firstName()} ${faker.name.lastName()}`;
+};
+
+const generateEmail = () => {
+  return `${faker.datatype.uuid()}.${faker.internet.email()}`;
 };
 
 export const connectToDb = async () => {

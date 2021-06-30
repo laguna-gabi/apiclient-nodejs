@@ -1,10 +1,10 @@
 export const Errors = {
-  coach: {
+  user: {
     create: {
-      title: 'Failed to create a coach',
+      title: 'Failed to create a user',
       reasons: {
         email: 'email already exists',
-        role: 'coach role should be one of the following',
+        role: 'user role should be one of the following',
       },
     },
   },

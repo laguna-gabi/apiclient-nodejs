@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Errors, Id } from '../common';
-import { CreateMemberParams, Member, MemberDocument } from './member.dto';
+import { Errors, Identifier } from '../common';
+import { CreateMemberParams, Member, MemberDocument } from './member.schema';
 
 @Injectable()
 export class MemberService {
@@ -11,13 +11,13 @@ export class MemberService {
     private readonly memberModel: Model<MemberDocument>,
   ) {}
 
-  async insert(createMemberParams: CreateMemberParams): Promise<Id> {
+  async insert(createMemberParams: CreateMemberParams): Promise<Identifier> {
     try {
       const result = await this.memberModel.create({
         phoneNumber: createMemberParams.phoneNumber,
         name: createMemberParams.name,
         primaryCoach: new Types.ObjectId(createMemberParams.primaryCoachId),
-        coaches: createMemberParams.coachIds.map(
+        users: createMemberParams.usersIds.map(
           (item) => new Types.ObjectId(item),
         ),
       });
@@ -34,7 +34,7 @@ export class MemberService {
   async get(id: string): Promise<Member> {
     return this.memberModel
       .findOne({ _id: id })
-      .populate('coaches')
+      .populate('users')
       .populate('primaryCoach');
   }
 }

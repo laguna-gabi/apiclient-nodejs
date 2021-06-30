@@ -7,12 +7,9 @@ import {
 } from 'apollo-server-testing';
 import gql from 'graphql-tag';
 import { AppModule } from '../../src/app.module';
-import {
-  generateCreateCoachParams,
-  generateCreateMemberParams,
-} from '../index';
-import { CoachRole, CreateCoachParams } from '../../src/coach/coach.dto';
-import { CreateMemberParams } from '../../src/member/member.dto';
+import { generateCreateUserParams, generateCreateMemberParams } from '../index';
+import { UserRole, CreateUserParams } from '../../src/user/user.schema';
+import { CreateMemberParams } from '../../src/member/member.schema';
 
 describe('Integration graphql resolvers', () => {
   let app: INestApplication;
@@ -31,50 +28,50 @@ describe('Integration graphql resolvers', () => {
     apolloClient = createTestClient((module as any).apolloServer);
   });
 
-  it('Should be able to create a coach, a nurse and a member of both', async () => {
-    const coachParams: CreateCoachParams = generateCreateCoachParams();
-    const primaryCoachId = await mutationCreateCoach(coachParams);
-    const coachParamsNurse: CreateCoachParams = generateCreateCoachParams(
-      CoachRole.nurse,
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('Should be able to create a user, a nurse and a member of both', async () => {
+    const userParams: CreateUserParams = generateCreateUserParams();
+    const primaryCoachId = await mutationCreateUser(userParams);
+    const nurseParams: CreateUserParams = generateCreateUserParams(
+      UserRole.nurse,
     );
-    const nurseCoachId = await mutationCreateCoach(coachParamsNurse);
+    const nurseId = await mutationCreateUser(nurseParams);
 
-    const resultCoach = await queryGetCoach(primaryCoachId);
-    expect(resultCoach).toEqual({ ...coachParams, id: primaryCoachId });
-    const resultNurse = await queryGetCoach(nurseCoachId);
-    expect(resultNurse).toEqual({ ...coachParamsNurse, id: nurseCoachId });
+    const resultUser = await queryGetUser(primaryCoachId);
+    expect(resultUser).toEqual({ ...userParams, id: primaryCoachId });
+    const resultNurse = await queryGetUser(nurseId);
+    expect(resultNurse).toEqual({ ...nurseParams, id: nurseId });
 
-    const memberParams = generateCreateMemberParams(primaryCoachId, [
-      nurseCoachId,
-    ]);
+    const memberParams = generateCreateMemberParams(primaryCoachId, [nurseId]);
 
     const id = await mutationCreateMember(memberParams);
     expect(id).not.toBeNull();
 
-    const { name, phoneNumber, primaryCoach, coaches } = await queryGetMember(
-      id,
-    );
+    const { name, phoneNumber, primaryCoach, users } = await queryGetMember(id);
 
     expect(name).toEqual(memberParams.name);
     expect(phoneNumber).toEqual(memberParams.phoneNumber);
-    expect(primaryCoach).toEqual({ ...coachParams, id: primaryCoachId });
-    expect(coaches).toEqual([{ ...coachParamsNurse, id: nurseCoachId }]);
+    expect(primaryCoach).toEqual({ ...userParams, id: primaryCoachId });
+    expect(users).toEqual([{ ...nurseParams, id: nurseId }]);
   });
 
-  const mutationCreateCoach = async (
-    coachParams: CreateCoachParams,
+  const mutationCreateUser = async (
+    userParams: CreateUserParams,
   ): Promise<string> => {
-    const resultCreateCoach = await apolloClient.mutate({
-      variables: { createCoachParams: coachParams },
+    const resultCreateUser = await apolloClient.mutate({
+      variables: { createUserParams: userParams },
       mutation: gql`
-        mutation CreateCoach($createCoachParams: CreateCoachParams!) {
-          createCoach(createCoachParams: $createCoachParams) {
+        mutation CreateUser($createUserParams: CreateUserParams!) {
+          createUser(createUserParams: $createUserParams) {
             id
           }
         }
       `,
     });
-    const { id } = resultCreateCoach.data.createCoach;
+    const { id } = resultCreateUser.data.createUser;
     expect(id).not.toBeNull();
 
     return id;
@@ -97,12 +94,12 @@ describe('Integration graphql resolvers', () => {
     return id;
   };
 
-  const queryGetCoach = async (id: string) => {
-    const resultGetCoach = await apolloClient.query({
+  const queryGetUser = async (id: string) => {
+    const resultGetUser = await apolloClient.query({
       variables: { id },
       query: gql`
-        query getCoach($id: String!) {
-          getCoach(id: $id) {
+        query getUser($id: String!) {
+          getUser(id: $id) {
             id
             name
             email
@@ -112,7 +109,7 @@ describe('Integration graphql resolvers', () => {
         }
       `,
     });
-    return resultGetCoach.data.getCoach;
+    return resultGetUser.data.getUser;
   };
 
   const queryGetMember = async (id: string) => {
@@ -131,7 +128,7 @@ describe('Integration graphql resolvers', () => {
               role
               photoUrl
             }
-            coaches {
+            users {
               id
               name
               email

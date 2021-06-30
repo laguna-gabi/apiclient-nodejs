@@ -40,13 +40,13 @@ describe('MemberResolver', () => {
       expect(spyOnServiceInsert).toBeCalledWith(params);
     });
 
-    it('should remove coach from coaches list if it is already sent as primaryCoach', async () => {
+    it('should remove user from users list if it is already sent as primaryCoach', async () => {
       const member = mockGenerateMember();
       spyOnServiceInsert.mockImplementationOnce(async () => member);
 
-      const additionalCoachId = new ObjectID().toString();
+      const additionalUserId = new ObjectID().toString();
       const params = generateCreateMemberParams(member.primaryCoach.id, [
-        additionalCoachId,
+        additionalUserId,
         member.primaryCoach.id,
       ]);
 
@@ -57,7 +57,7 @@ describe('MemberResolver', () => {
         phoneNumber: params.phoneNumber,
         name: params.name,
         primaryCoachId: params.primaryCoachId,
-        coachIds: [additionalCoachId],
+        usersIds: [additionalUserId],
       });
     });
   });
@@ -81,7 +81,7 @@ describe('MemberResolver', () => {
       expect(result).toEqual(member);
     });
 
-    it('should fetch empty on a non existing coach', async () => {
+    it('should fetch empty on a non existing user', async () => {
       spyOnServiceGet.mockImplementationOnce(async () => null);
 
       const id = new ObjectID();

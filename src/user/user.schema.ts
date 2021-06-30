@@ -6,19 +6,20 @@ import {
 } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
-import { Id } from '../common';
+import { Identifier } from '../common';
 
-export enum CoachRole {
+export enum UserRole {
+  admin = 'Admin',
   coach = 'Coach',
   nurse = 'Nurse',
 }
-registerEnumType(CoachRole, { name: 'CoachRole' });
+registerEnumType(UserRole, { name: 'UserRole' });
 
 /***********************************************************************************************************************
  ******************************************** Input params for gql methods *********************************************
  **********************************************************************************************************************/
 @InputType()
-export class CreateCoachParams {
+export class CreateUserParams {
   @Field()
   name: string;
 
@@ -36,8 +37,8 @@ export class CreateCoachParams {
  ******************************************** Return params for gql methods ********************************************
  **********************************************************************************************************************/
 @ObjectType()
-@Schema({ versionKey: false })
-export class Coach extends Id {
+@Schema({ versionKey: false, timestamps: true })
+export class User extends Identifier {
   @Prop()
   @Field(() => String, { description: 'name' })
   name: string;
@@ -48,7 +49,7 @@ export class Coach extends Id {
 
   @Prop()
   @Field(() => String, {
-    description: 'role of the coach: behaviour coach/nurse',
+    description: 'role of the user: admin/user/nurse/nutrition/doctor/...',
   })
   role: string;
 
@@ -63,5 +64,5 @@ export class Coach extends Id {
 /***********************************************************************************************************************
  ************************************************** Exported Schemas ***************************************************
  **********************************************************************************************************************/
-export type CoachDocument = Coach & mongoose.Document;
-export const CoachSchema = SchemaFactory.createForClass(Coach);
+export type UserDocument = User & mongoose.Document;
+export const UserSchema = SchemaFactory.createForClass(User);

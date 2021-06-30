@@ -5,7 +5,7 @@ import { Model, Types } from 'mongoose';
 import { ObjectID } from 'bson';
 import {
   connectToDb,
-  generateCreateCoachParams,
+  generateCreateUserParams,
   generateCreateMemberParams,
 } from '../index';
 import { MemberService } from '../../src/member/member.service';
@@ -13,15 +13,15 @@ import {
   CreateMemberParams,
   Member,
   MemberSchema,
-} from '../../src/member/member.dto';
+} from '../../src/member/member.schema';
 import { MemberModule } from '../../src/member/member.module';
-import { Coach, CoachRole, CoachSchema } from '../../src/coach/coach.dto';
+import { User, UserRole, UserSchema } from '../../src/user/user.schema';
 import { Errors } from '../../src/common';
 
 describe('MemberService', () => {
   let service: MemberService;
   let model: Model<typeof MemberSchema>;
-  let modelCoach: Model<typeof CoachSchema>;
+  let modelUser: Model<typeof UserSchema>;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -31,7 +31,7 @@ describe('MemberService', () => {
     service = module.get<MemberService>(MemberService);
 
     model = mongoose.model(Member.name, MemberSchema);
-    modelCoach = mongoose.model(Coach.name, CoachSchema);
+    modelUser = mongoose.model(User.name, UserSchema);
     await connectToDb();
   });
 
@@ -42,25 +42,25 @@ describe('MemberService', () => {
       expect(result).toBeNull();
     });
 
-    it('should return member and his/her coaches for an existing member', async () => {
-      const primaryCoachParams = generateCreateCoachParams();
-      const nurseParams = generateCreateCoachParams(CoachRole.nurse);
-      const coachParams = generateCreateCoachParams();
-      const primaryCoach = await modelCoach.create(primaryCoachParams);
-      const nurse = await modelCoach.create(nurseParams);
-      const coach = await modelCoach.create(coachParams);
-      await modelCoach.create(generateCreateCoachParams()); //Another coach, to check if it doesn't return in member
+    it('should return member and his/her users for an existing member', async () => {
+      const primaryCoachParams = generateCreateUserParams();
+      const nurseParams = generateCreateUserParams(UserRole.nurse);
+      const userParams = generateCreateUserParams();
+      const primaryCoach = await modelUser.create(primaryCoachParams);
+      const nurse = await modelUser.create(nurseParams);
+      const user = await modelUser.create(userParams);
+      await modelUser.create(generateCreateUserParams()); //Another user, to check if it doesn't return in member
 
       const member: CreateMemberParams = generateCreateMemberParams(
         primaryCoach._id,
-        [coach._id, nurse._id],
+        [user._id, nurse._id],
       );
 
       const { _id } = await model.create({
         name: member.name,
         phoneNumber: member.phoneNumber,
         primaryCoach: new Types.ObjectId(member.primaryCoachId),
-        coaches: member.coachIds.map((item) => new Types.ObjectId(item)),
+        users: member.usersIds.map((item) => new Types.ObjectId(item)),
       });
 
       const result = await service.get(_id);
@@ -68,25 +68,25 @@ describe('MemberService', () => {
       expect(result.id).toEqual(_id.toString());
       expect(result.name).toEqual(member.name);
       expect(result.phoneNumber).toEqual(member.phoneNumber);
-      compareCoach(result.primaryCoach, primaryCoach);
-      expect(result.coaches.length).toEqual(2);
-      compareCoach(result.coaches[0], coach);
-      compareCoach(result.coaches[1], nurse);
+      compareUsers(result.primaryCoach, primaryCoach);
+      expect(result.users.length).toEqual(2);
+      compareUsers(result.users[0], user);
+      compareUsers(result.users[1], nurse);
     });
 
-    const compareCoach = (resultCoach: Coach, coach) => {
-      expect(resultCoach.id).toEqual(coach._id.toString());
-      expect(resultCoach.name).toEqual(coach['name']);
-      expect(resultCoach.email).toEqual(coach['email']);
-      expect(resultCoach.role).toEqual(coach['role']);
-      expect(resultCoach.photoUrl).toEqual(coach['photoUrl']);
+    const compareUsers = (expectedUser: User, user) => {
+      expect(expectedUser.id).toEqual(user._id.toString());
+      expect(expectedUser.name).toEqual(user['name']);
+      expect(expectedUser.email).toEqual(user['email']);
+      expect(expectedUser.role).toEqual(user['role']);
+      expect(expectedUser.photoUrl).toEqual(user['photoUrl']);
     };
   });
 
   describe('insert', () => {
     it('should insert a member with primaryCoach', async () => {
-      const primaryCoachParams = generateCreateCoachParams();
-      const primaryCoach = await modelCoach.create(primaryCoachParams);
+      const primaryCoachParams = generateCreateUserParams();
+      const primaryCoach = await modelUser.create(primaryCoachParams);
       const member: CreateMemberParams = generateCreateMemberParams(
         primaryCoach._id,
       );

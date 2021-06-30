@@ -3,7 +3,7 @@ import { Schema } from '@nestjs/mongoose';
 
 @ObjectType()
 @Schema()
-export class Id {
+export class Identifier {
   @Field(() => String)
   id: string;
 }

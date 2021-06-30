@@ -1,20 +1,20 @@
 import { Resolver, Query, Args, Mutation } from '@nestjs/graphql';
 import { MemberService } from './member.service';
-import { CreateMemberParams, Member } from './member.dto';
-import { Id } from '../common';
+import { CreateMemberParams, Member } from './member.schema';
+import { Identifier } from '../common';
 import { camelCase, remove } from 'lodash';
 
 @Resolver(() => Member)
 export class MemberResolver {
   constructor(private readonly memberService: MemberService) {}
 
-  @Mutation(() => Id)
+  @Mutation(() => Identifier)
   async createMember(
     @Args(camelCase(CreateMemberParams.name))
     createMemberParams: CreateMemberParams,
   ) {
     remove(
-      createMemberParams.coachIds,
+      createMemberParams.usersIds,
       (i) => i === createMemberParams.primaryCoachId,
     );
     return this.memberService.insert(createMemberParams);

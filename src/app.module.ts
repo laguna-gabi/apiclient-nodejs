@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { DbModule } from './db/db.module';
 import { MemberModule } from './member/member.module';
 import { GraphQLModule } from '@nestjs/graphql';
-import { CoachModule } from './coach/coach.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
     MemberModule,
-    CoachModule,
+    UserModule,
     DbModule,
     GraphQLModule.forRoot({ autoSchemaFile: 'schema.gql' }),
   ],
