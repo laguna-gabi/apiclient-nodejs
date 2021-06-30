@@ -1,26 +1,36 @@
-import { ObjectType, Field, InputType } from '@nestjs/graphql';
+import {
+  Field,
+  ObjectType,
+  InputType,
+  registerEnumType,
+} from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
 import * as mongoose from 'mongoose';
-import { User } from '../user/user.schema';
 import { Identifier } from '../common';
+
+export enum UserRole {
+  admin = 'Admin',
+  coach = 'Coach',
+  nurse = 'Nurse',
+}
+registerEnumType(UserRole, { name: 'UserRole' });
 
 /***********************************************************************************************************************
  ******************************************** Input params for gql methods *********************************************
  **********************************************************************************************************************/
 @InputType()
-export class CreateMemberParams {
+export class CreateUserParams {
   @Field()
   name: string;
 
   @Field({ nullable: false })
-  phoneNumber: string;
+  email: string;
 
-  @Field(() => String)
-  primaryCoachId: string;
+  @Field()
+  role: string;
 
-  @Field(() => [String])
-  usersIds: string[];
+  @Field()
+  photoUrl?: string;
 }
 
 /***********************************************************************************************************************
@@ -28,29 +38,31 @@ export class CreateMemberParams {
  **********************************************************************************************************************/
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
-export class Member extends Identifier {
-  @Prop({ unique: true, index: true })
-  @Field(() => String)
-  phoneNumber: string;
-
+export class User extends Identifier {
   @Prop()
   @Field(() => String, { description: 'name' })
   name: string;
 
-  @Prop({
-    type: mongoose.Schema.Types.ObjectId,
-    ref: User.name,
-  })
-  @Field(() => User, { description: 'primary user' })
-  primaryCoach: User;
+  @Prop({ unique: true })
+  @Field(() => String)
+  email: string;
 
-  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: User.name }] })
-  @Field(() => [User], { description: 'users reference object' })
-  users: User[];
+  @Prop()
+  @Field(() => String, {
+    description: 'role of the user: admin/user/nurse/nutrition/doctor/...',
+  })
+  role: string;
+
+  @Prop()
+  @Field(() => String, {
+    description: 'profile image, can be nullable',
+    nullable: true,
+  })
+  photoUrl?: string;
 }
 
 /***********************************************************************************************************************
  ************************************************** Exported Schemas ***************************************************
  **********************************************************************************************************************/
-export type MemberDocument = Member & Document;
-export const MemberSchema = SchemaFactory.createForClass(Member);
+export type UserDocument = User & mongoose.Document;
+export const UserDto = SchemaFactory.createForClass(User);

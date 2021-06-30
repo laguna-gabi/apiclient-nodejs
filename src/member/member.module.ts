@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import { MemberService } from './member.service';
 import { MemberResolver } from './member.resolver';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Member, MemberSchema } from './member.schema';
+import { Member, MemberDto } from './member.dto';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Member.name, schema: MemberSchema }]),
+    MongooseModule.forFeature([{ name: Member.name, schema: MemberDto }]),
   ],
   providers: [MemberResolver, MemberService],
 })

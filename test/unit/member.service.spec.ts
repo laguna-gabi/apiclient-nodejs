@@ -12,16 +12,16 @@ import { MemberService } from '../../src/member/member.service';
 import {
   CreateMemberParams,
   Member,
-  MemberSchema,
-} from '../../src/member/member.schema';
+  MemberDto,
+} from '../../src/member/member.dto';
 import { MemberModule } from '../../src/member/member.module';
-import { User, UserRole, UserSchema } from '../../src/user/user.schema';
+import { User, UserRole, UserDto } from '../../src/user/user.dto';
 import { Errors } from '../../src/common';
 
 describe('MemberService', () => {
   let service: MemberService;
-  let model: Model<typeof MemberSchema>;
-  let modelUser: Model<typeof UserSchema>;
+  let model: Model<typeof MemberDto>;
+  let modelUser: Model<typeof UserDto>;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -30,8 +30,8 @@ describe('MemberService', () => {
 
     service = module.get<MemberService>(MemberService);
 
-    model = mongoose.model(Member.name, MemberSchema);
-    modelUser = mongoose.model(User.name, UserSchema);
+    model = mongoose.model(Member.name, MemberDto);
+    modelUser = mongoose.model(User.name, UserDto);
     await connectToDb();
   });
 

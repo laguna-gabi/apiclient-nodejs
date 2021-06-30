@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
 import * as mongoose from 'mongoose';
-import { User, UserRole, UserSchema } from '../../src/user/user.schema';
+import { User, UserRole, UserDto } from '../../src/user/user.dto';
 import { ObjectID } from 'bson';
 import { Errors } from '../../src/common';
 import { UserService } from '../../src/user/user.service';
@@ -10,7 +10,7 @@ import { connectToDb, generateCreateUserParams } from '../index';
 
 describe('UserService', () => {
   let service: UserService;
-  let model: mongoose.Model<typeof UserSchema>;
+  let model: mongoose.Model<typeof UserDto>;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -19,7 +19,7 @@ describe('UserService', () => {
 
     service = module.get<UserService>(UserService);
 
-    model = mongoose.model(User.name, UserSchema);
+    model = mongoose.model(User.name, UserDto);
 
     await connectToDb();
   });

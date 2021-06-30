@@ -8,8 +8,8 @@ import {
 import gql from 'graphql-tag';
 import { AppModule } from '../../src/app.module';
 import { generateCreateUserParams, generateCreateMemberParams } from '../index';
-import { UserRole, CreateUserParams } from '../../src/user/user.schema';
-import { CreateMemberParams } from '../../src/member/member.schema';
+import { UserRole, CreateUserParams } from '../../src/user/user.dto';
+import { CreateMemberParams } from '../../src/member/member.dto';
 
 describe('Integration graphql resolvers', () => {
   let app: INestApplication;

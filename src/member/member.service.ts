@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Errors, Identifier } from '../common';
-import { CreateMemberParams, Member, MemberDocument } from './member.schema';
+import { CreateMemberParams, Member, MemberDocument } from './member.dto';
 
 @Injectable()
 export class MemberService {
