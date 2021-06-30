@@ -6,7 +6,11 @@ import { ObjectID } from 'bson';
 import { Errors } from '../../src/common';
 import { UserService } from '../../src/user/user.service';
 import { UserModule } from '../../src/user/user.module';
-import { connectToDb, generateCreateUserParams } from '../index';
+import {
+  connectToDb,
+  generateCreateMemberParams,
+  generateCreateUserParams,
+} from '../index';
 
 describe('UserService', () => {
   let service: UserService;
@@ -52,11 +56,20 @@ describe('UserService', () => {
       const user = generateCreateUserParams(roles);
       const { id } = await service.insert(user);
 
-      const createdItem = await model.findById({ _id: id });
-      expect(createdItem['email']).toEqual(user.email);
-      expect(createdItem['roles']).toEqual(expect.arrayContaining(user.roles));
+      const createdUser = await model.findById(id);
+      expect(createdUser['email']).toEqual(user.email);
+      expect(createdUser['roles']).toEqual(expect.arrayContaining(user.roles));
 
       expect(id).not.toBeNull();
+    });
+
+    it('should check that createdAt and updatedAt exists in the collection', async () => {
+      const user = generateCreateUserParams();
+      const { id } = await service.insert(user);
+
+      const createdUser = await model.findById(id);
+      expect(createdUser['createdAt']).toEqual(expect.any(Date));
+      expect(createdUser['updatedAt']).toEqual(expect.any(Date));
     });
 
     it('should fail to insert an already existing user', async () => {

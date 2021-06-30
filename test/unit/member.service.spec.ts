@@ -87,13 +87,23 @@ describe('MemberService', () => {
     it('should insert a member with primaryCoach', async () => {
       const primaryCoachParams = generateCreateUserParams();
       const primaryCoach = await modelUser.create(primaryCoachParams);
-      const member: CreateMemberParams = generateCreateMemberParams(
-        primaryCoach._id,
+
+      const result = await service.insert(
+        generateCreateMemberParams(primaryCoach._id),
       );
 
-      const result = await service.insert(member);
-
       expect(result.id).not.toBeUndefined();
+    });
+
+    it('should check that createdAt and updatedAt exists in the collection', async () => {
+      const params = generateCreateUserParams();
+      const user = await modelUser.create(params);
+
+      const result = await service.insert(generateCreateMemberParams(user._id));
+
+      const createdMember = await model.findById(result.id);
+      expect(createdMember['createdAt']).toEqual(expect.any(Date));
+      expect(createdMember['updatedAt']).toEqual(expect.any(Date));
     });
 
     it('should insert a member even with primaryCoach not exists', async () => {
