@@ -54,8 +54,8 @@ describe('Integration graphql resolvers', () => {
 
     const { name, phoneNumber, primaryCoach, users } = await queryGetMember(id);
 
-    expect(name).toEqual(memberParams.name);
     expect(phoneNumber).toEqual(memberParams.phoneNumber);
+    expect(name).toEqual(memberParams.name);
     expect(primaryCoach).toEqual(resultUser);
     expect(users).toEqual([resultNurse]);
   });
@@ -136,8 +136,9 @@ describe('Integration graphql resolvers', () => {
         query getMember($id: String!) {
           getMember(id: $id) {
             id
-            name
             phoneNumber
+            name
+            dateOfBirth
             primaryCoach {
               id
               name

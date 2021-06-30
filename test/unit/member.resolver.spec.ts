@@ -56,6 +56,7 @@ describe('MemberResolver', () => {
       expect(spyOnServiceInsert).toBeCalledWith({
         phoneNumber: params.phoneNumber,
         name: params.name,
+        dateOfBirth: params.dateOfBirth,
         primaryCoachId: params.primaryCoachId,
         usersIds: [additionalUserId],
       });

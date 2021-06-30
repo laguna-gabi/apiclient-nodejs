@@ -11,8 +11,8 @@ export const generateCreateUserParams = (
   const name = generateFullName();
   return {
     name,
-    roles,
     email: generateEmail(),
+    roles,
     photoUrl: faker.image.imageUrl(),
   };
 };
@@ -23,8 +23,8 @@ export const mockGenerateUser = (): User => {
   return {
     id: id.toString(),
     name,
-    roles: [UserRole.coach],
     email: generateEmail(),
+    roles: [UserRole.coach],
   };
 };
 
@@ -35,6 +35,7 @@ export const generateCreateMemberParams = (
   return {
     phoneNumber: faker.phone.phoneNumber(),
     name: generateFullName(),
+    dateOfBirth: faker.date.past(),
     primaryCoachId,
     usersIds,
   };
@@ -46,6 +47,7 @@ export const mockGenerateMember = (): Member => {
     id: id.toString(),
     phoneNumber: faker.phone.phoneNumber(),
     name: generateFullName(),
+    dateOfBirth: faker.date.past(),
     primaryCoach: mockGenerateUser(),
     users: [],
   };

@@ -16,6 +16,7 @@ export class MemberService {
       const result = await this.memberModel.create({
         phoneNumber: createMemberParams.phoneNumber,
         name: createMemberParams.name,
+        dateOfBirth: createMemberParams.dateOfBirth,
         primaryCoach: new Types.ObjectId(createMemberParams.primaryCoachId),
         users: createMemberParams.usersIds.map(
           (item) => new Types.ObjectId(item),

@@ -57,8 +57,8 @@ describe('MemberService', () => {
       );
 
       const { _id } = await model.create({
-        name: member.name,
         phoneNumber: member.phoneNumber,
+        name: member.name,
         primaryCoach: new Types.ObjectId(member.primaryCoachId),
         users: member.usersIds.map((item) => new Types.ObjectId(item)),
       });
@@ -66,8 +66,8 @@ describe('MemberService', () => {
       const result = await service.get(_id);
 
       expect(result.id).toEqual(_id.toString());
-      expect(result.name).toEqual(member.name);
       expect(result.phoneNumber).toEqual(member.phoneNumber);
+      expect(result.name).toEqual(member.name);
       compareUsers(result.primaryCoach, primaryCoach);
       expect(result.users.length).toEqual(2);
       compareUsers(result.users[0], user);
@@ -84,15 +84,20 @@ describe('MemberService', () => {
   });
 
   describe('insert', () => {
-    it('should insert a member with primaryCoach', async () => {
+    it('should insert a member with primaryCoach and validate all insert fields', async () => {
       const primaryCoachParams = generateCreateUserParams();
       const primaryCoach = await modelUser.create(primaryCoachParams);
 
-      const result = await service.insert(
-        generateCreateMemberParams(primaryCoach._id),
-      );
+      const memberParams = generateCreateMemberParams(primaryCoach._id);
+      const result = await service.insert(memberParams);
 
       expect(result.id).not.toBeUndefined();
+
+      const createdMember = await model.findById(result.id);
+      expect(createdMember['phoneNumber']).toEqual(memberParams.phoneNumber);
+      expect(createdMember['name']).toEqual(memberParams.name);
+      expect(createdMember['dateOfBirth']).toEqual(memberParams.dateOfBirth);
+      expect(createdMember['primaryCoach']).toEqual(primaryCoach._id);
     });
 
     it('should check that createdAt and updatedAt exists in the collection', async () => {

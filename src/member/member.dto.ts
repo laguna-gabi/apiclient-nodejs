@@ -1,7 +1,7 @@
-import { ObjectType, Field, InputType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
 import * as mongoose from 'mongoose';
+import { Document } from 'mongoose';
 import { User } from '../user/user.dto';
 import { Identifier } from '../common';
 
@@ -10,11 +10,14 @@ import { Identifier } from '../common';
  **********************************************************************************************************************/
 @InputType()
 export class CreateMemberParams {
+  @Field({ nullable: false })
+  phoneNumber: string;
+
   @Field()
   name: string;
 
-  @Field({ nullable: false })
-  phoneNumber: string;
+  @Field(() => Date)
+  dateOfBirth: Date;
 
   @Field(() => String)
   primaryCoachId: string;
@@ -36,6 +39,10 @@ export class Member extends Identifier {
   @Prop()
   @Field(() => String, { description: 'name' })
   name: string;
+
+  @Prop({ type: Date })
+  @Field(() => Date)
+  dateOfBirth: Date;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
