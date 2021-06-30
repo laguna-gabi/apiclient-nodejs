@@ -8,8 +8,9 @@ import {
 import gql from 'graphql-tag';
 import { AppModule } from '../../src/app.module';
 import { generateCreateUserParams, generateCreateMemberParams } from '../index';
-import { UserRole, CreateUserParams } from '../../src/user/user.dto';
+import { CreateUserParams, User, UserRole } from '../../src/user/user.dto';
 import { CreateMemberParams } from '../../src/member/member.dto';
+import { omit, camelCase } from 'lodash';
 
 describe('Integration graphql resolvers', () => {
   let app: INestApplication;
@@ -41,9 +42,9 @@ describe('Integration graphql resolvers', () => {
     const nurseId = await mutationCreateUser(nurseParams);
 
     const resultUser = await queryGetUser(primaryCoachId);
-    expect(resultUser).toEqual({ ...userParams, id: primaryCoachId });
+    compareUsers(resultUser, { ...userParams, id: primaryCoachId });
     const resultNurse = await queryGetUser(nurseId);
-    expect(resultNurse).toEqual({ ...nurseParams, id: nurseId });
+    compareUsers(resultNurse, { ...nurseParams, id: nurseId });
 
     const memberParams = generateCreateMemberParams(primaryCoachId, [nurseId]);
 
@@ -54,15 +55,27 @@ describe('Integration graphql resolvers', () => {
 
     expect(name).toEqual(memberParams.name);
     expect(phoneNumber).toEqual(memberParams.phoneNumber);
-    expect(primaryCoach).toEqual({ ...userParams, id: primaryCoachId });
-    expect(users).toEqual([{ ...nurseParams, id: nurseId }]);
+    expect(primaryCoach).toEqual(resultUser);
+    expect(users).toEqual([resultNurse]);
   });
+
+  const compareUsers = (resultUser: User, expectedUser: User) => {
+    const resultUserNew = omit(resultUser, 'role');
+    const expectedUserNew = omit(expectedUser, 'role');
+    expect(resultUserNew).toEqual(expectedUserNew);
+    expect(resultUser.role).toEqual(camelCase(expectedUser.role));
+  };
 
   const mutationCreateUser = async (
     userParams: CreateUserParams,
   ): Promise<string> => {
     const resultCreateUser = await apolloClient.mutate({
-      variables: { createUserParams: userParams },
+      variables: {
+        createUserParams: {
+          ...userParams,
+          role: camelCase(userParams.role),
+        },
+      },
       mutation: gql`
         mutation CreateUser($createUserParams: CreateUserParams!) {
           createUser(createUserParams: $createUserParams) {

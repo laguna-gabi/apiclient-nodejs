@@ -74,12 +74,12 @@ describe('MemberService', () => {
       compareUsers(result.users[1], nurse);
     });
 
-    const compareUsers = (expectedUser: User, user) => {
-      expect(expectedUser.id).toEqual(user._id.toString());
-      expect(expectedUser.name).toEqual(user['name']);
-      expect(expectedUser.email).toEqual(user['email']);
-      expect(expectedUser.role).toEqual(user['role']);
-      expect(expectedUser.photoUrl).toEqual(user['photoUrl']);
+    const compareUsers = (user: User, userBase) => {
+      expect(user.id).toEqual(userBase._id.toString());
+      expect(user.name).toEqual(userBase['name']);
+      expect(user.email).toEqual(userBase['email']);
+      expect(user.role).toEqual(userBase['role']);
+      expect(user.photoUrl).toEqual(userBase['photoUrl']);
     };
   });
 
