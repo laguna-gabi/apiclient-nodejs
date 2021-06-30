@@ -18,7 +18,7 @@ export class MemberService {
         name: createMemberParams.name,
         dateOfBirth: createMemberParams.dateOfBirth,
         primaryCoach: new Types.ObjectId(createMemberParams.primaryCoachId),
-        users: createMemberParams.usersIds.map(
+        users: createMemberParams.usersIds?.map(
           (item) => new Types.ObjectId(item),
         ),
       });

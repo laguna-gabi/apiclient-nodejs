@@ -40,6 +40,18 @@ describe('MemberResolver', () => {
       expect(spyOnServiceInsert).toBeCalledWith(params);
     });
 
+    it('should support undefined fields', async () => {
+      const member = mockGenerateMember();
+      spyOnServiceInsert.mockImplementationOnce(async () => member);
+
+      const params = generateCreateMemberParams(member.primaryCoach.id);
+      delete params.usersIds;
+      await resolver.createMember(params);
+
+      expect(spyOnServiceInsert).toBeCalledTimes(1);
+      expect(spyOnServiceInsert).toBeCalledWith(params);
+    });
+
     it('should remove user from users list if it is already sent as primaryCoach', async () => {
       const member = mockGenerateMember();
       spyOnServiceInsert.mockImplementationOnce(async () => member);

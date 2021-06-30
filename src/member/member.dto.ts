@@ -10,7 +10,7 @@ import { Identifier } from '../common';
  **********************************************************************************************************************/
 @InputType()
 export class CreateMemberParams {
-  @Field({ nullable: false })
+  @Field()
   phoneNumber: string;
 
   @Field()
@@ -22,7 +22,7 @@ export class CreateMemberParams {
   @Field(() => String)
   primaryCoachId: string;
 
-  @Field(() => [String])
+  @Field(() => [String], { nullable: true })
   usersIds: string[];
 }
 
