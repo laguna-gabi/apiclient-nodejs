@@ -44,7 +44,7 @@ describe('MemberService', () => {
 
     it('should return member and his/her users for an existing member', async () => {
       const primaryCoachParams = generateCreateUserParams();
-      const nurseParams = generateCreateUserParams(UserRole.nurse);
+      const nurseParams = generateCreateUserParams([UserRole.nurse]);
       const userParams = generateCreateUserParams();
       const primaryCoach = await modelUser.create(primaryCoachParams);
       const nurse = await modelUser.create(nurseParams);
@@ -78,7 +78,7 @@ describe('MemberService', () => {
       expect(user.id).toEqual(userBase._id.toString());
       expect(user.name).toEqual(userBase['name']);
       expect(user.email).toEqual(userBase['email']);
-      expect(user.role).toEqual(userBase['role']);
+      expect(user.roles).toEqual(expect.arrayContaining(userBase['roles']));
       expect(user.photoUrl).toEqual(userBase['photoUrl']);
     };
   });

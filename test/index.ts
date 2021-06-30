@@ -6,12 +6,12 @@ import { ObjectID } from 'bson';
 import { CreateMemberParams, Member } from '../src/member/member.dto';
 
 export const generateCreateUserParams = (
-  role: UserRole = UserRole.coach,
+  roles: UserRole[] = [UserRole.coach],
 ): CreateUserParams => {
   const name = generateFullName();
   return {
     name,
-    role,
+    roles,
     email: generateEmail(),
     photoUrl: faker.image.imageUrl(),
   };
@@ -23,7 +23,7 @@ export const mockGenerateUser = (): User => {
   return {
     id: id.toString(),
     name,
-    role: UserRole.coach,
+    roles: [UserRole.coach],
     email: generateEmail(),
   };
 };

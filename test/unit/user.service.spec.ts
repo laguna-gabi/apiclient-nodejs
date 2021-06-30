@@ -36,20 +36,28 @@ describe('UserService', () => {
       const { id } = await model.create(user);
 
       const result = await service.get(id);
-      expect(result).toEqual(expect.objectContaining(user));
+      expect(result.email).toEqual(user.email);
+      expect(result.roles).toEqual(expect.arrayContaining(user.roles));
     });
   });
 
   describe('insert', () => {
-    test.each(Object.values(UserRole))(
-      'should successfully insert a %p',
-      async (role) => {
-        const user = generateCreateUserParams(role);
-        const { id } = await service.insert(user);
+    test.each([
+      [Object.values(UserRole)],
+      [[UserRole.coach, UserRole.nurse]],
+      [[UserRole.coach]],
+      [[UserRole.nurse]],
+      [[UserRole.admin]],
+    ])('should successfully insert a user having roles : %p', async (roles) => {
+      const user = generateCreateUserParams(roles);
+      const { id } = await service.insert(user);
 
-        expect(id).not.toBeNull();
-      },
-    );
+      const createdItem = await model.findById({ _id: id });
+      expect(createdItem['email']).toEqual(user.email);
+      expect(createdItem['roles']).toEqual(expect.arrayContaining(user.roles));
+
+      expect(id).not.toBeNull();
+    });
 
     it('should fail to insert an already existing user', async () => {
       const user = generateCreateUserParams();

@@ -2,10 +2,11 @@ import { UserResolver } from '../../src/user/user.resolver';
 import { UserService } from '../../src/user/user.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserModule } from '../../src/user/user.module';
-import { mockGenerateUser, generateCreateUserParams } from '../../test';
+import { generateCreateUserParams, mockGenerateUser } from '../../test';
 import { DbModule } from '../../src/db/db.module';
 import { Errors } from '../../src/common';
 import { ObjectID } from 'bson';
+import { UserRole } from '../../src/user/user.dto';
 
 describe('UserResolver', () => {
   let resolver: UserResolver;
@@ -30,10 +31,16 @@ describe('UserResolver', () => {
       spyOnServiceInsert.mockReset();
     });
 
-    it('should create a user', async () => {
+    test.each([
+      [Object.values(UserRole)],
+      [[UserRole.coach, UserRole.nurse]],
+      [[UserRole.coach]],
+      [[UserRole.nurse]],
+      [[UserRole.admin]],
+    ])('should successfully create a user with role: %p', async (roles) => {
       spyOnServiceInsert.mockImplementationOnce(async () => mockGenerateUser());
 
-      const params = generateCreateUserParams();
+      const params = generateCreateUserParams(roles);
       await resolver.createUser(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
@@ -41,8 +48,12 @@ describe('UserResolver', () => {
     });
 
     it('should fail to create a user due to invalid user role', async () => {
-      //@ts-ignore
-      const params = generateCreateUserParams('invalid role');
+      const params = generateCreateUserParams([
+        UserRole.coach,
+        UserRole.nurse,
+        //@ts-ignore
+        'invalid role',
+      ]);
 
       await expect(resolver.createUser(params)).rejects.toThrow(
         `${Errors.user.create.title} : ${Errors.user.create.reasons.role}`,

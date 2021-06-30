@@ -26,8 +26,8 @@ export class CreateUserParams {
   @Field({ nullable: false })
   email: string;
 
-  @Field(() => UserRole)
-  role: UserRole;
+  @Field(() => [UserRole])
+  roles: UserRole[];
 
   @Field()
   photoUrl?: string;
@@ -48,10 +48,10 @@ export class User extends Identifier {
   email: string;
 
   @Prop()
-  @Field(() => UserRole, {
+  @Field(() => [UserRole], {
     description: 'role of the user: admin/user/nurse/nutrition/doctor/...',
   })
-  role: UserRole;
+  roles: UserRole[];
 
   @Prop()
   @Field(() => String, {

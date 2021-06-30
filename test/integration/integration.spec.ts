@@ -7,10 +7,10 @@ import {
 } from 'apollo-server-testing';
 import gql from 'graphql-tag';
 import { AppModule } from '../../src/app.module';
-import { generateCreateUserParams, generateCreateMemberParams } from '../index';
+import { generateCreateMemberParams, generateCreateUserParams } from '../index';
 import { CreateUserParams, User, UserRole } from '../../src/user/user.dto';
 import { CreateMemberParams } from '../../src/member/member.dto';
-import { omit, camelCase } from 'lodash';
+import { camelCase, omit } from 'lodash';
 
 describe('Integration graphql resolvers', () => {
   let app: INestApplication;
@@ -36,15 +36,16 @@ describe('Integration graphql resolvers', () => {
   it('Should be able to create a user, a nurse and a member of both', async () => {
     const userParams: CreateUserParams = generateCreateUserParams();
     const primaryCoachId = await mutationCreateUser(userParams);
-    const nurseParams: CreateUserParams = generateCreateUserParams(
+    const nurseAndCoachParams: CreateUserParams = generateCreateUserParams([
       UserRole.nurse,
-    );
-    const nurseId = await mutationCreateUser(nurseParams);
+      UserRole.coach,
+    ]);
+    const nurseId = await mutationCreateUser(nurseAndCoachParams);
 
     const resultUser = await queryGetUser(primaryCoachId);
     compareUsers(resultUser, { ...userParams, id: primaryCoachId });
     const resultNurse = await queryGetUser(nurseId);
-    compareUsers(resultNurse, { ...nurseParams, id: nurseId });
+    compareUsers(resultNurse, { ...nurseAndCoachParams, id: nurseId });
 
     const memberParams = generateCreateMemberParams(primaryCoachId, [nurseId]);
 
@@ -60,10 +61,13 @@ describe('Integration graphql resolvers', () => {
   });
 
   const compareUsers = (resultUser: User, expectedUser: User) => {
-    const resultUserNew = omit(resultUser, 'role');
-    const expectedUserNew = omit(expectedUser, 'role');
+    const resultUserNew = omit(resultUser, 'roles');
+    const expectedUserNew = omit(expectedUser, 'roles');
     expect(resultUserNew).toEqual(expectedUserNew);
-    expect(resultUser.role).toEqual(camelCase(expectedUser.role));
+
+    expect(resultUser.roles).toEqual(
+      expectedUser.roles.map((role) => camelCase(role)),
+    );
   };
 
   const mutationCreateUser = async (
@@ -73,7 +77,7 @@ describe('Integration graphql resolvers', () => {
       variables: {
         createUserParams: {
           ...userParams,
-          role: camelCase(userParams.role),
+          roles: userParams.roles.map((role) => camelCase(role)),
         },
       },
       mutation: gql`
@@ -116,7 +120,7 @@ describe('Integration graphql resolvers', () => {
             id
             name
             email
-            role
+            roles
             photoUrl
           }
         }
@@ -138,14 +142,14 @@ describe('Integration graphql resolvers', () => {
               id
               name
               email
-              role
+              roles
               photoUrl
             }
             users {
               id
               name
               email
-              role
+              roles
               photoUrl
             }
           }

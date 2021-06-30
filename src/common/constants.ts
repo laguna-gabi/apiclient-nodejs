@@ -4,7 +4,7 @@ export const Errors = {
       title: 'Failed to create a user',
       reasons: {
         email: 'email already exists',
-        role: 'user role should be one of the following',
+        role: 'user roles should be any of the following',
       },
     },
   },
