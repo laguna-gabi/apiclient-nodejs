@@ -40,7 +40,7 @@ describe('UserResolver', () => {
     ])('should successfully create a user with role: %p', async (roles) => {
       spyOnServiceInsert.mockImplementationOnce(async () => mockGenerateUser());
 
-      const params = generateCreateUserParams(roles);
+      const params = generateCreateUserParams({ roles });
       await resolver.createUser(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
@@ -48,12 +48,14 @@ describe('UserResolver', () => {
     });
 
     it('should fail to create a user due to invalid user role', async () => {
-      const params = generateCreateUserParams([
-        UserRole.coach,
-        UserRole.nurse,
-        //@ts-ignore
-        'invalid role',
-      ]);
+      const params = generateCreateUserParams({
+        roles: [
+          UserRole.coach,
+          UserRole.nurse,
+          //@ts-ignore
+          'invalid role',
+        ],
+      });
 
       await expect(resolver.createUser(params)).rejects.toThrow(
         `${Errors.user.create.title} : ${Errors.user.create.reasons.role}`,

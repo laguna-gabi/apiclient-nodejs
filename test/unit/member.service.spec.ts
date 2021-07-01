@@ -44,7 +44,7 @@ describe('MemberService', () => {
 
     it('should return member and his/her users for an existing member', async () => {
       const primaryCoachParams = generateCreateUserParams();
-      const nurseParams = generateCreateUserParams([UserRole.nurse]);
+      const nurseParams = generateCreateUserParams({ roles: [UserRole.nurse] });
       const userParams = generateCreateUserParams();
       const primaryCoach = await modelUser.create(primaryCoachParams);
       const nurse = await modelUser.create(nurseParams);

@@ -33,7 +33,9 @@ describe('MemberResolver', () => {
       const member = mockGenerateMember();
       spyOnServiceInsert.mockImplementationOnce(async () => member);
 
-      const params = generateCreateMemberParams(member.primaryCoach.id);
+      const params = generateCreateMemberParams({
+        primaryCoachId: member.primaryCoach.id,
+      });
       await resolver.createMember(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
@@ -44,7 +46,9 @@ describe('MemberResolver', () => {
       const member = mockGenerateMember();
       spyOnServiceInsert.mockImplementationOnce(async () => member);
 
-      const params = generateCreateMemberParams(member.primaryCoach.id);
+      const params = generateCreateMemberParams({
+        primaryCoachId: member.primaryCoach.id,
+      });
       delete params.usersIds;
       await resolver.createMember(params);
 
@@ -57,10 +61,10 @@ describe('MemberResolver', () => {
       spyOnServiceInsert.mockImplementationOnce(async () => member);
 
       const additionalUserId = new ObjectID().toString();
-      const params = generateCreateMemberParams(member.primaryCoach.id, [
-        additionalUserId,
-        member.primaryCoach.id,
-      ]);
+      const params = generateCreateMemberParams({
+        primaryCoachId: member.primaryCoach.id,
+        usersIds: [additionalUserId, member.primaryCoach.id],
+      });
 
       await resolver.createMember(params);
 

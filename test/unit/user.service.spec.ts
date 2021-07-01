@@ -6,11 +6,7 @@ import { ObjectID } from 'bson';
 import { Errors } from '../../src/common';
 import { UserService } from '../../src/user/user.service';
 import { UserModule } from '../../src/user/user.module';
-import {
-  connectToDb,
-  generateCreateMemberParams,
-  generateCreateUserParams,
-} from '../index';
+import { connectToDb, generateCreateUserParams } from '../index';
 
 describe('UserService', () => {
   let service: UserService;
@@ -53,7 +49,7 @@ describe('UserService', () => {
       [[UserRole.nurse]],
       [[UserRole.admin]],
     ])('should successfully insert a user having roles : %p', async (roles) => {
-      const user = generateCreateUserParams(roles);
+      const user = generateCreateUserParams({ roles });
       const { id } = await service.insert(user);
 
       const createdUser = await model.findById(id);

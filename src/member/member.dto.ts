@@ -4,19 +4,34 @@ import * as mongoose from 'mongoose';
 import { Document } from 'mongoose';
 import { User } from '../user/user.dto';
 import { Identifier } from '../common';
+import { IsDate, IsPhoneNumber, Length } from 'class-validator';
+import * as config from 'config';
+
+const validatorsConfig = config.get('graphql.validators');
 
 /***********************************************************************************************************************
  ******************************************** Input params for gql methods *********************************************
  **********************************************************************************************************************/
 @InputType()
 export class CreateMemberParams {
-  @Field()
+  @Field({
+    description:
+      `phone number is invalid. please make sure you've added the` +
+      `country code with (+) in the beginning. ` +
+      `For example: +41 311111111, +41 (0)31 633 60 01, +49 9072 1111, etc..`,
+  })
+  @IsPhoneNumber()
   phoneNumber: string;
 
   @Field()
+  @Length(
+    validatorsConfig.get('name.minLength'),
+    validatorsConfig.get('name.maxLength'),
+  )
   name: string;
 
   @Field(() => Date)
+  @IsDate()
   dateOfBirth: Date;
 
   @Field(() => String)
