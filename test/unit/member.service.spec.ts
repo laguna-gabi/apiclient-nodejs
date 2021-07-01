@@ -22,6 +22,7 @@ describe('MemberService', () => {
   let service: MemberService;
   let model: Model<typeof MemberDto>;
   let modelUser: Model<typeof UserDto>;
+  const primaryCoachId = new ObjectID().toString();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -51,10 +52,10 @@ describe('MemberService', () => {
       const user = await modelUser.create(userParams);
       await modelUser.create(generateCreateUserParams()); //Another user, to check if it doesn't return in member
 
-      const member: CreateMemberParams = generateCreateMemberParams(
-        primaryCoach._id,
-        [user._id, nurse._id],
-      );
+      const member: CreateMemberParams = generateCreateMemberParams({
+        primaryCoachId: primaryCoach._id,
+        usersIds: [user._id, nurse._id],
+      });
 
       const { _id } = await model.create({
         phoneNumber: member.phoneNumber,
@@ -88,7 +89,9 @@ describe('MemberService', () => {
       const primaryCoachParams = generateCreateUserParams();
       const primaryCoach = await modelUser.create(primaryCoachParams);
 
-      const memberParams = generateCreateMemberParams(primaryCoach._id);
+      const memberParams = generateCreateMemberParams({
+        primaryCoachId: primaryCoach._id,
+      });
       const result = await service.insert(memberParams);
 
       expect(result.id).not.toBeUndefined();
@@ -112,16 +115,16 @@ describe('MemberService', () => {
     });
 
     it('should insert a member even with primaryCoach not exists', async () => {
-      const member: CreateMemberParams = generateCreateMemberParams(
-        new ObjectID().toString(),
-      );
+      const member: CreateMemberParams = generateCreateMemberParams({
+        primaryCoachId,
+      });
 
       const result = await service.insert(member);
       expect(result.id).not.toBeUndefined();
     });
 
     it('should fail to insert an already existing member', async () => {
-      const member = generateCreateMemberParams(new ObjectID().toString());
+      const member = generateCreateMemberParams({ primaryCoachId });
       await service.insert(member);
 
       await expect(service.insert(member)).rejects.toThrow(
