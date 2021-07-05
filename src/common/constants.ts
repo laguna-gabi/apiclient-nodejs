@@ -24,3 +24,7 @@ export const Errors = {
     },
   },
 };
+
+export const DbErrors = {
+  duplicateKey: 11000,
+};
