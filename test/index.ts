@@ -72,8 +72,8 @@ const generateEmail = () => {
 const generatePhoneNumber = () => {
   const random = () => Math.floor(Math.random() * 9) + 1;
 
-  let phoneNumber = '+41';
-  for (let i = 0; i < 9; i++) {
+  let phoneNumber = '+414';
+  for (let i = 0; i < 8; i++) {
     phoneNumber += random().toString();
   }
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Errors, Identifier } from '../common';
+import { DbErrors, Errors, Identifier } from '../common';
 import { CreateMemberParams, Member, MemberDocument } from './member.dto';
 
 @Injectable()
@@ -25,8 +25,8 @@ export class MemberService {
       return { id: result._id };
     } catch (ex) {
       throw new Error(
-        ex.code === 11000
-          ? `${Errors.member.create.title} : ${Errors.member.create.reasons.phoneNumber}`
+        ex.code === DbErrors.duplicateKey
+          ? `${Errors.member.create.title} : ${Errors.member.create.reasons.uniquePhoneNumber}`
           : ex,
       );
     }
