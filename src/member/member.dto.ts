@@ -3,7 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { Document } from 'mongoose';
 import { User } from '../user/user.dto';
-import { Identifier } from '../common';
+import { Errors, Identifier, validPhoneNumbersExamples } from '../common';
 import { IsDate, IsPhoneNumber, Length } from 'class-validator';
 import * as config from 'config';
 
@@ -14,13 +14,10 @@ const validatorsConfig = config.get('graphql.validators');
  **********************************************************************************************************************/
 @InputType()
 export class CreateMemberParams {
-  @Field({
-    description:
-      `phone number is invalid. please make sure you've added the` +
-      `country code with (+) in the beginning. ` +
-      `For example: +41 311111111, +41 (0)31 633 60 01, +49 9072 1111, etc..`,
+  @Field({ description: validPhoneNumbersExamples })
+  @IsPhoneNumber(undefined, {
+    message: Errors.member.create.reasons.phoneNumberValidation,
   })
-  @IsPhoneNumber()
   phoneNumber: string;
 
   @Field()

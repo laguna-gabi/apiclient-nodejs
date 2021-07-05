@@ -128,7 +128,7 @@ describe('MemberService', () => {
       await service.insert(member);
 
       await expect(service.insert(member)).rejects.toThrow(
-        `${Errors.member.create.title} : ${Errors.member.create.reasons.phoneNumber}`,
+        `${Errors.member.create.title} : ${Errors.member.create.reasons.uniquePhoneNumber}`,
       );
     });
   });

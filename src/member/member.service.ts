@@ -26,7 +26,7 @@ export class MemberService {
     } catch (ex) {
       throw new Error(
         ex.code === 11000
-          ? `${Errors.member.create.title} : ${Errors.member.create.reasons.phoneNumber}`
+          ? `${Errors.member.create.title} : ${Errors.member.create.reasons.uniquePhoneNumber}`
           : ex,
       );
     }

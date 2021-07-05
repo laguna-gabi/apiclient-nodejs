@@ -12,6 +12,7 @@ import * as config from 'config';
 import * as faker from 'faker';
 import { CreateMemberParams } from '../../src/member/member.dto';
 import { ObjectID } from 'bson';
+import { Errors } from '../../src/common';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -26,7 +27,7 @@ describe('Integration graphql resolvers', () => {
   const minError = `name must be longer than or equal to ${minLength} characters`;
   const maxError = `name must be shorter than or equal to ${maxLength} characters`;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -191,7 +192,7 @@ describe('Integration graphql resolvers', () => {
       /* eslint-disable max-len */
       test.each`
         field            | input                                                  | errors
-        ${'phoneNumber'} | ${{ primaryCoachId, phoneNumber: '+410' }}             | ${['phoneNumber must be a valid phone number']}
+        ${'phoneNumber'} | ${{ primaryCoachId, phoneNumber: '+410' }}             | ${[Errors.member.create.reasons.phoneNumberValidation]}
         ${'dateOfBirth'} | ${{ primaryCoachId, dateOfBirth: faker.lorem.word() }} | ${['dateOfBirth must be a Date instance']}
       `(
         /* eslint-enable max-len */
