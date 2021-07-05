@@ -1,0 +1,96 @@
+import { UserResolver } from '../../src/user/user.resolver';
+import { UserService } from '../../src/user/user.service';
+import { Test, TestingModule } from '@nestjs/testing';
+import { UserModule } from '../../src/user/user.module';
+import { generateCreateUserParams, mockGenerateUser } from '../../test';
+import { DbModule } from '../../src/db/db.module';
+import { Errors } from '../../src/common';
+import { ObjectID } from 'bson';
+import { UserRole } from '../../src/user/user.dto';
+
+describe('UserResolver', () => {
+  let resolver: UserResolver;
+  let service: UserService;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      imports: [DbModule, UserModule],
+    }).compile();
+
+    resolver = module.get<UserResolver>(UserResolver);
+    service = module.get<UserService>(UserService);
+  });
+
+  describe('createUser', () => {
+    let spyOnServiceInsert;
+    beforeEach(() => {
+      spyOnServiceInsert = jest.spyOn(service, 'insert');
+    });
+
+    afterEach(() => {
+      spyOnServiceInsert.mockReset();
+    });
+
+    test.each([
+      [Object.values(UserRole)],
+      [[UserRole.coach, UserRole.nurse]],
+      [[UserRole.coach]],
+      [[UserRole.nurse]],
+      [[UserRole.admin]],
+    ])('should successfully create a user with role: %p', async (roles) => {
+      spyOnServiceInsert.mockImplementationOnce(async () => mockGenerateUser());
+
+      const params = generateCreateUserParams({ roles });
+      await resolver.createUser(params);
+
+      expect(spyOnServiceInsert).toBeCalledTimes(1);
+      expect(spyOnServiceInsert).toBeCalledWith(params);
+    });
+
+    it('should fail to create a user due to invalid user role', async () => {
+      const params = generateCreateUserParams({
+        roles: [
+          UserRole.coach,
+          UserRole.nurse,
+          //@ts-ignore
+          'invalid role',
+        ],
+      });
+
+      await expect(resolver.createUser(params)).rejects.toThrow(
+        `${Errors.user.create.title} : ${Errors.user.create.reasons.role}`,
+      );
+
+      expect(spyOnServiceInsert).not.toBeCalled();
+    });
+  });
+
+  describe('getUser', () => {
+    let spyOnServiceGet;
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'get');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+    });
+
+    it('should get a user for a given id', async () => {
+      const user = mockGenerateUser();
+      spyOnServiceGet.mockImplementationOnce(async () => user);
+
+      const result = await resolver.getUser(user.id);
+
+      expect(result).toEqual(user);
+    });
+
+    it('should fetch empty on a non existing user', async () => {
+      spyOnServiceGet.mockImplementationOnce(async () => null);
+
+      const id = new ObjectID();
+      const result = await resolver.getUser(id.toString());
+
+      expect(result).toBeNull();
+    });
+  });
+});

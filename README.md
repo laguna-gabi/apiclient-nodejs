@@ -39,14 +39,19 @@ $ yarn start:prod
 # unit tests
 $ yarn test
 
-# e2e tests
-$ yarn test:e2e
+# integration tests
+$ yarn test:integration
 
 # test coverage
 $ yarn test:cov
 ```
 
 ## Troubleshooting
+### How to view the db locally?
+1. Download and install [robomongo](https://robomongo.org/download) or any other mongodb visualizer you like
+2. Set up local connection to : `mongodb://localhost:27017/laguna`, as defined on [db.module.ts](./src/db/db.module.ts)
+! there's no need for authentication when connecting locally to mongodb
+
 ### Error at connection to mongo locally
 ```text
 [MongooseModule] Unable to connect to the database. Retrying (1)

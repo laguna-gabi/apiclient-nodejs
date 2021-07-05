@@ -1,0 +1,13 @@
+{
+  "db": {
+    "connection": "mongodb://localhost:27017/laguna"
+  },
+  "graphql": {
+    "validators": {
+      "name": {
+        "minLength": 3,
+        "maxLength": 50
+      }
+    }
+  }
+}
