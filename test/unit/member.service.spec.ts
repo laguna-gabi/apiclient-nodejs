@@ -8,14 +8,14 @@ import {
   generateCreateUserParams,
   generateCreateMemberParams,
 } from '../index';
-import { MemberService } from '../../src/member/member.service';
 import {
+  MemberService,
+  MemberModule,
   CreateMemberParams,
   Member,
   MemberDto,
-} from '../../src/member/member.dto';
-import { MemberModule } from '../../src/member/member.module';
-import { User, UserRole, UserDto } from '../../src/user/user.dto';
+} from '../../src/member';
+import { User, UserRole, UserDto } from '../../src/user';
 import { Errors } from '../../src/common';
 
 describe('MemberService', () => {

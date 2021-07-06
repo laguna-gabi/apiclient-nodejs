@@ -1,11 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
 import * as mongoose from 'mongoose';
-import { User, UserRole, UserDto } from '../../src/user/user.dto';
+import {
+  User,
+  UserRole,
+  UserDto,
+  UserService,
+  UserModule,
+} from '../../src/user';
 import { ObjectID } from 'bson';
 import { Errors } from '../../src/common';
-import { UserService } from '../../src/user/user.service';
-import { UserModule } from '../../src/user/user.module';
 import { connectToDb, generateCreateUserParams } from '../index';
 
 describe('UserService', () => {

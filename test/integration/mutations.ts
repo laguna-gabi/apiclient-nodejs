@@ -1,7 +1,7 @@
-import { CreateUserParams } from '../../src/user/user.dto';
 import { camelCase } from 'lodash';
 import gql from 'graphql-tag';
-import { CreateMemberParams } from '../../src/member/member.dto';
+import { CreateUserParams } from '../../src/user';
+import { CreateMemberParams } from '../../src/member';
 import { ApolloServerTestClient } from 'apollo-server-testing';
 
 export class Mutations {

@@ -1,8 +1,7 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { UserService } from './user.service';
 import { camelCase, difference } from 'lodash';
 import { Errors } from '../common';
-import { User, UserRole, CreateUserParams } from './user.dto';
+import { User, UserRole, CreateUserParams, UserService } from '.';
 
 @Resolver(() => User)
 export class UserResolver {

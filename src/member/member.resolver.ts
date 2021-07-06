@@ -1,6 +1,5 @@
 import { Resolver, Query, Args, Mutation } from '@nestjs/graphql';
-import { MemberService } from './member.service';
-import { CreateMemberParams, Member } from './member.dto';
+import { MemberService, CreateMemberParams, Member } from '.';
 import { Identifier } from '../common';
 import { camelCase, remove } from 'lodash';
 

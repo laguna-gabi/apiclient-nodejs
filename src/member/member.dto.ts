@@ -1,8 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
-import { Document } from 'mongoose';
-import { User } from '../user/user.dto';
+import { User } from '../user';
 import { Errors, Identifier, validPhoneNumbersExamples } from '../common';
 import { IsDate, IsPhoneNumber, Length } from 'class-validator';
 import * as config from 'config';
@@ -71,5 +70,5 @@ export class Member extends Identifier {
 /***********************************************************************************************************************
  ************************************************** Exported Schemas ***************************************************
  **********************************************************************************************************************/
-export type MemberDocument = Member & Document;
+export type MemberDocument = Member & mongoose.Document;
 export const MemberDto = SchemaFactory.createForClass(Member);
