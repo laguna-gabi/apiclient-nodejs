@@ -4,13 +4,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { createTestClient } from 'apollo-server-testing';
 import { AppModule } from '../../src/app.module';
 import { generateCreateMemberParams, generateCreateUserParams } from '../index';
-import { CreateUserParams, User, UserRole } from '../../src/user/user.dto';
+import { CreateUserParams, User, UserRole } from '../../src/user';
 import { camelCase, omit } from 'lodash';
 import { Mutations } from './mutations';
 import { Queries } from './queries';
 import * as config from 'config';
 import * as faker from 'faker';
-import { CreateMemberParams } from '../../src/member/member.dto';
+import { CreateMemberParams } from '../../src/member';
 import { ObjectID } from 'bson';
 import { Errors } from '../../src/common';
 

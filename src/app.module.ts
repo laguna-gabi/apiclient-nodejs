@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { DbModule } from './db/db.module';
-import { MemberModule } from './member/member.module';
+import { MemberModule } from './member';
 import { GraphQLModule } from '@nestjs/graphql';
-import { UserModule } from './user/user.module';
+import { UserModule } from './user';
 import { GraphQLError, GraphQLFormattedError } from 'graphql';
 
 @Module({

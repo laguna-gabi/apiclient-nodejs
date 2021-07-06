@@ -1,12 +1,14 @@
-import { UserResolver } from '../../src/user/user.resolver';
-import { UserService } from '../../src/user/user.service';
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserModule } from '../../src/user/user.module';
 import { generateCreateUserParams, mockGenerateUser } from '../../test';
 import { DbModule } from '../../src/db/db.module';
 import { Errors } from '../../src/common';
 import { ObjectID } from 'bson';
-import { UserRole } from '../../src/user/user.dto';
+import {
+  UserModule,
+  UserResolver,
+  UserRole,
+  UserService,
+} from '../../src/user';
 
 describe('UserResolver', () => {
   let resolver: UserResolver;

@@ -1,9 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockGenerateMember, generateCreateMemberParams } from '../../test';
 import { DbModule } from '../../src/db/db.module';
-import { MemberResolver } from '../../src/member/member.resolver';
-import { MemberService } from '../../src/member/member.service';
-import { MemberModule } from '../../src/member/member.module';
+import { MemberResolver, MemberService, MemberModule } from '../../src/member';
 import { ObjectID } from 'bson';
 
 describe('MemberResolver', () => {

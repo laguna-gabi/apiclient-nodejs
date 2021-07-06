@@ -1,9 +1,9 @@
-import { CreateUserParams, User, UserRole } from '../src/user/user.dto';
 import * as faker from 'faker';
 import * as mongoose from 'mongoose';
 import * as config from 'config';
 import { ObjectID } from 'bson';
-import { CreateMemberParams, Member } from '../src/member/member.dto';
+import { CreateUserParams, User, UserRole } from '../src/user';
+import { CreateMemberParams, Member } from '../src/member';
 
 export const generateCreateUserParams = ({
   roles = [UserRole.coach],
