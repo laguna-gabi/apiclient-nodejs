@@ -1,12 +1,9 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { camelCase, difference } from 'lodash';
-import { Errors } from '../common';
-import { User, UserRole, CreateUserParams, UserService } from '.';
+import { camelCase } from 'lodash';
+import { User, CreateUserParams, UserService } from '.';
 
 @Resolver(() => User)
 export class UserResolver {
-  private readonly allowedValues = Object.values(UserRole);
-
   constructor(private readonly userService: UserService) {}
 
   @Mutation(() => User)
@@ -14,14 +11,6 @@ export class UserResolver {
     @Args(camelCase(CreateUserParams.name))
     createUserParams: CreateUserParams,
   ) {
-    if (difference(createUserParams.roles, this.allowedValues).length > 0) {
-      throw new Error(
-        `${Errors.user.create.title} : ${
-          Errors.user.create.reasons.role
-        }${Object.values(UserRole)}`,
-      );
-    }
-
     return this.userService.insert(createUserParams);
   }
 

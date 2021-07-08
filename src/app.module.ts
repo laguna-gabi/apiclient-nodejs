@@ -3,7 +3,10 @@ import { DbModule } from './db/db.module';
 import { MemberModule } from './member';
 import { GraphQLModule } from '@nestjs/graphql';
 import { UserModule } from './user';
-import { GraphQLError, GraphQLFormattedError } from 'graphql';
+import { GraphQLError } from 'graphql';
+import { Errors } from './common';
+
+const badRequestException = 'Bad Request Exception';
 
 @Module({
   imports: [
@@ -13,13 +16,20 @@ import { GraphQLError, GraphQLFormattedError } from 'graphql';
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql',
       formatError: (error: GraphQLError) => {
-        const graphQLFormattedError: GraphQLFormattedError = {
-          message:
-            error?.message && error?.message !== 'Bad Request Exception'
-              ? error?.message
-              : error?.extensions.exception.response?.message,
+        const handleErrorMessage = (message: string) => {
+          for (const key of Errors.keys()) {
+            if (Errors.get(key) === message) {
+              return { code: key, message };
+            }
+          }
+          return { code: -1, message };
         };
-        return graphQLFormattedError;
+
+        return error?.message && error?.message !== badRequestException
+          ? handleErrorMessage(error?.message)
+          : error?.extensions.exception.response?.message.map((error) =>
+              handleErrorMessage(error),
+            );
       },
     }),
   ],

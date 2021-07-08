@@ -1,20 +1,30 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { mockGenerateMember, generateCreateMemberParams } from '../../test';
+import {
+  mockGenerateMember,
+  generateCreateMemberParams,
+  dbDisconnect,
+} from '../../test';
 import { DbModule } from '../../src/db/db.module';
 import { MemberResolver, MemberService, MemberModule } from '../../src/member';
 import { ObjectID } from 'bson';
 
 describe('MemberResolver', () => {
+  let module: TestingModule;
   let resolver: MemberResolver;
   let service: MemberService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    module = await Test.createTestingModule({
       imports: [DbModule, MemberModule],
     }).compile();
 
     resolver = module.get<MemberResolver>(MemberResolver);
     service = module.get<MemberService>(MemberService);
+  });
+
+  afterAll(async () => {
+    await module.close();
+    await dbDisconnect();
   });
 
   describe('createMember', () => {

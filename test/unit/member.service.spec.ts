@@ -4,9 +4,10 @@ import * as mongoose from 'mongoose';
 import { Model, Types } from 'mongoose';
 import { ObjectID } from 'bson';
 import {
-  connectToDb,
+  dbConnect,
   generateCreateUserParams,
   generateCreateMemberParams,
+  dbDisconnect,
 } from '../index';
 import {
   MemberService,
@@ -15,17 +16,18 @@ import {
   Member,
   MemberDto,
 } from '../../src/member';
+import { Errors, ErrorType } from '../../src/common';
 import { User, UserRole, UserDto } from '../../src/user';
-import { Errors } from '../../src/common';
 
 describe('MemberService', () => {
+  let module: TestingModule;
   let service: MemberService;
   let model: Model<typeof MemberDto>;
   let modelUser: Model<typeof UserDto>;
   const primaryCoachId = new ObjectID().toString();
 
   beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [DbModule, MemberModule],
     }).compile();
 
@@ -33,7 +35,12 @@ describe('MemberService', () => {
 
     model = mongoose.model(Member.name, MemberDto);
     modelUser = mongoose.model(User.name, UserDto);
-    await connectToDb();
+    await dbConnect();
+  });
+
+  afterAll(async () => {
+    await module.close();
+    await dbDisconnect();
   });
 
   describe('get', () => {
@@ -128,7 +135,7 @@ describe('MemberService', () => {
       await service.insert(member);
 
       await expect(service.insert(member)).rejects.toThrow(
-        `${Errors.member.create.title} : ${Errors.member.create.reasons.uniquePhoneNumber}`,
+        Errors.get(ErrorType.memberPhoneAlreadyExists),
       );
     });
   });

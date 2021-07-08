@@ -2,7 +2,12 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { User } from '../user';
-import { Errors, Identifier, validPhoneNumbersExamples } from '../common';
+import {
+  Errors,
+  ErrorType,
+  Identifier,
+  validPhoneNumbersExamples,
+} from '../common';
 import { IsDate, IsPhoneNumber, Length } from 'class-validator';
 import * as config from 'config';
 
@@ -15,7 +20,7 @@ const validatorsConfig = config.get('graphql.validators');
 export class CreateMemberParams {
   @Field({ description: validPhoneNumbersExamples })
   @IsPhoneNumber(undefined, {
-    message: Errors.member.create.reasons.phoneNumberValidation,
+    message: Errors.get(ErrorType.memberPhoneNumber),
   })
   phoneNumber: string;
 
@@ -23,11 +28,12 @@ export class CreateMemberParams {
   @Length(
     validatorsConfig.get('name.minLength'),
     validatorsConfig.get('name.maxLength'),
+    { message: Errors.get(ErrorType.memberMinMaxLength) },
   )
   name: string;
 
   @Field(() => Date)
-  @IsDate()
+  @IsDate({ message: Errors.get(ErrorType.memberDate) })
   dateOfBirth: Date;
 
   @Field(() => String)

@@ -9,15 +9,16 @@ import {
   UserModule,
 } from '../../src/user';
 import { ObjectID } from 'bson';
-import { Errors } from '../../src/common';
-import { connectToDb, generateCreateUserParams } from '../index';
+import { dbConnect, dbDisconnect, generateCreateUserParams } from '../index';
+import { Errors, ErrorType } from '../../src/common';
 
 describe('UserService', () => {
+  let module: TestingModule;
   let service: UserService;
   let model: mongoose.Model<typeof UserDto>;
 
   beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [DbModule, UserModule],
     }).compile();
 
@@ -25,7 +26,12 @@ describe('UserService', () => {
 
     model = mongoose.model(User.name, UserDto);
 
-    await connectToDb();
+    await dbConnect();
+  });
+
+  afterAll(async () => {
+    await module.close();
+    await dbDisconnect();
   });
 
   describe('get', () => {
@@ -77,7 +83,7 @@ describe('UserService', () => {
       await service.insert(user);
 
       await expect(service.insert(user)).rejects.toThrow(
-        `${Errors.user.create.title} : ${Errors.user.create.reasons.email}`,
+        Errors.get(ErrorType.userEmailAlreadyExists),
       );
     });
   });

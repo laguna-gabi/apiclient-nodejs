@@ -6,8 +6,8 @@ import {
 } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
-import { Identifier } from '../common';
-import { IsEmail, IsOptional, IsUrl, Length } from 'class-validator';
+import { Errors, Identifier, ErrorType } from '../common';
+import { IsEmail, IsUrl, Length } from 'class-validator';
 import * as config from 'config';
 
 export enum UserRole {
@@ -18,6 +18,7 @@ export enum UserRole {
 registerEnumType(UserRole, { name: 'UserRole' });
 
 const validatorsConfig = config.get('graphql.validators');
+
 /***********************************************************************************************************************
  ******************************************** Input params for gql methods *********************************************
  **********************************************************************************************************************/
@@ -27,18 +28,21 @@ export class CreateUserParams {
   @Length(
     validatorsConfig.get('name.minLength'),
     validatorsConfig.get('name.maxLength'),
+    { message: Errors.get(ErrorType.userMinMaxLength) },
   )
   name: string;
 
   @Field()
-  @IsEmail()
+  @IsEmail(undefined, {
+    message: Errors.get(ErrorType.userEmailFormat),
+  })
   email: string;
 
   @Field(() => [UserRole])
   roles: UserRole[];
 
   @Field()
-  @IsUrl()
+  @IsUrl(undefined, { message: Errors.get(ErrorType.userPhotoUrlFormat) })
   photoUrl: string;
 }
 

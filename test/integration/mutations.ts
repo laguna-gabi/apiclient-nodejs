@@ -70,9 +70,13 @@ export class Mutations {
     missingFieldError,
   }): boolean => {
     if (invalidFieldsErrors) {
-      expect(invalidFieldsErrors.sort()).toEqual(result.errors[0].message);
+      for (let i = 0; i < invalidFieldsErrors.length; i++) {
+        expect(invalidFieldsErrors[i]).toEqual(result.errors[0][i].message);
+        expect(result.errors[0][i].code).not.toEqual(-1);
+      }
     } else if (missingFieldError) {
       expect(result.errors[0].message).toMatch(missingFieldError);
+      expect(result.errors[0].code).toEqual(-1);
     } else {
       return false;
     }

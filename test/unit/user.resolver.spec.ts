@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { generateCreateUserParams, mockGenerateUser } from '../../test';
+import {
+  dbDisconnect,
+  generateCreateUserParams,
+  mockGenerateUser,
+} from '../../test';
 import { DbModule } from '../../src/db/db.module';
-import { Errors } from '../../src/common';
 import { ObjectID } from 'bson';
 import {
   UserModule,
@@ -11,16 +14,22 @@ import {
 } from '../../src/user';
 
 describe('UserResolver', () => {
+  let module: TestingModule;
   let resolver: UserResolver;
   let service: UserService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    module = await Test.createTestingModule({
       imports: [DbModule, UserModule],
     }).compile();
 
     resolver = module.get<UserResolver>(UserResolver);
     service = module.get<UserService>(UserService);
+  });
+
+  afterAll(async () => {
+    await module.close();
+    await dbDisconnect();
   });
 
   describe('createUser', () => {
@@ -47,23 +56,6 @@ describe('UserResolver', () => {
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith(params);
-    });
-
-    it('should fail to create a user due to invalid user role', async () => {
-      const params = generateCreateUserParams({
-        roles: [
-          UserRole.coach,
-          UserRole.nurse,
-          //@ts-ignore
-          'invalid role',
-        ],
-      });
-
-      await expect(resolver.createUser(params)).rejects.toThrow(
-        `${Errors.user.create.title} : ${Errors.user.create.reasons.role}`,
-      );
-
-      expect(spyOnServiceInsert).not.toBeCalled();
     });
   });
 

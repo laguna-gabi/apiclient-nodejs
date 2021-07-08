@@ -80,8 +80,12 @@ const generatePhoneNumber = () => {
   return phoneNumber;
 };
 
-export const connectToDb = async () => {
+export const dbConnect = async () => {
   await mongoose.connect(config.get('db.connection'), {
     useNewUrlParser: true,
   });
+};
+
+export const dbDisconnect = async () => {
+  await mongoose.disconnect();
 };

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument, CreateUserParams } from '.';
-import { DbErrors, Errors, Identifier } from '../common';
+import { DbErrors, Errors, ErrorType, Identifier } from '../common';
 
 @Injectable()
 export class UserService {
@@ -22,7 +22,7 @@ export class UserService {
     } catch (ex) {
       throw new Error(
         ex.code === DbErrors.duplicateKey
-          ? `${Errors.user.create.title} : ${Errors.user.create.reasons.email}`
+          ? Errors.get(ErrorType.userEmailAlreadyExists)
           : ex,
       );
     }

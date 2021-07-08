@@ -12,7 +12,7 @@ import * as config from 'config';
 import * as faker from 'faker';
 import { CreateMemberParams } from '../../src/member';
 import { ObjectID } from 'bson';
-import { Errors } from '../../src/common';
+import { Errors, ErrorType } from '../../src/common';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -24,8 +24,6 @@ describe('Integration graphql resolvers', () => {
   const primaryCoachId = new ObjectID().toString();
   const minLength = validatorsConfig.get('name.minLength') as number;
   const maxLength = validatorsConfig.get('name.maxLength') as number;
-  const minError = `name must be longer than or equal to ${minLength} characters`;
-  const maxError = `name must be shorter than or equal to ${maxLength} characters`;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -112,8 +110,8 @@ describe('Integration graphql resolvers', () => {
 
       test.each`
         length           | errorString | error
-        ${minLength - 1} | ${'short'}  | ${minError}
-        ${maxLength + 1} | ${'long'}   | ${maxError}
+        ${minLength - 1} | ${'short'}  | ${[Errors.get(ErrorType.userMinMaxLength)]}
+        ${maxLength + 1} | ${'long'}   | ${[Errors.get(ErrorType.userMinMaxLength)]}
       `(
         `should fail to create a user since name is too $errorString`,
         async (params) => {
@@ -123,7 +121,7 @@ describe('Integration graphql resolvers', () => {
           });
           await mutations.createUser({
             userParams,
-            invalidFieldsErrors: [params.error],
+            invalidFieldsErrors: params.error,
           });
         },
       );
@@ -131,9 +129,9 @@ describe('Integration graphql resolvers', () => {
       /* eslint-disable max-len */
       test.each`
         field                 | input                                                          | errors
-        ${'email'}            | ${{ email: faker.lorem.word() }}                               | ${['email must be an email']}
-        ${'photoUrl'}         | ${{ photoUrl: faker.lorem.word() }}                            | ${['photoUrl must be an URL address']}
-        ${'email & photoUrl'} | ${{ email: faker.lorem.word(), photoUrl: faker.lorem.word() }} | ${['photoUrl must be an URL address', 'email must be an email']}
+        ${'email'}            | ${{ email: faker.lorem.word() }}                               | ${[Errors.get(ErrorType.userEmailFormat)]}
+        ${'photoUrl'}         | ${{ photoUrl: faker.lorem.word() }}                            | ${[Errors.get(ErrorType.userPhotoUrlFormat)]}
+        ${'email & photoUrl'} | ${{ email: faker.lorem.word(), photoUrl: faker.lorem.word() }} | ${[Errors.get(ErrorType.userEmailFormat), Errors.get(ErrorType.userPhotoUrlFormat)]}
       `(
         /* eslint-enable max-len */
         `should fail to create a user since $field is not valid`,
@@ -172,8 +170,8 @@ describe('Integration graphql resolvers', () => {
 
       test.each`
         length           | errorString | error
-        ${minLength - 1} | ${'short'}  | ${minError}
-        ${maxLength + 1} | ${'long'}   | ${maxError}
+        ${minLength - 1} | ${'short'}  | ${[Errors.get(ErrorType.memberMinMaxLength)]}
+        ${maxLength + 1} | ${'long'}   | ${[Errors.get(ErrorType.memberMinMaxLength)]}
       `(
         `should fail to create a member since name is too $errorString`,
         async (params) => {
@@ -184,7 +182,7 @@ describe('Integration graphql resolvers', () => {
           });
           await mutations.createMember({
             memberParams,
-            invalidFieldsErrors: [params.error],
+            invalidFieldsErrors: params.error,
           });
         },
       );
@@ -192,8 +190,8 @@ describe('Integration graphql resolvers', () => {
       /* eslint-disable max-len */
       test.each`
         field            | input                                                  | errors
-        ${'phoneNumber'} | ${{ primaryCoachId, phoneNumber: '+410' }}             | ${[Errors.member.create.reasons.phoneNumberValidation]}
-        ${'dateOfBirth'} | ${{ primaryCoachId, dateOfBirth: faker.lorem.word() }} | ${['dateOfBirth must be a Date instance']}
+        ${'phoneNumber'} | ${{ primaryCoachId, phoneNumber: '+410' }}             | ${[Errors.get(ErrorType.memberPhoneNumber)]}
+        ${'dateOfBirth'} | ${{ primaryCoachId, dateOfBirth: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDate)]}
       `(
         /* eslint-enable max-len */
         `should fail to create a member since $field is not valid`,
