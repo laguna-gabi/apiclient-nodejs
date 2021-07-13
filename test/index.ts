@@ -4,6 +4,12 @@ import * as config from 'config';
 import { ObjectID } from 'bson';
 import { CreateUserParams, User, UserRole } from '../src/user';
 import { CreateMemberParams, Member } from '../src/member';
+import {
+  AppointmentMethod,
+  CreateAppointmentParams,
+  ScheduleAppointmentParams,
+  NoShowParams,
+} from '../src/appointment';
 
 export const generateCreateUserParams = ({
   roles = [UserRole.coach],
@@ -63,6 +69,46 @@ export const mockGenerateMember = (): Member => {
     primaryCoach: mockGenerateUser(),
     users: [],
   };
+};
+
+export const generateCreateAppointmentParams = ({
+  userId = new ObjectID().toString(),
+  memberId = new ObjectID().toString(),
+  notBefore = faker.date.future(1),
+}: {
+  userId?: string;
+  memberId?: string;
+  notBefore?: Date;
+} = {}): CreateAppointmentParams => {
+  return { userId, memberId, notBefore };
+};
+
+export const generateScheduleAppointmentParams = ({
+  id = new mongoose.Types.ObjectId().toString(),
+  method = AppointmentMethod.chat,
+  start = faker.date.future(1),
+  end,
+}: {
+  id?: string;
+  method?: AppointmentMethod;
+  start?: Date;
+  end?: Date;
+} = {}): ScheduleAppointmentParams => {
+  const endNew = new Date(start);
+  endNew.setHours(endNew.getHours() + 2);
+  return { id, method, start, end: end || endNew };
+};
+
+export const generateNoShowAppointmentParams = ({
+  id = new mongoose.Types.ObjectId().toString(),
+  noShow = true,
+  reason = faker.lorem.sentence(),
+}: {
+  id?: string;
+  noShow?: boolean;
+  reason?: string;
+} = {}): NoShowParams => {
+  return { id, noShow, reason };
 };
 
 const generateEmail = () => {

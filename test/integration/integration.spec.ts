@@ -3,16 +3,29 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { Test, TestingModule } from '@nestjs/testing';
 import { createTestClient } from 'apollo-server-testing';
 import { AppModule } from '../../src/app.module';
-import { generateCreateMemberParams, generateCreateUserParams } from '../index';
+import {
+  generateCreateAppointmentParams,
+  generateCreateMemberParams,
+  generateCreateUserParams,
+  generateScheduleAppointmentParams,
+  generateNoShowAppointmentParams,
+} from '../index';
 import { CreateUserParams, User, UserRole } from '../../src/user';
 import { camelCase, omit } from 'lodash';
 import { Mutations } from './mutations';
 import { Queries } from './queries';
 import * as config from 'config';
 import * as faker from 'faker';
-import { CreateMemberParams } from '../../src/member';
+import { CreateMemberParams, Member } from '../../src/member';
 import { ObjectID } from 'bson';
+import {
+  Appointment,
+  AppointmentMethod,
+  AppointmentStatus,
+  CreateAppointmentParams,
+} from '../../src/appointment';
 import { Errors, ErrorType } from '../../src/common';
+import { Types } from 'mongoose';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -46,47 +59,30 @@ describe('Integration graphql resolvers', () => {
     await app.close();
   });
 
-  it('should successfully be able to complete a flow : create a user, a nurse and a member of both', async () => {
-    const userParams: CreateUserParams = generateCreateUserParams();
-    const primaryCoachId = await mutations.createUser({ userParams });
-    const nurseAndCoachParams: CreateUserParams = generateCreateUserParams({
-      roles: [UserRole.nurse, UserRole.coach],
+  it('should be able to call all gql mutations and queries', async () => {
+    /**
+     * 1. Create a user with a single role - coach
+     * 2. Create a user with 2 roles - coach and nurse
+     * 3. Create a member with the 2 users above, the 1st user is the primaryCoach, and the 2nd user is in users list
+     * 4. Create an appointment between the 1st coach and the member
+     * 5. Schedule the appointment to a 1 hour meeting
+     */
+    const resultCoach = await createAndValidateUser();
+    const resultNurse = await createAndValidateUser([
+      UserRole.nurse,
+      UserRole.coach,
+    ]);
+
+    const resultMember = await createAndValidateMember({
+      primaryCoach: resultCoach,
+      coaches: [resultNurse],
     });
-    const nurseId = await mutations.createUser({
-      userParams: nurseAndCoachParams,
+
+    await createAndValidateAppointment({
+      userId: resultCoach.id,
+      member: resultMember,
     });
-
-    const resultUser = await queries.getUser(primaryCoachId);
-    compareUsers(resultUser, { ...userParams, id: primaryCoachId });
-    const resultNurse = await queries.getUser(nurseId);
-    compareUsers(resultNurse, { ...nurseAndCoachParams, id: nurseId });
-
-    const memberParams = generateCreateMemberParams({
-      primaryCoachId,
-      usersIds: [nurseId],
-    });
-
-    const id = await mutations.createMember({ memberParams });
-
-    const { name, phoneNumber, primaryCoach, users } = await queries.getMember(
-      id,
-    );
-
-    expect(phoneNumber).toEqual(memberParams.phoneNumber);
-    expect(name).toEqual(memberParams.name);
-    expect(primaryCoach).toEqual(resultUser);
-    expect(users).toEqual([resultNurse]);
   });
-
-  const compareUsers = (resultUser: User, expectedUser: User) => {
-    const resultUserNew = omit(resultUser, 'roles');
-    const expectedUserNew = omit(expectedUser, 'roles');
-    expect(resultUserNew).toEqual(expectedUserNew);
-
-    expect(resultUser.roles).toEqual(
-      expectedUser.roles.map((role) => camelCase(role)),
-    );
-  };
 
   describe('validations', () => {
     describe('user', () => {
@@ -207,8 +203,382 @@ describe('Integration graphql resolvers', () => {
       );
     });
 
+    describe('appointment', () => {
+      describe('insert', () => {
+        test.each`
+          field          | error
+          ${'userId'}    | ${`Field "userId" of required type "String!" was not provided.`}
+          ${'memberId'}  | ${`Field "memberId" of required type "String!" was not provided.`}
+          ${'notBefore'} | ${`Field "notBefore" of required type "DateTime!" was not provided.`}
+        `(
+          `should fail to create an appointment since mandatory field $field is missing`,
+          async (params) => {
+            const appointmentParams: CreateAppointmentParams =
+              generateCreateAppointmentParams();
+            delete appointmentParams[params.field];
+            await mutations.createAppointment({
+              appointmentParams,
+              missingFieldError: params.error,
+            });
+          },
+        );
+
+        /* eslint-disable max-len */
+        test.each`
+          field          | input                                | error
+          ${'memberId'}  | ${{ memberId: 123 }}                 | ${{ missingFieldError: 'String cannot represent a non string value' }}
+          ${'userId'}    | ${{ userId: 123 }}                   | ${{ missingFieldError: 'String cannot represent a non string value' }}
+          ${'notBefore'} | ${{ notBefore: faker.lorem.word() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentNotBeforeDate)] }}
+        `(
+          /* eslint-enable max-len */
+          `should fail to create an appointment since $field is not a valid type`,
+          async (params) => {
+            const appointmentParams: CreateAppointmentParams =
+              generateCreateAppointmentParams(params.input);
+
+            await mutations.createAppointment({
+              appointmentParams,
+              ...params.error,
+            });
+          },
+        );
+
+        it('should fail since notBefore date is in the past', async () => {
+          const notBefore = new Date();
+          notBefore.setMinutes(notBefore.getMinutes() - 1);
+
+          await mutations.createAppointment({
+            appointmentParams: generateCreateAppointmentParams({ notBefore }),
+            invalidFieldsErrors: [
+              Errors.get(ErrorType.appointmentNotBeforeDateInThePast),
+            ],
+          });
+        });
+      });
+
+      describe('schedule', () => {
+        test.each`
+          field       | error
+          ${'id'}     | ${`Field "id" of required type "String!" was not provided.`}
+          ${'method'} | ${`Field "method" of required type "AppointmentMethod!" was not provided.`}
+          ${'start'}  | ${`Field "start" of required type "DateTime!" was not provided.`}
+          ${'end'}    | ${`Field "end" of required type "DateTime!" was not provided.`}
+        `(
+          `should fail to create an appointment since mandatory field $field is missing`,
+          async (params) => {
+            const primaryCoach = await createAndValidateUser();
+            const member = await createAndValidateMember({
+              primaryCoach,
+            });
+
+            await createAndValidateAppointment({
+              userId: primaryCoach.id,
+              member,
+            });
+
+            const appointmentParams = generateScheduleAppointmentParams();
+            delete appointmentParams[params.field];
+
+            await mutations.scheduleAppointment({
+              appointmentParams,
+              missingFieldError: params.error,
+            });
+          },
+        );
+
+        /* eslint-disable max-len */
+        test.each`
+          field       | input                      | error
+          ${'id'}     | ${{ id: 123 }}             | ${{ missingFieldError: 'String cannot represent a non string value' }}
+          ${'method'} | ${{ method: 'not-valid' }} | ${{ missingFieldError: 'Enum "AppointmentMethod" cannot represent non-string value' }}
+          ${'start'}  | ${{ start: 'not-valid' }}  | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentStartDate)] }}
+          ${'end'}    | ${{ end: 'not-valid' }}    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentEndDate)] }}
+        `(
+          /* eslint-enable max-len */
+          `should fail to schedule an appointment since $field is not a valid type`,
+          async (params) => {
+            const primaryCoach = await createAndValidateUser();
+            const member = await createAndValidateMember({
+              primaryCoach,
+            });
+
+            await createAndValidateAppointment({
+              userId: primaryCoach.id,
+              member,
+            });
+
+            const appointmentParams = generateScheduleAppointmentParams();
+            appointmentParams[params.field] = params.input;
+
+            await mutations.scheduleAppointment({
+              appointmentParams,
+              ...params.error,
+            });
+          },
+        );
+
+        it('should validate that an error is thrown if end date is before start date', async () => {
+          const primaryCoach = await createAndValidateUser();
+          const member = await createAndValidateMember({
+            primaryCoach,
+          });
+
+          await createAndValidateAppointment({
+            userId: primaryCoach.id,
+            member,
+          });
+
+          const end = faker.date.future(1);
+          const start = new Date(end);
+          start.setMinutes(start.getMinutes() + 1);
+          const appointmentParams = generateScheduleAppointmentParams({
+            start,
+            end,
+          });
+
+          await mutations.scheduleAppointment({
+            appointmentParams,
+            invalidFieldsErrors: [
+              Errors.get(ErrorType.appointmentEndAfterStart),
+            ],
+          });
+        });
+      });
+
+      describe('noShow', () => {
+        test.each`
+          field   | error
+          ${'id'} | ${`Field "id" of required type "String!" was not provided.`}
+        `(
+          `should fail to create an appointment since mandatory field $field is missing`,
+          async (params) => {
+            const primaryCoach = await createAndValidateUser();
+            const member = await createAndValidateMember({
+              primaryCoach,
+            });
+
+            await createAndValidateAppointment({
+              userId: primaryCoach.id,
+              member,
+            });
+
+            const noShowParams = generateNoShowAppointmentParams();
+            delete noShowParams[params.field];
+
+            await mutations.noShowAppointment({
+              noShowParams,
+              missingFieldError: params.error,
+            });
+          },
+        );
+
+        /* eslint-disable max-len */
+        test.each`
+          field       | input                      | error
+          ${'id'}     | ${{ id: 123 }}             | ${{ missingFieldError: 'String cannot represent a non string value' }}
+          ${'noShow'} | ${{ noShow: 'not-valid' }} | ${{ missingFieldError: 'Boolean cannot represent a non boolean value' }}
+          ${'reason'} | ${{ reason: 123 }}         | ${{ missingFieldError: 'String cannot represent a non string value' }}
+        `(
+          /* eslint-enable max-len */
+          `should fail to update an appointment no show since $field is not a valid type`,
+          async (params) => {
+            const primaryCoach = await createAndValidateUser();
+            const member = await createAndValidateMember({
+              primaryCoach,
+            });
+
+            await createAndValidateAppointment({
+              userId: primaryCoach.id,
+              member,
+            });
+
+            const noShowParams = {
+              id: new Types.ObjectId().toString(),
+              noShow: true,
+              reason: faker.lorem.sentence(),
+            };
+            noShowParams[params.field] = params.input;
+
+            await mutations.noShowAppointment({
+              noShowParams,
+              ...params.error,
+            });
+          },
+        );
+
+        const reason = faker.lorem.sentence();
+        test.each`
+          input
+          ${{ noShow: true }}
+          ${{ noShow: false, reason }}
+        `(
+          `should fail to update an appointment no show since noShow and reason combinations are not valid for $input`,
+          async (params) => {
+            const primaryCoach = await createAndValidateUser();
+            const member = await createAndValidateMember({
+              primaryCoach,
+            });
+
+            await createAndValidateAppointment({
+              userId: primaryCoach.id,
+              member,
+            });
+
+            const noShowParams = {
+              id: new Types.ObjectId().toString(),
+              ...params.input,
+            };
+
+            await mutations.noShowAppointment({
+              noShowParams,
+              invalidFieldsErrors: [Errors.get(ErrorType.appointmentNoShow)],
+            });
+          },
+        );
+      });
+    });
+
     const generateRandomName = (length: number): string => {
       return faker.lorem.words(length).substr(0, length);
     };
   });
+
+  /*********************************************************************************************************************
+   *********************************************************************************************************************
+   ************************************************** Internal methods *************************************************
+   *********************************************************************************************************************
+   ********************************************************************************************************************/
+
+  const createAndValidateUser = async (roles?: UserRole[]): Promise<User> => {
+    const userParams: CreateUserParams = generateCreateUserParams({ roles });
+    const primaryCoachId = await mutations.createUser({ userParams });
+
+    const result = await queries.getUser(primaryCoachId);
+
+    const expectedUser = { ...userParams, id: primaryCoachId };
+
+    const resultUserNew = omit(result, 'roles');
+    const expectedUserNew = omit(expectedUser, 'roles');
+    expect(resultUserNew).toEqual(expectedUserNew);
+
+    expect(result.roles).toEqual(
+      expectedUser.roles.map((role) => camelCase(role)),
+    );
+
+    return result;
+  };
+
+  const createAndValidateMember = async ({
+    primaryCoach,
+    coaches = [],
+  }): Promise<Member> => {
+    const memberParams = generateCreateMemberParams({
+      primaryCoachId: primaryCoach.id,
+      usersIds: coaches.map((coach) => coach.id),
+    });
+
+    const { id: memberId } = await mutations.createMember({ memberParams });
+
+    const member = await queries.getMember(memberId);
+
+    expect(member.phoneNumber).toEqual(memberParams.phoneNumber);
+    expect(member.name).toEqual(memberParams.name);
+
+    expect(new Date(member.dateOfBirth)).toEqual(
+      new Date(memberParams.dateOfBirth),
+    );
+    expect(member.primaryCoach).toEqual(primaryCoach);
+    expect(member.users).toEqual(coaches);
+
+    return member;
+  };
+
+  /**
+   * 1. call mutation createAppointment: created appointment with memberId, userId, notBefore
+   * 2. call query getAppointment: returned current appointment with memberId, userId, notBefore and status: requested
+   * 3. call mutation scheduleAppointment: returned current appointment with status: scheduled
+   * 4. call mutation endAppointment: returned current appointment with status: done
+   * 5. call mutation freezeAppointment: returned current appointment with status: closed
+   * 6. call mutation endAppointment: "unfreeze" returned current appointment with status: done
+   * 7. call query getAppointment: returned current appointment with all fields
+   */
+  const createAndValidateAppointment = async ({
+    userId,
+    member,
+  }: {
+    userId: string;
+    member: Member;
+  }): Promise<Appointment> => {
+    const appointmentParams = generateCreateAppointmentParams({
+      memberId: member.id,
+      userId,
+    });
+    const appointmentResult = await mutations.createAppointment({
+      appointmentParams,
+    });
+
+    expect(appointmentResult.userId).toEqual(userId);
+    expect(appointmentResult.memberId).toEqual(member.id);
+    expect(new Date(appointmentResult.notBefore)).toEqual(
+      new Date(appointmentParams.notBefore),
+    );
+
+    const start = new Date();
+    const end = new Date();
+    end.setHours(end.getHours() + 2);
+
+    let appointment = await mutations.scheduleAppointment({
+      appointmentParams: {
+        id: appointmentResult.id,
+        method: AppointmentMethod.chat,
+        start,
+        end,
+      },
+    });
+
+    expect(appointment.status).toEqual(AppointmentStatus.scheduled);
+    expect(appointmentResult.status).toEqual(AppointmentStatus.requested);
+    expect(appointment.id).toEqual(appointmentResult.id);
+    expect(appointment.memberId).toEqual(appointmentResult.memberId);
+    expect(appointment.userId).toEqual(appointmentResult.userId);
+    expect(appointment.notBefore).toEqual(appointmentResult.notBefore);
+    expect(new Date(appointment.start)).toEqual(start);
+    expect(new Date(appointment.end)).toEqual(end);
+
+    appointment = await mutations.endAppointment({ id: appointmentResult.id });
+    expect(appointment.status).toEqual(AppointmentStatus.done);
+
+    appointment = await mutations.freezeAppointment({
+      id: appointmentResult.id,
+    });
+    expect(appointment.status).toEqual(AppointmentStatus.closed);
+
+    //"unfreeze"
+    appointment = await mutations.endAppointment({ id: appointmentResult.id });
+    expect(appointment.status).toEqual(AppointmentStatus.done);
+
+    const noShowParams = generateNoShowAppointmentParams({
+      id: appointmentResult.id,
+    });
+    appointment = await mutations.noShowAppointment({ noShowParams });
+    expect(appointment.noShow).toEqual({
+      noShow: noShowParams.noShow,
+      reason: noShowParams.reason,
+    });
+
+    appointment = await mutations.noShowAppointment({
+      noShowParams: {
+        id: appointmentResult.id,
+        noShow: false,
+      },
+    });
+    expect(appointment.noShow).toEqual({ noShow: false, reason: null });
+
+    const appointmentResult2 = await queries.getAppointment(
+      appointmentResult.id,
+    );
+    expect(appointment).toEqual(appointmentResult2);
+
+    return appointment;
+  };
 });

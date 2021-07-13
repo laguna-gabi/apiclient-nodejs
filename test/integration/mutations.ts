@@ -3,6 +3,13 @@ import gql from 'graphql-tag';
 import { CreateUserParams } from '../../src/user';
 import { CreateMemberParams } from '../../src/member';
 import { ApolloServerTestClient } from 'apollo-server-testing';
+import {
+  Appointment,
+  CreateAppointmentParams,
+  ScheduleAppointmentParams,
+  NoShowParams,
+} from '../../src/appointment';
+import { Identifier } from '../../src/common';
 
 export class Mutations {
   constructor(private readonly apolloClient: ApolloServerTestClient) {}
@@ -32,7 +39,9 @@ export class Mutations {
       `,
     });
 
-    if (!this.checkErrors({ result, missingFieldError, invalidFieldsErrors })) {
+    if (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors })
+    ) {
       const { id } = result.data.createUser;
       return id;
     }
@@ -46,7 +55,7 @@ export class Mutations {
     memberParams: CreateMemberParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
-  }): Promise<string> => {
+  }): Promise<Identifier> => {
     const result = await this.apolloClient.mutate({
       variables: { createMemberParams: memberParams },
       mutation: gql`
@@ -58,13 +67,188 @@ export class Mutations {
       `,
     });
 
-    if (!this.checkErrors({ result, missingFieldError, invalidFieldsErrors })) {
-      const { id } = result.data.createMember;
-      return id;
-    }
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.createMember
+    );
   };
 
-  checkErrors = ({
+  createAppointment = async ({
+    appointmentParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    appointmentParams: CreateAppointmentParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Appointment> => {
+    const result = await this.apolloClient.mutate({
+      variables: { createAppointmentParams: appointmentParams },
+      mutation: gql`
+        mutation CreateAppointment(
+          $createAppointmentParams: CreateAppointmentParams!
+        ) {
+          createAppointment(createAppointmentParams: $createAppointmentParams) {
+            id
+            memberId
+            userId
+            notBefore
+            method
+            status
+            start
+            end
+          }
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.createAppointment
+    );
+  };
+
+  scheduleAppointment = async ({
+    appointmentParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    appointmentParams: ScheduleAppointmentParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Appointment> => {
+    const result = await this.apolloClient.mutate({
+      variables: { scheduleAppointmentParams: appointmentParams },
+      mutation: gql`
+        mutation ScheduleAppointment(
+          $scheduleAppointmentParams: ScheduleAppointmentParams!
+        ) {
+          scheduleAppointment(
+            scheduleAppointmentParams: $scheduleAppointmentParams
+          ) {
+            id
+            memberId
+            userId
+            notBefore
+            method
+            status
+            start
+            end
+          }
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.scheduleAppointment
+    );
+  };
+
+  endAppointment = async ({
+    id,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    id: string;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Appointment> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id },
+      mutation: gql`
+        mutation EndAppointment($id: String!) {
+          endAppointment(id: $id) {
+            id
+            memberId
+            userId
+            notBefore
+            method
+            status
+            start
+            end
+          }
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.endAppointment
+    );
+  };
+
+  freezeAppointment = async ({
+    id,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    id: string;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Appointment> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id },
+      mutation: gql`
+        mutation FreezeAppointment($id: String!) {
+          freezeAppointment(id: $id) {
+            id
+            memberId
+            userId
+            notBefore
+            method
+            status
+            start
+            end
+          }
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.freezeAppointment
+    );
+  };
+
+  noShowAppointment = async ({
+    noShowParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    noShowParams: NoShowParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Appointment> => {
+    const result = await this.apolloClient.mutate({
+      variables: { noShowParams: noShowParams },
+      mutation: gql`
+        mutation NoShowAppointment($noShowParams: NoShowParams!) {
+          noShowAppointment(noShowParams: $noShowParams) {
+            id
+            memberId
+            userId
+            notBefore
+            method
+            status
+            start
+            end
+            noShow {
+              noShow
+              reason
+            }
+          }
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.noShowAppointment
+    );
+  };
+
+  isResultValid = ({
     result,
     invalidFieldsErrors,
     missingFieldError,
@@ -78,9 +262,9 @@ export class Mutations {
       expect(result.errors[0].message).toMatch(missingFieldError);
       expect(result.errors[0].code).toEqual(-1);
     } else {
-      return false;
+      return true;
     }
 
-    return true;
+    return false;
   };
 }

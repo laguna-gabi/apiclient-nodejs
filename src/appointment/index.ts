@@ -1,0 +1,4 @@
+export * from './appointment.dto';
+export * from './appointment.service';
+export * from './appointment.resolver';
+export * from './appointment.module';

@@ -3,6 +3,7 @@ import { DbModule } from './db/db.module';
 import { MemberModule } from './member';
 import { GraphQLModule } from '@nestjs/graphql';
 import { UserModule } from './user';
+import { AppointmentModule } from './appointment';
 import { GraphQLError } from 'graphql';
 import { Errors } from './common';
 
@@ -12,6 +13,7 @@ const badRequestException = 'Bad Request Exception';
   imports: [
     MemberModule,
     UserModule,
+    AppointmentModule,
     DbModule,
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql',

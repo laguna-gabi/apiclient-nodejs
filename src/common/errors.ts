@@ -17,11 +17,21 @@ export enum ErrorType {
   memberPhoneAlreadyExists = 9202,
   memberPhoneNumber = 9203,
   memberDate = 9204,
+
+  // Module appointment errors
+  appointmentIdNotFound = 9301,
+  appointmentNotBeforeDate = 9302,
+  appointmentNotBeforeDateInThePast = 9303,
+  appointmentStartDate = 9304,
+  appointmentEndDate = 9305,
+  appointmentEndAfterStart = 9306,
+  appointmentNoShow = 9307,
 }
 
 const nameFormat = `name must be between ${graphqlConfig.get(
   'minLength',
 )} and ${graphqlConfig.get('maxLength')} characters`;
+const dateInstanceFormat = 'must be a Date instance';
 
 export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.userMinMaxLength.valueOf(), `user ${nameFormat}`],
@@ -42,7 +52,26 @@ export const Errors: Map<ErrorType, string> = new Map([
       `please make sure you've added the country code with (+) in the beginning. ` +
       `${validPhoneNumbersExamples}`,
   ],
-  [ErrorType.memberDate.valueOf(), 'dateOfBirth must be a Date instance'],
+  [ErrorType.memberDate.valueOf(), `dateOfBirth ${dateInstanceFormat}`],
+  [ErrorType.appointmentIdNotFound.valueOf(), 'appointment id was not found'],
+  [
+    ErrorType.appointmentNotBeforeDate.valueOf(),
+    `notBefore ${dateInstanceFormat}`,
+  ],
+  [
+    ErrorType.appointmentNotBeforeDateInThePast.valueOf(),
+    'notBefore must be in the future',
+  ],
+  [ErrorType.appointmentStartDate.valueOf(), `start ${dateInstanceFormat}`],
+  [ErrorType.appointmentEndDate.valueOf(), `end ${dateInstanceFormat}`],
+  [
+    ErrorType.appointmentEndAfterStart.valueOf(),
+    'end date must be after start date',
+  ],
+  [
+    ErrorType.appointmentNoShow.valueOf(),
+    'if noShow=true, a `reason` field is mandatory as well. if noShow=false, a `reason` field is not required',
+  ],
 ]);
 
 export const DbErrors = {
