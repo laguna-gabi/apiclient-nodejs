@@ -7,6 +7,7 @@ import {
 import { DbModule } from '../../src/db/db.module';
 import { MemberResolver, MemberService, MemberModule } from '../../src/member';
 import { ObjectID } from 'bson';
+import { context } from '../memberAuthorization';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
@@ -70,6 +71,7 @@ describe('MemberResolver', () => {
 
       const additionalUserId = new ObjectID().toString();
       const params = generateCreateMemberParams({
+        deviceId: member.deviceId,
         primaryCoachId: member.primaryCoach.id,
         usersIds: [additionalUserId, member.primaryCoach.id],
       });
@@ -79,6 +81,7 @@ describe('MemberResolver', () => {
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith({
         phoneNumber: params.phoneNumber,
+        deviceId: member.deviceId,
         name: params.name,
         dateOfBirth: params.dateOfBirth,
         primaryCoachId: params.primaryCoachId,
@@ -101,16 +104,17 @@ describe('MemberResolver', () => {
       const member = mockGenerateMember();
       spyOnServiceGet.mockImplementationOnce(async () => member);
 
-      const result = await resolver.getMember(member.id);
+      const result = await resolver.getMember(context);
 
       expect(result).toEqual(member);
     });
 
-    it('should fetch empty on a non existing user', async () => {
+    it('should fetch empty on a non valid member', async () => {
       spyOnServiceGet.mockImplementationOnce(async () => null);
 
-      const id = new ObjectID();
-      const result = await resolver.getMember(id.toString());
+      const result = await resolver.getMember({
+        req: { headers: { authorization: 'not-valid' } },
+      });
 
       expect(result).toBeNull();
     });

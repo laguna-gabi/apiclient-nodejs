@@ -26,8 +26,10 @@ import {
 } from '../../src/appointment';
 import { Errors, ErrorType } from '../../src/common';
 import { Types } from 'mongoose';
+import * as jwt from 'jsonwebtoken';
 
 const validatorsConfig = config.get('graphql.validators');
+const deviceId = faker.datatype.uuid();
 
 describe('Integration graphql resolvers', () => {
   let app: INestApplication;
@@ -49,6 +51,14 @@ describe('Integration graphql resolvers', () => {
 
     const module: GraphQLModule =
       moduleFixture.get<GraphQLModule>(GraphQLModule);
+
+    (module as any).apolloServer.context = () => ({
+      req: {
+        headers: {
+          authorization: jwt.sign({ username: deviceId }, 'shhh'),
+        },
+      },
+    });
 
     const apolloServer = createTestClient((module as any).apolloServer);
     mutations = new Mutations(apolloServer);
@@ -266,16 +276,6 @@ describe('Integration graphql resolvers', () => {
         `(
           `should fail to create an appointment since mandatory field $field is missing`,
           async (params) => {
-            const primaryCoach = await createAndValidateUser();
-            const member = await createAndValidateMember({
-              primaryCoach,
-            });
-
-            await createAndValidateAppointment({
-              userId: primaryCoach.id,
-              member,
-            });
-
             const appointmentParams = generateScheduleAppointmentParams();
             delete appointmentParams[params.field];
 
@@ -297,16 +297,6 @@ describe('Integration graphql resolvers', () => {
           /* eslint-enable max-len */
           `should fail to schedule an appointment since $field is not a valid type`,
           async (params) => {
-            const primaryCoach = await createAndValidateUser();
-            const member = await createAndValidateMember({
-              primaryCoach,
-            });
-
-            await createAndValidateAppointment({
-              userId: primaryCoach.id,
-              member,
-            });
-
             const appointmentParams = generateScheduleAppointmentParams();
             appointmentParams[params.field] = params.input;
 
@@ -318,16 +308,6 @@ describe('Integration graphql resolvers', () => {
         );
 
         it('should validate that an error is thrown if end date is before start date', async () => {
-          const primaryCoach = await createAndValidateUser();
-          const member = await createAndValidateMember({
-            primaryCoach,
-          });
-
-          await createAndValidateAppointment({
-            userId: primaryCoach.id,
-            member,
-          });
-
           const end = faker.date.future(1);
           const start = new Date(end);
           start.setMinutes(start.getMinutes() + 1);
@@ -352,16 +332,6 @@ describe('Integration graphql resolvers', () => {
         `(
           `should fail to create an appointment since mandatory field $field is missing`,
           async (params) => {
-            const primaryCoach = await createAndValidateUser();
-            const member = await createAndValidateMember({
-              primaryCoach,
-            });
-
-            await createAndValidateAppointment({
-              userId: primaryCoach.id,
-              member,
-            });
-
             const noShowParams = generateNoShowAppointmentParams();
             delete noShowParams[params.field];
 
@@ -382,16 +352,6 @@ describe('Integration graphql resolvers', () => {
           /* eslint-enable max-len */
           `should fail to update an appointment no show since $field is not a valid type`,
           async (params) => {
-            const primaryCoach = await createAndValidateUser();
-            const member = await createAndValidateMember({
-              primaryCoach,
-            });
-
-            await createAndValidateAppointment({
-              userId: primaryCoach.id,
-              member,
-            });
-
             const noShowParams = {
               id: new Types.ObjectId().toString(),
               noShow: true,
@@ -414,16 +374,6 @@ describe('Integration graphql resolvers', () => {
         `(
           `should fail to update an appointment no show since noShow and reason combinations are not valid for $input`,
           async (params) => {
-            const primaryCoach = await createAndValidateUser();
-            const member = await createAndValidateMember({
-              primaryCoach,
-            });
-
-            await createAndValidateAppointment({
-              userId: primaryCoach.id,
-              member,
-            });
-
             const noShowParams = {
               id: new Types.ObjectId().toString(),
               ...params.input,
@@ -473,15 +423,17 @@ describe('Integration graphql resolvers', () => {
     coaches = [],
   }): Promise<Member> => {
     const memberParams = generateCreateMemberParams({
+      deviceId,
       primaryCoachId: primaryCoach.id,
       usersIds: coaches.map((coach) => coach.id),
     });
 
-    const { id: memberId } = await mutations.createMember({ memberParams });
+    await mutations.createMember({ memberParams });
 
-    const member = await queries.getMember(memberId);
+    const member = await queries.getMember();
 
     expect(member.phoneNumber).toEqual(memberParams.phoneNumber);
+    expect(member.deviceId).toEqual(deviceId);
     expect(member.name).toEqual(memberParams.name);
 
     expect(new Date(member.dateOfBirth)).toEqual(

@@ -18,6 +18,7 @@ import {
 } from '../../src/member';
 import { Errors, ErrorType } from '../../src/common';
 import { User, UserRole, UserDto } from '../../src/user';
+import { datatype } from 'faker';
 
 describe('MemberService', () => {
   let module: TestingModule;
@@ -44,9 +45,8 @@ describe('MemberService', () => {
   });
 
   describe('get', () => {
-    it('should return null for non existing member', async () => {
-      const id = new ObjectID();
-      const result = await service.get(id.toString());
+    it('should return null for non existing deviceId of a member', async () => {
+      const result = await service.get(datatype.uuid());
       expect(result).toBeNull();
     });
 
@@ -59,22 +59,26 @@ describe('MemberService', () => {
       const user = await modelUser.create(userParams);
       await modelUser.create(generateCreateUserParams()); //Another user, to check if it doesn't return in member
 
+      const deviceId = datatype.uuid();
       const member: CreateMemberParams = generateCreateMemberParams({
+        deviceId,
         primaryCoachId: primaryCoach._id,
         usersIds: [user._id, nurse._id],
       });
 
       const { _id } = await model.create({
         phoneNumber: member.phoneNumber,
+        deviceId,
         name: member.name,
         primaryCoach: new Types.ObjectId(member.primaryCoachId),
         users: member.usersIds.map((item) => new Types.ObjectId(item)),
       });
 
-      const result = await service.get(_id);
+      const result = await service.get(member.deviceId);
 
       expect(result.id).toEqual(_id.toString());
       expect(result.phoneNumber).toEqual(member.phoneNumber);
+      expect(result.deviceId).toEqual(member.deviceId);
       expect(result.name).toEqual(member.name);
       compareUsers(result.primaryCoach, primaryCoach);
       expect(result.users.length).toEqual(2);
@@ -105,6 +109,7 @@ describe('MemberService', () => {
 
       const createdMember = await model.findById(result.id);
       expect(createdMember['phoneNumber']).toEqual(memberParams.phoneNumber);
+      expect(createdMember['deviceId']).toEqual(memberParams.deviceId);
       expect(createdMember['name']).toEqual(memberParams.name);
       expect(createdMember['dateOfBirth']).toEqual(memberParams.dateOfBirth);
       expect(createdMember['primaryCoach']).toEqual(primaryCoach._id);

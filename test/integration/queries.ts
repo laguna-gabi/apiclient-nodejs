@@ -22,14 +22,14 @@ export class Queries {
     return resultGetUser.data.getUser;
   };
 
-  getMember = async (id: string) => {
+  getMember = async () => {
     const resultGetMember = await this.apolloClient.query({
-      variables: { id },
       query: gql`
-        query getMember($id: String!) {
-          getMember(id: $id) {
+        query getMember {
+          getMember {
             id
             phoneNumber
+            deviceId
             name
             dateOfBirth
             primaryCoach {

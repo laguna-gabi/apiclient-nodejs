@@ -1,10 +1,12 @@
-import { Resolver, Query, Args, Mutation } from '@nestjs/graphql';
-import { MemberService, CreateMemberParams, Member } from '.';
+import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { CreateMemberParams, Member, MemberService } from '.';
 import { Identifier } from '../common';
 import { camelCase, remove } from 'lodash';
+import * as jwt from 'jsonwebtoken';
 
 @Resolver(() => Member)
 export class MemberResolver {
+  private readonly authenticationPrefix = 'Bearer ';
   constructor(private readonly memberService: MemberService) {}
 
   @Mutation(() => Identifier)
@@ -20,7 +22,15 @@ export class MemberResolver {
   }
 
   @Query(() => Member, { nullable: true })
-  async getMember(@Args('id', { type: () => String }) id: string) {
-    return this.memberService.get(id);
+  async getMember(@Context() context) {
+    const authorizationHeader = context.req.headers.authorization.replace(
+      this.authenticationPrefix,
+      '',
+    );
+    const authorization = jwt.decode(authorizationHeader);
+
+    return authorization?.username
+      ? this.memberService.get(authorization?.username)
+      : null;
   }
 }

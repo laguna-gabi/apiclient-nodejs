@@ -15,6 +15,7 @@ export class MemberService {
     try {
       const result = await this.memberModel.create({
         phoneNumber: createMemberParams.phoneNumber,
+        deviceId: createMemberParams.deviceId,
         name: createMemberParams.name,
         dateOfBirth: createMemberParams.dateOfBirth,
         primaryCoach: new Types.ObjectId(createMemberParams.primaryCoachId),
@@ -32,9 +33,9 @@ export class MemberService {
     }
   }
 
-  async get(id: string): Promise<Member> {
+  async get(deviceId: string): Promise<Member> {
     return this.memberModel
-      .findOne({ _id: id })
+      .findOne({ deviceId })
       .populate('users')
       .populate('primaryCoach');
   }

@@ -24,6 +24,9 @@ export class CreateMemberParams {
   })
   phoneNumber: string;
 
+  @Field(() => String)
+  deviceId: string;
+
   @Field()
   @Length(
     validatorsConfig.get('name.minLength'),
@@ -52,6 +55,10 @@ export class Member extends Identifier {
   @Prop({ unique: true, index: true })
   @Field(() => String)
   phoneNumber: string;
+
+  @Prop({ index: true })
+  @Field(() => String)
+  deviceId: string;
 
   @Prop()
   @Field(() => String, { description: 'name' })
