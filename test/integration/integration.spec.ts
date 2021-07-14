@@ -17,7 +17,6 @@ import { Queries } from './queries';
 import * as config from 'config';
 import * as faker from 'faker';
 import { CreateMemberParams, Member } from '../../src/member';
-import { ObjectID } from 'bson';
 import {
   Appointment,
   AppointmentMethod,
@@ -36,7 +35,7 @@ describe('Integration graphql resolvers', () => {
   let mutations: Mutations;
   let queries: Queries;
 
-  const primaryCoachId = new ObjectID().toString();
+  const primaryCoachId = new Types.ObjectId().toString();
   const minLength = validatorsConfig.get('name.minLength') as number;
   const maxLength = validatorsConfig.get('name.maxLength') as number;
 

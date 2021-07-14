@@ -6,8 +6,8 @@ import {
 } from '../../test';
 import { DbModule } from '../../src/db/db.module';
 import { MemberResolver, MemberService, MemberModule } from '../../src/member';
-import { ObjectID } from 'bson';
 import { context } from '../memberAuthorization';
+import { Types } from 'mongoose';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
@@ -69,7 +69,7 @@ describe('MemberResolver', () => {
       const member = mockGenerateMember();
       spyOnServiceInsert.mockImplementationOnce(async () => member);
 
-      const additionalUserId = new ObjectID().toString();
+      const additionalUserId = new Types.ObjectId().toString();
       const params = generateCreateMemberParams({
         deviceId: member.deviceId,
         primaryCoachId: member.primaryCoach.id,

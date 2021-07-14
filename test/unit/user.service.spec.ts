@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
-import * as mongoose from 'mongoose';
+import { Types, Model, model } from 'mongoose';
 import {
   User,
   UserRole,
@@ -8,14 +8,13 @@ import {
   UserService,
   UserModule,
 } from '../../src/user';
-import { ObjectID } from 'bson';
 import { dbConnect, dbDisconnect, generateCreateUserParams } from '../index';
 import { Errors, ErrorType } from '../../src/common';
 
 describe('UserService', () => {
   let module: TestingModule;
   let service: UserService;
-  let model: mongoose.Model<typeof UserDto>;
+  let userModel: Model<typeof UserDto>;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -24,7 +23,7 @@ describe('UserService', () => {
 
     service = module.get<UserService>(UserService);
 
-    model = mongoose.model(User.name, UserDto);
+    userModel = model(User.name, UserDto);
 
     await dbConnect();
   });
@@ -36,14 +35,14 @@ describe('UserService', () => {
 
   describe('get', () => {
     it('should return null for non existing user', async () => {
-      const id = new ObjectID();
+      const id = new Types.ObjectId();
       const result = await service.get(id.toString());
       expect(result).toBeNull();
     });
 
     it('should return user object for an existing user', async () => {
       const user = generateCreateUserParams();
-      const { id } = await model.create(user);
+      const { id } = await userModel.create(user);
 
       const result = await service.get(id);
       expect(result.email).toEqual(user.email);
@@ -62,7 +61,7 @@ describe('UserService', () => {
       const user = generateCreateUserParams({ roles });
       const { id } = await service.insert(user);
 
-      const createdUser = await model.findById(id);
+      const createdUser = await userModel.findById(id);
       expect(createdUser['email']).toEqual(user.email);
       expect(createdUser['roles']).toEqual(expect.arrayContaining(user.roles));
 
@@ -73,7 +72,7 @@ describe('UserService', () => {
       const user = generateCreateUserParams();
       const { id } = await service.insert(user);
 
-      const createdUser = await model.findById(id);
+      const createdUser = await userModel.findById(id);
       expect(createdUser['createdAt']).toEqual(expect.any(Date));
       expect(createdUser['updatedAt']).toEqual(expect.any(Date));
     });

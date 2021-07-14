@@ -1,8 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
-import * as mongoose from 'mongoose';
-import { Model, Types } from 'mongoose';
-import { ObjectID } from 'bson';
+import { Model, Types, model } from 'mongoose';
 import {
   dbConnect,
   generateCreateUserParams,
@@ -23,9 +21,9 @@ import { datatype } from 'faker';
 describe('MemberService', () => {
   let module: TestingModule;
   let service: MemberService;
-  let model: Model<typeof MemberDto>;
+  let memberModel: Model<typeof MemberDto>;
   let modelUser: Model<typeof UserDto>;
-  const primaryCoachId = new ObjectID().toString();
+  const primaryCoachId = new Types.ObjectId().toString();
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -34,8 +32,8 @@ describe('MemberService', () => {
 
     service = module.get<MemberService>(MemberService);
 
-    model = mongoose.model(Member.name, MemberDto);
-    modelUser = mongoose.model(User.name, UserDto);
+    memberModel = model(Member.name, MemberDto);
+    modelUser = model(User.name, UserDto);
     await dbConnect();
   });
 
@@ -66,7 +64,7 @@ describe('MemberService', () => {
         usersIds: [user._id, nurse._id],
       });
 
-      const { _id } = await model.create({
+      const { _id } = await memberModel.create({
         phoneNumber: member.phoneNumber,
         deviceId,
         name: member.name,
@@ -107,7 +105,7 @@ describe('MemberService', () => {
 
       expect(result.id).not.toBeUndefined();
 
-      const createdMember = await model.findById(result.id);
+      const createdMember = await memberModel.findById(result.id);
       expect(createdMember['phoneNumber']).toEqual(memberParams.phoneNumber);
       expect(createdMember['deviceId']).toEqual(memberParams.deviceId);
       expect(createdMember['name']).toEqual(memberParams.name);
@@ -121,7 +119,7 @@ describe('MemberService', () => {
 
       const result = await service.insert(generateCreateMemberParams(user._id));
 
-      const createdMember = await model.findById(result.id);
+      const createdMember = await memberModel.findById(result.id);
       expect(createdMember['createdAt']).toEqual(expect.any(Date));
       expect(createdMember['updatedAt']).toEqual(expect.any(Date));
     });

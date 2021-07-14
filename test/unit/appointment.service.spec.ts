@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
-import * as mongoose from 'mongoose';
-import { Types } from 'mongoose';
+import { model, Model, Types } from 'mongoose';
 import {
   dbConnect,
   dbDisconnect,
@@ -17,7 +16,6 @@ import {
   AppointmentStatus,
   NoShowParams,
 } from '../../src/appointment';
-import { ObjectID } from 'bson';
 import { User, UserDto } from '../../src/user';
 import { Member, MemberDto } from '../../src/member';
 import { Errors, ErrorType } from '../../src/common';
@@ -26,9 +24,9 @@ import * as faker from 'faker';
 describe('AppointmentService', () => {
   let module: TestingModule;
   let service: AppointmentService;
-  let userModel: mongoose.Model<typeof UserDto>;
-  let memberModel: mongoose.Model<typeof MemberDto>;
-  let model: mongoose.Model<typeof AppointmentDto>;
+  let userModel: Model<typeof UserDto>;
+  let memberModel: Model<typeof MemberDto>;
+  let appointmentModel: Model<typeof AppointmentDto>;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -37,9 +35,9 @@ describe('AppointmentService', () => {
 
     service = module.get<AppointmentService>(AppointmentService);
 
-    model = mongoose.model(Appointment.name, AppointmentDto);
-    userModel = mongoose.model(User.name, UserDto);
-    memberModel = mongoose.model(Member.name, MemberDto);
+    appointmentModel = model(Appointment.name, AppointmentDto);
+    userModel = model(User.name, UserDto);
+    memberModel = model(Member.name, MemberDto);
 
     await dbConnect();
   });
@@ -51,7 +49,7 @@ describe('AppointmentService', () => {
 
   describe('get', () => {
     it('should return null for non existing appointment', async () => {
-      const id = new ObjectID();
+      const id = new Types.ObjectId();
       const result = await service.get(id.toString());
       expect(result).toBeNull();
     });
@@ -64,9 +62,9 @@ describe('AppointmentService', () => {
 
       expect(result).toEqual(
         expect.objectContaining({
-          _id: new mongoose.Types.ObjectId(id),
-          userId: new mongoose.Types.ObjectId(appointment.userId),
-          memberId: new mongoose.Types.ObjectId(appointment.memberId),
+          _id: new Types.ObjectId(id),
+          userId: new Types.ObjectId(appointment.userId),
+          memberId: new Types.ObjectId(appointment.memberId),
           notBefore: appointment.notBefore,
           status: AppointmentStatus.requested,
         }),
@@ -90,9 +88,9 @@ describe('AppointmentService', () => {
 
       expect(result).toEqual(
         expect.objectContaining({
-          _id: new mongoose.Types.ObjectId(id),
-          userId: new mongoose.Types.ObjectId(appointment.userId),
-          memberId: new mongoose.Types.ObjectId(appointment.memberId),
+          _id: new Types.ObjectId(id),
+          userId: new Types.ObjectId(appointment.userId),
+          memberId: new Types.ObjectId(appointment.memberId),
           notBefore: appointment.notBefore,
           status: AppointmentStatus.scheduled,
           method,
@@ -110,13 +108,13 @@ describe('AppointmentService', () => {
 
       expect(result.id).not.toBeUndefined();
 
-      const resultGet = await model.findById(result.id);
+      const resultGet = await appointmentModel.findById(result.id);
 
       expect(resultGet).toEqual(
         expect.objectContaining({
-          _id: new mongoose.Types.ObjectId(result.id),
-          userId: new mongoose.Types.ObjectId(appointmentParams.userId),
-          memberId: new mongoose.Types.ObjectId(appointmentParams.memberId),
+          _id: new Types.ObjectId(result.id),
+          userId: new Types.ObjectId(appointmentParams.userId),
+          memberId: new Types.ObjectId(appointmentParams.memberId),
           notBefore: appointmentParams.notBefore,
           status: AppointmentStatus.requested,
         }),
@@ -124,8 +122,8 @@ describe('AppointmentService', () => {
     });
 
     it('should updated an appointment notBefore for an existing memberId and userId', async () => {
-      const memberId = new ObjectID().toString();
-      const userId = new ObjectID().toString();
+      const memberId = new Types.ObjectId().toString();
+      const userId = new Types.ObjectId().toString();
 
       const { id: id1, record: record1 } = await createAppointment({
         memberId,
@@ -148,8 +146,8 @@ describe('AppointmentService', () => {
       expect(record2).toEqual(
         expect.objectContaining({
           id: record1.id,
-          userId: new mongoose.Types.ObjectId(userId),
-          memberId: new mongoose.Types.ObjectId(memberId),
+          userId: new Types.ObjectId(userId),
+          memberId: new Types.ObjectId(memberId),
           notBefore,
           status: AppointmentStatus.requested,
         }),
@@ -157,9 +155,9 @@ describe('AppointmentService', () => {
     });
 
     it('should crate a new appointment for an existing memberId and different userId', async () => {
-      const memberId = new ObjectID().toString();
-      const userId1 = new ObjectID().toString();
-      const userId2 = new ObjectID().toString();
+      const memberId = new Types.ObjectId().toString();
+      const userId1 = new Types.ObjectId().toString();
+      const userId2 = new Types.ObjectId().toString();
 
       const { id: id1, record: record1 } = await createAppointment({
         memberId,
@@ -183,9 +181,9 @@ describe('AppointmentService', () => {
     });
 
     it('should crate a new appointment for an existing userId and different memberId', async () => {
-      const memberId1 = new ObjectID().toString();
-      const memberId2 = new ObjectID().toString();
-      const userId = new ObjectID().toString();
+      const memberId1 = new Types.ObjectId().toString();
+      const memberId2 = new Types.ObjectId().toString();
+      const userId = new Types.ObjectId().toString();
 
       const { id: id1, record: record1 } = await createAppointment({
         memberId: memberId1,
@@ -212,7 +210,7 @@ describe('AppointmentService', () => {
       const params = generateCreateAppointmentParams();
       const { id } = await service.insert(params);
 
-      const createdAppointment: any = await model.findById(id);
+      const createdAppointment: any = await appointmentModel.findById(id);
       expect(createdAppointment.createdAt).toEqual(expect.any(Date));
       expect(createdAppointment.updatedAt).toEqual(expect.any(Date));
     });
@@ -244,7 +242,7 @@ describe('AppointmentService', () => {
         start: date,
         end: date,
       });
-      const resultGet = await model.findById(result.id);
+      const resultGet = await appointmentModel.findById(result.id);
 
       expect(resultGet).toEqual(result);
     });
@@ -435,7 +433,7 @@ describe('AppointmentService', () => {
     const result = await service.insert(appointmentParams);
     expect(result.id).not.toBeUndefined();
 
-    const record: any = await model.findById(result.id);
+    const record: any = await appointmentModel.findById(result.id);
     return { notBefore, id: result.id, record };
   };
 });

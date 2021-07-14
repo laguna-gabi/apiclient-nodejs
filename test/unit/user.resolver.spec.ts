@@ -5,7 +5,7 @@ import {
   mockGenerateUser,
 } from '../../test';
 import { DbModule } from '../../src/db/db.module';
-import { ObjectID } from 'bson';
+import { Types } from 'mongoose';
 import {
   UserModule,
   UserResolver,
@@ -81,7 +81,7 @@ describe('UserResolver', () => {
     it('should fetch empty on a non existing user', async () => {
       spyOnServiceGet.mockImplementationOnce(async () => null);
 
-      const id = new ObjectID();
+      const id = new Types.ObjectId();
       const result = await resolver.getUser(id.toString());
 
       expect(result).toBeNull();

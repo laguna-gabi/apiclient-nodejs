@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
-import { ObjectID } from 'bson';
+import { Types } from 'mongoose';
 import {
   AppointmentMethod,
   AppointmentModule,
@@ -70,7 +70,7 @@ describe('AppointmentResolver', () => {
 
     it('should get an appointment for a given id', async () => {
       const appointment = {
-        id: new ObjectID().toString(),
+        id: new Types.ObjectId().toString(),
         ...generateCreateAppointmentParams(),
         method: AppointmentMethod.videoCall,
       };
@@ -84,7 +84,9 @@ describe('AppointmentResolver', () => {
     it('should fetch empty on a non existing appointment', async () => {
       spyOnServiceGet.mockImplementationOnce(async () => null);
 
-      const result = await resolver.getAppointment(new ObjectID().toString());
+      const result = await resolver.getAppointment(
+        new Types.ObjectId().toString(),
+      );
 
       expect(result).toBeNull();
     });
@@ -102,7 +104,7 @@ describe('AppointmentResolver', () => {
 
     it('should schedule an existing appointment for a given id', async () => {
       const appointment = {
-        id: new ObjectID().toString(),
+        id: new Types.ObjectId().toString(),
         ...generateCreateAppointmentParams(),
         status: AppointmentStatus.requested,
         method: AppointmentMethod.phoneCall,
@@ -132,7 +134,7 @@ describe('AppointmentResolver', () => {
 
     it('should end an existing appointment for a given id', async () => {
       const appointment = {
-        id: new ObjectID().toString(),
+        id: new Types.ObjectId().toString(),
         ...generateCreateAppointmentParams(),
         status: AppointmentStatus.done,
         method: AppointmentMethod.phoneCall,
@@ -157,7 +159,7 @@ describe('AppointmentResolver', () => {
 
     it('should freeze an existing appointment for a given id', async () => {
       const appointment = {
-        id: new ObjectID().toString(),
+        id: new Types.ObjectId().toString(),
         ...generateCreateAppointmentParams(),
         status: AppointmentStatus.closed,
         method: AppointmentMethod.phoneCall,

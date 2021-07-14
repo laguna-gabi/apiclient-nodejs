@@ -1,6 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import * as mongoose from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { User } from '../user';
 import {
   Errors,
@@ -68,14 +68,11 @@ export class Member extends Identifier {
   @Field(() => Date)
   dateOfBirth: Date;
 
-  @Prop({
-    type: mongoose.Schema.Types.ObjectId,
-    ref: User.name,
-  })
+  @Prop({ type: Types.ObjectId, ref: User.name })
   @Field(() => User, { description: 'primary user' })
   primaryCoach: User;
 
-  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: User.name }] })
+  @Prop({ type: [{ type: Types.ObjectId, ref: User.name }] })
   @Field(() => [User], { description: 'users reference object' })
   users: User[];
 }
@@ -83,5 +80,5 @@ export class Member extends Identifier {
 /***********************************************************************************************************************
  ************************************************** Exported Schemas ***************************************************
  **********************************************************************************************************************/
-export type MemberDocument = Member & mongoose.Document;
+export type MemberDocument = Member & Document;
 export const MemberDto = SchemaFactory.createForClass(Member);

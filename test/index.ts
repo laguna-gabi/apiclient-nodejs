@@ -1,7 +1,6 @@
 import * as faker from 'faker';
-import * as mongoose from 'mongoose';
+import { Types, connect, disconnect } from 'mongoose';
 import * as config from 'config';
-import { ObjectID } from 'bson';
 import { CreateUserParams, User, UserRole } from '../src/user';
 import { CreateMemberParams, Member } from '../src/member';
 import {
@@ -27,7 +26,7 @@ export const generateCreateUserParams = ({
 };
 
 export const mockGenerateUser = (): User => {
-  const id = new ObjectID();
+  const id = new Types.ObjectId();
   const name = faker.name.findName();
   return {
     id: id.toString(),
@@ -64,7 +63,7 @@ export const generateCreateMemberParams = ({
 };
 
 export const mockGenerateMember = (): Member => {
-  const id = new ObjectID();
+  const id = new Types.ObjectId();
   return {
     id: id.toString(),
     phoneNumber: generatePhoneNumber(),
@@ -77,8 +76,8 @@ export const mockGenerateMember = (): Member => {
 };
 
 export const generateCreateAppointmentParams = ({
-  userId = new ObjectID().toString(),
-  memberId = new ObjectID().toString(),
+  userId = new Types.ObjectId().toString(),
+  memberId = new Types.ObjectId().toString(),
   notBefore = faker.date.future(1),
 }: {
   userId?: string;
@@ -89,7 +88,7 @@ export const generateCreateAppointmentParams = ({
 };
 
 export const generateScheduleAppointmentParams = ({
-  id = new mongoose.Types.ObjectId().toString(),
+  id = new Types.ObjectId().toString(),
   method = AppointmentMethod.chat,
   start = faker.date.future(1),
   end,
@@ -105,7 +104,7 @@ export const generateScheduleAppointmentParams = ({
 };
 
 export const generateNoShowAppointmentParams = ({
-  id = new mongoose.Types.ObjectId().toString(),
+  id = new Types.ObjectId().toString(),
   noShow = true,
   reason = faker.lorem.sentence(),
 }: {
@@ -132,11 +131,11 @@ const generatePhoneNumber = () => {
 };
 
 export const dbConnect = async () => {
-  await mongoose.connect(config.get('db.connection'), {
+  await connect(config.get('db.connection'), {
     useNewUrlParser: true,
   });
 };
 
 export const dbDisconnect = async () => {
-  await mongoose.disconnect();
+  await disconnect();
 };

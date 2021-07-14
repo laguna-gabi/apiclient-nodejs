@@ -5,7 +5,7 @@ import {
   registerEnumType,
 } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import * as mongoose from 'mongoose';
+import { Document } from 'mongoose';
 import { Errors, Identifier, ErrorType } from '../common';
 import { IsEmail, IsUrl, Length } from 'class-validator';
 import * as config from 'config';
@@ -74,5 +74,5 @@ export class User extends Identifier {
 /***********************************************************************************************************************
  ************************************************** Exported Schemas ***************************************************
  **********************************************************************************************************************/
-export type UserDocument = User & mongoose.Document;
+export type UserDocument = User & Document;
 export const UserDto = SchemaFactory.createForClass(User);
