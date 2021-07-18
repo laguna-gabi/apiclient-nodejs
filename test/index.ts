@@ -8,6 +8,8 @@ import {
   RequestAppointmentParams,
   ScheduleAppointmentParams,
   NoShowParams,
+  Note,
+  Scores,
 } from '../src/appointment';
 import { authorizedDeviceId } from './memberAuthorization';
 
@@ -120,6 +122,19 @@ export const generateNoShowAppointmentParams = ({
   reason?: string;
 } = {}): NoShowParams => {
   return { id, noShow, reason };
+};
+
+export const generateNoteParam = (): Note => {
+  return { key: faker.lorem.word(), value: faker.lorem.sentence() };
+};
+
+export const generateScoresParam = (): Scores => {
+  return {
+    adherence: faker.datatype.number({ min: 1, max: 10 }),
+    adherenceText: faker.lorem.sentence(),
+    wellbeing: faker.datatype.number({ min: 1, max: 10 }),
+    wellbeingText: faker.lorem.sentence(),
+  };
 };
 
 const generateEmail = () => {

@@ -6,12 +6,13 @@ import {
   dbDisconnect,
   generateRequestAppointmentParams,
   generateNoShowAppointmentParams,
+  generateNoteParam,
+  generateScoresParam,
   generateScheduleAppointmentParams,
 } from '../index';
 import {
   Appointment,
   AppointmentDto,
-  AppointmentMethod,
   AppointmentModule,
   AppointmentService,
   AppointmentStatus,
@@ -391,6 +392,69 @@ describe('AppointmentService', () => {
         expect(result.noShow).toEqual(params.update2);
       },
     );
+  });
+
+  describe('setNotes', () => {
+    it('should set new notes to an appointment', async () => {
+      const resultAppointment = await requestAppointment({
+        memberId: new Types.ObjectId().toString(),
+        userId: new Types.ObjectId().toString(),
+        notBeforeHours: 5,
+      });
+
+      const notes = [generateNoteParam()];
+      const scores = generateScoresParam();
+
+      await service.setNotes({
+        appointmentId: resultAppointment.id,
+        notes,
+        scores,
+      });
+
+      const result = await service.get(resultAppointment.id);
+      expect(result.notes.notes[0].key).toEqual(notes[0].key);
+      expect(result.notes.notes[0].value).toEqual(notes[0].value);
+      expect(result.notes.scores).toEqual(expect.objectContaining(scores));
+    });
+
+    it('should re-set notes and scores to an appointment', async () => {
+      const resultAppointment = await requestAppointment({
+        memberId: new Types.ObjectId().toString(),
+        userId: new Types.ObjectId().toString(),
+        notBeforeHours: 5,
+      });
+
+      const notes1 = [generateNoteParam()];
+      const scores1 = generateScoresParam();
+
+      await service.setNotes({
+        appointmentId: resultAppointment.id,
+        notes: notes1,
+        scores: scores1,
+      });
+
+      const notes2 = [generateNoteParam(), generateNoteParam()];
+      const scores2 = generateScoresParam();
+
+      await service.setNotes({
+        appointmentId: resultAppointment.id,
+        notes: notes2,
+        scores: scores2,
+      });
+
+      const result = await service.get(resultAppointment.id);
+      expect(result.notes.notes[0].key).toEqual(notes2[0].key);
+      expect(result.notes.notes[0].value).toEqual(notes2[0].value);
+      expect(result.notes.notes[1].key).toEqual(notes2[1].key);
+      expect(result.notes.notes[1].value).toEqual(notes2[1].value);
+      expect(result.notes.scores).toEqual(expect.objectContaining(scores2));
+    });
+
+    it('should throw error on missing appointmentId', async () => {
+      await expect(
+        service.setNotes({ appointmentId: new Types.ObjectId().toString() }),
+      ).rejects.toThrow(Errors.get(ErrorType.appointmentIdNotFound));
+    });
   });
 
   const requestAppointment = async ({

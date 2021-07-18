@@ -5,12 +5,15 @@ import {
   AppointmentDto,
   AppointmentResolver,
   AppointmentService,
+  NotesDto,
+  Notes,
 } from '.';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Appointment.name, schema: AppointmentDto },
+      { name: Notes.name, schema: NotesDto },
     ]),
   ],
   providers: [AppointmentResolver, AppointmentService],

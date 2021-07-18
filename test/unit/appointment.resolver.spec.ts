@@ -12,6 +12,8 @@ import {
   dbDisconnect,
   generateRequestAppointmentParams,
   generateNoShowAppointmentParams,
+  generateNoteParam,
+  generateScoresParam,
   generateScheduleAppointmentParams,
 } from '../index';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -192,6 +194,30 @@ describe('AppointmentResolver', () => {
       const result = await resolver.noShowAppointment(update);
 
       expect(result).toEqual(appointment);
+    });
+  });
+
+  describe('setNotes', () => {
+    let spyOnServiceSetNotes;
+    beforeEach(() => {
+      spyOnServiceSetNotes = jest.spyOn(service, 'setNotes');
+    });
+
+    afterEach(() => {
+      spyOnServiceSetNotes.mockReset();
+    });
+
+    it('should set notes to an appointment', async () => {
+      const notes = [generateNoteParam()];
+      spyOnServiceSetNotes.mockImplementationOnce(async () => undefined);
+
+      const result = await resolver.setNotes({
+        appointmentId: Types.ObjectId().toString(),
+        notes,
+        scores: generateScoresParam(),
+      });
+
+      expect(result).toEqual(undefined);
     });
   });
 });

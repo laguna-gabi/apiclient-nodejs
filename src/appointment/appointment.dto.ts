@@ -16,6 +16,7 @@ import {
   IsNoShowValid,
 } from '../common';
 import { Types, Document } from 'mongoose';
+import { Notes } from './note.dto';
 
 /***********************************************************************************************************************
  ****************************************** Enum registration for gql methods ******************************************
@@ -139,6 +140,10 @@ export class Appointment extends Identifier {
   @Prop({ type: NoShow })
   @Field(() => NoShow, { nullable: true })
   noShow?: NoShow;
+
+  @Prop({ type: Types.ObjectId, ref: Notes.name })
+  @Field(() => Notes, { nullable: true })
+  notes?: Notes;
 }
 
 @ObjectType()

@@ -4,11 +4,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { createTestClient } from 'apollo-server-testing';
 import { AppModule } from '../../src/app.module';
 import {
-  generateRequestAppointmentParams,
   generateCreateMemberParams,
   generateCreateUserParams,
-  generateScheduleAppointmentParams,
   generateNoShowAppointmentParams,
+  generateNoteParam,
+  generateScoresParam,
+  generateRequestAppointmentParams,
+  generateScheduleAppointmentParams,
 } from '../index';
 import { CreateUserParams, User, UserRole } from '../../src/user';
 import { camelCase, omit } from 'lodash';
@@ -21,10 +23,12 @@ import {
   Appointment,
   AppointmentStatus,
   RequestAppointmentParams,
+  SetNotesParams,
 } from '../../src/appointment';
 import { Errors, ErrorType } from '../../src/common';
 import { Types } from 'mongoose';
 import * as jwt from 'jsonwebtoken';
+import { AppointmentsIntegrationActions } from './appointments';
 
 const validatorsConfig = config.get('graphql.validators');
 const deviceId = faker.datatype.uuid();
@@ -34,6 +38,7 @@ describe('Integration graphql resolvers', () => {
   let app: INestApplication;
   let mutations: Mutations;
   let queries: Queries;
+  let appointmentsActions: AppointmentsIntegrationActions;
   let module: GraphQLModule;
 
   const primaryCoachId = new Types.ObjectId().toString();
@@ -54,6 +59,8 @@ describe('Integration graphql resolvers', () => {
     const apolloServer = createTestClient((module as any).apolloServer);
     mutations = new Mutations(apolloServer);
     queries = new Queries(apolloServer);
+
+    appointmentsActions = new AppointmentsIntegrationActions(mutations);
   });
 
   afterAll(async () => {
@@ -433,11 +440,7 @@ describe('Integration graphql resolvers', () => {
           /* eslint-enable max-len */
           `should fail to update an appointment no show since $field is not a valid type`,
           async (params) => {
-            const noShowParams = {
-              id: new Types.ObjectId().toString(),
-              noShow: true,
-              reason: faker.lorem.sentence(),
-            };
+            const noShowParams = generateNoShowAppointmentParams();
             noShowParams[params.field] = params.input;
 
             await mutations.noShowAppointment({
@@ -463,6 +466,51 @@ describe('Integration graphql resolvers', () => {
             await mutations.noShowAppointment({
               noShowParams,
               invalidFieldsErrors: [Errors.get(ErrorType.appointmentNoShow)],
+            });
+          },
+        );
+      });
+
+      describe('setNotes', () => {
+        test.each`
+          field              | error
+          ${'appointmentId'} | ${`Field "appointmentId" of required type "String!" was not provided.`}
+        `(
+          `should fail to set notes to an appointment since mandatory field $field is missing`,
+          async (params) => {
+            const noteParams: SetNotesParams = {
+              appointmentId: new Types.ObjectId().toString(),
+              notes: [generateNoteParam()],
+              scores: generateScoresParam(),
+            };
+
+            delete noteParams[params.field];
+
+            await mutations.setNotes({
+              params: noteParams,
+              missingFieldError: params.error,
+            });
+          },
+        );
+
+        test.each`
+          field          | error
+          ${'adherence'} | ${`Field "adherence" of required type "Float!" was not provided.`}
+          ${'wellbeing'} | ${`Field "wellbeing" of required type "Float!" was not provided.`}
+        `(
+          `should fail to set notes to an appointment since mandatory field $field is missing`,
+          async (params) => {
+            const noteParams: SetNotesParams = {
+              appointmentId: new Types.ObjectId().toString(),
+              notes: [generateNoteParam()],
+              scores: generateScoresParam(),
+            };
+
+            delete noteParams.scores[params.field];
+
+            await mutations.setNotes({
+              params: noteParams,
+              missingFieldError: params.error,
             });
           },
         );
@@ -543,7 +591,8 @@ describe('Integration graphql resolvers', () => {
    * 4. call mutation endAppointment: returned current appointment with status: done
    * 5. call mutation freezeAppointment: returned current appointment with status: closed
    * 6. call mutation endAppointment: "unfreeze" returned current appointment with status: done
-   * 7. call query getAppointment: returned current appointment with all fields
+   * 7. call setNotes 2 times - 2nd time should override the 1st one
+   * 8. call query getAppointment: returned current appointment with all fields
    */
   const createAndValidateAppointment = async ({
     userId,
@@ -552,78 +601,34 @@ describe('Integration graphql resolvers', () => {
     userId: string;
     member: Member;
   }): Promise<Appointment> => {
-    const appointmentParams = generateRequestAppointmentParams({
-      memberId: member.id,
+    const requestAppointmentResult =
+      await appointmentsActions.requestAppointment(userId, member);
+
+    let appointment = await appointmentsActions.scheduleAppointment(
       userId,
-    });
-    const requestAppointmentResult = await mutations.requestAppointment({
-      appointmentParams,
-    });
-
-    expect(requestAppointmentResult.userId).toEqual(userId);
-    expect(requestAppointmentResult.memberId).toEqual(member.id);
-    expect(new Date(requestAppointmentResult.notBefore)).toEqual(
-      new Date(appointmentParams.notBefore),
+      member,
     );
 
-    const scheduleAppointment = generateScheduleAppointmentParams({
-      memberId: member.id,
-      userId,
-    });
-    let appointment = await mutations.scheduleAppointment({
-      appointmentParams: scheduleAppointment,
-    });
+    expect(requestAppointmentResult.id).not.toEqual(appointment.id);
 
-    expect(appointment.status).toEqual(AppointmentStatus.scheduled);
-    expect(requestAppointmentResult.status).toEqual(
-      AppointmentStatus.requested,
-    );
-    expect(appointment.id).not.toEqual(requestAppointmentResult.id);
-    expect(appointment.memberId).toEqual(requestAppointmentResult.memberId);
-    expect(appointment.userId).toEqual(requestAppointmentResult.userId);
-    expect(new Date(appointment.notBefore)).toEqual(
-      scheduleAppointment.notBefore,
-    );
-    expect(new Date(appointment.start)).toEqual(scheduleAppointment.start);
-    expect(new Date(appointment.end)).toEqual(scheduleAppointment.end);
+    appointment = await appointmentsActions.endAppointment(appointment.id);
+    appointment = await appointmentsActions.freezeAppointment(appointment.id);
+    appointment = await appointmentsActions.endAppointment(appointment.id); //Unfreeze
+    appointment = await appointmentsActions.showAppointment(appointment.id);
 
-    appointment = await mutations.endAppointment({
-      id: appointment.id,
-    });
-    expect(appointment.status).toEqual(AppointmentStatus.done);
+    let notes = [generateNoteParam()];
+    let scores = generateScoresParam();
+    await appointmentsActions.setNotes(appointment.id, notes, scores);
+    let result = await queries.getAppointment(appointment.id);
+    expect(result).toEqual({ ...appointment, notes: { notes, scores } });
 
-    appointment = await mutations.freezeAppointment({
-      id: appointment.id,
-    });
-    expect(appointment.status).toEqual(AppointmentStatus.closed);
+    notes = [generateNoteParam(), generateNoteParam()];
+    scores = generateScoresParam();
+    await appointmentsActions.setNotes(appointment.id, notes, scores);
+    result = await queries.getAppointment(appointment.id);
+    expect(result).toEqual({ ...appointment, notes: { notes, scores } });
 
-    //"unfreeze"
-    appointment = await mutations.endAppointment({
-      id: appointment.id,
-    });
-    expect(appointment.status).toEqual(AppointmentStatus.done);
-
-    const noShowParams = generateNoShowAppointmentParams({
-      id: appointment.id,
-    });
-    appointment = await mutations.noShowAppointment({ noShowParams });
-    expect(appointment.noShow).toEqual({
-      noShow: noShowParams.noShow,
-      reason: noShowParams.reason,
-    });
-
-    appointment = await mutations.noShowAppointment({
-      noShowParams: {
-        id: appointment.id,
-        noShow: false,
-      },
-    });
-    expect(appointment.noShow).toEqual({ noShow: false, reason: null });
-
-    const appointmentResult2 = await queries.getAppointment(appointment.id);
-    expect(appointment).toEqual(appointmentResult2);
-
-    return appointmentResult2;
+    return result;
   };
 
   const setContextUser = (deviceId: string) => {

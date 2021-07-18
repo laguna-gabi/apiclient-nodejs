@@ -6,6 +6,7 @@ import {
   RequestAppointmentParams,
   ScheduleAppointmentParams,
   NoShowParams,
+  SetNotesParams,
 } from '.';
 
 @Resolver(() => Appointment)
@@ -49,5 +50,10 @@ export class AppointmentResolver {
     noShowParams: NoShowParams,
   ) {
     return this.appointmentService.show(noShowParams);
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async setNotes(@Args('params') params: SetNotesParams) {
+    return this.appointmentService.setNotes(params);
   }
 }

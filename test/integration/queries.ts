@@ -83,7 +83,7 @@ export class Queries {
   };
 
   getAppointment = async (id: string) => {
-    const resultGetUser = await this.apolloClient.query({
+    const result = await this.apolloClient.query({
       variables: { id },
       query: gql`
         query getAppointment($id: String!) {
@@ -100,10 +100,22 @@ export class Queries {
               noShow
               reason
             }
+            notes {
+              notes {
+                key
+                value
+              }
+              scores {
+                adherence
+                adherenceText
+                wellbeing
+                wellbeingText
+              }
+            }
           }
         }
       `,
     });
-    return resultGetUser.data.getAppointment;
+    return result.data.getAppointment;
   };
 }

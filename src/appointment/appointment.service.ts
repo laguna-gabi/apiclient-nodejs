@@ -7,6 +7,9 @@ import {
   AppointmentStatus,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
+  SetNotesParams,
+  Notes,
+  NotesDocument,
 } from '.';
 import { Errors, ErrorType, EventType } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -16,6 +19,8 @@ export class AppointmentService {
   constructor(
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument>,
+    @InjectModel(Notes.name)
+    private readonly notesModel: Model<NotesDocument>,
     private eventEmitter: EventEmitter2,
   ) {}
 
@@ -45,7 +50,7 @@ export class AppointmentService {
   }
 
   async get(id: string): Promise<Appointment> {
-    return this.appointmentModel.findById({ _id: id });
+    return this.appointmentModel.findById({ _id: id }).populate('notes');
   }
 
   async schedule(params: ScheduleAppointmentParams): Promise<Appointment> {
@@ -91,6 +96,29 @@ export class AppointmentService {
         reason: params.reason,
       },
     });
+  }
+
+  async setNotes(params: SetNotesParams): Promise<void> {
+    const existing = await this.appointmentModel.findById({
+      _id: params.appointmentId,
+    });
+
+    if (!existing) {
+      throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
+    }
+
+    if (existing.notes) {
+      await this.notesModel.findOneAndUpdate(
+        { _id: existing.notes },
+        { $set: { notes: params.notes, scores: params.scores } },
+      );
+    } else {
+      const { id } = await this.notesModel.create(params);
+      await this.appointmentModel.findOneAndUpdate(
+        { _id: params.appointmentId },
+        { $set: { notes: id } },
+      );
+    }
   }
 
   private async updateAppointment(id, setParams): Promise<Appointment> {
