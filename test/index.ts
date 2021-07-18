@@ -16,13 +16,15 @@ export const generateCreateUserParams = ({
   name = faker.name.findName(),
   email = generateEmail(),
   photoUrl = faker.image.imageUrl(),
+  description = faker.lorem.sentence(),
 }: {
   roles?: UserRole[];
   name?: string;
   email?: string;
   photoUrl?: string;
+  description?: string;
 } = {}): CreateUserParams => {
-  return { name, email, roles, photoUrl };
+  return { name, email, roles, photoUrl, description };
 };
 
 export const mockGenerateUser = (): User => {
@@ -34,6 +36,7 @@ export const mockGenerateUser = (): User => {
     email: generateEmail(),
     roles: [UserRole.coach],
     photoUrl: faker.image.imageUrl(),
+    description: faker.lorem.sentence(),
   };
 };
 

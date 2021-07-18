@@ -27,6 +27,8 @@ import { Types } from 'mongoose';
 import * as jwt from 'jsonwebtoken';
 
 const validatorsConfig = config.get('graphql.validators');
+const deviceId = faker.datatype.uuid();
+const stringError = `String cannot represent a non string value`;
 
 describe('Integration graphql resolvers', () => {
   let app: INestApplication;
@@ -170,11 +172,12 @@ describe('Integration graphql resolvers', () => {
   describe('validations', () => {
     describe('user', () => {
       test.each`
-        field         | error
-        ${'email'}    | ${`Field "email" of required type "String!" was not provided.`}
-        ${'name'}     | ${`Field "name" of required type "String!" was not provided.`}
-        ${'roles'}    | ${`Field "roles" of required type "[UserRole!]!" was not provided.`}
-        ${'photoUrl'} | ${`Field "photoUrl" of required type "String!" was not provided.`}
+        field            | error
+        ${'email'}       | ${`Field "email" of required type "String!" was not provided.`}
+        ${'name'}        | ${`Field "name" of required type "String!" was not provided.`}
+        ${'roles'}       | ${`Field "roles" of required type "[UserRole!]!" was not provided.`}
+        ${'photoUrl'}    | ${`Field "photoUrl" of required type "String!" was not provided.`}
+        ${'description'} | ${`Field "description" of required type "String!" was not provided.`}
       `(
         `should fail to create a user since mandatory field $field is missing`,
         async (params) => {
@@ -208,9 +211,10 @@ describe('Integration graphql resolvers', () => {
       /* eslint-disable max-len */
       test.each`
         field                 | input                                                          | errors
-        ${'email'}            | ${{ email: faker.lorem.word() }}                               | ${[Errors.get(ErrorType.userEmailFormat)]}
-        ${'photoUrl'}         | ${{ photoUrl: faker.lorem.word() }}                            | ${[Errors.get(ErrorType.userPhotoUrlFormat)]}
-        ${'email & photoUrl'} | ${{ email: faker.lorem.word(), photoUrl: faker.lorem.word() }} | ${[Errors.get(ErrorType.userEmailFormat), Errors.get(ErrorType.userPhotoUrlFormat)]}
+        ${'email'}            | ${{ email: faker.lorem.word() }}                               | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat)] }}
+        ${'photoUrl'}         | ${{ photoUrl: faker.lorem.word() }}                            | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userPhotoUrlFormat)] }}
+        ${'email & photoUrl'} | ${{ email: faker.lorem.word(), photoUrl: faker.lorem.word() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat), Errors.get(ErrorType.userPhotoUrlFormat)] }}
+        ${'description'}      | ${{ description: 222 }}                                        | ${{ missingFieldError: stringError }}
       `(
         /* eslint-enable max-len */
         `should fail to create a user since $field is not valid`,
@@ -220,7 +224,7 @@ describe('Integration graphql resolvers', () => {
           );
           await mutations.createUser({
             userParams,
-            invalidFieldsErrors: params.errors,
+            ...params.errors,
           });
         },
       );
@@ -309,8 +313,8 @@ describe('Integration graphql resolvers', () => {
         /* eslint-disable max-len */
         test.each`
           field          | input                                | error
-          ${'memberId'}  | ${{ memberId: 123 }}                 | ${{ missingFieldError: 'String cannot represent a non string value' }}
-          ${'userId'}    | ${{ userId: 123 }}                   | ${{ missingFieldError: 'String cannot represent a non string value' }}
+          ${'memberId'}  | ${{ memberId: 123 }}                 | ${{ missingFieldError: stringError }}
+          ${'userId'}    | ${{ userId: 123 }}                   | ${{ missingFieldError: stringError }}
           ${'notBefore'} | ${{ notBefore: faker.lorem.word() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentNotBeforeDate)] }}
         `(
           /* eslint-enable max-len */
@@ -364,8 +368,8 @@ describe('Integration graphql resolvers', () => {
         /* eslint-disable max-len */
         test.each`
           field          | input                         | error
-          ${'memberId'}  | ${{ memberId: 123 }}          | ${{ missingFieldError: 'String cannot represent a non string value' }}
-          ${'userId'}    | ${{ userId: 123 }}            | ${{ missingFieldError: 'String cannot represent a non string value' }}
+          ${'memberId'}  | ${{ memberId: 123 }}          | ${{ missingFieldError: stringError }}
+          ${'userId'}    | ${{ userId: 123 }}            | ${{ missingFieldError: stringError }}
           ${'notBefore'} | ${{ notBefore: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentNotBeforeDate)] }}
           ${'method'}    | ${{ method: 'not-valid' }}    | ${{ missingFieldError: 'Enum "AppointmentMethod" cannot represent non-string value' }}
           ${'start'}     | ${{ start: 'not-valid' }}     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentStartDate)] }}
@@ -422,9 +426,9 @@ describe('Integration graphql resolvers', () => {
         /* eslint-disable max-len */
         test.each`
           field       | input                      | error
-          ${'id'}     | ${{ id: 123 }}             | ${{ missingFieldError: 'String cannot represent a non string value' }}
+          ${'id'}     | ${{ id: 123 }}             | ${{ missingFieldError: stringError }}
           ${'noShow'} | ${{ noShow: 'not-valid' }} | ${{ missingFieldError: 'Boolean cannot represent a non boolean value' }}
-          ${'reason'} | ${{ reason: 123 }}         | ${{ missingFieldError: 'String cannot represent a non string value' }}
+          ${'reason'} | ${{ reason: 123 }}         | ${{ missingFieldError: stringError }}
         `(
           /* eslint-enable max-len */
           `should fail to update an appointment no show since $field is not a valid type`,

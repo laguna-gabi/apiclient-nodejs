@@ -15,6 +15,7 @@ export class Queries {
             email
             roles
             photoUrl
+            description
             appointments {
               id
               notBefore
@@ -27,6 +28,7 @@ export class Queries {
         }
       `,
     });
+
     return resultGetUser.data.getUser;
   };
 
@@ -46,6 +48,7 @@ export class Queries {
               email
               roles
               photoUrl
+              description
               appointments {
                 id
                 notBefore
@@ -61,6 +64,7 @@ export class Queries {
               email
               roles
               photoUrl
+              description
               appointments {
                 id
                 notBefore

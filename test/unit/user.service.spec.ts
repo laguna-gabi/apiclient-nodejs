@@ -54,6 +54,7 @@ describe('UserService', () => {
       const result = await service.get(id);
       expect(result.email).toEqual(user.email);
       expect(result.roles).toEqual(expect.arrayContaining(user.roles));
+      expect(result.description).toEqual(user.description);
     });
   });
 
@@ -68,9 +69,8 @@ describe('UserService', () => {
       const user = generateCreateUserParams({ roles });
       const { id } = await service.insert(user);
 
-      const createdUser = await userModel.findById(id);
-      expect(createdUser['email']).toEqual(user.email);
-      expect(createdUser['roles']).toEqual(expect.arrayContaining(user.roles));
+      const createdUser = await userModel.findOne({ _id: id });
+      expect(createdUser.toObject()).toEqual(expect.objectContaining(user));
 
       expect(id).not.toBeNull();
     });
@@ -80,8 +80,7 @@ describe('UserService', () => {
       const { id } = await service.insert(user);
 
       const createdUser = await userModel.findById(id);
-      expect(createdUser['createdAt']).toEqual(expect.any(Date));
-      expect(createdUser['updatedAt']).toEqual(expect.any(Date));
+      expect(createdUser.toObject()).toEqual(expect.objectContaining(user));
     });
 
     it('should fail to insert an already existing user', async () => {
