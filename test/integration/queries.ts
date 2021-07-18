@@ -15,6 +15,14 @@ export class Queries {
             email
             roles
             photoUrl
+            appointments {
+              id
+              notBefore
+              method
+              status
+              start
+              end
+            }
           }
         }
       `,
@@ -38,6 +46,14 @@ export class Queries {
               email
               roles
               photoUrl
+              appointments {
+                id
+                notBefore
+                method
+                status
+                start
+                end
+              }
             }
             users {
               id
@@ -45,6 +61,14 @@ export class Queries {
               email
               roles
               photoUrl
+              appointments {
+                id
+                notBefore
+                method
+                status
+                start
+                end
+              }
             }
           }
         }

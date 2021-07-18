@@ -5,7 +5,7 @@ import { CreateUserParams, User, UserRole } from '../src/user';
 import { CreateMemberParams, Member } from '../src/member';
 import {
   AppointmentMethod,
-  CreateAppointmentParams,
+  RequestAppointmentParams,
   ScheduleAppointmentParams,
   NoShowParams,
 } from '../src/appointment';
@@ -75,7 +75,7 @@ export const mockGenerateMember = (): Member => {
   };
 };
 
-export const generateCreateAppointmentParams = ({
+export const generateRequestAppointmentParams = ({
   userId = new Types.ObjectId().toString(),
   memberId = new Types.ObjectId().toString(),
   notBefore = faker.date.future(1),
@@ -83,24 +83,28 @@ export const generateCreateAppointmentParams = ({
   userId?: string;
   memberId?: string;
   notBefore?: Date;
-} = {}): CreateAppointmentParams => {
+} = {}): RequestAppointmentParams => {
   return { userId, memberId, notBefore };
 };
 
 export const generateScheduleAppointmentParams = ({
-  id = new Types.ObjectId().toString(),
+  userId = new Types.ObjectId().toString(),
+  memberId = new Types.ObjectId().toString(),
+  notBefore = faker.date.future(1),
   method = AppointmentMethod.chat,
   start = faker.date.future(1),
   end,
 }: {
-  id?: string;
+  userId?: string;
+  memberId?: string;
+  notBefore?: Date;
   method?: AppointmentMethod;
   start?: Date;
   end?: Date;
 } = {}): ScheduleAppointmentParams => {
   const endNew = new Date(start);
   endNew.setHours(endNew.getHours() + 2);
-  return { id, method, start, end: end || endNew };
+  return { userId, memberId, notBefore, method, start, end: end || endNew };
 };
 
 export const generateNoShowAppointmentParams = ({

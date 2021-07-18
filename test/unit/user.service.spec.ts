@@ -10,6 +10,8 @@ import {
 } from '../../src/user';
 import { dbConnect, dbDisconnect, generateCreateUserParams } from '../index';
 import { Errors, ErrorType } from '../../src/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { AppointmentModule } from '../../src/appointment';
 
 describe('UserService', () => {
   let module: TestingModule;
@@ -18,7 +20,12 @@ describe('UserService', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, UserModule],
+      imports: [
+        DbModule,
+        AppointmentModule,
+        UserModule,
+        EventEmitterModule.forRoot(),
+      ],
     }).compile();
 
     service = module.get<UserService>(UserService);

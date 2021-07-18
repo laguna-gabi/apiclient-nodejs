@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { createTestClient } from 'apollo-server-testing';
 import { AppModule } from '../../src/app.module';
 import {
-  generateCreateAppointmentParams,
+  generateRequestAppointmentParams,
   generateCreateMemberParams,
   generateCreateUserParams,
   generateScheduleAppointmentParams,
@@ -19,21 +19,20 @@ import * as faker from 'faker';
 import { CreateMemberParams, Member } from '../../src/member';
 import {
   Appointment,
-  AppointmentMethod,
   AppointmentStatus,
-  CreateAppointmentParams,
+  RequestAppointmentParams,
 } from '../../src/appointment';
 import { Errors, ErrorType } from '../../src/common';
 import { Types } from 'mongoose';
 import * as jwt from 'jsonwebtoken';
 
 const validatorsConfig = config.get('graphql.validators');
-const deviceId = faker.datatype.uuid();
 
 describe('Integration graphql resolvers', () => {
   let app: INestApplication;
   let mutations: Mutations;
   let queries: Queries;
+  let module: GraphQLModule;
 
   const primaryCoachId = new Types.ObjectId().toString();
   const minLength = validatorsConfig.get('name.minLength') as number;
@@ -48,16 +47,7 @@ describe('Integration graphql resolvers', () => {
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
 
-    const module: GraphQLModule =
-      moduleFixture.get<GraphQLModule>(GraphQLModule);
-
-    (module as any).apolloServer.context = () => ({
-      req: {
-        headers: {
-          authorization: jwt.sign({ username: deviceId }, 'shhh'),
-        },
-      },
-    });
+    module = moduleFixture.get<GraphQLModule>(GraphQLModule);
 
     const apolloServer = createTestClient((module as any).apolloServer);
     mutations = new Mutations(apolloServer);
@@ -72,25 +62,109 @@ describe('Integration graphql resolvers', () => {
     /**
      * 1. Create a user with a single role - coach
      * 2. Create a user with 2 roles - coach and nurse
-     * 3. Create a member with the 2 users above, the 1st user is the primaryCoach, and the 2nd user is in users list
-     * 4. Create an appointment between the 1st coach and the member
-     * 5. Schedule the appointment to a 1 hour meeting
+     * 3. Create a user with 1 role - nurse
+     * 4. Create a member with the 3 users above. 1st user is the primaryCoach, 2nd and 3rd users is in users list
+     * 5. Create an appointment between the primary coach and the member
+     * 6. Create an appointment between the non primary coach (2nd user) and the member
+     * 7. Create an appointment between the non primary coach (3rd user) and the member
+     * 8. Fetch member and checks all related appointments
      */
     const resultCoach = await createAndValidateUser();
-    const resultNurse = await createAndValidateUser([
+    const resultNurse1 = await createAndValidateUser([
       UserRole.nurse,
       UserRole.coach,
     ]);
+    const resultNurse2 = await createAndValidateUser([UserRole.nurse]);
 
     const resultMember = await createAndValidateMember({
       primaryCoach: resultCoach,
-      coaches: [resultNurse],
+      coaches: [resultNurse1, resultNurse2],
     });
 
-    await createAndValidateAppointment({
-      userId: resultCoach.id,
+    const scheduledAppointmentPrimaryCoach = await createAndValidateAppointment(
+      {
+        userId: resultCoach.id,
+        member: resultMember,
+      },
+    );
+
+    const scheduledAppointmentNurse1 = await createAndValidateAppointment({
+      userId: resultNurse1.id,
       member: resultMember,
     });
+
+    const scheduledAppointmentNurse2 = await createAndValidateAppointment({
+      userId: resultNurse2.id,
+      member: resultMember,
+    });
+
+    const member = await queries.getMember();
+
+    expect(member.primaryCoach.appointments[0]).toEqual(
+      expect.objectContaining({ status: AppointmentStatus.requested }),
+    );
+    expect(scheduledAppointmentPrimaryCoach).toEqual(
+      expect.objectContaining(member.primaryCoach.appointments[1]),
+    );
+
+    expect(member.users[0].appointments[0]).toEqual(
+      expect.objectContaining({ status: AppointmentStatus.requested }),
+    );
+    expect(scheduledAppointmentNurse1).toEqual(
+      expect.objectContaining(member.users[0].appointments[1]),
+    );
+
+    expect(member.users[1].appointments[0]).toEqual(
+      expect.objectContaining({ status: AppointmentStatus.requested }),
+    );
+    expect(scheduledAppointmentNurse2).toEqual(
+      expect.objectContaining(member.users[1].appointments[1]),
+    );
+  });
+
+  /**
+   * Checks that if a user has 2+ appointments with 2+ members,
+   * when calling getMember it'll bring the specific member's appointment, and not all appointments
+   * 1. user: { id: 'user-123' }
+   * 2. member: { id: 'member-123', primaryCoach: { id : 'user-123' } }
+   * 3. member: { id: 'member-456', primaryCoach: { id : 'user-123' } }
+   * In this case, user has 2 appointments, but when a member requests an appointment, it'll return just the
+   * related appointment of a user, and not all appointments.
+   */
+  it('should validate that getAppointments just fetch the member appointment of a user', async () => {
+    const primaryCoach = await createAndValidateUser();
+    const member1 = await createAndValidateMember({ primaryCoach });
+    const member2 = await createAndValidateMember({ primaryCoach });
+
+    const appointmentMember1 = await createAndValidateAppointment({
+      userId: primaryCoach.id,
+      member: member1,
+    });
+
+    const appointmentMember2 = await createAndValidateAppointment({
+      userId: primaryCoach.id,
+      member: member2,
+    });
+
+    const primaryCoachWithAppointments = await queries.getUser(primaryCoach.id);
+    expect(appointmentMember1).toEqual(
+      expect.objectContaining(primaryCoachWithAppointments.appointments[1]),
+    );
+    expect(appointmentMember2).toEqual(
+      expect.objectContaining(primaryCoachWithAppointments.appointments[3]),
+    );
+
+    setContextUser(member1.deviceId);
+    const memberResult1 = await queries.getMember();
+    expect(appointmentMember1).toEqual(
+      expect.objectContaining(memberResult1.primaryCoach.appointments[1]),
+    );
+
+    setContextUser(member2.deviceId);
+    const memberResult2 = await queries.getMember();
+    expect(appointmentMember2).toEqual(
+      expect.objectContaining(memberResult2.primaryCoach.appointments[1]),
+    );
   });
 
   describe('validations', () => {
@@ -213,7 +287,7 @@ describe('Integration graphql resolvers', () => {
     });
 
     describe('appointment', () => {
-      describe('insert', () => {
+      describe('request', () => {
         test.each`
           field          | error
           ${'userId'}    | ${`Field "userId" of required type "String!" was not provided.`}
@@ -222,10 +296,10 @@ describe('Integration graphql resolvers', () => {
         `(
           `should fail to create an appointment since mandatory field $field is missing`,
           async (params) => {
-            const appointmentParams: CreateAppointmentParams =
-              generateCreateAppointmentParams();
+            const appointmentParams: RequestAppointmentParams =
+              generateRequestAppointmentParams();
             delete appointmentParams[params.field];
-            await mutations.createAppointment({
+            await mutations.requestAppointment({
               appointmentParams,
               missingFieldError: params.error,
             });
@@ -242,10 +316,10 @@ describe('Integration graphql resolvers', () => {
           /* eslint-enable max-len */
           `should fail to create an appointment since $field is not a valid type`,
           async (params) => {
-            const appointmentParams: CreateAppointmentParams =
-              generateCreateAppointmentParams(params.input);
+            const appointmentParams: RequestAppointmentParams =
+              generateRequestAppointmentParams(params.input);
 
-            await mutations.createAppointment({
+            await mutations.requestAppointment({
               appointmentParams,
               ...params.error,
             });
@@ -256,8 +330,8 @@ describe('Integration graphql resolvers', () => {
           const notBefore = new Date();
           notBefore.setMinutes(notBefore.getMinutes() - 1);
 
-          await mutations.createAppointment({
-            appointmentParams: generateCreateAppointmentParams({ notBefore }),
+          await mutations.requestAppointment({
+            appointmentParams: generateRequestAppointmentParams({ notBefore }),
             invalidFieldsErrors: [
               Errors.get(ErrorType.appointmentNotBeforeDateInThePast),
             ],
@@ -267,11 +341,13 @@ describe('Integration graphql resolvers', () => {
 
       describe('schedule', () => {
         test.each`
-          field       | error
-          ${'id'}     | ${`Field "id" of required type "String!" was not provided.`}
-          ${'method'} | ${`Field "method" of required type "AppointmentMethod!" was not provided.`}
-          ${'start'}  | ${`Field "start" of required type "DateTime!" was not provided.`}
-          ${'end'}    | ${`Field "end" of required type "DateTime!" was not provided.`}
+          field          | error
+          ${'memberId'}  | ${`Field "memberId" of required type "String!" was not provided.`}
+          ${'userId'}    | ${`Field "userId" of required type "String!" was not provided.`}
+          ${'notBefore'} | ${`Field "notBefore" of required type "DateTime!" was not provided.`}
+          ${'method'}    | ${`Field "method" of required type "AppointmentMethod!" was not provided.`}
+          ${'start'}     | ${`Field "start" of required type "DateTime!" was not provided.`}
+          ${'end'}       | ${`Field "end" of required type "DateTime!" was not provided.`}
         `(
           `should fail to create an appointment since mandatory field $field is missing`,
           async (params) => {
@@ -287,11 +363,13 @@ describe('Integration graphql resolvers', () => {
 
         /* eslint-disable max-len */
         test.each`
-          field       | input                      | error
-          ${'id'}     | ${{ id: 123 }}             | ${{ missingFieldError: 'String cannot represent a non string value' }}
-          ${'method'} | ${{ method: 'not-valid' }} | ${{ missingFieldError: 'Enum "AppointmentMethod" cannot represent non-string value' }}
-          ${'start'}  | ${{ start: 'not-valid' }}  | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentStartDate)] }}
-          ${'end'}    | ${{ end: 'not-valid' }}    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentEndDate)] }}
+          field          | input                         | error
+          ${'memberId'}  | ${{ memberId: 123 }}          | ${{ missingFieldError: 'String cannot represent a non string value' }}
+          ${'userId'}    | ${{ userId: 123 }}            | ${{ missingFieldError: 'String cannot represent a non string value' }}
+          ${'notBefore'} | ${{ notBefore: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentNotBeforeDate)] }}
+          ${'method'}    | ${{ method: 'not-valid' }}    | ${{ missingFieldError: 'Enum "AppointmentMethod" cannot represent non-string value' }}
+          ${'start'}     | ${{ start: 'not-valid' }}     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentStartDate)] }}
+          ${'end'}       | ${{ end: 'not-valid' }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentEndDate)] }}
         `(
           /* eslint-enable max-len */
           `should fail to schedule an appointment since $field is not a valid type`,
@@ -404,7 +482,11 @@ describe('Integration graphql resolvers', () => {
 
     const result = await queries.getUser(primaryCoachId);
 
-    const expectedUser = { ...userParams, id: primaryCoachId };
+    const expectedUser = {
+      ...userParams,
+      id: primaryCoachId,
+      appointments: [],
+    };
 
     const resultUserNew = omit(result, 'roles');
     const expectedUserNew = omit(expectedUser, 'roles');
@@ -421,6 +503,12 @@ describe('Integration graphql resolvers', () => {
     primaryCoach,
     coaches = [],
   }): Promise<Member> => {
+    const deviceId = faker.datatype.uuid();
+    setContextUser(deviceId);
+    const apolloServer = createTestClient((module as any).apolloServer);
+    mutations = new Mutations(apolloServer);
+    queries = new Queries(apolloServer);
+
     const memberParams = generateCreateMemberParams({
       deviceId,
       primaryCoachId: primaryCoach.id,
@@ -445,9 +533,9 @@ describe('Integration graphql resolvers', () => {
   };
 
   /**
-   * 1. call mutation createAppointment: created appointment with memberId, userId, notBefore
+   * 1. call mutation requestAppointment: created appointment with memberId, userId, notBefore
    * 2. call query getAppointment: returned current appointment with memberId, userId, notBefore and status: requested
-   * 3. call mutation scheduleAppointment: returned current appointment with status: scheduled
+   * 3. call mutation scheduleAppointment: created new scheduled appointment with status: scheduled
    * 4. call mutation endAppointment: returned current appointment with status: done
    * 5. call mutation freezeAppointment: returned current appointment with status: closed
    * 6. call mutation endAppointment: "unfreeze" returned current appointment with status: done
@@ -460,56 +548,59 @@ describe('Integration graphql resolvers', () => {
     userId: string;
     member: Member;
   }): Promise<Appointment> => {
-    const appointmentParams = generateCreateAppointmentParams({
+    const appointmentParams = generateRequestAppointmentParams({
       memberId: member.id,
       userId,
     });
-    const appointmentResult = await mutations.createAppointment({
+    const requestAppointmentResult = await mutations.requestAppointment({
       appointmentParams,
     });
 
-    expect(appointmentResult.userId).toEqual(userId);
-    expect(appointmentResult.memberId).toEqual(member.id);
-    expect(new Date(appointmentResult.notBefore)).toEqual(
+    expect(requestAppointmentResult.userId).toEqual(userId);
+    expect(requestAppointmentResult.memberId).toEqual(member.id);
+    expect(new Date(requestAppointmentResult.notBefore)).toEqual(
       new Date(appointmentParams.notBefore),
     );
 
-    const start = new Date();
-    const end = new Date();
-    end.setHours(end.getHours() + 2);
-
+    const scheduleAppointment = generateScheduleAppointmentParams({
+      memberId: member.id,
+      userId,
+    });
     let appointment = await mutations.scheduleAppointment({
-      appointmentParams: {
-        id: appointmentResult.id,
-        method: AppointmentMethod.chat,
-        start,
-        end,
-      },
+      appointmentParams: scheduleAppointment,
     });
 
     expect(appointment.status).toEqual(AppointmentStatus.scheduled);
-    expect(appointmentResult.status).toEqual(AppointmentStatus.requested);
-    expect(appointment.id).toEqual(appointmentResult.id);
-    expect(appointment.memberId).toEqual(appointmentResult.memberId);
-    expect(appointment.userId).toEqual(appointmentResult.userId);
-    expect(appointment.notBefore).toEqual(appointmentResult.notBefore);
-    expect(new Date(appointment.start)).toEqual(start);
-    expect(new Date(appointment.end)).toEqual(end);
+    expect(requestAppointmentResult.status).toEqual(
+      AppointmentStatus.requested,
+    );
+    expect(appointment.id).not.toEqual(requestAppointmentResult.id);
+    expect(appointment.memberId).toEqual(requestAppointmentResult.memberId);
+    expect(appointment.userId).toEqual(requestAppointmentResult.userId);
+    expect(new Date(appointment.notBefore)).toEqual(
+      scheduleAppointment.notBefore,
+    );
+    expect(new Date(appointment.start)).toEqual(scheduleAppointment.start);
+    expect(new Date(appointment.end)).toEqual(scheduleAppointment.end);
 
-    appointment = await mutations.endAppointment({ id: appointmentResult.id });
+    appointment = await mutations.endAppointment({
+      id: appointment.id,
+    });
     expect(appointment.status).toEqual(AppointmentStatus.done);
 
     appointment = await mutations.freezeAppointment({
-      id: appointmentResult.id,
+      id: appointment.id,
     });
     expect(appointment.status).toEqual(AppointmentStatus.closed);
 
     //"unfreeze"
-    appointment = await mutations.endAppointment({ id: appointmentResult.id });
+    appointment = await mutations.endAppointment({
+      id: appointment.id,
+    });
     expect(appointment.status).toEqual(AppointmentStatus.done);
 
     const noShowParams = generateNoShowAppointmentParams({
-      id: appointmentResult.id,
+      id: appointment.id,
     });
     appointment = await mutations.noShowAppointment({ noShowParams });
     expect(appointment.noShow).toEqual({
@@ -519,17 +610,25 @@ describe('Integration graphql resolvers', () => {
 
     appointment = await mutations.noShowAppointment({
       noShowParams: {
-        id: appointmentResult.id,
+        id: appointment.id,
         noShow: false,
       },
     });
     expect(appointment.noShow).toEqual({ noShow: false, reason: null });
 
-    const appointmentResult2 = await queries.getAppointment(
-      appointmentResult.id,
-    );
+    const appointmentResult2 = await queries.getAppointment(appointment.id);
     expect(appointment).toEqual(appointmentResult2);
 
-    return appointment;
+    return appointmentResult2;
+  };
+
+  const setContextUser = (deviceId: string) => {
+    (module as any).apolloServer.context = () => ({
+      req: {
+        headers: {
+          authorization: jwt.sign({ username: deviceId }, 'shhh'),
+        },
+      },
+    });
   };
 });

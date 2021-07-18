@@ -17,6 +17,8 @@ import {
 import { Errors, ErrorType } from '../../src/common';
 import { User, UserRole, UserDto } from '../../src/user';
 import { datatype } from 'faker';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { AppointmentModule } from '../../src/appointment';
 
 describe('MemberService', () => {
   let module: TestingModule;
@@ -27,7 +29,12 @@ describe('MemberService', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, MemberModule],
+      imports: [
+        DbModule,
+        MemberModule,
+        AppointmentModule,
+        EventEmitterModule.forRoot(),
+      ],
     }).compile();
 
     service = module.get<MemberService>(MemberService);

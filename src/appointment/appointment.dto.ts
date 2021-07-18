@@ -2,6 +2,7 @@ import {
   Field,
   InputType,
   ObjectType,
+  OmitType,
   registerEnumType,
 } from '@nestjs/graphql';
 import { IsBoolean, IsDate } from 'class-validator';
@@ -38,7 +39,7 @@ registerEnumType(AppointmentMethod, { name: 'AppointmentMethod' });
  ******************************************** Input params for gql methods *********************************************
  **********************************************************************************************************************/
 @InputType()
-export class CreateAppointmentParams {
+export class RequestAppointmentParams {
   @Field(() => String)
   memberId: string;
 
@@ -56,7 +57,17 @@ export class CreateAppointmentParams {
 @InputType()
 export class ScheduleAppointmentParams {
   @Field(() => String)
-  id: string;
+  memberId: string;
+
+  @Field(() => String)
+  userId: string;
+
+  @Field(() => Date)
+  @IsFutureDate({
+    message: Errors.get(ErrorType.appointmentNotBeforeDateInThePast),
+  })
+  @IsDate({ message: Errors.get(ErrorType.appointmentNotBeforeDate) })
+  notBefore: Date;
 
   @Field(() => AppointmentMethod)
   method: AppointmentMethod;
@@ -129,6 +140,12 @@ export class Appointment extends Identifier {
   @Field(() => NoShow, { nullable: true })
   noShow?: NoShow;
 }
+
+@ObjectType()
+export class AppointmentData extends OmitType(Appointment, [
+  'userId',
+  'memberId',
+]) {}
 
 /***********************************************************************************************************************
  ************************************************** Exported Schemas ***************************************************

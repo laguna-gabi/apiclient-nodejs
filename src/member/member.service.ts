@@ -34,9 +34,19 @@ export class MemberService {
   }
 
   async get(deviceId: string): Promise<Member> {
+    const member = await this.memberModel.findOne({ deviceId }, { _id: 1 });
+    if (!member) {
+      return null;
+    }
+
+    const subPopulate = {
+      path: 'appointments',
+      match: { memberId: new Types.ObjectId(member._id) },
+    };
+
     return this.memberModel
       .findOne({ deviceId })
-      .populate('users')
-      .populate('primaryCoach');
+      .populate({ path: 'primaryCoach', populate: subPopulate })
+      .populate({ path: 'users', populate: subPopulate });
   }
 }

@@ -5,21 +5,22 @@ import {
   Appointment,
   AppointmentDocument,
   AppointmentStatus,
-  CreateAppointmentParams,
+  RequestAppointmentParams,
   ScheduleAppointmentParams,
-  // NoShowParams,
 } from '.';
-import { Errors, ErrorType } from '../common';
+import { Errors, ErrorType, EventType } from '../common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class AppointmentService {
   constructor(
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument>,
+    private eventEmitter: EventEmitter2,
   ) {}
 
-  async insert(params: CreateAppointmentParams): Promise<Appointment> {
-    return this.appointmentModel.findOneAndUpdate(
+  async request(params: RequestAppointmentParams): Promise<Appointment> {
+    const result = await this.appointmentModel.findOneAndUpdate(
       {
         userId: new Types.ObjectId(params.userId),
         memberId: new Types.ObjectId(params.memberId),
@@ -30,8 +31,17 @@ export class AppointmentService {
           status: AppointmentStatus.requested,
         },
       },
-      { upsert: true, new: true },
+      { upsert: true, new: true, rawResult: true },
     );
+
+    if (result.lastErrorObject.upserted) {
+      this.notifyNewAppointmentCreated({
+        userId: result.value.userId,
+        appointmentId: result.value._id,
+      });
+    }
+
+    return result.value;
   }
 
   async get(id: string): Promise<Appointment> {
@@ -39,12 +49,27 @@ export class AppointmentService {
   }
 
   async schedule(params: ScheduleAppointmentParams): Promise<Appointment> {
-    return this.updateAppointment(params.id, {
-      method: params.method,
-      start: params.start,
-      end: params.end,
-      status: AppointmentStatus.scheduled,
+    const result = (
+      await this.appointmentModel.create({
+        userId: new Types.ObjectId(params.userId),
+        memberId: new Types.ObjectId(params.memberId),
+        notBefore: params.notBefore,
+        method: params.method,
+        start: params.start,
+        end: params.end,
+        status: AppointmentStatus.scheduled,
+      })
+    ).toObject();
+
+    result.id = new Types.ObjectId(result._id);
+    delete result._id;
+
+    this.notifyNewAppointmentCreated({
+      userId: result.userId,
+      appointmentId: result.id,
     });
+
+    return result;
   }
 
   async end(id: string): Promise<Appointment> {
@@ -84,5 +109,18 @@ export class AppointmentService {
     }
 
     return result;
+  }
+
+  private notifyNewAppointmentCreated({
+    userId,
+    appointmentId,
+  }: {
+    userId: Types.ObjectId;
+    appointmentId: string;
+  }) {
+    this.eventEmitter.emit(EventType.newAppointment, {
+      userId,
+      appointmentId,
+    });
   }
 }

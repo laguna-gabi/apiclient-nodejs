@@ -4,8 +4,9 @@ import { model, Model, Types } from 'mongoose';
 import {
   dbConnect,
   dbDisconnect,
-  generateCreateAppointmentParams,
+  generateRequestAppointmentParams,
   generateNoShowAppointmentParams,
+  generateScheduleAppointmentParams,
 } from '../index';
 import {
   Appointment,
@@ -18,22 +19,26 @@ import {
 } from '../../src/appointment';
 import { User, UserDto } from '../../src/user';
 import { Member, MemberDto } from '../../src/member';
-import { Errors, ErrorType } from '../../src/common';
+import { Errors, ErrorType, EventType } from '../../src/common';
 import * as faker from 'faker';
+import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
+import { cloneDeep } from 'lodash';
 
 describe('AppointmentService', () => {
   let module: TestingModule;
   let service: AppointmentService;
+  let eventEmitter: EventEmitter2;
   let userModel: Model<typeof UserDto>;
   let memberModel: Model<typeof MemberDto>;
   let appointmentModel: Model<typeof AppointmentDto>;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, AppointmentModule],
+      imports: [DbModule, AppointmentModule, EventEmitterModule.forRoot()],
     }).compile();
 
     service = module.get<AppointmentService>(AppointmentService);
+    eventEmitter = module.get<EventEmitter2>(EventEmitter2);
 
     appointmentModel = model(Appointment.name, AppointmentDto);
     userModel = model(User.name, UserDto);
@@ -55,8 +60,8 @@ describe('AppointmentService', () => {
     });
 
     it('should return appointment set up for a user and member', async () => {
-      const appointment = generateCreateAppointmentParams();
-      const { id } = await service.insert(appointment);
+      const appointment = generateRequestAppointmentParams();
+      const { id } = await service.request(appointment);
 
       const result = await service.get(id);
 
@@ -72,39 +77,18 @@ describe('AppointmentService', () => {
     });
 
     it('should return a scheduled appointment', async () => {
-      const appointment = generateCreateAppointmentParams();
-      const { id } = await service.insert(appointment);
+      const appointment = generateScheduleAppointmentParams();
+      const { id } = await service.schedule(appointment);
 
-      const start = new Date(2020, 10, 8, 5);
-      const end = new Date(2020, 10, 8, 7);
-      const method = AppointmentMethod.chat;
-
-      const result = await service.schedule({
-        id,
-        method,
-        start,
-        end,
-      });
-
-      expect(result).toEqual(
-        expect.objectContaining({
-          _id: new Types.ObjectId(id),
-          userId: new Types.ObjectId(appointment.userId),
-          memberId: new Types.ObjectId(appointment.memberId),
-          notBefore: appointment.notBefore,
-          status: AppointmentStatus.scheduled,
-          method,
-          start,
-          end,
-        }),
-      );
+      const result = await service.get(id);
+      expect(result.status).toEqual(AppointmentStatus.scheduled);
     });
   });
 
   describe('insert', () => {
     it('should insert a new appointment and validate all insert fields', async () => {
-      const appointmentParams = generateCreateAppointmentParams();
-      const result = await service.insert(appointmentParams);
+      const appointmentParams = generateRequestAppointmentParams();
+      const result = await service.request(appointmentParams);
 
       expect(result.id).not.toBeUndefined();
 
@@ -125,7 +109,7 @@ describe('AppointmentService', () => {
       const memberId = new Types.ObjectId().toString();
       const userId = new Types.ObjectId().toString();
 
-      const { id: id1, record: record1 } = await createAppointment({
+      const { id: id1, record: record1 } = await requestAppointment({
         memberId,
         userId,
         notBeforeHours: 12,
@@ -135,7 +119,7 @@ describe('AppointmentService', () => {
         notBefore,
         id: id2,
         record: record2,
-      } = await createAppointment({
+      } = await requestAppointment({
         memberId,
         userId,
         notBeforeHours: 8,
@@ -159,13 +143,13 @@ describe('AppointmentService', () => {
       const userId1 = new Types.ObjectId().toString();
       const userId2 = new Types.ObjectId().toString();
 
-      const { id: id1, record: record1 } = await createAppointment({
+      const { id: id1, record: record1 } = await requestAppointment({
         memberId,
         userId: userId1,
         notBeforeHours: 5,
       });
 
-      const { id: id2, record: record2 } = await createAppointment({
+      const { id: id2, record: record2 } = await requestAppointment({
         memberId,
         userId: userId2,
         notBeforeHours: 2,
@@ -185,13 +169,13 @@ describe('AppointmentService', () => {
       const memberId2 = new Types.ObjectId().toString();
       const userId = new Types.ObjectId().toString();
 
-      const { id: id1, record: record1 } = await createAppointment({
+      const { id: id1, record: record1 } = await requestAppointment({
         memberId: memberId1,
         userId,
         notBeforeHours: 5,
       });
 
-      const { id: id2, record: record2 } = await createAppointment({
+      const { id: id2, record: record2 } = await requestAppointment({
         memberId: memberId2,
         userId,
         notBeforeHours: 2,
@@ -207,60 +191,66 @@ describe('AppointmentService', () => {
     });
 
     it('should check that createdAt and updatedAt exists in the collection', async () => {
-      const params = generateCreateAppointmentParams();
-      const { id } = await service.insert(params);
+      const params = generateRequestAppointmentParams();
+      const { id } = await service.request(params);
 
       const createdAppointment: any = await appointmentModel.findById(id);
       expect(createdAppointment.createdAt).toEqual(expect.any(Date));
       expect(createdAppointment.updatedAt).toEqual(expect.any(Date));
     });
+
+    it('should validate that on inserted new appointment, an internal event is sent', async () => {
+      const params = generateRequestAppointmentParams();
+      const spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
+      const { id } = await service.request(params);
+
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.newAppointment, {
+        appointmentId: new Types.ObjectId(id),
+        userId: new Types.ObjectId(params.userId),
+      });
+
+      spyOnEventEmitter.mockReset();
+    });
+
+    it('should validate that on updated appointment, an internal event is NOT sent', async () => {
+      const params = generateRequestAppointmentParams();
+      const spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
+
+      await service.request(params);
+      expect(spyOnEventEmitter).toBeCalled();
+      spyOnEventEmitter.mockReset();
+
+      await service.request(params);
+      expect(spyOnEventEmitter).not.toBeCalled();
+      spyOnEventEmitter.mockReset();
+    });
   });
 
   describe('schedule', () => {
-    it('should not be able to schedule a non existing appointment', async () => {
-      const date = new Date();
-      await expect(
-        service.schedule({
-          id: new Types.ObjectId().toString(),
-          method: AppointmentMethod.chat,
-          start: date,
-          end: date,
+    it('should be able to schedule an appointment', async () => {
+      const appointmentParams = generateScheduleAppointmentParams();
+      const appointment = await service.schedule(appointmentParams);
+
+      expect(appointment).toEqual(
+        expect.objectContaining({
+          id: expect.any(Types.ObjectId),
+          method: appointmentParams.method,
+          notBefore: appointmentParams.notBefore,
+          status: AppointmentStatus.scheduled,
         }),
-      ).rejects.toThrow(Errors.get(ErrorType.appointmentIdNotFound));
-    });
-
-    it('should be able to schedule an existing appointment', async () => {
-      const date = new Date();
-
-      const appointment = await service.insert(
-        generateCreateAppointmentParams(),
       );
-
-      const result = await service.schedule({
-        id: appointment.id,
-        method: AppointmentMethod.phoneCall,
-        start: date,
-        end: date,
-      });
-      const resultGet = await appointmentModel.findById(result.id);
-
-      expect(resultGet).toEqual(result);
     });
 
-    it('should be able to re-schedule an existing scheduled appointment', async () => {
+    it('should be able to schedule 2 appointments for the same user and member', async () => {
       const start = new Date(2030, 1, 1, 10);
       const end = new Date(2030, 1, 1, 12);
 
-      const appointment = await service.insert(
-        generateCreateAppointmentParams(),
-      );
-
-      const resultBefore = await service.schedule({
-        id: appointment.id,
-        method: AppointmentMethod.phoneCall,
+      const appointmentParamsBefore = generateScheduleAppointmentParams({
         start,
         end,
       });
+
+      const resultBefore = await service.schedule(appointmentParamsBefore);
 
       expect(resultBefore.start).toEqual(start);
       expect(resultBefore.end).toEqual(end);
@@ -270,15 +260,24 @@ describe('AppointmentService', () => {
       const newEnd = new Date(end);
       newEnd.setHours(17);
 
-      const resultAfter = await service.schedule({
-        id: appointment.id,
-        method: AppointmentMethod.phoneCall,
-        start: newStart,
-        end: newEnd,
-      });
+      const appointmentParamsAfter = cloneDeep(appointmentParamsBefore);
+      appointmentParamsAfter.start = newStart;
+      appointmentParamsAfter.end = newEnd;
+
+      const resultAfter = await service.schedule(appointmentParamsAfter);
 
       expect(resultAfter.start).toEqual(newStart);
       expect(resultAfter.end).toEqual(newEnd);
+
+      const appointment1 = await appointmentModel.find({
+        _id: new Types.ObjectId(resultBefore.id),
+      });
+      const appointment2 = await appointmentModel.find({
+        _id: new Types.ObjectId(resultAfter.id),
+      });
+
+      expect(appointment1).not.toBeUndefined();
+      expect(appointment2).not.toBeUndefined();
     });
   });
 
@@ -290,8 +289,8 @@ describe('AppointmentService', () => {
     });
 
     it('should be able to end an existing appointment', async () => {
-      const appointment = await service.insert(
-        generateCreateAppointmentParams(),
+      const appointment = await service.request(
+        generateRequestAppointmentParams(),
       );
 
       const endResult = await service.end(appointment.id);
@@ -299,18 +298,9 @@ describe('AppointmentService', () => {
     });
 
     it('should be able to end an existing scheduled appointment', async () => {
-      const date = new Date();
+      const appointmentParams = generateScheduleAppointmentParams();
 
-      const appointment = await service.insert(
-        generateCreateAppointmentParams(),
-      );
-
-      await service.schedule({
-        id: appointment.id,
-        method: AppointmentMethod.phoneCall,
-        start: date,
-        end: date,
-      });
+      const appointment = await service.schedule(appointmentParams);
 
       const endResult = await service.end(appointment.id);
       expect(endResult.status).toEqual(AppointmentStatus.done);
@@ -325,8 +315,8 @@ describe('AppointmentService', () => {
     });
 
     it('should be able to end an existing appointment', async () => {
-      const appointment = await service.insert(
-        generateCreateAppointmentParams(),
+      const appointment = await service.request(
+        generateRequestAppointmentParams(),
       );
 
       const endResult = await service.freeze(appointment.id);
@@ -334,18 +324,9 @@ describe('AppointmentService', () => {
     });
 
     it('should be able to freeze an existing scheduled appointment', async () => {
-      const date = new Date();
+      const appointmentParams = generateScheduleAppointmentParams();
 
-      const appointment = await service.insert(
-        generateCreateAppointmentParams(),
-      );
-
-      await service.schedule({
-        id: appointment.id,
-        method: AppointmentMethod.phoneCall,
-        start: date,
-        end: date,
-      });
+      const appointment = await service.schedule(appointmentParams);
 
       const endResult = await service.freeze(appointment.id);
       expect(endResult.status).toEqual(AppointmentStatus.closed);
@@ -368,8 +349,8 @@ describe('AppointmentService', () => {
     `(
       `should be able to update appointment show $update to an existing appointment`,
       async (params) => {
-        const appointment = await service.insert(
-          generateCreateAppointmentParams(),
+        const appointment = await service.request(
+          generateRequestAppointmentParams(),
         );
 
         const updateShowParams: NoShowParams = {
@@ -392,8 +373,8 @@ describe('AppointmentService', () => {
     `(
       `should be able to multiple update appointment show $update1 and $update2 to an existing appointment`,
       async (params) => {
-        const appointment = await service.insert(
-          generateCreateAppointmentParams(),
+        const appointment = await service.request(
+          generateRequestAppointmentParams(),
         );
 
         const updateShowParams1: NoShowParams = {
@@ -412,7 +393,7 @@ describe('AppointmentService', () => {
     );
   });
 
-  const createAppointment = async ({
+  const requestAppointment = async ({
     memberId,
     userId,
     notBeforeHours,
@@ -424,13 +405,13 @@ describe('AppointmentService', () => {
     const notBefore = new Date();
     notBefore.setHours(notBeforeHours);
 
-    const appointmentParams = generateCreateAppointmentParams({
+    const appointmentParams = generateRequestAppointmentParams({
       memberId,
       userId,
       notBefore,
     });
 
-    const result = await service.insert(appointmentParams);
+    const result = await service.request(appointmentParams);
     expect(result.id).not.toBeUndefined();
 
     const record: any = await appointmentModel.findById(result.id);

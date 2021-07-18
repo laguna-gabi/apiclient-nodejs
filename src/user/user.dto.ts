@@ -1,14 +1,10 @@
-import {
-  Field,
-  ObjectType,
-  InputType,
-  registerEnumType,
-} from '@nestjs/graphql';
+import { Field, ObjectType, InputType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { Errors, Identifier, ErrorType } from '../common';
 import { IsEmail, IsUrl, Length } from 'class-validator';
 import * as config from 'config';
+import { Appointment, AppointmentData } from '../appointment';
 
 export enum UserRole {
   admin = 'Admin',
@@ -25,11 +21,9 @@ const validatorsConfig = config.get('graphql.validators');
 @InputType()
 export class CreateUserParams {
   @Field()
-  @Length(
-    validatorsConfig.get('name.minLength'),
-    validatorsConfig.get('name.maxLength'),
-    { message: Errors.get(ErrorType.userMinMaxLength) },
-  )
+  @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
+    message: Errors.get(ErrorType.userMinMaxLength),
+  })
   name: string;
 
   @Field()
@@ -69,6 +63,10 @@ export class User extends Identifier {
   @Prop()
   @Field(() => String)
   photoUrl: string;
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: Appointment.name }] })
+  @Field(() => [AppointmentData], { nullable: true })
+  appointments?: AppointmentData[];
 }
 
 /***********************************************************************************************************************

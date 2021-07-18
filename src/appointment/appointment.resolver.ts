@@ -3,7 +3,7 @@ import { camelCase } from 'lodash';
 import {
   Appointment,
   AppointmentService,
-  CreateAppointmentParams,
+  RequestAppointmentParams,
   ScheduleAppointmentParams,
   NoShowParams,
 } from '.';
@@ -13,11 +13,11 @@ export class AppointmentResolver {
   constructor(private readonly appointmentService: AppointmentService) {}
 
   @Mutation(() => Appointment)
-  async createAppointment(
-    @Args(camelCase(CreateAppointmentParams.name))
-    createAppointmentParams: CreateAppointmentParams,
+  async requestAppointment(
+    @Args(camelCase(RequestAppointmentParams.name))
+    requestAppointmentParams: RequestAppointmentParams,
   ) {
-    return this.appointmentService.insert(createAppointmentParams);
+    return this.appointmentService.request(requestAppointmentParams);
   }
 
   @Query(() => Appointment, { nullable: true })

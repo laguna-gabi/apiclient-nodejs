@@ -10,9 +10,11 @@ import {
 } from '../../src/appointment';
 import {
   dbDisconnect,
-  generateCreateAppointmentParams,
+  generateRequestAppointmentParams,
   generateNoShowAppointmentParams,
+  generateScheduleAppointmentParams,
 } from '../index';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 describe('AppointmentResolver', () => {
   let module: TestingModule;
@@ -21,7 +23,7 @@ describe('AppointmentResolver', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, AppointmentModule],
+      imports: [DbModule, AppointmentModule, EventEmitterModule.forRoot()],
     }).compile();
 
     resolver = module.get<AppointmentResolver>(AppointmentResolver);
@@ -33,10 +35,10 @@ describe('AppointmentResolver', () => {
     await dbDisconnect();
   });
 
-  describe('createAppointment', () => {
+  describe('requestAppointment', () => {
     let spyOnServiceInsert;
     beforeEach(() => {
-      spyOnServiceInsert = jest.spyOn(service, 'insert');
+      spyOnServiceInsert = jest.spyOn(service, 'request');
     });
 
     afterEach(() => {
@@ -45,13 +47,13 @@ describe('AppointmentResolver', () => {
 
     it('should create an appointment', async () => {
       const appointment = {
-        ...generateCreateAppointmentParams(),
+        ...generateRequestAppointmentParams(),
         status: AppointmentStatus.requested,
         method: AppointmentMethod.videoCall,
       };
       spyOnServiceInsert.mockImplementationOnce(async () => appointment);
 
-      await resolver.createAppointment(appointment);
+      await resolver.requestAppointment(appointment);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith(appointment);
@@ -71,7 +73,7 @@ describe('AppointmentResolver', () => {
     it('should get an appointment for a given id', async () => {
       const appointment = {
         id: new Types.ObjectId().toString(),
-        ...generateCreateAppointmentParams(),
+        ...generateRequestAppointmentParams(),
         method: AppointmentMethod.videoCall,
       };
       spyOnServiceGet.mockImplementationOnce(async () => appointment);
@@ -103,22 +105,16 @@ describe('AppointmentResolver', () => {
     });
 
     it('should schedule an existing appointment for a given id', async () => {
-      const appointment = {
-        id: new Types.ObjectId().toString(),
-        ...generateCreateAppointmentParams(),
-        status: AppointmentStatus.requested,
-        method: AppointmentMethod.phoneCall,
-      };
-      spyOnServiceSchedule.mockImplementationOnce(async () => appointment);
+      const status = AppointmentStatus.scheduled;
+      const appointment = generateScheduleAppointmentParams();
+      spyOnServiceSchedule.mockImplementationOnce(async () => ({
+        ...appointment,
+        status,
+      }));
 
-      const result = await resolver.scheduleAppointment({
-        id: appointment.id,
-        method: AppointmentMethod.phoneCall,
-        start: new Date(),
-        end: new Date(),
-      });
+      const result = await resolver.scheduleAppointment(appointment);
 
-      expect(result).toEqual(appointment);
+      expect(result).toEqual({ ...appointment, status });
     });
   });
 
@@ -135,7 +131,7 @@ describe('AppointmentResolver', () => {
     it('should end an existing appointment for a given id', async () => {
       const appointment = {
         id: new Types.ObjectId().toString(),
-        ...generateCreateAppointmentParams(),
+        ...generateRequestAppointmentParams(),
         status: AppointmentStatus.done,
         method: AppointmentMethod.phoneCall,
       };
@@ -160,7 +156,7 @@ describe('AppointmentResolver', () => {
     it('should freeze an existing appointment for a given id', async () => {
       const appointment = {
         id: new Types.ObjectId().toString(),
-        ...generateCreateAppointmentParams(),
+        ...generateRequestAppointmentParams(),
         status: AppointmentStatus.closed,
         method: AppointmentMethod.phoneCall,
       };
@@ -187,7 +183,7 @@ describe('AppointmentResolver', () => {
 
       const appointment = {
         ...update,
-        ...generateCreateAppointmentParams(),
+        ...generateRequestAppointmentParams(),
         status: AppointmentStatus.closed,
         method: AppointmentMethod.phoneCall,
       };

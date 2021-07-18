@@ -12,6 +12,7 @@ import {
   UserRole,
   UserService,
 } from '../../src/user';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 describe('UserResolver', () => {
   let module: TestingModule;
@@ -20,7 +21,7 @@ describe('UserResolver', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, UserModule],
+      imports: [DbModule, UserModule, EventEmitterModule.forRoot()],
     }).compile();
 
     resolver = module.get<UserResolver>(UserResolver);

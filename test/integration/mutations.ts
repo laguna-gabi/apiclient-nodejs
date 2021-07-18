@@ -5,7 +5,7 @@ import { CreateMemberParams } from '../../src/member';
 import { ApolloServerTestClient } from 'apollo-server-testing';
 import {
   Appointment,
-  CreateAppointmentParams,
+  RequestAppointmentParams,
   ScheduleAppointmentParams,
   NoShowParams,
 } from '../../src/appointment';
@@ -73,22 +73,24 @@ export class Mutations {
     );
   };
 
-  createAppointment = async ({
+  requestAppointment = async ({
     appointmentParams,
     missingFieldError,
     invalidFieldsErrors,
   }: {
-    appointmentParams: CreateAppointmentParams;
+    appointmentParams: RequestAppointmentParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   }): Promise<Appointment> => {
     const result = await this.apolloClient.mutate({
-      variables: { createAppointmentParams: appointmentParams },
+      variables: { requestAppointmentParams: appointmentParams },
       mutation: gql`
-        mutation CreateAppointment(
-          $createAppointmentParams: CreateAppointmentParams!
+        mutation RequestAppointment(
+          $requestAppointmentParams: RequestAppointmentParams!
         ) {
-          createAppointment(createAppointmentParams: $createAppointmentParams) {
+          requestAppointment(
+            requestAppointmentParams: $requestAppointmentParams
+          ) {
             id
             memberId
             userId
@@ -104,7 +106,7 @@ export class Mutations {
 
     return (
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.createAppointment
+      result.data.requestAppointment
     );
   };
 

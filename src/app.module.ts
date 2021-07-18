@@ -6,6 +6,7 @@ import { UserModule } from './user';
 import { AppointmentModule } from './appointment';
 import { GraphQLError } from 'graphql';
 import { Errors } from './common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 const badRequestException = 'Bad Request Exception';
 
@@ -15,6 +16,7 @@ const badRequestException = 'Bad Request Exception';
     UserModule,
     AppointmentModule,
     DbModule,
+    EventEmitterModule.forRoot(),
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql',
       formatError: (error: GraphQLError) => {
