@@ -48,6 +48,7 @@ In order to figure out what's the endpoints of *hepius*:
 1. init and load local mongodb as described on [docker section](#docker)
 2. run yarn start
 3. go to [graphql playground](http://localhost:3000/graphql) and create queries and mutations according to the docs.
+> **_Seed data_** If you wish to generate initial member and users, run `yarn seed`
 
 ## Troubleshooting
 ### How to view the db locally?
