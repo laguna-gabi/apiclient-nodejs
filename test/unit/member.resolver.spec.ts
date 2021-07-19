@@ -1,11 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  mockGenerateMember,
-  generateCreateMemberParams,
-  dbDisconnect,
-} from '../../test';
+import { dbDisconnect, generateCreateMemberParams, mockGenerateMember } from '../../test';
 import { DbModule } from '../../src/db/db.module';
-import { MemberResolver, MemberService, MemberModule } from '../../src/member';
+import { MemberModule, MemberResolver, MemberService } from '../../src/member';
 import { Types } from 'mongoose';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
@@ -107,7 +103,9 @@ describe('MemberResolver', () => {
       const result = await resolver.getMember({
         req: {
           headers: {
+            /* eslint-disable max-len */
             authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QifQ.hNQI_r8BATy1LyXPr6Zuo9X_V0kSED8ngcqQ6G-WV5w`,
+            /* eslint-enable max-len */
           },
         },
       });

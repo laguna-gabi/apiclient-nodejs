@@ -1,10 +1,5 @@
 import { Member } from '../../src/member';
-import {
-  Appointment,
-  AppointmentStatus,
-  Note,
-  Scores,
-} from '../../src/appointment';
+import { Appointment, AppointmentStatus, Note, Scores } from '../../src/appointment';
 import {
   generateNoShowAppointmentParams,
   generateRequestAppointmentParams,
@@ -15,10 +10,7 @@ import { Mutations } from './mutations';
 export class AppointmentsIntegrationActions {
   constructor(private readonly mutations: Mutations) {}
 
-  requestAppointment = async (
-    userId: string,
-    member: Member,
-  ): Promise<Appointment> => {
+  requestAppointment = async (userId: string, member: Member): Promise<Appointment> => {
     const appointmentParams = generateRequestAppointmentParams({
       memberId: member.id,
       userId,
@@ -29,18 +21,13 @@ export class AppointmentsIntegrationActions {
 
     expect(appointmentResult.userId).toEqual(userId);
     expect(appointmentResult.memberId).toEqual(member.id);
-    expect(new Date(appointmentResult.notBefore)).toEqual(
-      new Date(appointmentParams.notBefore),
-    );
+    expect(new Date(appointmentResult.notBefore)).toEqual(new Date(appointmentParams.notBefore));
     expect(appointmentResult.status).toEqual(AppointmentStatus.requested);
 
     return appointmentResult;
   };
 
-  scheduleAppointment = async (
-    userId: string,
-    member: Member,
-  ): Promise<Appointment> => {
+  scheduleAppointment = async (userId: string, member: Member): Promise<Appointment> => {
     const scheduleAppointment = generateScheduleAppointmentParams({
       memberId: member.id,
       userId,
@@ -53,12 +40,8 @@ export class AppointmentsIntegrationActions {
 
     expect(appointmentResult.memberId).toEqual(scheduleAppointment.memberId);
     expect(appointmentResult.userId).toEqual(scheduleAppointment.userId);
-    expect(new Date(appointmentResult.notBefore)).toEqual(
-      scheduleAppointment.notBefore,
-    );
-    expect(new Date(appointmentResult.start)).toEqual(
-      scheduleAppointment.start,
-    );
+    expect(new Date(appointmentResult.notBefore)).toEqual(scheduleAppointment.notBefore);
+    expect(new Date(appointmentResult.start)).toEqual(scheduleAppointment.start);
     expect(new Date(appointmentResult.end)).toEqual(scheduleAppointment.end);
 
     return appointmentResult;

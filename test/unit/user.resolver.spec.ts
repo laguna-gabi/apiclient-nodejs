@@ -1,17 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  dbDisconnect,
-  generateCreateUserParams,
-  mockGenerateUser,
-} from '../../test';
+import { dbDisconnect, generateCreateUserParams, mockGenerateUser } from '../../test';
 import { DbModule } from '../../src/db/db.module';
 import { Types } from 'mongoose';
-import {
-  UserModule,
-  UserResolver,
-  UserRole,
-  UserService,
-} from '../../src/user';
+import { UserModule, UserResolver, UserRole, UserService } from '../../src/user';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
 describe('UserResolver', () => {

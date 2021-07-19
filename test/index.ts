@@ -1,14 +1,14 @@
 import * as faker from 'faker';
-import { Types, connect, disconnect } from 'mongoose';
+import { connect, disconnect, Types } from 'mongoose';
 import * as config from 'config';
 import { CreateUserParams, User, UserRole } from '../src/user';
 import { CreateMemberParams, Member } from '../src/member';
 import {
   AppointmentMethod,
-  RequestAppointmentParams,
-  ScheduleAppointmentParams,
   NoShowParams,
   Note,
+  RequestAppointmentParams,
+  ScheduleAppointmentParams,
   Scores,
 } from '../src/appointment';
 

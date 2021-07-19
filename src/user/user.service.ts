@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateUserParams, User, UserDocument } from '.';
-import { DbErrors, Errors, ErrorType, Identifier, EventType } from '../common';
+import { DbErrors, Errors, ErrorType, EventType, Identifier } from '../common';
 import { OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
@@ -22,9 +22,7 @@ export class UserService {
       return { id: _id };
     } catch (ex) {
       throw new Error(
-        ex.code === DbErrors.duplicateKey
-          ? Errors.get(ErrorType.userEmailAlreadyExists)
-          : ex,
+        ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.userEmailAlreadyExists) : ex,
       );
     }
   }

@@ -28,9 +28,9 @@ export enum ErrorType {
   appointmentNoShow = 9307,
 }
 
-const nameFormat = `name must be between ${graphqlConfig.get(
-  'minLength',
-)} and ${graphqlConfig.get('maxLength')} characters`;
+const nameFormat = `name must be between ${graphqlConfig.get('minLength')} and ${graphqlConfig.get(
+  'maxLength',
+)} characters`;
 const dateInstanceFormat = 'must be a Date instance';
 
 export const Errors: Map<ErrorType, string> = new Map([
@@ -54,23 +54,15 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [ErrorType.memberDate.valueOf(), `dateOfBirth ${dateInstanceFormat}`],
   [ErrorType.appointmentIdNotFound.valueOf(), 'appointment id was not found'],
-  [
-    ErrorType.appointmentNotBeforeDate.valueOf(),
-    `notBefore ${dateInstanceFormat}`,
-  ],
-  [
-    ErrorType.appointmentNotBeforeDateInThePast.valueOf(),
-    'notBefore must be in the future',
-  ],
+  [ErrorType.appointmentNotBeforeDate.valueOf(), `notBefore ${dateInstanceFormat}`],
+  [ErrorType.appointmentNotBeforeDateInThePast.valueOf(), 'notBefore must be in the future'],
   [ErrorType.appointmentStartDate.valueOf(), `start ${dateInstanceFormat}`],
   [ErrorType.appointmentEndDate.valueOf(), `end ${dateInstanceFormat}`],
-  [
-    ErrorType.appointmentEndAfterStart.valueOf(),
-    'end date must be after start date',
-  ],
+  [ErrorType.appointmentEndAfterStart.valueOf(), 'end date must be after start date'],
   [
     ErrorType.appointmentNoShow.valueOf(),
-    'if noShow=true, a `reason` field is mandatory as well. if noShow=false, a `reason` field is not required',
+    'if noShow=true, a `reason` field is mandatory as well. ' +
+      'if noShow=false, a `reason` field is not required',
   ],
 ]);
 

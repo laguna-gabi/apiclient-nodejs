@@ -31,9 +31,7 @@ const badRequestException = 'Bad Request Exception';
 
         return error?.message && error?.message !== badRequestException
           ? handleErrorMessage(error?.message)
-          : error?.extensions.exception.response?.message.map((error) =>
-              handleErrorMessage(error),
-            );
+          : error?.extensions.exception.response?.message.map((error) => handleErrorMessage(error));
       },
     }),
   ],

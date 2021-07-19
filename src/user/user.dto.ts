@@ -1,12 +1,7 @@
-import {
-  Field,
-  InputType,
-  ObjectType,
-  registerEnumType,
-} from '@nestjs/graphql';
+import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { Errors, Identifier, ErrorType } from '../common';
+import { Errors, ErrorType, Identifier } from '../common';
 import { IsEmail, IsUrl, Length } from 'class-validator';
 import * as config from 'config';
 import { Appointment, AppointmentData } from '../appointment';
@@ -16,23 +11,20 @@ export enum UserRole {
   coach = 'Coach',
   nurse = 'Nurse',
 }
+
 registerEnumType(UserRole, { name: 'UserRole' });
 
 const validatorsConfig = config.get('graphql.validators');
 
-/***********************************************************************************************************************
- ******************************************** Input params for gql methods *********************************************
- **********************************************************************************************************************/
+/**************************************************************************************************
+ ********************************** Input params for gql methods **********************************
+ *************************************************************************************************/
 @InputType()
 export class CreateUserParams {
   @Field()
-  @Length(
-    validatorsConfig.get('name.minLength'),
-    validatorsConfig.get('name.maxLength'),
-    {
-      message: Errors.get(ErrorType.userMinMaxLength),
-    },
-  )
+  @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
+    message: Errors.get(ErrorType.userMinMaxLength),
+  })
   name: string;
 
   @Field()
@@ -52,9 +44,9 @@ export class CreateUserParams {
   description: string;
 }
 
-/***********************************************************************************************************************
- ******************************************** Return params for gql methods ********************************************
- **********************************************************************************************************************/
+/**************************************************************************************************
+ ********************************* Return params for gql methods **********************************
+ *************************************************************************************************/
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class User extends Identifier {
@@ -85,8 +77,8 @@ export class User extends Identifier {
   description: string;
 }
 
-/***********************************************************************************************************************
- ************************************************** Exported Schemas ***************************************************
- **********************************************************************************************************************/
+/**************************************************************************************************
+ **************************************** Exported Schemas ****************************************
+ *************************************************************************************************/
 export type UserDocument = User & Document;
 export const UserDto = SchemaFactory.createForClass(User);

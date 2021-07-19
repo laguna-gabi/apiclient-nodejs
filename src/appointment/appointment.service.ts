@@ -5,11 +5,11 @@ import {
   Appointment,
   AppointmentDocument,
   AppointmentStatus,
+  Notes,
+  NotesDocument,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
   SetNotesParams,
-  Notes,
-  NotesDocument,
 } from '.';
 import { Errors, ErrorType, EventType } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';

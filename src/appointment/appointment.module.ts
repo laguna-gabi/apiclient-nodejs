@@ -5,8 +5,8 @@ import {
   AppointmentDto,
   AppointmentResolver,
   AppointmentService,
-  NotesDto,
   Notes,
+  NotesDto,
 } from '.';
 
 @Module({

@@ -1,32 +1,20 @@
-import {
-  Field,
-  InputType,
-  ObjectType,
-  OmitType,
-  registerEnumType,
-} from '@nestjs/graphql';
+import { Field, InputType, ObjectType, OmitType, registerEnumType } from '@nestjs/graphql';
 import { IsBoolean, IsDate } from 'class-validator';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import {
-  Errors,
-  ErrorType,
-  Identifier,
-  IsDateAfter,
-  IsFutureDate,
-  IsNoShowValid,
-} from '../common';
-import { Types, Document } from 'mongoose';
+import { Errors, ErrorType, Identifier, IsDateAfter, IsFutureDate, IsNoShowValid } from '../common';
+import { Document, Types } from 'mongoose';
 import { Notes } from './note.dto';
 
-/***********************************************************************************************************************
- ****************************************** Enum registration for gql methods ******************************************
- **********************************************************************************************************************/
+/**************************************************************************************************
+ ******************************* Enum registration for gql methods ********************************
+ *************************************************************************************************/
 export enum AppointmentStatus {
   requested = 'requested',
   scheduled = 'scheduled',
   done = 'done',
   closed = 'closed',
 }
+
 registerEnumType(AppointmentStatus, { name: 'AppointmentStatus' });
 
 export enum AppointmentMethod {
@@ -34,11 +22,12 @@ export enum AppointmentMethod {
   phoneCall = 'phoneCall',
   videoCall = 'videoCall',
 }
+
 registerEnumType(AppointmentMethod, { name: 'AppointmentMethod' });
 
-/***********************************************************************************************************************
- ******************************************** Input params for gql methods *********************************************
- **********************************************************************************************************************/
+/**************************************************************************************************
+ ********************************** Input params for gql methods **********************************
+ *************************************************************************************************/
 @InputType()
 export class RequestAppointmentParams {
   @Field(() => String)
@@ -103,9 +92,9 @@ export class NoShowParams extends NoShow {
   id: string;
 }
 
-/***********************************************************************************************************************
- ******************************************** Return params for gql methods ********************************************
- **********************************************************************************************************************/
+/**************************************************************************************************
+ ********************************* Return params for gql methods **********************************
+ *************************************************************************************************/
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class Appointment extends Identifier {
@@ -147,13 +136,10 @@ export class Appointment extends Identifier {
 }
 
 @ObjectType()
-export class AppointmentData extends OmitType(Appointment, [
-  'userId',
-  'memberId',
-]) {}
+export class AppointmentData extends OmitType(Appointment, ['userId', 'memberId']) {}
 
-/***********************************************************************************************************************
- ************************************************** Exported Schemas ***************************************************
- **********************************************************************************************************************/
+/**************************************************************************************************
+ **************************************** Exported Schemas ****************************************
+ *************************************************************************************************/
 export type AppointmentDocument = Appointment & Document;
 export const AppointmentDto = SchemaFactory.createForClass(Appointment);

@@ -40,9 +40,7 @@ export class Mutations {
       `,
     });
 
-    if (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors })
-    ) {
+    if (this.isResultValid({ result, missingFieldError, invalidFieldsErrors })) {
       const { id } = result.data.createUser;
       return id;
     }
@@ -86,12 +84,8 @@ export class Mutations {
     const result = await this.apolloClient.mutate({
       variables: { requestAppointmentParams: appointmentParams },
       mutation: gql`
-        mutation RequestAppointment(
-          $requestAppointmentParams: RequestAppointmentParams!
-        ) {
-          requestAppointment(
-            requestAppointmentParams: $requestAppointmentParams
-          ) {
+        mutation RequestAppointment($requestAppointmentParams: RequestAppointmentParams!) {
+          requestAppointment(requestAppointmentParams: $requestAppointmentParams) {
             id
             memberId
             userId
@@ -123,12 +117,8 @@ export class Mutations {
     const result = await this.apolloClient.mutate({
       variables: { scheduleAppointmentParams: appointmentParams },
       mutation: gql`
-        mutation ScheduleAppointment(
-          $scheduleAppointmentParams: ScheduleAppointmentParams!
-        ) {
-          scheduleAppointment(
-            scheduleAppointmentParams: $scheduleAppointmentParams
-          ) {
+        mutation ScheduleAppointment($scheduleAppointmentParams: ScheduleAppointmentParams!) {
+          scheduleAppointment(scheduleAppointmentParams: $scheduleAppointmentParams) {
             id
             memberId
             userId
@@ -270,16 +260,11 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.setNotes
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.setNotes
     );
   };
 
-  isResultValid = ({
-    result,
-    invalidFieldsErrors,
-    missingFieldError,
-  }): boolean => {
+  isResultValid = ({ result, invalidFieldsErrors, missingFieldError }): boolean => {
     if (invalidFieldsErrors) {
       for (let i = 0; i < invalidFieldsErrors.length; i++) {
         expect(invalidFieldsErrors[i]).toEqual(result.errors[0][i].message);

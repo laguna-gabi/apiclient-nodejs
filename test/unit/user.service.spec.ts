@@ -1,13 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
-import { Types, Model, model } from 'mongoose';
-import {
-  User,
-  UserRole,
-  UserDto,
-  UserService,
-  UserModule,
-} from '../../src/user';
+import { Model, model, Types } from 'mongoose';
+import { User, UserDto, UserModule, UserRole, UserService } from '../../src/user';
 import { dbConnect, dbDisconnect, generateCreateUserParams } from '../index';
 import { Errors, ErrorType } from '../../src/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -20,12 +14,7 @@ describe('UserService', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        DbModule,
-        AppointmentModule,
-        UserModule,
-        EventEmitterModule.forRoot(),
-      ],
+      imports: [DbModule, AppointmentModule, UserModule, EventEmitterModule.forRoot()],
     }).compile();
 
     service = module.get<UserService>(UserService);

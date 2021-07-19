@@ -4,11 +4,11 @@ import { model, Model, Types } from 'mongoose';
 import {
   dbConnect,
   dbDisconnect,
-  generateRequestAppointmentParams,
   generateNoShowAppointmentParams,
   generateNoteParam,
-  generateScoresParam,
+  generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
+  generateScoresParam,
 } from '../index';
 import {
   Appointment,
@@ -18,8 +18,6 @@ import {
   AppointmentStatus,
   NoShowParams,
 } from '../../src/appointment';
-import { User, UserDto } from '../../src/user';
-import { Member, MemberDto } from '../../src/member';
 import { Errors, ErrorType, EventType } from '../../src/common';
 import * as faker from 'faker';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
@@ -29,8 +27,6 @@ describe('AppointmentService', () => {
   let module: TestingModule;
   let service: AppointmentService;
   let eventEmitter: EventEmitter2;
-  let userModel: Model<typeof UserDto>;
-  let memberModel: Model<typeof MemberDto>;
   let appointmentModel: Model<typeof AppointmentDto>;
 
   beforeAll(async () => {
@@ -42,8 +38,6 @@ describe('AppointmentService', () => {
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
 
     appointmentModel = model(Appointment.name, AppointmentDto);
-    userModel = model(User.name, UserDto);
-    memberModel = model(Member.name, MemberDto);
 
     await dbConnect();
   });
@@ -284,15 +278,13 @@ describe('AppointmentService', () => {
 
   describe('end', () => {
     it('should not be able to end a non existing appointment', async () => {
-      await expect(
-        service.end(new Types.ObjectId().toString()),
-      ).rejects.toThrow(Errors.get(ErrorType.appointmentIdNotFound));
+      await expect(service.end(new Types.ObjectId().toString())).rejects.toThrow(
+        Errors.get(ErrorType.appointmentIdNotFound),
+      );
     });
 
     it('should be able to end an existing appointment', async () => {
-      const appointment = await service.request(
-        generateRequestAppointmentParams(),
-      );
+      const appointment = await service.request(generateRequestAppointmentParams());
 
       const endResult = await service.end(appointment.id);
       expect(endResult.status).toEqual(AppointmentStatus.done);
@@ -310,15 +302,13 @@ describe('AppointmentService', () => {
 
   describe('freeze', () => {
     it('should not be able to end a non existing appointment', async () => {
-      await expect(
-        service.end(new Types.ObjectId().toString()),
-      ).rejects.toThrow(Errors.get(ErrorType.appointmentIdNotFound));
+      await expect(service.end(new Types.ObjectId().toString())).rejects.toThrow(
+        Errors.get(ErrorType.appointmentIdNotFound),
+      );
     });
 
     it('should be able to end an existing appointment', async () => {
-      const appointment = await service.request(
-        generateRequestAppointmentParams(),
-      );
+      const appointment = await service.request(generateRequestAppointmentParams());
 
       const endResult = await service.freeze(appointment.id);
       expect(endResult.status).toEqual(AppointmentStatus.closed);
@@ -338,9 +328,9 @@ describe('AppointmentService', () => {
     const reason = faker.lorem.sentence();
 
     it('should not be able to update show to a non existing appointment', async () => {
-      await expect(
-        service.show(generateNoShowAppointmentParams()),
-      ).rejects.toThrow(Errors.get(ErrorType.appointmentIdNotFound));
+      await expect(service.show(generateNoShowAppointmentParams())).rejects.toThrow(
+        Errors.get(ErrorType.appointmentIdNotFound),
+      );
     });
 
     test.each`
@@ -350,9 +340,7 @@ describe('AppointmentService', () => {
     `(
       `should be able to update appointment show $update to an existing appointment`,
       async (params) => {
-        const appointment = await service.request(
-          generateRequestAppointmentParams(),
-        );
+        const appointment = await service.request(generateRequestAppointmentParams());
 
         const updateShowParams: NoShowParams = {
           id: appointment.id,
@@ -360,9 +348,7 @@ describe('AppointmentService', () => {
         };
 
         const result = await service.show(updateShowParams);
-        expect(updateShowParams).toEqual(
-          expect.objectContaining(result.noShow),
-        );
+        expect(updateShowParams).toEqual(expect.objectContaining(result.noShow));
       },
     );
 
@@ -372,11 +358,9 @@ describe('AppointmentService', () => {
       ${{ noShow: false }}                                | ${{ noShow: true, reason }}
       ${{ noShow: true, reason }}                         | ${{ noShow: false, reason: null }}
     `(
-      `should be able to multiple update appointment show $update1 and $update2 to an existing appointment`,
+      `should be able to multiple update existing appointment : $update1 and $update2`,
       async (params) => {
-        const appointment = await service.request(
-          generateRequestAppointmentParams(),
-        );
+        const appointment = await service.request(generateRequestAppointmentParams());
 
         const updateShowParams1: NoShowParams = {
           id: appointment.id,

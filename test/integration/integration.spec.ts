@@ -8,9 +8,9 @@ import {
   generateCreateUserParams,
   generateNoShowAppointmentParams,
   generateNoteParam,
-  generateScoresParam,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
+  generateScoresParam,
 } from '../index';
 import { CreateUserParams, User, UserRole } from '../../src/user';
 import { camelCase, omit } from 'lodash';
@@ -31,7 +31,6 @@ import * as jwt from 'jsonwebtoken';
 import { AppointmentsIntegrationActions } from './appointments';
 
 const validatorsConfig = config.get('graphql.validators');
-const deviceId = faker.datatype.uuid();
 const stringError = `String cannot represent a non string value`;
 
 describe('Integration graphql resolvers', () => {
@@ -72,17 +71,15 @@ describe('Integration graphql resolvers', () => {
      * 1. Create a user with a single role - coach
      * 2. Create a user with 2 roles - coach and nurse
      * 3. Create a user with 1 role - nurse
-     * 4. Create a member with the 3 users above. 1st user is the primaryCoach, 2nd and 3rd users is in users list
+     * 4. Create a member with the 3 users above. 1st user is the primaryCoach,
+     *    2nd and 3rd users is in users list
      * 5. Create an appointment between the primary coach and the member
      * 6. Create an appointment between the non primary coach (2nd user) and the member
      * 7. Create an appointment between the non primary coach (3rd user) and the member
      * 8. Fetch member and checks all related appointments
      */
     const resultCoach = await createAndValidateUser();
-    const resultNurse1 = await createAndValidateUser([
-      UserRole.nurse,
-      UserRole.coach,
-    ]);
+    const resultNurse1 = await createAndValidateUser([UserRole.nurse, UserRole.coach]);
     const resultNurse2 = await createAndValidateUser([UserRole.nurse]);
 
     const resultMember = await createAndValidateMember({
@@ -90,12 +87,10 @@ describe('Integration graphql resolvers', () => {
       coaches: [resultNurse1, resultNurse2],
     });
 
-    const scheduledAppointmentPrimaryCoach = await createAndValidateAppointment(
-      {
-        userId: resultCoach.id,
-        member: resultMember,
-      },
-    );
+    const scheduledAppointmentPrimaryCoach = await createAndValidateAppointment({
+      userId: resultCoach.id,
+      member: resultMember,
+    });
 
     const scheduledAppointmentNurse1 = await createAndValidateAppointment({
       userId: resultNurse1.id,
@@ -137,10 +132,10 @@ describe('Integration graphql resolvers', () => {
    * 1. user: { id: 'user-123' }
    * 2. member: { id: 'member-123', primaryCoach: { id : 'user-123' } }
    * 3. member: { id: 'member-456', primaryCoach: { id : 'user-123' } }
-   * In this case, user has 2 appointments, but when a member requests an appointment, it'll return just the
-   * related appointment of a user, and not all appointments.
+   * In this case, user has 2 appointments, but when a member requests an appointment,
+   * it'll return just the related appointment of a user, and not all appointments.
    */
-  it('should validate that getAppointments just fetch the member appointment of a user', async () => {
+  it('getAppointments should return just the member appointment of a user', async () => {
     const primaryCoach = await createAndValidateUser();
     const member1 = await createAndValidateMember({ primaryCoach });
     const member2 = await createAndValidateMember({ primaryCoach });
@@ -185,50 +180,45 @@ describe('Integration graphql resolvers', () => {
         ${'roles'}       | ${`Field "roles" of required type "[UserRole!]!" was not provided.`}
         ${'photoUrl'}    | ${`Field "photoUrl" of required type "String!" was not provided.`}
         ${'description'} | ${`Field "description" of required type "String!" was not provided.`}
-      `(
-        `should fail to create a user since mandatory field $field is missing`,
-        async (params) => {
-          const userParams: CreateUserParams = generateCreateUserParams();
-          delete userParams[params.field];
-          await mutations.createUser({
-            userParams,
-            missingFieldError: params.error,
-          });
-        },
-      );
+      `(`should fail to create a user since mandatory field $field is missing`, async (params) => {
+        const userParams: CreateUserParams = generateCreateUserParams();
+        delete userParams[params.field];
+        await mutations.createUser({
+          userParams,
+          missingFieldError: params.error,
+        });
+      });
 
       test.each`
         length           | errorString | error
         ${minLength - 1} | ${'short'}  | ${[Errors.get(ErrorType.userMinMaxLength)]}
         ${maxLength + 1} | ${'long'}   | ${[Errors.get(ErrorType.userMinMaxLength)]}
-      `(
-        `should fail to create a user since name is too $errorString`,
-        async (params) => {
-          const name = generateRandomName(params.length);
-          const userParams: CreateUserParams = generateCreateUserParams({
-            name,
-          });
-          await mutations.createUser({
-            userParams,
-            invalidFieldsErrors: params.error,
-          });
-        },
-      );
+      `(`should fail to create a user since name is too $errorString`, async (params) => {
+        const name = generateRandomName(params.length);
+        const userParams: CreateUserParams = generateCreateUserParams({
+          name,
+        });
+        await mutations.createUser({
+          userParams,
+          invalidFieldsErrors: params.error,
+        });
+      });
 
       /* eslint-disable max-len */
       test.each`
-        field                 | input                                                          | errors
-        ${'email'}            | ${{ email: faker.lorem.word() }}                               | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat)] }}
-        ${'photoUrl'}         | ${{ photoUrl: faker.lorem.word() }}                            | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userPhotoUrlFormat)] }}
-        ${'email & photoUrl'} | ${{ email: faker.lorem.word(), photoUrl: faker.lorem.word() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat), Errors.get(ErrorType.userPhotoUrlFormat)] }}
-        ${'description'}      | ${{ description: 222 }}                                        | ${{ missingFieldError: stringError }}
+        field            | input                               | errors
+        ${'email'}       | ${{ email: faker.lorem.word() }}    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat)] }}
+        ${'photoUrl'}    | ${{ photoUrl: faker.lorem.word() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userPhotoUrlFormat)] }}
+        ${'email & photoUrl'} | ${{
+  email: faker.lorem.word(),
+  photoUrl: faker.lorem.word(),
+}} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat), Errors.get(ErrorType.userPhotoUrlFormat)] }}
+        ${'description'} | ${{ description: 222 }}             | ${{ missingFieldError: stringError }}
       `(
         /* eslint-enable max-len */
         `should fail to create a user since $field is not valid`,
         async (params) => {
-          const userParams: CreateUserParams = generateCreateUserParams(
-            params.input,
-          );
+          const userParams: CreateUserParams = generateCreateUserParams(params.input);
           await mutations.createUser({
             userParams,
             ...params.errors,
@@ -238,57 +228,54 @@ describe('Integration graphql resolvers', () => {
     });
 
     describe('member', () => {
+      /* eslint-disable max-len */
       test.each`
         field               | error
         ${'phoneNumber'}    | ${`Field "phoneNumber" of required type "String!" was not provided.`}
         ${'name'}           | ${`Field "name" of required type "String!" was not provided.`}
         ${'dateOfBirth'}    | ${`Field "dateOfBirth" of required type "DateTime!" was not provided.`}
         ${'primaryCoachId'} | ${`Field "primaryCoachId" of required type "String!" was not provided.`}
-      `(
-        `should fail to create a user since mandatory field $field is missing`,
-        async (params) => {
-          const memberParams: CreateMemberParams = generateCreateMemberParams({
-            primaryCoachId,
-          });
-          delete memberParams[params.field];
-          await mutations.createMember({
-            memberParams,
-            missingFieldError: params.error,
-          });
-        },
-      );
+      `(`should fail to create a user since mandatory field $field is missing`, async (params) => {
+        /* eslint-enable max-len */
+        const memberParams: CreateMemberParams = generateCreateMemberParams({
+          primaryCoachId,
+        });
+        delete memberParams[params.field];
+        await mutations.createMember({
+          memberParams,
+          missingFieldError: params.error,
+        });
+      });
 
       test.each`
         length           | errorString | error
         ${minLength - 1} | ${'short'}  | ${[Errors.get(ErrorType.memberMinMaxLength)]}
         ${maxLength + 1} | ${'long'}   | ${[Errors.get(ErrorType.memberMinMaxLength)]}
-      `(
-        `should fail to create a member since name is too $errorString`,
-        async (params) => {
-          const name = generateRandomName(params.length);
-          const memberParams: CreateMemberParams = generateCreateMemberParams({
-            primaryCoachId,
-            name,
-          });
-          await mutations.createMember({
-            memberParams,
-            invalidFieldsErrors: params.error,
-          });
-        },
-      );
+      `(`should fail to create a member since name is too $errorString`, async (params) => {
+        const name = generateRandomName(params.length);
+        const memberParams: CreateMemberParams = generateCreateMemberParams({
+          primaryCoachId,
+          name,
+        });
+        await mutations.createMember({
+          memberParams,
+          invalidFieldsErrors: params.error,
+        });
+      });
 
       /* eslint-disable max-len */
       test.each`
         field            | input                                                  | errors
-        ${'phoneNumber'} | ${{ primaryCoachId, phoneNumber: '+410' }}             | ${[Errors.get(ErrorType.memberPhoneNumber)]}
+        ${'phoneNumber'} | ${{
+  primaryCoachId,
+  phoneNumber: '+410',
+}} | ${[Errors.get(ErrorType.memberPhoneNumber)]}
         ${'dateOfBirth'} | ${{ primaryCoachId, dateOfBirth: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDate)]}
       `(
         /* eslint-enable max-len */
         `should fail to create a member since $field is not valid`,
         async (params) => {
-          const memberParams: CreateMemberParams = generateCreateMemberParams(
-            params.input,
-          );
+          const memberParams: CreateMemberParams = generateCreateMemberParams(params.input);
           await mutations.createMember({
             memberParams,
             invalidFieldsErrors: params.errors,
@@ -307,8 +294,7 @@ describe('Integration graphql resolvers', () => {
         `(
           `should fail to create an appointment since mandatory field $field is missing`,
           async (params) => {
-            const appointmentParams: RequestAppointmentParams =
-              generateRequestAppointmentParams();
+            const appointmentParams: RequestAppointmentParams = generateRequestAppointmentParams();
             delete appointmentParams[params.field];
             await mutations.requestAppointment({
               appointmentParams,
@@ -327,8 +313,9 @@ describe('Integration graphql resolvers', () => {
           /* eslint-enable max-len */
           `should fail to create an appointment since $field is not a valid type`,
           async (params) => {
-            const appointmentParams: RequestAppointmentParams =
-              generateRequestAppointmentParams(params.input);
+            const appointmentParams: RequestAppointmentParams = generateRequestAppointmentParams(
+              params.input,
+            );
 
             await mutations.requestAppointment({
               appointmentParams,
@@ -343,14 +330,13 @@ describe('Integration graphql resolvers', () => {
 
           await mutations.requestAppointment({
             appointmentParams: generateRequestAppointmentParams({ notBefore }),
-            invalidFieldsErrors: [
-              Errors.get(ErrorType.appointmentNotBeforeDateInThePast),
-            ],
+            invalidFieldsErrors: [Errors.get(ErrorType.appointmentNotBeforeDateInThePast)],
           });
         });
       });
 
       describe('schedule', () => {
+        /* eslint-disable max-len */
         test.each`
           field          | error
           ${'memberId'}  | ${`Field "memberId" of required type "String!" was not provided.`}
@@ -360,6 +346,7 @@ describe('Integration graphql resolvers', () => {
           ${'start'}     | ${`Field "start" of required type "DateTime!" was not provided.`}
           ${'end'}       | ${`Field "end" of required type "DateTime!" was not provided.`}
         `(
+          /* eslint-enable max-len */
           `should fail to create an appointment since mandatory field $field is missing`,
           async (params) => {
             const appointmentParams = generateScheduleAppointmentParams();
@@ -406,9 +393,7 @@ describe('Integration graphql resolvers', () => {
 
           await mutations.scheduleAppointment({
             appointmentParams,
-            invalidFieldsErrors: [
-              Errors.get(ErrorType.appointmentEndAfterStart),
-            ],
+            invalidFieldsErrors: [Errors.get(ErrorType.appointmentEndAfterStart)],
           });
         });
       });
@@ -456,7 +441,9 @@ describe('Integration graphql resolvers', () => {
           ${{ noShow: true }}
           ${{ noShow: false, reason }}
         `(
+          /* eslint-disable max-len */
           `should fail to update an appointment no show since noShow and reason combinations are not valid for $input`,
+          /* eslint-enable max-len */
           async (params) => {
             const noShowParams = {
               id: new Types.ObjectId().toString(),
@@ -472,10 +459,12 @@ describe('Integration graphql resolvers', () => {
       });
 
       describe('setNotes', () => {
+        /* eslint-disable max-len */
         test.each`
           field              | error
           ${'appointmentId'} | ${`Field "appointmentId" of required type "String!" was not provided.`}
         `(
+          /* eslint-enable max-len */
           `should fail to set notes to an appointment since mandatory field $field is missing`,
           async (params) => {
             const noteParams: SetNotesParams = {
@@ -522,11 +511,9 @@ describe('Integration graphql resolvers', () => {
     };
   });
 
-  /*********************************************************************************************************************
-   *********************************************************************************************************************
-   ************************************************** Internal methods *************************************************
-   *********************************************************************************************************************
-   ********************************************************************************************************************/
+  /************************************************************************************************
+   *************************************** Internal methods ***************************************
+   ***********************************************************************************************/
 
   const createAndValidateUser = async (roles?: UserRole[]): Promise<User> => {
     const userParams: CreateUserParams = generateCreateUserParams({ roles });
@@ -544,17 +531,12 @@ describe('Integration graphql resolvers', () => {
     const expectedUserNew = omit(expectedUser, 'roles');
     expect(resultUserNew).toEqual(expectedUserNew);
 
-    expect(result.roles).toEqual(
-      expectedUser.roles.map((role) => camelCase(role)),
-    );
+    expect(result.roles).toEqual(expectedUser.roles.map((role) => camelCase(role)));
 
     return result;
   };
 
-  const createAndValidateMember = async ({
-    primaryCoach,
-    coaches = [],
-  }): Promise<Member> => {
+  const createAndValidateMember = async ({ primaryCoach, coaches = [] }): Promise<Member> => {
     const deviceId = faker.datatype.uuid();
     setContextUser(deviceId);
     const apolloServer = createTestClient((module as any).apolloServer);
@@ -575,9 +557,7 @@ describe('Integration graphql resolvers', () => {
     expect(member.deviceId).toEqual(deviceId);
     expect(member.name).toEqual(memberParams.name);
 
-    expect(new Date(member.dateOfBirth)).toEqual(
-      new Date(memberParams.dateOfBirth),
-    );
+    expect(new Date(member.dateOfBirth)).toEqual(new Date(memberParams.dateOfBirth));
     expect(member.primaryCoach).toEqual(primaryCoach);
     expect(member.users).toEqual(coaches);
 
@@ -586,7 +566,8 @@ describe('Integration graphql resolvers', () => {
 
   /**
    * 1. call mutation requestAppointment: created appointment with memberId, userId, notBefore
-   * 2. call query getAppointment: returned current appointment with memberId, userId, notBefore and status: requested
+   * 2. call query getAppointment: returned current appointment with memberId, userId,
+   *                               notBefore and status: requested
    * 3. call mutation scheduleAppointment: created new scheduled appointment with status: scheduled
    * 4. call mutation endAppointment: returned current appointment with status: done
    * 5. call mutation freezeAppointment: returned current appointment with status: closed
@@ -601,13 +582,9 @@ describe('Integration graphql resolvers', () => {
     userId: string;
     member: Member;
   }): Promise<Appointment> => {
-    const requestAppointmentResult =
-      await appointmentsActions.requestAppointment(userId, member);
+    const requestAppointmentResult = await appointmentsActions.requestAppointment(userId, member);
 
-    let appointment = await appointmentsActions.scheduleAppointment(
-      userId,
-      member,
-    );
+    let appointment = await appointmentsActions.scheduleAppointment(userId, member);
 
     expect(requestAppointmentResult.id).not.toEqual(appointment.id);
 

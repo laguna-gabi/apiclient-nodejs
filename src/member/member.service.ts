@@ -19,16 +19,12 @@ export class MemberService {
         name: createMemberParams.name,
         dateOfBirth: createMemberParams.dateOfBirth,
         primaryCoach: new Types.ObjectId(createMemberParams.primaryCoachId),
-        users: createMemberParams.usersIds?.map(
-          (item) => new Types.ObjectId(item),
-        ),
+        users: createMemberParams.usersIds?.map((item) => new Types.ObjectId(item)),
       });
       return { id: result._id };
     } catch (ex) {
       throw new Error(
-        ex.code === DbErrors.duplicateKey
-          ? Errors.get(ErrorType.memberPhoneAlreadyExists)
-          : ex,
+        ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.memberPhoneAlreadyExists) : ex,
       );
     }
   }

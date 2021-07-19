@@ -1,21 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
-import { Model, Types, model } from 'mongoose';
+import { Model, model, Types } from 'mongoose';
 import {
   dbConnect,
-  generateCreateUserParams,
-  generateCreateMemberParams,
   dbDisconnect,
+  generateCreateMemberParams,
+  generateCreateUserParams,
 } from '../index';
 import {
-  MemberService,
-  MemberModule,
   CreateMemberParams,
   Member,
   MemberDto,
+  MemberModule,
+  MemberService,
 } from '../../src/member';
 import { Errors, ErrorType } from '../../src/common';
-import { User, UserRole, UserDto } from '../../src/user';
+import { User, UserDto, UserRole } from '../../src/user';
 import { datatype } from 'faker';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppointmentModule } from '../../src/appointment';
@@ -29,12 +29,7 @@ describe('MemberService', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        DbModule,
-        MemberModule,
-        AppointmentModule,
-        EventEmitterModule.forRoot(),
-      ],
+      imports: [DbModule, MemberModule, AppointmentModule, EventEmitterModule.forRoot()],
     }).compile();
 
     service = module.get<MemberService>(MemberService);
@@ -62,7 +57,8 @@ describe('MemberService', () => {
       const primaryCoach = await modelUser.create(primaryCoachParams);
       const nurse = await modelUser.create(nurseParams);
       const user = await modelUser.create(userParams);
-      await modelUser.create(generateCreateUserParams()); //Another user, to check if it doesn't return in member
+      //Another user, to check if it doesn't return in member
+      await modelUser.create(generateCreateUserParams());
 
       const deviceId = datatype.uuid();
       const member: CreateMemberParams = generateCreateMemberParams({

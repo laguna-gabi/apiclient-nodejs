@@ -1,6 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
-import { User, CreateUserParams, UserService } from '.';
+import { CreateUserParams, User, UserService } from '.';
 
 @Resolver(() => User)
 export class UserResolver {

@@ -7,6 +7,7 @@ import * as jwt from 'jsonwebtoken';
 @Resolver(() => Member)
 export class MemberResolver {
   private readonly authenticationPrefix = 'Bearer ';
+
   constructor(private readonly memberService: MemberService) {}
 
   @Mutation(() => Identifier)
@@ -14,10 +15,7 @@ export class MemberResolver {
     @Args(camelCase(CreateMemberParams.name))
     createMemberParams: CreateMemberParams,
   ) {
-    remove(
-      createMemberParams.usersIds,
-      (i) => i === createMemberParams.primaryCoachId,
-    );
+    remove(createMemberParams.usersIds, (i) => i === createMemberParams.primaryCoachId);
     return this.memberService.insert(createMemberParams);
   }
 
@@ -29,8 +27,6 @@ export class MemberResolver {
     );
     const authorization = jwt.decode(authorizationHeader);
 
-    return authorization?.username
-      ? this.memberService.get(authorization?.username)
-      : null;
+    return authorization?.username ? this.memberService.get(authorization?.username) : null;
   }
 }

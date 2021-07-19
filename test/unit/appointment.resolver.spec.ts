@@ -10,11 +10,11 @@ import {
 } from '../../src/appointment';
 import {
   dbDisconnect,
-  generateRequestAppointmentParams,
   generateNoShowAppointmentParams,
   generateNoteParam,
-  generateScoresParam,
+  generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
+  generateScoresParam,
 } from '../index';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
@@ -88,9 +88,7 @@ describe('AppointmentResolver', () => {
     it('should fetch empty on a non existing appointment', async () => {
       spyOnServiceGet.mockImplementationOnce(async () => null);
 
-      const result = await resolver.getAppointment(
-        new Types.ObjectId().toString(),
-      );
+      const result = await resolver.getAppointment(new Types.ObjectId().toString());
 
       expect(result).toBeNull();
     });

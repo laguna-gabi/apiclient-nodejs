@@ -3,9 +3,9 @@ import { camelCase } from 'lodash';
 import {
   Appointment,
   AppointmentService,
+  NoShowParams,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
-  NoShowParams,
   SetNotesParams,
 } from '.';
 

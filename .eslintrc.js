@@ -5,10 +5,7 @@ module.exports = {
     sourceType: 'module',
   },
   plugins: ['@typescript-eslint/eslint-plugin'],
-  extends: [
-    'plugin:@typescript-eslint/recommended',
-    'plugin:prettier/recommended',
-  ],
+  extends: ['plugin:@typescript-eslint/recommended'],
   root: true,
   env: {
     node: true,
@@ -20,6 +17,13 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
-    'max-len': ["error", { "code": 120 }]
+    'max-len': ['error', { code: 100 }],
+    'no-var': 'error',
+    semi: 'error',
+    'no-multi-spaces': 'error',
+    'space-in-parens': 'error',
+    'no-multiple-empty-lines': 'error',
+    'prefer-const': 'error',
+    'no-unexpected-multiline': 'error',
   },
 };

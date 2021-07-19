@@ -1,7 +1,10 @@
-import { Field, ObjectType, InputType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
+/**************************************************************************************************
+ ********************************** Input params for gql methods **********************************
+ *************************************************************************************************/
 @InputType('ScoresInput')
 @ObjectType()
 export class Scores {
@@ -41,6 +44,9 @@ export class SetNotesParams {
   scores?: Scores;
 }
 
+/**************************************************************************************************
+ ********************************* Return params for gql methods **********************************
+ *************************************************************************************************/
 @InputType('NotesInput')
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
@@ -54,5 +60,8 @@ export class Notes {
   scores: Scores;
 }
 
+/**************************************************************************************************
+ **************************************** Exported Schemas ****************************************
+ *************************************************************************************************/
 export type NotesDocument = Notes & Document;
 export const NotesDto = SchemaFactory.createForClass(Notes);
