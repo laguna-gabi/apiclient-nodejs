@@ -11,7 +11,6 @@ import {
   Note,
   Scores,
 } from '../src/appointment';
-import { authorizedDeviceId } from './memberAuthorization';
 
 export const generateCreateUserParams = ({
   roles = [UserRole.coach],
@@ -44,7 +43,7 @@ export const mockGenerateUser = (): User => {
 
 export const generateCreateMemberParams = ({
   phoneNumber = generatePhoneNumber(),
-  deviceId = authorizedDeviceId,
+  deviceId = faker.datatype.uuid(),
   name = faker.name.findName(),
   dateOfBirth = faker.date.past(),
   primaryCoachId,
@@ -72,7 +71,7 @@ export const mockGenerateMember = (): Member => {
   return {
     id: id.toString(),
     phoneNumber: generatePhoneNumber(),
-    deviceId: authorizedDeviceId,
+    deviceId: faker.datatype.uuid(),
     name: faker.name.findName(),
     dateOfBirth: faker.date.past(),
     primaryCoach: mockGenerateUser(),

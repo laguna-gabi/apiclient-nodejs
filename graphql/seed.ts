@@ -51,7 +51,17 @@ async function main() {
     memberParams,
   });
   console.log(
-    `${memberId} : member having a user1 as his\nprimaryCoach, user2, user3 as his secondary users`,
+    `${memberId} : member with deviceId ${memberParams.deviceId}\nhaving a user1 ` +
+      `as his primaryCoach, user2, user3 as his secondary users`,
+  );
+  console.debug(
+    'In case you want to call getMember:\n' +
+      ` 1. go to jwt.io\n` +
+      `    1a. add a payload for { username: THE-DEVICE-ID-OF-THE-MEMBER-PRINTED-IN-THE-LINE-ABOVE }\n` +
+      "    1b. generate a jwt like so : https://ibb.co/wRj3k7V [this is not a virus, don't worry]\n" +
+      ` 2. when calling getMember query, this header should be added:\n` +
+      `    'Authorization' : 'Bearer THE-JWT-TOKEN-GENERATED-ABOVE'\n` +
+      `    like so : https://ibb.co/TmhMbDL [this is not a virus, don't worry]`,
   );
 
   console.debug(

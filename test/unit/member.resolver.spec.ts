@@ -6,7 +6,6 @@ import {
 } from '../../test';
 import { DbModule } from '../../src/db/db.module';
 import { MemberResolver, MemberService, MemberModule } from '../../src/member';
-import { context } from '../memberAuthorization';
 import { Types } from 'mongoose';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
@@ -105,7 +104,13 @@ describe('MemberResolver', () => {
       const member = mockGenerateMember();
       spyOnServiceGet.mockImplementationOnce(async () => member);
 
-      const result = await resolver.getMember(context);
+      const result = await resolver.getMember({
+        req: {
+          headers: {
+            authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QifQ.hNQI_r8BATy1LyXPr6Zuo9X_V0kSED8ngcqQ6G-WV5w`,
+          },
+        },
+      });
 
       expect(result).toEqual(member);
     });
