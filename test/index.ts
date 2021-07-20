@@ -18,17 +18,17 @@ export const generateCreateUserParams = ({
   firstName = faker.name.firstName(21),
   lastName = faker.name.lastName(21),
   email = generateEmail(),
-  photoUrl = faker.image.imageUrl(),
+  avatar = faker.image.imageUrl(),
   description = faker.lorem.sentence(),
 }: {
   roles?: UserRole[];
   firstName?: string;
   lastName?: string;
   email?: string;
-  photoUrl?: string;
+  avatar?: string;
   description?: string;
 } = {}): CreateUserParams => {
-  return { firstName, lastName, email, roles, photoUrl, description };
+  return { firstName, lastName, email, roles, avatar, description };
 };
 
 export const mockGenerateUser = (): User => {
@@ -41,7 +41,7 @@ export const mockGenerateUser = (): User => {
     lastName,
     email: generateEmail(),
     roles: [UserRole.coach],
-    photoUrl: faker.image.imageUrl(),
+    avatar: faker.image.imageUrl(),
     description: faker.lorem.sentence(),
   };
 };
@@ -213,7 +213,7 @@ export const compareUsers = (user: User, userBase) => {
   expect(user.lastName).toEqual(userBase.lastName);
   expect(user.email).toEqual(userBase.email);
   expect(user.roles).toEqual(expect.arrayContaining(userBase.roles));
-  expect(user.photoUrl).toEqual(userBase.photoUrl);
+  expect(user.avatar).toEqual(userBase.avatar);
 };
 
 export const dbConnect = async () => {

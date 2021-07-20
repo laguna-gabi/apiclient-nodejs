@@ -43,8 +43,8 @@ export class CreateUserParams {
   roles: UserRole[];
 
   @Field()
-  @IsUrl(undefined, { message: Errors.get(ErrorType.userPhotoUrlFormat) })
-  photoUrl: string;
+  @IsUrl(undefined, { message: Errors.get(ErrorType.userAvatarFormat) })
+  avatar: string;
 
   @Field()
   description: string;
@@ -76,7 +76,7 @@ export class User extends Identifier {
 
   @Prop()
   @Field(() => String)
-  photoUrl: string;
+  avatar: string;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: Appointment.name }] })
   @Field(() => [AppointmentData], { nullable: true })

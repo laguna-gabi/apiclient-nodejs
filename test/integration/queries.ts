@@ -15,7 +15,7 @@ export class Queries {
             lastName
             email
             roles
-            photoUrl
+            avatar
             description
             appointments {
               id
@@ -58,7 +58,7 @@ export class Queries {
               lastName
               email
               roles
-              photoUrl
+              avatar
               description
               appointments {
                 id
@@ -75,7 +75,7 @@ export class Queries {
               lastName
               email
               roles
-              photoUrl
+              avatar
               description
               appointments {
                 id

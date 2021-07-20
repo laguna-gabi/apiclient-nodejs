@@ -10,7 +10,7 @@ export enum ErrorType {
   userMinMaxLength = 9101,
   userEmailAlreadyExists = 9102,
   userEmailFormat = 9103,
-  userPhotoUrlFormat = 9104,
+  userAvatarFormat = 9104,
 
   // Module member errors
   memberMinMaxLength = 9201,
@@ -46,8 +46,8 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.userEmailAlreadyExists.valueOf(), 'email already exists'],
   [ErrorType.userEmailFormat.valueOf(), emailFormat],
   [
-    ErrorType.userPhotoUrlFormat.valueOf(),
-    'photoUrl must be an URL address, for example: www.google.com',
+    ErrorType.userAvatarFormat.valueOf(),
+    'avatar must be an URL address, for example: www.google.com',
   ],
   [ErrorType.memberMinMaxLength.valueOf(), `member ${nameFormat}`],
   [ErrorType.memberPhoneAlreadyExists.valueOf(), 'phone already exists'],

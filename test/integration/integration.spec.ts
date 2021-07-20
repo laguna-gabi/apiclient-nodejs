@@ -186,7 +186,7 @@ describe('Integration graphql resolvers', () => {
         ${'firstName'}   | ${`Field "firstName" of required type "String!" was not provided.`}
         ${'lastName'}    | ${`Field "lastName" of required type "String!" was not provided.`}
         ${'roles'}       | ${`Field "roles" of required type "[UserRole!]!" was not provided.`}
-        ${'photoUrl'}    | ${`Field "photoUrl" of required type "String!" was not provided.`}
+        ${'avatar'}      | ${`Field "avatar" of required type "String!" was not provided.`}
         ${'description'} | ${`Field "description" of required type "String!" was not provided.`}
       `(`should fail to create a user since mandatory field $field is missing`, async (params) => {
         const userParams: CreateUserParams = generateCreateUserParams();
@@ -215,11 +215,11 @@ describe('Integration graphql resolvers', () => {
 
       /* eslint-disable max-len */
       test.each`
-        field                 | input                                                          | errors
-        ${'email'}            | ${{ email: faker.lorem.word() }}                               | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat)] }}
-        ${'photoUrl'}         | ${{ photoUrl: faker.lorem.word() }}                            | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userPhotoUrlFormat)] }}
-        ${'email & photoUrl'} | ${{ email: faker.lorem.word(), photoUrl: faker.lorem.word() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat), Errors.get(ErrorType.userPhotoUrlFormat)] }}
-        ${'description'}      | ${{ description: 222 }}                                        | ${{ missingFieldError: stringError }}
+        field               | input                                                        | errors
+        ${'email'}          | ${{ email: faker.lorem.word() }}                             | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat)] }}
+        ${'avatar'}         | ${{ avatar: faker.lorem.word() }}                            | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userAvatarFormat)] }}
+        ${'email & avatar'} | ${{ email: faker.lorem.word(), avatar: faker.lorem.word() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat), Errors.get(ErrorType.userAvatarFormat)] }}
+        ${'description'}    | ${{ description: 222 }}                                      | ${{ missingFieldError: stringError }}
       `(
         /* eslint-enable max-len */
         `should fail to create a user since $field is not valid`,
