@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
 import { Model, model, Types } from 'mongoose';
 import { User, UserDto, UserModule, UserRole, UserService } from '../../src/user';
-import { dbConnect, dbDisconnect, generateCreateUserParams } from '../index';
+import { compareUsers, dbConnect, dbDisconnect, generateCreateUserParams } from '../index';
 import { Errors, ErrorType } from '../../src/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppointmentModule } from '../../src/appointment';
@@ -41,9 +41,7 @@ describe('UserService', () => {
       const { id } = await userModel.create(user);
 
       const result = await service.get(id);
-      expect(result.email).toEqual(user.email);
-      expect(result.roles).toEqual(expect.arrayContaining(user.roles));
-      expect(result.description).toEqual(user.description);
+      compareUsers(result, { _id: id, ...user });
     });
   });
 

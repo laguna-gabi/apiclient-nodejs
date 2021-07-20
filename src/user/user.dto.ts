@@ -25,7 +25,13 @@ export class CreateUserParams {
   @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
     message: Errors.get(ErrorType.userMinMaxLength),
   })
-  name: string;
+  firstName: string;
+
+  @Field()
+  @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
+    message: Errors.get(ErrorType.userMinMaxLength),
+  })
+  lastName: string;
 
   @Field()
   @IsEmail(undefined, {
@@ -51,8 +57,12 @@ export class CreateUserParams {
 @Schema({ versionKey: false, timestamps: true })
 export class User extends Identifier {
   @Prop()
-  @Field(() => String, { description: 'name' })
-  name: string;
+  @Field(() => String)
+  firstName: string;
+
+  @Prop()
+  @Field(() => String)
+  lastName: string;
 
   @Prop({ unique: true })
   @Field(() => String)

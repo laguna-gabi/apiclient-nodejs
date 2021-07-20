@@ -76,12 +76,9 @@ describe('MemberResolver', () => {
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith({
-        phoneNumber: params.phoneNumber,
         deviceId: member.deviceId,
-        name: params.name,
-        dateOfBirth: params.dateOfBirth,
-        primaryCoachId: params.primaryCoachId,
         usersIds: [additionalUserId],
+        ...params,
       });
     });
   });

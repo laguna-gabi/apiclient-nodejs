@@ -14,26 +14,30 @@ import {
 
 export const generateCreateUserParams = ({
   roles = [UserRole.coach],
-  name = faker.name.findName(),
+  firstName = faker.name.firstName(21),
+  lastName = faker.name.lastName(21),
   email = generateEmail(),
   photoUrl = faker.image.imageUrl(),
   description = faker.lorem.sentence(),
 }: {
   roles?: UserRole[];
-  name?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   photoUrl?: string;
   description?: string;
 } = {}): CreateUserParams => {
-  return { name, email, roles, photoUrl, description };
+  return { firstName, lastName, email, roles, photoUrl, description };
 };
 
 export const mockGenerateUser = (): User => {
   const id = new Types.ObjectId();
-  const name = faker.name.findName();
+  const firstName = faker.name.firstName();
+  const lastName = faker.name.lastName();
   return {
     id: id.toString(),
-    name,
+    firstName,
+    lastName,
     email: generateEmail(),
     roles: [UserRole.coach],
     photoUrl: faker.image.imageUrl(),
@@ -44,14 +48,16 @@ export const mockGenerateUser = (): User => {
 export const generateCreateMemberParams = ({
   phoneNumber = generatePhoneNumber(),
   deviceId = faker.datatype.uuid(),
-  name = faker.name.findName(),
+  firstName = faker.name.firstName(),
+  lastName = faker.name.lastName(),
   dateOfBirth = faker.date.past(),
   primaryCoachId,
   usersIds = [],
 }: {
   phoneNumber?: string;
   deviceId?: string;
-  name?: string;
+  firstName?: string;
+  lastName?: string;
   dateOfBirth?: Date;
   primaryCoachId: string;
   usersIds?: string[];
@@ -59,7 +65,8 @@ export const generateCreateMemberParams = ({
   return {
     phoneNumber,
     deviceId,
-    name,
+    firstName,
+    lastName,
     dateOfBirth,
     primaryCoachId,
     usersIds,
@@ -72,7 +79,8 @@ export const mockGenerateMember = (): Member => {
     id: id.toString(),
     phoneNumber: generatePhoneNumber(),
     deviceId: faker.datatype.uuid(),
-    name: faker.name.findName(),
+    firstName: faker.name.firstName(),
+    lastName: faker.name.lastName(),
     dateOfBirth: faker.date.past(),
     primaryCoach: mockGenerateUser(),
     users: [],
@@ -149,6 +157,15 @@ const generatePhoneNumber = () => {
   }
 
   return phoneNumber;
+};
+
+export const compareUsers = (user: User, userBase) => {
+  expect(user.id).toEqual(userBase._id.toString());
+  expect(user.firstName).toEqual(userBase.firstName);
+  expect(user.lastName).toEqual(userBase.lastName);
+  expect(user.email).toEqual(userBase.email);
+  expect(user.roles).toEqual(expect.arrayContaining(userBase.roles));
+  expect(user.photoUrl).toEqual(userBase.photoUrl);
 };
 
 export const dbConnect = async () => {

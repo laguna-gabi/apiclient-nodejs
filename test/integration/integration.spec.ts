@@ -176,7 +176,8 @@ describe('Integration graphql resolvers', () => {
       test.each`
         field            | error
         ${'email'}       | ${`Field "email" of required type "String!" was not provided.`}
-        ${'name'}        | ${`Field "name" of required type "String!" was not provided.`}
+        ${'firstName'}   | ${`Field "firstName" of required type "String!" was not provided.`}
+        ${'lastName'}    | ${`Field "lastName" of required type "String!" was not provided.`}
         ${'roles'}       | ${`Field "roles" of required type "[UserRole!]!" was not provided.`}
         ${'photoUrl'}    | ${`Field "photoUrl" of required type "String!" was not provided.`}
         ${'description'} | ${`Field "description" of required type "String!" was not provided.`}
@@ -190,17 +191,18 @@ describe('Integration graphql resolvers', () => {
       });
 
       test.each`
-        length           | errorString | error
-        ${minLength - 1} | ${'short'}  | ${[Errors.get(ErrorType.userMinMaxLength)]}
-        ${maxLength + 1} | ${'long'}   | ${[Errors.get(ErrorType.userMinMaxLength)]}
-      `(`should fail to create a user since name is too $errorString`, async (params) => {
-        const name = generateRandomName(params.length);
-        const userParams: CreateUserParams = generateCreateUserParams({
-          name,
-        });
+        length           | errorString | field
+        ${minLength - 1} | ${'short'}  | ${'firstName'}
+        ${maxLength + 1} | ${'long'}   | ${'firstName'}
+        ${minLength - 1} | ${'short'}  | ${'lastName'}
+        ${maxLength + 1} | ${'long'}   | ${'lastName'}
+      `(`should fail to create a user since $field is too $errorString`, async (params) => {
+        const userParams: CreateUserParams = generateCreateUserParams();
+        userParams[params.field] = generateRandomName(params.length);
+
         await mutations.createUser({
           userParams,
-          invalidFieldsErrors: params.error,
+          invalidFieldsErrors: [Errors.get(ErrorType.userMinMaxLength)],
         });
       });
 
@@ -232,7 +234,8 @@ describe('Integration graphql resolvers', () => {
       test.each`
         field               | error
         ${'phoneNumber'}    | ${`Field "phoneNumber" of required type "String!" was not provided.`}
-        ${'name'}           | ${`Field "name" of required type "String!" was not provided.`}
+        ${'firstName'}      | ${`Field "firstName" of required type "String!" was not provided.`}
+        ${'lastName'}       | ${`Field "lastName" of required type "String!" was not provided.`}
         ${'dateOfBirth'}    | ${`Field "dateOfBirth" of required type "DateTime!" was not provided.`}
         ${'primaryCoachId'} | ${`Field "primaryCoachId" of required type "String!" was not provided.`}
       `(`should fail to create a user since mandatory field $field is missing`, async (params) => {
@@ -248,18 +251,17 @@ describe('Integration graphql resolvers', () => {
       });
 
       test.each`
-        length           | errorString | error
-        ${minLength - 1} | ${'short'}  | ${[Errors.get(ErrorType.memberMinMaxLength)]}
-        ${maxLength + 1} | ${'long'}   | ${[Errors.get(ErrorType.memberMinMaxLength)]}
-      `(`should fail to create a member since name is too $errorString`, async (params) => {
-        const name = generateRandomName(params.length);
-        const memberParams: CreateMemberParams = generateCreateMemberParams({
-          primaryCoachId,
-          name,
-        });
+        length           | errorString | field
+        ${minLength - 1} | ${'short'}  | ${'firstName'}
+        ${maxLength + 1} | ${'long'}   | ${'firstName'}
+        ${minLength - 1} | ${'short'}  | ${'lastName'}
+        ${maxLength + 1} | ${'long'}   | ${'lastName'}
+      `(`should fail to create a member since $field is too $errorString`, async (params) => {
+        const memberParams: CreateMemberParams = generateCreateMemberParams({ primaryCoachId });
+        memberParams[params.field] = generateRandomName(params.length);
         await mutations.createMember({
           memberParams,
-          invalidFieldsErrors: params.error,
+          invalidFieldsErrors: [Errors.get(ErrorType.memberMinMaxLength)],
         });
       });
 
@@ -555,7 +557,8 @@ describe('Integration graphql resolvers', () => {
 
     expect(member.phoneNumber).toEqual(memberParams.phoneNumber);
     expect(member.deviceId).toEqual(deviceId);
-    expect(member.name).toEqual(memberParams.name);
+    expect(member.firstName).toEqual(memberParams.firstName);
+    expect(member.lastName).toEqual(memberParams.lastName);
 
     expect(new Date(member.dateOfBirth)).toEqual(new Date(memberParams.dateOfBirth));
     expect(member.primaryCoach).toEqual(primaryCoach);

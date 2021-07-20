@@ -11,6 +11,7 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
 } from '../test';
+import * as jwt from 'jsonwebtoken';
 
 /**
  * This is a seed file for initial local db creation.
@@ -18,7 +19,8 @@ import {
  * 1. user(1) of type coach
  * 2. user(2) of type nurse
  * 3. user(3) of type coach and nurse
- * 4. member having user(1) as his primaryCoach, and user(2), user(3) as his 2ndary users.
+ * 4. member in organization above, having user(1) as his primaryCoach,
+ *    and user(2), user(3) as his 2ndary users.
  * 5. appointments for member and his users.
  */
 
@@ -54,14 +56,13 @@ async function main() {
     `${memberId} : member with deviceId ${memberParams.deviceId}\nhaving a user1 ` +
       `as his primaryCoach, user2, user3 as his secondary users`,
   );
+
+  const signed = jwt.sign({ username: memberParams.deviceId }, 'key-123');
+
   console.debug(
-    'In case you want to call getMember:\n' +
-      ` 1. go to jwt.io\n` +
-      `    1a. add a payload for { username: THE-DEVICE-ID-OF-THE-MEMBER-PRINTED-IN-THE-LINE-ABOVE }\n` +
-      "    1b. generate a jwt like so : https://ibb.co/wRj3k7V [this is not a virus, don't worry]\n" +
-      ` 2. when calling getMember query, this header should be added:\n` +
-      `    'Authorization' : 'Bearer THE-JWT-TOKEN-GENERATED-ABOVE'\n` +
-      `    like so : https://ibb.co/TmhMbDL [this is not a virus, don't worry]`,
+    `If you wish to call getMember this header should be added:\n` +
+      `    "Authorization" : "Bearer ${signed}"\n` +
+      `    like so : https://ibb.co/TmhMbDL [not a virus, don't worry]`,
   );
 
   console.debug(
@@ -77,9 +78,9 @@ async function main() {
   await cleanUp();
 }
 
-/***********************************************************************************************************************
- *************************************************** Internal methods **************************************************
- ***********************************************************************************************************************/
+/**************************************************************************************************
+ **************************************** Internal methods ****************************************
+ *************************************************************************************************/
 const init = async () => {
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
@@ -97,7 +98,8 @@ const init = async () => {
 
 const cleanUp = async () => {
   /**
-   * Since we have an eventEmitter updating db, we need to postpone closing the db until after the update occurs.
+   * Since we have an eventEmitter updating db, we need to postpone closing the
+   * db until after the update occurs.
    * @see [UserService#handleOrderCreatedEvent]
    */
   await new Promise((f) => setTimeout(f, 100));
@@ -105,10 +107,7 @@ const cleanUp = async () => {
   await app.close();
 };
 
-const createUser = async (
-  roles: UserRole[],
-  userText: string,
-): Promise<string> => {
+const createUser = async (roles: UserRole[], userText: string): Promise<string> => {
   const userId = await mutations.createUser({
     userParams: generateCreateUserParams({
       roles,
@@ -119,36 +118,24 @@ const createUser = async (
   return userId;
 };
 
-const requestAppointment = async (
-  memberId: string,
-  userId: string,
-  userText: string,
-) => {
+const requestAppointment = async (memberId: string, userId: string, userText: string) => {
   const appointment = await mutations.requestAppointment({
     appointmentParams: generateRequestAppointmentParams({
       memberId,
       userId,
     }),
   });
-  console.log(
-    `${appointment.id} : request appointment for member and ${userText}`,
-  );
+  console.log(`${appointment.id} : request appointment for member and ${userText}`);
 };
 
-const scheduleAppointment = async (
-  memberId: string,
-  userId: string,
-  userText: string,
-) => {
+const scheduleAppointment = async (memberId: string, userId: string, userText: string) => {
   const appointment = await mutations.scheduleAppointment({
     appointmentParams: generateScheduleAppointmentParams({
       memberId,
       userId,
     }),
   });
-  console.log(
-    `${appointment.id} : scheduled appointment for member and ${userText}`,
-  );
+  console.log(`${appointment.id} : scheduled appointment for member and ${userText}`);
 };
 
 (async () => {

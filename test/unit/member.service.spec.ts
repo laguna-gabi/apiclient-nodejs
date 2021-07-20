@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
 import { Model, model, Types } from 'mongoose';
 import {
+  compareUsers,
   dbConnect,
   dbDisconnect,
   generateCreateMemberParams,
@@ -70,7 +71,8 @@ describe('MemberService', () => {
       const { _id } = await memberModel.create({
         phoneNumber: member.phoneNumber,
         deviceId,
-        name: member.name,
+        firstName: member.firstName,
+        lastName: member.lastName,
         primaryCoach: new Types.ObjectId(member.primaryCoachId),
         users: member.usersIds.map((item) => new Types.ObjectId(item)),
       });
@@ -80,20 +82,13 @@ describe('MemberService', () => {
       expect(result.id).toEqual(_id.toString());
       expect(result.phoneNumber).toEqual(member.phoneNumber);
       expect(result.deviceId).toEqual(member.deviceId);
-      expect(result.name).toEqual(member.name);
+      expect(result.firstName).toEqual(member.firstName);
+      expect(result.lastName).toEqual(member.lastName);
       compareUsers(result.primaryCoach, primaryCoach);
       expect(result.users.length).toEqual(2);
       compareUsers(result.users[0], user);
       compareUsers(result.users[1], nurse);
     });
-
-    const compareUsers = (user: User, userBase) => {
-      expect(user.id).toEqual(userBase._id.toString());
-      expect(user.name).toEqual(userBase['name']);
-      expect(user.email).toEqual(userBase['email']);
-      expect(user.roles).toEqual(expect.arrayContaining(userBase['roles']));
-      expect(user.photoUrl).toEqual(userBase['photoUrl']);
-    };
   });
 
   describe('insert', () => {
@@ -111,7 +106,8 @@ describe('MemberService', () => {
       const createdMember = await memberModel.findById(result.id);
       expect(createdMember['phoneNumber']).toEqual(memberParams.phoneNumber);
       expect(createdMember['deviceId']).toEqual(memberParams.deviceId);
-      expect(createdMember['name']).toEqual(memberParams.name);
+      expect(createdMember['firstName']).toEqual(memberParams.firstName);
+      expect(createdMember['lastName']).toEqual(memberParams.lastName);
       expect(createdMember['dateOfBirth']).toEqual(memberParams.dateOfBirth);
       expect(createdMember['primaryCoach']).toEqual(primaryCoach._id);
     });

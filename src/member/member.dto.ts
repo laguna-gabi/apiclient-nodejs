@@ -26,7 +26,13 @@ export class CreateMemberParams {
   @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
     message: Errors.get(ErrorType.memberMinMaxLength),
   })
-  name: string;
+  firstName: string;
+
+  @Field()
+  @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
+    message: Errors.get(ErrorType.memberMinMaxLength),
+  })
+  lastName: string;
 
   @Field(() => Date)
   @IsDate({ message: Errors.get(ErrorType.memberDate) })
@@ -54,8 +60,12 @@ export class Member extends Identifier {
   deviceId: string;
 
   @Prop()
-  @Field(() => String, { description: 'name' })
-  name: string;
+  @Field(() => String)
+  firstName: string;
+
+  @Prop()
+  @Field(() => String)
+  lastName: string;
 
   @Prop({ type: Date })
   @Field(() => Date)

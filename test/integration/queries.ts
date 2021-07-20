@@ -11,7 +11,8 @@ export class Queries {
         query getUser($id: String!) {
           getUser(id: $id) {
             id
-            name
+            firstName
+            lastName
             email
             roles
             photoUrl
@@ -40,11 +41,13 @@ export class Queries {
             id
             phoneNumber
             deviceId
-            name
+            firstName
+            lastName
             dateOfBirth
             primaryCoach {
               id
-              name
+              firstName
+              lastName
               email
               roles
               photoUrl
@@ -60,7 +63,8 @@ export class Queries {
             }
             users {
               id
-              name
+              firstName
+              lastName
               email
               roles
               photoUrl
