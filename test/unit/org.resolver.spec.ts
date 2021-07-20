@@ -1,10 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  dbDisconnect,
-  generateCreateUserParams,
-  generateOrgParams,
-  mockGenerateUser,
-} from '../../test';
+import { dbDisconnect, generateOrgParams } from '../../test';
 import { DbModule } from '../../src/db/db.module';
 import { Types } from 'mongoose';
 import { OrgModule, OrgResolver, OrgService } from '../../src/org';

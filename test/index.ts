@@ -2,7 +2,7 @@ import * as faker from 'faker';
 import { connect, disconnect, Types } from 'mongoose';
 import * as config from 'config';
 import { CreateUserParams, User, UserRole } from '../src/user';
-import { CreateMemberParams, Member } from '../src/member';
+import { CreateMemberParams, defaultMemberParams, Language, Member, Sex } from '../src/member';
 import {
   AppointmentMethod,
   NoShowParams,
@@ -55,6 +55,11 @@ export const generateCreateMemberParams = ({
   primaryCoachId,
   orgId,
   usersIds = [],
+  sex,
+  email,
+  language,
+  zipCode,
+  dischargeDate,
 }: {
   phoneNumber?: string;
   deviceId?: string;
@@ -64,6 +69,11 @@ export const generateCreateMemberParams = ({
   primaryCoachId: string;
   orgId: string;
   usersIds?: string[];
+  sex?: Sex;
+  email?: string;
+  language?: Language;
+  zipCode?: string;
+  dischargeDate?: Date;
 }): CreateMemberParams => {
   return {
     phoneNumber,
@@ -74,6 +84,11 @@ export const generateCreateMemberParams = ({
     orgId,
     primaryCoachId,
     usersIds,
+    sex,
+    email,
+    language,
+    zipCode,
+    dischargeDate,
   };
 };
 
@@ -92,6 +107,8 @@ export const mockGenerateMember = (): Member => {
     primaryCoach: mockGenerateUser(),
     ...generateMemberLinks(firstName, lastName),
     users: [],
+    sex: defaultMemberParams.sex,
+    language: defaultMemberParams.language,
   };
 };
 

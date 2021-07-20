@@ -16,7 +16,9 @@ export enum ErrorType {
   memberMinMaxLength = 9201,
   memberPhoneAlreadyExists = 9202,
   memberPhoneNumber = 9203,
-  memberDate = 9204,
+  memberDateOfBirth = 9204,
+  memberDischargeDate = 9205,
+  memberEmailFormat = 9103,
 
   // Module appointment errors
   appointmentIdNotFound = 9301,
@@ -36,14 +38,13 @@ const nameFormat = `name must be between ${graphqlConfig.get('minLength')} and $
   'maxLength',
 )} characters`;
 const dateInstanceFormat = 'must be a Date instance';
+const emailFormat =
+  'email must be in an email format - having a @ and an extension, for example: test@gmail.com';
 
 export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.userMinMaxLength.valueOf(), `user ${nameFormat}`],
   [ErrorType.userEmailAlreadyExists.valueOf(), 'email already exists'],
-  [
-    ErrorType.userEmailFormat.valueOf(),
-    'email must be in an email format - having a @ and an extension, for example: test@gmail.com',
-  ],
+  [ErrorType.userEmailFormat.valueOf(), emailFormat],
   [
     ErrorType.userPhotoUrlFormat.valueOf(),
     'photoUrl must be an URL address, for example: www.google.com',
@@ -56,7 +57,9 @@ export const Errors: Map<ErrorType, string> = new Map([
       `please make sure you've added the country code with (+) in the beginning. ` +
       `${validPhoneNumbersExamples}`,
   ],
-  [ErrorType.memberDate.valueOf(), `dateOfBirth ${dateInstanceFormat}`],
+  [ErrorType.memberDateOfBirth.valueOf(), `dateOfBirth ${dateInstanceFormat}`],
+  [ErrorType.memberDischargeDate.valueOf(), `dischargeDate ${dateInstanceFormat}`],
+  [ErrorType.memberEmailFormat.valueOf(), emailFormat],
   [ErrorType.appointmentIdNotFound.valueOf(), 'appointment id was not found'],
   [ErrorType.appointmentNotBeforeDate.valueOf(), `notBefore ${dateInstanceFormat}`],
   [ErrorType.appointmentNotBeforeDateInThePast.valueOf(), 'notBefore must be in the future'],

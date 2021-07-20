@@ -86,6 +86,11 @@ export class Queries {
                 end
               }
             }
+            sex
+            email
+            language
+            zipCode
+            dischargeDate
           }
         }
       `,

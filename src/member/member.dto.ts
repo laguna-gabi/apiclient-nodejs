@@ -1,13 +1,33 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { User } from '../user';
 import { Errors, ErrorType, Identifier, validPhoneNumbersExamples } from '../common';
-import { IsDate, IsPhoneNumber, Length } from 'class-validator';
+import { IsDate, IsEmail, IsOptional, IsPhoneNumber, Length } from 'class-validator';
 import * as config from 'config';
 import { Org } from '../org';
 
 const validatorsConfig = config.get('graphql.validators');
+/**************************************************************************************************
+ ******************************* Enum registration for gql methods ********************************
+ *************************************************************************************************/
+export enum Language {
+  en = 'en',
+  es = 'es',
+}
+registerEnumType(Language, { name: 'Language' });
+
+export enum Sex {
+  male = 'male',
+  female = 'female',
+  other = 'other',
+}
+registerEnumType(Sex, { name: 'Sex' });
+
+export const defaultMemberParams = {
+  sex: Sex.male,
+  language: Language.en,
+};
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -36,7 +56,7 @@ export class CreateMemberParams {
   lastName: string;
 
   @Field(() => Date)
-  @IsDate({ message: Errors.get(ErrorType.memberDate) })
+  @IsDate({ message: Errors.get(ErrorType.memberDateOfBirth) })
   dateOfBirth: Date;
 
   @Field(() => String)
@@ -47,6 +67,30 @@ export class CreateMemberParams {
 
   @Field(() => [String], { nullable: true })
   usersIds: string[];
+
+  @Field(() => Sex, { nullable: true })
+  @IsOptional()
+  sex?: Sex;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsEmail(undefined, {
+    message: Errors.get(ErrorType.memberEmailFormat),
+  })
+  email?: string;
+
+  @Field(() => Language, { nullable: true })
+  @IsOptional()
+  language?: Language;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  zipCode?: string;
+
+  @Field(() => Date, { nullable: true })
+  @IsOptional()
+  @IsDate({ message: Errors.get(ErrorType.memberDischargeDate) })
+  dischargeDate?: Date;
 }
 
 /**************************************************************************************************
@@ -94,6 +138,26 @@ export class Member extends Identifier {
   @Prop()
   @Field(() => String)
   dischargeInstructionsLink: string;
+
+  @Prop({ default: defaultMemberParams.sex })
+  @Field(() => Sex)
+  sex: Sex;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  email?: string;
+
+  @Prop({ default: defaultMemberParams.language })
+  @Field(() => Language)
+  language: Language;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  zipCode?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => Date, { nullable: true })
+  dischargeDate?: Date;
 }
 
 /**************************************************************************************************

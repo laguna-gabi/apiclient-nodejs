@@ -13,6 +13,7 @@ import {
   generateScheduleAppointmentParams,
 } from '../test';
 import * as jwt from 'jsonwebtoken';
+import * as faker from 'faker';
 
 /**
  * This is a seed file for initial local db creation.
@@ -58,6 +59,9 @@ async function main() {
     orgId: org.id,
     primaryCoachId: user1Id,
     usersIds: [user2Id, user3Id],
+    email: faker.internet.email(),
+    zipCode: faker.address.zipCode(),
+    dischargeDate: faker.date.future(1),
   });
 
   const { id: memberId } = await mutations.createMember({

@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { DbErrors, Errors, ErrorType, Identifier } from '../common';
 import { CreateMemberParams, Member, MemberDocument } from '.';
+import { cloneDeep } from 'lodash';
 
 @Injectable()
 export class MemberService {
@@ -21,12 +22,13 @@ export class MemberService {
     dischargeInstructionsLink: string;
   }): Promise<Identifier> {
     try {
+      const primitiveValues = cloneDeep(createMemberParams);
+      delete primitiveValues.orgId;
+      delete primitiveValues.primaryCoachId;
+      delete primitiveValues.usersIds;
+
       const result = await this.memberModel.create({
-        phoneNumber: createMemberParams.phoneNumber,
-        deviceId: createMemberParams.deviceId,
-        firstName: createMemberParams.firstName,
-        lastName: createMemberParams.lastName,
-        dateOfBirth: createMemberParams.dateOfBirth,
+        ...primitiveValues,
         org: new Types.ObjectId(createMemberParams.orgId),
         primaryCoach: new Types.ObjectId(createMemberParams.primaryCoachId),
         users: createMemberParams.usersIds?.map((item) => new Types.ObjectId(item)),

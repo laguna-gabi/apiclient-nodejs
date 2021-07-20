@@ -20,7 +20,7 @@ import { Mutations } from './mutations';
 import { Queries } from './queries';
 import * as config from 'config';
 import * as faker from 'faker';
-import { CreateMemberParams, Member } from '../../src/member';
+import { CreateMemberParams, defaultMemberParams, Language, Member, Sex } from '../../src/member';
 import {
   Appointment,
   AppointmentStatus,
@@ -295,6 +295,108 @@ describe('Integration graphql resolvers', () => {
       });
 
       test.each`
+        field              | defaultValue
+        ${'sex'}           | ${defaultMemberParams.sex}
+        ${'email'}         | ${null}
+        ${'language'}      | ${defaultMemberParams.language}
+        ${'zipCode'}       | ${null}
+        ${'dischargeDate'} | ${null}
+      `(`should set default value if exists for optional field $field`, async (params) => {
+        /* eslint-enable max-len */
+        const org: Org = await createAndValidateOrg();
+        const primaryCoach: User = await createAndValidateUser();
+        const memberParams: CreateMemberParams = generateCreateMemberParams({
+          orgId: org.id,
+          primaryCoachId: primaryCoach.id,
+        });
+        delete memberParams[params.field];
+
+        setContextUser(memberParams.deviceId);
+        const { id } = await mutations.createMember({ memberParams });
+        expect(id).not.toBeUndefined();
+
+        const member = await queries.getMember();
+        expect(member[params.field]).toEqual(params.defaultValue);
+      });
+
+      test.each`
+        field         | value
+        ${'sex'}      | ${Sex.female}
+        ${'email'}    | ${faker.internet.email()}
+        ${'language'} | ${Language.es}
+        ${'zipCode'}  | ${faker.address.zipCode()}
+      `(`should set value for optional field $field`, async (params) => {
+        const org: Org = await createAndValidateOrg();
+        const primaryCoach: User = await createAndValidateUser();
+        const memberParams: CreateMemberParams = generateCreateMemberParams({
+          orgId: org.id,
+          primaryCoachId: primaryCoach.id,
+        });
+        memberParams[params.field] = params.value;
+
+        setContextUser(memberParams.deviceId);
+        const { id } = await mutations.createMember({ memberParams });
+        expect(id).not.toBeUndefined();
+
+        const member = await queries.getMember();
+        expect(member[params.field]).toEqual(params.value);
+      });
+
+      it('should set value for optional field dischargeDate', async () => {
+        const org: Org = await createAndValidateOrg();
+        const primaryCoach: User = await createAndValidateUser();
+        const memberParams: CreateMemberParams = generateCreateMemberParams({
+          orgId: org.id,
+          primaryCoachId: primaryCoach.id,
+        });
+
+        memberParams.dischargeDate = faker.date.future(1);
+
+        setContextUser(memberParams.deviceId);
+        const { id } = await mutations.createMember({ memberParams });
+        expect(id).not.toBeUndefined();
+
+        const member = await queries.getMember();
+        expect(new Date(member.dischargeDate)).toEqual(memberParams.dischargeDate);
+      });
+
+      /**
+       *  
+       
+       
+       */
+
+      /* eslint-disable max-len */
+      test.each`
+        input                             | error
+        ${{ phoneNumber: 123 }}           | ${{ missingFieldError: stringError }}
+        ${{ deviceId: 123 }}              | ${{ missingFieldError: stringError }}
+        ${{ firstName: 123 }}             | ${{ missingFieldError: stringError }}
+        ${{ lastName: 123 }}              | ${{ missingFieldError: stringError }}
+        ${{ dateOfBirth: 'not-valid' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
+        ${{ orgId: 123 }}                 | ${{ missingFieldError: stringError }}
+        ${{ primaryCoachId: 123 }}        | ${{ missingFieldError: stringError }}
+        ${{ usersIds: [123] }}            | ${{ missingFieldError: stringError }}
+        ${{ email: 'not-valid' }}         | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberEmailFormat)] }}
+        ${{ sex: 'not-valid' }}           | ${{ missingFieldError: 'does not exist in "Sex" enum' }}
+        ${{ language: 'not-valid' }}      | ${{ missingFieldError: 'does not exist in "Language" enum' }}
+        ${{ zipCode: 123 }}               | ${{ missingFieldError: stringError }}
+        ${{ dischargeDate: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
+      `(
+        /* eslint-enable max-len */
+        `should fail to create a member since setting $input is not a valid`,
+        async (params) => {
+          const memberParams: CreateMemberParams = generateCreateMemberParams({
+            orgId: new Types.ObjectId().toString(),
+            primaryCoachId,
+            ...params.input,
+          });
+
+          await mutations.createMember({ memberParams, ...params.error });
+        },
+      );
+
+      test.each`
         length           | errorString | field
         ${minLength - 1} | ${'short'}  | ${'firstName'}
         ${maxLength + 1} | ${'long'}   | ${'firstName'}
@@ -316,7 +418,7 @@ describe('Integration graphql resolvers', () => {
       test.each`
         field            | input                                                  | errors
         ${'phoneNumber'} | ${{ primaryCoachId, phoneNumber: '+410' }}             | ${[Errors.get(ErrorType.memberPhoneNumber)]}
-        ${'dateOfBirth'} | ${{ primaryCoachId, dateOfBirth: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDate)]}
+        ${'dateOfBirth'} | ${{ primaryCoachId, dateOfBirth: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDateOfBirth)]}
       `(
         /* eslint-enable max-len */
         `should fail to create a member since $field is not valid`,
@@ -606,9 +708,6 @@ describe('Integration graphql resolvers', () => {
   }): Promise<Member> => {
     const deviceId = faker.datatype.uuid();
     setContextUser(deviceId);
-    const apolloServer = createTestClient((module as any).apolloServer);
-    mutations = new Mutations(apolloServer);
-    queries = new Queries(apolloServer);
 
     const memberParams = generateCreateMemberParams({
       deviceId,
@@ -633,6 +732,11 @@ describe('Integration graphql resolvers', () => {
     expect(member.dischargeNotesLink).toEqual(links.dischargeNotesLink);
     expect(member.dischargeInstructionsLink).toEqual(links.dischargeInstructionsLink);
     expect(member.org).toEqual(org);
+    expect(member.sex).toEqual(defaultMemberParams.sex);
+    expect(member.email).toBeNull();
+    expect(member.language).toEqual(defaultMemberParams.language);
+    expect(member.zipcode).toBeUndefined();
+    expect(member.dischargeDate).toBeNull();
 
     return member;
   };
