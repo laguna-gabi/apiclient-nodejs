@@ -360,12 +360,6 @@ describe('Integration graphql resolvers', () => {
         expect(new Date(member.dischargeDate)).toEqual(memberParams.dischargeDate);
       });
 
-      /**
-       *  
-       
-       
-       */
-
       /* eslint-disable max-len */
       test.each`
         input                             | error

@@ -1,36 +1,42 @@
 # Hepius
 Laguna health backend infrastructure
+<br/>Written in typescript by using [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-## Description
+- [Prerequisites](#prerequisites)
+   - [Installation](#installation)
+   - [Docker](#docker)
+- [Running the app](#running-the-app)
+- [Testing the app](#testing-the-app)
+- [Troubleshooting](#troubleshooting)
+   - [How to view the db locally?](#how-to-view-the-db-locally-)
+   - [Error at connection to mongo locally](#error-at-connection-to-mongo-locally)
 
-Written in typescript by using [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+<br/><br/>
 
-## Installation
-
+## Prerequisites
+### Installation
+install all dependencies in [package.json](./package.json) file by running the following command:
 ```bash
 $ yarn
 ```
-
 ### Docker
 We're loading a local mongodb by using [docker](https://docs.docker.com/get-docker/).
 1. [docker](https://docs.docker.com/get-docker/).
 2. run `docker-compose.yml` file for starting Docker, by using the command: `docker-compose up`.
 > **_Stop:_**  After running the sample, you can stop the Docker container with `docker-compose down`
 
+<br/><br/>
+
 ## Running the app
+In order to work with all graphql endpoints of *hepius*:
+1. init and load local mongodb as described on [docker section](#docker)
+2. start the server by using one of the following methods:
+   <br/>2a. run `yarn start` if you just want to use *hepius* api locally
+   <br/>2b. run `yarn start:dev` if you're creating code changes in *hepius* and you wish to load the local changes automatically
+3. run `yarn seed` : generates initial org, users, members and appointments on you local station
+4. go to [graphql playground](http://localhost:3000/graphql) and create queries and mutations according to the docs.
 
-```bash
-# development
-$ yarn start
-
-# watch mode
-$ yarn start:dev
-
-# production mode
-$ yarn start:prod
-```
-
-## Test
+## Testing the app
 
 ```bash
 # unit tests
@@ -43,12 +49,7 @@ $ yarn test:integration
 $ yarn test:cov
 ```
 
-## How to view and work with Graphql's methods
-In order to figure out what's the endpoints of *hepius*:
-1. init and load local mongodb as described on [docker section](#docker)
-2. run yarn start
-3. go to [graphql playground](http://localhost:3000/graphql) and create queries and mutations according to the docs.
-> **_Seed data_** If you wish to generate initial member and users, run `yarn seed`
+<br/><br/>
 
 ## Troubleshooting
 ### How to view the db locally?
