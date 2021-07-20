@@ -11,6 +11,7 @@ import {
   ScheduleAppointmentParams,
   Scores,
 } from '../src/appointment';
+import { CreateOrgParams, OrgType } from '../src/org';
 
 export const generateCreateUserParams = ({
   roles = [UserRole.coach],
@@ -52,6 +53,7 @@ export const generateCreateMemberParams = ({
   lastName = faker.name.lastName(),
   dateOfBirth = faker.date.past(),
   primaryCoachId,
+  orgId,
   usersIds = [],
 }: {
   phoneNumber?: string;
@@ -60,6 +62,7 @@ export const generateCreateMemberParams = ({
   lastName?: string;
   dateOfBirth?: Date;
   primaryCoachId: string;
+  orgId: string;
   usersIds?: string[];
 }): CreateMemberParams => {
   return {
@@ -68,6 +71,7 @@ export const generateCreateMemberParams = ({
     firstName,
     lastName,
     dateOfBirth,
+    orgId,
     primaryCoachId,
     usersIds,
   };
@@ -84,6 +88,7 @@ export const mockGenerateMember = (): Member => {
     firstName,
     lastName,
     dateOfBirth: faker.date.past(),
+    org: { id: new Types.ObjectId().toString(), ...generateOrgParams() },
     primaryCoach: mockGenerateUser(),
     ...generateMemberLinks(firstName, lastName),
     users: [],
@@ -156,6 +161,18 @@ export const generateScoresParam = (): Scores => {
     wellbeing: faker.datatype.number({ min: 1, max: 10 }),
     wellbeingText: faker.lorem.sentence(),
   };
+};
+
+export const generateOrgParams = ({
+  type = OrgType.hospital,
+  name = `${faker.lorem.word()}.${faker.datatype.uuid()}`,
+  trialDuration = faker.datatype.number({ min: 1, max: 100 }),
+}: {
+  type?: OrgType;
+  name?: string;
+  trialDuration?: number;
+} = {}): CreateOrgParams => {
+  return { type, name, trialDuration: trialDuration };
 };
 
 const generateEmail = () => {

@@ -27,6 +27,7 @@ export class MemberService {
         firstName: createMemberParams.firstName,
         lastName: createMemberParams.lastName,
         dateOfBirth: createMemberParams.dateOfBirth,
+        org: new Types.ObjectId(createMemberParams.orgId),
         primaryCoach: new Types.ObjectId(createMemberParams.primaryCoachId),
         users: createMemberParams.usersIds?.map((item) => new Types.ObjectId(item)),
         dischargeNotesLink,
@@ -53,6 +54,7 @@ export class MemberService {
 
     return this.memberModel
       .findOne({ deviceId })
+      .populate({ path: 'org' })
       .populate({ path: 'primaryCoach', populate: subPopulate })
       .populate({ path: 'users', populate: subPopulate });
   }

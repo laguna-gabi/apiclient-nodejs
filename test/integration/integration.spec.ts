@@ -9,6 +9,7 @@ import {
   generateMemberLinks,
   generateNoShowAppointmentParams,
   generateNoteParam,
+  generateOrgParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateScoresParam,
@@ -30,6 +31,7 @@ import { Errors, ErrorType } from '../../src/common';
 import { Types } from 'mongoose';
 import * as jwt from 'jsonwebtoken';
 import { AppointmentsIntegrationActions } from './appointments';
+import { CreateOrgParams, Org } from '../../src/org';
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
@@ -72,18 +74,21 @@ describe('Integration graphql resolvers', () => {
      * 1. Create a user with a single role - coach
      * 2. Create a user with 2 roles - coach and nurse
      * 3. Create a user with 1 role - nurse
-     * 4. Create a member with the 3 users above. 1st user is the primaryCoach,
-     *    2nd and 3rd users is in users list
-     * 5. Create an appointment between the primary coach and the member
-     * 6. Create an appointment between the non primary coach (2nd user) and the member
-     * 7. Create an appointment between the non primary coach (3rd user) and the member
-     * 8. Fetch member and checks all related appointments
+     * 4. Create an organization
+     * 5. Create a member in the organization above with the 3 users above.
+     *    1st user is the primaryCoach, 2nd and 3rd users is in users list
+     * 6. Create an appointment between the primary coach and the member
+     * 7. Create an appointment between the non primary coach (2nd user) and the member
+     * 8. Create an appointment between the non primary coach (3rd user) and the member
+     * 9. Fetch member and checks all related appointments
      */
     const resultCoach = await createAndValidateUser();
     const resultNurse1 = await createAndValidateUser([UserRole.nurse, UserRole.coach]);
     const resultNurse2 = await createAndValidateUser([UserRole.nurse]);
 
+    const resultOrg = await createAndValidateOrg();
     const resultMember = await createAndValidateMember({
+      org: resultOrg,
       primaryCoach: resultCoach,
       coaches: [resultNurse1, resultNurse2],
     });
@@ -138,8 +143,9 @@ describe('Integration graphql resolvers', () => {
    */
   it('getAppointments should return just the member appointment of a user', async () => {
     const primaryCoach = await createAndValidateUser();
-    const member1 = await createAndValidateMember({ primaryCoach });
-    const member2 = await createAndValidateMember({ primaryCoach });
+    const org = await createAndValidateOrg();
+    const member1 = await createAndValidateMember({ org, primaryCoach });
+    const member2 = await createAndValidateMember({ org, primaryCoach });
 
     const appointmentMember1 = await createAndValidateAppointment({
       userId: primaryCoach.id,
@@ -209,14 +215,11 @@ describe('Integration graphql resolvers', () => {
 
       /* eslint-disable max-len */
       test.each`
-        field            | input                               | errors
-        ${'email'}       | ${{ email: faker.lorem.word() }}    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat)] }}
-        ${'photoUrl'}    | ${{ photoUrl: faker.lorem.word() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userPhotoUrlFormat)] }}
-        ${'email & photoUrl'} | ${{
-  email: faker.lorem.word(),
-  photoUrl: faker.lorem.word(),
-}} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat), Errors.get(ErrorType.userPhotoUrlFormat)] }}
-        ${'description'} | ${{ description: 222 }}             | ${{ missingFieldError: stringError }}
+        field                 | input                                                          | errors
+        ${'email'}            | ${{ email: faker.lorem.word() }}                               | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat)] }}
+        ${'photoUrl'}         | ${{ photoUrl: faker.lorem.word() }}                            | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userPhotoUrlFormat)] }}
+        ${'email & photoUrl'} | ${{ email: faker.lorem.word(), photoUrl: faker.lorem.word() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat), Errors.get(ErrorType.userPhotoUrlFormat)] }}
+        ${'description'}      | ${{ description: 222 }}                                        | ${{ missingFieldError: stringError }}
       `(
         /* eslint-enable max-len */
         `should fail to create a user since $field is not valid`,
@@ -228,6 +231,45 @@ describe('Integration graphql resolvers', () => {
           });
         },
       );
+    });
+
+    describe('org', () => {
+      test.each`
+        field              | error
+        ${'name'}          | ${`Field "name" of required type "String!" was not provided.`}
+        ${'type'}          | ${`Field "type" of required type "OrgType!" was not provided.`}
+        ${'trialDuration'} | ${`Field "trialDuration" of required type "Int!" was not provided.`}
+      `(`should fail to create a user since mandatory field $field is missing`, async (params) => {
+        const orgParams: CreateOrgParams = generateOrgParams();
+        delete orgParams[params.field];
+        await mutations.createOrg({ orgParams, missingFieldError: params.error });
+      });
+
+      /* eslint-disable max-len */
+      test.each`
+        field              | input                      | errors
+        ${'name'}          | ${{ name: 1 }}             | ${stringError}
+        ${'type'}          | ${{ type: 'not-valid' }}   | ${'does not exist in "OrgType" enum'}
+        ${'trialDuration'} | ${{ trialDuration: 24.8 }} | ${'Int cannot represent non-integer value'}
+      `(
+        /* eslint-enable max-len */
+        `should fail to create an org since $field is not valid`,
+        async (params) => {
+          const orgParams: CreateOrgParams = generateOrgParams(params.input);
+          await mutations.createOrg({
+            orgParams,
+            missingFieldError: params.errors,
+          });
+        },
+      );
+
+      it('should validate that trialDuration should be a positive number', async () => {
+        const orgParams: CreateOrgParams = generateOrgParams({ trialDuration: 0 });
+        await mutations.createOrg({
+          orgParams,
+          invalidFieldsErrors: [Errors.get(ErrorType.orgTrialDurationOutOfRange)],
+        });
+      });
     });
 
     describe('member', () => {
@@ -242,6 +284,7 @@ describe('Integration graphql resolvers', () => {
       `(`should fail to create a user since mandatory field $field is missing`, async (params) => {
         /* eslint-enable max-len */
         const memberParams: CreateMemberParams = generateCreateMemberParams({
+          orgId: new Types.ObjectId().toString(),
           primaryCoachId,
         });
         delete memberParams[params.field];
@@ -258,7 +301,10 @@ describe('Integration graphql resolvers', () => {
         ${minLength - 1} | ${'short'}  | ${'lastName'}
         ${maxLength + 1} | ${'long'}   | ${'lastName'}
       `(`should fail to create a member since $field is too $errorString`, async (params) => {
-        const memberParams: CreateMemberParams = generateCreateMemberParams({ primaryCoachId });
+        const memberParams: CreateMemberParams = generateCreateMemberParams({
+          primaryCoachId,
+          orgId: new Types.ObjectId().toString(),
+        });
         memberParams[params.field] = generateRandomName(params.length);
         await mutations.createMember({
           memberParams,
@@ -269,16 +315,17 @@ describe('Integration graphql resolvers', () => {
       /* eslint-disable max-len */
       test.each`
         field            | input                                                  | errors
-        ${'phoneNumber'} | ${{
-  primaryCoachId,
-  phoneNumber: '+410',
-}} | ${[Errors.get(ErrorType.memberPhoneNumber)]}
+        ${'phoneNumber'} | ${{ primaryCoachId, phoneNumber: '+410' }}             | ${[Errors.get(ErrorType.memberPhoneNumber)]}
         ${'dateOfBirth'} | ${{ primaryCoachId, dateOfBirth: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDate)]}
       `(
         /* eslint-enable max-len */
         `should fail to create a member since $field is not valid`,
         async (params) => {
-          const memberParams: CreateMemberParams = generateCreateMemberParams(params.input);
+          const memberParams: CreateMemberParams = generateCreateMemberParams({
+            orgId: new Types.ObjectId().toString(),
+            primaryCoachId,
+            ...params.input,
+          });
           await mutations.createMember({
             memberParams,
             invalidFieldsErrors: params.errors,
@@ -539,7 +586,24 @@ describe('Integration graphql resolvers', () => {
     return result;
   };
 
-  const createAndValidateMember = async ({ primaryCoach, coaches = [] }): Promise<Member> => {
+  const createAndValidateOrg = async (): Promise<Org> => {
+    const orgParams = generateOrgParams();
+    const { id } = await mutations.createOrg({ orgParams });
+
+    expect(id).not.toBeUndefined();
+
+    return { id, ...orgParams };
+  };
+
+  const createAndValidateMember = async ({
+    org,
+    primaryCoach,
+    coaches = [],
+  }: {
+    org: Org;
+    primaryCoach: User;
+    coaches?: User[];
+  }): Promise<Member> => {
     const deviceId = faker.datatype.uuid();
     setContextUser(deviceId);
     const apolloServer = createTestClient((module as any).apolloServer);
@@ -548,6 +612,7 @@ describe('Integration graphql resolvers', () => {
 
     const memberParams = generateCreateMemberParams({
       deviceId,
+      orgId: org.id,
       primaryCoachId: primaryCoach.id,
       usersIds: coaches.map((coach) => coach.id),
     });
@@ -567,6 +632,7 @@ describe('Integration graphql resolvers', () => {
     expect(member.users).toEqual(coaches);
     expect(member.dischargeNotesLink).toEqual(links.dischargeNotesLink);
     expect(member.dischargeInstructionsLink).toEqual(links.dischargeInstructionsLink);
+    expect(member.org).toEqual(org);
 
     return member;
   };

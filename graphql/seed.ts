@@ -8,6 +8,7 @@ import { UserRole } from '../src/user';
 import {
   generateCreateMemberParams,
   generateCreateUserParams,
+  generateOrgParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
 } from '../test';
@@ -19,9 +20,10 @@ import * as jwt from 'jsonwebtoken';
  * 1. user(1) of type coach
  * 2. user(2) of type nurse
  * 3. user(3) of type coach and nurse
- * 4. member in organization above, having user(1) as his primaryCoach,
+ * 4. organization
+ * 5. member in organization above, having user(1) as his primaryCoach,
  *    and user(2), user(3) as his 2ndary users.
- * 5. appointments for member and his users.
+ * 6. appointments for member and his users.
  */
 
 let mutations: Mutations;
@@ -41,10 +43,19 @@ async function main() {
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
+      '------------------- Creating an organization -------------------\n' +
+      '----------------------------------------------------------------',
+  );
+  const org = await mutations.createOrg({ orgParams: generateOrgParams() });
+  console.log(`${org.id} : organization`);
+
+  console.debug(
+    '\n----------------------------------------------------------------\n' +
       '---------------------- Creating a member -----------------------\n' +
       '----------------------------------------------------------------',
   );
   const memberParams = generateCreateMemberParams({
+    orgId: org.id,
     primaryCoachId: user1Id,
     usersIds: [user2Id, user3Id],
   });

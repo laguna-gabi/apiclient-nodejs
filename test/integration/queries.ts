@@ -46,6 +46,12 @@ export class Queries {
             dateOfBirth
             dischargeNotesLink
             dischargeInstructionsLink
+            org {
+              id
+              name
+              type
+              trialDuration
+            }
             primaryCoach {
               id
               firstName

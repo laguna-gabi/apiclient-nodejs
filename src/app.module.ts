@@ -7,6 +7,7 @@ import { AppointmentModule } from './appointment';
 import { GraphQLError } from 'graphql';
 import { Errors } from './common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { OrgModule } from './org';
 
 const badRequestException = 'Bad Request Exception';
 
@@ -15,6 +16,7 @@ const badRequestException = 'Bad Request Exception';
     MemberModule,
     UserModule,
     AppointmentModule,
+    OrgModule,
     DbModule,
     EventEmitterModule.forRoot(),
     GraphQLModule.forRoot({

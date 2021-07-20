@@ -5,6 +5,7 @@ import { User } from '../user';
 import { Errors, ErrorType, Identifier, validPhoneNumbersExamples } from '../common';
 import { IsDate, IsPhoneNumber, Length } from 'class-validator';
 import * as config from 'config';
+import { Org } from '../org';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -39,6 +40,9 @@ export class CreateMemberParams {
   dateOfBirth: Date;
 
   @Field(() => String)
+  orgId: string;
+
+  @Field(() => String)
   primaryCoachId: string;
 
   @Field(() => [String], { nullable: true })
@@ -70,6 +74,10 @@ export class Member extends Identifier {
   @Prop({ type: Date })
   @Field(() => Date)
   dateOfBirth: Date;
+
+  @Prop({ type: Types.ObjectId, ref: Org.name })
+  @Field(() => Org)
+  org: Org;
 
   @Prop({ type: Types.ObjectId, ref: User.name })
   @Field(() => User, { description: 'primary user' })

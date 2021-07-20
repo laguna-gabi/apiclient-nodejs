@@ -7,6 +7,7 @@ import {
   dbDisconnect,
   generateCreateMemberParams,
   generateCreateUserParams,
+  generateOrgParams,
   generateMemberLinks,
 } from '../index';
 import {
@@ -21,12 +22,14 @@ import { User, UserDto, UserRole } from '../../src/user';
 import { datatype } from 'faker';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppointmentModule } from '../../src/appointment';
+import { Org, OrgDto } from '../../src/org';
 
 describe('MemberService', () => {
   let module: TestingModule;
   let service: MemberService;
   let memberModel: Model<typeof MemberDto>;
   let modelUser: Model<typeof UserDto>;
+  let modelOrg: Model<typeof OrgDto>;
   const primaryCoachId = new Types.ObjectId().toString();
 
   beforeAll(async () => {
@@ -38,6 +41,7 @@ describe('MemberService', () => {
 
     memberModel = model(Member.name, MemberDto);
     modelUser = model(User.name, UserDto);
+    modelOrg = model(Org.name, OrgDto);
     await dbConnect();
   });
 
@@ -61,10 +65,13 @@ describe('MemberService', () => {
       const user = await modelUser.create(userParams);
       //Another user, to check if it doesn't return in member
       await modelUser.create(generateCreateUserParams());
+      const orgParams = generateOrgParams();
+      const org = await modelOrg.create(orgParams);
 
       const deviceId = datatype.uuid();
       const member: CreateMemberParams = generateCreateMemberParams({
         deviceId,
+        orgId: new Types.ObjectId().toString(),
         primaryCoachId: primaryCoach._id,
         usersIds: [user._id, nurse._id],
       });
@@ -76,6 +83,7 @@ describe('MemberService', () => {
         deviceId,
         firstName: member.firstName,
         lastName: member.lastName,
+        org: new Types.ObjectId(org.id),
         primaryCoach: new Types.ObjectId(member.primaryCoachId),
         users: member.usersIds.map((item) => new Types.ObjectId(item)),
         ...links,
@@ -90,6 +98,7 @@ describe('MemberService', () => {
       expect(result.lastName).toEqual(member.lastName);
       expect(result.dischargeNotesLink).toEqual(links.dischargeNotesLink);
       expect(result.dischargeInstructionsLink).toEqual(links.dischargeInstructionsLink);
+      expect(result.org).toEqual(expect.objectContaining(orgParams));
       compareUsers(result.primaryCoach, primaryCoach);
       expect(result.users.length).toEqual(2);
       compareUsers(result.users[0], user);
@@ -101,10 +110,12 @@ describe('MemberService', () => {
     it('should insert a member with primaryCoach and validate all insert fields', async () => {
       const primaryCoachParams = generateCreateUserParams();
       const primaryCoach = await modelUser.create(primaryCoachParams);
+      const orgParams = generateOrgParams();
+      const org = await modelOrg.create(orgParams);
 
       const createMemberParams = generateCreateMemberParams({
-        primaryCoachId: primaryCoach._id,
-      });
+        orgId: org._id,
+        primaryCoachId: primaryCoach._id});
       const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
       const result = await service.insert({
         createMemberParams,
@@ -122,6 +133,7 @@ describe('MemberService', () => {
       expect(createdMember['dischargeInstructionsLink']).toEqual(links.dischargeInstructionsLink);
       expect(createdMember['dateOfBirth']).toEqual(createMemberParams.dateOfBirth);
       expect(createdMember['primaryCoach']).toEqual(primaryCoach._id);
+      expect(createdMember['org']).toEqual(org._id);
     });
 
     it('should check that createdAt and updatedAt exists in the collection', async () => {
@@ -138,7 +150,10 @@ describe('MemberService', () => {
     });
 
     it('should insert a member even with primaryCoach not exists', async () => {
-      const createMemberParams: CreateMemberParams = generateCreateMemberParams({ primaryCoachId });
+      const createMemberParams: CreateMemberParams = generateCreateMemberParams({
+        orgId: new Types.ObjectId().toString(),
+        primaryCoachId,
+      });
       const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
 
       const result = await service.insert({ createMemberParams, ...links });
@@ -147,7 +162,7 @@ describe('MemberService', () => {
     });
 
     it('should fail to insert an already existing member', async () => {
-      const createMemberParams = generateCreateMemberParams({ primaryCoachId });
+      const createMemberParams = generateCreateMemberParams({ orgId: new Types.ObjectId().toString(), primaryCoachId });
       const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
 
       await service.insert({ createMemberParams, ...links });

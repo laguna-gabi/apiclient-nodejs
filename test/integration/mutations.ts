@@ -11,6 +11,7 @@ import {
   NoShowParams,
 } from '../../src/appointment';
 import { Identifier } from '../../src/common';
+import { CreateOrgParams } from '../../src/org';
 
 export class Mutations {
   constructor(private readonly apolloClient: ApolloServerTestClient) {}
@@ -44,6 +45,32 @@ export class Mutations {
       const { id } = result.data.createUser;
       return id;
     }
+  };
+
+  createOrg = async ({
+    orgParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    orgParams: CreateOrgParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Identifier> => {
+    const result = await this.apolloClient.mutate({
+      variables: { createOrgParams: orgParams },
+      mutation: gql`
+        mutation CreateOrg($createOrgParams: CreateOrgParams!) {
+          createOrg(createOrgParams: $createOrgParams) {
+            id
+          }
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.createOrg
+    );
   };
 
   createMember = async ({

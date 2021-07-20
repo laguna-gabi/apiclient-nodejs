@@ -44,6 +44,7 @@ describe('MemberResolver', () => {
       spyOnServiceInsert.mockImplementationOnce(async () => member);
 
       const params = generateCreateMemberParams({
+        orgId: new Types.ObjectId().toString(),
         primaryCoachId: member.primaryCoach.id,
       });
       const links = generateMemberLinks(params.firstName, params.lastName);
@@ -59,6 +60,7 @@ describe('MemberResolver', () => {
       spyOnServiceInsert.mockImplementationOnce(async () => member);
 
       const params = generateCreateMemberParams({
+        orgId: new Types.ObjectId().toString(),
         primaryCoachId: member.primaryCoach.id,
       });
       delete params.usersIds;
@@ -76,6 +78,7 @@ describe('MemberResolver', () => {
       const additionalUserId = new Types.ObjectId().toString();
       const params = generateCreateMemberParams({
         deviceId: member.deviceId,
+        orgId: new Types.ObjectId().toString(),
         primaryCoachId: member.primaryCoach.id,
         usersIds: [additionalUserId, member.primaryCoach.id],
       });
