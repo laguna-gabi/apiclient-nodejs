@@ -6,6 +6,7 @@ import { AppModule } from '../../src/app.module';
 import {
   generateCreateMemberParams,
   generateCreateUserParams,
+  generateMemberLinks,
   generateNoShowAppointmentParams,
   generateNoteParam,
   generateRequestAppointmentParams,
@@ -550,6 +551,7 @@ describe('Integration graphql resolvers', () => {
       primaryCoachId: primaryCoach.id,
       usersIds: coaches.map((coach) => coach.id),
     });
+    const links = generateMemberLinks(memberParams.firstName, memberParams.lastName);
 
     await mutations.createMember({ memberParams });
 
@@ -563,6 +565,8 @@ describe('Integration graphql resolvers', () => {
     expect(new Date(member.dateOfBirth)).toEqual(new Date(memberParams.dateOfBirth));
     expect(member.primaryCoach).toEqual(primaryCoach);
     expect(member.users).toEqual(coaches);
+    expect(member.dischargeNotesLink).toEqual(links.dischargeNotesLink);
+    expect(member.dischargeInstructionsLink).toEqual(links.dischargeInstructionsLink);
 
     return member;
   };

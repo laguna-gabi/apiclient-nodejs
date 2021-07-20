@@ -11,7 +11,15 @@ export class MemberService {
     private readonly memberModel: Model<MemberDocument>,
   ) {}
 
-  async insert(createMemberParams: CreateMemberParams): Promise<Identifier> {
+  async insert({
+    createMemberParams,
+    dischargeNotesLink,
+    dischargeInstructionsLink,
+  }: {
+    createMemberParams: CreateMemberParams;
+    dischargeNotesLink: string;
+    dischargeInstructionsLink: string;
+  }): Promise<Identifier> {
     try {
       const result = await this.memberModel.create({
         phoneNumber: createMemberParams.phoneNumber,
@@ -21,6 +29,8 @@ export class MemberService {
         dateOfBirth: createMemberParams.dateOfBirth,
         primaryCoach: new Types.ObjectId(createMemberParams.primaryCoachId),
         users: createMemberParams.usersIds?.map((item) => new Types.ObjectId(item)),
+        dischargeNotesLink,
+        dischargeInstructionsLink,
       });
       return { id: result._id };
     } catch (ex) {

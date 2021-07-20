@@ -78,6 +78,14 @@ export class Member extends Identifier {
   @Prop({ type: [{ type: Types.ObjectId, ref: User.name }] })
   @Field(() => [User], { description: 'users reference object' })
   users: User[];
+
+  @Prop()
+  @Field(() => String)
+  dischargeNotesLink: string;
+
+  @Prop()
+  @Field(() => String)
+  dischargeInstructionsLink: string;
 }
 
 /**************************************************************************************************

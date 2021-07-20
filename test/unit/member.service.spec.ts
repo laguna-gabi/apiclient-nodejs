@@ -7,6 +7,7 @@ import {
   dbDisconnect,
   generateCreateMemberParams,
   generateCreateUserParams,
+  generateMemberLinks,
 } from '../index';
 import {
   CreateMemberParams,
@@ -68,6 +69,8 @@ describe('MemberService', () => {
         usersIds: [user._id, nurse._id],
       });
 
+      const links = generateMemberLinks(member.firstName, member.lastName);
+
       const { _id } = await memberModel.create({
         phoneNumber: member.phoneNumber,
         deviceId,
@@ -75,6 +78,7 @@ describe('MemberService', () => {
         lastName: member.lastName,
         primaryCoach: new Types.ObjectId(member.primaryCoachId),
         users: member.usersIds.map((item) => new Types.ObjectId(item)),
+        ...links,
       });
 
       const result = await service.get(member.deviceId);
@@ -84,6 +88,8 @@ describe('MemberService', () => {
       expect(result.deviceId).toEqual(member.deviceId);
       expect(result.firstName).toEqual(member.firstName);
       expect(result.lastName).toEqual(member.lastName);
+      expect(result.dischargeNotesLink).toEqual(links.dischargeNotesLink);
+      expect(result.dischargeInstructionsLink).toEqual(links.dischargeInstructionsLink);
       compareUsers(result.primaryCoach, primaryCoach);
       expect(result.users.length).toEqual(2);
       compareUsers(result.users[0], user);
@@ -96,27 +102,35 @@ describe('MemberService', () => {
       const primaryCoachParams = generateCreateUserParams();
       const primaryCoach = await modelUser.create(primaryCoachParams);
 
-      const memberParams = generateCreateMemberParams({
+      const createMemberParams = generateCreateMemberParams({
         primaryCoachId: primaryCoach._id,
       });
-      const result = await service.insert(memberParams);
+      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
+      const result = await service.insert({
+        createMemberParams,
+        ...links,
+      });
 
       expect(result.id).not.toBeUndefined();
 
       const createdMember = await memberModel.findById(result.id);
-      expect(createdMember['phoneNumber']).toEqual(memberParams.phoneNumber);
-      expect(createdMember['deviceId']).toEqual(memberParams.deviceId);
-      expect(createdMember['firstName']).toEqual(memberParams.firstName);
-      expect(createdMember['lastName']).toEqual(memberParams.lastName);
-      expect(createdMember['dateOfBirth']).toEqual(memberParams.dateOfBirth);
+      expect(createdMember['phoneNumber']).toEqual(createMemberParams.phoneNumber);
+      expect(createdMember['deviceId']).toEqual(createMemberParams.deviceId);
+      expect(createdMember['firstName']).toEqual(createMemberParams.firstName);
+      expect(createdMember['lastName']).toEqual(createMemberParams.lastName);
+      expect(createdMember['dischargeNotesLink']).toEqual(links.dischargeNotesLink);
+      expect(createdMember['dischargeInstructionsLink']).toEqual(links.dischargeInstructionsLink);
+      expect(createdMember['dateOfBirth']).toEqual(createMemberParams.dateOfBirth);
       expect(createdMember['primaryCoach']).toEqual(primaryCoach._id);
     });
 
     it('should check that createdAt and updatedAt exists in the collection', async () => {
       const params = generateCreateUserParams();
       const user = await modelUser.create(params);
+      const createMemberParams = generateCreateMemberParams(user._id);
+      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
 
-      const result = await service.insert(generateCreateMemberParams(user._id));
+      const result = await service.insert({ createMemberParams, ...links });
 
       const createdMember = await memberModel.findById(result.id);
       expect(createdMember['createdAt']).toEqual(expect.any(Date));
@@ -124,19 +138,21 @@ describe('MemberService', () => {
     });
 
     it('should insert a member even with primaryCoach not exists', async () => {
-      const member: CreateMemberParams = generateCreateMemberParams({
-        primaryCoachId,
-      });
+      const createMemberParams: CreateMemberParams = generateCreateMemberParams({ primaryCoachId });
+      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
 
-      const result = await service.insert(member);
+      const result = await service.insert({ createMemberParams, ...links });
+
       expect(result.id).not.toBeUndefined();
     });
 
     it('should fail to insert an already existing member', async () => {
-      const member = generateCreateMemberParams({ primaryCoachId });
-      await service.insert(member);
+      const createMemberParams = generateCreateMemberParams({ primaryCoachId });
+      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
 
-      await expect(service.insert(member)).rejects.toThrow(
+      await service.insert({ createMemberParams, ...links });
+
+      await expect(service.insert({ createMemberParams, ...links })).rejects.toThrow(
         Errors.get(ErrorType.memberPhoneAlreadyExists),
       );
     });

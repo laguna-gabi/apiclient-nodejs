@@ -75,15 +75,29 @@ export const generateCreateMemberParams = ({
 
 export const mockGenerateMember = (): Member => {
   const id = new Types.ObjectId();
+  const firstName = faker.name.firstName();
+  const lastName = faker.name.lastName();
   return {
     id: id.toString(),
     phoneNumber: generatePhoneNumber(),
     deviceId: faker.datatype.uuid(),
-    firstName: faker.name.firstName(),
-    lastName: faker.name.lastName(),
+    firstName,
+    lastName,
     dateOfBirth: faker.date.past(),
     primaryCoach: mockGenerateUser(),
+    ...generateMemberLinks(firstName, lastName),
     users: [],
+  };
+};
+
+export const generateMemberLinks = (
+  firstName,
+  lastName,
+): { dischargeNotesLink; dischargeInstructionsLink } => {
+  const prefix = `${firstName}_${lastName}`;
+  return {
+    dischargeNotesLink: `${prefix}_Summary.pdf`,
+    dischargeInstructionsLink: `${prefix}_Instructions.pdf`,
   };
 };
 

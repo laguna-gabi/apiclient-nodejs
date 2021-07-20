@@ -16,7 +16,16 @@ export class MemberResolver {
     createMemberParams: CreateMemberParams,
   ) {
     remove(createMemberParams.usersIds, (i) => i === createMemberParams.primaryCoachId);
-    return this.memberService.insert(createMemberParams);
+
+    const { firstName, lastName } = createMemberParams;
+    const dischargeNotesLink = `${firstName}_${lastName}_Summary.pdf`;
+    const dischargeInstructionsLink = `${firstName}_${lastName}_Instructions.pdf`;
+
+    return this.memberService.insert({
+      createMemberParams,
+      dischargeNotesLink,
+      dischargeInstructionsLink,
+    });
   }
 
   @Query(() => Member, { nullable: true })

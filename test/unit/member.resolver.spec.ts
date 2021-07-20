@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { dbDisconnect, generateCreateMemberParams, mockGenerateMember } from '../../test';
+import {
+  dbDisconnect,
+  generateCreateMemberParams,
+  generateMemberLinks,
+  mockGenerateMember,
+} from '../../test';
 import { DbModule } from '../../src/db/db.module';
 import { MemberModule, MemberResolver, MemberService } from '../../src/member';
 import { Types } from 'mongoose';
@@ -41,10 +46,12 @@ describe('MemberResolver', () => {
       const params = generateCreateMemberParams({
         primaryCoachId: member.primaryCoach.id,
       });
+      const links = generateMemberLinks(params.firstName, params.lastName);
+
       await resolver.createMember(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
-      expect(spyOnServiceInsert).toBeCalledWith(params);
+      expect(spyOnServiceInsert).toBeCalledWith({ createMemberParams: params, ...links });
     });
 
     it('should support undefined fields', async () => {
@@ -55,10 +62,11 @@ describe('MemberResolver', () => {
         primaryCoachId: member.primaryCoach.id,
       });
       delete params.usersIds;
+      const links = generateMemberLinks(params.firstName, params.lastName);
       await resolver.createMember(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
-      expect(spyOnServiceInsert).toBeCalledWith(params);
+      expect(spyOnServiceInsert).toBeCalledWith({ createMemberParams: params, ...links });
     });
 
     it('should remove user from users list if it is already sent as primaryCoach', async () => {
@@ -71,14 +79,18 @@ describe('MemberResolver', () => {
         primaryCoachId: member.primaryCoach.id,
         usersIds: [additionalUserId, member.primaryCoach.id],
       });
+      const links = generateMemberLinks(params.firstName, params.lastName);
 
       await resolver.createMember(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith({
-        deviceId: member.deviceId,
-        usersIds: [additionalUserId],
-        ...params,
+        createMemberParams: {
+          deviceId: member.deviceId,
+          usersIds: [additionalUserId],
+          ...params,
+        },
+        ...links,
       });
     });
   });
