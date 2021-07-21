@@ -69,6 +69,18 @@ export class Queries {
                 status
                 start
                 end
+                notes {
+                  notes {
+                    key
+                    value
+                  }
+                  scores {
+                    adherence
+                    adherenceText
+                    wellbeing
+                    wellbeingText
+                  }
+                }
               }
             }
             users {
@@ -87,6 +99,18 @@ export class Queries {
                 status
                 start
                 end
+                notes {
+                  notes {
+                    key
+                    value
+                  }
+                  scores {
+                    adherence
+                    adherenceText
+                    wellbeing
+                    wellbeingText
+                  }
+                }
               }
             }
             sex
@@ -116,6 +140,7 @@ export class Queries {
             status
             start
             end
+            updatedAt
             noShow {
               noShow
               reason

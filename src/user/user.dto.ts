@@ -86,7 +86,6 @@ export class User extends Identifier {
   @Field(() => String)
   description: string;
 
-  @Prop()
   @Field(() => Date)
   createdAt: Date;
 }

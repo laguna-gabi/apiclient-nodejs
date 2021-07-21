@@ -67,6 +67,7 @@ describe('AppointmentService', () => {
           memberId: new Types.ObjectId(appointment.memberId),
           notBefore: appointment.notBefore,
           status: AppointmentStatus.requested,
+          updatedAt: expect.any(Date),
         }),
       );
     });
@@ -96,6 +97,7 @@ describe('AppointmentService', () => {
           memberId: new Types.ObjectId(appointmentParams.memberId),
           notBefore: appointmentParams.notBefore,
           status: AppointmentStatus.requested,
+          updatedAt: expect.any(Date),
         }),
       );
     });
@@ -129,6 +131,7 @@ describe('AppointmentService', () => {
           memberId: new Types.ObjectId(memberId),
           notBefore,
           status: AppointmentStatus.requested,
+          updatedAt: expect.any(Date),
         }),
       );
     });
@@ -232,6 +235,7 @@ describe('AppointmentService', () => {
           method: appointmentParams.method,
           notBefore: appointmentParams.notBefore,
           status: AppointmentStatus.scheduled,
+          updatedAt: expect.any(Date),
         }),
       );
     });

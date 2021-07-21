@@ -121,6 +121,7 @@ export class Mutations {
             status
             start
             end
+            updatedAt
           }
         }
       `,
@@ -154,6 +155,7 @@ export class Mutations {
             status
             start
             end
+            updatedAt
           }
         }
       `,
@@ -187,6 +189,7 @@ export class Mutations {
             status
             start
             end
+            updatedAt
           }
         }
       `,
@@ -220,6 +223,7 @@ export class Mutations {
             status
             start
             end
+            updatedAt
           }
         }
       `,
@@ -253,6 +257,7 @@ export class Mutations {
             status
             start
             end
+            updatedAt
             noShow {
               noShow
               reason

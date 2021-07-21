@@ -769,13 +769,22 @@ describe('Integration graphql resolvers', () => {
     let scores = generateScoresParam();
     await appointmentsActions.setNotes(appointment.id, notes, scores);
     let result = await queries.getAppointment(appointment.id);
-    expect(result).toEqual({ ...appointment, notes: { notes, scores } });
+
+    expect(result).toEqual({
+      ...appointment,
+      updatedAt: result.updatedAt,
+      notes: { notes, scores },
+    });
 
     notes = [generateNoteParam(), generateNoteParam()];
     scores = generateScoresParam();
     await appointmentsActions.setNotes(appointment.id, notes, scores);
     result = await queries.getAppointment(appointment.id);
-    expect(result).toEqual({ ...appointment, notes: { notes, scores } });
+    expect(result).toEqual({
+      ...appointment,
+      updatedAt: result.updatedAt,
+      notes: { notes, scores },
+    });
 
     return result;
   };

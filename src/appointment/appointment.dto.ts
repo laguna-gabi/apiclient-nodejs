@@ -133,6 +133,9 @@ export class Appointment extends Identifier {
   @Prop({ type: Types.ObjectId, ref: Notes.name })
   @Field(() => Notes, { nullable: true })
   notes?: Notes;
+
+  @Field(() => Date)
+  updatedAt: Date;
 }
 
 @ObjectType()
