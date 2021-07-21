@@ -11,10 +11,9 @@ import {
 import {
   dbDisconnect,
   generateNoShowAppointmentParams,
-  generateNoteParam,
+  generateNotesParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
-  generateScoresParam,
 } from '../index';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
@@ -206,13 +205,11 @@ describe('AppointmentResolver', () => {
     });
 
     it('should set notes to an appointment', async () => {
-      const notes = [generateNoteParam()];
       spyOnServiceSetNotes.mockImplementationOnce(async () => undefined);
 
       const result = await resolver.setNotes({
         appointmentId: Types.ObjectId().toString(),
-        notes,
-        scores: generateScoresParam(),
+        ...generateNotesParams(),
       });
 
       expect(result).toEqual(undefined);

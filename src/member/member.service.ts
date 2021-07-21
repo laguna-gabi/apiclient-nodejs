@@ -52,6 +52,7 @@ export class MemberService {
     const subPopulate = {
       path: 'appointments',
       match: { memberId: new Types.ObjectId(member._id) },
+      populate: 'notes',
     };
 
     return this.memberModel

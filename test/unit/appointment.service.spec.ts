@@ -5,10 +5,9 @@ import {
   dbConnect,
   dbDisconnect,
   generateNoShowAppointmentParams,
-  generateNoteParam,
+  generateNotesParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
-  generateScoresParam,
 } from '../index';
 import {
   Appointment,
@@ -390,19 +389,13 @@ describe('AppointmentService', () => {
         notBeforeHours: 5,
       });
 
-      const notes = [generateNoteParam()];
-      const scores = generateScoresParam();
-
-      await service.setNotes({
-        appointmentId: resultAppointment.id,
-        notes,
-        scores,
-      });
+      const notes = generateNotesParams();
+      await service.setNotes({ appointmentId: resultAppointment.id, ...notes });
 
       const result = await service.get(resultAppointment.id);
-      expect(result.notes.notes[0].key).toEqual(notes[0].key);
-      expect(result.notes.notes[0].value).toEqual(notes[0].value);
-      expect(result.notes.scores).toEqual(expect.objectContaining(scores));
+      expect(result.notes.notes[0].key).toEqual(notes.notes[0].key);
+      expect(result.notes.notes[0].value).toEqual(notes.notes[0].value);
+      expect(result.notes.scores).toEqual(expect.objectContaining(notes.scores));
     });
 
     it('should re-set notes and scores to an appointment', async () => {
@@ -412,30 +405,18 @@ describe('AppointmentService', () => {
         notBeforeHours: 5,
       });
 
-      const notes1 = [generateNoteParam()];
-      const scores1 = generateScoresParam();
+      const notes1 = generateNotesParams();
+      await service.setNotes({ appointmentId: resultAppointment.id, ...notes1 });
 
-      await service.setNotes({
-        appointmentId: resultAppointment.id,
-        notes: notes1,
-        scores: scores1,
-      });
-
-      const notes2 = [generateNoteParam(), generateNoteParam()];
-      const scores2 = generateScoresParam();
-
-      await service.setNotes({
-        appointmentId: resultAppointment.id,
-        notes: notes2,
-        scores: scores2,
-      });
+      const notes2 = generateNotesParams(2);
+      await service.setNotes({ appointmentId: resultAppointment.id, ...notes2 });
 
       const result = await service.get(resultAppointment.id);
-      expect(result.notes.notes[0].key).toEqual(notes2[0].key);
-      expect(result.notes.notes[0].value).toEqual(notes2[0].value);
-      expect(result.notes.notes[1].key).toEqual(notes2[1].key);
-      expect(result.notes.notes[1].value).toEqual(notes2[1].value);
-      expect(result.notes.scores).toEqual(expect.objectContaining(scores2));
+      expect(result.notes.notes[0].key).toEqual(notes2.notes[0].key);
+      expect(result.notes.notes[0].value).toEqual(notes2.notes[0].value);
+      expect(result.notes.notes[1].key).toEqual(notes2.notes[1].key);
+      expect(result.notes.notes[1].value).toEqual(notes2.notes[1].value);
+      expect(result.notes.scores).toEqual(expect.objectContaining(notes2.scores));
     });
 
     it('should throw error on missing appointmentId', async () => {

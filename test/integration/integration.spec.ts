@@ -8,11 +8,10 @@ import {
   generateCreateUserParams,
   generateMemberLinks,
   generateNoShowAppointmentParams,
-  generateNoteParam,
+  generateNotesParams,
   generateOrgParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
-  generateScoresParam,
 } from '../index';
 import { CreateUserParams, User, UserRole } from '../../src/user';
 import { camelCase, omit } from 'lodash';
@@ -167,6 +166,7 @@ describe('Integration graphql resolvers', () => {
 
     setContextUser(member1.deviceId);
     const memberResult1 = await queries.getMember();
+    console.dir(memberResult1);
     expect(appointmentMember1).toEqual(
       expect.objectContaining(memberResult1.primaryCoach.appointments[1]),
     );
@@ -615,8 +615,7 @@ describe('Integration graphql resolvers', () => {
           async (params) => {
             const noteParams: SetNotesParams = {
               appointmentId: new Types.ObjectId().toString(),
-              notes: [generateNoteParam()],
-              scores: generateScoresParam(),
+              ...generateNotesParams(),
             };
 
             delete noteParams[params.field];
@@ -637,8 +636,7 @@ describe('Integration graphql resolvers', () => {
           async (params) => {
             const noteParams: SetNotesParams = {
               appointmentId: new Types.ObjectId().toString(),
-              notes: [generateNoteParam()],
-              scores: generateScoresParam(),
+              ...generateNotesParams(),
             };
 
             delete noteParams.scores[params.field];
@@ -765,26 +763,16 @@ describe('Integration graphql resolvers', () => {
     appointment = await appointmentsActions.endAppointment(appointment.id); //Unfreeze
     appointment = await appointmentsActions.showAppointment(appointment.id);
 
-    let notes = [generateNoteParam()];
-    let scores = generateScoresParam();
-    await appointmentsActions.setNotes(appointment.id, notes, scores);
+    let notes = generateNotesParams();
+    await mutations.setNotes({ params: { appointmentId: appointment.id, ...notes } });
     let result = await queries.getAppointment(appointment.id);
 
-    expect(result).toEqual({
-      ...appointment,
-      updatedAt: result.updatedAt,
-      notes: { notes, scores },
-    });
+    expect(result).toEqual({ ...appointment, updatedAt: result.updatedAt, notes });
 
-    notes = [generateNoteParam(), generateNoteParam()];
-    scores = generateScoresParam();
-    await appointmentsActions.setNotes(appointment.id, notes, scores);
+    notes = generateNotesParams(2);
+    await mutations.setNotes({ params: { appointmentId: appointment.id, ...notes } });
     result = await queries.getAppointment(appointment.id);
-    expect(result).toEqual({
-      ...appointment,
-      updatedAt: result.updatedAt,
-      notes: { notes, scores },
-    });
+    expect(result).toEqual({ ...appointment, updatedAt: result.updatedAt, notes });
 
     return result;
   };

@@ -6,10 +6,9 @@ import { CreateMemberParams, defaultMemberParams, Language, Member, Sex } from '
 import {
   AppointmentMethod,
   NoShowParams,
-  Note,
+  Notes,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
-  Scores,
 } from '../src/appointment';
 import { CreateOrgParams, OrgType } from '../src/org';
 
@@ -168,16 +167,20 @@ export const generateNoShowAppointmentParams = ({
   return { id, noShow, reason };
 };
 
-export const generateNoteParam = (): Note => {
-  return { key: faker.lorem.word(), value: faker.lorem.sentence() };
-};
+export const generateNotesParams = (notesCount = 1): Notes => {
+  const notes = Array.from(Array(notesCount)).map(() => ({
+    key: faker.lorem.word(),
+    value: faker.lorem.sentence(),
+  }));
 
-export const generateScoresParam = (): Scores => {
   return {
-    adherence: faker.datatype.number({ min: 1, max: 10 }),
-    adherenceText: faker.lorem.sentence(),
-    wellbeing: faker.datatype.number({ min: 1, max: 10 }),
-    wellbeingText: faker.lorem.sentence(),
+    notes,
+    scores: {
+      adherence: faker.datatype.number({ min: 1, max: 10 }),
+      adherenceText: faker.lorem.sentence(),
+      wellbeing: faker.datatype.number({ min: 1, max: 10 }),
+      wellbeingText: faker.lorem.sentence(),
+    },
   };
 };
 

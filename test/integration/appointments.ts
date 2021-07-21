@@ -69,10 +69,4 @@ export class AppointmentsIntegrationActions {
 
     return appointment;
   };
-
-  setNotes = async (id: string, notes: Note[], scores?: Scores) => {
-    await this.mutations.setNotes({
-      params: { appointmentId: id, notes, scores: scores },
-    });
-  };
 }
