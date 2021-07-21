@@ -8,12 +8,15 @@ import { UserRole } from '../src/user';
 import {
   generateCreateMemberParams,
   generateCreateUserParams,
+  generateNoteParam,
   generateOrgParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
+  generateScoresParam,
 } from '../test';
 import * as jwt from 'jsonwebtoken';
 import * as faker from 'faker';
+import { SetNotesParams } from '../src/appointment';
 
 /**
  * This is a seed file for initial local db creation.
@@ -87,7 +90,8 @@ async function main() {
   );
   await scheduleAppointment(memberId, user1Id, 'user1');
   await requestAppointment(memberId, user2Id, 'user2');
-  await scheduleAppointment(memberId, user2Id, 'user2');
+  const appointmentId = await scheduleAppointment(memberId, user2Id, 'user2');
+  await setNotes(appointmentId);
   await scheduleAppointment(memberId, user3Id, 'user3');
 
   await cleanUp();
@@ -143,7 +147,11 @@ const requestAppointment = async (memberId: string, userId: string, userText: st
   console.log(`${appointment.id} : request appointment for member and ${userText}`);
 };
 
-const scheduleAppointment = async (memberId: string, userId: string, userText: string) => {
+const scheduleAppointment = async (
+  memberId: string,
+  userId: string,
+  userText: string,
+): Promise<string> => {
   const appointment = await mutations.scheduleAppointment({
     appointmentParams: generateScheduleAppointmentParams({
       memberId,
@@ -151,6 +159,15 @@ const scheduleAppointment = async (memberId: string, userId: string, userText: s
     }),
   });
   console.log(`${appointment.id} : scheduled appointment for member and ${userText}`);
+
+  return appointment.id;
+};
+
+const setNotes = async (appointmentId: string) => {
+  await mutations.setNotes({
+    params: { appointmentId, notes: [generateNoteParam()], scores: generateScoresParam() },
+  });
+  console.log(`${appointmentId} : set notes and scores`);
 };
 
 (async () => {
