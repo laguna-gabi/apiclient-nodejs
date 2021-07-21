@@ -43,6 +43,7 @@ export const mockGenerateUser = (): User => {
     roles: [UserRole.coach],
     avatar: faker.image.imageUrl(),
     description: faker.lorem.sentence(),
+    createdAt: faker.date.past(1),
   };
 };
 
@@ -214,6 +215,7 @@ export const compareUsers = (user: User, userBase) => {
   expect(user.email).toEqual(userBase.email);
   expect(user.roles).toEqual(expect.arrayContaining(userBase.roles));
   expect(user.avatar).toEqual(userBase.avatar);
+  expect(user.createdAt).toEqual(expect.any(Date));
 };
 
 export const dbConnect = async () => {

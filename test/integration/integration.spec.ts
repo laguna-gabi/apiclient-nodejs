@@ -675,7 +675,8 @@ describe('Integration graphql resolvers', () => {
 
     const resultUserNew = omit(result, 'roles');
     const expectedUserNew = omit(expectedUser, 'roles');
-    expect(resultUserNew).toEqual(expectedUserNew);
+    expect(resultUserNew).toEqual(expect.objectContaining(expectedUserNew));
+    expect(new Date(resultUserNew.createdAt)).toEqual(expect.any(Date));
 
     expect(result.roles).toEqual(expectedUser.roles.map((role) => camelCase(role)));
 

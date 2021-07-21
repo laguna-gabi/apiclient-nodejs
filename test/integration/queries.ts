@@ -17,6 +17,7 @@ export class Queries {
             roles
             avatar
             description
+            createdAt
             appointments {
               id
               notBefore
@@ -60,6 +61,7 @@ export class Queries {
               roles
               avatar
               description
+              createdAt
               appointments {
                 id
                 notBefore
@@ -77,6 +79,7 @@ export class Queries {
               roles
               avatar
               description
+              createdAt
               appointments {
                 id
                 notBefore
