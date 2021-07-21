@@ -166,7 +166,6 @@ describe('Integration graphql resolvers', () => {
 
     setContextUser(member1.deviceId);
     const memberResult1 = await queries.getMember();
-    console.dir(memberResult1);
     expect(appointmentMember1).toEqual(
       expect.objectContaining(memberResult1.primaryCoach.appointments[1]),
     );

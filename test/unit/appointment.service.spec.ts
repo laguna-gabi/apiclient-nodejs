@@ -383,11 +383,7 @@ describe('AppointmentService', () => {
 
   describe('setNotes', () => {
     it('should set new notes to an appointment', async () => {
-      const resultAppointment = await requestAppointment({
-        memberId: new Types.ObjectId().toString(),
-        userId: new Types.ObjectId().toString(),
-        notBeforeHours: 5,
-      });
+      const resultAppointment = await service.schedule(generateScheduleAppointmentParams());
 
       const notes = generateNotesParams();
       await service.setNotes({ appointmentId: resultAppointment.id, ...notes });
@@ -399,11 +395,7 @@ describe('AppointmentService', () => {
     });
 
     it('should re-set notes and scores to an appointment', async () => {
-      const resultAppointment = await requestAppointment({
-        memberId: new Types.ObjectId().toString(),
-        userId: new Types.ObjectId().toString(),
-        notBeforeHours: 5,
-      });
+      const resultAppointment = await service.schedule(generateScheduleAppointmentParams());
 
       const notes1 = generateNotesParams();
       await service.setNotes({ appointmentId: resultAppointment.id, ...notes1 });

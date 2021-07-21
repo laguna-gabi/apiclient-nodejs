@@ -1,5 +1,5 @@
 import { Member } from '../../src/member';
-import { Appointment, AppointmentStatus, Note, Scores } from '../../src/appointment';
+import { Appointment, AppointmentStatus } from '../../src/appointment';
 import {
   generateNoShowAppointmentParams,
   generateRequestAppointmentParams,
