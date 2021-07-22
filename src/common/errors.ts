@@ -18,7 +18,7 @@ export enum ErrorType {
   memberPhoneNumber = 9203,
   memberDateOfBirth = 9204,
   memberDischargeDate = 9205,
-  memberEmailFormat = 9103,
+  memberEmailFormat = 9206,
 
   // Module appointment errors
   appointmentIdNotFound = 9301,
