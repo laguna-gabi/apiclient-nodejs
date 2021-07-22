@@ -8,15 +8,13 @@ import { UserRole } from '../src/user';
 import {
   generateCreateMemberParams,
   generateCreateUserParams,
-  generateNoteParam,
+  generateNotesParams,
   generateOrgParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
-  generateScoresParam,
 } from '../test';
 import * as jwt from 'jsonwebtoken';
 import * as faker from 'faker';
-import { SetNotesParams } from '../src/appointment';
 
 /**
  * This is a seed file for initial local db creation.
@@ -165,7 +163,7 @@ const scheduleAppointment = async (
 
 const setNotes = async (appointmentId: string) => {
   await mutations.setNotes({
-    params: { appointmentId, notes: [generateNoteParam()], scores: generateScoresParam() },
+    params: { appointmentId, ...generateNotesParams() },
   });
   console.log(`${appointmentId} : set notes and scores`);
 };
