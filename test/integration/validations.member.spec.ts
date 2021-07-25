@@ -9,14 +9,8 @@ import {
 } from '../index';
 import * as config from 'config';
 import * as faker from 'faker';
-import {
-  CreateMemberParams,
-  defaultMemberParams,
-  Language,
-  Sex,
-  UpdateMemberParams,
-} from '../../src/member';
-import { Errors, ErrorType } from '../../src/common';
+import { CreateMemberParams, defaultMemberParams, Sex, UpdateMemberParams } from '../../src/member';
+import { Errors, ErrorType, Language } from '../../src/common';
 import { Types } from 'mongoose';
 import { Handler } from './aux/handler';
 

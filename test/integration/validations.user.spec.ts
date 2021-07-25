@@ -1,9 +1,15 @@
-import { generateCreateUserParams, generateRandomName } from '../index';
-import { CreateUserParams } from '../../src/user';
+import {
+  generateCreateMemberParams,
+  generateCreateUserParams,
+  generateOrgParams,
+  generateRandomName,
+} from '../index';
+import { CreateUserParams, defaultUserParams } from '../../src/user';
 import * as config from 'config';
 import * as faker from 'faker';
 import { Errors, ErrorType } from '../../src/common';
 import { Handler } from './aux/handler';
+import { CreateMemberParams, defaultMemberParams } from '../../src/member';
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
@@ -30,6 +36,7 @@ describe('Validations - user', () => {
     ${'roles'}       | ${`Field "roles" of required type "[UserRole!]!" was not provided.`}
     ${'avatar'}      | ${`Field "avatar" of required type "String!" was not provided.`}
     ${'description'} | ${`Field "description" of required type "String!" was not provided.`}
+    ${'phoneNumber'} | ${`Field "phoneNumber" of required type "String!" was not provided.`}
   `(`should fail to create a user since mandatory field $field is missing`, async (params) => {
     const userParams: CreateUserParams = generateCreateUserParams();
     delete userParams[params.field];
@@ -62,6 +69,14 @@ describe('Validations - user', () => {
     ${'avatar'}         | ${{ avatar: faker.lorem.word() }}                            | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userAvatarFormat)] }}
     ${'email & avatar'} | ${{ email: faker.lorem.word(), avatar: faker.lorem.word() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat), Errors.get(ErrorType.userAvatarFormat)] }}
     ${'description'}    | ${{ description: 222 }}                                      | ${{ missingFieldError: stringError }}
+    ${'firstName'}      | ${{ firstName: 222 }}                                        | ${{ missingFieldError: stringError }}
+    ${'lastName'}       | ${{ lastName: 222 }}                                         | ${{ missingFieldError: stringError }}
+    ${'roles'}          | ${{ roles: [222] }}                                          | ${{ missingFieldError: 'does not exist in "UserRole" enum.' }}
+    ${'phoneNumber'}    | ${{ phoneNumber: 222 }}                                      | ${{ missingFieldError: stringError }}
+    ${'phoneNumber'}    | ${{ phoneNumber: '+410' }}                                   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userPhoneNumber)] }}
+    ${'title'}          | ${{ title: 222 }}                                            | ${{ missingFieldError: stringError }}
+    ${'maxCustomers'}   | ${{ maxCustomers: faker.lorem.word() }}                      | ${{ missingFieldError: 'Float cannot represent non numeric value' }}
+    ${'languages'}      | ${{ languages: faker.lorem.word() }}                         | ${{ missingFieldError: 'does not exist in "Language" enum.' }}
   `(
     /* eslint-enable max-len */
     `should fail to create a user since $field is not valid`,
@@ -73,4 +88,20 @@ describe('Validations - user', () => {
       });
     },
   );
+
+  test.each`
+    field             | defaultValue
+    ${'maxCustomers'} | ${defaultUserParams.maxCustomers}
+    ${'languages'}    | ${defaultUserParams.languages}
+  `(`should set default value if exists for optional field $field`, async (params) => {
+    /* eslint-enable max-len */
+    const userParams: CreateUserParams = generateCreateUserParams();
+    delete userParams[params.field];
+
+    const { id } = await handler.mutations.createUser({ userParams });
+
+    const user = await handler.queries.getUser(id);
+    expect(user[params.field]).not.toBeUndefined();
+    expect(user[params.field]).toEqual(params.defaultValue);
+  });
 });

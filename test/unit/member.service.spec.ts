@@ -17,7 +17,6 @@ import {
 import {
   CreateMemberParams,
   defaultMemberParams,
-  Language,
   Member,
   MemberDto,
   MemberModule,
@@ -26,7 +25,7 @@ import {
   TaskState,
   UpdateMemberParams,
 } from '../../src/member';
-import { Errors, ErrorType } from '../../src/common';
+import { Errors, ErrorType, Language } from '../../src/common';
 import { User, UserDto, UserRole } from '../../src/user';
 import * as faker from 'faker';
 import { address, datatype, date, internet } from 'faker';

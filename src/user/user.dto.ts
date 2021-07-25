@@ -1,8 +1,8 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { Errors, ErrorType, Identifier } from '../common';
-import { IsEmail, IsUrl, Length } from 'class-validator';
+import { Errors, ErrorType, Identifier, Language, validPhoneNumbersExamples } from '../common';
+import { IsEmail, IsPhoneNumber, IsUrl, Length } from 'class-validator';
 import * as config from 'config';
 import { Appointment, AppointmentData } from '../appointment';
 
@@ -15,6 +15,11 @@ export enum UserRole {
 registerEnumType(UserRole, { name: 'UserRole' });
 
 const validatorsConfig = config.get('graphql.validators');
+
+export const defaultUserParams = {
+  maxCustomers: 7,
+  languages: [Language.en],
+};
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -48,6 +53,21 @@ export class CreateUserParams {
 
   @Field()
   description: string;
+
+  @Field({ description: validPhoneNumbersExamples })
+  @IsPhoneNumber(undefined, {
+    message: Errors.get(ErrorType.userPhoneNumber),
+  })
+  phoneNumber: string;
+
+  @Field({ nullable: true })
+  title?: string;
+
+  @Field(() => Number, { nullable: true })
+  maxCustomers?: number;
+
+  @Field(() => [Language], { nullable: true })
+  languages?: Language[];
 }
 
 /**************************************************************************************************
@@ -88,6 +108,22 @@ export class User extends Identifier {
 
   @Field(() => Date)
   createdAt: Date;
+
+  @Prop()
+  @Field(() => String)
+  phoneNumber: string;
+
+  @Prop({ isNaN: true })
+  @Field({ nullable: true })
+  title?: string;
+
+  @Prop({ default: defaultUserParams.maxCustomers })
+  @Field(() => Number)
+  maxCustomers?: number;
+
+  @Prop({ default: defaultUserParams.languages })
+  @Field(() => [Language], { nullable: true })
+  languages?: Language[];
 }
 
 /**************************************************************************************************

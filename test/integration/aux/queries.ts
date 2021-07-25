@@ -18,6 +18,10 @@ export class Queries {
             avatar
             description
             createdAt
+            phoneNumber
+            title
+            maxCustomers
+            languages
             appointments {
               id
               notBefore
@@ -68,6 +72,10 @@ export class Queries {
               avatar
               description
               createdAt
+              phoneNumber
+              title
+              maxCustomers
+              languages
               appointments {
                 id
                 notBefore
@@ -98,6 +106,10 @@ export class Queries {
               avatar
               description
               createdAt
+              phoneNumber
+              title
+              maxCustomers
+              languages
               appointments {
                 id
                 notBefore

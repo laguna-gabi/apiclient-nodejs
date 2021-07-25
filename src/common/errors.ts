@@ -11,6 +11,7 @@ export enum ErrorType {
   userEmailAlreadyExists = 9102,
   userEmailFormat = 9103,
   userAvatarFormat = 9104,
+  userPhoneNumber = 9105,
 
   // Module member errors
   memberMinMaxLength = 9201,
@@ -44,6 +45,10 @@ const nameFormat = `name must be between ${graphqlConfig.get('minLength')} and $
 const dateInstanceFormat = 'must be a Date instance';
 const emailFormat =
   'email must be in an email format - having a @ and an extension, for example: test@gmail.com';
+const phoneFormat =
+  `phone number must be a valid phone number. ` +
+  `please make sure you've added the country code with (+) in the beginning. ` +
+  `${validPhoneNumbersExamples}`;
 
 export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.userMinMaxLength.valueOf(), `user ${nameFormat}`],
@@ -53,14 +58,10 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.userAvatarFormat.valueOf(),
     'avatar must be an URL address, for example: www.google.com',
   ],
+  [ErrorType.userPhoneNumber.valueOf(), phoneFormat],
   [ErrorType.memberMinMaxLength.valueOf(), `member ${nameFormat}`],
   [ErrorType.memberPhoneAlreadyExists.valueOf(), 'phone already exists'],
-  [
-    ErrorType.memberPhoneNumber.valueOf(),
-    `phone number must be a valid phone number. ` +
-      `please make sure you've added the country code with (+) in the beginning. ` +
-      `${validPhoneNumbersExamples}`,
-  ],
+  [ErrorType.memberPhoneNumber.valueOf(), phoneFormat],
   [ErrorType.memberDateOfBirth.valueOf(), `dateOfBirth ${dateInstanceFormat}`],
   [ErrorType.memberDischargeDate.valueOf(), `dischargeDate ${dateInstanceFormat}`],
   [ErrorType.memberEmailFormat.valueOf(), emailFormat],

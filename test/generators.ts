@@ -5,7 +5,6 @@ import {
   CreateMemberParams,
   CreateTaskParams,
   defaultMemberParams,
-  Language,
   Member,
   Sex,
   TaskState,
@@ -21,6 +20,7 @@ import {
 } from '../src/appointment';
 import { CreateOrgParams, OrgType } from '../src/org';
 import { Links } from '.';
+import { Language } from '../src/common';
 
 export const generateCreateUserParams = ({
   roles = [UserRole.coach],
@@ -29,6 +29,10 @@ export const generateCreateUserParams = ({
   email = generateEmail(),
   avatar = faker.image.imageUrl(),
   description = faker.lorem.sentence(),
+  phoneNumber = generatePhoneNumber(),
+  title = faker.name.title(),
+  maxCustomers = faker.datatype.number({ min: 1, max: 100 }),
+  languages = [Language.en, Language.es],
 }: {
   roles?: UserRole[];
   firstName?: string;
@@ -36,8 +40,23 @@ export const generateCreateUserParams = ({
   email?: string;
   avatar?: string;
   description?: string;
+  phoneNumber?: string;
+  title?: string;
+  maxCustomers?: number;
+  languages?: Language[];
 } = {}): CreateUserParams => {
-  return { firstName, lastName, email, roles, avatar, description };
+  return {
+    firstName,
+    lastName,
+    email,
+    roles,
+    avatar,
+    description,
+    phoneNumber,
+    title,
+    maxCustomers,
+    languages,
+  };
 };
 
 export const mockGenerateUser = (): User => {
@@ -53,6 +72,7 @@ export const mockGenerateUser = (): User => {
     avatar: faker.image.imageUrl(),
     description: faker.lorem.sentence(),
     createdAt: faker.date.past(1),
+    phoneNumber: generatePhoneNumber(),
   };
 };
 

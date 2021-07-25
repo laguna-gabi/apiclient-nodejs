@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { User } from '../user';
-import { Errors, ErrorType, Identifier, validPhoneNumbersExamples } from '../common';
+import { Errors, ErrorType, Identifier, Language, validPhoneNumbersExamples } from '../common';
 import { IsDate, IsEmail, IsOptional, IsPhoneNumber, Length } from 'class-validator';
 import * as config from 'config';
 import { Org } from '../org';
@@ -13,12 +13,6 @@ const validatorsConfig = config.get('graphql.validators');
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
-export enum Language {
-  en = 'en',
-  es = 'es',
-}
-registerEnumType(Language, { name: 'Language' });
-
 export enum Sex {
   male = 'male',
   female = 'female',

@@ -1,11 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
 import { Model, model, Types } from 'mongoose';
-import { User, UserDto, UserModule, UserRole, UserService } from '../../src/user';
+import {
+  defaultUserParams,
+  User,
+  UserDto,
+  UserModule,
+  UserRole,
+  UserService,
+} from '../../src/user';
 import { compareUsers, dbConnect, dbDisconnect, generateCreateUserParams } from '../index';
 import { Errors, ErrorType } from '../../src/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppointmentModule } from '../../src/appointment';
+import { defaultMemberParams } from '../../src/member';
 
 describe('UserService', () => {
   let module: TestingModule;
@@ -76,6 +84,24 @@ describe('UserService', () => {
 
       await expect(service.insert(user)).rejects.toThrow(
         Errors.get(ErrorType.userEmailAlreadyExists),
+      );
+    });
+
+    it('should insert a user without optional params + validate all fields', async () => {
+      const user = generateCreateUserParams();
+      delete user.title;
+      delete user.languages;
+      delete user.maxCustomers;
+
+      const { id } = await service.insert(user);
+
+      const createdUser = await userModel.findById(id);
+      expect(createdUser.toObject()).toEqual(
+        expect.objectContaining({
+          ...user,
+          languages: defaultUserParams.languages,
+          maxCustomers: defaultUserParams.maxCustomers,
+        }),
       );
     });
   });
