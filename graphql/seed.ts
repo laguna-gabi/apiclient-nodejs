@@ -7,6 +7,7 @@ import { Mutations } from '../test/integration/mutations';
 import { UserRole } from '../src/user';
 import {
   generateCreateMemberParams,
+  generateCreateTaskParams,
   generateCreateUserParams,
   generateNotesParams,
   generateOrgParams,
@@ -30,6 +31,7 @@ import * as faker from 'faker';
 
 let mutations: Mutations;
 let app: INestApplication;
+type TaskType = 'goal' | 'actionItem';
 
 async function main() {
   await init();
@@ -91,6 +93,16 @@ async function main() {
   const appointmentId = await scheduleAppointment(memberId, user2Id, 'user2');
   await setNotes(appointmentId);
   await scheduleAppointment(memberId, user3Id, 'user3');
+
+  console.debug(
+    '\n----------------------------------------------------------------\n' +
+      '---------- Create goals and action items for a member ----------\n' +
+      '----------------------------------------------------------------',
+  );
+  await createTask(memberId, mutations.createGoal, 'goal');
+  await createTask(memberId, mutations.createGoal, 'goal');
+  await createTask(memberId, mutations.createActionItem, 'actionItem');
+  await createTask(memberId, mutations.createActionItem, 'actionItem');
 
   await cleanUp();
 }
@@ -166,6 +178,12 @@ const setNotes = async (appointmentId: string) => {
     params: { appointmentId, ...generateNotesParams() },
   });
   console.log(`${appointmentId} : set notes and scores`);
+};
+
+const createTask = async (memberId: string, preformMethod, taskType: TaskType) => {
+  const createTaskParams = generateCreateTaskParams({ memberId });
+  const id = await preformMethod({ createTaskParams });
+  console.log(`${id} : created a ${taskType} '${createTaskParams.title}' for member`);
 };
 
 (async () => {

@@ -6,6 +6,7 @@ import { Errors, ErrorType, Identifier, validPhoneNumbersExamples } from '../com
 import { IsDate, IsEmail, IsOptional, IsPhoneNumber, Length } from 'class-validator';
 import * as config from 'config';
 import { Org } from '../org';
+import { ActionItem, Goal } from '.';
 import { Scores } from '../appointment';
 
 const validatorsConfig = config.get('graphql.validators');
@@ -159,6 +160,14 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => Date, { nullable: true })
   dischargeDate?: Date;
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: Goal.name }], isNaN: true })
+  @Field(() => [Goal], { nullable: true })
+  goals?: Goal[];
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: ActionItem.name }], isNaN: true })
+  @Field(() => [ActionItem], { nullable: true })
+  actionItems?: ActionItem[];
 
   @Prop({ isNaN: true })
   @Field(() => Scores, { nullable: true })

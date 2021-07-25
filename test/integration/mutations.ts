@@ -1,14 +1,14 @@
 import { camelCase } from 'lodash';
 import gql from 'graphql-tag';
 import { CreateUserParams } from '../../src/user';
-import { CreateMemberParams } from '../../src/member';
+import { CreateMemberParams, CreateTaskParams, UpdateTaskStateParams } from '../../src/member';
 import { ApolloServerTestClient } from 'apollo-server-testing';
 import {
   Appointment,
+  NoShowParams,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
   SetNotesParams,
-  NoShowParams,
 } from '../../src/appointment';
 import { Identifier } from '../../src/common';
 import { CreateOrgParams } from '../../src/org';
@@ -293,6 +293,106 @@ export class Mutations {
 
     return (
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.setNotes
+    );
+  };
+
+  createGoal = async ({
+    createTaskParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    createTaskParams: CreateTaskParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<string> => {
+    const result = await this.apolloClient.mutate({
+      variables: { createTaskParams: createTaskParams },
+      mutation: gql`
+        mutation CreateGoal($createTaskParams: CreateTaskParams!) {
+          createGoal(createTaskParams: $createTaskParams) {
+            id
+          }
+        }
+      `,
+    });
+
+    if (this.isResultValid({ result, missingFieldError, invalidFieldsErrors })) {
+      const { id } = result.data.createGoal;
+      return id;
+    }
+  };
+
+  updateGoalState = async ({
+    updateTaskStateParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    updateTaskStateParams: UpdateTaskStateParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }) => {
+    const result = await this.apolloClient.mutate({
+      variables: { updateTaskStateParams: updateTaskStateParams },
+      mutation: gql`
+        mutation UpdateGoalState($updateTaskStateParams: UpdateTaskStateParams!) {
+          updateGoalState(updateTaskStateParams: $updateTaskStateParams)
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.updateGoalState
+    );
+  };
+
+  createActionItem = async ({
+    createTaskParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    createTaskParams: CreateTaskParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<string> => {
+    const result = await this.apolloClient.mutate({
+      variables: { createTaskParams: createTaskParams },
+      mutation: gql`
+        mutation CreateActionItem($createTaskParams: CreateTaskParams!) {
+          createActionItem(createTaskParams: $createTaskParams) {
+            id
+          }
+        }
+      `,
+    });
+
+    if (this.isResultValid({ result, missingFieldError, invalidFieldsErrors })) {
+      const { id } = result.data.createActionItem;
+      return id;
+    }
+  };
+
+  updateActionItemState = async ({
+    updateTaskStateParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    updateTaskStateParams: UpdateTaskStateParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }) => {
+    const result = await this.apolloClient.mutate({
+      variables: { updateTaskStateParams: updateTaskStateParams },
+      mutation: gql`
+        mutation UpdateActionItemState($updateTaskStateParams: UpdateTaskStateParams!) {
+          updateActionItemState(updateTaskStateParams: $updateTaskStateParams)
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.updateGoalState
     );
   };
 

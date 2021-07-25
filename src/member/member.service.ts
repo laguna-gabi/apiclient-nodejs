@@ -2,7 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { DbErrors, Errors, ErrorType, EventType, Identifier } from '../common';
-import { CreateMemberParams, Member, MemberDocument } from '.';
+import {
+  ActionItem,
+  ActionItemDocument,
+  CreateMemberParams,
+  CreateTaskParams,
+  Goal,
+  GoalDocument,
+  Member,
+  MemberDocument,
+  TaskState,
+  UpdateTaskStateParams,
+} from '.';
 import { cloneDeep } from 'lodash';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Scores } from '../appointment';
@@ -12,6 +23,10 @@ export class MemberService {
   constructor(
     @InjectModel(Member.name)
     private readonly memberModel: Model<MemberDocument>,
+    @InjectModel(Goal.name)
+    private readonly goalModel: Model<GoalDocument>,
+    @InjectModel(ActionItem.name)
+    private readonly actionItemModel: Model<ActionItemDocument>,
   ) {}
 
   async insert({
@@ -57,11 +72,52 @@ export class MemberService {
       populate: 'notes',
     };
 
+    const options = { sort: { updatedAt: -1 } };
+
     return this.memberModel
       .findOne({ deviceId })
       .populate({ path: 'org' })
+      .populate({ path: 'goals', options })
+      .populate({ path: 'actionItems', options })
       .populate({ path: 'primaryCoach', populate: subPopulate })
       .populate({ path: 'users', populate: subPopulate });
+  }
+
+  /*************************************************************************************************
+   ********************************************* Goals *********************************************
+   ************************************************************************************************/
+
+  async insertGoal({
+    createTaskParams,
+    state,
+  }: {
+    createTaskParams: CreateTaskParams;
+    state: TaskState;
+  }): Promise<Identifier> {
+    const { memberId } = createTaskParams;
+    delete createTaskParams.memberId;
+
+    const { _id } = await this.goalModel.create({ ...createTaskParams, state });
+
+    await this.memberModel.updateOne(
+      { _id: new Types.ObjectId(memberId) },
+      { $push: { goals: _id } },
+    );
+
+    return { id: _id };
+  }
+
+  async updateGoalState(updateTaskStateParams: UpdateTaskStateParams): Promise<void> {
+    const { id, state } = updateTaskStateParams;
+
+    const result = await this.goalModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(id) },
+      { $set: { state } },
+    );
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.memberGoalIdNotFound));
+    }
   }
 
   @OnEvent(EventType.appointmentScoresUpdated, { async: true })
@@ -73,5 +129,42 @@ export class MemberService {
     scores: Scores;
   }) {
     await this.memberModel.updateOne({ _id: memberId }, { $set: { scores } });
+  }
+
+  /*************************************************************************************************
+   ****************************************** Action item ******************************************
+   ************************************************************************************************/
+
+  async insertActionItem({
+    createTaskParams,
+    state,
+  }: {
+    createTaskParams: CreateTaskParams;
+    state: TaskState;
+  }): Promise<Identifier> {
+    const { memberId } = createTaskParams;
+    delete createTaskParams.memberId;
+
+    const { _id } = await this.actionItemModel.create({ ...createTaskParams, state });
+
+    await this.memberModel.updateOne(
+      { _id: new Types.ObjectId(memberId) },
+      { $push: { actionItems: _id } },
+    );
+
+    return { id: _id };
+  }
+
+  async updateActionItemState(updateTaskStateParams: UpdateTaskStateParams): Promise<void> {
+    const { id, state } = updateTaskStateParams;
+
+    const result = await this.actionItemModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(id) },
+      { $set: { state } },
+    );
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.memberActionItemIdNotFound));
+    }
   }
 }

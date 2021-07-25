@@ -5,6 +5,7 @@ import { createTestClient } from 'apollo-server-testing';
 import { AppModule } from '../../src/app.module';
 import {
   generateCreateMemberParams,
+  generateCreateTaskParams,
   generateCreateUserParams,
   generateMemberLinks,
   generateNoShowAppointmentParams,
@@ -12,6 +13,7 @@ import {
   generateOrgParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
+  generateUpdateTaskStateParams,
 } from '../index';
 import { CreateUserParams, User, UserRole } from '../../src/user';
 import { camelCase, omit } from 'lodash';
@@ -19,7 +21,16 @@ import { Mutations } from './mutations';
 import { Queries } from './queries';
 import * as config from 'config';
 import * as faker from 'faker';
-import { CreateMemberParams, defaultMemberParams, Language, Member, Sex } from '../../src/member';
+import {
+  CreateMemberParams,
+  CreateTaskParams,
+  defaultMemberParams,
+  Language,
+  Member,
+  Sex,
+  Task,
+  TaskState,
+} from '../../src/member';
 import {
   Appointment,
   AppointmentStatus,
@@ -79,7 +90,11 @@ describe('Integration graphql resolvers', () => {
      * 6. Create an appointment between the primary coach and the member
      * 7. Create an appointment between the non primary coach (2nd user) and the member
      * 8. Create an appointment between the non primary coach (3rd user) and the member
-     * 9. Fetch member and checks all related appointments
+     * 9. Create goals for a member
+     * 10. Update goals for a member
+     * 11. Create action items for a member
+     * 12. Update action items for a member
+     * 13. Fetch member and checks all related appointments
      */
     const resultCoach = await createAndValidateUser();
     const resultNurse1 = await createAndValidateUser([UserRole.nurse, UserRole.coach]);
@@ -107,6 +122,28 @@ describe('Integration graphql resolvers', () => {
       member: resultMember,
     });
 
+    const { createTaskParams: goal1, id: idGoal1 } = await createAndValidateTask(
+      resultMember.id,
+      mutations.createGoal,
+    );
+    const { createTaskParams: goal2, id: idGoal2 } = await createAndValidateTask(
+      resultMember.id,
+      mutations.createGoal,
+    );
+    await updateTaskState(idGoal1, mutations.updateGoalState);
+    await updateTaskState(idGoal2, mutations.updateGoalState);
+
+    const { createTaskParams: ai1, id: idAi1 } = await createAndValidateTask(
+      resultMember.id,
+      mutations.createActionItem,
+    );
+    const { createTaskParams: ai2, id: idAi2 } = await createAndValidateTask(
+      resultMember.id,
+      mutations.createActionItem,
+    );
+    await updateTaskState(idAi1, mutations.updateActionItemState);
+    await updateTaskState(idAi2, mutations.updateActionItemState);
+
     const member = await queries.getMember();
 
     expect(member.primaryCoach.appointments[0]).toEqual(
@@ -130,6 +167,12 @@ describe('Integration graphql resolvers', () => {
       expect.objectContaining(member.users[1].appointments[1]),
     );
     expect(member.scores).toEqual(scheduledAppointmentNurse2.notes.scores);
+
+    //Goals and action items are desc sorted, so the last inserted goal is the 1st in the list
+    compareTasks(member.goals[0], goal2);
+    compareTasks(member.goals[1], goal1);
+    compareTasks(member.actionItems[0], ai2);
+    compareTasks(member.actionItems[1], ai1);
   });
 
   /**
@@ -464,6 +507,98 @@ describe('Integration graphql resolvers', () => {
           });
         },
       );
+
+      enum TaskType {
+        goal = 'goal',
+        actionItem = 'actionItem',
+      }
+
+      describe('goal + action items', () => {
+        describe('createGoal + createActionItem', () => {
+          /* eslint-disable max-len */
+          test.each`
+            field         | taskType               | error
+            ${'memberId'} | ${TaskType.goal}       | ${`Field "memberId" of required type "String!" was not provided.`}
+            ${'title'}    | ${TaskType.goal}       | ${`Field "title" of required type "String!" was not provided.`}
+            ${'deadline'} | ${TaskType.goal}       | ${`Field "deadline" of required type "DateTime!" was not provided.`}
+            ${'memberId'} | ${TaskType.actionItem} | ${`Field "memberId" of required type "String!" was not provided.`}
+            ${'title'}    | ${TaskType.actionItem} | ${`Field "title" of required type "String!" was not provided.`}
+            ${'deadline'} | ${TaskType.actionItem} | ${`Field "deadline" of required type "DateTime!" was not provided.`}
+          `(
+            /* eslint-enable max-len */
+            `should fail to create $taskType since mandatory field $field is missing`,
+            async (params) => {
+              const createTaskParams = generateCreateTaskParams();
+              delete createTaskParams[params.field];
+              const method = TaskType.goal ? mutations.createGoal : mutations.createActionItem;
+              await method({ createTaskParams, missingFieldError: params.error });
+            },
+          );
+
+          /* eslint-disable max-len */
+          test.each`
+            input                        | taskType               | error
+            ${{ memberId: 123 }}         | ${TaskType.goal}       | ${{ missingFieldError: stringError }}
+            ${{ title: 123 }}            | ${TaskType.goal}       | ${{ missingFieldError: stringError }}
+            ${{ deadline: 'not-valid' }} | ${TaskType.goal}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberTaskDeadline)] }}
+            ${{ memberId: 123 }}         | ${TaskType.actionItem} | ${{ missingFieldError: stringError }}
+            ${{ title: 123 }}            | ${TaskType.actionItem} | ${{ missingFieldError: stringError }}
+            ${{ deadline: 'not-valid' }} | ${TaskType.actionItem} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberTaskDeadline)] }}
+          `(
+            /* eslint-enable max-len */
+            `should fail to create $taskType since setting $input is not a valid type`,
+            async (params) => {
+              const createTaskParams = generateCreateTaskParams({ ...params.input });
+              const method = TaskType.goal ? mutations.createGoal : mutations.createActionItem;
+              await method({ createTaskParams, ...params.error });
+            },
+          );
+        });
+
+        describe('updateGoalState + updateActionItemState', () => {
+          /* eslint-disable max-len */
+          test.each`
+            field      | taskType               | error
+            ${'id'}    | ${TaskType.goal}       | ${`Field "id" of required type "String!" was not provided.`}
+            ${'state'} | ${TaskType.goal}       | ${`Field "state" of required type "TaskState!" was not provided.`}
+            ${'id'}    | ${TaskType.actionItem} | ${`Field "id" of required type "String!" was not provided.`}
+            ${'state'} | ${TaskType.actionItem} | ${`Field "state" of required type "TaskState!" was not provided.`}
+          `(
+            /* eslint-enable max-len */
+            `should fail to update $taskType since mandatory field $field is missing`,
+            async (params) => {
+              const updateTaskStateParams = generateUpdateTaskStateParams();
+              delete updateTaskStateParams[params.field];
+              const method = TaskType.goal
+                ? mutations.updateGoalState
+                : mutations.updateActionItemState;
+              await method({
+                updateTaskStateParams,
+                missingFieldError: params.error,
+              });
+            },
+          );
+
+          /* eslint-disable max-len */
+          test.each`
+            input             | taskType               | error
+            ${{ id: 123 }}    | ${TaskType.goal}       | ${stringError}
+            ${{ state: 123 }} | ${TaskType.goal}       | ${'Enum "TaskState" cannot represent non-string value'}
+            ${{ id: 123 }}    | ${TaskType.actionItem} | ${stringError}
+            ${{ state: 123 }} | ${TaskType.actionItem} | ${'Enum "TaskState" cannot represent non-string value'}
+          `(`should fail to update $taskType since $input is not a valid type`, async (params) => {
+            /* eslint-enable max-len */
+            const updateTaskStateParams = generateUpdateTaskStateParams({ ...params.input });
+            const method = TaskType.goal
+              ? mutations.updateGoalState
+              : mutations.updateActionItemState;
+            await method({
+              updateTaskStateParams,
+              missingFieldError: params.error,
+            });
+          });
+        });
+      });
     });
 
     describe('appointment', () => {
@@ -811,6 +946,28 @@ describe('Integration graphql resolvers', () => {
     expect(result).toEqual({ ...appointment, updatedAt: result.updatedAt, notes });
 
     return result;
+  };
+
+  const createAndValidateTask = async (
+    memberId: string,
+    method,
+  ): Promise<{ id: string; createTaskParams: CreateTaskParams }> => {
+    const createTaskParams = generateCreateTaskParams({ memberId });
+    const id = await method({ createTaskParams });
+    expect(id).toEqual(expect.any(String));
+
+    return { id, createTaskParams };
+  };
+
+  const updateTaskState = async (id: string, method) => {
+    const updateTaskStateParams = { id, state: TaskState.reached };
+    await method({ updateTaskStateParams });
+  };
+
+  const compareTasks = (task: Task, createTaskParams: CreateTaskParams) => {
+    expect(task.title).toEqual(createTaskParams.title);
+    expect(task.state).toEqual(TaskState.reached);
+    expect(new Date(task.deadline)).toEqual(createTaskParams.deadline);
   };
 
   const setContextUser = (deviceId: string) => {

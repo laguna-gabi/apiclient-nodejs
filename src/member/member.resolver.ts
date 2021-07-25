@@ -1,5 +1,12 @@
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { CreateMemberParams, Member, MemberService } from '.';
+import {
+  CreateMemberParams,
+  CreateTaskParams,
+  Member,
+  MemberService,
+  UpdateTaskStateParams,
+  TaskState,
+} from '.';
 import { Identifier } from '../common';
 import { camelCase, remove } from 'lodash';
 import * as jwt from 'jsonwebtoken';
@@ -37,5 +44,48 @@ export class MemberResolver {
     const authorization = jwt.decode(authorizationHeader);
 
     return authorization?.username ? this.memberService.get(authorization?.username) : null;
+  }
+
+  /*************************************************************************************************
+   ********************************************* Goals *********************************************
+   ************************************************************************************************/
+
+  @Mutation(() => Identifier)
+  async createGoal(
+    @Args(camelCase(CreateTaskParams.name))
+    createTaskParams: CreateTaskParams,
+  ) {
+    return this.memberService.insertGoal({ createTaskParams, state: TaskState.pending });
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async updateGoalState(
+    @Args(camelCase(UpdateTaskStateParams.name))
+    updateTaskStateParams: UpdateTaskStateParams,
+  ) {
+    return this.memberService.updateGoalState(updateTaskStateParams);
+  }
+
+  /*************************************************************************************************
+   ****************************************** Action items *****************************************
+   ************************************************************************************************/
+
+  @Mutation(() => Identifier)
+  async createActionItem(
+    @Args(camelCase(CreateTaskParams.name))
+    createTaskParams: CreateTaskParams,
+  ) {
+    return this.memberService.insertActionItem({
+      createTaskParams,
+      state: TaskState.pending,
+    });
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async updateActionItemState(
+    @Args(camelCase(UpdateTaskStateParams.name))
+    updateTaskStateParams: UpdateTaskStateParams,
+  ) {
+    return this.memberService.updateActionItemState(updateTaskStateParams);
   }
 }

@@ -2,11 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import {
   dbDisconnect,
   generateCreateMemberParams,
+  generateCreateTaskParams,
   generateMemberLinks,
+  generateUpdateTaskStateParams,
   mockGenerateMember,
 } from '../../test';
 import { DbModule } from '../../src/db/db.module';
-import { MemberModule, MemberResolver, MemberService } from '../../src/member';
+import { MemberModule, MemberResolver, MemberService, TaskState } from '../../src/member';
 import { Types } from 'mongoose';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
@@ -133,6 +135,100 @@ describe('MemberResolver', () => {
       });
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('createGoal', () => {
+    let spyOnServiceInsertGoal;
+    beforeEach(() => {
+      spyOnServiceInsertGoal = jest.spyOn(service, 'insertGoal');
+    });
+
+    afterEach(() => {
+      spyOnServiceInsertGoal.mockReset();
+    });
+
+    it('should create a goal', async () => {
+      spyOnServiceInsertGoal.mockImplementationOnce(async () => ({
+        id: new Types.ObjectId().toString(),
+      }));
+
+      const params = generateCreateTaskParams();
+      await resolver.createGoal(params);
+
+      expect(spyOnServiceInsertGoal).toBeCalledTimes(1);
+      expect(spyOnServiceInsertGoal).toBeCalledWith({
+        createTaskParams: params,
+        state: TaskState.pending,
+      });
+    });
+  });
+
+  describe('updateGoalState', () => {
+    let spyOnServiceUpdateGoalState;
+    beforeEach(() => {
+      spyOnServiceUpdateGoalState = jest.spyOn(service, 'updateGoalState');
+    });
+
+    afterEach(() => {
+      spyOnServiceUpdateGoalState.mockReset();
+    });
+
+    it('should create a goal', async () => {
+      spyOnServiceUpdateGoalState.mockImplementationOnce(async () => undefined);
+
+      const updateGoalState = { id: new Types.ObjectId().toString(), state: TaskState.reached };
+      await resolver.updateGoalState(updateGoalState);
+
+      expect(spyOnServiceUpdateGoalState).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateGoalState).toBeCalledWith(updateGoalState);
+    });
+  });
+
+  describe('createActionItem', () => {
+    let spyOnServiceInsertActionItem;
+    beforeEach(() => {
+      spyOnServiceInsertActionItem = jest.spyOn(service, 'insertActionItem');
+    });
+
+    afterEach(() => {
+      spyOnServiceInsertActionItem.mockReset();
+    });
+
+    it('should create an action item', async () => {
+      spyOnServiceInsertActionItem.mockImplementationOnce(async () => ({
+        id: new Types.ObjectId().toString(),
+      }));
+
+      const params = generateCreateTaskParams();
+      await resolver.createActionItem(params);
+
+      expect(spyOnServiceInsertActionItem).toBeCalledTimes(1);
+      expect(spyOnServiceInsertActionItem).toBeCalledWith({
+        createTaskParams: params,
+        state: TaskState.pending,
+      });
+    });
+  });
+
+  describe('updateActionItemState', () => {
+    let spyOnServiceUpdateActionItemState;
+    beforeEach(() => {
+      spyOnServiceUpdateActionItemState = jest.spyOn(service, 'updateActionItemState');
+    });
+
+    afterEach(() => {
+      spyOnServiceUpdateActionItemState.mockReset();
+    });
+
+    it('should create an action item', async () => {
+      spyOnServiceUpdateActionItemState.mockImplementationOnce(async () => undefined);
+
+      const updateActionItemState = generateUpdateTaskStateParams();
+      await resolver.updateActionItemState(updateActionItemState);
+
+      expect(spyOnServiceUpdateActionItemState).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateActionItemState).toBeCalledWith(updateActionItemState);
     });
   });
 });

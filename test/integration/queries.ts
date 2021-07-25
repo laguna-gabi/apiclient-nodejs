@@ -124,6 +124,18 @@ export class Queries {
             language
             zipCode
             dischargeDate
+            goals {
+              id
+              title
+              state
+              deadline
+            }
+            actionItems {
+              id
+              title
+              state
+              deadline
+            }
           }
         }
       `,

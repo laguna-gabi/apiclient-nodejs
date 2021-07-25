@@ -2,7 +2,16 @@ import * as faker from 'faker';
 import { connect, disconnect, Types } from 'mongoose';
 import * as config from 'config';
 import { CreateUserParams, User, UserRole } from '../src/user';
-import { CreateMemberParams, defaultMemberParams, Language, Member, Sex } from '../src/member';
+import {
+  CreateMemberParams,
+  CreateTaskParams,
+  defaultMemberParams,
+  Language,
+  Member,
+  Sex,
+  TaskState,
+  UpdateTaskStateParams,
+} from '../src/member';
 import {
   AppointmentMethod,
   NoShowParams,
@@ -121,6 +130,21 @@ export const generateMemberLinks = (
     dischargeNotesLink: `${prefix}_Summary.pdf`,
     dischargeInstructionsLink: `${prefix}_Instructions.pdf`,
   };
+};
+
+export const generateCreateTaskParams = ({
+  memberId = new Types.ObjectId().toString(),
+  title = faker.lorem.words(2),
+  deadline = faker.date.future(1),
+}: { memberId?: string; title?: string; deadline?: Date } = {}): CreateTaskParams => {
+  return { memberId, title, deadline };
+};
+
+export const generateUpdateTaskStateParams = ({
+  id = new Types.ObjectId().toString(),
+  state = TaskState.reached,
+}: { id?: string; state?: TaskState } = {}): UpdateTaskStateParams => {
+  return { id, state };
 };
 
 export const generateRequestAppointmentParams = ({

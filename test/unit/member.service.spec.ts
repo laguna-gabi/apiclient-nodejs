@@ -6,9 +6,11 @@ import {
   dbConnect,
   dbDisconnect,
   generateCreateMemberParams,
+  generateCreateTaskParams,
   generateCreateUserParams,
   generateMemberLinks,
   generateOrgParams,
+  generateUpdateTaskStateParams,
 } from '../index';
 import {
   CreateMemberParams,
@@ -19,10 +21,11 @@ import {
   MemberModule,
   MemberService,
   Sex,
+  TaskState,
 } from '../../src/member';
 import { Errors, ErrorType } from '../../src/common';
 import { User, UserDto, UserRole } from '../../src/user';
-import { datatype, internet, address, date } from 'faker';
+import { address, datatype, date, internet } from 'faker';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppointmentModule } from '../../src/appointment';
 import { Org, OrgDto } from '../../src/org';
@@ -216,6 +219,60 @@ describe('MemberService', () => {
 
       await expect(service.insert({ createMemberParams, ...links })).rejects.toThrow(
         Errors.get(ErrorType.memberPhoneAlreadyExists),
+      );
+    });
+  });
+
+  describe('insertGoal', () => {
+    it('should insert a goal', async () => {
+      const createTaskParams = generateCreateTaskParams();
+      const { id } = await service.insertGoal({ createTaskParams, state: TaskState.pending });
+
+      expect(id).toEqual(expect.any(Types.ObjectId));
+    });
+  });
+
+  describe('updateGoalState', () => {
+    it('should update an existing goal state', async () => {
+      const createTaskParams = generateCreateTaskParams();
+      const { id } = await service.insertGoal({ createTaskParams, state: TaskState.pending });
+
+      await service.updateGoalState({ id, state: TaskState.reached });
+    });
+
+    it('should not be able to update state for a non existing goal', async () => {
+      await expect(service.updateGoalState(generateUpdateTaskStateParams())).rejects.toThrow(
+        Errors.get(ErrorType.memberGoalIdNotFound),
+      );
+    });
+  });
+
+  describe('insertActionItem', () => {
+    it('should insert an action item', async () => {
+      const createTaskParams = generateCreateTaskParams();
+      const { id } = await service.insertActionItem({
+        createTaskParams,
+        state: TaskState.pending,
+      });
+
+      expect(id).toEqual(expect.any(Types.ObjectId));
+    });
+  });
+
+  describe('updateActionItemState', () => {
+    it('should update an existing action item state', async () => {
+      const createTaskParams = generateCreateTaskParams();
+      const { id } = await service.insertActionItem({
+        createTaskParams,
+        state: TaskState.pending,
+      });
+
+      await service.updateActionItemState({ id, state: TaskState.reached });
+    });
+
+    it('should not be able to update state for a non existing action item', async () => {
+      await expect(service.updateActionItemState(generateUpdateTaskStateParams())).rejects.toThrow(
+        Errors.get(ErrorType.memberActionItemIdNotFound),
       );
     });
   });
