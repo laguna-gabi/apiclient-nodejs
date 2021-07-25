@@ -129,6 +129,7 @@ describe('Integration graphql resolvers', () => {
     expect(scheduledAppointmentNurse2).toEqual(
       expect.objectContaining(member.users[1].appointments[1]),
     );
+    expect(member.scores).toEqual(scheduledAppointmentNurse2.notes.scores);
   });
 
   /**
@@ -175,6 +176,42 @@ describe('Integration graphql resolvers', () => {
     expect(appointmentMember2).toEqual(
       expect.objectContaining(memberResult2.primaryCoach.appointments[1]),
     );
+  });
+
+  it('should validate that exact member scores are updated on notes.scores update', async () => {
+    const primaryCoach = await createAndValidateUser();
+    const org = await createAndValidateOrg();
+    const member1 = await createAndValidateMember({ org, primaryCoach });
+    const member2 = await createAndValidateMember({ org, primaryCoach });
+
+    const appointmentMember1 = await createAndValidateAppointment({
+      userId: primaryCoach.id,
+      member: member1,
+    });
+
+    const appointmentMember2 = await createAndValidateAppointment({
+      userId: primaryCoach.id,
+      member: member2,
+    });
+
+    const notes1 = { appointmentId: appointmentMember1.id, ...generateNotesParams() };
+    const notes2 = { appointmentId: appointmentMember2.id, ...generateNotesParams() };
+    await mutations.setNotes({ params: notes2 });
+
+    setContextUser(member2.deviceId);
+    let member2Result = await queries.getMember();
+    expect(member2Result.scores).toEqual(notes2.scores);
+
+    setContextUser(member1.deviceId);
+    let member1Result = await queries.getMember();
+    expect(member1Result.scores).not.toEqual(member2Result.scores);
+    await mutations.setNotes({ params: notes1 });
+    member1Result = await queries.getMember();
+    expect(member1Result.scores).toEqual(notes1.scores);
+
+    setContextUser(member2.deviceId);
+    member2Result = await queries.getMember();
+    expect(member2Result.scores).toEqual(notes2.scores);
   });
 
   describe('validations', () => {

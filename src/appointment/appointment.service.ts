@@ -119,6 +119,11 @@ export class AppointmentService {
         { $set: { notes: id } },
       );
     }
+
+    this.eventEmitter.emit(EventType.appointmentScoresUpdated, {
+      memberId: existing.memberId,
+      scores: params.scores,
+    });
   }
 
   private async updateAppointment(id, setParams): Promise<Appointment> {

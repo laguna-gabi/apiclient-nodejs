@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { DbErrors, Errors, ErrorType, Identifier } from '../common';
+import { DbErrors, Errors, ErrorType, EventType, Identifier } from '../common';
 import { CreateMemberParams, Member, MemberDocument } from '.';
 import { cloneDeep } from 'lodash';
+import { OnEvent } from '@nestjs/event-emitter';
+import { Scores } from '../appointment';
 
 @Injectable()
 export class MemberService {
@@ -60,5 +62,16 @@ export class MemberService {
       .populate({ path: 'org' })
       .populate({ path: 'primaryCoach', populate: subPopulate })
       .populate({ path: 'users', populate: subPopulate });
+  }
+
+  @OnEvent(EventType.appointmentScoresUpdated, { async: true })
+  async handleAppointmentScoreUpdated({
+    memberId,
+    scores,
+  }: {
+    memberId: Types.ObjectId;
+    scores: Scores;
+  }) {
+    await this.memberModel.updateOne({ _id: memberId }, { $set: { scores } });
   }
 }

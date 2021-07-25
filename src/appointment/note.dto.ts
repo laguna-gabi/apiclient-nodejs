@@ -37,11 +37,11 @@ export class SetNotesParams {
   @Field(() => String)
   appointmentId: string;
 
-  @Field(() => [Note], { nullable: true })
-  notes?: Array<Note>;
+  @Field(() => [Note])
+  notes: Array<Note>;
 
-  @Field(() => Scores, { nullable: true })
-  scores?: Scores;
+  @Field(() => Scores)
+  scores: Scores;
 }
 
 /**************************************************************************************************

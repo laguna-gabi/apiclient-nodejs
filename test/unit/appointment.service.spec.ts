@@ -16,6 +16,7 @@ import {
   AppointmentService,
   AppointmentStatus,
   NoShowParams,
+  SetNotesParams,
 } from '../../src/appointment';
 import { Errors, ErrorType, EventType } from '../../src/common';
 import * as faker from 'faker';
@@ -413,8 +414,30 @@ describe('AppointmentService', () => {
 
     it('should throw error on missing appointmentId', async () => {
       await expect(
-        service.setNotes({ appointmentId: new Types.ObjectId().toString() }),
+        service.setNotes({
+          appointmentId: new Types.ObjectId().toString(),
+          ...generateNotesParams(),
+        }),
       ).rejects.toThrow(Errors.get(ErrorType.appointmentIdNotFound));
+    });
+
+    it('should validate that on insert notes, an internal event is sent', async () => {
+      const appointmentParams = generateScheduleAppointmentParams();
+      const resultAppointment = await service.schedule(appointmentParams);
+
+      const spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
+      const setNotesParams: SetNotesParams = {
+        appointmentId: resultAppointment.id,
+        ...generateNotesParams(),
+      };
+      await service.setNotes(setNotesParams);
+
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.appointmentScoresUpdated, {
+        memberId: new Types.ObjectId(appointmentParams.memberId),
+        scores: setNotesParams.scores,
+      });
+
+      spyOnEventEmitter.mockReset();
     });
   });
 

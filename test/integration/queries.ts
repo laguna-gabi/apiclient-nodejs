@@ -47,6 +47,12 @@ export class Queries {
             dateOfBirth
             dischargeNotesLink
             dischargeInstructionsLink
+            scores {
+              adherence
+              adherenceText
+              wellbeing
+              wellbeingText
+            }
             org {
               id
               name

@@ -6,6 +6,7 @@ import { Errors, ErrorType, Identifier, validPhoneNumbersExamples } from '../com
 import { IsDate, IsEmail, IsOptional, IsPhoneNumber, Length } from 'class-validator';
 import * as config from 'config';
 import { Org } from '../org';
+import { Scores } from '../appointment';
 
 const validatorsConfig = config.get('graphql.validators');
 /**************************************************************************************************
@@ -158,6 +159,10 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => Date, { nullable: true })
   dischargeDate?: Date;
+
+  @Prop({ isNaN: true })
+  @Field(() => Scores, { nullable: true })
+  scores?: Scores;
 }
 
 /**************************************************************************************************
