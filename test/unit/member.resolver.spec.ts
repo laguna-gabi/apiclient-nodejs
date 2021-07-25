@@ -6,7 +6,7 @@ import {
   generateMemberLinks,
   generateUpdateTaskStateParams,
   mockGenerateMember,
-} from '../../test';
+} from '../index';
 import { DbModule } from '../../src/db/db.module';
 import { MemberModule, MemberResolver, MemberService, TaskState } from '../../src/member';
 import { Types } from 'mongoose';

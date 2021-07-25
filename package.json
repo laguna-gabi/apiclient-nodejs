@@ -19,7 +19,8 @@
     "test:watch": "jest --config test/unit/jest.json --watch",
     "test:cov": "jest --config test/unit/jest.json --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:integration": "jest --config test/integration/jest.json"
+    "test:integration": "jest --config test/integration/jest.json",
+    "test:all": "yarn test && yarn test:integration"
   },
   "dependencies": {
     "@nestjs/common": "^7.6.15",
