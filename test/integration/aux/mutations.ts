@@ -1,7 +1,7 @@
 import { camelCase } from 'lodash';
 import gql from 'graphql-tag';
-import { CreateUserParams } from '../../src/user';
-import { CreateMemberParams, CreateTaskParams, UpdateTaskStateParams } from '../../src/member';
+import { CreateUserParams } from '../../../src/user';
+import { CreateMemberParams, CreateTaskParams, UpdateTaskStateParams } from '../../../src/member';
 import { ApolloServerTestClient } from 'apollo-server-testing';
 import {
   Appointment,
@@ -9,9 +9,9 @@ import {
   RequestAppointmentParams,
   ScheduleAppointmentParams,
   SetNotesParams,
-} from '../../src/appointment';
-import { Identifier } from '../../src/common';
-import { CreateOrgParams } from '../../src/org';
+} from '../../../src/appointment';
+import { Identifier } from '../../../src/common';
+import { CreateOrgParams } from '../../../src/org';
 
 export class Mutations {
   constructor(private readonly apolloClient: ApolloServerTestClient) {}
@@ -24,7 +24,7 @@ export class Mutations {
     userParams: CreateUserParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
-  }): Promise<string> => {
+  }): Promise<Identifier> => {
     const result = await this.apolloClient.mutate({
       variables: {
         createUserParams: {
@@ -41,10 +41,10 @@ export class Mutations {
       `,
     });
 
-    if (this.isResultValid({ result, missingFieldError, invalidFieldsErrors })) {
-      const { id } = result.data.createUser;
-      return id;
-    }
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.createUser
+    );
   };
 
   createOrg = async ({
@@ -316,10 +316,10 @@ export class Mutations {
       `,
     });
 
-    if (this.isResultValid({ result, missingFieldError, invalidFieldsErrors })) {
-      const { id } = result.data.createGoal;
-      return id;
-    }
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.createGoal
+    );
   };
 
   updateGoalState = async ({
@@ -366,10 +366,10 @@ export class Mutations {
       `,
     });
 
-    if (this.isResultValid({ result, missingFieldError, invalidFieldsErrors })) {
-      const { id } = result.data.createActionItem;
-      return id;
-    }
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.createActionItem
+    );
   };
 
   updateActionItemState = async ({

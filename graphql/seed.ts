@@ -3,7 +3,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { Test, TestingModule } from '@nestjs/testing';
 import { createTestClient } from 'apollo-server-testing';
 import { AppModule } from '../src/app.module';
-import { Mutations } from '../test/integration/mutations';
+import { Mutations } from '../test/integration/aux/mutations';
 import { UserRole } from '../src/user';
 import {
   generateCreateMemberParams,
@@ -16,6 +16,7 @@ import {
 } from '../test';
 import * as jwt from 'jsonwebtoken';
 import * as faker from 'faker';
+import { Identifier } from '../src/common';
 
 /**
  * This is a seed file for initial local db creation.
@@ -41,9 +42,9 @@ async function main() {
       '----------------------- Creating 3 users -----------------------\n' +
       '----------------------------------------------------------------',
   );
-  const user1Id = await createUser([UserRole.coach], 'user1');
-  const user2Id = await createUser([UserRole.nurse], 'user2');
-  const user3Id = await createUser([UserRole.coach, UserRole.nurse], 'user2');
+  const { id: user1Id } = await createUser([UserRole.coach], 'user1');
+  const { id: user2Id } = await createUser([UserRole.nurse], 'user2');
+  const { id: user3Id } = await createUser([UserRole.coach, UserRole.nurse], 'user2');
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
@@ -136,15 +137,15 @@ const cleanUp = async () => {
   await app.close();
 };
 
-const createUser = async (roles: UserRole[], userText: string): Promise<string> => {
-  const userId = await mutations.createUser({
+const createUser = async (roles: UserRole[], userText: string): Promise<Identifier> => {
+  const { id } = await mutations.createUser({
     userParams: generateCreateUserParams({
       roles,
     }),
   });
-  console.log(`${userId} : ${userText} of type ${roles}`);
+  console.log(`${id} : ${userText} of type ${roles}`);
 
-  return userId;
+  return { id };
 };
 
 const requestAppointment = async (memberId: string, userId: string, userText: string) => {
@@ -182,7 +183,7 @@ const setNotes = async (appointmentId: string) => {
 
 const createTask = async (memberId: string, preformMethod, taskType: TaskType) => {
   const createTaskParams = generateCreateTaskParams({ memberId });
-  const id = await preformMethod({ createTaskParams });
+  const { id } = await preformMethod({ createTaskParams });
   console.log(`${id} : created a ${taskType} '${createTaskParams.title}' for member`);
 };
 

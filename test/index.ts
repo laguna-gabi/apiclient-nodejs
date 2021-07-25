@@ -220,6 +220,10 @@ export const generateOrgParams = ({
   return { type, name, trialDuration: trialDuration };
 };
 
+export const generateRandomName = (length: number): string => {
+  return faker.lorem.words(length).substr(0, length);
+};
+
 const generateEmail = () => {
   return `${faker.datatype.uuid()}.${faker.internet.email()}`;
 };

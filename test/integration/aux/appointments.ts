@@ -1,10 +1,10 @@
-import { Member } from '../../src/member';
-import { Appointment, AppointmentStatus } from '../../src/appointment';
+import { Member } from '../../../src/member';
+import { Appointment, AppointmentStatus } from '../../../src/appointment';
 import {
   generateNoShowAppointmentParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
-} from '../index';
+} from '../../index';
 import { Mutations } from './mutations';
 
 export class AppointmentsIntegrationActions {
