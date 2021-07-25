@@ -34,8 +34,35 @@ export const defaultMemberParams = {
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
  *************************************************************************************************/
+@InputType({ isAbstract: true })
+export class ExtraMemberParams {
+  @Field(() => Sex, { nullable: true })
+  @IsOptional()
+  sex?: Sex;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsEmail(undefined, {
+    message: Errors.get(ErrorType.memberEmailFormat),
+  })
+  email?: string;
+
+  @Field(() => Language, { nullable: true })
+  @IsOptional()
+  language?: Language;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  zipCode?: string;
+
+  @Field(() => Date, { nullable: true })
+  @IsOptional()
+  @IsDate({ message: Errors.get(ErrorType.memberDischargeDate) })
+  dischargeDate?: Date;
+}
+
 @InputType()
-export class CreateMemberParams {
+export class CreateMemberParams extends ExtraMemberParams {
   @Field({ description: validPhoneNumbersExamples })
   @IsPhoneNumber(undefined, {
     message: Errors.get(ErrorType.memberPhoneNumber),
@@ -69,30 +96,43 @@ export class CreateMemberParams {
 
   @Field(() => [String], { nullable: true })
   usersIds: string[];
+}
 
-  @Field(() => Sex, { nullable: true })
-  @IsOptional()
-  sex?: Sex;
+@InputType()
+export class UpdateMemberParams extends ExtraMemberParams {
+  @Field(() => String)
+  id: string;
 
-  @Field(() => String, { nullable: true })
-  @IsOptional()
-  @IsEmail(undefined, {
-    message: Errors.get(ErrorType.memberEmailFormat),
+  @Field({ nullable: true })
+  @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
+    message: Errors.get(ErrorType.memberMinMaxLength),
   })
-  email?: string;
+  firstName?: string;
 
-  @Field(() => Language, { nullable: true })
-  @IsOptional()
-  language?: Language;
+  @Field({ nullable: true })
+  @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
+    message: Errors.get(ErrorType.memberMinMaxLength),
+  })
+  lastName?: string;
 
   @Field(() => String, { nullable: true })
   @IsOptional()
-  zipCode?: string;
+  fellowName?: string;
 
-  @Field(() => Date, { nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
-  @IsDate({ message: Errors.get(ErrorType.memberDischargeDate) })
-  dischargeDate?: Date;
+  drgDesc?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  readmissionRisk?: string;
+
+  @Field({ description: validPhoneNumbersExamples, nullable: true })
+  @IsOptional()
+  @IsPhoneNumber(undefined, {
+    message: Errors.get(ErrorType.memberPhoneNumber),
+  })
+  phoneSecondary?: string;
 }
 
 /**************************************************************************************************
@@ -172,6 +212,28 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => Scores, { nullable: true })
   scores?: Scores;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  fellowName?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  drgDesc?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  readmissionRisk?: string;
+
+  @Prop({ isNaN: true })
+  @Field({ description: validPhoneNumbersExamples, nullable: true })
+  @IsPhoneNumber(undefined, {
+    message: Errors.get(ErrorType.memberPhoneNumber),
+  })
+  phoneSecondary?: string;
 }
 
 /**************************************************************************************************

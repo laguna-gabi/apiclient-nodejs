@@ -4,11 +4,18 @@ import {
   generateCreateUserParams,
   generateOrgParams,
   generateRandomName,
+  generateUpdateMemberParams,
   generateUpdateTaskStateParams,
 } from '../index';
 import * as config from 'config';
 import * as faker from 'faker';
-import { CreateMemberParams, defaultMemberParams, Language, Sex } from '../../src/member';
+import {
+  CreateMemberParams,
+  defaultMemberParams,
+  Language,
+  Sex,
+  UpdateMemberParams,
+} from '../../src/member';
 import { Errors, ErrorType } from '../../src/common';
 import { Types } from 'mongoose';
 import { Handler } from './aux/handler';
@@ -31,174 +38,218 @@ describe('Validations - member', () => {
     await handler.afterAll();
   });
 
-  /* eslint-disable max-len */
-  test.each`
-    field               | error
-    ${'phoneNumber'}    | ${`Field "phoneNumber" of required type "String!" was not provided.`}
-    ${'firstName'}      | ${`Field "firstName" of required type "String!" was not provided.`}
-    ${'lastName'}       | ${`Field "lastName" of required type "String!" was not provided.`}
-    ${'dateOfBirth'}    | ${`Field "dateOfBirth" of required type "DateTime!" was not provided.`}
-    ${'primaryCoachId'} | ${`Field "primaryCoachId" of required type "String!" was not provided.`}
-  `(`should fail to create a user since mandatory field $field is missing`, async (params) => {
-    /* eslint-enable max-len */
-    const memberParams: CreateMemberParams = generateCreateMemberParams({
-      orgId: new Types.ObjectId().toString(),
-      primaryCoachId,
-    });
-    delete memberParams[params.field];
-    await handler.mutations.createMember({
-      memberParams,
-      missingFieldError: params.error,
-    });
-  });
-
-  test.each`
-    field              | defaultValue
-    ${'sex'}           | ${defaultMemberParams.sex}
-    ${'email'}         | ${null}
-    ${'language'}      | ${defaultMemberParams.language}
-    ${'zipCode'}       | ${null}
-    ${'dischargeDate'} | ${null}
-  `(`should set default value if exists for optional field $field`, async (params) => {
-    /* eslint-enable max-len */
-    const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
-    const { id: primaryCoachId } = await handler.mutations.createUser({
-      userParams: generateCreateUserParams(),
-    });
-    const memberParams: CreateMemberParams = generateCreateMemberParams({
-      orgId,
-      primaryCoachId,
-    });
-    delete memberParams[params.field];
-
-    handler.setContextUser(memberParams.deviceId);
-    const { id } = await handler.mutations.createMember({ memberParams });
-    expect(id).not.toBeUndefined();
-
-    const member = await handler.queries.getMember();
-    expect(member[params.field]).toEqual(params.defaultValue);
-  });
-
-  test.each`
-    field         | value
-    ${'sex'}      | ${Sex.female}
-    ${'email'}    | ${faker.internet.email()}
-    ${'language'} | ${Language.es}
-    ${'zipCode'}  | ${faker.address.zipCode()}
-  `(`should set value for optional field $field`, async (params) => {
-    const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
-    const { id: primaryCoachId } = await handler.mutations.createUser({
-      userParams: generateCreateUserParams(),
-    });
-    const memberParams: CreateMemberParams = generateCreateMemberParams({
-      orgId,
-      primaryCoachId,
-    });
-    memberParams[params.field] = params.value;
-
-    handler.setContextUser(memberParams.deviceId);
-    const { id } = await handler.mutations.createMember({ memberParams });
-    expect(id).not.toBeUndefined();
-
-    const member = await handler.queries.getMember();
-    expect(member[params.field]).toEqual(params.value);
-  });
-
-  it('should set value for optional field dischargeDate', async () => {
-    const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
-    const { id: primaryCoachId } = await handler.mutations.createUser({
-      userParams: generateCreateUserParams(),
-    });
-    const memberParams: CreateMemberParams = generateCreateMemberParams({
-      orgId,
-      primaryCoachId,
-    });
-
-    memberParams.dischargeDate = faker.date.future(1);
-
-    handler.setContextUser(memberParams.deviceId);
-    const { id } = await handler.mutations.createMember({ memberParams });
-    expect(id).not.toBeUndefined();
-
-    const member = await handler.queries.getMember();
-    expect(new Date(member.dischargeDate)).toEqual(memberParams.dischargeDate);
-  });
-
-  /* eslint-disable max-len */
-  test.each`
-    input                             | error
-    ${{ phoneNumber: 123 }}           | ${{ missingFieldError: stringError }}
-    ${{ deviceId: 123 }}              | ${{ missingFieldError: stringError }}
-    ${{ firstName: 123 }}             | ${{ missingFieldError: stringError }}
-    ${{ lastName: 123 }}              | ${{ missingFieldError: stringError }}
-    ${{ dateOfBirth: 'not-valid' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
-    ${{ orgId: 123 }}                 | ${{ missingFieldError: stringError }}
-    ${{ primaryCoachId: 123 }}        | ${{ missingFieldError: stringError }}
-    ${{ usersIds: [123] }}            | ${{ missingFieldError: stringError }}
-    ${{ email: 'not-valid' }}         | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberEmailFormat)] }}
-    ${{ sex: 'not-valid' }}           | ${{ missingFieldError: 'does not exist in "Sex" enum' }}
-    ${{ language: 'not-valid' }}      | ${{ missingFieldError: 'does not exist in "Language" enum' }}
-    ${{ zipCode: 123 }}               | ${{ missingFieldError: stringError }}
-    ${{ dischargeDate: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
-  `(
-    /* eslint-enable max-len */
-    `should fail to create a member since setting $input is not a valid`,
-    async (params) => {
+  describe('createMember + getMember', () => {
+    /* eslint-disable max-len */
+    test.each`
+      field               | error
+      ${'phoneNumber'}    | ${`Field "phoneNumber" of required type "String!" was not provided.`}
+      ${'firstName'}      | ${`Field "firstName" of required type "String!" was not provided.`}
+      ${'lastName'}       | ${`Field "lastName" of required type "String!" was not provided.`}
+      ${'dateOfBirth'}    | ${`Field "dateOfBirth" of required type "DateTime!" was not provided.`}
+      ${'primaryCoachId'} | ${`Field "primaryCoachId" of required type "String!" was not provided.`}
+    `(`should fail to create a member since mandatory field $field is missing`, async (params) => {
+      /* eslint-enable max-len */
       const memberParams: CreateMemberParams = generateCreateMemberParams({
         orgId: new Types.ObjectId().toString(),
         primaryCoachId,
-        ...params.input,
       });
-
-      await handler.mutations.createMember({ memberParams, ...params.error });
-    },
-  );
-
-  test.each`
-    length           | errorString | field
-    ${minLength - 1} | ${'short'}  | ${'firstName'}
-    ${maxLength + 1} | ${'long'}   | ${'firstName'}
-    ${minLength - 1} | ${'short'}  | ${'lastName'}
-    ${maxLength + 1} | ${'long'}   | ${'lastName'}
-  `(`should fail to create a member since $field is too $errorString`, async (params) => {
-    const memberParams: CreateMemberParams = generateCreateMemberParams({
-      primaryCoachId,
-      orgId: new Types.ObjectId().toString(),
-    });
-    memberParams[params.field] = generateRandomName(params.length);
-    await handler.mutations.createMember({
-      memberParams,
-      invalidFieldsErrors: [Errors.get(ErrorType.memberMinMaxLength)],
-    });
-  });
-
-  /* eslint-disable max-len */
-  test.each`
-    field            | input                                                  | errors
-    ${'phoneNumber'} | ${{ primaryCoachId, phoneNumber: '+410' }}             | ${[Errors.get(ErrorType.memberPhoneNumber)]}
-    ${'dateOfBirth'} | ${{ primaryCoachId, dateOfBirth: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDateOfBirth)]}
-  `(
-    /* eslint-enable max-len */
-    `should fail to create a member since $field is not valid`,
-    async (params) => {
-      const memberParams: CreateMemberParams = generateCreateMemberParams({
-        orgId: new Types.ObjectId().toString(),
-        primaryCoachId,
-        ...params.input,
-      });
+      delete memberParams[params.field];
       await handler.mutations.createMember({
         memberParams,
-        invalidFieldsErrors: params.errors,
+        missingFieldError: params.error,
       });
-    },
-  );
+    });
 
-  enum TaskType {
-    goal = 'goal',
-    actionItem = 'actionItem',
-  }
+    test.each`
+      field              | defaultValue
+      ${'sex'}           | ${defaultMemberParams.sex}
+      ${'email'}         | ${null}
+      ${'language'}      | ${defaultMemberParams.language}
+      ${'zipCode'}       | ${null}
+      ${'dischargeDate'} | ${null}
+    `(`should set default value if exists for optional field $field`, async (params) => {
+      /* eslint-enable max-len */
+      const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
+      const { id: primaryCoachId } = await handler.mutations.createUser({
+        userParams: generateCreateUserParams(),
+      });
+      const memberParams: CreateMemberParams = generateCreateMemberParams({
+        orgId,
+        primaryCoachId,
+      });
+      delete memberParams[params.field];
+
+      handler.setContextUser(memberParams.deviceId);
+      const { id } = await handler.mutations.createMember({ memberParams });
+      expect(id).not.toBeUndefined();
+
+      const member = await handler.queries.getMember();
+      expect(member[params.field]).toEqual(params.defaultValue);
+    });
+
+    test.each`
+      field         | value
+      ${'sex'}      | ${Sex.female}
+      ${'email'}    | ${faker.internet.email()}
+      ${'language'} | ${Language.es}
+      ${'zipCode'}  | ${faker.address.zipCode()}
+    `(`should be able to set value for optional field $field`, async (params) => {
+      const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
+      const { id: primaryCoachId } = await handler.mutations.createUser({
+        userParams: generateCreateUserParams(),
+      });
+      const memberParams: CreateMemberParams = generateCreateMemberParams({
+        orgId,
+        primaryCoachId,
+      });
+      memberParams[params.field] = params.value;
+
+      handler.setContextUser(memberParams.deviceId);
+      const { id } = await handler.mutations.createMember({ memberParams });
+      expect(id).not.toBeUndefined();
+
+      const member = await handler.queries.getMember();
+      expect(member[params.field]).toEqual(params.value);
+    });
+
+    it('should set value for optional field dischargeDate', async () => {
+      const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
+      const { id: primaryCoachId } = await handler.mutations.createUser({
+        userParams: generateCreateUserParams(),
+      });
+      const memberParams: CreateMemberParams = generateCreateMemberParams({
+        orgId,
+        primaryCoachId,
+      });
+
+      memberParams.dischargeDate = faker.date.future(1);
+
+      handler.setContextUser(memberParams.deviceId);
+      const { id } = await handler.mutations.createMember({ memberParams });
+      expect(id).not.toBeUndefined();
+
+      const member = await handler.queries.getMember();
+      expect(new Date(member.dischargeDate)).toEqual(memberParams.dischargeDate);
+    });
+
+    /* eslint-disable max-len */
+    test.each`
+      input                             | error
+      ${{ phoneNumber: 123 }}           | ${{ missingFieldError: stringError }}
+      ${{ deviceId: 123 }}              | ${{ missingFieldError: stringError }}
+      ${{ firstName: 123 }}             | ${{ missingFieldError: stringError }}
+      ${{ lastName: 123 }}              | ${{ missingFieldError: stringError }}
+      ${{ dateOfBirth: 'not-valid' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
+      ${{ orgId: 123 }}                 | ${{ missingFieldError: stringError }}
+      ${{ primaryCoachId: 123 }}        | ${{ missingFieldError: stringError }}
+      ${{ usersIds: [123] }}            | ${{ missingFieldError: stringError }}
+      ${{ email: 'not-valid' }}         | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberEmailFormat)] }}
+      ${{ sex: 'not-valid' }}           | ${{ missingFieldError: 'does not exist in "Sex" enum' }}
+      ${{ language: 'not-valid' }}      | ${{ missingFieldError: 'does not exist in "Language" enum' }}
+      ${{ zipCode: 123 }}               | ${{ missingFieldError: stringError }}
+      ${{ dischargeDate: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
+    `(
+      /* eslint-enable max-len */
+      `should fail to create a member since setting $input is not a valid`,
+      async (params) => {
+        const memberParams: CreateMemberParams = generateCreateMemberParams({
+          orgId: new Types.ObjectId().toString(),
+          primaryCoachId,
+          ...params.input,
+        });
+
+        await handler.mutations.createMember({ memberParams, ...params.error });
+      },
+    );
+
+    test.each`
+      length           | errorString | field
+      ${minLength - 1} | ${'short'}  | ${'firstName'}
+      ${maxLength + 1} | ${'long'}   | ${'firstName'}
+      ${minLength - 1} | ${'short'}  | ${'lastName'}
+      ${maxLength + 1} | ${'long'}   | ${'lastName'}
+    `(`should fail to create a member since $field is too $errorString`, async (params) => {
+      const memberParams: CreateMemberParams = generateCreateMemberParams({
+        primaryCoachId,
+        orgId: new Types.ObjectId().toString(),
+      });
+      memberParams[params.field] = generateRandomName(params.length);
+      await handler.mutations.createMember({
+        memberParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.memberMinMaxLength)],
+      });
+    });
+
+    /* eslint-disable max-len */
+    test.each`
+      field            | input                                                  | errors
+      ${'phoneNumber'} | ${{ primaryCoachId, phoneNumber: '+410' }}             | ${[Errors.get(ErrorType.memberPhoneNumber)]}
+      ${'dateOfBirth'} | ${{ primaryCoachId, dateOfBirth: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDateOfBirth)]}
+    `(
+      /* eslint-enable max-len */
+      `should fail to create a member since $field is not valid`,
+      async (params) => {
+        const memberParams: CreateMemberParams = generateCreateMemberParams({
+          orgId: new Types.ObjectId().toString(),
+          primaryCoachId,
+          ...params.input,
+        });
+        await handler.mutations.createMember({
+          memberParams,
+          invalidFieldsErrors: params.errors,
+        });
+      },
+    );
+  });
+
+  describe('updateMember', () => {
+    /* eslint-disable max-len */
+    test.each`
+      input                             | error
+      ${{ id: 123 }}                    | ${{ missingFieldError: stringError }}
+      ${{ firstName: 123 }}             | ${{ missingFieldError: stringError }}
+      ${{ lastName: 123 }}              | ${{ missingFieldError: stringError }}
+      ${{ fellowName: 123 }}            | ${{ missingFieldError: stringError }}
+      ${{ drgDesc: 123 }}               | ${{ missingFieldError: stringError }}
+      ${{ readmissionRisk: 123 }}       | ${{ missingFieldError: stringError }}
+      ${{ phoneSecondary: 123 }}        | ${{ missingFieldError: stringError }}
+      ${{ email: 'not-valid' }}         | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberEmailFormat)] }}
+      ${{ sex: 'not-valid' }}           | ${{ missingFieldError: 'does not exist in "Sex" enum' }}
+      ${{ language: 'not-valid' }}      | ${{ missingFieldError: 'does not exist in "Language" enum' }}
+      ${{ zipCode: 123 }}               | ${{ missingFieldError: stringError }}
+      ${{ dischargeDate: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
+    `(`should fail to update a member since setting $input is not a valid`, async (params) => {
+      /* eslint-enable max-len */
+      const updateMemberParams = generateUpdateMemberParams({ ...params.input });
+
+      await handler.mutations.updateMember({ updateMemberParams, ...params.error });
+    });
+
+    /* eslint-disable max-len */
+    test.each`
+      field               | input                                    | errors
+      ${'phoneSecondary'} | ${{ phoneSecondary: '+410' }}            | ${[Errors.get(ErrorType.memberPhoneNumber)]}
+      ${'dischargeDate'}  | ${{ dischargeDate: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
+    `(
+      /* eslint-enable max-len */
+      `should fail to update a member since $field is not valid`,
+      async (params) => {
+        const updateMemberParams: UpdateMemberParams = generateUpdateMemberParams({
+          ...params.input,
+        });
+        await handler.mutations.updateMember({
+          updateMemberParams,
+          invalidFieldsErrors: params.errors,
+        });
+      },
+    );
+  });
 
   describe('goal + action items', () => {
+    enum TaskType {
+      goal = 'goal',
+      actionItem = 'actionItem',
+    }
     describe('createGoal + createActionItem', () => {
       /* eslint-disable max-len */
       test.each`

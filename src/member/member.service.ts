@@ -12,6 +12,7 @@ import {
   Member,
   MemberDocument,
   TaskState,
+  UpdateMemberParams,
   UpdateTaskStateParams,
 } from '.';
 import { cloneDeep } from 'lodash';
@@ -58,6 +59,23 @@ export class MemberService {
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.memberPhoneAlreadyExists) : ex,
       );
     }
+  }
+
+  async update(updateMemberParams: UpdateMemberParams): Promise<Member> {
+    const { id } = updateMemberParams;
+    delete updateMemberParams.id;
+
+    const result = await this.memberModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(id) },
+      { $set: updateMemberParams },
+      { new: true, rawResult: true },
+    );
+
+    if (!result.value) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
+
+    return result.value;
   }
 
   async get(deviceId: string): Promise<Member> {

@@ -136,6 +136,10 @@ export class Queries {
               state
               deadline
             }
+            fellowName
+            drgDesc
+            readmissionRisk
+            phoneSecondary
           }
         }
       `,

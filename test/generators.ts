@@ -9,6 +9,7 @@ import {
   Member,
   Sex,
   TaskState,
+  UpdateMemberParams,
   UpdateTaskStateParams,
 } from '../src/member';
 import {
@@ -118,6 +119,49 @@ export const mockGenerateMember = (): Member => {
     users: [],
     sex: defaultMemberParams.sex,
     language: defaultMemberParams.language,
+  };
+};
+
+export const generateUpdateMemberParams = ({
+  id = new Types.ObjectId().toString(),
+  firstName = faker.name.firstName(),
+  lastName = faker.name.lastName(),
+  sex = Sex.female,
+  email = generateEmail(),
+  language = Language.en,
+  zipCode = faker.address.zipCode(),
+  dischargeDate = faker.date.future(1),
+  fellowName = faker.name.firstName(),
+  drgDesc = faker.name.firstName(),
+  readmissionRisk = faker.name.firstName(),
+  phoneSecondary = generatePhoneNumber(),
+}: {
+  id?: string;
+  firstName?: string;
+  lastName?: string;
+  sex?: Sex;
+  email?: string;
+  language?: Language;
+  zipCode?: string;
+  dischargeDate?: Date;
+  fellowName?: string;
+  drgDesc?: string;
+  readmissionRisk?: string;
+  phoneSecondary?: string;
+} = {}): UpdateMemberParams => {
+  return {
+    id,
+    firstName,
+    lastName,
+    fellowName,
+    sex,
+    email,
+    language,
+    zipCode,
+    dischargeDate,
+    drgDesc,
+    readmissionRisk,
+    phoneSecondary,
   };
 };
 

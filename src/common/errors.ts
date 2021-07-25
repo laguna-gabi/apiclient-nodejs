@@ -22,6 +22,7 @@ export enum ErrorType {
   memberGoalIdNotFound = 9207,
   memberTaskDeadline = 9208,
   memberActionItemIdNotFound = 9209,
+  memberNotFound = 9210,
 
   // Module appointment errors
   appointmentIdNotFound = 9301,
@@ -66,6 +67,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberGoalIdNotFound.valueOf(), 'goal id was not found'],
   [ErrorType.memberTaskDeadline.valueOf(), `deadline ${dateInstanceFormat}`],
   [ErrorType.memberActionItemIdNotFound.valueOf(), 'action item id was not found'],
+  [ErrorType.memberNotFound.valueOf(), 'member id was not found'],
   [ErrorType.appointmentIdNotFound.valueOf(), 'appointment id was not found'],
   [ErrorType.appointmentNotBeforeDate.valueOf(), `notBefore ${dateInstanceFormat}`],
   [ErrorType.appointmentNotBeforeDateInThePast.valueOf(), 'notBefore must be in the future'],

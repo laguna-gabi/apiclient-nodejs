@@ -5,6 +5,7 @@ import {
   generateMemberLinks,
   generateNotesParams,
   generateOrgParams,
+  generateUpdateMemberParams,
 } from '../index';
 import { CreateUserParams, User, UserRole } from '../../src/user';
 import { camelCase, omit } from 'lodash';
@@ -204,6 +205,20 @@ describe('Integration tests', () => {
     handler.setContextUser(member2.deviceId);
     member2Result = await handler.queries.getMember();
     expect(member2Result.scores).toEqual(notes2.scores);
+  });
+
+  it('should update a member fields', async () => {
+    const primaryCoach = await createAndValidateUser();
+    const org = await createAndValidateOrg();
+    const member = await createAndValidateMember({ org, primaryCoach });
+
+    const updateMemberParams = generateUpdateMemberParams({ id: member.id });
+    const updatedMemberResult = await handler.mutations.updateMember({ updateMemberParams });
+
+    handler.setContextUser(member.deviceId);
+    const memberResult = await handler.queries.getMember();
+
+    expect(memberResult).toEqual(expect.objectContaining(updatedMemberResult));
   });
 
   /************************************************************************************************

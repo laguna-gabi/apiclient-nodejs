@@ -1,7 +1,12 @@
 import { camelCase } from 'lodash';
 import gql from 'graphql-tag';
 import { CreateUserParams } from '../../../src/user';
-import { CreateMemberParams, CreateTaskParams, UpdateTaskStateParams } from '../../../src/member';
+import {
+  CreateMemberParams,
+  CreateTaskParams,
+  UpdateMemberParams,
+  UpdateTaskStateParams,
+} from '../../../src/member';
 import { ApolloServerTestClient } from 'apollo-server-testing';
 import {
   Appointment,
@@ -96,6 +101,48 @@ export class Mutations {
     return (
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.createMember
+    );
+  };
+
+  updateMember = async ({
+    updateMemberParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    updateMemberParams: UpdateMemberParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<void> => {
+    const result = await this.apolloClient.mutate({
+      variables: { updateMemberParams: updateMemberParams },
+      mutation: gql`
+        mutation UpdateMember($updateMemberParams: UpdateMemberParams!) {
+          updateMember(updateMemberParams: $updateMemberParams) {
+            id
+            phoneNumber
+            deviceId
+            firstName
+            lastName
+            dateOfBirth
+            dischargeNotesLink
+            dischargeInstructionsLink
+            sex
+            email
+            language
+            zipCode
+            dischargeDate
+            fellowName
+            drgDesc
+            readmissionRisk
+            phoneSecondary
+          }
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.updateMember
     );
   };
 

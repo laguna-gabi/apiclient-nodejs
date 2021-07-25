@@ -6,6 +6,7 @@ import {
   MemberService,
   UpdateTaskStateParams,
   TaskState,
+  UpdateMemberParams,
 } from '.';
 import { Identifier } from '../common';
 import { camelCase, remove } from 'lodash';
@@ -44,6 +45,13 @@ export class MemberResolver {
     const authorization = jwt.decode(authorizationHeader);
 
     return authorization?.username ? this.memberService.get(authorization?.username) : null;
+  }
+
+  @Mutation(() => Member)
+  async updateMember(
+    @Args(camelCase(UpdateMemberParams.name)) updateMemberParams: UpdateMemberParams,
+  ) {
+    return this.memberService.update(updateMemberParams);
   }
 
   /*************************************************************************************************

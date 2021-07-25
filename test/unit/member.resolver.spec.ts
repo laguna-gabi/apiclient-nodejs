@@ -4,6 +4,7 @@ import {
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateMemberLinks,
+  generateUpdateMemberParams,
   generateUpdateTaskStateParams,
   mockGenerateMember,
 } from '../index';
@@ -97,6 +98,27 @@ describe('MemberResolver', () => {
         },
         ...links,
       });
+    });
+  });
+
+  describe('updateMember', () => {
+    let spyOnServiceUpdate;
+    beforeEach(() => {
+      spyOnServiceUpdate = jest.spyOn(service, 'update');
+    });
+
+    afterEach(() => {
+      spyOnServiceUpdate.mockReset();
+    });
+
+    it('should update a member', async () => {
+      const updateMemberParams = generateUpdateMemberParams();
+      spyOnServiceUpdate.mockImplementationOnce(async () => updateMemberParams);
+
+      await resolver.updateMember(updateMemberParams);
+
+      expect(spyOnServiceUpdate).toBeCalledTimes(1);
+      expect(spyOnServiceUpdate).toBeCalledWith(updateMemberParams);
     });
   });
 
@@ -222,7 +244,7 @@ describe('MemberResolver', () => {
     });
 
     it('should create an action item', async () => {
-      spyOnServiceUpdateActionItemState.mockImplementationOnce(async () => undefined);
+      spyOnServiceUpdateActionItemState.mockImplementationOnce(async () => mockGenerateMember());
 
       const updateActionItemState = generateUpdateTaskStateParams();
       await resolver.updateActionItemState(updateActionItemState);

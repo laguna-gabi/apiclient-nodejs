@@ -10,6 +10,7 @@ import {
   generateCreateUserParams,
   generateMemberLinks,
   generateOrgParams,
+  generateUpdateMemberParams,
   generateUpdateTaskStateParams,
   Links,
 } from '../index';
@@ -23,9 +24,11 @@ import {
   MemberService,
   Sex,
   TaskState,
+  UpdateMemberParams,
 } from '../../src/member';
 import { Errors, ErrorType } from '../../src/common';
 import { User, UserDto, UserRole } from '../../src/user';
+import * as faker from 'faker';
 import { address, datatype, date, internet } from 'faker';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppointmentModule } from '../../src/appointment';
@@ -201,6 +204,46 @@ describe('MemberService', () => {
         Errors.get(ErrorType.memberPhoneAlreadyExists),
       );
     });
+  });
+
+  describe('update', () => {
+    it('should throw when trying to update non existing member', async () => {
+      await expect(
+        service.update({ id: new Types.ObjectId().toString(), language: Language.es }),
+      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+    });
+
+    it('should be able to update partial fields', async () => {
+      await updateMember({
+        language: Language.es,
+        fellowName: faker.name.firstName(),
+        readmissionRisk: faker.lorem.words(3),
+      });
+    });
+
+    it('should be able to receive only id in update', async () => {
+      await updateMember();
+    });
+
+    it('should handle updating all fields', async () => {
+      const params = generateUpdateMemberParams();
+      delete params.id;
+      await updateMember(params);
+    });
+
+    const updateMember = async (updateMemberParams?: Omit<UpdateMemberParams, 'id'>) => {
+      const { id } = await createInitialRequirements();
+      const beforeObject: any = await memberModel.findById(id);
+
+      await service.update({ id, ...updateMemberParams });
+      const afterObject: any = await memberModel.findById(id);
+
+      expect(afterObject.toJSON()).toEqual({
+        ...beforeObject.toJSON(),
+        ...updateMemberParams,
+        updatedAt: afterObject['updatedAt'],
+      });
+    };
   });
 
   const createInitialRequirements = async (
