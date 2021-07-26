@@ -12,7 +12,6 @@ import {
   generateOrgParams,
   generateUpdateMemberParams,
   generateUpdateTaskStateParams,
-  Links,
 } from '../index';
 import {
   CreateMemberParams,
@@ -117,13 +116,26 @@ describe('MemberService', () => {
 
   describe('insert', () => {
     it('should insert a member without optional params + validate all fields', async () => {
-      const { id, links, createMemberParams, primaryCoachId, orgId } =
-        await createInitialRequirements();
+      const primaryCoach = await modelUser.create(generateCreateUserParams());
+      const org = await modelOrg.create(generateOrgParams());
+
+      const createMemberParams = generateCreateMemberParams({
+        orgId: org._id,
+        primaryCoachId: primaryCoach._id,
+      });
+      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
+      const { id } = await service.insert({ createMemberParams, ...links });
 
       expect(id).not.toBeUndefined();
 
       const createdMember: any = await memberModel.findById(id);
-      compareMembers({ createdMember, createMemberParams, links, primaryCoachId, orgId });
+      compareMembers({
+        createdMember,
+        createMemberParams,
+        links,
+        primaryCoachId: primaryCoach._id,
+        orgId: org._id,
+      });
       expect(createdMember.sex).toEqual(defaultMemberParams.sex);
       expect(createdMember.email).toBeUndefined();
       expect(createdMember.language).toEqual(defaultMemberParams.language);
@@ -132,19 +144,31 @@ describe('MemberService', () => {
     });
 
     it('should insert a member with all params + validate all insert fields', async () => {
-      const { id, links, createMemberParams, primaryCoachId, orgId } =
-        await createInitialRequirements({
-          sex: Sex.female,
-          email: internet.email(),
-          language: Language.es,
-          zipCode: address.zipCode(),
-          dischargeDate: date.future(1),
-        });
+      const primaryCoach = await modelUser.create(generateCreateUserParams());
+      const org = await modelOrg.create(generateOrgParams());
+
+      const createMemberParams = generateCreateMemberParams({
+        orgId: org._id,
+        primaryCoachId: primaryCoach._id,
+        sex: Sex.female,
+        email: internet.email(),
+        language: Language.es,
+        zipCode: address.zipCode(),
+        dischargeDate: date.future(1),
+      });
+      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
+      const { id } = await service.insert({ createMemberParams, ...links });
 
       expect(id).not.toBeUndefined();
 
       const createdMember: any = await memberModel.findById(id);
-      compareMembers({ createdMember, createMemberParams, links, primaryCoachId, orgId });
+      compareMembers({
+        createdMember,
+        createMemberParams,
+        links,
+        primaryCoachId: primaryCoach._id,
+        orgId: org._id,
+      });
       expect(createdMember.sex).toEqual(createMemberParams.sex);
       expect(createdMember.email).toEqual(createMemberParams.email);
       expect(createdMember.language).toEqual(createMemberParams.language);
@@ -171,7 +195,15 @@ describe('MemberService', () => {
     };
 
     it('should check that createdAt and updatedAt exists in the collection', async () => {
-      const { id } = await createInitialRequirements();
+      const primaryCoach = await modelUser.create(generateCreateUserParams());
+      const org = await modelOrg.create(generateOrgParams());
+
+      const createMemberParams = generateCreateMemberParams({
+        orgId: org._id,
+        primaryCoachId: primaryCoach._id,
+      });
+      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
+      const { id } = await service.insert({ createMemberParams, ...links });
 
       const createdMember: any = await memberModel.findById(id);
       expect(createdMember.createdAt).toEqual(expect.any(Date));
@@ -231,7 +263,16 @@ describe('MemberService', () => {
     });
 
     const updateMember = async (updateMemberParams?: Omit<UpdateMemberParams, 'id'>) => {
-      const { id } = await createInitialRequirements();
+      const primaryCoach = await modelUser.create(generateCreateUserParams());
+      const org = await modelOrg.create(generateOrgParams());
+
+      const createMemberParams = generateCreateMemberParams({
+        orgId: org._id,
+        primaryCoachId: primaryCoach._id,
+      });
+      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
+      const { id } = await service.insert({ createMemberParams, ...links });
+
       const beforeObject: any = await memberModel.findById(id);
 
       await service.update({ id, ...updateMemberParams });
@@ -244,37 +285,6 @@ describe('MemberService', () => {
       });
     };
   });
-
-  const createInitialRequirements = async (
-    createMembersExtraInput?,
-  ): Promise<{
-    id: string;
-    links: Links;
-    createMemberParams: CreateMemberParams;
-    primaryCoachId: string;
-    orgId: string;
-  }> => {
-    const primaryCoachParams = generateCreateUserParams();
-    const primaryCoach = await modelUser.create(primaryCoachParams);
-    const orgParams = generateOrgParams();
-    const org = await modelOrg.create(orgParams);
-
-    const createMemberParams = generateCreateMemberParams({
-      orgId: org._id,
-      primaryCoachId: primaryCoach._id,
-      ...createMembersExtraInput,
-    });
-    const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
-    const result = await service.insert({ createMemberParams, ...links });
-
-    return {
-      id: result.id,
-      links,
-      createMemberParams,
-      primaryCoachId: primaryCoach._id,
-      orgId: org._id,
-    };
-  };
 
   describe('insertGoal', () => {
     it('should insert a goal', async () => {
