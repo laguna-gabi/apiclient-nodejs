@@ -296,6 +296,7 @@ describe('Integration tests', () => {
     expect(member.language).toEqual(defaultMemberParams.language);
     expect(member.zipcode).toBeUndefined();
     expect(member.dischargeDate).toBeNull();
+    expect(new Date(member.createdAt)).toEqual(expect.any(Date));
 
     return member;
   };

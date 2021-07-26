@@ -139,6 +139,7 @@ export const mockGenerateMember = (): Member => {
     users: [],
     sex: defaultMemberParams.sex,
     language: defaultMemberParams.language,
+    createdAt: faker.date.past(1),
   };
 };
 

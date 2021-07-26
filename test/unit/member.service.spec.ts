@@ -192,6 +192,7 @@ describe('MemberService', () => {
       expect(createdMember.dateOfBirth).toEqual(createMemberParams.dateOfBirth);
       expect(createdMember.primaryCoach).toEqual(primaryCoachId);
       expect(createdMember.org).toEqual(orgId);
+      expect(createdMember.createdAt).toEqual(expect.any(Date));
     };
 
     it('should check that createdAt and updatedAt exists in the collection', async () => {

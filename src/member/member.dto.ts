@@ -228,6 +228,10 @@ export class Member extends Identifier {
     message: Errors.get(ErrorType.memberPhoneNumber),
   })
   phoneSecondary?: string;
+
+  @Prop()
+  @Field(() => Date)
+  createdAt: Date;
 }
 
 /**************************************************************************************************

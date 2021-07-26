@@ -152,6 +152,7 @@ export class Queries {
             drgDesc
             readmissionRisk
             phoneSecondary
+            createdAt
           }
         }
       `,
