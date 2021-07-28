@@ -38,7 +38,7 @@ export class Queries {
     return resultGetUser.data.getUser;
   };
 
-  getMember = async () => {
+  getMember = async ({ invalidFieldsError }: { invalidFieldsError?: string } = {}) => {
     const resultGetMember = await this.apolloClient.query({
       query: gql`
         query getMember {
@@ -158,6 +158,7 @@ export class Queries {
       `,
     });
 
+    invalidFieldsError && expect(invalidFieldsError).toEqual(resultGetMember.errors[0].message);
     return resultGetMember.data.getMember;
   };
 

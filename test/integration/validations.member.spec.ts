@@ -194,6 +194,13 @@ describe('Validations - member', () => {
         });
       },
     );
+
+    it('should throw error on non existing member', async () => {
+      handler.setContextUser('not-valid');
+      await handler.queries.getMember({
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+      });
+    });
   });
 
   describe('updateMember', () => {

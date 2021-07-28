@@ -82,7 +82,7 @@ export class MemberService {
   async get(deviceId: string): Promise<Member> {
     const member = await this.memberModel.findOne({ deviceId }, { _id: 1 });
     if (!member) {
-      return null;
+      throw new Error(Errors.get(ErrorType.memberNotFound));
     }
 
     const subPopulate = {

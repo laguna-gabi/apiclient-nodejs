@@ -9,7 +9,7 @@ import {
   UpdateMemberParams,
   MemberSummary,
 } from '.';
-import { Identifier } from '../common';
+import { Errors, ErrorType, Identifier } from '../common';
 import { camelCase, remove } from 'lodash';
 import * as jwt from 'jsonwebtoken';
 
@@ -39,13 +39,8 @@ export class MemberResolver {
 
   @Query(() => Member, { nullable: true })
   async getMember(@Context() context) {
-    const authorizationHeader = context.req.headers.authorization.replace(
-      this.authenticationPrefix,
-      '',
-    );
-    const authorization = jwt.decode(authorizationHeader);
-
-    return authorization?.username ? this.memberService.get(authorization?.username) : null;
+    const deviceId = this.extractDeviceId(context);
+    return this.memberService.get(deviceId);
   }
 
   @Mutation(() => Member)
@@ -101,5 +96,24 @@ export class MemberResolver {
     updateTaskStateParams: UpdateTaskStateParams,
   ) {
     return this.memberService.updateActionItemState(updateTaskStateParams);
+  }
+
+  /*************************************************************************************************
+   ******************************************** Helpers ********************************************
+   ************************************************************************************************/
+
+  private extractDeviceId(@Context() context) {
+    const authorizationHeader = context.req?.headers.authorization.replace(
+      this.authenticationPrefix,
+      '',
+    );
+
+    const authorization = jwt.decode(authorizationHeader);
+
+    if (!authorization?.username) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
+
+    return authorization.username;
   }
 }

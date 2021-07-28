@@ -12,6 +12,7 @@ import { DbModule } from '../../src/db/db.module';
 import { MemberModule, MemberResolver, MemberService, TaskState } from '../../src/member';
 import { Types } from 'mongoose';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { Errors, ErrorType } from '../../src/common';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
@@ -149,14 +150,14 @@ describe('MemberResolver', () => {
       expect(result).toEqual(member);
     });
 
-    it('should fetch empty on a non valid member', async () => {
+    it('should throw exception on a non valid member', async () => {
       spyOnServiceGet.mockImplementationOnce(async () => null);
 
-      const result = await resolver.getMember({
-        req: { headers: { authorization: 'not-valid' } },
-      });
-
-      expect(result).toBeNull();
+      await expect(
+        resolver.getMember({
+          req: { headers: { authorization: 'not-valid' } },
+        }),
+      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
     });
   });
 

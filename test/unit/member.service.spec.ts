@@ -59,9 +59,10 @@ describe('MemberService', () => {
   });
 
   describe('get', () => {
-    it('should return null for non existing deviceId of a member', async () => {
-      const result = await service.get(datatype.uuid());
-      expect(result).toBeNull();
+    it('should throw error on a non existing deviceId of a member', async () => {
+      await expect(service.get(datatype.uuid())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
     });
 
     it('should return member and his/her users for an existing member', async () => {
