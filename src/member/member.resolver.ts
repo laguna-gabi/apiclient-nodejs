@@ -7,6 +7,7 @@ import {
   UpdateTaskStateParams,
   TaskState,
   UpdateMemberParams,
+  MemberSummary,
 } from '.';
 import { Identifier } from '../common';
 import { camelCase, remove } from 'lodash';
@@ -52,6 +53,11 @@ export class MemberResolver {
     @Args(camelCase(UpdateMemberParams.name)) updateMemberParams: UpdateMemberParams,
   ) {
     return this.memberService.update(updateMemberParams);
+  }
+
+  @Query(() => [MemberSummary])
+  async getMembers(@Args('orgId', { type: () => String, nullable: true }) orgId?: string) {
+    return this.memberService.getByOrg(orgId);
   }
 
   /*************************************************************************************************

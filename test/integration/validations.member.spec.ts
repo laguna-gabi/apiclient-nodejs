@@ -244,6 +244,7 @@ describe('Validations - member', () => {
       goal = 'goal',
       actionItem = 'actionItem',
     }
+
     describe('createGoal + createActionItem', () => {
       /* eslint-disable max-len */
       test.each`

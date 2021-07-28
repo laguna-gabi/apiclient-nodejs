@@ -1,15 +1,9 @@
-import {
-  generateCreateMemberParams,
-  generateCreateUserParams,
-  generateOrgParams,
-  generateRandomName,
-} from '../index';
+import { generateCreateUserParams, generateRandomName } from '../index';
 import { CreateUserParams, defaultUserParams } from '../../src/user';
 import * as config from 'config';
 import * as faker from 'faker';
 import { Errors, ErrorType } from '../../src/common';
 import { Handler } from './aux/handler';
-import { CreateMemberParams, defaultMemberParams } from '../../src/member';
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;

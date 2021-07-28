@@ -13,7 +13,6 @@ import { compareUsers, dbConnect, dbDisconnect, generateCreateUserParams } from 
 import { Errors, ErrorType } from '../../src/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppointmentModule } from '../../src/appointment';
-import { defaultMemberParams } from '../../src/member';
 
 describe('UserService', () => {
   let module: TestingModule;

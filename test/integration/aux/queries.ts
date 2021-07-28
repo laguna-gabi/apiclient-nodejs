@@ -161,6 +161,38 @@ export class Queries {
     return resultGetMember.data.getMember;
   };
 
+  getMembers = async (orgId?: string) => {
+    const resultGetMembers = await this.apolloClient.query({
+      variables: { orgId },
+      query: gql`
+        query getMembers($orgId: String) {
+          getMembers(orgId: $orgId) {
+            id
+            name
+            phoneNumber
+            dischargeDate
+            adherence
+            wellbeing
+            createdAt
+            goalsCount
+            actionItemsCount
+            primaryCoach {
+              id
+              firstName
+              lastName
+              avatar
+              createdAt
+            }
+            nextAppointment
+            appointmentsCount
+          }
+        }
+      `,
+    });
+
+    return resultGetMembers.data.getMembers;
+  };
+
   getAppointment = async (id: string) => {
     const result = await this.apolloClient.query({
       variables: { id },

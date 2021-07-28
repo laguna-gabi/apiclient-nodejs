@@ -10,6 +10,7 @@ import { ActionItem, Goal } from '.';
 import { Scores } from '../appointment';
 
 const validatorsConfig = config.get('graphql.validators');
+
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
@@ -18,6 +19,7 @@ export enum Sex {
   female = 'female',
   other = 'other',
 }
+
 registerEnumType(Sex, { name: 'Sex' });
 
 export const defaultMemberParams = {
@@ -155,7 +157,7 @@ export class Member extends Identifier {
   @Field(() => Date)
   dateOfBirth: Date;
 
-  @Prop({ type: Types.ObjectId, ref: Org.name })
+  @Prop({ type: Types.ObjectId, ref: Org.name, index: true })
   @Field(() => Org)
   org: Org;
 
@@ -232,6 +234,42 @@ export class Member extends Identifier {
   @Prop()
   @Field(() => Date)
   createdAt: Date;
+}
+
+@ObjectType()
+export class MemberSummary extends Identifier {
+  @Field(() => String)
+  name: string;
+
+  @Field(() => String)
+  phoneNumber: string;
+
+  @Field(() => Date, { nullable: true })
+  dischargeDate?: Date;
+
+  @Field(() => Number)
+  adherence: number;
+
+  @Field(() => Number)
+  wellbeing: number;
+
+  @Field(() => Date)
+  createdAt: Date;
+
+  @Field(() => Number)
+  goalsCount: number;
+
+  @Field(() => Number)
+  actionItemsCount: number;
+
+  @Field(() => User)
+  primaryCoach: User;
+
+  @Field(() => Date, { nullable: true })
+  nextAppointment?: Date;
+
+  @Field(() => Number)
+  appointmentsCount: number;
 }
 
 /**************************************************************************************************

@@ -160,6 +160,39 @@ describe('MemberResolver', () => {
     });
   });
 
+  describe('getMembers', () => {
+    let spyOnServiceGet;
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'getByOrg');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+    });
+
+    it('should get members for a given orgId', async () => {
+      const member = mockGenerateMember();
+      spyOnServiceGet.mockImplementationOnce(async () => [member]);
+
+      const result = await resolver.getMembers(member.org.id);
+
+      expect(spyOnServiceGet).toBeCalledTimes(1);
+      expect(spyOnServiceGet).toBeCalledWith(member.org.id);
+      expect(result).toEqual([member]);
+    });
+
+    it('should fetch all members without filtering orgId', async () => {
+      const members = [mockGenerateMember(), mockGenerateMember()];
+      spyOnServiceGet.mockImplementationOnce(async () => members);
+
+      const result = await resolver.getMembers();
+
+      expect(spyOnServiceGet).toBeCalledTimes(1);
+      expect(spyOnServiceGet).toBeCalledWith(undefined);
+      expect(result).toEqual(members);
+    });
+  });
+
   describe('createGoal', () => {
     let spyOnServiceInsertGoal;
     beforeEach(() => {

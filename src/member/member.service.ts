@@ -11,13 +11,14 @@ import {
   GoalDocument,
   Member,
   MemberDocument,
+  MemberSummary,
   TaskState,
   UpdateMemberParams,
   UpdateTaskStateParams,
 } from '.';
 import { cloneDeep } from 'lodash';
 import { OnEvent } from '@nestjs/event-emitter';
-import { Scores } from '../appointment';
+import { AppointmentStatus, Scores } from '../appointment';
 
 @Injectable()
 export class MemberService {
@@ -99,6 +100,42 @@ export class MemberService {
       .populate({ path: 'actionItems', options })
       .populate({ path: 'primaryCoach', populate: subPopulate })
       .populate({ path: 'users', populate: subPopulate });
+  }
+
+  async getByOrg(orgId?: string): Promise<MemberSummary[]> {
+    const filter = orgId ? { org: new Types.ObjectId(orgId) } : {};
+
+    let result = await this.memberModel.aggregate([
+      { $match: filter },
+      {
+        $project: {
+          id: '$_id',
+          name: { $concat: ['$firstName', ' ', '$lastName'] },
+          phoneNumber: '$phoneNumber',
+          dischargeDate: { $ifNull: ['$dischargeDate', undefined] },
+          adherence: { $ifNull: ['$scores.adherence', 0] },
+          wellbeing: { $ifNull: ['$scores.wellbeing', 0] },
+          createdAt: '$createdAt',
+          goalsCount: { $size: '$goals' },
+          actionItemsCount: { $size: '$actionItems' },
+          primaryCoach: '$primaryCoach',
+          users: '$users',
+        },
+      },
+    ]);
+
+    result = await this.memberModel.populate(result, [
+      { path: 'primaryCoach', options: { populate: 'appointments' } },
+      { path: 'users', options: { populate: 'appointments' } },
+    ]);
+
+    return result.map((item) => {
+      const { appointmentsCount, nextAppointment } = this.calculateAppointments(item);
+      delete item.users;
+      delete item._id;
+
+      return { ...item, appointmentsCount, nextAppointment };
+    });
   }
 
   /*************************************************************************************************
@@ -185,4 +222,28 @@ export class MemberService {
       throw new Error(Errors.get(ErrorType.memberActionItemIdNotFound));
     }
   }
+
+  /*************************************************************************************************
+   ******************************************** Helpers ********************************************
+   ************************************************************************************************/
+  private calculateAppointments = (
+    member: Member,
+  ): { appointmentsCount: number; nextAppointment: Date } => {
+    const allAppointments = member.users
+      .map((user) => user.appointments)
+      .reduce((acc = [], current) => acc.concat(current), [])
+      .concat(member.primaryCoach?.appointments);
+
+    const nextAppointment = allAppointments
+      .filter(
+        (appointment) =>
+          appointment?.status === AppointmentStatus.scheduled &&
+          appointment?.start.getTime() >= Date.now(),
+      )
+      .sort((appointment1, appointment2) =>
+        appointment1.start.getTime() > appointment2.start.getTime() ? 1 : -1,
+      )[0]?.start;
+
+    return { appointmentsCount: allAppointments.length, nextAppointment };
+  };
 }

@@ -24,7 +24,7 @@ import {
   TaskState,
   UpdateMemberParams,
 } from '../../src/member';
-import { Errors, ErrorType, Language } from '../../src/common';
+import { Errors, ErrorType, Identifier, Language } from '../../src/common';
 import { User, UserDto, UserRole } from '../../src/user';
 import * as faker from 'faker';
 import { address, datatype, date, internet } from 'faker';
@@ -112,6 +112,138 @@ describe('MemberService', () => {
       compareUsers(result.users[0], user);
       compareUsers(result.users[1], nurse);
     });
+  });
+
+  describe('getMembers', () => {
+    it('should return empty list for non existing orgId', async () => {
+      const result = await service.getByOrg(new Types.ObjectId().toString());
+      expect(result).toEqual([]);
+    });
+
+    it('should return only 2 members which are within an orgId', async () => {
+      const { _id: primaryCoachId } = await modelUser.create(generateCreateUserParams());
+      const { _id: orgId1 } = await modelOrg.create(generateOrgParams());
+      const { _id: orgId2 } = await modelOrg.create(generateOrgParams());
+
+      const { id: memberId1a } = await generateBasicMember({ primaryCoachId, orgId: orgId1 });
+      const { id: memberId1b } = await generateBasicMember({ primaryCoachId, orgId: orgId1 });
+      await generateBasicMember({ primaryCoachId, orgId: orgId2 });
+
+      const result = await service.getByOrg(orgId1);
+      expect(result.length).toEqual(2);
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: memberId1a }),
+          expect.objectContaining({ id: memberId1b }),
+        ]),
+      );
+    });
+
+    it('should return all members on missing orgId input', async () => {
+      const { _id: primaryCoachId } = await modelUser.create(generateCreateUserParams());
+      const { _id: orgId1 } = await modelOrg.create(generateOrgParams());
+      const { _id: orgId2 } = await modelOrg.create(generateOrgParams());
+
+      const { id: memberId1a } = await generateBasicMember({ primaryCoachId, orgId: orgId1 });
+      const { id: memberId1b } = await generateBasicMember({ primaryCoachId, orgId: orgId1 });
+      const { id: memberId2 } = await generateBasicMember({ primaryCoachId, orgId: orgId2 });
+
+      const result = await service.getByOrg();
+      expect(result.length).toBeGreaterThan(3);
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: memberId1a }),
+          expect.objectContaining({ id: memberId1b }),
+          expect.objectContaining({ id: memberId2 }),
+        ]),
+      );
+    });
+
+    it('should handle member with default values', async () => {
+      const { _id: primaryCoachId } = await modelUser.create(generateCreateUserParams());
+      const { _id: orgId } = await modelOrg.create(generateOrgParams());
+
+      const deviceId = datatype.uuid();
+      const { id: memberId } = await generateBasicMember({ primaryCoachId, orgId, deviceId });
+
+      const result = await service.getByOrg(orgId);
+      const member = await service.get(deviceId);
+
+      expect(result.length).toEqual(1);
+      expect(result[0]).toEqual(
+        expect.objectContaining({
+          id: memberId,
+          name: `${member.firstName} ${member.lastName}`,
+          phoneNumber: member.phoneNumber,
+          dischargeDate: null,
+          adherence: 0,
+          wellbeing: 0,
+          createdAt: member.createdAt,
+          goalsCount: 0,
+          actionItemsCount: 0,
+          primaryCoach: expect.objectContaining({ _id: primaryCoachId }),
+          nextAppointment: undefined,
+          appointmentsCount: 0,
+        }),
+      );
+    });
+
+    it('should handle member with all values', async () => {
+      const { _id: primaryCoachId } = await modelUser.create(generateCreateUserParams());
+      const { _id: orgId } = await modelOrg.create(generateOrgParams());
+
+      const deviceId = datatype.uuid();
+      const dischargeDate = date.future(1);
+      const createMemberParams = generateCreateMemberParams({
+        primaryCoachId,
+        orgId,
+        deviceId,
+        dischargeDate,
+      });
+      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
+
+      const { id: memberId } = await service.insert({ createMemberParams, ...links });
+      await service.insertGoal({
+        createTaskParams: generateCreateTaskParams({ memberId }),
+        state: TaskState.pending,
+      });
+      await service.insertActionItem({
+        createTaskParams: generateCreateTaskParams({ memberId }),
+        state: TaskState.pending,
+      });
+      await service.insertActionItem({
+        createTaskParams: generateCreateTaskParams({ memberId }),
+        state: TaskState.pending,
+      });
+
+      const result = await service.getByOrg(orgId);
+      const member = await service.get(deviceId);
+
+      expect(result.length).toEqual(1);
+      expect(result[0]).toEqual(
+        expect.objectContaining({
+          id: memberId,
+          name: `${member.firstName} ${member.lastName}`,
+          phoneNumber: member.phoneNumber,
+          dischargeDate: member.dischargeDate,
+          adherence: 0,
+          wellbeing: 0,
+          createdAt: member.createdAt,
+          goalsCount: 1,
+          actionItemsCount: 2,
+          primaryCoach: expect.objectContaining({ _id: primaryCoachId }),
+          nextAppointment: undefined,
+          appointmentsCount: 0,
+        }),
+      );
+    });
+
+    const generateBasicMember = async (createMemberParamsInput?): Promise<Identifier> => {
+      const createMemberParams = generateCreateMemberParams(createMemberParamsInput);
+      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
+
+      return service.insert({ createMemberParams, ...links });
+    };
   });
 
   describe('insert', () => {
