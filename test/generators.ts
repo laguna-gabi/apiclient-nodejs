@@ -21,6 +21,7 @@ import {
 import { CreateOrgParams, OrgType } from '../src/org';
 import { Links } from '.';
 import { Language } from '../src/common';
+import { lookup } from 'zipcode-to-timezone';
 
 export const generateCreateUserParams = ({
   roles = [UserRole.coach],
@@ -88,7 +89,7 @@ export const generateCreateMemberParams = ({
   sex,
   email,
   language,
-  zipCode,
+  zipCode = generateZipCode(),
   dischargeDate,
 }: {
   phoneNumber?: string;
@@ -150,7 +151,7 @@ export const generateUpdateMemberParams = ({
   sex = Sex.female,
   email = generateEmail(),
   language = Language.en,
-  zipCode = faker.address.zipCode(),
+  zipCode = generateZipCode(),
   dischargeDate = faker.date.future(1),
   fellowName = faker.name.firstName(),
   drgDesc = faker.name.firstName(),
@@ -284,6 +285,21 @@ export const generateOrgParams = ({
 
 export const generateRandomName = (length: number): string => {
   return faker.lorem.words(length).substr(0, length);
+};
+
+export const generateZipCode = (): string => {
+  while (true) {
+    const zipCode = faker.address.zipCode('#####');
+    /**
+     * On occasions, faker generates invalid zipcodes. we'll try to generate
+     * timezone, if it worked, we'll return the zipCode and exit the loop
+     * Usually this works in the 1st time, so rarely we'll do it twice.
+     */
+    const timeZone = lookup(zipCode);
+    if (timeZone) {
+      return zipCode;
+    }
+  }
 };
 
 const generateEmail = () => {

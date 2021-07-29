@@ -135,6 +135,7 @@ export class Queries {
             email
             language
             zipCode
+            utcDelta
             dischargeDate
             goals {
               id

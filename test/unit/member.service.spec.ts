@@ -12,6 +12,7 @@ import {
   generateOrgParams,
   generateUpdateMemberParams,
   generateUpdateTaskStateParams,
+  generateZipCode,
 } from '../index';
 import {
   CreateMemberParams,
@@ -27,7 +28,7 @@ import {
 import { Errors, ErrorType, Identifier, Language } from '../../src/common';
 import { User, UserDto, UserRole } from '../../src/user';
 import * as faker from 'faker';
-import { address, datatype, date, internet } from 'faker';
+import { datatype, date, internet } from 'faker';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppointmentModule } from '../../src/appointment';
 import { Org, OrgDto } from '../../src/org';
@@ -256,6 +257,7 @@ describe('MemberService', () => {
         orgId: org._id,
         primaryCoachId: primaryCoach._id,
       });
+      createMemberParams.zipCode = undefined;
       const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
       const { id } = await service.insert({ createMemberParams, ...links });
 
@@ -286,7 +288,7 @@ describe('MemberService', () => {
         sex: Sex.female,
         email: internet.email(),
         language: Language.es,
-        zipCode: address.zipCode(),
+        zipCode: generateZipCode(),
         dischargeDate: date.future(1),
       });
       const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);

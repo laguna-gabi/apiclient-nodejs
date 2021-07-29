@@ -234,6 +234,9 @@ export class Member extends Identifier {
   @Prop()
   @Field(() => Date)
   createdAt: Date;
+
+  @Field(() => Number, { nullable: true })
+  utcDelta?: number;
 }
 
 @ObjectType()

@@ -6,6 +6,7 @@ import {
   generateRandomName,
   generateUpdateMemberParams,
   generateUpdateTaskStateParams,
+  generateZipCode,
 } from '../index';
 import * as config from 'config';
 import * as faker from 'faker';
@@ -86,7 +87,7 @@ describe('Validations - member', () => {
       ${'sex'}      | ${Sex.female}
       ${'email'}    | ${faker.internet.email()}
       ${'language'} | ${Language.es}
-      ${'zipCode'}  | ${faker.address.zipCode()}
+      ${'zipCode'}  | ${generateZipCode()}
     `(`should be able to set value for optional field $field`, async (params) => {
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
       const { id: primaryCoachId } = await handler.mutations.createUser({

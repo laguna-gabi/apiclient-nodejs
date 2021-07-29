@@ -17,7 +17,7 @@ import { AppointmentsIntegrationActions } from './appointments';
 
 export class Creators {
   constructor(
-    private readonly handler: Handler,
+    readonly handler: Handler,
     private readonly appointmentsActions: AppointmentsIntegrationActions,
   ) {}
 

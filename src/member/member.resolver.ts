@@ -12,6 +12,9 @@ import {
 import { Errors, ErrorType, Identifier } from '../common';
 import { camelCase, remove } from 'lodash';
 import * as jwt from 'jsonwebtoken';
+import { getTimezoneOffset } from 'date-fns-tz';
+import { millisecondsInHour } from 'date-fns';
+import { lookup } from 'zipcode-to-timezone';
 
 @Resolver(() => Member)
 export class MemberResolver {
@@ -40,7 +43,9 @@ export class MemberResolver {
   @Query(() => Member, { nullable: true })
   async getMember(@Context() context) {
     const deviceId = this.extractDeviceId(context);
-    return this.memberService.get(deviceId);
+    const member = await this.memberService.get(deviceId);
+    member.utcDelta = this.getTimezoneDeltaFromZipcode(member.zipCode);
+    return member;
   }
 
   @Mutation(() => Member)
@@ -115,5 +120,12 @@ export class MemberResolver {
     }
 
     return authorization.username;
+  }
+
+  private getTimezoneDeltaFromZipcode(zipCode?: string): number | undefined {
+    if (zipCode) {
+      const timeZone = lookup(zipCode);
+      return getTimezoneOffset(timeZone) / millisecondsInHour;
+    }
   }
 }

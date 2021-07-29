@@ -1,4 +1,8 @@
-import { generateNotesParams, generateUpdateMemberParams } from '../index';
+import {
+  generateCreateMemberParams,
+  generateNotesParams,
+  generateUpdateMemberParams,
+} from '../index';
 import { UserRole } from '../../src/user';
 import { AppointmentStatus } from '../../src/appointment';
 import { Handler } from './aux/handler';
@@ -19,6 +23,11 @@ describe('Integration tests: all', () => {
 
   afterAll(async () => {
     await handler.afterAll();
+  });
+
+  it('should not fail if member is not found', async () => {
+    const member = await creators.handler.queries.getMember();
+    expect(member).toBeNull();
   });
 
   it('should be able to call all gql handler.mutations and handler.queries', async () => {
@@ -211,6 +220,39 @@ describe('Integration tests: all', () => {
     const memberResult = await handler.queries.getMember();
 
     expect(memberResult).toEqual(expect.objectContaining(updatedMemberResult));
+  });
+
+  it('should return nullable utcDelta if zipCode does not exists', async () => {
+    const primaryCoach = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+
+    const memberParams = generateCreateMemberParams({
+      orgId: org.id,
+      primaryCoachId: primaryCoach.id,
+    });
+    memberParams.zipCode = undefined;
+
+    await creators.handler.mutations.createMember({ memberParams });
+
+    creators.handler.setContextUser(memberParams.deviceId);
+    const member = await creators.handler.queries.getMember();
+    expect(member.utcDelta).toBeNull();
+  });
+
+  it('should calculate utcDelta if zipCode exists', async () => {
+    const primaryCoach = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+
+    const memberParams = generateCreateMemberParams({
+      orgId: org.id,
+      primaryCoachId: primaryCoach.id,
+    });
+
+    await creators.handler.mutations.createMember({ memberParams });
+
+    creators.handler.setContextUser(memberParams.deviceId);
+    const member = await creators.handler.queries.getMember();
+    expect(member.utcDelta).toBeLessThan(0);
   });
 
   /************************************************************************************************
