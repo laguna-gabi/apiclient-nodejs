@@ -29,6 +29,7 @@ export class AppointmentService {
       {
         userId: new Types.ObjectId(params.userId),
         memberId: new Types.ObjectId(params.memberId),
+        status: AppointmentStatus.requested,
       },
       {
         $set: {
@@ -46,7 +47,11 @@ export class AppointmentService {
       });
     }
 
-    return result.value;
+    const object = result.value.toObject();
+    object.id = new Types.ObjectId(object._id);
+    delete object._id;
+
+    return object;
   }
 
   async get(id: string): Promise<Appointment> {

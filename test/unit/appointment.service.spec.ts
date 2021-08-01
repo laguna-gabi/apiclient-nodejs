@@ -222,6 +222,17 @@ describe('AppointmentService', () => {
       expect(spyOnEventEmitter).not.toBeCalled();
       spyOnEventEmitter.mockReset();
     });
+
+    it('should create a new request appointment on exising scheduled', async () => {
+      const memberId = new Types.ObjectId().toString();
+      const userId = new Types.ObjectId().toString();
+      const scheduleParams = generateScheduleAppointmentParams({ userId, memberId });
+      const requestParams = generateRequestAppointmentParams({ userId, memberId });
+      const scheduleAppointment = await service.schedule(scheduleParams);
+      const requestAppointment = await service.request(requestParams);
+
+      expect(scheduleAppointment.id).not.toEqual(requestAppointment.id);
+    });
   });
 
   describe('schedule', () => {
