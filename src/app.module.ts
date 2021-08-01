@@ -8,6 +8,8 @@ import { GraphQLError } from 'graphql';
 import { Errors } from './common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { OrgModule } from './org';
+import { TerminusModule } from '@nestjs/terminus';
+import { HealthController } from './health/health.controller';
 
 const badRequestException = 'Bad Request Exception';
 
@@ -18,6 +20,7 @@ const badRequestException = 'Bad Request Exception';
     AppointmentModule,
     OrgModule,
     DbModule,
+    TerminusModule,
     EventEmitterModule.forRoot(),
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql',
@@ -37,5 +40,6 @@ const badRequestException = 'Bad Request Exception';
       },
     }),
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}
