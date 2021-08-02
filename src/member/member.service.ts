@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { DbErrors, Errors, ErrorType, EventType, Identifier } from '../common';
+import { BaseService, DbErrors, Errors, ErrorType, EventType, Identifier } from '../common';
 import {
   ActionItem,
   ActionItemDocument,
@@ -21,7 +21,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { AppointmentStatus, Scores } from '../appointment';
 
 @Injectable()
-export class MemberService {
+export class MemberService extends BaseService {
   constructor(
     @InjectModel(Member.name)
     private readonly memberModel: Model<MemberDocument>,
@@ -29,7 +29,9 @@ export class MemberService {
     private readonly goalModel: Model<GoalDocument>,
     @InjectModel(ActionItem.name)
     private readonly actionItemModel: Model<ActionItemDocument>,
-  ) {}
+  ) {
+    super();
+  }
 
   async insert({
     createMemberParams,
@@ -54,7 +56,7 @@ export class MemberService {
         dischargeNotesLink,
         dischargeInstructionsLink,
       });
-      return { id: result._id };
+      return this.replaceId(result.toObject());
     } catch (ex) {
       throw new Error(
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.memberPhoneAlreadyExists) : ex,
@@ -76,7 +78,7 @@ export class MemberService {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
 
-    return result.value;
+    return this.replaceId(result.value.toObject());
   }
 
   async get(deviceId: string): Promise<Member> {

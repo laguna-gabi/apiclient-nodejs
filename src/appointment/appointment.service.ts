@@ -11,18 +11,20 @@ import {
   ScheduleAppointmentParams,
   SetNotesParams,
 } from '.';
-import { Errors, ErrorType, EventType } from '../common';
+import { Errors, ErrorType, EventType, BaseService } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
-export class AppointmentService {
+export class AppointmentService extends BaseService {
   constructor(
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument>,
     @InjectModel(Notes.name)
     private readonly notesModel: Model<NotesDocument>,
     private eventEmitter: EventEmitter2,
-  ) {}
+  ) {
+    super();
+  }
 
   async request(params: RequestAppointmentParams): Promise<Appointment> {
     const result = await this.appointmentModel.findOneAndUpdate(
@@ -47,19 +49,16 @@ export class AppointmentService {
       });
     }
 
-    const object = result.value.toObject();
-    object.id = new Types.ObjectId(object._id);
-    delete object._id;
-
-    return object;
+    return this.replaceId(result.value.toObject() as AppointmentDocument);
   }
 
   async get(id: string): Promise<Appointment> {
-    return this.appointmentModel.findById({ _id: id }).populate('notes');
+    const result = await this.appointmentModel.findById({ _id: id }).populate('notes');
+    return this.replaceId(result);
   }
 
   async schedule(params: ScheduleAppointmentParams): Promise<Appointment> {
-    const result = (
+    const object = (
       await this.appointmentModel.create({
         userId: new Types.ObjectId(params.userId),
         memberId: new Types.ObjectId(params.memberId),
@@ -71,8 +70,7 @@ export class AppointmentService {
       })
     ).toObject();
 
-    result.id = new Types.ObjectId(result._id);
-    delete result._id;
+    const result = this.replaceId(object as AppointmentDocument);
 
     this.notifyNewAppointmentCreated({
       userId: result.userId,
@@ -132,7 +130,7 @@ export class AppointmentService {
   }
 
   private async updateAppointment(id, setParams): Promise<Appointment> {
-    const result = await this.appointmentModel.findOneAndUpdate(
+    const object = await this.appointmentModel.findOneAndUpdate(
       {
         _id: new Types.ObjectId(id),
       },
@@ -142,11 +140,11 @@ export class AppointmentService {
       { upsert: false, new: true },
     );
 
-    if (!result) {
+    if (!object) {
       throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
     }
 
-    return result;
+    return this.replaceId(object.toObject());
   }
 
   private notifyNewAppointmentCreated({
