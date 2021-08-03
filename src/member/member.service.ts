@@ -10,6 +10,7 @@ import {
   Goal,
   GoalDocument,
   Member,
+  AppointmentCompose,
   MemberDocument,
   MemberSummary,
   TaskState,
@@ -18,7 +19,7 @@ import {
 } from '.';
 import { cloneDeep } from 'lodash';
 import { OnEvent } from '@nestjs/event-emitter';
-import { AppointmentStatus, Scores } from '../appointment';
+import { Appointment, AppointmentDocument, AppointmentStatus, Scores } from '../appointment';
 
 @Injectable()
 export class MemberService extends BaseService {
@@ -29,6 +30,8 @@ export class MemberService extends BaseService {
     private readonly goalModel: Model<GoalDocument>,
     @InjectModel(ActionItem.name)
     private readonly actionItemModel: Model<ActionItemDocument>,
+    @InjectModel(Appointment.name)
+    private readonly appointmentModel: Model<AppointmentDocument>,
   ) {
     super();
   }
@@ -138,6 +141,48 @@ export class MemberService extends BaseService {
 
       return { ...item, appointmentsCount, nextAppointment };
     });
+  }
+
+  async getMembersAppointments(orgId?: string): Promise<AppointmentCompose[]> {
+    return this.memberModel.aggregate([
+      {
+        $project: {
+          _id: 0,
+          members: '$$ROOT',
+        },
+      },
+      { $match: orgId ? { 'members.org': new Types.ObjectId(orgId) } : {} },
+      {
+        $lookup: {
+          localField: 'members._id',
+          from: 'appointments',
+          foreignField: 'memberId',
+          as: 'a',
+        },
+      },
+      { $unwind: { path: '$a' } },
+      { $match: { 'a.status': AppointmentStatus.scheduled } },
+      {
+        $lookup: {
+          localField: 'a.userId',
+          from: 'users',
+          foreignField: '_id',
+          as: 'u',
+        },
+      },
+      { $unwind: { path: '$u' } },
+      { $sort: { 'a.start': -1 } },
+      {
+        $project: {
+          memberId: '$members._id',
+          memberName: { $concat: ['$members.firstName', ' ', '$members.lastName'] },
+          userId: '$a.userId',
+          userName: { $concat: ['$u.firstName', ' ', '$u.lastName'] },
+          start: '$a.start',
+          end: '$a.end',
+        },
+      },
+    ]);
   }
 
   /*************************************************************************************************

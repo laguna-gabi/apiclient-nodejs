@@ -8,6 +8,7 @@ import {
   TaskState,
   UpdateMemberParams,
   MemberSummary,
+  AppointmentCompose,
 } from '.';
 import { Errors, ErrorType, Identifier } from '../common';
 import { camelCase, remove } from 'lodash';
@@ -58,6 +59,13 @@ export class MemberResolver {
   @Query(() => [MemberSummary])
   async getMembers(@Args('orgId', { type: () => String, nullable: true }) orgId?: string) {
     return this.memberService.getByOrg(orgId);
+  }
+
+  @Query(() => [AppointmentCompose])
+  async getMembersAppointments(
+    @Args('orgId', { type: () => String, nullable: true }) orgId?: string,
+  ) {
+    return this.memberService.getMembersAppointments(orgId);
   }
 
   /*************************************************************************************************

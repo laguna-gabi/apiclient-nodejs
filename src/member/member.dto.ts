@@ -275,6 +275,27 @@ export class MemberSummary extends Identifier {
   appointmentsCount: number;
 }
 
+@ObjectType()
+export class AppointmentCompose {
+  @Field(() => String)
+  memberId: string;
+
+  @Field(() => String)
+  memberName: string;
+
+  @Field(() => String)
+  userId: string;
+
+  @Field(() => String)
+  userName: string;
+
+  @Field(() => Date)
+  start: Date;
+
+  @Field(() => Date)
+  end: Date;
+}
+
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/

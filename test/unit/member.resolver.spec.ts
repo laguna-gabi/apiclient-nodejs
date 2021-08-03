@@ -3,13 +3,20 @@ import {
   dbDisconnect,
   generateCreateMemberParams,
   generateCreateTaskParams,
+  generateAppointmentComposeParams,
   generateMemberLinks,
   generateUpdateMemberParams,
   generateUpdateTaskStateParams,
   mockGenerateMember,
 } from '../index';
 import { DbModule } from '../../src/db/db.module';
-import { MemberModule, MemberResolver, MemberService, TaskState } from '../../src/member';
+import {
+  AppointmentCompose,
+  MemberModule,
+  MemberResolver,
+  MemberService,
+  TaskState,
+} from '../../src/member';
 import { Types } from 'mongoose';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Errors, ErrorType } from '../../src/common';
@@ -191,6 +198,43 @@ describe('MemberResolver', () => {
       expect(spyOnServiceGet).toBeCalledTimes(1);
       expect(spyOnServiceGet).toBeCalledWith(undefined);
       expect(result).toEqual(members);
+    });
+  });
+
+  describe('getMembersAppointments', () => {
+    let spyOnServiceGet;
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'getMembersAppointments');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+    });
+
+    it('should get appointments by a given orgId', async () => {
+      const appointmentComposes = [generateAppointmentComposeParams()];
+      spyOnServiceGet.mockImplementationOnce(async () => appointmentComposes);
+
+      const orgId = new Types.ObjectId().toString();
+      const result = await resolver.getMembersAppointments(orgId);
+
+      expect(spyOnServiceGet).toBeCalledTimes(1);
+      expect(spyOnServiceGet).toBeCalledWith(orgId);
+      expect(result).toEqual(appointmentComposes);
+    });
+
+    it('should fetch all appointments without filtering orgId', async () => {
+      const appointmentComposes = [
+        generateAppointmentComposeParams(),
+        generateAppointmentComposeParams(),
+      ];
+      spyOnServiceGet.mockImplementationOnce(async () => appointmentComposes);
+
+      const result = await resolver.getMembersAppointments();
+
+      expect(spyOnServiceGet).toBeCalledTimes(1);
+      expect(spyOnServiceGet).toBeCalledWith(undefined);
+      expect(result).toEqual(appointmentComposes);
     });
   });
 

@@ -2,6 +2,8 @@ import {
   generateAvailabilityInput,
   generateCreateMemberParams,
   generateNotesParams,
+  generateRequestAppointmentParams,
+  generateScheduleAppointmentParams,
   generateUpdateMemberParams,
 } from '../index';
 import { UserRole } from '../../src/user';
@@ -273,6 +275,73 @@ describe('Integration tests: all', () => {
       id: new Types.ObjectId().toString(),
       invalidFieldsErrors: [Errors.get(ErrorType.availabilityNotFound)],
     });
+  });
+
+  it('should return members appointment filtered by orgId', async () => {
+    const primaryCoach = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+
+    const mParams1 = generateCreateMemberParams({
+      orgId: org.id,
+      primaryCoachId: primaryCoach.id,
+    });
+    const mParams2 = generateCreateMemberParams({
+      orgId: org.id,
+      primaryCoachId: primaryCoach.id,
+    });
+    const { id: memberId1 } = await creators.handler.mutations.createMember({
+      memberParams: mParams1,
+    });
+    const { id: memberId2 } = await creators.handler.mutations.createMember({
+      memberParams: mParams2,
+    });
+
+    const params1a = generateScheduleAppointmentParams({
+      memberId: memberId1,
+      userId: primaryCoach.id,
+    });
+    const params1b = generateScheduleAppointmentParams({
+      memberId: memberId1,
+      userId: primaryCoach.id,
+    });
+    const params2a = generateScheduleAppointmentParams({
+      memberId: memberId2,
+      userId: primaryCoach.id,
+    });
+    // Request appointment should not be on results, only showing status scheduled
+    const params2b = generateRequestAppointmentParams({
+      memberId: memberId2,
+      userId: primaryCoach.id,
+    });
+
+    await creators.handler.mutations.scheduleAppointment({ appointmentParams: params1a });
+    await creators.handler.mutations.scheduleAppointment({ appointmentParams: params1b });
+    await creators.handler.mutations.scheduleAppointment({ appointmentParams: params2a });
+    await creators.handler.mutations.requestAppointment({ appointmentParams: params2b });
+
+    const result = await creators.handler.queries.getMembersAppointments(org.id);
+    expect(result.length).toEqual(3);
+
+    expect(result).toEqual(
+      expect.arrayContaining([
+        {
+          memberId: memberId1,
+          memberName: `${mParams1.firstName} ${mParams1.lastName}`,
+          userId: primaryCoach.id,
+          userName: `${primaryCoach.firstName} ${primaryCoach.lastName}`,
+          start: expect.any(String),
+          end: expect.any(String),
+        },
+        {
+          memberId: memberId2,
+          memberName: `${mParams2.firstName} ${mParams2.lastName}`,
+          userId: primaryCoach.id,
+          userName: `${primaryCoach.firstName} ${primaryCoach.lastName}`,
+          start: expect.any(String),
+          end: expect.any(String),
+        },
+      ]),
+    );
   });
 
   /************************************************************************************************

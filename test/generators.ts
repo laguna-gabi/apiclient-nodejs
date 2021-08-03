@@ -6,6 +6,7 @@ import {
   CreateTaskParams,
   defaultMemberParams,
   Member,
+  AppointmentCompose,
   Sex,
   TaskState,
   UpdateMemberParams,
@@ -282,6 +283,21 @@ export const generateOrgParams = ({
   trialDuration?: number;
 } = {}): CreateOrgParams => {
   return { type, name, trialDuration: trialDuration };
+};
+
+export const generateAppointmentComposeParams = (): AppointmentCompose => {
+  const start = faker.date.future(1);
+  const end = new Date(start);
+  end.setHours(end.getHours() + 2);
+
+  return {
+    memberId: new Types.ObjectId().toString(),
+    memberName: `${faker.name.firstName()} ${faker.name.lastName()}`,
+    userId: new Types.ObjectId().toString(),
+    userName: `${faker.name.firstName()} ${faker.name.lastName()}`,
+    start,
+    end,
+  };
 };
 
 export const generateRandomName = (length: number): string => {

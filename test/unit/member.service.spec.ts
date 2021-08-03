@@ -10,6 +10,8 @@ import {
   generateCreateUserParams,
   generateMemberLinks,
   generateOrgParams,
+  generateRequestAppointmentParams,
+  generateScheduleAppointmentParams,
   generateUpdateMemberParams,
   generateUpdateTaskStateParams,
   generateZipCode,
@@ -30,7 +32,12 @@ import { User, UserDto, UserRole } from '../../src/user';
 import * as faker from 'faker';
 import { datatype, date, internet } from 'faker';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { AppointmentModule } from '../../src/appointment';
+import {
+  Appointment,
+  AppointmentDto,
+  AppointmentModule,
+  AppointmentStatus,
+} from '../../src/appointment';
 import { Org, OrgDto } from '../../src/org';
 
 describe('MemberService', () => {
@@ -39,6 +46,7 @@ describe('MemberService', () => {
   let memberModel: Model<typeof MemberDto>;
   let modelUser: Model<typeof UserDto>;
   let modelOrg: Model<typeof OrgDto>;
+  let modelAppointment: Model<typeof AppointmentDto>;
   const primaryCoachId = new Types.ObjectId().toString();
 
   beforeAll(async () => {
@@ -51,6 +59,7 @@ describe('MemberService', () => {
     memberModel = model(Member.name, MemberDto);
     modelUser = model(User.name, UserDto);
     modelOrg = model(Org.name, OrgDto);
+    modelAppointment = model(Appointment.name, AppointmentDto);
     await dbConnect();
   });
 
@@ -239,12 +248,183 @@ describe('MemberService', () => {
         }),
       );
     });
+  });
 
-    const generateBasicMember = async (createMemberParamsInput?): Promise<Identifier> => {
-      const createMemberParams = generateCreateMemberParams(createMemberParamsInput);
-      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
+  const generateBasicMember = async (createMemberParamsInput?): Promise<Identifier> => {
+    const createMemberParams = generateCreateMemberParams(createMemberParamsInput);
+    const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
 
-      return service.insert({ createMemberParams, ...links });
+    return service.insert({ createMemberParams, ...links });
+  };
+
+  describe('getMembersAppointments', () => {
+    it('should return empty array on members with orgId and no appointments', async () => {
+      const { _id: primaryCoachId } = await modelUser.create(generateCreateUserParams());
+      const { _id: orgId } = await modelOrg.create(generateOrgParams());
+
+      await generateBasicMember({ primaryCoachId, orgId });
+      await generateBasicMember({ primaryCoachId, orgId });
+      await generateBasicMember({ primaryCoachId, orgId });
+
+      const result = await service.getMembersAppointments(orgId);
+      expect(result).toEqual([]);
+    });
+
+    it('should return members with by orgId and appointments for each', async () => {
+      const primaryCoachParams = {
+        firstName: faker.name.firstName(),
+        lastName: faker.name.lastName(),
+      };
+      const { _id: primaryCoachId } = await modelUser.create(
+        generateCreateUserParams({ ...primaryCoachParams }),
+      );
+      const { _id: orgId } = await modelOrg.create(generateOrgParams());
+
+      const member1AppointmentsCount = 3;
+      const member1 = await generateMemberAndAppointment({
+        primaryCoachId,
+        orgId,
+        numberOfAppointments: member1AppointmentsCount,
+      });
+      const member2AppointmentsCount = 4;
+      const member2 = await generateMemberAndAppointment({
+        primaryCoachId,
+        orgId,
+        numberOfAppointments: member2AppointmentsCount,
+      });
+
+      const result = await service.getMembersAppointments(orgId);
+      expect(result.length).toEqual(member1AppointmentsCount + member2AppointmentsCount);
+      expect(result).toEqual(
+        expect.arrayContaining([
+          {
+            memberId: member1.id,
+            userId: primaryCoachId,
+            memberName: `${member1.firstName} ${member1.lastName}`,
+            userName: `${primaryCoachParams.firstName} ${primaryCoachParams.lastName}`,
+            start: expect.any(Date),
+            end: expect.any(Date),
+          },
+          {
+            memberId: member2.id,
+            userId: primaryCoachId,
+            memberName: `${member2.firstName} ${member2.lastName}`,
+            userName: `${primaryCoachParams.firstName} ${primaryCoachParams.lastName}`,
+            start: expect.any(Date),
+            end: expect.any(Date),
+          },
+        ]),
+      );
+    });
+
+    it('should exclude non org members from results', async () => {
+      const primaryCoachParams = {
+        firstName: faker.name.firstName(),
+        lastName: faker.name.lastName(),
+      };
+      const { _id: primaryCoachId } = await modelUser.create(
+        generateCreateUserParams({ ...primaryCoachParams }),
+      );
+      const { _id: orgId1 } = await modelOrg.create(generateOrgParams());
+      const { _id: orgId2 } = await modelOrg.create(generateOrgParams());
+
+      const memberAppointmentsCount = 2;
+      const member = await generateMemberAndAppointment({
+        primaryCoachId,
+        orgId: orgId1,
+        numberOfAppointments: memberAppointmentsCount,
+      });
+      await generateMemberAndAppointment({
+        primaryCoachId,
+        orgId: orgId2,
+        numberOfAppointments: 1,
+      });
+
+      const result = await service.getMembersAppointments(orgId1);
+      expect(result.length).toEqual(memberAppointmentsCount);
+      expect(result).toEqual(
+        expect.arrayContaining([
+          {
+            memberId: member.id,
+            userId: primaryCoachId,
+            memberName: `${member.firstName} ${member.lastName}`,
+            userName: `${primaryCoachParams.firstName} ${primaryCoachParams.lastName}`,
+            start: expect.any(Date),
+            end: expect.any(Date),
+          },
+        ]),
+      );
+    });
+
+    it('should sort results by start timestamp desc', async () => {
+      const { _id: primaryCoachId } = await modelUser.create(generateCreateUserParams());
+      const { _id: orgId } = await modelOrg.create(generateOrgParams());
+
+      const member1AppointmentsCount = 3;
+      await generateMemberAndAppointment({
+        primaryCoachId,
+        orgId,
+        numberOfAppointments: member1AppointmentsCount,
+      });
+      const member2AppointmentsCount = 4;
+      await generateMemberAndAppointment({
+        primaryCoachId,
+        orgId,
+        numberOfAppointments: member2AppointmentsCount,
+      });
+
+      const result = await service.getMembersAppointments(orgId);
+      const isSorted = result
+        .map((item) => item.start)
+        .every((v, i, a) => !i || a[i - 1].getTime() >= v.getTime());
+
+      expect(result.length).toEqual(member1AppointmentsCount + member2AppointmentsCount);
+      expect(isSorted).toBeTruthy();
+    });
+
+    it('should include only scheduled appointments', async () => {
+      const { _id: primaryCoachId } = await modelUser.create(generateCreateUserParams());
+      const { _id: orgId } = await modelOrg.create(generateOrgParams());
+
+      const numberOfAppointments = 1;
+      const { id } = await generateMemberAndAppointment({
+        primaryCoachId,
+        orgId,
+        numberOfAppointments,
+      });
+
+      await modelAppointment.create({
+        ...generateRequestAppointmentParams({ memberId: id, userId: primaryCoachId }),
+      });
+
+      const result = await service.getMembersAppointments(orgId);
+      expect(result.length).toEqual(numberOfAppointments);
+      expect(result[0]).toEqual(expect.objectContaining({ memberId: id, userId: primaryCoachId }));
+    });
+
+    it('should not take longer than 2 seconds to query with no filter orgId', async () => {
+      await service.getMembersAppointments();
+    }, 2000);
+
+    const generateMemberAndAppointment = async ({
+      primaryCoachId,
+      orgId,
+      numberOfAppointments,
+    }) => {
+      const params = { firstName: faker.name.firstName(), lastName: faker.name.lastName() };
+      const { id } = await generateBasicMember({ primaryCoachId, orgId, ...params });
+
+      await Promise.all(
+        Array.from(Array(numberOfAppointments)).map(
+          async () =>
+            await modelAppointment.create({
+              ...generateScheduleAppointmentParams({ memberId: id, userId: primaryCoachId }),
+              status: AppointmentStatus.scheduled,
+            }),
+        ),
+      );
+
+      return { id, ...params };
     };
   });
 

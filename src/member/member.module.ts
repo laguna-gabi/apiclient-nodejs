@@ -10,6 +10,7 @@ import {
   MemberService,
 } from '.';
 import { MongooseModule } from '@nestjs/mongoose';
+import { Appointment, AppointmentDto } from '../appointment';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { MongooseModule } from '@nestjs/mongoose';
       { name: Member.name, schema: MemberDto },
       { name: Goal.name, schema: GoalDto },
       { name: ActionItem.name, schema: ActionItemDto },
+      { name: Appointment.name, schema: AppointmentDto },
     ]),
   ],
   providers: [MemberResolver, MemberService],
