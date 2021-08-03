@@ -232,4 +232,22 @@ export class Queries {
     });
     return result.data.getAppointment;
   };
+
+  getAvailabilities = async () => {
+    const result = await this.apolloClient.query({
+      query: gql`
+        query getAvailabilities {
+          getAvailabilities {
+            id
+            start
+            end
+            userId
+            userName
+          }
+        }
+      `,
+    });
+
+    return result.data.getAvailabilities;
+  };
 }

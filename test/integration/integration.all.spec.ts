@@ -256,13 +256,9 @@ describe('Integration tests: all', () => {
     expect(member.utcDelta).toBeLessThan(0);
   });
 
-  it('should set availability for users', async () => {
-    const user1 = await creators.createAndValidateUser();
-    const availabilities = [
-      generateAvailabilityInput({ userId: user1.id }),
-      generateAvailabilityInput({ userId: user1.id }),
-    ];
-    await handler.mutations.createAvailabilities({ availabilities });
+  it('should set and get availability for users', async () => {
+    await createAndValidateAvailabilities(2);
+    await createAndValidateAvailabilities(5);
   });
 
   /************************************************************************************************
@@ -278,5 +274,26 @@ describe('Integration tests: all', () => {
     expect(task.title).toEqual(createTaskParams.title);
     expect(task.state).toEqual(TaskState.reached);
     expect(new Date(task.deadline)).toEqual(createTaskParams.deadline);
+  };
+
+  const createAndValidateAvailabilities = async (count: number) => {
+    const { id: userId } = await creators.createAndValidateUser();
+
+    const availabilities = Array.from(Array(count)).map(() =>
+      generateAvailabilityInput({ userId }),
+    );
+
+    const { ids } = await handler.mutations.createAvailabilities({
+      availabilities,
+    });
+
+    expect(ids.length).toEqual(availabilities.length);
+
+    const availabilitiesResult = await handler.queries.getAvailabilities();
+    const resultFiltered = availabilitiesResult.filter(
+      (availability) => availability.userId === userId,
+    );
+
+    expect(resultFiltered.length).toEqual(availabilities.length);
   };
 });

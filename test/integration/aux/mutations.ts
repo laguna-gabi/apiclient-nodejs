@@ -15,7 +15,7 @@ import {
   ScheduleAppointmentParams,
   SetNotesParams,
 } from '../../../src/appointment';
-import { Identifier } from '../../../src/common';
+import { Identifier, Identifiers } from '../../../src/common';
 import { CreateOrgParams } from '../../../src/org';
 import { AvailabilityInput } from '../../../src/availability';
 
@@ -452,7 +452,7 @@ export class Mutations {
     availabilities: AvailabilityInput[];
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
-  }): Promise<Identifier> => {
+  }): Promise<Identifiers> => {
     const result = await this.apolloClient.mutate({
       variables: { availabilities: availabilities },
       mutation: gql`

@@ -1,18 +1,25 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
 import { Model, model, Types } from 'mongoose';
-import { dbConnect, dbDisconnect, generateAvailabilityInput } from '../index';
+import {
+  dbConnect,
+  dbDisconnect,
+  generateAvailabilityInput,
+  generateCreateUserParams,
+} from '../index';
 import {
   Availability,
   AvailabilityDto,
   AvailabilityModule,
   AvailabilityService,
 } from '../../src/availability';
+import { User, UserDto } from '../../src/user';
 
 describe('AvailabilityService', () => {
   let module: TestingModule;
   let service: AvailabilityService;
   let availabilityModel: Model<typeof AvailabilityDto>;
+  let modelUser: Model<typeof UserDto>;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -22,6 +29,7 @@ describe('AvailabilityService', () => {
     service = module.get<AvailabilityService>(AvailabilityService);
 
     availabilityModel = model(Availability.name, AvailabilityDto);
+    modelUser = model(User.name, UserDto);
 
     await dbConnect();
   });
@@ -34,10 +42,12 @@ describe('AvailabilityService', () => {
   describe('create', () => {
     it('should create an availability', async () => {
       const params = generateAvailabilityInput();
-      await service.create([params]);
+      const { ids } = await service.create([params]);
 
-      const result = await availabilityModel.findOne({ userId: params.userId });
-      expect(result).toEqual(expect.objectContaining(params));
+      const result: any = await availabilityModel.findById(ids[0]);
+      expect(result.userId.toString()).toEqual(params.userId);
+      expect(result.start).toEqual(params.start);
+      expect(result.end).toEqual(params.end);
     });
 
     /* eslint-disable max-len*/
@@ -54,7 +64,7 @@ describe('AvailabilityService', () => {
       const createResult = await service.create(params);
       expect(createResult.ids.length).toEqual(params.length);
 
-      const result = await availabilityModel.find({ userId });
+      const result = await availabilityModel.find({ userId: new Types.ObjectId(userId) });
       expect(result.length).toEqual(params.length);
     });
 
@@ -72,22 +82,72 @@ describe('AvailabilityService', () => {
       await service.create(params1);
       await service.create(params2);
 
-      const result1 = await availabilityModel.find({ userId: userId1 });
+      const result1 = await availabilityModel.find({ userId: new Types.ObjectId(userId1) });
       expect(result1.length).toEqual(2);
-      const result2 = await availabilityModel.find({ userId: userId2 });
+      const result2 = await availabilityModel.find({ userId: new Types.ObjectId(userId2) });
       expect(result2.length).toEqual(1);
     });
   });
 
+  describe('get', () => {
+    it('should sort availabilities in ascending order', async () => {
+      const userId = new Types.ObjectId().toString();
+
+      const params = [
+        generateAvailabilityInput({ userId }),
+        generateAvailabilityInput({ userId }),
+        generateAvailabilityInput({ userId }),
+      ];
+      await service.create(params);
+
+      const result = await service.get();
+
+      const isSorted = result
+        .map((availability) => availability.start)
+        .every((cur, index, arr) => !index || arr[index - 1].getTime() <= cur.getTime());
+
+      expect(isSorted).toBeTruthy();
+    });
+
+    it('should get availabilities of at least 2 users', async () => {
+      const { _id: userId1 } = await modelUser.create(generateCreateUserParams());
+      const { _id: userId2 } = await modelUser.create(generateCreateUserParams());
+
+      const params1 = [
+        generateAvailabilityInput({ userId: userId1 }),
+        generateAvailabilityInput({ userId: userId1 }),
+      ];
+      const params2 = [generateAvailabilityInput({ userId: userId2 })];
+      await service.create(params1);
+      await service.create(params2);
+
+      const allResult = await service.get();
+      const filtered = allResult.filter(
+        (result) =>
+          result.userId.toString() === userId1.toString() ||
+          result.userId.toString() === userId2.toString(),
+      );
+
+      expect(filtered.length).toEqual(params1.length + params2.length);
+      expect(filtered).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining(params1[0]),
+          expect.objectContaining(params1[1]),
+          expect.objectContaining(params2[0]),
+        ]),
+      );
+    });
+
+    it('should not take longer than 0.5 seconds to fetch availabilities', async () => {
+      await service.get();
+    }, 500);
+  });
+
   it('should check that createdAt and updatedAt exists in the collection', async () => {
     const params = generateAvailabilityInput();
-    await service.create([params]);
+    const { ids } = await service.create([params]);
 
-    const result: any = await availabilityModel.findOne({
-      userId: params.userId,
-      start: params.start,
-      end: params.end,
-    });
+    const result: any = await availabilityModel.findById(ids[0]);
 
     expect(result.createdAt).toEqual(expect.any(Date));
     expect(result.updatedAt).toEqual(expect.any(Date));

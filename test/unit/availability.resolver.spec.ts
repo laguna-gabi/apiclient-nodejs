@@ -36,16 +36,34 @@ describe('AvailabilityResolver', () => {
       spyOnServiceCreate.mockReset();
     });
 
-    describe('createAvailabilities', () => {
-      it('should successfully create availabilities', async () => {
-        const params = generateAvailabilityInput();
-        spyOnServiceCreate.mockImplementationOnce(async () => undefined);
+    it('should successfully create availabilities', async () => {
+      const params = generateAvailabilityInput();
+      spyOnServiceCreate.mockImplementationOnce(async () => undefined);
 
-        await resolver.createAvailabilities([params]);
+      await resolver.createAvailabilities([params]);
 
-        expect(spyOnServiceCreate).toBeCalledTimes(1);
-        expect(spyOnServiceCreate).toBeCalledWith([params]);
-      });
+      expect(spyOnServiceCreate).toBeCalledTimes(1);
+      expect(spyOnServiceCreate).toBeCalledWith([params]);
+    });
+  });
+
+  describe('getAvailabilities', () => {
+    let spyOnServiceGet;
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'get');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+    });
+
+    it('should successfully create availabilities', async () => {
+      spyOnServiceGet.mockImplementationOnce(async () => undefined);
+
+      await resolver.getAvailabilities();
+
+      expect(spyOnServiceGet).toBeCalledTimes(1);
+      expect(spyOnServiceGet).toBeCalledWith();
     });
   });
 });

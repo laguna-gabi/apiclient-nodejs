@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Availability, AvailabilityDocument, AvailabilityInput } from '.';
+import { Availability, AvailabilityDocument, AvailabilityInput, AvailabilitySlot } from '.';
 import { Model, Types } from 'mongoose';
 import { cloneDeep } from 'lodash';
 import { InjectModel } from '@nestjs/mongoose';
@@ -21,7 +21,46 @@ export class AvailabilityService {
     });
 
     const result = await this.availabilityModel.insertMany(items);
-
     return { ids: result.map((item) => item._id) };
+  }
+
+  async get(): Promise<AvailabilitySlot[]> {
+    return this.availabilityModel.aggregate([
+      {
+        $project: {
+          _id: 0,
+          availabilities: '$$ROOT',
+        },
+      },
+      {
+        $lookup: {
+          localField: 'availabilities.userId',
+          from: 'users',
+          foreignField: '_id',
+          as: 'users',
+        },
+      },
+      {
+        $sort: {
+          'availabilities.start': 1,
+        },
+      },
+      {
+        $unwind: {
+          path: '$users',
+          preserveNullAndEmptyArrays: false,
+        },
+      },
+      {
+        $project: {
+          id: '$availabilities._id',
+          start: '$availabilities.start',
+          end: '$availabilities.end',
+          userId: '$availabilities.userId',
+          userName: '$users.firstName',
+          _id: 0,
+        },
+      },
+    ]);
   }
 }
