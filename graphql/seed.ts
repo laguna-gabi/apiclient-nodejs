@@ -115,6 +115,11 @@ async function main() {
   await createTask(memberId, mutations.createActionItem, 'actionItem');
   await createTask(memberId, mutations.createActionItem, 'actionItem');
 
+  console.debug(
+    '\n----------------------------------------------------------------\n' +
+      '---------------- Pending sendbird registration -----------------\n' +
+      '----------------------------------------------------------------',
+  );
   //Since Sendbird is doing async calls in event emitter,
   //we need to wait a while for the actions to be finished.
   await new Promise((resolve) => setTimeout(resolve, 3000));
