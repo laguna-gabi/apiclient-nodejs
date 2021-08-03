@@ -3,6 +3,7 @@ import { Availability, AvailabilityDocument, AvailabilityInput } from '.';
 import { Model, Types } from 'mongoose';
 import { cloneDeep } from 'lodash';
 import { InjectModel } from '@nestjs/mongoose';
+import { Identifiers } from '../common';
 
 @Injectable()
 export class AvailabilityService {
@@ -10,7 +11,7 @@ export class AvailabilityService {
     @InjectModel(Availability.name) private readonly availabilityModel: Model<AvailabilityDocument>,
   ) {}
 
-  async create(params: AvailabilityInput[]): Promise<void> {
+  async create(params: AvailabilityInput[]): Promise<Identifiers> {
     const items = params.map((input) => {
       const { userId } = input;
       const primitiveValues = cloneDeep(input);
@@ -19,6 +20,8 @@ export class AvailabilityService {
       return { ...primitiveValues, userId: new Types.ObjectId(userId) };
     });
 
-    await this.availabilityModel.insertMany(items);
+    const result = await this.availabilityModel.insertMany(items);
+
+    return { ids: result.map((item) => item._id) };
   }
 }

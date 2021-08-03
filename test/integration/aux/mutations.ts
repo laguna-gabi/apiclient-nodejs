@@ -457,7 +457,9 @@ export class Mutations {
       variables: { availabilities: availabilities },
       mutation: gql`
         mutation createAvailabilities($availabilities: [AvailabilityInput!]!) {
-          createAvailabilities(availabilities: $availabilities)
+          createAvailabilities(availabilities: $availabilities) {
+            ids
+          }
         }
       `,
     });

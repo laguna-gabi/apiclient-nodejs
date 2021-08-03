@@ -1,12 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
 import { Model, model, Types } from 'mongoose';
-import {
-  dbConnect,
-  dbDisconnect,
-  generateAvailabilityInput,
-  generateRequestAppointmentParams,
-} from '../index';
+import { dbConnect, dbDisconnect, generateAvailabilityInput } from '../index';
 import {
   Availability,
   AvailabilityDto,
@@ -55,10 +50,12 @@ describe('AvailabilityService', () => {
         generateAvailabilityInput({ userId }),
         generateAvailabilityInput({ userId }),
       ];
-      await service.create(params);
+
+      const createResult = await service.create(params);
+      expect(createResult.ids.length).toEqual(params.length);
 
       const result = await availabilityModel.find({ userId });
-      expect(result.length).toEqual(3);
+      expect(result.length).toEqual(params.length);
     });
 
     /* eslint-disable max-len*/

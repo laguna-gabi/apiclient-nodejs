@@ -9,6 +9,12 @@ export class Identifier {
   id: string;
 }
 
+@ObjectType()
+export class Identifiers {
+  @Field(() => [String])
+  ids: string[];
+}
+
 export abstract class BaseService {
   replaceId(object) {
     if (!object) {
