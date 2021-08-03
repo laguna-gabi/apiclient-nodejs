@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import {
   Communication,
   CommunicationDocument,
@@ -49,14 +49,14 @@ export class CommunicationService {
       channel_url: sendbirdChannelUrl,
       cover_url: user.avatar,
       inviter_id: user.id,
-      user_ids: [member.id, user.id],
+      user_ids: [member.id.toString(), user.id],
     };
 
     const result = await this.sendBird.createGroupChannel(params);
     if (result) {
       await this.communicationModel.create({
-        memberId: member.id,
-        userId: user.id,
+        memberId: new Types.ObjectId(member.id),
+        userId: new Types.ObjectId(user.id),
         sendbirdChannelUrl,
       });
     }

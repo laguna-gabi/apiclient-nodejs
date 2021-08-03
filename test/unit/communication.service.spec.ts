@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
-import { Model, model } from 'mongoose';
+import { Model, model, Types } from 'mongoose';
 import {
   dbConnect,
   dbDisconnect,
@@ -83,13 +83,16 @@ describe('CommunicationService', () => {
         user_ids: [member.id, user.id],
       });
 
-      const result = await communicationModel.find({ memberId: member.id, userId: user.id });
+      const result = await communicationModel.find({
+        memberId: new Types.ObjectId(member.id),
+        userId: new Types.ObjectId(user.id),
+      });
 
       expect(result).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            memberId: member.id,
-            userId: user.id,
+            memberId: new Types.ObjectId(member.id),
+            userId: new Types.ObjectId(user.id),
             sendbirdChannelUrl: expect.any(String),
           }),
         ]),

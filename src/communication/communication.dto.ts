@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 /**************************************************************************************************
  **************************************** Internal params *****************************************
@@ -24,11 +24,11 @@ export interface CreateSendbirdGroupChannelParams {
  *************************************************************************************************/
 @Schema({ versionKey: false, timestamps: true })
 export class Communication {
-  @Prop({ index: true })
-  memberId: string;
+  @Prop({ type: Types.ObjectId, index: true })
+  memberId: Types.ObjectId;
 
-  @Prop({ index: true })
-  userId: string;
+  @Prop({ type: Types.ObjectId, index: true })
+  userId: Types.ObjectId;
 
   @Prop({ index: true, unique: true })
   sendbirdChannelUrl: string;
