@@ -9,5 +9,11 @@
         "maxLength": 50
       }
     }
+  },
+  "providers": {
+    "sendbird": {
+      "appId": "5866C7DA-4691-4CAC-B21E-896D1C31BD6F",
+      "appToken": "4fc83cd037c7a8442fda92f0dd0a2f5a0cd7803b"
+    }
   }
 }

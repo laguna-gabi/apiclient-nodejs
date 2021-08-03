@@ -8,6 +8,7 @@ import { Queries } from './queries';
 import * as config from 'config';
 import { Types } from 'mongoose';
 import * as jwt from 'jsonwebtoken';
+import { mockProviders } from '../../common';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -16,6 +17,7 @@ export class Handler {
   mutations: Mutations;
   queries: Queries;
   module: GraphQLModule;
+  sendBird;
 
   readonly primaryCoachId = new Types.ObjectId().toString();
   readonly minLength = validatorsConfig.get('name.minLength') as number;
@@ -31,6 +33,7 @@ export class Handler {
     await this.app.init();
 
     this.module = moduleFixture.get<GraphQLModule>(GraphQLModule);
+    this.sendBird = mockProviders(moduleFixture);
 
     const apolloServer = createTestClient((this.module as any).apolloServer);
     this.mutations = new Mutations(apolloServer);
@@ -39,6 +42,9 @@ export class Handler {
 
   async afterAll() {
     await this.app.close();
+
+    this.sendBird.spyOnSendBirdCreateUser.mockReset();
+    this.sendBird.spyOnSendBirdCreateGroupChannel.mockReset();
   }
 
   setContextUser = (deviceId: string) => {

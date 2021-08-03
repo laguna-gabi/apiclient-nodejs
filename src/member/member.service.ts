@@ -44,14 +44,14 @@ export class MemberService extends BaseService {
     createMemberParams: CreateMemberParams;
     dischargeNotesLink: string;
     dischargeInstructionsLink: string;
-  }): Promise<Identifier> {
+  }) {
     try {
       const primitiveValues = cloneDeep(createMemberParams);
       delete primitiveValues.orgId;
       delete primitiveValues.primaryCoachId;
       delete primitiveValues.usersIds;
 
-      const result = await this.memberModel.create({
+      const object = await this.memberModel.create({
         ...primitiveValues,
         org: new Types.ObjectId(createMemberParams.orgId),
         primaryCoach: new Types.ObjectId(createMemberParams.primaryCoachId),
@@ -59,7 +59,7 @@ export class MemberService extends BaseService {
         dischargeNotesLink,
         dischargeInstructionsLink,
       });
-      return this.replaceId(result.toObject());
+      return this.replaceId(object.toObject());
     } catch (ex) {
       throw new Error(
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.memberPhoneAlreadyExists) : ex,

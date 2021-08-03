@@ -2,24 +2,28 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateUserParams, User, UserDocument } from '.';
-import { DbErrors, Errors, ErrorType, EventType, Identifier } from '../common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { BaseService, DbErrors, Errors, ErrorType, EventType } from '../common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { Member } from '../member';
 
 @Injectable()
-export class UserService {
+export class UserService extends BaseService {
   constructor(
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
-  ) {}
+    private eventEmitter: EventEmitter2,
+  ) {
+    super();
+  }
 
   async get(id: string): Promise<User> {
     return this.userModel.findById({ _id: id }).populate('appointments');
   }
 
-  async insert(createUserParams: CreateUserParams): Promise<Identifier> {
+  async insert(createUserParams: CreateUserParams): Promise<User> {
     try {
-      const { _id } = await this.userModel.create(createUserParams);
-      return { id: _id };
+      const object = await this.userModel.create(createUserParams);
+      return this.replaceId(object.toObject());
     } catch (ex) {
       throw new Error(
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.userEmailAlreadyExists) : ex,
@@ -39,5 +43,21 @@ export class UserService {
       { _id: userId },
       { $push: { appointments: new Types.ObjectId(appointmentId) } },
     );
+  }
+
+  @OnEvent(EventType.collectUsersDataBridge, { async: true })
+  async collectUsersDataBridge({
+    member,
+    primaryCoachId,
+    usersIds,
+  }: {
+    member: Member;
+    primaryCoachId: string;
+    usersIds: string[];
+  }) {
+    const primaryCoach = await this.userModel.findById(primaryCoachId);
+    const users = await this.userModel.find({ _id: { $in: usersIds } });
+
+    this.eventEmitter.emit(EventType.newMember, { member, primaryCoach, users });
   }
 }

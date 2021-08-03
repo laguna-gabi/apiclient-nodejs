@@ -1,27 +1,28 @@
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
+  AppointmentCompose,
   CreateMemberParams,
   CreateTaskParams,
   Member,
   MemberService,
-  UpdateTaskStateParams,
+  MemberSummary,
   TaskState,
   UpdateMemberParams,
-  MemberSummary,
-  AppointmentCompose,
+  UpdateTaskStateParams,
 } from '.';
-import { Errors, ErrorType, Identifier } from '../common';
+import { Errors, ErrorType, EventType, Identifier } from '../common';
 import { camelCase, remove } from 'lodash';
 import * as jwt from 'jsonwebtoken';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { millisecondsInHour } from 'date-fns';
 import { lookup } from 'zipcode-to-timezone';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Resolver(() => Member)
 export class MemberResolver {
   private readonly authenticationPrefix = 'Bearer ';
 
-  constructor(private readonly memberService: MemberService) {}
+  constructor(private readonly memberService: MemberService, private eventEmitter: EventEmitter2) {}
 
   @Mutation(() => Identifier)
   async createMember(
@@ -34,11 +35,19 @@ export class MemberResolver {
     const dischargeNotesLink = `${firstName}_${lastName}_Summary.pdf`;
     const dischargeInstructionsLink = `${firstName}_${lastName}_Instructions.pdf`;
 
-    return this.memberService.insert({
+    const member = await this.memberService.insert({
       createMemberParams,
       dischargeNotesLink,
       dischargeInstructionsLink,
     });
+
+    this.eventEmitter.emit(EventType.collectUsersDataBridge, {
+      member,
+      primaryCoachId: createMemberParams.primaryCoachId,
+      usersIds: createMemberParams.usersIds,
+    });
+
+    return member;
   }
 
   @Query(() => Member, { nullable: true })
