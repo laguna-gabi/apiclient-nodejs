@@ -14,6 +14,7 @@ import {
   AvailabilityService,
 } from '../../src/availability';
 import { User, UserDto } from '../../src/user';
+import { Errors, ErrorType } from '../../src/common';
 
 describe('AvailabilityService', () => {
   let module: TestingModule;
@@ -141,6 +142,26 @@ describe('AvailabilityService', () => {
     it('should not take longer than 0.5 seconds to fetch availabilities', async () => {
       await service.get();
     }, 500);
+  });
+
+  describe('delete', () => {
+    it('should successfully delete an availability', async () => {
+      const params = generateAvailabilityInput();
+      const { ids } = await service.create([params]);
+
+      let result = await availabilityModel.findById(ids[0]);
+      expect(result).not.toBeNull();
+
+      await service.delete(ids[0]);
+
+      result = await availabilityModel.findById(ids[0]);
+      expect(result).toBeNull();
+    });
+
+    it('should throw exception when trying to delete a non existing availability', async () => {
+      const id = new Types.ObjectId().toString();
+      await expect(service.delete(id)).rejects.toThrow(Errors.get(ErrorType.availabilityNotFound));
+    });
   });
 
   it('should check that createdAt and updatedAt exists in the collection', async () => {

@@ -6,6 +6,7 @@ import {
   AvailabilityResolver,
   AvailabilityService,
 } from '../../src/availability';
+import { Types } from 'mongoose';
 
 describe('AvailabilityResolver', () => {
   let module: TestingModule;
@@ -57,13 +58,34 @@ describe('AvailabilityResolver', () => {
       spyOnServiceGet.mockReset();
     });
 
-    it('should successfully create availabilities', async () => {
+    it('should successfully get availabilities', async () => {
       spyOnServiceGet.mockImplementationOnce(async () => undefined);
 
       await resolver.getAvailabilities();
 
       expect(spyOnServiceGet).toBeCalledTimes(1);
       expect(spyOnServiceGet).toBeCalledWith();
+    });
+  });
+
+  describe('deleteAvailability', () => {
+    let spyOnServiceDelete;
+    beforeEach(() => {
+      spyOnServiceDelete = jest.spyOn(service, 'delete');
+    });
+
+    afterEach(() => {
+      spyOnServiceDelete.mockReset();
+    });
+
+    it('should successfully delete an availability', async () => {
+      spyOnServiceDelete.mockImplementationOnce(async () => undefined);
+
+      const id = new Types.ObjectId().toString();
+      await resolver.deleteAvailability(id);
+
+      expect(spyOnServiceDelete).toBeCalledTimes(1);
+      expect(spyOnServiceDelete).toBeCalledWith(id);
     });
   });
 });

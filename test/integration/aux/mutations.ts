@@ -470,11 +470,32 @@ export class Mutations {
     );
   };
 
-  isResultValid = ({ result, invalidFieldsErrors, missingFieldError }): boolean => {
+  deleteAvailability = async ({
+    id,
+    invalidFieldsErrors,
+  }: {
+    id: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Identifiers> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id: id },
+      mutation: gql`
+        mutation deleteAvailability($id: String!) {
+          deleteAvailability(id: $id)
+        }
+      `,
+    });
+
+    return this.isResultValid({ result, invalidFieldsErrors }) && result.data.deleteAvailability;
+  };
+
+  isResultValid = ({ result, invalidFieldsErrors, missingFieldError = undefined }): boolean => {
     if (invalidFieldsErrors) {
       for (let i = 0; i < invalidFieldsErrors.length; i++) {
-        expect(invalidFieldsErrors[i]).toEqual(result.errors[0][i].message);
-        expect(result.errors[0][i].code).not.toEqual(-1);
+        expect(invalidFieldsErrors[i]).toEqual(
+          result.errors[0][i]?.message || result.errors[0]?.message,
+        );
+        expect(result.errors[0][i]?.code || result.errors[0]?.code).not.toEqual(-1);
       }
     } else if (missingFieldError) {
       expect(result.errors[0].message).toMatch(missingFieldError);

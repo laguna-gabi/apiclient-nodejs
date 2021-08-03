@@ -3,7 +3,7 @@ import { Availability, AvailabilityDocument, AvailabilityInput, AvailabilitySlot
 import { Model, Types } from 'mongoose';
 import { cloneDeep } from 'lodash';
 import { InjectModel } from '@nestjs/mongoose';
-import { Identifiers } from '../common';
+import { Errors, ErrorType, Identifiers } from '../common';
 
 @Injectable()
 export class AvailabilityService {
@@ -22,6 +22,14 @@ export class AvailabilityService {
 
     const result = await this.availabilityModel.insertMany(items);
     return { ids: result.map((item) => item._id) };
+  }
+
+  async delete(id: string): Promise<void> {
+    const result = await this.availabilityModel.deleteOne({ _id: id });
+
+    if (result.deletedCount === 0) {
+      throw new Error(Errors.get(ErrorType.availabilityNotFound));
+    }
   }
 
   async get(): Promise<AvailabilitySlot[]> {

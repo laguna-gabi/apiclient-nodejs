@@ -37,6 +37,9 @@ export enum ErrorType {
   // Module org errors
   orgAlreadyExists = 9401,
   orgTrialDurationOutOfRange = 9402,
+
+  // Module availability errors
+  availabilityNotFound = 9501,
 }
 
 const nameFormat = `name must be between ${graphqlConfig.get('minLength')} and ${graphqlConfig.get(
@@ -82,6 +85,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [ErrorType.orgAlreadyExists.valueOf(), 'organization already exists'],
   [ErrorType.orgTrialDurationOutOfRange.valueOf(), 'trialDuration must not be less than 1'],
+  [ErrorType.availabilityNotFound.valueOf(), 'availability id was not found'],
 ]);
 
 export const DbErrors = {

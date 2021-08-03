@@ -10,6 +10,8 @@ import { Handler } from './aux/handler';
 import { AppointmentsIntegrationActions } from './aux/appointments';
 import { Creators } from './aux/creators';
 import { CreateTaskParams, Task, TaskState } from '../../src/member';
+import { Errors, ErrorType, Identifiers } from '../../src/common';
+import { Types } from 'mongoose';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -261,6 +263,18 @@ describe('Integration tests: all', () => {
     await createAndValidateAvailabilities(5);
   });
 
+  it('should be able to delete an availability', async () => {
+    const { ids } = await createAndValidateAvailabilities(1);
+    await handler.mutations.deleteAvailability({ id: ids[0] });
+  });
+
+  it('should throw error on delete a non existing availability', async () => {
+    await handler.mutations.deleteAvailability({
+      id: new Types.ObjectId().toString(),
+      invalidFieldsErrors: [Errors.get(ErrorType.availabilityNotFound)],
+    });
+  });
+
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/
@@ -276,7 +290,7 @@ describe('Integration tests: all', () => {
     expect(new Date(task.deadline)).toEqual(createTaskParams.deadline);
   };
 
-  const createAndValidateAvailabilities = async (count: number) => {
+  const createAndValidateAvailabilities = async (count: number): Promise<Identifiers> => {
     const { id: userId } = await creators.createAndValidateUser();
 
     const availabilities = Array.from(Array(count)).map(() =>
@@ -295,5 +309,7 @@ describe('Integration tests: all', () => {
     );
 
     expect(resultFiltered.length).toEqual(availabilities.length);
+
+    return { ids };
   };
 });

@@ -18,4 +18,9 @@ export class AvailabilityResolver {
   async getAvailabilities() {
     return this.availabilityService.get();
   }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async deleteAvailability(@Args('id', { type: () => String }) id: string) {
+    await this.availabilityService.delete(id);
+  }
 }
