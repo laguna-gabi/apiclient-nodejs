@@ -1,0 +1,51 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { dbDisconnect, generateAvailabilityInput } from '../index';
+import { DbModule } from '../../src/db/db.module';
+import {
+  AvailabilityModule,
+  AvailabilityResolver,
+  AvailabilityService,
+} from '../../src/availability';
+
+describe('AvailabilityResolver', () => {
+  let module: TestingModule;
+  let resolver: AvailabilityResolver;
+  let service: AvailabilityService;
+
+  beforeAll(async () => {
+    module = await Test.createTestingModule({
+      imports: [DbModule, AvailabilityModule],
+    }).compile();
+
+    resolver = module.get<AvailabilityResolver>(AvailabilityResolver);
+    service = module.get<AvailabilityService>(AvailabilityService);
+  });
+
+  afterAll(async () => {
+    await module.close();
+    await dbDisconnect();
+  });
+
+  describe('createAvailabilities', () => {
+    let spyOnServiceCreate;
+    beforeEach(() => {
+      spyOnServiceCreate = jest.spyOn(service, 'create');
+    });
+
+    afterEach(() => {
+      spyOnServiceCreate.mockReset();
+    });
+
+    describe('createAvailabilities', () => {
+      it('should successfully create availabilities', async () => {
+        const params = generateAvailabilityInput();
+        spyOnServiceCreate.mockImplementationOnce(async () => undefined);
+
+        await resolver.createAvailabilities([params]);
+
+        expect(spyOnServiceCreate).toBeCalledTimes(1);
+        expect(spyOnServiceCreate).toBeCalledWith([params]);
+      });
+    });
+  });
+});

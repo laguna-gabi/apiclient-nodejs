@@ -6,6 +6,7 @@ import { AppModule } from '../src/app.module';
 import { Mutations } from '../test/integration/aux/mutations';
 import { UserRole } from '../src/user';
 import {
+  generateAvailabilityInput,
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateCreateUserParams,
@@ -45,6 +46,15 @@ async function main() {
   const { id: user1Id } = await createUser([UserRole.coach], 'user1');
   const { id: user2Id } = await createUser([UserRole.nurse], 'user2');
   const { id: user3Id } = await createUser([UserRole.coach, UserRole.nurse], 'user2');
+
+  console.debug(
+    '\n----------------------------------------------------------------\n' +
+      '------------- Creating 9 availabilities for 3 users ------------\n' +
+      '----------------------------------------------------------------',
+  );
+  await createAvailability(user1Id);
+  await createAvailability(user2Id);
+  await createAvailability(user3Id);
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
@@ -146,6 +156,15 @@ const createUser = async (roles: UserRole[], userText: string): Promise<Identifi
   console.log(`${id} : ${userText} of type ${roles}`);
 
   return { id };
+};
+
+const createAvailability = async (userId: string) => {
+  const availabilities = [
+    generateAvailabilityInput({ userId }),
+    generateAvailabilityInput({ userId }),
+    generateAvailabilityInput({ userId }),
+  ];
+  await mutations.createAvailabilities({ availabilities });
 };
 
 const requestAppointment = async (memberId: string, userId: string, userText: string) => {

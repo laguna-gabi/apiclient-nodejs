@@ -17,6 +17,7 @@ import {
 } from '../../../src/appointment';
 import { Identifier } from '../../../src/common';
 import { CreateOrgParams } from '../../../src/org';
+import { AvailabilityInput } from '../../../src/availability';
 
 export class Mutations {
   constructor(private readonly apolloClient: ApolloServerTestClient) {}
@@ -440,6 +441,30 @@ export class Mutations {
     return (
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.updateGoalState
+    );
+  };
+
+  createAvailabilities = async ({
+    availabilities,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    availabilities: AvailabilityInput[];
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Identifier> => {
+    const result = await this.apolloClient.mutate({
+      variables: { availabilities: availabilities },
+      mutation: gql`
+        mutation createAvailabilities($availabilities: [AvailabilityInput!]!) {
+          createAvailabilities(availabilities: $availabilities)
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.createAvailabilities
     );
   };
 

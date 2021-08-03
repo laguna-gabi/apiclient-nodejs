@@ -1,4 +1,5 @@
 import {
+  generateAvailabilityInput,
   generateCreateMemberParams,
   generateNotesParams,
   generateUpdateMemberParams,
@@ -253,6 +254,15 @@ describe('Integration tests: all', () => {
     creators.handler.setContextUser(memberParams.deviceId);
     const member = await creators.handler.queries.getMember();
     expect(member.utcDelta).toBeLessThan(0);
+  });
+
+  it('should set availability for users', async () => {
+    const user1 = await creators.createAndValidateUser();
+    const availabilities = [
+      generateAvailabilityInput({ userId: user1.id }),
+      generateAvailabilityInput({ userId: user1.id }),
+    ];
+    await handler.mutations.createAvailabilities({ availabilities });
   });
 
   /************************************************************************************************

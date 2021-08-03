@@ -22,6 +22,7 @@ import { CreateOrgParams, OrgType } from '../src/org';
 import { Links } from '.';
 import { Language } from '../src/common';
 import { lookup } from 'zipcode-to-timezone';
+import { AvailabilityInput } from '../src/availability';
 
 export const generateCreateUserParams = ({
   roles = [UserRole.coach],
@@ -300,6 +301,20 @@ export const generateZipCode = (): string => {
       return zipCode;
     }
   }
+};
+
+export const generateAvailabilityInput = ({
+  userId = new Types.ObjectId().toString(),
+  start = faker.date.soon(),
+  end,
+}: {
+  userId?: string;
+  start?: Date;
+  end?: Date;
+} = {}): AvailabilityInput => {
+  const endNew = new Date(start);
+  endNew.setHours(endNew.getHours() + 5);
+  return { userId, start, end: end || endNew };
 };
 
 const generateEmail = () => {

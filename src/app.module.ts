@@ -10,6 +10,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { OrgModule } from './org';
 import { TerminusModule } from '@nestjs/terminus';
 import { HealthController } from './health/health.controller';
+import { AvailabilityModule } from './availability';
 
 const badRequestException = 'Bad Request Exception';
 
@@ -19,6 +20,7 @@ const badRequestException = 'Bad Request Exception';
     UserModule,
     AppointmentModule,
     OrgModule,
+    AvailabilityModule,
     DbModule,
     TerminusModule,
     EventEmitterModule.forRoot(),
