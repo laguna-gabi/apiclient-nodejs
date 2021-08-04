@@ -62,7 +62,6 @@ export class AppointmentService extends BaseService {
       {
         userId: new Types.ObjectId(params.userId),
         memberId: new Types.ObjectId(params.memberId),
-        status: AppointmentStatus.requested,
       },
       {
         $set: {
@@ -80,10 +79,12 @@ export class AppointmentService extends BaseService {
 
     const result = this.replaceId(object.value.toObject() as AppointmentDocument);
 
-    this.notifyNewAppointmentCreated({
-      userId: result.userId,
-      appointmentId: result.id,
-    });
+    if (!object.lastErrorObject.updatedExisting) {
+      this.notifyNewAppointmentCreated({
+        userId: result.userId,
+        appointmentId: result.id,
+      });
+    }
 
     return result;
   }

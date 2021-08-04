@@ -92,7 +92,7 @@ describe('Integration tests : getMembers', () => {
         actionItemsCount: 1,
         primaryCoach: expect.objectContaining({ avatar: primaryCoach.avatar }),
         nextAppointment: appointment.start,
-        appointmentsCount: 3,
+        appointmentsCount: 1,
       }),
     );
   });
@@ -129,7 +129,7 @@ describe('Integration tests : getMembers', () => {
     expect(membersResult[0]).toEqual(
       expect.objectContaining({
         nextAppointment: null,
-        appointmentsCount: 2,
+        appointmentsCount: 1,
       }),
     );
   });
@@ -145,18 +145,20 @@ describe('Integration tests : getMembers', () => {
 
     const start1 = new Date();
     start1.setHours(start1.getHours() + 2);
-    const appointment = await generateAppointment({ userId, memberId, start: start1 });
+    const appointment1 = await generateAppointment({ userId, memberId, start: start1 });
     const start2 = new Date();
     start2.setHours(start1.getHours() + 4);
-    await generateAppointment({ userId, memberId, start: start2 });
+    const appointment2 = await generateAppointment({ userId, memberId, start: start2 });
 
     const membersResult = await handler.queries.getMembers(org.id);
+
+    expect(appointment1.id).toEqual(appointment2.id);
 
     expect(membersResult.length).toEqual(1);
     expect(membersResult[0]).toEqual(
       expect.objectContaining({
-        nextAppointment: appointment.start,
-        appointmentsCount: 2,
+        nextAppointment: appointment2.start,
+        appointmentsCount: 1,
       }),
     );
   });
@@ -172,18 +174,19 @@ describe('Integration tests : getMembers', () => {
 
     const start1 = new Date();
     start1.setHours(start1.getHours() + 2);
-    await generateAppointment({ userId, memberId, start: start1 });
+    const appointment1 = await generateAppointment({ userId, memberId, start: start1 });
     const start2 = new Date();
     start2.setHours(start2.getHours() + 1);
-    const appointment = await generateAppointment({ userId, memberId, start: start2 });
+    const appointment2 = await generateAppointment({ userId, memberId, start: start2 });
 
+    expect(appointment1.id).toEqual(appointment2.id);
     const membersResult = await handler.queries.getMembers(org.id);
 
     expect(membersResult.length).toEqual(1);
     expect(membersResult[0]).toEqual(
       expect.objectContaining({
-        nextAppointment: appointment.start,
-        appointmentsCount: 2,
+        nextAppointment: appointment2.start,
+        appointmentsCount: 1,
       }),
     );
   });
@@ -227,7 +230,7 @@ describe('Integration tests : getMembers', () => {
     expect(membersResult[0]).toEqual(
       expect.objectContaining({
         nextAppointment: appointment.start,
-        appointmentsCount: 4,
+        appointmentsCount: 3,
       }),
     );
   });

@@ -28,6 +28,7 @@ describe('AppointmentService', () => {
   let service: AppointmentService;
   let eventEmitter: EventEmitter2;
   let appointmentModel: Model<typeof AppointmentDto>;
+  let spyOnEventEmitter;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -38,6 +39,7 @@ describe('AppointmentService', () => {
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
 
     appointmentModel = model(Appointment.name, AppointmentDto);
+    spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
 
     await dbConnect();
   });
@@ -45,6 +47,10 @@ describe('AppointmentService', () => {
   afterAll(async () => {
     await module.close();
     await dbDisconnect();
+  });
+
+  afterEach(() => {
+    spyOnEventEmitter.mockReset();
   });
 
   describe('get', () => {
@@ -78,6 +84,7 @@ describe('AppointmentService', () => {
 
       const result = await service.get(id);
       expect(result.status).toEqual(AppointmentStatus.scheduled);
+      validateNewAppointmentEvent(appointment.userId, id);
     });
   });
 
@@ -86,6 +93,7 @@ describe('AppointmentService', () => {
       const appointmentParams = generateRequestAppointmentParams();
       const result = await service.request(appointmentParams);
 
+      validateNewAppointmentEvent(appointmentParams.userId, result.id);
       expect(result.id).not.toBeUndefined();
 
       const resultGet = await appointmentModel.findById(result.id);
@@ -102,7 +110,7 @@ describe('AppointmentService', () => {
       );
     });
 
-    it('should updated an appointment notBefore for an existing memberId and userId', async () => {
+    it('should update an appointment notBefore for an existing memberId and userId', async () => {
       const memberId = new Types.ObjectId().toString();
       const userId = new Types.ObjectId().toString();
 
@@ -111,6 +119,7 @@ describe('AppointmentService', () => {
         userId,
         notBeforeHours: 12,
       });
+      validateNewAppointmentEvent(userId, id1);
 
       const {
         notBefore,
@@ -121,6 +130,7 @@ describe('AppointmentService', () => {
         userId,
         notBeforeHours: 8,
       });
+      expect(spyOnEventEmitter).not.toBeCalled();
 
       expect(id1).toEqual(id2);
 
@@ -146,12 +156,14 @@ describe('AppointmentService', () => {
         userId: userId1,
         notBeforeHours: 5,
       });
+      validateNewAppointmentEvent(userId1, id1);
 
       const { id: id2, record: record2 } = await requestAppointment({
         memberId,
         userId: userId2,
         notBeforeHours: 2,
       });
+      validateNewAppointmentEvent(userId2, id2);
 
       expect(id1).not.toEqual(id2);
       expect(record1.memberId).toEqual(record2.memberId);
@@ -172,12 +184,14 @@ describe('AppointmentService', () => {
         userId,
         notBeforeHours: 5,
       });
+      validateNewAppointmentEvent(userId, id1);
 
       const { id: id2, record: record2 } = await requestAppointment({
         memberId: memberId2,
         userId,
         notBeforeHours: 2,
       });
+      validateNewAppointmentEvent(userId, id2);
 
       expect(id1).not.toEqual(id2);
       expect(record1.userId).toEqual(record2.userId);
@@ -192,35 +206,11 @@ describe('AppointmentService', () => {
       const params = generateRequestAppointmentParams();
       const { id } = await service.request(params);
 
+      validateNewAppointmentEvent(params.userId, id);
+
       const createdAppointment: any = await appointmentModel.findById(id);
       expect(createdAppointment.createdAt).toEqual(expect.any(Date));
       expect(createdAppointment.updatedAt).toEqual(expect.any(Date));
-    });
-
-    it('should validate that on inserted new appointment, an internal event is sent', async () => {
-      const params = generateRequestAppointmentParams();
-      const spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
-      const { id } = await service.request(params);
-
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.newAppointment, {
-        appointmentId: new Types.ObjectId(id),
-        userId: new Types.ObjectId(params.userId),
-      });
-
-      spyOnEventEmitter.mockReset();
-    });
-
-    it('should validate that on updated appointment, an internal event is NOT sent', async () => {
-      const params = generateRequestAppointmentParams();
-      const spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
-
-      await service.request(params);
-      expect(spyOnEventEmitter).toBeCalled();
-      spyOnEventEmitter.mockReset();
-
-      await service.request(params);
-      expect(spyOnEventEmitter).not.toBeCalled();
-      spyOnEventEmitter.mockReset();
     });
 
     it('should create a new request appointment on exising scheduled', async () => {
@@ -228,8 +218,13 @@ describe('AppointmentService', () => {
       const userId = new Types.ObjectId().toString();
       const scheduleParams = generateScheduleAppointmentParams({ userId, memberId });
       const requestParams = generateRequestAppointmentParams({ userId, memberId });
+
       const scheduleAppointment = await service.schedule(scheduleParams);
+      validateNewAppointmentEvent(userId, scheduleAppointment.id);
+      spyOnEventEmitter.mockReset();
+
       const requestAppointment = await service.request(requestParams);
+      validateNewAppointmentEvent(userId, requestAppointment.id);
 
       expect(scheduleAppointment.id).not.toEqual(requestAppointment.id);
     });
@@ -239,6 +234,8 @@ describe('AppointmentService', () => {
     it('should be able to schedule an appointment', async () => {
       const appointmentParams = generateScheduleAppointmentParams();
       const appointment = await service.schedule(appointmentParams);
+
+      validateNewAppointmentEvent(appointmentParams.userId, appointment.id);
 
       expect(appointment).toEqual(
         expect.objectContaining({
@@ -261,9 +258,9 @@ describe('AppointmentService', () => {
       });
 
       const resultBefore = await service.schedule(appointmentParamsBefore);
-
       expect(resultBefore.start).toEqual(start);
       expect(resultBefore.end).toEqual(end);
+      validateNewAppointmentEvent(appointmentParamsBefore.userId, resultBefore.id);
 
       const newStart = new Date(start);
       newStart.setHours(15);
@@ -275,7 +272,7 @@ describe('AppointmentService', () => {
       appointmentParamsAfter.end = newEnd;
 
       const resultAfter = await service.schedule(appointmentParamsAfter);
-
+      expect(spyOnEventEmitter).not.toBeCalled();
       expect(resultAfter.start).toEqual(newStart);
       expect(resultAfter.end).toEqual(newEnd);
 
@@ -288,6 +285,8 @@ describe('AppointmentService', () => {
 
       expect(appointment1).not.toBeUndefined();
       expect(appointment2).not.toBeUndefined();
+
+      expect(appointment1).toEqual(appointment2);
     });
   });
 
@@ -295,6 +294,7 @@ describe('AppointmentService', () => {
     const requestAppointmentParams = generateRequestAppointmentParams();
     const { id } = await service.request(requestAppointmentParams);
 
+    validateNewAppointmentEvent(requestAppointmentParams.userId, id);
     expect(id).not.toBeNull();
 
     const scheduleAppointmentParams = generateScheduleAppointmentParams({
@@ -305,6 +305,7 @@ describe('AppointmentService', () => {
     const { id: scheduledId } = await service.schedule(scheduleAppointmentParams);
 
     expect(id).toEqual(scheduledId);
+    expect(spyOnEventEmitter).not.toBeCalled();
   });
 
   describe('end', () => {
@@ -315,7 +316,10 @@ describe('AppointmentService', () => {
     });
 
     it('should be able to end an existing appointment', async () => {
-      const appointment = await service.request(generateRequestAppointmentParams());
+      const appointmentParams = generateRequestAppointmentParams();
+      const appointment = await service.request(appointmentParams);
+
+      validateNewAppointmentEvent(appointmentParams.userId, appointment.id);
 
       const endResult = await service.end(appointment.id);
       expect(endResult.status).toEqual(AppointmentStatus.done);
@@ -325,6 +329,7 @@ describe('AppointmentService', () => {
       const appointmentParams = generateScheduleAppointmentParams();
 
       const appointment = await service.schedule(appointmentParams);
+      validateNewAppointmentEvent(appointmentParams.userId, appointment.id);
 
       const endResult = await service.end(appointment.id);
       expect(endResult.status).toEqual(AppointmentStatus.done);
@@ -391,7 +396,10 @@ describe('AppointmentService', () => {
     `(
       `should be able to multiple update existing appointment : $update1 and $update2`,
       async (params) => {
-        const appointment = await service.request(generateRequestAppointmentParams());
+        const appointmentParams = generateRequestAppointmentParams();
+        const appointment = await service.request(appointmentParams);
+
+        validateNewAppointmentEvent(appointmentParams.userId, appointment.id);
 
         const updateShowParams1: NoShowParams = {
           id: appointment.id,
@@ -491,5 +499,13 @@ describe('AppointmentService', () => {
 
     const record: any = await appointmentModel.findById(result.id);
     return { notBefore, id: result.id, record };
+  };
+
+  const validateNewAppointmentEvent = (userId: string, appointmentId: string) => {
+    expect(spyOnEventEmitter).toBeCalledWith(EventType.newAppointment, {
+      appointmentId: appointmentId,
+      userId: new Types.ObjectId(userId),
+    });
+    spyOnEventEmitter.mockReset();
   };
 });

@@ -7,7 +7,7 @@ import {
   generateUpdateMemberParams,
 } from '../index';
 import { UserRole } from '../../src/user';
-import { AppointmentStatus } from '../../src/appointment';
+import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { Handler } from './aux/handler';
 import { AppointmentsIntegrationActions } from './aux/appointments';
 import { Creators } from './aux/creators';
@@ -106,21 +106,21 @@ describe('Integration tests: all', () => {
       expect.objectContaining({ status: AppointmentStatus.done }),
     );
     expect(scheduledAppointmentPrimaryCoach).toEqual(
-      expect.objectContaining(member.primaryCoach.appointments[1]),
+      expect.objectContaining(member.primaryCoach.appointments[0]),
     );
 
     expect(member.users[0].appointments[0]).toEqual(
       expect.objectContaining({ status: AppointmentStatus.done }),
     );
     expect(scheduledAppointmentNurse1).toEqual(
-      expect.objectContaining(member.users[0].appointments[1]),
+      expect.objectContaining(member.users[0].appointments[0]),
     );
 
     expect(member.users[1].appointments[0]).toEqual(
       expect.objectContaining({ status: AppointmentStatus.done }),
     );
     expect(scheduledAppointmentNurse2).toEqual(
-      expect.objectContaining(member.users[1].appointments[1]),
+      expect.objectContaining(member.users[1].appointments[0]),
     );
     expect(member.scores).toEqual(scheduledAppointmentNurse2.notes.scores);
 
@@ -158,22 +158,22 @@ describe('Integration tests: all', () => {
 
     const primaryCoachWithAppointments = await handler.queries.getUser(primaryCoach.id);
     expect(appointmentMember1).toEqual(
-      expect.objectContaining(primaryCoachWithAppointments.appointments[1]),
+      expect.objectContaining(primaryCoachWithAppointments.appointments[0]),
     );
     expect(appointmentMember2).toEqual(
-      expect.objectContaining(primaryCoachWithAppointments.appointments[3]),
+      expect.objectContaining(primaryCoachWithAppointments.appointments[1]),
     );
 
     handler.setContextUser(member1.deviceId);
     const memberResult1 = await handler.queries.getMember();
     expect(appointmentMember1).toEqual(
-      expect.objectContaining(memberResult1.primaryCoach.appointments[1]),
+      expect.objectContaining(memberResult1.primaryCoach.appointments[0]),
     );
 
     handler.setContextUser(member2.deviceId);
     const memberResult2 = await handler.queries.getMember();
     expect(appointmentMember2).toEqual(
-      expect.objectContaining(memberResult2.primaryCoach.appointments[1]),
+      expect.objectContaining(memberResult2.primaryCoach.appointments[0]),
     );
   });
 
@@ -320,7 +320,7 @@ describe('Integration tests: all', () => {
     await creators.handler.mutations.requestAppointment({ appointmentParams: params2b });
 
     const result = await creators.handler.queries.getMembersAppointments(org.id);
-    expect(result.length).toEqual(3);
+    expect(result.length).toEqual(2);
 
     expect(result).toEqual(
       expect.arrayContaining([
@@ -376,6 +376,43 @@ describe('Integration tests: all', () => {
     const result = await creators.handler.queries.getAppointment(scheduledId);
     expect(new Date(result.end)).toEqual(scheduledAppointment.end);
     expect(new Date(result.start)).toEqual(scheduledAppointment.start);
+  });
+
+  it('should override scheduled appointment when calling schedule appointment', async () => {
+    const primaryCoach = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+
+    const memberParams = generateCreateMemberParams({
+      orgId: org.id,
+      primaryCoachId: primaryCoach.id,
+    });
+    const { id: memberId } = await creators.handler.mutations.createMember({
+      memberParams,
+    });
+
+    const scheduledAppointment1 = generateScheduleAppointmentParams({
+      memberId,
+      userId: primaryCoach.id,
+      method: AppointmentMethod.chat,
+    });
+    const { id: requestedId } = await creators.handler.mutations.scheduleAppointment({
+      appointmentParams: scheduledAppointment1,
+    });
+
+    const scheduledAppointment2 = generateScheduleAppointmentParams({
+      memberId,
+      userId: primaryCoach.id,
+      method: AppointmentMethod.videoCall,
+    });
+    const { id: scheduledId } = await creators.handler.mutations.scheduleAppointment({
+      appointmentParams: scheduledAppointment2,
+    });
+
+    expect(requestedId).toEqual(scheduledId);
+    const result = await creators.handler.queries.getAppointment(scheduledId);
+    expect(new Date(result.end)).toEqual(scheduledAppointment2.end);
+    expect(new Date(result.start)).toEqual(scheduledAppointment2.start);
+    expect(result.method).toEqual(scheduledAppointment2.method);
   });
 
   /************************************************************************************************
