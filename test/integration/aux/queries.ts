@@ -1,5 +1,6 @@
 import gql from 'graphql-tag';
 import { ApolloServerTestClient } from 'apollo-server-testing';
+import { GetCommunicationParams } from '../../../src/communication';
 
 export class Queries {
   constructor(private readonly apolloClient: ApolloServerTestClient) {}
@@ -269,5 +270,35 @@ export class Queries {
     });
 
     return result.data.getAvailabilities;
+  };
+
+  getCommunication = async ({
+    getCommunicationParams,
+    missingFieldError,
+  }: {
+    getCommunicationParams: GetCommunicationParams;
+    missingFieldError?: string;
+  }) => {
+    const result = await this.apolloClient.query({
+      variables: { getCommunicationParams },
+      query: gql`
+        query getCommunication($getCommunicationParams: GetCommunicationParams!) {
+          getCommunication(getCommunicationParams: $getCommunicationParams) {
+            memberId
+            userId
+            chat {
+              memberUrl
+              userUrl
+            }
+          }
+        }
+      `,
+    });
+
+    if (missingFieldError) {
+      expect(result.errors[0].message).toMatch(missingFieldError);
+      return;
+    }
+    return result.data.getCommunication;
   };
 }

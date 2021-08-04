@@ -5,6 +5,7 @@ import {
   Communication,
   CommunicationDocument,
   CreateSendbirdGroupChannelParams,
+  GetCommunicationParams,
   RegisterSendbirdUserParams,
 } from '.';
 import { User } from '../user';
@@ -60,5 +61,12 @@ export class CommunicationService {
         sendbirdChannelUrl,
       });
     }
+  }
+
+  async get(params: GetCommunicationParams): Promise<Communication | null> {
+    return this.communicationModel.findOne({
+      userId: new Types.ObjectId(params.userId),
+      memberId: new Types.ObjectId(params.memberId),
+    });
   }
 }

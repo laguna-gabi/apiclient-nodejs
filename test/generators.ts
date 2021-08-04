@@ -24,6 +24,7 @@ import { Links } from '.';
 import { Language } from '../src/common';
 import { lookup } from 'zipcode-to-timezone';
 import { AvailabilityInput } from '../src/availability';
+import { GetCommunicationParams } from '../src/communication';
 
 export const generateCreateUserParams = ({
   roles = [UserRole.coach],
@@ -331,6 +332,13 @@ export const generateAvailabilityInput = ({
   const endNew = new Date(start);
   endNew.setHours(endNew.getHours() + 5);
   return { userId, start, end: end || endNew };
+};
+
+export const generateGetCommunicationParams = ({
+  userId = new Types.ObjectId().toString(),
+  memberId = new Types.ObjectId().toString(),
+}: { userId?: string; memberId?: string } = {}): GetCommunicationParams => {
+  return { userId, memberId };
 };
 
 const generateEmail = () => {

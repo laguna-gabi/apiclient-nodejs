@@ -1,4 +1,7 @@
 {
+  "hosts": {
+    "chat": "https://www.chat.getlaguna.com"
+  },
   "providers": {
     "sendbird": {
       "appId": "3DFBFF29-DA70-47BC-8362-B74CF1F46523",

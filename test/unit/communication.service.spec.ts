@@ -99,4 +99,27 @@ describe('CommunicationService', () => {
       );
     });
   });
+
+  describe('get', () => {
+    it('should fetch communication object from userId and memberId', async () => {
+      const member = mockGenerateMember();
+      await service.createMember(member);
+      const user = mockGenerateUser();
+      await service.createUser(user);
+      await service.connectMemberToUser(member, user);
+
+      const result = await service.get({ memberId: member.id, userId: user.id });
+      expect(result.memberId.toString()).toEqual(member.id);
+      expect(result.userId.toString()).toEqual(user.id);
+      expect(result.sendbirdChannelUrl).toEqual(expect.any(String));
+    });
+
+    it('should return null for not existing userId and memberId', async () => {
+      const result = await service.get({
+        memberId: new Types.ObjectId().toString(),
+        userId: new Types.ObjectId().toString(),
+      });
+      expect(result).toBeNull();
+    });
+  });
 });

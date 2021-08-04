@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 
 /**************************************************************************************************
  **************************************** Internal params *****************************************
@@ -20,6 +21,18 @@ export interface CreateSendbirdGroupChannelParams {
 }
 
 /**************************************************************************************************
+ ********************************** Input params for gql methods **********************************
+ *************************************************************************************************/
+@InputType()
+export class GetCommunicationParams {
+  @Field(() => String)
+  memberId: string;
+
+  @Field(() => String)
+  userId: string;
+}
+
+/**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
 @Schema({ versionKey: false, timestamps: true })
@@ -32,6 +45,27 @@ export class Communication {
 
   @Prop({ index: true, unique: true })
   sendbirdChannelUrl: string;
+}
+
+@ObjectType()
+export class Chat {
+  @Field(() => String)
+  memberUrl: string;
+
+  @Field(() => String)
+  userUrl: string;
+}
+
+@ObjectType()
+export class CommunicationInfo {
+  @Field(() => String)
+  memberId: string;
+
+  @Field(() => String)
+  userId: string;
+
+  @Field(() => Chat)
+  chat: Chat;
 }
 
 /**************************************************************************************************

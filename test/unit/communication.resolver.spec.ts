@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { dbDisconnect, mockGenerateMember, mockGenerateUser } from '../index';
+import {
+  dbDisconnect,
+  generateGetCommunicationParams,
+  mockGenerateMember,
+  mockGenerateUser,
+} from '../index';
 import { DbModule } from '../../src/db/db.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import {
@@ -73,6 +78,26 @@ describe('CommunicationResolver', () => {
       expect(spyOnServiceConnectMemberToUser).toBeCalledWith(member, primaryCoach);
       expect(spyOnServiceConnectMemberToUser).toBeCalledWith(member, users[0]);
       expect(spyOnServiceConnectMemberToUser).toBeCalledWith(member, users[1]);
+    });
+  });
+
+  describe('get', () => {
+    let spyOnServiceGet;
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'get');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+    });
+
+    it('should successfully return a communication object', async () => {
+      spyOnServiceGet.mockImplementationOnce(() => undefined);
+
+      const params = generateGetCommunicationParams();
+      await resolver.getCommunication(params);
+
+      expect(spyOnServiceGet).toBeCalledWith(params);
     });
   });
 });

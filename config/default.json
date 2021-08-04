@@ -1,4 +1,7 @@
 {
+  "hosts": {
+    "chat": "https://www.dev.chat.getlaguna.com"
+  },
   "db": {
     "connection": "mongodb://localhost:27017/laguna"
   },
