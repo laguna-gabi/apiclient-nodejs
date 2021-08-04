@@ -122,7 +122,7 @@ export class Creators {
 
     let appointment = await this.appointmentsActions.scheduleAppointment(userId, member);
 
-    expect(requestAppointmentResult.id).not.toEqual(appointment.id);
+    expect(requestAppointmentResult.id).toEqual(appointment.id);
 
     appointment = await this.appointmentsActions.endAppointment(appointment.id);
     appointment = await this.appointmentsActions.freezeAppointment(appointment.id);

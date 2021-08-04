@@ -58,19 +58,27 @@ export class AppointmentService extends BaseService {
   }
 
   async schedule(params: ScheduleAppointmentParams): Promise<Appointment> {
-    const object = (
-      await this.appointmentModel.create({
+    const object = await this.appointmentModel.findOneAndUpdate(
+      {
         userId: new Types.ObjectId(params.userId),
         memberId: new Types.ObjectId(params.memberId),
-        notBefore: params.notBefore,
-        method: params.method,
-        start: params.start,
-        end: params.end,
-        status: AppointmentStatus.scheduled,
-      })
-    ).toObject();
+        status: AppointmentStatus.requested,
+      },
+      {
+        $set: {
+          userId: new Types.ObjectId(params.userId),
+          memberId: new Types.ObjectId(params.memberId),
+          notBefore: params.notBefore,
+          method: params.method,
+          start: params.start,
+          end: params.end,
+          status: AppointmentStatus.scheduled,
+        },
+      },
+      { upsert: true, new: true, rawResult: true },
+    );
 
-    const result = this.replaceId(object as AppointmentDocument);
+    const result = this.replaceId(object.value.toObject() as AppointmentDocument);
 
     this.notifyNewAppointmentCreated({
       userId: result.userId,

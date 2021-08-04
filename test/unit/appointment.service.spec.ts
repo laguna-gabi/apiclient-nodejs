@@ -81,7 +81,7 @@ describe('AppointmentService', () => {
     });
   });
 
-  describe('insert', () => {
+  describe('request', () => {
     it('should insert a new appointment and validate all insert fields', async () => {
       const appointmentParams = generateRequestAppointmentParams();
       const result = await service.request(appointmentParams);
@@ -289,6 +289,22 @@ describe('AppointmentService', () => {
       expect(appointment1).not.toBeUndefined();
       expect(appointment2).not.toBeUndefined();
     });
+  });
+
+  it('should override requested appointment on scheduled appointment', async () => {
+    const requestAppointmentParams = generateRequestAppointmentParams();
+    const { id } = await service.request(requestAppointmentParams);
+
+    expect(id).not.toBeNull();
+
+    const scheduleAppointmentParams = generateScheduleAppointmentParams({
+      userId: requestAppointmentParams.userId,
+      memberId: requestAppointmentParams.memberId,
+    });
+
+    const { id: scheduledId } = await service.schedule(scheduleAppointmentParams);
+
+    expect(id).toEqual(scheduledId);
   });
 
   describe('end', () => {
