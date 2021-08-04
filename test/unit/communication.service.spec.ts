@@ -14,6 +14,7 @@ import {
   CommunicationModule,
   CommunicationService,
 } from '../../src/communication';
+import { UserRole } from '../../src/user';
 
 describe('CommunicationService', () => {
   let module: TestingModule;
@@ -51,7 +52,7 @@ describe('CommunicationService', () => {
         user_id: user.id,
         nickname: `${user.firstName} ${user.lastName}`,
         profile_url: user.avatar,
-        metadata: { roles: user.roles },
+        metadata: { role: UserRole.coach },
       });
     });
   });

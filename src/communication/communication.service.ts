@@ -8,7 +8,7 @@ import {
   GetCommunicationParams,
   RegisterSendbirdUserParams,
 } from '.';
-import { User } from '../user';
+import { User, UserRole } from '../user';
 import { Member } from '../member';
 import { v4 } from 'uuid';
 import { SendBird } from '../providers';
@@ -21,12 +21,16 @@ export class CommunicationService {
     private readonly sendBird: SendBird,
   ) {}
 
+  /**
+   * metadata is required to be 'coach', otherwise chat won't be active
+   * https://github.com/LagunaHealth/laguna-chat-v2/blob/develop/src/Home.js#L36
+   */
   async createUser(user: User) {
     const params: RegisterSendbirdUserParams = {
       user_id: user.id,
       nickname: `${user.firstName} ${user.lastName}`,
       profile_url: user.avatar,
-      metadata: { roles: user.roles },
+      metadata: { role: UserRole.coach },
     };
 
     await this.sendBird.createUser(params);
