@@ -22,8 +22,8 @@ export class CommunicationResolver {
         memberId: result.memberId,
         userId: result.userId,
         chat: {
-          memberUrl: this.buildUrl({ uid: result.memberId, mid: result.sendbirdChannelUrl }),
-          userUrl: this.buildUrl({ uid: result.userId, mid: result.sendbirdChannelUrl }),
+          memberLink: this.buildUrl({ uid: result.memberId, mid: result.sendbirdChannelUrl }),
+          userLink: this.buildUrl({ uid: result.userId, mid: result.sendbirdChannelUrl }),
         },
       };
     } else {

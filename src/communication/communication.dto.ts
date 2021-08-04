@@ -50,10 +50,10 @@ export class Communication {
 @ObjectType()
 export class Chat {
   @Field(() => String)
-  memberUrl: string;
+  memberLink: string;
 
   @Field(() => String)
-  userUrl: string;
+  userLink: string;
 }
 
 @ObjectType()

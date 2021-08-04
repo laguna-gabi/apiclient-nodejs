@@ -287,8 +287,8 @@ export class Queries {
             memberId
             userId
             chat {
-              memberUrl
-              userUrl
+              memberLink
+              userLink
             }
           }
         }
