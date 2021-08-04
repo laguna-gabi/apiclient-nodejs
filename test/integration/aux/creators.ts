@@ -1,5 +1,6 @@
 import { CreateUserParams, User, UserRole } from '../../../src/user';
 import {
+  generateAppointmentLink,
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateCreateUserParams,
@@ -129,16 +130,24 @@ export class Creators {
     appointment = await this.appointmentsActions.endAppointment(appointment.id); //Unfreeze
     appointment = await this.appointmentsActions.showAppointment(appointment.id);
 
+    const expectResult = (result) => {
+      expect(result).toEqual({
+        ...appointment,
+        updatedAt: result.updatedAt,
+        notes,
+        link: generateAppointmentLink(appointment.id),
+      });
+    };
+
     let notes = generateNotesParams();
     await this.handler.mutations.setNotes({ params: { appointmentId: appointment.id, ...notes } });
     let result = await this.handler.queries.getAppointment(appointment.id);
-
-    expect(result).toEqual({ ...appointment, updatedAt: result.updatedAt, notes });
+    expectResult(result);
 
     notes = generateNotesParams(2);
     await this.handler.mutations.setNotes({ params: { appointmentId: appointment.id, ...notes } });
     result = await this.handler.queries.getAppointment(appointment.id);
-    expect(result).toEqual({ ...appointment, updatedAt: result.updatedAt, notes });
+    expectResult(result);
 
     return result;
   };

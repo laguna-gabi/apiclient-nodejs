@@ -13,9 +13,12 @@ import {
 } from '.';
 import { Errors, ErrorType, EventType, BaseService } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import * as config from 'config';
 
 @Injectable()
 export class AppointmentService extends BaseService {
+  private readonly APP_URL = config.get('hosts.app');
+
   constructor(
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument>,
@@ -43,10 +46,8 @@ export class AppointmentService extends BaseService {
     );
 
     if (result.lastErrorObject.upserted) {
-      this.notifyNewAppointmentCreated({
-        userId: result.value.userId,
-        appointmentId: result.value._id,
-      });
+      const { _id, userId } = result.value;
+      return this.postNewAppointmentAction({ userId, appointmentId: _id });
     }
 
     return this.replaceId(result.value.toObject() as AppointmentDocument);
@@ -77,16 +78,14 @@ export class AppointmentService extends BaseService {
       { upsert: true, new: true, rawResult: true },
     );
 
-    const result = this.replaceId(object.value.toObject() as AppointmentDocument);
-
     if (!object.lastErrorObject.updatedExisting) {
-      this.notifyNewAppointmentCreated({
-        userId: result.userId,
-        appointmentId: result.id,
+      return this.postNewAppointmentAction({
+        userId: object.value.userId,
+        appointmentId: object.value._id,
       });
     }
 
-    return result;
+    return this.replaceId(object.value.toObject() as AppointmentDocument);
   }
 
   async end(id: string): Promise<Appointment> {
@@ -156,7 +155,7 @@ export class AppointmentService extends BaseService {
     return this.replaceId(object.toObject());
   }
 
-  private notifyNewAppointmentCreated({
+  private async postNewAppointmentAction({
     userId,
     appointmentId,
   }: {
@@ -167,5 +166,15 @@ export class AppointmentService extends BaseService {
       userId,
       appointmentId,
     });
+
+    const link = `${this.APP_URL}/${appointmentId.toString()}`;
+
+    const result = await this.appointmentModel.findOneAndUpdate(
+      { _id: appointmentId },
+      { $set: { link } },
+      { upsert: true, new: true, rawResult: true },
+    );
+
+    return this.replaceId(result.value.toObject() as AppointmentDocument);
   }
 }

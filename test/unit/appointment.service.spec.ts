@@ -4,6 +4,7 @@ import { model, Model, Types } from 'mongoose';
 import {
   dbConnect,
   dbDisconnect,
+  generateAppointmentLink,
   generateNoShowAppointmentParams,
   generateNotesParams,
   generateRequestAppointmentParams,
@@ -12,6 +13,7 @@ import {
 import {
   Appointment,
   AppointmentDto,
+  AppointmentMethod,
   AppointmentModule,
   AppointmentService,
   AppointmentStatus,
@@ -22,6 +24,7 @@ import { Errors, ErrorType, EventType } from '../../src/common';
 import * as faker from 'faker';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { cloneDeep } from 'lodash';
+import * as config from 'config';
 
 describe('AppointmentService', () => {
   let module: TestingModule;
@@ -73,6 +76,7 @@ describe('AppointmentService', () => {
           memberId: new Types.ObjectId(appointment.memberId),
           notBefore: appointment.notBefore,
           status: AppointmentStatus.requested,
+          link: generateAppointmentLink(id),
           updatedAt: expect.any(Date),
         }),
       );
@@ -94,7 +98,15 @@ describe('AppointmentService', () => {
       const result = await service.request(appointmentParams);
 
       validateNewAppointmentEvent(appointmentParams.userId, result.id);
-      expect(result.id).not.toBeUndefined();
+      expect(result).toEqual(
+        expect.objectContaining({
+          id: result.id,
+          notBefore: result.notBefore,
+          status: AppointmentStatus.requested,
+          link: generateAppointmentLink(result.id),
+          updatedAt: expect.any(Date),
+        }),
+      );
 
       const resultGet = await appointmentModel.findById(result.id);
 
@@ -105,6 +117,7 @@ describe('AppointmentService', () => {
           memberId: new Types.ObjectId(appointmentParams.memberId),
           notBefore: appointmentParams.notBefore,
           status: AppointmentStatus.requested,
+          link: generateAppointmentLink(result.id),
           updatedAt: expect.any(Date),
         }),
       );
@@ -141,6 +154,7 @@ describe('AppointmentService', () => {
           memberId: new Types.ObjectId(memberId),
           notBefore,
           status: AppointmentStatus.requested,
+          link: generateAppointmentLink(record1.id),
           updatedAt: expect.any(Date),
         }),
       );
@@ -239,10 +253,11 @@ describe('AppointmentService', () => {
 
       expect(appointment).toEqual(
         expect.objectContaining({
-          id: expect.any(Types.ObjectId),
+          id: appointment.id,
           method: appointmentParams.method,
           notBefore: appointmentParams.notBefore,
           status: AppointmentStatus.scheduled,
+          link: generateAppointmentLink(appointment.id),
           updatedAt: expect.any(Date),
         }),
       );
@@ -275,6 +290,7 @@ describe('AppointmentService', () => {
       expect(spyOnEventEmitter).not.toBeCalled();
       expect(resultAfter.start).toEqual(newStart);
       expect(resultAfter.end).toEqual(newEnd);
+      expect(resultAfter.link).toEqual(generateAppointmentLink(resultAfter.id));
 
       const appointment1 = await appointmentModel.find({
         _id: new Types.ObjectId(resultBefore.id),
@@ -503,7 +519,7 @@ describe('AppointmentService', () => {
 
   const validateNewAppointmentEvent = (userId: string, appointmentId: string) => {
     expect(spyOnEventEmitter).toBeCalledWith(EventType.newAppointment, {
-      appointmentId: appointmentId,
+      appointmentId,
       userId: new Types.ObjectId(userId),
     });
     spyOnEventEmitter.mockReset();

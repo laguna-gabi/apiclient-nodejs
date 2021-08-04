@@ -84,6 +84,7 @@ export class Queries {
                 status
                 start
                 end
+                link
                 notes {
                   notes {
                     key
@@ -118,6 +119,7 @@ export class Queries {
                 status
                 start
                 end
+                link
                 notes {
                   notes {
                     key
@@ -230,6 +232,7 @@ export class Queries {
             status
             start
             end
+            link
             updatedAt
             noShow {
               noShow

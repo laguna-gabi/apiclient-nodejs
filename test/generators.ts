@@ -25,6 +25,7 @@ import { Language } from '../src/common';
 import { lookup } from 'zipcode-to-timezone';
 import { AvailabilityInput } from '../src/availability';
 import { GetCommunicationParams } from '../src/communication';
+import * as config from 'config';
 
 export const generateCreateUserParams = ({
   roles = [UserRole.coach],
@@ -339,6 +340,10 @@ export const generateGetCommunicationParams = ({
   memberId = new Types.ObjectId().toString(),
 }: { userId?: string; memberId?: string } = {}): GetCommunicationParams => {
   return { userId, memberId };
+};
+
+export const generateAppointmentLink = (appointmentId: string) => {
+  return `${config.get('hosts.app')}/${appointmentId}`;
 };
 
 const generateEmail = () => {

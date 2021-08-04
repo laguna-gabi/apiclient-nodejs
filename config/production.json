@@ -1,6 +1,7 @@
 {
   "hosts": {
-    "chat": "https://www.chat.getlaguna.com"
+    "chat": "https://www.chat.getlaguna.com",
+    "app": "https://www.app.getlaguna.com"
   },
   "providers": {
     "sendbird": {

@@ -169,6 +169,7 @@ export class Mutations {
             status
             start
             end
+            link
             updatedAt
           }
         }
@@ -203,6 +204,7 @@ export class Mutations {
             status
             start
             end
+            link
             updatedAt
           }
         }

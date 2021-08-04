@@ -1,4 +1,5 @@
 import {
+  generateAppointmentLink,
   generateAvailabilityInput,
   generateCreateMemberParams,
   generateNotesParams,
@@ -413,6 +414,25 @@ describe('Integration tests: all', () => {
     expect(new Date(result.end)).toEqual(scheduledAppointment2.end);
     expect(new Date(result.start)).toEqual(scheduledAppointment2.start);
     expect(result.method).toEqual(scheduledAppointment2.method);
+  });
+
+  it('should validate that getMember attach chat app link to each appointment', async () => {
+    const primaryCoach = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({ org, primaryCoach });
+
+    const appointmentMember = await creators.createAndValidateAppointment({
+      userId: primaryCoach.id,
+      member,
+    });
+
+    handler.setContextUser(member.deviceId);
+    const memberResult = await handler.queries.getMember();
+    expect(appointmentMember).toEqual(
+      expect.objectContaining({
+        link: generateAppointmentLink(memberResult.primaryCoach.appointments[0].id),
+      }),
+    );
   });
 
   /************************************************************************************************

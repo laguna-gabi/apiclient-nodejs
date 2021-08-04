@@ -1,6 +1,7 @@
 import { Member } from '../../../src/member';
 import { Appointment, AppointmentStatus } from '../../../src/appointment';
 import {
+  generateAppointmentLink,
   generateNoShowAppointmentParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
@@ -23,6 +24,7 @@ export class AppointmentsIntegrationActions {
     expect(appointmentResult.memberId).toEqual(member.id);
     expect(new Date(appointmentResult.notBefore)).toEqual(new Date(appointmentParams.notBefore));
     expect(appointmentResult.status).toEqual(AppointmentStatus.requested);
+    expect(appointmentResult.link).toEqual(generateAppointmentLink(appointmentResult.id));
 
     return appointmentResult;
   };
@@ -43,6 +45,7 @@ export class AppointmentsIntegrationActions {
     expect(new Date(appointmentResult.notBefore)).toEqual(scheduleAppointment.notBefore);
     expect(new Date(appointmentResult.start)).toEqual(scheduleAppointment.start);
     expect(new Date(appointmentResult.end)).toEqual(scheduleAppointment.end);
+    expect(appointmentResult.link).toEqual(generateAppointmentLink(appointmentResult.id));
 
     return appointmentResult;
   };

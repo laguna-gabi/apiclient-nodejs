@@ -136,6 +136,10 @@ export class Appointment extends Identifier {
 
   @Field(() => Date)
   updatedAt: Date;
+
+  @Prop()
+  @Field(() => String)
+  link: string;
 }
 
 @ObjectType()
