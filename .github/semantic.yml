@@ -1,0 +1,17 @@
+# file not working :( takes types from default configurations here : 
+# https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.json
+
+titleOnly: true
+types:
+  - feat
+  - fix
+  - docs
+  - style
+  - refactor
+  - test
+  - build
+  - ci
+  - chore
+  - infra
+  - revert
+  - Feature/ch

@@ -1,0 +1,42 @@
+name: Laguna
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+      - name: Install Node.js dependencies
+        run: yarn
+      - name: Run linters
+        run: yarn lint
+      
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install node v16
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - name: install
+        run: yarn install
+      - name: build
+        run: yarn build
+      - name: Run docker image with mongodb
+        run: docker-compose up -d
+      - name: unit test
+        run: yarn test
+      - name: integration + validation test
+        run: yarn test:integration        
+  
