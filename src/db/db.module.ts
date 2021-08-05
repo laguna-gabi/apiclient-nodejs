@@ -6,6 +6,8 @@ import * as config from 'config';
   imports: [
     MongooseModule.forRoot(config.get('db.connection'), {
       useFindAndModify: false,
+      useCreateIndex: true,
+      useUnifiedTopology: true,
     }),
   ],
 })

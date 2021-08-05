@@ -9,7 +9,7 @@
   "graphql": {
     "validators": {
       "name": {
-        "minLength": 3,
+        "minLength": 2,
         "maxLength": 50
       }
     }
