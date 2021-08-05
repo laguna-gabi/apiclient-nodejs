@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
-import { Model, model, Types } from 'mongoose';
+import { Model, model } from 'mongoose';
 import {
   defaultUserParams,
   User,
@@ -9,7 +9,13 @@ import {
   UserRole,
   UserService,
 } from '../../src/user';
-import { compareUsers, dbConnect, dbDisconnect, generateCreateUserParams } from '../index';
+import {
+  compareUsers,
+  dbConnect,
+  dbDisconnect,
+  generateCreateUserParams,
+  generateObjectId,
+} from '../index';
 import { Errors, ErrorType } from '../../src/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppointmentModule } from '../../src/appointment';
@@ -38,7 +44,7 @@ describe('UserService', () => {
 
   describe('get', () => {
     it('should return null for non existing user', async () => {
-      const id = new Types.ObjectId();
+      const id = generateObjectId();
       const result = await service.get(id.toString());
       expect(result).toBeNull();
     });

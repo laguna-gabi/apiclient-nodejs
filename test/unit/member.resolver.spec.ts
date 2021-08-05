@@ -1,23 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   dbDisconnect,
+  generateAppointmentComposeParams,
   generateCreateMemberParams,
   generateCreateTaskParams,
-  generateAppointmentComposeParams,
+  generateId,
   generateMemberLinks,
   generateUpdateMemberParams,
   generateUpdateTaskStateParams,
   mockGenerateMember,
 } from '../index';
 import { DbModule } from '../../src/db/db.module';
-import {
-  AppointmentCompose,
-  MemberModule,
-  MemberResolver,
-  MemberService,
-  TaskState,
-} from '../../src/member';
-import { Types } from 'mongoose';
+import { MemberModule, MemberResolver, MemberService, TaskState } from '../../src/member';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Errors, ErrorType } from '../../src/common';
 
@@ -55,7 +49,7 @@ describe('MemberResolver', () => {
       spyOnServiceInsert.mockImplementationOnce(async () => member);
 
       const params = generateCreateMemberParams({
-        orgId: new Types.ObjectId().toString(),
+        orgId: generateId(),
         primaryCoachId: member.primaryCoach.id,
       });
       const links = generateMemberLinks(params.firstName, params.lastName);
@@ -71,7 +65,7 @@ describe('MemberResolver', () => {
       spyOnServiceInsert.mockImplementationOnce(async () => member);
 
       const params = generateCreateMemberParams({
-        orgId: new Types.ObjectId().toString(),
+        orgId: generateId(),
         primaryCoachId: member.primaryCoach.id,
       });
       delete params.usersIds;
@@ -86,10 +80,10 @@ describe('MemberResolver', () => {
       const member = mockGenerateMember();
       spyOnServiceInsert.mockImplementationOnce(async () => member);
 
-      const additionalUserId = new Types.ObjectId().toString();
+      const additionalUserId = generateId();
       const params = generateCreateMemberParams({
         deviceId: member.deviceId,
-        orgId: new Types.ObjectId().toString(),
+        orgId: generateId(),
         primaryCoachId: member.primaryCoach.id,
         usersIds: [additionalUserId, member.primaryCoach.id],
       });
@@ -215,7 +209,7 @@ describe('MemberResolver', () => {
       const appointmentComposes = [generateAppointmentComposeParams()];
       spyOnServiceGet.mockImplementationOnce(async () => appointmentComposes);
 
-      const orgId = new Types.ObjectId().toString();
+      const orgId = generateId();
       const result = await resolver.getMembersAppointments(orgId);
 
       expect(spyOnServiceGet).toBeCalledTimes(1);
@@ -250,7 +244,7 @@ describe('MemberResolver', () => {
 
     it('should create a goal', async () => {
       spyOnServiceInsertGoal.mockImplementationOnce(async () => ({
-        id: new Types.ObjectId().toString(),
+        id: generateId(),
       }));
 
       const params = generateCreateTaskParams();
@@ -277,7 +271,7 @@ describe('MemberResolver', () => {
     it('should create a goal', async () => {
       spyOnServiceUpdateGoalState.mockImplementationOnce(async () => undefined);
 
-      const updateGoalState = { id: new Types.ObjectId().toString(), state: TaskState.reached };
+      const updateGoalState = { id: generateId(), state: TaskState.reached };
       await resolver.updateGoalState(updateGoalState);
 
       expect(spyOnServiceUpdateGoalState).toBeCalledTimes(1);
@@ -297,7 +291,7 @@ describe('MemberResolver', () => {
 
     it('should create an action item', async () => {
       spyOnServiceInsertActionItem.mockImplementationOnce(async () => ({
-        id: new Types.ObjectId().toString(),
+        id: generateId(),
       }));
 
       const params = generateCreateTaskParams();

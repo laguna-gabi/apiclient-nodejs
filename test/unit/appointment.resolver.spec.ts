@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
-import { Types } from 'mongoose';
 import {
   AppointmentMethod,
   AppointmentModule,
@@ -10,6 +9,7 @@ import {
 } from '../../src/appointment';
 import {
   dbDisconnect,
+  generateId,
   generateNoShowAppointmentParams,
   generateNotesParams,
   generateRequestAppointmentParams,
@@ -73,7 +73,7 @@ describe('AppointmentResolver', () => {
 
     it('should get an appointment for a given id', async () => {
       const appointment = {
-        id: new Types.ObjectId().toString(),
+        id: generateId(),
         ...generateRequestAppointmentParams(),
         method: AppointmentMethod.videoCall,
       };
@@ -87,7 +87,7 @@ describe('AppointmentResolver', () => {
     it('should fetch empty on a non existing appointment', async () => {
       spyOnServiceGet.mockImplementationOnce(async () => null);
 
-      const result = await resolver.getAppointment(new Types.ObjectId().toString());
+      const result = await resolver.getAppointment(generateId());
 
       expect(result).toBeNull();
     });
@@ -129,7 +129,7 @@ describe('AppointmentResolver', () => {
 
     it('should end an existing appointment for a given id', async () => {
       const appointment = {
-        id: new Types.ObjectId().toString(),
+        id: generateId(),
         ...generateRequestAppointmentParams(),
         status: AppointmentStatus.done,
         method: AppointmentMethod.phoneCall,
@@ -154,7 +154,7 @@ describe('AppointmentResolver', () => {
 
     it('should freeze an existing appointment for a given id', async () => {
       const appointment = {
-        id: new Types.ObjectId().toString(),
+        id: generateId(),
         ...generateRequestAppointmentParams(),
         status: AppointmentStatus.closed,
         method: AppointmentMethod.phoneCall,
@@ -208,7 +208,7 @@ describe('AppointmentResolver', () => {
       spyOnServiceSetNotes.mockImplementationOnce(async () => undefined);
 
       const result = await resolver.setNotes({
-        appointmentId: Types.ObjectId().toString(),
+        appointmentId: generateId(),
         ...generateNotesParams(),
       });
 

@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
-import { Model, model, Types } from 'mongoose';
+import { Model, model } from 'mongoose';
 import {
   dbConnect,
   dbDisconnect,
+  generateId,
+  generateObjectId,
   mockGenerateMember,
   mockGenerateUser,
   mockProviders,
@@ -85,15 +87,15 @@ describe('CommunicationService', () => {
       });
 
       const result = await communicationModel.find({
-        memberId: new Types.ObjectId(member.id),
-        userId: new Types.ObjectId(user.id),
+        memberId: generateObjectId(member.id),
+        userId: generateObjectId(user.id),
       });
 
       expect(result).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            memberId: new Types.ObjectId(member.id),
-            userId: new Types.ObjectId(user.id),
+            memberId: generateObjectId(member.id),
+            userId: generateObjectId(user.id),
             sendbirdChannelUrl: expect.any(String),
           }),
         ]),
@@ -117,8 +119,8 @@ describe('CommunicationService', () => {
 
     it('should return null for not existing userId and memberId', async () => {
       const result = await service.get({
-        memberId: new Types.ObjectId().toString(),
-        userId: new Types.ObjectId().toString(),
+        memberId: generateId(),
+        userId: generateId(),
       });
       expect(result).toBeNull();
     });

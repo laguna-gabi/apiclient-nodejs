@@ -1,4 +1,5 @@
 import {
+  generateId,
   generateNoShowAppointmentParams,
   generateNotesParams,
   generateRequestAppointmentParams,
@@ -7,7 +8,6 @@ import {
 import * as faker from 'faker';
 import { RequestAppointmentParams, SetNotesParams } from '../../src/appointment';
 import { Errors, ErrorType } from '../../src/common';
-import { Types } from 'mongoose';
 import { Handler } from './aux/handler';
 
 const stringError = `String cannot represent a non string value`;
@@ -184,7 +184,7 @@ describe('Validations - appointment', () => {
       /* eslint-enable max-len */
       async (params) => {
         const noShowParams = {
-          id: new Types.ObjectId().toString(),
+          id: generateId(),
           ...params.input,
         };
 
@@ -206,7 +206,7 @@ describe('Validations - appointment', () => {
       `should fail to set notes to an appointment since mandatory field $field is missing`,
       async (params) => {
         const noteParams: SetNotesParams = {
-          appointmentId: new Types.ObjectId().toString(),
+          appointmentId: generateId(),
           ...generateNotesParams(),
         };
 
@@ -227,7 +227,7 @@ describe('Validations - appointment', () => {
       `should fail to set notes to an appointment since mandatory field $field is missing`,
       async (params) => {
         const noteParams: SetNotesParams = {
-          appointmentId: new Types.ObjectId().toString(),
+          appointmentId: generateId(),
           ...generateNotesParams(),
         };
 

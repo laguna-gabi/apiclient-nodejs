@@ -1,12 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { dbDisconnect, generateAvailabilityInput } from '../index';
+import { dbDisconnect, generateAvailabilityInput, generateId } from '../index';
 import { DbModule } from '../../src/db/db.module';
 import {
   AvailabilityModule,
   AvailabilityResolver,
   AvailabilityService,
 } from '../../src/availability';
-import { Types } from 'mongoose';
 
 describe('AvailabilityResolver', () => {
   let module: TestingModule;
@@ -81,7 +80,7 @@ describe('AvailabilityResolver', () => {
     it('should successfully delete an availability', async () => {
       spyOnServiceDelete.mockImplementationOnce(async () => undefined);
 
-      const id = new Types.ObjectId().toString();
+      const id = generateId();
       await resolver.deleteAvailability(id);
 
       expect(spyOnServiceDelete).toBeCalledTimes(1);

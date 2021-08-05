@@ -1,19 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
-import { model, Model, Types } from 'mongoose';
+import { model, Model } from 'mongoose';
 import {
   dbConnect,
   dbDisconnect,
   generateAppointmentLink,
+  generateId,
   generateNoShowAppointmentParams,
   generateNotesParams,
+  generateObjectId,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
 } from '../index';
 import {
   Appointment,
   AppointmentDto,
-  AppointmentMethod,
   AppointmentModule,
   AppointmentService,
   AppointmentStatus,
@@ -24,7 +25,6 @@ import { Errors, ErrorType, EventType } from '../../src/common';
 import * as faker from 'faker';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { cloneDeep } from 'lodash';
-import * as config from 'config';
 
 describe('AppointmentService', () => {
   let module: TestingModule;
@@ -58,7 +58,7 @@ describe('AppointmentService', () => {
 
   describe('get', () => {
     it('should return null for non existing appointment', async () => {
-      const id = new Types.ObjectId();
+      const id = generateObjectId();
       const result = await service.get(id.toString());
       expect(result).toBeNull();
     });
@@ -71,9 +71,9 @@ describe('AppointmentService', () => {
 
       expect(result).toEqual(
         expect.objectContaining({
-          _id: new Types.ObjectId(id),
-          userId: new Types.ObjectId(appointment.userId),
-          memberId: new Types.ObjectId(appointment.memberId),
+          _id: generateObjectId(id),
+          userId: generateObjectId(appointment.userId),
+          memberId: generateObjectId(appointment.memberId),
           notBefore: appointment.notBefore,
           status: AppointmentStatus.requested,
           link: generateAppointmentLink(id),
@@ -112,9 +112,9 @@ describe('AppointmentService', () => {
 
       expect(resultGet).toEqual(
         expect.objectContaining({
-          _id: new Types.ObjectId(result.id),
-          userId: new Types.ObjectId(appointmentParams.userId),
-          memberId: new Types.ObjectId(appointmentParams.memberId),
+          _id: generateObjectId(result.id),
+          userId: generateObjectId(appointmentParams.userId),
+          memberId: generateObjectId(appointmentParams.memberId),
           notBefore: appointmentParams.notBefore,
           status: AppointmentStatus.requested,
           link: generateAppointmentLink(result.id),
@@ -124,8 +124,8 @@ describe('AppointmentService', () => {
     });
 
     it('should update an appointment notBefore for an existing memberId and userId', async () => {
-      const memberId = new Types.ObjectId().toString();
-      const userId = new Types.ObjectId().toString();
+      const memberId = generateId();
+      const userId = generateId();
 
       const { id: id1, record: record1 } = await requestAppointment({
         memberId,
@@ -150,8 +150,8 @@ describe('AppointmentService', () => {
       expect(record2).toEqual(
         expect.objectContaining({
           id: record1.id,
-          userId: new Types.ObjectId(userId),
-          memberId: new Types.ObjectId(memberId),
+          userId: generateObjectId(userId),
+          memberId: generateObjectId(memberId),
           notBefore,
           status: AppointmentStatus.requested,
           link: generateAppointmentLink(record1.id),
@@ -161,9 +161,9 @@ describe('AppointmentService', () => {
     });
 
     it('should crate a new appointment for an existing memberId and different userId', async () => {
-      const memberId = new Types.ObjectId().toString();
-      const userId1 = new Types.ObjectId().toString();
-      const userId2 = new Types.ObjectId().toString();
+      const memberId = generateId();
+      const userId1 = generateId();
+      const userId2 = generateId();
 
       const { id: id1, record: record1 } = await requestAppointment({
         memberId,
@@ -189,9 +189,9 @@ describe('AppointmentService', () => {
     });
 
     it('should crate a new appointment for an existing userId and different memberId', async () => {
-      const memberId1 = new Types.ObjectId().toString();
-      const memberId2 = new Types.ObjectId().toString();
-      const userId = new Types.ObjectId().toString();
+      const memberId1 = generateId();
+      const memberId2 = generateId();
+      const userId = generateId();
 
       const { id: id1, record: record1 } = await requestAppointment({
         memberId: memberId1,
@@ -228,8 +228,8 @@ describe('AppointmentService', () => {
     });
 
     it('should create a new request appointment on exising scheduled', async () => {
-      const memberId = new Types.ObjectId().toString();
-      const userId = new Types.ObjectId().toString();
+      const memberId = generateId();
+      const userId = generateId();
       const scheduleParams = generateScheduleAppointmentParams({ userId, memberId });
       const requestParams = generateRequestAppointmentParams({ userId, memberId });
 
@@ -293,10 +293,10 @@ describe('AppointmentService', () => {
       expect(resultAfter.link).toEqual(generateAppointmentLink(resultAfter.id));
 
       const appointment1 = await appointmentModel.find({
-        _id: new Types.ObjectId(resultBefore.id),
+        _id: generateObjectId(resultBefore.id),
       });
       const appointment2 = await appointmentModel.find({
-        _id: new Types.ObjectId(resultAfter.id),
+        _id: generateObjectId(resultAfter.id),
       });
 
       expect(appointment1).not.toBeUndefined();
@@ -326,7 +326,7 @@ describe('AppointmentService', () => {
 
   describe('end', () => {
     it('should not be able to end a non existing appointment', async () => {
-      await expect(service.end(new Types.ObjectId().toString())).rejects.toThrow(
+      await expect(service.end(generateId())).rejects.toThrow(
         Errors.get(ErrorType.appointmentIdNotFound),
       );
     });
@@ -354,7 +354,7 @@ describe('AppointmentService', () => {
 
   describe('freeze', () => {
     it('should not be able to end a non existing appointment', async () => {
-      await expect(service.end(new Types.ObjectId().toString())).rejects.toThrow(
+      await expect(service.end(generateId())).rejects.toThrow(
         Errors.get(ErrorType.appointmentIdNotFound),
       );
     });
@@ -466,7 +466,7 @@ describe('AppointmentService', () => {
     it('should throw error on missing appointmentId', async () => {
       await expect(
         service.setNotes({
-          appointmentId: new Types.ObjectId().toString(),
+          appointmentId: generateId(),
           ...generateNotesParams(),
         }),
       ).rejects.toThrow(Errors.get(ErrorType.appointmentIdNotFound));
@@ -484,7 +484,7 @@ describe('AppointmentService', () => {
       await service.setNotes(setNotesParams);
 
       expect(spyOnEventEmitter).toBeCalledWith(EventType.appointmentScoresUpdated, {
-        memberId: new Types.ObjectId(appointmentParams.memberId),
+        memberId: generateObjectId(appointmentParams.memberId),
         scores: setNotesParams.scores,
       });
 
@@ -520,7 +520,7 @@ describe('AppointmentService', () => {
   const validateNewAppointmentEvent = (userId: string, appointmentId: string) => {
     expect(spyOnEventEmitter).toBeCalledWith(EventType.newAppointment, {
       appointmentId,
-      userId: new Types.ObjectId(userId),
+      userId: generateObjectId(userId),
     });
     spyOnEventEmitter.mockReset();
   };

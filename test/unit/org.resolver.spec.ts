@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { dbDisconnect, generateOrgParams } from '../index';
+import { dbDisconnect, generateId, generateOrgParams } from '../index';
 import { DbModule } from '../../src/db/db.module';
-import { Types } from 'mongoose';
 import { OrgModule, OrgResolver, OrgService } from '../../src/org';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
@@ -38,7 +37,7 @@ describe('OrgResolver', () => {
       it('should successfully create an org', async () => {
         const params = generateOrgParams();
         spyOnServiceInsert.mockImplementationOnce(async () => ({
-          id: new Types.ObjectId().toString(),
+          id: generateId(),
           ...params,
         }));
 

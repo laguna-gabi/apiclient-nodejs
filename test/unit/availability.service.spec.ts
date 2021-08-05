@@ -1,11 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
-import { Model, model, Types } from 'mongoose';
+import { Model, model } from 'mongoose';
 import {
   dbConnect,
   dbDisconnect,
   generateAvailabilityInput,
   generateCreateUserParams,
+  generateId,
+  generateObjectId,
 } from '../index';
 import {
   Availability,
@@ -54,7 +56,7 @@ describe('AvailabilityService', () => {
     /* eslint-disable max-len*/
     it('should create multiple availability for the same user, regardless of time overlapping', async () => {
       /* eslint-enable max-len*/
-      const userId = new Types.ObjectId().toString();
+      const userId = generateId();
 
       const params = [
         generateAvailabilityInput({ userId }),
@@ -65,15 +67,15 @@ describe('AvailabilityService', () => {
       const createResult = await service.create(params);
       expect(createResult.ids.length).toEqual(params.length);
 
-      const result = await availabilityModel.find({ userId: new Types.ObjectId(userId) });
+      const result = await availabilityModel.find({ userId: generateObjectId(userId) });
       expect(result.length).toEqual(params.length);
     });
 
     /* eslint-disable max-len*/
     it('should create multiple availability for the multiple users, regardless of time overlapping', async () => {
       /* eslint-enable max-len*/
-      const userId1 = new Types.ObjectId().toString();
-      const userId2 = new Types.ObjectId().toString();
+      const userId1 = generateId();
+      const userId2 = generateId();
 
       const params1 = [
         generateAvailabilityInput({ userId: userId1 }),
@@ -83,16 +85,16 @@ describe('AvailabilityService', () => {
       await service.create(params1);
       await service.create(params2);
 
-      const result1 = await availabilityModel.find({ userId: new Types.ObjectId(userId1) });
+      const result1 = await availabilityModel.find({ userId: generateObjectId(userId1) });
       expect(result1.length).toEqual(2);
-      const result2 = await availabilityModel.find({ userId: new Types.ObjectId(userId2) });
+      const result2 = await availabilityModel.find({ userId: generateObjectId(userId2) });
       expect(result2.length).toEqual(1);
     });
   });
 
   describe('get', () => {
     it('should sort availabilities in ascending order', async () => {
-      const userId = new Types.ObjectId().toString();
+      const userId = generateId();
 
       const params = [
         generateAvailabilityInput({ userId }),
@@ -159,7 +161,7 @@ describe('AvailabilityService', () => {
     });
 
     it('should throw exception when trying to delete a non existing availability', async () => {
-      const id = new Types.ObjectId().toString();
+      const id = generateId();
       await expect(service.delete(id)).rejects.toThrow(Errors.get(ErrorType.availabilityNotFound));
     });
   });

@@ -8,7 +8,9 @@ import {
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateCreateUserParams,
+  generateId,
   generateMemberLinks,
+  generateObjectId,
   generateOrgParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
@@ -47,7 +49,7 @@ describe('MemberService', () => {
   let modelUser: Model<typeof UserDto>;
   let modelOrg: Model<typeof OrgDto>;
   let modelAppointment: Model<typeof AppointmentDto>;
-  const primaryCoachId = new Types.ObjectId().toString();
+  const primaryCoachId = generateId();
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -90,7 +92,7 @@ describe('MemberService', () => {
       const deviceId = datatype.uuid();
       const member: CreateMemberParams = generateCreateMemberParams({
         deviceId,
-        orgId: new Types.ObjectId().toString(),
+        orgId: generateId(),
         primaryCoachId: primaryCoach._id,
         usersIds: [user._id, nurse._id],
       });
@@ -102,9 +104,9 @@ describe('MemberService', () => {
         deviceId,
         firstName: member.firstName,
         lastName: member.lastName,
-        org: new Types.ObjectId(org.id),
-        primaryCoach: new Types.ObjectId(member.primaryCoachId),
-        users: member.usersIds.map((item) => new Types.ObjectId(item)),
+        org: generateObjectId(org.id),
+        primaryCoach: generateObjectId(member.primaryCoachId),
+        users: member.usersIds.map((item) => generateObjectId(item)),
         ...links,
       });
 
@@ -127,7 +129,7 @@ describe('MemberService', () => {
 
   describe('getMembers', () => {
     it('should return empty list for non existing orgId', async () => {
-      const result = await service.getByOrg(new Types.ObjectId().toString());
+      const result = await service.getByOrg(generateId());
       expect(result).toEqual([]);
     });
 
@@ -528,7 +530,7 @@ describe('MemberService', () => {
 
     it('should insert a member even with primaryCoach not exists', async () => {
       const createMemberParams: CreateMemberParams = generateCreateMemberParams({
-        orgId: new Types.ObjectId().toString(),
+        orgId: generateId(),
         primaryCoachId,
       });
       const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
@@ -540,7 +542,7 @@ describe('MemberService', () => {
 
     it('should fail to insert an already existing member', async () => {
       const createMemberParams = generateCreateMemberParams({
-        orgId: new Types.ObjectId().toString(),
+        orgId: generateId(),
         primaryCoachId,
       });
       const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
@@ -555,9 +557,9 @@ describe('MemberService', () => {
 
   describe('update', () => {
     it('should throw when trying to update non existing member', async () => {
-      await expect(
-        service.update({ id: new Types.ObjectId().toString(), language: Language.es }),
-      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+      await expect(service.update({ id: generateId(), language: Language.es })).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
     });
 
     it('should be able to update partial fields', async () => {

@@ -2,6 +2,7 @@ import {
   generateAppointmentLink,
   generateAvailabilityInput,
   generateCreateMemberParams,
+  generateId,
   generateNotesParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
@@ -14,7 +15,6 @@ import { AppointmentsIntegrationActions } from './aux/appointments';
 import { Creators } from './aux/creators';
 import { CreateTaskParams, Task, TaskState } from '../../src/member';
 import { Errors, ErrorType, Identifiers } from '../../src/common';
-import { Types } from 'mongoose';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -273,7 +273,7 @@ describe('Integration tests: all', () => {
 
   it('should throw error on delete a non existing availability', async () => {
     await handler.mutations.deleteAvailability({
-      id: new Types.ObjectId().toString(),
+      id: generateId(),
       invalidFieldsErrors: [Errors.get(ErrorType.availabilityNotFound)],
     });
   });

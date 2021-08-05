@@ -6,9 +6,9 @@ import { AppModule } from '../../../src/app.module';
 import { Mutations } from './mutations';
 import { Queries } from './queries';
 import * as config from 'config';
-import { Types } from 'mongoose';
 import * as jwt from 'jsonwebtoken';
 import { mockProviders } from '../../common';
+import { generateId } from '../../generators';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -19,7 +19,7 @@ export class Handler {
   module: GraphQLModule;
   sendBird;
 
-  readonly primaryCoachId = new Types.ObjectId().toString();
+  readonly primaryCoachId = generateId();
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
 

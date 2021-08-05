@@ -2,6 +2,7 @@ import {
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateCreateUserParams,
+  generateId,
   generateOrgParams,
   generateRandomName,
   generateUpdateMemberParams,
@@ -12,7 +13,6 @@ import * as config from 'config';
 import * as faker from 'faker';
 import { CreateMemberParams, defaultMemberParams, Sex, UpdateMemberParams } from '../../src/member';
 import { Errors, ErrorType, Language } from '../../src/common';
-import { Types } from 'mongoose';
 import { Handler } from './aux/handler';
 
 const validatorsConfig = config.get('graphql.validators');
@@ -21,7 +21,7 @@ const stringError = `String cannot represent a non string value`;
 describe('Validations - member', () => {
   const handler: Handler = new Handler();
 
-  const primaryCoachId = new Types.ObjectId().toString();
+  const primaryCoachId = generateId();
   const minLength = validatorsConfig.get('name.minLength') as number;
   const maxLength = validatorsConfig.get('name.maxLength') as number;
 
@@ -45,7 +45,7 @@ describe('Validations - member', () => {
     `(`should fail to create a member since mandatory field $field is missing`, async (params) => {
       /* eslint-enable max-len */
       const memberParams: CreateMemberParams = generateCreateMemberParams({
-        orgId: new Types.ObjectId().toString(),
+        orgId: generateId(),
         primaryCoachId,
       });
       delete memberParams[params.field];
@@ -148,7 +148,7 @@ describe('Validations - member', () => {
       `should fail to create a member since setting $input is not a valid`,
       async (params) => {
         const memberParams: CreateMemberParams = generateCreateMemberParams({
-          orgId: new Types.ObjectId().toString(),
+          orgId: generateId(),
           primaryCoachId,
           ...params.input,
         });
@@ -166,7 +166,7 @@ describe('Validations - member', () => {
     `(`should fail to create a member since $field is too $errorString`, async (params) => {
       const memberParams: CreateMemberParams = generateCreateMemberParams({
         primaryCoachId,
-        orgId: new Types.ObjectId().toString(),
+        orgId: generateId(),
       });
       memberParams[params.field] = generateRandomName(params.length);
       await handler.mutations.createMember({
@@ -185,7 +185,7 @@ describe('Validations - member', () => {
       `should fail to create a member since $field is not valid`,
       async (params) => {
         const memberParams: CreateMemberParams = generateCreateMemberParams({
-          orgId: new Types.ObjectId().toString(),
+          orgId: generateId(),
           primaryCoachId,
           ...params.input,
         });

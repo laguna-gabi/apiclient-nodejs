@@ -2,11 +2,11 @@ import * as faker from 'faker';
 import { Types } from 'mongoose';
 import { CreateUserParams, User, UserRole } from '../src/user';
 import {
+  AppointmentCompose,
   CreateMemberParams,
   CreateTaskParams,
   defaultMemberParams,
   Member,
-  AppointmentCompose,
   Sex,
   TaskState,
   UpdateMemberParams,
@@ -65,11 +65,10 @@ export const generateCreateUserParams = ({
 };
 
 export const mockGenerateUser = (): User => {
-  const id = new Types.ObjectId();
   const firstName = faker.name.firstName();
   const lastName = faker.name.lastName();
   return {
-    id: id.toString(),
+    id: generateId(),
     firstName,
     lastName,
     email: generateEmail(),
@@ -128,17 +127,16 @@ export const generateCreateMemberParams = ({
 };
 
 export const mockGenerateMember = (): Member => {
-  const id = new Types.ObjectId();
   const firstName = faker.name.firstName();
   const lastName = faker.name.lastName();
   return {
-    id: id.toString(),
+    id: generateId(),
     phoneNumber: generatePhoneNumber(),
     deviceId: faker.datatype.uuid(),
     firstName,
     lastName,
     dateOfBirth: faker.date.past(),
-    org: { id: new Types.ObjectId().toString(), ...generateOrgParams() },
+    org: { id: generateId(), ...generateOrgParams() },
     primaryCoach: mockGenerateUser(),
     ...generateMemberLinks(firstName, lastName),
     users: [],
@@ -149,7 +147,7 @@ export const mockGenerateMember = (): Member => {
 };
 
 export const generateUpdateMemberParams = ({
-  id = new Types.ObjectId().toString(),
+  id = generateId(),
   firstName = faker.name.firstName(),
   lastName = faker.name.lastName(),
   sex = Sex.female,
@@ -200,7 +198,7 @@ export const generateMemberLinks = (firstName, lastName): Links => {
 };
 
 export const generateCreateTaskParams = ({
-  memberId = new Types.ObjectId().toString(),
+  memberId = generateId(),
   title = faker.lorem.words(2),
   deadline = faker.date.future(1),
 }: { memberId?: string; title?: string; deadline?: Date } = {}): CreateTaskParams => {
@@ -208,15 +206,15 @@ export const generateCreateTaskParams = ({
 };
 
 export const generateUpdateTaskStateParams = ({
-  id = new Types.ObjectId().toString(),
+  id = generateId(),
   state = TaskState.reached,
 }: { id?: string; state?: TaskState } = {}): UpdateTaskStateParams => {
   return { id, state };
 };
 
 export const generateRequestAppointmentParams = ({
-  userId = new Types.ObjectId().toString(),
-  memberId = new Types.ObjectId().toString(),
+  userId = generateId(),
+  memberId = generateId(),
   notBefore = faker.date.future(1),
 }: {
   userId?: string;
@@ -227,8 +225,8 @@ export const generateRequestAppointmentParams = ({
 };
 
 export const generateScheduleAppointmentParams = ({
-  userId = new Types.ObjectId().toString(),
-  memberId = new Types.ObjectId().toString(),
+  userId = generateId(),
+  memberId = generateId(),
   notBefore = faker.date.future(1),
   method = AppointmentMethod.chat,
   start = faker.date.future(1),
@@ -247,7 +245,7 @@ export const generateScheduleAppointmentParams = ({
 };
 
 export const generateNoShowAppointmentParams = ({
-  id = new Types.ObjectId().toString(),
+  id = generateId(),
   noShow = true,
   reason = faker.lorem.sentence(),
 }: {
@@ -293,9 +291,9 @@ export const generateAppointmentComposeParams = (): AppointmentCompose => {
   end.setHours(end.getHours() + 2);
 
   return {
-    memberId: new Types.ObjectId().toString(),
+    memberId: generateId(),
     memberName: `${faker.name.firstName()} ${faker.name.lastName()}`,
-    userId: new Types.ObjectId().toString(),
+    userId: generateId(),
     userName: `${faker.name.firstName()} ${faker.name.lastName()}`,
     start,
     end,
@@ -322,7 +320,7 @@ export const generateZipCode = (): string => {
 };
 
 export const generateAvailabilityInput = ({
-  userId = new Types.ObjectId().toString(),
+  userId = generateId(),
   start = faker.date.soon(),
   end,
 }: {
@@ -336,14 +334,22 @@ export const generateAvailabilityInput = ({
 };
 
 export const generateGetCommunicationParams = ({
-  userId = new Types.ObjectId().toString(),
-  memberId = new Types.ObjectId().toString(),
+  userId = generateId(),
+  memberId = generateId(),
 }: { userId?: string; memberId?: string } = {}): GetCommunicationParams => {
   return { userId, memberId };
 };
 
 export const generateAppointmentLink = (appointmentId: string) => {
   return `${config.get('hosts.app')}/${appointmentId}`;
+};
+
+export const generateObjectId = (id?): Types.ObjectId => {
+  return new Types.ObjectId(id);
+};
+
+export const generateId = (id?): string => {
+  return generateObjectId(id).toString();
 };
 
 const generateEmail = () => {
