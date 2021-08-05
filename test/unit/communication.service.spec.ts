@@ -52,7 +52,7 @@ describe('CommunicationService', () => {
         user_id: user.id,
         nickname: `${user.firstName} ${user.lastName}`,
         profile_url: user.avatar,
-        metadata: { role: UserRole.coach },
+        metadata: { role: UserRole.coach.toLowerCase() },
       });
     });
   });
