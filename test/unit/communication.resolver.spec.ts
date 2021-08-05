@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import {
   dbDisconnect,
   generateGetCommunicationParams,
+  generateId,
   mockGenerateMember,
   mockGenerateUser,
 } from '../index';
@@ -12,6 +13,8 @@ import {
   CommunicationResolver,
   CommunicationService,
 } from '../../src/communication';
+import * as config from 'config';
+import * as faker from 'faker';
 
 describe('CommunicationResolver', () => {
   let module: TestingModule;
@@ -92,12 +95,37 @@ describe('CommunicationResolver', () => {
     });
 
     it('should successfully return a communication object', async () => {
-      spyOnServiceGet.mockImplementationOnce(() => undefined);
+      const payload = {
+        userId: generateId(),
+        memberId: generateId(),
+        sendbirdChannelUrl: faker.datatype.uuid(),
+      };
+      spyOnServiceGet.mockImplementationOnce(() => payload);
 
       const params = generateGetCommunicationParams();
-      await resolver.getCommunication(params);
+      const result = await resolver.getCommunication(params);
+
+      const link = (id) => {
+        return `${config.get('hosts.chat')}/?uid=${id}&mid=${payload.sendbirdChannelUrl}`;
+      };
+
+      expect(result).toEqual({
+        userId: payload.userId,
+        memberId: payload.memberId,
+        chat: { memberLink: link(payload.memberId), userLink: link(payload.userId) },
+      });
 
       expect(spyOnServiceGet).toBeCalledWith(params);
+    });
+
+    it('should return null on no communication of user and member', async () => {
+      spyOnServiceGet.mockImplementationOnce(() => null);
+
+      const params = generateGetCommunicationParams();
+      const result = await resolver.getCommunication(params);
+
+      expect(spyOnServiceGet).toBeCalledWith(params);
+      expect(result).toBeNull();
     });
   });
 });
