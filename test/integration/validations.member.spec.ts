@@ -199,7 +199,14 @@ describe('Validations - member', () => {
       },
     );
 
-    it('should throw error on non existing member', async () => {
+    it('should throw error on non existing member from web', async () => {
+      await handler.queries.getMember({
+        id: generateId(),
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+      });
+    });
+
+    it('should throw error on non existing member from mobile', async () => {
       handler.setContextUser('not-valid');
       await handler.queries.getMember({
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),

@@ -50,10 +50,23 @@ export class MemberResolver {
     return member;
   }
 
+  /**
+   * Can be called from 2 sources:
+   * @param context : mobile - by using authorization header in context
+   * @param id : web - by using a query param of member id
+   */
   @Query(() => Member, { nullable: true })
-  async getMember(@Context() context) {
-    const deviceId = this.extractDeviceId(context);
-    const member = await this.memberService.get(deviceId);
+  async getMember(
+    @Context() context,
+    @Args('id', { type: () => String, nullable: true }) id?: string,
+  ) {
+    let member;
+    if (id) {
+      member = await this.memberService.get(id);
+    } else {
+      const deviceId = this.extractDeviceId(context);
+      member = await this.memberService.getByDeviceId(deviceId);
+    }
     member.utcDelta = this.getTimezoneDeltaFromZipcode(member.zipCode);
     return member;
   }

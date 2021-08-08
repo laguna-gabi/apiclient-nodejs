@@ -39,11 +39,15 @@ export class Queries {
     return resultGetUser.data.getUser;
   };
 
-  getMember = async ({ invalidFieldsError }: { invalidFieldsError?: string } = {}) => {
+  getMember = async ({
+    id,
+    invalidFieldsError,
+  }: { id?: string; invalidFieldsError?: string } = {}) => {
     const resultGetMember = await this.apolloClient.query({
+      variables: { id },
       query: gql`
-        query getMember {
-          getMember {
+        query getMember($id: String) {
+          getMember(id: $id) {
             id
             phone
             deviceId

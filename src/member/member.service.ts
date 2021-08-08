@@ -84,27 +84,22 @@ export class MemberService extends BaseService {
     return this.replaceId(result.value.toObject());
   }
 
-  async get(deviceId: string): Promise<Member> {
+  async get(id: string): Promise<Member> {
+    const member = await this.memberModel.findById(id, { _id: 1 });
+    if (!member) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
+
+    return this.getById(id);
+  }
+
+  async getByDeviceId(deviceId: string): Promise<Member> {
     const member = await this.memberModel.findOne({ deviceId }, { _id: 1 });
     if (!member) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
 
-    const subPopulate = {
-      path: 'appointments',
-      match: { memberId: new Types.ObjectId(member._id) },
-      populate: 'notes',
-    };
-
-    const options = { sort: { updatedAt: -1 } };
-
-    return this.memberModel
-      .findOne({ deviceId })
-      .populate({ path: 'org' })
-      .populate({ path: 'goals', options })
-      .populate({ path: 'actionItems', options })
-      .populate({ path: 'primaryCoach', populate: subPopulate })
-      .populate({ path: 'users', populate: subPopulate });
+    return this.getById(member._id);
   }
 
   async getByOrg(orgId?: string): Promise<MemberSummary[]> {
@@ -293,4 +288,22 @@ export class MemberService extends BaseService {
 
     return { appointmentsCount: allAppointments.length, nextAppointment };
   };
+
+  private async getById(id: string) {
+    const subPopulate = {
+      path: 'appointments',
+      match: { memberId: new Types.ObjectId(id) },
+      populate: 'notes',
+    };
+
+    const options = { sort: { updatedAt: -1 } };
+
+    return this.memberModel
+      .findOne({ _id: id })
+      .populate({ path: 'org' })
+      .populate({ path: 'goals', options })
+      .populate({ path: 'actionItems', options })
+      .populate({ path: 'primaryCoach', populate: subPopulate })
+      .populate({ path: 'users', populate: subPopulate });
+  }
 }

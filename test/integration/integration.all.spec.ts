@@ -31,9 +31,10 @@ describe('Integration tests: all', () => {
     await handler.afterAll();
   });
 
-  it('should not fail if member is not found', async () => {
-    const member = await creators.handler.queries.getMember();
-    expect(member).toBeNull();
+  it('should throw error if member is not found', async () => {
+    await creators.handler.queries.getMember({
+      invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+    });
   });
 
   it('should be able to call all gql handler.mutations and handler.queries', async () => {
@@ -433,6 +434,15 @@ describe('Integration tests: all', () => {
         link: generateAppointmentLink(memberResult.primaryCoach.appointments[0].id),
       }),
     );
+  });
+
+  it('web: should be able to getMember with member id', async () => {
+    const primaryCoach = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({ org, primaryCoach });
+
+    const memberResult = await handler.queries.getMember({ id: member.id });
+    expect(memberResult).toEqual(expect.objectContaining({ ...member }));
   });
 
   /************************************************************************************************

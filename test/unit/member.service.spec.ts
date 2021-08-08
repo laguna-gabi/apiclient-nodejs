@@ -70,61 +70,72 @@ describe('MemberService', () => {
     await dbDisconnect();
   });
 
-  describe('get', () => {
+  describe('getByDeviceId + get', () => {
     it('should throw error on a non existing deviceId of a member', async () => {
-      await expect(service.get(datatype.uuid())).rejects.toThrow(
+      await expect(service.getByDeviceId(datatype.uuid())).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
     });
 
-    it('should return member and his/her users for an existing member', async () => {
-      const primaryCoachParams = generateCreateUserParams();
-      const nurseParams = generateCreateUserParams({ roles: [UserRole.nurse] });
-      const userParams = generateCreateUserParams();
-      const primaryCoach = await modelUser.create(primaryCoachParams);
-      const nurse = await modelUser.create(nurseParams);
-      const user = await modelUser.create(userParams);
-      //Another user, to check if it doesn't return in member
-      await modelUser.create(generateCreateUserParams());
-      const orgParams = generateOrgParams();
-      const org = await modelOrg.create(orgParams);
-
-      const deviceId = datatype.uuid();
-      const member: CreateMemberParams = generateCreateMemberParams({
-        deviceId,
-        orgId: generateId(),
-        primaryCoachId: primaryCoach._id,
-        usersIds: [user._id, nurse._id],
-      });
-
-      const links = generateMemberLinks(member.firstName, member.lastName);
-
-      const { _id } = await memberModel.create({
-        phone: member.phone,
-        deviceId,
-        firstName: member.firstName,
-        lastName: member.lastName,
-        org: generateObjectId(org.id),
-        primaryCoach: generateObjectId(member.primaryCoachId),
-        users: member.usersIds.map((item) => generateObjectId(item)),
-        ...links,
-      });
-
-      const result = await service.get(member.deviceId);
-
-      expect(result.id).toEqual(_id.toString());
-      expect(result.phone).toEqual(member.phone);
-      expect(result.deviceId).toEqual(member.deviceId);
-      expect(result.firstName).toEqual(member.firstName);
-      expect(result.lastName).toEqual(member.lastName);
-      expect(result.dischargeNotesLink).toEqual(links.dischargeNotesLink);
-      expect(result.dischargeInstructionsLink).toEqual(links.dischargeInstructionsLink);
-      expect(result.org).toEqual(expect.objectContaining(orgParams));
-      compareUsers(result.primaryCoach, primaryCoach);
-      expect(result.users.length).toEqual(2);
-      compareUsers(result.users[0], user);
-      compareUsers(result.users[1], nurse);
+    it('should throw error on a non existing id of a member', async () => {
+      await expect(service.get(generateId())).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
     });
+
+    test.each`
+      field        | method
+      ${'context'} | ${(deviceId) => service.getByDeviceId(deviceId)}
+      ${'id'}      | ${(id) => service.get(id)}
+    `(
+      `should return member and his/her users for an existing member using $field`,
+      async (params) => {
+        const primaryCoachParams = generateCreateUserParams();
+        const nurseParams = generateCreateUserParams({ roles: [UserRole.nurse] });
+        const userParams = generateCreateUserParams();
+        const primaryCoach = await modelUser.create(primaryCoachParams);
+        const nurse = await modelUser.create(nurseParams);
+        const user = await modelUser.create(userParams);
+        //Another user, to check if it doesn't return in member
+        await modelUser.create(generateCreateUserParams());
+        const orgParams = generateOrgParams();
+        const org = await modelOrg.create(orgParams);
+
+        const deviceId = datatype.uuid();
+        const member: CreateMemberParams = generateCreateMemberParams({
+          deviceId,
+          orgId: generateId(),
+          primaryCoachId: primaryCoach._id,
+          usersIds: [user._id, nurse._id],
+        });
+
+        const links = generateMemberLinks(member.firstName, member.lastName);
+
+        const { _id } = await memberModel.create({
+          phone: member.phone,
+          deviceId,
+          firstName: member.firstName,
+          lastName: member.lastName,
+          org: generateObjectId(org.id),
+          primaryCoach: generateObjectId(member.primaryCoachId),
+          users: member.usersIds.map((item) => generateObjectId(item)),
+          ...links,
+        });
+
+        const result = await params.method(params.field === 'context' ? member.deviceId : _id);
+
+        expect(result.id).toEqual(_id.toString());
+        expect(result.phone).toEqual(member.phone);
+        expect(result.deviceId).toEqual(member.deviceId);
+        expect(result.firstName).toEqual(member.firstName);
+        expect(result.lastName).toEqual(member.lastName);
+        expect(result.dischargeNotesLink).toEqual(links.dischargeNotesLink);
+        expect(result.dischargeInstructionsLink).toEqual(links.dischargeInstructionsLink);
+        expect(result.org).toEqual(expect.objectContaining(orgParams));
+        compareUsers(result.primaryCoach, primaryCoach);
+        expect(result.users.length).toEqual(2);
+        compareUsers(result.users[0], user);
+        compareUsers(result.users[1], nurse);
+      },
+    );
   });
 
   describe('getMembers', () => {
@@ -180,7 +191,7 @@ describe('MemberService', () => {
       const { id: memberId } = await generateBasicMember({ primaryCoachId, orgId, deviceId });
 
       const result = await service.getByOrg(orgId);
-      const member = await service.get(deviceId);
+      const member = await service.getByDeviceId(deviceId);
 
       expect(result.length).toEqual(1);
       expect(result[0]).toEqual(
@@ -230,7 +241,7 @@ describe('MemberService', () => {
       });
 
       const result = await service.getByOrg(orgId);
-      const member = await service.get(deviceId);
+      const member = await service.getByDeviceId(deviceId);
 
       expect(result.length).toEqual(1);
       expect(result[0]).toEqual(

@@ -125,18 +125,21 @@ describe('MemberResolver', () => {
   });
 
   describe('getMember', () => {
+    let spyOnServiceGetByDeviceId;
     let spyOnServiceGet;
     beforeEach(() => {
+      spyOnServiceGetByDeviceId = jest.spyOn(service, 'getByDeviceId');
       spyOnServiceGet = jest.spyOn(service, 'get');
     });
 
     afterEach(() => {
+      spyOnServiceGetByDeviceId.mockReset();
       spyOnServiceGet.mockReset();
     });
 
-    it('should get a member for a given id', async () => {
+    it('should get a member for a given context', async () => {
       const member = mockGenerateMember();
-      spyOnServiceGet.mockImplementationOnce(async () => member);
+      spyOnServiceGetByDeviceId.mockImplementationOnce(async () => member);
 
       const result = await resolver.getMember({
         req: {
@@ -151,8 +154,26 @@ describe('MemberResolver', () => {
       expect(result).toEqual(member);
     });
 
+    it('should get a member for a given id', async () => {
+      const member = mockGenerateMember();
+      spyOnServiceGet.mockImplementationOnce(async () => member);
+
+      const result = await resolver.getMember({}, member.id);
+      expect(result).toEqual(member);
+    });
+
     it('should throw exception on a non valid member', async () => {
-      spyOnServiceGet.mockImplementationOnce(async () => null);
+      spyOnServiceGet.mockImplementationOnce(async () => {
+        throw Error(Errors.get(ErrorType.memberNotFound));
+      });
+
+      await expect(resolver.getMember({}, generateId())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
+    });
+
+    it('should throw exception on a non valid member', async () => {
+      spyOnServiceGetByDeviceId.mockImplementationOnce(async () => null);
 
       await expect(
         resolver.getMember({
