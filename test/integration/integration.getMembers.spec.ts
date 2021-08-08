@@ -44,7 +44,7 @@ describe('Integration tests : getMembers', () => {
         expect.objectContaining({
           id: member.id,
           name: `${member.firstName} ${member.lastName}`,
-          phoneNumber: member.phoneNumber,
+          phone: member.phone,
           dischargeDate: member.dischargeDate,
           adherence: 0,
           wellbeing: 0,
@@ -82,7 +82,7 @@ describe('Integration tests : getMembers', () => {
       expect.objectContaining({
         id: memberResult.id,
         name: `${memberResult.firstName} ${memberResult.lastName}`,
-        phoneNumber: memberResult.phoneNumber,
+        phone: memberResult.phone,
         dischargeDate: memberResult.dischargeDate,
         adherence: memberResult.scores.adherence,
         wellbeing: memberResult.scores.wellbeing,

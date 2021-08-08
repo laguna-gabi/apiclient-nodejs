@@ -6,12 +6,12 @@ import { IsDate } from 'class-validator';
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
-export enum TaskState {
+export enum TaskStatus {
   pending = 'pending',
   reached = 'reached',
 }
 
-registerEnumType(TaskState, { name: 'TaskState' });
+registerEnumType(TaskStatus, { name: 'TaskStatus' });
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -30,12 +30,12 @@ export class CreateTaskParams {
 }
 
 @InputType({ isAbstract: true })
-export class UpdateTaskStateParams {
+export class UpdateTaskStatusParams {
   @Field(() => String)
   id: string;
 
-  @Field(() => TaskState)
-  state: TaskState;
+  @Field(() => TaskStatus)
+  status: TaskStatus;
 }
 
 /**************************************************************************************************
@@ -48,9 +48,9 @@ export class Task extends Identifier {
   @Field(() => String)
   title: string;
 
-  @Prop({ type: TaskState })
-  @Field(() => TaskState)
-  state: TaskState;
+  @Prop({ type: TaskStatus })
+  @Field(() => TaskStatus)
+  status: TaskStatus;
 
   @Prop({ type: Date })
   @Field(() => Date)

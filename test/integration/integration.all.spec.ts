@@ -13,7 +13,7 @@ import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { Handler } from './aux/handler';
 import { AppointmentsIntegrationActions } from './aux/appointments';
 import { Creators } from './aux/creators';
-import { CreateTaskParams, Task, TaskState } from '../../src/member';
+import { CreateTaskParams, Task, TaskStatus } from '../../src/member';
 import { Errors, ErrorType, Identifiers } from '../../src/common';
 
 describe('Integration tests: all', () => {
@@ -87,8 +87,8 @@ describe('Integration tests: all', () => {
       resultMember.id,
       handler.mutations.createGoal,
     );
-    await updateTaskState(idGoal1, handler.mutations.updateGoalState);
-    await updateTaskState(idGoal2, handler.mutations.updateGoalState);
+    await updateTaskStatus(idGoal1, handler.mutations.updateGoalStatus);
+    await updateTaskStatus(idGoal2, handler.mutations.updateGoalStatus);
 
     const { createTaskParams: ai1, id: idAi1 } = await creators.createAndValidateTask(
       resultMember.id,
@@ -98,8 +98,8 @@ describe('Integration tests: all', () => {
       resultMember.id,
       handler.mutations.createActionItem,
     );
-    await updateTaskState(idAi1, handler.mutations.updateActionItemState);
-    await updateTaskState(idAi2, handler.mutations.updateActionItemState);
+    await updateTaskStatus(idAi1, handler.mutations.updateActionItemStatus);
+    await updateTaskStatus(idAi2, handler.mutations.updateActionItemStatus);
 
     const member = await handler.queries.getMember();
 
@@ -439,14 +439,14 @@ describe('Integration tests: all', () => {
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/
 
-  const updateTaskState = async (id: string, method) => {
-    const updateTaskStateParams = { id, state: TaskState.reached };
-    await method({ updateTaskStateParams });
+  const updateTaskStatus = async (id: string, method) => {
+    const updateTaskStatusParams = { id, status: TaskStatus.reached };
+    await method({ updateTaskStatusParams });
   };
 
   const compareTasks = (task: Task, createTaskParams: CreateTaskParams) => {
     expect(task.title).toEqual(createTaskParams.title);
-    expect(task.state).toEqual(TaskState.reached);
+    expect(task.status).toEqual(TaskStatus.reached);
     expect(new Date(task.deadline)).toEqual(createTaskParams.deadline);
   };
 

@@ -7,11 +7,11 @@ import {
   generateId,
   generateMemberLinks,
   generateUpdateMemberParams,
-  generateUpdateTaskStateParams,
+  generateUpdateTaskStatusParams,
   mockGenerateMember,
 } from '../index';
 import { DbModule } from '../../src/db/db.module';
-import { MemberModule, MemberResolver, MemberService, TaskState } from '../../src/member';
+import { MemberModule, MemberResolver, MemberService, TaskStatus } from '../../src/member';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Errors, ErrorType } from '../../src/common';
 
@@ -253,29 +253,29 @@ describe('MemberResolver', () => {
       expect(spyOnServiceInsertGoal).toBeCalledTimes(1);
       expect(spyOnServiceInsertGoal).toBeCalledWith({
         createTaskParams: params,
-        state: TaskState.pending,
+        status: TaskStatus.pending,
       });
     });
   });
 
-  describe('updateGoalState', () => {
-    let spyOnServiceUpdateGoalState;
+  describe('updateGoalStatus', () => {
+    let spyOnServiceUpdateGoalStatus;
     beforeEach(() => {
-      spyOnServiceUpdateGoalState = jest.spyOn(service, 'updateGoalState');
+      spyOnServiceUpdateGoalStatus = jest.spyOn(service, 'updateGoalStatus');
     });
 
     afterEach(() => {
-      spyOnServiceUpdateGoalState.mockReset();
+      spyOnServiceUpdateGoalStatus.mockReset();
     });
 
     it('should create a goal', async () => {
-      spyOnServiceUpdateGoalState.mockImplementationOnce(async () => undefined);
+      spyOnServiceUpdateGoalStatus.mockImplementationOnce(async () => undefined);
 
-      const updateGoalState = { id: generateId(), state: TaskState.reached };
-      await resolver.updateGoalState(updateGoalState);
+      const updateGoalStatus = { id: generateId(), status: TaskStatus.reached };
+      await resolver.updateGoalStatus(updateGoalStatus);
 
-      expect(spyOnServiceUpdateGoalState).toBeCalledTimes(1);
-      expect(spyOnServiceUpdateGoalState).toBeCalledWith(updateGoalState);
+      expect(spyOnServiceUpdateGoalStatus).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateGoalStatus).toBeCalledWith(updateGoalStatus);
     });
   });
 
@@ -300,29 +300,29 @@ describe('MemberResolver', () => {
       expect(spyOnServiceInsertActionItem).toBeCalledTimes(1);
       expect(spyOnServiceInsertActionItem).toBeCalledWith({
         createTaskParams: params,
-        state: TaskState.pending,
+        status: TaskStatus.pending,
       });
     });
   });
 
-  describe('updateActionItemState', () => {
-    let spyOnServiceUpdateActionItemState;
+  describe('updateActionItemStatus', () => {
+    let spyOnServiceUpdateActionItemStatus;
     beforeEach(() => {
-      spyOnServiceUpdateActionItemState = jest.spyOn(service, 'updateActionItemState');
+      spyOnServiceUpdateActionItemStatus = jest.spyOn(service, 'updateActionItemStatus');
     });
 
     afterEach(() => {
-      spyOnServiceUpdateActionItemState.mockReset();
+      spyOnServiceUpdateActionItemStatus.mockReset();
     });
 
     it('should create an action item', async () => {
-      spyOnServiceUpdateActionItemState.mockImplementationOnce(async () => mockGenerateMember());
+      spyOnServiceUpdateActionItemStatus.mockImplementationOnce(async () => mockGenerateMember());
 
-      const updateActionItemState = generateUpdateTaskStateParams();
-      await resolver.updateActionItemState(updateActionItemState);
+      const updateActionItemStatus = generateUpdateTaskStatusParams();
+      await resolver.updateActionItemStatus(updateActionItemStatus);
 
-      expect(spyOnServiceUpdateActionItemState).toBeCalledTimes(1);
-      expect(spyOnServiceUpdateActionItemState).toBeCalledWith(updateActionItemState);
+      expect(spyOnServiceUpdateActionItemStatus).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateActionItemStatus).toBeCalledWith(updateActionItemStatus);
     });
   });
 });

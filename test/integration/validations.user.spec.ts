@@ -30,7 +30,7 @@ describe('Validations - user', () => {
     ${'roles'}       | ${`Field "roles" of required type "[UserRole!]!" was not provided.`}
     ${'avatar'}      | ${`Field "avatar" of required type "String!" was not provided.`}
     ${'description'} | ${`Field "description" of required type "String!" was not provided.`}
-    ${'phoneNumber'} | ${`Field "phoneNumber" of required type "String!" was not provided.`}
+    ${'phone'}       | ${`Field "phone" of required type "String!" was not provided.`}
   `(`should fail to create a user since mandatory field $field is missing`, async (params) => {
     const userParams: CreateUserParams = generateCreateUserParams();
     delete userParams[params.field];
@@ -66,8 +66,8 @@ describe('Validations - user', () => {
     ${'firstName'}      | ${{ firstName: 222 }}                                        | ${{ missingFieldError: stringError }}
     ${'lastName'}       | ${{ lastName: 222 }}                                         | ${{ missingFieldError: stringError }}
     ${'roles'}          | ${{ roles: [222] }}                                          | ${{ missingFieldError: 'does not exist in "UserRole" enum.' }}
-    ${'phoneNumber'}    | ${{ phoneNumber: 222 }}                                      | ${{ missingFieldError: stringError }}
-    ${'phoneNumber'}    | ${{ phoneNumber: '+410' }}                                   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userPhoneNumber)] }}
+    ${'phone'}          | ${{ phone: 222 }}                                            | ${{ missingFieldError: stringError }}
+    ${'phone'}          | ${{ phone: '+410' }}                                         | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userPhone)] }}
     ${'title'}          | ${{ title: 222 }}                                            | ${{ missingFieldError: stringError }}
     ${'maxCustomers'}   | ${{ maxCustomers: faker.lorem.word() }}                      | ${{ missingFieldError: 'Float cannot represent non numeric value' }}
     ${'languages'}      | ${{ languages: faker.lorem.word() }}                         | ${{ missingFieldError: 'does not exist in "Language" enum.' }}

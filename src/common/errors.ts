@@ -2,7 +2,7 @@ import * as config from 'config';
 
 const graphqlConfig = config.get('graphql.validators.name');
 
-export const validPhoneNumbersExamples =
+export const validPhoneExamples =
   'examples for a valid phone number: +41 311111111, +41 (0)31 633 60 01, +49 9072 1111, etc..';
 
 export enum ErrorType {
@@ -11,12 +11,12 @@ export enum ErrorType {
   userEmailAlreadyExists = 9102,
   userEmailFormat = 9103,
   userAvatarFormat = 9104,
-  userPhoneNumber = 9105,
+  userPhone = 9105,
 
   // Module member errors
   memberMinMaxLength = 9201,
   memberPhoneAlreadyExists = 9202,
-  memberPhoneNumber = 9203,
+  memberPhone = 9203,
   memberDateOfBirth = 9204,
   memberDischargeDate = 9205,
   memberEmailFormat = 9206,
@@ -51,7 +51,7 @@ const emailFormat =
 const phoneFormat =
   `phone number must be a valid phone number. ` +
   `please make sure you've added the country code with (+) in the beginning. ` +
-  `${validPhoneNumbersExamples}`;
+  `${validPhoneExamples}`;
 
 export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.userMinMaxLength.valueOf(), `user ${nameFormat}`],
@@ -61,10 +61,10 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.userAvatarFormat.valueOf(),
     'avatar must be an URL address, for example: www.google.com',
   ],
-  [ErrorType.userPhoneNumber.valueOf(), phoneFormat],
+  [ErrorType.userPhone.valueOf(), phoneFormat],
   [ErrorType.memberMinMaxLength.valueOf(), `member ${nameFormat}`],
   [ErrorType.memberPhoneAlreadyExists.valueOf(), 'phone already exists'],
-  [ErrorType.memberPhoneNumber.valueOf(), phoneFormat],
+  [ErrorType.memberPhone.valueOf(), phoneFormat],
   [ErrorType.memberDateOfBirth.valueOf(), `dateOfBirth ${dateInstanceFormat}`],
   [ErrorType.memberDischargeDate.valueOf(), `dischargeDate ${dateInstanceFormat}`],
   [ErrorType.memberEmailFormat.valueOf(), emailFormat],

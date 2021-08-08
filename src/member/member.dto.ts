@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { User } from '../user';
-import { Errors, ErrorType, Identifier, Language, validPhoneNumbersExamples } from '../common';
+import { Errors, ErrorType, Identifier, Language, validPhoneExamples } from '../common';
 import { IsDate, IsEmail, IsOptional, IsPhoneNumber, Length } from 'class-validator';
 import * as config from 'config';
 import { Org } from '../org';
@@ -59,11 +59,11 @@ export class ExtraMemberParams {
 
 @InputType()
 export class CreateMemberParams extends ExtraMemberParams {
-  @Field({ description: validPhoneNumbersExamples })
+  @Field({ description: validPhoneExamples })
   @IsPhoneNumber(undefined, {
-    message: Errors.get(ErrorType.memberPhoneNumber),
+    message: Errors.get(ErrorType.memberPhone),
   })
-  phoneNumber: string;
+  phone: string;
 
   @Field(() => String)
   deviceId: string;
@@ -123,10 +123,10 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @IsOptional()
   readmissionRisk?: string;
 
-  @Field({ description: validPhoneNumbersExamples, nullable: true })
+  @Field({ description: validPhoneExamples, nullable: true })
   @IsOptional()
   @IsPhoneNumber(undefined, {
-    message: Errors.get(ErrorType.memberPhoneNumber),
+    message: Errors.get(ErrorType.memberPhone),
   })
   phoneSecondary?: string;
 }
@@ -139,7 +139,7 @@ export class UpdateMemberParams extends ExtraMemberParams {
 export class Member extends Identifier {
   @Prop({ unique: true, index: true })
   @Field(() => String)
-  phoneNumber: string;
+  phone: string;
 
   @Prop({ index: true })
   @Field(() => String)
@@ -225,9 +225,9 @@ export class Member extends Identifier {
   readmissionRisk?: string;
 
   @Prop({ isNaN: true })
-  @Field({ description: validPhoneNumbersExamples, nullable: true })
+  @Field({ description: validPhoneExamples, nullable: true })
   @IsPhoneNumber(undefined, {
-    message: Errors.get(ErrorType.memberPhoneNumber),
+    message: Errors.get(ErrorType.memberPhone),
   })
   phoneSecondary?: string;
 
@@ -245,7 +245,7 @@ export class MemberSummary extends Identifier {
   name: string;
 
   @Field(() => String)
-  phoneNumber: string;
+  phone: string;
 
   @Field(() => Date, { nullable: true })
   dischargeDate?: Date;

@@ -13,9 +13,9 @@ import {
   AppointmentCompose,
   MemberDocument,
   MemberSummary,
-  TaskState,
+  TaskStatus,
   UpdateMemberParams,
-  UpdateTaskStateParams,
+  UpdateTaskStatusParams,
 } from '.';
 import { cloneDeep } from 'lodash';
 import { OnEvent } from '@nestjs/event-emitter';
@@ -116,7 +116,7 @@ export class MemberService extends BaseService {
         $project: {
           id: '$_id',
           name: { $concat: ['$firstName', ' ', '$lastName'] },
-          phoneNumber: '$phoneNumber',
+          phone: '$phone',
           dischargeDate: { $ifNull: ['$dischargeDate', undefined] },
           adherence: { $ifNull: ['$scores.adherence', 0] },
           wellbeing: { $ifNull: ['$scores.wellbeing', 0] },
@@ -191,15 +191,15 @@ export class MemberService extends BaseService {
 
   async insertGoal({
     createTaskParams,
-    state,
+    status,
   }: {
     createTaskParams: CreateTaskParams;
-    state: TaskState;
+    status: TaskStatus;
   }): Promise<Identifier> {
     const { memberId } = createTaskParams;
     delete createTaskParams.memberId;
 
-    const { _id } = await this.goalModel.create({ ...createTaskParams, state });
+    const { _id } = await this.goalModel.create({ ...createTaskParams, status });
 
     await this.memberModel.updateOne(
       { _id: new Types.ObjectId(memberId) },
@@ -209,12 +209,12 @@ export class MemberService extends BaseService {
     return { id: _id };
   }
 
-  async updateGoalState(updateTaskStateParams: UpdateTaskStateParams): Promise<void> {
-    const { id, state } = updateTaskStateParams;
+  async updateGoalStatus(updateTaskStatusParams: UpdateTaskStatusParams): Promise<void> {
+    const { id, status } = updateTaskStatusParams;
 
     const result = await this.goalModel.findOneAndUpdate(
       { _id: new Types.ObjectId(id) },
-      { $set: { state } },
+      { $set: { status } },
     );
 
     if (!result) {
@@ -239,15 +239,15 @@ export class MemberService extends BaseService {
 
   async insertActionItem({
     createTaskParams,
-    state,
+    status,
   }: {
     createTaskParams: CreateTaskParams;
-    state: TaskState;
+    status: TaskStatus;
   }): Promise<Identifier> {
     const { memberId } = createTaskParams;
     delete createTaskParams.memberId;
 
-    const { _id } = await this.actionItemModel.create({ ...createTaskParams, state });
+    const { _id } = await this.actionItemModel.create({ ...createTaskParams, status });
 
     await this.memberModel.updateOne(
       { _id: new Types.ObjectId(memberId) },
@@ -257,12 +257,12 @@ export class MemberService extends BaseService {
     return { id: _id };
   }
 
-  async updateActionItemState(updateTaskStateParams: UpdateTaskStateParams): Promise<void> {
-    const { id, state } = updateTaskStateParams;
+  async updateActionItemStatus(updateTaskStatusParams: UpdateTaskStatusParams): Promise<void> {
+    const { id, status } = updateTaskStatusParams;
 
     const result = await this.actionItemModel.findOneAndUpdate(
       { _id: new Types.ObjectId(id) },
-      { $set: { state } },
+      { $set: { status } },
     );
 
     if (!result) {

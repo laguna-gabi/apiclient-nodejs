@@ -15,7 +15,7 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateUpdateMemberParams,
-  generateUpdateTaskStateParams,
+  generateUpdateTaskStatusParams,
   generateZipCode,
 } from '../index';
 import {
@@ -26,7 +26,7 @@ import {
   MemberModule,
   MemberService,
   Sex,
-  TaskState,
+  TaskStatus,
   UpdateMemberParams,
 } from '../../src/member';
 import { Errors, ErrorType, Identifier, Language } from '../../src/common';
@@ -100,7 +100,7 @@ describe('MemberService', () => {
       const links = generateMemberLinks(member.firstName, member.lastName);
 
       const { _id } = await memberModel.create({
-        phoneNumber: member.phoneNumber,
+        phone: member.phone,
         deviceId,
         firstName: member.firstName,
         lastName: member.lastName,
@@ -113,7 +113,7 @@ describe('MemberService', () => {
       const result = await service.get(member.deviceId);
 
       expect(result.id).toEqual(_id.toString());
-      expect(result.phoneNumber).toEqual(member.phoneNumber);
+      expect(result.phone).toEqual(member.phone);
       expect(result.deviceId).toEqual(member.deviceId);
       expect(result.firstName).toEqual(member.firstName);
       expect(result.lastName).toEqual(member.lastName);
@@ -187,7 +187,7 @@ describe('MemberService', () => {
         expect.objectContaining({
           id: memberId,
           name: `${member.firstName} ${member.lastName}`,
-          phoneNumber: member.phoneNumber,
+          phone: member.phone,
           dischargeDate: null,
           adherence: 0,
           wellbeing: 0,
@@ -218,15 +218,15 @@ describe('MemberService', () => {
       const { id: memberId } = await service.insert({ createMemberParams, ...links });
       await service.insertGoal({
         createTaskParams: generateCreateTaskParams({ memberId }),
-        state: TaskState.pending,
+        status: TaskStatus.pending,
       });
       await service.insertActionItem({
         createTaskParams: generateCreateTaskParams({ memberId }),
-        state: TaskState.pending,
+        status: TaskStatus.pending,
       });
       await service.insertActionItem({
         createTaskParams: generateCreateTaskParams({ memberId }),
-        state: TaskState.pending,
+        status: TaskStatus.pending,
       });
 
       const result = await service.getByOrg(orgId);
@@ -237,7 +237,7 @@ describe('MemberService', () => {
         expect.objectContaining({
           id: memberId,
           name: `${member.firstName} ${member.lastName}`,
-          phoneNumber: member.phoneNumber,
+          phone: member.phone,
           dischargeDate: member.dischargeDate,
           adherence: 0,
           wellbeing: 0,
@@ -500,7 +500,7 @@ describe('MemberService', () => {
       primaryCoachId,
       orgId,
     }) => {
-      expect(createdMember.phoneNumber).toEqual(createMemberParams.phoneNumber);
+      expect(createdMember.phone).toEqual(createMemberParams.phone);
       expect(createdMember.deviceId).toEqual(createMemberParams.deviceId);
       expect(createdMember.firstName).toEqual(createMemberParams.firstName);
       expect(createdMember.lastName).toEqual(createMemberParams.lastName);
@@ -607,22 +607,22 @@ describe('MemberService', () => {
   describe('insertGoal', () => {
     it('should insert a goal', async () => {
       const createTaskParams = generateCreateTaskParams();
-      const { id } = await service.insertGoal({ createTaskParams, state: TaskState.pending });
+      const { id } = await service.insertGoal({ createTaskParams, status: TaskStatus.pending });
 
       expect(id).toEqual(expect.any(Types.ObjectId));
     });
   });
 
-  describe('updateGoalState', () => {
-    it('should update an existing goal state', async () => {
+  describe('updateGoalStatus', () => {
+    it('should update an existing goal status', async () => {
       const createTaskParams = generateCreateTaskParams();
-      const { id } = await service.insertGoal({ createTaskParams, state: TaskState.pending });
+      const { id } = await service.insertGoal({ createTaskParams, status: TaskStatus.pending });
 
-      await service.updateGoalState({ id, state: TaskState.reached });
+      await service.updateGoalStatus({ id, status: TaskStatus.reached });
     });
 
-    it('should not be able to update state for a non existing goal', async () => {
-      await expect(service.updateGoalState(generateUpdateTaskStateParams())).rejects.toThrow(
+    it('should not be able to update status for a non existing goal', async () => {
+      await expect(service.updateGoalStatus(generateUpdateTaskStatusParams())).rejects.toThrow(
         Errors.get(ErrorType.memberGoalIdNotFound),
       );
     });
@@ -633,28 +633,28 @@ describe('MemberService', () => {
       const createTaskParams = generateCreateTaskParams();
       const { id } = await service.insertActionItem({
         createTaskParams,
-        state: TaskState.pending,
+        status: TaskStatus.pending,
       });
 
       expect(id).toEqual(expect.any(Types.ObjectId));
     });
   });
 
-  describe('updateActionItemState', () => {
-    it('should update an existing action item state', async () => {
+  describe('updateActionItemStatus', () => {
+    it('should update an existing action item status', async () => {
       const createTaskParams = generateCreateTaskParams();
       const { id } = await service.insertActionItem({
         createTaskParams,
-        state: TaskState.pending,
+        status: TaskStatus.pending,
       });
 
-      await service.updateActionItemState({ id, state: TaskState.reached });
+      await service.updateActionItemStatus({ id, status: TaskStatus.reached });
     });
 
-    it('should not be able to update state for a non existing action item', async () => {
-      await expect(service.updateActionItemState(generateUpdateTaskStateParams())).rejects.toThrow(
-        Errors.get(ErrorType.memberActionItemIdNotFound),
-      );
+    it('should not be able to update status for a non existing action item', async () => {
+      await expect(
+        service.updateActionItemStatus(generateUpdateTaskStatusParams()),
+      ).rejects.toThrow(Errors.get(ErrorType.memberActionItemIdNotFound));
     });
   });
 });

@@ -8,9 +8,9 @@ import {
   defaultMemberParams,
   Member,
   Sex,
-  TaskState,
+  TaskStatus,
   UpdateMemberParams,
-  UpdateTaskStateParams,
+  UpdateTaskStatusParams,
 } from '../src/member';
 import {
   AppointmentMethod,
@@ -34,7 +34,7 @@ export const generateCreateUserParams = ({
   email = generateEmail(),
   avatar = faker.image.imageUrl(),
   description = faker.lorem.sentence(),
-  phoneNumber = generatePhoneNumber(),
+  phone = generatePhone(),
   title = faker.name.title(),
   maxCustomers = faker.datatype.number({ min: 1, max: 100 }),
   languages = [Language.en, Language.es],
@@ -45,7 +45,7 @@ export const generateCreateUserParams = ({
   email?: string;
   avatar?: string;
   description?: string;
-  phoneNumber?: string;
+  phone?: string;
   title?: string;
   maxCustomers?: number;
   languages?: Language[];
@@ -57,7 +57,7 @@ export const generateCreateUserParams = ({
     roles,
     avatar,
     description,
-    phoneNumber,
+    phone,
     title,
     maxCustomers,
     languages,
@@ -76,12 +76,12 @@ export const mockGenerateUser = (): User => {
     avatar: faker.image.imageUrl(),
     description: faker.lorem.sentence(),
     createdAt: faker.date.past(1),
-    phoneNumber: generatePhoneNumber(),
+    phone: generatePhone(),
   };
 };
 
 export const generateCreateMemberParams = ({
-  phoneNumber = generatePhoneNumber(),
+  phone = generatePhone(),
   deviceId = faker.datatype.uuid(),
   firstName = faker.name.firstName(),
   lastName = faker.name.lastName(),
@@ -95,7 +95,7 @@ export const generateCreateMemberParams = ({
   zipCode = generateZipCode(),
   dischargeDate,
 }: {
-  phoneNumber?: string;
+  phone?: string;
   deviceId?: string;
   firstName?: string;
   lastName?: string;
@@ -110,7 +110,7 @@ export const generateCreateMemberParams = ({
   dischargeDate?: Date;
 }): CreateMemberParams => {
   return {
-    phoneNumber,
+    phone,
     deviceId,
     firstName,
     lastName,
@@ -131,7 +131,7 @@ export const mockGenerateMember = (): Member => {
   const lastName = faker.name.lastName();
   return {
     id: generateId(),
-    phoneNumber: generatePhoneNumber(),
+    phone: generatePhone(),
     deviceId: faker.datatype.uuid(),
     firstName,
     lastName,
@@ -158,7 +158,7 @@ export const generateUpdateMemberParams = ({
   fellowName = faker.name.firstName(),
   drgDesc = faker.name.firstName(),
   readmissionRisk = faker.name.firstName(),
-  phoneSecondary = generatePhoneNumber(),
+  phoneSecondary = generatePhone(),
 }: {
   id?: string;
   firstName?: string;
@@ -205,11 +205,11 @@ export const generateCreateTaskParams = ({
   return { memberId, title, deadline };
 };
 
-export const generateUpdateTaskStateParams = ({
+export const generateUpdateTaskStatusParams = ({
   id = generateId(),
-  state = TaskState.reached,
-}: { id?: string; state?: TaskState } = {}): UpdateTaskStateParams => {
-  return { id, state };
+  status = TaskStatus.reached,
+}: { id?: string; status?: TaskStatus } = {}): UpdateTaskStatusParams => {
+  return { id, status };
 };
 
 export const generateRequestAppointmentParams = ({
@@ -356,13 +356,13 @@ const generateEmail = () => {
   return `${faker.datatype.uuid()}.${faker.internet.email()}`;
 };
 
-const generatePhoneNumber = () => {
+const generatePhone = () => {
   const random = () => Math.floor(Math.random() * 9) + 1;
 
-  let phoneNumber = '+414';
+  let phone = '+414';
   for (let i = 0; i < 8; i++) {
-    phoneNumber += random().toString();
+    phone += random().toString();
   }
 
-  return phoneNumber;
+  return phone;
 };

@@ -6,7 +6,7 @@ import {
   generateOrgParams,
   generateRandomName,
   generateUpdateMemberParams,
-  generateUpdateTaskStateParams,
+  generateUpdateTaskStatusParams,
   generateZipCode,
 } from '../index';
 import * as config from 'config';
@@ -37,7 +37,7 @@ describe('Validations - member', () => {
     /* eslint-disable max-len */
     test.each`
       field               | error
-      ${'phoneNumber'}    | ${`Field "phoneNumber" of required type "String!" was not provided.`}
+      ${'phone'}          | ${`Field "phone" of required type "String!" was not provided.`}
       ${'firstName'}      | ${`Field "firstName" of required type "String!" was not provided.`}
       ${'lastName'}       | ${`Field "lastName" of required type "String!" was not provided.`}
       ${'dateOfBirth'}    | ${`Field "dateOfBirth" of required type "DateTime!" was not provided.`}
@@ -130,7 +130,7 @@ describe('Validations - member', () => {
     /* eslint-disable max-len */
     test.each`
       input                             | error
-      ${{ phoneNumber: 123 }}           | ${{ missingFieldError: stringError }}
+      ${{ phone: 123 }}                 | ${{ missingFieldError: stringError }}
       ${{ deviceId: 123 }}              | ${{ missingFieldError: stringError }}
       ${{ firstName: 123 }}             | ${{ missingFieldError: stringError }}
       ${{ lastName: 123 }}              | ${{ missingFieldError: stringError }}
@@ -177,9 +177,12 @@ describe('Validations - member', () => {
 
     /* eslint-disable max-len */
     test.each`
-      field            | input                                                  | errors
-      ${'phoneNumber'} | ${{ primaryCoachId, phoneNumber: '+410' }}             | ${[Errors.get(ErrorType.memberPhoneNumber)]}
-      ${'dateOfBirth'} | ${{ primaryCoachId, dateOfBirth: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDateOfBirth)]}
+      field      | input                                | errors
+      ${'phone'} | ${{ primaryCoachId, phone: '+410' }} | ${[Errors.get(ErrorType.memberPhone)]}
+      ${'dateOfBirth'} | ${{
+  primaryCoachId,
+  dateOfBirth: faker.lorem.word(),
+}} | ${[Errors.get(ErrorType.memberDateOfBirth)]}
     `(
       /* eslint-enable max-len */
       `should fail to create a member since $field is not valid`,
@@ -230,7 +233,7 @@ describe('Validations - member', () => {
     /* eslint-disable max-len */
     test.each`
       field               | input                                    | errors
-      ${'phoneSecondary'} | ${{ phoneSecondary: '+410' }}            | ${[Errors.get(ErrorType.memberPhoneNumber)]}
+      ${'phoneSecondary'} | ${{ phoneSecondary: '+410' }}            | ${[Errors.get(ErrorType.memberPhone)]}
       ${'dischargeDate'}  | ${{ dischargeDate: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
     `(
       /* eslint-enable max-len */
@@ -298,25 +301,25 @@ describe('Validations - member', () => {
       );
     });
 
-    describe('updateGoalState + updateActionItemState', () => {
+    describe('updateGoalStatus + updateActionItemStatus', () => {
       /* eslint-disable max-len */
       test.each`
-        field      | taskType               | error
-        ${'id'}    | ${TaskType.goal}       | ${`Field "id" of required type "String!" was not provided.`}
-        ${'state'} | ${TaskType.goal}       | ${`Field "state" of required type "TaskState!" was not provided.`}
-        ${'id'}    | ${TaskType.actionItem} | ${`Field "id" of required type "String!" was not provided.`}
-        ${'state'} | ${TaskType.actionItem} | ${`Field "state" of required type "TaskState!" was not provided.`}
+        field       | taskType               | error
+        ${'id'}     | ${TaskType.goal}       | ${`Field "id" of required type "String!" was not provided.`}
+        ${'status'} | ${TaskType.goal}       | ${`Field "status" of required type "TaskStatus!" was not provided.`}
+        ${'id'}     | ${TaskType.actionItem} | ${`Field "id" of required type "String!" was not provided.`}
+        ${'status'} | ${TaskType.actionItem} | ${`Field "status" of required type "TaskStatus!" was not provided.`}
       `(
         /* eslint-enable max-len */
         `should fail to update $taskType since mandatory field $field is missing`,
         async (params) => {
-          const updateTaskStateParams = generateUpdateTaskStateParams();
-          delete updateTaskStateParams[params.field];
+          const updateTaskStatusParams = generateUpdateTaskStatusParams();
+          delete updateTaskStatusParams[params.field];
           const method = TaskType.goal
-            ? handler.mutations.updateGoalState
-            : handler.mutations.updateActionItemState;
+            ? handler.mutations.updateGoalStatus
+            : handler.mutations.updateActionItemStatus;
           await method({
-            updateTaskStateParams,
+            updateTaskStatusParams,
             missingFieldError: params.error,
           });
         },
@@ -324,19 +327,19 @@ describe('Validations - member', () => {
 
       /* eslint-disable max-len */
       test.each`
-        input             | taskType               | error
-        ${{ id: 123 }}    | ${TaskType.goal}       | ${stringError}
-        ${{ state: 123 }} | ${TaskType.goal}       | ${'Enum "TaskState" cannot represent non-string value'}
-        ${{ id: 123 }}    | ${TaskType.actionItem} | ${stringError}
-        ${{ state: 123 }} | ${TaskType.actionItem} | ${'Enum "TaskState" cannot represent non-string value'}
+        input              | taskType               | error
+        ${{ id: 123 }}     | ${TaskType.goal}       | ${stringError}
+        ${{ status: 123 }} | ${TaskType.goal}       | ${'Enum "TaskStatus" cannot represent non-string value'}
+        ${{ id: 123 }}     | ${TaskType.actionItem} | ${stringError}
+        ${{ status: 123 }} | ${TaskType.actionItem} | ${'Enum "TaskStatus" cannot represent non-string value'}
       `(`should fail to update $taskType since $input is not a valid type`, async (params) => {
         /* eslint-enable max-len */
-        const updateTaskStateParams = generateUpdateTaskStateParams({ ...params.input });
+        const updateTaskStatusParams = generateUpdateTaskStatusParams({ ...params.input });
         const method = TaskType.goal
-          ? handler.mutations.updateGoalState
-          : handler.mutations.updateActionItemState;
+          ? handler.mutations.updateGoalStatus
+          : handler.mutations.updateActionItemStatus;
         await method({
-          updateTaskStateParams,
+          updateTaskStatusParams,
           missingFieldError: params.error,
         });
       });

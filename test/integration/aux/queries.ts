@@ -19,7 +19,7 @@ export class Queries {
             avatar
             description
             createdAt
-            phoneNumber
+            phone
             title
             maxCustomers
             languages
@@ -45,7 +45,7 @@ export class Queries {
         query getMember {
           getMember {
             id
-            phoneNumber
+            phone
             deviceId
             firstName
             lastName
@@ -73,7 +73,7 @@ export class Queries {
               avatar
               description
               createdAt
-              phoneNumber
+              phone
               title
               maxCustomers
               languages
@@ -108,7 +108,7 @@ export class Queries {
               avatar
               description
               createdAt
-              phoneNumber
+              phone
               title
               maxCustomers
               languages
@@ -143,13 +143,13 @@ export class Queries {
             goals {
               id
               title
-              state
+              status
               deadline
             }
             actionItems {
               id
               title
-              state
+              status
               deadline
             }
             fellowName
@@ -174,7 +174,7 @@ export class Queries {
           getMembers(orgId: $orgId) {
             id
             name
-            phoneNumber
+            phone
             dischargeDate
             adherence
             wellbeing

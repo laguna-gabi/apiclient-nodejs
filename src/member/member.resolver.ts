@@ -6,9 +6,9 @@ import {
   Member,
   MemberService,
   MemberSummary,
-  TaskState,
+  TaskStatus,
   UpdateMemberParams,
-  UpdateTaskStateParams,
+  UpdateTaskStatusParams,
 } from '.';
 import { Errors, ErrorType, EventType, Identifier } from '../common';
 import { camelCase, remove } from 'lodash';
@@ -86,15 +86,15 @@ export class MemberResolver {
     @Args(camelCase(CreateTaskParams.name))
     createTaskParams: CreateTaskParams,
   ) {
-    return this.memberService.insertGoal({ createTaskParams, state: TaskState.pending });
+    return this.memberService.insertGoal({ createTaskParams, status: TaskStatus.pending });
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  async updateGoalState(
-    @Args(camelCase(UpdateTaskStateParams.name))
-    updateTaskStateParams: UpdateTaskStateParams,
+  async updateGoalStatus(
+    @Args(camelCase(UpdateTaskStatusParams.name))
+    updateTaskStatusParams: UpdateTaskStatusParams,
   ) {
-    return this.memberService.updateGoalState(updateTaskStateParams);
+    return this.memberService.updateGoalStatus(updateTaskStatusParams);
   }
 
   /*************************************************************************************************
@@ -108,16 +108,16 @@ export class MemberResolver {
   ) {
     return this.memberService.insertActionItem({
       createTaskParams,
-      state: TaskState.pending,
+      status: TaskStatus.pending,
     });
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  async updateActionItemState(
-    @Args(camelCase(UpdateTaskStateParams.name))
-    updateTaskStateParams: UpdateTaskStateParams,
+  async updateActionItemStatus(
+    @Args(camelCase(UpdateTaskStatusParams.name))
+    updateTaskStatusParams: UpdateTaskStatusParams,
   ) {
-    return this.memberService.updateActionItemState(updateTaskStateParams);
+    return this.memberService.updateActionItemStatus(updateTaskStatusParams);
   }
 
   /*************************************************************************************************

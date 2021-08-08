@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { Errors, ErrorType, Identifier, Language, validPhoneNumbersExamples } from '../common';
+import { Errors, ErrorType, Identifier, Language, validPhoneExamples } from '../common';
 import { IsEmail, IsPhoneNumber, IsUrl, Length } from 'class-validator';
 import * as config from 'config';
 import { Appointment, AppointmentData } from '../appointment';
@@ -54,11 +54,11 @@ export class CreateUserParams {
   @Field()
   description: string;
 
-  @Field({ description: validPhoneNumbersExamples })
+  @Field({ description: validPhoneExamples })
   @IsPhoneNumber(undefined, {
-    message: Errors.get(ErrorType.userPhoneNumber),
+    message: Errors.get(ErrorType.userPhone),
   })
-  phoneNumber: string;
+  phone: string;
 
   @Field({ nullable: true })
   title?: string;
@@ -111,7 +111,7 @@ export class User extends Identifier {
 
   @Prop()
   @Field(() => String)
-  phoneNumber: string;
+  phone: string;
 
   @Prop({ isNaN: true })
   @Field({ nullable: true })
