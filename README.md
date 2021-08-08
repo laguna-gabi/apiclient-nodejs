@@ -5,6 +5,7 @@ Laguna health backend infrastructure
 - [Prerequisites](#prerequisites)
    - [Installation](#installation)
    - [Docker](#docker)
+   - [Shared code settings](#shared-code-settings)
 - [Running the app](#running-the-app)
 - [Testing the app](#testing-the-app)
 - [Troubleshooting](#troubleshooting)
@@ -24,8 +25,10 @@ We're loading a local mongodb by using [docker](https://docs.docker.com/get-dock
 1. [docker](https://docs.docker.com/get-docker/).
 2. run `docker-compose.yml` file for starting Docker, by using the command: `docker-compose up`.
 > **_Stop:_**  After running the sample, you can stop the Docker container with `docker-compose down`
-
 <br/><br/>
+### Shared code settings
+1. Set up your ide to run with `.prettierrc` file which exists on the main root of the project.
+2. Set up your ide to run with `.eslintrc.js` file which exists on the main root of the project.
 
 ## Running the app
 In order to work with all graphql endpoints of *hepius*:
