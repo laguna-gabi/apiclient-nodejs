@@ -136,6 +136,11 @@ export class Mutations {
             drgDesc
             readmissionRisk
             phoneSecondary
+            address {
+              street
+              city
+              state
+            }
           }
         }
       `,
