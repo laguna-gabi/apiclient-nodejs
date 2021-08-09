@@ -155,7 +155,7 @@ export const generateUpdateMemberParams = ({
   email = generateEmail(),
   language = Language.en,
   zipCode = generateZipCode(),
-  dischargeDate = faker.date.future(1),
+  dischargeDate = faker.date.soon(10),
   fellowName = faker.name.firstName(),
   drgDesc = faker.name.firstName(),
   readmissionRisk = faker.name.firstName(),
@@ -201,7 +201,7 @@ export const generateMemberLinks = (firstName, lastName): Links => {
 export const generateCreateTaskParams = ({
   memberId = generateId(),
   title = faker.lorem.words(2),
-  deadline = faker.date.future(1),
+  deadline = faker.date.soon(3),
 }: { memberId?: string; title?: string; deadline?: Date } = {}): CreateTaskParams => {
   return { memberId, title, deadline };
 };
@@ -216,7 +216,7 @@ export const generateUpdateTaskStatusParams = ({
 export const generateRequestAppointmentParams = ({
   userId = generateId(),
   memberId = generateId(),
-  notBefore = faker.date.future(1),
+  notBefore = faker.date.soon(3),
 }: {
   userId?: string;
   memberId?: string;
@@ -228,9 +228,9 @@ export const generateRequestAppointmentParams = ({
 export const generateScheduleAppointmentParams = ({
   userId = generateId(),
   memberId = generateId(),
-  notBefore = faker.date.future(1),
+  notBefore = faker.date.soon(3),
   method = AppointmentMethod.chat,
-  start = faker.date.future(1),
+  start = faker.date.soon(4),
   end,
 }: {
   userId?: string;
@@ -287,7 +287,7 @@ export const generateOrgParams = ({
 };
 
 export const generateAppointmentComposeParams = (): AppointmentCompose => {
-  const start = faker.date.future(1);
+  const start = faker.date.soon(5);
   const end = new Date(start);
   end.setHours(end.getHours() + 2);
 

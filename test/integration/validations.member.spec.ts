@@ -122,7 +122,7 @@ describe('Validations - member', () => {
         usersIds: [primaryUserId],
       });
 
-      memberParams.dischargeDate = faker.date.future(1);
+      memberParams.dischargeDate = faker.date.soon(3);
 
       handler.setContextUser(memberParams.deviceId);
       const { id } = await handler.mutations.createMember({ memberParams });

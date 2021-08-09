@@ -121,7 +121,7 @@ describe('Validations - appointment', () => {
     );
 
     it('should validate that an error is thrown if end date is before start date', async () => {
-      const end = faker.date.future(1);
+      const end = faker.date.soon(3);
       const start = new Date(end);
       start.setMinutes(start.getMinutes() + 1);
       const appointmentParams = generateScheduleAppointmentParams({
