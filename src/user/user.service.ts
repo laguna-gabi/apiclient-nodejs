@@ -46,18 +46,8 @@ export class UserService extends BaseService {
   }
 
   @OnEvent(EventType.collectUsersDataBridge, { async: true })
-  async collectUsersDataBridge({
-    member,
-    primaryCoachId,
-    usersIds,
-  }: {
-    member: Member;
-    primaryCoachId: string;
-    usersIds: string[];
-  }) {
-    const primaryCoach = await this.userModel.findById(primaryCoachId);
-    const users = await this.userModel.find({ _id: { $in: usersIds } });
-
-    this.eventEmitter.emit(EventType.newMember, { member, primaryCoach, users });
+  async collectUsersDataBridge({ member, usersIds }: { member: Member; usersIds: string[] }) {
+    const users = await this.userModel.find({ _id: { $in: usersIds.map((user) => user) } });
+    this.eventEmitter.emit(EventType.newMember, { member, users });
   }
 }

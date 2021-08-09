@@ -86,9 +86,9 @@ export const generateCreateMemberParams = ({
   firstName = faker.name.firstName(),
   lastName = faker.name.lastName(),
   dateOfBirth = faker.date.past(),
-  primaryCoachId,
   orgId,
-  usersIds = [],
+  primaryUserId,
+  usersIds,
   sex,
   email,
   language,
@@ -100,8 +100,8 @@ export const generateCreateMemberParams = ({
   firstName?: string;
   lastName?: string;
   dateOfBirth?: Date;
-  primaryCoachId: string;
   orgId: string;
+  primaryUserId: string;
   usersIds?: string[];
   sex?: Sex;
   email?: string;
@@ -116,7 +116,7 @@ export const generateCreateMemberParams = ({
     lastName,
     dateOfBirth,
     orgId,
-    primaryCoachId,
+    primaryUserId,
     usersIds,
     sex,
     email,
@@ -129,17 +129,18 @@ export const generateCreateMemberParams = ({
 export const mockGenerateMember = (): Member => {
   const firstName = faker.name.firstName();
   const lastName = faker.name.lastName();
+  const user = mockGenerateUser();
   return {
     id: generateId(),
+    primaryUserId: user.id,
     phone: generatePhone(),
     deviceId: faker.datatype.uuid(),
     firstName,
     lastName,
     dateOfBirth: faker.date.past(),
     org: { id: generateId(), ...generateOrgParams() },
-    primaryCoach: mockGenerateUser(),
     ...generateMemberLinks(firstName, lastName),
-    users: [],
+    users: [user],
     sex: defaultMemberParams.sex,
     language: defaultMemberParams.language,
     createdAt: faker.date.past(1),

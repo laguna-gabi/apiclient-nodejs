@@ -71,8 +71,8 @@ async function main() {
   );
   const memberParams = generateCreateMemberParams({
     orgId: org.id,
-    primaryCoachId: user1Id,
-    usersIds: [user2Id, user3Id],
+    primaryUserId: user1Id,
+    usersIds: [user1Id, user2Id, user3Id],
     email: faker.internet.email(),
     zipCode: faker.address.zipCode(),
     dischargeDate: faker.date.future(1),

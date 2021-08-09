@@ -68,41 +68,7 @@ export class Queries {
               type
               trialDuration
             }
-            primaryCoach {
-              id
-              firstName
-              lastName
-              email
-              roles
-              avatar
-              description
-              createdAt
-              phone
-              title
-              maxCustomers
-              languages
-              appointments {
-                id
-                notBefore
-                method
-                status
-                start
-                end
-                link
-                notes {
-                  notes {
-                    key
-                    value
-                  }
-                  scores {
-                    adherence
-                    adherenceText
-                    wellbeing
-                    wellbeingText
-                  }
-                }
-              }
-            }
+            primaryUserId
             users {
               id
               firstName
@@ -185,7 +151,7 @@ export class Queries {
             createdAt
             goalsCount
             actionItemsCount
-            primaryCoach {
+            primaryUser {
               id
               firstName
               lastName

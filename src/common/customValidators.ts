@@ -60,3 +60,19 @@ export function IsNoShowValid(property: string, options?: ValidationOptions) {
     });
   };
 }
+
+export function IsPrimaryUserInUsers(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(users: string[], args: ValidationArguments) {
+          const primaryUser = args.object['primaryUserId'];
+          return users.indexOf(primaryUser) >= 0;
+        },
+      },
+    });
+  };
+}

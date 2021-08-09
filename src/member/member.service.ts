@@ -48,13 +48,13 @@ export class MemberService extends BaseService {
     try {
       const primitiveValues = cloneDeep(createMemberParams);
       delete primitiveValues.orgId;
-      delete primitiveValues.primaryCoachId;
+      delete primitiveValues.primaryUserId;
       delete primitiveValues.usersIds;
 
       const object = await this.memberModel.create({
         ...primitiveValues,
         org: new Types.ObjectId(createMemberParams.orgId),
-        primaryCoach: new Types.ObjectId(createMemberParams.primaryCoachId),
+        primaryUserId: new Types.ObjectId(createMemberParams.primaryUserId),
         users: createMemberParams.usersIds?.map((item) => new Types.ObjectId(item)),
         dischargeNotesLink,
         dischargeInstructionsLink,
@@ -118,23 +118,25 @@ export class MemberService extends BaseService {
           createdAt: '$createdAt',
           goalsCount: { $size: '$goals' },
           actionItemsCount: { $size: '$actionItems' },
-          primaryCoach: '$primaryCoach',
+          primaryUserId: '$primaryUserId',
           users: '$users',
         },
       },
     ]);
 
     result = await this.memberModel.populate(result, [
-      { path: 'primaryCoach', options: { populate: 'appointments' } },
       { path: 'users', options: { populate: 'appointments' } },
     ]);
 
     return result.map((item) => {
       const { appointmentsCount, nextAppointment } = this.calculateAppointments(item);
+      const primaryUser = item.users.filter(
+        (user) => user._id.toString() === item.primaryUserId.toString(),
+      )[0];
       delete item.users;
       delete item._id;
 
-      return { ...item, appointmentsCount, nextAppointment };
+      return { ...item, primaryUser, appointmentsCount, nextAppointment };
     });
   }
 
@@ -273,8 +275,7 @@ export class MemberService extends BaseService {
   ): { appointmentsCount: number; nextAppointment: Date } => {
     const allAppointments = member.users
       .map((user) => user.appointments)
-      .reduce((acc = [], current) => acc.concat(current), [])
-      .concat(member.primaryCoach?.appointments);
+      .reduce((acc = [], current) => acc.concat(current), []);
 
     const nextAppointment = allAppointments
       .filter(
@@ -303,7 +304,6 @@ export class MemberService extends BaseService {
       .populate({ path: 'org' })
       .populate({ path: 'goals', options })
       .populate({ path: 'actionItems', options })
-      .populate({ path: 'primaryCoach', populate: subPopulate })
       .populate({ path: 'users', populate: subPopulate });
   }
 }

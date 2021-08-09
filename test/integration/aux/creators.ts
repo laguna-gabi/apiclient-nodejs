@@ -24,13 +24,13 @@ export class Creators {
 
   createAndValidateUser = async (roles?: UserRole[]): Promise<User> => {
     const userParams: CreateUserParams = generateCreateUserParams({ roles });
-    const { id: primaryCoachId } = await this.handler.mutations.createUser({ userParams });
+    const { id: primaryUserId } = await this.handler.mutations.createUser({ userParams });
 
-    const result = await this.handler.queries.getUser(primaryCoachId);
+    const result = await this.handler.queries.getUser(primaryUserId);
 
     const expectedUser = {
       ...userParams,
-      id: primaryCoachId,
+      id: primaryUserId,
       appointments: [],
     };
 
@@ -55,12 +55,12 @@ export class Creators {
 
   createAndValidateMember = async ({
     org,
-    primaryCoach,
-    coaches = [],
+    primaryUser,
+    users,
   }: {
     org: Org;
-    primaryCoach: User;
-    coaches?: User[];
+    primaryUser: User;
+    users: User[];
   }): Promise<Member> => {
     const deviceId = faker.datatype.uuid();
     this.handler.setContextUser(deviceId);
@@ -68,8 +68,8 @@ export class Creators {
     const memberParams = generateCreateMemberParams({
       deviceId,
       orgId: org.id,
-      primaryCoachId: primaryCoach.id,
-      usersIds: coaches.map((coach) => coach.id),
+      primaryUserId: primaryUser.id,
+      usersIds: users.map((user) => user.id),
     });
     const links = generateMemberLinks(memberParams.firstName, memberParams.lastName);
 
@@ -83,8 +83,8 @@ export class Creators {
     expect(member.lastName).toEqual(memberParams.lastName);
 
     expect(new Date(member.dateOfBirth)).toEqual(new Date(memberParams.dateOfBirth));
-    expect(member.primaryCoach).toEqual(primaryCoach);
-    expect(member.users).toEqual(coaches);
+    expect(member.primaryUserId).toEqual(primaryUser.id);
+    expect(member.users).toEqual(users);
     expect(member.dischargeNotesLink).toEqual(links.dischargeNotesLink);
     expect(member.dischargeInstructionsLink).toEqual(links.dischargeInstructionsLink);
     expect(member.org).toEqual(org);

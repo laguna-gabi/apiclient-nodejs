@@ -19,7 +19,6 @@ export class Handler {
   module: GraphQLModule;
   sendBird;
 
-  readonly primaryCoachId = generateId();
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
 

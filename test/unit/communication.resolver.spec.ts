@@ -72,13 +72,11 @@ describe('CommunicationResolver', () => {
       spyOnServiceConnectMemberToUser.mockImplementation(() => true);
 
       const users = [mockGenerateUser(), mockGenerateUser()];
-      const primaryCoach = mockGenerateUser();
       const member = mockGenerateMember();
-      await resolver.handleNewMember({ member, users, primaryCoach });
+      await resolver.handleNewMember({ member, users });
 
       expect(spyOnServiceCreateMember).toBeCalledWith(member);
-      expect(spyOnServiceConnectMemberToUser).toBeCalledTimes(3);
-      expect(spyOnServiceConnectMemberToUser).toBeCalledWith(member, primaryCoach);
+      expect(spyOnServiceConnectMemberToUser).toBeCalledTimes(2);
       expect(spyOnServiceConnectMemberToUser).toBeCalledWith(member, users[0]);
       expect(spyOnServiceConnectMemberToUser).toBeCalledWith(member, users[1]);
     });

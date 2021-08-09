@@ -37,18 +37,8 @@ export class CommunicationResolver {
   }
 
   @OnEvent(EventType.newMember, { async: true })
-  async handleNewMember({
-    member,
-    primaryCoach,
-    users,
-  }: {
-    member: Member;
-    primaryCoach: User;
-    users: User[];
-  }) {
+  async handleNewMember({ member, users }: { member: Member; users: User[] }) {
     await this.communicationService.createMember(member);
-
-    await this.communicationService.connectMemberToUser(member, primaryCoach);
 
     await Promise.all(
       users.map(async (user) => this.communicationService.connectMemberToUser(member, user)),

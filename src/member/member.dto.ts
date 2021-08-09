@@ -2,7 +2,14 @@ import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { User } from '../user';
-import { Errors, ErrorType, Identifier, Language, validPhoneExamples } from '../common';
+import {
+  Errors,
+  ErrorType,
+  Identifier,
+  IsPrimaryUserInUsers,
+  Language,
+  validPhoneExamples,
+} from '../common';
 import { IsDate, IsEmail, IsOptional, IsPhoneNumber, Length } from 'class-validator';
 import * as config from 'config';
 import { Org } from '../org';
@@ -88,9 +95,10 @@ export class CreateMemberParams extends ExtraMemberParams {
   orgId: string;
 
   @Field(() => String)
-  primaryCoachId: string;
+  primaryUserId: string;
 
-  @Field(() => [String], { nullable: true })
+  @Field(() => [String])
+  @IsPrimaryUserInUsers({ message: Errors.get(ErrorType.memberPrimaryUserIdNotInUsers) })
   usersIds: string[];
 }
 
@@ -161,9 +169,9 @@ export class Member extends Identifier {
   @Field(() => Org)
   org: Org;
 
-  @Prop({ type: Types.ObjectId, ref: User.name })
-  @Field(() => User, { description: 'primary user' })
-  primaryCoach: User;
+  @Prop(() => Types.ObjectId)
+  @Field(() => String, { description: 'primary user id' })
+  primaryUserId: string;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: User.name }] })
   @Field(() => [User], { description: 'users reference object' })
@@ -266,7 +274,7 @@ export class MemberSummary extends Identifier {
   actionItemsCount: number;
 
   @Field(() => User)
-  primaryCoach: User;
+  primaryUser: User;
 
   @Field(() => Date, { nullable: true })
   nextAppointment?: Date;

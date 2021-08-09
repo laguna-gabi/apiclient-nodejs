@@ -11,7 +11,7 @@ import {
   UpdateTaskStatusParams,
 } from '.';
 import { Errors, ErrorType, EventType, Identifier } from '../common';
-import { camelCase, remove } from 'lodash';
+import { camelCase } from 'lodash';
 import * as jwt from 'jsonwebtoken';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { millisecondsInHour } from 'date-fns';
@@ -29,8 +29,6 @@ export class MemberResolver {
     @Args(camelCase(CreateMemberParams.name))
     createMemberParams: CreateMemberParams,
   ) {
-    remove(createMemberParams.usersIds, (i) => i === createMemberParams.primaryCoachId);
-
     const { firstName, lastName } = createMemberParams;
     const dischargeNotesLink = `${firstName}_${lastName}_Summary.pdf`;
     const dischargeInstructionsLink = `${firstName}_${lastName}_Instructions.pdf`;
@@ -43,7 +41,6 @@ export class MemberResolver {
 
     this.eventEmitter.emit(EventType.collectUsersDataBridge, {
       member,
-      primaryCoachId: createMemberParams.primaryCoachId,
       usersIds: createMemberParams.usersIds,
     });
 

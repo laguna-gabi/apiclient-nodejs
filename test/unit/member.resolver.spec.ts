@@ -50,7 +50,8 @@ describe('MemberResolver', () => {
 
       const params = generateCreateMemberParams({
         orgId: generateId(),
-        primaryCoachId: member.primaryCoach.id,
+        primaryUserId: member.primaryUserId,
+        usersIds: [member.primaryUserId],
       });
       const links = generateMemberLinks(params.firstName, params.lastName);
 
@@ -66,7 +67,7 @@ describe('MemberResolver', () => {
 
       const params = generateCreateMemberParams({
         orgId: generateId(),
-        primaryCoachId: member.primaryCoach.id,
+        primaryUserId: member.primaryUserId,
       });
       delete params.usersIds;
       const links = generateMemberLinks(params.firstName, params.lastName);
@@ -74,32 +75,6 @@ describe('MemberResolver', () => {
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith({ createMemberParams: params, ...links });
-    });
-
-    it('should remove user from users list if it is already sent as primaryCoach', async () => {
-      const member = mockGenerateMember();
-      spyOnServiceInsert.mockImplementationOnce(async () => member);
-
-      const additionalUserId = generateId();
-      const params = generateCreateMemberParams({
-        deviceId: member.deviceId,
-        orgId: generateId(),
-        primaryCoachId: member.primaryCoach.id,
-        usersIds: [additionalUserId, member.primaryCoach.id],
-      });
-      const links = generateMemberLinks(params.firstName, params.lastName);
-
-      await resolver.createMember(params);
-
-      expect(spyOnServiceInsert).toBeCalledTimes(1);
-      expect(spyOnServiceInsert).toBeCalledWith({
-        createMemberParams: {
-          deviceId: member.deviceId,
-          usersIds: [additionalUserId],
-          ...params,
-        },
-        ...links,
-      });
     });
   });
 
@@ -184,34 +159,34 @@ describe('MemberResolver', () => {
   });
 
   describe('getMembers', () => {
-    let spyOnServiceGet;
+    let spyOnServiceGetByOrg;
     beforeEach(() => {
-      spyOnServiceGet = jest.spyOn(service, 'getByOrg');
+      spyOnServiceGetByOrg = jest.spyOn(service, 'getByOrg');
     });
 
     afterEach(() => {
-      spyOnServiceGet.mockReset();
+      spyOnServiceGetByOrg.mockReset();
     });
 
     it('should get members for a given orgId', async () => {
       const member = mockGenerateMember();
-      spyOnServiceGet.mockImplementationOnce(async () => [member]);
+      spyOnServiceGetByOrg.mockImplementationOnce(async () => [member]);
 
       const result = await resolver.getMembers(member.org.id);
 
-      expect(spyOnServiceGet).toBeCalledTimes(1);
-      expect(spyOnServiceGet).toBeCalledWith(member.org.id);
+      expect(spyOnServiceGetByOrg).toBeCalledTimes(1);
+      expect(spyOnServiceGetByOrg).toBeCalledWith(member.org.id);
       expect(result).toEqual([member]);
     });
 
     it('should fetch all members without filtering orgId', async () => {
       const members = [mockGenerateMember(), mockGenerateMember()];
-      spyOnServiceGet.mockImplementationOnce(async () => members);
+      spyOnServiceGetByOrg.mockImplementationOnce(async () => members);
 
       const result = await resolver.getMembers();
 
-      expect(spyOnServiceGet).toBeCalledTimes(1);
-      expect(spyOnServiceGet).toBeCalledWith(undefined);
+      expect(spyOnServiceGetByOrg).toBeCalledTimes(1);
+      expect(spyOnServiceGetByOrg).toBeCalledWith(undefined);
       expect(result).toEqual(members);
     });
   });

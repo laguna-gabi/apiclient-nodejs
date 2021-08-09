@@ -32,10 +32,18 @@ describe('Integration tests : getMembers', () => {
   });
 
   it('should call with a default member(no: appointments, goals, ai, ..)', async () => {
-    const primaryCoach = await creators.createAndValidateUser();
+    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member1: Member = await creators.createAndValidateMember({ org, primaryCoach });
-    const member2: Member = await creators.createAndValidateMember({ org, primaryCoach });
+    const member1: Member = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+    const member2: Member = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
 
     const membersResult = await handler.queries.getMembers(org.id);
 
@@ -51,7 +59,12 @@ describe('Integration tests : getMembers', () => {
           createdAt: member.createdAt,
           goalsCount: 0,
           actionItemsCount: 0,
-          primaryCoach: expect.objectContaining({ avatar: primaryCoach.avatar }),
+          primaryUser: expect.objectContaining({
+            id: primaryUser.id,
+            firstName: primaryUser.firstName,
+            lastName: primaryUser.lastName,
+            avatar: primaryUser.avatar,
+          }),
           nextAppointment: null,
           appointmentsCount: 0,
         }),
@@ -64,11 +77,15 @@ describe('Integration tests : getMembers', () => {
   });
 
   it('should call with a all member parameters', async () => {
-    const primaryCoach = await creators.createAndValidateUser();
+    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member: Member = await creators.createAndValidateMember({ org, primaryCoach });
-    await creators.createAndValidateAppointment({ userId: primaryCoach.id, member });
-    const appointment = await appointmentsActions.scheduleAppointment(primaryCoach.id, member);
+    const member: Member = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+    await creators.createAndValidateAppointment({ userId: primaryUser.id, member });
+    const appointment = await appointmentsActions.scheduleAppointment(primaryUser.id, member);
     await creators.createAndValidateTask(member.id, handler.mutations.createGoal);
     await creators.createAndValidateTask(member.id, handler.mutations.createGoal);
     await creators.createAndValidateTask(member.id, handler.mutations.createActionItem);
@@ -89,7 +106,12 @@ describe('Integration tests : getMembers', () => {
         createdAt: memberResult.createdAt,
         goalsCount: 2,
         actionItemsCount: 1,
-        primaryCoach: expect.objectContaining({ avatar: primaryCoach.avatar }),
+        primaryUser: expect.objectContaining({
+          id: primaryUser.id,
+          firstName: primaryUser.firstName,
+          lastName: primaryUser.lastName,
+          avatar: primaryUser.avatar,
+        }),
         nextAppointment: appointment.start,
         appointmentsCount: 1,
       }),
@@ -97,10 +119,14 @@ describe('Integration tests : getMembers', () => {
   });
 
   it('should call having a single scheduled appointment', async () => {
-    const primaryCoach = await creators.createAndValidateUser();
+    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member: Member = await creators.createAndValidateMember({ org, primaryCoach });
-    const appointment = await appointmentsActions.scheduleAppointment(primaryCoach.id, member);
+    const member: Member = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+    const appointment = await appointmentsActions.scheduleAppointment(primaryUser.id, member);
 
     const membersResult = await handler.queries.getMembers(org.id);
 
@@ -115,11 +141,15 @@ describe('Integration tests : getMembers', () => {
   });
 
   it('should return no nextAppointment on no scheduled appointments', async () => {
-    const primaryCoach = await creators.createAndValidateUser();
+    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member: Member = await creators.createAndValidateMember({ org, primaryCoach });
-    await appointmentsActions.requestAppointment(primaryCoach.id, member);
-    const appointment = await appointmentsActions.scheduleAppointment(primaryCoach.id, member);
+    const member: Member = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+    await appointmentsActions.requestAppointment(primaryUser.id, member);
+    const appointment = await appointmentsActions.scheduleAppointment(primaryUser.id, member);
     await appointmentsActions.endAppointment(appointment.id);
 
     const membersResult = await handler.queries.getMembers(org.id);
@@ -136,11 +166,15 @@ describe('Integration tests : getMembers', () => {
   /* eslint-disable max-len*/
   it('should return most recent scheduled appointment (start time) when it was scheduled before', async () => {
     /* eslint-enable max-len*/
-    const primaryCoach = await creators.createAndValidateUser();
+    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
 
-    const { id: userId } = primaryCoach;
-    const { id: memberId }: Member = await creators.createAndValidateMember({ org, primaryCoach });
+    const { id: userId } = primaryUser;
+    const { id: memberId }: Member = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
 
     const start1 = new Date();
     start1.setHours(start1.getHours() + 2);
@@ -165,11 +199,15 @@ describe('Integration tests : getMembers', () => {
   /* eslint-disable max-len*/
   it('should return most recent scheduled appointment (start time) when it was scheduled after', async () => {
     /* eslint-enable max-len*/
-    const primaryCoach = await creators.createAndValidateUser();
+    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
 
-    const { id: userId } = primaryCoach;
-    const { id: memberId } = await creators.createAndValidateMember({ org, primaryCoach });
+    const { id: userId } = primaryUser;
+    const { id: memberId } = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
 
     const start1 = new Date();
     start1.setHours(start1.getHours() + 2);
@@ -193,23 +231,23 @@ describe('Integration tests : getMembers', () => {
   /* eslint-disable max-len*/
   it('should handle primaryUser and users appointments in nextAppointment calculations', async () => {
     /* eslint-enable max-len*/
-    const primaryCoach = await creators.createAndValidateUser();
+    const primaryUser = await creators.createAndValidateUser();
     const user1 = await creators.createAndValidateUser();
     const user2 = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
 
     const { id: memberId } = await creators.createAndValidateMember({
       org,
-      primaryCoach,
-      coaches: [user1, user2],
+      primaryUser,
+      users: [user1, primaryUser, user2],
     });
 
-    let startPrimaryCoach = new Date();
-    startPrimaryCoach.setHours(startPrimaryCoach.getHours() + 10);
-    await generateAppointment({ userId: primaryCoach.id, memberId, start: startPrimaryCoach });
-    startPrimaryCoach = new Date();
-    startPrimaryCoach.setHours(startPrimaryCoach.getHours() + 6);
-    await generateAppointment({ userId: primaryCoach.id, memberId, start: startPrimaryCoach });
+    let startPrimaryUser = new Date();
+    startPrimaryUser.setHours(startPrimaryUser.getHours() + 10);
+    await generateAppointment({ userId: primaryUser.id, memberId, start: startPrimaryUser });
+    startPrimaryUser = new Date();
+    startPrimaryUser.setHours(startPrimaryUser.getHours() + 6);
+    await generateAppointment({ userId: primaryUser.id, memberId, start: startPrimaryUser });
 
     const startUser1 = new Date();
     startUser1.setHours(startUser1.getHours() + 4);
@@ -235,15 +273,15 @@ describe('Integration tests : getMembers', () => {
   });
 
   it('should handle just users appointments in nextAppointment calculations', async () => {
-    const primaryCoach = await creators.createAndValidateUser();
+    const primaryUser = await creators.createAndValidateUser();
     const user1 = await creators.createAndValidateUser();
     const user2 = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
 
     const { id: memberId } = await creators.createAndValidateMember({
       org,
-      primaryCoach,
-      coaches: [user1, user2],
+      primaryUser,
+      users: [user1, user2, primaryUser],
     });
 
     const start = new Date();
@@ -268,14 +306,18 @@ describe('Integration tests : getMembers', () => {
   /* eslint-disable max-len*/
   it('should not take longer than 1 second to process 10 members with 3 appointments each', async () => {
     /* eslint-enable max-len*/
-    const primaryCoach = await creators.createAndValidateUser();
+    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
 
     for (let i = 0; i < 10; i++) {
-      const member = await creators.createAndValidateMember({ org, primaryCoach });
-      await generateAppointment({ userId: primaryCoach.id, memberId: member.id });
-      await generateAppointment({ userId: primaryCoach.id, memberId: member.id });
-      await generateAppointment({ userId: primaryCoach.id, memberId: member.id });
+      const member = await creators.createAndValidateMember({
+        org,
+        primaryUser,
+        users: [primaryUser],
+      });
+      await generateAppointment({ userId: primaryUser.id, memberId: member.id });
+      await generateAppointment({ userId: primaryUser.id, memberId: member.id });
+      await generateAppointment({ userId: primaryUser.id, memberId: member.id });
     }
 
     const membersResult = await handler.queries.getMembers(org.id);
