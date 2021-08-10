@@ -285,12 +285,14 @@ export const generateOrgParams = ({
   type = OrgType.hospital,
   name = `${faker.lorem.word()}.${faker.datatype.uuid()}`,
   trialDuration = faker.datatype.number({ min: 1, max: 100 }),
+  zipCode = generateZipCode(),
 }: {
   type?: OrgType;
   name?: string;
   trialDuration?: number;
+  zipCode?: string;
 } = {}): CreateOrgParams => {
-  return { type, name, trialDuration: trialDuration };
+  return { type, name, trialDuration: trialDuration, zipCode };
 };
 
 export const generateAppointmentComposeParams = (): AppointmentCompose => {

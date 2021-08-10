@@ -64,6 +64,8 @@ export class MemberResolver {
       const deviceId = this.extractDeviceId(context);
       member = await this.memberService.getByDeviceId(deviceId);
     }
+    member.zipCode = member.zipCode || member.org.zipCode;
+
     member.utcDelta = this.getTimezoneDeltaFromZipcode(member.zipCode);
     return member;
   }

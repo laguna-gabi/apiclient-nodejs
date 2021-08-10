@@ -72,6 +72,7 @@ export class Queries {
               name
               type
               trialDuration
+              zipCode
             }
             primaryUserId
             users {

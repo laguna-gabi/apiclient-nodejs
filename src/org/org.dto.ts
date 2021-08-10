@@ -27,6 +27,9 @@ export class CreateOrgParams {
   @Field(() => Int)
   @Min(1, { message: Errors.get(ErrorType.orgTrialDurationOutOfRange) })
   trialDuration: number; //in days
+
+  @Field()
+  zipCode: string;
 }
 
 /**************************************************************************************************
@@ -47,6 +50,10 @@ export class Org extends Identifier {
   @Prop()
   @Field(() => Int)
   trialDuration: number; //in days
+
+  @Prop()
+  @Field(() => String)
+  zipCode: string;
 }
 
 /**************************************************************************************************

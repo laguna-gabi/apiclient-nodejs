@@ -251,7 +251,7 @@ describe('Integration tests: all', () => {
     expect(memberResult).toEqual(expect.objectContaining(updatedMemberResult));
   });
 
-  it('should return nullable utcDelta if zipCode does not exists', async () => {
+  it('should return org zip code if member does not have one', async () => {
     const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
 
@@ -260,13 +260,14 @@ describe('Integration tests: all', () => {
       primaryUserId: primaryUser.id,
       usersIds: [primaryUser.id],
     });
-    memberParams.zipCode = undefined;
+
+    delete memberParams.zipCode;
 
     await creators.handler.mutations.createMember({ memberParams });
 
     creators.handler.setContextUser(memberParams.deviceId);
     const member = await creators.handler.queries.getMember();
-    expect(member.utcDelta).toBeNull();
+    expect(member.zipCode).toEqual(org.zipCode);
   });
 
   it('should calculate utcDelta if zipCode exists', async () => {

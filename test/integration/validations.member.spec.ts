@@ -62,7 +62,6 @@ describe('Validations - member', () => {
       ${'sex'}           | ${defaultMemberParams.sex}
       ${'email'}         | ${null}
       ${'language'}      | ${defaultMemberParams.language}
-      ${'zipCode'}       | ${null}
       ${'dischargeDate'} | ${null}
     `(`should set default value if exists for optional field $field`, async (params) => {
       /* eslint-enable max-len */

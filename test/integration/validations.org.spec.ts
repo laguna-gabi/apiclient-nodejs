@@ -21,6 +21,7 @@ describe('Validations - org', () => {
     ${'name'}          | ${`Field "name" of required type "String!" was not provided.`}
     ${'type'}          | ${`Field "type" of required type "OrgType!" was not provided.`}
     ${'trialDuration'} | ${`Field "trialDuration" of required type "Int!" was not provided.`}
+    ${'zipCode'}       | ${`Field "zipCode" of required type "String!" was not provided.`}
   `(`should fail to create a user since mandatory field $field is missing`, async (params) => {
     const orgParams: CreateOrgParams = generateOrgParams();
     delete orgParams[params.field];
@@ -33,6 +34,7 @@ describe('Validations - org', () => {
     ${'name'}          | ${{ name: 1 }}             | ${stringError}
     ${'type'}          | ${{ type: 'not-valid' }}   | ${'does not exist in "OrgType" enum'}
     ${'trialDuration'} | ${{ trialDuration: 24.8 }} | ${'Int cannot represent non-integer value'}
+    ${'zipCode'}       | ${{ zipCode: 1 }}          | ${stringError}
   `(
     /* eslint-enable max-len */
     `should fail to create an org since $field is not valid`,
