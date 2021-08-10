@@ -137,6 +137,7 @@ export class Mutations {
             drgDesc
             readmissionRisk
             phoneSecondary
+            admitDate
             address {
               street
               city

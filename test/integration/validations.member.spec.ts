@@ -288,6 +288,7 @@ describe('Validations - member', () => {
       field               | input                                    | errors
       ${'phoneSecondary'} | ${{ phoneSecondary: '+410' }}            | ${[Errors.get(ErrorType.memberPhone)]}
       ${'dischargeDate'}  | ${{ dischargeDate: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
+      ${'admitDate'}      | ${{ admitDate: faker.lorem.word() }}     | ${[Errors.get(ErrorType.memberAdminDate)]}
     `(
       /* eslint-enable max-len */
       `should fail to update a member since $field is not valid`,

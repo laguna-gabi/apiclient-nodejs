@@ -154,6 +154,10 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @Field(() => Address, { nullable: true })
   @IsOptional()
   address?: Address;
+
+  @Field(() => Date, { nullable: true })
+  @IsDate({ message: Errors.get(ErrorType.memberAdminDate) })
+  admitDate?: Date;
 }
 
 @InputType()
@@ -279,6 +283,10 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   generalNotes?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => Date, { nullable: true })
+  admitDate?: Date;
 }
 
 @ObjectType()

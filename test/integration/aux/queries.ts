@@ -133,6 +133,7 @@ export class Queries {
             readmissionRisk
             phoneSecondary
             generalNotes
+            admitDate
             createdAt
           }
         }

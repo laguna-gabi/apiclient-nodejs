@@ -161,6 +161,7 @@ export const generateUpdateMemberParams = ({
   drgDesc = faker.name.firstName(),
   readmissionRisk = faker.name.firstName(),
   phoneSecondary = generatePhone(),
+  admitDate = faker.date.soon(1),
   address = {
     street: faker.address.streetName(),
     city: faker.address.city(),
@@ -179,6 +180,7 @@ export const generateUpdateMemberParams = ({
   drgDesc?: string;
   readmissionRisk?: string;
   phoneSecondary?: string;
+  admitDate?: Date;
   address?: { street?: string; city?: string; state?: string };
 } = {}): UpdateMemberParams => {
   return {
@@ -194,6 +196,7 @@ export const generateUpdateMemberParams = ({
     drgDesc,
     readmissionRisk,
     phoneSecondary,
+    admitDate,
     address,
   };
 };
