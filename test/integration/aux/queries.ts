@@ -132,6 +132,7 @@ export class Queries {
             drgDesc
             readmissionRisk
             phoneSecondary
+            generalNotes
             createdAt
           }
         }

@@ -7,6 +7,7 @@ import {
   CreateTaskParams,
   defaultMemberParams,
   Member,
+  SetGeneralNotesParams,
   Sex,
   TaskStatus,
   UpdateMemberParams,
@@ -360,6 +361,13 @@ export const generateObjectId = (id?): Types.ObjectId => {
 
 export const generateId = (id?): string => {
   return generateObjectId(id).toString();
+};
+
+export const generateSetGeneralNotesParams = ({
+  memberId = generateId(),
+  note = faker.lorem.sentence(),
+}: { memberId?: string; note?: string } = {}): SetGeneralNotesParams => {
+  return { memberId, note };
 };
 
 const generateEmail = () => {

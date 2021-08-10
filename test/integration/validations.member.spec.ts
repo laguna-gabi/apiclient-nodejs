@@ -5,6 +5,7 @@ import {
   generateId,
   generateOrgParams,
   generateRandomName,
+  generateSetGeneralNotesParams,
   generateUpdateMemberParams,
   generateUpdateTaskStatusParams,
   generateZipCode,
@@ -394,6 +395,35 @@ describe('Validations - member', () => {
           updateTaskStatusParams,
           missingFieldError: params.error,
         });
+      });
+    });
+  });
+
+  describe('setGeneralNotes', () => {
+    test.each`
+      field         | error
+      ${'memberId'} | ${`Field "memberId" of required type "String!" was not provided.`}
+    `(
+      `should fail to set general notes since mandatory field $field is missing`,
+      async (params) => {
+        const setGeneralNotesParams = generateSetGeneralNotesParams();
+        delete setGeneralNotesParams[params.field];
+        await handler.mutations.setGeneralNotes({
+          setGeneralNotesParams,
+          missingFieldError: params.error,
+        });
+      },
+    );
+
+    test.each`
+      field                | error
+      ${{ memberId: 123 }} | ${stringError}
+      ${{ note: 123 }}     | ${stringError}
+    `(`should fail to set general notes since $input is not a valid type`, async (params) => {
+      const setGeneralNotesParams = generateSetGeneralNotesParams({ ...params.field });
+      await handler.mutations.setGeneralNotes({
+        setGeneralNotesParams,
+        missingFieldError: params.error,
       });
     });
   });

@@ -14,6 +14,7 @@ import {
   generateOrgParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
+  generateSetGeneralNotesParams,
 } from '../test';
 import * as jwt from 'jsonwebtoken';
 import * as faker from 'faker';
@@ -117,6 +118,13 @@ async function main() {
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
+      '---------------- Set general notes for a member ----------------\n' +
+      '----------------------------------------------------------------',
+  );
+  await setGeneralNotes(memberId);
+
+  console.debug(
+    '\n----------------------------------------------------------------\n' +
       '---------------- Pending sendbird registration -----------------\n' +
       '----------------------------------------------------------------',
   );
@@ -207,6 +215,11 @@ const setNotes = async (appointmentId: string) => {
     params: { appointmentId, ...generateNotesParams() },
   });
   console.log(`${appointmentId} : set notes and scores`);
+};
+
+const setGeneralNotes = async (memberId: string) => {
+  const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId });
+  await mutations.setGeneralNotes({ setGeneralNotesParams });
 };
 
 const createTask = async (memberId: string, preformMethod, taskType: TaskType) => {

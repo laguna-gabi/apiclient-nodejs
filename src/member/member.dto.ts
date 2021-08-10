@@ -156,6 +156,15 @@ export class UpdateMemberParams extends ExtraMemberParams {
   address?: Address;
 }
 
+@InputType()
+export class SetGeneralNotesParams {
+  @Field(() => String)
+  memberId: string;
+
+  @Field(() => String, { nullable: true })
+  note?: string;
+}
+
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
@@ -266,6 +275,10 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => Address, { nullable: true })
   address?: Address;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  generalNotes?: string;
 }
 
 @ObjectType()

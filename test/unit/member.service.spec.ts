@@ -14,6 +14,7 @@ import {
   generateOrgParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
+  generateSetGeneralNotesParams,
   generateUpdateMemberParams,
   generateUpdateTaskStatusParams,
   generateZipCode,
@@ -25,6 +26,7 @@ import {
   MemberDto,
   MemberModule,
   MemberService,
+  SetGeneralNotesParams,
   Sex,
   TaskStatus,
   UpdateMemberParams,
@@ -694,6 +696,33 @@ describe('MemberService', () => {
       await expect(
         service.updateActionItemStatus(generateUpdateTaskStatusParams()),
       ).rejects.toThrow(Errors.get(ErrorType.memberActionItemIdNotFound));
+    });
+  });
+
+  describe('setGeneralNotes', () => {
+    it('should set general notes for a member', async () => {
+      const { _id: primaryUserId } = await modelUser.create(generateCreateUserParams());
+      const { _id: orgId } = await modelOrg.create(generateOrgParams());
+
+      const { id: memberId } = await generateBasicMember({
+        primaryUserId,
+        usersIds: [primaryUserId],
+        orgId,
+      });
+
+      const generalNotes = generateSetGeneralNotesParams({ memberId });
+      await service.setGeneralNotes(generalNotes);
+
+      const result: any = await memberModel.findById(memberId);
+
+      expect(result.generalNotes).toEqual(generalNotes.note);
+    });
+
+    it('should throw error on set general notes for a non existing member', async () => {
+      const generalNotes = generateSetGeneralNotesParams();
+      await expect(service.setGeneralNotes(generalNotes)).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
     });
   });
 });

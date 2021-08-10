@@ -16,6 +16,7 @@ import {
   TaskStatus,
   UpdateMemberParams,
   UpdateTaskStatusParams,
+  SetGeneralNotesParams,
 } from '.';
 import { cloneDeep } from 'lodash';
 import { OnEvent } from '@nestjs/event-emitter';
@@ -264,6 +265,20 @@ export class MemberService extends BaseService {
 
     if (!result) {
       throw new Error(Errors.get(ErrorType.memberActionItemIdNotFound));
+    }
+  }
+
+  /*************************************************************************************************
+   ****************************************** General notes ****************************************
+   ************************************************************************************************/
+  async setGeneralNotes(setGeneralNotesParams: SetGeneralNotesParams): Promise<void> {
+    const result = await this.memberModel.updateOne(
+      { _id: new Types.ObjectId(setGeneralNotesParams.memberId) },
+      { $set: { generalNotes: setGeneralNotesParams.note } },
+    );
+
+    if (result.nModified === 0) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
     }
   }
 

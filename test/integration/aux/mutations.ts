@@ -4,6 +4,7 @@ import { CreateUserParams } from '../../../src/user';
 import {
   CreateMemberParams,
   CreateTaskParams,
+  SetGeneralNotesParams,
   UpdateMemberParams,
   UpdateTaskStatusParams,
 } from '../../../src/member';
@@ -494,6 +495,30 @@ export class Mutations {
     });
 
     return this.isResultValid({ result, invalidFieldsErrors }) && result.data.deleteAvailability;
+  };
+
+  setGeneralNotes = async ({
+    setGeneralNotesParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    setGeneralNotesParams: SetGeneralNotesParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<void> => {
+    const result = await this.apolloClient.mutate({
+      variables: { setGeneralNotesParams: setGeneralNotesParams },
+      mutation: gql`
+        mutation setGeneralNotes($setGeneralNotesParams: SetGeneralNotesParams!) {
+          setGeneralNotes(setGeneralNotesParams: $setGeneralNotesParams)
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.setGeneralNotes
+    );
   };
 
   isResultValid = ({ result, invalidFieldsErrors, missingFieldError = undefined }): boolean => {

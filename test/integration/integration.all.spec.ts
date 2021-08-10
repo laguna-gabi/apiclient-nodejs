@@ -6,6 +6,7 @@ import {
   generateNotesParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
+  generateSetGeneralNotesParams,
   generateUpdateMemberParams,
 } from '../index';
 import { UserRole } from '../../src/user';
@@ -480,6 +481,44 @@ describe('Integration tests: all', () => {
 
     const memberResult = await handler.queries.getMember({ id: member.id });
     expect(memberResult).toEqual(expect.objectContaining({ ...member }));
+  });
+
+  it('should be able to set note for a member', async () => {
+    const primaryUser = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+
+    const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: member.id });
+    await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
+
+    const memberResult = await handler.queries.getMember({ id: member.id });
+    expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
+  });
+
+  it('should be able to set null note for a member', async () => {
+    const primaryUser = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+
+    const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: member.id });
+    await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
+
+    let memberResult = await handler.queries.getMember({ id: member.id });
+    expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
+
+    delete setGeneralNotesParams.note;
+    await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
+
+    memberResult = await handler.queries.getMember({ id: member.id });
+    expect(memberResult.generalNotes).toBeNull();
   });
 
   /************************************************************************************************

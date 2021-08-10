@@ -6,6 +6,7 @@ import {
   Member,
   MemberService,
   MemberSummary,
+  SetGeneralNotesParams,
   TaskStatus,
   UpdateMemberParams,
   UpdateTaskStatusParams,
@@ -130,6 +131,16 @@ export class MemberResolver {
     updateTaskStatusParams: UpdateTaskStatusParams,
   ) {
     return this.memberService.updateActionItemStatus(updateTaskStatusParams);
+  }
+
+  /*************************************************************************************************
+   ****************************************** General notes ****************************************
+   ************************************************************************************************/
+  @Mutation(() => Boolean, { nullable: true })
+  async setGeneralNotes(
+    @Args(camelCase(SetGeneralNotesParams.name)) setGeneralNotesParams: SetGeneralNotesParams,
+  ) {
+    return this.memberService.setGeneralNotes(setGeneralNotesParams);
   }
 
   /*************************************************************************************************
