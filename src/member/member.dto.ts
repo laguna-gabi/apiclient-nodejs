@@ -34,6 +34,19 @@ export const defaultMemberParams = {
   language: Language.en,
 };
 
+@InputType('AddressInput')
+@ObjectType()
+export class Address {
+  @Field(() => String, { nullable: true })
+  street?: string;
+
+  @Field(() => String, { nullable: true })
+  city?: string;
+
+  @Field(() => String, { nullable: true })
+  state?: string;
+}
+
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
  *************************************************************************************************/
@@ -137,6 +150,10 @@ export class UpdateMemberParams extends ExtraMemberParams {
     message: Errors.get(ErrorType.memberPhone),
   })
   phoneSecondary?: string;
+
+  @Field(() => Address, { nullable: true })
+  @IsOptional()
+  address?: Address;
 }
 
 /**************************************************************************************************
@@ -245,6 +262,10 @@ export class Member extends Identifier {
 
   @Field(() => Number, { nullable: true })
   utcDelta?: number;
+
+  @Prop({ isNaN: true })
+  @Field(() => Address, { nullable: true })
+  address?: Address;
 }
 
 @ObjectType()

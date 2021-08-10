@@ -56,6 +56,11 @@ export class Queries {
             dateOfBirth
             dischargeNotesLink
             dischargeInstructionsLink
+            address {
+              street
+              city
+              state
+            }
             scores {
               adherence
               adherenceText

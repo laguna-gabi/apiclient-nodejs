@@ -272,6 +272,10 @@ describe('Validations - member', () => {
       ${{ language: 'not-valid' }}      | ${{ missingFieldError: 'does not exist in "Language" enum' }}
       ${{ zipCode: 123 }}               | ${{ missingFieldError: stringError }}
       ${{ dischargeDate: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
+      ${{ address: 123 }}               | ${{ missingFieldError: 'Expected type "AddressInput" to be an object.' }}
+      ${{ address: { street: 123 } }}   | ${{ missingFieldError: stringError }}
+      ${{ address: { city: 123 } }}     | ${{ missingFieldError: stringError }}
+      ${{ address: { state: 123 } }}    | ${{ missingFieldError: stringError }}
     `(`should fail to update a member since setting $input is not a valid`, async (params) => {
       /* eslint-enable max-len */
       const updateMemberParams = generateUpdateMemberParams({ ...params.input });
