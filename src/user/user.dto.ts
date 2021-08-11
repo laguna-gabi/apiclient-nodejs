@@ -27,6 +27,9 @@ export const defaultUserParams = {
 @InputType()
 export class CreateUserParams {
   @Field()
+  id: string;
+
+  @Field()
   @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
     message: Errors.get(ErrorType.userMinMaxLength),
   })
@@ -76,6 +79,9 @@ export class CreateUserParams {
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class User extends Identifier {
+  @Prop(() => String)
+  _id: string;
+
   @Prop()
   @Field(() => String)
   firstName: string;

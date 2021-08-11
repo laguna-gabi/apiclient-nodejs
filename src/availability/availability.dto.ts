@@ -1,4 +1,4 @@
-import { Document, Types } from 'mongoose';
+import { Document } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Identifier } from '../common';
@@ -32,9 +32,9 @@ export class Availability extends Identifier {
   @Field(() => Date)
   end: Date;
 
-  @Prop({ index: true, type: Types.ObjectId })
+  @Prop({ index: true })
   @Field(() => String)
-  userId: Types.ObjectId;
+  userId: string;
 }
 
 @ObjectType()
@@ -46,7 +46,7 @@ export class AvailabilitySlot extends Identifier {
   end: Date;
 
   @Field(() => String)
-  userId: Types.ObjectId;
+  userId: string;
 
   @Field(() => String)
   userName: string;

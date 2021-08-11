@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Availability, AvailabilityDocument, AvailabilityInput, AvailabilitySlot } from '.';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { cloneDeep } from 'lodash';
 import { InjectModel } from '@nestjs/mongoose';
 import { Errors, ErrorType, Identifiers } from '../common';
@@ -17,7 +17,7 @@ export class AvailabilityService {
       const primitiveValues = cloneDeep(input);
       delete primitiveValues.userId;
 
-      return { ...primitiveValues, userId: new Types.ObjectId(userId) };
+      return { ...primitiveValues, userId };
     });
 
     const result = await this.availabilityModel.insertMany(items);

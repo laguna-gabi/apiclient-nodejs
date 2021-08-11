@@ -1,4 +1,4 @@
-import { generateObjectId, generateScheduleAppointmentParams } from '../index';
+import { generateId, generateScheduleAppointmentParams } from '../index';
 import { Member, MemberSummary } from '../../src/member';
 import { Handler } from './aux/handler';
 import { AppointmentsIntegrationActions } from './aux/appointments';
@@ -21,7 +21,7 @@ describe('Integration tests : getMembers', () => {
   });
 
   it('should return nothing for none existing org', async () => {
-    const membersResult = await handler.queries.getMembers(generateObjectId().toString());
+    const membersResult = await handler.queries.getMembers(generateId());
     expect(membersResult.length).toEqual(0);
   });
 

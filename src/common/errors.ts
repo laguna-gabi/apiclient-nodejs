@@ -8,7 +8,7 @@ export const validPhoneExamples =
 export enum ErrorType {
   // Module user errors
   userMinMaxLength = 9101,
-  userEmailAlreadyExists = 9102,
+  userIdOrEmailAlreadyExists = 9102,
   userEmailFormat = 9103,
   userAvatarFormat = 9104,
   userPhone = 9105,
@@ -57,7 +57,7 @@ const phoneFormat =
 
 export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.userMinMaxLength.valueOf(), `user ${nameFormat}`],
-  [ErrorType.userEmailAlreadyExists.valueOf(), 'email already exists'],
+  [ErrorType.userIdOrEmailAlreadyExists.valueOf(), 'id or/and email already exists'],
   [ErrorType.userEmailFormat.valueOf(), emailFormat],
   [
     ErrorType.userAvatarFormat.valueOf(),

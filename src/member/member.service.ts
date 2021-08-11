@@ -49,14 +49,12 @@ export class MemberService extends BaseService {
     try {
       const primitiveValues = cloneDeep(createMemberParams);
       delete primitiveValues.orgId;
-      delete primitiveValues.primaryUserId;
       delete primitiveValues.usersIds;
 
       const object = await this.memberModel.create({
         ...primitiveValues,
         org: new Types.ObjectId(createMemberParams.orgId),
-        primaryUserId: new Types.ObjectId(createMemberParams.primaryUserId),
-        users: createMemberParams.usersIds?.map((item) => new Types.ObjectId(item)),
+        users: createMemberParams.usersIds,
         dischargeNotesLink,
         dischargeInstructionsLink,
       });
@@ -131,9 +129,7 @@ export class MemberService extends BaseService {
 
     return result.map((item) => {
       const { appointmentsCount, nextAppointment } = this.calculateAppointments(item);
-      const primaryUser = item.users.filter(
-        (user) => user._id.toString() === item.primaryUserId.toString(),
-      )[0];
+      const primaryUser = item.users.filter((user) => user.id === item.primaryUserId)[0];
       delete item.users;
       delete item._id;
 

@@ -40,8 +40,8 @@ export class Communication {
   @Prop({ type: Types.ObjectId, index: true })
   memberId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, index: true })
-  userId: Types.ObjectId;
+  @Prop({ index: true })
+  userId: string;
 
   @Prop({ index: true, unique: true })
   sendbirdChannelUrl: string;

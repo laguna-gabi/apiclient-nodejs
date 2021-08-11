@@ -17,6 +17,7 @@ import {
   CommunicationService,
 } from '../../src/communication';
 import { UserRole } from '../../src/user';
+import { v4 } from 'uuid';
 
 describe('CommunicationService', () => {
   let module: TestingModule;
@@ -88,14 +89,14 @@ describe('CommunicationService', () => {
 
       const result = await communicationModel.find({
         memberId: generateObjectId(member.id),
-        userId: generateObjectId(user.id),
+        userId: user.id,
       });
 
       expect(result).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             memberId: generateObjectId(member.id),
-            userId: generateObjectId(user.id),
+            userId: user.id,
             sendbirdChannelUrl: expect.any(String),
           }),
         ]),
@@ -113,14 +114,14 @@ describe('CommunicationService', () => {
 
       const result = await service.get({ memberId: member.id, userId: user.id });
       expect(result.memberId.toString()).toEqual(member.id);
-      expect(result.userId.toString()).toEqual(user.id);
+      expect(result.userId).toEqual(user.id);
       expect(result.sendbirdChannelUrl).toEqual(expect.any(String));
     });
 
     it('should return null for not existing userId and memberId', async () => {
       const result = await service.get({
         memberId: generateId(),
-        userId: generateId(),
+        userId: v4(),
       });
       expect(result).toBeNull();
     });

@@ -61,7 +61,7 @@ export class CommunicationService {
     if (result) {
       await this.communicationModel.create({
         memberId: new Types.ObjectId(member.id),
-        userId: new Types.ObjectId(user.id),
+        userId: user.id,
         sendbirdChannelUrl,
       });
     }
@@ -69,7 +69,7 @@ export class CommunicationService {
 
   async get(params: GetCommunicationParams): Promise<Communication | null> {
     return this.communicationModel.findOne({
-      userId: new Types.ObjectId(params.userId),
+      userId: params.userId,
       memberId: new Types.ObjectId(params.memberId),
     });
   }

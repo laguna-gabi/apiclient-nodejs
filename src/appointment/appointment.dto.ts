@@ -98,9 +98,9 @@ export class NoShowParams extends NoShow {
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class Appointment extends Identifier {
-  @Prop({ index: true, type: Types.ObjectId })
+  @Prop({ index: true })
   @Field(() => String)
-  userId: Types.ObjectId;
+  userId: string;
 
   @Prop({ index: true, type: Types.ObjectId })
   @Field(() => String)

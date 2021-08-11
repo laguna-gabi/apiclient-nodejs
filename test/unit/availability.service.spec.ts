@@ -5,9 +5,8 @@ import {
   dbConnect,
   dbDisconnect,
   generateAvailabilityInput,
-  generateCreateUserParams,
+  generateCreateRawUserParams,
   generateId,
-  generateObjectId,
 } from '../index';
 import {
   Availability,
@@ -67,7 +66,7 @@ describe('AvailabilityService', () => {
       const createResult = await service.create(params);
       expect(createResult.ids.length).toEqual(params.length);
 
-      const result = await availabilityModel.find({ userId: generateObjectId(userId) });
+      const result = await availabilityModel.find({ userId });
       expect(result.length).toEqual(params.length);
     });
 
@@ -85,9 +84,9 @@ describe('AvailabilityService', () => {
       await service.create(params1);
       await service.create(params2);
 
-      const result1 = await availabilityModel.find({ userId: generateObjectId(userId1) });
+      const result1 = await availabilityModel.find({ userId: userId1 });
       expect(result1.length).toEqual(2);
-      const result2 = await availabilityModel.find({ userId: generateObjectId(userId2) });
+      const result2 = await availabilityModel.find({ userId: userId2 });
       expect(result2.length).toEqual(1);
     });
   });
@@ -113,8 +112,8 @@ describe('AvailabilityService', () => {
     });
 
     it('should get availabilities of at least 2 users', async () => {
-      const { _id: userId1 } = await modelUser.create(generateCreateUserParams());
-      const { _id: userId2 } = await modelUser.create(generateCreateUserParams());
+      const { _id: userId1 } = await modelUser.create(generateCreateRawUserParams());
+      const { _id: userId2 } = await modelUser.create(generateCreateRawUserParams());
 
       const params1 = [
         generateAvailabilityInput({ userId: userId1 }),
@@ -126,9 +125,7 @@ describe('AvailabilityService', () => {
 
       const allResult = await service.get();
       const filtered = allResult.filter(
-        (result) =>
-          result.userId.toString() === userId1.toString() ||
-          result.userId.toString() === userId2.toString(),
+        (result) => result.userId === userId1 || result.userId === userId2,
       );
 
       expect(filtered.length).toEqual(params1.length + params2.length);

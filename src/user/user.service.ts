@@ -2,31 +2,37 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateUserParams, User, UserDocument } from '.';
-import { BaseService, DbErrors, Errors, ErrorType, EventType } from '../common';
+import { DbErrors, Errors, ErrorType, EventType } from '../common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Member } from '../member';
+import { cloneDeep } from 'lodash';
 
 @Injectable()
-export class UserService extends BaseService {
+export class UserService {
   constructor(
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
     private eventEmitter: EventEmitter2,
-  ) {
-    super();
-  }
+  ) {}
 
   async get(id: string): Promise<User> {
-    return this.userModel.findById({ _id: id }).populate('appointments');
+    return this.userModel.findById(id).populate('appointments');
   }
 
   async insert(createUserParams: CreateUserParams): Promise<User> {
     try {
-      const object = await this.userModel.create(createUserParams);
-      return this.replaceId(object.toObject());
+      const newObject = cloneDeep(createUserParams);
+      const _id = newObject.id;
+      delete newObject.id;
+
+      const object = (await this.userModel.create({ ...newObject, _id })).toObject();
+
+      object.id = object._id;
+      delete object._id;
+      return object;
     } catch (ex) {
       throw new Error(
-        ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.userEmailAlreadyExists) : ex,
+        ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.userIdOrEmailAlreadyExists) : ex,
       );
     }
   }

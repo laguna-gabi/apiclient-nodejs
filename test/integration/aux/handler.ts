@@ -8,7 +8,6 @@ import { Queries } from './queries';
 import * as config from 'config';
 import * as jwt from 'jsonwebtoken';
 import { mockProviders } from '../../common';
-import { generateId } from '../../generators';
 
 const validatorsConfig = config.get('graphql.validators');
 

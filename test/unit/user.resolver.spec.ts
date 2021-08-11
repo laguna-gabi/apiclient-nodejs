@@ -1,13 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  dbDisconnect,
-  generateCreateUserParams,
-  generateObjectId,
-  mockGenerateUser,
-} from '../index';
+import { dbDisconnect, generateCreateUserParams, mockGenerateUser } from '../index';
 import { DbModule } from '../../src/db/db.module';
 import { UserModule, UserResolver, UserRole, UserService } from '../../src/user';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { v4 } from 'uuid';
 
 describe('UserResolver', () => {
   let module: TestingModule;
@@ -77,8 +73,7 @@ describe('UserResolver', () => {
     it('should fetch empty on a non existing user', async () => {
       spyOnServiceGet.mockImplementationOnce(async () => null);
 
-      const id = generateObjectId();
-      const result = await resolver.getUser(id.toString());
+      const result = await resolver.getUser(v4());
 
       expect(result).toBeNull();
     });

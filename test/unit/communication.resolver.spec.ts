@@ -15,6 +15,7 @@ import {
 } from '../../src/communication';
 import * as config from 'config';
 import * as faker from 'faker';
+import { v4 } from 'uuid';
 
 describe('CommunicationResolver', () => {
   let module: TestingModule;
@@ -94,7 +95,7 @@ describe('CommunicationResolver', () => {
 
     it('should successfully return a communication object', async () => {
       const payload = {
-        userId: generateId(),
+        userId: v4(),
         memberId: generateId(),
         sendbirdChannelUrl: faker.datatype.uuid(),
       };

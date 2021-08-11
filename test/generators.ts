@@ -27,8 +27,11 @@ import { lookup } from 'zipcode-to-timezone';
 import { AvailabilityInput } from '../src/availability';
 import { GetCommunicationParams } from '../src/communication';
 import * as config from 'config';
+import { v4 } from 'uuid';
+import { cloneDeep } from 'lodash';
 
 export const generateCreateUserParams = ({
+  id = v4(),
   roles = [UserRole.coach],
   firstName = faker.name.firstName(21),
   lastName = faker.name.lastName(21),
@@ -40,6 +43,7 @@ export const generateCreateUserParams = ({
   maxCustomers = faker.datatype.number({ min: 1, max: 100 }),
   languages = [Language.en, Language.es],
 }: {
+  id?: string;
   roles?: UserRole[];
   firstName?: string;
   lastName?: string;
@@ -52,6 +56,7 @@ export const generateCreateUserParams = ({
   languages?: Language[];
 } = {}): CreateUserParams => {
   return {
+    id,
     firstName,
     lastName,
     email,
@@ -68,8 +73,10 @@ export const generateCreateUserParams = ({
 export const mockGenerateUser = (): User => {
   const firstName = faker.name.firstName();
   const lastName = faker.name.lastName();
+  const _id = v4();
   return {
-    id: generateId(),
+    id: _id,
+    _id,
     firstName,
     lastName,
     email: generateEmail(),
@@ -79,6 +86,14 @@ export const mockGenerateUser = (): User => {
     createdAt: faker.date.past(1),
     phone: generatePhone(),
   };
+};
+
+export const generateCreateRawUserParams = (params = undefined) => {
+  const newUser = cloneDeep(generateCreateUserParams(params));
+  newUser['_id'] = newUser.id;
+  delete newUser.id;
+
+  return newUser;
 };
 
 export const generateCreateMemberParams = ({
@@ -225,7 +240,7 @@ export const generateUpdateTaskStatusParams = ({
 };
 
 export const generateRequestAppointmentParams = ({
-  userId = generateId(),
+  userId = v4(),
   memberId = generateId(),
   notBefore = faker.date.soon(3),
 }: {
@@ -237,7 +252,7 @@ export const generateRequestAppointmentParams = ({
 };
 
 export const generateScheduleAppointmentParams = ({
-  userId = generateId(),
+  userId = v4(),
   memberId = generateId(),
   notBefore = faker.date.soon(3),
   method = AppointmentMethod.chat,
@@ -307,7 +322,7 @@ export const generateAppointmentComposeParams = (): AppointmentCompose => {
   return {
     memberId: generateId(),
     memberName: `${faker.name.firstName()} ${faker.name.lastName()}`,
-    userId: generateId(),
+    userId: v4(),
     userName: `${faker.name.firstName()} ${faker.name.lastName()}`,
     start,
     end,
@@ -334,7 +349,7 @@ export const generateZipCode = (): string => {
 };
 
 export const generateAvailabilityInput = ({
-  userId = generateId(),
+  userId = v4(),
   start = faker.date.soon(),
   end,
 }: {
@@ -348,7 +363,7 @@ export const generateAvailabilityInput = ({
 };
 
 export const generateGetCommunicationParams = ({
-  userId = generateId(),
+  userId = v4(),
   memberId = generateId(),
 }: { userId?: string; memberId?: string } = {}): GetCommunicationParams => {
   return { userId, memberId };

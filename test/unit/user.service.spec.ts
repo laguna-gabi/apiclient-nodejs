@@ -9,16 +9,11 @@ import {
   UserRole,
   UserService,
 } from '../../src/user';
-import {
-  compareUsers,
-  dbConnect,
-  dbDisconnect,
-  generateCreateUserParams,
-  generateObjectId,
-} from '../index';
+import { compareUsers, dbConnect, dbDisconnect, generateCreateUserParams } from '../index';
 import { Errors, ErrorType } from '../../src/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppointmentModule } from '../../src/appointment';
+import { v4 } from 'uuid';
 
 describe('UserService', () => {
   let module: TestingModule;
@@ -42,23 +37,12 @@ describe('UserService', () => {
     await dbDisconnect();
   });
 
-  describe('get', () => {
+  describe('get+insert', () => {
     it('should return null for non existing user', async () => {
-      const id = generateObjectId();
-      const result = await service.get(id.toString());
+      const result = await service.get(v4());
       expect(result).toBeNull();
     });
 
-    it('should return user object for an existing user', async () => {
-      const user = generateCreateUserParams();
-      const { id } = await userModel.create(user);
-
-      const result = await service.get(id);
-      compareUsers(result, { _id: id, ...user });
-    });
-  });
-
-  describe('insert', () => {
     test.each([
       [Object.values(UserRole)],
       [[UserRole.coach, UserRole.nurse]],
@@ -67,29 +51,21 @@ describe('UserService', () => {
       [[UserRole.admin]],
     ])('should successfully insert a user having roles : %p', async (roles) => {
       const user = generateCreateUserParams({ roles });
+
       const { id } = await service.insert(user);
+      const result = await service.get(id);
 
-      const createdUser = await userModel.findOne({ _id: id });
-      expect(createdUser.toObject()).toEqual(expect.objectContaining(user));
-
-      expect(id).not.toBeNull();
+      compareUsers(result, user);
     });
 
     it('should check that createdAt and updatedAt exists in the collection', async () => {
       const user = generateCreateUserParams();
+
       const { id } = await service.insert(user);
+      const createdUser: any = await userModel.findById(id);
 
-      const createdUser = await userModel.findById(id);
-      expect(createdUser.toObject()).toEqual(expect.objectContaining(user));
-    });
-
-    it('should fail to insert an already existing user', async () => {
-      const user = generateCreateUserParams();
-      await service.insert(user);
-
-      await expect(service.insert(user)).rejects.toThrow(
-        Errors.get(ErrorType.userEmailAlreadyExists),
-      );
+      expect(createdUser.createdAt).toEqual(expect.any(Date));
+      expect(createdUser.updatedAt).toEqual(expect.any(Date));
     });
 
     it('should insert a user without optional params + validate all fields', async () => {
@@ -99,14 +75,21 @@ describe('UserService', () => {
       delete user.maxCustomers;
 
       const { id } = await service.insert(user);
+      const result = await service.get(id);
 
-      const createdUser = await userModel.findById(id);
-      expect(createdUser.toObject()).toEqual(
-        expect.objectContaining({
-          ...user,
-          languages: defaultUserParams.languages,
-          maxCustomers: defaultUserParams.maxCustomers,
-        }),
+      compareUsers(result, {
+        ...user,
+        languages: defaultUserParams.languages,
+        maxCustomers: defaultUserParams.maxCustomers,
+      });
+    });
+
+    it('should fail to insert an already existing user', async () => {
+      const user = generateCreateUserParams();
+      await service.insert(user);
+
+      await expect(service.insert(user)).rejects.toThrow(
+        Errors.get(ErrorType.userIdOrEmailAlreadyExists),
       );
     });
   });

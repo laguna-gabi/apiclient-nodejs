@@ -15,6 +15,7 @@ import * as faker from 'faker';
 import { CreateMemberParams, defaultMemberParams, Sex, UpdateMemberParams } from '../../src/member';
 import { Errors, ErrorType, Language } from '../../src/common';
 import { Handler } from './aux/handler';
+import { v4 } from 'uuid';
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
@@ -45,7 +46,7 @@ describe('Validations - member', () => {
       ${'usersIds'}      | ${`Field "usersIds" of required type "[String!]!" was not provided.`}
     `(`should fail to create a member since mandatory field $field is missing`, async (params) => {
       /* eslint-enable max-len */
-      const primaryUserId = generateId();
+      const primaryUserId = v4();
       const memberParams: CreateMemberParams = generateCreateMemberParams({
         orgId: generateId(),
         primaryUserId,
@@ -151,7 +152,7 @@ describe('Validations - member', () => {
       /* eslint-enable max-len */
       `should fail to create a member since setting $input is not a valid`,
       async (params) => {
-        const primaryUserId = generateId();
+        const primaryUserId = v4();
         const memberParams: CreateMemberParams = generateCreateMemberParams({
           orgId: generateId(),
           primaryUserId,
@@ -171,7 +172,7 @@ describe('Validations - member', () => {
       /* eslint-enable max-len */
       `should fail to create a member since setting $input is not a valid`,
       async (params) => {
-        const primaryUserId = generateId();
+        const primaryUserId = v4();
         const memberParams: CreateMemberParams = generateCreateMemberParams({
           orgId: generateId(),
           primaryUserId,
@@ -192,7 +193,7 @@ describe('Validations - member', () => {
       ${minLength - 1} | ${'short'}  | ${'lastName'}
       ${maxLength + 1} | ${'long'}   | ${'lastName'}
     `(`should fail to create a member since $field is too $errorString`, async (params) => {
-      const primaryUserId = generateId();
+      const primaryUserId = v4();
       const memberParams: CreateMemberParams = generateCreateMemberParams({
         primaryUserId,
         usersIds: [primaryUserId],
@@ -214,7 +215,7 @@ describe('Validations - member', () => {
       /* eslint-enable max-len */
       `should fail to create a member since $field is not valid`,
       async (params) => {
-        const primaryUserId = generateId();
+        const primaryUserId = v4();
         const memberParams: CreateMemberParams = generateCreateMemberParams({
           orgId: generateId(),
           primaryUserId,
@@ -243,11 +244,11 @@ describe('Validations - member', () => {
     });
 
     it('should throw error on primaryUserId not existing in users list', async () => {
-      const primaryUserId = generateId();
+      const primaryUserId = v4();
       const memberParams: CreateMemberParams = generateCreateMemberParams({
         orgId: generateId(),
         primaryUserId,
-        usersIds: [generateId()],
+        usersIds: [v4()],
       });
       await handler.mutations.createMember({
         memberParams,

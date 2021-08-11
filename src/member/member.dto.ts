@@ -199,11 +199,11 @@ export class Member extends Identifier {
   @Field(() => Org)
   org: Org;
 
-  @Prop(() => Types.ObjectId)
+  @Prop(() => String)
   @Field(() => String, { description: 'primary user id' })
   primaryUserId: string;
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: User.name }] })
+  @Prop({ type: [{ type: String, ref: User.name }] })
   @Field(() => [User], { description: 'users reference object' })
   users: User[];
 

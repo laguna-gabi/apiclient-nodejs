@@ -32,7 +32,7 @@ export class AppointmentService extends BaseService {
   async request(params: RequestAppointmentParams): Promise<Appointment> {
     const result = await this.appointmentModel.findOneAndUpdate(
       {
-        userId: new Types.ObjectId(params.userId),
+        userId: params.userId,
         memberId: new Types.ObjectId(params.memberId),
         status: AppointmentStatus.requested,
       },
@@ -61,12 +61,12 @@ export class AppointmentService extends BaseService {
   async schedule(params: ScheduleAppointmentParams): Promise<Appointment> {
     const object = await this.appointmentModel.findOneAndUpdate(
       {
-        userId: new Types.ObjectId(params.userId),
+        userId: params.userId,
         memberId: new Types.ObjectId(params.memberId),
       },
       {
         $set: {
-          userId: new Types.ObjectId(params.userId),
+          userId: params.userId,
           memberId: new Types.ObjectId(params.memberId),
           notBefore: params.notBefore,
           method: params.method,
@@ -159,7 +159,7 @@ export class AppointmentService extends BaseService {
     userId,
     appointmentId,
   }: {
-    userId: Types.ObjectId;
+    userId: string;
     appointmentId: string;
   }) {
     this.eventEmitter.emit(EventType.newAppointment, {

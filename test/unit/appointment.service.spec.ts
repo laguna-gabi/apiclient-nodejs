@@ -25,6 +25,7 @@ import { Errors, ErrorType, EventType } from '../../src/common';
 import * as faker from 'faker';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { cloneDeep } from 'lodash';
+import { v4 } from 'uuid';
 
 describe('AppointmentService', () => {
   let module: TestingModule;
@@ -72,7 +73,7 @@ describe('AppointmentService', () => {
       expect(result).toEqual(
         expect.objectContaining({
           _id: generateObjectId(id),
-          userId: generateObjectId(appointment.userId),
+          userId: appointment.userId,
           memberId: generateObjectId(appointment.memberId),
           notBefore: appointment.notBefore,
           status: AppointmentStatus.requested,
@@ -113,7 +114,7 @@ describe('AppointmentService', () => {
       expect(resultGet).toEqual(
         expect.objectContaining({
           _id: generateObjectId(result.id),
-          userId: generateObjectId(appointmentParams.userId),
+          userId: appointmentParams.userId,
           memberId: generateObjectId(appointmentParams.memberId),
           notBefore: appointmentParams.notBefore,
           status: AppointmentStatus.requested,
@@ -125,7 +126,7 @@ describe('AppointmentService', () => {
 
     it('should update an appointment notBefore for an existing memberId and userId', async () => {
       const memberId = generateId();
-      const userId = generateId();
+      const userId = v4();
 
       const { id: id1, record: record1 } = await requestAppointment({
         memberId,
@@ -150,7 +151,7 @@ describe('AppointmentService', () => {
       expect(record2).toEqual(
         expect.objectContaining({
           id: record1.id,
-          userId: generateObjectId(userId),
+          userId,
           memberId: generateObjectId(memberId),
           notBefore,
           status: AppointmentStatus.requested,
@@ -162,8 +163,8 @@ describe('AppointmentService', () => {
 
     it('should crate a new appointment for an existing memberId and different userId', async () => {
       const memberId = generateId();
-      const userId1 = generateId();
-      const userId2 = generateId();
+      const userId1 = v4();
+      const userId2 = v4();
 
       const { id: id1, record: record1 } = await requestAppointment({
         memberId,
@@ -191,7 +192,7 @@ describe('AppointmentService', () => {
     it('should crate a new appointment for an existing userId and different memberId', async () => {
       const memberId1 = generateId();
       const memberId2 = generateId();
-      const userId = generateId();
+      const userId = v4();
 
       const { id: id1, record: record1 } = await requestAppointment({
         memberId: memberId1,
@@ -229,7 +230,7 @@ describe('AppointmentService', () => {
 
     it('should create a new request appointment on exising scheduled', async () => {
       const memberId = generateId();
-      const userId = generateId();
+      const userId = v4();
       const scheduleParams = generateScheduleAppointmentParams({ userId, memberId });
       const requestParams = generateRequestAppointmentParams({ userId, memberId });
 
@@ -518,10 +519,7 @@ describe('AppointmentService', () => {
   };
 
   const validateNewAppointmentEvent = (userId: string, appointmentId: string) => {
-    expect(spyOnEventEmitter).toBeCalledWith(EventType.newAppointment, {
-      appointmentId,
-      userId: generateObjectId(userId),
-    });
+    expect(spyOnEventEmitter).toBeCalledWith(EventType.newAppointment, { appointmentId, userId });
     spyOnEventEmitter.mockReset();
   };
 });
