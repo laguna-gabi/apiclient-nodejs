@@ -4,7 +4,7 @@
     "app": "https://www.dev.app.getlaguna.com"
   },
   "db": {
-    "connection": "mongodb://localhost:27017/laguna"
+    "connection": "mongodb+srv://hepius-user:ZWHTgx27kNlcGybK@cluster0.bvvib.mongodb.net/laguna"
   },
   "graphql": {
     "validators": {
