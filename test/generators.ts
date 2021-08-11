@@ -27,6 +27,7 @@ import { lookup } from 'zipcode-to-timezone';
 import { AvailabilityInput } from '../src/availability';
 import { GetCommunicationParams } from '../src/communication';
 import * as config from 'config';
+import { format } from 'date-fns';
 import { v4 } from 'uuid';
 import { cloneDeep } from 'lodash';
 
@@ -89,7 +90,10 @@ export const mockGenerateUser = (): User => {
 };
 
 export const generateCreateRawUserParams = (params = undefined) => {
-  const newUser = cloneDeep(generateCreateUserParams(params));
+  const newUser = 
+        
+        
+        (generateCreateUserParams(params));
   newUser['_id'] = newUser.id;
   delete newUser.id;
 
@@ -101,7 +105,7 @@ export const generateCreateMemberParams = ({
   deviceId = faker.datatype.uuid(),
   firstName = faker.name.firstName(),
   lastName = faker.name.lastName(),
-  dateOfBirth = faker.date.past(),
+  dateOfBirth = generateDateOnly(faker.date.past()),
   orgId,
   primaryUserId,
   usersIds,
@@ -115,7 +119,7 @@ export const generateCreateMemberParams = ({
   deviceId?: string;
   firstName?: string;
   lastName?: string;
-  dateOfBirth?: Date;
+  dateOfBirth?: string;
   orgId: string;
   primaryUserId: string;
   usersIds?: string[];
@@ -123,7 +127,7 @@ export const generateCreateMemberParams = ({
   email?: string;
   language?: Language;
   zipCode?: string;
-  dischargeDate?: Date;
+  dischargeDate?: string;
 }): CreateMemberParams => {
   return {
     phone,
@@ -153,7 +157,7 @@ export const mockGenerateMember = (): Member => {
     deviceId: faker.datatype.uuid(),
     firstName,
     lastName,
-    dateOfBirth: faker.date.past(),
+    dateOfBirth: generateDateOnly(faker.date.past()),
     org: { id: generateId(), ...generateOrgParams() },
     ...generateMemberLinks(firstName, lastName),
     users: [user],
@@ -171,12 +175,13 @@ export const generateUpdateMemberParams = ({
   email = generateEmail(),
   language = Language.en,
   zipCode = generateZipCode(),
-  dischargeDate = faker.date.soon(10),
+  dischargeDate = generateDateOnly(faker.date.soon(10)),
   fellowName = faker.name.firstName(),
   drgDesc = faker.name.firstName(),
   readmissionRisk = faker.name.firstName(),
   phoneSecondary = generatePhone(),
-  admitDate = faker.date.soon(1),
+  admitDate = generateDateOnly(faker.date.soon(1)),
+  dateOfBirth = generateDateOnly(faker.date.past()),
   address = {
     street: faker.address.streetName(),
     city: faker.address.city(),
@@ -190,12 +195,13 @@ export const generateUpdateMemberParams = ({
   email?: string;
   language?: Language;
   zipCode?: string;
-  dischargeDate?: Date;
+  dischargeDate?: string;
   fellowName?: string;
   drgDesc?: string;
   readmissionRisk?: string;
   phoneSecondary?: string;
-  admitDate?: Date;
+  admitDate?: string;
+  dateOfBirth?: string;
   address?: { street?: string; city?: string; state?: string };
 } = {}): UpdateMemberParams => {
   return {
@@ -212,6 +218,7 @@ export const generateUpdateMemberParams = ({
     readmissionRisk,
     phoneSecondary,
     admitDate,
+    dateOfBirth,
     address,
   };
 };
@@ -386,6 +393,10 @@ export const generateSetGeneralNotesParams = ({
   note = faker.lorem.sentence(),
 }: { memberId?: string; note?: string } = {}): SetGeneralNotesParams => {
   return { memberId, note };
+};
+
+export const generateDateOnly = (date: Date): string => {
+  return format(date, 'MM/dd/yyyy');
 };
 
 const generateEmail = () => {

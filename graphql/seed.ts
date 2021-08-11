@@ -11,6 +11,7 @@ import {
   generateCreateTaskParams,
   generateCreateUserParams,
   generateNotesParams,
+  generateDateOnly,
   generateOrgParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
@@ -76,7 +77,7 @@ async function main() {
     usersIds: [user1Id, user2Id, user3Id],
     email: faker.internet.email(),
     zipCode: faker.address.zipCode(),
-    dischargeDate: faker.date.future(1),
+    dischargeDate: generateDateOnly(faker.date.future(1)),
   });
 
   const { id: memberId } = await mutations.createMember({

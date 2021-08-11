@@ -3,6 +3,7 @@ import {
   generateCreateTaskParams,
   generateCreateUserParams,
   generateId,
+  generateDateOnly,
   generateOrgParams,
   generateRandomName,
   generateSetGeneralNotesParams,
@@ -41,7 +42,7 @@ describe('Validations - member', () => {
       ${'phone'}         | ${`Field "phone" of required type "String!" was not provided.`}
       ${'firstName'}     | ${`Field "firstName" of required type "String!" was not provided.`}
       ${'lastName'}      | ${`Field "lastName" of required type "String!" was not provided.`}
-      ${'dateOfBirth'}   | ${`Field "dateOfBirth" of required type "DateTime!" was not provided.`}
+      ${'dateOfBirth'}   | ${`Field "dateOfBirth" of required type "String!" was not provided.`}
       ${'primaryUserId'} | ${`Field "primaryUserId" of required type "String!" was not provided.`}
       ${'usersIds'}      | ${`Field "usersIds" of required type "[String!]!" was not provided.`}
     `(`should fail to create a member since mandatory field $field is missing`, async (params) => {
@@ -123,14 +124,14 @@ describe('Validations - member', () => {
         usersIds: [primaryUserId],
       });
 
-      memberParams.dischargeDate = faker.date.soon(3);
+      memberParams.dischargeDate = generateDateOnly(faker.date.soon(3));
 
       handler.setContextUser(memberParams.deviceId);
       const { id } = await handler.mutations.createMember({ memberParams });
       expect(id).not.toBeUndefined();
 
       const member = await handler.queries.getMember();
-      expect(new Date(member.dischargeDate)).toEqual(memberParams.dischargeDate);
+      expect(generateDateOnly(new Date(member.dischargeDate))).toEqual(memberParams.dischargeDate);
     });
 
     /* eslint-disable max-len */
@@ -140,14 +141,16 @@ describe('Validations - member', () => {
       ${{ deviceId: 123 }}              | ${{ missingFieldError: stringError }}
       ${{ firstName: 123 }}             | ${{ missingFieldError: stringError }}
       ${{ lastName: 123 }}              | ${{ missingFieldError: stringError }}
-      ${{ dateOfBirth: 'not-valid' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
       ${{ orgId: 123 }}                 | ${{ missingFieldError: stringError }}
       ${{ primaryUserId: 123 }}         | ${{ missingFieldError: stringError }}
       ${{ email: 'not-valid' }}         | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberEmailFormat)] }}
       ${{ sex: 'not-valid' }}           | ${{ missingFieldError: 'does not exist in "Sex" enum' }}
       ${{ language: 'not-valid' }}      | ${{ missingFieldError: 'does not exist in "Language" enum' }}
       ${{ zipCode: 123 }}               | ${{ missingFieldError: stringError }}
+      ${{ dateOfBirth: 'not-valid' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
+      ${{ dateOfBirth: '13/1/2021' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
       ${{ dischargeDate: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
+      ${{ dischargeDate: '13/1/2021' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
     `(
       /* eslint-enable max-len */
       `should fail to create a member since setting $input is not a valid`,
@@ -289,7 +292,12 @@ describe('Validations - member', () => {
       field               | input                                    | errors
       ${'phoneSecondary'} | ${{ phoneSecondary: '+410' }}            | ${[Errors.get(ErrorType.memberPhone)]}
       ${'dischargeDate'}  | ${{ dischargeDate: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
-      ${'admitDate'}      | ${{ admitDate: faker.lorem.word() }}     | ${[Errors.get(ErrorType.memberAdminDate)]}
+      ${'admitDate'}      | ${{ admitDate: faker.lorem.word() }}     | ${[Errors.get(ErrorType.memberAdmitDate)]}
+      ${'admitDate'}      | ${{ admitDate: '13/1/2021' }}            | ${[Errors.get(ErrorType.memberAdmitDate)]}
+      ${'dischargeDate'}  | ${{ dischargeDate: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
+      ${'dischargeDate'}  | ${{ dischargeDate: '13/1/2021' }}        | ${[Errors.get(ErrorType.memberDischargeDate)]}
+      ${'dateOfBirth'}    | ${{ dateOfBirth: faker.lorem.word() }}   | ${[Errors.get(ErrorType.memberDateOfBirth)]}
+      ${'dateOfBirth'}    | ${{ dateOfBirth: '13/1/2021' }}          | ${[Errors.get(ErrorType.memberDateOfBirth)]}
     `(
       /* eslint-enable max-len */
       `should fail to update a member since $field is not valid`,

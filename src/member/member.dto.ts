@@ -7,10 +7,11 @@ import {
   ErrorType,
   Identifier,
   IsPrimaryUserInUsers,
+  IsStringDate,
   Language,
   validPhoneExamples,
 } from '../common';
-import { IsDate, IsEmail, IsOptional, IsPhoneNumber, Length } from 'class-validator';
+import { IsEmail, IsOptional, IsPhoneNumber, Length } from 'class-validator';
 import * as config from 'config';
 import { Org } from '../org';
 import { ActionItem, Goal } from '.';
@@ -71,10 +72,10 @@ export class ExtraMemberParams {
   @IsOptional()
   zipCode?: string;
 
-  @Field(() => Date, { nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
-  @IsDate({ message: Errors.get(ErrorType.memberDischargeDate) })
-  dischargeDate?: Date;
+  @IsStringDate({ message: Errors.get(ErrorType.memberDischargeDate) })
+  dischargeDate?: string;
 }
 
 @InputType()
@@ -100,9 +101,9 @@ export class CreateMemberParams extends ExtraMemberParams {
   })
   lastName: string;
 
-  @Field(() => Date)
-  @IsDate({ message: Errors.get(ErrorType.memberDateOfBirth) })
-  dateOfBirth: Date;
+  @Field(() => String)
+  @IsStringDate({ message: Errors.get(ErrorType.memberDateOfBirth) })
+  dateOfBirth: string;
 
   @Field(() => String)
   orgId: string;
@@ -124,12 +125,14 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
     message: Errors.get(ErrorType.memberMinMaxLength),
   })
+  @IsOptional()
   firstName?: string;
 
   @Field({ nullable: true })
   @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
     message: Errors.get(ErrorType.memberMinMaxLength),
   })
+  @IsOptional()
   lastName?: string;
 
   @Field(() => String, { nullable: true })
@@ -155,9 +158,15 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @IsOptional()
   address?: Address;
 
-  @Field(() => Date, { nullable: true })
-  @IsDate({ message: Errors.get(ErrorType.memberAdminDate) })
-  admitDate?: Date;
+  @Field(() => String, { nullable: true })
+  @IsStringDate({ message: Errors.get(ErrorType.memberAdmitDate) })
+  @IsOptional()
+  admitDate?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsStringDate({ message: Errors.get(ErrorType.memberDateOfBirth) })
+  @IsOptional()
+  dateOfBirth?: string;
 }
 
 @InputType()
@@ -191,9 +200,9 @@ export class Member extends Identifier {
   @Field(() => String)
   lastName: string;
 
-  @Prop({ type: Date })
-  @Field(() => Date)
-  dateOfBirth: Date;
+  @Prop()
+  @Field(() => String)
+  dateOfBirth: string;
 
   @Prop({ type: Types.ObjectId, ref: Org.name, index: true })
   @Field(() => Org)
@@ -232,8 +241,8 @@ export class Member extends Identifier {
   zipCode?: string;
 
   @Prop({ isNaN: true })
-  @Field(() => Date, { nullable: true })
-  dischargeDate?: Date;
+  @Field(() => String, { nullable: true })
+  dischargeDate?: string;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: Goal.name }], isNaN: true })
   @Field(() => [Goal], { nullable: true })
@@ -285,8 +294,8 @@ export class Member extends Identifier {
   generalNotes?: string;
 
   @Prop({ isNaN: true })
-  @Field(() => Date, { nullable: true })
-  admitDate?: Date;
+  @Field(() => String, { nullable: true })
+  admitDate?: string;
 }
 
 @ObjectType()
@@ -297,8 +306,8 @@ export class MemberSummary extends Identifier {
   @Field(() => String)
   phone: string;
 
-  @Field(() => Date, { nullable: true })
-  dischargeDate?: Date;
+  @Field(() => String, { nullable: true })
+  dischargeDate?: string;
 
   @Field(() => Number)
   adherence: number;

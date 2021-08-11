@@ -11,6 +11,7 @@ import {
   generateId,
   generateMemberLinks,
   generateObjectId,
+  generateDateOnly,
   generateOrgParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
@@ -247,7 +248,7 @@ describe('MemberService', () => {
       const { _id: orgId } = await modelOrg.create(generateOrgParams());
 
       const deviceId = datatype.uuid();
-      const dischargeDate = date.future(1);
+      const dischargeDate = generateDateOnly(date.future(1));
       const createMemberParams = generateCreateMemberParams({
         primaryUserId,
         usersIds: [primaryUserId],
@@ -518,7 +519,7 @@ describe('MemberService', () => {
         email: internet.email(),
         language: Language.es,
         zipCode: generateZipCode(),
-        dischargeDate: date.future(1),
+        dischargeDate: generateDateOnly(date.future(1)),
       });
       const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
       const { id } = await service.insert({ createMemberParams, ...links });
