@@ -5,7 +5,6 @@ import {
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateId,
-  generateMemberLinks,
   generateSetGeneralNotesParams,
   generateUpdateMemberParams,
   generateUpdateTaskStatusParams,
@@ -15,11 +14,13 @@ import { DbModule } from '../../src/db/db.module';
 import { MemberModule, MemberResolver, MemberService, TaskStatus } from '../../src/member';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Errors, ErrorType } from '../../src/common';
+import { Storage } from '../../src/providers';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
   let resolver: MemberResolver;
   let service: MemberService;
+  let storage: Storage;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -28,6 +29,7 @@ describe('MemberResolver', () => {
 
     resolver = module.get<MemberResolver>(MemberResolver);
     service = module.get<MemberService>(MemberService);
+    storage = module.get<Storage>(Storage);
   });
 
   afterAll(async () => {
@@ -54,12 +56,10 @@ describe('MemberResolver', () => {
         primaryUserId: member.primaryUserId,
         usersIds: [member.primaryUserId],
       });
-      const links = generateMemberLinks(params.firstName, params.lastName);
-
       await resolver.createMember(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
-      expect(spyOnServiceInsert).toBeCalledWith({ createMemberParams: params, ...links });
+      expect(spyOnServiceInsert).toBeCalledWith(params);
     });
 
     it('should support undefined fields', async () => {
@@ -71,11 +71,10 @@ describe('MemberResolver', () => {
         primaryUserId: member.primaryUserId,
       });
       delete params.usersIds;
-      const links = generateMemberLinks(params.firstName, params.lastName);
       await resolver.createMember(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
-      expect(spyOnServiceInsert).toBeCalledWith({ createMemberParams: params, ...links });
+      expect(spyOnServiceInsert).toBeCalledWith(params);
     });
   });
 
@@ -226,6 +225,53 @@ describe('MemberResolver', () => {
       expect(spyOnServiceGet).toBeCalledTimes(1);
       expect(spyOnServiceGet).toBeCalledWith(undefined);
       expect(result).toEqual(appointmentComposes);
+    });
+  });
+
+  describe('getMemberDischargeDocumentsLinks', () => {
+    let spyOnServiceGetByDeviceId;
+    let spyOnStorage;
+    beforeEach(() => {
+      spyOnServiceGetByDeviceId = jest.spyOn(service, 'getByDeviceId');
+      spyOnStorage = jest.spyOn(storage, 'getUrl');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetByDeviceId.mockReset();
+      spyOnStorage.mockReset();
+    });
+
+    it('should get a member discharge documents links for a given context', async () => {
+      const member = mockGenerateMember();
+      spyOnServiceGetByDeviceId.mockImplementationOnce(async () => member);
+      spyOnStorage.mockImplementation(async () => 'https://aws-bucket-path/extras');
+
+      await resolver.getMemberDischargeDocumentsLinks({
+        req: {
+          headers: {
+            /* eslint-disable max-len */
+            authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QifQ.hNQI_r8BATy1LyXPr6Zuo9X_V0kSED8ngcqQ6G-WV5w`,
+            /* eslint-enable max-len */
+          },
+        },
+      });
+
+      const prefix = `${member.firstName}_${member.lastName}`;
+
+      expect(spyOnServiceGetByDeviceId).toBeCalledTimes(1);
+      expect(spyOnStorage).toBeCalledTimes(2);
+      expect(spyOnStorage).toHaveBeenNthCalledWith(1, `${prefix}_Summary.pdf`);
+      expect(spyOnStorage).toHaveBeenNthCalledWith(2, `${prefix}_Instructions.pdf`);
+    });
+
+    it('should throw exception on a non valid member', async () => {
+      spyOnServiceGetByDeviceId.mockImplementationOnce(async () => null);
+
+      await expect(
+        resolver.getMemberDischargeDocumentsLinks({
+          req: { headers: { authorization: 'not-valid' } },
+        }),
+      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
     });
   });
 

@@ -6,10 +6,9 @@ import {
   dbConnect,
   dbDisconnect,
   generateCreateMemberParams,
-  generateCreateTaskParams,
   generateCreateRawUserParams,
+  generateCreateTaskParams,
   generateId,
-  generateMemberLinks,
   generateObjectId,
   generateDateOnly,
   generateOrgParams,
@@ -109,8 +108,6 @@ describe('MemberService', () => {
           usersIds: [user._id, nurse._id, primaryUser._id],
         });
 
-        const links = generateMemberLinks(member.firstName, member.lastName);
-
         const { _id } = await memberModel.create({
           phone: member.phone,
           deviceId,
@@ -119,7 +116,6 @@ describe('MemberService', () => {
           org: generateObjectId(org.id),
           primaryUserId: member.primaryUserId,
           users: member.usersIds,
-          ...links,
         });
 
         const result = await params.method(params.field === 'context' ? member.deviceId : _id);
@@ -129,8 +125,6 @@ describe('MemberService', () => {
         expect(result.deviceId).toEqual(member.deviceId);
         expect(result.firstName).toEqual(member.firstName);
         expect(result.lastName).toEqual(member.lastName);
-        expect(result.dischargeNotesLink).toEqual(links.dischargeNotesLink);
-        expect(result.dischargeInstructionsLink).toEqual(links.dischargeInstructionsLink);
         expect(result.org).toEqual(expect.objectContaining(orgParams));
         expect(result.primaryUserId).toEqual(primaryUser._id);
         expect(result.users.length).toEqual(3);
@@ -256,9 +250,8 @@ describe('MemberService', () => {
         deviceId,
         dischargeDate,
       });
-      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
 
-      const { id: memberId } = await service.insert({ createMemberParams, ...links });
+      const { id: memberId } = await service.insert(createMemberParams);
       await service.insertGoal({
         createTaskParams: generateCreateTaskParams({ memberId }),
         status: TaskStatus.pending,
@@ -301,9 +294,7 @@ describe('MemberService', () => {
 
   const generateBasicMember = async (createMemberParamsInput?): Promise<Identifier> => {
     const createMemberParams = generateCreateMemberParams(createMemberParamsInput);
-    const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
-
-    return service.insert({ createMemberParams, ...links });
+    return service.insert(createMemberParams);
   };
 
   describe('getMembersAppointments', () => {
@@ -488,8 +479,7 @@ describe('MemberService', () => {
         primaryUserId: primaryUser._id,
       });
       createMemberParams.zipCode = undefined;
-      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
-      const { id } = await service.insert({ createMemberParams, ...links });
+      const { id } = await service.insert(createMemberParams);
 
       expect(id).not.toBeUndefined();
 
@@ -497,7 +487,6 @@ describe('MemberService', () => {
       compareMembers({
         createdMember,
         createMemberParams,
-        links,
         primaryUserId: primaryUser._id,
         orgId: org._id,
       });
@@ -521,8 +510,7 @@ describe('MemberService', () => {
         zipCode: generateZipCode(),
         dischargeDate: generateDateOnly(date.future(1)),
       });
-      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
-      const { id } = await service.insert({ createMemberParams, ...links });
+      const { id } = await service.insert(createMemberParams);
 
       expect(id).not.toBeUndefined();
 
@@ -530,7 +518,6 @@ describe('MemberService', () => {
       compareMembers({
         createdMember,
         createMemberParams,
-        links,
         primaryUserId: primaryUser._id,
         orgId: org._id,
       });
@@ -541,13 +528,11 @@ describe('MemberService', () => {
       expect(createdMember.dischargeDate).toEqual(createMemberParams.dischargeDate);
     });
 
-    const compareMembers = ({ createdMember, createMemberParams, links, primaryUserId, orgId }) => {
+    const compareMembers = ({ createdMember, createMemberParams, primaryUserId, orgId }) => {
       expect(createdMember.phone).toEqual(createMemberParams.phone);
       expect(createdMember.deviceId).toEqual(createMemberParams.deviceId);
       expect(createdMember.firstName).toEqual(createMemberParams.firstName);
       expect(createdMember.lastName).toEqual(createMemberParams.lastName);
-      expect(createdMember.dischargeNotesLink).toEqual(links.dischargeNotesLink);
-      expect(createdMember.dischargeInstructionsLink).toEqual(links.dischargeInstructionsLink);
       expect(createdMember.dateOfBirth).toEqual(createMemberParams.dateOfBirth);
       expect(createdMember.primaryUserId).toEqual(primaryUserId);
       expect(createdMember.org).toEqual(orgId);
@@ -562,8 +547,7 @@ describe('MemberService', () => {
         orgId: org._id,
         primaryUserId: primaryUser._id,
       });
-      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
-      const { id } = await service.insert({ createMemberParams, ...links });
+      const { id } = await service.insert(createMemberParams);
 
       const createdMember: any = await memberModel.findById(id);
       expect(createdMember.createdAt).toEqual(expect.any(Date));
@@ -575,9 +559,7 @@ describe('MemberService', () => {
         orgId: generateId(),
         primaryUserId: v4(),
       });
-      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
-
-      const result = await service.insert({ createMemberParams, ...links });
+      const result = await service.insert(createMemberParams);
 
       expect(result.id).not.toBeUndefined();
     });
@@ -587,11 +569,9 @@ describe('MemberService', () => {
         orgId: generateId(),
         primaryUserId: v4(),
       });
-      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
+      await service.insert(createMemberParams);
 
-      await service.insert({ createMemberParams, ...links });
-
-      await expect(service.insert({ createMemberParams, ...links })).rejects.toThrow(
+      await expect(service.insert(createMemberParams)).rejects.toThrow(
         Errors.get(ErrorType.memberPhoneAlreadyExists),
       );
     });
@@ -630,8 +610,7 @@ describe('MemberService', () => {
         orgId: org._id,
         primaryUserId: primaryUser._id,
       });
-      const links = generateMemberLinks(createMemberParams.firstName, createMemberParams.lastName);
-      const { id } = await service.insert({ createMemberParams, ...links });
+      const { id } = await service.insert(createMemberParams);
 
       const beforeObject: any = await memberModel.findById(id);
 

@@ -37,15 +37,7 @@ export class MemberService extends BaseService {
     super();
   }
 
-  async insert({
-    createMemberParams,
-    dischargeNotesLink,
-    dischargeInstructionsLink,
-  }: {
-    createMemberParams: CreateMemberParams;
-    dischargeNotesLink: string;
-    dischargeInstructionsLink: string;
-  }) {
+  async insert(createMemberParams: CreateMemberParams) {
     try {
       const primitiveValues = cloneDeep(createMemberParams);
       delete primitiveValues.orgId;
@@ -55,8 +47,6 @@ export class MemberService extends BaseService {
         ...primitiveValues,
         org: new Types.ObjectId(createMemberParams.orgId),
         users: createMemberParams.usersIds,
-        dischargeNotesLink,
-        dischargeInstructionsLink,
       });
       return this.replaceId(object.toObject());
     } catch (ex) {

@@ -3,6 +3,7 @@ import {
   AppointmentCompose,
   CreateMemberParams,
   CreateTaskParams,
+  DischargeDocumentsLinks,
   Member,
   MemberService,
   MemberSummary,
@@ -18,27 +19,24 @@ import { getTimezoneOffset } from 'date-fns-tz';
 import { millisecondsInHour } from 'date-fns';
 import { lookup } from 'zipcode-to-timezone';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Storage } from '../providers';
 
 @Resolver(() => Member)
 export class MemberResolver {
   private readonly authenticationPrefix = 'Bearer ';
 
-  constructor(private readonly memberService: MemberService, private eventEmitter: EventEmitter2) {}
+  constructor(
+    private readonly memberService: MemberService,
+    private eventEmitter: EventEmitter2,
+    private readonly storage: Storage,
+  ) {}
 
   @Mutation(() => Identifier)
   async createMember(
     @Args(camelCase(CreateMemberParams.name))
     createMemberParams: CreateMemberParams,
   ) {
-    const { firstName, lastName } = createMemberParams;
-    const dischargeNotesLink = `${firstName}_${lastName}_Summary.pdf`;
-    const dischargeInstructionsLink = `${firstName}_${lastName}_Instructions.pdf`;
-
-    const member = await this.memberService.insert({
-      createMemberParams,
-      dischargeNotesLink,
-      dischargeInstructionsLink,
-    });
+    const member = await this.memberService.insert(createMemberParams);
 
     this.eventEmitter.emit(EventType.collectUsersDataBridge, {
       member,
@@ -88,6 +86,21 @@ export class MemberResolver {
     @Args('orgId', { type: () => String, nullable: true }) orgId?: string,
   ) {
     return this.memberService.getMembersAppointments(orgId);
+  }
+
+  @Query(() => DischargeDocumentsLinks)
+  async getMemberDischargeDocumentsLinks(@Context() context) {
+    const deviceId = this.extractDeviceId(context);
+    const member = await this.memberService.getByDeviceId(deviceId);
+
+    const { firstName, lastName } = member;
+
+    const [dischargeNotesLink, dischargeInstructionsLink] = await Promise.all([
+      await this.storage.getUrl(`${firstName}_${lastName}_Summary.pdf`),
+      await this.storage.getUrl(`${firstName}_${lastName}_Instructions.pdf`),
+    ]);
+
+    return { dischargeNotesLink, dischargeInstructionsLink };
   }
 
   /*************************************************************************************************

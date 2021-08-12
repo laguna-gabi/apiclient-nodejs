@@ -521,6 +521,18 @@ describe('Integration tests: all', () => {
     expect(memberResult.generalNotes).toBeNull();
   });
 
+  it('should be able to get dispatch links of a member', async () => {
+    const primaryUser = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+    await creators.createAndValidateMember({ org, primaryUser, users: [primaryUser] });
+
+    const result = await handler.queries.getMemberDischargeDocumentsLinks();
+    expect(result).toEqual({
+      dischargeNotesLink: null,
+      dischargeInstructionsLink: null,
+    });
+  });
+
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

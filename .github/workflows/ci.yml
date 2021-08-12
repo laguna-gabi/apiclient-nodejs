@@ -38,5 +38,5 @@ jobs:
       - name: unit test
         run: yarn test
       - name: integration + validation test
-        run: yarn test:integration        
+        run: yarn test:integration     
   

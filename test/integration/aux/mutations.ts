@@ -126,8 +126,6 @@ export class Mutations {
             firstName
             lastName
             dateOfBirth
-            dischargeNotesLink
-            dischargeInstructionsLink
             sex
             email
             language

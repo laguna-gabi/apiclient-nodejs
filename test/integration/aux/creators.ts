@@ -4,7 +4,6 @@ import {
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateCreateUserParams,
-  generateMemberLinks,
   generateNotesParams,
   generateOrgParams,
 } from '../../generators';
@@ -71,8 +70,6 @@ export class Creators {
       primaryUserId: primaryUser.id,
       usersIds: users.map((user) => user.id),
     });
-    const links = generateMemberLinks(memberParams.firstName, memberParams.lastName);
-
     await this.handler.mutations.createMember({ memberParams });
 
     const member = await this.handler.queries.getMember();
@@ -85,8 +82,6 @@ export class Creators {
     expect(new Date(member.dateOfBirth)).toEqual(new Date(memberParams.dateOfBirth));
     expect(member.primaryUserId).toEqual(primaryUser.id);
     expect(member.users).toEqual(users);
-    expect(member.dischargeNotesLink).toEqual(links.dischargeNotesLink);
-    expect(member.dischargeInstructionsLink).toEqual(links.dischargeInstructionsLink);
     expect(member.org).toEqual(org);
     expect(member.sex).toEqual(defaultMemberParams.sex);
     expect(member.email).toBeNull();

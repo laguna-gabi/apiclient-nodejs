@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { SendBird } from './sendBird';
+import { Storage } from './aws';
 
 @Module({
-  providers: [SendBird],
-  exports: [SendBird],
+  providers: [SendBird, Storage],
+  exports: [SendBird, Storage],
 })
 export class ProvidersModule {}

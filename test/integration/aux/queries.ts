@@ -1,6 +1,7 @@
 import gql from 'graphql-tag';
 import { ApolloServerTestClient } from 'apollo-server-testing';
 import { GetCommunicationParams } from '../../../src/communication';
+import { DischargeDocumentsLinks } from '../../../src/member';
 
 export class Queries {
   constructor(private readonly apolloClient: ApolloServerTestClient) {}
@@ -54,8 +55,6 @@ export class Queries {
             firstName
             lastName
             dateOfBirth
-            dischargeNotesLink
-            dischargeInstructionsLink
             address {
               street
               city
@@ -142,6 +141,27 @@ export class Queries {
 
     invalidFieldsError && expect(invalidFieldsError).toEqual(resultGetMember.errors[0].message);
     return resultGetMember.data.getMember;
+  };
+
+  getMemberDischargeDocumentsLinks = async ({
+    invalidFieldsError,
+  }: { invalidFieldsError?: string } = {}): Promise<DischargeDocumentsLinks> => {
+    const result = await this.apolloClient.query({
+      query: gql`
+        query getMemberDischargeDocumentsLinks {
+          getMemberDischargeDocumentsLinks {
+            dischargeNotesLink
+            dischargeInstructionsLink
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(invalidFieldsError).toEqual(result.errors[0].message);
+    } else {
+      return result.data.getMemberDischargeDocumentsLinks;
+    }
   };
 
   getMembers = async (orgId?: string) => {

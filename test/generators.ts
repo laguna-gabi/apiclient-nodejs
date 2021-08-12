@@ -21,7 +21,6 @@ import {
   ScheduleAppointmentParams,
 } from '../src/appointment';
 import { CreateOrgParams, OrgType } from '../src/org';
-import { Links } from '.';
 import { Language } from '../src/common';
 import { lookup } from 'zipcode-to-timezone';
 import { AvailabilityInput } from '../src/availability';
@@ -29,7 +28,6 @@ import { GetCommunicationParams } from '../src/communication';
 import * as config from 'config';
 import { format } from 'date-fns';
 import { v4 } from 'uuid';
-import { cloneDeep } from 'lodash';
 
 export const generateCreateUserParams = ({
   id = v4(),
@@ -90,10 +88,7 @@ export const mockGenerateUser = (): User => {
 };
 
 export const generateCreateRawUserParams = (params = undefined) => {
-  const newUser = 
-        
-        
-        (generateCreateUserParams(params));
+  const newUser = generateCreateUserParams(params);
   newUser['_id'] = newUser.id;
   delete newUser.id;
 
@@ -159,7 +154,6 @@ export const mockGenerateMember = (): Member => {
     lastName,
     dateOfBirth: generateDateOnly(faker.date.past()),
     org: { id: generateId(), ...generateOrgParams() },
-    ...generateMemberLinks(firstName, lastName),
     users: [user],
     sex: defaultMemberParams.sex,
     language: defaultMemberParams.language,
@@ -220,14 +214,6 @@ export const generateUpdateMemberParams = ({
     admitDate,
     dateOfBirth,
     address,
-  };
-};
-
-export const generateMemberLinks = (firstName, lastName): Links => {
-  const prefix = `${firstName}_${lastName}`;
-  return {
-    dischargeNotesLink: `${prefix}_Summary.pdf`,
-    dischargeInstructionsLink: `${prefix}_Instructions.pdf`,
   };
 };
 

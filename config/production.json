@@ -7,6 +7,11 @@
     "sendbird": {
       "appId": "3DFBFF29-DA70-47BC-8362-B74CF1F46523",
       "appToken": "1c9df4de9b2b3e16176403d65c85aea61572db7d"
+    },
+    "aws": {
+      "storage": {
+        "memberBucketName": "laguna-secure-docs164442-master"
+      }
     }
   }
 }

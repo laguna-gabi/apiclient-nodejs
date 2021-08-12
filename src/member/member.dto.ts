@@ -216,14 +216,6 @@ export class Member extends Identifier {
   @Field(() => [User], { description: 'users reference object' })
   users: User[];
 
-  @Prop()
-  @Field(() => String)
-  dischargeNotesLink: string;
-
-  @Prop()
-  @Field(() => String)
-  dischargeInstructionsLink: string;
-
   @Prop({ default: defaultMemberParams.sex })
   @Field(() => Sex)
   sex: Sex;
@@ -353,6 +345,15 @@ export class AppointmentCompose {
 
   @Field(() => Date)
   end: Date;
+}
+
+@ObjectType()
+export class DischargeDocumentsLinks {
+  @Field(() => String, { nullable: true })
+  dischargeNotesLink?: string;
+
+  @Field(() => String, { nullable: true })
+  dischargeInstructionsLink?: string;
 }
 
 /**************************************************************************************************

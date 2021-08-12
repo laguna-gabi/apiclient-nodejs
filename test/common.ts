@@ -2,12 +2,7 @@ import { User } from '../src/user';
 import { connect, disconnect } from 'mongoose';
 import * as config from 'config';
 import { TestingModule } from '@nestjs/testing';
-import { SendBird } from '../src/providers';
-
-export interface Links {
-  dischargeNotesLink: string;
-  dischargeInstructionsLink: string;
-}
+import { SendBird, Storage } from '../src/providers';
 
 export const compareUsers = (user: User, userBase) => {
   expect(user.id).toEqual(userBase.id);
@@ -30,12 +25,15 @@ export const dbDisconnect = async () => {
 };
 
 export const mockProviders = (module: TestingModule): { sendBird } => {
-  const test = module.get<SendBird>(SendBird);
-  const spyOnSendBirdCreateUser = jest.spyOn(test, 'createUser');
-  const spyOnSendBirdCreateGroupChannel = jest.spyOn(test, 'createGroupChannel');
+  const sendBird = module.get<SendBird>(SendBird);
+  const storage = module.get<Storage>(Storage);
+  const spyOnSendBirdCreateUser = jest.spyOn(sendBird, 'createUser');
+  const spyOnSendBirdCreateGroupChannel = jest.spyOn(sendBird, 'createGroupChannel');
+  const spyOnStorage = jest.spyOn(storage, 'getUrl');
 
   spyOnSendBirdCreateUser.mockResolvedValue(true);
   spyOnSendBirdCreateGroupChannel.mockResolvedValue(true);
+  spyOnStorage.mockResolvedValue('https://some-url');
 
   return { sendBird: { spyOnSendBirdCreateUser, spyOnSendBirdCreateGroupChannel } };
 };

@@ -26,6 +26,11 @@ We're loading a local mongodb by using [docker](https://docs.docker.com/get-dock
 2. run `docker-compose.yml` file for starting Docker, by using the command: `docker-compose up`.
 > **_Stop:_**  After running the sample, you can stop the Docker container with `docker-compose down`
 <br/><br/>
+### Aws
+In order to work locally with aws cli and `package.json` dependencies, install
+1. install [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-mac.html) (will be easy for working with aws on terminal)
+2. [set up](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html) credentials on your local computer (region is optional)
+
 ### Shared code settings
 1. Set up your ide to run with `.prettierrc` file which exists on the main root of the project.
 2. Set up your ide to run with `.eslintrc.js` file which exists on the main root of the project.
