@@ -11,6 +11,7 @@ import { Errors, ErrorType } from '../../src/common';
 import { Handler } from './aux/handler';
 
 const stringError = `String cannot represent a non string value`;
+const floatError = `Float cannot represent non numeric value`;
 
 describe('Validations - appointment', () => {
   const handler: Handler = new Handler();
@@ -199,8 +200,14 @@ describe('Validations - appointment', () => {
   describe('setNotes', () => {
     /* eslint-disable max-len */
     test.each`
-      field              | error
-      ${'appointmentId'} | ${`Field "appointmentId" of required type "String!" was not provided.`}
+      field                 | scores   | error
+      ${'appointmentId'}    | ${false} | ${`Field "appointmentId" of required type "String!" was not provided.`}
+      ${'recap'}            | ${false} | ${`Field "recap" of required type "String!" was not provided.`}
+      ${'strengths'}        | ${false} | ${`Field "strengths" of required type "String!" was not provided.`}
+      ${'userActionItem'}   | ${false} | ${`Field "userActionItem" of required type "String!" was not provided.`}
+      ${'memberActionItem'} | ${false} | ${`Field "memberActionItem" of required type "String!" was not provided.`}
+      ${'wellbeing'}        | ${true}  | ${`Field "wellbeing" of required type "Float!" was not provided.`}
+      ${'adherence'}        | ${true}  | ${`Field "adherence" of required type "Float!" was not provided.`}
     `(
       /* eslint-enable max-len */
       `should fail to set notes to an appointment since mandatory field $field is missing`,
@@ -210,7 +217,7 @@ describe('Validations - appointment', () => {
           ...generateNotesParams(),
         };
 
-        delete noteParams[params.field];
+        params.scores ? delete noteParams.scores[params.field] : delete noteParams[params.field];
 
         await handler.mutations.setNotes({
           params: noteParams,
@@ -220,18 +227,23 @@ describe('Validations - appointment', () => {
     );
 
     test.each`
-      field          | error
-      ${'adherence'} | ${`Field "adherence" of required type "Float!" was not provided.`}
-      ${'wellbeing'} | ${`Field "wellbeing" of required type "Float!" was not provided.`}
+      input                 | input                         | error
+      ${'recap'}            | ${{ recap: 123 }}             | ${stringError}
+      ${'strengths'}        | ${{ strengths: 123 }}         | ${stringError}
+      ${'userActionItem'}   | ${{ userActionItem: 123 }}    | ${stringError}
+      ${'memberActionItem'} | ${{ memberActionItem: 123 }}  | ${stringError}
+      ${'adherence'}        | ${{ adherence: 'not-valid' }} | ${floatError}
+      ${'adherenceText'}    | ${{ adherenceText: 123 }}     | ${stringError}
+      ${'wellbeing'}        | ${{ wellbeing: 'not-valid' }} | ${floatError}
+      ${'wellbeingText'}    | ${{ wellbeingText: 123 }}     | ${stringError}
     `(
-      `should fail to set notes to an appointment since mandatory field $field is missing`,
+      /* eslint-enable max-len */
+      `should fail to set notes to an appointment since $field is not a valid type`,
       async (params) => {
         const noteParams: SetNotesParams = {
           appointmentId: generateId(),
-          ...generateNotesParams(),
+          ...generateNotesParams({ ...params.input }),
         };
-
-        delete noteParams.scores[params.field];
 
         await handler.mutations.setNotes({
           params: noteParams,

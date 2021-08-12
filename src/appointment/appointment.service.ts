@@ -119,10 +119,7 @@ export class AppointmentService extends BaseService {
     }
 
     if (existing.notes) {
-      await this.notesModel.findOneAndUpdate(
-        { _id: existing.notes },
-        { $set: { notes: params.notes, scores: params.scores } },
-      );
+      await this.notesModel.findOneAndUpdate({ _id: existing.notes }, { $set: params });
     } else {
       const { id } = await this.notesModel.create(params);
       await this.appointmentModel.findOneAndUpdate(

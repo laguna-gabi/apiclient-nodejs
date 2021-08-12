@@ -139,7 +139,7 @@ export class Creators {
     let result = await this.handler.queries.getAppointment(appointment.id);
     expectResult(result);
 
-    notes = generateNotesParams(2);
+    notes = generateNotesParams();
     await this.handler.mutations.setNotes({ params: { appointmentId: appointment.id, ...notes } });
     result = await this.handler.queries.getAppointment(appointment.id);
     expectResult(result);

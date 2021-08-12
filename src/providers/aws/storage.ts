@@ -7,7 +7,6 @@ export class Storage {
   private readonly s3 = new AWS.S3({ signatureVersion: 'v4', apiVersion: '2006-03-01' });
 
   async getUrl(fileName: string): Promise<string | undefined> {
-    console.error('hadas getUrl');
     const params = {
       Bucket: config.get('providers.aws.storage.memberBucketName'),
       Key: `public/${fileName}`,

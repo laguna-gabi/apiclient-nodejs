@@ -442,9 +442,7 @@ describe('AppointmentService', () => {
       await service.setNotes({ appointmentId: resultAppointment.id, ...notes });
 
       const result = await service.get(resultAppointment.id);
-      expect(result.notes.notes[0].key).toEqual(notes.notes[0].key);
-      expect(result.notes.notes[0].value).toEqual(notes.notes[0].value);
-      expect(result.notes.scores).toEqual(expect.objectContaining(notes.scores));
+      expect(result.notes).toEqual(expect.objectContaining(notes));
     });
 
     it('should re-set notes and scores to an appointment', async () => {
@@ -453,15 +451,14 @@ describe('AppointmentService', () => {
       const notes1 = generateNotesParams();
       await service.setNotes({ appointmentId: resultAppointment.id, ...notes1 });
 
-      const notes2 = generateNotesParams(2);
+      const result1 = await service.get(resultAppointment.id);
+      expect(result1.notes).toEqual(expect.objectContaining(notes1));
+
+      const notes2 = generateNotesParams();
       await service.setNotes({ appointmentId: resultAppointment.id, ...notes2 });
 
-      const result = await service.get(resultAppointment.id);
-      expect(result.notes.notes[0].key).toEqual(notes2.notes[0].key);
-      expect(result.notes.notes[0].value).toEqual(notes2.notes[0].value);
-      expect(result.notes.notes[1].key).toEqual(notes2.notes[1].key);
-      expect(result.notes.notes[1].value).toEqual(notes2.notes[1].value);
-      expect(result.notes.scores).toEqual(expect.objectContaining(notes2.scores));
+      const result2 = await service.get(resultAppointment.id);
+      expect(result2.notes).toEqual(expect.objectContaining(notes2));
     });
 
     it('should throw error on missing appointmentId', async () => {
@@ -477,16 +474,14 @@ describe('AppointmentService', () => {
       const appointmentParams = generateScheduleAppointmentParams();
       const resultAppointment = await service.schedule(appointmentParams);
 
+      const notes = generateNotesParams();
       const spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
-      const setNotesParams: SetNotesParams = {
-        appointmentId: resultAppointment.id,
-        ...generateNotesParams(),
-      };
+      const setNotesParams: SetNotesParams = { appointmentId: resultAppointment.id, ...notes };
       await service.setNotes(setNotesParams);
 
       expect(spyOnEventEmitter).toBeCalledWith(EventType.appointmentScoresUpdated, {
         memberId: generateObjectId(appointmentParams.memberId),
-        scores: setNotesParams.scores,
+        scores: notes.scores,
       });
 
       spyOnEventEmitter.mockReset();

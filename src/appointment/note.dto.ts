@@ -7,41 +7,23 @@ import { Document } from 'mongoose';
  *************************************************************************************************/
 @InputType('ScoresInput')
 @ObjectType()
+@Schema()
 export class Scores {
+  @Prop()
   @Field(() => Number)
   adherence: number;
 
+  @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   adherenceText?: string;
 
+  @Prop()
   @Field(() => Number)
   wellbeing: number;
 
+  @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   wellbeingText?: string;
-}
-
-@InputType('NoteInput')
-@ObjectType()
-export class Note {
-  @Field(() => String)
-  key: string;
-
-  @Field(() => String)
-  value: string;
-}
-
-@InputType()
-@ObjectType()
-export class SetNotesParams {
-  @Field(() => String)
-  appointmentId: string;
-
-  @Field(() => [Note])
-  notes: Array<Note>;
-
-  @Field(() => Scores)
-  scores: Scores;
 }
 
 /**************************************************************************************************
@@ -52,12 +34,34 @@ export class SetNotesParams {
 @Schema({ versionKey: false, timestamps: true })
 export class Notes {
   @Prop()
-  @Field(() => [Note])
-  notes: Note[];
+  @Field(() => String)
+  recap: string;
+
+  @Prop()
+  @Field(() => String)
+  strengths: string;
+
+  @Prop()
+  @Field(() => String)
+  userActionItem: string;
+
+  @Prop()
+  @Field(() => String)
+  memberActionItem: string;
 
   @Prop()
   @Field(() => Scores)
   scores: Scores;
+}
+
+/**************************************************************************************************
+ ********************************** Input params for gql methods **********************************
+ *************************************************************************************************/
+@InputType()
+@ObjectType()
+export class SetNotesParams extends Notes {
+  @Field(() => String)
+  appointmentId: string;
 }
 
 /**************************************************************************************************

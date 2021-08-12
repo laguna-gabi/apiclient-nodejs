@@ -96,10 +96,10 @@ export class Queries {
                 end
                 link
                 notes {
-                  notes {
-                    key
-                    value
-                  }
+                  recap
+                  strengths
+                  userActionItem
+                  memberActionItem
                   scores {
                     adherence
                     adherenceText
@@ -237,10 +237,10 @@ export class Queries {
               reason
             }
             notes {
-              notes {
-                key
-                value
-              }
+              recap
+              strengths
+              userActionItem
+              memberActionItem
               scores {
                 adherence
                 adherenceText

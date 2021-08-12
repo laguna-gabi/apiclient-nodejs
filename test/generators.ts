@@ -276,19 +276,35 @@ export const generateNoShowAppointmentParams = ({
   return { id, noShow, reason };
 };
 
-export const generateNotesParams = (notesCount = 1): Notes => {
-  const notes = Array.from(Array(notesCount)).map(() => ({
-    key: faker.lorem.word(),
-    value: faker.lorem.sentence(),
-  }));
-
+export const generateNotesParams = ({
+  recap = faker.lorem.sentence(),
+  strengths = faker.lorem.sentence(),
+  userActionItem = faker.lorem.sentence(),
+  memberActionItem = faker.lorem.sentence(),
+  adherence = faker.datatype.number({ min: 1, max: 10 }),
+  adherenceText = faker.lorem.sentence(),
+  wellbeing = faker.datatype.number({ min: 1, max: 10 }),
+  wellbeingText = faker.lorem.sentence(),
+}: {
+  recap?: string;
+  strengths?: string;
+  userActionItem?: string;
+  memberActionItem?: string;
+  adherence?: number;
+  adherenceText?: string;
+  wellbeing?: number;
+  wellbeingText?: string;
+} = {}): Notes => {
   return {
-    notes,
+    recap,
+    strengths,
+    userActionItem,
+    memberActionItem,
     scores: {
-      adherence: faker.datatype.number({ min: 1, max: 10 }),
-      adherenceText: faker.lorem.sentence(),
-      wellbeing: faker.datatype.number({ min: 1, max: 10 }),
-      wellbeingText: faker.lorem.sentence(),
+      adherence,
+      adherenceText,
+      wellbeing,
+      wellbeingText,
     },
   };
 };
