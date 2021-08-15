@@ -104,7 +104,7 @@ async function main() {
   await scheduleAppointment(memberId, user1Id, 'user1');
   await requestAppointment(memberId, user2Id, 'user2');
   const appointmentId = await scheduleAppointment(memberId, user2Id, 'user2');
-  await setNotes(appointmentId);
+  await endAppointment(appointmentId);
   await scheduleAppointment(memberId, user3Id, 'user3');
 
   console.debug(
@@ -211,11 +211,11 @@ const scheduleAppointment = async (
   return appointment.id;
 };
 
-const setNotes = async (appointmentId: string) => {
-  await mutations.setNotes({
-    params: { appointmentId, ...generateNotesParams() },
+const endAppointment = async (id: string) => {
+  await mutations.endAppointment({
+    endAppointmentParams: { id, notes: generateNotesParams() },
   });
-  console.log(`${appointmentId} : set notes and scores`);
+  console.log(`${id} : end appointment with notes and scores`);
 };
 
 const setGeneralNotes = async (memberId: string) => {

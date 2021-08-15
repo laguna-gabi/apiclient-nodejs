@@ -15,7 +15,7 @@ import {
 } from '../src/member';
 import {
   AppointmentMethod,
-  NoShowParams,
+  EndAppointmentParams,
   Notes,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
@@ -264,16 +264,18 @@ export const generateScheduleAppointmentParams = ({
   return { userId, memberId, notBefore, method, start, end: end || endNew };
 };
 
-export const generateNoShowAppointmentParams = ({
+export const generateEndAppointmentParams = ({
   id = generateId(),
   noShow = true,
-  reason = faker.lorem.sentence(),
+  noShowReason = faker.lorem.sentence(),
+  notes = generateNotesParams(),
 }: {
   id?: string;
   noShow?: boolean;
-  reason?: string;
-} = {}): NoShowParams => {
-  return { id, noShow, reason };
+  noShowReason?: string;
+  notes?: Notes;
+} = {}): EndAppointmentParams => {
+  return { id, noShow, noShowReason, notes };
 };
 
 export const generateNotesParams = ({

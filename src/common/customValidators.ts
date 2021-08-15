@@ -43,17 +43,15 @@ export function IsFutureDate(options?: ValidationOptions) {
   };
 }
 
-export function IsNoShowValid(property: string, options?: ValidationOptions) {
+export function IsNoShowValid(options?: ValidationOptions) {
   return (object, propertyName: string) => {
     registerDecorator({
       target: object.constructor,
       propertyName,
-      constraints: [property],
       options,
       validator: {
         validate(reason, args: ValidationArguments) {
-          const [relatedPropertyName] = args.constraints;
-          const noShow = args.object[relatedPropertyName];
+          const noShow = args.object['noShow'];
           return (!noShow && !reason) || (reason && noShow);
         },
       },

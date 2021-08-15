@@ -95,6 +95,8 @@ export class Queries {
                 start
                 end
                 link
+                noShow
+                noShowReason
                 notes {
                   recap
                   strengths
@@ -232,10 +234,8 @@ export class Queries {
             end
             link
             updatedAt
-            noShow {
-              noShow
-              reason
-            }
+            noShow
+            noShowReason
             notes {
               recap
               strengths

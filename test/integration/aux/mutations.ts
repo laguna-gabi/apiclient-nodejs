@@ -11,10 +11,9 @@ import {
 import { ApolloServerTestClient } from 'apollo-server-testing';
 import {
   Appointment,
-  NoShowParams,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
-  SetNotesParams,
+  EndAppointmentParams,
 } from '../../../src/appointment';
 import { Identifier, Identifiers } from '../../../src/common';
 import { CreateOrgParams } from '../../../src/org';
@@ -222,40 +221,6 @@ export class Mutations {
     );
   };
 
-  endAppointment = async ({
-    id,
-    missingFieldError,
-    invalidFieldsErrors,
-  }: {
-    id: string;
-    missingFieldError?: string;
-    invalidFieldsErrors?: string[];
-  }): Promise<Appointment> => {
-    const result = await this.apolloClient.mutate({
-      variables: { id },
-      mutation: gql`
-        mutation EndAppointment($id: String!) {
-          endAppointment(id: $id) {
-            id
-            memberId
-            userId
-            notBefore
-            method
-            status
-            start
-            end
-            updatedAt
-          }
-        }
-      `,
-    });
-
-    return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.endAppointment
-    );
-  };
-
   freezeAppointment = async ({
     id,
     missingFieldError,
@@ -290,64 +255,27 @@ export class Mutations {
     );
   };
 
-  noShowAppointment = async ({
-    noShowParams,
+  endAppointment = async ({
+    endAppointmentParams,
     missingFieldError,
     invalidFieldsErrors,
   }: {
-    noShowParams: NoShowParams;
+    endAppointmentParams: EndAppointmentParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
-  }): Promise<Appointment> => {
+  }): Promise<Identifier> => {
     const result = await this.apolloClient.mutate({
-      variables: { noShowParams: noShowParams },
+      variables: { endAppointmentParams },
       mutation: gql`
-        mutation NoShowAppointment($noShowParams: NoShowParams!) {
-          noShowAppointment(noShowParams: $noShowParams) {
-            id
-            memberId
-            userId
-            notBefore
-            method
-            status
-            start
-            end
-            updatedAt
-            noShow {
-              noShow
-              reason
-            }
-          }
+        mutation EndAppointment($endAppointmentParams: EndAppointmentParams!) {
+          endAppointment(endAppointmentParams: $endAppointmentParams)
         }
       `,
     });
 
     return (
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.noShowAppointment
-    );
-  };
-
-  setNotes = async ({
-    params,
-    missingFieldError,
-    invalidFieldsErrors,
-  }: {
-    params: SetNotesParams;
-    missingFieldError?: string;
-    invalidFieldsErrors?: string[];
-  }): Promise<Identifier> => {
-    const result = await this.apolloClient.mutate({
-      variables: { params: params },
-      mutation: gql`
-        mutation SetNotes($params: SetNotesParams!) {
-          setNotes(params: $params)
-        }
-      `,
-    });
-
-    return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.setNotes
+      result.data.endAppointment
     );
   };
 

@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType, OmitType, registerEnumType } from '@nestjs/graphql';
-import { IsBoolean, IsDate } from 'class-validator';
+import { IsDate } from 'class-validator';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Errors, ErrorType, Identifier, IsDateAfter, IsFutureDate, IsNoShowValid } from '../common';
+import { Errors, ErrorType, Identifier, IsDateAfter, IsFutureDate } from '../common';
 import { Document, Types } from 'mongoose';
 import { Notes } from './note.dto';
 
@@ -74,24 +74,6 @@ export class ScheduleAppointmentParams {
   end: Date;
 }
 
-@InputType()
-@ObjectType('NoShowType')
-export class NoShow {
-  @Field(() => Boolean)
-  @IsBoolean()
-  noShow: boolean;
-
-  @Field(() => String, { nullable: true })
-  @IsNoShowValid('noShow', { message: Errors.get(ErrorType.appointmentNoShow) })
-  reason?: string;
-}
-
-@InputType()
-export class NoShowParams extends NoShow {
-  @Field(() => String)
-  id: string;
-}
-
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
@@ -126,9 +108,13 @@ export class Appointment extends Identifier {
   @Field(() => Date, { nullable: true })
   end?: Date;
 
-  @Prop({ type: NoShow })
-  @Field(() => NoShow, { nullable: true })
-  noShow?: NoShow;
+  @Prop({ isNan: true })
+  @Field(() => Boolean, { nullable: true })
+  noShow?: boolean;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  noShowReason?: string;
 
   @Prop({ type: Types.ObjectId, ref: Notes.name })
   @Field(() => Notes, { nullable: true })

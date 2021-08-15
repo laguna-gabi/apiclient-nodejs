@@ -6,7 +6,6 @@ import {
   dbDisconnect,
   generateAppointmentLink,
   generateId,
-  generateNoShowAppointmentParams,
   generateNotesParams,
   generateObjectId,
   generateRequestAppointmentParams,
@@ -18,8 +17,7 @@ import {
   AppointmentModule,
   AppointmentService,
   AppointmentStatus,
-  NoShowParams,
-  SetNotesParams,
+  EndAppointmentParams,
 } from '../../src/appointment';
 import { Errors, ErrorType, EventType } from '../../src/common';
 import * as faker from 'faker';
@@ -325,37 +323,9 @@ describe('AppointmentService', () => {
     expect(spyOnEventEmitter).not.toBeCalled();
   });
 
-  describe('end', () => {
-    it('should not be able to end a non existing appointment', async () => {
-      await expect(service.end(generateId())).rejects.toThrow(
-        Errors.get(ErrorType.appointmentIdNotFound),
-      );
-    });
-
-    it('should be able to end an existing appointment', async () => {
-      const appointmentParams = generateRequestAppointmentParams();
-      const appointment = await service.request(appointmentParams);
-
-      validateNewAppointmentEvent(appointmentParams.userId, appointment.id);
-
-      const endResult = await service.end(appointment.id);
-      expect(endResult.status).toEqual(AppointmentStatus.done);
-    });
-
-    it('should be able to end an existing scheduled appointment', async () => {
-      const appointmentParams = generateScheduleAppointmentParams();
-
-      const appointment = await service.schedule(appointmentParams);
-      validateNewAppointmentEvent(appointmentParams.userId, appointment.id);
-
-      const endResult = await service.end(appointment.id);
-      expect(endResult.status).toEqual(AppointmentStatus.done);
-    });
-  });
-
   describe('freeze', () => {
-    it('should not be able to end a non existing appointment', async () => {
-      await expect(service.end(generateId())).rejects.toThrow(
+    it('should not be able to freeze a non existing appointment', async () => {
+      await expect(service.freeze(generateId())).rejects.toThrow(
         Errors.get(ErrorType.appointmentIdNotFound),
       );
     });
@@ -377,98 +347,65 @@ describe('AppointmentService', () => {
     });
   });
 
-  describe('show', () => {
-    const reason = faker.lorem.sentence();
-
-    it('should not be able to update show to a non existing appointment', async () => {
-      await expect(service.show(generateNoShowAppointmentParams())).rejects.toThrow(
+  describe('end', () => {
+    it('should not be able to end a non existing appointment', async () => {
+      await expect(service.end({ id: generateId() })).rejects.toThrow(
         Errors.get(ErrorType.appointmentIdNotFound),
       );
     });
 
+    const noShowReason = faker.lorem.sentence();
+    /* eslint-disable max-len */
     test.each`
-      update
-      ${{ noShow: true, reason }}
-      ${{ noShow: false, reason: null }}
-    `(
-      `should be able to update appointment show $update to an existing appointment`,
-      async (params) => {
-        const appointment = await service.request(generateRequestAppointmentParams());
-
-        const updateShowParams: NoShowParams = {
-          id: appointment.id,
-          ...params.update,
-        };
-
-        const result = await service.show(updateShowParams);
-        expect(updateShowParams).toEqual(expect.objectContaining(result.noShow));
-      },
-    );
-
-    test.each`
-      update1                                             | update2
-      ${{ noShow: true, reason: faker.lorem.sentence() }} | ${{ noShow: true, reason }}
-      ${{ noShow: false }}                                | ${{ noShow: true, reason }}
-      ${{ noShow: true, reason }}                         | ${{ noShow: false, reason: null }}
+      update1                               | update2
+      ${{ noShow: true, noShowReason }}     | ${{ noShow: true, noShowReason: faker.lorem.sentence(), notes: generateNotesParams() }}
+      ${{ noShow: true, noShowReason }}     | ${{ noShow: false, noShowReason: null }}
+      ${{ noShow: false }}                  | ${{ noShow: true, noShowReason }}
+      ${{ notes: generateNotesParams() }}   | ${{ noShow: true }}
+      ${{ notes: generateNotesParams() }}   | ${{ notes: null }}
+      ${{ notes: generateNotesParams() }}   | ${{ notes: generateNotesParams(), noShow: false }}
+      ${{ notes: generateNotesParams() }}   | ${{ notes: null, noShow: true, noShowReason }}
+      ${{ notes: null }}                    | ${{ notes: generateNotesParams(), noShow: true, noShowReason }}
+      ${{ notes: undefined, noShow: true }} | ${{ notes: generateNotesParams(), noShow: false }}
     `(
       `should be able to multiple update existing appointment : $update1 and $update2`,
+      /* eslint-enable max-len */
       async (params) => {
-        const appointmentParams = generateRequestAppointmentParams();
-        const appointment = await service.request(appointmentParams);
+        const appointmentParams = generateScheduleAppointmentParams();
+        const appointment = await service.schedule(appointmentParams);
 
         validateNewAppointmentEvent(appointmentParams.userId, appointment.id);
 
-        const updateShowParams1: NoShowParams = {
+        const updateShowParams1: EndAppointmentParams = {
           id: appointment.id,
           ...params.update1,
         };
-        await service.show(updateShowParams1);
+        await service.end(updateShowParams1);
 
-        const updateShowParams2: NoShowParams = {
+        const updateShowParams2: EndAppointmentParams = {
           id: appointment.id,
           ...params.update2,
         };
-        const result = await service.show(updateShowParams2);
-        expect(result.noShow).toEqual(params.update2);
+        await service.end(updateShowParams2);
+
+        const result = await service.get(appointment.id);
+        expect(result.noShow).toEqual(
+          params.update2.noShow !== undefined ? params.update2.noShow : params.update1.noShow,
+        );
+        expect(result.noShowReason).toEqual(
+          params.update2.noShowReason !== undefined
+            ? params.update2.noShowReason
+            : params.update1.noShowReason,
+        );
+        expect(result.notes).toEqual(
+          params.update1.notes === undefined && params.update2.notes === undefined
+            ? undefined
+            : expect.objectContaining(
+                params.update2.notes !== undefined ? params.update2.notes : params.update1.notes,
+              ),
+        );
       },
     );
-  });
-
-  describe('setNotes', () => {
-    it('should set new notes to an appointment', async () => {
-      const resultAppointment = await service.schedule(generateScheduleAppointmentParams());
-
-      const notes = generateNotesParams();
-      await service.setNotes({ appointmentId: resultAppointment.id, ...notes });
-
-      const result = await service.get(resultAppointment.id);
-      expect(result.notes).toEqual(expect.objectContaining(notes));
-    });
-
-    it('should re-set notes and scores to an appointment', async () => {
-      const resultAppointment = await service.schedule(generateScheduleAppointmentParams());
-
-      const notes1 = generateNotesParams();
-      await service.setNotes({ appointmentId: resultAppointment.id, ...notes1 });
-
-      const result1 = await service.get(resultAppointment.id);
-      expect(result1.notes).toEqual(expect.objectContaining(notes1));
-
-      const notes2 = generateNotesParams();
-      await service.setNotes({ appointmentId: resultAppointment.id, ...notes2 });
-
-      const result2 = await service.get(resultAppointment.id);
-      expect(result2.notes).toEqual(expect.objectContaining(notes2));
-    });
-
-    it('should throw error on missing appointmentId', async () => {
-      await expect(
-        service.setNotes({
-          appointmentId: generateId(),
-          ...generateNotesParams(),
-        }),
-      ).rejects.toThrow(Errors.get(ErrorType.appointmentIdNotFound));
-    });
 
     it('should validate that on insert notes, an internal event is sent', async () => {
       const appointmentParams = generateScheduleAppointmentParams();
@@ -476,8 +413,8 @@ describe('AppointmentService', () => {
 
       const notes = generateNotesParams();
       const spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
-      const setNotesParams: SetNotesParams = { appointmentId: resultAppointment.id, ...notes };
-      await service.setNotes(setNotesParams);
+      const endAppointmentParams: EndAppointmentParams = { id: resultAppointment.id, notes };
+      await service.end(endAppointmentParams);
 
       expect(spyOnEventEmitter).toBeCalledWith(EventType.appointmentScoresUpdated, {
         memberId: generateObjectId(appointmentParams.memberId),

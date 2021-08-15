@@ -1,6 +1,8 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { IsBoolean, IsOptional } from 'class-validator';
+import { Errors, ErrorType, IsNoShowValid } from '../common';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -9,17 +11,17 @@ import { Document } from 'mongoose';
 @ObjectType()
 @Schema()
 export class Scores {
-  @Prop()
-  @Field(() => Number)
-  adherence: number;
+  @Prop({ isNaN: true })
+  @Field(() => Number, { nullable: true })
+  adherence?: number;
 
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   adherenceText?: string;
 
-  @Prop()
-  @Field(() => Number)
-  wellbeing: number;
+  @Prop({ isNaN: true })
+  @Field(() => Number, { nullable: true })
+  wellbeing?: number;
 
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
@@ -33,25 +35,25 @@ export class Scores {
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class Notes {
-  @Prop()
-  @Field(() => String)
-  recap: string;
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  recap?: string;
 
-  @Prop()
-  @Field(() => String)
-  strengths: string;
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  strengths?: string;
 
-  @Prop()
-  @Field(() => String)
-  userActionItem: string;
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  userActionItem?: string;
 
-  @Prop()
-  @Field(() => String)
-  memberActionItem: string;
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  memberActionItem?: string;
 
-  @Prop()
-  @Field(() => Scores)
-  scores: Scores;
+  @Prop({ isNan: true })
+  @Field(() => Scores, { nullable: true })
+  scores?: Scores;
 }
 
 /**************************************************************************************************
@@ -59,9 +61,23 @@ export class Notes {
  *************************************************************************************************/
 @InputType()
 @ObjectType()
-export class SetNotesParams extends Notes {
+export class EndAppointmentParams {
   @Field(() => String)
-  appointmentId: string;
+  id: string;
+
+  @Field(() => Notes, { nullable: true })
+  @IsOptional()
+  notes?: Notes;
+
+  @Field(() => Boolean, { nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  noShow?: boolean;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsNoShowValid({ message: Errors.get(ErrorType.appointmentNoShow) })
+  noShowReason?: string;
 }
 
 /**************************************************************************************************

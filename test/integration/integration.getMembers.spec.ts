@@ -76,7 +76,7 @@ describe('Integration tests : getMembers', () => {
     compareResults(membersResult[1], member2);
   });
 
-  it('should call with a all member parameters', async () => {
+  it.only('should call with a all member parameters', async () => {
     const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
     const member: Member = await creators.createAndValidateMember({
@@ -150,7 +150,7 @@ describe('Integration tests : getMembers', () => {
     });
     await appointmentsActions.requestAppointment(primaryUser.id, member);
     const appointment = await appointmentsActions.scheduleAppointment(primaryUser.id, member);
-    await appointmentsActions.endAppointment(appointment.id);
+    await handler.mutations.endAppointment({ endAppointmentParams: { id: appointment.id } });
 
     const membersResult = await handler.queries.getMembers(org.id);
 

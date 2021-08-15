@@ -4,14 +4,14 @@ import {
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateCreateUserParams,
-  generateNotesParams,
   generateOrgParams,
+  generateEndAppointmentParams,
 } from '../../generators';
 import { camelCase, omit } from 'lodash';
 import { Org } from '../../../src/org';
 import { CreateTaskParams, defaultMemberParams, Member } from '../../../src/member';
 import * as faker from 'faker';
-import { Appointment } from '../../../src/appointment';
+import { Appointment, AppointmentStatus, EndAppointmentParams } from '../../../src/appointment';
 import { Handler } from './handler';
 import { AppointmentsIntegrationActions } from './appointments';
 
@@ -101,7 +101,7 @@ export class Creators {
    * 4. call mutation endAppointment: returned current appointment with status: done
    * 5. call mutation freezeAppointment: returned current appointment with status: closed
    * 6. call mutation endAppointment: "unfreeze" returned current appointment with status: done
-   * 7. call setNotes 2 times - 2nd time should override the 1st one
+   * 7. call endAppointment a few times (checks for 'override' endAppointmentParams)
    * 8. call query getAppointment: returned current appointment with all fields
    */
   createAndValidateAppointment = async ({
@@ -117,34 +117,33 @@ export class Creators {
     );
 
     let appointment = await this.appointmentsActions.scheduleAppointment(userId, member);
-
+    appointment = await this.appointmentsActions.freezeAppointment(appointment.id);
+    expect(appointment.status).toEqual(AppointmentStatus.closed);
     expect(requestAppointmentResult.id).toEqual(appointment.id);
 
-    appointment = await this.appointmentsActions.endAppointment(appointment.id);
-    appointment = await this.appointmentsActions.freezeAppointment(appointment.id);
-    appointment = await this.appointmentsActions.endAppointment(appointment.id); //Unfreeze
-    appointment = await this.appointmentsActions.showAppointment(appointment.id);
+    await this.handler.mutations.endAppointment({ endAppointmentParams: { id: appointment.id } });
+    const result = await this.handler.queries.getAppointment(appointment.id);
+    expect(result.status).toEqual(AppointmentStatus.done);
 
-    const expectResult = (result) => {
-      expect(result).toEqual({
-        ...appointment,
-        updatedAt: result.updatedAt,
-        notes,
-        link: generateAppointmentLink(appointment.id),
+    const executeEndAppointment = async (): Promise<Appointment> => {
+      const endAppointmentParams: EndAppointmentParams = generateEndAppointmentParams({
+        id: appointment.id,
       });
+      await this.handler.mutations.endAppointment({ endAppointmentParams });
+      const result = await this.handler.queries.getAppointment(appointment.id);
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: AppointmentStatus.done,
+          link: generateAppointmentLink(appointment.id),
+          ...endAppointmentParams,
+        }),
+      );
+      return result;
     };
 
-    let notes = generateNotesParams();
-    await this.handler.mutations.setNotes({ params: { appointmentId: appointment.id, ...notes } });
-    let result = await this.handler.queries.getAppointment(appointment.id);
-    expectResult(result);
-
-    notes = generateNotesParams();
-    await this.handler.mutations.setNotes({ params: { appointmentId: appointment.id, ...notes } });
-    result = await this.handler.queries.getAppointment(appointment.id);
-    expectResult(result);
-
-    return result;
+    await executeEndAppointment();
+    await executeEndAppointment();
+    return executeEndAppointment(); //triple checking end appointment with params
   };
 
   createAndValidateTask = async (

@@ -3,7 +3,6 @@ import {
   generateAvailabilityInput,
   generateCreateMemberParams,
   generateId,
-  generateNotesParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
@@ -188,50 +187,6 @@ describe('Integration tests: all', () => {
     expect(appointmentMember2).toEqual(
       expect.objectContaining(memberResult2.users[0].appointments[0]),
     );
-  });
-
-  it('should validate that exact member scores are updated on notes.scores update', async () => {
-    const primaryUser = await creators.createAndValidateUser();
-    const org = await creators.createAndValidateOrg();
-    const member1 = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
-    const member2 = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
-
-    const appointmentMember1 = await creators.createAndValidateAppointment({
-      userId: primaryUser.id,
-      member: member1,
-    });
-
-    const appointmentMember2 = await creators.createAndValidateAppointment({
-      userId: primaryUser.id,
-      member: member2,
-    });
-
-    const notes1 = { appointmentId: appointmentMember1.id, ...generateNotesParams() };
-    const notes2 = { appointmentId: appointmentMember2.id, ...generateNotesParams() };
-    await handler.mutations.setNotes({ params: notes2 });
-
-    handler.setContextUser(member2.deviceId);
-    let member2Result = await handler.queries.getMember();
-    expect(member2Result.scores).toEqual(notes2.scores);
-
-    handler.setContextUser(member1.deviceId);
-    let member1Result = await handler.queries.getMember();
-    expect(member1Result.scores).not.toEqual(member2Result.scores);
-    await handler.mutations.setNotes({ params: notes1 });
-    member1Result = await handler.queries.getMember();
-    expect(member1Result.scores).toEqual(notes1.scores);
-
-    handler.setContextUser(member2.deviceId);
-    member2Result = await handler.queries.getMember();
-    expect(member2Result.scores).toEqual(notes2.scores);
   });
 
   it('should update a member fields', async () => {

@@ -2,7 +2,6 @@ import { Member } from '../../../src/member';
 import { Appointment, AppointmentStatus } from '../../../src/appointment';
 import {
   generateAppointmentLink,
-  generateNoShowAppointmentParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
 } from '../../index';
@@ -50,26 +49,9 @@ export class AppointmentsIntegrationActions {
     return appointmentResult;
   };
 
-  endAppointment = async (id: string): Promise<Appointment> => {
-    const appointment = await this.mutations.endAppointment({ id });
-    expect(appointment.status).toEqual(AppointmentStatus.done);
-    return appointment;
-  };
-
   freezeAppointment = async (id: string): Promise<Appointment> => {
     const appointment = await this.mutations.freezeAppointment({ id });
     expect(appointment.status).toEqual(AppointmentStatus.closed);
-    return appointment;
-  };
-
-  showAppointment = async (id: string): Promise<Appointment> => {
-    const noShowParams = generateNoShowAppointmentParams({ id });
-    const appointment = await this.mutations.noShowAppointment({
-      noShowParams,
-    });
-
-    expect(noShowParams).toEqual(expect.objectContaining(appointment.noShow));
-
     return appointment;
   };
 }

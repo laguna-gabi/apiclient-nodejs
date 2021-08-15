@@ -10,8 +10,6 @@ import {
 import {
   dbDisconnect,
   generateId,
-  generateNoShowAppointmentParams,
-  generateNotesParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
 } from '../index';
@@ -136,9 +134,7 @@ describe('AppointmentResolver', () => {
       };
       spyOnServiceEnd.mockImplementationOnce(async () => appointment);
 
-      const result = await resolver.endAppointment(appointment.id);
-
-      expect(result).toEqual(appointment);
+      await resolver.endAppointment({ id: appointment.id });
     });
   });
 
@@ -164,55 +160,6 @@ describe('AppointmentResolver', () => {
       const result = await resolver.freezeAppointment(appointment.id);
 
       expect(result).toEqual(appointment);
-    });
-  });
-
-  describe('showAppointment', () => {
-    let spyOnServiceShow;
-    beforeEach(() => {
-      spyOnServiceShow = jest.spyOn(service, 'show');
-    });
-
-    afterEach(() => {
-      spyOnServiceShow.mockReset();
-    });
-
-    it('should update show on an existing appointment for a given id', async () => {
-      const update = generateNoShowAppointmentParams();
-
-      const appointment = {
-        ...update,
-        ...generateRequestAppointmentParams(),
-        status: AppointmentStatus.closed,
-        method: AppointmentMethod.phoneCall,
-      };
-      spyOnServiceShow.mockImplementationOnce(async () => appointment);
-
-      const result = await resolver.noShowAppointment(update);
-
-      expect(result).toEqual(appointment);
-    });
-  });
-
-  describe('setNotes', () => {
-    let spyOnServiceSetNotes;
-    beforeEach(() => {
-      spyOnServiceSetNotes = jest.spyOn(service, 'setNotes');
-    });
-
-    afterEach(() => {
-      spyOnServiceSetNotes.mockReset();
-    });
-
-    it('should set notes to an appointment', async () => {
-      spyOnServiceSetNotes.mockImplementationOnce(async () => undefined);
-
-      const result = await resolver.setNotes({
-        appointmentId: generateId(),
-        ...generateNotesParams(),
-      });
-
-      expect(result).toEqual(undefined);
     });
   });
 });

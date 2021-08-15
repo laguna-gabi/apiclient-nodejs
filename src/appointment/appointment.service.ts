@@ -9,9 +9,9 @@ import {
   NotesDocument,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
-  SetNotesParams,
+  EndAppointmentParams,
 } from '.';
-import { Errors, ErrorType, EventType, BaseService } from '../common';
+import { BaseService, Errors, ErrorType, EventType } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as config from 'config';
 
@@ -88,12 +88,6 @@ export class AppointmentService extends BaseService {
     return this.replaceId(object.value.toObject() as AppointmentDocument);
   }
 
-  async end(id: string): Promise<Appointment> {
-    return this.updateAppointment(id, {
-      status: AppointmentStatus.done,
-    });
-  }
-
   async freeze(id: string): Promise<Appointment> {
     return this.updateAppointment(id, {
       status: AppointmentStatus.closed,
@@ -109,29 +103,56 @@ export class AppointmentService extends BaseService {
     });
   }
 
-  async setNotes(params: SetNotesParams): Promise<void> {
-    const existing = await this.appointmentModel.findById({
-      _id: params.appointmentId,
-    });
+  async end(params: EndAppointmentParams): Promise<void> {
+    const existing = await this.appointmentModel.findById({ _id: params.id });
 
     if (!existing) {
       throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
     }
 
-    if (existing.notes) {
-      await this.notesModel.findOneAndUpdate({ _id: existing.notes }, { $set: params });
-    } else {
-      const { id } = await this.notesModel.create(params);
+    const update: any = { status: AppointmentStatus.done };
+    if (params.noShow !== undefined) {
+      update.noShow = params.noShow;
+    }
+    if (params.noShowReason !== undefined) {
+      update.noShowReason = params.noShowReason;
+    }
+
+    if (params.notes === undefined) {
+      await this.appointmentModel.findOneAndUpdate({ _id: params.id }, { $set: { ...update } });
+    } else if (params.notes === null) {
+      if (existing.notes) {
+        await this.notesModel.deleteOne({ _id: existing.notes });
+      }
       await this.appointmentModel.findOneAndUpdate(
-        { _id: params.appointmentId },
-        { $set: { notes: id } },
+        { _id: params.id },
+        { $set: { ...update, notes: null } },
+      );
+    } else {
+      let notesId;
+      if (existing.notes) {
+        const { _id } = await this.notesModel.findByIdAndUpdate(
+          { _id: existing.notes },
+          { $set: params.notes },
+          { upsert: true, new: true },
+        );
+        notesId = _id;
+      } else {
+        const { _id } = await this.notesModel.create(params.notes);
+        notesId = _id;
+      }
+      await this.appointmentModel.findOneAndUpdate(
+        { _id: params.id },
+        { $set: update, notes: notesId },
       );
     }
 
-    this.eventEmitter.emit(EventType.appointmentScoresUpdated, {
-      memberId: existing.memberId,
-      scores: params.scores,
-    });
+    if (params.notes?.scores) {
+      this.eventEmitter.emit(EventType.appointmentScoresUpdated, {
+        memberId: existing.memberId,
+        scores: params.notes.scores,
+      });
+    }
   }
 
   private async updateAppointment(id, setParams): Promise<Appointment> {

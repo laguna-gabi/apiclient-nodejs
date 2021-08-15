@@ -3,10 +3,9 @@ import { camelCase } from 'lodash';
 import {
   Appointment,
   AppointmentService,
-  NoShowParams,
+  EndAppointmentParams,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
-  SetNotesParams,
 } from '.';
 
 @Resolver(() => Appointment)
@@ -34,26 +33,15 @@ export class AppointmentResolver {
     return this.appointmentService.schedule(scheduleAppointmentParams);
   }
 
-  @Mutation(() => Appointment)
-  async endAppointment(@Args('id', { type: () => String }) id: string) {
-    return this.appointmentService.end(id);
+  @Mutation(() => Boolean, { nullable: true })
+  async endAppointment(
+    @Args(camelCase(EndAppointmentParams.name)) endAppointmentParams: EndAppointmentParams,
+  ) {
+    return this.appointmentService.end(endAppointmentParams);
   }
 
   @Mutation(() => Appointment)
   async freezeAppointment(@Args('id', { type: () => String }) id: string) {
     return this.appointmentService.freeze(id);
-  }
-
-  @Mutation(() => Appointment)
-  noShowAppointment(
-    @Args(camelCase(NoShowParams.name))
-    noShowParams: NoShowParams,
-  ) {
-    return this.appointmentService.show(noShowParams);
-  }
-
-  @Mutation(() => Boolean, { nullable: true })
-  async setNotes(@Args('params') params: SetNotesParams) {
-    return this.appointmentService.setNotes(params);
   }
 }

@@ -1,12 +1,11 @@
 import {
   generateId,
-  generateNoShowAppointmentParams,
-  generateNotesParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
+  generateEndAppointmentParams,
 } from '../index';
 import * as faker from 'faker';
-import { RequestAppointmentParams, SetNotesParams } from '../../src/appointment';
+import { RequestAppointmentParams, EndAppointmentParams } from '../../src/appointment';
 import { Errors, ErrorType } from '../../src/common';
 import { Handler } from './aux/handler';
 
@@ -137,18 +136,18 @@ describe('Validations - appointment', () => {
     });
   });
 
-  describe('noShow', () => {
+  describe('end', () => {
     test.each`
       field   | error
       ${'id'} | ${`Field "id" of required type "String!" was not provided.`}
     `(
       `should fail to create an appointment since mandatory field $field is missing`,
       async (params) => {
-        const noShowParams = generateNoShowAppointmentParams();
-        delete noShowParams[params.field];
+        const endAppointmentParams = generateEndAppointmentParams();
+        delete endAppointmentParams[params.field];
 
-        await handler.mutations.noShowAppointment({
-          noShowParams,
+        await handler.mutations.endAppointment({
+          endAppointmentParams,
           missingFieldError: params.error,
         });
       },
@@ -156,97 +155,57 @@ describe('Validations - appointment', () => {
 
     /* eslint-disable max-len */
     test.each`
-      field       | input                      | error
-      ${'id'}     | ${{ id: 123 }}             | ${{ missingFieldError: stringError }}
-      ${'noShow'} | ${{ noShow: 'not-valid' }} | ${{ missingFieldError: 'Boolean cannot represent a non boolean value' }}
-      ${'reason'} | ${{ reason: 123 }}         | ${{ missingFieldError: stringError }}
+      field             | input                      | error
+      ${'id'}           | ${{ id: 123 }}             | ${{ missingFieldError: stringError }}
+      ${'noShow'}       | ${{ noShow: 'not-valid' }} | ${{ missingFieldError: 'Boolean cannot represent a non boolean value' }}
+      ${'noShowReason'} | ${{ noShowReason: 123 }}   | ${{ missingFieldError: stringError }}
     `(
       /* eslint-enable max-len */
       `should fail to update an appointment no show since $field is not a valid type`,
       async (params) => {
-        const noShowParams = generateNoShowAppointmentParams();
-        noShowParams[params.field] = params.input;
+        const endAppointmentParams = generateEndAppointmentParams();
+        endAppointmentParams[params.field] = params.input;
 
-        await handler.mutations.noShowAppointment({
-          noShowParams,
+        await handler.mutations.endAppointment({
+          endAppointmentParams,
           ...params.error,
         });
       },
     );
 
-    const reason = faker.lorem.sentence();
-    test.each`
-      input
-      ${{ noShow: true }}
-      ${{ noShow: false, reason }}
-    `(
-      /* eslint-disable max-len */
-      `should fail to update an appointment no show since noShow and reason combinations are not valid for $input`,
-      /* eslint-enable max-len */
-      async (params) => {
-        const noShowParams = {
-          id: generateId(),
-          ...params.input,
-        };
+    it('should fail to end an appointment with noShow=false and noShowReason != null', async () => {
+      const endAppointmentParams = {
+        id: generateId(),
+        noShow: false,
+        noShowReason: faker.lorem.sentence(),
+      };
 
-        await handler.mutations.noShowAppointment({
-          noShowParams,
-          invalidFieldsErrors: [Errors.get(ErrorType.appointmentNoShow)],
-        });
-      },
-    );
-  });
-
-  describe('setNotes', () => {
-    /* eslint-disable max-len */
-    test.each`
-      field                 | scores   | error
-      ${'appointmentId'}    | ${false} | ${`Field "appointmentId" of required type "String!" was not provided.`}
-      ${'recap'}            | ${false} | ${`Field "recap" of required type "String!" was not provided.`}
-      ${'strengths'}        | ${false} | ${`Field "strengths" of required type "String!" was not provided.`}
-      ${'userActionItem'}   | ${false} | ${`Field "userActionItem" of required type "String!" was not provided.`}
-      ${'memberActionItem'} | ${false} | ${`Field "memberActionItem" of required type "String!" was not provided.`}
-      ${'wellbeing'}        | ${true}  | ${`Field "wellbeing" of required type "Float!" was not provided.`}
-      ${'adherence'}        | ${true}  | ${`Field "adherence" of required type "Float!" was not provided.`}
-    `(
-      /* eslint-enable max-len */
-      `should fail to set notes to an appointment since mandatory field $field is missing`,
-      async (params) => {
-        const noteParams: SetNotesParams = {
-          appointmentId: generateId(),
-          ...generateNotesParams(),
-        };
-
-        params.scores ? delete noteParams.scores[params.field] : delete noteParams[params.field];
-
-        await handler.mutations.setNotes({
-          params: noteParams,
-          missingFieldError: params.error,
-        });
-      },
-    );
+      await handler.mutations.endAppointment({
+        endAppointmentParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.appointmentNoShow)],
+      });
+    });
 
     test.each`
-      input                 | input                         | error
-      ${'recap'}            | ${{ recap: 123 }}             | ${stringError}
-      ${'strengths'}        | ${{ strengths: 123 }}         | ${stringError}
-      ${'userActionItem'}   | ${{ userActionItem: 123 }}    | ${stringError}
-      ${'memberActionItem'} | ${{ memberActionItem: 123 }}  | ${stringError}
-      ${'adherence'}        | ${{ adherence: 'not-valid' }} | ${floatError}
-      ${'adherenceText'}    | ${{ adherenceText: 123 }}     | ${stringError}
-      ${'wellbeing'}        | ${{ wellbeing: 'not-valid' }} | ${floatError}
-      ${'wellbeingText'}    | ${{ wellbeingText: 123 }}     | ${stringError}
+      input                 | input                                     | error
+      ${'recap'}            | ${{ recap: 123 }}                         | ${stringError}
+      ${'strengths'}        | ${{ strengths: 123 }}                     | ${stringError}
+      ${'userActionItem'}   | ${{ userActionItem: 123 }}                | ${stringError}
+      ${'memberActionItem'} | ${{ memberActionItem: 123 }}              | ${stringError}
+      ${'adherence'}        | ${{ scores: { adherence: 'not-valid' } }} | ${floatError}
+      ${'adherenceText'}    | ${{ scores: { adherenceText: 123 } }}     | ${stringError}
+      ${'wellbeing'}        | ${{ scores: { wellbeing: 'not-valid' } }} | ${floatError}
+      ${'wellbeingText'}    | ${{ scores: { wellbeingText: 123 } }}     | ${stringError}
     `(
       /* eslint-enable max-len */
       `should fail to set notes to an appointment since $field is not a valid type`,
       async (params) => {
-        const noteParams: SetNotesParams = {
-          appointmentId: generateId(),
-          ...generateNotesParams({ ...params.input }),
-        };
+        const endAppointmentParams: EndAppointmentParams = generateEndAppointmentParams({
+          notes: params.input,
+        });
 
-        await handler.mutations.setNotes({
-          params: noteParams,
+        await handler.mutations.endAppointment({
+          endAppointmentParams,
           missingFieldError: params.error,
         });
       },
