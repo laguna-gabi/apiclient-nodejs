@@ -1,19 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { CreateUserParams, User, UserDocument } from '.';
-import { DbErrors, Errors, ErrorType, EventType } from '../common';
+import { CreateUserParams, NotNullableUserKeys, User, UserDocument } from '.';
+import { BaseService, DbErrors, Errors, ErrorType, EventType } from '../common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Member } from '../member';
 import { cloneDeep } from 'lodash';
 
 @Injectable()
-export class UserService {
+export class UserService extends BaseService {
   constructor(
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
     private eventEmitter: EventEmitter2,
-  ) {}
+  ) {
+    super();
+  }
 
   async get(id: string): Promise<User> {
     return this.userModel.findById(id).populate('appointments');
@@ -21,6 +23,7 @@ export class UserService {
 
   async insert(createUserParams: CreateUserParams): Promise<User> {
     try {
+      this.removeNotNullable(createUserParams, NotNullableUserKeys);
       const newObject = cloneDeep(createUserParams);
       const _id = newObject.id;
       delete newObject.id;

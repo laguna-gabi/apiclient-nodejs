@@ -26,6 +26,7 @@ import {
   MemberDto,
   MemberModule,
   MemberService,
+  NotNullableMemberKeys,
   Sex,
   TaskStatus,
   UpdateMemberParams,
@@ -554,6 +555,31 @@ describe('MemberService', () => {
       expect(createdMember.updatedAt).toEqual(expect.any(Date));
     });
 
+    it('should remove not nullable optional params if null is passed', async () => {
+      const primaryUser = await modelUser.create(generateCreateRawUserParams());
+      const org = await modelOrg.create(generateOrgParams());
+
+      const createMemberParams = generateCreateMemberParams({
+        orgId: org._id,
+        primaryUserId: primaryUser._id,
+      });
+
+      NotNullableMemberKeys.forEach((key) => {
+        createMemberParams[key] = null;
+      });
+
+      createMemberParams.firstName = faker.name.firstName();
+      createMemberParams.lastName = faker.name.lastName();
+      createMemberParams.dateOfBirth = generateDateOnly(faker.date.past());
+
+      const { id } = await service.insert(createMemberParams);
+      const createdObject = await memberModel.findById(id);
+
+      NotNullableMemberKeys.forEach((key) => {
+        expect(createdObject).not.toHaveProperty(key, null);
+      });
+    });
+
     it('should insert a member even with primaryUser not exists', async () => {
       const createMemberParams: CreateMemberParams = generateCreateMemberParams({
         orgId: generateId(),
@@ -600,6 +626,31 @@ describe('MemberService', () => {
       const params = generateUpdateMemberParams();
       delete params.id;
       await updateMember(params);
+    });
+
+    it('should not change no nullable params if null is passed', async () => {
+      const primaryUser = await modelUser.create(generateCreateRawUserParams());
+      const org = await modelOrg.create(generateOrgParams());
+
+      const createMemberParams = generateCreateMemberParams({
+        orgId: org._id,
+        primaryUserId: primaryUser._id,
+      });
+
+      const { id } = await service.insert(createMemberParams);
+      const beforeObject = await memberModel.findById(id);
+
+      const updateMemberParams = generateUpdateMemberParams();
+      NotNullableMemberKeys.forEach((key) => {
+        updateMemberParams[key] = null;
+      });
+
+      await service.update({ ...updateMemberParams, id });
+      const afterObject = await memberModel.findById(id);
+
+      NotNullableMemberKeys.forEach((key) => {
+        expect(beforeObject[key]).toEqual(afterObject[key]);
+      });
     });
 
     const updateMember = async (updateMemberParams?: Omit<UpdateMemberParams, 'id'>) => {

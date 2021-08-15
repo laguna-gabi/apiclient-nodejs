@@ -148,9 +148,9 @@ describe('Validations - member', () => {
       ${{ language: 'not-valid' }}      | ${{ missingFieldError: 'does not exist in "Language" enum' }}
       ${{ zipCode: 123 }}               | ${{ missingFieldError: stringError }}
       ${{ dateOfBirth: 'not-valid' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
-      ${{ dateOfBirth: '13/1/2021' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
+      ${{ dateOfBirth: '2021/13/1' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
       ${{ dischargeDate: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
-      ${{ dischargeDate: '13/1/2021' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
+      ${{ dischargeDate: '2021/13/1' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
     `(
       /* eslint-enable max-len */
       `should fail to create a member since setting $input is not a valid`,
@@ -302,11 +302,11 @@ describe('Validations - member', () => {
       ${'phoneSecondary'} | ${{ phoneSecondary: '+410' }}            | ${[Errors.get(ErrorType.memberPhone)]}
       ${'dischargeDate'}  | ${{ dischargeDate: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
       ${'admitDate'}      | ${{ admitDate: faker.lorem.word() }}     | ${[Errors.get(ErrorType.memberAdmitDate)]}
-      ${'admitDate'}      | ${{ admitDate: '13/1/2021' }}            | ${[Errors.get(ErrorType.memberAdmitDate)]}
+      ${'admitDate'}      | ${{ admitDate: '2021/13/1' }}            | ${[Errors.get(ErrorType.memberAdmitDate)]}
       ${'dischargeDate'}  | ${{ dischargeDate: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
-      ${'dischargeDate'}  | ${{ dischargeDate: '13/1/2021' }}        | ${[Errors.get(ErrorType.memberDischargeDate)]}
+      ${'dischargeDate'}  | ${{ dischargeDate: '2021/13/1' }}        | ${[Errors.get(ErrorType.memberDischargeDate)]}
       ${'dateOfBirth'}    | ${{ dateOfBirth: faker.lorem.word() }}   | ${[Errors.get(ErrorType.memberDateOfBirth)]}
-      ${'dateOfBirth'}    | ${{ dateOfBirth: '13/1/2021' }}          | ${[Errors.get(ErrorType.memberDateOfBirth)]}
+      ${'dateOfBirth'}    | ${{ dateOfBirth: '2021/13/1' }}          | ${[Errors.get(ErrorType.memberDateOfBirth)]}
     `(
       /* eslint-enable max-len */
       `should fail to update a member since $field is not valid`,

@@ -35,6 +35,15 @@ export const defaultMemberParams = {
   language: Language.en,
 };
 
+export const NotNullableMemberKeys = [
+  'firstName',
+  'lastName',
+  'dateOfBirth',
+  'sex',
+  'email',
+  'language',
+];
+
 @InputType('AddressInput')
 @ObjectType()
 export class Address {

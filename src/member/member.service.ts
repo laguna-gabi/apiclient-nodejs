@@ -17,6 +17,7 @@ import {
   UpdateMemberParams,
   UpdateTaskStatusParams,
   SetGeneralNotesParams,
+  NotNullableMemberKeys,
 } from '.';
 import { cloneDeep } from 'lodash';
 import { OnEvent } from '@nestjs/event-emitter';
@@ -39,6 +40,7 @@ export class MemberService extends BaseService {
 
   async insert(createMemberParams: CreateMemberParams) {
     try {
+      this.removeNotNullable(createMemberParams, NotNullableMemberKeys);
       const primitiveValues = cloneDeep(createMemberParams);
       delete primitiveValues.orgId;
       delete primitiveValues.usersIds;
@@ -57,6 +59,7 @@ export class MemberService extends BaseService {
   }
 
   async update(updateMemberParams: UpdateMemberParams): Promise<Member> {
+    this.removeNotNullable(updateMemberParams, NotNullableMemberKeys);
     const { id } = updateMemberParams;
     delete updateMemberParams.id;
 

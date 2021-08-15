@@ -1,6 +1,6 @@
 import * as faker from 'faker';
 import { Types } from 'mongoose';
-import { CreateUserParams, User, UserRole } from '../src/user';
+import { CreateUserParams, defaultUserParams, User, UserRole } from '../src/user';
 import {
   AppointmentCompose,
   CreateMemberParams,
@@ -39,7 +39,7 @@ export const generateCreateUserParams = ({
   description = faker.lorem.sentence(),
   phone = generatePhone(),
   title = faker.name.title(),
-  maxCustomers = faker.datatype.number({ min: 1, max: 100 }),
+  maxCustomers = defaultUserParams.maxCustomers,
   languages = [Language.en, Language.es],
 }: {
   id?: string;
@@ -398,7 +398,7 @@ export const generateSetGeneralNotesParams = ({
 };
 
 export const generateDateOnly = (date: Date): string => {
-  return format(date, 'MM/dd/yyyy');
+  return format(date, 'yyyy/MM/dd');
 };
 
 const generateEmail = () => {

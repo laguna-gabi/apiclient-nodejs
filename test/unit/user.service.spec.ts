@@ -3,6 +3,7 @@ import { DbModule } from '../../src/db/db.module';
 import { Model, model } from 'mongoose';
 import {
   defaultUserParams,
+  NotNullableUserKeys,
   User,
   UserDto,
   UserModule,
@@ -81,6 +82,20 @@ describe('UserService', () => {
         ...user,
         languages: defaultUserParams.languages,
         maxCustomers: defaultUserParams.maxCustomers,
+      });
+    });
+
+    it('should remove not nullable optional params if null is passed', async () => {
+      const user = generateCreateUserParams();
+      NotNullableUserKeys.forEach((key) => {
+        user[key] = null;
+      });
+
+      const { id } = await service.insert(user);
+      const result = await service.get(id);
+
+      NotNullableUserKeys.forEach((key) => {
+        expect(result).not.toHaveProperty(key, null);
       });
     });
 

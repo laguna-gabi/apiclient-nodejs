@@ -25,4 +25,12 @@ export abstract class BaseService {
 
     return object;
   }
+
+  removeNotNullable(object, keys: string[]) {
+    keys.forEach((key) => {
+      if (object[key] === null) {
+        delete object[key];
+      }
+    });
+  }
 }
