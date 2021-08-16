@@ -11,7 +11,7 @@ import {
   Language,
   validPhoneExamples,
 } from '../common';
-import { IsEmail, IsOptional, IsPhoneNumber, Length } from 'class-validator';
+import { IsEmail, IsOptional, IsPhoneNumber, Length, ValidateIf } from 'class-validator';
 import * as config from 'config';
 import { Org } from '../org';
 import { ActionItem, Goal } from '.';
@@ -90,9 +90,8 @@ export class ExtraMemberParams {
 @InputType()
 export class CreateMemberParams extends ExtraMemberParams {
   @Field({ description: validPhoneExamples })
-  @IsPhoneNumber(undefined, {
-    message: Errors.get(ErrorType.memberPhone),
-  })
+  @ValidateIf((params) => params.phone !== config.get('iosExcludeRegistrationNumber'))
+  @IsPhoneNumber(undefined, { message: Errors.get(ErrorType.memberPhone) })
   phone: string;
 
   @Field(() => String)

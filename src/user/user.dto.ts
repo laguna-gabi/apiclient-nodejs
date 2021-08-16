@@ -60,9 +60,7 @@ export class CreateUserParams {
   description: string;
 
   @Field({ description: validPhoneExamples })
-  @IsPhoneNumber(undefined, {
-    message: Errors.get(ErrorType.userPhone),
-  })
+  @IsPhoneNumber(undefined, { message: Errors.get(ErrorType.userPhone) })
   phone: string;
 
   @Field({ nullable: true })

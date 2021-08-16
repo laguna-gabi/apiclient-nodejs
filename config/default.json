@@ -6,6 +6,7 @@
   "db": {
     "connection": "mongodb://localhost:27017/laguna"
   },
+  "iosExcludeRegistrationNumber": "+10011223344",
   "graphql": {
     "validators": {
       "name": {
