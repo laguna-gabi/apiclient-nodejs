@@ -1,4 +1,4 @@
-import { Storage } from '../../src/providers';
+import { StorageService } from '../../src/providers';
 import * as fs from 'fs';
 import * as axios from 'axios';
 import * as config from 'config';
@@ -12,7 +12,7 @@ describe('run aws s3 live', () => {
   });
 
   it('should fetch sample file from aws storage', async () => {
-    const storageProvider = new Storage();
+    const storageProvider = new StorageService();
     const url = await storageProvider.getUrl(storageFilePath);
 
     const link = await axios.default({ method: 'GET', url: url, responseType: 'stream' });

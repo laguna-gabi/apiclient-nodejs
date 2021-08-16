@@ -19,7 +19,7 @@ import { getTimezoneOffset } from 'date-fns-tz';
 import { millisecondsInHour } from 'date-fns';
 import { lookup } from 'zipcode-to-timezone';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Storage } from '../providers';
+import { StorageService } from '../providers';
 
 @Resolver(() => Member)
 export class MemberResolver {
@@ -28,7 +28,7 @@ export class MemberResolver {
   constructor(
     private readonly memberService: MemberService,
     private eventEmitter: EventEmitter2,
-    private readonly storage: Storage,
+    private readonly storageService: StorageService,
   ) {}
 
   @Mutation(() => Identifier)
@@ -96,8 +96,8 @@ export class MemberResolver {
     const { firstName, lastName } = member;
 
     const [dischargeNotesLink, dischargeInstructionsLink] = await Promise.all([
-      await this.storage.getUrl(`${firstName}_${lastName}_Summary.pdf`),
-      await this.storage.getUrl(`${firstName}_${lastName}_Instructions.pdf`),
+      await this.storageService.getUrl(`${firstName}_${lastName}_Summary.pdf`),
+      await this.storageService.getUrl(`${firstName}_${lastName}_Instructions.pdf`),
     ]);
 
     return { dischargeNotesLink, dischargeInstructionsLink };

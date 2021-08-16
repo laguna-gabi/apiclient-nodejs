@@ -3,7 +3,7 @@ import * as AWS from 'aws-sdk';
 import * as config from 'config';
 
 @Injectable()
-export class Storage {
+export class StorageService {
   private readonly s3 = new AWS.S3({ signatureVersion: 'v4', apiVersion: '2006-03-01' });
 
   async getUrl(fileName: string): Promise<string | undefined> {

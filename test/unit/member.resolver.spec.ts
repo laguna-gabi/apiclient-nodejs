@@ -14,13 +14,13 @@ import { DbModule } from '../../src/db/db.module';
 import { MemberModule, MemberResolver, MemberService, TaskStatus } from '../../src/member';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Errors, ErrorType } from '../../src/common';
-import { Storage } from '../../src/providers';
+import { StorageService } from '../../src/providers';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
   let resolver: MemberResolver;
   let service: MemberService;
-  let storage: Storage;
+  let storage: StorageService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -29,7 +29,7 @@ describe('MemberResolver', () => {
 
     resolver = module.get<MemberResolver>(MemberResolver);
     service = module.get<MemberService>(MemberService);
-    storage = module.get<Storage>(Storage);
+    storage = module.get<StorageService>(StorageService);
   });
 
   afterAll(async () => {

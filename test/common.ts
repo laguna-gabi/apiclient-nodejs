@@ -2,7 +2,7 @@ import { User } from '../src/user';
 import { connect, disconnect } from 'mongoose';
 import * as config from 'config';
 import { TestingModule } from '@nestjs/testing';
-import { SendBird, Storage } from '../src/providers';
+import { SendBird, StorageService } from '../src/providers';
 
 export const compareUsers = (user: User, userBase) => {
   expect(user.id).toEqual(userBase.id);
@@ -16,9 +16,7 @@ export const compareUsers = (user: User, userBase) => {
 };
 
 export const dbConnect = async () => {
-  await connect(config.get('db.connection'), {
-    useNewUrlParser: true,
-  });
+  await connect(config.get('db.connection'), { useNewUrlParser: true });
 };
 
 export const dbDisconnect = async () => {
@@ -27,7 +25,7 @@ export const dbDisconnect = async () => {
 
 export const mockProviders = (module: TestingModule): { sendBird } => {
   const sendBird = module.get<SendBird>(SendBird);
-  const storage = module.get<Storage>(Storage);
+  const storage = module.get<StorageService>(StorageService);
   const spyOnSendBirdCreateUser = jest.spyOn(sendBird, 'createUser');
   const spyOnSendBirdCreateGroupChannel = jest.spyOn(sendBird, 'createGroupChannel');
   const spyOnStorage = jest.spyOn(storage, 'getUrl');

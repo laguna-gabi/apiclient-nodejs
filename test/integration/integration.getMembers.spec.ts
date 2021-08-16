@@ -76,7 +76,7 @@ describe('Integration tests : getMembers', () => {
     compareResults(membersResult[1], member2);
   });
 
-  it.only('should call with a all member parameters', async () => {
+  it('should call with a all member parameters', async () => {
     const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
     const member: Member = await creators.createAndValidateMember({
