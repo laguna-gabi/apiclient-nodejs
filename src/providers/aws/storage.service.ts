@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
-import * as config from 'config';
+import { ConfigsService, ExternalConfigs } from '.';
 
 @Injectable()
 export class StorageService {
+  constructor(private readonly configsService: ConfigsService) {}
+
   private readonly s3 = new AWS.S3({ signatureVersion: 'v4', apiVersion: '2006-03-01' });
 
   async getUrl(fileName: string): Promise<string | undefined> {
-    const params = {
-      Bucket: config.get('providers.aws.storage.memberBucketName'),
-      Key: `public/${fileName}`,
-    };
+    const bucket = await this.configsService.getConfig(ExternalConfigs.awsStorageMember);
+    const params = { Bucket: bucket, Key: `public/${fileName}` };
 
     try {
       await this.s3.headObject(params).promise();

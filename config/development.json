@@ -1,5 +1,3 @@
 {
-  "db": {
-    "connection": "mongodb+srv://hepius-user:ZWHTgx27kNlcGybK@cluster0.bvvib.mongodb.net/laguna"
-  }
+
 }

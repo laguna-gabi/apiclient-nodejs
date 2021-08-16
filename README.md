@@ -21,15 +21,19 @@ install all dependencies in [package.json](./package.json) file by running the f
 $ yarn
 ```
 ### Docker
-We're loading a local mongodb by using [docker](https://docs.docker.com/get-docker/).
-1. [docker](https://docs.docker.com/get-docker/).
-2. run `docker-compose.yml` file for starting Docker, by using the command: `docker-compose up`.
+We're loading a local mongodb by using [docker](https://hub.docker.com/).
+1. install [docker](https://docs.docker.com/get-docker/).
+2. run `docker-compose up -d` for starting Docker with mongodb instance within.
 > **_Stop:_**  After running the sample, you can stop the Docker container with `docker-compose down`
 <br/><br/>
 ### Aws
 In order to work locally with aws cli and `package.json` dependencies, install
 1. install [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-mac.html) (will be easy for working with aws on terminal)
-2. [set up](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html) credentials on your local computer (region is optional)
+2. [set up](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html) credentials on your local computer (make sure to set region to `us-east-1`)
+> **_Don't skip aws setup:_** This step is critical to develop locally on this project. 
+   We're loading configurations(api keys and tokens for external providers such as 
+   [sendbird](https://sendbird.com), [onesignal](https://onesignal.com), [twilio](https://www.twilio.com), etc..) 
+   from [aws secrets manager](https://aws.amazon.com/secrets-manager/). 
 
 ### Shared code settings
 1. Set up your ide to run with `.prettierrc` file which exists on the main root of the project.

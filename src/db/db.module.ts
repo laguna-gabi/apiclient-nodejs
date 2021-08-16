@@ -1,14 +1,11 @@
-import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import * as config from 'config';
+import { ProvidersModule } from '../providers';
+import { ConfigsService } from '../providers/aws/configs.service';
+import { Module } from '@nestjs/common';
 
 @Module({
   imports: [
-    MongooseModule.forRoot(config.get('db.connection'), {
-      useFindAndModify: false,
-      useCreateIndex: true,
-      useUnifiedTopology: true,
-    }),
+    MongooseModule.forRootAsync({ imports: [ProvidersModule], useExisting: ConfigsService }),
   ],
 })
 export class DbModule {}

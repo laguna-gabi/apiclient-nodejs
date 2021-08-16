@@ -11,7 +11,7 @@ import {
 } from '.';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Appointment, AppointmentDto } from '../appointment';
-import { StorageService } from '../providers';
+import { ConfigsService, StorageService } from '../providers';
 
 @Module({
   imports: [
@@ -22,6 +22,6 @@ import { StorageService } from '../providers';
       { name: Appointment.name, schema: AppointmentDto },
     ]),
   ],
-  providers: [MemberResolver, MemberService, StorageService],
+  providers: [MemberResolver, MemberService, ConfigsService, StorageService],
 })
 export class MemberModule {}

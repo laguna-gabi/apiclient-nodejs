@@ -1,7 +1,6 @@
-import { StorageService } from '../../src/providers';
+import { ConfigsService, ExternalConfigs, StorageService } from '../../src/providers';
 import * as fs from 'fs';
 import * as axios from 'axios';
-import * as config from 'config';
 
 describe('run aws s3 live', () => {
   const tempFilePath = 'output.pdf';
@@ -12,17 +11,15 @@ describe('run aws s3 live', () => {
   });
 
   it('should fetch sample file from aws storage', async () => {
-    const storageProvider = new StorageService();
+    const configService = new ConfigsService();
+    const storageProvider = new StorageService(configService);
     const url = await storageProvider.getUrl(storageFilePath);
 
     const link = await axios.default({ method: 'GET', url: url, responseType: 'stream' });
     link.data.pipe(fs.createWriteStream(tempFilePath));
 
-    expect(url).toMatch(
-      `${config.get(
-        'providers.aws.storage.memberBucketName',
-      )}.s3.amazonaws.com/public/${storageFilePath}`,
-    );
+    const bucketName = await configService.getConfig(ExternalConfigs.awsStorageMember);
+    expect(url).toMatch(`${bucketName}.s3.amazonaws.com/public/${storageFilePath}`);
     expect(url).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
     expect(url).toMatch(`Amz-Expires=10800`); //expiration: 3 hours
 

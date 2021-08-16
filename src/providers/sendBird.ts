@@ -1,6 +1,6 @@
-import { HttpService, Injectable } from '@nestjs/common';
-import * as config from 'config';
+import { HttpService, Injectable, OnModuleInit } from '@nestjs/common';
 import { CreateSendbirdGroupChannelParams, RegisterSendbirdUserParams } from '../communication';
+import { ConfigsService, ExternalConfigs } from '.';
 
 enum suffix {
   users = 'users',
@@ -8,11 +8,20 @@ enum suffix {
 }
 
 @Injectable()
-export class SendBird {
-  private readonly appId = config.get('providers.sendbird.appId');
-  private readonly appToken = config.get('providers.sendbird.appToken');
-  private readonly basePath = `https://api-${this.appId}.sendbird.com/v3/`;
-  private readonly headers = { 'Api-Token': this.appToken };
+export class SendBird implements OnModuleInit {
+  private appId;
+  private appToken;
+  private basePath;
+  private headers;
+
+  constructor(private readonly configsService: ConfigsService) {}
+
+  async onModuleInit(): Promise<void> {
+    this.appId = await this.configsService.getConfig(ExternalConfigs.sendbirdApiId);
+    this.appToken = await this.configsService.getConfig(ExternalConfigs.sendbirdApiToken);
+    this.basePath = `https://api-${this.appId}.sendbird.com/v3/`;
+    this.headers = { 'Api-Token': this.appToken };
+  }
 
   private readonly httpService: HttpService = new HttpService();
 
