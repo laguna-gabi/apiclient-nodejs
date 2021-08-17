@@ -259,24 +259,6 @@ describe('Validations - member', () => {
       });
     });
 
-    it('should be able to pass validation on ios fake registration number', async () => {
-      const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
-      const { id: primaryUserId } = await handler.mutations.createUser({
-        userParams: generateCreateUserParams(),
-      });
-      const memberParams: CreateMemberParams = generateCreateMemberParams({
-        orgId,
-        primaryUserId,
-        usersIds: [primaryUserId],
-        phone: config.get('iosExcludeRegistrationNumber'),
-      });
-
-      handler.setContextUser(memberParams.deviceId);
-      const { id } = await handler.mutations.createMember({ memberParams });
-      expect(id).not.toBeUndefined();
-    });
-  });
-
   describe('getMemberDischargeDocumentsLinks', () => {
     it('should throw error on non existing member', async () => {
       handler.setContextUser('not-valid');
