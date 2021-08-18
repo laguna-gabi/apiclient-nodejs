@@ -23,6 +23,10 @@ export const dbDisconnect = async () => {
   await disconnect();
 };
 
+export const delay = async (milliseconds: number) => {
+  await new Promise((resolve) => setTimeout(resolve, milliseconds));
+};
+
 export const mockProviders = (module: TestingModule): { sendBird } => {
   const sendBird = module.get<SendBird>(SendBird);
   const storage = module.get<StorageService>(StorageService);

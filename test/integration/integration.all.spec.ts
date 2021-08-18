@@ -483,8 +483,8 @@ describe('Integration tests: all', () => {
 
     const result = await handler.queries.getMemberDischargeDocumentsLinks();
     expect(result).toEqual({
-      dischargeNotesLink: null,
-      dischargeInstructionsLink: null,
+      dischargeNotesLink: 'https://some-url',
+      dischargeInstructionsLink: 'https://some-url',
     });
   });
 

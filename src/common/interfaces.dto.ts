@@ -1,6 +1,15 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Schema } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
+
+/**************************************************************************************************
+ ******************************* Enum registration for gql methods ********************************
+ *************************************************************************************************/
+export enum Language {
+  en = 'en',
+  es = 'es',
+}
+registerEnumType(Language, { name: 'Language' });
 
 @ObjectType()
 @Schema()

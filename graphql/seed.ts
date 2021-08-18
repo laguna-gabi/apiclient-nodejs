@@ -16,6 +16,7 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
+  delay,
 } from '../test';
 import * as jwt from 'jsonwebtoken';
 import * as faker from 'faker';
@@ -131,7 +132,7 @@ async function main() {
   );
   //Since Sendbird is doing async calls in event emitter,
   //we need to wait a while for the actions to be finished.
-  await new Promise((resolve) => setTimeout(resolve, 3000));
+  await delay(3000);
 
   await cleanUp();
 }

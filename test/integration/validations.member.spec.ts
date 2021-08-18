@@ -258,6 +258,7 @@ describe('Validations - member', () => {
         invalidFieldsErrors: [Errors.get(ErrorType.memberPrimaryUserIdNotInUsers)],
       });
     });
+  });
 
   describe('getMemberDischargeDocumentsLinks', () => {
     it('should throw error on non existing member', async () => {
