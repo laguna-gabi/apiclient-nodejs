@@ -28,6 +28,7 @@ import { GetCommunicationParams } from '../src/communication';
 import * as config from 'config';
 import { format } from 'date-fns';
 import { v4 } from 'uuid';
+import { GetSlotsParams } from '../src/user/slot.dto';
 
 export const generateCreateUserParams = ({
   id = v4(),
@@ -93,6 +94,19 @@ export const generateCreateRawUserParams = (params = undefined) => {
   delete newUser.id;
 
   return newUser;
+};
+
+export const generateGetSlotsParams = ({
+  appointmentId = generateId(),
+  notBefore = null,
+}: {
+  appointmentId?: string;
+  notBefore?: Date;
+} = {}): GetSlotsParams => {
+  return {
+    appointmentId,
+    notBefore,
+  };
 };
 
 export const generateCreateMemberParams = ({

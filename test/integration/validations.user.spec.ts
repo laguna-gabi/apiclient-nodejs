@@ -4,6 +4,8 @@ import * as config from 'config';
 import * as faker from 'faker';
 import { Errors, ErrorType } from '../../src/common';
 import { Handler } from './aux/handler';
+import { GetSlotsParams } from '../../src/user/slot.dto';
+import { generateGetSlotsParams } from '../generators';
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
@@ -97,5 +99,15 @@ describe('Validations - user', () => {
     const user = await handler.queries.getUser(id);
     expect(user[params.field]).not.toBeUndefined();
     expect(user[params.field]).toEqual(params.defaultValue);
+  });
+
+  test.each`
+    field              | input                     | errors
+    ${'appointmentId'} | ${{ appointmentId: 123 }} | ${stringError}
+    ${'notBefore'}     | ${{ notBefore: 'asd' }}   | ${'must be a Date instance'}
+  `(`should fail to request slots since $field is not valid`, async (params) => {
+    const getSlotsParams: GetSlotsParams = generateGetSlotsParams(params.input);
+
+    await handler.queries.getUserSlots(getSlotsParams, params.errors);
   });
 });

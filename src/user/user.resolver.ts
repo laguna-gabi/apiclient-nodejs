@@ -3,6 +3,7 @@ import { camelCase } from 'lodash';
 import { CreateUserParams, User, UserService } from '.';
 import { EventType, Identifier } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { GetSlotsParams, Slots } from './slot.dto';
 
 @Resolver(() => User)
 export class UserResolver {
@@ -23,5 +24,10 @@ export class UserResolver {
   @Query(() => User, { nullable: true })
   async getUser(@Args('id', { type: () => String }) id: string) {
     return this.userService.get(id);
+  }
+
+  @Query(() => Slots)
+  async getUserSlots(@Args(camelCase(GetSlotsParams.name)) getSlotsParams: GetSlotsParams) {
+    return this.userService.getSlots(getSlotsParams);
   }
 }

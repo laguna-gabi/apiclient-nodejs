@@ -6,6 +6,8 @@ import {
   generateScheduleAppointmentParams,
 } from '../../index';
 import { Mutations } from './mutations';
+import { generateEndAppointmentParams } from '../../generators';
+import { Identifier } from '../../../src/common';
 
 export class AppointmentsIntegrationActions {
   constructor(private readonly mutations: Mutations) {}
@@ -47,6 +49,48 @@ export class AppointmentsIntegrationActions {
     expect(appointmentResult.link).toEqual(generateAppointmentLink(appointmentResult.id));
 
     return appointmentResult;
+  };
+
+  scheduleAppointmentWithDate = async (
+    userId: string,
+    member: Member,
+    start: Date,
+    end: Date,
+  ): Promise<Appointment> => {
+    const scheduleAppointment = generateScheduleAppointmentParams({
+      memberId: member.id,
+      userId,
+      start,
+      end,
+    });
+
+    const appointmentResult = await this.mutations.scheduleAppointment({
+      appointmentParams: scheduleAppointment,
+    });
+
+    expect(appointmentResult.status).toEqual(AppointmentStatus.scheduled);
+
+    return appointmentResult;
+  };
+
+  requestAppointmentWithDate = async (
+    userId: string,
+    member: Member,
+    notBefore: Date,
+  ): Promise<Appointment> => {
+    const appointmentParams = generateRequestAppointmentParams({
+      memberId: member.id,
+      userId,
+      notBefore,
+    });
+    return this.mutations.requestAppointment({
+      appointmentParams,
+    });
+  };
+
+  endAppointment = async (id: string) => {
+    const endAppointmentParams = generateEndAppointmentParams({ id });
+    await this.mutations.endAppointment({ endAppointmentParams });
   };
 
   freezeAppointment = async (id: string): Promise<Appointment> => {

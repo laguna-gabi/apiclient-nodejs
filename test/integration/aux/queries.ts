@@ -2,6 +2,7 @@ import gql from 'graphql-tag';
 import { ApolloServerTestClient } from 'apollo-server-testing';
 import { GetCommunicationParams } from '../../../src/communication';
 import { DischargeDocumentsLinks } from '../../../src/member';
+import { GetSlotsParams } from '../../../src/user/slot.dto';
 
 export class Queries {
   constructor(private readonly apolloClient: ApolloServerTestClient) {}
@@ -38,6 +39,45 @@ export class Queries {
     });
 
     return resultGetUser.data.getUser;
+  };
+
+  getUserSlots = async (getSlotsParams: GetSlotsParams, invalidFieldsError?: string) => {
+    const resultGetUserSlots = await this.apolloClient.query({
+      variables: { getSlotsParams },
+      query: gql`
+        query getUserSlots($getSlotsParams: GetSlotsParams!) {
+          getUserSlots(getSlotsParams: $getSlotsParams) {
+            slots
+            user {
+              id
+              firstName
+              roles
+              avatar
+              description
+            }
+            member {
+              id
+              firstName
+            }
+            appointment {
+              id
+              start
+              method
+              duration
+            }
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(
+        resultGetUserSlots.errors[0]?.message || resultGetUserSlots.errors[0][0]?.message,
+      ).toContain(invalidFieldsError);
+      return;
+    }
+
+    return resultGetUserSlots.data.getUserSlots;
   };
 
   getMember = async ({

@@ -1,18 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { CreateUserParams, NotNullableUserKeys, User, UserDocument } from '.';
+import {
+  CreateUserParams,
+  NotNullableUserKeys,
+  User,
+  UserDocument,
+  SlotService,
+  defaultSlotsParams,
+  GetSlotsParams,
+  NotNullableSlotsKeys,
+  Slots,
+} from '.';
 import { BaseService, DbErrors, Errors, ErrorType, EventType } from '../common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Member } from '../member';
 import { cloneDeep } from 'lodash';
-
 @Injectable()
 export class UserService extends BaseService {
   constructor(
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
     private eventEmitter: EventEmitter2,
+    private slotService: SlotService,
   ) {
     super();
   }
@@ -38,6 +48,92 @@ export class UserService extends BaseService {
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.userIdOrEmailAlreadyExists) : ex,
       );
     }
+  }
+
+  async getSlots(getSlotsParams: GetSlotsParams): Promise<Slots> {
+    this.removeNotNullable(getSlotsParams, NotNullableSlotsKeys);
+    const [slotsObject] = await this.userModel.aggregate([
+      {
+        $unwind: {
+          path: '$appointments',
+        },
+      },
+      {
+        $match: {
+          appointments: new Types.ObjectId(getSlotsParams.appointmentId),
+        },
+      },
+      {
+        $lookup: {
+          from: 'appointments',
+          localField: 'appointments',
+          foreignField: '_id',
+          as: 'userAp',
+        },
+      },
+      {
+        $lookup: {
+          from: 'members',
+          localField: 'userAp.memberId',
+          foreignField: '_id',
+          as: 'me',
+        },
+      },
+      {
+        $lookup: {
+          from: 'appointments',
+          localField: '_id',
+          foreignField: 'userId',
+          as: 'ap',
+        },
+      },
+      {
+        $lookup: {
+          from: 'availabilities',
+          localField: '_id',
+          foreignField: 'userId',
+          as: 'av',
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          user: {
+            id: '$_id',
+            firstName: '$firstName',
+            roles: '$roles',
+            avatar: '$avatar',
+            description: '$description',
+          },
+          member: {
+            id: { $arrayElemAt: ['$me._id', 0] },
+            firstName: { $arrayElemAt: ['$me.firstName', 0] },
+          },
+          appointment: {
+            id: { $arrayElemAt: ['$userAp._id', 0] },
+            start: { $arrayElemAt: ['$userAp.start', 0] },
+            method: { $arrayElemAt: ['$userAp.method', 0] },
+            duration: `${defaultSlotsParams.duration}`,
+          },
+          ap: '$ap',
+          av: '$av',
+        },
+      },
+    ]);
+
+    const slots = this.slotService.getSlots(
+      slotsObject.av,
+      slotsObject.ap,
+      defaultSlotsParams.duration,
+      defaultSlotsParams.maxSlots,
+      getSlotsParams.notBefore,
+    );
+
+    slotsObject.slots = slots;
+    delete slotsObject.ap;
+    delete slotsObject.av;
+
+    return slotsObject;
   }
 
   @OnEvent(EventType.newAppointment, { async: true })
