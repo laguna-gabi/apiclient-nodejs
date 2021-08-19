@@ -17,6 +17,7 @@ export class Handler {
   queries: Queries;
   module: GraphQLModule;
   sendBird;
+  notificationsService;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -31,7 +32,9 @@ export class Handler {
     await this.app.init();
 
     this.module = moduleFixture.get<GraphQLModule>(GraphQLModule);
-    this.sendBird = mockProviders(moduleFixture);
+    const providers = mockProviders(moduleFixture);
+    this.sendBird = providers.sendBird;
+    this.notificationsService = providers.notificationsService;
 
     const apolloServer = createTestClient((this.module as any).apolloServer);
     this.mutations = new Mutations(apolloServer);
@@ -43,6 +46,7 @@ export class Handler {
 
     this.sendBird.spyOnSendBirdCreateUser.mockReset();
     this.sendBird.spyOnSendBirdCreateGroupChannel.mockReset();
+    this.notificationsService.spyOnNotificationsServiceRegister.mockReset();
   }
 
   setContextUser = (deviceId: string) => {

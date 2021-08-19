@@ -7,6 +7,7 @@ import {
   CreateTaskParams,
   defaultMemberParams,
   Member,
+  MemberConfig,
   SetGeneralNotesParams,
   Sex,
   TaskStatus,
@@ -21,7 +22,7 @@ import {
   ScheduleAppointmentParams,
 } from '../src/appointment';
 import { CreateOrgParams, OrgType } from '../src/org';
-import { Language } from '../src/common';
+import { Language, MobilePlatform } from '../src/common';
 import { lookup } from 'zipcode-to-timezone';
 import { AvailabilityInput } from '../src/availability';
 import { GetCommunicationParams } from '../src/communication';
@@ -228,6 +229,14 @@ export const generateUpdateMemberParams = ({
     admitDate,
     dateOfBirth,
     address,
+  };
+};
+
+export const mockGenerateMemberConfig = (): MemberConfig => {
+  return {
+    memberId: generateObjectId(),
+    externalUserId: v4(),
+    mobilePlatform: MobilePlatform.ios,
   };
 };
 

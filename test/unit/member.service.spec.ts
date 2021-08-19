@@ -756,4 +756,33 @@ describe('MemberService', () => {
       );
     });
   });
+
+  describe('getMemberConfig', () => {
+    it('should fail to fetch member config on non existing member', async () => {
+      await expect(service.getMemberConfig(generateId())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
+    });
+
+    it('should insert member config on member insert, and fetch it', async () => {
+      const { _id: primaryUserId } = await modelUser.create(generateCreateRawUserParams());
+      const { _id: orgId } = await modelOrg.create(generateOrgParams());
+
+      const createMemberParams = generateCreateMemberParams({
+        primaryUserId,
+        usersIds: [primaryUserId],
+        orgId,
+      });
+
+      const { id } = await service.insert(createMemberParams);
+      const memberConfig = await service.getMemberConfig(id);
+
+      expect(memberConfig).toEqual(
+        expect.objectContaining({
+          memberId: id,
+          externalUserId: expect.any(String),
+        }),
+      );
+    });
+  });
 });

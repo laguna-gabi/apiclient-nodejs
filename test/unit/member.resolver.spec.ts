@@ -9,18 +9,21 @@ import {
   generateUpdateMemberParams,
   generateUpdateTaskStatusParams,
   mockGenerateMember,
+  mockGenerateMemberConfig,
 } from '../index';
 import { DbModule } from '../../src/db/db.module';
 import { MemberModule, MemberResolver, MemberService, TaskStatus } from '../../src/member';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { Errors, ErrorType } from '../../src/common';
-import { StorageService } from '../../src/providers';
+import { Errors, ErrorType, MobilePlatform, RegisterForNotificationParams } from '../../src/common';
+import { NotificationsService, StorageService } from '../../src/providers';
+import * as faker from 'faker';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
   let resolver: MemberResolver;
   let service: MemberService;
   let storage: StorageService;
+  let notificationsService: NotificationsService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -30,6 +33,7 @@ describe('MemberResolver', () => {
     resolver = module.get<MemberResolver>(MemberResolver);
     service = module.get<MemberService>(MemberService);
     storage = module.get<StorageService>(StorageService);
+    notificationsService = module.get<NotificationsService>(NotificationsService);
   });
 
   afterAll(async () => {
@@ -387,6 +391,90 @@ describe('MemberResolver', () => {
 
       expect(spyOnServiceSetGeneralNotes).toBeCalledTimes(1);
       expect(spyOnServiceSetGeneralNotes).toBeCalledWith(params);
+    });
+  });
+
+  describe('getMemberConfig', () => {
+    let spyOnServiceGetMemberConfig;
+    beforeEach(() => {
+      spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetMemberConfig.mockReset();
+    });
+
+    it('should set general notes', async () => {
+      const memberConfig = mockGenerateMemberConfig();
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+
+      await resolver.getMemberConfig(memberConfig.memberId.toString());
+
+      expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
+      expect(spyOnServiceGetMemberConfig).toBeCalledWith(memberConfig.memberId.toString());
+    });
+  });
+
+  describe('registerMemberForNotifications', () => {
+    let spyOnNotificationsServiceRegister;
+    let spyOnServiceGetMemberConfig;
+    let spyOnServiceUpdateMemberConfig;
+
+    beforeEach(() => {
+      spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
+      spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
+      spyOnServiceUpdateMemberConfig = jest.spyOn(service, 'updateMemberConfig');
+    });
+
+    afterEach(() => {
+      spyOnNotificationsServiceRegister.mockReset();
+      spyOnServiceGetMemberConfig.mockReset();
+      spyOnServiceUpdateMemberConfig.mockReset();
+    });
+
+    it('should not call notificationsService on mobilePlatform=android', async () => {
+      spyOnNotificationsServiceRegister.mockImplementationOnce(async () => undefined);
+      const member = mockGenerateMemberConfig();
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => member);
+      spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => true);
+
+      const params: RegisterForNotificationParams = {
+        memberId: member.memberId.toString(),
+        mobilePlatform: MobilePlatform.android,
+      };
+      await resolver.registerMemberForNotifications(params);
+
+      expect(spyOnNotificationsServiceRegister).not.toBeCalled();
+      expect(spyOnServiceUpdateMemberConfig).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateMemberConfig).toBeCalledWith({
+        memberId: member.memberId,
+        mobilePlatform: params.mobilePlatform,
+      });
+    });
+
+    it('should not call notificationsService on mobilePlatform=ios', async () => {
+      spyOnNotificationsServiceRegister.mockImplementationOnce(async () => undefined);
+      const member = mockGenerateMemberConfig();
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => member);
+      spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => true);
+
+      const params: RegisterForNotificationParams = {
+        memberId: member.memberId.toString(),
+        mobilePlatform: MobilePlatform.ios,
+        token: faker.lorem.word(),
+      };
+      await resolver.registerMemberForNotifications(params);
+
+      expect(spyOnNotificationsServiceRegister).toBeCalledTimes(1);
+      expect(spyOnNotificationsServiceRegister).toBeCalledWith({
+        token: params.token,
+        externalUserId: member.externalUserId,
+      });
+      expect(spyOnServiceUpdateMemberConfig).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateMemberConfig).toBeCalledWith({
+        memberId: member.memberId,
+        mobilePlatform: params.mobilePlatform,
+      });
     });
   });
 });

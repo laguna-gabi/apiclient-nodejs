@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
-import { SendBird, StorageService, ConfigsService } from '.';
+import { ConfigsService, NotificationsService, SendBird, StorageService } from '.';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
-  providers: [SendBird, StorageService, ConfigsService],
-  exports: [SendBird, StorageService, ConfigsService],
+  imports: [HttpModule],
+  providers: [SendBird, StorageService, ConfigsService, NotificationsService],
+  exports: [SendBird, StorageService, ConfigsService, NotificationsService],
 })
 export class ProvidersModule {}

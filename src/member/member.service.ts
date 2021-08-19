@@ -1,27 +1,38 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { BaseService, DbErrors, Errors, ErrorType, EventType, Identifier } from '../common';
+import {
+  BaseService,
+  DbErrors,
+  Errors,
+  ErrorType,
+  EventType,
+  Identifier,
+  MobilePlatform,
+} from '../common';
 import {
   ActionItem,
   ActionItemDocument,
+  AppointmentCompose,
   CreateMemberParams,
   CreateTaskParams,
   Goal,
   GoalDocument,
   Member,
-  AppointmentCompose,
+  MemberConfig,
+  MemberConfigDocument,
   MemberDocument,
   MemberSummary,
+  NotNullableMemberKeys,
+  SetGeneralNotesParams,
   TaskStatus,
   UpdateMemberParams,
   UpdateTaskStatusParams,
-  SetGeneralNotesParams,
-  NotNullableMemberKeys,
 } from '.';
 import { cloneDeep } from 'lodash';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Appointment, AppointmentDocument, AppointmentStatus, Scores } from '../appointment';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class MemberService extends BaseService {
@@ -32,6 +43,8 @@ export class MemberService extends BaseService {
     private readonly goalModel: Model<GoalDocument>,
     @InjectModel(ActionItem.name)
     private readonly actionItemModel: Model<ActionItemDocument>,
+    @InjectModel(MemberConfig.name)
+    private readonly memberConfigModel: Model<MemberConfigDocument>,
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument>,
   ) {
@@ -50,6 +63,12 @@ export class MemberService extends BaseService {
         org: new Types.ObjectId(createMemberParams.orgId),
         users: createMemberParams.usersIds,
       });
+
+      await this.memberConfigModel.create({
+        memberId: new Types.ObjectId(object._id),
+        externalUserId: v4(),
+      });
+
       return this.replaceId(object.toObject());
     } catch (ex) {
       throw new Error(
@@ -255,6 +274,33 @@ export class MemberService extends BaseService {
     if (!result) {
       throw new Error(Errors.get(ErrorType.memberActionItemIdNotFound));
     }
+  }
+
+  /************************************************************************************************
+   ***************************************** Member Config ****************************************
+   ************************************************************************************************/
+
+  async updateMemberConfig({
+    memberId,
+    mobilePlatform,
+  }: {
+    memberId: Types.ObjectId;
+    mobilePlatform: MobilePlatform;
+  }): Promise<boolean> {
+    const result = await this.memberConfigModel.updateOne(
+      { memberId },
+      { $set: { memberId, mobilePlatform } },
+    );
+
+    return result.ok === 1;
+  }
+
+  async getMemberConfig(id: string): Promise<MemberConfig> {
+    const object = await this.memberConfigModel.findOne({ memberId: new Types.ObjectId(id) });
+    if (!object) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
+    return this.replaceId(object.toObject());
   }
 
   /*************************************************************************************************

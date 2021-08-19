@@ -15,7 +15,7 @@ import {
   ScheduleAppointmentParams,
   EndAppointmentParams,
 } from '../../../src/appointment';
-import { Identifier, Identifiers } from '../../../src/common';
+import { Identifier, Identifiers, RegisterForNotificationParams } from '../../../src/common';
 import { CreateOrgParams } from '../../../src/org';
 import { AvailabilityInput } from '../../../src/availability';
 
@@ -445,6 +445,34 @@ export class Mutations {
     return (
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.setGeneralNotes
+    );
+  };
+
+  registerMemberForNotifications = async ({
+    registerForNotificationParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    registerForNotificationParams: RegisterForNotificationParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<void> => {
+    const result = await this.apolloClient.mutate({
+      variables: { registerForNotificationParams: registerForNotificationParams },
+      mutation: gql`
+        mutation registerMemberForNotifications(
+          $registerForNotificationParams: RegisterForNotificationParams!
+        ) {
+          registerMemberForNotifications(
+            registerForNotificationParams: $registerForNotificationParams
+          )
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.registerMemberForNotifications
     );
   };
 

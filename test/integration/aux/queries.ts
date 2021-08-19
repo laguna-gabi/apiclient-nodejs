@@ -342,4 +342,31 @@ export class Queries {
     }
     return result.data.getCommunication;
   };
+
+  getMemberConfig = async ({
+    id,
+    invalidFieldsError,
+  }: {
+    id: string;
+    invalidFieldsError?: string;
+  }) => {
+    const result = await this.apolloClient.query({
+      variables: { id },
+      query: gql`
+        query getMemberConfig($id: String!) {
+          getMemberConfig(id: $id) {
+            memberId
+            externalUserId
+            mobilePlatform
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(invalidFieldsError).toEqual(result.errors[0].message);
+    } else {
+      return result.data.getMemberConfig;
+    }
+  };
 }

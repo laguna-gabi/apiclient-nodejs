@@ -8,6 +8,10 @@ export enum ExternalConfigs {
   sendbirdApiId = 'sendbird.apiId',
   sendbirdApiToken = 'sendbird.apiToken',
   awsStorageMember = 'aws.storage.memberBucketName',
+  oneSignalDefaultApiId = 'onesignal.default.apiId',
+  oneSignalDefaultApiKey = 'onesignal.default.apiKey',
+  oneSignalVoipApiId = 'onesignal.voip.apiId',
+  oneSignalVoipApiKey = 'onesignal.voip.apiKey',
 }
 
 enum environments {

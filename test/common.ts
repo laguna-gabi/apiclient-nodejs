@@ -2,7 +2,7 @@ import { User } from '../src/user';
 import { connect, disconnect } from 'mongoose';
 import * as config from 'config';
 import { TestingModule } from '@nestjs/testing';
-import { SendBird, StorageService } from '../src/providers';
+import { NotificationsService, SendBird, StorageService } from '../src/providers';
 
 export const compareUsers = (user: User, userBase) => {
   expect(user.id).toEqual(userBase.id);
@@ -27,16 +27,23 @@ export const delay = async (milliseconds: number) => {
   await new Promise((resolve) => setTimeout(resolve, milliseconds));
 };
 
-export const mockProviders = (module: TestingModule): { sendBird } => {
+export const mockProviders = (module: TestingModule): { sendBird; notificationsService } => {
   const sendBird = module.get<SendBird>(SendBird);
   const storage = module.get<StorageService>(StorageService);
+  const notificationsService = module.get<NotificationsService>(NotificationsService);
+
   const spyOnSendBirdCreateUser = jest.spyOn(sendBird, 'createUser');
   const spyOnSendBirdCreateGroupChannel = jest.spyOn(sendBird, 'createGroupChannel');
   const spyOnStorage = jest.spyOn(storage, 'getUrl');
+  const spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
 
   spyOnSendBirdCreateUser.mockResolvedValue(true);
   spyOnSendBirdCreateGroupChannel.mockResolvedValue(true);
   spyOnStorage.mockResolvedValue('https://some-url');
+  spyOnNotificationsServiceRegister.mockResolvedValue(undefined);
 
-  return { sendBird: { spyOnSendBirdCreateUser, spyOnSendBirdCreateGroupChannel } };
+  return {
+    sendBird: { spyOnSendBirdCreateUser, spyOnSendBirdCreateGroupChannel },
+    notificationsService: { spyOnNotificationsServiceRegister },
+  };
 };

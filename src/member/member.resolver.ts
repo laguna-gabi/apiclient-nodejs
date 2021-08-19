@@ -5,6 +5,7 @@ import {
   CreateTaskParams,
   DischargeDocumentsLinks,
   Member,
+  MemberConfig,
   MemberService,
   MemberSummary,
   SetGeneralNotesParams,
@@ -12,14 +13,21 @@ import {
   UpdateMemberParams,
   UpdateTaskStatusParams,
 } from '.';
-import { Errors, ErrorType, EventType, Identifier } from '../common';
+import {
+  Errors,
+  ErrorType,
+  EventType,
+  Identifier,
+  MobilePlatform,
+  RegisterForNotificationParams,
+} from '../common';
 import { camelCase } from 'lodash';
 import * as jwt from 'jsonwebtoken';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { millisecondsInHour } from 'date-fns';
 import { lookup } from 'zipcode-to-timezone';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { StorageService } from '../providers';
+import { NotificationsService, StorageService } from '../providers';
 
 @Resolver(() => Member)
 export class MemberResolver {
@@ -29,6 +37,7 @@ export class MemberResolver {
     private readonly memberService: MemberService,
     private eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   @Mutation(() => Identifier)
@@ -154,6 +163,39 @@ export class MemberResolver {
     @Args(camelCase(SetGeneralNotesParams.name)) setGeneralNotesParams: SetGeneralNotesParams,
   ) {
     return this.memberService.setGeneralNotes(setGeneralNotesParams);
+  }
+
+  /************************************************************************************************
+   ***************************************** Notifications ****************************************
+   ************************************************************************************************/
+  @Mutation(() => Boolean, { nullable: true })
+  async registerMemberForNotifications(
+    @Args(camelCase(RegisterForNotificationParams.name))
+    registerForNotificationParams: RegisterForNotificationParams,
+  ) {
+    const memberConfig = await this.memberService.getMemberConfig(
+      registerForNotificationParams.memberId,
+    );
+
+    if (registerForNotificationParams.mobilePlatform === MobilePlatform.ios) {
+      const { token } = registerForNotificationParams;
+      await this.notificationsService.register({
+        token,
+        externalUserId: memberConfig.externalUserId,
+      });
+    }
+    await this.memberService.updateMemberConfig({
+      memberId: memberConfig.memberId,
+      mobilePlatform: registerForNotificationParams.mobilePlatform,
+    });
+  }
+
+  /************************************************************************************************
+   **************************************** Member Internal ***************************************
+   ************************************************************************************************/
+  @Query(() => MemberConfig)
+  async getMemberConfig(@Args('id', { type: () => String }) id: string) {
+    return this.memberService.getMemberConfig(id);
   }
 
   /*************************************************************************************************

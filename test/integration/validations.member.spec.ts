@@ -14,7 +14,7 @@ import {
 import * as config from 'config';
 import * as faker from 'faker';
 import { CreateMemberParams, defaultMemberParams, Sex, UpdateMemberParams } from '../../src/member';
-import { Errors, ErrorType, Language } from '../../src/common';
+import { Errors, ErrorType, Language, MobilePlatform } from '../../src/common';
 import { Handler } from './aux/handler';
 import { v4 } from 'uuid';
 
@@ -267,6 +267,31 @@ describe('Validations - member', () => {
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
     });
+  });
+
+  describe('getMemberConfig', () => {
+    it('should throw error on non existing member', async () => {
+      await handler.queries.getMemberConfig({
+        id: generateId(),
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+      });
+    });
+  });
+
+  describe('registerForNotificationParams', () => {
+    test.each(['a-b', 'a_b'])(
+      'should not be able to register on non alphanumeric token %p',
+      async (token) => {
+        await handler.mutations.registerMemberForNotifications({
+          registerForNotificationParams: {
+            memberId: generateId(),
+            mobilePlatform: MobilePlatform.ios,
+            token,
+          },
+          invalidFieldsErrors: [Errors.get(ErrorType.memberRegisterForNotificationToken)],
+        });
+      },
+    );
   });
 
   describe('updateMember', () => {

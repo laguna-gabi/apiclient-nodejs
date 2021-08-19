@@ -13,8 +13,15 @@ import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { Handler } from './aux/handler';
 import { AppointmentsIntegrationActions } from './aux/appointments';
 import { Creators } from './aux/creators';
-import { CreateTaskParams, Task, TaskStatus } from '../../src/member';
-import { Errors, ErrorType, Identifiers } from '../../src/common';
+import { CreateTaskParams, MemberConfig, Task, TaskStatus } from '../../src/member';
+import {
+  Errors,
+  ErrorType,
+  Identifiers,
+  MobilePlatform,
+  RegisterForNotificationParams,
+} from '../../src/common';
+import * as faker from 'faker';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -487,6 +494,55 @@ describe('Integration tests: all', () => {
       dischargeInstructionsLink: 'https://some-url',
     });
   });
+
+  test.each`
+    register
+    ${{ mobilePlatform: MobilePlatform.ios, token: faker.lorem.word() }}
+    ${{ mobilePlatform: MobilePlatform.android }}
+  `(
+    /* eslint-enable max-len */
+    `should registerMemberForNotifications and update MemberConfig on $register.mobilePlatform`,
+    async (params) => {
+      const primaryUser = await creators.createAndValidateUser();
+      const org = await creators.createAndValidateOrg();
+      const { id } = await creators.createAndValidateMember({
+        org,
+        primaryUser,
+        users: [primaryUser],
+      });
+
+      const memberConfigDefault: MemberConfig = await handler.queries.getMemberConfig({ id });
+      expect(memberConfigDefault).toEqual({
+        memberId: id,
+        externalUserId: expect.any(String),
+        mobilePlatform: null,
+      });
+
+      const registerForNotificationParams: RegisterForNotificationParams = {
+        memberId: id,
+        ...params.register,
+      };
+      await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+
+      if (params.register.mobilePlatform === MobilePlatform.ios) {
+        expect(handler.notificationsService.spyOnNotificationsServiceRegister).toBeCalledWith({
+          token: registerForNotificationParams.token,
+          externalUserId: memberConfigDefault.externalUserId,
+        });
+      } else {
+        expect(handler.notificationsService.spyOnNotificationsServiceRegister).not.toBeCalled();
+      }
+
+      const newMemberConfig: MemberConfig = await handler.queries.getMemberConfig({ id });
+      expect(newMemberConfig).toEqual({
+        memberId: id,
+        externalUserId: expect.any(String),
+        mobilePlatform: params.register.mobilePlatform,
+      });
+
+      handler.notificationsService.spyOnNotificationsServiceRegister.mockReset();
+    },
+  );
 
   /************************************************************************************************
    *************************************** Internal methods ***************************************
