@@ -98,9 +98,8 @@ export class MemberResolver {
   }
 
   @Query(() => DischargeDocumentsLinks)
-  async getMemberDischargeDocumentsLinks(@Context() context) {
-    const deviceId = this.extractDeviceId(context);
-    const member = await this.memberService.getByDeviceId(deviceId);
+  async getMemberDischargeDocumentsLinks(@Args('id', { type: () => String }) id: string) {
+    const member = await this.memberService.get(id);
 
     const { firstName, lastName } = member;
 

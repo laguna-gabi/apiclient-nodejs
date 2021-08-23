@@ -186,12 +186,14 @@ export class Queries {
   };
 
   getMemberDischargeDocumentsLinks = async ({
+    id,
     invalidFieldsError,
-  }: { invalidFieldsError?: string } = {}): Promise<DischargeDocumentsLinks> => {
+  }: { id?: string; invalidFieldsError?: string } = {}): Promise<DischargeDocumentsLinks> => {
     const result = await this.apolloClient.query({
+      variables: { id },
       query: gql`
-        query getMemberDischargeDocumentsLinks {
-          getMemberDischargeDocumentsLinks {
+        query getMemberDischargeDocumentsLinks($id: String!) {
+          getMemberDischargeDocumentsLinks(id: $id) {
             dischargeNotesLink
             dischargeInstructionsLink
           }

@@ -486,9 +486,13 @@ describe('Integration tests: all', () => {
   it('should be able to get dispatch links of a member', async () => {
     const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    await creators.createAndValidateMember({ org, primaryUser, users: [primaryUser] });
+    const { id } = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
 
-    const result = await handler.queries.getMemberDischargeDocumentsLinks();
+    const result = await handler.queries.getMemberDischargeDocumentsLinks({ id });
     expect(result).toEqual({
       dischargeNotesLink: 'https://some-url',
       dischargeInstructionsLink: 'https://some-url',

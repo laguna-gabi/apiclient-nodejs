@@ -262,8 +262,8 @@ describe('Validations - member', () => {
 
   describe('getMemberDischargeDocumentsLinks', () => {
     it('should throw error on non existing member', async () => {
-      handler.setContextUser('not-valid');
       await handler.queries.getMemberDischargeDocumentsLinks({
+        id: generateId(),
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
     });

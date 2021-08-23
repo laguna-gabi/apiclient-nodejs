@@ -233,49 +233,44 @@ describe('MemberResolver', () => {
   });
 
   describe('getMemberDischargeDocumentsLinks', () => {
-    let spyOnServiceGetByDeviceId;
+    let spyOnServiceGet;
     let spyOnStorage;
     beforeEach(() => {
-      spyOnServiceGetByDeviceId = jest.spyOn(service, 'getByDeviceId');
+      spyOnServiceGet = jest.spyOn(service, 'get');
       spyOnStorage = jest.spyOn(storage, 'getUrl');
     });
 
     afterEach(() => {
-      spyOnServiceGetByDeviceId.mockReset();
+      spyOnServiceGet.mockReset();
       spyOnStorage.mockReset();
     });
 
     it('should get a member discharge documents links for a given context', async () => {
       const member = mockGenerateMember();
-      spyOnServiceGetByDeviceId.mockImplementationOnce(async () => member);
+      spyOnServiceGet.mockImplementationOnce(async () => member);
       spyOnStorage.mockImplementation(async () => 'https://aws-bucket-path/extras');
 
-      await resolver.getMemberDischargeDocumentsLinks({
-        req: {
-          headers: {
-            /* eslint-disable max-len */
-            authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QifQ.hNQI_r8BATy1LyXPr6Zuo9X_V0kSED8ngcqQ6G-WV5w`,
-            /* eslint-enable max-len */
-          },
-        },
-      });
+      const id = generateId();
+
+      await resolver.getMemberDischargeDocumentsLinks(id);
 
       const prefix = `${member.firstName}_${member.lastName}`;
 
-      expect(spyOnServiceGetByDeviceId).toBeCalledTimes(1);
+      expect(spyOnServiceGet).toBeCalledTimes(1);
+      expect(spyOnServiceGet).toBeCalledWith(id);
       expect(spyOnStorage).toBeCalledTimes(2);
       expect(spyOnStorage).toHaveBeenNthCalledWith(1, `${prefix}_Summary.pdf`);
       expect(spyOnStorage).toHaveBeenNthCalledWith(2, `${prefix}_Instructions.pdf`);
     });
 
     it('should throw exception on a non valid member', async () => {
-      spyOnServiceGetByDeviceId.mockImplementationOnce(async () => null);
+      spyOnServiceGet.mockImplementationOnce(async () => {
+        throw Error(Errors.get(ErrorType.memberNotFound));
+      });
 
-      await expect(
-        resolver.getMemberDischargeDocumentsLinks({
-          req: { headers: { authorization: 'not-valid' } },
-        }),
-      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+      await expect(resolver.getMemberDischargeDocumentsLinks(generateId())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
     });
   });
 
