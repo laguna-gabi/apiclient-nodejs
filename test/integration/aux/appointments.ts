@@ -7,7 +7,6 @@ import {
 } from '../../index';
 import { Mutations } from './mutations';
 import { generateEndAppointmentParams } from '../../generators';
-import { Identifier } from '../../../src/common';
 
 export class AppointmentsIntegrationActions {
   constructor(private readonly mutations: Mutations) {}
@@ -88,9 +87,9 @@ export class AppointmentsIntegrationActions {
     });
   };
 
-  endAppointment = async (id: string) => {
+  endAppointment = async (id: string): Promise<Appointment> => {
     const endAppointmentParams = generateEndAppointmentParams({ id });
-    await this.mutations.endAppointment({ endAppointmentParams });
+    return this.mutations.endAppointment({ endAppointmentParams });
   };
 
   freezeAppointment = async (id: string): Promise<Appointment> => {

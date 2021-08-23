@@ -19,6 +19,35 @@ import { Identifier, Identifiers, RegisterForNotificationParams } from '../../..
 import { CreateOrgParams } from '../../../src/org';
 import { AvailabilityInput } from '../../../src/availability';
 
+const FRAGMENT_APPOINTMENT = gql`
+  fragment appointmentFragment on Appointment {
+    id
+    userId
+    memberId
+    notBefore
+    status
+    method
+    start
+    end
+    noShow
+    noShowReason
+    notes {
+      recap
+      strengths
+      userActionItem
+      memberActionItem
+      scores {
+        adherence
+        adherenceText
+        wellbeing
+        wellbeingText
+      }
+    }
+    updatedAt
+    link
+  }
+`;
+
 export class Mutations {
   constructor(private readonly apolloClient: ApolloServerTestClient) {}
 
@@ -165,18 +194,10 @@ export class Mutations {
       mutation: gql`
         mutation RequestAppointment($requestAppointmentParams: RequestAppointmentParams!) {
           requestAppointment(requestAppointmentParams: $requestAppointmentParams) {
-            id
-            memberId
-            userId
-            notBefore
-            method
-            status
-            start
-            end
-            link
-            updatedAt
+            ...appointmentFragment
           }
         }
+        ${FRAGMENT_APPOINTMENT}
       `,
     });
 
@@ -200,18 +221,10 @@ export class Mutations {
       mutation: gql`
         mutation ScheduleAppointment($scheduleAppointmentParams: ScheduleAppointmentParams!) {
           scheduleAppointment(scheduleAppointmentParams: $scheduleAppointmentParams) {
-            id
-            memberId
-            userId
-            notBefore
-            method
-            status
-            start
-            end
-            link
-            updatedAt
+            ...appointmentFragment
           }
         }
+        ${FRAGMENT_APPOINTMENT}
       `,
     });
 
@@ -235,17 +248,10 @@ export class Mutations {
       mutation: gql`
         mutation FreezeAppointment($id: String!) {
           freezeAppointment(id: $id) {
-            id
-            memberId
-            userId
-            notBefore
-            method
-            status
-            start
-            end
-            updatedAt
+            ...appointmentFragment
           }
         }
+        ${FRAGMENT_APPOINTMENT}
       `,
     });
 
@@ -263,13 +269,16 @@ export class Mutations {
     endAppointmentParams: EndAppointmentParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
-  }): Promise<Identifier> => {
+  }): Promise<Appointment> => {
     const result = await this.apolloClient.mutate({
       variables: { endAppointmentParams },
       mutation: gql`
         mutation EndAppointment($endAppointmentParams: EndAppointmentParams!) {
-          endAppointment(endAppointmentParams: $endAppointmentParams)
+          endAppointment(endAppointmentParams: $endAppointmentParams) {
+            ...appointmentFragment
+          }
         }
+        ${FRAGMENT_APPOINTMENT}
       `,
     });
 

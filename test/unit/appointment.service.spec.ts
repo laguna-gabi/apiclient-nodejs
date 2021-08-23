@@ -386,9 +386,8 @@ describe('AppointmentService', () => {
           id: appointment.id,
           ...params.update2,
         };
-        await service.end(updateShowParams2);
+        const result = await service.end(updateShowParams2);
 
-        const result = await service.get(appointment.id);
         expect(result.noShow).toEqual(
           params.update2.noShow !== undefined ? params.update2.noShow : params.update1.noShow,
         );

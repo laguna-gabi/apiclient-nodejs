@@ -103,8 +103,9 @@ export class AppointmentService extends BaseService {
     });
   }
 
-  async end(params: EndAppointmentParams): Promise<void> {
+  async end(params: EndAppointmentParams): Promise<Appointment> {
     const existing = await this.appointmentModel.findById({ _id: params.id });
+    let result;
 
     if (!existing) {
       throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
@@ -119,32 +120,34 @@ export class AppointmentService extends BaseService {
     }
 
     if (params.notes === undefined) {
-      await this.appointmentModel.findOneAndUpdate({ _id: params.id }, { $set: { ...update } });
+      result = await this.appointmentModel
+        .findOneAndUpdate({ _id: params.id }, { $set: { ...update } }, { new: true })
+        .populate('notes');
     } else if (params.notes === null) {
       if (existing.notes) {
         await this.notesModel.deleteOne({ _id: existing.notes });
       }
-      await this.appointmentModel.findOneAndUpdate(
-        { _id: params.id },
-        { $set: { ...update, notes: null } },
-      );
+      result = await this.appointmentModel
+        .findOneAndUpdate({ _id: params.id }, { $set: { ...update, notes: null } }, { new: true })
+        .populate('notes');
     } else {
       let notesId;
       if (existing.notes) {
-        const { _id } = await this.notesModel.findByIdAndUpdate(
-          { _id: existing.notes },
-          { $set: params.notes },
-          { upsert: true, new: true },
-        );
-        notesId = _id;
+        const result = await this.notesModel
+          .findByIdAndUpdate(
+            { _id: existing.notes },
+            { $set: params.notes },
+            { upsert: true, new: true },
+          )
+          .populate('notes');
+        notesId = result._id;
       } else {
         const { _id } = await this.notesModel.create(params.notes);
         notesId = _id;
       }
-      await this.appointmentModel.findOneAndUpdate(
-        { _id: params.id },
-        { $set: update, notes: notesId },
-      );
+      result = await this.appointmentModel
+        .findOneAndUpdate({ _id: params.id }, { $set: update, notes: notesId }, { new: true })
+        .populate('notes');
     }
 
     if (params.notes?.scores) {
@@ -153,6 +156,8 @@ export class AppointmentService extends BaseService {
         scores: params.notes.scores,
       });
     }
+
+    return this.replaceId(result.toObject() as AppointmentDocument);
   }
 
   private async updateAppointment(id, setParams): Promise<Appointment> {

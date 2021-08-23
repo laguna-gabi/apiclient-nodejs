@@ -171,14 +171,14 @@ describe('Integration tests : getUserSlots', () => {
 
     await appointmentsActions.freezeAppointment(freezedAppointment.id);
 
-    const endAppointment = await appointmentsActions.scheduleAppointmentWithDate(
+    const scheduleAppointmentResult = await appointmentsActions.scheduleAppointmentWithDate(
       primaryUser.id,
       member,
       add(startOfToday(), { hours: 11 }),
       add(startOfToday(), { hours: 11, minutes: defaultSlotsParams.duration }),
     );
 
-    await appointmentsActions.endAppointment(endAppointment.id);
+    await appointmentsActions.endAppointment(scheduleAppointmentResult.id);
 
     const result = await handler.queries.getUserSlots({
       appointmentId: appointment.id,
@@ -219,8 +219,8 @@ describe('Integration tests : getUserSlots', () => {
       result.slots.some((slot) => {
         return areIntervalsOverlapping(
           {
-            start: new Date(endAppointment.start),
-            end: new Date(endAppointment.end),
+            start: new Date(scheduleAppointmentResult.start),
+            end: new Date(scheduleAppointmentResult.end),
           },
           {
             start: new Date(slot),

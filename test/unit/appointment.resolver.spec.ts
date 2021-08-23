@@ -134,7 +134,9 @@ describe('AppointmentResolver', () => {
       };
       spyOnServiceEnd.mockImplementationOnce(async () => appointment);
 
-      await resolver.endAppointment({ id: appointment.id });
+      const result = await resolver.endAppointment({ id: appointment.id });
+      expect(spyOnServiceEnd).toBeCalledWith({ id: appointment.id });
+      expect(result).toEqual(appointment);
     });
   });
 

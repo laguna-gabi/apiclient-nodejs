@@ -33,7 +33,7 @@ export class AppointmentResolver {
     return this.appointmentService.schedule(scheduleAppointmentParams);
   }
 
-  @Mutation(() => Boolean, { nullable: true })
+  @Mutation(() => Appointment)
   async endAppointment(
     @Args(camelCase(EndAppointmentParams.name)) endAppointmentParams: EndAppointmentParams,
   ) {

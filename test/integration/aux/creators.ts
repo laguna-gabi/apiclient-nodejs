@@ -121,16 +121,11 @@ export class Creators {
     expect(appointment.status).toEqual(AppointmentStatus.closed);
     expect(requestAppointmentResult.id).toEqual(appointment.id);
 
-    await this.handler.mutations.endAppointment({ endAppointmentParams: { id: appointment.id } });
-    const result = await this.handler.queries.getAppointment(appointment.id);
-    expect(result.status).toEqual(AppointmentStatus.done);
-
     const executeEndAppointment = async (): Promise<Appointment> => {
       const endAppointmentParams: EndAppointmentParams = generateEndAppointmentParams({
         id: appointment.id,
       });
-      await this.handler.mutations.endAppointment({ endAppointmentParams });
-      const result = await this.handler.queries.getAppointment(appointment.id);
+      const result = await this.handler.mutations.endAppointment({ endAppointmentParams });
       expect(result).toEqual(
         expect.objectContaining({
           status: AppointmentStatus.done,
