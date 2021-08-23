@@ -139,29 +139,4 @@ describe('AppointmentResolver', () => {
       expect(result).toEqual(appointment);
     });
   });
-
-  describe('freezeAppointment', () => {
-    let spyOnServiceFreeze;
-    beforeEach(() => {
-      spyOnServiceFreeze = jest.spyOn(service, 'freeze');
-    });
-
-    afterEach(() => {
-      spyOnServiceFreeze.mockReset();
-    });
-
-    it('should freeze an existing appointment for a given id', async () => {
-      const appointment = {
-        id: generateId(),
-        ...generateRequestAppointmentParams(),
-        status: AppointmentStatus.closed,
-        method: AppointmentMethod.phoneCall,
-      };
-      spyOnServiceFreeze.mockImplementationOnce(async () => appointment);
-
-      const result = await resolver.freezeAppointment(appointment.id);
-
-      expect(result).toEqual(appointment);
-    });
-  });
 });

@@ -162,15 +162,6 @@ describe('Integration tests : getUserSlots', () => {
       add(startOfTomorrow(), { hours: 10 }),
     );
 
-    const freezedAppointment = await appointmentsActions.scheduleAppointmentWithDate(
-      primaryUser.id,
-      anotherMember,
-      add(startOfToday(), { hours: 10 }),
-      add(startOfToday(), { hours: 10, minutes: defaultSlotsParams.duration }),
-    );
-
-    await appointmentsActions.freezeAppointment(freezedAppointment.id);
-
     const scheduleAppointmentResult = await appointmentsActions.scheduleAppointmentWithDate(
       primaryUser.id,
       member,
@@ -193,20 +184,6 @@ describe('Integration tests : getUserSlots', () => {
             end: add(new Date(requestedAppointment.notBefore), {
               minutes: defaultSlotsParams.duration,
             }),
-          },
-          {
-            start: new Date(slot),
-            end: add(new Date(slot), { minutes: defaultSlotsParams.duration }),
-          },
-        );
-      }),
-    ).toEqual(true);
-    expect(
-      result.slots.some((slot) => {
-        return areIntervalsOverlapping(
-          {
-            start: new Date(freezedAppointment.start),
-            end: new Date(freezedAppointment.end),
           },
           {
             start: new Date(slot),

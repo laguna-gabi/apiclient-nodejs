@@ -91,10 +91,4 @@ export class AppointmentsIntegrationActions {
     const endAppointmentParams = generateEndAppointmentParams({ id });
     return this.mutations.endAppointment({ endAppointmentParams });
   };
-
-  freezeAppointment = async (id: string): Promise<Appointment> => {
-    const appointment = await this.mutations.freezeAppointment({ id });
-    expect(appointment.status).toEqual(AppointmentStatus.closed);
-    return appointment;
-  };
 }

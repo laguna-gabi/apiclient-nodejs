@@ -323,30 +323,6 @@ describe('AppointmentService', () => {
     expect(spyOnEventEmitter).not.toBeCalled();
   });
 
-  describe('freeze', () => {
-    it('should not be able to freeze a non existing appointment', async () => {
-      await expect(service.freeze(generateId())).rejects.toThrow(
-        Errors.get(ErrorType.appointmentIdNotFound),
-      );
-    });
-
-    it('should be able to end an existing appointment', async () => {
-      const appointment = await service.request(generateRequestAppointmentParams());
-
-      const endResult = await service.freeze(appointment.id);
-      expect(endResult.status).toEqual(AppointmentStatus.closed);
-    });
-
-    it('should be able to freeze an existing scheduled appointment', async () => {
-      const appointmentParams = generateScheduleAppointmentParams();
-
-      const appointment = await service.schedule(appointmentParams);
-
-      const endResult = await service.freeze(appointment.id);
-      expect(endResult.status).toEqual(AppointmentStatus.closed);
-    });
-  });
-
   describe('end', () => {
     it('should not be able to end a non existing appointment', async () => {
       await expect(service.end({ id: generateId() })).rejects.toThrow(

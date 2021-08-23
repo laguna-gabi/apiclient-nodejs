@@ -99,10 +99,8 @@ export class Creators {
    *                               notBefore and status: requested
    * 3. call mutation scheduleAppointment: created new scheduled appointment with status: scheduled
    * 4. call mutation endAppointment: returned current appointment with status: done
-   * 5. call mutation freezeAppointment: returned current appointment with status: closed
-   * 6. call mutation endAppointment: "unfreeze" returned current appointment with status: done
-   * 7. call endAppointment a few times (checks for 'override' endAppointmentParams)
-   * 8. call query getAppointment: returned current appointment with all fields
+   * 5. call endAppointment a few times (checks for 'override' endAppointmentParams)
+   * 6. call query getAppointment: returned current appointment with all fields
    */
   createAndValidateAppointment = async ({
     userId,
@@ -116,9 +114,8 @@ export class Creators {
       member,
     );
 
-    let appointment = await this.appointmentsActions.scheduleAppointment(userId, member);
-    appointment = await this.appointmentsActions.freezeAppointment(appointment.id);
-    expect(appointment.status).toEqual(AppointmentStatus.closed);
+    const appointment = await this.appointmentsActions.scheduleAppointment(userId, member);
+    expect(appointment.status).toEqual(AppointmentStatus.scheduled);
     expect(requestAppointmentResult.id).toEqual(appointment.id);
 
     const executeEndAppointment = async (): Promise<Appointment> => {

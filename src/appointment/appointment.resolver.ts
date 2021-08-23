@@ -39,9 +39,4 @@ export class AppointmentResolver {
   ) {
     return this.appointmentService.end(endAppointmentParams);
   }
-
-  @Mutation(() => Appointment)
-  async freezeAppointment(@Args('id', { type: () => String }) id: string) {
-    return this.appointmentService.freeze(id);
-  }
 }

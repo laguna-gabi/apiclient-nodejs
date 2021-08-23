@@ -88,12 +88,6 @@ export class AppointmentService extends BaseService {
     return this.replaceId(object.value.toObject() as AppointmentDocument);
   }
 
-  async freeze(id: string): Promise<Appointment> {
-    return this.updateAppointment(id, {
-      status: AppointmentStatus.closed,
-    });
-  }
-
   async show(params): Promise<Appointment> {
     return this.updateAppointment(params.id, {
       noShow: {

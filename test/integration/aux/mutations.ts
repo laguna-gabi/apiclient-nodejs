@@ -234,33 +234,6 @@ export class Mutations {
     );
   };
 
-  freezeAppointment = async ({
-    id,
-    missingFieldError,
-    invalidFieldsErrors,
-  }: {
-    id: string;
-    missingFieldError?: string;
-    invalidFieldsErrors?: string[];
-  }): Promise<Appointment> => {
-    const result = await this.apolloClient.mutate({
-      variables: { id },
-      mutation: gql`
-        mutation FreezeAppointment($id: String!) {
-          freezeAppointment(id: $id) {
-            ...appointmentFragment
-          }
-        }
-        ${FRAGMENT_APPOINTMENT}
-      `,
-    });
-
-    return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.freezeAppointment
-    );
-  };
-
   endAppointment = async ({
     endAppointmentParams,
     missingFieldError,
