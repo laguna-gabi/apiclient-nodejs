@@ -14,6 +14,15 @@ export enum Language {
 
 registerEnumType(Language, { name: 'Language' });
 
+export enum SlackIcon {
+  exclamationPoint = ':exclamation:',
+  questionMark = ':question:',
+  phone = ':telephone_receiver:',
+  info = ':information_source:',
+  warning = ':warning:',
+  critical = ':no_entry:',
+}
+
 export enum NotificationType {
   voip = 'voip',
   text = 'text',
@@ -31,6 +40,7 @@ registerEnumType(MobilePlatform, { name: 'MobilePlatform' });
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
  *************************************************************************************************/
+
 @ObjectType()
 @Schema()
 export class Identifier {

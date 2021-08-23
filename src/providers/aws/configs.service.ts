@@ -8,6 +8,7 @@ export enum ExternalConfigs {
   sendbirdApiId = 'sendbird.apiId',
   sendbirdApiToken = 'sendbird.apiToken',
   awsStorageMember = 'aws.storage.memberBucketName',
+  slackUrl = 'slack.url',
   oneSignalDefaultApiId = 'onesignal.default.apiId',
   oneSignalDefaultApiKey = 'onesignal.default.apiKey',
   oneSignalVoipApiId = 'onesignal.voip.apiId',

@@ -4,4 +4,5 @@ export enum EventType {
   collectUsersDataBridge = 'collectUsersDataBridge',
   newMember = 'newMember',
   newUser = 'newUser',
+  slackMessage = 'slackMessage',
 }
