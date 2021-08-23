@@ -10,7 +10,7 @@ export class StorageService {
 
   async getUrl(fileName: string): Promise<string | undefined> {
     const bucket = await this.configsService.getConfig(ExternalConfigs.awsStorageMember);
-    const params = { Bucket: bucket, Key: `public/${fileName}` };
+    const params = { Bucket: bucket, Key: `public/documents/${fileName}` };
 
     try {
       await this.s3.headObject(params).promise();
