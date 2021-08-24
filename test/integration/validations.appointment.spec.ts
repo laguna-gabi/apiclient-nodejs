@@ -1,22 +1,26 @@
 import {
+  generateEndAppointmentParams,
   generateId,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
-  generateEndAppointmentParams,
+  urls,
 } from '../index';
 import * as faker from 'faker';
-import { RequestAppointmentParams, EndAppointmentParams } from '../../src/appointment';
+import { EndAppointmentParams, RequestAppointmentParams } from '../../src/appointment';
 import { Errors, ErrorType } from '../../src/common';
 import { Handler } from './aux/handler';
+import * as request from 'supertest';
 
 const stringError = `String cannot represent a non string value`;
 const floatError = `Float cannot represent non numeric value`;
 
 describe('Validations - appointment', () => {
   const handler: Handler = new Handler();
+  let server;
 
   beforeAll(async () => {
     await handler.beforeAll();
+    server = handler.app.getHttpServer();
   });
 
   afterAll(async () => {
@@ -74,7 +78,6 @@ describe('Validations - appointment', () => {
   });
 
   describe('schedule', () => {
-    /* eslint-disable max-len */
     test.each`
       field          | error
       ${'memberId'}  | ${`Field "memberId" of required type "String!" was not provided.`}
@@ -84,8 +87,7 @@ describe('Validations - appointment', () => {
       ${'start'}     | ${`Field "start" of required type "DateTime!" was not provided.`}
       ${'end'}       | ${`Field "end" of required type "DateTime!" was not provided.`}
     `(
-      /* eslint-enable max-len */
-      `should fail to create an appointment since mandatory field $field is missing`,
+      `graphql: should fail to create an appointment since mandatory field $field is missing`,
       async (params) => {
         const appointmentParams = generateScheduleAppointmentParams();
         delete appointmentParams[params.field];
@@ -94,6 +96,16 @@ describe('Validations - appointment', () => {
           appointmentParams,
           missingFieldError: params.error,
         });
+      },
+    );
+
+    test.each(['memberId', 'userId', 'notBefore', 'method', 'start', 'end'])(
+      'rest: should fail to create an appointment since mandatory field %p is missing',
+      async (param) => {
+        const appointmentParams = generateScheduleAppointmentParams();
+        delete appointmentParams[param];
+
+        await request(server).post(urls.scheduleAppointments).send(appointmentParams).expect(400);
       },
     );
 
@@ -108,7 +120,7 @@ describe('Validations - appointment', () => {
       ${'end'}       | ${{ end: 'not-valid' }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentEndDate)] }}
     `(
       /* eslint-enable max-len */
-      `should fail to schedule an appointment since $field is not a valid type`,
+      `graphql: should fail to schedule an appointment since $field is not a valid type`,
       async (params) => {
         const appointmentParams = generateScheduleAppointmentParams();
         appointmentParams[params.field] = params.input;
@@ -117,6 +129,24 @@ describe('Validations - appointment', () => {
           appointmentParams,
           ...params.error,
         });
+      },
+    );
+
+    test.each`
+      field          | input
+      ${'memberId'}  | ${{ memberId: 123 }}
+      ${'userId'}    | ${{ userId: 123 }}
+      ${'notBefore'} | ${{ notBefore: 'not-valid' }}
+      ${'start'}     | ${{ start: 'not-valid' }}
+      ${'end'}       | ${{ end: 'not-valid' }}
+    `(
+      /* eslint-enable max-len */
+      `rest: should fail to schedule an appointment since $field is not a valid type`,
+      async (params) => {
+        const appointmentParams = generateScheduleAppointmentParams();
+        appointmentParams[params.field] = params.input;
+
+        await request(server).post(urls.scheduleAppointments).send(appointmentParams).expect(400);
       },
     );
 

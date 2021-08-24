@@ -1,4 +1,4 @@
-import { generateCreateUserParams, generateRandomName } from '../index';
+import { generateCreateUserParams, generateRandomName, urls } from '../index';
 import { CreateUserParams, defaultUserParams } from '../../src/user';
 import * as config from 'config';
 import * as faker from 'faker';
@@ -6,18 +6,21 @@ import { Errors, ErrorType } from '../../src/common';
 import { Handler } from './aux/handler';
 import { GetSlotsParams } from '../../src/user/slot.dto';
 import { generateGetSlotsParams } from '../generators';
+import * as request from 'supertest';
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
 
 describe('Validations - user', () => {
   const handler: Handler = new Handler();
+  let server;
 
   const minLength = validatorsConfig.get('name.minLength') as number;
   const maxLength = validatorsConfig.get('name.maxLength') as number;
 
   beforeAll(async () => {
     await handler.beforeAll();
+    server = handler.app.getHttpServer();
   });
 
   afterAll(async () => {
@@ -109,5 +112,9 @@ describe('Validations - user', () => {
     const getSlotsParams: GetSlotsParams = generateGetSlotsParams(params.input);
 
     await handler.queries.getUserSlots(getSlotsParams, params.errors);
+  });
+
+  it('rest: should return 404 on no appointmentId given', async () => {
+    await request(server).get(urls.slots).expect(404);
   });
 });

@@ -35,8 +35,8 @@ export function IsFutureDate(options?: ValidationOptions) {
       propertyName,
       options,
       validator: {
-        validate(date: Date) {
-          return date.getTime() > new Date().getTime();
+        validate(date?: Date) {
+          return date?.getTime() > new Date().getTime();
         },
       },
     });

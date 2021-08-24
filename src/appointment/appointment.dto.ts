@@ -1,9 +1,10 @@
 import { Field, InputType, ObjectType, OmitType, registerEnumType } from '@nestjs/graphql';
-import { IsDate } from 'class-validator';
+import { IsDate, IsNotEmpty, IsString } from 'class-validator';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Errors, ErrorType, Identifier, IsDateAfter, IsFutureDate } from '../common';
 import { Document, Types } from 'mongoose';
 import { Notes } from './note.dto';
+import { Type } from 'class-transformer';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -46,30 +47,41 @@ export class RequestAppointmentParams {
 @InputType()
 export class ScheduleAppointmentParams {
   @Field(() => String)
+  @IsNotEmpty() /* for rest api */
+  @IsString() /* for rest api */
   memberId: string;
 
   @Field(() => String)
+  @IsNotEmpty() /* for rest api */
+  @IsString() /* for rest api */
   userId: string;
 
   @Field(() => Date)
+  @Type(() => Date) /* for rest api */
   @IsFutureDate({
     message: Errors.get(ErrorType.appointmentNotBeforeDateInThePast),
   })
   @IsDate({ message: Errors.get(ErrorType.appointmentNotBeforeDate) })
+  @IsNotEmpty() /* for rest api */
   notBefore: Date;
 
   @Field(() => AppointmentMethod)
+  @IsNotEmpty() /* for rest api */
   method: AppointmentMethod;
 
   @Field(() => Date)
+  @Type(() => Date) /* for rest api */
   @IsDate({ message: Errors.get(ErrorType.appointmentStartDate) })
+  @IsNotEmpty() /* for rest api */
   start: Date;
 
   @Field(() => Date)
+  @Type(() => Date) /* for rest api */
   @IsDateAfter('start', {
     message: Errors.get(ErrorType.appointmentEndAfterStart),
   })
   @IsDate({ message: Errors.get(ErrorType.appointmentEndDate) })
+  @IsNotEmpty() /* for rest api */
   end: Date;
 }
 

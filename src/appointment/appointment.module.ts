@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
   Appointment,
+  AppointmentController,
   AppointmentDto,
   AppointmentResolver,
   AppointmentService,
@@ -17,5 +18,6 @@ import {
     ]),
   ],
   providers: [AppointmentResolver, AppointmentService],
+  controllers: [AppointmentController],
 })
 export class AppointmentModule {}

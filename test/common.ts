@@ -3,6 +3,12 @@ import { connect, disconnect } from 'mongoose';
 import * as config from 'config';
 import { TestingModule } from '@nestjs/testing';
 import { NotificationsService, SendBird, StorageService } from '../src/providers';
+import { apiPrefix } from '../src/common';
+
+export const urls = {
+  scheduleAppointments: `/${apiPrefix}/appointments/schedule`,
+  slots: `/${apiPrefix}/users/slots`,
+};
 
 export const compareUsers = (user: User, userBase) => {
   expect(user.id).toEqual(userBase.id);

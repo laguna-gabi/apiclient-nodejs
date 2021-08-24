@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
 import {
+  AppointmentController,
   AppointmentMethod,
   AppointmentModule,
   AppointmentResolver,
@@ -18,6 +19,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 describe('AppointmentResolver', () => {
   let module: TestingModule;
   let resolver: AppointmentResolver;
+  let controller: AppointmentController;
   let service: AppointmentService;
 
   beforeAll(async () => {
@@ -26,6 +28,7 @@ describe('AppointmentResolver', () => {
     }).compile();
 
     resolver = module.get<AppointmentResolver>(AppointmentResolver);
+    controller = module.get<AppointmentController>(AppointmentController);
     service = module.get<AppointmentService>(AppointmentService);
   });
 
@@ -78,15 +81,12 @@ describe('AppointmentResolver', () => {
       spyOnServiceGet.mockImplementationOnce(async () => appointment);
 
       const result = await resolver.getAppointment(appointment.id);
-
       expect(result).toEqual(appointment);
     });
 
     it('should fetch empty on a non existing appointment', async () => {
       spyOnServiceGet.mockImplementationOnce(async () => null);
-
       const result = await resolver.getAppointment(generateId());
-
       expect(result).toBeNull();
     });
   });
@@ -101,7 +101,11 @@ describe('AppointmentResolver', () => {
       spyOnServiceSchedule.mockReset();
     });
 
-    it('should schedule an existing appointment for a given id', async () => {
+    test.each`
+      type            | method
+      ${'resolver'}   | ${async (appointment) => await resolver.scheduleAppointment(appointment)}
+      ${'controller'} | ${async (appointment) => await controller.scheduleAppointment(appointment)}
+    `(`should get an appointment via $type for a given id`, async (params) => {
       const status = AppointmentStatus.scheduled;
       const appointment = generateScheduleAppointmentParams();
       spyOnServiceSchedule.mockImplementationOnce(async () => ({
@@ -109,7 +113,7 @@ describe('AppointmentResolver', () => {
         status,
       }));
 
-      const result = await resolver.scheduleAppointment(appointment);
+      const result = await params.method(appointment);
 
       expect(result).toEqual({ ...appointment, status });
     });

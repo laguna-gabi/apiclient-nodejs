@@ -132,7 +132,7 @@ describe('Integration tests : getUserSlots', () => {
 
   it('should get slots that overlap appointments that are not scheduled', async () => {
     const { primaryUser, member } = await createUserMember();
-    const { member: anotherMember } = await createUserMember();
+    await createUserMember();
 
     await handler.mutations.createAvailabilities({
       availabilities: [

@@ -6,7 +6,7 @@ import {
   mockGenerateUser,
 } from '../index';
 import { DbModule } from '../../src/db/db.module';
-import { UserModule, UserResolver, UserRole, UserService } from '../../src/user';
+import { UserController, UserModule, UserResolver, UserRole, UserService } from '../../src/user';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { v4 } from 'uuid';
 import { GetSlotsParams } from '../../src/user/slot.dto';
@@ -14,6 +14,7 @@ import { GetSlotsParams } from '../../src/user/slot.dto';
 describe('UserResolver', () => {
   let module: TestingModule;
   let resolver: UserResolver;
+  let controller: UserController;
   let service: UserService;
 
   beforeAll(async () => {
@@ -22,6 +23,7 @@ describe('UserResolver', () => {
     }).compile();
 
     resolver = module.get<UserResolver>(UserResolver);
+    controller = module.get<UserController>(UserController);
     service = module.get<UserService>(UserService);
   });
 
@@ -101,6 +103,18 @@ describe('UserResolver', () => {
       spyOnServiceGetSlots.mockImplementationOnce(async () => getSlotsParams);
 
       const result = await resolver.getUserSlots(getSlotsParams);
+
+      expect(spyOnServiceGetSlots).toBeCalledWith(getSlotsParams);
+      expect(result).toEqual(getSlotsParams);
+    });
+
+    it('should get free slots of a user given an appointmentId', async () => {
+      const getSlotsParams: GetSlotsParams = generateGetSlotsParams();
+      delete getSlotsParams.notBefore;
+
+      spyOnServiceGetSlots.mockImplementationOnce(async () => getSlotsParams);
+
+      const result = await controller.getUserSlots(getSlotsParams);
 
       expect(spyOnServiceGetSlots).toBeCalledWith(getSlotsParams);
       expect(result).toEqual(getSlotsParams);
