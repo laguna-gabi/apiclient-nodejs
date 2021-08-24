@@ -12,6 +12,8 @@ import { User, UserRole } from '../user';
 import { Member } from '../member';
 import { v4 } from 'uuid';
 import { SendBird } from '../providers';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventType } from '../common';
 
 @Injectable()
 export class CommunicationService {
@@ -19,6 +21,7 @@ export class CommunicationService {
     @InjectModel(Communication.name)
     private readonly communicationModel: Model<CommunicationDocument>,
     private readonly sendBird: SendBird,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -30,10 +33,16 @@ export class CommunicationService {
       user_id: user.id,
       nickname: `${user.firstName} ${user.lastName}`,
       profile_url: user.avatar,
+      issue_access_token: true,
       metadata: { role: UserRole.coach.toLowerCase() },
     };
 
-    await this.sendBird.createUser(params);
+    const accessToken = await this.sendBird.createUser(params);
+
+    this.eventEmitter.emit(EventType.updateUserConfig, {
+      userId: user.id,
+      accessToken,
+    });
   }
 
   async createMember(member: Member) {
@@ -41,10 +50,16 @@ export class CommunicationService {
       user_id: member.id,
       nickname: `${member.firstName} ${member.lastName}`,
       profile_url: '',
+      issue_access_token: true,
       metadata: {},
     };
 
-    await this.sendBird.createUser(params);
+    const accessToken = await this.sendBird.createUser(params);
+
+    this.eventEmitter.emit(EventType.updateMemberConfig, {
+      memberId: member.id,
+      accessToken,
+    });
   }
 
   async connectMemberToUser(member: Member, user: User) {
@@ -67,10 +82,42 @@ export class CommunicationService {
     }
   }
 
-  async get(params: GetCommunicationParams): Promise<Communication | null> {
-    return this.communicationModel.findOne({
-      userId: params.userId,
-      memberId: new Types.ObjectId(params.memberId),
-    });
+  async get(params: GetCommunicationParams) {
+    const result = await this.communicationModel.aggregate([
+      {
+        $match: {
+          userId: params.userId,
+          memberId: new Types.ObjectId(params.memberId),
+        },
+      },
+      {
+        $lookup: {
+          from: 'memberconfigs',
+          localField: 'memberId',
+          foreignField: 'memberId',
+          as: 'member',
+        },
+      },
+      { $unwind: '$member' },
+      {
+        $lookup: {
+          from: 'userconfigs',
+          localField: 'userId',
+          foreignField: 'userId',
+          as: 'user',
+        },
+      },
+      { $unwind: '$user' },
+      {
+        $project: {
+          userId: '$userId',
+          memberId: '$memberId',
+          memberToken: '$member.accessToken',
+          userToken: '$user.accessToken',
+          sendbirdChannelUrl: '$sendbirdChannelUrl',
+        },
+      },
+    ]);
+    return result[0];
   }
 }

@@ -18,6 +18,7 @@ import {
 } from '../../src/communication';
 import { UserRole } from '../../src/user';
 import { v4 } from 'uuid';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 describe('CommunicationService', () => {
   let module: TestingModule;
@@ -27,7 +28,7 @@ describe('CommunicationService', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, CommunicationModule],
+      imports: [DbModule, CommunicationModule, EventEmitterModule.forRoot()],
     }).compile();
 
     service = module.get<CommunicationService>(CommunicationService);
@@ -55,6 +56,7 @@ describe('CommunicationService', () => {
         user_id: user.id,
         nickname: `${user.firstName} ${user.lastName}`,
         profile_url: user.avatar,
+        issue_access_token: true,
         metadata: { role: UserRole.coach.toLowerCase() },
       });
     });
@@ -68,6 +70,7 @@ describe('CommunicationService', () => {
         user_id: member.id,
         nickname: `${member.firstName} ${member.lastName}`,
         profile_url: '',
+        issue_access_token: true,
         metadata: {},
       });
     });
@@ -105,25 +108,12 @@ describe('CommunicationService', () => {
   });
 
   describe('get', () => {
-    it('should fetch communication object from userId and memberId', async () => {
-      const member = mockGenerateMember();
-      await service.createMember(member);
-      const user = mockGenerateUser();
-      await service.createUser(user);
-      await service.connectMemberToUser(member, user);
-
-      const result = await service.get({ memberId: member.id, userId: user.id });
-      expect(result.memberId.toString()).toEqual(member.id);
-      expect(result.userId).toEqual(user.id);
-      expect(result.sendbirdChannelUrl).toEqual(expect.any(String));
-    });
-
     it('should return null for not existing userId and memberId', async () => {
       const result = await service.get({
         memberId: generateId(),
         userId: v4(),
       });
-      expect(result).toBeNull();
+      expect(result).toBeUndefined();
     });
   });
 });

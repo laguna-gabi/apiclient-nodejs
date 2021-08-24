@@ -5,4 +5,6 @@ export enum EventType {
   newMember = 'newMember',
   newUser = 'newUser',
   slackMessage = 'slackMessage',
+  updateMemberConfig = 'updateMemberConfig',
+  updateUserConfig = 'updateUserConfig',
 }

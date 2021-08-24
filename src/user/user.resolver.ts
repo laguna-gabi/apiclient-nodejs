@@ -1,6 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
-import { CreateUserParams, User, UserService } from '.';
+import { CreateUserParams, User, UserService, UserConfig } from '.';
 import { EventType, Identifier } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GetSlotsParams, Slots } from './slot.dto';
@@ -29,5 +29,10 @@ export class UserResolver {
   @Query(() => Slots)
   async getUserSlots(@Args(camelCase(GetSlotsParams.name)) getSlotsParams: GetSlotsParams) {
     return this.userService.getSlots(getSlotsParams);
+  }
+
+  @Query(() => UserConfig)
+  async getUserConfig(@Args('id', { type: () => String }) id: string) {
+    return this.userService.getUserConfig(id);
   }
 }

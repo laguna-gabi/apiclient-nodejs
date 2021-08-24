@@ -22,8 +22,16 @@ export class CommunicationResolver {
         memberId: result.memberId,
         userId: result.userId,
         chat: {
-          memberLink: this.buildUrl({ uid: result.memberId, mid: result.sendbirdChannelUrl }),
-          userLink: this.buildUrl({ uid: result.userId, mid: result.sendbirdChannelUrl }),
+          memberLink: this.buildUrl({
+            uid: result.memberId,
+            mid: result.sendbirdChannelUrl,
+            token: result.memberToken,
+          }),
+          userLink: this.buildUrl({
+            uid: result.userId,
+            mid: result.sendbirdChannelUrl,
+            token: result.userToken,
+          }),
         },
       };
     } else {
@@ -45,7 +53,7 @@ export class CommunicationResolver {
     );
   }
 
-  private buildUrl({ uid, mid }): string {
-    return `${config.get('hosts.chat')}/?uid=${uid}&mid=${mid}`;
+  private buildUrl({ uid, mid, token }): string {
+    return `${config.get('hosts.chat')}/?uid=${uid}&mid=${mid}&token=${token}`;
   }
 }

@@ -7,6 +7,7 @@ import { Handler } from './aux/handler';
 import { GetSlotsParams } from '../../src/user/slot.dto';
 import { generateGetSlotsParams, generateId } from '../generators';
 import * as request from 'supertest';
+import { v4 } from 'uuid';
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
@@ -116,6 +117,23 @@ describe('Validations - user', () => {
     const getSlotsParams: GetSlotsParams = generateGetSlotsParams(params.input);
 
     await handler.queries.getUserSlots(getSlotsParams, params.errors);
+  });
+
+  it('should throw error on non existing userConfig', async () => {
+    await handler.queries.getUserConfig({
+      id: v4(),
+      invalidFieldsError: Errors.get(ErrorType.userNotFound),
+    });
+  });
+
+  test.each`
+    field   | input  | error
+    ${'id'} | ${123} | ${'String cannot represent a non string value'}
+  `(`should fail to getUserConfig since $field is not valid,`, async (params) => {
+    await handler.queries.getUserConfig({
+      id: params.input,
+      invalidFieldsError: params.error,
+    });
   });
 
   it('rest: should return 404 on no appointmentId given', async () => {

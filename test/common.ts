@@ -4,6 +4,7 @@ import * as config from 'config';
 import { TestingModule } from '@nestjs/testing';
 import { NotificationsService, SendBird, StorageService } from '../src/providers';
 import { apiPrefix } from '../src/common';
+import { v4 } from 'uuid';
 
 export const urls = {
   scheduleAppointments: `/${apiPrefix}/appointments/schedule`,
@@ -43,7 +44,7 @@ export const mockProviders = (module: TestingModule): { sendBird; notificationsS
   const spyOnStorage = jest.spyOn(storage, 'getUrl');
   const spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
 
-  spyOnSendBirdCreateUser.mockResolvedValue(true);
+  spyOnSendBirdCreateUser.mockResolvedValue(v4());
   spyOnSendBirdCreateGroupChannel.mockResolvedValue(true);
   spyOnStorage.mockResolvedValue('https://some-url');
   spyOnNotificationsServiceRegister.mockResolvedValue(undefined);

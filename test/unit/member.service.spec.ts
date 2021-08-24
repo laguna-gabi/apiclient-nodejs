@@ -758,6 +758,21 @@ describe('MemberService', () => {
   });
 
   describe('getMemberConfig', () => {
+    it('should create memberConfig on memberCreate', async () => {
+      const { _id: primaryUserId } = await modelUser.create(generateCreateRawUserParams());
+      const { _id: orgId } = await modelOrg.create(generateOrgParams());
+
+      const member = generateCreateMemberParams({
+        primaryUserId,
+        usersIds: [primaryUserId],
+        orgId,
+      });
+      const craetedMember = await service.insert(member);
+      const CreatedConfigMember = await service.getMemberConfig(craetedMember.id);
+
+      expect(craetedMember.id).toEqual(CreatedConfigMember.memberId);
+    });
+
     it('should fail to fetch member config on non existing member', async () => {
       await expect(service.getMemberConfig(generateId())).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),

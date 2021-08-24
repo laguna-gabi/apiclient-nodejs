@@ -303,6 +303,19 @@ export class MemberService extends BaseService {
     return this.replaceId(object.toObject());
   }
 
+  @OnEvent(EventType.updateMemberConfig, { async: true })
+  async handleupdateMemberConfig({
+    memberId,
+    accessToken,
+  }: {
+    memberId: Types.ObjectId;
+    accessToken: string;
+  }): Promise<boolean> {
+    const result = await this.memberConfigModel.updateOne({ memberId }, { $set: { accessToken } });
+
+    return result.ok === 1;
+  }
+
   /*************************************************************************************************
    ****************************************** General notes ****************************************
    ************************************************************************************************/
