@@ -56,15 +56,6 @@ export class ScheduleAppointmentParams {
   @IsString() /* for rest api */
   userId: string;
 
-  @Field(() => Date)
-  @Type(() => Date) /* for rest api */
-  @IsFutureDate({
-    message: Errors.get(ErrorType.appointmentNotBeforeDateInThePast),
-  })
-  @IsDate({ message: Errors.get(ErrorType.appointmentNotBeforeDate) })
-  @IsNotEmpty() /* for rest api */
-  notBefore: Date;
-
   @Field(() => AppointmentMethod)
   @IsNotEmpty() /* for rest api */
   method: AppointmentMethod;
@@ -99,8 +90,8 @@ export class Appointment extends Identifier {
   @Field(() => String)
   memberId: Types.ObjectId;
 
-  @Prop()
-  @Field(() => Date)
+  @Prop({ isNaN: true })
+  @Field(() => Date, { nullable: true })
   notBefore: Date;
 
   @Prop()

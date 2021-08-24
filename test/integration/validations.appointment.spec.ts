@@ -79,13 +79,12 @@ describe('Validations - appointment', () => {
 
   describe('schedule', () => {
     test.each`
-      field          | error
-      ${'memberId'}  | ${`Field "memberId" of required type "String!" was not provided.`}
-      ${'userId'}    | ${`Field "userId" of required type "String!" was not provided.`}
-      ${'notBefore'} | ${`Field "notBefore" of required type "DateTime!" was not provided.`}
-      ${'method'}    | ${`Field "method" of required type "AppointmentMethod!" was not provided.`}
-      ${'start'}     | ${`Field "start" of required type "DateTime!" was not provided.`}
-      ${'end'}       | ${`Field "end" of required type "DateTime!" was not provided.`}
+      field         | error
+      ${'memberId'} | ${`Field "memberId" of required type "String!" was not provided.`}
+      ${'userId'}   | ${`Field "userId" of required type "String!" was not provided.`}
+      ${'method'}   | ${`Field "method" of required type "AppointmentMethod!" was not provided.`}
+      ${'start'}    | ${`Field "start" of required type "DateTime!" was not provided.`}
+      ${'end'}      | ${`Field "end" of required type "DateTime!" was not provided.`}
     `(
       `graphql: should fail to create an appointment since mandatory field $field is missing`,
       async (params) => {
@@ -99,7 +98,7 @@ describe('Validations - appointment', () => {
       },
     );
 
-    test.each(['memberId', 'userId', 'notBefore', 'method', 'start', 'end'])(
+    test.each(['memberId', 'userId', 'method', 'start', 'end'])(
       'rest: should fail to create an appointment since mandatory field %p is missing',
       async (param) => {
         const appointmentParams = generateScheduleAppointmentParams();
@@ -111,13 +110,12 @@ describe('Validations - appointment', () => {
 
     /* eslint-disable max-len */
     test.each`
-      field          | input                         | error
-      ${'memberId'}  | ${{ memberId: 123 }}          | ${{ missingFieldError: stringError }}
-      ${'userId'}    | ${{ userId: 123 }}            | ${{ missingFieldError: stringError }}
-      ${'notBefore'} | ${{ notBefore: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentNotBeforeDate)] }}
-      ${'method'}    | ${{ method: 'not-valid' }}    | ${{ missingFieldError: 'Enum "AppointmentMethod" cannot represent non-string value' }}
-      ${'start'}     | ${{ start: 'not-valid' }}     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentStartDate)] }}
-      ${'end'}       | ${{ end: 'not-valid' }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentEndDate)] }}
+      field         | input                      | error
+      ${'memberId'} | ${{ memberId: 123 }}       | ${{ missingFieldError: stringError }}
+      ${'userId'}   | ${{ userId: 123 }}         | ${{ missingFieldError: stringError }}
+      ${'method'}   | ${{ method: 'not-valid' }} | ${{ missingFieldError: 'Enum "AppointmentMethod" cannot represent non-string value' }}
+      ${'start'}    | ${{ start: 'not-valid' }}  | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentStartDate)] }}
+      ${'end'}      | ${{ end: 'not-valid' }}    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentEndDate)] }}
     `(
       /* eslint-enable max-len */
       `graphql: should fail to schedule an appointment since $field is not a valid type`,
@@ -133,12 +131,11 @@ describe('Validations - appointment', () => {
     );
 
     test.each`
-      field          | input
-      ${'memberId'}  | ${{ memberId: 123 }}
-      ${'userId'}    | ${{ userId: 123 }}
-      ${'notBefore'} | ${{ notBefore: 'not-valid' }}
-      ${'start'}     | ${{ start: 'not-valid' }}
-      ${'end'}       | ${{ end: 'not-valid' }}
+      field         | input
+      ${'memberId'} | ${{ memberId: 123 }}
+      ${'userId'}   | ${{ userId: 123 }}
+      ${'start'}    | ${{ start: 'not-valid' }}
+      ${'end'}      | ${{ end: 'not-valid' }}
     `(
       /* eslint-enable max-len */
       `rest: should fail to schedule an appointment since $field is not a valid type`,

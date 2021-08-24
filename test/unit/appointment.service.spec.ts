@@ -254,7 +254,6 @@ describe('AppointmentService', () => {
         expect.objectContaining({
           id: appointment.id,
           method: appointmentParams.method,
-          notBefore: appointmentParams.notBefore,
           status: AppointmentStatus.scheduled,
           link: generateAppointmentLink(appointment.id),
           updatedAt: expect.any(Date),

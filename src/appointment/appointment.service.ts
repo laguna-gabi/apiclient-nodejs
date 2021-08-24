@@ -68,7 +68,6 @@ export class AppointmentService extends BaseService {
         $set: {
           userId: params.userId,
           memberId: new Types.ObjectId(params.memberId),
-          notBefore: params.notBefore,
           method: params.method,
           start: params.start,
           end: params.end,

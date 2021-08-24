@@ -42,7 +42,6 @@ export class AppointmentsIntegrationActions {
 
     expect(appointmentResult.memberId).toEqual(scheduleAppointment.memberId);
     expect(appointmentResult.userId).toEqual(scheduleAppointment.userId);
-    expect(new Date(appointmentResult.notBefore)).toEqual(scheduleAppointment.notBefore);
     expect(new Date(appointmentResult.start)).toEqual(scheduleAppointment.start);
     expect(new Date(appointmentResult.end)).toEqual(scheduleAppointment.end);
     expect(appointmentResult.link).toEqual(generateAppointmentLink(appointmentResult.id));

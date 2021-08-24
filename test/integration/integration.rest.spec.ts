@@ -118,7 +118,6 @@ describe('Integration tests: rest', () => {
       );
 
       expect(new Date(body.end)).toEqual(appointmentsParams.end);
-      expect(new Date(body.notBefore)).toEqual(appointmentsParams.notBefore);
       expect(new Date(body.start)).toEqual(appointmentsParams.start);
     });
   });
