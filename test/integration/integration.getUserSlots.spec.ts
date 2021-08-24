@@ -108,7 +108,7 @@ describe('Integration tests : getUserSlots', () => {
     );
 
     const result = await handler.queries.getUserSlots({
-      appointmentId: appointment.id,
+      userId: primaryUser.id,
       notBefore: add(startOfToday(), { hours: 10 }),
     });
 
@@ -149,7 +149,7 @@ describe('Integration tests : getUserSlots', () => {
       ],
     });
 
-    const appointment = await appointmentsActions.scheduleAppointmentWithDate(
+    await appointmentsActions.scheduleAppointmentWithDate(
       primaryUser.id,
       member,
       add(startOfToday(), { hours: 9 }),
@@ -172,7 +172,7 @@ describe('Integration tests : getUserSlots', () => {
     await appointmentsActions.endAppointment(scheduleAppointmentResult.id);
 
     const result = await handler.queries.getUserSlots({
-      appointmentId: appointment.id,
+      userId: primaryUser.id,
       notBefore: add(startOfToday(), { hours: 10 }),
     });
 
@@ -221,7 +221,7 @@ describe('Integration tests : getUserSlots', () => {
       ],
     });
 
-    const appointment = await appointmentsActions.scheduleAppointmentWithDate(
+    await appointmentsActions.scheduleAppointmentWithDate(
       primaryUser.id,
       member,
       add(startOfToday(), { hours: 8 }),
@@ -229,7 +229,7 @@ describe('Integration tests : getUserSlots', () => {
     );
 
     const result = await handler.queries.getUserSlots({
-      appointmentId: appointment.id,
+      userId: primaryUser.id,
       notBefore: add(startOfToday(), { hours: 12 }),
     });
 
@@ -239,7 +239,7 @@ describe('Integration tests : getUserSlots', () => {
   it('should return no slots if there is no availability', async () => {
     const { primaryUser, member } = await createUserMember();
 
-    const appointment = await appointmentsActions.scheduleAppointmentWithDate(
+    await appointmentsActions.scheduleAppointmentWithDate(
       primaryUser.id,
       member,
       add(startOfToday(), { hours: 9 }),
@@ -247,7 +247,7 @@ describe('Integration tests : getUserSlots', () => {
     );
 
     const result = await handler.queries.getUserSlots({
-      appointmentId: appointment.id,
+      userId: primaryUser.id,
       notBefore: add(startOfToday(), { hours: 10 }),
     });
 
@@ -272,7 +272,7 @@ describe('Integration tests : getUserSlots', () => {
       ],
     });
 
-    const appointment = await appointmentsActions.scheduleAppointmentWithDate(
+    await appointmentsActions.scheduleAppointmentWithDate(
       primaryUser.id,
       member,
       add(startOfToday(), { hours: 9 }),
@@ -280,7 +280,7 @@ describe('Integration tests : getUserSlots', () => {
     );
 
     const result = await handler.queries.getUserSlots({
-      appointmentId: appointment.id,
+      userId: primaryUser.id,
       notBefore: add(startOfToday(), { hours: 10 }),
     });
 
@@ -314,7 +314,7 @@ describe('Integration tests : getUserSlots', () => {
       ],
     });
 
-    const appointment = await appointmentsActions.scheduleAppointmentWithDate(
+    await appointmentsActions.scheduleAppointmentWithDate(
       primaryUser.id,
       member,
       add(startOfToday(), { hours: 9 }),
@@ -322,7 +322,7 @@ describe('Integration tests : getUserSlots', () => {
     );
 
     const result = await handler.queries.getUserSlots({
-      appointmentId: appointment.id,
+      userId: primaryUser.id,
       notBefore: add(startOfToday(), { hours: 10 }),
     });
 

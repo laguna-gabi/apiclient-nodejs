@@ -75,6 +75,24 @@ export function IsPrimaryUserInUsers(options: ValidationOptions) {
   };
 }
 
+export function IsUserIdOrAppointmentId(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(userId: string, args: ValidationArguments) {
+          return (
+            (args.object['userId'] && !args.object['appointmentId']) ||
+            (!args.object['userId'] && args.object['appointmentId'])
+          );
+        },
+      },
+    });
+  };
+}
+
 export function IsStringDate(options: ValidationOptions) {
   return (object, propertyName: string) => {
     registerDecorator({

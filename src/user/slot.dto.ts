@@ -1,7 +1,7 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { AppointmentMethod } from '../appointment';
 import { UserRole } from '.';
-import { Identifier } from '../common';
+import { Errors, ErrorType, Identifier, IsUserIdOrAppointmentId } from '../common';
 import { IsDate, IsOptional } from 'class-validator';
 
 export const defaultSlotsParams = {
@@ -9,7 +9,7 @@ export const defaultSlotsParams = {
   maxSlots: 9,
 };
 
-export const NotNullableSlotsKeys = ['notBefore'];
+export const NotNullableSlotsKeys = ['notBefore', 'userId', 'appointmentId'];
 
 @ObjectType()
 export class UserSlotSummary extends Identifier {
@@ -51,11 +51,11 @@ export class Slots {
   @Field(() => UserSlotSummary)
   user: UserSlotSummary;
 
-  @Field(() => AppointmentSlotSummary)
-  appointment: AppointmentSlotSummary;
+  @Field(() => AppointmentSlotSummary, { nullable: true })
+  appointment?: AppointmentSlotSummary;
 
-  @Field(() => MemberSlotSummary)
-  member: MemberSlotSummary;
+  @Field(() => MemberSlotSummary, { nullable: true })
+  member?: MemberSlotSummary;
 
   @Field(() => [Date], { nullable: 'items' })
   slots: Date[];
@@ -63,8 +63,12 @@ export class Slots {
 
 @InputType()
 export class GetSlotsParams {
-  @Field(() => String)
-  appointmentId: string;
+  @Field(() => String, { nullable: true })
+  @IsUserIdOrAppointmentId({ message: Errors.get(ErrorType.slotsParams) })
+  userId?: string;
+
+  @Field(() => String, { nullable: true })
+  appointmentId?: string;
 
   @IsOptional()
   @IsDate()

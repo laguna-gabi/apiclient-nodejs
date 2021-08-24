@@ -108,9 +108,10 @@ describe('UserResolver', () => {
       expect(result).toEqual(getSlotsParams);
     });
 
-    it('should get free slots of a user given an appointmentId', async () => {
+    it('should get free slots of a user given an Id', async () => {
       const getSlotsParams: GetSlotsParams = generateGetSlotsParams();
       delete getSlotsParams.notBefore;
+      delete getSlotsParams.userId;
 
       spyOnServiceGetSlots.mockImplementationOnce(async () => getSlotsParams);
 

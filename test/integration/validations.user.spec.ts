@@ -5,7 +5,7 @@ import * as faker from 'faker';
 import { Errors, ErrorType } from '../../src/common';
 import { Handler } from './aux/handler';
 import { GetSlotsParams } from '../../src/user/slot.dto';
-import { generateGetSlotsParams } from '../generators';
+import { generateGetSlotsParams, generateId } from '../generators';
 import * as request from 'supertest';
 
 const validatorsConfig = config.get('graphql.validators');
@@ -104,10 +104,14 @@ describe('Validations - user', () => {
     expect(user[params.field]).toEqual(params.defaultValue);
   });
 
+  /* eslint-disable max-len */
   test.each`
-    field              | input                     | errors
-    ${'appointmentId'} | ${{ appointmentId: 123 }} | ${stringError}
-    ${'notBefore'}     | ${{ notBefore: 'asd' }}   | ${'must be a Date instance'}
+    field              | input                                                    | errors
+    ${'appointmentId'} | ${{ appointmentId: 123 }}                                | ${stringError}
+    ${'userId'}        | ${{ userId: 123 }}                                       | ${stringError}
+    ${'notBefore'}     | ${{ notBefore: 'asd', userId: generateId() }}            | ${'must be a Date instance'}
+    ${'both ID'}       | ${{ appointmentId: generateId(), userId: generateId() }} | ${Errors.get(ErrorType.slotsParams)}
+    ${'no ID'}         | ${{}}                                                    | ${Errors.get(ErrorType.slotsParams)}
   `(`should fail to request slots since $field is not valid`, async (params) => {
     const getSlotsParams: GetSlotsParams = generateGetSlotsParams(params.input);
 

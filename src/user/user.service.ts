@@ -52,33 +52,44 @@ export class UserService extends BaseService {
 
   async getSlots(getSlotsParams: GetSlotsParams): Promise<Slots> {
     this.removeNotNullable(getSlotsParams, NotNullableSlotsKeys);
+    const { appointmentId, userId } = getSlotsParams;
     const [slotsObject] = await this.userModel.aggregate([
-      {
-        $unwind: {
-          path: '$appointments',
-        },
-      },
-      {
-        $match: {
-          appointments: new Types.ObjectId(getSlotsParams.appointmentId),
-        },
-      },
-      {
-        $lookup: {
-          from: 'appointments',
-          localField: 'appointments',
-          foreignField: '_id',
-          as: 'userAp',
-        },
-      },
-      {
-        $lookup: {
-          from: 'members',
-          localField: 'userAp.memberId',
-          foreignField: '_id',
-          as: 'me',
-        },
-      },
+      ...(userId
+        ? [
+            {
+              $match: {
+                _id: userId,
+              },
+            },
+          ]
+        : [
+            {
+              $unwind: {
+                path: '$appointments',
+              },
+            },
+            {
+              $match: {
+                appointments: new Types.ObjectId(appointmentId),
+              },
+            },
+            {
+              $lookup: {
+                from: 'appointments',
+                localField: 'appointments',
+                foreignField: '_id',
+                as: 'userAp',
+              },
+            },
+            {
+              $lookup: {
+                from: 'members',
+                localField: 'userAp.memberId',
+                foreignField: '_id',
+                as: 'me',
+              },
+            },
+          ]),
       {
         $lookup: {
           from: 'appointments',
@@ -121,6 +132,10 @@ export class UserService extends BaseService {
       },
     ]);
 
+    if (!slotsObject) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+
     const slots = this.slotService.getSlots(
       slotsObject.av,
       slotsObject.ap,
@@ -132,6 +147,9 @@ export class UserService extends BaseService {
     slotsObject.slots = slots;
     delete slotsObject.ap;
     delete slotsObject.av;
+    if (!slotsObject) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
 
     return slotsObject;
   }

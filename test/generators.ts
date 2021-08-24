@@ -98,13 +98,16 @@ export const generateCreateRawUserParams = (params = undefined) => {
 };
 
 export const generateGetSlotsParams = ({
-  appointmentId = generateId(),
+  userId = null,
+  appointmentId = null,
   notBefore = null,
 }: {
+  userId?: string;
   appointmentId?: string;
   notBefore?: Date;
 } = {}): GetSlotsParams => {
   return {
+    userId,
     appointmentId,
     notBefore,
   };
