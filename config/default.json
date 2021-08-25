@@ -19,5 +19,8 @@
     "aws": {
       "region": "us-east-1"
     }
+  },
+  "slack": {
+    "channel": "development-notifications"
   }
 }
