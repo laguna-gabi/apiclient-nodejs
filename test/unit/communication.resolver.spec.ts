@@ -98,20 +98,27 @@ describe('CommunicationResolver', () => {
         userId: v4(),
         memberId: generateId(),
         sendbirdChannelUrl: faker.datatype.uuid(),
+        userToken: faker.datatype.uuid(),
+        memberToken: faker.datatype.uuid(),
       };
       spyOnServiceGet.mockImplementationOnce(() => payload);
 
       const params = generateGetCommunicationParams();
       const result = await resolver.getCommunication(params);
 
-      const link = (id) => {
-        return `${config.get('hosts.chat')}/?uid=${id}&mid=${payload.sendbirdChannelUrl}`;
+      const link = (id, token) => {
+        return `${config.get('hosts.chat')}/?uid=${id}&mid=${
+          payload.sendbirdChannelUrl
+        }&token=${token}`;
       };
 
       expect(result).toEqual({
         userId: payload.userId,
         memberId: payload.memberId,
-        chat: { memberLink: link(payload.memberId), userLink: link(payload.userId) },
+        chat: {
+          memberLink: link(payload.memberId, payload.memberToken),
+          userLink: link(payload.userId, payload.userToken),
+        },
       });
 
       expect(spyOnServiceGet).toBeCalledWith(params);

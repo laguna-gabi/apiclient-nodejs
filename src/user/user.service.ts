@@ -16,6 +16,8 @@ import { BaseService, DbErrors, Errors, ErrorType, EventType } from '../common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Member } from '../member';
 import { cloneDeep } from 'lodash';
+import { UserConfig, UserConfigDocument } from './userConfig.dto';
+
 @Injectable()
 export class UserService extends BaseService {
   constructor(
@@ -23,6 +25,8 @@ export class UserService extends BaseService {
     private readonly userModel: Model<UserDocument>,
     private eventEmitter: EventEmitter2,
     private slotService: SlotService,
+    @InjectModel(UserConfig.name)
+    private readonly userConfigModel: Model<UserConfigDocument>,
   ) {
     super();
   }
@@ -39,6 +43,10 @@ export class UserService extends BaseService {
       delete newObject.id;
 
       const object = (await this.userModel.create({ ...newObject, _id })).toObject();
+
+      await this.userConfigModel.create({
+        userId: object._id,
+      });
 
       object.id = object._id;
       delete object._id;
@@ -147,11 +155,33 @@ export class UserService extends BaseService {
     slotsObject.slots = slots;
     delete slotsObject.ap;
     delete slotsObject.av;
-    if (!slotsObject) {
-      throw new Error(Errors.get(ErrorType.userNotFound));
+    if (userId) {
+      delete slotsObject.member;
+      delete slotsObject.appointment;
     }
 
     return slotsObject;
+  }
+
+  async getUserConfig(userId: string): Promise<UserConfig> {
+    const object = await this.userConfigModel.findOne({ userId });
+    if (!object) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+    return object;
+  }
+
+  @OnEvent(EventType.updateUserConfig, { async: true })
+  async handleupdateUserConfig({
+    userId,
+    accessToken,
+  }: {
+    userId: string;
+    accessToken: string;
+  }): Promise<boolean> {
+    const result = await this.userConfigModel.updateOne({ userId }, { $set: { accessToken } });
+
+    return result.ok === 1;
   }
 
   @OnEvent(EventType.newAppointment, { async: true })

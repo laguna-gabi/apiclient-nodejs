@@ -240,6 +240,7 @@ export const mockGenerateMemberConfig = (): MemberConfig => {
     memberId: generateObjectId(),
     externalUserId: v4(),
     mobilePlatform: MobilePlatform.ios,
+    accessToken: generateId(),
   };
 };
 

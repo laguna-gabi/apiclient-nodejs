@@ -25,7 +25,7 @@ export class SendBird implements OnModuleInit {
 
   private readonly httpService: HttpService = new HttpService();
 
-  async createUser(params: RegisterSendbirdUserParams): Promise<boolean> {
+  async createUser(params: RegisterSendbirdUserParams): Promise<string | void> {
     const failure = `Sendbird: Failed to create a user`;
     try {
       const result = await this.httpService
@@ -36,7 +36,7 @@ export class SendBird implements OnModuleInit {
 
       if (result.status === 200) {
         console.log(`Sendbird: Successfully created a user ${params.user_id}`);
-        return true;
+        return result.data.access_token;
       } else {
         console.error(`${failure} ${result.status} ${this.formatMessage(result.data)}`);
       }
@@ -45,8 +45,6 @@ export class SendBird implements OnModuleInit {
         `${failure} ${this.formatMessage(ex.config)} ${this.formatMessage(ex.response.data)}`,
       );
     }
-
-    return false;
   }
 
   async createGroupChannel(params: CreateSendbirdGroupChannelParams): Promise<boolean> {

@@ -9,6 +9,7 @@ export interface RegisterSendbirdUserParams {
   user_id: string;
   nickname: string;
   profile_url: string;
+  issue_access_token: boolean;
   metadata: any;
 }
 

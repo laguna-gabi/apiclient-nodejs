@@ -108,4 +108,14 @@ describe('UserService', () => {
       );
     });
   });
+
+  describe('userConfig', () => {
+    it('should create userConfig on userCreate', async () => {
+      const user = generateCreateUserParams();
+      const craetedUser = await service.insert(user);
+      const CreatedConfigUser = await service.getUserConfig(craetedUser.id);
+
+      expect(craetedUser.id).toEqual(CreatedConfigUser.userId);
+    });
+  });
 });

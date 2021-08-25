@@ -548,6 +548,25 @@ describe('Integration tests: all', () => {
     },
   );
 
+  it('should get communication with the same user and member id that were given', async () => {
+    const primaryUser = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+
+    const result = await handler.queries.getCommunication({
+      getCommunicationParams: { memberId: member.id, userId: primaryUser.id },
+    });
+    console.log(result);
+
+    expect(result.memberId).toEqual(member.id);
+    expect(result.userId).toEqual(primaryUser.id);
+    expect(result).toHaveProperty('chat');
+  });
+
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

@@ -121,4 +121,26 @@ describe('UserResolver', () => {
       expect(result).toEqual(getSlotsParams);
     });
   });
+
+  describe('getUserConfig', () => {
+    let spyOnServiceGetUserConfig;
+    beforeEach(() => {
+      spyOnServiceGetUserConfig = jest.spyOn(service, 'getUserConfig');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetUserConfig.mockReset();
+    });
+
+    it('should fetch userConfig', async () => {
+      const userId = v4();
+
+      spyOnServiceGetUserConfig.mockImplementationOnce(async () => userId);
+
+      const result = await resolver.getUserConfig(userId);
+
+      expect(spyOnServiceGetUserConfig).toBeCalledWith(userId);
+      expect(result).toEqual(userId);
+    });
+  });
 });
