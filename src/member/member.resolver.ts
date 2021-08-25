@@ -14,7 +14,6 @@ import {
   UpdateTaskStatusParams,
 } from '.';
 import {
-  CallParams,
   Errors,
   ErrorType,
   EventType,
