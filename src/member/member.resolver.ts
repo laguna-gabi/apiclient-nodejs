@@ -99,22 +99,14 @@ export class MemberResolver {
 
   @Query(() => DischargeDocumentsLinks)
   async getMemberDischargeDocumentsLinks(@Args('id', { type: () => String }) id: string) {
-    console.log('1 getMemberDischargeDocumentsLinks');
     const member = await this.memberService.get(id);
-    console.log('2 getMemberDischargeDocumentsLinks');
 
     const { firstName, lastName } = member;
-    console.log(`3 getMemberDischargeDocumentsLinks firstName=${firstName} lastName=${lastName}`);
 
     const [dischargeNotesLink, dischargeInstructionsLink] = await Promise.all([
       await this.storageService.getUrl(`${firstName}_${lastName}_Summary.pdf`),
       await this.storageService.getUrl(`${firstName}_${lastName}_Instructions.pdf`),
     ]);
-
-    console.log(
-      `4 getMemberDischargeDocumentsLinks dischargeNotesLink=${dischargeNotesLink}` +
-        `dischargeInstructionsLink=${dischargeInstructionsLink}`,
-    );
 
     return { dischargeNotesLink, dischargeInstructionsLink };
   }
