@@ -155,8 +155,9 @@ export class UserService extends BaseService {
     slotsObject.slots = slots;
     delete slotsObject.ap;
     delete slotsObject.av;
-    if (!slotsObject) {
-      throw new Error(Errors.get(ErrorType.userNotFound));
+    if (userId) {
+      delete slotsObject.member;
+      delete slotsObject.appointment;
     }
 
     return slotsObject;
