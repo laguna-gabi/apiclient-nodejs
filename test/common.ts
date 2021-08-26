@@ -2,7 +2,7 @@ import { User } from '../src/user';
 import { connect, disconnect } from 'mongoose';
 import * as config from 'config';
 import { TestingModule } from '@nestjs/testing';
-import { NotificationsService, SendBird, StorageService } from '../src/providers';
+import { NotificationsService, SendBird, StorageService, TwilioService } from '../src/providers';
 import { apiPrefix } from '../src/common';
 import { v4 } from 'uuid';
 
@@ -34,23 +34,29 @@ export const delay = async (milliseconds: number) => {
   await new Promise((resolve) => setTimeout(resolve, milliseconds));
 };
 
-export const mockProviders = (module: TestingModule): { sendBird; notificationsService } => {
+export const mockProviders = (
+  module: TestingModule,
+): { sendBird; notificationsService; twilioService } => {
   const sendBird = module.get<SendBird>(SendBird);
   const storage = module.get<StorageService>(StorageService);
   const notificationsService = module.get<NotificationsService>(NotificationsService);
+  const twilioService = module.get<TwilioService>(TwilioService);
 
   const spyOnSendBirdCreateUser = jest.spyOn(sendBird, 'createUser');
   const spyOnSendBirdCreateGroupChannel = jest.spyOn(sendBird, 'createGroupChannel');
   const spyOnStorage = jest.spyOn(storage, 'getUrl');
   const spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
+  const spyOnTwilioGetToken = jest.spyOn(twilioService, 'getAccessToken');
 
   spyOnSendBirdCreateUser.mockResolvedValue(v4());
   spyOnSendBirdCreateGroupChannel.mockResolvedValue(true);
   spyOnStorage.mockResolvedValue('https://some-url');
   spyOnNotificationsServiceRegister.mockResolvedValue(undefined);
+  spyOnTwilioGetToken.mockReturnValue('token');
 
   return {
     sendBird: { spyOnSendBirdCreateUser, spyOnSendBirdCreateGroupChannel },
     notificationsService: { spyOnNotificationsServiceRegister },
+    twilioService: { spyOnTwilioGetToken },
   };
 };

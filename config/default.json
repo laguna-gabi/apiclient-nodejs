@@ -20,6 +20,10 @@
       "region": "us-east-1"
     }
   },
+  "twilio": {
+    "source": "+18337090314",
+    "identity": "the_user_id"
+  },
   "slack": {
     "support": "#supports",
     "testingSms": "#testing-sms",

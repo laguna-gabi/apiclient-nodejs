@@ -18,6 +18,7 @@ export class Handler {
   module: GraphQLModule;
   sendBird;
   notificationsService;
+  twilioService;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -35,6 +36,7 @@ export class Handler {
     const providers = mockProviders(moduleFixture);
     this.sendBird = providers.sendBird;
     this.notificationsService = providers.notificationsService;
+    this.twilioService = providers.twilioService;
 
     const apolloServer = createTestClient((this.module as any).apolloServer);
     this.mutations = new Mutations(apolloServer);
@@ -47,6 +49,7 @@ export class Handler {
     this.sendBird.spyOnSendBirdCreateUser.mockReset();
     this.sendBird.spyOnSendBirdCreateGroupChannel.mockReset();
     this.notificationsService.spyOnNotificationsServiceRegister.mockReset();
+    this.twilioService.spyOnTwilioGetToken.mockReset();
   }
 
   setContextUser = (deviceId: string) => {

@@ -134,4 +134,23 @@ describe('CommunicationResolver', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('twilio', () => {
+    let spyOnServiceGetTwilioToken;
+    beforeEach(() => {
+      spyOnServiceGetTwilioToken = jest.spyOn(service, 'getTwilioAccessToken');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetTwilioToken.mockReset();
+    });
+
+    it('should return twilio token', () => {
+      const token = v4();
+      spyOnServiceGetTwilioToken.mockImplementationOnce(() => token);
+
+      const result = resolver.getTwilioAccessToken();
+      expect(result).toEqual(token);
+    });
+  });
 });

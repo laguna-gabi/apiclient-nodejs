@@ -39,6 +39,11 @@ export class CommunicationResolver {
     }
   }
 
+  @Query(() => String)
+  getTwilioAccessToken() {
+    return this.communicationService.getTwilioAccessToken();
+  }
+
   @OnEvent(EventType.newUser, { async: true })
   async handleNewUser({ user }: { user: User }) {
     await this.communicationService.createUser(user);

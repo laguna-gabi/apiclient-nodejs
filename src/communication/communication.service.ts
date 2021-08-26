@@ -11,7 +11,7 @@ import {
 import { User, UserRole } from '../user';
 import { Member } from '../member';
 import { v4 } from 'uuid';
-import { SendBird } from '../providers';
+import { SendBird, TwilioService } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventType } from '../common';
 
@@ -22,6 +22,7 @@ export class CommunicationService {
     private readonly communicationModel: Model<CommunicationDocument>,
     private readonly sendBird: SendBird,
     private eventEmitter: EventEmitter2,
+    private readonly twilio: TwilioService,
   ) {}
 
   /**
@@ -119,5 +120,9 @@ export class CommunicationService {
       },
     ]);
     return result[0];
+  }
+
+  getTwilioAccessToken() {
+    return this.twilio.getAccessToken();
   }
 }

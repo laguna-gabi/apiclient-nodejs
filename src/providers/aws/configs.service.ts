@@ -13,6 +13,11 @@ export enum ExternalConfigs {
   oneSignalDefaultApiKey = 'onesignal.default.apiKey',
   oneSignalVoipApiId = 'onesignal.voip.apiId',
   oneSignalVoipApiKey = 'onesignal.voip.apiKey',
+  twilioAccountSid = 'twilio.accountSid',
+  twilioAppSid = 'twilio.appSid',
+  twilioAuthToken = 'twilio.authToken',
+  twilioApiKey = 'twilio.apiKey',
+  twilioApiSecret = 'twilio.apiSecret',
 }
 
 enum environments {

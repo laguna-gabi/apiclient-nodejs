@@ -565,7 +565,7 @@ describe('Integration tests: all', () => {
     expect(result.userId).toEqual(primaryUser.id);
     expect(result).toHaveProperty('chat');
   });
-
+  
   it('should get all users and a newly created user should be in the list', async () => {
     const newUser = await creators.createAndValidateUser();
 
@@ -575,6 +575,12 @@ describe('Integration tests: all', () => {
         return newUser.id == user.id;
       }),
     ).toEqual(true);
+  });
+
+  it('should get twilio token', async () => {
+    const result = await handler.queries.getTwilioAccessToken();
+
+    expect(result).toEqual('token');
   });
 
   /************************************************************************************************

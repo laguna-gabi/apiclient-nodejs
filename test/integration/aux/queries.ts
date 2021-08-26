@@ -378,6 +378,18 @@ export class Queries {
     return result.data.getCommunication;
   };
 
+  getTwilioAccessToken = async () => {
+    const result = await this.apolloClient.query({
+      query: gql`
+        query getTwilioAccessToken {
+          getTwilioAccessToken
+        }
+      `,
+    });
+
+    return result.data.getTwilioAccessToken;
+  };
+
   getMemberConfig = async ({
     id,
     invalidFieldsError,
