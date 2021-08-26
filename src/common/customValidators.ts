@@ -52,7 +52,7 @@ export function IsNoShowValid(options?: ValidationOptions) {
       validator: {
         validate(reason, args: ValidationArguments) {
           const noShow = args.object['noShow'];
-          return (!noShow && !reason) || (reason && noShow);
+          return noShow ? true : !reason;
         },
       },
     });
