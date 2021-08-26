@@ -21,6 +21,8 @@
     }
   },
   "slack": {
-    "channel": "development-notifications"
+    "support": "#supports",
+    "testingSms": "#testing-sms",
+    "notifications": "#development-notifications"
   }
 }

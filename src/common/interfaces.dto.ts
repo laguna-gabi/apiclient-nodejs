@@ -14,6 +14,12 @@ export enum Language {
 
 registerEnumType(Language, { name: 'Language' });
 
+export enum slackChannel {
+  support = 'slack.support',
+  testingSms = 'slack.testingSms',
+  notifications = 'slack.notifications',
+}
+
 export enum SlackIcon {
   exclamationPoint = ':exclamation:',
   questionMark = ':question:',

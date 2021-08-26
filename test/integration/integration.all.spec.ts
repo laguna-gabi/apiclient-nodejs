@@ -560,7 +560,6 @@ describe('Integration tests: all', () => {
     const result = await handler.queries.getCommunication({
       getCommunicationParams: { memberId: member.id, userId: primaryUser.id },
     });
-    console.log(result);
 
     expect(result.memberId).toEqual(member.id);
     expect(result.userId).toEqual(primaryUser.id);

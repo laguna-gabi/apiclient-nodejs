@@ -4,6 +4,6 @@
     "app": "https://www.app.getlaguna.com"
   },
   "slack": {
-    "channel": "production-notifications"
+    "notifications": "#production-notifications"
   }
 }
