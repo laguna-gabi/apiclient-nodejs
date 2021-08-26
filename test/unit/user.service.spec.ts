@@ -44,6 +44,16 @@ describe('UserService', () => {
       expect(result).toBeNull();
     });
 
+    it('should get the two or more users users created', async () => {
+      const user1 = generateCreateUserParams();
+      await service.insert(user1);
+      const user2 = generateCreateUserParams();
+      await service.insert(user2);
+
+      const result = await service.getUsers();
+      expect(result.length).toBeGreaterThanOrEqual(2);
+    });
+
     test.each([
       [Object.values(UserRole)],
       [[UserRole.coach, UserRole.nurse]],

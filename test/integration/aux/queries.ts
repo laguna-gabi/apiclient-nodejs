@@ -41,6 +41,39 @@ export class Queries {
     return resultGetUser.data.getUser;
   };
 
+  getUsers = async () => {
+    const resultGetUsers = await this.apolloClient.query({
+      query: gql`
+        query getUsers {
+          getUsers {
+            id
+            firstName
+            lastName
+            email
+            roles
+            avatar
+            description
+            createdAt
+            phone
+            title
+            maxCustomers
+            languages
+            appointments {
+              id
+              notBefore
+              method
+              status
+              start
+              end
+            }
+          }
+        }
+      `,
+    });
+
+    return resultGetUsers.data.getUsers;
+  };
+
   getUserSlots = async (getSlotsParams: GetSlotsParams, invalidFieldsError?: string) => {
     const resultGetUserSlots = await this.apolloClient.query({
       variables: { getSlotsParams },

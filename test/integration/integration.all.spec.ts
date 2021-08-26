@@ -566,6 +566,17 @@ describe('Integration tests: all', () => {
     expect(result).toHaveProperty('chat');
   });
 
+  it('should get all users and a newly created user should be in the list', async () => {
+    const newUser = await creators.createAndValidateUser();
+
+    const result = await handler.queries.getUsers();
+    expect(
+      result.some((user) => {
+        return newUser.id == user.id;
+      }),
+    ).toEqual(true);
+  });
+
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

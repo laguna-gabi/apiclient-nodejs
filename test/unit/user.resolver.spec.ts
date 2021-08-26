@@ -87,6 +87,27 @@ describe('UserResolver', () => {
     });
   });
 
+  describe('getUsers', () => {
+    let spyOnServiceGetUsers;
+    beforeEach(() => {
+      spyOnServiceGetUsers = jest.spyOn(service, 'getUsers');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetUsers.mockReset();
+    });
+
+    it('should get users', async () => {
+      const user1 = mockGenerateUser();
+      const user2 = mockGenerateUser();
+      spyOnServiceGetUsers.mockImplementationOnce(async () => [user1, user2]);
+
+      const result = await resolver.getUsers();
+
+      expect(result).toEqual([user1, user2]);
+    });
+  });
+
   describe('getUserSlots', () => {
     let spyOnServiceGetSlots;
     beforeEach(() => {

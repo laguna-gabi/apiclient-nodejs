@@ -35,6 +35,10 @@ export class UserService extends BaseService {
     return this.userModel.findById(id).populate('appointments');
   }
 
+  async getUsers(): Promise<User[]> {
+    return this.userModel.find().populate('appointments');
+  }
+
   async insert(createUserParams: CreateUserParams): Promise<User> {
     try {
       this.removeNotNullable(createUserParams, NotNullableUserKeys);

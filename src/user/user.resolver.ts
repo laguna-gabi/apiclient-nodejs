@@ -26,6 +26,11 @@ export class UserResolver {
     return this.userService.get(id);
   }
 
+  @Query(() => [User])
+  async getUsers() {
+    return this.userService.getUsers();
+  }
+
   @Query(() => Slots)
   async getUserSlots(@Args(camelCase(GetSlotsParams.name)) getSlotsParams: GetSlotsParams) {
     return this.userService.getSlots(getSlotsParams);

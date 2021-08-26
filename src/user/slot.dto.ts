@@ -57,7 +57,7 @@ export class Slots {
   @Field(() => MemberSlotSummary, { nullable: true })
   member?: MemberSlotSummary;
 
-  @Field(() => [Date], { nullable: 'items' })
+  @Field(() => [Date])
   slots: Date[];
 }
 
