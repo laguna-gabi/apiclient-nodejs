@@ -122,41 +122,19 @@ describe('AppointmentService', () => {
       );
     });
 
-    it('should update an appointment notBefore for an existing memberId and userId', async () => {
+    /* eslint-disable max-len */
+    it('should create a new appointment on existing requested appointment for memberId and userId', async () => {
+      /* eslint-enable max-len */
       const memberId = generateId();
       const userId = v4();
 
-      const { id: id1, record: record1 } = await requestAppointment({
-        memberId,
-        userId,
-        notBeforeHours: 12,
-      });
+      const { id: id1 } = await requestAppointment({ memberId, userId, notBeforeHours: 12 });
       validateNewAppointmentEvent(userId, id1);
 
-      const {
-        notBefore,
-        id: id2,
-        record: record2,
-      } = await requestAppointment({
-        memberId,
-        userId,
-        notBeforeHours: 8,
-      });
-      expect(spyOnEventEmitter).not.toBeCalled();
+      const { id: id2 } = await requestAppointment({ memberId, userId, notBeforeHours: 8 });
+      validateNewAppointmentEvent(userId, id2);
 
-      expect(id1).toEqual(id2);
-
-      expect(record2).toEqual(
-        expect.objectContaining({
-          id: record1.id,
-          userId,
-          memberId: generateObjectId(memberId),
-          notBefore,
-          status: AppointmentStatus.requested,
-          link: generateAppointmentLink(record1.id),
-          updatedAt: expect.any(Date),
-        }),
-      );
+      expect(id1).not.toEqual(id2);
     });
 
     it('should crate a new appointment for an existing memberId and different userId', async () => {
