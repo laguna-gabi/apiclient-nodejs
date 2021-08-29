@@ -22,6 +22,7 @@ import {
 import {
   CreateMemberParams,
   defaultMemberParams,
+  Honorific,
   Member,
   MemberDto,
   MemberModule,
@@ -496,6 +497,7 @@ describe('MemberService', () => {
       expect(createdMember.language).toEqual(defaultMemberParams.language);
       expect(createdMember.zipCode).toBeUndefined();
       expect(createdMember.dischargeDate).toBeUndefined();
+      expect(createdMember.honorific).toEqual(defaultMemberParams.honorific);
     });
 
     it('should insert a member with all params + validate all insert fields', async () => {
@@ -510,6 +512,7 @@ describe('MemberService', () => {
         language: Language.es,
         zipCode: generateZipCode(),
         dischargeDate: generateDateOnly(date.future(1)),
+        honorific: Honorific.Dr,
       });
       const { id } = await service.insert(createMemberParams);
 
@@ -527,6 +530,7 @@ describe('MemberService', () => {
       expect(createdMember.language).toEqual(createMemberParams.language);
       expect(createdMember.zipCode).toEqual(createMemberParams.zipCode);
       expect(createdMember.dischargeDate).toEqual(createMemberParams.dischargeDate);
+      expect(createdMember.honorific).toEqual(createMemberParams.honorific);
     });
 
     const compareMembers = ({ createdMember, createMemberParams, primaryUserId, orgId }) => {

@@ -30,9 +30,22 @@ export enum Sex {
 
 registerEnumType(Sex, { name: 'Sex' });
 
+export enum Honorific {
+  Mr = 'Mr',
+  Mrs = 'Mrs',
+  Ms = 'Ms',
+  Miss = 'Miss',
+  Mx = 'Mx',
+  Dr = 'Dr',
+  Reverend = 'Reverend',
+}
+
+registerEnumType(Honorific, { name: 'Honorific' });
+
 export const defaultMemberParams = {
   sex: Sex.male,
   language: Language.en,
+  honorific: Honorific.Mx,
 };
 
 export const NotNullableMemberKeys = [
@@ -42,6 +55,7 @@ export const NotNullableMemberKeys = [
   'sex',
   'email',
   'language',
+  'honorific',
 ];
 
 @InputType('AddressInput')
@@ -85,6 +99,10 @@ export class ExtraMemberParams {
   @IsOptional()
   @IsStringDate({ message: Errors.get(ErrorType.memberDischargeDate) })
   dischargeDate?: string;
+
+  @Field(() => Honorific, { nullable: true })
+  @IsOptional()
+  honorific?: Honorific;
 }
 
 @InputType()
@@ -296,6 +314,10 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   admitDate?: string;
+
+  @Prop({ default: defaultMemberParams.honorific })
+  @Field(() => Honorific)
+  honorific: Honorific;
 }
 
 @ObjectType()

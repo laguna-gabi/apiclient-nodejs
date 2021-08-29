@@ -13,7 +13,13 @@ import {
 } from '../index';
 import * as config from 'config';
 import * as faker from 'faker';
-import { CreateMemberParams, defaultMemberParams, Sex, UpdateMemberParams } from '../../src/member';
+import {
+  CreateMemberParams,
+  defaultMemberParams,
+  Honorific,
+  Sex,
+  UpdateMemberParams,
+} from '../../src/member';
 import { Errors, ErrorType, Language, MobilePlatform } from '../../src/common';
 import { Handler } from './aux/handler';
 import { v4 } from 'uuid';
@@ -66,6 +72,7 @@ describe('Validations - member', () => {
       ${'email'}         | ${null}
       ${'language'}      | ${defaultMemberParams.language}
       ${'dischargeDate'} | ${null}
+      ${'honorific'}     | ${defaultMemberParams.honorific}
     `(`should set default value if exists for optional field $field`, async (params) => {
       /* eslint-enable max-len */
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
@@ -88,11 +95,12 @@ describe('Validations - member', () => {
     });
 
     test.each`
-      field         | value
-      ${'sex'}      | ${Sex.female}
-      ${'email'}    | ${faker.internet.email()}
-      ${'language'} | ${Language.es}
-      ${'zipCode'}  | ${generateZipCode()}
+      field          | value
+      ${'sex'}       | ${Sex.female}
+      ${'email'}     | ${faker.internet.email()}
+      ${'language'}  | ${Language.es}
+      ${'zipCode'}   | ${generateZipCode()}
+      ${'honorific'} | ${Honorific.Reverend}
     `(`should be able to set value for optional field $field`, async (params) => {
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
       const { id: primaryUserId } = await handler.mutations.createUser({
@@ -151,6 +159,7 @@ describe('Validations - member', () => {
       ${{ dateOfBirth: '2021/13/1' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
       ${{ dischargeDate: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
       ${{ dischargeDate: '2021/13/1' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
+      ${{ honorific: 'not-valid' }}     | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
     `(
       /* eslint-enable max-len */
       `should fail to create a member since setting $input is not a valid`,
@@ -314,6 +323,7 @@ describe('Validations - member', () => {
       ${{ address: { street: 123 } }}   | ${{ missingFieldError: stringError }}
       ${{ address: { city: 123 } }}     | ${{ missingFieldError: stringError }}
       ${{ address: { state: 123 } }}    | ${{ missingFieldError: stringError }}
+      ${{ honorific: 'not-valid' }}     | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
     `(`should fail to update a member since setting $input is not a valid`, async (params) => {
       /* eslint-enable max-len */
       const updateMemberParams = generateUpdateMemberParams({ ...params.input });

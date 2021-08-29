@@ -209,6 +209,7 @@ export class Queries {
             generalNotes
             admitDate
             createdAt
+            honorific
           }
         }
       `,

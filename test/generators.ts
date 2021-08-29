@@ -6,6 +6,7 @@ import {
   CreateMemberParams,
   CreateTaskParams,
   defaultMemberParams,
+  Honorific,
   Member,
   MemberConfig,
   SetGeneralNotesParams,
@@ -127,6 +128,7 @@ export const generateCreateMemberParams = ({
   language,
   zipCode = generateZipCode(),
   dischargeDate,
+  honorific,
 }: {
   phone?: string;
   deviceId?: string;
@@ -141,6 +143,7 @@ export const generateCreateMemberParams = ({
   language?: Language;
   zipCode?: string;
   dischargeDate?: string;
+  honorific?: Honorific;
 }): CreateMemberParams => {
   return {
     phone,
@@ -156,6 +159,7 @@ export const generateCreateMemberParams = ({
     language,
     zipCode,
     dischargeDate,
+    honorific,
   };
 };
 
@@ -176,6 +180,7 @@ export const mockGenerateMember = (): Member => {
     sex: defaultMemberParams.sex,
     language: defaultMemberParams.language,
     createdAt: faker.date.past(1),
+    honorific: defaultMemberParams.honorific,
   };
 };
 
@@ -199,6 +204,7 @@ export const generateUpdateMemberParams = ({
     city: faker.address.city(),
     state: faker.address.state(),
   },
+  honorific = Honorific.Dr,
 }: {
   id?: string;
   firstName?: string;
@@ -215,6 +221,7 @@ export const generateUpdateMemberParams = ({
   admitDate?: string;
   dateOfBirth?: string;
   address?: { street?: string; city?: string; state?: string };
+  honorific?: Honorific;
 } = {}): UpdateMemberParams => {
   return {
     id,
@@ -232,6 +239,7 @@ export const generateUpdateMemberParams = ({
     admitDate,
     dateOfBirth,
     address,
+    honorific,
   };
 };
 
