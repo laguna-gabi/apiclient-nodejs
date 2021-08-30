@@ -1,10 +1,12 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotImplementedException, OnModuleInit } from '@nestjs/common';
 import { ConfigsService, ExternalConfigs } from '.';
 import { Twilio, jwt } from 'twilio';
 import * as config from 'config';
+import { INotifications } from './interfaces';
+import { MobilePlatform, SendNotificationParams } from '../common';
 
 @Injectable()
-export class TwilioService implements OnModuleInit {
+export class TwilioService implements OnModuleInit, INotifications {
   private accountSid;
   private appSid;
   private authToken;
@@ -28,6 +30,20 @@ export class TwilioService implements OnModuleInit {
     this.client = new Twilio(this.accountSid, this.authToken);
   }
 
+  async register({
+    token,
+    externalUserId,
+  }: {
+    token: string;
+    externalUserId: string;
+  }): Promise<string | undefined> {
+    throw new NotImplementedException();
+  }
+
+  send(sendNotificationParams: SendNotificationParams): Promise<boolean> {
+    throw new NotImplementedException();
+  }
+
   async sendSms({ body, to, from = this.source }: { body: string; to: string; from: string }) {
     await this.client.messages.create({ body, to, from });
   }
@@ -45,5 +61,9 @@ export class TwilioService implements OnModuleInit {
     token.addGrant(voiceGrant);
 
     return token.toJwt();
+  }
+
+  async unregister(playerId: string, mobilePlatform: MobilePlatform): Promise<void> {
+    throw new NotImplementedException();
   }
 }
