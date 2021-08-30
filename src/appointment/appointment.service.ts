@@ -47,7 +47,11 @@ export class AppointmentService extends BaseService {
 
     if (result.lastErrorObject.upserted) {
       const { _id, userId } = result.value;
-      return this.postNewAppointmentAction({ userId, appointmentId: _id });
+      return this.postNewAppointmentAction({
+        userId,
+        memberId: params.memberId,
+        appointmentId: _id,
+      });
     }
 
     return this.replaceId(result.value.toObject() as AppointmentDocument);
@@ -80,6 +84,7 @@ export class AppointmentService extends BaseService {
     if (!object.lastErrorObject.updatedExisting) {
       return this.postNewAppointmentAction({
         userId: object.value.userId,
+        memberId: params.memberId,
         appointmentId: object.value._id,
       });
     }
@@ -173,15 +178,15 @@ export class AppointmentService extends BaseService {
 
   private async postNewAppointmentAction({
     userId,
+    memberId,
     appointmentId,
   }: {
     userId: string;
+    memberId: string;
     appointmentId: string;
   }) {
-    this.eventEmitter.emit(EventType.newAppointment, {
-      userId,
-      appointmentId,
-    });
+    this.eventEmitter.emit(EventType.newAppointment, { userId, appointmentId });
+    this.eventEmitter.emit(EventType.addUserToMemberList, { memberId, userId });
 
     const link = `${this.APP_URL}/${appointmentId.toString()}`;
 

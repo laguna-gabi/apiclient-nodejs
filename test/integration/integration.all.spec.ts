@@ -565,7 +565,7 @@ describe('Integration tests: all', () => {
     expect(result.userId).toEqual(primaryUser.id);
     expect(result).toHaveProperty('chat');
   });
-  
+
   it('should get all users and a newly created user should be in the list', async () => {
     const newUser = await creators.createAndValidateUser();
 
@@ -581,6 +581,38 @@ describe('Integration tests: all', () => {
     const result = await handler.queries.getTwilioAccessToken();
 
     expect(result).toEqual('token');
+  });
+
+  /* eslint-disable max-len */
+  test.each`
+    title                    | method
+    ${'requestAppointment'}  | ${async ({ memberId, userId }) => await handler.mutations.requestAppointment({ appointmentParams: generateRequestAppointmentParams({ memberId, userId }) })}
+    ${'scheduleAppointment'} | ${async ({ memberId, userId }) => await handler.mutations.scheduleAppointment({ appointmentParams: generateScheduleAppointmentParams({ memberId, userId }) })}
+  `(`should add a not existed user to member users list on $title`, async (params) => {
+    /* eslint-enable max-len */
+    const primaryUser = await creators.createAndValidateUser();
+    const user = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+
+    const initialMember = await handler.queries.getMember({ id: member.id });
+    expect(initialMember.users.length).toEqual(1);
+    expect(initialMember.users[0].id).toEqual(primaryUser.id);
+
+    //calling twice, to check that the user wasn't added twice to users list
+    await params.method({ userId: user.id, memberId: member.id });
+    await params.method({ userId: user.id, memberId: member.id });
+
+    const { users } = await handler.queries.getMember({ id: member.id });
+
+    const ids = users.map((user) => user.id);
+    expect(ids.length).toEqual(2);
+    expect(ids[0]).toEqual(primaryUser.id);
+    expect(ids[1]).toEqual(user.id);
   });
 
   /************************************************************************************************

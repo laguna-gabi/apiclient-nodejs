@@ -191,6 +191,14 @@ export class MemberService extends BaseService {
     ]);
   }
 
+  @OnEvent(EventType.addUserToMemberList, { async: true })
+  async handleAddUserToMemberList({ memberId, userId }: { memberId: string; userId: string }) {
+    await this.memberModel.updateOne(
+      { _id: Types.ObjectId(memberId) },
+      { $addToSet: { users: userId } },
+    );
+  }
+
   /*************************************************************************************************
    ********************************************* Goals *********************************************
    ************************************************************************************************/
