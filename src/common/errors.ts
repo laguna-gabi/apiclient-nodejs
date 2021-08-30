@@ -29,6 +29,8 @@ export enum ErrorType {
   memberPrimaryUserIdNotInUsers = 9211,
   memberAdmitDate = 9212,
   memberRegisterForNotificationToken = 9213,
+  // Notifications
+  notificationPeerIdIsMissing = 9270,
 
   // Module appointment errors
   appointmentIdNotFound = 9301,
@@ -85,6 +87,7 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.memberRegisterForNotificationToken.valueOf(),
     `token must contain only letters and numbers`,
   ],
+  [ErrorType.notificationPeerIdIsMissing.valueOf(), `peerId can not be null for type call/video`],
   [ErrorType.appointmentIdNotFound.valueOf(), 'appointment id was not found'],
   [ErrorType.appointmentNotBeforeDate.valueOf(), `notBefore ${dateInstanceFormat}`],
   [ErrorType.appointmentNotBeforeDateInThePast.valueOf(), 'notBefore must be in the future'],

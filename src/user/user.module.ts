@@ -20,5 +20,6 @@ import {
   ],
   providers: [UserResolver, UserService, SlotService],
   controllers: [UserController],
+  exports: [UserService],
 })
 export class UserModule {}

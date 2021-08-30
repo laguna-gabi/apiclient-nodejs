@@ -9,6 +9,7 @@ import {
   Honorific,
   Member,
   MemberConfig,
+  NotifyParams,
   SetGeneralNotesParams,
   Sex,
   TaskStatus,
@@ -23,7 +24,7 @@ import {
   ScheduleAppointmentParams,
 } from '../src/appointment';
 import { CreateOrgParams, OrgType } from '../src/org';
-import { Language, MobilePlatform } from '../src/common';
+import { Language, MobilePlatform, NotificationType } from '../src/common';
 import { lookup } from 'zipcode-to-timezone';
 import { AvailabilityInput } from '../src/availability';
 import { GetCommunicationParams } from '../src/communication';
@@ -434,6 +435,20 @@ export const generateSetGeneralNotesParams = ({
 
 export const generateDateOnly = (date: Date): string => {
   return format(date, 'yyyy/MM/dd');
+};
+
+export const generateNotifyParams = ({
+  userId = v4(),
+  memberId = generateId(),
+  peerId = v4(),
+  type = NotificationType.call,
+}: {
+  userId?: string;
+  memberId?: string;
+  peerId?: string;
+  type?: NotificationType;
+} = {}): NotifyParams => {
+  return { userId, memberId, peerId, type };
 };
 
 const generateEmail = () => {

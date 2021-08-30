@@ -6,9 +6,11 @@ import {
   Errors,
   ErrorType,
   Identifier,
+  IsPeerIdNotNullOnNotifyVideoOrCall,
   IsPrimaryUserInUsers,
   IsStringDate,
   Language,
+  NotificationType,
   validPhoneExamples,
 } from '../common';
 import { IsEmail, IsOptional, IsPhoneNumber, Length, ValidateIf } from 'class-validator';
@@ -202,6 +204,24 @@ export class SetGeneralNotesParams {
 
   @Field(() => String, { nullable: true })
   note?: string;
+}
+
+@InputType()
+export class NotifyParams {
+  @Field(() => String)
+  userId: string;
+
+  @Field(() => String)
+  memberId: string;
+
+  @Field(() => String, { nullable: true })
+  @IsPeerIdNotNullOnNotifyVideoOrCall({
+    message: Errors.get(ErrorType.notificationPeerIdIsMissing),
+  })
+  peerId?: string;
+
+  @Field(() => NotificationType)
+  type: NotificationType;
 }
 
 /**************************************************************************************************

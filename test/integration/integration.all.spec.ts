@@ -13,15 +13,17 @@ import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { Handler } from './aux/handler';
 import { AppointmentsIntegrationActions } from './aux/appointments';
 import { Creators } from './aux/creators';
-import { CreateTaskParams, MemberConfig, Task, TaskStatus } from '../../src/member';
+import { CreateTaskParams, MemberConfig, NotifyParams, Task, TaskStatus } from '../../src/member';
 import {
   Errors,
   ErrorType,
   Identifiers,
   MobilePlatform,
+  NotificationType,
   RegisterForNotificationParams,
 } from '../../src/common';
 import * as faker from 'faker';
+import { v4 } from 'uuid';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -547,6 +549,42 @@ describe('Integration tests: all', () => {
       handler.notificationsService.spyOnNotificationsServiceRegister.mockReset();
     },
   );
+
+  it('should send a notification', async () => {
+    const primaryUser = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+    const { id } = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+
+    const memberConfig = await handler.queries.getMemberConfig({ id });
+
+    const notifyParams: NotifyParams = {
+      memberId: id,
+      userId: primaryUser.id,
+      type: NotificationType.video,
+      peerId: v4(),
+    };
+    await handler.mutations.notify({ notifyParams });
+
+    expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
+      externalUserId: memberConfig.externalUserId,
+      payload: { heading: { en: 'Laguna' } },
+      data: {
+        user: {
+          id: primaryUser.id,
+          firstName: primaryUser.firstName,
+          avatar: primaryUser.avatar,
+        },
+        type: notifyParams.type,
+        peerId: notifyParams.peerId,
+      },
+    });
+
+    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+  });
 
   it('should get communication with the same user and member id that were given', async () => {
     const primaryUser = await creators.createAndValidateUser();

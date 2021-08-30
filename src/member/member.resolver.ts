@@ -8,6 +8,7 @@ import {
   MemberConfig,
   MemberService,
   MemberSummary,
+  NotifyParams,
   SetGeneralNotesParams,
   TaskStatus,
   UpdateMemberParams,
@@ -28,6 +29,7 @@ import { millisecondsInHour } from 'date-fns';
 import { lookup } from 'zipcode-to-timezone';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotificationsService, StorageService } from '../providers';
+import { UserService } from '../user';
 
 @Resolver(() => Member)
 export class MemberResolver {
@@ -38,6 +40,7 @@ export class MemberResolver {
     private eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
     private readonly notificationsService: NotificationsService,
+    private readonly userService: UserService,
   ) {}
 
   @Mutation(() => Identifier)
@@ -186,6 +189,32 @@ export class MemberResolver {
     await this.memberService.updateMemberConfig({
       memberId: memberConfig.memberId,
       mobilePlatform: registerForNotificationParams.mobilePlatform,
+    });
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async notify(@Args(camelCase(NotifyParams.name)) notifyParams: NotifyParams) {
+    const { memberId, userId, peerId, type } = notifyParams;
+
+    const memberConfig = await this.memberService.getMemberConfig(memberId);
+    const user = await this.userService.get(userId);
+    if (!user) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+
+    await this.notificationsService.send({
+      externalUserId: memberConfig.externalUserId,
+      mobilePlatform: memberConfig.mobilePlatform,
+      payload: { heading: { en: 'Laguna' } },
+      data: {
+        user: {
+          id: user.id,
+          firstName: user.firstName,
+          avatar: user.avatar,
+        },
+        type,
+        peerId,
+      },
     });
   }
 

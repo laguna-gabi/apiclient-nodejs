@@ -1,4 +1,5 @@
 import { registerDecorator, ValidationArguments, ValidationOptions } from 'class-validator';
+import { NotificationType } from './interfaces.dto';
 
 /**
  * When there are 2 params of dates, and we want to make sure that one param is
@@ -102,6 +103,22 @@ export function IsStringDate(options: ValidationOptions) {
       validator: {
         validate(date) {
           return Date.parse(date) ? true : false;
+        },
+      },
+    });
+  };
+}
+
+export function IsPeerIdNotNullOnNotifyVideoOrCall(options?: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(peerId, args: ValidationArguments) {
+          const notificationType: NotificationType = args.object['notificationType'];
+          return peerId || (!peerId && notificationType === NotificationType.text);
         },
       },
     });

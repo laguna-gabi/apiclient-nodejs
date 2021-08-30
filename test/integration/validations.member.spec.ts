@@ -2,8 +2,9 @@ import {
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateCreateUserParams,
-  generateId,
   generateDateOnly,
+  generateId,
+  generateNotifyParams,
   generateOrgParams,
   generateRandomName,
   generateSetGeneralNotesParams,
@@ -17,10 +18,11 @@ import {
   CreateMemberParams,
   defaultMemberParams,
   Honorific,
+  NotifyParams,
   Sex,
   UpdateMemberParams,
 } from '../../src/member';
-import { Errors, ErrorType, Language, MobilePlatform } from '../../src/common';
+import { Errors, ErrorType, Language, MobilePlatform, NotificationType } from '../../src/common';
 import { Handler } from './aux/handler';
 import { v4 } from 'uuid';
 
@@ -298,6 +300,44 @@ describe('Validations - member', () => {
             token,
           },
           invalidFieldsErrors: [Errors.get(ErrorType.memberRegisterForNotificationToken)],
+        });
+      },
+    );
+  });
+
+  describe('notify', () => {
+    test.each`
+      input                | error
+      ${{ userId: 123 }}   | ${stringError}
+      ${{ memberId: 123 }} | ${stringError}
+      ${{ peerId: 123 }}   | ${stringError}
+      ${{ type: 123 }}     | ${'cannot represent non-string value'}
+    `(`should fail to notify since setting $input is not a valid`, async (params) => {
+      const notifyParams: NotifyParams = generateNotifyParams({ ...params.input });
+      await handler.mutations.notify({ notifyParams, missingFieldError: params.error });
+    });
+
+    /* eslint-disable max-len */
+    test.each`
+      field         | error
+      ${'userId'}   | ${`Field "userId" of required type "String!" was not provided.`}
+      ${'memberId'} | ${`Field "memberId" of required type "String!" was not provided.`}
+      ${'type'}     | ${`Field "type" of required type "NotificationType!" was not provided.`}
+    `(`should fail to create a member since mandatory field $field is missing`, async (params) => {
+      /* eslint-enable max-len */
+      const notifyParams: NotifyParams = generateNotifyParams();
+      delete notifyParams[params.field];
+      await handler.mutations.notify({ notifyParams, missingFieldError: params.error });
+    });
+
+    test.each([NotificationType.video, NotificationType.call])(
+      'should throw error on peerId null when notificationType = %p',
+      async (type) => {
+        const notifyParams: NotifyParams = generateNotifyParams({ type });
+        delete notifyParams.peerId;
+        await handler.mutations.notify({
+          notifyParams,
+          invalidFieldsErrors: [Errors.get(ErrorType.notificationPeerIdIsMissing)],
         });
       },
     );

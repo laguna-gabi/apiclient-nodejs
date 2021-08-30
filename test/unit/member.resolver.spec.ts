@@ -5,11 +5,13 @@ import {
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateId,
+  generateNotifyParams,
   generateSetGeneralNotesParams,
   generateUpdateMemberParams,
   generateUpdateTaskStatusParams,
   mockGenerateMember,
   mockGenerateMemberConfig,
+  mockGenerateUser,
 } from '../index';
 import { DbModule } from '../../src/db/db.module';
 import { MemberModule, MemberResolver, MemberService, TaskStatus } from '../../src/member';
@@ -17,11 +19,13 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Errors, ErrorType, MobilePlatform, RegisterForNotificationParams } from '../../src/common';
 import { NotificationsService, StorageService } from '../../src/providers';
 import * as faker from 'faker';
+import { UserService } from '../../src/user';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
   let resolver: MemberResolver;
   let service: MemberService;
+  let userService: UserService;
   let storage: StorageService;
   let notificationsService: NotificationsService;
 
@@ -32,6 +36,7 @@ describe('MemberResolver', () => {
 
     resolver = module.get<MemberResolver>(MemberResolver);
     service = module.get<MemberService>(MemberService);
+    userService = module.get<UserService>(UserService);
     storage = module.get<StorageService>(StorageService);
     notificationsService = module.get<NotificationsService>(NotificationsService);
   });
@@ -469,6 +474,51 @@ describe('MemberResolver', () => {
       expect(spyOnServiceUpdateMemberConfig).toBeCalledWith({
         memberId: member.memberId,
         mobilePlatform: params.mobilePlatform,
+      });
+    });
+  });
+
+  describe('notify', () => {
+    let spyOnServiceGetMemberConfig;
+    let spyOnUserServiceGetUser;
+    let spyOnNotificationsServiceSend;
+
+    beforeEach(() => {
+      spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
+      spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
+      spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetMemberConfig.mockReset();
+      spyOnUserServiceGetUser.mockReset();
+      spyOnNotificationsServiceSend.mockReset();
+    });
+
+    it('should notify a message', async () => {
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const notifyParams = generateNotifyParams();
+
+      await resolver.notify(notifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        externalUserId: memberConfig.externalUserId,
+        mobilePlatform: memberConfig.mobilePlatform,
+        payload: { heading: { en: 'Laguna' } },
+        data: {
+          user: {
+            id: user.id,
+            firstName: user.firstName,
+            avatar: user.avatar,
+          },
+          type: notifyParams.type,
+          peerId: notifyParams.peerId,
+        },
       });
     });
   });

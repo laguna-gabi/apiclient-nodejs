@@ -17,11 +17,15 @@ describe('live: notifications (one signal)', () => {
   });
 
   it(
-    'should register a device on voip onesignal project and send video notification',
+    'should register an ios device on voip onesignal project and send video notification',
     async () => {
-      const params = { token: 'sampleiospushkittoken', externalUserId: v4() };
-      const result = await notificationsService.register(params);
-      expect(result).toBeTruthy();
+      const params = {
+        token: 'sampleiospushkittoken',
+        externalUserId: v4(),
+        mobilePlatform: MobilePlatform.ios,
+      };
+      const playerId = await notificationsService.register(params);
+      expect(playerId).not.toBeUndefined();
 
       /**
        * If sent immediately after registering a device, calling send notification causes an error.
@@ -34,11 +38,18 @@ describe('live: notifications (one signal)', () => {
 
         const result = await notificationsService.send({
           externalUserId: params.externalUserId,
-          mobilePlatform: MobilePlatform.ios,
-          notificationType: NotificationType.voip,
+          mobilePlatform: params.mobilePlatform,
           payload: {
-            contents: { en: faker.lorem.sentence() },
             heading: { en: faker.lorem.word() },
+          },
+          data: {
+            user: {
+              id: v4(),
+              firstName: faker.name.firstName(),
+              avatar: faker.image.avatar(),
+            },
+            type: NotificationType.video,
+            peerId: v4(),
           },
         });
 
@@ -47,7 +58,44 @@ describe('live: notifications (one signal)', () => {
           expect(result).toBeTruthy();
         }
       }
+      await notificationsService.unregister(playerId, params.mobilePlatform);
     },
     delayTime * RETRY_MAX + 5000,
   );
+
+  /* eslint-disable max-len */
+  /**
+   * This is only optional when loading the app on android emulator, since the externalUserId
+   * needs to be subscribed on onesignal.
+   * https://app.onesignal.com/apps/02126dc4-664e-4acb-bc42-cb6edc100993/players?user_search%5Bby%5D=external_id&user_search%5Bterm%5D=eb0ef495-0e63-4a48-b45a-a58248f6b775
+   * We're setting this as skip since once the emulator is shutdown the state of the user in
+   * one signal is 'un-subscribed' which will cause the `send` api to return 400 http response.
+   */
+  /* eslint-enable max-len */
+  it.skip('should send android video notification for default onesignal project', async () => {
+    const params = {
+      externalUserId: 'eb0ef495-0e63-4a48-b45a-a58248f6b775',
+      mobilePlatform: MobilePlatform.android,
+    };
+
+    const result = await notificationsService.send({
+      externalUserId: params.externalUserId,
+      mobilePlatform: params.mobilePlatform,
+      payload: {
+        contents: { en: faker.lorem.sentence() },
+        heading: { en: faker.lorem.word() },
+      },
+      data: {
+        user: {
+          id: faker.datatype.uuid(),
+          firstName: faker.name.firstName(),
+          avatar: faker.image.avatar(),
+        },
+        type: NotificationType.video,
+        peerId: v4(),
+      },
+    });
+
+    expect(result).toBeTruthy();
+  });
 });

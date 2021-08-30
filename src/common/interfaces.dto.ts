@@ -30,7 +30,8 @@ export enum SlackIcon {
 }
 
 export enum NotificationType {
-  voip = 'voip',
+  video = 'video',
+  call = 'call',
   text = 'text',
 }
 
@@ -107,13 +108,21 @@ export class Input {
 }
 
 export class NotificationPayload {
-  contents: Input;
+  contents?: Input;
   heading: Input;
 }
 
 export class SendNotificationParams {
   externalUserId: string;
   mobilePlatform: MobilePlatform;
-  notificationType: NotificationType;
   payload: NotificationPayload;
+  data: {
+    user: {
+      id: string;
+      firstName: string;
+      avatar: string;
+    };
+    peerId: string;
+    type: NotificationType;
+  };
 }

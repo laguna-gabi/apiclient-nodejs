@@ -4,6 +4,7 @@ import { CreateUserParams } from '../../../src/user';
 import {
   CreateMemberParams,
   CreateTaskParams,
+  NotifyParams,
   SetGeneralNotesParams,
   UpdateMemberParams,
   UpdateTaskStatusParams,
@@ -456,6 +457,29 @@ export class Mutations {
     return (
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.registerMemberForNotifications
+    );
+  };
+
+  notify = async ({
+    notifyParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    notifyParams: NotifyParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<void> => {
+    const result = await this.apolloClient.mutate({
+      variables: { notifyParams: notifyParams },
+      mutation: gql`
+        mutation notify($notifyParams: NotifyParams!) {
+          notify(notifyParams: $notifyParams)
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.notify
     );
   };
 

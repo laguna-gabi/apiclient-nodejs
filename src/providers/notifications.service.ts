@@ -14,34 +14,25 @@ export class NotificationsService {
     private readonly httpService: HttpService,
   ) {}
 
+  /**
+   * Supporting ONLY ios since the android registration is made by default from the client.
+   */
   async register({
     token,
     externalUserId,
   }: {
     token: string;
     externalUserId: string;
-  }): Promise<boolean> {
+  }): Promise<string | undefined> {
     try {
       const data = {
-        app_id: await this.configsService.getConfig(ExternalConfigs.oneSignalVoipApiId),
+        app_id: await this.getApiId(MobilePlatform.ios),
         identifier: token,
         external_user_id: externalUserId,
         device_type: 0, //ios
       };
       const result = await this.httpService.post(this.playersUrl, data).toPromise();
-
-      if (result.status === 200) {
-        console.log(
-          `Onesignal: Successfully registered externalUserId ${externalUserId} for voip project`,
-        );
-        return true;
-      } else {
-        console.error(
-          `Onesignal: Failure to register externalUserId 
-          ${externalUserId} for voip project ${result.statusText}`,
-        );
-        return false;
-      }
+      return this.validateRegisterResult(externalUserId, result);
     } catch (ex) {
       console.error(
         `Onesignal: Failure to register a user for voip project`,
@@ -52,33 +43,81 @@ export class NotificationsService {
   }
 
   async send(sendNotificationParams: SendNotificationParams) {
-    const { mobilePlatform, externalUserId, notificationType, payload } = sendNotificationParams;
+    const { mobilePlatform, externalUserId, payload, data } = sendNotificationParams;
 
-    let data: any = { include_external_user_ids: [externalUserId], ...payload };
-    let header = 'Basic ';
-    if (notificationType === NotificationType.voip && mobilePlatform === MobilePlatform.ios) {
-      data = {
-        ...data,
-        app_id: await this.configsService.getConfig(ExternalConfigs.oneSignalVoipApiId),
-        apns_push_type_override: NotificationType.voip,
-      };
-      header += await this.configsService.getConfig(ExternalConfigs.oneSignalVoipApiKey);
-    } else {
-      data = {
-        ...data,
-        app_id: await this.configsService.getConfig(ExternalConfigs.oneSignalDefaultApiId),
-        include_external_user_ids: [externalUserId],
-      };
-      header += await this.configsService.getConfig(ExternalConfigs.oneSignalDefaultApiKey);
+    const config = await this.getConfig(mobilePlatform, data.type);
+    const app_id = await this.getApiId(mobilePlatform, data.type);
+    const body: any = {
+      include_external_user_ids: [externalUserId],
+      content_available: true,
+      ...payload,
+      data,
+      app_id,
+    };
+
+    if (this.isVoipProject(mobilePlatform, data.type)) {
+      body.apns_push_type_override = 'voip';
     }
 
     try {
-      const result = await this.httpService
-        .post(this.notificationsUrl, data, { headers: { Authorization: header } })
-        .toPromise();
+      const result = await this.httpService.post(this.notificationsUrl, body, config).toPromise();
       return result.status === 200 && result.data.recipients === 1;
     } catch (ex) {
       console.error(ex);
     }
+  }
+
+  async unregister(playerId: string, mobilePlatform: MobilePlatform) {
+    const appId = await this.getApiId(mobilePlatform);
+    const url = `${this.playersUrl}/${playerId}?app_id=${appId}`;
+    const config = await this.getConfig(mobilePlatform);
+
+    await this.httpService.delete(url, config).toPromise();
+  }
+
+  /*************************************************************************************************
+   **************************************** Private methods ****************************************
+   ************************************************************************************************/
+  private isVoipProject(
+    mobilePlatform: MobilePlatform,
+    notificationType?: NotificationType,
+  ): boolean {
+    return mobilePlatform === MobilePlatform.ios && notificationType !== NotificationType.text;
+  }
+
+  private validateRegisterResult(externalUserId, result): string | undefined {
+    if (result.status === 200) {
+      console.log(
+        `Onesignal: Successfully registered externalUserId ${externalUserId} for voip project`,
+      );
+      return result.data.id;
+    } else {
+      console.error(
+        `Onesignal: Failure to register externalUserId 
+          ${externalUserId} for voip project ${result.statusText}`,
+      );
+      return undefined;
+    }
+  }
+
+  private async getApiId(
+    mobilePlatform: MobilePlatform,
+    notificationType?: NotificationType,
+  ): Promise<string> {
+    return this.configsService.getConfig(
+      this.isVoipProject(mobilePlatform, notificationType)
+        ? ExternalConfigs.oneSignalVoipApiId
+        : ExternalConfigs.oneSignalDefaultApiId,
+    );
+  }
+
+  private async getConfig(mobilePlatform: MobilePlatform, notificationType?: NotificationType) {
+    const config = await this.configsService.getConfig(
+      this.isVoipProject(mobilePlatform, notificationType)
+        ? ExternalConfigs.oneSignalVoipApiKey
+        : ExternalConfigs.oneSignalDefaultApiKey,
+    );
+
+    return { headers: { Authorization: `Basic ${config}` } };
   }
 }
