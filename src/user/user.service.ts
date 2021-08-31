@@ -12,7 +12,7 @@ import {
   NotNullableSlotsKeys,
   Slots,
 } from '.';
-import { BaseService, DbErrors, Errors, ErrorType, EventType } from '../common';
+import { BaseService, DbErrors, Errors, ErrorType, EventType, Platform } from '../common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Member } from '../member';
 import { cloneDeep } from 'lodash';
@@ -203,8 +203,16 @@ export class UserService extends BaseService {
   }
 
   @OnEvent(EventType.collectUsersDataBridge, { async: true })
-  async collectUsersDataBridge({ member, usersIds }: { member: Member; usersIds: string[] }) {
+  async collectUsersDataBridge({
+    member,
+    platform,
+    usersIds,
+  }: {
+    member: Member;
+    platform: Platform;
+    usersIds: string[];
+  }) {
     const users = await this.userModel.find({ _id: { $in: usersIds.map((user) => user) } });
-    this.eventEmitter.emit(EventType.newMember, { member, users });
+    this.eventEmitter.emit(EventType.newMember, { member, users, platform });
   }
 }

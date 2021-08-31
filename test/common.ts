@@ -44,6 +44,7 @@ export const mockProviders = (
 
   const spyOnSendBirdCreateUser = jest.spyOn(sendBird, 'createUser');
   const spyOnSendBirdCreateGroupChannel = jest.spyOn(sendBird, 'createGroupChannel');
+  const spyOnSendBirdFreeze = jest.spyOn(sendBird, 'freezeGroupChannel');
   const spyOnStorage = jest.spyOn(storage, 'getUrl');
   const spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
   const spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
@@ -51,13 +52,14 @@ export const mockProviders = (
 
   spyOnSendBirdCreateUser.mockResolvedValue(v4());
   spyOnSendBirdCreateGroupChannel.mockResolvedValue(true);
+  spyOnSendBirdFreeze.mockResolvedValue(undefined);
   spyOnStorage.mockResolvedValue('https://some-url');
   spyOnNotificationsServiceRegister.mockResolvedValue(v4());
   spyOnNotificationsServiceSend.mockResolvedValue(true);
   spyOnTwilioGetToken.mockReturnValue('token');
 
   return {
-    sendBird: { spyOnSendBirdCreateUser, spyOnSendBirdCreateGroupChannel },
+    sendBird: { spyOnSendBirdCreateUser, spyOnSendBirdCreateGroupChannel, spyOnSendBirdFreeze },
     notificationsService: { spyOnNotificationsServiceRegister, spyOnNotificationsServiceSend },
     twilioService: { spyOnTwilioGetToken },
   };

@@ -1,7 +1,7 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
 import { CommunicationInfo, CommunicationService, GetCommunicationParams } from '.';
 import { OnEvent } from '@nestjs/event-emitter';
-import { EventType } from '../common';
+import { EventType, Platform } from '../common';
 import { User } from '../user';
 import { Member } from '../member';
 import { camelCase } from 'lodash';
@@ -50,12 +50,39 @@ export class CommunicationResolver {
   }
 
   @OnEvent(EventType.newMember, { async: true })
-  async handleNewMember({ member, users }: { member: Member; users: User[] }) {
+  async handleNewMember({
+    member,
+    users,
+    platform,
+  }: {
+    member: Member;
+    users: User[];
+    platform: Platform;
+  }) {
     await this.communicationService.createMember(member);
 
     await Promise.all(
-      users.map(async (user) => this.communicationService.connectMemberToUser(member, user)),
+      users.map(async (user) =>
+        this.communicationService.connectMemberToUser(member, user, platform),
+      ),
     );
+  }
+
+  @OnEvent(EventType.updateMemberPlatform, { async: true })
+  async handleUpdateMemberPlatform({
+    memberId,
+    userId,
+    platform,
+  }: {
+    memberId: string;
+    userId: string;
+    platform: Platform;
+  }) {
+    return this.communicationService.onUpdateMemberPlatform({
+      memberId,
+      userId,
+      platform,
+    });
   }
 
   private buildUrl({ uid, mid, token }): string {

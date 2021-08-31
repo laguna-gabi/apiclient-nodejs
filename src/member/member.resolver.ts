@@ -49,9 +49,11 @@ export class MemberResolver {
     createMemberParams: CreateMemberParams,
   ) {
     const member = await this.memberService.insert(createMemberParams);
+    const { platform } = await this.memberService.getMemberConfig(member.id);
 
     this.eventEmitter.emit(EventType.collectUsersDataBridge, {
       member,
+      platform,
       usersIds: createMemberParams.usersIds,
     });
 
@@ -175,6 +177,7 @@ export class MemberResolver {
     @Args(camelCase(RegisterForNotificationParams.name))
     registerForNotificationParams: RegisterForNotificationParams,
   ) {
+    const member = await this.memberService.get(registerForNotificationParams.memberId);
     const memberConfig = await this.memberService.getMemberConfig(
       registerForNotificationParams.memberId,
     );
@@ -189,6 +192,14 @@ export class MemberResolver {
     await this.memberService.updateMemberConfig({
       memberId: memberConfig.memberId,
       platform: registerForNotificationParams.platform,
+    });
+
+    member.users.map((user) => {
+      this.eventEmitter.emit(EventType.updateMemberPlatform, {
+        memberId: registerForNotificationParams.memberId,
+        platform: registerForNotificationParams.platform,
+        userId: user.id,
+      });
     });
   }
 

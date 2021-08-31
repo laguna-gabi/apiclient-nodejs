@@ -13,7 +13,7 @@ import { Member } from '../member';
 import { v4 } from 'uuid';
 import { SendBird, TwilioService } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EventType } from '../common';
+import { EventType, Platform } from '../common';
 
 @Injectable()
 export class CommunicationService {
@@ -63,7 +63,7 @@ export class CommunicationService {
     });
   }
 
-  async connectMemberToUser(member: Member, user: User) {
+  async connectMemberToUser(member: Member, user: User, platform: Platform) {
     const sendbirdChannelUrl = v4();
     const params: CreateSendbirdGroupChannelParams = {
       name: user.firstName,
@@ -75,12 +75,29 @@ export class CommunicationService {
 
     const result = await this.sendBird.createGroupChannel(params);
     if (result) {
+      await this.sendBird.freezeGroupChannel(sendbirdChannelUrl, platform === Platform.web);
       await this.communicationModel.create({
         memberId: new Types.ObjectId(member.id),
         userId: user.id,
         sendbirdChannelUrl,
       });
     }
+  }
+
+  async onUpdateMemberPlatform({
+    memberId,
+    userId,
+    platform,
+  }: {
+    memberId: string;
+    userId: string;
+    platform: Platform;
+  }) {
+    const communication = await this.get({ memberId, userId });
+    await this.sendBird.freezeGroupChannel(
+      communication.sendbirdChannelUrl,
+      platform === Platform.web,
+    );
   }
 
   async get(params: GetCommunicationParams) {

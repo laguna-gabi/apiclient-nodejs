@@ -16,6 +16,7 @@ import {
 import * as config from 'config';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
+import { Platform } from '../../src/common';
 
 describe('CommunicationResolver', () => {
   let module: TestingModule;
@@ -68,18 +69,19 @@ describe('CommunicationResolver', () => {
       spyOnServiceConnectMemberToUser.mockReset();
     });
 
-    it('should successfully handle a new user', async () => {
+    it('should successfully handle a new member', async () => {
       spyOnServiceCreateMember.mockImplementationOnce(() => true);
       spyOnServiceConnectMemberToUser.mockImplementation(() => true);
 
+      const platform = Platform.android;
       const users = [mockGenerateUser(), mockGenerateUser()];
       const member = mockGenerateMember();
-      await resolver.handleNewMember({ member, users });
+      await resolver.handleNewMember({ member, users, platform });
 
       expect(spyOnServiceCreateMember).toBeCalledWith(member);
       expect(spyOnServiceConnectMemberToUser).toBeCalledTimes(2);
-      expect(spyOnServiceConnectMemberToUser).toBeCalledWith(member, users[0]);
-      expect(spyOnServiceConnectMemberToUser).toBeCalledWith(member, users[1]);
+      expect(spyOnServiceConnectMemberToUser).toBeCalledWith(member, users[0], platform);
+      expect(spyOnServiceConnectMemberToUser).toBeCalledWith(member, users[1], platform);
     });
   });
 

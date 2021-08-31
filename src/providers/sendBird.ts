@@ -63,6 +63,18 @@ export class SendBird implements OnModuleInit {
     }
   }
 
+  async freezeGroupChannel(channelUrl: string, freeze: boolean) {
+    await this.httpService
+      .put(
+        `${this.basePath}${suffix.groupChannels}/${channelUrl}/freeze`,
+        { freeze },
+        {
+          headers: this.headers,
+        },
+      )
+      .toPromise();
+  }
+
   private formatMessage(message: string): string {
     return JSON.stringify(message, undefined, 2);
   }

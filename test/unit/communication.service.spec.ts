@@ -5,7 +5,6 @@ import {
   dbConnect,
   dbDisconnect,
   generateId,
-  generateObjectId,
   mockGenerateMember,
   mockGenerateUser,
   mockProviders,
@@ -19,6 +18,7 @@ import {
 import { UserRole } from '../../src/user';
 import { v4 } from 'uuid';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { Platform } from '../../src/common';
 
 describe('CommunicationService', () => {
   let module: TestingModule;
@@ -46,6 +46,7 @@ describe('CommunicationService', () => {
 
     sendBirdMock.spyOnSendBirdCreateUser.mockReset();
     sendBirdMock.spyOnSendBirdCreateGroupChannel.mockReset();
+    sendBirdMock.spyOnSendBirdFreeze.mockReset();
   });
 
   describe('createUser', () => {
@@ -77,10 +78,18 @@ describe('CommunicationService', () => {
   });
 
   describe('connectMemberToUser', () => {
-    it('should call createUser with member params', async () => {
+    it('should call connectMemberToUser with member params', async () => {
       const member = mockGenerateMember();
       const user = mockGenerateUser();
-      await service.connectMemberToUser(member, user);
+      const mockServiceGet = jest.spyOn(service, 'get');
+
+      mockServiceGet.mockImplementationOnce(async () => ({
+        memberId: member.id,
+        userId: user.id,
+        sendbirdChannelUrl: 'test123',
+      }));
+
+      await service.connectMemberToUser(member, user, Platform.android);
 
       expect(sendBirdMock.spyOnSendBirdCreateGroupChannel).toBeCalledWith({
         name: user.firstName,
@@ -90,20 +99,8 @@ describe('CommunicationService', () => {
         user_ids: [member.id, user.id],
       });
 
-      const result = await communicationModel.find({
-        memberId: generateObjectId(member.id),
-        userId: user.id,
-      });
-
-      expect(result).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            memberId: generateObjectId(member.id),
-            userId: user.id,
-            sendbirdChannelUrl: expect.any(String),
-          }),
-        ]),
-      );
+      expect(sendBirdMock.spyOnSendBirdFreeze).toBeCalledWith(expect.any(String), false);
+      mockServiceGet.mockReset();
     });
   });
 
@@ -114,6 +111,27 @@ describe('CommunicationService', () => {
         userId: v4(),
       });
       expect(result).toBeUndefined();
+    });
+  });
+
+  describe('onUpdateMemberPlatform', () => {
+    it('should update member platform and freeze/unfreeze accordingly', async () => {
+      const mockServiceGet = jest.spyOn(service, 'get');
+
+      const data = {
+        memberId: generateId(),
+        userId: v4(),
+        sendbirdChannelUrl: 'test123',
+      };
+      mockServiceGet.mockImplementationOnce(async () => data);
+
+      await service.onUpdateMemberPlatform({
+        memberId: data.memberId,
+        userId: data.userId,
+        platform: Platform.android,
+      });
+
+      expect(sendBirdMock.spyOnSendBirdFreeze).toBeCalledWith(expect.any(String), false);
     });
   });
 });

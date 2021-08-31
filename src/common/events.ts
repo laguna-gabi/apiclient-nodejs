@@ -8,4 +8,5 @@ export enum EventType {
   updateMemberConfig = 'updateMemberConfig',
   updateUserConfig = 'updateUserConfig',
   addUserToMemberList = 'addUserToMemberList',
+  updateMemberPlatform = 'updateMemberPlatform',
 }
