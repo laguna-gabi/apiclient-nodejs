@@ -405,7 +405,7 @@ export class Queries {
           getMemberConfig(id: $id) {
             memberId
             externalUserId
-            mobilePlatform
+            platform
           }
         }
       `,

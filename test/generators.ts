@@ -24,7 +24,7 @@ import {
   ScheduleAppointmentParams,
 } from '../src/appointment';
 import { CreateOrgParams, OrgType } from '../src/org';
-import { Language, MobilePlatform, NotificationType } from '../src/common';
+import { Language, Platform, NotificationType } from '../src/common';
 import { lookup } from 'zipcode-to-timezone';
 import { AvailabilityInput } from '../src/availability';
 import { GetCommunicationParams } from '../src/communication';
@@ -248,7 +248,7 @@ export const mockGenerateMemberConfig = (): MemberConfig => {
   return {
     memberId: generateObjectId(),
     externalUserId: v4(),
-    mobilePlatform: MobilePlatform.ios,
+    platform: Platform.ios,
     accessToken: generateId(),
   };
 };

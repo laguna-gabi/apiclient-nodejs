@@ -1,7 +1,7 @@
 import { ConfigsService, NotificationsService } from '../../src/providers';
 import { HttpService } from '@nestjs/axios';
 import { v4 } from 'uuid';
-import { MobilePlatform, NotificationType } from '../../src/common';
+import { Platform, NotificationType } from '../../src/common';
 import * as faker from 'faker';
 import { delay } from '../common';
 
@@ -22,7 +22,7 @@ describe('live: notifications (one signal)', () => {
       const params = {
         token: 'sampleiospushkittoken',
         externalUserId: v4(),
-        mobilePlatform: MobilePlatform.ios,
+        platform: Platform.ios,
       };
       const playerId = await notificationsService.register(params);
       expect(playerId).not.toBeUndefined();
@@ -38,7 +38,7 @@ describe('live: notifications (one signal)', () => {
 
         const result = await notificationsService.send({
           externalUserId: params.externalUserId,
-          mobilePlatform: params.mobilePlatform,
+          platform: params.platform,
           payload: {
             heading: { en: faker.lorem.word() },
           },
@@ -58,7 +58,7 @@ describe('live: notifications (one signal)', () => {
           expect(result).toBeTruthy();
         }
       }
-      await notificationsService.unregister(playerId, params.mobilePlatform);
+      await notificationsService.unregister(playerId, params.platform);
     },
     delayTime * RETRY_MAX + 5000,
   );
@@ -75,12 +75,12 @@ describe('live: notifications (one signal)', () => {
   it.skip('should send android video notification for default onesignal project', async () => {
     const params = {
       externalUserId: 'eb0ef495-0e63-4a48-b45a-a58248f6b775',
-      mobilePlatform: MobilePlatform.android,
+      platform: Platform.android,
     };
 
     const result = await notificationsService.send({
       externalUserId: params.externalUserId,
-      mobilePlatform: params.mobilePlatform,
+      platform: params.platform,
       payload: {
         contents: { en: faker.lorem.sentence() },
         heading: { en: faker.lorem.word() },

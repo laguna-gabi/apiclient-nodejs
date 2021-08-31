@@ -37,12 +37,13 @@ export enum NotificationType {
 
 registerEnumType(NotificationType, { name: 'NotificationType' });
 
-export enum MobilePlatform {
+export enum Platform {
   ios = 'ios',
   android = 'android',
+  web = 'web',
 }
 
-registerEnumType(MobilePlatform, { name: 'MobilePlatform' });
+registerEnumType(Platform, { name: 'Platform' });
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -66,8 +67,8 @@ export class RegisterForNotificationParams {
   @Field(() => String)
   memberId: string;
 
-  @Field(() => MobilePlatform)
-  mobilePlatform: MobilePlatform;
+  @Field(() => Platform)
+  platform: Platform;
 
   @Field(() => String, { nullable: true })
   @IsOptional()
@@ -114,7 +115,7 @@ export class NotificationPayload {
 
 export class SendNotificationParams {
   externalUserId: string;
-  mobilePlatform: MobilePlatform;
+  platform: Platform;
   payload: NotificationPayload;
   data: {
     user: {

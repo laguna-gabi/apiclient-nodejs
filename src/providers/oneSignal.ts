@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigsService, ExternalConfigs } from '.';
-import { MobilePlatform, NotificationType, SendNotificationParams } from '../common';
+import { Platform, NotificationType, SendNotificationParams } from '../common';
 import { HttpService } from '@nestjs/axios';
 import { INotifications } from './interfaces';
 
@@ -27,7 +27,7 @@ export class OneSignal implements INotifications {
   }): Promise<string | undefined> {
     try {
       const data = {
-        app_id: await this.getApiId(MobilePlatform.ios),
+        app_id: await this.getApiId(Platform.ios),
         identifier: token,
         external_user_id: externalUserId,
         device_type: 0, //ios
@@ -44,10 +44,10 @@ export class OneSignal implements INotifications {
   }
 
   async send(sendNotificationParams: SendNotificationParams) {
-    const { mobilePlatform, externalUserId, payload, data } = sendNotificationParams;
+    const { platform, externalUserId, payload, data } = sendNotificationParams;
 
-    const config = await this.getConfig(mobilePlatform, data.type);
-    const app_id = await this.getApiId(mobilePlatform, data.type);
+    const config = await this.getConfig(platform, data.type);
+    const app_id = await this.getApiId(platform, data.type);
     const body: any = {
       include_external_user_ids: [externalUserId],
       content_available: true,
@@ -56,7 +56,7 @@ export class OneSignal implements INotifications {
       app_id,
     };
 
-    if (this.isVoipProject(mobilePlatform, data.type)) {
+    if (this.isVoipProject(platform, data.type)) {
       body.apns_push_type_override = 'voip';
     }
 
@@ -68,10 +68,10 @@ export class OneSignal implements INotifications {
     }
   }
 
-  async unregister(playerId: string, mobilePlatform: MobilePlatform) {
-    const appId = await this.getApiId(mobilePlatform);
+  async unregister(playerId: string, platform: Platform) {
+    const appId = await this.getApiId(platform);
     const url = `${this.playersUrl}/${playerId}?app_id=${appId}`;
-    const config = await this.getConfig(mobilePlatform);
+    const config = await this.getConfig(platform);
 
     await this.httpService.delete(url, config).toPromise();
   }
@@ -79,11 +79,8 @@ export class OneSignal implements INotifications {
   /*************************************************************************************************
    **************************************** Private methods ****************************************
    ************************************************************************************************/
-  private isVoipProject(
-    mobilePlatform: MobilePlatform,
-    notificationType?: NotificationType,
-  ): boolean {
-    return mobilePlatform === MobilePlatform.ios && notificationType !== NotificationType.text;
+  private isVoipProject(platform: Platform, notificationType?: NotificationType): boolean {
+    return platform === Platform.ios && notificationType !== NotificationType.text;
   }
 
   private validateRegisterResult(externalUserId, result): string | undefined {
@@ -101,20 +98,17 @@ export class OneSignal implements INotifications {
     }
   }
 
-  private async getApiId(
-    mobilePlatform: MobilePlatform,
-    notificationType?: NotificationType,
-  ): Promise<string> {
+  private async getApiId(platform: Platform, notificationType?: NotificationType): Promise<string> {
     return this.configsService.getConfig(
-      this.isVoipProject(mobilePlatform, notificationType)
+      this.isVoipProject(platform, notificationType)
         ? ExternalConfigs.oneSignalVoipApiId
         : ExternalConfigs.oneSignalDefaultApiId,
     );
   }
 
-  private async getConfig(mobilePlatform: MobilePlatform, notificationType?: NotificationType) {
+  private async getConfig(platform: Platform, notificationType?: NotificationType) {
     const config = await this.configsService.getConfig(
-      this.isVoipProject(mobilePlatform, notificationType)
+      this.isVoipProject(platform, notificationType)
         ? ExternalConfigs.oneSignalVoipApiKey
         : ExternalConfigs.oneSignalDefaultApiKey,
     );

@@ -22,7 +22,7 @@ import {
   Sex,
   UpdateMemberParams,
 } from '../../src/member';
-import { Errors, ErrorType, Language, MobilePlatform, NotificationType } from '../../src/common';
+import { Errors, ErrorType, Language, Platform, NotificationType } from '../../src/common';
 import { Handler } from './aux/handler';
 import { v4 } from 'uuid';
 
@@ -296,7 +296,7 @@ describe('Validations - member', () => {
         await handler.mutations.registerMemberForNotifications({
           registerForNotificationParams: {
             memberId: generateId(),
-            mobilePlatform: MobilePlatform.ios,
+            platform: Platform.ios,
             token,
           },
           invalidFieldsErrors: [Errors.get(ErrorType.memberRegisterForNotificationToken)],

@@ -16,7 +16,7 @@ import {
 import { DbModule } from '../../src/db/db.module';
 import { MemberModule, MemberResolver, MemberService, TaskStatus } from '../../src/member';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { Errors, ErrorType, MobilePlatform, RegisterForNotificationParams } from '../../src/common';
+import { Errors, ErrorType, Platform, RegisterForNotificationParams } from '../../src/common';
 import { NotificationsService, StorageService } from '../../src/providers';
 import * as faker from 'faker';
 import { UserService } from '../../src/user';
@@ -432,7 +432,7 @@ describe('MemberResolver', () => {
       spyOnServiceUpdateMemberConfig.mockReset();
     });
 
-    it('should not call notificationsService on mobilePlatform=android', async () => {
+    it('should not call notificationsService on platform=android', async () => {
       spyOnNotificationsServiceRegister.mockImplementationOnce(async () => undefined);
       const member = mockGenerateMemberConfig();
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => member);
@@ -440,7 +440,7 @@ describe('MemberResolver', () => {
 
       const params: RegisterForNotificationParams = {
         memberId: member.memberId.toString(),
-        mobilePlatform: MobilePlatform.android,
+        platform: Platform.android,
       };
       await resolver.registerMemberForNotifications(params);
 
@@ -448,11 +448,11 @@ describe('MemberResolver', () => {
       expect(spyOnServiceUpdateMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceUpdateMemberConfig).toBeCalledWith({
         memberId: member.memberId,
-        mobilePlatform: params.mobilePlatform,
+        platform: params.platform,
       });
     });
 
-    it('should not call notificationsService on mobilePlatform=ios', async () => {
+    it('should not call notificationsService on platform=ios', async () => {
       spyOnNotificationsServiceRegister.mockImplementationOnce(async () => undefined);
       const member = mockGenerateMemberConfig();
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => member);
@@ -460,7 +460,7 @@ describe('MemberResolver', () => {
 
       const params: RegisterForNotificationParams = {
         memberId: member.memberId.toString(),
-        mobilePlatform: MobilePlatform.ios,
+        platform: Platform.ios,
         token: faker.lorem.word(),
       };
       await resolver.registerMemberForNotifications(params);
@@ -473,7 +473,7 @@ describe('MemberResolver', () => {
       expect(spyOnServiceUpdateMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceUpdateMemberConfig).toBeCalledWith({
         memberId: member.memberId,
-        mobilePlatform: params.mobilePlatform,
+        platform: params.platform,
       });
     });
   });
@@ -508,7 +508,7 @@ describe('MemberResolver', () => {
 
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
         externalUserId: memberConfig.externalUserId,
-        mobilePlatform: memberConfig.mobilePlatform,
+        platform: memberConfig.platform,
         payload: { heading: { en: 'Laguna' } },
         data: {
           user: {

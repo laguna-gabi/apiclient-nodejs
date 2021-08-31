@@ -19,7 +19,7 @@ import {
   ErrorType,
   EventType,
   Identifier,
-  MobilePlatform,
+  Platform,
   RegisterForNotificationParams,
 } from '../common';
 import { camelCase } from 'lodash';
@@ -179,7 +179,7 @@ export class MemberResolver {
       registerForNotificationParams.memberId,
     );
 
-    if (registerForNotificationParams.mobilePlatform === MobilePlatform.ios) {
+    if (registerForNotificationParams.platform === Platform.ios) {
       const { token } = registerForNotificationParams;
       await this.notificationsService.register({
         token,
@@ -188,7 +188,7 @@ export class MemberResolver {
     }
     await this.memberService.updateMemberConfig({
       memberId: memberConfig.memberId,
-      mobilePlatform: registerForNotificationParams.mobilePlatform,
+      platform: registerForNotificationParams.platform,
     });
   }
 
@@ -204,7 +204,7 @@ export class MemberResolver {
 
     await this.notificationsService.send({
       externalUserId: memberConfig.externalUserId,
-      mobilePlatform: memberConfig.mobilePlatform,
+      platform: memberConfig.platform,
       payload: { heading: { en: 'Laguna' } },
       data: {
         user: {

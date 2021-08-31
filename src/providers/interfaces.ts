@@ -1,4 +1,4 @@
-import { MobilePlatform, SendNotificationParams } from '../common';
+import { Platform, SendNotificationParams } from '../common';
 
 export interface INotifications {
   register({
@@ -9,5 +9,5 @@ export interface INotifications {
     externalUserId: string;
   }): Promise<string | undefined>;
   send(sendNotificationParams: SendNotificationParams): Promise<boolean>;
-  unregister(playerId: string, mobilePlatform: MobilePlatform): Promise<void>;
+  unregister(playerId: string, platform: Platform): Promise<void>;
 }

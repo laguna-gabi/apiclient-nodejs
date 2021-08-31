@@ -18,7 +18,7 @@ import {
   Errors,
   ErrorType,
   Identifiers,
-  MobilePlatform,
+  Platform,
   NotificationType,
   RegisterForNotificationParams,
 } from '../../src/common';
@@ -503,11 +503,11 @@ describe('Integration tests: all', () => {
 
   test.each`
     register
-    ${{ mobilePlatform: MobilePlatform.ios, token: faker.lorem.word() }}
-    ${{ mobilePlatform: MobilePlatform.android }}
+    ${{ platform: Platform.ios, token: faker.lorem.word() }}
+    ${{ platform: Platform.android }}
   `(
     /* eslint-enable max-len */
-    `should registerMemberForNotifications and update MemberConfig on $register.mobilePlatform`,
+    `should registerMemberForNotifications and update MemberConfig on $register.platform`,
     async (params) => {
       const primaryUser = await creators.createAndValidateUser();
       const org = await creators.createAndValidateOrg();
@@ -521,7 +521,7 @@ describe('Integration tests: all', () => {
       expect(memberConfigDefault).toEqual({
         memberId: id,
         externalUserId: expect.any(String),
-        mobilePlatform: null,
+        platform: Platform.web,
       });
 
       const registerForNotificationParams: RegisterForNotificationParams = {
@@ -530,7 +530,7 @@ describe('Integration tests: all', () => {
       };
       await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
 
-      if (params.register.mobilePlatform === MobilePlatform.ios) {
+      if (params.register.platform === Platform.ios) {
         expect(handler.notificationsService.spyOnNotificationsServiceRegister).toBeCalledWith({
           token: registerForNotificationParams.token,
           externalUserId: memberConfigDefault.externalUserId,
@@ -543,7 +543,7 @@ describe('Integration tests: all', () => {
       expect(newMemberConfig).toEqual({
         memberId: id,
         externalUserId: expect.any(String),
-        mobilePlatform: params.register.mobilePlatform,
+        platform: params.register.platform,
       });
 
       handler.notificationsService.spyOnNotificationsServiceRegister.mockReset();
@@ -572,6 +572,7 @@ describe('Integration tests: all', () => {
     expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
       externalUserId: memberConfig.externalUserId,
       payload: { heading: { en: 'Laguna' } },
+      platform: Platform.web,
       data: {
         user: {
           id: primaryUser.id,

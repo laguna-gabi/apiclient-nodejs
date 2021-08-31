@@ -8,7 +8,7 @@ import {
   ErrorType,
   EventType,
   Identifier,
-  MobilePlatform,
+  Platform,
 } from '../common';
 import {
   ActionItem,
@@ -290,14 +290,14 @@ export class MemberService extends BaseService {
 
   async updateMemberConfig({
     memberId,
-    mobilePlatform,
+    platform,
   }: {
     memberId: Types.ObjectId;
-    mobilePlatform: MobilePlatform;
+    platform: Platform;
   }): Promise<boolean> {
     const result = await this.memberConfigModel.updateOne(
       { memberId },
-      { $set: { memberId, mobilePlatform } },
+      { $set: { memberId, platform: platform } },
     );
 
     return result.ok === 1;
@@ -312,7 +312,7 @@ export class MemberService extends BaseService {
   }
 
   @OnEvent(EventType.updateMemberConfig, { async: true })
-  async handleupdateMemberConfig({
+  async handleUpdateMemberConfig({
     memberId,
     accessToken,
   }: {

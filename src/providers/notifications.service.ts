@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { MobilePlatform, SendNotificationParams } from '../common';
+import { Platform, SendNotificationParams } from '../common';
 import { ConfigsService } from './aws';
 import { OneSignal } from './oneSignal';
 import { TwilioService } from './twilio.service';
@@ -30,14 +30,14 @@ export class NotificationsService implements INotifications {
   }
 
   async send(sendNotificationParams: SendNotificationParams): Promise<boolean> {
-    if (sendNotificationParams.mobilePlatform) {
+    if (sendNotificationParams.platform) {
       return this.oneSignal.send(sendNotificationParams);
     } else {
       return this.twilio.send(sendNotificationParams);
     }
   }
 
-  async unregister(playerId: string, mobilePlatform: MobilePlatform): Promise<void> {
-    return this.oneSignal.unregister(playerId, mobilePlatform);
+  async unregister(playerId: string, platform: Platform): Promise<void> {
+    return this.oneSignal.unregister(playerId, platform);
   }
 }

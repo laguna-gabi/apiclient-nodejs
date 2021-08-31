@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { MobilePlatform } from '../common';
+import { Platform } from '../common';
 import { Types } from 'mongoose';
 
 /**************************************************************************************************
@@ -18,9 +18,9 @@ export class MemberConfig {
   @Field(() => String)
   externalUserId: string;
 
-  @Prop({ isNan: true })
-  @Field(() => MobilePlatform, { nullable: true })
-  mobilePlatform: MobilePlatform;
+  @Prop({ default: Platform.web })
+  @Field(() => Platform, { nullable: true })
+  platform: Platform;
 
   @Prop()
   @Field(() => String, { nullable: true })

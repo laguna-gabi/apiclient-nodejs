@@ -3,7 +3,7 @@ import { ConfigsService, ExternalConfigs } from '.';
 import { Twilio, jwt } from 'twilio';
 import * as config from 'config';
 import { INotifications } from './interfaces';
-import { MobilePlatform, SendNotificationParams } from '../common';
+import { Platform, SendNotificationParams } from '../common';
 
 @Injectable()
 export class TwilioService implements OnModuleInit, INotifications {
@@ -63,7 +63,7 @@ export class TwilioService implements OnModuleInit, INotifications {
     return token.toJwt();
   }
 
-  async unregister(playerId: string, mobilePlatform: MobilePlatform): Promise<void> {
+  async unregister(playerId: string, platform: Platform): Promise<void> {
     throw new NotImplementedException();
   }
 }

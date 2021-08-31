@@ -32,7 +32,7 @@ import {
   TaskStatus,
   UpdateMemberParams,
 } from '../../src/member';
-import { Errors, ErrorType, Identifier, Language } from '../../src/common';
+import { Errors, ErrorType, Identifier, Language, Platform } from '../../src/common';
 import { User, UserDto, UserRole } from '../../src/user';
 import * as faker from 'faker';
 import { datatype, date, internet } from 'faker';
@@ -800,6 +800,7 @@ describe('MemberService', () => {
         expect.objectContaining({
           memberId: id,
           externalUserId: expect.any(String),
+          platform: Platform.web,
         }),
       );
     });
