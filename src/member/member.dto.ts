@@ -7,13 +7,21 @@ import {
   ErrorType,
   Identifier,
   IsPeerIdNotNullOnNotifyVideoOrCall,
-  IsPrimaryUserInUsers,
   IsStringDate,
   Language,
   NotificationType,
   validPhoneExamples,
 } from '../common';
-import { IsEmail, IsOptional, IsPhoneNumber, Length, ValidateIf } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  Length,
+  ValidateIf,
+} from 'class-validator';
 import * as config from 'config';
 import { Org } from '../org';
 import { ActionItem, Goal } from '.';
@@ -79,69 +87,80 @@ export class Address {
 @InputType({ isAbstract: true })
 export class ExtraMemberParams {
   @Field(() => Sex, { nullable: true })
+  @IsEnum(Sex) /* for rest api */
   @IsOptional()
   sex?: Sex;
 
   @Field(() => String, { nullable: true })
-  @IsOptional()
   @IsEmail(undefined, {
     message: Errors.get(ErrorType.memberEmailFormat),
   })
+  @IsString() /* for rest api */
+  @IsOptional()
   email?: string;
 
   @Field(() => Language, { nullable: true })
+  @IsEnum(Language) /* for rest api */
   @IsOptional()
   language?: Language;
 
   @Field(() => String, { nullable: true })
+  @IsString() /* for rest api */
   @IsOptional()
   zipCode?: string;
 
   @Field(() => String, { nullable: true })
-  @IsOptional()
   @IsStringDate({ message: Errors.get(ErrorType.memberDischargeDate) })
+  @IsString() /* for rest api */
+  @IsOptional()
   dischargeDate?: string;
 
   @Field(() => Honorific, { nullable: true })
+  @IsEnum(Honorific) /* for rest api */
   @IsOptional()
   honorific?: Honorific;
 }
 
 @InputType()
 export class CreateMemberParams extends ExtraMemberParams {
-  @Field({ description: validPhoneExamples })
+  @Field(() => String, { description: validPhoneExamples })
   @ValidateIf((params) => params.phone !== config.get('iosExcludeRegistrationNumber'))
   @IsPhoneNumber(undefined, { message: Errors.get(ErrorType.memberPhone) })
+  @IsNotEmpty() /* for rest api */
+  @IsString() /* for rest api */
   phone: string;
 
   @Field(() => String)
+  @IsNotEmpty() /* for rest api */
+  @IsString() /* for rest api */
   deviceId: string;
 
-  @Field()
+  @Field(() => String)
   @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
     message: Errors.get(ErrorType.memberMinMaxLength),
   })
+  @IsNotEmpty() /* for rest api */
+  @IsString() /* for rest api */
   firstName: string;
 
-  @Field()
+  @Field(() => String)
   @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
     message: Errors.get(ErrorType.memberMinMaxLength),
   })
+  @IsNotEmpty() /* for rest api */
+  @IsString() /* for rest api */
   lastName: string;
 
   @Field(() => String)
   @IsStringDate({ message: Errors.get(ErrorType.memberDateOfBirth) })
+  @IsNotEmpty() /* for rest api */
+  @IsString() /* for rest api */
   dateOfBirth: string;
 
   @Field(() => String)
+  @IsNotEmpty() /* for rest api */
+  @IsString() /* for rest api */
   orgId: string;
-
-  @Field(() => String)
-  primaryUserId: string;
-
-  @Field(() => [String])
-  @IsPrimaryUserInUsers({ message: Errors.get(ErrorType.memberPrimaryUserIdNotInUsers) })
-  usersIds: string[];
 }
 
 @InputType()
@@ -149,14 +168,14 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @Field(() => String)
   id: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
     message: Errors.get(ErrorType.memberMinMaxLength),
   })
   @IsOptional()
   firstName?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
     message: Errors.get(ErrorType.memberMinMaxLength),
   })
@@ -175,7 +194,7 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @IsOptional()
   readmissionRisk?: string;
 
-  @Field({ description: validPhoneExamples, nullable: true })
+  @Field(() => String, { description: validPhoneExamples, nullable: true })
   @IsOptional()
   @IsPhoneNumber(undefined, {
     message: Errors.get(ErrorType.memberPhone),

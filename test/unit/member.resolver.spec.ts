@@ -26,7 +26,6 @@ import {
 import { NotificationsService, StorageService } from '../../src/providers';
 import * as faker from 'faker';
 import { UserService } from '../../src/user';
-import { v4 } from 'uuid';
 import { Types } from 'mongoose';
 
 describe('MemberResolver', () => {
@@ -64,15 +63,22 @@ describe('MemberResolver', () => {
 
   describe('createMember', () => {
     let spyOnServiceInsert;
+    let spyOnServiceGetAvailableUser;
+    let spyOnUserServiceGetRegisteredUsers;
     let spyOnServiceGetMemberConfig;
+
     beforeEach(() => {
       spyOnServiceInsert = jest.spyOn(service, 'insert');
+      spyOnServiceGetAvailableUser = jest.spyOn(service, 'getAvailableUser');
+      spyOnUserServiceGetRegisteredUsers = jest.spyOn(userService, 'getRegisteredUsers');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
     });
 
     afterEach(() => {
       spyOnServiceInsert.mockReset();
       spyOnServiceGetMemberConfig.mockReset();
+      spyOnServiceGetAvailableUser.mockReset();
+      spyOnUserServiceGetRegisteredUsers.mockReset();
       spyOnEventEmitter.mockReset();
     });
 
@@ -85,44 +91,24 @@ describe('MemberResolver', () => {
       };
       spyOnServiceInsert.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnServiceGetAvailableUser.mockImplementationOnce(async () => member.primaryUserId);
+      spyOnUserServiceGetRegisteredUsers.mockImplementationOnce(async () => [member.primaryUserId]);
 
-      const params = generateCreateMemberParams({
-        orgId: generateId(),
-        primaryUserId: member.primaryUserId,
-        usersIds: [member.primaryUserId],
-      });
+      const params = generateCreateMemberParams({ orgId: generateId() });
       await resolver.createMember(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
-      expect(spyOnServiceInsert).toBeCalledWith(params);
+      expect(spyOnServiceInsert).toBeCalledWith(params, member.primaryUserId);
+      expect(spyOnServiceGetAvailableUser).toBeCalledTimes(1);
+      expect(spyOnServiceGetAvailableUser).toBeCalledWith([member.primaryUserId]);
+      expect(spyOnUserServiceGetRegisteredUsers).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
       expect(spyOnEventEmitter).toBeCalledWith(EventType.collectUsersDataBridge, {
         member,
         platform: memberConfig.platform,
-        usersIds: [memberConfig.userId],
+        userId: memberConfig.userId,
       });
-    });
-
-    it('should support undefined fields', async () => {
-      const member = mockGenerateMember();
-      spyOnServiceInsert.mockImplementationOnce(async () => member);
-      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => ({
-        memberId: member.id,
-        userId: v4(),
-      }));
-
-      const params = generateCreateMemberParams({
-        orgId: generateId(),
-        primaryUserId: member.primaryUserId,
-      });
-      delete params.usersIds;
-      await resolver.createMember(params);
-
-      expect(spyOnServiceInsert).toBeCalledTimes(1);
-      expect(spyOnServiceInsert).toBeCalledWith(params);
-      expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
-      expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
     });
   });
 

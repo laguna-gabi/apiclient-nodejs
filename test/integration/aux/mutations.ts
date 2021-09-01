@@ -157,21 +157,87 @@ export class Mutations {
             firstName
             lastName
             dateOfBirth
-            sex
-            email
-            language
-            zipCode
-            dischargeDate
-            fellowName
-            drgDesc
-            readmissionRisk
-            phoneSecondary
-            admitDate
             address {
               street
               city
               state
             }
+            scores {
+              adherence
+              adherenceText
+              wellbeing
+              wellbeingText
+            }
+            org {
+              id
+              name
+              type
+              trialDuration
+              zipCode
+            }
+            primaryUserId
+            users {
+              id
+              firstName
+              lastName
+              email
+              roles
+              avatar
+              description
+              createdAt
+              phone
+              title
+              maxCustomers
+              languages
+              appointments {
+                id
+                notBefore
+                method
+                status
+                start
+                end
+                link
+                noShow
+                noShowReason
+                notes {
+                  recap
+                  strengths
+                  userActionItem
+                  memberActionItem
+                  scores {
+                    adherence
+                    adherenceText
+                    wellbeing
+                    wellbeingText
+                  }
+                }
+              }
+            }
+            sex
+            email
+            language
+            zipCode
+            utcDelta
+            dischargeDate
+            goals {
+              id
+              title
+              status
+              deadline
+            }
+            actionItems {
+              id
+              title
+              status
+              deadline
+            }
+            fellowName
+            drgDesc
+            readmissionRisk
+            phoneSecondary
+            generalNotes
+            admitDate
+            createdAt
             honorific
           }
         }

@@ -9,6 +9,7 @@ import { v4 } from 'uuid';
 export const urls = {
   scheduleAppointments: `/${apiPrefix}/appointments/schedule`,
   slots: `/${apiPrefix}/users/slots`,
+  members: `/${apiPrefix}/members/create`,
 };
 
 export const compareUsers = (user: User, userBase) => {

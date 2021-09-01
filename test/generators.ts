@@ -123,8 +123,6 @@ export const generateCreateMemberParams = ({
   lastName = faker.name.lastName(),
   dateOfBirth = generateDateOnly(faker.date.past()),
   orgId,
-  primaryUserId,
-  usersIds,
   sex,
   email,
   language,
@@ -138,8 +136,6 @@ export const generateCreateMemberParams = ({
   lastName?: string;
   dateOfBirth?: string;
   orgId: string;
-  primaryUserId: string;
-  usersIds?: string[];
   sex?: Sex;
   email?: string;
   language?: Language;
@@ -154,8 +150,6 @@ export const generateCreateMemberParams = ({
     lastName,
     dateOfBirth,
     orgId,
-    primaryUserId,
-    usersIds,
     sex,
     email,
     language,

@@ -1,3 +1,4 @@
+import * as request from 'supertest';
 import {
   generateCreateMemberParams,
   generateCreateTaskParams,
@@ -11,6 +12,7 @@ import {
   generateUpdateMemberParams,
   generateUpdateTaskStatusParams,
   generateZipCode,
+  urls,
 } from '../index';
 import * as config from 'config';
 import * as faker from 'faker';
@@ -24,19 +26,23 @@ import {
 } from '../../src/member';
 import { Errors, ErrorType, Language, Platform, NotificationType } from '../../src/common';
 import { Handler } from './aux/handler';
-import { v4 } from 'uuid';
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
 
 describe('Validations - member', () => {
   const handler: Handler = new Handler();
+  let server;
 
   const minLength = validatorsConfig.get('name.minLength') as number;
   const maxLength = validatorsConfig.get('name.maxLength') as number;
 
   beforeAll(async () => {
     await handler.beforeAll();
+    await handler.mutations.createUser({
+      userParams: generateCreateUserParams(),
+    });
+    server = handler.app.getHttpServer();
   });
 
   afterAll(async () => {
@@ -46,20 +52,15 @@ describe('Validations - member', () => {
   describe('createMember + getMember', () => {
     /* eslint-disable max-len */
     test.each`
-      field              | error
-      ${'phone'}         | ${`Field "phone" of required type "String!" was not provided.`}
-      ${'firstName'}     | ${`Field "firstName" of required type "String!" was not provided.`}
-      ${'lastName'}      | ${`Field "lastName" of required type "String!" was not provided.`}
-      ${'dateOfBirth'}   | ${`Field "dateOfBirth" of required type "String!" was not provided.`}
-      ${'primaryUserId'} | ${`Field "primaryUserId" of required type "String!" was not provided.`}
-      ${'usersIds'}      | ${`Field "usersIds" of required type "[String!]!" was not provided.`}
+      field            | error
+      ${'phone'}       | ${`Field "phone" of required type "String!" was not provided.`}
+      ${'firstName'}   | ${`Field "firstName" of required type "String!" was not provided.`}
+      ${'lastName'}    | ${`Field "lastName" of required type "String!" was not provided.`}
+      ${'dateOfBirth'} | ${`Field "dateOfBirth" of required type "String!" was not provided.`}
     `(`should fail to create a member since mandatory field $field is missing`, async (params) => {
       /* eslint-enable max-len */
-      const primaryUserId = v4();
       const memberParams: CreateMemberParams = generateCreateMemberParams({
         orgId: generateId(),
-        primaryUserId,
-        usersIds: [primaryUserId],
       });
       delete memberParams[params.field];
       await handler.mutations.createMember({
@@ -78,13 +79,8 @@ describe('Validations - member', () => {
     `(`should set default value if exists for optional field $field`, async (params) => {
       /* eslint-enable max-len */
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
-      const { id: primaryUserId } = await handler.mutations.createUser({
-        userParams: generateCreateUserParams(),
-      });
       const memberParams: CreateMemberParams = generateCreateMemberParams({
         orgId,
-        primaryUserId,
-        usersIds: [primaryUserId],
       });
       delete memberParams[params.field];
 
@@ -105,13 +101,8 @@ describe('Validations - member', () => {
       ${'honorific'} | ${Honorific.Reverend}
     `(`should be able to set value for optional field $field`, async (params) => {
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
-      const { id: primaryUserId } = await handler.mutations.createUser({
-        userParams: generateCreateUserParams(),
-      });
       const memberParams: CreateMemberParams = generateCreateMemberParams({
         orgId,
-        primaryUserId,
-        usersIds: [primaryUserId],
       });
       memberParams[params.field] = params.value;
 
@@ -125,13 +116,8 @@ describe('Validations - member', () => {
 
     it('should set value for optional field dischargeDate', async () => {
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
-      const { id: primaryUserId } = await handler.mutations.createUser({
-        userParams: generateCreateUserParams(),
-      });
       const memberParams: CreateMemberParams = generateCreateMemberParams({
         orgId,
-        primaryUserId,
-        usersIds: [primaryUserId],
       });
 
       memberParams.dischargeDate = generateDateOnly(faker.date.soon(3));
@@ -152,7 +138,6 @@ describe('Validations - member', () => {
       ${{ firstName: 123 }}             | ${{ missingFieldError: stringError }}
       ${{ lastName: 123 }}              | ${{ missingFieldError: stringError }}
       ${{ orgId: 123 }}                 | ${{ missingFieldError: stringError }}
-      ${{ primaryUserId: 123 }}         | ${{ missingFieldError: stringError }}
       ${{ email: 'not-valid' }}         | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberEmailFormat)] }}
       ${{ sex: 'not-valid' }}           | ${{ missingFieldError: 'does not exist in "Sex" enum' }}
       ${{ language: 'not-valid' }}      | ${{ missingFieldError: 'does not exist in "Language" enum' }}
@@ -166,37 +151,12 @@ describe('Validations - member', () => {
       /* eslint-enable max-len */
       `should fail to create a member since setting $input is not a valid`,
       async (params) => {
-        const primaryUserId = v4();
         const memberParams: CreateMemberParams = generateCreateMemberParams({
           orgId: generateId(),
-          primaryUserId,
-          usersIds: [primaryUserId],
           ...params.input,
         });
 
         await handler.mutations.createMember({ memberParams, ...params.error });
-      },
-    );
-
-    test.each`
-      input
-      ${{ usersIds: [] }}
-      ${{ usersIds: [123] }}
-    `(
-      /* eslint-enable max-len */
-      `should fail to create a member since setting $input is not a valid`,
-      async (params) => {
-        const primaryUserId = v4();
-        const memberParams: CreateMemberParams = generateCreateMemberParams({
-          orgId: generateId(),
-          primaryUserId,
-          usersIds: params.usersIds,
-        });
-
-        await handler.mutations.createMember({
-          memberParams,
-          missingFieldError: 'Field "usersIds" of required type "[String!]!" was not provided',
-        });
       },
     );
 
@@ -207,10 +167,7 @@ describe('Validations - member', () => {
       ${minLength - 1} | ${'short'}  | ${'lastName'}
       ${maxLength + 1} | ${'long'}   | ${'lastName'}
     `(`should fail to create a member since $field is too $errorString`, async (params) => {
-      const primaryUserId = v4();
       const memberParams: CreateMemberParams = generateCreateMemberParams({
-        primaryUserId,
-        usersIds: [primaryUserId],
         orgId: generateId(),
       });
       memberParams[params.field] = generateRandomName(params.length);
@@ -229,11 +186,8 @@ describe('Validations - member', () => {
       /* eslint-enable max-len */
       `should fail to create a member since $field is not valid`,
       async (params) => {
-        const primaryUserId = v4();
         const memberParams: CreateMemberParams = generateCreateMemberParams({
           orgId: generateId(),
-          primaryUserId,
-          usersIds: [primaryUserId],
           ...params.input,
         });
         await handler.mutations.createMember({
@@ -257,17 +211,18 @@ describe('Validations - member', () => {
       });
     });
 
-    it('should throw error on primaryUserId not existing in users list', async () => {
-      const primaryUserId = v4();
+    it('rest: should fail to create member if phone already exists', async () => {
       const memberParams: CreateMemberParams = generateCreateMemberParams({
         orgId: generateId(),
-        primaryUserId,
-        usersIds: [v4()],
       });
       await handler.mutations.createMember({
         memberParams,
-        invalidFieldsErrors: [Errors.get(ErrorType.memberPrimaryUserIdNotInUsers)],
       });
+      const newMemberParams: CreateMemberParams = generateCreateMemberParams({
+        orgId: generateId(),
+        phone: memberParams.phone,
+      });
+      await request(server).post(urls.members).send(newMemberParams).expect(400);
     });
   });
 

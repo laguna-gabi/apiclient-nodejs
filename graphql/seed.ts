@@ -4,7 +4,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { createTestClient } from 'apollo-server-testing';
 import { AppModule } from '../src/app.module';
 import { Mutations } from '../test/integration/aux/mutations';
-import { UserRole } from '../src/user';
+import { Queries } from '../test/integration/aux/queries';
+import { UserRole, UserService } from '../src/user';
 import {
   generateAvailabilityInput,
   generateCreateMemberParams,
@@ -35,29 +36,23 @@ import { Identifier } from '../src/common';
  */
 
 let mutations: Mutations;
+let queries: Queries;
+let userService: UserService; //used for internal method, isn't exposed on queries
 let app: INestApplication;
 type TaskType = 'goal' | 'actionItem';
 
 async function main() {
   await init();
 
-  console.debug(
-    '\n----------------------------------------------------------------\n' +
-      '----------------------- Creating 3 users -----------------------\n' +
-      '----------------------------------------------------------------',
-  );
-  const { id: user1Id } = await createUser([UserRole.coach], 'user1');
-  const { id: user2Id } = await createUser([UserRole.nurse], 'user2');
-  const { id: user3Id } = await createUser([UserRole.coach, UserRole.nurse], 'user2');
-
-  console.debug(
-    '\n----------------------------------------------------------------\n' +
-      '------------- Creating 9 availabilities for 3 users ------------\n' +
-      '----------------------------------------------------------------',
-  );
-  await createAvailability(user1Id);
-  await createAvailability(user2Id);
-  await createAvailability(user3Id);
+  const users = await userService.getRegisteredUsers();
+  if (users.length === 0) {
+    //No users existing in the db, creating one
+    await createUser([UserRole.coach], 'user');
+    //Since Sendbird is doing async calls in event emitter,
+    //we need to wait a while for the actions to be finished since in createMember we're creating
+    //a groupChannel that should wait for the user to be registered on sendbird.
+    await delay(2000);
+  }
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
@@ -74,8 +69,6 @@ async function main() {
   );
   const memberParams = generateCreateMemberParams({
     orgId: org.id,
-    primaryUserId: user1Id,
-    usersIds: [user1Id, user2Id, user3Id],
     email: faker.internet.email(),
     zipCode: faker.address.zipCode(),
     dischargeDate: generateDateOnly(faker.date.future(1)),
@@ -84,9 +77,10 @@ async function main() {
   const { id: memberId } = await mutations.createMember({
     memberParams,
   });
+  const { primaryUserId } = await queries.getMember({ id: memberId });
   console.log(
-    `${memberId} : member with deviceId ${memberParams.deviceId}\nhaving a user1 ` +
-      `as his primaryCoach, user2, user3 as his secondary users`,
+    `${memberId} : member with deviceId ${memberParams.deviceId}\nhaving` +
+      ` primaryUser ${primaryUserId} was registered`,
   );
 
   const signed = jwt.sign({ username: memberParams.deviceId }, 'key-123');
@@ -99,14 +93,21 @@ async function main() {
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
+      '------------- Creating 9 availabilities for 3 users ------------\n' +
+      '----------------------------------------------------------------',
+  );
+  await createAvailability(primaryUserId);
+
+  console.debug(
+    '\n----------------------------------------------------------------\n' +
       '-------- Scheduling appointments with users and member ---------\n' +
       '----------------------------------------------------------------',
   );
-  await scheduleAppointment(memberId, user1Id, 'user1');
-  await requestAppointment(memberId, user2Id, 'user2');
-  const appointmentId = await scheduleAppointment(memberId, user2Id, 'user2');
+  await scheduleAppointment(memberId, primaryUserId, 'user1');
+  await requestAppointment(memberId, primaryUserId, 'user2');
+  const appointmentId = await scheduleAppointment(memberId, primaryUserId, 'user2');
   await endAppointment(appointmentId);
-  await scheduleAppointment(memberId, user3Id, 'user3');
+  await scheduleAppointment(memberId, primaryUserId, 'user3');
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
@@ -153,6 +154,9 @@ const init = async () => {
 
   const apolloServer = createTestClient((module as any).apolloServer);
   mutations = new Mutations(apolloServer);
+  queries = new Queries(apolloServer);
+
+  userService = moduleFixture.get<UserService>(UserService);
 };
 
 const cleanUp = async () => {

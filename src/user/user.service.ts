@@ -175,6 +175,29 @@ export class UserService extends BaseService {
     return object;
   }
 
+  /**
+   * Internal method for all receiving users who where fully registered -
+   * users who have sendbird accessToken in userConfig
+   */
+  async getRegisteredUsers(): Promise<User[]> {
+    return this.userModel.aggregate([
+      {
+        $lookup: {
+          from: 'userconfigs',
+          localField: '_id',
+          foreignField: 'userId',
+          as: 'configs',
+        },
+      },
+      { $match: { configs: { $ne: [] } } },
+      { $addFields: { configs: { $arrayElemAt: ['$configs', 0] } } },
+      { $match: { 'configs.accessToken': { $ne: null } } },
+      { $addFields: { id: '$_id' } },
+      { $unset: ['_id'] },
+      { $project: { configs: 0 } },
+    ]);
+  }
+
   @OnEvent(EventType.updateUserConfig, { async: true })
   async handleupdateUserConfig({
     userId,
@@ -206,13 +229,13 @@ export class UserService extends BaseService {
   async collectUsersDataBridge({
     member,
     platform,
-    usersIds,
+    userId,
   }: {
     member: Member;
     platform: Platform;
-    usersIds: string[];
+    userId: string;
   }) {
-    const users = await this.userModel.find({ _id: { $in: usersIds.map((user) => user) } });
-    this.eventEmitter.emit(EventType.newMember, { member, users, platform });
+    const user = await this.userModel.findById(userId);
+    this.eventEmitter.emit(EventType.newMember, { member, user, platform });
   }
 }

@@ -73,14 +73,18 @@ export class CommunicationService {
       user_ids: [member.id.toString(), user.id],
     };
 
-    const result = await this.sendBird.createGroupChannel(params);
-    if (result) {
-      await this.sendBird.freezeGroupChannel(sendbirdChannelUrl, platform === Platform.web);
-      await this.communicationModel.create({
-        memberId: new Types.ObjectId(member.id),
-        userId: user.id,
-        sendbirdChannelUrl,
-      });
+    try {
+      const result = await this.sendBird.createGroupChannel(params);
+      if (result) {
+        await this.sendBird.freezeGroupChannel(sendbirdChannelUrl, platform === Platform.web);
+        await this.communicationModel.create({
+          memberId: new Types.ObjectId(member.id),
+          userId: user.id,
+          sendbirdChannelUrl,
+        });
+      }
+    } catch (ex) {
+      console.error(ex);
     }
   }
 

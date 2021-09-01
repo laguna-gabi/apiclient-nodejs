@@ -52,20 +52,15 @@ export class CommunicationResolver {
   @OnEvent(EventType.newMember, { async: true })
   async handleNewMember({
     member,
-    users,
+    user,
     platform,
   }: {
     member: Member;
-    users: User[];
+    user: User;
     platform: Platform;
   }) {
     await this.communicationService.createMember(member);
-
-    await Promise.all(
-      users.map(async (user) =>
-        this.communicationService.connectMemberToUser(member, user, platform),
-      ),
-    );
+    await this.communicationService.connectMemberToUser(member, user, platform);
   }
 
   @OnEvent(EventType.updateMemberPlatform, { async: true })

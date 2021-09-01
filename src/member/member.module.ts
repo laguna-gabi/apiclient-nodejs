@@ -10,6 +10,7 @@ import {
   MemberDto,
   MemberResolver,
   MemberService,
+  MemberController,
 } from '.';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HttpModule } from '@nestjs/axios';
@@ -31,5 +32,6 @@ import { UserModule } from '../user';
     ]),
   ],
   providers: [MemberResolver, MemberService, ConfigsService],
+  controllers: [MemberController],
 })
 export class MemberModule {}

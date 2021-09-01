@@ -74,14 +74,13 @@ describe('CommunicationResolver', () => {
       spyOnServiceConnectMemberToUser.mockImplementation(() => true);
 
       const platform = Platform.android;
-      const users = [mockGenerateUser(), mockGenerateUser()];
+      const user = mockGenerateUser();
       const member = mockGenerateMember();
-      await resolver.handleNewMember({ member, users, platform });
+      await resolver.handleNewMember({ member, user, platform });
 
       expect(spyOnServiceCreateMember).toBeCalledWith(member);
-      expect(spyOnServiceConnectMemberToUser).toBeCalledTimes(2);
-      expect(spyOnServiceConnectMemberToUser).toBeCalledWith(member, users[0], platform);
-      expect(spyOnServiceConnectMemberToUser).toBeCalledWith(member, users[1], platform);
+      expect(spyOnServiceConnectMemberToUser).toBeCalledTimes(1);
+      expect(spyOnServiceConnectMemberToUser).toBeCalledWith(member, user, platform);
     });
   });
 

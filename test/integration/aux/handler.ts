@@ -7,7 +7,9 @@ import { Mutations } from './mutations';
 import { Queries } from './queries';
 import * as config from 'config';
 import * as jwt from 'jsonwebtoken';
-import { mockProviders } from '../../common';
+import { dbConnect, dbDisconnect, mockProviders } from '../../common';
+import { model } from 'mongoose';
+import { MemberDto } from '../../../src/member';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -19,6 +21,7 @@ export class Handler {
   sendBird;
   notificationsService;
   twilioService;
+  memberModel;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -41,6 +44,9 @@ export class Handler {
     const apolloServer = createTestClient((this.module as any).apolloServer);
     this.mutations = new Mutations(apolloServer);
     this.queries = new Queries(apolloServer);
+
+    await dbConnect();
+    this.memberModel = model('members', MemberDto);
   }
 
   async afterAll() {
@@ -50,6 +56,8 @@ export class Handler {
     this.sendBird.spyOnSendBirdCreateGroupChannel.mockReset();
     this.notificationsService.spyOnNotificationsServiceRegister.mockReset();
     this.twilioService.spyOnTwilioGetToken.mockReset();
+
+    await dbDisconnect();
   }
 
   setContextUser = (deviceId: string) => {

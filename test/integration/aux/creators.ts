@@ -14,6 +14,7 @@ import * as faker from 'faker';
 import { Appointment, AppointmentStatus, EndAppointmentParams } from '../../../src/appointment';
 import { Handler } from './handler';
 import { AppointmentsIntegrationActions } from './appointments';
+import { Types } from 'mongoose';
 
 export class Creators {
   constructor(
@@ -67,12 +68,16 @@ export class Creators {
     const memberParams = generateCreateMemberParams({
       deviceId,
       orgId: org.id,
-      primaryUserId: primaryUser.id,
-      usersIds: users.map((user) => user.id),
     });
-    await this.handler.mutations.createMember({ memberParams });
+    const usersIds = users.map((i) => i.id);
+    const { id } = await this.handler.mutations.createMember({ memberParams });
+    await this.handler.memberModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(id) },
+      { $set: { primaryUserId: primaryUser.id, users: usersIds } },
+      { upsert: true, new: true, rawResult: true },
+    );
 
-    const member = await this.handler.queries.getMember();
+    const member = await this.handler.queries.getMember({ id });
 
     expect(member.phone).toEqual(memberParams.phone);
     expect(member.deviceId).toEqual(deviceId);

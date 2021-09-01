@@ -8,9 +8,9 @@ import {
   generateCreateMemberParams,
   generateCreateRawUserParams,
   generateCreateTaskParams,
+  generateDateOnly,
   generateId,
   generateObjectId,
-  generateDateOnly,
   generateOrgParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
@@ -32,7 +32,7 @@ import {
   TaskStatus,
   UpdateMemberParams,
 } from '../../src/member';
-import { Errors, ErrorType, Identifier, Language, Platform } from '../../src/common';
+import { Errors, ErrorType, Language, Platform } from '../../src/common';
 import { User, UserDto, UserRole } from '../../src/user';
 import * as faker from 'faker';
 import { datatype, date, internet } from 'faker';
@@ -92,23 +92,12 @@ describe('MemberService', () => {
       `should return member and his/her users for an existing member using $field`,
       async (params) => {
         const primaryUserParams = generateCreateRawUserParams();
-        const nurseParams = generateCreateRawUserParams({ roles: [UserRole.nurse] });
-        const userParams = generateCreateRawUserParams();
         const primaryUser = await modelUser.create(primaryUserParams);
-        const nurse = await modelUser.create(nurseParams);
-        const user = await modelUser.create(userParams);
-        //Another user, to check if it doesn't return in member
-        await modelUser.create(generateCreateRawUserParams());
         const orgParams = generateOrgParams();
         const org = await modelOrg.create(orgParams);
 
         const deviceId = datatype.uuid();
-        const member: CreateMemberParams = generateCreateMemberParams({
-          deviceId,
-          orgId: generateId(),
-          primaryUserId: primaryUser._id,
-          usersIds: [user._id, nurse._id, primaryUser._id],
-        });
+        const member = generateCreateMemberParams({ deviceId, orgId: generateId() });
 
         const { _id } = await memberModel.create({
           phone: member.phone,
@@ -116,8 +105,8 @@ describe('MemberService', () => {
           firstName: member.firstName,
           lastName: member.lastName,
           org: generateObjectId(org.id),
-          primaryUserId: member.primaryUserId,
-          users: member.usersIds,
+          primaryUserId: primaryUser.id,
+          users: [primaryUser.id],
         });
 
         const result = await params.method(params.field === 'context' ? member.deviceId : _id);
@@ -129,10 +118,8 @@ describe('MemberService', () => {
         expect(result.lastName).toEqual(member.lastName);
         expect(result.org).toEqual(expect.objectContaining(orgParams));
         expect(result.primaryUserId).toEqual(primaryUser._id);
-        expect(result.users.length).toEqual(3);
-        compareUsers(result.users[0], user);
-        compareUsers(result.users[1], nurse);
-        compareUsers(result.users[2], primaryUser);
+        expect(result.users.length).toEqual(1);
+        compareUsers(result.users[0], primaryUser);
       },
     );
   });
@@ -148,17 +135,15 @@ describe('MemberService', () => {
       const { _id: orgId1 } = await modelOrg.create(generateOrgParams());
       const { _id: orgId2 } = await modelOrg.create(generateOrgParams());
 
-      const { id: memberId1a } = await generateBasicMember({
+      const { id: memberId1a } = await service.insert(
+        generateCreateMemberParams({ orgId: orgId1 }),
         primaryUserId,
-        usersIds: [primaryUserId],
-        orgId: orgId1,
-      });
-      const { id: memberId1b } = await generateBasicMember({
+      );
+      const { id: memberId1b } = await service.insert(
+        generateCreateMemberParams({ orgId: orgId1 }),
         primaryUserId,
-        usersIds: [primaryUserId],
-        orgId: orgId1,
-      });
-      await generateBasicMember({ primaryUserId, usersIds: [primaryUserId], orgId: orgId2 });
+      );
+      await service.insert(generateCreateMemberParams({ orgId: orgId2 }), primaryUserId);
 
       const result = await service.getByOrg(orgId1);
       expect(result.length).toEqual(2);
@@ -175,21 +160,18 @@ describe('MemberService', () => {
       const { _id: orgId1 } = await modelOrg.create(generateOrgParams());
       const { _id: orgId2 } = await modelOrg.create(generateOrgParams());
 
-      const { id: memberId1a } = await generateBasicMember({
+      const { id: memberId1a } = await service.insert(
+        generateCreateMemberParams({ orgId: orgId1 }),
         primaryUserId,
-        usersIds: [primaryUserId],
-        orgId: orgId1,
-      });
-      const { id: memberId1b } = await generateBasicMember({
+      );
+      const { id: memberId1b } = await service.insert(
+        generateCreateMemberParams({ orgId: orgId1 }),
         primaryUserId,
-        usersIds: [primaryUserId],
-        orgId: orgId1,
-      });
-      const { id: memberId2 } = await generateBasicMember({
+      );
+      const { id: memberId2 } = await service.insert(
+        generateCreateMemberParams({ orgId: orgId2 }),
         primaryUserId,
-        usersIds: [primaryUserId],
-        orgId: orgId2,
-      });
+      );
 
       const result = await service.getByOrg();
       expect(result.length).toBeGreaterThan(3);
@@ -207,12 +189,10 @@ describe('MemberService', () => {
       const { _id: orgId } = await modelOrg.create(generateOrgParams());
 
       const deviceId = datatype.uuid();
-      const { id: memberId } = await generateBasicMember({
+      const { id: memberId } = await service.insert(
+        generateCreateMemberParams({ orgId, deviceId }),
         primaryUserId,
-        usersIds: [primaryUserId],
-        orgId,
-        deviceId,
-      });
+      );
 
       const result = await service.getByOrg(orgId);
       const member = await service.getByDeviceId(deviceId);
@@ -245,15 +225,11 @@ describe('MemberService', () => {
 
       const deviceId = datatype.uuid();
       const dischargeDate = generateDateOnly(date.future(1));
-      const createMemberParams = generateCreateMemberParams({
+      const { id: memberId } = await service.insert(
+        generateCreateMemberParams({ orgId, deviceId, dischargeDate }),
         primaryUserId,
-        usersIds: [primaryUserId],
-        orgId,
-        deviceId,
-        dischargeDate,
-      });
+      );
 
-      const { id: memberId } = await service.insert(createMemberParams);
       await service.insertGoal({
         createTaskParams: generateCreateTaskParams({ memberId }),
         status: TaskStatus.pending,
@@ -294,19 +270,14 @@ describe('MemberService', () => {
     });
   });
 
-  const generateBasicMember = async (createMemberParamsInput?): Promise<Identifier> => {
-    const createMemberParams = generateCreateMemberParams(createMemberParamsInput);
-    return service.insert(createMemberParams);
-  };
-
   describe('getMembersAppointments', () => {
     it('should return empty array on members with orgId and no appointments', async () => {
       const { _id: primaryUserId } = await modelUser.create(generateCreateRawUserParams());
       const { _id: orgId } = await modelOrg.create(generateOrgParams());
 
-      await generateBasicMember({ primaryUserId, usersIds: [primaryUserId], orgId });
-      await generateBasicMember({ primaryUserId, usersIds: [primaryUserId], orgId });
-      await generateBasicMember({ primaryUserId, usersIds: [primaryUserId], orgId });
+      await service.insert(generateCreateMemberParams({ orgId }), primaryUserId);
+      await service.insert(generateCreateMemberParams({ orgId }), primaryUserId);
+      await service.insert(generateCreateMemberParams({ orgId }), primaryUserId);
 
       const result = await service.getMembersAppointments(orgId);
       expect(result).toEqual([]);
@@ -450,12 +421,10 @@ describe('MemberService', () => {
 
     const generateMemberAndAppointment = async ({ primaryUserId, orgId, numberOfAppointments }) => {
       const params = { firstName: faker.name.firstName(), lastName: faker.name.lastName() };
-      const { id } = await generateBasicMember({
+      const { id } = await service.insert(
+        generateCreateMemberParams({ orgId, ...params }),
         primaryUserId,
-        usersIds: [primaryUserId],
-        orgId,
-        ...params,
-      });
+      );
 
       await Promise.all(
         Array.from(Array(numberOfAppointments)).map(
@@ -478,10 +447,9 @@ describe('MemberService', () => {
 
       const createMemberParams = generateCreateMemberParams({
         orgId: org._id,
-        primaryUserId: primaryUser._id,
       });
       createMemberParams.zipCode = undefined;
-      const { id } = await service.insert(createMemberParams);
+      const { id } = await service.insert(createMemberParams, primaryUser._id);
 
       expect(id).not.toBeUndefined();
 
@@ -506,7 +474,6 @@ describe('MemberService', () => {
 
       const createMemberParams = generateCreateMemberParams({
         orgId: org._id,
-        primaryUserId: primaryUser._id,
         sex: Sex.female,
         email: internet.email(),
         language: Language.es,
@@ -514,7 +481,7 @@ describe('MemberService', () => {
         dischargeDate: generateDateOnly(date.future(1)),
         honorific: Honorific.Dr,
       });
-      const { id } = await service.insert(createMemberParams);
+      const { id } = await service.insert(createMemberParams, primaryUser._id);
 
       expect(id).not.toBeUndefined();
 
@@ -548,11 +515,12 @@ describe('MemberService', () => {
       const primaryUser = await modelUser.create(generateCreateRawUserParams());
       const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateCreateMemberParams({
-        orgId: org._id,
-        primaryUserId: primaryUser._id,
-      });
-      const { id } = await service.insert(createMemberParams);
+      const { id } = await service.insert(
+        generateCreateMemberParams({
+          orgId: org._id,
+        }),
+        primaryUser._id,
+      );
 
       const createdMember: any = await memberModel.findById(id);
       expect(createdMember.createdAt).toEqual(expect.any(Date));
@@ -563,10 +531,7 @@ describe('MemberService', () => {
       const primaryUser = await modelUser.create(generateCreateRawUserParams());
       const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateCreateMemberParams({
-        orgId: org._id,
-        primaryUserId: primaryUser._id,
-      });
+      const createMemberParams = generateCreateMemberParams({ orgId: org._id });
 
       NotNullableMemberKeys.forEach((key) => {
         createMemberParams[key] = null;
@@ -576,7 +541,7 @@ describe('MemberService', () => {
       createMemberParams.lastName = faker.name.lastName();
       createMemberParams.dateOfBirth = generateDateOnly(faker.date.past());
 
-      const { id } = await service.insert(createMemberParams);
+      const { id } = await service.insert(createMemberParams, primaryUser._id);
       const createdObject = await memberModel.findById(id);
 
       NotNullableMemberKeys.forEach((key) => {
@@ -587,21 +552,18 @@ describe('MemberService', () => {
     it('should insert a member even with primaryUser not exists', async () => {
       const createMemberParams: CreateMemberParams = generateCreateMemberParams({
         orgId: generateId(),
-        primaryUserId: v4(),
       });
-      const result = await service.insert(createMemberParams);
+      const result = await service.insert(createMemberParams, v4());
 
       expect(result.id).not.toBeUndefined();
     });
 
     it('should fail to insert an already existing member', async () => {
-      const createMemberParams = generateCreateMemberParams({
-        orgId: generateId(),
-        primaryUserId: v4(),
-      });
-      await service.insert(createMemberParams);
+      const primaryUserId = v4();
+      const createMemberParams = generateCreateMemberParams({ orgId: generateId() });
+      await service.insert(createMemberParams, primaryUserId);
 
-      await expect(service.insert(createMemberParams)).rejects.toThrow(
+      await expect(service.insert(createMemberParams, primaryUserId)).rejects.toThrow(
         Errors.get(ErrorType.memberPhoneAlreadyExists),
       );
     });
@@ -636,12 +598,9 @@ describe('MemberService', () => {
       const primaryUser = await modelUser.create(generateCreateRawUserParams());
       const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateCreateMemberParams({
-        orgId: org._id,
-        primaryUserId: primaryUser._id,
-      });
+      const createMemberParams = generateCreateMemberParams({ orgId: org._id });
 
-      const { id } = await service.insert(createMemberParams);
+      const { id } = await service.insert(createMemberParams, primaryUser._id);
       const beforeObject = await memberModel.findById(id);
 
       const updateMemberParams = generateUpdateMemberParams();
@@ -661,11 +620,8 @@ describe('MemberService', () => {
       const primaryUser = await modelUser.create(generateCreateRawUserParams());
       const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateCreateMemberParams({
-        orgId: org._id,
-        primaryUserId: primaryUser._id,
-      });
-      const { id } = await service.insert(createMemberParams);
+      const createMemberParams = generateCreateMemberParams({ orgId: org._id });
+      const { id } = await service.insert(createMemberParams, primaryUser._id);
 
       const beforeObject: any = await memberModel.findById(id);
 
@@ -739,11 +695,10 @@ describe('MemberService', () => {
       const { _id: primaryUserId } = await modelUser.create(generateCreateRawUserParams());
       const { _id: orgId } = await modelOrg.create(generateOrgParams());
 
-      const { id: memberId } = await generateBasicMember({
+      const { id: memberId } = await service.insert(
+        generateCreateMemberParams({ orgId }),
         primaryUserId,
-        usersIds: [primaryUserId],
-        orgId,
-      });
+      );
 
       const generalNotes = generateSetGeneralNotesParams({ memberId });
       await service.setGeneralNotes(generalNotes);
@@ -766,15 +721,11 @@ describe('MemberService', () => {
       const { _id: primaryUserId } = await modelUser.create(generateCreateRawUserParams());
       const { _id: orgId } = await modelOrg.create(generateOrgParams());
 
-      const member = generateCreateMemberParams({
-        primaryUserId,
-        usersIds: [primaryUserId],
-        orgId,
-      });
-      const craetedMember = await service.insert(member);
-      const CreatedConfigMember = await service.getMemberConfig(craetedMember.id);
+      const member = generateCreateMemberParams({ orgId });
+      const createdMember = await service.insert(member, primaryUserId);
+      const CreatedConfigMember = await service.getMemberConfig(createdMember.id);
 
-      expect(craetedMember.id).toEqual(CreatedConfigMember.memberId);
+      expect(createdMember.id).toEqual(CreatedConfigMember.memberId);
     });
 
     it('should fail to fetch member config on non existing member', async () => {
@@ -787,13 +738,9 @@ describe('MemberService', () => {
       const { _id: primaryUserId } = await modelUser.create(generateCreateRawUserParams());
       const { _id: orgId } = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateCreateMemberParams({
-        primaryUserId,
-        usersIds: [primaryUserId],
-        orgId,
-      });
+      const createMemberParams = generateCreateMemberParams({ orgId });
 
-      const { id } = await service.insert(createMemberParams);
+      const { id } = await service.insert(createMemberParams, primaryUserId);
       const memberConfig = await service.getMemberConfig(id);
 
       expect(memberConfig).toEqual(

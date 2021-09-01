@@ -13,6 +13,7 @@ import {
   TaskStatus,
   UpdateMemberParams,
   UpdateTaskStatusParams,
+  MemberBase,
 } from '.';
 import {
   Errors,
@@ -32,32 +33,25 @@ import { NotificationsService, StorageService } from '../providers';
 import { UserService } from '../user';
 
 @Resolver(() => Member)
-export class MemberResolver {
+export class MemberResolver extends MemberBase {
   private readonly authenticationPrefix = 'Bearer ';
 
   constructor(
-    private readonly memberService: MemberService,
-    private eventEmitter: EventEmitter2,
+    readonly memberService: MemberService,
+    readonly eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
     private readonly notificationsService: NotificationsService,
-    private readonly userService: UserService,
-  ) {}
+    readonly userService: UserService,
+  ) {
+    super(memberService, eventEmitter, userService);
+  }
 
   @Mutation(() => Identifier)
   async createMember(
     @Args(camelCase(CreateMemberParams.name))
     createMemberParams: CreateMemberParams,
   ) {
-    const member = await this.memberService.insert(createMemberParams);
-    const { platform } = await this.memberService.getMemberConfig(member.id);
-
-    this.eventEmitter.emit(EventType.collectUsersDataBridge, {
-      member,
-      platform,
-      usersIds: createMemberParams.usersIds,
-    });
-
-    return member;
+    return super.createMember(createMemberParams);
   }
 
   /**
@@ -78,7 +72,6 @@ export class MemberResolver {
       member = await this.memberService.getByDeviceId(deviceId);
     }
     member.zipCode = member.zipCode || member.org.zipCode;
-
     member.utcDelta = this.getTimezoneDeltaFromZipcode(member.zipCode);
     return member;
   }
@@ -87,7 +80,10 @@ export class MemberResolver {
   async updateMember(
     @Args(camelCase(UpdateMemberParams.name)) updateMemberParams: UpdateMemberParams,
   ) {
-    return this.memberService.update(updateMemberParams);
+    const member = await this.memberService.update(updateMemberParams);
+    member.zipCode = member.zipCode || member.org.zipCode;
+    member.utcDelta = this.getTimezoneDeltaFromZipcode(member.zipCode);
+    return member;
   }
 
   @Query(() => [MemberSummary])
@@ -198,7 +194,7 @@ export class MemberResolver {
       this.eventEmitter.emit(EventType.updateMemberPlatform, {
         memberId: registerForNotificationParams.memberId,
         platform: registerForNotificationParams.platform,
-        userId: user.id,
+        userId: user._id,
       });
     });
   }

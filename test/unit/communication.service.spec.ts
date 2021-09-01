@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
-import { Model, model } from 'mongoose';
 import {
   dbConnect,
   dbDisconnect,
@@ -9,12 +8,7 @@ import {
   mockGenerateUser,
   mockProviders,
 } from '../index';
-import {
-  Communication,
-  CommunicationDto,
-  CommunicationModule,
-  CommunicationService,
-} from '../../src/communication';
+import { CommunicationModule, CommunicationService } from '../../src/communication';
 import { UserRole } from '../../src/user';
 import { v4 } from 'uuid';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -23,7 +17,6 @@ import { Platform } from '../../src/common';
 describe('CommunicationService', () => {
   let module: TestingModule;
   let service: CommunicationService;
-  let communicationModel: Model<typeof CommunicationDto>;
   let sendBirdMock;
 
   beforeAll(async () => {
@@ -34,8 +27,6 @@ describe('CommunicationService', () => {
     service = module.get<CommunicationService>(CommunicationService);
 
     sendBirdMock = mockProviders(module).sendBird;
-
-    communicationModel = model(Communication.name, CommunicationDto);
 
     await dbConnect();
   });

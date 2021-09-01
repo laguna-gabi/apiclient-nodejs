@@ -3,7 +3,11 @@ import { Handler } from './aux/handler';
 import { Creators } from './aux/creators';
 import { AppointmentsIntegrationActions } from './aux/appointments';
 import { urls } from '../common';
-import { generateAvailabilityInput, generateScheduleAppointmentParams } from '../generators';
+import {
+  generateAvailabilityInput,
+  generateCreateMemberParams,
+  generateScheduleAppointmentParams,
+} from '../generators';
 import { AppointmentStatus } from '../../src/appointment';
 import { add, startOfToday, startOfTomorrow } from 'date-fns';
 import { defaultSlotsParams } from '../../src/user';
@@ -119,6 +123,18 @@ describe('Integration tests: rest', () => {
 
       expect(new Date(body.end)).toEqual(appointmentsParams.end);
       expect(new Date(body.start)).toEqual(appointmentsParams.start);
+    });
+  });
+
+  describe('createMember', () => {
+    it('should create a member', async () => {
+      const org = await creators.createAndValidateOrg();
+      const memberParams = generateCreateMemberParams({
+        orgId: org.id,
+      });
+
+      const { body } = await request(server).post(urls.members).send(memberParams).expect(201);
+      expect(body).toEqual({ id: expect.any(String) });
     });
   });
 });

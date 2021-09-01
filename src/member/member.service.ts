@@ -33,6 +33,7 @@ import { cloneDeep } from 'lodash';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Appointment, AppointmentDocument, AppointmentStatus, Scores } from '../appointment';
 import { v4 } from 'uuid';
+import { User } from '../user';
 
 @Injectable()
 export class MemberService extends BaseService {
@@ -51,17 +52,17 @@ export class MemberService extends BaseService {
     super();
   }
 
-  async insert(createMemberParams: CreateMemberParams) {
+  async insert(createMemberParams: CreateMemberParams, primaryUserId: string) {
     try {
       this.removeNotNullable(createMemberParams, NotNullableMemberKeys);
       const primitiveValues = cloneDeep(createMemberParams);
       delete primitiveValues.orgId;
-      delete primitiveValues.usersIds;
 
       const object = await this.memberModel.create({
         ...primitiveValues,
         org: new Types.ObjectId(createMemberParams.orgId),
-        users: createMemberParams.usersIds,
+        primaryUserId,
+        users: [primaryUserId],
       });
 
       await this.memberConfigModel.create({
@@ -88,11 +89,12 @@ export class MemberService extends BaseService {
       { new: true, rawResult: true },
     );
 
-    if (!result.value) {
+    const member = await this.getById(result.value?.id);
+    if (!member) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
 
-    return this.replaceId(result.value.toObject());
+    return this.replaceId(member);
   }
 
   async get(id: string): Promise<Member> {
@@ -189,6 +191,29 @@ export class MemberService extends BaseService {
         },
       },
     ]);
+  }
+
+  async getAvailableUser(users: User[]): Promise<string> {
+    const memberCountList = [];
+
+    if (users.length === 0) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+    for (let index = 0; index < users.length; index++) {
+      const [memberCount] = await this.memberModel.aggregate([
+        { $match: { primaryUserId: users[index].id } },
+        { $count: 'memberCount' },
+        {
+          $project: {
+            userId: users[index].id,
+            members: '$memberCount',
+          },
+        },
+      ]);
+      memberCountList.push(memberCount ? memberCount : { userId: users[index].id, members: 0 });
+    }
+    const sorted = memberCountList.sort((a, b) => a.members - b.members);
+    return sorted[0].userId;
   }
 
   @OnEvent(EventType.addUserToMemberList, { async: true })
