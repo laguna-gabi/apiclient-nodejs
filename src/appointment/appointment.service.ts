@@ -10,6 +10,7 @@ import {
   RequestAppointmentParams,
   ScheduleAppointmentParams,
   EndAppointmentParams,
+  UpdateNotesParams,
 } from '.';
 import { BaseService, Errors, ErrorType, EventType } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -197,5 +198,41 @@ export class AppointmentService extends BaseService {
     );
 
     return this.replaceId(result.value.toObject() as AppointmentDocument);
+  }
+
+  async updateNotes(params: UpdateNotesParams): Promise<Notes | null> {
+    const existing = await this.appointmentModel.findById({ _id: params.appointmentId });
+
+    if (!existing) {
+      throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
+    }
+
+    if (params.notes === null) {
+      if (existing.notes) {
+        await this.notesModel.deleteOne({ _id: existing.notes });
+        await this.appointmentModel.findOneAndUpdate(
+          { _id: params.appointmentId },
+          { $set: { notes: null } },
+        );
+      }
+      return null;
+    } else {
+      let note;
+      if (existing.notes) {
+        note = await this.notesModel.findOneAndUpdate(
+          { _id: existing.notes },
+          { $set: params.notes },
+          { upsert: true, new: true },
+        );
+      } else {
+        note = await this.notesModel.create(params.notes);
+        await this.appointmentModel.findOneAndUpdate(
+          { _id: existing.id },
+          { $set: { notes: note._id } },
+        );
+      }
+
+      return note;
+    }
   }
 }

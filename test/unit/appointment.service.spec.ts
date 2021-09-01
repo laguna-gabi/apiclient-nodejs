@@ -10,6 +10,7 @@ import {
   generateObjectId,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
+  generateUpdateNotesParams,
 } from '../index';
 import {
   Appointment,
@@ -396,6 +397,72 @@ describe('AppointmentService', () => {
       });
 
       spyOnEventEmitter.mockReset();
+    });
+  });
+
+  describe('updateNotes', () => {
+    it('should not be able to update non existing appointment', async () => {
+      await expect(service.updateNotes(generateUpdateNotesParams())).rejects.toThrow(
+        Errors.get(ErrorType.appointmentIdNotFound),
+      );
+    });
+
+    it('should create notes for a given appointment id', async () => {
+      const appointmentParams = generateScheduleAppointmentParams();
+      const resultAppointment = await service.schedule(appointmentParams);
+
+      expect(resultAppointment.notes).toBeUndefined();
+
+      const updateNotesParams = generateUpdateNotesParams({
+        appointmentId: resultAppointment.id,
+      });
+      await service.updateNotes(updateNotesParams);
+      const result = await service.get(resultAppointment.id);
+
+      expect(result.notes).toMatchObject(updateNotesParams.notes);
+    });
+
+    it('should update notes for a given appointment id', async () => {
+      const appointmentParams = generateScheduleAppointmentParams();
+      const resultAppointment = await service.schedule(appointmentParams);
+
+      const notes = generateNotesParams();
+      let updateNotesParams = generateUpdateNotesParams({
+        appointmentId: resultAppointment.id,
+        notes,
+      });
+      await service.updateNotes(updateNotesParams);
+      let result = await service.get(resultAppointment.id);
+      expect(result.notes).toMatchObject(notes);
+
+      const newNotes = generateNotesParams();
+      updateNotesParams = generateUpdateNotesParams({
+        appointmentId: resultAppointment.id,
+        notes: newNotes,
+      });
+      await service.updateNotes(updateNotesParams);
+      result = await service.get(resultAppointment.id);
+      expect(result.notes).toMatchObject(newNotes);
+    });
+
+    it('should remove the notes for a given appointment id', async () => {
+      const appointmentParams = generateScheduleAppointmentParams();
+      const resultAppointment = await service.schedule(appointmentParams);
+      const notes = generateNotesParams();
+      let updateNotesParams = generateUpdateNotesParams({
+        appointmentId: resultAppointment.id,
+        notes,
+      });
+      await service.updateNotes(updateNotesParams);
+
+      updateNotesParams = generateUpdateNotesParams({
+        appointmentId: resultAppointment.id,
+        notes: null,
+      });
+      await service.updateNotes(updateNotesParams);
+      const result = await service.get(resultAppointment.id);
+
+      expect(result.notes).toBeNull();
     });
   });
 

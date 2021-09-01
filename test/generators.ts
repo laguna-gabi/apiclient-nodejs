@@ -22,6 +22,7 @@ import {
   Notes,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
+  UpdateNotesParams,
 } from '../src/appointment';
 import { CreateOrgParams, OrgType } from '../src/org';
 import { Language, Platform, NotificationType } from '../src/common';
@@ -343,6 +344,16 @@ export const generateNotesParams = ({
       wellbeingText,
     },
   };
+};
+
+export const generateUpdateNotesParams = ({
+  appointmentId = generateId(),
+  notes = generateNotesParams(),
+}: {
+  appointmentId?: string;
+  notes?: Notes;
+} = {}): UpdateNotesParams => {
+  return { appointmentId, notes };
 };
 
 export const generateOrgParams = ({

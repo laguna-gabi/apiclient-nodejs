@@ -11,8 +11,10 @@ import {
 import {
   dbDisconnect,
   generateId,
+  generateNotesParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
+  generateUpdateNotesParams,
 } from '../index';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
@@ -141,6 +143,28 @@ describe('AppointmentResolver', () => {
       const result = await resolver.endAppointment({ id: appointment.id });
       expect(spyOnServiceEnd).toBeCalledWith({ id: appointment.id });
       expect(result).toEqual(appointment);
+    });
+  });
+
+  describe('updateNotes', () => {
+    let spyOnServiceUpdateNotes;
+    beforeEach(() => {
+      spyOnServiceUpdateNotes = jest.spyOn(service, 'updateNotes');
+    });
+
+    afterEach(() => {
+      spyOnServiceUpdateNotes.mockReset();
+    });
+
+    it('should update the notes of given appointment id', async () => {
+      const notes = generateNotesParams();
+      const notesParams = generateUpdateNotesParams({ notes });
+
+      spyOnServiceUpdateNotes.mockImplementationOnce(async () => notes);
+
+      const result = await resolver.updateNotes(notesParams);
+      expect(spyOnServiceUpdateNotes).toBeCalledWith(notesParams);
+      expect(result).toEqual(notes);
     });
   });
 });

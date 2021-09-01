@@ -80,6 +80,15 @@ export class EndAppointmentParams {
   noShowReason?: string;
 }
 
+@InputType()
+export class UpdateNotesParams {
+  @Field(() => String)
+  appointmentId: string;
+
+  @Field(() => Notes, { nullable: true })
+  notes?: Notes;
+}
+
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/

@@ -7,6 +7,7 @@ import {
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
   generateUpdateMemberParams,
+  generateUpdateNotesParams,
 } from '../index';
 import { UserRole } from '../../src/user';
 import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
@@ -409,6 +410,49 @@ describe('Integration tests: all', () => {
     expect(new Date(result.end)).toEqual(scheduledAppointment2.end);
     expect(new Date(result.start)).toEqual(scheduledAppointment2.start);
     expect(result.method).toEqual(scheduledAppointment2.method);
+  });
+
+  it('should create update and delete appointment notes', async () => {
+    const primaryUser = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+
+    const memberParams = generateCreateMemberParams({
+      orgId: org.id,
+      primaryUserId: primaryUser.id,
+      usersIds: [primaryUser.id],
+    });
+    const { id: memberId } = await creators.handler.mutations.createMember({
+      memberParams,
+    });
+    const scheduledAppointment = generateScheduleAppointmentParams({
+      memberId,
+      userId: primaryUser.id,
+      method: AppointmentMethod.chat,
+    });
+    const { id: appointmentId } = await creators.handler.mutations.scheduleAppointment({
+      appointmentParams: scheduledAppointment,
+    });
+    let appointment = await creators.handler.queries.getAppointment(appointmentId);
+
+    expect(appointment.notes).toBeNull();
+
+    let updateNotesParams = generateUpdateNotesParams({ appointmentId: appointment.id });
+    await handler.mutations.updateNotes({ updateNotesParams });
+    appointment = await creators.handler.queries.getAppointment(appointment.id);
+
+    expect(appointment.notes).toMatchObject(updateNotesParams.notes);
+
+    updateNotesParams = generateUpdateNotesParams({ appointmentId: appointment.id });
+    await handler.mutations.updateNotes({ updateNotesParams });
+    appointment = await creators.handler.queries.getAppointment(appointment.id);
+
+    expect(appointment.notes).toMatchObject(updateNotesParams.notes);
+
+    updateNotesParams = generateUpdateNotesParams({ appointmentId: appointment.id, notes: null });
+    await handler.mutations.updateNotes({ updateNotesParams });
+    appointment = await creators.handler.queries.getAppointment(appointment.id);
+
+    expect(appointment.notes).toBeNull();
   });
 
   it('should validate that getMember attach chat app link to each appointment', async () => {

@@ -4,6 +4,7 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   urls,
+  generateUpdateNotesParams,
 } from '../index';
 import * as faker from 'faker';
 import { EndAppointmentParams, RequestAppointmentParams } from '../../src/appointment';
@@ -214,7 +215,7 @@ describe('Validations - appointment', () => {
     });
 
     test.each`
-      input                 | input                                     | error
+      field                 | input                                     | error
       ${'recap'}            | ${{ recap: 123 }}                         | ${stringError}
       ${'strengths'}        | ${{ strengths: 123 }}                     | ${stringError}
       ${'userActionItem'}   | ${{ userActionItem: 123 }}                | ${stringError}
@@ -233,6 +234,30 @@ describe('Validations - appointment', () => {
 
         await handler.mutations.endAppointment({
           endAppointmentParams,
+          missingFieldError: params.error,
+        });
+      },
+    );
+  });
+
+  describe('updateNotes', () => {
+    test.each`
+      field                 | input                                     | error
+      ${'recap'}            | ${{ recap: 123 }}                         | ${stringError}
+      ${'strengths'}        | ${{ strengths: 123 }}                     | ${stringError}
+      ${'userActionItem'}   | ${{ userActionItem: 123 }}                | ${stringError}
+      ${'memberActionItem'} | ${{ memberActionItem: 123 }}              | ${stringError}
+      ${'adherence'}        | ${{ scores: { adherence: 'not-valid' } }} | ${floatError}
+      ${'adherenceText'}    | ${{ scores: { adherenceText: 123 } }}     | ${stringError}
+      ${'wellbeing'}        | ${{ scores: { wellbeing: 'not-valid' } }} | ${floatError}
+      ${'wellbeingText'}    | ${{ scores: { wellbeingText: 123 } }}     | ${stringError}
+    `(
+      `should fail to update notes of an appointment since $field is not a valid type`,
+      async (params) => {
+        const updateNotesParams = generateUpdateNotesParams({ notes: params.input });
+
+        await handler.mutations.updateNotes({
+          updateNotesParams,
           missingFieldError: params.error,
         });
       },

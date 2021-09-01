@@ -15,6 +15,8 @@ import {
   RequestAppointmentParams,
   ScheduleAppointmentParams,
   EndAppointmentParams,
+  Notes,
+  UpdateNotesParams,
 } from '../../../src/appointment';
 import { Identifier, Identifiers, RegisterForNotificationParams } from '../../../src/common';
 import { CreateOrgParams } from '../../../src/org';
@@ -260,6 +262,41 @@ export class Mutations {
     return (
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.endAppointment
+    );
+  };
+
+  updateNotes = async ({
+    updateNotesParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    updateNotesParams: UpdateNotesParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Notes> => {
+    const result = await this.apolloClient.mutate({
+      variables: { updateNotesParams },
+      mutation: gql`
+        mutation updateNotes($updateNotesParams: UpdateNotesParams!) {
+          updateNotes(updateNotesParams: $updateNotesParams) {
+            recap
+            strengths
+            userActionItem
+            memberActionItem
+            scores {
+              adherence
+              adherenceText
+              wellbeing
+              wellbeingText
+            }
+          }
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.updateNotes
     );
   };
 

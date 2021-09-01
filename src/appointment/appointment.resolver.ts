@@ -6,6 +6,8 @@ import {
   EndAppointmentParams,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
+  Notes,
+  UpdateNotesParams,
 } from '.';
 
 @Resolver(() => Appointment)
@@ -38,5 +40,10 @@ export class AppointmentResolver {
     @Args(camelCase(EndAppointmentParams.name)) endAppointmentParams: EndAppointmentParams,
   ) {
     return this.appointmentService.end(endAppointmentParams);
+  }
+
+  @Mutation(() => Notes, { nullable: true })
+  async updateNotes(@Args(camelCase(UpdateNotesParams.name)) updateNotesParams: UpdateNotesParams) {
+    return this.appointmentService.updateNotes(updateNotesParams);
   }
 }
