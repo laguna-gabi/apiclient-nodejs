@@ -262,6 +262,18 @@ describe('AppointmentService', () => {
       );
     });
 
+    it('should not override end appointment on a new schedule appointment', async () => {
+      let endedAppointment = await service.schedule(generateScheduleAppointmentParams());
+      endedAppointment = await service.end({ id: endedAppointment.id });
+
+      const appointmentParams = generateScheduleAppointmentParams();
+      const newAppointment = await service.schedule(appointmentParams);
+
+      expect(endedAppointment.id).not.toEqual(newAppointment.id);
+      expect(endedAppointment.status).toEqual(AppointmentStatus.done);
+      expect(newAppointment.status).toEqual(AppointmentStatus.scheduled);
+    });
+
     it('should be able to schedule 2 appointments for the same user and member', async () => {
       const start = new Date(2030, 1, 1, 10);
       const end = new Date(2030, 1, 1, 12);

@@ -5,11 +5,11 @@ import {
   Appointment,
   AppointmentDocument,
   AppointmentStatus,
+  EndAppointmentParams,
   Notes,
   NotesDocument,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
-  EndAppointmentParams,
   UpdateNotesParams,
 } from '.';
 import { BaseService, Errors, ErrorType, EventType } from '../common';
@@ -68,6 +68,7 @@ export class AppointmentService extends BaseService {
       {
         userId: params.userId,
         memberId: new Types.ObjectId(params.memberId),
+        status: { $ne: AppointmentStatus.done },
       },
       {
         $set: {

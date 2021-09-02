@@ -113,7 +113,7 @@ describe('Integration tests : getMembers', () => {
           avatar: primaryUser.avatar,
         }),
         nextAppointment: appointment.start,
-        appointmentsCount: 1,
+        appointmentsCount: 2,
       }),
     );
   });
