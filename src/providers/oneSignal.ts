@@ -3,6 +3,7 @@ import { ConfigsService, ExternalConfigs } from '.';
 import { Platform, NotificationType, SendNotificationParams } from '../common';
 import { HttpService } from '@nestjs/axios';
 import { INotifications } from './interfaces';
+import * as config from 'config';
 
 @Injectable()
 export class OneSignal implements INotifications {
@@ -31,6 +32,7 @@ export class OneSignal implements INotifications {
         identifier: token,
         external_user_id: externalUserId,
         device_type: 0, //ios
+        ...config.get('oneSignal.voipRegistrationPayload'),
       };
       const result = await this.httpService.post(this.playersUrl, data).toPromise();
       return this.validateRegisterResult(externalUserId, result);

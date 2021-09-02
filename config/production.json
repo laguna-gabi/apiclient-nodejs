@@ -5,5 +5,8 @@
   },
   "slack": {
     "notifications": "#production-notifications"
+  },
+  "oneSignal": {
+    "voipRegistrationPayload": {}
   }
 }

@@ -28,5 +28,10 @@
     "support": "#supports",
     "testingSms": "#testing-sms",
     "notifications": "#development-notifications"
+  },
+  "oneSignal": {
+    "voipRegistrationPayload": {
+      "test_type": 1
+    }
   }
 }
