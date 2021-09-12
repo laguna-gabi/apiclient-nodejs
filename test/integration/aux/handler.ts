@@ -58,7 +58,11 @@ export class Handler {
 
     this.sendBird.spyOnSendBirdCreateUser.mockReset();
     this.sendBird.spyOnSendBirdCreateGroupChannel.mockReset();
+    this.sendBird.spyOnSendBirdFreeze.mockReset();
+    this.sendBird.spyOnSendBirdUpdateGroupChannelMetadata.mockReset();
+    this.sendBird.spyOnSendBirdDeleteGroupChannelMetadata.mockReset();
     this.notificationsService.spyOnNotificationsServiceRegister.mockReset();
+    this.notificationsService.spyOnNotificationsServiceSend.mockReset();
     this.twilioService.spyOnTwilioGetToken.mockReset();
 
     await dbDisconnect();

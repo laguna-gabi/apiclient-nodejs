@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigsService, ExternalConfigs } from '.';
-import { Platform, NotificationType, SendNotificationParams } from '../common';
+import { NotificationType, Platform, SendNotificationParams } from '../common';
 import { HttpService } from '@nestjs/axios';
 import { INotifications } from './interfaces';
 import * as config from 'config';
@@ -50,12 +50,15 @@ export class OneSignal implements INotifications {
 
     const config = await this.getConfig(platform, data.type);
     const app_id = await this.getApiId(platform, data.type);
+    const extraData = this.getExtraDataByPlatform(platform);
+
     const body: any = {
+      app_id,
       include_external_user_ids: [externalUserId],
       content_available: true,
       ...payload,
+      ...extraData,
       data,
-      app_id,
     };
 
     if (this.isVoipProject(platform, data.type)) {
@@ -116,5 +119,17 @@ export class OneSignal implements INotifications {
     );
 
     return { headers: { Authorization: `Basic ${config}` } };
+  }
+
+  private getExtraDataByPlatform(platform: Platform) {
+    if (platform === Platform.android) {
+      return {
+        android_channel_id: config.get('oneSignal.androidChannelId'),
+        android_visibility: 1,
+        priority: 10,
+      };
+    }
+
+    return {};
   }
 }

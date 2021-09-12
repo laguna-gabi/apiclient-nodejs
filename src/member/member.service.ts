@@ -322,7 +322,7 @@ export class MemberService extends BaseService {
   }): Promise<boolean> {
     const result = await this.memberConfigModel.updateOne(
       { memberId },
-      { $set: { memberId, platform: platform } },
+      { $set: { memberId, platform } },
     );
 
     return result.ok === 1;

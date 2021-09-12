@@ -32,6 +32,7 @@
   "oneSignal": {
     "voipRegistrationPayload": {
       "test_type": 1
-    }
+    },
+    "androidChannelId": "00349af6-be67-4729-9d48-9057a5507b14"
   }
 }

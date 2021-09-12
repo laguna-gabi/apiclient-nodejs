@@ -110,6 +110,8 @@ export class SendNotificationParams {
     };
     peerId: string;
     type: NotificationType;
+    path: string;
+    isVideo: boolean;
   };
 }
 

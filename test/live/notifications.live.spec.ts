@@ -50,6 +50,8 @@ describe('live: notifications (one signal)', () => {
             },
             type: NotificationType.video,
             peerId: v4(),
+            isVideo: true,
+            path: 'call',
           },
         });
 
@@ -91,8 +93,10 @@ describe('live: notifications (one signal)', () => {
           firstName: faker.name.firstName(),
           avatar: faker.image.avatar(),
         },
-        type: NotificationType.video,
+        type: NotificationType.call,
         peerId: v4(),
+        isVideo: false,
+        path: 'call',
       },
     });
 

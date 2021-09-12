@@ -30,10 +30,10 @@ export class NotificationsService implements INotifications {
   }
 
   async send(sendNotificationParams: SendNotificationParams): Promise<boolean> {
-    if (sendNotificationParams.platform) {
-      return this.oneSignal.send(sendNotificationParams);
-    } else {
+    if (sendNotificationParams.platform === Platform.web) {
       return this.twilio.send(sendNotificationParams);
+    } else {
+      return this.oneSignal.send(sendNotificationParams);
     }
   }
 

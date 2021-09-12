@@ -560,6 +560,8 @@ describe('MemberResolver', () => {
           },
           type: notifyParams.type,
           peerId: notifyParams.peerId,
+          isVideo: false,
+          path: 'call',
         },
       });
     });

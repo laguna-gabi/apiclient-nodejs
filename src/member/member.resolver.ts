@@ -5,6 +5,7 @@ import {
   CreateTaskParams,
   DischargeDocumentsLinks,
   Member,
+  MemberBase,
   MemberConfig,
   MemberService,
   MemberSummary,
@@ -13,13 +14,13 @@ import {
   TaskStatus,
   UpdateMemberParams,
   UpdateTaskStatusParams,
-  MemberBase,
 } from '.';
 import {
   Errors,
   ErrorType,
   EventType,
   Identifier,
+  NotificationType,
   Platform,
   RegisterForNotificationParams,
 } from '../common';
@@ -220,6 +221,8 @@ export class MemberResolver extends MemberBase {
           avatar: user.avatar,
         },
         type,
+        path: 'call',
+        isVideo: type === NotificationType.video,
         peerId,
       },
     });

@@ -617,6 +617,8 @@ describe('Integration tests: all', () => {
         },
         type: notifyParams.type,
         peerId: notifyParams.peerId,
+        isVideo: true,
+        path: 'call',
       },
     });
 
