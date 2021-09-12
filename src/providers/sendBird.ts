@@ -12,8 +12,9 @@ enum suffix {
 export class SendBird implements OnModuleInit {
   private appId;
   private appToken;
-  private basePath;
-  private headers;
+  public basePath;
+  public headers;
+  public METADATA_KEY = 'appointments';
 
   constructor(private readonly configsService: ConfigsService) {}
 
@@ -64,15 +65,34 @@ export class SendBird implements OnModuleInit {
     }
   }
 
+  /**
+   * in client sdk: https://sendbird.com/docs/chat/v3/javascript/guides/user-and-channel-metadata
+   * it must know the key - appointmentId, so we're not able to set the key as the appointmentId
+   * since the client doesn't know whats the appointment in the chat view.
+   */
   async updateGroupChannelMetadata(
     channelUrl: string,
-    key: string,
+    appointmentId: string,
     value: { status: AppointmentStatus; start: Date },
   ) {
+    const current = await this.httpService
+      .get(
+        `${this.basePath}${suffix.groupChannels}/${channelUrl}/metadata?keys=${this.METADATA_KEY}`,
+        {
+          headers: this.headers,
+        },
+      )
+      .toPromise();
+
+    const currentAppointments: any = current.data.appointments
+      ? JSON.parse(current.data.appointments)
+      : {};
+    currentAppointments[appointmentId] = value;
+
     await this.httpService
       .put(
-        `${this.basePath}${suffix.groupChannels}/${channelUrl}/metadata/${key}`,
-        { value: JSON.stringify(value), upsert: true },
+        `${this.basePath}${suffix.groupChannels}/${channelUrl}/metadata/${this.METADATA_KEY}`,
+        { value: JSON.stringify(currentAppointments), upsert: true },
         {
           headers: this.headers,
         },
@@ -80,11 +100,27 @@ export class SendBird implements OnModuleInit {
       .toPromise();
   }
 
-  async deleteGroupChannelMetadata(channelUrl: string, key: string) {
+  async deleteGroupChannelMetadata(channelUrl: string, appointmentId: string) {
+    const current = await this.httpService
+      .get(
+        `${this.basePath}${suffix.groupChannels}/${channelUrl}/metadata?keys=${this.METADATA_KEY}`,
+        {
+          headers: this.headers,
+        },
+      )
+      .toPromise();
+
+    const currentAppointments = JSON.parse(current.data.appointments);
+    currentAppointments[appointmentId] = undefined;
+
     await this.httpService
-      .delete(`${this.basePath}${suffix.groupChannels}/${channelUrl}/metadata/${key}`, {
-        headers: this.headers,
-      })
+      .put(
+        `${this.basePath}${suffix.groupChannels}/${channelUrl}/metadata/${this.METADATA_KEY}`,
+        { value: JSON.stringify(currentAppointments), upsert: true },
+        {
+          headers: this.headers,
+        },
+      )
       .toPromise();
   }
 

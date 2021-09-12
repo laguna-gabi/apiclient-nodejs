@@ -1,6 +1,6 @@
 import { ConfigsService, ExternalConfigs, StorageService } from '../../src/providers';
 import * as fs from 'fs';
-import * as axios from 'axios';
+import axios from 'axios';
 
 describe('live: aws', () => {
   describe('storage', () => {
@@ -16,7 +16,7 @@ describe('live: aws', () => {
       const storageProvider = new StorageService(configService);
       const url = await storageProvider.getUrl(storageFilePath);
 
-      const link = await axios.default({ method: 'GET', url: url, responseType: 'stream' });
+      const link = await axios.get(url, { responseType: 'stream' });
       link.data.pipe(fs.createWriteStream(tempFilePath));
 
       const bucketName = await configService.getConfig(ExternalConfigs.awsStorageMember);

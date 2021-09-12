@@ -65,10 +65,9 @@ export class CommunicationService {
   }
 
   async connectMemberToUser(member: Member, user: User, platform: Platform) {
-    const sendbirdChannelUrl = v4();
     const params: CreateSendbirdGroupChannelParams = {
       name: user.firstName,
-      channel_url: sendbirdChannelUrl,
+      channel_url: v4(),
       cover_url: user.avatar,
       inviter_id: user.id,
       user_ids: [member.id.toString(), user.id],
@@ -80,9 +79,9 @@ export class CommunicationService {
         await this.communicationModel.create({
           memberId: new Types.ObjectId(member.id),
           userId: user.id,
-          sendbirdChannelUrl,
+          sendbirdChannelUrl: params.channel_url,
         });
-        await this.sendBird.freezeGroupChannel(sendbirdChannelUrl, platform === Platform.web);
+        await this.sendBird.freezeGroupChannel(params.channel_url, platform === Platform.web);
       }
     } catch (ex) {
       console.error(ex);
