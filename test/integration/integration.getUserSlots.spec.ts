@@ -9,24 +9,33 @@ import {
 } from 'date-fns';
 import { Member } from '../../src/member';
 import { defaultSlotsParams } from '../../src/user';
-import { generateAvailabilityInput } from './../generators';
+import { generateAvailabilityInput, generateId } from './../generators';
 import { AppointmentsIntegrationActions } from './aux/appointments';
 import { Creators } from './aux/creators';
 import { Handler } from './aux/handler';
+import { v4 } from 'uuid';
 
 describe('Integration tests : getUserSlots', () => {
   const handler: Handler = new Handler();
   let creators: Creators;
   let appointmentsActions: AppointmentsIntegrationActions;
+  let spyOnGet;
 
   beforeAll(async () => {
     await handler.beforeAll();
     appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
     creators = new Creators(handler, appointmentsActions);
+    spyOnGet = jest.spyOn(handler.communicationService, 'get');
+    spyOnGet.mockImplementation(async () => ({
+      memberId: generateId(),
+      userId: v4(),
+      sendbirdChannelUrl: v4(),
+    }));
   });
 
   afterAll(async () => {
     await handler.afterAll();
+    spyOnGet.mockReset();
   });
 
   it('should return objects with all slots', async () => {

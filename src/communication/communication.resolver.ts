@@ -1,11 +1,12 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
 import { CommunicationInfo, CommunicationService, GetCommunicationParams } from '.';
 import { OnEvent } from '@nestjs/event-emitter';
-import { EventType, Platform } from '../common';
+import { UpdatedAppointmentAction, EventType, Platform } from '../common';
 import { User } from '../user';
 import { Member } from '../member';
 import { camelCase } from 'lodash';
 import * as config from 'config';
+import { AppointmentStatus } from '../appointment';
 
 @Resolver(() => CommunicationInfo)
 export class CommunicationResolver {
@@ -78,6 +79,17 @@ export class CommunicationResolver {
       userId,
       platform,
     });
+  }
+
+  @OnEvent(EventType.updatedAppointment, { async: true })
+  async handleUpdatedAppointment(params: {
+    memberId: string;
+    userId: string;
+    key: string;
+    value?: { status: AppointmentStatus; start: Date };
+    updatedAppointmentAction: UpdatedAppointmentAction;
+  }) {
+    return this.communicationService.onUpdatedAppointment(params);
   }
 
   private buildUrl({ uid, mid, token }): string {

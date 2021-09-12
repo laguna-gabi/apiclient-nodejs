@@ -14,21 +14,6 @@ export enum Language {
 
 registerEnumType(Language, { name: 'Language' });
 
-export enum slackChannel {
-  support = 'slack.support',
-  testingSms = 'slack.testingSms',
-  notifications = 'slack.notifications',
-}
-
-export enum SlackIcon {
-  exclamationPoint = ':exclamation:',
-  questionMark = ':question:',
-  phone = ':telephone_receiver:',
-  info = ':information_source:',
-  warning = ':warning:',
-  critical = ':no_entry:',
-}
-
 export enum NotificationType {
   video = 'video',
   call = 'call',
@@ -81,7 +66,7 @@ export class RegisterForNotificationParams {
 }
 
 /**************************************************************************************************
- ******************************************** Others  *********************************************
+ ******************************************** Internals *******************************************
  *************************************************************************************************/
 export abstract class BaseService {
   replaceId(object) {
@@ -126,4 +111,24 @@ export class SendNotificationParams {
     peerId: string;
     type: NotificationType;
   };
+}
+
+export enum slackChannel {
+  support = 'slack.support',
+  testingSms = 'slack.testingSms',
+  notifications = 'slack.notifications',
+}
+
+export enum SlackIcon {
+  exclamationPoint = ':exclamation:',
+  questionMark = ':question:',
+  phone = ':telephone_receiver:',
+  info = ':information_source:',
+  warning = ':warning:',
+  critical = ':no_entry:',
+}
+
+export enum UpdatedAppointmentAction {
+  edit = 'edit',
+  delete = 'delete',
 }

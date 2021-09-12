@@ -1,28 +1,35 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
 import {
+  Appointment,
   AppointmentController,
+  AppointmentDto,
   AppointmentMethod,
   AppointmentModule,
   AppointmentResolver,
   AppointmentService,
   AppointmentStatus,
+  EndAppointmentParams,
 } from '../../src/appointment';
 import {
   dbDisconnect,
   generateId,
   generateNotesParams,
+  generateObjectId,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateUpdateNotesParams,
 } from '../index';
-import { EventEmitterModule } from '@nestjs/event-emitter';
+import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
+import { EventType, UpdatedAppointmentAction } from '../../src/common';
 
 describe('AppointmentResolver', () => {
   let module: TestingModule;
   let resolver: AppointmentResolver;
   let controller: AppointmentController;
   let service: AppointmentService;
+  let eventEmitter: EventEmitter2;
+  let spyOnEventEmitter;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -32,6 +39,8 @@ describe('AppointmentResolver', () => {
     resolver = module.get<AppointmentResolver>(AppointmentResolver);
     controller = module.get<AppointmentController>(AppointmentController);
     service = module.get<AppointmentService>(AppointmentService);
+    eventEmitter = module.get<EventEmitter2>(EventEmitter2);
+    spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
   });
 
   afterAll(async () => {
@@ -119,6 +128,27 @@ describe('AppointmentResolver', () => {
 
       expect(result).toEqual({ ...appointment, status });
     });
+
+    it('should validate that on schedule appointment, an internal event is sent', async () => {
+      const status = AppointmentStatus.scheduled;
+      const appointment = generateScheduleAppointmentParams();
+      spyOnServiceSchedule.mockImplementationOnce(async () => ({
+        ...appointment,
+        status,
+      }));
+
+      const result = await resolver.scheduleAppointment(appointment);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.updatedAppointment, {
+        updatedAppointmentAction: UpdatedAppointmentAction.edit,
+        memberId: result.memberId,
+        userId: result.userId,
+        key: result.id,
+        value: {
+          status: result.status,
+          start: result.start,
+        },
+      });
+    });
   });
 
   describe('endAppointment', () => {
@@ -143,6 +173,24 @@ describe('AppointmentResolver', () => {
       const result = await resolver.endAppointment({ id: appointment.id });
       expect(spyOnServiceEnd).toBeCalledWith({ id: appointment.id });
       expect(result).toEqual(appointment);
+    });
+
+    it('should validate that on end appointment, an internal event is sent', async () => {
+      const appointment = {
+        id: generateId(),
+        ...generateRequestAppointmentParams(),
+        status: AppointmentStatus.done,
+        method: AppointmentMethod.phoneCall,
+      };
+      spyOnServiceEnd.mockImplementationOnce(async () => appointment);
+
+      const result = await resolver.endAppointment({ id: generateId() });
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.updatedAppointment, {
+        updatedAppointmentAction: UpdatedAppointmentAction.delete,
+        memberId: result.memberId,
+        userId: result.userId,
+        key: result.id,
+      });
     });
   });
 

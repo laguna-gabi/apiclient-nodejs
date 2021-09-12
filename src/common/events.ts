@@ -1,5 +1,6 @@
 export enum EventType {
   newAppointment = 'newAppointment',
+  updatedAppointment = 'updatedAppointment',
   appointmentScoresUpdated = 'appointmentScoresUpdated',
   collectUsersDataBridge = 'collectUsersDataBridge',
   newMember = 'newMember',

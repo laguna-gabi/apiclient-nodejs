@@ -1,6 +1,7 @@
 import { HttpService, Injectable, OnModuleInit } from '@nestjs/common';
 import { CreateSendbirdGroupChannelParams, RegisterSendbirdUserParams } from '../communication';
 import { ConfigsService, ExternalConfigs } from '.';
+import { AppointmentStatus } from '../appointment';
 
 enum suffix {
   users = 'users',
@@ -61,6 +62,30 @@ export class SendBird implements OnModuleInit {
       console.error(`Sendbird: Failed to create a group channel`, result.status, result.data);
       return false;
     }
+  }
+
+  async updateGroupChannelMetadata(
+    channelUrl: string,
+    key: string,
+    value: { status: AppointmentStatus; start: Date },
+  ) {
+    await this.httpService
+      .put(
+        `${this.basePath}${suffix.groupChannels}/${channelUrl}/metadata/${key}`,
+        { value: JSON.stringify(value), upsert: true },
+        {
+          headers: this.headers,
+        },
+      )
+      .toPromise();
+  }
+
+  async deleteGroupChannelMetadata(channelUrl: string, key: string) {
+    await this.httpService
+      .delete(`${this.basePath}${suffix.groupChannels}/${channelUrl}/metadata/${key}`, {
+        headers: this.headers,
+      })
+      .toPromise();
   }
 
   async freezeGroupChannel(channelUrl: string, freeze: boolean) {

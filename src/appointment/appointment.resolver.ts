@@ -9,10 +9,15 @@ import {
   Notes,
   UpdateNotesParams,
 } from '.';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { UpdatedAppointmentAction, EventType } from '../common';
 
 @Resolver(() => Appointment)
 export class AppointmentResolver {
-  constructor(private readonly appointmentService: AppointmentService) {}
+  constructor(
+    private readonly appointmentService: AppointmentService,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   @Mutation(() => Appointment)
   async requestAppointment(
@@ -32,14 +37,36 @@ export class AppointmentResolver {
     @Args(camelCase(ScheduleAppointmentParams.name))
     scheduleAppointmentParams: ScheduleAppointmentParams,
   ) {
-    return this.appointmentService.schedule(scheduleAppointmentParams);
+    const appointment = await this.appointmentService.schedule(scheduleAppointmentParams);
+
+    this.eventEmitter.emit(EventType.updatedAppointment, {
+      updatedAppointmentAction: UpdatedAppointmentAction.edit,
+      memberId: appointment.memberId,
+      userId: appointment.userId,
+      key: appointment.id,
+      value: {
+        status: appointment.status,
+        start: appointment.start,
+      },
+    });
+
+    return appointment;
   }
 
   @Mutation(() => Appointment)
   async endAppointment(
     @Args(camelCase(EndAppointmentParams.name)) endAppointmentParams: EndAppointmentParams,
   ) {
-    return this.appointmentService.end(endAppointmentParams);
+    const appointment = await this.appointmentService.end(endAppointmentParams);
+
+    this.eventEmitter.emit(EventType.updatedAppointment, {
+      updatedAppointmentAction: UpdatedAppointmentAction.delete,
+      memberId: appointment.memberId,
+      userId: appointment.userId,
+      key: appointment.id,
+    });
+
+    return appointment;
   }
 
   @Mutation(() => Notes, { nullable: true })

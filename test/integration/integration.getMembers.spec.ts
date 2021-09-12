@@ -4,20 +4,29 @@ import { Handler } from './aux/handler';
 import { AppointmentsIntegrationActions } from './aux/appointments';
 import { Creators } from './aux/creators';
 import { date } from 'faker';
+import { v4 } from 'uuid';
 
 describe('Integration tests : getMembers', () => {
   const handler: Handler = new Handler();
   let creators: Creators;
   let appointmentsActions: AppointmentsIntegrationActions;
+  let spyOnGet;
 
   beforeAll(async () => {
     await handler.beforeAll();
     appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
     creators = new Creators(handler, appointmentsActions);
+    spyOnGet = jest.spyOn(handler.communicationService, 'get');
+    spyOnGet.mockImplementation(async () => ({
+      memberId: generateId(),
+      userId: v4(),
+      sendbirdChannelUrl: v4(),
+    }));
   });
 
   afterAll(async () => {
     await handler.afterAll();
+    spyOnGet.mockReset();
   });
 
   it('should return nothing for none existing org', async () => {

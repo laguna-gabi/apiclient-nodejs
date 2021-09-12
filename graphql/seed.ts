@@ -51,7 +51,7 @@ async function main() {
     //Since Sendbird is doing async calls in event emitter,
     //we need to wait a while for the actions to be finished since in createMember we're creating
     //a groupChannel that should wait for the user to be registered on sendbird.
-    await delay(2000);
+    await delay(5000);
   }
 
   console.debug(
@@ -83,6 +83,15 @@ async function main() {
       ` primaryUser ${primaryUserId} was registered`,
   );
 
+  console.debug(
+    '\n----------------------------------------------------------------\n' +
+      '---------------- Pending sendbird registration -----------------\n' +
+      '----------------------------------------------------------------',
+  );
+  //Since Sendbird is doing async calls in event emitter,
+  //we need to wait a while for the register of group chat to be finished.
+  await delay(4000);
+
   const signed = jwt.sign({ username: memberParams.deviceId }, 'key-123');
 
   console.debug(
@@ -93,7 +102,7 @@ async function main() {
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
-      '------------- Creating 9 availabilities for 3 users ------------\n' +
+      '---------- Creating 3 availabilities for primaryUserId ---------\n' +
       '----------------------------------------------------------------',
   );
   await createAvailability(primaryUserId);
@@ -103,11 +112,13 @@ async function main() {
       '-------- Scheduling appointments with users and member ---------\n' +
       '----------------------------------------------------------------',
   );
-  await scheduleAppointment(memberId, primaryUserId, 'user1');
-  await requestAppointment(memberId, primaryUserId, 'user2');
-  const appointmentId = await scheduleAppointment(memberId, primaryUserId, 'user2');
+  await requestAppointment(memberId, primaryUserId);
+  const appointmentId = await scheduleAppointment(memberId, primaryUserId);
+  await delay(2000); //pending sendbird post events actions
   await endAppointment(appointmentId);
-  await scheduleAppointment(memberId, primaryUserId, 'user3');
+  await delay(2000); //pending sendbird post events actions
+  await scheduleAppointment(memberId, primaryUserId);
+  await delay(2000); //pending sendbird post events actions
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
@@ -125,15 +136,6 @@ async function main() {
       '----------------------------------------------------------------',
   );
   await setGeneralNotes(memberId);
-
-  console.debug(
-    '\n----------------------------------------------------------------\n' +
-      '---------------- Pending sendbird registration -----------------\n' +
-      '----------------------------------------------------------------',
-  );
-  //Since Sendbird is doing async calls in event emitter,
-  //we need to wait a while for the actions to be finished.
-  await delay(3000);
 
   await cleanUp();
 }
@@ -190,28 +192,24 @@ const createAvailability = async (userId: string) => {
   await mutations.createAvailabilities({ availabilities });
 };
 
-const requestAppointment = async (memberId: string, userId: string, userText: string) => {
+const requestAppointment = async (memberId: string, userId: string) => {
   const appointment = await mutations.requestAppointment({
     appointmentParams: generateRequestAppointmentParams({
       memberId,
       userId,
     }),
   });
-  console.log(`${appointment.id} : request appointment for member and ${userText}`);
+  console.log(`${appointment.id} : request appointment for member and primaryUser`);
 };
 
-const scheduleAppointment = async (
-  memberId: string,
-  userId: string,
-  userText: string,
-): Promise<string> => {
+const scheduleAppointment = async (memberId: string, userId: string): Promise<string> => {
   const appointment = await mutations.scheduleAppointment({
     appointmentParams: generateScheduleAppointmentParams({
       memberId,
       userId,
     }),
   });
-  console.log(`${appointment.id} : scheduled appointment for member and ${userText}`);
+  console.log(`${appointment.id} : scheduled appointment for member and primaryUser`);
 
   return appointment.id;
 };

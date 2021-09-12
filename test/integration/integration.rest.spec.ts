@@ -6,28 +6,37 @@ import { urls } from '../common';
 import {
   generateAvailabilityInput,
   generateCreateMemberParams,
+  generateId,
   generateScheduleAppointmentParams,
 } from '../generators';
 import { AppointmentStatus } from '../../src/appointment';
 import { add, startOfToday, startOfTomorrow } from 'date-fns';
 import { defaultSlotsParams } from '../../src/user';
+import { v4 } from 'uuid';
 
 describe('Integration tests: rest', () => {
   const handler: Handler = new Handler();
   let creators: Creators;
   let server;
   let appointmentsActions: AppointmentsIntegrationActions;
+  let spyOnGet;
 
   beforeAll(async () => {
     await handler.beforeAll();
     appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
     creators = new Creators(handler, appointmentsActions);
-
     server = handler.app.getHttpServer();
+    spyOnGet = jest.spyOn(handler.communicationService, 'get');
+    spyOnGet.mockImplementation(async () => ({
+      memberId: generateId(),
+      userId: v4(),
+      sendbirdChannelUrl: v4(),
+    }));
   });
 
   afterAll(async () => {
     await handler.afterAll();
+    spyOnGet.mockReset();
   });
 
   describe('getSlots', () => {

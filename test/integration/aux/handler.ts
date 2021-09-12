@@ -10,6 +10,7 @@ import * as jwt from 'jsonwebtoken';
 import { dbConnect, dbDisconnect, mockProviders } from '../../common';
 import { model } from 'mongoose';
 import { MemberDto } from '../../../src/member';
+import { CommunicationService } from '../../../src/communication';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -22,6 +23,7 @@ export class Handler {
   notificationsService;
   twilioService;
   memberModel;
+  communicationService: CommunicationService;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -47,6 +49,8 @@ export class Handler {
 
     await dbConnect();
     this.memberModel = model('members', MemberDto);
+
+    this.communicationService = moduleFixture.get<CommunicationService>(CommunicationService);
   }
 
   async afterAll() {

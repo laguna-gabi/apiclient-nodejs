@@ -12,7 +12,9 @@ import { CommunicationModule, CommunicationService } from '../../src/communicati
 import { UserRole } from '../../src/user';
 import { v4 } from 'uuid';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { Platform } from '../../src/common';
+import { Platform, UpdatedAppointmentAction } from '../../src/common';
+import { AppointmentStatus } from '../../src/appointment';
+import * as faker from 'faker';
 
 describe('CommunicationService', () => {
   let module: TestingModule;
@@ -38,6 +40,8 @@ describe('CommunicationService', () => {
     sendBirdMock.spyOnSendBirdCreateUser.mockReset();
     sendBirdMock.spyOnSendBirdCreateGroupChannel.mockReset();
     sendBirdMock.spyOnSendBirdFreeze.mockReset();
+    sendBirdMock.spyOnSendBirdUpdateGroupChannelMetadata.mockReset();
+    sendBirdMock.spyOnSendBirdDeleteGroupChannelMetadata.mockReset();
   });
 
   describe('createUser', () => {
@@ -123,6 +127,89 @@ describe('CommunicationService', () => {
       });
 
       expect(sendBirdMock.spyOnSendBirdFreeze).toBeCalledWith(expect.any(String), false);
+    });
+  });
+
+  describe('onUpdatedAppointment', () => {
+    afterEach(() => {
+      sendBirdMock.spyOnSendBirdUpdateGroupChannelMetadata.mockReset();
+    });
+
+    it('should handle updated appointment according to the action - edit', async () => {
+      const member = mockGenerateMember();
+      const user = mockGenerateUser();
+      const sendbirdChannelUrl = faker.internet.url();
+      const mockServiceGet = jest.spyOn(service, 'get');
+      mockServiceGet.mockImplementationOnce(async () => ({
+        memberId: member.id,
+        userId: user.id,
+        sendbirdChannelUrl,
+      }));
+
+      const params = {
+        memberId: member.id,
+        userId: user.id,
+        key: generateId(),
+        value: {
+          status: AppointmentStatus.scheduled,
+          start: faker.date.future(),
+        },
+        updatedAppointmentAction: UpdatedAppointmentAction.edit,
+      };
+
+      await service.onUpdatedAppointment(params);
+
+      expect(sendBirdMock.spyOnSendBirdUpdateGroupChannelMetadata).toBeCalledWith(
+        sendbirdChannelUrl,
+        params.key,
+        params.value,
+      );
+    });
+
+    it('should handle updated appointment according to the action - delete', async () => {
+      const member = mockGenerateMember();
+      const user = mockGenerateUser();
+      const sendbirdChannelUrl = faker.internet.url();
+      const mockServiceGet = jest.spyOn(service, 'get');
+      mockServiceGet.mockImplementationOnce(async () => ({
+        memberId: member.id,
+        userId: user.id,
+        sendbirdChannelUrl,
+      }));
+
+      const params = {
+        memberId: member.id,
+        userId: user.id,
+        key: generateId(),
+        updatedAppointmentAction: UpdatedAppointmentAction.delete,
+      };
+
+      await service.onUpdatedAppointment(params);
+
+      expect(sendBirdMock.spyOnSendBirdDeleteGroupChannelMetadata).toBeCalledWith(
+        sendbirdChannelUrl,
+        params.key,
+      );
+    });
+
+    it('should not update since no user-member communication was found', async () => {
+      const mockServiceGet = jest.spyOn(service, 'get');
+      mockServiceGet.mockImplementationOnce(async () => undefined);
+
+      const params = {
+        memberId: generateId(),
+        userId: v4(),
+        key: generateId(),
+        value: {
+          status: AppointmentStatus.scheduled,
+          start: faker.date.future(),
+        },
+        updatedAppointmentAction: UpdatedAppointmentAction.edit,
+      };
+
+      await service.onUpdatedAppointment(params);
+
+      expect(sendBirdMock.spyOnSendBirdUpdateGroupChannelMetadata).not.toBeCalled();
     });
   });
 });

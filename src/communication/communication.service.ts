@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotImplementedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
@@ -13,7 +13,8 @@ import { Member } from '../member';
 import { v4 } from 'uuid';
 import { SendBird, TwilioService } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EventType, Platform } from '../common';
+import { EventType, Platform, UpdatedAppointmentAction } from '../common';
+import { AppointmentStatus } from '../appointment';
 
 @Injectable()
 export class CommunicationService {
@@ -76,15 +77,43 @@ export class CommunicationService {
     try {
       const result = await this.sendBird.createGroupChannel(params);
       if (result) {
-        await this.sendBird.freezeGroupChannel(sendbirdChannelUrl, platform === Platform.web);
         await this.communicationModel.create({
           memberId: new Types.ObjectId(member.id),
           userId: user.id,
           sendbirdChannelUrl,
         });
+        await this.sendBird.freezeGroupChannel(sendbirdChannelUrl, platform === Platform.web);
       }
     } catch (ex) {
       console.error(ex);
+    }
+  }
+
+  async onUpdatedAppointment(params: {
+    memberId: string;
+    userId: string;
+    key: string;
+    value?: { status: AppointmentStatus; start: Date };
+    updatedAppointmentAction: UpdatedAppointmentAction;
+  }) {
+    const communication = await this.get({ memberId: params.memberId, userId: params.userId });
+    if (!communication) {
+      console.warn(
+        'NOT updating sendbird appointment metadata since no member-user communication exists',
+      );
+      return;
+    }
+
+    if (params.updatedAppointmentAction === UpdatedAppointmentAction.edit) {
+      await this.sendBird.updateGroupChannelMetadata(
+        communication.sendbirdChannelUrl,
+        params.key,
+        params.value,
+      );
+    } else if (params.updatedAppointmentAction === UpdatedAppointmentAction.delete) {
+      await this.sendBird.deleteGroupChannelMetadata(communication.sendbirdChannelUrl, params.key);
+    } else {
+      throw new NotImplementedException();
     }
   }
 

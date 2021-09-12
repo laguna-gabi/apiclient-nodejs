@@ -16,7 +16,7 @@ import {
 import * as config from 'config';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
-import { Platform } from '../../src/common';
+import { Platform, UpdatedAppointmentAction } from '../../src/common';
 
 describe('CommunicationResolver', () => {
   let module: TestingModule;
@@ -81,6 +81,31 @@ describe('CommunicationResolver', () => {
       expect(spyOnServiceCreateMember).toBeCalledWith(member);
       expect(spyOnServiceConnectMemberToUser).toBeCalledTimes(1);
       expect(spyOnServiceConnectMemberToUser).toBeCalledWith(member, user, platform);
+    });
+  });
+
+  describe('handleUpdatedAppointment', () => {
+    let spyOnServiceUpdatedAppointment;
+    beforeEach(() => {
+      spyOnServiceUpdatedAppointment = jest.spyOn(service, 'onUpdatedAppointment');
+    });
+
+    afterEach(() => {
+      spyOnServiceUpdatedAppointment.mockReset();
+    });
+
+    it('should successfully handle an updated appointment', async () => {
+      spyOnServiceUpdatedAppointment.mockImplementationOnce(() => undefined);
+
+      const params = {
+        memberId: generateId(),
+        userId: v4(),
+        key: faker.lorem.word(),
+        updatedAppointmentAction: UpdatedAppointmentAction.delete,
+      };
+      const user = mockGenerateUser();
+      await resolver.handleUpdatedAppointment(params);
+      expect(spyOnServiceUpdatedAppointment).toBeCalledWith(params);
     });
   });
 
