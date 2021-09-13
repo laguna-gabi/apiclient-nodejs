@@ -79,7 +79,7 @@ async function main() {
     memberParams,
   });
   const { primaryUserId } = await queries.getMember({ id: memberId });
-  const updateMemberParams = generateUpdateMemberParams({ ...memberParams, id: primaryUserId });
+  const updateMemberParams = generateUpdateMemberParams({ ...memberParams, id: memberId });
   const member = await mutations.updateMember({ updateMemberParams });
 
   console.log(
