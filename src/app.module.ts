@@ -30,6 +30,7 @@ const badRequestException = 'Bad Request Exception';
     EventEmitterModule.forRoot(),
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql',
+      cors: true,
       formatError: (error: GraphQLError) => {
         const handleErrorMessage = (message: string) => {
           for (const key of Errors.keys()) {
