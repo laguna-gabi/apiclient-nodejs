@@ -99,8 +99,7 @@ describe('Integration tests : getMembers', () => {
     await creators.createAndValidateTask(member.id, handler.mutations.createGoal);
     await creators.createAndValidateTask(member.id, handler.mutations.createActionItem);
 
-    handler.setContextUser(member.deviceId);
-    const memberResult = await handler.queries.getMember();
+    const memberResult = await handler.queries.getMember({ id: member.id });
     const membersResult = await handler.queries.getMembers(org.id);
 
     expect(membersResult.length).toEqual(1);

@@ -4,6 +4,7 @@ import { CreateUserParams } from '../../../src/user';
 import {
   CreateMemberParams,
   CreateTaskParams,
+  Member,
   NotifyParams,
   SetGeneralNotesParams,
   UpdateMemberParams,
@@ -145,7 +146,7 @@ export class Mutations {
     updateMemberParams: UpdateMemberParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
-  }): Promise<void> => {
+  }): Promise<Member> => {
     const result = await this.apolloClient.mutate({
       variables: { updateMemberParams: updateMemberParams },
       mutation: gql`

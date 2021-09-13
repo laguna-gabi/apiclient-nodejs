@@ -18,6 +18,7 @@ import {
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
   delay,
+  generateUpdateMemberParams,
 } from '../test';
 import * as jwt from 'jsonwebtoken';
 import * as faker from 'faker';
@@ -78,8 +79,11 @@ async function main() {
     memberParams,
   });
   const { primaryUserId } = await queries.getMember({ id: memberId });
+  const updateMemberParams = generateUpdateMemberParams({ ...memberParams, id: primaryUserId });
+  const member = await mutations.updateMember({ updateMemberParams });
+
   console.log(
-    `${memberId} : member with deviceId ${memberParams.deviceId}\nhaving` +
+    `${memberId} : member with deviceId ${member.deviceId}\nhaving` +
       ` primaryUser ${primaryUserId} was registered`,
   );
 
@@ -92,7 +96,7 @@ async function main() {
   //we need to wait a while for the register of group chat to be finished.
   await delay(4000);
 
-  const signed = jwt.sign({ username: memberParams.deviceId }, 'key-123');
+  const signed = jwt.sign({ username: member.deviceId }, 'key-123');
 
   console.debug(
     `If you wish to call getMember this header should be added:\n` +

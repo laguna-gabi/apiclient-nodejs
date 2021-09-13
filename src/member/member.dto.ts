@@ -132,11 +132,6 @@ export class CreateMemberParams extends ExtraMemberParams {
   phone: string;
 
   @Field(() => String)
-  @IsNotEmpty() /* for rest api */
-  @IsString() /* for rest api */
-  deviceId: string;
-
-  @Field(() => String)
   @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
     message: Errors.get(ErrorType.memberMinMaxLength),
   })
@@ -215,6 +210,10 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @IsStringDate({ message: Errors.get(ErrorType.memberDateOfBirth) })
   @IsOptional()
   dateOfBirth?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  deviceId?: string;
 }
 
 @InputType()
@@ -273,8 +272,8 @@ export class Member extends Identifier {
   @Field(() => String)
   phone: string;
 
-  @Prop({ index: true })
-  @Field(() => String)
+  @Prop({ index: true, isNaN: true })
+  @Field(() => String, { nullable: true })
   deviceId: string;
 
   @Prop()

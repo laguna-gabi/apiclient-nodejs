@@ -127,7 +127,7 @@ describe('Integration tests: all', () => {
     await updateTaskStatus(idAi1, handler.mutations.updateActionItemStatus);
     await updateTaskStatus(idAi2, handler.mutations.updateActionItemStatus);
 
-    const member = await handler.queries.getMember();
+    const member = await handler.queries.getMember({ id: resultMember.id });
 
     expect(member.users.filter((user) => user.id === resultCoach.id)[0].appointments[0]).toEqual(
       expect.objectContaining({ status: AppointmentStatus.done }),
@@ -201,14 +201,12 @@ describe('Integration tests: all', () => {
       expect.objectContaining(primaryUserWithAppointments.appointments[1]),
     );
 
-    handler.setContextUser(member1.deviceId);
-    const memberResult1 = await handler.queries.getMember();
+    const memberResult1 = await handler.queries.getMember({ id: member1.id });
     expect(appointmentMember1).toEqual(
       expect.objectContaining(memberResult1.users[0].appointments[0]),
     );
 
-    handler.setContextUser(member2.deviceId);
-    const memberResult2 = await handler.queries.getMember();
+    const memberResult2 = await handler.queries.getMember({ id: member2.id });
     expect(appointmentMember2).toEqual(
       expect.objectContaining(memberResult2.users[0].appointments[0]),
     );
@@ -226,8 +224,7 @@ describe('Integration tests: all', () => {
     const updateMemberParams = generateUpdateMemberParams({ id: member.id });
     const updatedMemberResult = await handler.mutations.updateMember({ updateMemberParams });
 
-    handler.setContextUser(member.deviceId);
-    const memberResult = await handler.queries.getMember();
+    const memberResult = await handler.queries.getMember({ id: member.id });
 
     expect(memberResult).toEqual(expect.objectContaining(updatedMemberResult));
   });
@@ -239,25 +236,23 @@ describe('Integration tests: all', () => {
     const memberParams = generateCreateMemberParams({ orgId: org.id });
     delete memberParams.zipCode;
 
-    await creators.handler.mutations.createMember({ memberParams });
+    const member = await creators.handler.mutations.createMember({ memberParams });
 
-    creators.handler.setContextUser(memberParams.deviceId);
-    const member = await creators.handler.queries.getMember();
-    expect(member.zipCode).toEqual(org.zipCode);
+    const memberResult = await handler.queries.getMember({ id: member.id });
+    expect(memberResult.zipCode).toEqual(org.zipCode);
   });
 
   it('should calculate utcDelta if zipCode exists', async () => {
     const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const { id } = await creators.createAndValidateMember({
+    const member = await creators.createAndValidateMember({
       org,
       primaryUser,
       users: [primaryUser],
     });
 
-    const member = await creators.handler.queries.getMember({ id });
-    creators.handler.setContextUser(member.deviceId);
-    expect(member.utcDelta).toBeLessThan(0);
+    const memberResult = await handler.queries.getMember({ id: member.id });
+    expect(memberResult.utcDelta).toBeLessThan(0);
   });
 
   it('should set and get availability for users', async () => {
@@ -460,8 +455,7 @@ describe('Integration tests: all', () => {
       member,
     });
 
-    handler.setContextUser(member.deviceId);
-    const memberResult = await handler.queries.getMember();
+    const memberResult = await handler.queries.getMember({ id: member.id });
     expect(appointmentMember).toEqual(
       expect.objectContaining({
         link: generateAppointmentLink(memberResult.users[0].appointments[0].id),

@@ -119,7 +119,6 @@ export const generateGetSlotsParams = ({
 
 export const generateCreateMemberParams = ({
   phone = generatePhone(),
-  deviceId = faker.datatype.uuid(),
   firstName = faker.name.firstName(),
   lastName = faker.name.lastName(),
   dateOfBirth = generateDateOnly(faker.date.past()),
@@ -132,7 +131,6 @@ export const generateCreateMemberParams = ({
   honorific,
 }: {
   phone?: string;
-  deviceId?: string;
   firstName?: string;
   lastName?: string;
   dateOfBirth?: string;
@@ -146,7 +144,6 @@ export const generateCreateMemberParams = ({
 }): CreateMemberParams => {
   return {
     phone,
-    deviceId,
     firstName,
     lastName,
     dateOfBirth,
@@ -202,6 +199,7 @@ export const generateUpdateMemberParams = ({
     state: faker.address.state(),
   },
   honorific = Honorific.Dr,
+  deviceId = faker.datatype.uuid(),
 }: {
   id?: string;
   firstName?: string;
@@ -219,6 +217,7 @@ export const generateUpdateMemberParams = ({
   dateOfBirth?: string;
   address?: { street?: string; city?: string; state?: string };
   honorific?: Honorific;
+  deviceId?: string;
 } = {}): UpdateMemberParams => {
   return {
     id,
@@ -237,6 +236,7 @@ export const generateUpdateMemberParams = ({
     dateOfBirth,
     address,
     honorific,
+    deviceId,
   };
 };
 

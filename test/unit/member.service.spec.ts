@@ -97,7 +97,7 @@ describe('MemberService', () => {
         const org = await modelOrg.create(orgParams);
 
         const deviceId = datatype.uuid();
-        const member = generateCreateMemberParams({ deviceId, orgId: generateId() });
+        const member = generateCreateMemberParams({ orgId: generateId() });
 
         const { _id } = await memberModel.create({
           phone: member.phone,
@@ -109,11 +109,11 @@ describe('MemberService', () => {
           users: [primaryUser.id],
         });
 
-        const result = await params.method(params.field === 'context' ? member.deviceId : _id);
+        const result = await params.method(params.field === 'context' ? deviceId : _id);
 
         expect(result.id).toEqual(_id.toString());
         expect(result.phone).toEqual(member.phone);
-        expect(result.deviceId).toEqual(member.deviceId);
+        expect(result.deviceId).toEqual(deviceId);
         expect(result.firstName).toEqual(member.firstName);
         expect(result.lastName).toEqual(member.lastName);
         expect(result.org).toEqual(expect.objectContaining(orgParams));
@@ -188,14 +188,13 @@ describe('MemberService', () => {
       const { _id: primaryUserId } = await modelUser.create(generateCreateRawUserParams());
       const { _id: orgId } = await modelOrg.create(generateOrgParams());
 
-      const deviceId = datatype.uuid();
       const { id: memberId } = await service.insert(
-        generateCreateMemberParams({ orgId, deviceId }),
+        generateCreateMemberParams({ orgId }),
         primaryUserId,
       );
 
       const result = await service.getByOrg(orgId);
-      const member = await service.getByDeviceId(deviceId);
+      const member = await service.get(memberId);
       const primaryUser = await modelUser.findOne({ _id: primaryUserId });
 
       expect(result.length).toEqual(1);
@@ -226,7 +225,7 @@ describe('MemberService', () => {
       const deviceId = datatype.uuid();
       const dischargeDate = generateDateOnly(date.future(1));
       const { id: memberId } = await service.insert(
-        generateCreateMemberParams({ orgId, deviceId, dischargeDate }),
+        generateCreateMemberParams({ orgId, dischargeDate }),
         primaryUserId,
       );
 
@@ -244,7 +243,7 @@ describe('MemberService', () => {
       });
 
       const result = await service.getByOrg(orgId);
-      const member = await service.getByDeviceId(deviceId);
+      const member = await service.get(memberId);
       const primaryUser = await modelUser.findById(primaryUserId);
 
       expect(result.length).toEqual(1);

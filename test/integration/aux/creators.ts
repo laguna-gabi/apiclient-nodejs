@@ -62,11 +62,7 @@ export class Creators {
     primaryUser: User;
     users: User[];
   }): Promise<Member> => {
-    const deviceId = faker.datatype.uuid();
-    this.handler.setContextUser(deviceId);
-
     const memberParams = generateCreateMemberParams({
-      deviceId,
       orgId: org.id,
     });
     const usersIds = users.map((i) => i.id);
@@ -80,7 +76,6 @@ export class Creators {
     const member = await this.handler.queries.getMember({ id });
 
     expect(member.phone).toEqual(memberParams.phone);
-    expect(member.deviceId).toEqual(deviceId);
     expect(member.firstName).toEqual(memberParams.firstName);
     expect(member.lastName).toEqual(memberParams.lastName);
 

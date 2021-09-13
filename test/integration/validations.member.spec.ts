@@ -84,11 +84,10 @@ describe('Validations - member', () => {
       });
       delete memberParams[params.field];
 
-      handler.setContextUser(memberParams.deviceId);
       const { id } = await handler.mutations.createMember({ memberParams });
       expect(id).not.toBeUndefined();
 
-      const member = await handler.queries.getMember();
+      const member = await handler.queries.getMember({ id });
       expect(member[params.field]).toEqual(params.defaultValue);
     });
 
@@ -106,11 +105,10 @@ describe('Validations - member', () => {
       });
       memberParams[params.field] = params.value;
 
-      handler.setContextUser(memberParams.deviceId);
       const { id } = await handler.mutations.createMember({ memberParams });
       expect(id).not.toBeUndefined();
 
-      const member = await handler.queries.getMember();
+      const member = await handler.queries.getMember({ id });
       expect(member[params.field]).toEqual(params.value);
     });
 
@@ -122,11 +120,10 @@ describe('Validations - member', () => {
 
       memberParams.dischargeDate = generateDateOnly(faker.date.soon(3));
 
-      handler.setContextUser(memberParams.deviceId);
       const { id } = await handler.mutations.createMember({ memberParams });
       expect(id).not.toBeUndefined();
 
-      const member = await handler.queries.getMember();
+      const member = await handler.queries.getMember({ id });
       expect(generateDateOnly(new Date(member.dischargeDate))).toEqual(memberParams.dischargeDate);
     });
 
@@ -134,7 +131,6 @@ describe('Validations - member', () => {
     test.each`
       input                             | error
       ${{ phone: 123 }}                 | ${{ missingFieldError: stringError }}
-      ${{ deviceId: 123 }}              | ${{ missingFieldError: stringError }}
       ${{ firstName: 123 }}             | ${{ missingFieldError: stringError }}
       ${{ lastName: 123 }}              | ${{ missingFieldError: stringError }}
       ${{ orgId: 123 }}                 | ${{ missingFieldError: stringError }}
@@ -343,6 +339,7 @@ describe('Validations - member', () => {
       ${{ address: { city: 123 } }}     | ${{ missingFieldError: stringError }}
       ${{ address: { state: 123 } }}    | ${{ missingFieldError: stringError }}
       ${{ honorific: 'not-valid' }}     | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
+      ${{ deviceId: 123 }}              | ${{ missingFieldError: stringError }}
     `(`should fail to update a member since setting $input is not a valid`, async (params) => {
       /* eslint-enable max-len */
       const updateMemberParams = generateUpdateMemberParams({ ...params.input });
