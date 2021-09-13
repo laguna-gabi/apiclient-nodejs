@@ -1,9 +1,10 @@
-import { ConfigsService, NotificationsService } from '../../src/providers';
+import { ConfigsService, NotificationsService, TwilioService } from '../../src/providers';
 import { HttpService } from '@nestjs/axios';
 import { v4 } from 'uuid';
 import { Platform, NotificationType } from '../../src/common';
 import * as faker from 'faker';
 import { delay } from '../common';
+import { generatePhone } from '../generators';
 
 describe('live: notifications (one signal)', () => {
   let notificationsService: NotificationsService;
@@ -13,7 +14,8 @@ describe('live: notifications (one signal)', () => {
   beforeAll(() => {
     const configService = new ConfigsService();
     const httpService = new HttpService();
-    notificationsService = new NotificationsService(configService, httpService);
+    const twilio = new TwilioService(configService);
+    notificationsService = new NotificationsService(configService, httpService, twilio);
   });
 
   it(
@@ -39,20 +41,21 @@ describe('live: notifications (one signal)', () => {
         const result = await notificationsService.send({
           externalUserId: params.externalUserId,
           platform: params.platform,
-          payload: {
-            heading: { en: faker.lorem.word() },
-          },
           data: {
             user: {
               id: v4(),
               firstName: faker.name.firstName(),
               avatar: faker.image.avatar(),
             },
+            member: {
+              phone: generatePhone(),
+            },
             type: NotificationType.video,
             peerId: v4(),
             isVideo: true,
             path: 'call',
           },
+          metadata: undefined,
         });
 
         current = result ? RETRY_MAX : current + 1;
@@ -83,21 +86,21 @@ describe('live: notifications (one signal)', () => {
     const result = await notificationsService.send({
       externalUserId: params.externalUserId,
       platform: params.platform,
-      payload: {
-        contents: { en: faker.lorem.sentence() },
-        heading: { en: faker.lorem.word() },
-      },
       data: {
         user: {
           id: faker.datatype.uuid(),
           firstName: faker.name.firstName(),
           avatar: faker.image.avatar(),
         },
+        member: {
+          phone: generatePhone(),
+        },
         type: NotificationType.call,
         peerId: v4(),
         isVideo: false,
         path: 'call',
       },
+      metadata: undefined,
     });
 
     expect(result).toBeTruthy();

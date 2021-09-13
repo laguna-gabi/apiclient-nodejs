@@ -2,11 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { ConfigsService, ExternalConfigs } from '.';
 import { NotificationType, Platform, SendNotificationParams } from '../common';
 import { HttpService } from '@nestjs/axios';
-import { INotifications } from './interfaces';
 import * as config from 'config';
 
 @Injectable()
-export class OneSignal implements INotifications {
+export class OneSignal {
   private readonly oneSignalUrl = 'https://onesignal.com/api/v1';
   private readonly playersUrl = `${this.oneSignalUrl}/players`;
   private readonly notificationsUrl = `${this.oneSignalUrl}/notifications`;
@@ -46,7 +45,7 @@ export class OneSignal implements INotifications {
   }
 
   async send(sendNotificationParams: SendNotificationParams) {
-    const { platform, externalUserId, payload, data } = sendNotificationParams;
+    const { platform, externalUserId, data, metadata } = sendNotificationParams;
 
     const config = await this.getConfig(platform, data.type);
     const app_id = await this.getApiId(platform, data.type);
@@ -56,7 +55,12 @@ export class OneSignal implements INotifications {
       app_id,
       include_external_user_ids: [externalUserId],
       content_available: true,
-      ...payload,
+      contents: {
+        en: metadata?.content
+          ? metadata.content
+          : `incoming ${data.type} from ${data.user.firstName}`,
+      },
+      headings: { en: 'Laguna' },
       ...extraData,
       data,
     };

@@ -586,47 +586,13 @@ describe('Integration tests: all', () => {
     },
   );
 
-  it('should send a notification', async () => {
-    const primaryUser = await creators.createAndValidateUser();
-    const org = await creators.createAndValidateOrg();
-    const { id } = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
-
-    const memberConfig = await handler.queries.getMemberConfig({ id });
-
-    const notifyParams: NotifyParams = {
-      memberId: id,
-      userId: primaryUser.id,
-      type: NotificationType.video,
-      peerId: v4(),
-    };
-    await handler.mutations.notify({ notifyParams });
-
-    expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
-      externalUserId: memberConfig.externalUserId,
-      payload: { heading: { en: 'Laguna' } },
-      platform: Platform.web,
-      data: {
-        user: {
-          id: primaryUser.id,
-          firstName: primaryUser.firstName,
-          avatar: primaryUser.avatar,
-        },
-        type: notifyParams.type,
-        peerId: notifyParams.peerId,
-        isVideo: true,
-        path: 'call',
-      },
-    });
-
-    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-  });
-
-  // https://app.clubhouse.io/laguna-health/story/1625/add-edit-for-member-s-users-and-primaryuserid
-  it.skip('should get communication with the same user and member id that were given', async () => {
+  test.each`
+    type                         | isVideo  | metadata
+    ${NotificationType.video}    | ${true}  | ${{}}
+    ${NotificationType.call}     | ${false} | ${{}}
+    ${NotificationType.text}     | ${false} | ${{ text: { content: 'text' } }}
+    ${NotificationType.forceSms} | ${false} | ${{ forceSms: { content: 'text' } }}
+  `(`should send a notification of type $type`, async (params) => {
     const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({
@@ -634,31 +600,45 @@ describe('Integration tests: all', () => {
       primaryUser,
       users: [primaryUser],
     });
+    const registerForNotificationParams: RegisterForNotificationParams = {
+      memberId: member.id,
+      platform: Platform.android,
+    };
+    await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
 
-    const result = await handler.queries.getCommunication({
-      getCommunicationParams: { memberId: member.id, userId: primaryUser.id },
+    const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
+
+    const notifyParams: NotifyParams = {
+      memberId: member.id,
+      userId: primaryUser.id,
+      type: params.type,
+      peerId: v4(),
+      metadata: params.metadata,
+    };
+
+    await handler.mutations.notify({ notifyParams });
+
+    expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
+      externalUserId: memberConfig.externalUserId,
+      platform: memberConfig.platform,
+      data: {
+        user: {
+          id: primaryUser.id,
+          firstName: primaryUser.firstName,
+          avatar: primaryUser.avatar,
+        },
+        member: {
+          phone: member.phone,
+        },
+        type: params.type,
+        peerId: notifyParams.peerId,
+        isVideo: params.isVideo,
+        path: 'call',
+      },
+      metadata: params.metadata ? params.metadata[params.type] : undefined,
     });
 
-    expect(result.memberId).toEqual(member.id);
-    expect(result.userId).toEqual(primaryUser.id);
-    expect(result).toHaveProperty('chat');
-  });
-
-  it('should get all users and a newly created user should be in the list', async () => {
-    const newUser = await creators.createAndValidateUser();
-
-    const result = await handler.queries.getUsers();
-    expect(
-      result.some((user) => {
-        return newUser.id == user.id;
-      }),
-    ).toEqual(true);
-  });
-
-  it('should get twilio token', async () => {
-    const result = await handler.queries.getTwilioAccessToken();
-
-    expect(result).toEqual('token');
+    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
   });
 
   //https://app.clubhouse.io/laguna-health/story/1625/add-edit-for-member-s-users-and-primaryuserid

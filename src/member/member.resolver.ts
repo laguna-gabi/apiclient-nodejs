@@ -204,27 +204,37 @@ export class MemberResolver extends MemberBase {
   async notify(@Args(camelCase(NotifyParams.name)) notifyParams: NotifyParams) {
     const { memberId, userId, peerId, type } = notifyParams;
 
+    const member = await this.memberService.get(memberId);
     const memberConfig = await this.memberService.getMemberConfig(memberId);
     const user = await this.userService.get(userId);
     if (!user) {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
+    if (
+      memberConfig.platform === Platform.web &&
+      (type === NotificationType.call || type === NotificationType.video)
+    ) {
+      throw new Error(Errors.get(ErrorType.notificationMemberPlatformWeb));
+    }
 
     await this.notificationsService.send({
       externalUserId: memberConfig.externalUserId,
       platform: memberConfig.platform,
-      payload: { heading: { en: 'Laguna' } },
       data: {
         user: {
           id: user.id,
           firstName: user.firstName,
           avatar: user.avatar,
         },
+        member: {
+          phone: member.phone,
+        },
         type,
         path: 'call',
         isVideo: type === NotificationType.video,
         peerId,
       },
+      metadata: notifyParams.metadata ? notifyParams.metadata[type] : undefined,
     });
   }
 

@@ -9,6 +9,7 @@ import {
   Honorific,
   Member,
   MemberConfig,
+  NotificationMetadata,
   NotifyParams,
   SetGeneralNotesParams,
   Sex,
@@ -447,20 +448,22 @@ export const generateNotifyParams = ({
   memberId = generateId(),
   peerId = v4(),
   type = NotificationType.call,
+  metadata = {},
 }: {
   userId?: string;
   memberId?: string;
   peerId?: string;
   type?: NotificationType;
+  metadata?: NotificationMetadata;
 } = {}): NotifyParams => {
-  return { userId, memberId, peerId, type };
+  return { userId, memberId, peerId, type, metadata };
 };
 
 const generateEmail = () => {
   return `${faker.datatype.uuid()}.${faker.internet.email()}`;
 };
 
-const generatePhone = () => {
+export const generatePhone = () => {
   const random = () => Math.floor(Math.random() * 9) + 1;
 
   let phone = '+414';

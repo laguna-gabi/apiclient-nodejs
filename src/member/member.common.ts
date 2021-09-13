@@ -56,3 +56,9 @@ export class Task extends Identifier {
   @Field(() => Date)
   deadline: Date;
 }
+
+@InputType()
+export class ContentMetadata {
+  @Field(() => String)
+  content: string;
+}

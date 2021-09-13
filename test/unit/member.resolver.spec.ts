@@ -20,6 +20,7 @@ import {
   Errors,
   ErrorType,
   EventType,
+  NotificationType,
   Platform,
   RegisterForNotificationParams,
 } from '../../src/common';
@@ -521,25 +522,90 @@ describe('MemberResolver', () => {
   });
 
   describe('notify', () => {
+    let spyOnServiceGetMember;
     let spyOnServiceGetMemberConfig;
     let spyOnUserServiceGetUser;
     let spyOnNotificationsServiceSend;
 
     beforeEach(() => {
+      spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
       spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
     });
 
     afterEach(() => {
+      spyOnServiceGetMember.mockReset();
       spyOnServiceGetMemberConfig.mockReset();
       spyOnUserServiceGetUser.mockReset();
       spyOnNotificationsServiceSend.mockReset();
     });
 
-    it('should notify a message', async () => {
+    test.each`
+      type                         | isVideo  | metadata
+      ${NotificationType.video}    | ${true}  | ${{}}
+      ${NotificationType.call}     | ${false} | ${{}}
+      ${NotificationType.text}     | ${false} | ${{ text: { content: 'text' } }}
+      ${NotificationType.forceSms} | ${false} | ${{ forceSms: { content: 'text' } }}
+    `(`should notify a member`, async (params) => {
+      const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();
       const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const notifyParams = generateNotifyParams({ type: params.type, metadata: params.metadata });
+
+      await resolver.notify(notifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        externalUserId: memberConfig.externalUserId,
+        platform: memberConfig.platform,
+        data: {
+          user: {
+            id: user.id,
+            firstName: user.firstName,
+            avatar: user.avatar,
+          },
+          member: {
+            phone: member.phone,
+          },
+          type: notifyParams.type,
+          peerId: notifyParams.peerId,
+          isVideo: params.isVideo,
+          path: 'call',
+        },
+        metadata: params.metadata ? params.metadata[params.type] : undefined,
+      });
+    });
+
+    test.each([NotificationType.call, NotificationType.video])(
+      'should throw an error when a web member receives video or call notification',
+      async (params) => {
+        const member = mockGenerateMember();
+        const memberConfig = mockGenerateMemberConfig();
+        memberConfig.platform = Platform.web;
+        const user = mockGenerateUser();
+        spyOnServiceGetMember.mockImplementationOnce(async () => member);
+        spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+        spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+        spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+        const notifyParams = generateNotifyParams({ type: params });
+
+        await expect(resolver.notify(notifyParams)).rejects.toThrow(
+          Errors.get(ErrorType.notificationMemberPlatformWeb),
+        );
+      },
+    );
+
+    it('should notify a message', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
@@ -551,18 +617,21 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
         externalUserId: memberConfig.externalUserId,
         platform: memberConfig.platform,
-        payload: { heading: { en: 'Laguna' } },
         data: {
           user: {
             id: user.id,
             firstName: user.firstName,
             avatar: user.avatar,
           },
+          member: {
+            phone: member.phone,
+          },
           type: notifyParams.type,
           peerId: notifyParams.peerId,
           isVideo: false,
           path: 'call',
         },
+        metadata: undefined,
       });
     });
   });

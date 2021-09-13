@@ -117,8 +117,34 @@ export function IsPeerIdNotNullOnNotifyVideoOrCall(options?: ValidationOptions) 
       options,
       validator: {
         validate(peerId, args: ValidationArguments) {
-          const notificationType: NotificationType = args.object['notificationType'];
-          return peerId || (!peerId && notificationType === NotificationType.text);
+          const notificationType: NotificationType = args.object['type'];
+          return (
+            peerId ||
+            (!peerId &&
+              (notificationType === NotificationType.text ||
+                notificationType === NotificationType.forceSms))
+          );
+        },
+      },
+    });
+  };
+}
+
+export function IsTypeMetadataProvided(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(type: string, args: ValidationArguments) {
+          if (type === NotificationType.text) {
+            return args.object['metadata']?.text;
+          } else if (type === NotificationType.forceSms) {
+            return args.object['metadata']?.forceSms;
+          } else {
+            return true;
+          }
         },
       },
     });

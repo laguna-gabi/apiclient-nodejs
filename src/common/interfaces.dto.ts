@@ -18,6 +18,7 @@ export enum NotificationType {
   video = 'video',
   call = 'call',
   text = 'text',
+  forceSms = 'forceSms',
 }
 
 registerEnumType(NotificationType, { name: 'NotificationType' });
@@ -88,31 +89,24 @@ export abstract class BaseService {
   }
 }
 
-export class Input {
-  en: string;
-  es?: string;
-}
-
-export class NotificationPayload {
-  contents?: Input;
-  heading: Input;
-}
-
 export class SendNotificationParams {
   externalUserId: string;
   platform: Platform;
-  payload: NotificationPayload;
   data: {
     user: {
       id: string;
       firstName: string;
       avatar: string;
     };
+    member: {
+      phone: string;
+    };
     peerId: string;
     type: NotificationType;
     path: string;
     isVideo: boolean;
   };
+  metadata: Record<string, any>;
 }
 
 export enum slackChannel {

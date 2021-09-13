@@ -1,12 +1,10 @@
-import { Injectable, NotImplementedException, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigsService, ExternalConfigs } from '.';
 import { Twilio, jwt } from 'twilio';
 import * as config from 'config';
-import { INotifications } from './interfaces';
-import { Platform, SendNotificationParams } from '../common';
 
 @Injectable()
-export class TwilioService implements OnModuleInit, INotifications {
+export class TwilioService implements OnModuleInit {
   private accountSid;
   private appSid;
   private authToken;
@@ -30,22 +28,8 @@ export class TwilioService implements OnModuleInit, INotifications {
     this.client = new Twilio(this.accountSid, this.authToken);
   }
 
-  async register({
-    token,
-    externalUserId,
-  }: {
-    token: string;
-    externalUserId: string;
-  }): Promise<string | undefined> {
-    throw new NotImplementedException();
-  }
-
-  send(sendNotificationParams: SendNotificationParams): Promise<boolean> {
-    throw new NotImplementedException();
-  }
-
-  async sendSms({ body, to, from = this.source }: { body: string; to: string; from: string }) {
-    await this.client.messages.create({ body, to, from });
+  async send({ body, to }: { body: string; to: string }) {
+    return this.client.messages.create({ body, to, from: this.source });
   }
 
   getAccessToken() {
@@ -61,9 +45,5 @@ export class TwilioService implements OnModuleInit, INotifications {
     token.addGrant(voiceGrant);
 
     return token.toJwt();
-  }
-
-  async unregister(playerId: string, platform: Platform): Promise<void> {
-    throw new NotImplementedException();
   }
 }

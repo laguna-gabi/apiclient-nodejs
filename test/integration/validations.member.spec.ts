@@ -262,12 +262,25 @@ describe('Validations - member', () => {
 
   describe('notify', () => {
     test.each`
-      input                | error
-      ${{ userId: 123 }}   | ${stringError}
-      ${{ memberId: 123 }} | ${stringError}
-      ${{ peerId: 123 }}   | ${stringError}
-      ${{ type: 123 }}     | ${'cannot represent non-string value'}
+      input                                           | error
+      ${{ userId: 123 }}                              | ${stringError}
+      ${{ memberId: 123 }}                            | ${stringError}
+      ${{ peerId: 123 }}                              | ${stringError}
+      ${{ metadata: { text: { content: 123 } } }}     | ${stringError}
+      ${{ metadata: { forceSms: { content: 123 } } }} | ${stringError}
+      ${{ type: 123 }}                                | ${'cannot represent non-string value'}
     `(`should fail to notify since setting $input is not a valid`, async (params) => {
+      const notifyParams: NotifyParams = generateNotifyParams({ ...params.input });
+      await handler.mutations.notify({ notifyParams, missingFieldError: params.error });
+    });
+
+    /* eslint-disable max-len */
+    test.each`
+      input                             | error
+      ${{ metadata: { text: {} } }}     | ${'Field "content" of required type "String!" was not provided.'}
+      ${{ metadata: { forceSms: {} } }} | ${'Field "content" of required type "String!" was not provided.'}
+    `(`should fail to notify since mandatory metadata was not provided`, async (params) => {
+      /* eslint-enable max-len */
       const notifyParams: NotifyParams = generateNotifyParams({ ...params.input });
       await handler.mutations.notify({ notifyParams, missingFieldError: params.error });
     });
@@ -296,6 +309,17 @@ describe('Validations - member', () => {
         });
       },
     );
+
+    /* eslint-disable max-len */
+    test.each`
+      field         | input                                  | error
+      ${'forceSms'} | ${{ type: NotificationType.forceSms }} | ${[Errors.get(ErrorType.notificationMetadataMissing)]}
+      ${'text'}     | ${{ type: NotificationType.text }}     | ${[Errors.get(ErrorType.notificationMetadataMissing)]}
+    `('should throw an error when metadata is not provided with type $field', async (params) => {
+      /* eslint-enable max-len */
+      const notifyParams: NotifyParams = generateNotifyParams({ ...params.input });
+      await handler.mutations.notify({ notifyParams, invalidFieldsErrors: params.error });
+    });
   });
 
   describe('updateMember', () => {

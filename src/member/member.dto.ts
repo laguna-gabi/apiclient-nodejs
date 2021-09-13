@@ -6,6 +6,7 @@ import {
   Errors,
   ErrorType,
   Identifier,
+  IsTypeMetadataProvided,
   IsPeerIdNotNullOnNotifyVideoOrCall,
   IsStringDate,
   Language,
@@ -24,7 +25,7 @@ import {
 } from 'class-validator';
 import * as config from 'config';
 import { Org } from '../org';
-import { ActionItem, Goal } from '.';
+import { ActionItem, Goal, ContentMetadata } from '.';
 import { Scores } from '../appointment';
 
 const validatorsConfig = config.get('graphql.validators');
@@ -226,6 +227,21 @@ export class SetGeneralNotesParams {
 }
 
 @InputType()
+export class TextMetadata extends ContentMetadata {}
+
+@InputType()
+export class ForceSmsMetadata extends ContentMetadata {}
+
+@InputType()
+export class NotificationMetadata {
+  @Field(() => TextMetadata, { nullable: true })
+  text?: TextMetadata;
+
+  @Field(() => ForceSmsMetadata, { nullable: true })
+  forceSms?: ForceSmsMetadata;
+}
+
+@InputType()
 export class NotifyParams {
   @Field(() => String)
   userId: string;
@@ -239,8 +255,12 @@ export class NotifyParams {
   })
   peerId?: string;
 
+  @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataMissing) })
   @Field(() => NotificationType)
   type: NotificationType;
+
+  @Field(() => NotificationMetadata, { nullable: true })
+  metadata?: NotificationMetadata;
 }
 
 /**************************************************************************************************

@@ -1,22 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { Platform, SendNotificationParams } from '../common';
+import { NotificationType, Platform, SendNotificationParams } from '../common';
 import { ConfigsService } from './aws';
 import { OneSignal } from './oneSignal';
 import { TwilioService } from './twilio.service';
-import { INotifications } from './interfaces';
 
 @Injectable()
-export class NotificationsService implements INotifications {
+export class NotificationsService {
   private readonly oneSignal: OneSignal;
-  private readonly twilio: TwilioService;
 
   constructor(
     private readonly configsService: ConfigsService,
     private readonly httpService: HttpService,
+    private readonly twilio: TwilioService,
   ) {
     this.oneSignal = new OneSignal(configsService, httpService);
-    this.twilio = new TwilioService(configsService);
   }
 
   async register({
@@ -30,8 +28,14 @@ export class NotificationsService implements INotifications {
   }
 
   async send(sendNotificationParams: SendNotificationParams): Promise<boolean> {
-    if (sendNotificationParams.platform === Platform.web) {
-      return this.twilio.send(sendNotificationParams);
+    if (
+      sendNotificationParams.platform === Platform.web ||
+      sendNotificationParams.data.type === NotificationType.forceSms
+    ) {
+      return this.twilio.send({
+        body: sendNotificationParams.metadata.content,
+        to: sendNotificationParams.data.member.phone,
+      });
     } else {
       return this.oneSignal.send(sendNotificationParams);
     }
