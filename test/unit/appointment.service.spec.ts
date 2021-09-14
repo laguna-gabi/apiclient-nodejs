@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DbModule } from '../../src/db/db.module';
 import { model, Model } from 'mongoose';
 import {
   dbConnect,
   dbDisconnect,
+  defaultModules,
   generateAppointmentLink,
   generateId,
   generateNotesParams,
@@ -22,7 +22,7 @@ import {
 } from '../../src/appointment';
 import { Errors, ErrorType, EventType } from '../../src/common';
 import * as faker from 'faker';
-import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { cloneDeep } from 'lodash';
 import { v4 } from 'uuid';
 
@@ -35,7 +35,7 @@ describe('AppointmentService', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, AppointmentModule, EventEmitterModule.forRoot()],
+      imports: defaultModules().concat(AppointmentModule),
     }).compile();
 
     service = module.get<AppointmentService>(AppointmentService);
@@ -346,7 +346,11 @@ describe('AppointmentService', () => {
     /* eslint-disable max-len */
     test.each`
       update1                               | update2
-      ${{ noShow: true, noShowReason }}     | ${{ noShow: true, noShowReason: faker.lorem.sentence(), notes: generateNotesParams() }}
+      ${{ noShow: true, noShowReason }} | ${{
+  noShow: true,
+  noShowReason: faker.lorem.sentence(),
+  notes: generateNotesParams(),
+}}
       ${{ noShow: true, noShowReason }}     | ${{ noShow: false, noShowReason: null }}
       ${{ noShow: false }}                  | ${{ noShow: true, noShowReason }}
       ${{ notes: generateNotesParams() }}   | ${{ noShow: true }}

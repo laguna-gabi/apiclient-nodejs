@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DbModule } from '../../src/db/db.module';
 import { Model, model, Types } from 'mongoose';
 import {
   compareUsers,
   dbConnect,
   dbDisconnect,
+  defaultModules,
   generateCreateMemberParams,
   generateCreateRawUserParams,
   generateCreateTaskParams,
@@ -36,7 +36,6 @@ import { Errors, ErrorType, Language, Platform } from '../../src/common';
 import { User, UserDto } from '../../src/user';
 import * as faker from 'faker';
 import { datatype, date, internet } from 'faker';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 import {
   Appointment,
   AppointmentDto,
@@ -56,7 +55,7 @@ describe('MemberService', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, MemberModule, AppointmentModule, EventEmitterModule.forRoot()],
+      imports: defaultModules().concat(MemberModule, AppointmentModule),
     }).compile();
 
     service = module.get<MemberService>(MemberService);

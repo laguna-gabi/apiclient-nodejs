@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DbModule } from '../../src/db/db.module';
 import { Model, model } from 'mongoose';
 import {
   defaultUserParams,
@@ -10,9 +9,14 @@ import {
   UserRole,
   UserService,
 } from '../../src/user';
-import { compareUsers, dbConnect, dbDisconnect, generateCreateUserParams } from '../index';
+import {
+  compareUsers,
+  dbConnect,
+  dbDisconnect,
+  defaultModules,
+  generateCreateUserParams,
+} from '../index';
 import { Errors, ErrorType } from '../../src/common';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppointmentModule } from '../../src/appointment';
 import { v4 } from 'uuid';
 
@@ -23,7 +27,7 @@ describe('UserService', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, AppointmentModule, UserModule, EventEmitterModule.forRoot()],
+      imports: defaultModules().concat(UserModule, AppointmentModule),
     }).compile();
 
     service = module.get<UserService>(UserService);

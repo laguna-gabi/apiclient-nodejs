@@ -2,22 +2,27 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
 import {
   Appointment,
+  AppointmentScheduler,
   AppointmentService,
   EndAppointmentParams,
+  Notes,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
-  Notes,
   UpdateNotesParams,
 } from '.';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { UpdatedAppointmentAction, EventType } from '../common';
+import { EventType, UpdatedAppointmentAction } from '../common';
+import { AppointmentBase } from './appointment.interfaces';
 
 @Resolver(() => Appointment)
-export class AppointmentResolver {
+export class AppointmentResolver extends AppointmentBase {
   constructor(
-    private readonly appointmentService: AppointmentService,
-    private eventEmitter: EventEmitter2,
-  ) {}
+    readonly appointmentService: AppointmentService,
+    readonly appointmentScheduler: AppointmentScheduler,
+    readonly eventEmitter: EventEmitter2,
+  ) {
+    super(appointmentService, appointmentScheduler, eventEmitter);
+  }
 
   @Mutation(() => Appointment)
   async requestAppointment(
@@ -37,20 +42,7 @@ export class AppointmentResolver {
     @Args(camelCase(ScheduleAppointmentParams.name))
     scheduleAppointmentParams: ScheduleAppointmentParams,
   ) {
-    const appointment = await this.appointmentService.schedule(scheduleAppointmentParams);
-
-    this.eventEmitter.emit(EventType.updatedAppointment, {
-      updatedAppointmentAction: UpdatedAppointmentAction.edit,
-      memberId: appointment.memberId,
-      userId: appointment.userId,
-      key: appointment.id,
-      value: {
-        status: appointment.status,
-        start: appointment.start,
-      },
-    });
-
-    return appointment;
+    return super.scheduleAppointment(scheduleAppointmentParams);
   }
 
   @Mutation(() => Appointment)
@@ -65,6 +57,8 @@ export class AppointmentResolver {
       userId: appointment.userId,
       key: appointment.id,
     });
+
+    await this.appointmentScheduler.deleteAppointmentAlert({ id: appointment.id });
 
     return appointment;
   }

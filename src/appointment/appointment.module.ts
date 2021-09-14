@@ -5,19 +5,24 @@ import {
   AppointmentController,
   AppointmentDto,
   AppointmentResolver,
+  AppointmentScheduler,
   AppointmentService,
   Notes,
   NotesDto,
 } from '.';
+import { ProvidersModule } from '../providers';
+import { CommunicationModule } from '../communication';
 
 @Module({
   imports: [
+    ProvidersModule,
+    CommunicationModule,
     MongooseModule.forFeature([
       { name: Appointment.name, schema: AppointmentDto },
       { name: Notes.name, schema: NotesDto },
     ]),
   ],
-  providers: [AppointmentResolver, AppointmentService],
+  providers: [AppointmentResolver, AppointmentService, AppointmentScheduler],
   controllers: [AppointmentController],
 })
 export class AppointmentModule {}

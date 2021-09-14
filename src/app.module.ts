@@ -13,6 +13,7 @@ import { HealthController } from './health/health.controller';
 import { AvailabilityModule } from './availability';
 import { CommunicationModule } from './communication';
 import { ProvidersModule } from './providers';
+import { ScheduleModule } from '@nestjs/schedule';
 
 const badRequestException = 'Bad Request Exception';
 
@@ -28,6 +29,7 @@ const badRequestException = 'Bad Request Exception';
     DbModule,
     TerminusModule,
     EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql',
       cors: true,

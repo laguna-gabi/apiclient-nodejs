@@ -34,6 +34,7 @@
     "@nestjs/graphql": "^7.11.0",
     "@nestjs/mongoose": "^7.2.4",
     "@nestjs/platform-express": "^7.6.15",
+    "@nestjs/schedule": "^1.0.1",
     "@nestjs/terminus": "^7.2.0",
     "@slack/webhook": "^6.0.0",
     "@types/aws-sdk": "^2.7.0",

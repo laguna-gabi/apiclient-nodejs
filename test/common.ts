@@ -5,6 +5,9 @@ import { TestingModule } from '@nestjs/testing';
 import { NotificationsService, SendBird, StorageService, TwilioService } from '../src/providers';
 import { apiPrefix } from '../src/common';
 import { v4 } from 'uuid';
+import { DbModule } from '../src/db/db.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 
 export const urls = {
   scheduleAppointments: `/${apiPrefix}/appointments/schedule`,
@@ -33,6 +36,10 @@ export const dbDisconnect = async () => {
 
 export const delay = async (milliseconds: number) => {
   await new Promise((resolve) => setTimeout(resolve, milliseconds));
+};
+
+export const defaultModules = () => {
+  return [DbModule, EventEmitterModule.forRoot(), ScheduleModule.forRoot()];
 };
 
 export const mockProviders = (

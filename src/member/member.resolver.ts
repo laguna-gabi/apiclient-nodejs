@@ -29,9 +29,9 @@ import * as jwt from 'jsonwebtoken';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { millisecondsInHour } from 'date-fns';
 import { lookup } from 'zipcode-to-timezone';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { NotificationsService, StorageService } from '../providers';
-import { UserService } from '../user';
+import { User, UserService } from '../user';
 
 @Resolver(() => Member)
 export class MemberResolver extends MemberBase {
@@ -203,18 +203,22 @@ export class MemberResolver extends MemberBase {
   @Mutation(() => Boolean, { nullable: true })
   async notify(@Args(camelCase(NotifyParams.name)) notifyParams: NotifyParams) {
     const { memberId, userId, peerId, type } = notifyParams;
-
-    const member = await this.memberService.get(memberId);
-    const memberConfig = await this.memberService.getMemberConfig(memberId);
-    const user = await this.userService.get(userId);
-    if (!user) {
-      throw new Error(Errors.get(ErrorType.userNotFound));
-    }
+    const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId);
     if (
       memberConfig.platform === Platform.web &&
       (type === NotificationType.call || type === NotificationType.video)
     ) {
       throw new Error(Errors.get(ErrorType.notificationMemberPlatformWeb));
+    }
+
+    if (
+      notifyParams.metadata &&
+      notifyParams.metadata[type] &&
+      notifyParams.metadata[type].content
+    ) {
+      notifyParams.metadata[type].content = notifyParams.metadata[type].content
+        .replace('@member.firstName@', member.firstName)
+        .replace('@user.firstName@', user.firstName);
     }
 
     await this.notificationsService.send({
@@ -236,6 +240,20 @@ export class MemberResolver extends MemberBase {
       },
       metadata: notifyParams.metadata ? notifyParams.metadata[type] : undefined,
     });
+  }
+
+  /**
+   * Event is coming from appointment.scheduler - scheduling appointments reminders.
+   * We have to specify an event method here, instead of just adding to @notify method,
+   * since the app freezes when not catching the internal exception.
+   */
+  @OnEvent(EventType.notify, { async: true })
+  async notifyInternal(notifyParams: NotifyParams) {
+    try {
+      await this.notify(notifyParams);
+    } catch (ex) {
+      console.error(ex);
+    }
   }
 
   /************************************************************************************************
@@ -270,5 +288,19 @@ export class MemberResolver extends MemberBase {
       const timeZone = lookup(zipCode);
       return getTimezoneOffset(timeZone) / millisecondsInHour;
     }
+  }
+
+  private async extractDataOfMemberAndUser(
+    memberId: string,
+    userId: string,
+  ): Promise<{ member: Member; memberConfig: MemberConfig; user: User }> {
+    const member = await this.memberService.get(memberId);
+    const memberConfig = await this.memberService.getMemberConfig(memberId);
+    const user = await this.userService.get(userId);
+    if (!user) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+
+    return { member, memberConfig, user };
   }
 }

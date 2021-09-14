@@ -1,22 +1,23 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DbModule } from '../../src/db/db.module';
 import {
   AppointmentController,
   AppointmentMethod,
   AppointmentModule,
   AppointmentResolver,
+  AppointmentScheduler,
   AppointmentService,
   AppointmentStatus,
 } from '../../src/appointment';
 import {
   dbDisconnect,
+  defaultModules,
   generateId,
   generateNotesParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateUpdateNotesParams,
 } from '../index';
-import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventType, UpdatedAppointmentAction } from '../../src/common';
 
 describe('AppointmentResolver', () => {
@@ -24,17 +25,19 @@ describe('AppointmentResolver', () => {
   let resolver: AppointmentResolver;
   let controller: AppointmentController;
   let service: AppointmentService;
+  let scheduler: AppointmentScheduler;
   let eventEmitter: EventEmitter2;
   let spyOnEventEmitter;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, AppointmentModule, EventEmitterModule.forRoot()],
+      imports: defaultModules().concat(AppointmentModule),
     }).compile();
 
     resolver = module.get<AppointmentResolver>(AppointmentResolver);
     controller = module.get<AppointmentController>(AppointmentController);
     service = module.get<AppointmentService>(AppointmentService);
+    scheduler = module.get<AppointmentScheduler>(AppointmentScheduler);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
   });
@@ -100,12 +103,15 @@ describe('AppointmentResolver', () => {
 
   describe('scheduleAppointment', () => {
     let spyOnServiceSchedule;
+    let spyOnSchedulerUpdateAppointmentAlert;
     beforeEach(() => {
       spyOnServiceSchedule = jest.spyOn(service, 'schedule');
+      spyOnSchedulerUpdateAppointmentAlert = jest.spyOn(scheduler, 'updateAppointmentAlert');
     });
 
     afterEach(() => {
       spyOnServiceSchedule.mockReset();
+      spyOnSchedulerUpdateAppointmentAlert.mockReset();
     });
 
     test.each`
@@ -113,16 +119,19 @@ describe('AppointmentResolver', () => {
       ${'resolver'}   | ${async (appointment) => await resolver.scheduleAppointment(appointment)}
       ${'controller'} | ${async (appointment) => await controller.scheduleAppointment(appointment)}
     `(`should get an appointment via $type for a given id`, async (params) => {
-      const status = AppointmentStatus.scheduled;
       const appointment = generateScheduleAppointmentParams();
-      spyOnServiceSchedule.mockImplementationOnce(async () => ({
-        ...appointment,
-        status,
-      }));
+      const mockResult = { ...appointment, status: AppointmentStatus.scheduled, id: generateId() };
+      spyOnServiceSchedule.mockImplementationOnce(async () => mockResult);
 
       const result = await params.method(appointment);
 
-      expect(result).toEqual({ ...appointment, status });
+      expect(result).toEqual(mockResult);
+      expect(spyOnSchedulerUpdateAppointmentAlert).toBeCalledWith({
+        id: mockResult.id,
+        memberId: appointment.memberId.toString(),
+        userId: appointment.userId,
+        start: appointment.start,
+      });
     });
 
     it('should validate that on schedule appointment, an internal event is sent', async () => {
@@ -149,12 +158,15 @@ describe('AppointmentResolver', () => {
 
   describe('endAppointment', () => {
     let spyOnServiceEnd;
+    let spyOnSchedulerDeleteAppointmentAlert;
     beforeEach(() => {
       spyOnServiceEnd = jest.spyOn(service, 'end');
+      spyOnSchedulerDeleteAppointmentAlert = jest.spyOn(scheduler, 'deleteAppointmentAlert');
     });
 
     afterEach(() => {
       spyOnServiceEnd.mockReset();
+      spyOnSchedulerDeleteAppointmentAlert.mockReset();
     });
 
     it('should end an existing appointment for a given id', async () => {
@@ -168,6 +180,7 @@ describe('AppointmentResolver', () => {
 
       const result = await resolver.endAppointment({ id: appointment.id });
       expect(spyOnServiceEnd).toBeCalledWith({ id: appointment.id });
+      expect(spyOnSchedulerDeleteAppointmentAlert).toBeCalledWith({ id: appointment.id });
       expect(result).toEqual(appointment);
     });
 

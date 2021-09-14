@@ -34,5 +34,12 @@
       "test_type": 1
     },
     "androidChannelId": "00349af6-be67-4729-9d48-9057a5507b14"
+  },
+  "appointments": {
+    "alertBeforeInMin": 5,
+    "maxAlertGapInMin": 43800
+  },
+  "contents": {
+    "appointmentReminder": "Hello @member.firstName@, your coaching appointment with @user.firstName@ will start in @gapMinutes@ minutes. Click here to join: @chatLink@"
   }
 }

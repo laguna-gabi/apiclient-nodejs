@@ -28,6 +28,7 @@ import { NotificationsService, StorageService } from '../../src/providers';
 import * as faker from 'faker';
 import { UserService } from '../../src/user';
 import { Types } from 'mongoose';
+import * as config from 'config';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
@@ -541,6 +542,18 @@ describe('MemberResolver', () => {
       spyOnNotificationsServiceSend.mockReset();
     });
 
+    it('should catch notify exception on non existing user', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => undefined);
+
+      await expect(resolver.notify(generateNotifyParams())).rejects.toThrow(
+        Errors.get(ErrorType.userNotFound),
+      );
+    });
+
     test.each`
       type                         | isVideo  | metadata
       ${NotificationType.video}    | ${true}  | ${{}}
@@ -632,6 +645,64 @@ describe('MemberResolver', () => {
           path: 'call',
         },
         metadata: undefined,
+      });
+    });
+
+    it('should handle exception locally on calling internal notify(user not found)', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => undefined);
+
+      await resolver.notifyInternal(generateNotifyParams());
+    });
+
+    it('should call notify from notify.internal with appointment reminder metadata', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const content = `${config
+        .get('contents.appointmentReminder')
+        .replace('@gapMinutes@', config.get('appointments.alertBeforeInMin'))
+        .replace('@chatLink@', faker.internet.url())}`;
+
+      const notifyParams = generateNotifyParams({
+        type: NotificationType.text,
+        metadata: { text: { content } },
+      });
+
+      await resolver.notify(notifyParams);
+
+      expect(notifyParams.metadata[notifyParams.type].content).toEqual(
+        content
+          .replace('@member.firstName@', member.firstName)
+          .replace('@user.firstName@', user.firstName),
+      );
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        externalUserId: memberConfig.externalUserId,
+        platform: memberConfig.platform,
+        data: {
+          user: {
+            id: user.id,
+            firstName: user.firstName,
+            avatar: user.avatar,
+          },
+          member: {
+            phone: member.phone,
+          },
+          type: notifyParams.type,
+          peerId: notifyParams.peerId,
+          isVideo: false,
+          path: 'call',
+        },
+        metadata: notifyParams.metadata[notifyParams.type],
       });
     });
   });
