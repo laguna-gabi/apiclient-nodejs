@@ -2,12 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
+  AppointmentStatus,
   BaseService,
   DbErrors,
   Errors,
   ErrorType,
   EventType,
   Identifier,
+  IEventAddUserToMemberList,
+  IEventAppointmentScoresUpdated,
+  IEventUpdateMemberConfig,
   Platform,
 } from '../common';
 import {
@@ -31,7 +35,7 @@ import {
 } from '.';
 import { cloneDeep } from 'lodash';
 import { OnEvent } from '@nestjs/event-emitter';
-import { Appointment, AppointmentDocument, AppointmentStatus, Scores } from '../appointment';
+import { Appointment, AppointmentDocument } from '../appointment';
 import { v4 } from 'uuid';
 import { User } from '../user';
 
@@ -217,7 +221,8 @@ export class MemberService extends BaseService {
   }
 
   @OnEvent(EventType.addUserToMemberList, { async: true })
-  async handleAddUserToMemberList({ memberId, userId }: { memberId: string; userId: string }) {
+  async handleAddUserToMemberList(params: IEventAddUserToMemberList) {
+    const { memberId, userId } = params;
     await this.memberModel.updateOne(
       { _id: Types.ObjectId(memberId) },
       { $addToSet: { users: userId } },
@@ -262,14 +267,8 @@ export class MemberService extends BaseService {
   }
 
   @OnEvent(EventType.appointmentScoresUpdated, { async: true })
-  async handleAppointmentScoreUpdated({
-    memberId,
-    scores,
-  }: {
-    memberId: Types.ObjectId;
-    scores: Scores;
-  }) {
-    await this.memberModel.updateOne({ _id: memberId }, { $set: { scores } });
+  async handleAppointmentScoreUpdated(params: IEventAppointmentScoresUpdated) {
+    await this.memberModel.updateOne({ _id: params.memberId }, { $set: { scores: params.scores } });
   }
 
   /*************************************************************************************************
@@ -337,14 +336,11 @@ export class MemberService extends BaseService {
   }
 
   @OnEvent(EventType.updateMemberConfig, { async: true })
-  async handleUpdateMemberConfig({
-    memberId,
-    accessToken,
-  }: {
-    memberId: Types.ObjectId;
-    accessToken: string;
-  }): Promise<boolean> {
-    const result = await this.memberConfigModel.updateOne({ memberId }, { $set: { accessToken } });
+  async handleUpdateMemberConfig(params: IEventUpdateMemberConfig): Promise<boolean> {
+    const result = await this.memberConfigModel.updateOne(
+      { memberId: new Types.ObjectId(params.memberId) },
+      { $set: { accessToken: params.accessToken } },
+    );
 
     return result.ok === 1;
   }

@@ -31,6 +31,14 @@ export enum Platform {
 
 registerEnumType(Platform, { name: 'Platform' });
 
+export enum AppointmentStatus {
+  requested = 'requested',
+  scheduled = 'scheduled',
+  done = 'done',
+}
+
+registerEnumType(AppointmentStatus, { name: 'AppointmentStatus' });
+
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
  *************************************************************************************************/

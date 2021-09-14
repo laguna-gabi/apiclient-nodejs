@@ -195,7 +195,7 @@ describe('AppointmentScheduler', () => {
       expect(spyOnCommunicationResolverGet).toBeCalledWith({ memberId, userId });
 
       expect(spyOnEventEmitter).toBeCalledTimes(1);
-      const params: NotifyParams = {
+      const eventParams: NotifyParams = {
         memberId,
         userId,
         type: NotificationType.text,
@@ -208,7 +208,7 @@ describe('AppointmentScheduler', () => {
           },
         },
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notify, params);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.notify, eventParams);
 
       spyOnCommunicationResolverGet.mockReset();
       spyOnEventEmitter.mockReset();

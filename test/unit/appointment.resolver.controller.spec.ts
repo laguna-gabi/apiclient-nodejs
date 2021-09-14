@@ -6,7 +6,6 @@ import {
   AppointmentResolver,
   AppointmentScheduler,
   AppointmentService,
-  AppointmentStatus,
 } from '../../src/appointment';
 import {
   dbDisconnect,
@@ -19,7 +18,13 @@ import {
   generateUpdateNotesParams,
 } from '../index';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EventType, NotificationType, UpdatedAppointmentAction } from '../../src/common';
+import {
+  AppointmentStatus,
+  EventType,
+  IEventUpdatedAppointment,
+  NotificationType,
+  UpdatedAppointmentAction,
+} from '../../src/common';
 import { NotifyParams } from '../../src/member';
 import * as config from 'config';
 
@@ -78,7 +83,7 @@ describe('AppointmentResolver', () => {
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith(appointment);
 
-      const notifyParams: NotifyParams = {
+      const eventParams: NotifyParams = {
         memberId: params.memberId,
         userId: params.userId,
         type: NotificationType.text,
@@ -90,7 +95,7 @@ describe('AppointmentResolver', () => {
           },
         },
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notify, notifyParams);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.notify, eventParams);
     });
   });
 
@@ -165,16 +170,17 @@ describe('AppointmentResolver', () => {
       }));
 
       const result = await resolver.scheduleAppointment(appointment);
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.updatedAppointment, {
+      const eventParams: IEventUpdatedAppointment = {
         updatedAppointmentAction: UpdatedAppointmentAction.edit,
-        memberId: result.memberId,
+        memberId: result.memberId.toString(),
         userId: result.userId,
         key: result.id,
         value: {
           status: result.status,
           start: result.start,
         },
-      });
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.updatedAppointment, eventParams);
     });
   });
 
@@ -216,12 +222,13 @@ describe('AppointmentResolver', () => {
       spyOnServiceEnd.mockImplementationOnce(async () => appointment);
 
       const result = await resolver.endAppointment({ id: generateId() });
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.updatedAppointment, {
+      const eventParams: IEventUpdatedAppointment = {
         updatedAppointmentAction: UpdatedAppointmentAction.delete,
-        memberId: result.memberId,
+        memberId: result.memberId.toString(),
         userId: result.userId,
         key: result.id,
-      });
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.updatedAppointment, eventParams);
     });
   });
 

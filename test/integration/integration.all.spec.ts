@@ -11,7 +11,7 @@ import {
   generateUpdateNotesParams,
 } from '../index';
 import { UserRole } from '../../src/user';
-import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
+import { AppointmentMethod } from '../../src/appointment';
 import { Handler } from './aux/handler';
 import { AppointmentsIntegrationActions } from './aux/appointments';
 import { Creators } from './aux/creators';
@@ -24,6 +24,7 @@ import {
   TaskStatus,
 } from '../../src/member';
 import {
+  AppointmentStatus,
   Errors,
   ErrorType,
   Identifiers,

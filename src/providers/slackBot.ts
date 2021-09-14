@@ -3,7 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { IncomingWebhook } from '@slack/webhook';
 import * as config from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
-import { EventType, slackChannel, SlackIcon } from '../common';
+import { EventType, IEventSlackMessage } from '../common';
 
 @Injectable()
 export class SlackBot implements OnModuleInit {
@@ -18,19 +18,11 @@ export class SlackBot implements OnModuleInit {
   }
 
   @OnEvent(EventType.slackMessage, { async: true })
-  async sendMessage({
-    message,
-    icon = SlackIcon.info,
-    channel = slackChannel.notifications,
-  }: {
-    message: string;
-    icon: SlackIcon;
-    channel: slackChannel;
-  }) {
+  async sendMessage(params: IEventSlackMessage) {
     await this.webhook.send({
       username: 'LagunaBot',
-      icon_emoji: icon,
-      channel: config.get(channel),
+      icon_emoji: params.icon,
+      channel: config.get(params.channel),
       attachments: [
         {
           color: '#9733EE',
@@ -39,7 +31,7 @@ export class SlackBot implements OnModuleInit {
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: message,
+                text: params.message,
               },
             },
           ],

@@ -1,7 +1,7 @@
 import { MemberService } from './member.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UserService } from '../user';
-import { EventType } from '../common';
+import { EventType, IEventNewMember } from '../common';
 import { CreateMemberParams } from './member.dto';
 
 export class MemberBase {
@@ -18,11 +18,9 @@ export class MemberBase {
     const member = await this.memberService.insert(createMemberParams, primaryUserId);
     const { platform } = await this.memberService.getMemberConfig(member.id);
 
-    this.eventEmitter.emit(EventType.collectUsersDataBridge, {
-      member,
-      userId: primaryUserId,
-      platform,
-    });
+    const user = await this.userService.get(primaryUserId);
+    const eventParams: IEventNewMember = { member, user, platform };
+    this.eventEmitter.emit(EventType.newMember, eventParams);
 
     return member;
   }

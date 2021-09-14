@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
-import { Appointment, AppointmentDocument, AppointmentStatus } from './appointment.dto';
+import { Appointment, AppointmentDocument, AppointmentStatus } from '.';
 import { Model } from 'mongoose';
 import { EventType, NotificationType } from '../common';
 import { NotificationsService } from '../providers';

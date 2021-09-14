@@ -11,8 +11,14 @@ import {
 import { CommunicationModule, CommunicationService } from '../../src/communication';
 import { UserRole } from '../../src/user';
 import { v4 } from 'uuid';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-import { Platform, UpdatedAppointmentAction } from '../../src/common';
+import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
+import {
+  EventType,
+  IEventUpdateMemberConfig,
+  IEventUpdateUserConfig,
+  Platform,
+  UpdatedAppointmentAction,
+} from '../../src/common';
 import { AppointmentStatus } from '../../src/appointment';
 import * as faker from 'faker';
 
@@ -20,6 +26,8 @@ describe('CommunicationService', () => {
   let module: TestingModule;
   let service: CommunicationService;
   let sendBirdMock;
+  let eventEmitter: EventEmitter2;
+  let spyOnEventEmitter;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -27,6 +35,8 @@ describe('CommunicationService', () => {
     }).compile();
 
     service = module.get<CommunicationService>(CommunicationService);
+    eventEmitter = module.get<EventEmitter2>(EventEmitter2);
+    spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
 
     sendBirdMock = mockProviders(module).sendBird;
 
@@ -56,6 +66,19 @@ describe('CommunicationService', () => {
         metadata: { role: UserRole.coach.toLowerCase() },
       });
     });
+
+    it('should send updateUserConfig event', async () => {
+      const user = mockGenerateUser();
+      await service.createUser(user);
+
+      const eventParams: IEventUpdateUserConfig = {
+        userId: user.id,
+        accessToken: expect.any(String),
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateUserConfig, eventParams);
+
+      spyOnEventEmitter.mockReset();
+    });
   });
 
   describe('createMember', () => {
@@ -69,6 +92,19 @@ describe('CommunicationService', () => {
         issue_access_token: true,
         metadata: {},
       });
+    });
+
+    it('should send updateMemberConfig event', async () => {
+      const member = mockGenerateMember();
+      await service.createMember(member);
+
+      const eventParams: IEventUpdateMemberConfig = {
+        memberId: member.id,
+        accessToken: expect.any(String),
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateMemberConfig, eventParams);
+
+      spyOnEventEmitter.mockReset();
     });
   });
 

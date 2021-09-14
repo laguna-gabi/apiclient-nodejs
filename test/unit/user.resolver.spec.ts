@@ -7,15 +7,18 @@ import {
 } from '../index';
 import { DbModule } from '../../src/db/db.module';
 import { UserController, UserModule, UserResolver, UserRole, UserService } from '../../src/user';
-import { EventEmitterModule } from '@nestjs/event-emitter';
+import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { v4 } from 'uuid';
 import { GetSlotsParams } from '../../src/user/slot.dto';
+import { EventType, IEventNewUser } from '../../src/common';
 
 describe('UserResolver', () => {
   let module: TestingModule;
   let resolver: UserResolver;
   let controller: UserController;
   let service: UserService;
+  let eventEmitter: EventEmitter2;
+  let spyOnEventEmitter;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -25,6 +28,8 @@ describe('UserResolver', () => {
     resolver = module.get<UserResolver>(UserResolver);
     controller = module.get<UserController>(UserController);
     service = module.get<UserService>(UserService);
+    eventEmitter = module.get<EventEmitter2>(EventEmitter2);
+    spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
   });
 
   afterAll(async () => {
@@ -40,6 +45,7 @@ describe('UserResolver', () => {
 
     afterEach(() => {
       spyOnServiceInsert.mockReset();
+      spyOnEventEmitter.mockReset();
     });
 
     test.each([
@@ -56,6 +62,18 @@ describe('UserResolver', () => {
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith(params);
+    });
+
+    it('should call event newUser', async () => {
+      const params = generateCreateUserParams();
+      spyOnServiceInsert.mockImplementationOnce(async () => params);
+      await resolver.createUser(params);
+
+      /* eslint-disable */
+      // @ts-ignore
+      const eventParams: IEventNewUser = { user: params };
+      /* eslint-enable */
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.newUser, eventParams);
     });
   });
 

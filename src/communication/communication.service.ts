@@ -13,7 +13,13 @@ import { Member } from '../member';
 import { v4 } from 'uuid';
 import { SendBird, TwilioService } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EventType, Platform, UpdatedAppointmentAction } from '../common';
+import {
+  EventType,
+  IEventUpdateMemberConfig,
+  IEventUpdateUserConfig,
+  Platform,
+  UpdatedAppointmentAction,
+} from '../common';
 import { AppointmentStatus } from '../appointment';
 
 @Injectable()
@@ -41,10 +47,8 @@ export class CommunicationService {
 
     const accessToken = await this.sendBird.createUser(params);
 
-    this.eventEmitter.emit(EventType.updateUserConfig, {
-      userId: user.id,
-      accessToken,
-    });
+    const eventParams: IEventUpdateUserConfig = { userId: user.id, accessToken };
+    this.eventEmitter.emit(EventType.updateUserConfig, eventParams);
   }
 
   async createMember(member: Member) {
@@ -58,10 +62,8 @@ export class CommunicationService {
 
     const accessToken = await this.sendBird.createUser(params);
 
-    this.eventEmitter.emit(EventType.updateMemberConfig, {
-      memberId: member.id,
-      accessToken,
-    });
+    const eventParams: IEventUpdateMemberConfig = { memberId: member.id, accessToken };
+    this.eventEmitter.emit(EventType.updateMemberConfig, eventParams);
   }
 
   async connectMemberToUser(member: Member, user: User, platform: Platform) {

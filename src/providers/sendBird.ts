@@ -27,7 +27,7 @@ export class SendBird implements OnModuleInit {
 
   private readonly httpService: HttpService = new HttpService();
 
-  async createUser(params: RegisterSendbirdUserParams): Promise<string | void> {
+  async createUser(params: RegisterSendbirdUserParams): Promise<string | undefined> {
     const failure = `Sendbird: Failed to create a user`;
     try {
       const result = await this.httpService

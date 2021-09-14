@@ -21,6 +21,8 @@ import {
   Errors,
   ErrorType,
   EventType,
+  IEventNewMember,
+  IEventUpdateMemberPlatform,
   NotificationType,
   Platform,
   RegisterForNotificationParams,
@@ -68,25 +70,29 @@ describe('MemberResolver', () => {
     let spyOnServiceInsert;
     let spyOnServiceGetAvailableUser;
     let spyOnUserServiceGetRegisteredUsers;
+    let spyOnUserServiceGetUser;
     let spyOnServiceGetMemberConfig;
 
     beforeEach(() => {
       spyOnServiceInsert = jest.spyOn(service, 'insert');
       spyOnServiceGetAvailableUser = jest.spyOn(service, 'getAvailableUser');
       spyOnUserServiceGetRegisteredUsers = jest.spyOn(userService, 'getRegisteredUsers');
+      spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
     });
 
     afterEach(() => {
       spyOnServiceInsert.mockReset();
-      spyOnServiceGetMemberConfig.mockReset();
       spyOnServiceGetAvailableUser.mockReset();
       spyOnUserServiceGetRegisteredUsers.mockReset();
+      spyOnUserServiceGetUser.mockReset();
+      spyOnServiceGetMemberConfig.mockReset();
       spyOnEventEmitter.mockReset();
     });
 
     it('should create a member', async () => {
       const member = mockGenerateMember();
+      const user = mockGenerateUser();
       const memberConfig = {
         memberId: member.id,
         userId: member.primaryUserId,
@@ -96,6 +102,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetAvailableUser.mockImplementationOnce(async () => member.primaryUserId);
       spyOnUserServiceGetRegisteredUsers.mockImplementationOnce(async () => [member.primaryUserId]);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
 
       const params = generateCreateMemberParams({ orgId: generateId() });
       await resolver.createMember(params);
@@ -107,11 +114,12 @@ describe('MemberResolver', () => {
       expect(spyOnUserServiceGetRegisteredUsers).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.collectUsersDataBridge, {
+      const eventParams: IEventNewMember = {
         member,
+        user,
         platform: memberConfig.platform,
-        userId: memberConfig.userId,
-      });
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.newMember, eventParams);
     });
   });
 
@@ -515,11 +523,12 @@ describe('MemberResolver', () => {
         memberId: memberConfig.memberId,
         platform: params.platform,
       });
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateMemberPlatform, {
+      const eventParams: IEventUpdateMemberPlatform = {
         memberId: params.memberId,
         platform: params.platform,
         userId: member.primaryUserId,
-      });
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateMemberPlatform, eventParams);
     });
   });
 

@@ -1,12 +1,16 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
 import { CommunicationInfo, CommunicationService, GetCommunicationParams } from '.';
 import { OnEvent } from '@nestjs/event-emitter';
-import { UpdatedAppointmentAction, EventType, Platform } from '../common';
-import { User } from '../user';
-import { Member } from '../member';
+import {
+  EventType,
+  IEventNewMember,
+  IEventNewUser,
+  IEventUpdateMemberPlatform,
+  UpdatedAppointmentAction,
+} from '../common';
+import { AppointmentStatus } from '../appointment';
 import { camelCase } from 'lodash';
 import * as config from 'config';
-import { AppointmentStatus } from '../appointment';
 
 @Resolver(() => CommunicationInfo)
 export class CommunicationResolver {
@@ -46,39 +50,23 @@ export class CommunicationResolver {
   }
 
   @OnEvent(EventType.newUser, { async: true })
-  async handleNewUser({ user }: { user: User }) {
-    await this.communicationService.createUser(user);
+  async handleNewUser(params: IEventNewUser) {
+    await this.communicationService.createUser(params.user);
   }
 
   @OnEvent(EventType.newMember, { async: true })
-  async handleNewMember({
-    member,
-    user,
-    platform,
-  }: {
-    member: Member;
-    user: User;
-    platform: Platform;
-  }) {
-    await this.communicationService.createMember(member);
-    await this.communicationService.connectMemberToUser(member, user, platform);
+  async handleNewMember(params: IEventNewMember) {
+    await this.communicationService.createMember(params.member);
+    await this.communicationService.connectMemberToUser(
+      params.member,
+      params.user,
+      params.platform,
+    );
   }
 
   @OnEvent(EventType.updateMemberPlatform, { async: true })
-  async handleUpdateMemberPlatform({
-    memberId,
-    userId,
-    platform,
-  }: {
-    memberId: string;
-    userId: string;
-    platform: Platform;
-  }) {
-    return this.communicationService.onUpdateMemberPlatform({
-      memberId,
-      userId,
-      platform,
-    });
+  async handleUpdateMemberPlatform(params: IEventUpdateMemberPlatform) {
+    return this.communicationService.onUpdateMemberPlatform(params);
   }
 
   @OnEvent(EventType.updatedAppointment, { async: true })

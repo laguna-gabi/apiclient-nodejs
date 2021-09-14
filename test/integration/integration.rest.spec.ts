@@ -9,10 +9,10 @@ import {
   generateId,
   generateScheduleAppointmentParams,
 } from '../generators';
-import { AppointmentStatus } from '../../src/appointment';
 import { add, startOfToday, startOfTomorrow } from 'date-fns';
 import { defaultSlotsParams } from '../../src/user';
 import { v4 } from 'uuid';
+import { AppointmentStatus } from '../../src/appointment';
 
 describe('Integration tests: rest', () => {
   const handler: Handler = new Handler();

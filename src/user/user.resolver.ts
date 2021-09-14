@@ -1,7 +1,7 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
 import { CreateUserParams, User, UserService, UserConfig } from '.';
-import { EventType, Identifier } from '../common';
+import { EventType, Identifier, IEventNewUser } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GetSlotsParams, Slots } from './slot.dto';
 
@@ -16,7 +16,8 @@ export class UserResolver {
   ) {
     const user = await this.userService.insert(createUserParams);
 
-    this.eventEmitter.emit(EventType.newUser, { user });
+    const eventParams: IEventNewUser = { user };
+    this.eventEmitter.emit(EventType.newUser, eventParams);
 
     return { id: user.id };
   }

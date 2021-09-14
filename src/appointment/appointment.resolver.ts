@@ -11,7 +11,12 @@ import {
   UpdateNotesParams,
 } from '.';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EventType, NotificationType, UpdatedAppointmentAction } from '../common';
+import {
+  EventType,
+  IEventUpdatedAppointment,
+  NotificationType,
+  UpdatedAppointmentAction,
+} from '../common';
 import { AppointmentBase } from './appointment.interfaces';
 import { NotifyParams } from '../member';
 import * as config from 'config';
@@ -57,12 +62,13 @@ export class AppointmentResolver extends AppointmentBase {
   ) {
     const appointment = await this.appointmentService.end(endAppointmentParams);
 
-    this.eventEmitter.emit(EventType.updatedAppointment, {
+    const eventParams: IEventUpdatedAppointment = {
       updatedAppointmentAction: UpdatedAppointmentAction.delete,
-      memberId: appointment.memberId,
+      memberId: appointment.memberId.toString(),
       userId: appointment.userId,
       key: appointment.id,
-    });
+    };
+    this.eventEmitter.emit(EventType.updatedAppointment, eventParams);
 
     await this.appointmentScheduler.deleteAppointmentAlert({ id: appointment.id });
 
@@ -86,12 +92,12 @@ export class AppointmentResolver extends AppointmentBase {
           .replace('@appLink@', appointment.link)}`,
       },
     };
-    const notifyParams: NotifyParams = {
+    const params: NotifyParams = {
       memberId: appointment.memberId.toString(),
       userId: appointment.userId,
       type: NotificationType.text,
       metadata,
     };
-    this.eventEmitter.emit(EventType.notify, notifyParams);
+    this.eventEmitter.emit(EventType.notify, params);
   }
 }

@@ -17,10 +17,17 @@ import {
   AppointmentDto,
   AppointmentModule,
   AppointmentService,
-  AppointmentStatus,
   EndAppointmentParams,
 } from '../../src/appointment';
-import { Errors, ErrorType, EventType } from '../../src/common';
+import {
+  AppointmentStatus,
+  Errors,
+  ErrorType,
+  EventType,
+  IEventAddUserToMemberList,
+  IEventAppointmentScoresUpdated,
+  IEventNewAppointment,
+} from '../../src/common';
 import * as faker from 'faker';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { cloneDeep } from 'lodash';
@@ -88,7 +95,7 @@ describe('AppointmentService', () => {
 
       const result = await service.get(id);
       expect(result.status).toEqual(AppointmentStatus.scheduled);
-      validateNewAppointmentEvent(appointment.userId, id);
+      validateNewAppointmentEvent(appointment.memberId, appointment.userId, id);
     });
   });
 
@@ -97,7 +104,7 @@ describe('AppointmentService', () => {
       const appointmentParams = generateRequestAppointmentParams();
       const result = await service.request(appointmentParams);
 
-      validateNewAppointmentEvent(appointmentParams.userId, result.id);
+      validateNewAppointmentEvent(appointmentParams.memberId, appointmentParams.userId, result.id);
       expect(result).toEqual(
         expect.objectContaining({
           id: result.id,
@@ -132,7 +139,7 @@ describe('AppointmentService', () => {
         userId,
         notBeforeHours: 12,
       });
-      validateNewAppointmentEvent(userId, id1);
+      validateNewAppointmentEvent(memberId, userId, id1);
 
       const {
         notBefore,
@@ -170,14 +177,14 @@ describe('AppointmentService', () => {
         userId: userId1,
         notBeforeHours: 5,
       });
-      validateNewAppointmentEvent(userId1, id1);
+      validateNewAppointmentEvent(memberId, userId1, id1);
 
       const { id: id2, record: record2 } = await requestAppointment({
         memberId,
         userId: userId2,
         notBeforeHours: 2,
       });
-      validateNewAppointmentEvent(userId2, id2);
+      validateNewAppointmentEvent(memberId, userId2, id2);
 
       expect(id1).not.toEqual(id2);
       expect(record1.memberId).toEqual(record2.memberId);
@@ -198,14 +205,14 @@ describe('AppointmentService', () => {
         userId,
         notBeforeHours: 5,
       });
-      validateNewAppointmentEvent(userId, id1);
+      validateNewAppointmentEvent(memberId1, userId, id1);
 
       const { id: id2, record: record2 } = await requestAppointment({
         memberId: memberId2,
         userId,
         notBeforeHours: 2,
       });
-      validateNewAppointmentEvent(userId, id2);
+      validateNewAppointmentEvent(memberId2, userId, id2);
 
       expect(id1).not.toEqual(id2);
       expect(record1.userId).toEqual(record2.userId);
@@ -220,7 +227,7 @@ describe('AppointmentService', () => {
       const params = generateRequestAppointmentParams();
       const { id } = await service.request(params);
 
-      validateNewAppointmentEvent(params.userId, id);
+      validateNewAppointmentEvent(params.memberId, params.userId, id);
 
       const createdAppointment: any = await appointmentModel.findById(id);
       expect(createdAppointment.createdAt).toEqual(expect.any(Date));
@@ -234,11 +241,11 @@ describe('AppointmentService', () => {
       const requestParams = generateRequestAppointmentParams({ userId, memberId });
 
       const scheduleAppointment = await service.schedule(scheduleParams);
-      validateNewAppointmentEvent(userId, scheduleAppointment.id);
+      validateNewAppointmentEvent(memberId, userId, scheduleAppointment.id);
       spyOnEventEmitter.mockReset();
 
       const requestAppointment = await service.request(requestParams);
-      validateNewAppointmentEvent(userId, requestAppointment.id);
+      validateNewAppointmentEvent(memberId, userId, requestAppointment.id);
 
       expect(scheduleAppointment.id).not.toEqual(requestAppointment.id);
     });
@@ -249,7 +256,11 @@ describe('AppointmentService', () => {
       const appointmentParams = generateScheduleAppointmentParams();
       const appointment = await service.schedule(appointmentParams);
 
-      validateNewAppointmentEvent(appointmentParams.userId, appointment.id);
+      validateNewAppointmentEvent(
+        appointmentParams.memberId,
+        appointmentParams.userId,
+        appointment.id,
+      );
 
       expect(appointment).toEqual(
         expect.objectContaining({
@@ -286,7 +297,11 @@ describe('AppointmentService', () => {
       const resultBefore = await service.schedule(appointmentParamsBefore);
       expect(resultBefore.start).toEqual(start);
       expect(resultBefore.end).toEqual(end);
-      validateNewAppointmentEvent(appointmentParamsBefore.userId, resultBefore.id);
+      validateNewAppointmentEvent(
+        appointmentParamsBefore.memberId,
+        appointmentParamsBefore.userId,
+        resultBefore.id,
+      );
 
       const newStart = new Date(start);
       newStart.setHours(15);
@@ -321,7 +336,11 @@ describe('AppointmentService', () => {
     const requestAppointmentParams = generateRequestAppointmentParams();
     const { id } = await service.request(requestAppointmentParams);
 
-    validateNewAppointmentEvent(requestAppointmentParams.userId, id);
+    validateNewAppointmentEvent(
+      requestAppointmentParams.memberId,
+      requestAppointmentParams.userId,
+      id,
+    );
     expect(id).not.toBeNull();
 
     const scheduleAppointmentParams = generateScheduleAppointmentParams({
@@ -366,7 +385,11 @@ describe('AppointmentService', () => {
         const appointmentParams = generateScheduleAppointmentParams();
         const appointment = await service.schedule(appointmentParams);
 
-        validateNewAppointmentEvent(appointmentParams.userId, appointment.id);
+        validateNewAppointmentEvent(
+          appointmentParams.memberId,
+          appointmentParams.userId,
+          appointment.id,
+        );
 
         const updateShowParams1: EndAppointmentParams = {
           id: appointment.id,
@@ -407,10 +430,11 @@ describe('AppointmentService', () => {
       const endAppointmentParams: EndAppointmentParams = { id: resultAppointment.id, notes };
       await service.end(endAppointmentParams);
 
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.appointmentScoresUpdated, {
+      const eventParams: IEventAppointmentScoresUpdated = {
         memberId: generateObjectId(appointmentParams.memberId),
         scores: notes.scores,
-      });
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.appointmentScoresUpdated, eventParams);
 
       spyOnEventEmitter.mockReset();
     });
@@ -507,8 +531,15 @@ describe('AppointmentService', () => {
     return { notBefore, id: result.id, record };
   };
 
-  const validateNewAppointmentEvent = (userId: string, appointmentId: string) => {
-    expect(spyOnEventEmitter).toBeCalledWith(EventType.newAppointment, { appointmentId, userId });
+  const validateNewAppointmentEvent = (memberId: string, userId: string, appointmentId: string) => {
+    const eventParams1: IEventNewAppointment = { appointmentId, userId };
+    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.newAppointment, eventParams1);
+    const eventParams2: IEventAddUserToMemberList = { memberId, userId };
+    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+      2,
+      EventType.addUserToMemberList,
+      eventParams2,
+    );
     spyOnEventEmitter.mockReset();
   };
 });

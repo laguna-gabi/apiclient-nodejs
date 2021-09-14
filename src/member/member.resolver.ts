@@ -20,6 +20,7 @@ import {
   ErrorType,
   EventType,
   Identifier,
+  IEventUpdateMemberPlatform,
   NotificationType,
   Platform,
   RegisterForNotificationParams,
@@ -192,11 +193,12 @@ export class MemberResolver extends MemberBase {
     });
 
     member.users.map((user) => {
-      this.eventEmitter.emit(EventType.updateMemberPlatform, {
+      const eventParams: IEventUpdateMemberPlatform = {
         memberId: registerForNotificationParams.memberId,
         platform: registerForNotificationParams.platform,
         userId: user._id,
-      });
+      };
+      this.eventEmitter.emit(EventType.updateMemberPlatform, eventParams);
     });
   }
 

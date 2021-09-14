@@ -12,9 +12,16 @@ import {
   NotNullableSlotsKeys,
   Slots,
 } from '.';
-import { BaseService, DbErrors, Errors, ErrorType, EventType, Platform } from '../common';
+import {
+  BaseService,
+  DbErrors,
+  Errors,
+  ErrorType,
+  EventType,
+  IEventNewAppointment,
+  IEventUpdateUserConfig,
+} from '../common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { Member } from '../member';
 import { cloneDeep } from 'lodash';
 import { UserConfig, UserConfigDocument } from './userConfig.dto';
 
@@ -199,43 +206,18 @@ export class UserService extends BaseService {
   }
 
   @OnEvent(EventType.updateUserConfig, { async: true })
-  async handleupdateUserConfig({
-    userId,
-    accessToken,
-  }: {
-    userId: string;
-    accessToken: string;
-  }): Promise<boolean> {
+  async handleUpdateUserConfig(params: IEventUpdateUserConfig): Promise<boolean> {
+    const { userId, accessToken } = params;
     const result = await this.userConfigModel.updateOne({ userId }, { $set: { accessToken } });
 
     return result.ok === 1;
   }
 
   @OnEvent(EventType.newAppointment, { async: true })
-  async handleOrderCreatedEvent({
-    userId,
-    appointmentId,
-  }: {
-    userId: string;
-    appointmentId: string;
-  }) {
+  async handleOrderCreatedEvent(params: IEventNewAppointment) {
     await this.userModel.updateOne(
-      { _id: userId },
-      { $push: { appointments: new Types.ObjectId(appointmentId) } },
+      { _id: params.userId },
+      { $push: { appointments: new Types.ObjectId(params.appointmentId) } },
     );
-  }
-
-  @OnEvent(EventType.collectUsersDataBridge, { async: true })
-  async collectUsersDataBridge({
-    member,
-    platform,
-    userId,
-  }: {
-    member: Member;
-    platform: Platform;
-    userId: string;
-  }) {
-    const user = await this.userModel.findById(userId);
-    this.eventEmitter.emit(EventType.newMember, { member, user, platform });
   }
 }

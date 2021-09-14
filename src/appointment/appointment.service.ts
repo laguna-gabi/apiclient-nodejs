@@ -4,7 +4,6 @@ import { Model, Types } from 'mongoose';
 import {
   Appointment,
   AppointmentDocument,
-  AppointmentStatus,
   EndAppointmentParams,
   Notes,
   NotesDocument,
@@ -12,7 +11,16 @@ import {
   ScheduleAppointmentParams,
   UpdateNotesParams,
 } from '.';
-import { BaseService, Errors, ErrorType, EventType } from '../common';
+import {
+  AppointmentStatus,
+  BaseService,
+  Errors,
+  ErrorType,
+  EventType,
+  IEventAddUserToMemberList,
+  IEventAppointmentScoresUpdated,
+  IEventNewAppointment,
+} from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as config from 'config';
 
@@ -151,10 +159,11 @@ export class AppointmentService extends BaseService {
     }
 
     if (params.notes?.scores) {
-      this.eventEmitter.emit(EventType.appointmentScoresUpdated, {
+      const eventParams: IEventAppointmentScoresUpdated = {
         memberId: existing.memberId,
         scores: params.notes.scores,
-      });
+      };
+      this.eventEmitter.emit(EventType.appointmentScoresUpdated, eventParams);
     }
 
     return this.replaceId(result.toObject() as AppointmentDocument);
@@ -187,8 +196,10 @@ export class AppointmentService extends BaseService {
     memberId: string;
     appointmentId: string;
   }) {
-    this.eventEmitter.emit(EventType.newAppointment, { userId, appointmentId });
-    this.eventEmitter.emit(EventType.addUserToMemberList, { memberId, userId });
+    const eventParams: IEventNewAppointment = { userId, appointmentId };
+    this.eventEmitter.emit(EventType.newAppointment, eventParams);
+    const eventParamsAddUser: IEventAddUserToMemberList = { memberId, userId };
+    this.eventEmitter.emit(EventType.addUserToMemberList, eventParamsAddUser);
 
     const link = `${this.APP_URL}/${appointmentId.toString()}`;
 

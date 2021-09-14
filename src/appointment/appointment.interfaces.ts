@@ -1,7 +1,5 @@
-import { AppointmentService } from './appointment.service';
-import { ScheduleAppointmentParams } from './appointment.dto';
-import { EventType, UpdatedAppointmentAction } from '../common';
-import { AppointmentScheduler } from './appointment.scheduler';
+import { AppointmentService, ScheduleAppointmentParams, AppointmentScheduler } from '.';
+import { EventType, IEventUpdatedAppointment, UpdatedAppointmentAction } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 export class AppointmentBase {
@@ -14,16 +12,17 @@ export class AppointmentBase {
   async scheduleAppointment(scheduleAppointmentParams: ScheduleAppointmentParams) {
     const appointment = await this.appointmentService.schedule(scheduleAppointmentParams);
 
-    this.eventEmitter.emit(EventType.updatedAppointment, {
+    const eventParams: IEventUpdatedAppointment = {
       updatedAppointmentAction: UpdatedAppointmentAction.edit,
-      memberId: appointment.memberId,
+      memberId: appointment.memberId.toString(),
       userId: appointment.userId,
       key: appointment.id,
       value: {
         status: appointment.status,
         start: appointment.start,
       },
-    });
+    };
+    this.eventEmitter.emit(EventType.updatedAppointment, eventParams);
 
     await this.appointmentScheduler.updateAppointmentAlert({
       id: appointment.id,
