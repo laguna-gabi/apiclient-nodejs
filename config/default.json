@@ -40,6 +40,7 @@
     "maxAlertGapInMin": 43800
   },
   "contents": {
-    "appointmentReminder": "Hello @member.firstName@, your coaching appointment with @user.firstName@ will start in @gapMinutes@ minutes. Click here to join: @chatLink@"
+    "appointmentReminder": "Hello @member.firstName@, your coaching appointment with @user.firstName@ will start in @gapMinutes@ minutes. Click below to join: @chatLink@",
+    "appointmentRequest": "Hello @member.firstName@, It's @user.firstName@ from Laguna. Click below to schedule your next meeting: @appLink@"
   }
 }

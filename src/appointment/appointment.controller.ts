@@ -1,9 +1,12 @@
 import { Body, Controller, NotFoundException, Post } from '@nestjs/common';
-import { AppointmentService } from './appointment.service';
 import { apiPrefix } from '../common';
-import { Appointment, ScheduleAppointmentParams } from './appointment.dto';
-import { AppointmentBase } from './appointment.interfaces';
-import { AppointmentScheduler } from './appointment.scheduler';
+import {
+  Appointment,
+  AppointmentScheduler,
+  AppointmentBase,
+  ScheduleAppointmentParams,
+  AppointmentService,
+} from '.';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Controller(`${apiPrefix}/appointments`)

@@ -11,6 +11,7 @@ import {
 import {
   dbDisconnect,
   defaultModules,
+  generateAppointmentLink,
   generateId,
   generateNotesParams,
   generateRequestAppointmentParams,
@@ -18,7 +19,9 @@ import {
   generateUpdateNotesParams,
 } from '../index';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EventType, UpdatedAppointmentAction } from '../../src/common';
+import { EventType, NotificationType, UpdatedAppointmentAction } from '../../src/common';
+import { NotifyParams } from '../../src/member';
+import * as config from 'config';
 
 describe('AppointmentResolver', () => {
   let module: TestingModule;
@@ -55,13 +58,18 @@ describe('AppointmentResolver', () => {
 
     afterEach(() => {
       spyOnServiceInsert.mockReset();
+      spyOnEventEmitter.mockReset();
     });
 
     it('should create an appointment', async () => {
+      const params = generateRequestAppointmentParams();
+      const id = generateId();
       const appointment = {
-        ...generateRequestAppointmentParams(),
+        ...params,
+        id,
         status: AppointmentStatus.requested,
         method: AppointmentMethod.videoCall,
+        link: generateAppointmentLink(id),
       };
       spyOnServiceInsert.mockImplementationOnce(async () => appointment);
 
@@ -69,6 +77,20 @@ describe('AppointmentResolver', () => {
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith(appointment);
+
+      const notifyParams: NotifyParams = {
+        memberId: params.memberId,
+        userId: params.userId,
+        type: NotificationType.text,
+        metadata: {
+          text: {
+            content: `${config
+              .get('contents.appointmentRequest')
+              .replace('@appLink@', appointment.link)}`,
+          },
+        },
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.notify, notifyParams);
     });
   });
 

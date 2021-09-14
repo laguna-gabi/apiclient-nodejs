@@ -11,8 +11,10 @@ import {
   UpdateNotesParams,
 } from '.';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EventType, UpdatedAppointmentAction } from '../common';
+import { EventType, NotificationType, UpdatedAppointmentAction } from '../common';
 import { AppointmentBase } from './appointment.interfaces';
+import { NotifyParams } from '../member';
+import * as config from 'config';
 
 @Resolver(() => Appointment)
 export class AppointmentResolver extends AppointmentBase {
@@ -29,7 +31,11 @@ export class AppointmentResolver extends AppointmentBase {
     @Args(camelCase(RequestAppointmentParams.name))
     requestAppointmentParams: RequestAppointmentParams,
   ) {
-    return this.appointmentService.request(requestAppointmentParams);
+    const appointment = await this.appointmentService.request(requestAppointmentParams);
+
+    this.notifyRequestAppointment(appointment);
+
+    return appointment;
   }
 
   @Query(() => Appointment, { nullable: true })
@@ -66,5 +72,26 @@ export class AppointmentResolver extends AppointmentBase {
   @Mutation(() => Notes, { nullable: true })
   async updateNotes(@Args(camelCase(UpdateNotesParams.name)) updateNotesParams: UpdateNotesParams) {
     return this.appointmentService.updateNotes(updateNotesParams);
+  }
+
+  /*************************************************************************************************
+   ******************************************** Internals ******************************************
+   ************************************************************************************************/
+
+  private notifyRequestAppointment(appointment: Appointment) {
+    const metadata = {
+      text: {
+        content: `${config
+          .get('contents.appointmentRequest')
+          .replace('@appLink@', appointment.link)}`,
+      },
+    };
+    const notifyParams: NotifyParams = {
+      memberId: appointment.memberId.toString(),
+      userId: appointment.userId,
+      type: NotificationType.text,
+      metadata,
+    };
+    this.eventEmitter.emit(EventType.notify, notifyParams);
   }
 }
