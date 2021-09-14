@@ -4,7 +4,7 @@ import { v4 } from 'uuid';
 import { Platform, NotificationType } from '../../src/common';
 import * as faker from 'faker';
 import { delay } from '../common';
-import { generatePhone } from '../generators';
+import { generatePath, generatePhone } from '../generators';
 
 describe('live: notifications (one signal)', () => {
   let notificationsService: NotificationsService;
@@ -53,7 +53,7 @@ describe('live: notifications (one signal)', () => {
             type: NotificationType.video,
             peerId: v4(),
             isVideo: true,
-            path: 'call',
+            ...generatePath(NotificationType.video),
           },
           metadata: undefined,
         });
@@ -98,7 +98,7 @@ describe('live: notifications (one signal)', () => {
         type: NotificationType.call,
         peerId: v4(),
         isVideo: false,
-        path: 'call',
+        ...generatePath(NotificationType.call),
       },
       metadata: undefined,
     });

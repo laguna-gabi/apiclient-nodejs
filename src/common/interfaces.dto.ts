@@ -103,7 +103,7 @@ export class SendNotificationParams {
     };
     peerId: string;
     type: NotificationType;
-    path: string;
+    path?: string;
     isVideo: boolean;
   };
   metadata: Record<string, any>;

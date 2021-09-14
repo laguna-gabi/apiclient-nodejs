@@ -6,6 +6,7 @@ import {
   generateCreateTaskParams,
   generateId,
   generateNotifyParams,
+  generatePath,
   generateSetGeneralNotesParams,
   generateUpdateMemberParams,
   generateUpdateTaskStatusParams,
@@ -588,7 +589,7 @@ describe('MemberResolver', () => {
           type: notifyParams.type,
           peerId: notifyParams.peerId,
           isVideo: params.isVideo,
-          path: 'call',
+          ...generatePath(notifyParams.type),
         },
         metadata: params.metadata ? params.metadata[params.type] : undefined,
       });
@@ -642,7 +643,7 @@ describe('MemberResolver', () => {
           type: notifyParams.type,
           peerId: notifyParams.peerId,
           isVideo: false,
-          path: 'call',
+          ...generatePath(notifyParams.type),
         },
         metadata: undefined,
       });
@@ -700,7 +701,7 @@ describe('MemberResolver', () => {
           type: notifyParams.type,
           peerId: notifyParams.peerId,
           isVideo: false,
-          path: 'call',
+          ...generatePath(notifyParams.type),
         },
         metadata: notifyParams.metadata[notifyParams.type],
       });

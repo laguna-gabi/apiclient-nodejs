@@ -221,6 +221,9 @@ export class MemberResolver extends MemberBase {
         .replace('@user.firstName@', user.firstName);
     }
 
+    const path =
+      type === NotificationType.call || type === NotificationType.video ? { path: 'call' } : {};
+
     await this.notificationsService.send({
       externalUserId: memberConfig.externalUserId,
       platform: memberConfig.platform,
@@ -234,7 +237,7 @@ export class MemberResolver extends MemberBase {
           phone: member.phone,
         },
         type,
-        path: 'call',
+        ...path,
         isVideo: type === NotificationType.video,
         peerId,
       },

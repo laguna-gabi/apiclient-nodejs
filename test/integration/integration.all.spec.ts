@@ -3,6 +3,7 @@ import {
   generateAvailabilityInput,
   generateCreateMemberParams,
   generateId,
+  generatePath,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
@@ -627,7 +628,7 @@ describe('Integration tests: all', () => {
         type: params.type,
         peerId: notifyParams.peerId,
         isVideo: params.isVideo,
-        path: 'call',
+        ...generatePath(params.type),
       },
       metadata: params.metadata ? params.metadata[params.type] : undefined,
     });
