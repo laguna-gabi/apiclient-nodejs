@@ -103,7 +103,6 @@ describe('CommunicationResolver', () => {
         key: faker.lorem.word(),
         updatedAppointmentAction: UpdatedAppointmentAction.delete,
       };
-      const user = mockGenerateUser();
       await resolver.handleUpdatedAppointment(params);
       expect(spyOnServiceUpdatedAppointment).toBeCalledWith(params);
     });

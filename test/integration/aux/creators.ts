@@ -4,13 +4,12 @@ import {
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateCreateUserParams,
-  generateOrgParams,
   generateEndAppointmentParams,
+  generateOrgParams,
 } from '../../generators';
 import { camelCase, omit } from 'lodash';
 import { Org } from '../../../src/org';
 import { CreateTaskParams, defaultMemberParams, Member } from '../../../src/member';
-import * as faker from 'faker';
 import { Appointment, AppointmentStatus, EndAppointmentParams } from '../../../src/appointment';
 import { Handler } from './handler';
 import { AppointmentsIntegrationActions } from './appointments';

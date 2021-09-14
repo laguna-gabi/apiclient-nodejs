@@ -2,13 +2,7 @@ import { User } from '../src/user';
 import { connect, disconnect } from 'mongoose';
 import * as config from 'config';
 import { TestingModule } from '@nestjs/testing';
-import {
-  NotificationsService,
-  OneSignal,
-  SendBird,
-  StorageService,
-  TwilioService,
-} from '../src/providers';
+import { NotificationsService, SendBird, StorageService, TwilioService } from '../src/providers';
 import { apiPrefix } from '../src/common';
 import { v4 } from 'uuid';
 

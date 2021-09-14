@@ -33,7 +33,7 @@ import {
   UpdateMemberParams,
 } from '../../src/member';
 import { Errors, ErrorType, Language, Platform } from '../../src/common';
-import { User, UserDto, UserRole } from '../../src/user';
+import { User, UserDto } from '../../src/user';
 import * as faker from 'faker';
 import { datatype, date, internet } from 'faker';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -222,7 +222,6 @@ describe('MemberService', () => {
       const { _id: primaryUserId } = await modelUser.create(generateCreateRawUserParams());
       const { _id: orgId } = await modelOrg.create(generateOrgParams());
 
-      const deviceId = datatype.uuid();
       const dischargeDate = generateDateOnly(date.future(1));
       const { id: memberId } = await service.insert(
         generateCreateMemberParams({ orgId, dischargeDate }),

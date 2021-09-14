@@ -1,21 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbModule } from '../../src/db/db.module';
 import {
-  Appointment,
   AppointmentController,
-  AppointmentDto,
   AppointmentMethod,
   AppointmentModule,
   AppointmentResolver,
   AppointmentService,
   AppointmentStatus,
-  EndAppointmentParams,
 } from '../../src/appointment';
 import {
   dbDisconnect,
   generateId,
   generateNotesParams,
-  generateObjectId,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateUpdateNotesParams,
