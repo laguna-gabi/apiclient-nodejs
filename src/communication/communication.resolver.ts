@@ -77,7 +77,11 @@ export class CommunicationResolver {
     value?: { status: AppointmentStatus; start: Date };
     updatedAppointmentAction: UpdatedAppointmentAction;
   }) {
-    return this.communicationService.onUpdatedAppointment(params);
+    try {
+      return this.communicationService.onUpdatedAppointment(params);
+    } catch (ex) {
+      console.error(JSON.stringify(ex.message, undefined, 2));
+    }
   }
 
   private buildUrl({ uid, mid, token }): string {

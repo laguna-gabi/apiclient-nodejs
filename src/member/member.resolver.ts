@@ -271,28 +271,29 @@ export class MemberResolver extends MemberBase {
    */
   @OnEvent(EventType.notify, { async: true })
   async notifyInternal(notifyParams: NotifyParams) {
-    if (notifyParams.memberId === '') {
-      //send to sms to user
-      const user = await this.userService.get(notifyParams.userId);
-      if (!user) {
-        throw new Error(Errors.get(ErrorType.userNotFound));
-      }
-      notifyParams.metadata.content = notifyParams.metadata.content.replace(
-        '@user.firstName@',
-        user.firstName,
-      );
-      await this.notificationsService.send({
-        sendNotificationToUserParams: {
-          data: { user: { phone: user.phone } },
-          metadata: notifyParams.metadata,
-        },
-      });
-      return;
-    }
     try {
+      if (notifyParams.memberId === '') {
+        //send to sms to user
+        const user = await this.userService.get(notifyParams.userId);
+        if (!user) {
+          throw new Error(Errors.get(ErrorType.userNotFound));
+        }
+        notifyParams.metadata.content = notifyParams.metadata.content.replace(
+          '@user.firstName@',
+          user.firstName,
+        );
+        await this.notificationsService.send({
+          sendNotificationToUserParams: {
+            data: { user: { phone: user.phone } },
+            metadata: notifyParams.metadata,
+          },
+        });
+        return;
+      }
+
       await this.notify(notifyParams);
     } catch (ex) {
-      console.error(ex);
+      console.error(JSON.stringify(ex.message, undefined, 2));
     }
   }
 

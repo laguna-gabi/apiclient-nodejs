@@ -81,7 +81,7 @@ export class OneSignal {
         return result.data.id;
       }
     } catch (ex) {
-      console.error(ex);
+      console.error(JSON.stringify(ex.message, undefined, 2));
     }
   }
 
@@ -119,7 +119,7 @@ export class OneSignal {
             return result.data.id;
           }
         } catch (ex) {
-          console.error(ex);
+          console.error(JSON.stringify(ex.message, undefined, 2));
         }
       }
     }
