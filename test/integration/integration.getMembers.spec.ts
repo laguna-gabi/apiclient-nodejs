@@ -188,18 +188,19 @@ describe('Integration tests : getMembers', () => {
     start1.setHours(start1.getHours() + 2);
     const appointment1 = await generateAppointment({ userId, memberId, start: start1 });
     const start2 = new Date();
-    start2.setHours(start1.getHours() + 4);
+    start2.setHours(start2.getHours() + 4);
     const appointment2 = await generateAppointment({ userId, memberId, start: start2 });
 
     const membersResult = await handler.queries.getMembers(org.id);
 
-    expect(appointment1.id).toEqual(appointment2.id);
+    expect(appointment1.id).not.toEqual(appointment2.id);
 
+    console.log(membersResult[0].nextAppointment, appointment1.start, appointment2.start);
     expect(membersResult.length).toEqual(1);
     expect(membersResult[0]).toEqual(
       expect.objectContaining({
-        nextAppointment: appointment2.start,
-        appointmentsCount: 1,
+        nextAppointment: appointment1.start,
+        appointmentsCount: 2,
       }),
     );
   });
@@ -211,7 +212,7 @@ describe('Integration tests : getMembers', () => {
     const org = await creators.createAndValidateOrg();
 
     const { id: userId } = primaryUser;
-    const { id: memberId } = await creators.createAndValidateMember({
+    const { id: memberId }: Member = await creators.createAndValidateMember({
       org,
       primaryUser,
       users: [primaryUser],
@@ -224,14 +225,15 @@ describe('Integration tests : getMembers', () => {
     start2.setHours(start2.getHours() + 1);
     const appointment2 = await generateAppointment({ userId, memberId, start: start2 });
 
-    expect(appointment1.id).toEqual(appointment2.id);
     const membersResult = await handler.queries.getMembers(org.id);
+
+    expect(appointment1.id).not.toEqual(appointment2.id);
 
     expect(membersResult.length).toEqual(1);
     expect(membersResult[0]).toEqual(
       expect.objectContaining({
         nextAppointment: appointment2.start,
-        appointmentsCount: 1,
+        appointmentsCount: 2,
       }),
     );
   });
@@ -275,7 +277,7 @@ describe('Integration tests : getMembers', () => {
     expect(membersResult[0]).toEqual(
       expect.objectContaining({
         nextAppointment: appointment.start,
-        appointmentsCount: 3,
+        appointmentsCount: 4,
       }),
     );
   });

@@ -318,10 +318,18 @@ describe('Integration tests: all', () => {
     const member1 = await creators.handler.queries.getMember({ id: memberId1 });
     const member2 = await creators.handler.queries.getMember({ id: memberId2 });
 
-    expect(result.length).toEqual(2);
+    expect(result.length).toEqual(3);
 
     expect(result).toEqual(
       expect.arrayContaining([
+        {
+          memberId: memberId1,
+          memberName: `${member1.firstName} ${member1.lastName}`,
+          userId: primaryUser.id,
+          userName: `${primaryUser.firstName} ${primaryUser.lastName}`,
+          start: expect.any(String),
+          end: expect.any(String),
+        },
         {
           memberId: memberId1,
           memberName: `${member1.firstName} ${member1.lastName}`,
@@ -373,7 +381,7 @@ describe('Integration tests: all', () => {
     expect(new Date(result.start)).toEqual(scheduledAppointment.start);
   });
 
-  it('should override scheduled appointment when calling schedule appointment', async () => {
+  it('should create multiple new scheduled appointments', async () => {
     const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
     const { id: memberId } = await creators.createAndValidateMember({
@@ -400,11 +408,7 @@ describe('Integration tests: all', () => {
       appointmentParams: scheduledAppointment2,
     });
 
-    expect(requestedId).toEqual(scheduledId);
-    const result = await creators.handler.queries.getAppointment(scheduledId);
-    expect(new Date(result.end)).toEqual(scheduledAppointment2.end);
-    expect(new Date(result.start)).toEqual(scheduledAppointment2.start);
-    expect(result.method).toEqual(scheduledAppointment2.method);
+    expect(requestedId).not.toEqual(scheduledId);
   });
 
   it('should create update and delete appointment notes', async () => {

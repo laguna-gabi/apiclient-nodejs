@@ -30,7 +30,6 @@ import {
 } from '../../src/common';
 import * as faker from 'faker';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { cloneDeep } from 'lodash';
 import { v4 } from 'uuid';
 
 describe('AppointmentService', () => {
@@ -285,50 +284,31 @@ describe('AppointmentService', () => {
       expect(newAppointment.status).toEqual(AppointmentStatus.scheduled);
     });
 
-    it('should be able to schedule 2 appointments for the same user and member', async () => {
-      const start = new Date(2030, 1, 1, 10);
-      const end = new Date(2030, 1, 1, 12);
+    it('should schedule multiple appointments for the same user and member', async () => {
+      const memberId = generateId();
+      const userId = v4();
+      const schedule = async (): Promise<Appointment> => {
+        const appointmentParams = generateScheduleAppointmentParams({ memberId, userId });
+        const result = await service.schedule(appointmentParams);
+        validateNewAppointmentEvent(
+          appointmentParams.memberId,
+          appointmentParams.userId,
+          result.id,
+        );
+        return result;
+      };
 
-      const appointmentParamsBefore = generateScheduleAppointmentParams({
-        start,
-        end,
-      });
+      const appointment1 = await schedule();
+      const appointment2 = await schedule();
+      const appointment3 = await schedule();
 
-      const resultBefore = await service.schedule(appointmentParamsBefore);
-      expect(resultBefore.start).toEqual(start);
-      expect(resultBefore.end).toEqual(end);
-      validateNewAppointmentEvent(
-        appointmentParamsBefore.memberId,
-        appointmentParamsBefore.userId,
-        resultBefore.id,
-      );
-
-      const newStart = new Date(start);
-      newStart.setHours(15);
-      const newEnd = new Date(end);
-      newEnd.setHours(17);
-
-      const appointmentParamsAfter = cloneDeep(appointmentParamsBefore);
-      appointmentParamsAfter.start = newStart;
-      appointmentParamsAfter.end = newEnd;
-
-      const resultAfter = await service.schedule(appointmentParamsAfter);
-      expect(spyOnEventEmitter).not.toBeCalled();
-      expect(resultAfter.start).toEqual(newStart);
-      expect(resultAfter.end).toEqual(newEnd);
-      expect(resultAfter.link).toEqual(generateAppointmentLink(resultAfter.id));
-
-      const appointment1 = await appointmentModel.find({
-        _id: generateObjectId(resultBefore.id),
-      });
-      const appointment2 = await appointmentModel.find({
-        _id: generateObjectId(resultAfter.id),
-      });
-
-      expect(appointment1).not.toBeUndefined();
-      expect(appointment2).not.toBeUndefined();
-
-      expect(appointment1).toEqual(appointment2);
+      expect(appointment1.userId).toEqual(appointment2.userId);
+      expect(appointment2.userId).toEqual(appointment3.userId);
+      expect(appointment1.memberId).toEqual(appointment2.memberId);
+      expect(appointment2.memberId).toEqual(appointment3.memberId);
+      expect(appointment1.id).not.toEqual(appointment2.id);
+      expect(appointment1.id).not.toEqual(appointment3.id);
+      expect(appointment2.id).not.toEqual(appointment3.id);
     });
   });
 

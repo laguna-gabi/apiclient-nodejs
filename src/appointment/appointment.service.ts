@@ -76,7 +76,7 @@ export class AppointmentService extends BaseService {
       {
         userId: params.userId,
         memberId: new Types.ObjectId(params.memberId),
-        status: { $ne: AppointmentStatus.done },
+        status: { $eq: AppointmentStatus.requested },
       },
       {
         $set: {
