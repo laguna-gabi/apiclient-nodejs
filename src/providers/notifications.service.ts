@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import {
-  CancelNotificationParams,
   NotificationType,
   Platform,
-  SendNotificationParams,
+  CancelNotificationParams,
+  SendNotificationToMemberParams,
+  SendNotificationToUserParams,
 } from '../common';
 import { ConfigsService } from './aws';
 import { OneSignal } from './oneSignal';
@@ -32,17 +33,32 @@ export class NotificationsService {
     return this.oneSignal.register({ token, externalUserId });
   }
 
-  async send(sendNotificationParams: SendNotificationParams) {
-    if (
-      sendNotificationParams.platform === Platform.web ||
-      sendNotificationParams.data.type === NotificationType.textSms
-    ) {
-      await this.twilio.send({
-        body: sendNotificationParams.metadata.content,
-        to: sendNotificationParams.data.member.phone,
+  async send({
+    sendNotificationToMemberParams,
+    sendNotificationToUserParams,
+  }: {
+    sendNotificationToMemberParams?: SendNotificationToMemberParams;
+    sendNotificationToUserParams?: SendNotificationToUserParams;
+  }): Promise<boolean> {
+    if (sendNotificationToMemberParams) {
+      if (
+        sendNotificationToMemberParams.platform === Platform.web ||
+        sendNotificationToMemberParams.data.type === NotificationType.textSms
+      ) {
+        await this.twilio.send({
+          body: sendNotificationToMemberParams.metadata.content,
+          to: sendNotificationToMemberParams.data.member.phone,
+        });
+      } else {
+        return this.oneSignal.send(sendNotificationToMemberParams);
+      }
+    }
+
+    if (sendNotificationToUserParams) {
+      return this.twilio.send({
+        body: sendNotificationToUserParams.metadata.content,
+        to: sendNotificationToUserParams.data.user.phone,
       });
-    } else {
-      return this.oneSignal.send(sendNotificationParams);
     }
   }
 

@@ -26,8 +26,8 @@ import {
   TaskStatus,
 } from '../../src/member';
 import {
-  CancelNotificationType,
   AppointmentStatus,
+  CancelNotificationType,
   Errors,
   ErrorType,
   Identifiers,
@@ -571,8 +571,10 @@ describe('Integration tests: all', () => {
 
       if (params.register.platform === Platform.ios) {
         expect(handler.notificationsService.spyOnNotificationsServiceRegister).toBeCalledWith({
-          token: registerForNotificationParams.token,
-          externalUserId: memberConfigDefault.externalUserId,
+          sendNotificationToMemberParams: {
+            token: registerForNotificationParams.token,
+            externalUserId: memberConfigDefault.externalUserId,
+          },
         });
       } else {
         expect(handler.notificationsService.spyOnNotificationsServiceRegister).not.toBeCalled();
@@ -621,23 +623,25 @@ describe('Integration tests: all', () => {
     await handler.mutations.notify({ notifyParams });
 
     expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
-      externalUserId: memberConfig.externalUserId,
-      platform: memberConfig.platform,
-      data: {
-        user: {
-          id: primaryUser.id,
-          firstName: primaryUser.firstName,
-          avatar: primaryUser.avatar,
+      sendNotificationToMemberParams: {
+        externalUserId: memberConfig.externalUserId,
+        platform: memberConfig.platform,
+        data: {
+          user: {
+            id: primaryUser.id,
+            firstName: primaryUser.firstName,
+            avatar: primaryUser.avatar,
+          },
+          member: {
+            phone: member.phone,
+          },
+          type: params.type,
+          peerId: notifyParams.metadata.peerId,
+          isVideo: params.isVideo,
+          ...generatePath(params.type),
         },
-        member: {
-          phone: member.phone,
-        },
-        type: params.type,
-        peerId: notifyParams.metadata.peerId,
-        isVideo: params.isVideo,
-        ...generatePath(params.type),
+        metadata: notifyParams.metadata,
       },
-      metadata: notifyParams.metadata,
     });
 
     handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
@@ -685,9 +689,19 @@ describe('Integration tests: all', () => {
   //https://app.clubhouse.io/laguna-health/story/1625/add-edit-for-member-s-users-and-primaryuserid
   /* eslint-disable max-len */
   test.skip.each`
-    title                    | method
-    ${'requestAppointment'}  | ${async ({ memberId, userId }) => await handler.mutations.requestAppointment({ appointmentParams: generateRequestAppointmentParams({ memberId, userId }) })}
-    ${'scheduleAppointment'} | ${async ({ memberId, userId }) => await handler.mutations.scheduleAppointment({ appointmentParams: generateScheduleAppointmentParams({ memberId, userId }) })}
+    title | method
+    ${'requestAppointment'} | ${async ({ memberId, userId }) => await handler.mutations.requestAppointment({
+    appointmentParams: generateRequestAppointmentParams({
+      memberId,
+      userId,
+    }),
+  })}
+    ${'scheduleAppointment'} | ${async ({ memberId, userId }) => await handler.mutations.scheduleAppointment({
+    appointmentParams: generateScheduleAppointmentParams({
+      memberId,
+      userId,
+    }),
+  })}
   `(`should add a not existed user to member users list on $title`, async (params) => {
     /* eslint-enable max-len */
     const primaryUser = await creators.createAndValidateUser();

@@ -113,23 +113,25 @@ describe('live: notifications (one signal)', () => {
     };
 
     const result = await notificationsService.send({
-      externalUserId: params.externalUserId,
-      platform: params.platform,
-      data: {
-        user: {
-          id: faker.datatype.uuid(),
-          firstName: faker.name.firstName(),
-          avatar: faker.image.avatar(),
+      sendNotificationToMemberParams: {
+        externalUserId: params.externalUserId,
+        platform: params.platform,
+        data: {
+          user: {
+            id: faker.datatype.uuid(),
+            firstName: faker.name.firstName(),
+            avatar: faker.image.avatar(),
+          },
+          member: {
+            phone: generatePhone(),
+          },
+          type: NotificationType.call,
+          peerId: v4(),
+          isVideo: false,
+          ...generatePath(NotificationType.call),
         },
-        member: {
-          phone: generatePhone(),
-        },
-        type: NotificationType.call,
-        peerId: v4(),
-        isVideo: false,
-        ...generatePath(NotificationType.call),
+        metadata: undefined,
       },
-      metadata: undefined,
     });
 
     expect(result).toBeTruthy();
@@ -156,23 +158,25 @@ describe('live: notifications (one signal)', () => {
       await delay(delayTime);
 
       result = await notificationsService.send({
-        externalUserId: params.externalUserId,
-        platform: params.platform,
-        data: {
-          user: {
-            id: v4(),
-            firstName: faker.name.firstName(),
-            avatar: faker.image.avatar(),
+        sendNotificationToMemberParams: {
+          externalUserId: params.externalUserId,
+          platform: params.platform,
+          data: {
+            user: {
+              id: v4(),
+              firstName: faker.name.firstName(),
+              avatar: faker.image.avatar(),
+            },
+            member: {
+              phone: generatePhone(),
+            },
+            type: NotificationType.video,
+            peerId: v4(),
+            isVideo: true,
+            path: 'call',
           },
-          member: {
-            phone: generatePhone(),
-          },
-          type: NotificationType.video,
-          peerId: v4(),
-          isVideo: true,
-          path: 'call',
+          metadata: { peerId: v4(), content: 'test' },
         },
-        metadata: { peerId: v4(), content: 'test' },
       });
 
       current = result ? RETRY_MAX : current + 1;

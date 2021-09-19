@@ -7,7 +7,7 @@ import {
   ErrorType,
   NotificationType,
   Platform,
-  SendNotificationParams,
+  SendNotificationToMemberParams,
 } from '../common';
 import { HttpService } from '@nestjs/axios';
 import * as config from 'config';
@@ -52,8 +52,8 @@ export class OneSignal {
     }
   }
 
-  async send(sendNotificationParams: SendNotificationParams) {
-    const { platform, externalUserId, data, metadata } = sendNotificationParams;
+  async send(sendNotificationToMemberParams: SendNotificationToMemberParams) {
+    const { platform, externalUserId, data, metadata } = sendNotificationToMemberParams;
 
     const config = await this.getConfig(platform, data.type);
     const app_id = await this.getApiId(platform, data.type);

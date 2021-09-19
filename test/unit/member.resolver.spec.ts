@@ -590,23 +590,25 @@ describe('MemberResolver', () => {
       await resolver.notify(notifyParams);
 
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        externalUserId: memberConfig.externalUserId,
-        platform: memberConfig.platform,
-        data: {
-          user: {
-            id: user.id,
-            firstName: user.firstName,
-            avatar: user.avatar,
+        sendNotificationToMemberParams: {
+          externalUserId: memberConfig.externalUserId,
+          platform: memberConfig.platform,
+          data: {
+            user: {
+              id: user.id,
+              firstName: user.firstName,
+              avatar: user.avatar,
+            },
+            member: {
+              phone: member.phone,
+            },
+            type: notifyParams.type,
+            peerId: notifyParams.metadata.peerId,
+            isVideo: params.isVideo,
+            ...generatePath(notifyParams.type),
           },
-          member: {
-            phone: member.phone,
-          },
-          type: notifyParams.type,
-          peerId: notifyParams.metadata.peerId,
-          isVideo: params.isVideo,
-          ...generatePath(notifyParams.type),
+          metadata: params.metadata,
         },
-        metadata: params.metadata,
       });
     });
 
@@ -644,23 +646,25 @@ describe('MemberResolver', () => {
       await resolver.notify(notifyParams);
 
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        externalUserId: memberConfig.externalUserId,
-        platform: memberConfig.platform,
-        data: {
-          user: {
-            id: user.id,
-            firstName: user.firstName,
-            avatar: user.avatar,
+        sendNotificationToMemberParams: {
+          externalUserId: memberConfig.externalUserId,
+          platform: memberConfig.platform,
+          data: {
+            user: {
+              id: user.id,
+              firstName: user.firstName,
+              avatar: user.avatar,
+            },
+            member: {
+              phone: member.phone,
+            },
+            type: notifyParams.type,
+            peerId: notifyParams.metadata.peerId,
+            isVideo: false,
+            ...generatePath(notifyParams.type),
           },
-          member: {
-            phone: member.phone,
-          },
-          type: notifyParams.type,
-          peerId: notifyParams.metadata.peerId,
-          isVideo: false,
-          ...generatePath(notifyParams.type),
+          metadata: notifyParams.metadata,
         },
-        metadata: notifyParams.metadata,
       });
     });
 
@@ -700,7 +704,7 @@ describe('MemberResolver', () => {
       await resolver.notifyInternal(generateNotifyParams());
     });
 
-    it('should call notify from notify.internal with appointment reminder metadata', async () => {
+    it('should notify a member via notify.internal with appointment reminder', async () => {
       const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();
       const user = mockGenerateUser();
@@ -719,7 +723,7 @@ describe('MemberResolver', () => {
         metadata: { content },
       });
 
-      await resolver.notify(notifyParams);
+      await resolver.notifyInternal(notifyParams);
 
       expect(notifyParams.metadata.content).toEqual(
         content
@@ -728,23 +732,60 @@ describe('MemberResolver', () => {
       );
 
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        externalUserId: memberConfig.externalUserId,
-        platform: memberConfig.platform,
-        data: {
-          user: {
-            id: user.id,
-            firstName: user.firstName,
-            avatar: user.avatar,
+        sendNotificationToMemberParams: {
+          externalUserId: memberConfig.externalUserId,
+          platform: memberConfig.platform,
+          data: {
+            user: {
+              id: user.id,
+              firstName: user.firstName,
+              avatar: user.avatar,
+            },
+            member: {
+              phone: member.phone,
+            },
+            type: notifyParams.type,
+            peerId: notifyParams.metadata.peerId,
+            isVideo: false,
+            ...generatePath(notifyParams.type),
           },
-          member: {
-            phone: member.phone,
-          },
-          type: notifyParams.type,
-          peerId: notifyParams.metadata.peerId,
-          isVideo: false,
-          ...generatePath(notifyParams.type),
+          metadata: notifyParams.metadata,
         },
-        metadata: notifyParams.metadata,
+      });
+    });
+
+    it('should notify a user via notify.internal with appointment reminder', async () => {
+      const user = mockGenerateUser();
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const now = new Date();
+      const content = `${config
+        .get('contents.appointmentUser')
+        .replace('@user.firstName@', user.firstName)
+        .replace('@appointment.start@', now)}`;
+
+      const notifyParams = generateNotifyParams({
+        memberId: '',
+        type: NotificationType.textSms,
+        metadata: { content },
+      });
+
+      await resolver.notifyInternal(notifyParams);
+
+      expect(notifyParams.metadata.content).toEqual(
+        content.replace('@user.firstName@', user.firstName),
+      );
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendNotificationToUserParams: {
+          data: {
+            user: {
+              phone: user.phone,
+            },
+          },
+          metadata: notifyParams.metadata,
+        },
       });
     });
   });

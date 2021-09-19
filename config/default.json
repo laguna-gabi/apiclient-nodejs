@@ -41,6 +41,7 @@
   },
   "contents": {
     "appointmentReminder": "Hello @member.firstName@, your coaching appointment with @user.firstName@ will start in @gapMinutes@ minutes. Click below to join: @chatLink@",
-    "appointmentRequest": "Hello @member.firstName@, It's @user.firstName@ from Laguna. Click below to schedule your next meeting: @appLink@"
+    "appointmentRequest": "Hello @member.firstName@, It's @user.firstName@ from Laguna. Click below to schedule your next meeting: @appLink@",
+    "appointmentUser":"Hello @user.firstName@, an appointment has been added to your schedule on @appointment.start@"
   }
 }

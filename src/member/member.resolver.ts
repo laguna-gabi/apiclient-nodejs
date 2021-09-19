@@ -224,23 +224,25 @@ export class MemberResolver extends MemberBase {
       type === NotificationType.call || type === NotificationType.video ? { path: 'call' } : {};
 
     return this.notificationsService.send({
-      externalUserId: memberConfig.externalUserId,
-      platform: memberConfig.platform,
-      data: {
-        user: {
-          id: user.id,
-          firstName: user.firstName,
-          avatar: user.avatar,
+      sendNotificationToMemberParams: {
+        externalUserId: memberConfig.externalUserId,
+        platform: memberConfig.platform,
+        data: {
+          user: {
+            id: user.id,
+            firstName: user.firstName,
+            avatar: user.avatar,
+          },
+          member: {
+            phone: member.phone,
+          },
+          type,
+          ...path,
+          isVideo: type === NotificationType.video,
+          peerId: metadata.peerId,
         },
-        member: {
-          phone: member.phone,
-        },
-        type,
-        ...path,
-        isVideo: type === NotificationType.video,
-        peerId: metadata.peerId,
+        metadata,
       },
-      metadata,
     });
   }
 
@@ -269,6 +271,24 @@ export class MemberResolver extends MemberBase {
    */
   @OnEvent(EventType.notify, { async: true })
   async notifyInternal(notifyParams: NotifyParams) {
+    if (notifyParams.memberId === '') {
+      //send to sms to user
+      const user = await this.userService.get(notifyParams.userId);
+      if (!user) {
+        throw new Error(Errors.get(ErrorType.userNotFound));
+      }
+      notifyParams.metadata.content = notifyParams.metadata.content.replace(
+        '@user.firstName@',
+        user.firstName,
+      );
+      await this.notificationsService.send({
+        sendNotificationToUserParams: {
+          data: { user: { phone: user.phone } },
+          metadata: notifyParams.metadata,
+        },
+      });
+      return;
+    }
     try {
       await this.notify(notifyParams);
     } catch (ex) {

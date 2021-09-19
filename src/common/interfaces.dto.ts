@@ -105,7 +105,7 @@ export abstract class BaseService {
   }
 }
 
-export class SendNotificationParams {
+export class SendNotificationToMemberParams {
   externalUserId: string;
   platform: Platform;
   data: {
@@ -121,6 +121,15 @@ export class SendNotificationParams {
     type: NotificationType;
     path?: string;
     isVideo: boolean;
+  };
+  metadata: Record<string, any>;
+}
+
+export class SendNotificationToUserParams {
+  data: {
+    user: {
+      phone: string;
+    };
   };
   metadata: Record<string, any>;
 }

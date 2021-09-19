@@ -1,6 +1,18 @@
-import { AppointmentService, ScheduleAppointmentParams, AppointmentScheduler } from '.';
-import { EventType, IEventUpdatedAppointment, UpdatedAppointmentAction } from '../common';
+import {
+  AppointmentService,
+  ScheduleAppointmentParams,
+  AppointmentScheduler,
+  Appointment,
+} from '.';
+import {
+  EventType,
+  IEventUpdatedAppointment,
+  NotificationType,
+  UpdatedAppointmentAction,
+} from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NotifyParams } from '../member';
+import * as config from 'config';
 
 export class AppointmentBase {
   constructor(
@@ -12,6 +24,18 @@ export class AppointmentBase {
   async scheduleAppointment(scheduleAppointmentParams: ScheduleAppointmentParams) {
     const appointment = await this.appointmentService.schedule(scheduleAppointmentParams);
 
+    this.updateAppointmentExternalData(appointment);
+    this.notifyAppointment(appointment);
+    await this.updateAppointmentAlert(appointment);
+
+    return appointment;
+  }
+
+  /*************************************************************************************************
+   ******************************************** Helpers ********************************************
+   ************************************************************************************************/
+
+  private updateAppointmentExternalData(appointment: Appointment) {
     const eventParams: IEventUpdatedAppointment = {
       updatedAppointmentAction: UpdatedAppointmentAction.edit,
       memberId: appointment.memberId.toString(),
@@ -23,14 +47,28 @@ export class AppointmentBase {
       },
     };
     this.eventEmitter.emit(EventType.updatedAppointment, eventParams);
+  }
 
+  private notifyAppointment(appointment: Appointment) {
+    const params: NotifyParams = {
+      memberId: '',
+      userId: appointment.userId,
+      type: NotificationType.textSms,
+      metadata: {
+        content: `${config
+          .get('contents.appointmentUser')
+          .replace('@appointment.start@', appointment.start.toLocaleString())}`,
+      },
+    };
+    this.eventEmitter.emit(EventType.notify, params);
+  }
+
+  private async updateAppointmentAlert(appointment: Appointment) {
     await this.appointmentScheduler.updateAppointmentAlert({
       id: appointment.id,
       memberId: appointment.memberId.toString(),
       userId: appointment.userId,
       start: appointment.start,
     });
-
-    return appointment;
   }
 }

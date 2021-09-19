@@ -105,6 +105,7 @@ describe('AppointmentResolver', () => {
 
     afterEach(() => {
       spyOnServiceGet.mockReset();
+      spyOnEventEmitter.mockReset();
     });
 
     it('should get an appointment for a given id', async () => {
@@ -137,6 +138,7 @@ describe('AppointmentResolver', () => {
     afterEach(() => {
       spyOnServiceSchedule.mockReset();
       spyOnSchedulerUpdateAppointmentAlert.mockReset();
+      spyOnEventEmitter.mockReset();
     });
 
     test.each`
@@ -159,7 +161,7 @@ describe('AppointmentResolver', () => {
       });
     });
 
-    it('should validate that on schedule appointment, an internal event is sent', async () => {
+    it('should validate that on schedule appointment, internal events are sent', async () => {
       const status = AppointmentStatus.scheduled;
       const appointment = generateScheduleAppointmentParams();
       spyOnServiceSchedule.mockImplementationOnce(async () => ({
@@ -178,7 +180,23 @@ describe('AppointmentResolver', () => {
           start: result.start,
         },
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.updatedAppointment, eventParams);
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+        1,
+        EventType.updatedAppointment,
+        eventParams,
+      );
+
+      const notifyParams: NotifyParams = {
+        memberId: '',
+        userId: appointment.userId,
+        type: NotificationType.textSms,
+        metadata: {
+          content: `${config
+            .get('contents.appointmentUser')
+            .replace('@appointment.start@', appointment.start.toLocaleString())}`,
+        },
+      };
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notify, notifyParams);
     });
   });
 
@@ -193,6 +211,7 @@ describe('AppointmentResolver', () => {
     afterEach(() => {
       spyOnServiceEnd.mockReset();
       spyOnSchedulerDeleteAppointmentAlert.mockReset();
+      spyOnEventEmitter.mockReset();
     });
 
     it('should end an existing appointment for a given id', async () => {
@@ -238,6 +257,7 @@ describe('AppointmentResolver', () => {
 
     afterEach(() => {
       spyOnServiceUpdateNotes.mockReset();
+      spyOnEventEmitter.mockReset();
     });
 
     it('should update the notes of given appointment id', async () => {
