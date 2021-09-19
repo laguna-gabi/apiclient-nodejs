@@ -32,6 +32,7 @@ import { millisecondsInHour } from 'date-fns';
 import { lookup } from 'zipcode-to-timezone';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { NotificationsService, StorageService } from '../providers';
+import { CancelNotifyParams } from './member.dto';
 import { User, UserService } from '../user';
 
 @Resolver(() => Member)
@@ -202,9 +203,9 @@ export class MemberResolver extends MemberBase {
     });
   }
 
-  @Mutation(() => Boolean, { nullable: true })
+  @Mutation(() => String, { nullable: true })
   async notify(@Args(camelCase(NotifyParams.name)) notifyParams: NotifyParams) {
-    const { memberId, userId, peerId, type } = notifyParams;
+    const { memberId, userId, type, metadata } = notifyParams;
     const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId);
     if (
       memberConfig.platform === Platform.web &&
@@ -213,12 +214,8 @@ export class MemberResolver extends MemberBase {
       throw new Error(Errors.get(ErrorType.notificationMemberPlatformWeb));
     }
 
-    if (
-      notifyParams.metadata &&
-      notifyParams.metadata[type] &&
-      notifyParams.metadata[type].content
-    ) {
-      notifyParams.metadata[type].content = notifyParams.metadata[type].content
+    if (metadata.content) {
+      metadata.content = metadata.content
         .replace('@member.firstName@', member.firstName)
         .replace('@user.firstName@', user.firstName);
     }
@@ -226,7 +223,7 @@ export class MemberResolver extends MemberBase {
     const path =
       type === NotificationType.call || type === NotificationType.video ? { path: 'call' } : {};
 
-    await this.notificationsService.send({
+    return this.notificationsService.send({
       externalUserId: memberConfig.externalUserId,
       platform: memberConfig.platform,
       data: {
@@ -241,12 +238,30 @@ export class MemberResolver extends MemberBase {
         type,
         ...path,
         isVideo: type === NotificationType.video,
-        peerId,
+        peerId: metadata.peerId,
       },
-      metadata: notifyParams.metadata ? notifyParams.metadata[type] : undefined,
+      metadata,
     });
   }
 
+  @Mutation(() => String, { nullable: true })
+  async cancelNotify(
+    @Args(camelCase(CancelNotifyParams.name))
+    cancelNotifyParams: CancelNotifyParams,
+  ) {
+    const { memberId, type, notificationId, metadata } = cancelNotifyParams;
+    const memberConfig = await this.memberService.getMemberConfig(memberId);
+
+    return this.notificationsService.cancel({
+      externalUserId: memberConfig.externalUserId,
+      platform: memberConfig.platform,
+      data: {
+        type,
+        peerId: metadata.peerId,
+        notificationId,
+      },
+    });
+  }
   /**
    * Event is coming from appointment.scheduler - scheduling appointments reminders.
    * We have to specify an event method here, instead of just adding to @notify method,

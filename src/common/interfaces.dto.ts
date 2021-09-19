@@ -18,10 +18,18 @@ export enum NotificationType {
   video = 'video',
   call = 'call',
   text = 'text',
-  forceSms = 'forceSms',
+  textSms = 'textSms',
 }
 
 registerEnumType(NotificationType, { name: 'NotificationType' });
+
+export enum CancelNotificationType {
+  cancelVideo = 'cancelVideo',
+  cancelCall = 'cancelCall',
+  cancelText = 'cancelText',
+}
+
+registerEnumType(CancelNotificationType, { name: 'CancelNotificationType' });
 
 export enum Platform {
   ios = 'ios',
@@ -109,12 +117,22 @@ export class SendNotificationParams {
     member: {
       phone: string;
     };
-    peerId: string;
+    peerId?: string;
     type: NotificationType;
     path?: string;
     isVideo: boolean;
   };
   metadata: Record<string, any>;
+}
+
+export class CancelNotificationParams {
+  externalUserId: string;
+  platform: Platform;
+  data: {
+    peerId?: string;
+    type: CancelNotificationType;
+    notificationId: string;
+  };
 }
 
 export enum slackChannel {

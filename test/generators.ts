@@ -3,6 +3,8 @@ import { Types } from 'mongoose';
 import { CreateUserParams, defaultUserParams, User, UserRole } from '../src/user';
 import {
   AppointmentCompose,
+  CancelNotificationMetadata,
+  CancelNotifyParams,
   CreateMemberParams,
   CreateTaskParams,
   defaultMemberParams,
@@ -26,7 +28,7 @@ import {
   UpdateNotesParams,
 } from '../src/appointment';
 import { CreateOrgParams, OrgType } from '../src/org';
-import { Language, Platform, NotificationType } from '../src/common';
+import { Language, Platform, NotificationType, CancelNotificationType } from '../src/common';
 import { lookup } from 'zipcode-to-timezone';
 import { AvailabilityInput } from '../src/availability';
 import { GetCommunicationParams } from '../src/communication';
@@ -450,17 +452,29 @@ export const generateDateOnly = (date: Date): string => {
 export const generateNotifyParams = ({
   userId = v4(),
   memberId = generateId(),
-  peerId = v4(),
   type = NotificationType.call,
-  metadata = {},
+  metadata = { peerId: v4(), content: 'test' },
 }: {
   userId?: string;
   memberId?: string;
-  peerId?: string;
   type?: NotificationType;
   metadata?: NotificationMetadata;
 } = {}): NotifyParams => {
-  return { userId, memberId, peerId, type, metadata };
+  return { userId, memberId, type, metadata };
+};
+
+export const generateCancelNotifyParams = ({
+  notificationId = v4(),
+  memberId = generateId(),
+  type = CancelNotificationType.cancelCall,
+  metadata = { peerId: v4() },
+}: {
+  notificationId?: string;
+  memberId?: string;
+  type?: CancelNotificationType;
+  metadata?: CancelNotificationMetadata;
+} = {}): CancelNotifyParams => {
+  return { notificationId, memberId, type, metadata };
 };
 
 const generateEmail = () => {

@@ -1,5 +1,5 @@
 import { registerDecorator, ValidationArguments, ValidationOptions } from 'class-validator';
-import { NotificationType } from './interfaces.dto';
+import { CancelNotificationType, NotificationType } from './interfaces.dto';
 
 /**
  * When there are 2 params of dates, and we want to make sure that one param is
@@ -109,27 +109,6 @@ export function IsStringDate(options: ValidationOptions) {
   };
 }
 
-export function IsPeerIdNotNullOnNotifyVideoOrCall(options?: ValidationOptions) {
-  return (object, propertyName: string) => {
-    registerDecorator({
-      target: object.constructor,
-      propertyName,
-      options,
-      validator: {
-        validate(peerId, args: ValidationArguments) {
-          const notificationType: NotificationType = args.object['type'];
-          return (
-            peerId ||
-            (!peerId &&
-              (notificationType === NotificationType.text ||
-                notificationType === NotificationType.forceSms))
-          );
-        },
-      },
-    });
-  };
-}
-
 export function IsTypeMetadataProvided(options: ValidationOptions) {
   return (object, propertyName: string) => {
     registerDecorator({
@@ -138,12 +117,20 @@ export function IsTypeMetadataProvided(options: ValidationOptions) {
       options,
       validator: {
         validate(type: string, args: ValidationArguments) {
-          if (type === NotificationType.text) {
-            return args.object['metadata']?.text;
-          } else if (type === NotificationType.forceSms) {
-            return args.object['metadata']?.forceSms;
-          } else {
-            return true;
+          switch (type) {
+            case NotificationType.call:
+            case NotificationType.video:
+            case CancelNotificationType.cancelCall:
+            case CancelNotificationType.cancelVideo: {
+              return 'peerId' in args.object['metadata'];
+            }
+            case NotificationType.text:
+            case NotificationType.textSms: {
+              return 'content' in args.object['metadata'];
+            }
+            case CancelNotificationType.cancelText: {
+              return true;
+            }
           }
         },
       },

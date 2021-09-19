@@ -88,11 +88,9 @@ describe('AppointmentResolver', () => {
         userId: params.userId,
         type: NotificationType.text,
         metadata: {
-          text: {
-            content: `${config
-              .get('contents.appointmentRequest')
-              .replace('@appLink@', appointment.link)}`,
-          },
+          content: `${config
+            .get('contents.appointmentRequest')
+            .replace('@appLink@', appointment.link)}`,
         },
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notify, eventParams);

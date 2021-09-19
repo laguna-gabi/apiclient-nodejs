@@ -1,7 +1,13 @@
 import { ConfigsService, NotificationsService, TwilioService } from '../../src/providers';
 import { HttpService } from '@nestjs/axios';
 import { v4 } from 'uuid';
-import { Platform, NotificationType } from '../../src/common';
+import {
+  Platform,
+  NotificationType,
+  CancelNotificationType,
+  Errors,
+  ErrorType,
+} from '../../src/common';
 import * as faker from 'faker';
 import { delay } from '../common';
 import { generatePath, generatePhone } from '../generators';
@@ -29,44 +35,67 @@ describe('live: notifications (one signal)', () => {
       const playerId = await notificationsService.register(params);
       expect(playerId).not.toBeUndefined();
 
-      /**
-       * If sent immediately after registering a device, calling send notification causes an error.
-       * We'll retry and delay sending a notification for a few seconds.
-       * result.data.errors: ["All included players are not subscribed"]
-       */
-      let current = 0;
-      while (current < RETRY_MAX) {
-        await delay(delayTime);
+      await sendNotification(params);
 
-        const result = await notificationsService.send({
-          externalUserId: params.externalUserId,
-          platform: params.platform,
-          data: {
-            user: {
-              id: v4(),
-              firstName: faker.name.firstName(),
-              avatar: faker.image.avatar(),
-            },
-            member: {
-              phone: generatePhone(),
-            },
-            type: NotificationType.video,
-            peerId: v4(),
-            isVideo: true,
-            ...generatePath(NotificationType.video),
-          },
-          metadata: undefined,
-        });
-
-        current = result ? RETRY_MAX : current + 1;
-        if (current === RETRY_MAX || result) {
-          expect(result).toBeTruthy();
-        }
-      }
       await notificationsService.unregister(playerId, params.platform);
     },
     delayTime * RETRY_MAX + 5000,
   );
+
+  it(
+    'should send video notification and then cancel it',
+    async () => {
+      const params = {
+        token: 'sampleioscancelkittoken',
+        externalUserId: v4(),
+        platform: Platform.ios,
+      };
+      const playerId = await notificationsService.register(params);
+      expect(playerId).not.toBeUndefined();
+
+      const result = await sendNotification(params);
+
+      /* Delay so the notification has time to reach the target*/
+      await delay(1000);
+
+      await notificationsService.cancel({
+        externalUserId: params.externalUserId,
+        platform: params.platform,
+        data: {
+          peerId: v4(),
+          type: CancelNotificationType.cancelVideo,
+          notificationId: result,
+        },
+      });
+
+      await notificationsService.unregister(playerId, params.platform);
+    },
+    delayTime * RETRY_MAX + 6000,
+  );
+
+  it('should throw an error for not existing notificationId', async () => {
+    const params = {
+      token: 'sampleioscancelkittoken',
+      externalUserId: v4(),
+      platform: Platform.ios,
+    };
+    const playerId = await notificationsService.register(params);
+    expect(playerId).not.toBeUndefined();
+
+    await expect(
+      notificationsService.cancel({
+        externalUserId: params.externalUserId,
+        platform: params.platform,
+        data: {
+          peerId: v4(),
+          type: CancelNotificationType.cancelVideo,
+          notificationId: v4(),
+        },
+      }),
+    ).rejects.toThrow(Errors.get(ErrorType.notificationNotFound));
+
+    await notificationsService.unregister(playerId, params.platform);
+  });
 
   /* eslint-disable max-len */
   /**
@@ -105,4 +134,54 @@ describe('live: notifications (one signal)', () => {
 
     expect(result).toBeTruthy();
   });
+
+  /************************************************************************************************
+   *************************************** Internal methods ***************************************
+   ***********************************************************************************************/
+
+  const sendNotification = async (params: {
+    token: string;
+    externalUserId: string;
+    platform: Platform;
+  }) => {
+    let result;
+    let current = 0;
+
+    /**
+     * If sent immediately after registering a device, calling send notification causes an error.
+     * We'll retry and delay sending a notification for a few seconds.
+     * result.data.errors: ["All included players are not subscribed"]
+     */
+    while (current < RETRY_MAX) {
+      await delay(delayTime);
+
+      result = await notificationsService.send({
+        externalUserId: params.externalUserId,
+        platform: params.platform,
+        data: {
+          user: {
+            id: v4(),
+            firstName: faker.name.firstName(),
+            avatar: faker.image.avatar(),
+          },
+          member: {
+            phone: generatePhone(),
+          },
+          type: NotificationType.video,
+          peerId: v4(),
+          isVideo: true,
+          path: 'call',
+        },
+        metadata: { peerId: v4(), content: 'test' },
+      });
+
+      current = result ? RETRY_MAX : current + 1;
+      if (current === RETRY_MAX || result) {
+        expect(result).toMatch(
+          /\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b/,
+        );
+        return result;
+      }
+    }
+  };
 });

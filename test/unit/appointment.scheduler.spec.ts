@@ -200,12 +200,10 @@ describe('AppointmentScheduler', () => {
         userId,
         type: NotificationType.text,
         metadata: {
-          text: {
-            content: `${config
-              .get('contents.appointmentReminder')
-              .replace('@gapMinutes@', config.get('appointments.alertBeforeInMin'))
-              .replace('@chatLink@', chat.memberLink)}`,
-          },
+          content: `${config
+            .get('contents.appointmentReminder')
+            .replace('@gapMinutes@', config.get('appointments.alertBeforeInMin'))
+            .replace('@chatLink@', chat.memberLink)}`,
         },
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notify, eventParams);

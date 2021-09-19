@@ -1,6 +1,7 @@
 import {
   generateAppointmentLink,
   generateAvailabilityInput,
+  generateCancelNotifyParams,
   generateCreateMemberParams,
   generateId,
   generatePath,
@@ -16,6 +17,7 @@ import { Handler } from './aux/handler';
 import { AppointmentsIntegrationActions } from './aux/appointments';
 import { Creators } from './aux/creators';
 import {
+  CancelNotifyParams,
   CreateTaskParams,
   Member,
   MemberConfig,
@@ -24,6 +26,7 @@ import {
   TaskStatus,
 } from '../../src/member';
 import {
+  CancelNotificationType,
   AppointmentStatus,
   Errors,
   ErrorType,
@@ -583,11 +586,11 @@ describe('Integration tests: all', () => {
   );
 
   test.each`
-    type                         | isVideo  | metadata
-    ${NotificationType.video}    | ${true}  | ${{}}
-    ${NotificationType.call}     | ${false} | ${{}}
-    ${NotificationType.text}     | ${false} | ${{ text: { content: 'text' } }}
-    ${NotificationType.forceSms} | ${false} | ${{ forceSms: { content: 'text' } }}
+    type                        | isVideo  | metadata
+    ${NotificationType.video}   | ${true}  | ${{ peerId: v4() }}
+    ${NotificationType.call}    | ${false} | ${{ peerId: v4() }}
+    ${NotificationType.text}    | ${false} | ${{ content: 'text' }}
+    ${NotificationType.textSms} | ${false} | ${{ content: 'text' }}
   `(`should send a notification of type $type`, async (params) => {
     const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
@@ -608,7 +611,6 @@ describe('Integration tests: all', () => {
       memberId: member.id,
       userId: primaryUser.id,
       type: params.type,
-      peerId: v4(),
       metadata: params.metadata,
     };
 
@@ -627,14 +629,53 @@ describe('Integration tests: all', () => {
           phone: member.phone,
         },
         type: params.type,
-        peerId: notifyParams.peerId,
+        peerId: notifyParams.metadata.peerId,
         isVideo: params.isVideo,
         ...generatePath(params.type),
       },
-      metadata: params.metadata ? params.metadata[params.type] : undefined,
+      metadata: notifyParams.metadata,
     });
 
     handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+  });
+
+  test.each([
+    CancelNotificationType.cancelVideo,
+    CancelNotificationType.cancelCall,
+    CancelNotificationType.cancelText,
+  ])(`should cancel a notification of type $type`, async (params) => {
+    const primaryUser = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+    const registerForNotificationParams: RegisterForNotificationParams = {
+      memberId: member.id,
+      platform: Platform.android,
+    };
+    await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+
+    const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
+
+    const cancelNotifyParams: CancelNotifyParams = generateCancelNotifyParams({
+      memberId: member.id,
+      type: params,
+    });
+
+    await handler.mutations.cancel({ cancelNotifyParams });
+    expect(handler.notificationsService.spyOnNotificationsServiceCancel).toBeCalledWith({
+      externalUserId: memberConfig.externalUserId,
+      platform: memberConfig.platform,
+      data: {
+        type: cancelNotifyParams.type,
+        peerId: cancelNotifyParams.metadata.peerId,
+        notificationId: cancelNotifyParams.notificationId,
+      },
+    });
+
+    handler.notificationsService.spyOnNotificationsServiceCancel.mockReset();
   });
 
   //https://app.clubhouse.io/laguna-health/story/1625/add-edit-for-member-s-users-and-primaryuserid

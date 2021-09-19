@@ -105,12 +105,10 @@ export class AppointmentScheduler {
 
         const { chat } = await this.communicationResolver.getCommunication({ memberId, userId });
         const metadata = {
-          text: {
-            content: `${config
-              .get('contents.appointmentReminder')
-              .replace('@gapMinutes@', config.get('appointments.alertBeforeInMin'))
-              .replace('@chatLink@', chat.memberLink)}`,
-          },
+          content: `${config
+            .get('contents.appointmentReminder')
+            .replace('@gapMinutes@', config.get('appointments.alertBeforeInMin'))
+            .replace('@chatLink@', chat.memberLink)}`,
         };
         const params: NotifyParams = { memberId, userId, type: NotificationType.text, metadata };
 

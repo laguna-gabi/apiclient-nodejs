@@ -2,6 +2,7 @@ import { camelCase } from 'lodash';
 import gql from 'graphql-tag';
 import { CreateUserParams } from '../../../src/user';
 import {
+  CancelNotifyParams,
   CreateMemberParams,
   CreateTaskParams,
   Member,
@@ -584,6 +585,30 @@ export class Mutations {
 
     return (
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.notify
+    );
+  };
+
+  cancel = async ({
+    cancelNotifyParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    cancelNotifyParams: CancelNotifyParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<void> => {
+    const result = await this.apolloClient.mutate({
+      variables: { cancelNotifyParams: cancelNotifyParams },
+      mutation: gql`
+        mutation cancelNotify($cancelNotifyParams: CancelNotifyParams!) {
+          cancelNotify(cancelNotifyParams: $cancelNotifyParams)
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.cancelNotify
     );
   };
 

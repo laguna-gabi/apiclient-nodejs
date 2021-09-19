@@ -13,11 +13,13 @@ import {
   mockGenerateMember,
   mockGenerateMemberConfig,
   mockGenerateUser,
+  generateCancelNotifyParams,
 } from '../index';
 import { DbModule } from '../../src/db/db.module';
 import { MemberModule, MemberResolver, MemberService, TaskStatus } from '../../src/member';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import {
+  CancelNotificationType,
   Errors,
   ErrorType,
   EventType,
@@ -32,6 +34,7 @@ import * as faker from 'faker';
 import { UserService } from '../../src/user';
 import { Types } from 'mongoose';
 import * as config from 'config';
+import { v4 } from 'uuid';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
@@ -537,12 +540,14 @@ describe('MemberResolver', () => {
     let spyOnServiceGetMemberConfig;
     let spyOnUserServiceGetUser;
     let spyOnNotificationsServiceSend;
+    let spyOnNotificationsServiceCancel;
 
     beforeEach(() => {
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
       spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
+      spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
     });
 
     afterEach(() => {
@@ -550,6 +555,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig.mockReset();
       spyOnUserServiceGetUser.mockReset();
       spyOnNotificationsServiceSend.mockReset();
+      spyOnNotificationsServiceCancel.mockReset();
     });
 
     it('should catch notify exception on non existing user', async () => {
@@ -565,11 +571,11 @@ describe('MemberResolver', () => {
     });
 
     test.each`
-      type                         | isVideo  | metadata
-      ${NotificationType.video}    | ${true}  | ${{}}
-      ${NotificationType.call}     | ${false} | ${{}}
-      ${NotificationType.text}     | ${false} | ${{ text: { content: 'text' } }}
-      ${NotificationType.forceSms} | ${false} | ${{ forceSms: { content: 'text' } }}
+      type                        | isVideo  | metadata
+      ${NotificationType.video}   | ${true}  | ${{ peerId: v4() }}
+      ${NotificationType.call}    | ${false} | ${{ peerId: v4() }}
+      ${NotificationType.text}    | ${false} | ${{ content: 'text' }}
+      ${NotificationType.textSms} | ${false} | ${{ content: 'text' }}
     `(`should notify a member`, async (params) => {
       const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();
@@ -596,11 +602,11 @@ describe('MemberResolver', () => {
             phone: member.phone,
           },
           type: notifyParams.type,
-          peerId: notifyParams.peerId,
+          peerId: notifyParams.metadata.peerId,
           isVideo: params.isVideo,
           ...generatePath(notifyParams.type),
         },
-        metadata: params.metadata ? params.metadata[params.type] : undefined,
+        metadata: params.metadata,
       });
     });
 
@@ -650,11 +656,37 @@ describe('MemberResolver', () => {
             phone: member.phone,
           },
           type: notifyParams.type,
-          peerId: notifyParams.peerId,
+          peerId: notifyParams.metadata.peerId,
           isVideo: false,
           ...generatePath(notifyParams.type),
         },
-        metadata: undefined,
+        metadata: notifyParams.metadata,
+      });
+    });
+
+    test.each([
+      CancelNotificationType.cancelVideo,
+      CancelNotificationType.cancelCall,
+      CancelNotificationType.cancelText,
+    ])(`should cancel a notification`, async (params) => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnNotificationsServiceCancel.mockImplementationOnce(async () => undefined);
+
+      const cancelNotifyParams = generateCancelNotifyParams({ type: params });
+
+      await resolver.cancelNotify(cancelNotifyParams);
+
+      expect(spyOnNotificationsServiceCancel).toBeCalledWith({
+        externalUserId: memberConfig.externalUserId,
+        platform: memberConfig.platform,
+        data: {
+          type: cancelNotifyParams.type,
+          peerId: cancelNotifyParams.metadata.peerId,
+          notificationId: cancelNotifyParams.notificationId,
+        },
       });
     });
 
@@ -684,12 +716,12 @@ describe('MemberResolver', () => {
 
       const notifyParams = generateNotifyParams({
         type: NotificationType.text,
-        metadata: { text: { content } },
+        metadata: { content },
       });
 
       await resolver.notify(notifyParams);
 
-      expect(notifyParams.metadata[notifyParams.type].content).toEqual(
+      expect(notifyParams.metadata.content).toEqual(
         content
           .replace('@member.firstName@', member.firstName)
           .replace('@user.firstName@', user.firstName),
@@ -708,11 +740,11 @@ describe('MemberResolver', () => {
             phone: member.phone,
           },
           type: notifyParams.type,
-          peerId: notifyParams.peerId,
+          peerId: notifyParams.metadata.peerId,
           isVideo: false,
           ...generatePath(notifyParams.type),
         },
-        metadata: notifyParams.metadata[notifyParams.type],
+        metadata: notifyParams.metadata,
       });
     });
   });

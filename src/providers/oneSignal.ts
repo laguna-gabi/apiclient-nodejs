@@ -1,6 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigsService, ExternalConfigs } from '.';
-import { NotificationType, Platform, SendNotificationParams } from '../common';
+import {
+  CancelNotificationParams,
+  CancelNotificationType,
+  Errors,
+  ErrorType,
+  NotificationType,
+  Platform,
+  SendNotificationParams,
+} from '../common';
 import { HttpService } from '@nestjs/axios';
 import * as config from 'config';
 
@@ -56,9 +64,7 @@ export class OneSignal {
       include_external_user_ids: [externalUserId],
       content_available: true,
       contents: {
-        en: metadata?.content
-          ? metadata.content
-          : `incoming ${data.type} from ${data.user.firstName}`,
+        en: metadata.content,
       },
       headings: { en: 'Laguna' },
       ...extraData,
@@ -71,9 +77,51 @@ export class OneSignal {
 
     try {
       const result = await this.httpService.post(this.notificationsUrl, body, config).toPromise();
-      return result.status === 200 && result.data.recipients === 1;
+      if (result.status === 200 && result.data.recipients === 1) {
+        return result.data.id;
+      }
     } catch (ex) {
       console.error(ex);
+    }
+  }
+
+  async cancel(cancelNotificationParams: CancelNotificationParams) {
+    const { platform, externalUserId, data } = cancelNotificationParams;
+
+    const config = await this.getConfig(platform, data.type);
+    const app_id = await this.getApiId(platform, data.type);
+    const cancelUrl = `${this.notificationsUrl}/${data.notificationId}?app_id=${app_id}`;
+
+    try {
+      await this.httpService.delete(cancelUrl, config).toPromise();
+    } catch (ex) {
+      if (ex.response.data.errors[0] !== 'Notification has already been sent to all recipients') {
+        throw new Error(Errors.get(ErrorType.notificationNotFound));
+      } else {
+        const defaultApiKey = await this.configsService.getConfig(
+          ExternalConfigs.oneSignalDefaultApiKey,
+        );
+        const config = { headers: { Authorization: `Basic ${defaultApiKey}` } };
+        const app_id = await this.configsService.getConfig(ExternalConfigs.oneSignalDefaultApiId);
+
+        const body: any = {
+          app_id,
+          include_external_user_ids: [externalUserId],
+          content_available: true,
+          data,
+        };
+
+        try {
+          const result = await this.httpService
+            .post(this.notificationsUrl, body, config)
+            .toPromise();
+          if (result.status === 200 && result.data.recipients === 1) {
+            return result.data.id;
+          }
+        } catch (ex) {
+          console.error(ex);
+        }
+      }
     }
   }
 
@@ -88,8 +136,15 @@ export class OneSignal {
   /*************************************************************************************************
    **************************************** Private methods ****************************************
    ************************************************************************************************/
-  private isVoipProject(platform: Platform, notificationType?: NotificationType): boolean {
-    return platform === Platform.ios && notificationType !== NotificationType.text;
+  private isVoipProject(
+    platform: Platform,
+    notificationType?: NotificationType | CancelNotificationType,
+  ): boolean {
+    return (
+      platform === Platform.ios &&
+      notificationType !== NotificationType.text &&
+      notificationType !== CancelNotificationType.cancelText
+    );
   }
 
   private validateRegisterResult(externalUserId, result): string | undefined {
@@ -107,7 +162,10 @@ export class OneSignal {
     }
   }
 
-  private async getApiId(platform: Platform, notificationType?: NotificationType): Promise<string> {
+  private async getApiId(
+    platform: Platform,
+    notificationType?: NotificationType | CancelNotificationType,
+  ): Promise<string> {
     return this.configsService.getConfig(
       this.isVoipProject(platform, notificationType)
         ? ExternalConfigs.oneSignalVoipApiId
@@ -115,7 +173,10 @@ export class OneSignal {
     );
   }
 
-  private async getConfig(platform: Platform, notificationType?: NotificationType) {
+  private async getConfig(
+    platform: Platform,
+    notificationType?: NotificationType | CancelNotificationType,
+  ) {
     const config = await this.configsService.getConfig(
       this.isVoipProject(platform, notificationType)
         ? ExternalConfigs.oneSignalVoipApiKey

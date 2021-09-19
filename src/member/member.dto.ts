@@ -7,11 +7,11 @@ import {
   ErrorType,
   Identifier,
   IsTypeMetadataProvided,
-  IsPeerIdNotNullOnNotifyVideoOrCall,
   IsStringDate,
   Language,
   NotificationType,
   validPhoneExamples,
+  CancelNotificationType,
 } from '../common';
 import {
   IsEmail,
@@ -25,7 +25,7 @@ import {
 } from 'class-validator';
 import * as config from 'config';
 import { Org } from '../org';
-import { ActionItem, Goal, ContentMetadata } from '.';
+import { ActionItem, Goal } from '.';
 import { Scores } from '../appointment';
 
 const validatorsConfig = config.get('graphql.validators');
@@ -225,19 +225,17 @@ export class SetGeneralNotesParams {
   note?: string;
 }
 
-@InputType()
-export class TextMetadata extends ContentMetadata {}
-
-@InputType()
-export class ForceSmsMetadata extends ContentMetadata {}
+/************************************************************************************************
+ ***************************************** Notifications ****************************************
+ ************************************************************************************************/
 
 @InputType()
 export class NotificationMetadata {
-  @Field(() => TextMetadata, { nullable: true })
-  text?: TextMetadata;
+  @Field(() => String, { nullable: true })
+  peerId?: string;
 
-  @Field(() => ForceSmsMetadata, { nullable: true })
-  forceSms?: ForceSmsMetadata;
+  @Field(() => String, { nullable: true })
+  content?: string;
 }
 
 @InputType()
@@ -248,18 +246,34 @@ export class NotifyParams {
   @Field(() => String)
   memberId: string;
 
-  @Field(() => String, { nullable: true })
-  @IsPeerIdNotNullOnNotifyVideoOrCall({
-    message: Errors.get(ErrorType.notificationPeerIdIsMissing),
-  })
-  peerId?: string;
-
   @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataMissing) })
   @Field(() => NotificationType)
   type: NotificationType;
 
-  @Field(() => NotificationMetadata, { nullable: true })
-  metadata?: NotificationMetadata;
+  @Field(() => NotificationMetadata)
+  metadata: NotificationMetadata;
+}
+
+@InputType()
+export class CancelNotificationMetadata {
+  @Field(() => String, { nullable: true })
+  peerId?: string;
+}
+
+@InputType()
+export class CancelNotifyParams {
+  @Field(() => String)
+  memberId: string;
+
+  @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataMissing) })
+  @Field(() => CancelNotificationType)
+  type: CancelNotificationType;
+
+  @Field(() => String)
+  notificationId: string;
+
+  @Field(() => CancelNotificationMetadata)
+  metadata: CancelNotificationMetadata;
 }
 
 /**************************************************************************************************

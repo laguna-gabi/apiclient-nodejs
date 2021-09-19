@@ -6,6 +6,7 @@ import {
   generateDateOnly,
   generateId,
   generateNotifyParams,
+  generateCancelNotifyParams,
   generateOrgParams,
   generateRandomName,
   generateSetGeneralNotesParams,
@@ -17,6 +18,7 @@ import {
 import * as config from 'config';
 import * as faker from 'faker';
 import {
+  CancelNotifyParams,
   CreateMemberParams,
   defaultMemberParams,
   Honorific,
@@ -24,7 +26,14 @@ import {
   Sex,
   UpdateMemberParams,
 } from '../../src/member';
-import { Errors, ErrorType, Language, Platform, NotificationType } from '../../src/common';
+import {
+  Errors,
+  ErrorType,
+  Language,
+  Platform,
+  NotificationType,
+  CancelNotificationType,
+} from '../../src/common';
 import { Handler } from './aux/handler';
 
 const validatorsConfig = config.get('graphql.validators');
@@ -258,25 +267,13 @@ describe('Validations - member', () => {
 
   describe('notify', () => {
     test.each`
-      input                                           | error
-      ${{ userId: 123 }}                              | ${stringError}
-      ${{ memberId: 123 }}                            | ${stringError}
-      ${{ peerId: 123 }}                              | ${stringError}
-      ${{ metadata: { text: { content: 123 } } }}     | ${stringError}
-      ${{ metadata: { forceSms: { content: 123 } } }} | ${stringError}
-      ${{ type: 123 }}                                | ${'cannot represent non-string value'}
-    `(`should fail to notify since setting $input is not a valid`, async (params) => {
-      const notifyParams: NotifyParams = generateNotifyParams({ ...params.input });
-      await handler.mutations.notify({ notifyParams, missingFieldError: params.error });
-    });
-
-    /* eslint-disable max-len */
-    test.each`
       input                             | error
-      ${{ metadata: { text: {} } }}     | ${'Field "content" of required type "String!" was not provided.'}
-      ${{ metadata: { forceSms: {} } }} | ${'Field "content" of required type "String!" was not provided.'}
-    `(`should fail to notify since mandatory metadata was not provided`, async (params) => {
-      /* eslint-enable max-len */
+      ${{ userId: 123 }}                | ${stringError}
+      ${{ memberId: 123 }}              | ${stringError}
+      ${{ metadata: { content: 123 } }} | ${stringError}
+      ${{ metadata: { peerId: 123 } }}  | ${stringError}
+      ${{ type: 123 }}                  | ${'cannot represent non-string value'}
+    `(`should fail to notify since setting $input is not a valid`, async (params) => {
       const notifyParams: NotifyParams = generateNotifyParams({ ...params.input });
       await handler.mutations.notify({ notifyParams, missingFieldError: params.error });
     });
@@ -287,35 +284,76 @@ describe('Validations - member', () => {
       ${'userId'}   | ${`Field "userId" of required type "String!" was not provided.`}
       ${'memberId'} | ${`Field "memberId" of required type "String!" was not provided.`}
       ${'type'}     | ${`Field "type" of required type "NotificationType!" was not provided.`}
-    `(`should fail to create a member since mandatory field $field is missing`, async (params) => {
-      /* eslint-enable max-len */
-      const notifyParams: NotifyParams = generateNotifyParams();
-      delete notifyParams[params.field];
-      await handler.mutations.notify({ notifyParams, missingFieldError: params.error });
-    });
-
-    test.each([NotificationType.video, NotificationType.call])(
-      'should throw error on peerId null when notificationType = %p',
-      async (type) => {
-        const notifyParams: NotifyParams = generateNotifyParams({ type });
-        delete notifyParams.peerId;
-        await handler.mutations.notify({
-          notifyParams,
-          invalidFieldsErrors: [Errors.get(ErrorType.notificationPeerIdIsMissing)],
-        });
+      ${'metadata'} | ${`Field "metadata" of required type "NotificationMetadata!" was not provided.`}
+    `(
+      `should fail to create a notification since mandatory field $field is missing`,
+      async (params) => {
+        /* eslint-enable max-len */
+        const notifyParams: NotifyParams = generateNotifyParams();
+        delete notifyParams[params.field];
+        await handler.mutations.notify({ notifyParams, missingFieldError: params.error });
       },
     );
 
     /* eslint-disable max-len */
     test.each`
-      field         | input                                  | error
-      ${'forceSms'} | ${{ type: NotificationType.forceSms }} | ${[Errors.get(ErrorType.notificationMetadataMissing)]}
-      ${'text'}     | ${{ type: NotificationType.text }}     | ${[Errors.get(ErrorType.notificationMetadataMissing)]}
+      field        | input                                 | error
+      ${'textSms'} | ${{ type: NotificationType.textSms }} | ${[Errors.get(ErrorType.notificationMetadataMissing)]}
+      ${'text'}    | ${{ type: NotificationType.text }}    | ${[Errors.get(ErrorType.notificationMetadataMissing)]}
+      ${'call'}    | ${{ type: NotificationType.call }}    | ${[Errors.get(ErrorType.notificationMetadataMissing)]}
+      ${'video'}   | ${{ type: NotificationType.video }}   | ${[Errors.get(ErrorType.notificationMetadataMissing)]}
     `('should throw an error when metadata is not provided with type $field', async (params) => {
       /* eslint-enable max-len */
-      const notifyParams: NotifyParams = generateNotifyParams({ ...params.input });
+      const notifyParams: NotifyParams = generateNotifyParams({ ...params.input, metadata: {} });
       await handler.mutations.notify({ notifyParams, invalidFieldsErrors: params.error });
     });
+
+    test.each`
+      input                            | error
+      ${{ memberId: 123 }}             | ${stringError}
+      ${{ type: 123 }}                 | ${'cannot represent non-string value'}
+      ${{ notificationId: 123 }}       | ${stringError}
+      ${{ metadata: { peerId: 123 } }} | ${stringError}
+    `(`should fail to cancel notification since setting $input is not a valid`, async (params) => {
+      const cancelNotifyParams: CancelNotifyParams = generateCancelNotifyParams({
+        ...params.input,
+      });
+      await handler.mutations.cancel({ cancelNotifyParams, missingFieldError: params.error });
+    });
+
+    /* eslint-disable max-len */
+    test.each`
+      field            | input                                           | error
+      ${'cancelCall'}  | ${{ type: CancelNotificationType.cancelCall }}  | ${[Errors.get(ErrorType.notificationMetadataMissing)]}
+      ${'cancelVideo'} | ${{ type: CancelNotificationType.cancelVideo }} | ${[Errors.get(ErrorType.notificationMetadataMissing)]}
+    `('should throw an error when metadata is not provided with type $field', async (params) => {
+      /* eslint-enable max-len */
+      const cancelNotifyParams: CancelNotifyParams = generateCancelNotifyParams({
+        ...params.input,
+        metadata: {},
+      });
+      await handler.mutations.cancel({ cancelNotifyParams, invalidFieldsErrors: params.error });
+    });
+
+    /* eslint-disable max-len */
+    test.each`
+      field               | error
+      ${'memberId'}       | ${`Field "memberId" of required type "String!" was not provided.`}
+      ${'type'}           | ${`Field "type" of required type "CancelNotificationType!" was not provided.`}
+      ${'notificationId'} | ${`Field "notificationId" of required type "String!" was not provided.`}
+      ${'metadata'}       | ${`Field "metadata" of required type "CancelNotificationMetadata!" was not provided.`}
+    `(
+      `should fail to cancel a notification since mandatory field $field is missing`,
+      async (params) => {
+        /* eslint-enable max-len */
+        const cancelNotifyParams: CancelNotifyParams = generateCancelNotifyParams();
+        delete cancelNotifyParams[params.field];
+        await handler.mutations.cancel({
+          cancelNotifyParams,
+          missingFieldError: params.error,
+        });
+      },
+    );
   });
 
   describe('updateMember', () => {

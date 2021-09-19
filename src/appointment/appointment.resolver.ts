@@ -86,11 +86,9 @@ export class AppointmentResolver extends AppointmentBase {
 
   private notifyRequestAppointment(appointment: Appointment) {
     const metadata = {
-      text: {
-        content: `${config
-          .get('contents.appointmentRequest')
-          .replace('@appLink@', appointment.link)}`,
-      },
+      content: `${config
+        .get('contents.appointmentRequest')
+        .replace('@appLink@', appointment.link)}`,
     };
     const params: NotifyParams = {
       memberId: appointment.memberId.toString(),

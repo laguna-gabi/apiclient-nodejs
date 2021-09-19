@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { NotificationType, Platform, SendNotificationParams } from '../common';
+import {
+  CancelNotificationParams,
+  NotificationType,
+  Platform,
+  SendNotificationParams,
+} from '../common';
 import { ConfigsService } from './aws';
 import { OneSignal } from './oneSignal';
 import { TwilioService } from './twilio.service';
@@ -27,18 +32,22 @@ export class NotificationsService {
     return this.oneSignal.register({ token, externalUserId });
   }
 
-  async send(sendNotificationParams: SendNotificationParams): Promise<boolean> {
+  async send(sendNotificationParams: SendNotificationParams) {
     if (
       sendNotificationParams.platform === Platform.web ||
-      sendNotificationParams.data.type === NotificationType.forceSms
+      sendNotificationParams.data.type === NotificationType.textSms
     ) {
-      return this.twilio.send({
+      await this.twilio.send({
         body: sendNotificationParams.metadata.content,
         to: sendNotificationParams.data.member.phone,
       });
     } else {
       return this.oneSignal.send(sendNotificationParams);
     }
+  }
+
+  async cancel(cancelNotificationParams: CancelNotificationParams) {
+    return this.oneSignal.cancel(cancelNotificationParams);
   }
 
   async unregister(playerId: string, platform: Platform): Promise<void> {

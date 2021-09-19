@@ -64,6 +64,7 @@ export const mockProviders = (
   const spyOnStorage = jest.spyOn(storage, 'getUrl');
   const spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
   const spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
+  const spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
   const spyOnTwilioGetToken = jest.spyOn(twilioService, 'getAccessToken');
 
   spyOnSendBirdCreateUser.mockResolvedValue(v4());
@@ -73,7 +74,8 @@ export const mockProviders = (
   spyOnSendBirdDeleteGroupChannelMetadata.mockResolvedValue(undefined);
   spyOnStorage.mockResolvedValue('https://some-url');
   spyOnNotificationsServiceRegister.mockResolvedValue(v4());
-  spyOnNotificationsServiceSend.mockResolvedValue(true);
+  spyOnNotificationsServiceSend.mockResolvedValue(v4());
+  spyOnNotificationsServiceCancel.mockResolvedValue(v4());
   spyOnTwilioGetToken.mockReturnValue('token');
 
   return {
@@ -84,7 +86,11 @@ export const mockProviders = (
       spyOnSendBirdUpdateGroupChannelMetadata,
       spyOnSendBirdDeleteGroupChannelMetadata,
     },
-    notificationsService: { spyOnNotificationsServiceRegister, spyOnNotificationsServiceSend },
+    notificationsService: {
+      spyOnNotificationsServiceRegister,
+      spyOnNotificationsServiceSend,
+      spyOnNotificationsServiceCancel,
+    },
     twilioService: { spyOnTwilioGetToken },
   };
 };
