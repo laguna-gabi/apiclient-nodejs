@@ -205,6 +205,27 @@ export class UserService extends BaseService {
     ]);
   }
 
+  async getAvailableUser(): Promise<string> {
+    const users = await this.userModel.aggregate([
+      {
+        $lookup: {
+          from: 'members',
+          localField: '_id',
+          foreignField: 'users',
+          as: 'member',
+        },
+      },
+
+      {
+        $project: {
+          members: { $size: '$member' },
+        },
+      },
+      { $sort: { members: 1 } },
+    ]);
+    return users[0]._id;
+  }
+
   @OnEvent(EventType.updateUserConfig, { async: true })
   async handleUpdateUserConfig(params: IEventUpdateUserConfig): Promise<boolean> {
     const { userId, accessToken } = params;

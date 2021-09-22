@@ -72,14 +72,12 @@ describe('MemberResolver', () => {
   describe('createMember', () => {
     let spyOnServiceInsert;
     let spyOnServiceGetAvailableUser;
-    let spyOnUserServiceGetRegisteredUsers;
     let spyOnUserServiceGetUser;
     let spyOnServiceGetMemberConfig;
 
     beforeEach(() => {
       spyOnServiceInsert = jest.spyOn(service, 'insert');
-      spyOnServiceGetAvailableUser = jest.spyOn(service, 'getAvailableUser');
-      spyOnUserServiceGetRegisteredUsers = jest.spyOn(userService, 'getRegisteredUsers');
+      spyOnServiceGetAvailableUser = jest.spyOn(userService, 'getAvailableUser');
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
     });
@@ -87,7 +85,6 @@ describe('MemberResolver', () => {
     afterEach(() => {
       spyOnServiceInsert.mockReset();
       spyOnServiceGetAvailableUser.mockReset();
-      spyOnUserServiceGetRegisteredUsers.mockReset();
       spyOnUserServiceGetUser.mockReset();
       spyOnServiceGetMemberConfig.mockReset();
       spyOnEventEmitter.mockReset();
@@ -104,7 +101,6 @@ describe('MemberResolver', () => {
       spyOnServiceInsert.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetAvailableUser.mockImplementationOnce(async () => member.primaryUserId);
-      spyOnUserServiceGetRegisteredUsers.mockImplementationOnce(async () => [member.primaryUserId]);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
 
       const params = generateCreateMemberParams({ orgId: generateId() });
@@ -113,8 +109,6 @@ describe('MemberResolver', () => {
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith(params, member.primaryUserId);
       expect(spyOnServiceGetAvailableUser).toBeCalledTimes(1);
-      expect(spyOnServiceGetAvailableUser).toBeCalledWith([member.primaryUserId]);
-      expect(spyOnUserServiceGetRegisteredUsers).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
       const eventParams: IEventNewMember = {

@@ -5,6 +5,7 @@ import { AppointmentsIntegrationActions } from './aux/appointments';
 import { Creators } from './aux/creators';
 import { date } from 'faker';
 import { v4 } from 'uuid';
+import { performance } from 'perf_hooks';
 
 describe('Integration tests : getMembers', () => {
   const handler: Handler = new Handler();
@@ -313,9 +314,8 @@ describe('Integration tests : getMembers', () => {
     );
   });
 
-  // https://app.clubhouse.io/laguna-health/story/1639/make-getavailableuser-faster
   /* eslint-disable max-len*/
-  it.skip('should not take longer than 1 second to process 10 members with 3 appointments each', async () => {
+  it('should not take longer than 1 second to process 10 members with 3 appointments each', async () => {
     /* eslint-enable max-len*/
     const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
@@ -331,9 +331,12 @@ describe('Integration tests : getMembers', () => {
       await generateAppointment({ userId: primaryUser.id, memberId: member.id });
     }
 
+    const startTime = performance.now();
     const membersResult = await handler.queries.getMembers(org.id);
+    const endTime = performance.now();
     expect(membersResult.length).toEqual(10);
-  }, 1000);
+    expect(endTime - startTime).toBeLessThan(1000);
+  }, 15000);
 
   /************************************************************************************************
    *************************************** Internal methods ***************************************

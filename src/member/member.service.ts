@@ -37,7 +37,6 @@ import { cloneDeep } from 'lodash';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Appointment, AppointmentDocument } from '../appointment';
 import { v4 } from 'uuid';
-import { User } from '../user';
 
 @Injectable()
 export class MemberService extends BaseService {
@@ -195,29 +194,6 @@ export class MemberService extends BaseService {
         },
       },
     ]);
-  }
-
-  async getAvailableUser(users: User[]): Promise<string> {
-    const memberCountList = [];
-
-    if (users.length === 0) {
-      throw new Error(Errors.get(ErrorType.userNotFound));
-    }
-    for (let index = 0; index < users.length; index++) {
-      const [memberCount] = await this.memberModel.aggregate([
-        { $match: { primaryUserId: users[index].id } },
-        { $count: 'memberCount' },
-        {
-          $project: {
-            userId: users[index].id,
-            members: '$memberCount',
-          },
-        },
-      ]);
-      memberCountList.push(memberCount ? memberCount : { userId: users[index].id, members: 0 });
-    }
-    const sorted = memberCountList.sort((a, b) => a.members - b.members);
-    return sorted[0].userId;
   }
 
   @OnEvent(EventType.addUserToMemberList, { async: true })

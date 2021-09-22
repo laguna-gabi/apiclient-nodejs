@@ -12,8 +12,7 @@ export class MemberBase {
   ) {}
 
   async createMember(createMemberParams: CreateMemberParams) {
-    const users = await this.userService.getRegisteredUsers();
-    const primaryUserId = await this.memberService.getAvailableUser(users);
+    const primaryUserId = await this.userService.getAvailableUser();
 
     const member = await this.memberService.insert(createMemberParams, primaryUserId);
     const { platform } = await this.memberService.getMemberConfig(member.id);
