@@ -103,12 +103,22 @@ export class AppointmentScheduler {
       const timeout = setTimeout(async () => {
         this.log(`${id}: notifying appointment reminder`);
 
-        const { chat } = await this.communicationResolver.getCommunication({ memberId, userId });
+        const communication = await this.communicationResolver.getCommunication({
+          memberId,
+          userId,
+        });
+        if (!communication) {
+          console.warn(
+            `NOT sending appointment reminder since no member-user communication exists ` +
+              `for member ${memberId} and user ${userId}`,
+          );
+          return;
+        }
         const metadata = {
           content: `${config
             .get('contents.appointmentReminder')
             .replace('@gapMinutes@', config.get('appointments.alertBeforeInMin'))
-            .replace('@chatLink@', chat.memberLink)}`,
+            .replace('@chatLink@', communication.chat.memberLink)}`,
         };
         const params: NotifyParams = { memberId, userId, type: NotificationType.text, metadata };
 

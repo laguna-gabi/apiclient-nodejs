@@ -14,7 +14,6 @@ export class SendBird implements OnModuleInit {
   private appToken;
   public basePath;
   public headers;
-  public METADATA_KEY = 'appointments';
 
   constructor(private readonly configsService: ConfigsService) {}
 
@@ -65,63 +64,16 @@ export class SendBird implements OnModuleInit {
     }
   }
 
-  /**
-   * in client sdk: https://sendbird.com/docs/chat/v3/javascript/guides/user-and-channel-metadata
-   * it must know the key - appointmentId, so we're not able to set the key as the appointmentId
-   * since the client doesn't know whats the appointment in the chat view.
-   */
   async updateGroupChannelMetadata(
     channelUrl: string,
     appointmentId: string,
     value: { status: AppointmentStatus; start: Date },
   ) {
-    const current = await this.httpService
-      .get(
-        `${this.basePath}${suffix.groupChannels}/${channelUrl}/metadata?keys=${this.METADATA_KEY}`,
-        {
-          headers: this.headers,
-        },
-      )
-      .toPromise();
-
-    const currentAppointments: any = current.data.appointments
-      ? JSON.parse(current.data.appointments)
-      : {};
-    currentAppointments[appointmentId] = value;
-
-    await this.httpService
-      .put(
-        `${this.basePath}${suffix.groupChannels}/${channelUrl}/metadata/${this.METADATA_KEY}`,
-        { value: JSON.stringify(currentAppointments), upsert: true },
-        {
-          headers: this.headers,
-        },
-      )
-      .toPromise();
+    await this.update(channelUrl, appointmentId, value);
   }
 
   async deleteGroupChannelMetadata(channelUrl: string, appointmentId: string) {
-    const current = await this.httpService
-      .get(
-        `${this.basePath}${suffix.groupChannels}/${channelUrl}/metadata?keys=${this.METADATA_KEY}`,
-        {
-          headers: this.headers,
-        },
-      )
-      .toPromise();
-
-    const currentAppointments = JSON.parse(current.data.appointments);
-    currentAppointments[appointmentId] = undefined;
-
-    await this.httpService
-      .put(
-        `${this.basePath}${suffix.groupChannels}/${channelUrl}/metadata/${this.METADATA_KEY}`,
-        { value: JSON.stringify(currentAppointments), upsert: true },
-        {
-          headers: this.headers,
-        },
-      )
-      .toPromise();
+    await this.update(channelUrl, appointmentId);
   }
 
   async freezeGroupChannel(channelUrl: string, freeze: boolean) {
@@ -138,5 +90,24 @@ export class SendBird implements OnModuleInit {
 
   private formatMessage(message: string): string {
     return JSON.stringify(message, undefined, 2);
+  }
+
+  private async update(
+    channelUrl: string,
+    appointmentId: string,
+    value?: { status: AppointmentStatus; start: Date },
+  ) {
+    const url = `${this.basePath}${suffix.groupChannels}/${channelUrl}`;
+    const current = await this.httpService.get(url, { headers: this.headers }).toPromise();
+
+    let data: any = current.data.data ? JSON.parse(current.data.data) : {};
+    if (!data.appointments) {
+      data = { ...data, appointments: {} };
+    }
+    data.appointments[appointmentId] = value;
+
+    await this.httpService
+      .put(url, { data: JSON.stringify(data) }, { headers: this.headers })
+      .toPromise();
   }
 }

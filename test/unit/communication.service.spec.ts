@@ -171,10 +171,7 @@ describe('CommunicationService', () => {
       sendBirdMock.spyOnSendBirdUpdateGroupChannelMetadata.mockReset();
     });
 
-    /* eslint-disable max-len */
-    //TODO enable https://app.shortcut.com/laguna-health/story/1756/change-the-extra-info-on-sendbird-appointment
-    /* eslint-enable max-len */
-    it.skip('should handle updated appointment according to the action - edit', async () => {
+    it('should handle updated appointment according to the action - edit', async () => {
       const member = mockGenerateMember();
       const user = mockGenerateUser();
       const sendbirdChannelUrl = faker.internet.url();
@@ -205,10 +202,7 @@ describe('CommunicationService', () => {
       );
     });
 
-    /* eslint-disable max-len */
-    //TODO enable https://app.shortcut.com/laguna-health/story/1756/change-the-extra-info-on-sendbird-appointment
-    /* eslint-enable max-len */
-    it.skip('should handle updated appointment according to the action - delete', async () => {
+    it('should handle updated appointment according to the action - delete', async () => {
       const member = mockGenerateMember();
       const user = mockGenerateUser();
       const sendbirdChannelUrl = faker.internet.url();
@@ -234,10 +228,7 @@ describe('CommunicationService', () => {
       );
     });
 
-    /* eslint-disable max-len */
-    //TODO enable https://app.shortcut.com/laguna-health/story/1756/change-the-extra-info-on-sendbird-appointment
-    /* eslint-enable max-len */
-    it.skip('should not update since no user-member communication was found', async () => {
+    it('should not update since no user-member communication was found', async () => {
       const mockServiceGet = jest.spyOn(service, 'get');
       mockServiceGet.mockImplementationOnce(async () => undefined);
 

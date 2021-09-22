@@ -64,33 +64,31 @@ describe('live: sendbird actions', () => {
     const appointmentId1 = generateId();
     const value1 = { status: AppointmentStatus.scheduled, start: faker.date.future() };
     await sendBird.updateGroupChannelMetadata(params.channel_url, appointmentId1, value1);
-    let metadata = await getAppointmentsMetadata(params.channel_url);
-    expect(Object.keys(metadata).length).toEqual(1);
-    expect(metadata[appointmentId1].status).toEqual(value1.status);
-    expect(new Date(metadata[appointmentId1].start)).toEqual(value1.start);
+    const { appointments: appointments1 } = await getData(params.channel_url);
+    expect(Object.keys(appointments1).length).toEqual(1);
+    expect(appointments1[appointmentId1].status).toEqual(value1.status);
+    expect(new Date(appointments1[appointmentId1].start)).toEqual(value1.start);
 
     const appointmentId2 = generateId();
     const value2 = { status: AppointmentStatus.scheduled, start: faker.date.future() };
     await sendBird.updateGroupChannelMetadata(params.channel_url, appointmentId2, value2);
-    metadata = await getAppointmentsMetadata(params.channel_url);
-    expect(Object.keys(metadata).length).toEqual(2);
-    expect(metadata[appointmentId1].status).toEqual(value1.status);
-    expect(new Date(metadata[appointmentId1].start)).toEqual(value1.start);
-    expect(metadata[appointmentId2].status).toEqual(value2.status);
-    expect(new Date(metadata[appointmentId2].start)).toEqual(value2.start);
+    const { appointments: appointments2 } = await getData(params.channel_url);
+    expect(Object.keys(appointments2).length).toEqual(2);
+    expect(appointments2[appointmentId1].status).toEqual(value1.status);
+    expect(new Date(appointments2[appointmentId1].start)).toEqual(value1.start);
+    expect(appointments2[appointmentId2].status).toEqual(value2.status);
+    expect(new Date(appointments2[appointmentId2].start)).toEqual(value2.start);
 
     await sendBird.deleteGroupChannelMetadata(params.channel_url, appointmentId2);
-    metadata = await getAppointmentsMetadata(params.channel_url);
-    expect(Object.keys(metadata).length).toEqual(1);
-    expect(metadata[appointmentId1].status).toEqual(value1.status);
-    expect(new Date(metadata[appointmentId1].start)).toEqual(value1.start);
+    const { appointments: appointments3 } = await getData(params.channel_url);
+    expect(Object.keys(appointments3).length).toEqual(1);
+    expect(appointments3[appointmentId1].status).toEqual(value1.status);
+    expect(new Date(appointments3[appointmentId1].start)).toEqual(value1.start);
   }, 20000);
 
-  const getAppointmentsMetadata = async (channelUrl: string) => {
-    /* eslint-disable max-len */
-    const url = `${sendBird.basePath}group_channels/${channelUrl}/metadata?keys=${sendBird.METADATA_KEY}`;
-    /* eslint-enable max-len */
-    const { data } = await axios.get(url, { headers: sendBird.headers });
-    return JSON.parse(data[sendBird.METADATA_KEY]);
+  const getData = async (channelUrl: string) => {
+    const url = `${sendBird.basePath}group_channels/${channelUrl}`;
+    const current = await axios.get(url, { headers: sendBird.headers });
+    return JSON.parse(current.data.data);
   };
 });

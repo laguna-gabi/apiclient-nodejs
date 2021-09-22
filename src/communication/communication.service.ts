@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotImplementedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
@@ -105,20 +105,17 @@ export class CommunicationService {
       return;
     }
 
-    /* eslint-disable max-len */
-    //TODO fix this on current ticket https://app.shortcut.com/laguna-health/story/1756/change-the-extra-info-on-sendbird-appointment
-    // if (params.updatedAppointmentAction === UpdatedAppointmentAction.edit) {
-    //   await this.sendBird.updateGroupChannelMetadata(
-    //     communication.sendbirdChannelUrl,
-    //     params.key,
-    //     params.value,
-    //   );
-    // } else if (params.updatedAppointmentAction === UpdatedAppointmentAction.delete) {
-    //   await this.sendBird.deleteGroupChannelMetadata(communication.sendbirdChannelUrl, params.key);
-    // } else {
-    //   throw new NotImplementedException();
-    // }
-    /* eslint-enable max-len */
+    if (params.updatedAppointmentAction === UpdatedAppointmentAction.edit) {
+      await this.sendBird.updateGroupChannelMetadata(
+        communication.sendbirdChannelUrl,
+        params.key,
+        params.value,
+      );
+    } else if (params.updatedAppointmentAction === UpdatedAppointmentAction.delete) {
+      await this.sendBird.deleteGroupChannelMetadata(communication.sendbirdChannelUrl, params.key);
+    } else {
+      throw new NotImplementedException();
+    }
   }
 
   async onUpdateMemberPlatform({
