@@ -52,9 +52,7 @@ export class AppointmentScheduler {
     userId: string;
     start: Date;
   }): Promise<void> {
-    if (this.schedulerRegistry.doesExists('timeout', id)) {
-      this.schedulerRegistry.deleteTimeout(id);
-    }
+    this.deleteAppointmentAlert({ id });
 
     const { gapDate, maxDate } = this.generateDateConfigs();
 
@@ -63,7 +61,7 @@ export class AppointmentScheduler {
     }
   }
 
-  async deleteAppointmentAlert({ id }: { id: string }): Promise<void> {
+  deleteAppointmentAlert({ id }: { id: string }) {
     if (this.schedulerRegistry.doesExists('timeout', id)) {
       this.schedulerRegistry.deleteTimeout(id);
     }
