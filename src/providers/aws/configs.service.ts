@@ -30,6 +30,10 @@ export const ExternalConfigs = {
     apiKey: 'twilio.apiKey',
     apiSecret: 'twilio.apiSecret',
   },
+  bitly: {
+    apiToken: 'bitly.apiToken',
+    groupGuid: 'bitly.groupGuid',
+  },
 };
 
 enum environments {

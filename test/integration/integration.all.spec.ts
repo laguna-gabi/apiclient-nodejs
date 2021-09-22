@@ -1,4 +1,5 @@
 import {
+  delay,
   generateAppointmentLink,
   generateAvailabilityInput,
   generateCancelNotifyParams,
@@ -37,6 +38,7 @@ import {
 } from '../../src/common';
 import { v4 } from 'uuid';
 import * as faker from 'faker';
+import * as config from 'config';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -727,6 +729,58 @@ describe('Integration tests: all', () => {
     expect(ids.length).toEqual(2);
     expect(ids[0]).toEqual(primaryUser.id);
     expect(ids[1]).toEqual(user.id);
+  });
+
+  it('should register scheduled appointment reminder and notify it to member', async () => {
+    const primaryUser = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+
+    const milliseconds = (config.get('appointments.alertBeforeInMin') + 1 / 60) * 60 * 1000;
+    const start = new Date();
+    start.setMilliseconds(start.getMilliseconds() + milliseconds);
+    Date.now = jest.fn(() => milliseconds - 1000);
+
+    const appointmentParams = generateScheduleAppointmentParams({
+      memberId: member.id,
+      userId: primaryUser.id,
+      start,
+    });
+
+    await creators.handler.mutations.scheduleAppointment({ appointmentParams });
+
+    await delay(2000);
+
+    expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenNthCalledWith(1, {
+      sendNotificationToUserParams: {
+        data: { user: { phone: primaryUser.phone } },
+        metadata: { content: expect.any(String) },
+      },
+    });
+
+    expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenNthCalledWith(2, {
+      sendNotificationToMemberParams: {
+        externalUserId: expect.any(String),
+        platform: expect.any(String),
+        data: {
+          user: {
+            id: primaryUser.id,
+            firstName: primaryUser.firstName,
+            avatar: primaryUser.avatar,
+          },
+          member: { phone: member.phone },
+          isVideo: false,
+          type: NotificationType.text,
+        },
+        metadata: { content: expect.any(String) },
+      },
+    });
+
+    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
   });
 
   /************************************************************************************************

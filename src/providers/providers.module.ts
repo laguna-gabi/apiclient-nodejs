@@ -6,12 +6,14 @@ import {
   StorageService,
   SlackBot,
   TwilioService,
+  Bitly,
 } from '.';
 import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [HttpModule],
   providers: [
+    Bitly,
     SendBird,
     SlackBot,
     TwilioService,
@@ -20,6 +22,7 @@ import { HttpModule } from '@nestjs/axios';
     NotificationsService,
   ],
   exports: [
+    Bitly,
     SendBird,
     SlackBot,
     TwilioService,

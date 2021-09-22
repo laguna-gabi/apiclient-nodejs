@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Appointment, AppointmentDocument, AppointmentStatus } from '.';
 import { Model } from 'mongoose';
 import { EventType, NotificationType } from '../common';
-import { NotificationsService } from '../providers';
+import { Bitly, NotificationsService } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotifyParams } from '../member';
 import * as config from 'config';
@@ -18,6 +18,7 @@ export class AppointmentScheduler {
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly notificationsService: NotificationsService,
     private readonly communicationResolver: CommunicationResolver,
+    private readonly bitly: Bitly,
     private eventEmitter: EventEmitter2,
   ) {}
 
@@ -56,7 +57,7 @@ export class AppointmentScheduler {
 
     const { gapDate, maxDate } = this.generateDateConfigs();
 
-    if (start <= maxDate) {
+    if (start.getTime() <= maxDate.getTime()) {
       this.scheduleAppointmentAlert({ id, memberId, userId, start, gapDate });
     }
   }
@@ -101,22 +102,15 @@ export class AppointmentScheduler {
       const timeout = setTimeout(async () => {
         this.log(`${id}: notifying appointment reminder`);
 
-        const communication = await this.communicationResolver.getCommunication({
-          memberId,
-          userId,
-        });
-        if (!communication) {
-          console.warn(
-            `NOT sending appointment reminder since no member-user communication exists ` +
-              `for member ${memberId} and user ${userId}`,
-          );
+        const chatLink = await this.getChatLink(memberId, userId);
+        if (!chatLink) {
           return;
         }
         const metadata = {
           content: `${config
             .get('contents.appointmentReminder')
             .replace('@gapMinutes@', config.get('appointments.alertBeforeInMin'))
-            .replace('@chatLink@', communication.chat.memberLink)}`,
+            .replace('@chatLink@', chatLink)}`,
         };
         const params: NotifyParams = { memberId, userId, type: NotificationType.text, metadata };
 
@@ -127,6 +121,10 @@ export class AppointmentScheduler {
     }
   }
 
+  /*************************************************************************************************
+   ******************************************** Helpers ********************************************
+   ************************************************************************************************/
+
   private log(text: string) {
     const now = new Date();
     console.debug(
@@ -134,5 +132,17 @@ export class AppointmentScheduler {
         AppointmentScheduler.name
       }] ${text}`,
     );
+  }
+
+  private async getChatLink(memberId: string, userId: string) {
+    const communication = await this.communicationResolver.getCommunication({ memberId, userId });
+    if (!communication) {
+      console.warn(
+        `NOT sending appointment reminder since no member-user communication exists ` +
+          `for member ${memberId} and user ${userId}`,
+      );
+      return;
+    }
+    return this.bitly.shortenLink(communication.chat.memberLink);
   }
 }

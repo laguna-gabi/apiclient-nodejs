@@ -17,6 +17,7 @@ import { CommunicationResolver } from '../../src/communication';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventType, NotificationType } from '../../src/common';
 import { NotifyParams } from '../../src/member';
+import { Bitly } from '../../src/providers';
 
 describe('AppointmentScheduler', () => {
   let module: TestingModule;
@@ -25,6 +26,7 @@ describe('AppointmentScheduler', () => {
   let communicationResolver: CommunicationResolver;
   let eventEmitter: EventEmitter2;
   let appointmentModel: Model<typeof AppointmentDto>;
+  let bitly: Bitly;
 
   const clear = async () => {
     const timeouts = schedulerRegistry.getTimeouts();
@@ -41,6 +43,7 @@ describe('AppointmentScheduler', () => {
     appointmentModel = model(Appointment.name, AppointmentDto);
     communicationResolver = module.get<CommunicationResolver>(CommunicationResolver);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
+    bitly = module.get<Bitly>(Bitly);
 
     await dbConnect();
   });
@@ -179,6 +182,9 @@ describe('AppointmentScheduler', () => {
 
       const spyOnCommunicationResolverGet = jest.spyOn(communicationResolver, 'getCommunication');
       spyOnCommunicationResolverGet.mockResolvedValue({ memberId, userId, chat });
+      const spyOnBitlyShortenLink = jest.spyOn(bitly, 'shortenLink');
+      const chatLink = 'https://bit.ly/abc';
+      spyOnBitlyShortenLink.mockResolvedValue(chatLink);
       const spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
 
       await scheduler.updateAppointmentAlert(param);
@@ -203,13 +209,15 @@ describe('AppointmentScheduler', () => {
           content: `${config
             .get('contents.appointmentReminder')
             .replace('@gapMinutes@', config.get('appointments.alertBeforeInMin'))
-            .replace('@chatLink@', chat.memberLink)}`,
+            .replace('@chatLink@', chatLink)}`,
         },
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notify, eventParams);
+      expect(spyOnBitlyShortenLink).toBeCalledWith(chat.memberLink);
 
       spyOnCommunicationResolverGet.mockReset();
       spyOnEventEmitter.mockReset();
+      spyOnBitlyShortenLink.mockReset();
     });
   });
 

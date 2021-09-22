@@ -1,4 +1,5 @@
 export * from './aws';
+export * from './bitly';
 export * from './notifications.service';
 export * from './sendBird';
 export * from './slackBot';
