@@ -99,10 +99,10 @@ export class OneSignal {
         throw new Error(Errors.get(ErrorType.notificationNotFound));
       } else {
         const defaultApiKey = await this.configsService.getConfig(
-          ExternalConfigs.oneSignalDefaultApiKey,
+          ExternalConfigs.oneSignal.defaultApiKey,
         );
         const config = { headers: { Authorization: `Basic ${defaultApiKey}` } };
-        const app_id = await this.configsService.getConfig(ExternalConfigs.oneSignalDefaultApiId);
+        const app_id = await this.configsService.getConfig(ExternalConfigs.oneSignal.defaultApiId);
 
         const body: any = {
           app_id,
@@ -168,8 +168,8 @@ export class OneSignal {
   ): Promise<string> {
     return this.configsService.getConfig(
       this.isVoipProject(platform, notificationType)
-        ? ExternalConfigs.oneSignalVoipApiId
-        : ExternalConfigs.oneSignalDefaultApiId,
+        ? ExternalConfigs.oneSignal.voipApiId
+        : ExternalConfigs.oneSignal.defaultApiId,
     );
   }
 
@@ -179,8 +179,8 @@ export class OneSignal {
   ) {
     const config = await this.configsService.getConfig(
       this.isVoipProject(platform, notificationType)
-        ? ExternalConfigs.oneSignalVoipApiKey
-        : ExternalConfigs.oneSignalDefaultApiKey,
+        ? ExternalConfigs.oneSignal.voipApiKey
+        : ExternalConfigs.oneSignal.defaultApiKey,
     );
 
     return { headers: { Authorization: `Basic ${config}` } };

@@ -13,7 +13,7 @@ export class SlackBot implements OnModuleInit {
   constructor(private readonly configsService: ConfigsService) {}
 
   async onModuleInit(): Promise<void> {
-    this.url = await this.configsService.getConfig(ExternalConfigs.slackUrl);
+    this.url = await this.configsService.getConfig(ExternalConfigs.slack.url);
     this.webhook = new IncomingWebhook(this.url);
   }
 

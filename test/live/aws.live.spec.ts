@@ -19,7 +19,7 @@ describe('live: aws', () => {
       const link = await axios.get(url, { responseType: 'stream' });
       link.data.pipe(fs.createWriteStream(tempFilePath));
 
-      const bucketName = await configService.getConfig(ExternalConfigs.awsStorageMember);
+      const bucketName = await configService.getConfig(ExternalConfigs.aws.memberBucketName);
       expect(url).toMatch(`${bucketName}.s3.amazonaws.com/public/documents/${storageFilePath}`);
       expect(url).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
       expect(url).toMatch(`Amz-Expires=10800`); //expiration: 3 hours

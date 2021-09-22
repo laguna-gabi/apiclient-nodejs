@@ -3,22 +3,34 @@ import * as AWS from 'aws-sdk';
 import * as config from 'config';
 import { MongooseModuleOptions, MongooseOptionsFactory } from '@nestjs/mongoose';
 
-export enum ExternalConfigs {
-  db = 'db.connection',
-  sendbirdApiId = 'sendbird.apiId',
-  sendbirdApiToken = 'sendbird.apiToken',
-  awsStorageMember = 'aws.storage.memberBucketName',
-  slackUrl = 'slack.url',
-  oneSignalDefaultApiId = 'onesignal.default.apiId',
-  oneSignalDefaultApiKey = 'onesignal.default.apiKey',
-  oneSignalVoipApiId = 'onesignal.voip.apiId',
-  oneSignalVoipApiKey = 'onesignal.voip.apiKey',
-  twilioAccountSid = 'twilio.accountSid',
-  twilioAppSid = 'twilio.appSid',
-  twilioAuthToken = 'twilio.authToken',
-  twilioApiKey = 'twilio.apiKey',
-  twilioApiSecret = 'twilio.apiSecret',
-}
+export const ExternalConfigs = {
+  aws: {
+    memberBucketName: 'aws.storage.memberBucketName',
+  },
+  db: {
+    connection: 'db.connection',
+  },
+  oneSignal: {
+    defaultApiId: 'onesignal.default.apiId',
+    defaultApiKey: 'onesignal.default.apiKey',
+    voipApiId: 'onesignal.voip.apiId',
+    voipApiKey: 'onesignal.voip.apiKey',
+  },
+  sendbird: {
+    apiId: 'sendbird.apiId',
+    apiToken: 'sendbird.apiToken',
+  },
+  slack: {
+    url: 'slack.url',
+  },
+  twilio: {
+    accountSid: 'twilio.accountSid',
+    appSid: 'twilio.appSid',
+    authToken: 'twilio.authToken',
+    apiKey: 'twilio.apiKey',
+    apiSecret: 'twilio.apiSecret',
+  },
+};
 
 enum environments {
   production = 'production',
@@ -32,7 +44,7 @@ export class ConfigsService implements MongooseOptionsFactory {
   async createMongooseOptions(): Promise<MongooseModuleOptions> {
     const uri =
       Object.keys(environments).indexOf(process.env.NODE_ENV) >= 0
-        ? await this.getConfig(ExternalConfigs.db)
+        ? await this.getConfig(ExternalConfigs.db.connection)
         : config.get('db.connection');
     return { uri, useFindAndModify: false, useCreateIndex: true, useUnifiedTopology: true };
   }
@@ -42,7 +54,7 @@ export class ConfigsService implements MongooseOptionsFactory {
    * Modules are singleton in nestjs, so we're making sure that data will be initiated only once
    * in the whole app.
    */
-  async getConfig(configs: ExternalConfigs): Promise<string> {
+  async getConfig(configs: string): Promise<string> {
     if (!this.data) {
       const secretsManager = new AWS.SecretsManager({ region: config.get('providers.aws.region') });
       const result = await secretsManager

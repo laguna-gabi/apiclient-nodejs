@@ -18,8 +18,8 @@ export class SendBird implements OnModuleInit {
   constructor(private readonly configsService: ConfigsService) {}
 
   async onModuleInit(): Promise<void> {
-    this.appId = await this.configsService.getConfig(ExternalConfigs.sendbirdApiId);
-    this.appToken = await this.configsService.getConfig(ExternalConfigs.sendbirdApiToken);
+    this.appId = await this.configsService.getConfig(ExternalConfigs.sendbird.apiId);
+    this.appToken = await this.configsService.getConfig(ExternalConfigs.sendbird.apiToken);
     this.basePath = `https://api-${this.appId}.sendbird.com/v3/`;
     this.headers = { 'Api-Token': this.appToken };
   }

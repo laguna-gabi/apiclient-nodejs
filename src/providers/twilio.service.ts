@@ -20,11 +20,11 @@ export class TwilioService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    this.accountSid = await this.configsService.getConfig(ExternalConfigs.twilioAccountSid);
-    this.appSid = await this.configsService.getConfig(ExternalConfigs.twilioAppSid);
-    this.authToken = await this.configsService.getConfig(ExternalConfigs.twilioAuthToken);
-    this.apiKey = await this.configsService.getConfig(ExternalConfigs.twilioApiKey);
-    this.apiSecret = await this.configsService.getConfig(ExternalConfigs.twilioApiSecret);
+    this.accountSid = await this.configsService.getConfig(ExternalConfigs.twilio.accountSid);
+    this.appSid = await this.configsService.getConfig(ExternalConfigs.twilio.appSid);
+    this.authToken = await this.configsService.getConfig(ExternalConfigs.twilio.authToken);
+    this.apiKey = await this.configsService.getConfig(ExternalConfigs.twilio.apiKey);
+    this.apiSecret = await this.configsService.getConfig(ExternalConfigs.twilio.apiSecret);
     this.client = new Twilio(this.accountSid, this.authToken);
   }
 

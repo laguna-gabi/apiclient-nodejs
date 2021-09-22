@@ -9,7 +9,7 @@ export class StorageService {
   private readonly s3 = new AWS.S3({ signatureVersion: 'v4', apiVersion: '2006-03-01' });
 
   async getUrl(fileName: string): Promise<string | undefined> {
-    const bucket = await this.configsService.getConfig(ExternalConfigs.awsStorageMember);
+    const bucket = await this.configsService.getConfig(ExternalConfigs.aws.memberBucketName);
     const params = { Bucket: bucket, Key: `public/documents/${fileName}` };
 
     try {
