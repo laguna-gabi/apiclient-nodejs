@@ -240,7 +240,7 @@ export class NotifyParams {
   @Field(() => String)
   memberId: string;
 
-  @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataMissing) })
+  @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataInvalid) })
   @Field(() => NotificationType)
   type: NotificationType;
 
@@ -259,7 +259,7 @@ export class CancelNotifyParams {
   @Field(() => String)
   memberId: string;
 
-  @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataMissing) })
+  @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataInvalid) })
   @Field(() => CancelNotificationType)
   type: CancelNotificationType;
 

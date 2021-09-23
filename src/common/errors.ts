@@ -31,7 +31,7 @@ export enum ErrorType {
   memberRegisterForNotificationToken = 9213,
   memberInvalidHonorific = 9214,
   // Notifications
-  notificationMetadataMissing = 9270,
+  notificationMetadataInvalid = 9270,
   notificationMemberPlatformWeb = 9271,
   notificationNotFound = 9272,
 
@@ -97,9 +97,10 @@ export const Errors: Map<ErrorType, string> = new Map([
     `token must contain only letters and numbers`,
   ],
   [
-    ErrorType.notificationMetadataMissing.valueOf(),
-    // eslint-disable-next-line max-len
-    `when calling type text or textSms please provide content in metadata, when calling type video or call please provide peerId in metadata`,
+    ErrorType.notificationMetadataInvalid.valueOf(),
+    `when calling type 'text' or 'textSms', 'content' in metadata is required` +
+      `when calling type 'video' or 'call', 'peerId' in metadata is required` +
+      `when calling type 'video' or 'call', 'when' in metadata is not allowed`,
   ],
   [
     ErrorType.notificationMemberPlatformWeb.valueOf(),

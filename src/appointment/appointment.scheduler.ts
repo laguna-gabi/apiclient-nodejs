@@ -3,7 +3,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Appointment, AppointmentDocument, AppointmentStatus } from '.';
 import { Model } from 'mongoose';
-import { EventType, NotificationType } from '../common';
+import { EventType, log, NotificationType } from '../common';
 import { Bitly, NotificationsService } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotifyParams } from '../member';
@@ -39,7 +39,7 @@ export class AppointmentScheduler {
       });
     });
 
-    this.log(`Finish init scheduler for ${appointments.length} appointments`);
+    log(`Finish init scheduler for ${appointments.length} appointments`, AppointmentScheduler.name);
   }
 
   async updateAppointmentAlert({
@@ -100,7 +100,7 @@ export class AppointmentScheduler {
     const milliseconds = start.getTime() - gapDate.getTime();
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
-        this.log(`${id}: notifying appointment reminder`);
+        log(`${id}: notifying appointment reminder`, AppointmentScheduler.name);
 
         const chatLink = await this.getChatLink(memberId, userId);
         if (!chatLink) {
@@ -124,15 +124,6 @@ export class AppointmentScheduler {
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
-
-  private log(text: string) {
-    const now = new Date();
-    console.debug(
-      `${now.toLocaleDateString()}, ${now.toLocaleTimeString()}   [${
-        AppointmentScheduler.name
-      }] ${text}`,
-    );
-  }
 
   private async getChatLink(memberId: string, userId: string) {
     const communication = await this.communicationResolver.getCommunication({ memberId, userId });

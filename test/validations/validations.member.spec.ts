@@ -294,10 +294,10 @@ describe('Validations - member', () => {
     /* eslint-disable max-len */
     test.each`
       field        | input                                 | error
-      ${'textSms'} | ${{ type: NotificationType.textSms }} | ${[Errors.get(ErrorType.notificationMetadataMissing)]}
-      ${'text'}    | ${{ type: NotificationType.text }}    | ${[Errors.get(ErrorType.notificationMetadataMissing)]}
-      ${'call'}    | ${{ type: NotificationType.call }}    | ${[Errors.get(ErrorType.notificationMetadataMissing)]}
-      ${'video'}   | ${{ type: NotificationType.video }}   | ${[Errors.get(ErrorType.notificationMetadataMissing)]}
+      ${'textSms'} | ${{ type: NotificationType.textSms }} | ${[Errors.get(ErrorType.notificationMetadataInvalid)]}
+      ${'text'}    | ${{ type: NotificationType.text }}    | ${[Errors.get(ErrorType.notificationMetadataInvalid)]}
+      ${'call'}    | ${{ type: NotificationType.call }}    | ${[Errors.get(ErrorType.notificationMetadataInvalid)]}
+      ${'video'}   | ${{ type: NotificationType.video }}   | ${[Errors.get(ErrorType.notificationMetadataInvalid)]}
     `('should throw an error when metadata is not provided with type $field', async (params) => {
       /* eslint-enable max-len */
       const notifyParams: NotifyParams = generateNotifyParams({ ...params.input, metadata: {} });
@@ -320,8 +320,8 @@ describe('Validations - member', () => {
     /* eslint-disable max-len */
     test.each`
       field            | input                                           | error
-      ${'cancelCall'}  | ${{ type: CancelNotificationType.cancelCall }}  | ${[Errors.get(ErrorType.notificationMetadataMissing)]}
-      ${'cancelVideo'} | ${{ type: CancelNotificationType.cancelVideo }} | ${[Errors.get(ErrorType.notificationMetadataMissing)]}
+      ${'cancelCall'}  | ${{ type: CancelNotificationType.cancelCall }}  | ${[Errors.get(ErrorType.notificationMetadataInvalid)]}
+      ${'cancelVideo'} | ${{ type: CancelNotificationType.cancelVideo }} | ${[Errors.get(ErrorType.notificationMetadataInvalid)]}
     `('should throw an error when metadata is not provided with type $field', async (params) => {
       /* eslint-enable max-len */
       const cancelNotifyParams: CancelNotifyParams = generateCancelNotifyParams({
