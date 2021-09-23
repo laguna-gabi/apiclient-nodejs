@@ -128,6 +128,10 @@ export class CommunicationService {
     platform: Platform;
   }) {
     const communication = await this.get({ memberId, userId });
+    if (!communication) {
+      console.warn('NOT freezing group channel since no member-user communication exists');
+      return;
+    }
     await this.sendBird.freezeGroupChannel(
       communication.sendbirdChannelUrl,
       platform === Platform.web,
