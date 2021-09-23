@@ -8,7 +8,6 @@ import {
   CreateMemberParams,
   CreateTaskParams,
   defaultMemberParams,
-  Honorific,
   Member,
   MemberConfig,
   NotificationMetadata,
@@ -18,6 +17,7 @@ import {
   TaskStatus,
   UpdateMemberParams,
   UpdateTaskStatusParams,
+  getHonorificKeyName,
 } from '../src/member';
 import {
   AppointmentMethod,
@@ -142,7 +142,7 @@ export const generateCreateMemberParams = ({
   language?: Language;
   zipCode?: string;
   dischargeDate?: string;
-  honorific?: Honorific;
+  honorific?: string;
 }): CreateMemberParams => {
   return {
     phone,
@@ -200,7 +200,7 @@ export const generateUpdateMemberParams = ({
     city: faker.address.city(),
     state: faker.address.state(),
   },
-  honorific = Honorific.Dr,
+  honorific = getHonorificKeyName(),
   deviceId = faker.datatype.uuid(),
 }: {
   id?: string;
@@ -218,7 +218,7 @@ export const generateUpdateMemberParams = ({
   admitDate?: string;
   dateOfBirth?: string;
   address?: { street?: string; city?: string; state?: string };
-  honorific?: Honorific;
+  honorific?: string;
   deviceId?: string;
 } = {}): UpdateMemberParams => {
   return {

@@ -1,5 +1,6 @@
 import { registerDecorator, ValidationArguments, ValidationOptions } from 'class-validator';
 import { CancelNotificationType, NotificationType } from './interfaces.dto';
+import * as config from 'config';
 
 /**
  * When there are 2 params of dates, and we want to make sure that one param is
@@ -132,6 +133,21 @@ export function IsTypeMetadataProvided(options: ValidationOptions) {
               return true;
             }
           }
+        },
+      },
+    });
+  };
+}
+
+export function IsHonorific(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(honorific: string) {
+          return Object.keys(config.get('contents.honorific')).includes(honorific);
         },
       },
     });

@@ -29,6 +29,7 @@ export enum ErrorType {
   memberPrimaryUserIdNotInUsers = 9211,
   memberAdmitDate = 9212,
   memberRegisterForNotificationToken = 9213,
+  memberInvalidHonorific = 9214,
   // Notifications
   notificationMetadataMissing = 9270,
   notificationMemberPlatformWeb = 9271,
@@ -85,6 +86,12 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberNotFound.valueOf(), 'member id was not found'],
   [ErrorType.memberPrimaryUserIdNotInUsers.valueOf(), 'primaryUserId must exists in usersIds list'],
   [ErrorType.memberAdmitDate.valueOf(), `admitDate ${dateInstanceFormat}`],
+  [
+    ErrorType.memberInvalidHonorific.valueOf(),
+    `invalid honorific provided. Should be : ${Object.keys(
+      config.get('contents.honorific'),
+    ).join()}`,
+  ],
   [
     ErrorType.memberRegisterForNotificationToken.valueOf(),
     `token must contain only letters and numbers`,

@@ -216,7 +216,8 @@ export class MemberResolver extends MemberBase {
 
     if (metadata.content) {
       metadata.content = metadata.content
-        .replace('@member.firstName@', member.firstName)
+        .replace('@member.honorific@', member.honorific)
+        .replace('@member.lastName@', member.lastName)
         .replace('@user.firstName@', user.firstName);
     }
 

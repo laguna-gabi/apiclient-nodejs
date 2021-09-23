@@ -3,15 +3,16 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { User } from '../user';
 import {
+  CancelNotificationType,
   Errors,
   ErrorType,
   Identifier,
-  IsTypeMetadataProvided,
+  IsHonorific,
   IsStringDate,
+  IsTypeMetadataProvided,
   Language,
   NotificationType,
   validPhoneExamples,
-  CancelNotificationType,
 } from '../common';
 import {
   IsEmail,
@@ -41,22 +42,15 @@ export enum Sex {
 
 registerEnumType(Sex, { name: 'Sex' });
 
-export enum Honorific {
-  Mr = 'Mr',
-  Mrs = 'Mrs',
-  Ms = 'Ms',
-  Miss = 'Miss',
-  Mx = 'Mx',
-  Dr = 'Dr',
-  Reverend = 'Reverend',
-}
-
-registerEnumType(Honorific, { name: 'Honorific' });
+export const getHonorificKeyName = (honorificKey = config.get('contents.honorific.mx')) => {
+  const honorificConfigs = config.get('contents.honorific');
+  return Object.keys(honorificConfigs).find((key) => honorificConfigs[key] === honorificKey);
+};
 
 export const defaultMemberParams = {
   sex: Sex.male,
   language: Language.en,
-  honorific: Honorific.Mx,
+  honorific: getHonorificKeyName(config.get('contents.honorific.mx')),
 };
 
 export const NotNullableMemberKeys = [
@@ -116,10 +110,10 @@ export class ExtraMemberParams {
   @IsOptional()
   dischargeDate?: string;
 
-  @Field(() => Honorific, { nullable: true })
-  @IsEnum(Honorific) /* for rest api */
+  @Field(() => String, { nullable: true })
+  @IsHonorific({ message: Errors.get(ErrorType.memberInvalidHonorific) })
   @IsOptional()
-  honorific?: Honorific;
+  honorific?: string;
 }
 
 @InputType()
@@ -388,8 +382,8 @@ export class Member extends Identifier {
   admitDate?: string;
 
   @Prop({ default: defaultMemberParams.honorific })
-  @Field(() => Honorific)
-  honorific: Honorific;
+  @Field(() => String)
+  honorific: string;
 }
 
 @ObjectType()

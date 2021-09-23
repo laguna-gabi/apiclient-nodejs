@@ -698,7 +698,10 @@ describe('MemberResolver', () => {
       await resolver.notifyInternal(generateNotifyParams());
     });
 
-    it('should notify a member via notify.internal with appointment reminder', async () => {
+    test.each([
+      config.get('contents.appointmentReminder'),
+      config.get('contents.appointmentRequest'),
+    ])(`should notify a member via notify.internal with appointment reminder`, async (configs) => {
       const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();
       const user = mockGenerateUser();
@@ -707,8 +710,7 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
 
-      const content = `${config
-        .get('contents.appointmentReminder')
+      const content = `${configs
         .replace('@gapMinutes@', config.get('appointments.alertBeforeInMin'))
         .replace('@chatLink@', faker.internet.url())}`;
 
@@ -721,7 +723,8 @@ describe('MemberResolver', () => {
 
       expect(notifyParams.metadata.content).toEqual(
         content
-          .replace('@member.firstName@', member.firstName)
+          .replace('@member.honorific@', member.honorific)
+          .replace('@member.lastName@', member.lastName)
           .replace('@user.firstName@', user.firstName),
       );
 

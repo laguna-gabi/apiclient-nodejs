@@ -40,8 +40,17 @@
     "maxAlertGapInMin": 43800
   },
   "contents": {
-    "appointmentReminder": "Hello @member.firstName@, your coaching appointment with @user.firstName@ will start in @gapMinutes@ minutes. Click below to join: @chatLink@",
-    "appointmentRequest": "Hello @member.firstName@, It's @user.firstName@ from Laguna. Click below to schedule your next meeting: @appLink@",
-    "appointmentUser":"Hello @user.firstName@, an appointment has been added to your schedule on @appointment.start@"
+    "appointmentReminder": "Hello @member.honorific@ @member.lastName@, this is @user.firstName@. Our meeting will start in @gapMinutes@ minutes; to join, click: @chatLink@",
+    "appointmentRequest": "Hello @member.honorific@ @member.lastName@, It's @user.firstName@ from Laguna. Click below to schedule your next meeting: @appLink@",
+    "appointmentUser":"Hello @user.firstName@, an appointment has been added to your schedule on @appointment.start@",
+    "honorific": {
+      "mr": "Mr",
+      "mrs": "Mrs",
+      "ms": "Ms",
+      "miss": "Miss",
+      "mx": "Mx",
+      "dr": "Dr",
+      "reverend": "Reverend"
+    }
   }
 }

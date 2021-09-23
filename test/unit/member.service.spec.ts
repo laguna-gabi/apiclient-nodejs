@@ -22,7 +22,6 @@ import {
 import {
   CreateMemberParams,
   defaultMemberParams,
-  Honorific,
   Member,
   MemberDto,
   MemberModule,
@@ -44,6 +43,7 @@ import {
 } from '../../src/appointment';
 import { Org, OrgDto } from '../../src/org';
 import { v4 } from 'uuid';
+import * as config from 'config';
 
 describe('MemberService', () => {
   let module: TestingModule;
@@ -476,7 +476,7 @@ describe('MemberService', () => {
         language: Language.es,
         zipCode: generateZipCode(),
         dischargeDate: generateDateOnly(date.future(1)),
-        honorific: Honorific.Dr,
+        honorific: config.get('contents.honorific.dr'),
       });
       const { id } = await service.insert(createMemberParams, primaryUser._id);
 
