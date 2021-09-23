@@ -1,7 +1,8 @@
 {
   "hosts": {
     "chat": "https://www.dev.chat.getlaguna.com",
-    "app": "https://www.dev.app.getlaguna.com"
+    "app": "https://www.dev.app.getlaguna.com",
+    "webApp": "https://dev.app.lagunahealth.com"
   },
   "db": {
     "connection": "mongodb://localhost:27017/laguna"
@@ -42,7 +43,8 @@
   "contents": {
     "appointmentReminder": "Hello @member.honorific@ @member.lastName@, this is @user.firstName@. Our meeting will start in @gapMinutes@ minutes; to join, click: @chatLink@",
     "appointmentRequest": "Hello @member.honorific@ @member.lastName@, It's @user.firstName@ from Laguna. Click below to schedule your next meeting: @appLink@",
-    "appointmentUser":"Hello @user.firstName@, an appointment has been added to your schedule on @appointment.start@",
+    "appointmentUser": "Hello @user.firstName@, an appointment has been added to your schedule on @appointment.start@",
+    "downloadPage": "Hello @member.honorific@ @member.lastName@! I’m @user.firstName@ from Laguna. I’m contacting you because you signed up to participate in the Laguna program. Our goal is to help you when you get home from the hospital. This program is sponsored and free for you. I’m looking forward to meeting you! You can click below to schedule the first meeting with me here: @downloadLink@",
     "honorific": {
       "mr": "Mr",
       "mrs": "Mrs",

@@ -196,7 +196,6 @@ describe('Integration tests : getMembers', () => {
 
     expect(appointment1.id).not.toEqual(appointment2.id);
 
-    console.log(membersResult[0].nextAppointment, appointment1.start, appointment2.start);
     expect(membersResult.length).toEqual(1);
     expect(membersResult[0]).toEqual(
       expect.objectContaining({

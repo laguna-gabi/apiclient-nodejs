@@ -355,7 +355,11 @@ export class MemberService extends BaseService {
         appointment1.start.getTime() > appointment2.start.getTime() ? 1 : -1,
       )[0]?.start;
 
-    return { appointmentsCount: allAppointments.length, nextAppointment };
+    const appointmentsCount = allAppointments.filter(
+      (appointment) => appointment?.status !== AppointmentStatus.requested,
+    ).length;
+
+    return { appointmentsCount, nextAppointment };
   };
 
   private async getById(id: string) {

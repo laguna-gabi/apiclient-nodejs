@@ -62,12 +62,14 @@ export class SlotService {
 
   private noCollision(appointments: Appointment[], slot: Date, duration: number): boolean {
     return appointments.some((appointment) => {
-      return !(
-        areIntervalsOverlapping(
+      if (appointment.status === AppointmentStatus.scheduled) {
+        return !areIntervalsOverlapping(
           { start: slot, end: add(slot, { minutes: duration }) },
           { start: appointment.start, end: appointment.end },
-        ) && appointment.status === AppointmentStatus.scheduled
-      );
+        );
+      } else {
+        return false;
+      }
     });
   }
 }

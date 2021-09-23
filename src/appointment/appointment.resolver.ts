@@ -10,16 +10,19 @@ import {
   ScheduleAppointmentParams,
   UpdateNotesParams,
 } from '.';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import {
   EventType,
+  IEventRequestAppointment,
   IEventUpdatedAppointment,
   NotificationType,
   UpdatedAppointmentAction,
 } from '../common';
 import { AppointmentBase } from './appointment.interfaces';
-import { NotifyParams } from '../member';
+import { Member, NotifyParams } from '../member';
+import { User } from '../user';
 import * as config from 'config';
+import { add } from 'date-fns';
 
 @Resolver(() => Appointment)
 export class AppointmentResolver extends AppointmentBase {
@@ -80,6 +83,18 @@ export class AppointmentResolver extends AppointmentBase {
     return this.appointmentService.updateNotes(updateNotesParams);
   }
 
+  @OnEvent(EventType.requestAppointment, { async: true })
+  async handleRequestAppointment(params: IEventRequestAppointment) {
+    const { member, user } = params;
+    const requestAppointmentParams: RequestAppointmentParams = {
+      memberId: member.id,
+      userId: user.id,
+      notBefore: add(new Date(), { hours: 2 }),
+    };
+    const appointment = await this.appointmentService.request(requestAppointmentParams);
+    this.notifyRegistration({ appointment, member, user });
+  }
+
   /*************************************************************************************************
    ******************************************** Internals ******************************************
    ************************************************************************************************/
@@ -94,6 +109,32 @@ export class AppointmentResolver extends AppointmentBase {
       memberId: appointment.memberId.toString(),
       userId: appointment.userId,
       type: NotificationType.text,
+      metadata,
+    };
+    this.eventEmitter.emit(EventType.notify, params);
+  }
+
+  private notifyRegistration({
+    appointment,
+    member,
+    user,
+  }: {
+    appointment: Appointment;
+    member: Member;
+    user: User;
+  }) {
+    const metadata = {
+      content: `${config
+        .get('contents.downloadPage')
+        .replace('@member.honorific@', member.honorific)
+        .replace('@member.lastName@', member.lastName)
+        .replace('@user.firstName@', user.firstName)
+        .replace('@downloadLink@', `\n${config.get('hosts.webApp')}/download/${appointment.id}`)}`,
+    };
+    const params: NotifyParams = {
+      memberId: member.id,
+      userId: user.id,
+      type: NotificationType.textSms,
       metadata,
     };
     this.eventEmitter.emit(EventType.notify, params);

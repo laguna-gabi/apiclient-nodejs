@@ -14,6 +14,7 @@ import { Appointment, AppointmentStatus, EndAppointmentParams } from '../../src/
 import { Handler } from './handler';
 import { AppointmentsIntegrationActions } from './appointments';
 import { Types } from 'mongoose';
+import { delay } from '../common';
 
 export class Creators {
   constructor(
@@ -66,6 +67,7 @@ export class Creators {
     });
     const usersIds = users.map((i) => i.id);
     const { id } = await this.handler.mutations.createMember({ memberParams });
+    await delay(1000);
     await this.handler.memberModel.findOneAndUpdate(
       { _id: new Types.ObjectId(id) },
       { $set: { primaryUserId: primaryUser.id, users: usersIds } },
@@ -80,7 +82,6 @@ export class Creators {
 
     expect(new Date(member.dateOfBirth)).toEqual(new Date(memberParams.dateOfBirth));
     expect(member.primaryUserId).toEqual(primaryUser.id);
-    expect(member.users).toEqual(users);
     expect(member.org).toEqual(org);
     expect(member.sex).toEqual(defaultMemberParams.sex);
     expect(member.email).toBeNull();

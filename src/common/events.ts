@@ -5,6 +5,7 @@ import { Member } from '../member';
 import { User } from '../user';
 
 export enum EventType {
+  requestAppointment = 'requestAppointment',
   newAppointment = 'newAppointment',
   updatedAppointment = 'updatedAppointment',
   appointmentScoresUpdated = 'appointmentScoresUpdated',
@@ -16,6 +17,11 @@ export enum EventType {
   addUserToMemberList = 'addUserToMemberList',
   updateMemberPlatform = 'updateMemberPlatform',
   notify = 'notify',
+}
+
+export interface IEventRequestAppointment {
+  user: User;
+  member: Member;
 }
 
 export interface IEventNewAppointment {

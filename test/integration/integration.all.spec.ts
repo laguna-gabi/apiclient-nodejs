@@ -751,6 +751,10 @@ describe('Integration tests: all', () => {
       start,
     });
 
+    /* reset mock on NotificationsService so we dont count 
+    the notifications that are made on member creation */
+    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+
     await creators.handler.mutations.scheduleAppointment({ appointmentParams });
 
     await delay(2000);

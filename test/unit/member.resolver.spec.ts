@@ -24,6 +24,7 @@ import {
   ErrorType,
   EventType,
   IEventNewMember,
+  IEventRequestAppointment,
   IEventUpdateMemberPlatform,
   NotificationType,
   Platform,
@@ -111,12 +112,20 @@ describe('MemberResolver', () => {
       expect(spyOnServiceGetAvailableUser).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
-      const eventParams: IEventNewMember = {
+      const eventNewMemberParams: IEventNewMember = {
         member,
         user,
         platform: memberConfig.platform,
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.newMember, eventParams);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.newMember, eventNewMemberParams);
+      const eventRequestAppointmentParams: IEventRequestAppointment = {
+        member,
+        user,
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(
+        EventType.requestAppointment,
+        eventRequestAppointmentParams,
+      );
     });
   });
 

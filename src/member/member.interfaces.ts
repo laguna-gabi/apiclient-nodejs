@@ -1,7 +1,7 @@
 import { MemberService } from './member.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UserService } from '../user';
-import { EventType, IEventNewMember } from '../common';
+import { EventType, IEventNewMember, IEventRequestAppointment } from '../common';
 import { CreateMemberParams } from './member.dto';
 
 export class MemberBase {
@@ -18,8 +18,11 @@ export class MemberBase {
     const { platform } = await this.memberService.getMemberConfig(member.id);
 
     const user = await this.userService.get(primaryUserId);
-    const eventParams: IEventNewMember = { member, user, platform };
-    this.eventEmitter.emit(EventType.newMember, eventParams);
+    const eventNewMemberParams: IEventNewMember = { member, user, platform };
+    this.eventEmitter.emit(EventType.newMember, eventNewMemberParams);
+
+    const eventRequestAppointmentParams: IEventRequestAppointment = { user, member };
+    this.eventEmitter.emit(EventType.requestAppointment, eventRequestAppointmentParams);
 
     return member;
   }
