@@ -114,6 +114,7 @@ describe('Validations - appointment', () => {
       field         | input                      | error
       ${'memberId'} | ${{ memberId: 123 }}       | ${{ missingFieldError: stringError }}
       ${'userId'}   | ${{ userId: 123 }}         | ${{ missingFieldError: stringError }}
+      ${'id'}       | ${{ id: 123 }}             | ${{ missingFieldError: stringError }}
       ${'method'}   | ${{ method: 'not-valid' }} | ${{ missingFieldError: 'Enum "AppointmentMethod" cannot represent non-string value' }}
       ${'start'}    | ${{ start: 'not-valid' }}  | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentStartDate)] }}
       ${'end'}      | ${{ end: 'not-valid' }}    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentEndDate)] }}
@@ -135,6 +136,7 @@ describe('Validations - appointment', () => {
       field         | input
       ${'memberId'} | ${{ memberId: 123 }}
       ${'userId'}   | ${{ userId: 123 }}
+      ${'id'}       | ${{ id: 123 }}
       ${'start'}    | ${{ start: 'not-valid' }}
       ${'end'}      | ${{ end: 'not-valid' }}
     `(

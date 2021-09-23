@@ -15,6 +15,7 @@ import {
 import {
   Appointment,
   AppointmentDto,
+  AppointmentMethod,
   AppointmentModule,
   AppointmentService,
   EndAppointmentParams,
@@ -282,6 +283,24 @@ describe('AppointmentService', () => {
       expect(endedAppointment.id).not.toEqual(newAppointment.id);
       expect(endedAppointment.status).toEqual(AppointmentStatus.done);
       expect(newAppointment.status).toEqual(AppointmentStatus.scheduled);
+    });
+
+    it('should override an appointment when id is passed', async () => {
+      const params1 = generateScheduleAppointmentParams();
+      const { id } = await service.schedule(params1);
+
+      const params2 = generateScheduleAppointmentParams({
+        id,
+        method: AppointmentMethod.phoneCall,
+      });
+      const appointment = await service.schedule(params2);
+
+      expect(appointment.id).toEqual(params2.id);
+      expect(appointment.userId).toEqual(params2.userId);
+      expect(appointment.memberId.toString()).toEqual(params2.memberId);
+      expect(appointment.method).toEqual(params2.method);
+      expect(appointment.start).toEqual(params2.start);
+      expect(appointment.end).toEqual(params2.end);
     });
 
     it('should schedule multiple appointments for the same user and member', async () => {

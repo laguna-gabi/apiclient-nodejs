@@ -1,5 +1,5 @@
 import { Field, InputType, ObjectType, OmitType, registerEnumType } from '@nestjs/graphql';
-import { IsDate, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Errors, ErrorType, Identifier, IsDateAfter, IsFutureDate } from '../common';
 import { Document, Types } from 'mongoose';
@@ -75,6 +75,11 @@ export class ScheduleAppointmentParams {
   @IsDate({ message: Errors.get(ErrorType.appointmentEndDate) })
   @IsNotEmpty() /* for rest api */
   end: Date;
+
+  @Field(() => String, { nullable: true })
+  @IsString() /* for rest api */
+  @IsOptional() /* for rest api */
+  id?: string;
 }
 
 /**************************************************************************************************

@@ -72,12 +72,16 @@ export class AppointmentService extends BaseService {
   }
 
   async schedule(params: ScheduleAppointmentParams): Promise<Appointment> {
+    const filter = params.id
+      ? { _id: new Types.ObjectId(params.id) }
+      : {
+          userId: params.userId,
+          memberId: new Types.ObjectId(params.memberId),
+          status: { $eq: AppointmentStatus.requested },
+        };
+
     const object = await this.appointmentModel.findOneAndUpdate(
-      {
-        userId: params.userId,
-        memberId: new Types.ObjectId(params.memberId),
-        status: { $eq: AppointmentStatus.requested },
-      },
+      filter,
       {
         $set: {
           userId: params.userId,
@@ -88,8 +92,12 @@ export class AppointmentService extends BaseService {
           status: AppointmentStatus.scheduled,
         },
       },
-      { upsert: true, new: true, rawResult: true },
+      { upsert: params.id === undefined, new: true, rawResult: true },
     );
+
+    if (params.id && object.lastErrorObject.n === 0) {
+      throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
+    }
 
     if (!object.lastErrorObject.updatedExisting) {
       return this.postNewAppointmentAction({

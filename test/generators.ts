@@ -279,12 +279,14 @@ export const generateRequestAppointmentParams = ({
 };
 
 export const generateScheduleAppointmentParams = ({
+  id,
   userId = v4(),
   memberId = generateId(),
   method = AppointmentMethod.chat,
   start = faker.date.soon(4),
   end,
 }: {
+  id?: string;
   userId?: string;
   memberId?: string;
   method?: AppointmentMethod;
@@ -293,7 +295,7 @@ export const generateScheduleAppointmentParams = ({
 } = {}): ScheduleAppointmentParams => {
   const endNew = new Date(start);
   endNew.setHours(endNew.getHours() + 2);
-  return { userId, memberId, method, start, end: end || endNew };
+  return { id, userId, memberId, method, start, end: end || endNew };
 };
 
 export const generateEndAppointmentParams = ({
