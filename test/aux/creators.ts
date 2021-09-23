@@ -1,4 +1,4 @@
-import { CreateUserParams, User, UserRole } from '../../../src/user';
+import { CreateUserParams, User, UserRole } from '../../src/user';
 import {
   generateAppointmentLink,
   generateCreateMemberParams,
@@ -6,11 +6,11 @@ import {
   generateCreateUserParams,
   generateEndAppointmentParams,
   generateOrgParams,
-} from '../../generators';
+} from '../generators';
 import { camelCase, omit } from 'lodash';
-import { Org } from '../../../src/org';
-import { CreateTaskParams, defaultMemberParams, Member } from '../../../src/member';
-import { Appointment, AppointmentStatus, EndAppointmentParams } from '../../../src/appointment';
+import { Org } from '../../src/org';
+import { CreateTaskParams, defaultMemberParams, Member } from '../../src/member';
+import { Appointment, AppointmentStatus, EndAppointmentParams } from '../../src/appointment';
 import { Handler } from './handler';
 import { AppointmentsIntegrationActions } from './appointments';
 import { Types } from 'mongoose';

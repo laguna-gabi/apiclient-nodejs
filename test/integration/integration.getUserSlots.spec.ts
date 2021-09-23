@@ -10,9 +10,9 @@ import {
 import { Member } from '../../src/member';
 import { defaultSlotsParams } from '../../src/user';
 import { generateAvailabilityInput, generateId } from './../generators';
-import { AppointmentsIntegrationActions } from './aux/appointments';
-import { Creators } from './aux/creators';
-import { Handler } from './aux/handler';
+import { AppointmentsIntegrationActions } from '../aux/appointments';
+import { Creators } from '../aux/creators';
+import { Handler } from '../aux/handler';
 import { v4 } from 'uuid';
 
 describe('Integration tests : getUserSlots', () => {

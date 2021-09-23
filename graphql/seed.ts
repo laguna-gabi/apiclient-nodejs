@@ -3,8 +3,8 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { Test, TestingModule } from '@nestjs/testing';
 import { createTestClient } from 'apollo-server-testing';
 import { AppModule } from '../src/app.module';
-import { Mutations } from '../test/integration/aux/mutations';
-import { Queries } from '../test/integration/aux/queries';
+import { Mutations } from '../test/aux/mutations';
+import { Queries } from '../test/aux/queries';
 import { UserRole, UserService } from '../src/user';
 import {
   generateAvailabilityInput,

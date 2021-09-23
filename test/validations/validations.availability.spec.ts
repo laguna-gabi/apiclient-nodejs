@@ -1,4 +1,4 @@
-import { Handler } from './aux/handler';
+import { Handler } from '../aux/handler';
 import { AvailabilityInput } from '../../src/availability';
 import { generateAvailabilityInput } from '../generators';
 

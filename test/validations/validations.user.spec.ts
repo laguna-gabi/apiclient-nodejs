@@ -3,7 +3,7 @@ import { CreateUserParams, defaultUserParams } from '../../src/user';
 import * as config from 'config';
 import * as faker from 'faker';
 import { Errors, ErrorType } from '../../src/common';
-import { Handler } from './aux/handler';
+import { Handler } from '../aux/handler';
 import { GetSlotsParams } from '../../src/user/slot.dto';
 import { generateGetSlotsParams, generateId } from '../generators';
 import * as request from 'supertest';

@@ -34,7 +34,7 @@ import {
   NotificationType,
   CancelNotificationType,
 } from '../../src/common';
-import { Handler } from './aux/handler';
+import { Handler } from '../aux/handler';
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;

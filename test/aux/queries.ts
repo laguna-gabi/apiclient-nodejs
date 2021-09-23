@@ -1,8 +1,8 @@
 import gql from 'graphql-tag';
 import { ApolloServerTestClient } from 'apollo-server-testing';
-import { GetCommunicationParams } from '../../../src/communication';
-import { DischargeDocumentsLinks } from '../../../src/member';
-import { GetSlotsParams } from '../../../src/user/slot.dto';
+import { GetCommunicationParams } from '../../src/communication';
+import { DischargeDocumentsLinks } from '../../src/member';
+import { GetSlotsParams } from '../../src/user/slot.dto';
 
 export class Queries {
   constructor(private readonly apolloClient: ApolloServerTestClient) {}

@@ -1,7 +1,7 @@
 import { generateOrgParams } from '../index';
 import { Errors, ErrorType } from '../../src/common';
 import { CreateOrgParams } from '../../src/org';
-import { Handler } from './aux/handler';
+import { Handler } from '../aux/handler';
 
 const stringError = `String cannot represent a non string value`;
 

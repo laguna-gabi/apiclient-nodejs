@@ -1,8 +1,8 @@
 import { generateId, generateScheduleAppointmentParams } from '../index';
 import { Member, MemberSummary } from '../../src/member';
-import { Handler } from './aux/handler';
-import { AppointmentsIntegrationActions } from './aux/appointments';
-import { Creators } from './aux/creators';
+import { Handler } from '../aux/handler';
+import { AppointmentsIntegrationActions } from '../aux/appointments';
+import { Creators } from '../aux/creators';
 import { date } from 'faker';
 import { v4 } from 'uuid';
 import { performance } from 'perf_hooks';

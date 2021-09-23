@@ -1,4 +1,4 @@
-import { Handler } from './aux/handler';
+import { Handler } from '../aux/handler';
 import { generateGetCommunicationParams } from '../generators';
 
 const stringError = `String cannot represent a non string value`;

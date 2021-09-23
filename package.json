@@ -23,8 +23,9 @@
     "test:cov": "jest --config test/unit/jest.json --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:integration": "jest --config test/integration/jest.json",
+    "test:validation": "jest --config test/validations/jest.json",
     "test:live": "jest --config test/live/jest.json",
-    "test:all": "yarn test && yarn test:integration"
+    "test:all": "yarn test && yarn test:validation && yarn test:integration"
   },
   "dependencies": {
     "@nestjs/axios": "^0.0.1",

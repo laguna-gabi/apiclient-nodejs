@@ -2,15 +2,15 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { Test, TestingModule } from '@nestjs/testing';
 import { createTestClient } from 'apollo-server-testing';
-import { AppModule } from '../../../src/app.module';
+import { AppModule } from '../../src/app.module';
 import { Mutations } from './mutations';
 import { Queries } from './queries';
 import * as config from 'config';
 import * as jwt from 'jsonwebtoken';
-import { dbConnect, dbDisconnect, mockProviders } from '../../common';
+import { dbConnect, dbDisconnect, mockProviders } from '../common';
 import { model } from 'mongoose';
-import { MemberDto } from '../../../src/member';
-import { CommunicationService } from '../../../src/communication';
+import { MemberDto } from '../../src/member';
+import { CommunicationService } from '../../src/communication';
 
 const validatorsConfig = config.get('graphql.validators');
 

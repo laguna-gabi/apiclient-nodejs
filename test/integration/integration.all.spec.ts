@@ -14,9 +14,9 @@ import {
 } from '../index';
 import { UserRole } from '../../src/user';
 import { AppointmentMethod } from '../../src/appointment';
-import { Handler } from './aux/handler';
-import { AppointmentsIntegrationActions } from './aux/appointments';
-import { Creators } from './aux/creators';
+import { Handler } from '../aux/handler';
+import { AppointmentsIntegrationActions } from '../aux/appointments';
+import { Creators } from '../aux/creators';
 import {
   CancelNotifyParams,
   CreateTaskParams,
