@@ -16,7 +16,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 describe('live: notifications (one signal)', () => {
   let notificationsService: NotificationsService;
   const delayTime = 5000;
-  const RETRY_MAX = 3;
+  const RETRY_MAX = 5;
 
   beforeAll(() => {
     const configService = new ConfigsService();
