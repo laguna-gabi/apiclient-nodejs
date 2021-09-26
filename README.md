@@ -1,7 +1,9 @@
 # Hepius
-Laguna health backend infrastructure
-<br/>Written in typescript by using [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Laguna health backend infrastructure.
+<br/>Written in typescript by using [Nest](https://github.com/nestjs/nest) framework.
 
+- [Project introduction](#project-introduction)
+    - [Entities](#entities)
 - [Prerequisites](#prerequisites)
    - [Installation](#installation)
    - [Docker](#docker)
@@ -13,6 +15,22 @@ Laguna health backend infrastructure
    - [Error at connection to mongo locally](#error-at-connection-to-mongo-locally)
 
 <br/><br/>
+
+## Project introduction
+This project handles all the backend logic for laguna-health.
+- We're using mongodb in order to store our data.
+- We're using graphql for the secure methods.
+- We're using rest for the unsecure methods (minimal number of methods)
+
+### entities
+The main entities in our system: 
+1. <b>User</b>: internal laguna employees: coaches, nurse, dr, etc
+2. <b>Org</b>: a member's associated org : hospital, health insurance, etc...
+3. <b>Member</b>: a patient using web or mobile(preferable)
+<br/> Each member has an `primaryUserId` which is his main coach.
+<br/> Each member has an `orgId` which is his associated org
+4. <b>Appointment</b>: a schedule appointment between a member and a user.
+5. <b>Availabilities</b>: a user's time availabilities (for example, `start: 10/02/2022 10:00:00 end: 10/02/2022 12:00:00`)
 
 ## Prerequisites
 ### Installation
