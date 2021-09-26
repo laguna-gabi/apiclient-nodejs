@@ -1,3 +1,5 @@
 {
-  
+  "db": {
+    "connection": "mongodb://localhost:27018/test"
+  }
 }

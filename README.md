@@ -23,7 +23,7 @@ $ yarn
 ### Docker
 We're loading a local mongodb by using [docker](https://hub.docker.com/).
 1. install [docker](https://docs.docker.com/get-docker/).
-2. run `docker-compose up -d` for starting Docker with mongodb instance within.
+2. run `docker-compose up -d` for [starting docker](./docker-compose.yml) with 2 mongodb instances(localhost and test).
 > **_Stop:_**  After running the sample, you can stop the Docker container with `docker-compose down`
 <br/><br/>
 ### Aws
