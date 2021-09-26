@@ -17,7 +17,7 @@ describe.skip('live: bitly actions', () => {
   });
 
   it('should shorten a link', async () => {
-    //when running this, remove process.env.NODE_ENV === 'test' in shortenLink method.
+    //when running this, remove process.env.NODE_ENV === environments.test in shortenLink method.
     const link = await bitly.shortenLink(config.get('hosts.chat'));
     expect(link).toMatch('https://bit.ly');
   });

@@ -36,9 +36,10 @@ export const ExternalConfigs = {
   },
 };
 
-enum environments {
+export enum environments {
   production = 'production',
   development = 'development',
+  test = 'test',
 }
 
 @Injectable()
@@ -47,9 +48,9 @@ export class ConfigsService implements MongooseOptionsFactory {
 
   async createMongooseOptions(): Promise<MongooseModuleOptions> {
     const uri =
-      Object.keys(environments).indexOf(process.env.NODE_ENV) >= 0
-        ? await this.getConfig(ExternalConfigs.db.connection)
-        : config.get('db.connection');
+      !process.env.NODE_ENV || process.env.NODE_ENV === environments.test
+        ? config.get('db.connection')
+        : await this.getConfig(ExternalConfigs.db.connection);
     return { uri, useFindAndModify: false, useCreateIndex: true, useUnifiedTopology: true };
   }
 

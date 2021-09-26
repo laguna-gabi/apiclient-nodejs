@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { dbDisconnect, generateAvailabilityInput, generateId } from '../index';
-import { DbModule } from '../../src/db/db.module';
+import { dbDisconnect, defaultModules, generateAvailabilityInput, generateId } from '../index';
 import {
   AvailabilityModule,
   AvailabilityResolver,
@@ -14,7 +13,7 @@ describe('AvailabilityResolver', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, AvailabilityModule],
+      imports: defaultModules().concat(AvailabilityModule),
     }).compile();
 
     resolver = module.get<AvailabilityResolver>(AvailabilityResolver);

@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DbModule } from '../../src/db/db.module';
 import { Model, model } from 'mongoose';
-import { dbConnect, dbDisconnect, generateOrgParams } from '../index';
+import { dbConnect, dbDisconnect, defaultModules, generateOrgParams } from '../index';
 import { Errors, ErrorType } from '../../src/common';
 import { Org, OrgDto, OrgModule, OrgService, OrgType } from '../../src/org';
 
@@ -12,7 +11,7 @@ describe('OrgService', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, OrgModule],
+      imports: defaultModules().concat(OrgModule),
     }).compile();
 
     service = module.get<OrgService>(OrgService);

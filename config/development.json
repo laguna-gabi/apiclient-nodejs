@@ -1,6 +1,6 @@
 {
   "slack": {
-    "channel": "production-notifications"
+    "channel": "development-notifications"
   },
   "oneSignal": {
     "voipRegistrationPayload": {}

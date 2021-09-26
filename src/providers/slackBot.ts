@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { IncomingWebhook } from '@slack/webhook';
 import * as config from 'config';
-import { ConfigsService, ExternalConfigs } from '.';
+import { ConfigsService, environments, ExternalConfigs } from '.';
 import { EventType, IEventSlackMessage } from '../common';
 
 @Injectable()
@@ -19,24 +19,28 @@ export class SlackBot implements OnModuleInit {
 
   @OnEvent(EventType.slackMessage, { async: true })
   async sendMessage(params: IEventSlackMessage) {
-    await this.webhook.send({
-      username: 'LagunaBot',
-      icon_emoji: params.icon,
-      channel: config.get(params.channel),
-      attachments: [
-        {
-          color: '#9733EE',
-          blocks: [
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: params.message,
+    if (!process.env.NODE_ENV || process.env.NODE_ENV === environments.test) {
+      console.log(`${config.get(params.channel)}: ${params.message}`);
+    } else {
+      await this.webhook.send({
+        username: 'LagunaBot',
+        icon_emoji: params.icon,
+        channel: config.get(params.channel),
+        attachments: [
+          {
+            color: '#9733EE',
+            blocks: [
+              {
+                type: 'section',
+                text: {
+                  type: 'mrkdwn',
+                  text: params.message,
+                },
               },
-            },
-          ],
-        },
-      ],
-    });
+            ],
+          },
+        ],
+      });
+    }
   }
 }

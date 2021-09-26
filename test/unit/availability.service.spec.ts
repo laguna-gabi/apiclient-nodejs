@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DbModule } from '../../src/db/db.module';
 import { Model, model } from 'mongoose';
 import {
   dbConnect,
   dbDisconnect,
+  defaultModules,
   generateAvailabilityInput,
   generateCreateRawUserParams,
   generateId,
@@ -25,7 +25,7 @@ describe('AvailabilityService', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, AvailabilityModule],
+      imports: defaultModules().concat(AvailabilityModule),
     }).compile();
 
     service = module.get<AvailabilityService>(AvailabilityService);
