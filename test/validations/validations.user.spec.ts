@@ -139,4 +139,22 @@ describe('Validations - user', () => {
   it('rest: should return 404 on no appointmentId given', async () => {
     await request(server).get(urls.slots).expect(404);
   });
+
+  it('rest: should return 400 on non existing appointmentId', async () => {
+    const result = await request(server).get(`${urls.slots}/${generateId()}`).expect(400);
+    expect(result).toEqual(
+      expect.objectContaining({
+        text: '{"statusCode":400,"message":"user id was not found"}',
+      }),
+    );
+  });
+
+  it('rest: should return 400 on bad appointmentId', async () => {
+    const result = await request(server).get(`${urls.slots}/${'not-valid'}`).expect(400);
+    expect(result).toEqual(
+      expect.objectContaining({
+        text: '{"statusCode":400,"message":"Argument passed in must be a single String of 12 bytes or a string of 24 hex characters"}',
+      }),
+    );
+  });
 });
