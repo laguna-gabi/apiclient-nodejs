@@ -24,6 +24,7 @@ import {
   NotificationType,
   Platform,
   RegisterForNotificationParams,
+  replaceConfigs,
 } from '../common';
 import { camelCase } from 'lodash';
 import * as jwt from 'jsonwebtoken';
@@ -229,10 +230,7 @@ export class MemberResolver extends MemberBase implements OnModuleInit {
     }
 
     if (metadata.content) {
-      metadata.content = metadata.content
-        .replace('@member.honorific@', member.honorific)
-        .replace('@member.lastName@', member.lastName)
-        .replace('@user.firstName@', user.firstName);
+      metadata.content = replaceConfigs({ content: metadata.content, member, user });
     }
 
     const path =

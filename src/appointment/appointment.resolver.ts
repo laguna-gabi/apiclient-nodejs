@@ -16,6 +16,7 @@ import {
   IEventRequestAppointment,
   IEventUpdatedAppointment,
   NotificationType,
+  replaceConfigs,
   UpdatedAppointmentAction,
 } from '../common';
 import { AppointmentBase } from './appointment.interfaces';
@@ -124,12 +125,11 @@ export class AppointmentResolver extends AppointmentBase {
     user: User;
   }) {
     const metadata = {
-      content: `${config
-        .get('contents.downloadPage')
-        .replace('@member.honorific@', member.honorific)
-        .replace('@member.lastName@', member.lastName)
-        .replace('@user.firstName@', user.firstName)
-        .replace('@downloadLink@', `\n${config.get('hosts.webApp')}/download/${appointment.id}`)}`,
+      content: replaceConfigs({
+        content: config.get('contents.downloadPage'),
+        member,
+        user,
+      }).replace('@downloadLink@', `\n${config.get('hosts.webApp')}/download/${appointment.id}`),
     };
     const params: NotifyParams = {
       memberId: member.id,

@@ -36,6 +36,7 @@ import {
   NotificationType,
   Platform,
   RegisterForNotificationParams,
+  replaceConfigs,
 } from '../../src/common';
 import { NotificationsService, StorageService } from '../../src/providers';
 import * as faker from 'faker';
@@ -787,12 +788,7 @@ describe('MemberResolver', () => {
 
       await resolver.notifyInternal(notifyParams);
 
-      expect(notifyParams.metadata.content).toEqual(
-        content
-          .replace('@member.honorific@', member.honorific)
-          .replace('@member.lastName@', member.lastName)
-          .replace('@user.firstName@', user.firstName),
-      );
+      expect(notifyParams.metadata.content).toEqual(replaceConfigs({ content, member, user }));
 
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
         sendNotificationToMemberParams: {
