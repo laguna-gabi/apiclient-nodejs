@@ -649,6 +649,58 @@ describe('Integration tests: all', () => {
     handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
   });
 
+  it(`should send a future notification`, async () => {
+    const primaryUser = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+    /**
+     * reset mock on NotificationsService so we dont count
+     * the notifications that are made on member creation
+     */
+    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+
+    const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
+
+    const when = new Date();
+    when.setSeconds(when.getSeconds() + 1);
+    const notifyParams: NotifyParams = {
+      memberId: member.id,
+      userId: primaryUser.id,
+      type: NotificationType.text,
+      metadata: { content: faker.lorem.word(), when },
+    };
+
+    await handler.mutations.notify({ notifyParams });
+    expect(handler.notificationsService.spyOnNotificationsServiceSend).not.toBeCalled();
+
+    await delay(1500);
+    delete notifyParams.metadata.when;
+    expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
+      sendNotificationToMemberParams: {
+        externalUserId: memberConfig.externalUserId,
+        platform: memberConfig.platform,
+        data: {
+          user: {
+            id: primaryUser.id,
+            firstName: primaryUser.firstName,
+            avatar: primaryUser.avatar,
+          },
+          member: { phone: member.phone },
+          type: NotificationType.text,
+          peerId: notifyParams.metadata.peerId,
+          isVideo: false,
+        },
+        metadata: notifyParams.metadata,
+      },
+    });
+
+    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+  });
+
   test.each([
     CancelNotificationType.cancelVideo,
     CancelNotificationType.cancelCall,
@@ -740,7 +792,7 @@ describe('Integration tests: all', () => {
       users: [primaryUser],
     });
 
-    const milliseconds = (config.get('appointments.alertBeforeInMin') + 1 / 60) * 60 * 1000;
+    const milliseconds = (config.get('scheduler.alertBeforeInMin') + 1 / 60) * 60 * 1000;
     const start = new Date();
     start.setMilliseconds(start.getMilliseconds() + milliseconds);
     Date.now = jest.fn(() => milliseconds - 1000);
@@ -751,8 +803,10 @@ describe('Integration tests: all', () => {
       start,
     });
 
-    /* reset mock on NotificationsService so we dont count 
-    the notifications that are made on member creation */
+    /**
+     * reset mock on NotificationsService so we dont count
+     * the notifications that are made on member creation
+     */
     handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
 
     await creators.handler.mutations.scheduleAppointment({ appointmentParams });
@@ -786,7 +840,6 @@ describe('Integration tests: all', () => {
 
     handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
   });
-
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

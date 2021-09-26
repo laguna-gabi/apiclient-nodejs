@@ -34,9 +34,11 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { NotificationsService, StorageService } from '../providers';
 import { CancelNotifyParams } from './member.dto';
 import { User, UserService } from '../user';
+import { MemberScheduler } from './member.scheduler';
+import { OnModuleInit } from '@nestjs/common';
 
 @Resolver(() => Member)
-export class MemberResolver extends MemberBase {
+export class MemberResolver extends MemberBase implements OnModuleInit {
   private readonly authenticationPrefix = 'Bearer ';
 
   constructor(
@@ -45,8 +47,15 @@ export class MemberResolver extends MemberBase {
     private readonly storageService: StorageService,
     private readonly notificationsService: NotificationsService,
     readonly userService: UserService,
+    private readonly memberScheduler: MemberScheduler,
   ) {
     super(memberService, eventEmitter, userService);
+  }
+
+  async onModuleInit(): Promise<void> {
+    await this.memberScheduler.init(
+      async (notifyParams: NotifyParams) => await this.notify(notifyParams),
+    );
   }
 
   @Mutation(() => Identifier)
@@ -207,6 +216,11 @@ export class MemberResolver extends MemberBase {
   async notify(@Args(camelCase(NotifyParams.name)) notifyParams: NotifyParams) {
     const { memberId, userId, type, metadata } = notifyParams;
     const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId);
+    if (metadata.when) {
+      await this.memberScheduler.registerToFutureNotify(notifyParams);
+      return;
+    }
+
     if (
       memberConfig.platform === Platform.web &&
       (type === NotificationType.call || type === NotificationType.video)
@@ -234,9 +248,7 @@ export class MemberResolver extends MemberBase {
             firstName: user.firstName,
             avatar: user.avatar,
           },
-          member: {
-            phone: member.phone,
-          },
+          member: { phone: member.phone },
           type,
           ...path,
           isVideo: type === NotificationType.video,
@@ -265,6 +277,7 @@ export class MemberResolver extends MemberBase {
       },
     });
   }
+
   /**
    * Event is coming from appointment.scheduler - scheduling appointments reminders.
    * We have to specify an event method here, instead of just adding to @notify method,
@@ -337,6 +350,9 @@ export class MemberResolver extends MemberBase {
     userId: string,
   ): Promise<{ member: Member; memberConfig: MemberConfig; user: User }> {
     const member = await this.memberService.get(memberId);
+    if (!member) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
     const memberConfig = await this.memberService.getMemberConfig(memberId);
     const user = await this.userService.get(userId);
     if (!user) {

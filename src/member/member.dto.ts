@@ -230,20 +230,28 @@ export class NotificationMetadata {
 
   @Field(() => String, { nullable: true })
   content?: string;
+
+  @Field(() => Date, { nullable: true })
+  when?: Date;
 }
 
+@Schema({ versionKey: false, timestamps: true })
 @InputType()
 export class NotifyParams {
+  @Prop()
   @Field(() => String)
   userId: string;
 
+  @Prop()
   @Field(() => String)
   memberId: string;
 
+  @Prop()
   @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataInvalid) })
   @Field(() => NotificationType)
   type: NotificationType;
 
+  @Prop()
   @Field(() => NotificationMetadata)
   metadata: NotificationMetadata;
 }
@@ -457,3 +465,5 @@ export class DischargeDocumentsLinks {
  *************************************************************************************************/
 export type MemberDocument = Member & Document;
 export const MemberDto = SchemaFactory.createForClass(Member);
+export type NotifyParamsDocument = NotifyParams & Document;
+export const NotifyParamsDto = SchemaFactory.createForClass(NotifyParams);

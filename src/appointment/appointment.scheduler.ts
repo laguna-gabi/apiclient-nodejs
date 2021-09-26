@@ -3,7 +3,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Appointment, AppointmentDocument, AppointmentStatus } from '.';
 import { Model } from 'mongoose';
-import { EventType, log, NotificationType } from '../common';
+import { BaseScheduler, EventType, log, NotificationType } from '../common';
 import { Bitly, NotificationsService } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotifyParams } from '../member';
@@ -11,19 +11,21 @@ import * as config from 'config';
 import { CommunicationResolver } from '../communication';
 
 @Injectable()
-export class AppointmentScheduler {
+export class AppointmentScheduler extends BaseScheduler {
   constructor(
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument>,
-    private readonly schedulerRegistry: SchedulerRegistry,
     private readonly notificationsService: NotificationsService,
     private readonly communicationResolver: CommunicationResolver,
     private readonly bitly: Bitly,
     private eventEmitter: EventEmitter2,
-  ) {}
+    protected readonly schedulerRegistry: SchedulerRegistry,
+  ) {
+    super(schedulerRegistry);
+  }
 
   async init() {
-    const { gapDate, maxDate } = this.generateDateConfigs();
+    const { gapDate, maxDate } = this.getCurrentDateConfigs();
 
     const appointments = await this.appointmentModel
       .find({ status: AppointmentStatus.scheduled, start: { $gte: gapDate, $lte: maxDate } })
@@ -53,37 +55,18 @@ export class AppointmentScheduler {
     userId: string;
     start: Date;
   }): Promise<void> {
-    this.deleteAppointmentAlert({ id });
+    this.deleteTimeout({ id });
 
-    const { gapDate, maxDate } = this.generateDateConfigs();
+    const { gapDate, maxDate } = this.getCurrentDateConfigs();
 
     if (start.getTime() <= maxDate.getTime()) {
       this.scheduleAppointmentAlert({ id, memberId, userId, start, gapDate });
     }
   }
 
-  deleteAppointmentAlert({ id }: { id: string }) {
-    if (this.schedulerRegistry.doesExists('timeout', id)) {
-      this.schedulerRegistry.deleteTimeout(id);
-    }
-  }
-
   /*************************************************************************************************
    ******************************************** Internals ******************************************
    ************************************************************************************************/
-  /**
-   * Setting max alert time for 2 months to avoid alerting the max integer allowed in setTimeout.
-   * Avoiding error: TimeoutOverflowWarning: 6988416489 does not fit into a 32-bit signed integer
-   */
-  private generateDateConfigs(): { gapDate: Date; maxDate: Date } {
-    const gapDate = new Date();
-    gapDate.setMinutes(gapDate.getMinutes() + config.get('appointments.alertBeforeInMin'));
-    const maxDate = new Date();
-    maxDate.setMinutes(maxDate.getMinutes() + config.get('appointments.maxAlertGapInMin'));
-
-    return { gapDate, maxDate };
-  }
-
   private scheduleAppointmentAlert({
     id,
     memberId,
@@ -109,7 +92,7 @@ export class AppointmentScheduler {
         const metadata = {
           content: `${config
             .get('contents.appointmentReminder')
-            .replace('@gapMinutes@', config.get('appointments.alertBeforeInMin'))
+            .replace('@gapMinutes@', config.get('scheduler.alertBeforeInMin'))
             .replace('@chatLink@', chatLink)}`,
         };
         const params: NotifyParams = { memberId, userId, type: NotificationType.text, metadata };

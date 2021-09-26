@@ -60,9 +60,9 @@ describe('AppointmentScheduler', () => {
 
     it('should register schedulerRegistry with all scheduled appointments', async () => {
       const gapDate = new Date();
-      gapDate.setMinutes(gapDate.getMinutes() + config.get('appointments.alertBeforeInMin'));
+      gapDate.setMinutes(gapDate.getMinutes() + config.get('scheduler.alertBeforeInMin'));
       const maxDate = new Date();
-      maxDate.setMinutes(maxDate.getMinutes() + config.get('appointments.maxAlertGapInMin'));
+      maxDate.setMinutes(maxDate.getMinutes() + config.get('scheduler.maxAlertGapInMin'));
 
       await scheduler.init();
 
@@ -126,7 +126,7 @@ describe('AppointmentScheduler', () => {
     });
 
     it('should not add appointment is start > 1 month', async () => {
-      const days = (config.get('appointments.maxAlertGapInMin') + 1) * 60 * 1000;
+      const days = (config.get('scheduler.maxAlertGapInMin') + 1) * 60 * 1000;
       const start = new Date();
       start.setMilliseconds(start.getMilliseconds() + days);
       const param = generateParam(start);
@@ -137,7 +137,7 @@ describe('AppointmentScheduler', () => {
     });
 
     it('should not add an appointment on start < alertBeforeInMin', async () => {
-      const minutes = config.get('appointments.alertBeforeInMin') - 0.1;
+      const minutes = config.get('scheduler.alertBeforeInMin') - 0.1;
       const start = new Date();
       start.setMinutes(start.getMinutes() + minutes);
       const param = generateParam(start);
@@ -148,7 +148,7 @@ describe('AppointmentScheduler', () => {
     });
 
     it('should add appointment is start <= 1 month', async () => {
-      const daysInMilliseconds = (config.get('appointments.maxAlertGapInMin') - 0.1) * 60 * 1000;
+      const daysInMilliseconds = (config.get('scheduler.maxAlertGapInMin') - 0.1) * 60 * 1000;
       const start = new Date();
       start.setMilliseconds(start.getMilliseconds() + daysInMilliseconds);
       const param = generateParam(start);
@@ -160,7 +160,7 @@ describe('AppointmentScheduler', () => {
     });
 
     it('should add an appointment on start >= alertBeforeInMin', async () => {
-      const milliseconds = (config.get('appointments.alertBeforeInMin') + 0.1) * 60 * 1000;
+      const milliseconds = (config.get('scheduler.alertBeforeInMin') + 0.1) * 60 * 1000;
       const start = new Date();
       start.setMilliseconds(start.getMilliseconds() + milliseconds);
       const param = generateParam(start);
@@ -172,8 +172,8 @@ describe('AppointmentScheduler', () => {
     });
 
     it('should set timeout and check that it occurs and notifying', async () => {
-      //Adding 1 second to appointments.alertBeforeInMin
-      const milliseconds = (config.get('appointments.alertBeforeInMin') + 1 / 60) * 60 * 1000;
+      //Adding 1 second to scheduler.alertBeforeInMin
+      const milliseconds = (config.get('scheduler.alertBeforeInMin') + 1 / 60) * 60 * 1000;
       const start = new Date();
       start.setMilliseconds(start.getMilliseconds() + milliseconds);
       const param = generateParam(start);
@@ -208,7 +208,7 @@ describe('AppointmentScheduler', () => {
         metadata: {
           content: `${config
             .get('contents.appointmentReminder')
-            .replace('@gapMinutes@', config.get('appointments.alertBeforeInMin'))
+            .replace('@gapMinutes@', config.get('scheduler.alertBeforeInMin'))
             .replace('@chatLink@', chatLink)}`,
         },
       };
@@ -227,7 +227,7 @@ describe('AppointmentScheduler', () => {
     });
 
     it('should not fail on deleting a non existing appointment', async () => {
-      await scheduler.deleteAppointmentAlert({ id: generateId() });
+      await scheduler.deleteTimeout({ id: generateId() });
     });
 
     it('should delete an existing appointment', async () => {
@@ -236,7 +236,7 @@ describe('AppointmentScheduler', () => {
       let timeouts = schedulerRegistry.getTimeouts();
       expect(timeouts[0]).toEqual(id);
 
-      await scheduler.deleteAppointmentAlert({ id });
+      await scheduler.deleteTimeout({ id });
       timeouts = schedulerRegistry.getTimeouts();
       expect(timeouts.length).toEqual(0);
     });

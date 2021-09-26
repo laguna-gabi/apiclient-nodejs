@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   dbDisconnect,
+  defaultModules,
+  delay,
   generateAppointmentComposeParams,
+  generateCancelNotifyParams,
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateId,
@@ -13,11 +16,15 @@ import {
   mockGenerateMember,
   mockGenerateMemberConfig,
   mockGenerateUser,
-  generateCancelNotifyParams,
 } from '../index';
-import { DbModule } from '../../src/db/db.module';
-import { MemberModule, MemberResolver, MemberService, TaskStatus } from '../../src/member';
-import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
+import {
+  MemberModule,
+  MemberResolver,
+  MemberScheduler,
+  MemberService,
+  TaskStatus,
+} from '../../src/member';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   CancelNotificationType,
   Errors,
@@ -41,6 +48,7 @@ describe('MemberResolver', () => {
   let module: TestingModule;
   let resolver: MemberResolver;
   let service: MemberService;
+  let memberScheduler: MemberScheduler;
   let userService: UserService;
   let storage: StorageService;
   let notificationsService: NotificationsService;
@@ -49,7 +57,7 @@ describe('MemberResolver', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, MemberModule, EventEmitterModule.forRoot()],
+      imports: defaultModules().concat(MemberModule),
     }).compile();
 
     resolver = module.get<MemberResolver>(MemberResolver);
@@ -59,6 +67,7 @@ describe('MemberResolver', () => {
     notificationsService = module.get<NotificationsService>(NotificationsService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
+    memberScheduler = module.get<MemberScheduler>(MemberScheduler);
   });
 
   afterAll(async () => {
@@ -671,6 +680,54 @@ describe('MemberResolver', () => {
       });
     });
 
+    it('should register for future notify', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementation(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementation(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementation(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      await memberScheduler.init(async (notifyParams) => {
+        await resolver.notify(notifyParams);
+      });
+
+      const when = new Date();
+      when.setMilliseconds(when.getMilliseconds() + 100);
+
+      const notifyParams = generateNotifyParams({
+        type: NotificationType.text,
+        metadata: { content: faker.lorem.word(), when },
+      });
+
+      await resolver.notify(notifyParams);
+      expect(spyOnNotificationsServiceSend).not.toBeCalled();
+
+      await delay(300);
+      delete notifyParams.metadata.when;
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendNotificationToMemberParams: {
+          externalUserId: memberConfig.externalUserId,
+          platform: memberConfig.platform,
+          data: {
+            user: {
+              id: user.id,
+              firstName: user.firstName,
+              avatar: user.avatar,
+            },
+            member: { phone: member.phone },
+            type: notifyParams.type,
+            peerId: notifyParams.metadata.peerId,
+            isVideo: false,
+            ...generatePath(notifyParams.type),
+          },
+          metadata: notifyParams.metadata,
+        },
+      });
+    });
+
     test.each([
       CancelNotificationType.cancelVideo,
       CancelNotificationType.cancelCall,
@@ -720,7 +777,7 @@ describe('MemberResolver', () => {
       spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
 
       const content = `${configs
-        .replace('@gapMinutes@', config.get('appointments.alertBeforeInMin'))
+        .replace('@gapMinutes@', config.get('scheduler.alertBeforeInMin'))
         .replace('@chatLink@', faker.internet.url())}`;
 
       const notifyParams = generateNotifyParams({

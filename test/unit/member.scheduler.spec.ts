@@ -1,0 +1,141 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { dbConnect, dbDisconnect, defaultModules, delay, generateId } from '../index';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import { MemberModule, MemberScheduler, NotifyParams, NotifyParamsDto } from '../../src/member';
+import { model, Model } from 'mongoose';
+import { NotificationType } from '../../src/common';
+import * as faker from 'faker';
+import { v4 } from 'uuid';
+import * as config from 'config';
+
+describe('MemberScheduler', () => {
+  let module: TestingModule;
+  let scheduler: MemberScheduler;
+  let notifyParamsModel: Model<typeof NotifyParamsDto>;
+  let schedulerRegistry: SchedulerRegistry;
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  const callback = jest.fn(() => {});
+
+  const days = (config.get('scheduler.maxAlertGapInMin') + 1) * 60 * 1000;
+  const whenNotInRange = new Date();
+  whenNotInRange.setMilliseconds(whenNotInRange.getMilliseconds() + days);
+
+  const clear = async () => {
+    const timeouts = schedulerRegistry.getTimeouts();
+    timeouts.map((timeout) => schedulerRegistry.deleteTimeout(timeout));
+
+    //Clearing test inserts
+    await notifyParamsModel.deleteMany({});
+
+    callback.mockReset();
+  };
+
+  const generateParams = (when: Date = faker.date.soon()): NotifyParams => {
+    return {
+      memberId: generateId(),
+      userId: v4(),
+      type: NotificationType.textSms,
+      metadata: {
+        content: faker.lorem.sentence(),
+        when,
+      },
+    };
+  };
+
+  beforeAll(async () => {
+    module = await Test.createTestingModule({
+      imports: defaultModules().concat(MemberModule),
+    }).compile();
+
+    scheduler = module.get<MemberScheduler>(MemberScheduler);
+    notifyParamsModel = model(NotifyParams.name, NotifyParamsDto);
+    schedulerRegistry = module.get<SchedulerRegistry>(SchedulerRegistry);
+
+    await dbConnect();
+  });
+
+  afterAll(async () => {
+    await module.close();
+    await dbDisconnect();
+  });
+
+  describe('init', () => {
+    afterEach(async () => {
+      await clear();
+    });
+
+    it('should register schedulerRegistry with all scheduled messages', async () => {
+      const when1 = new Date();
+      when1.setMinutes(when1.getMinutes() + 1);
+      const when2 = new Date();
+      when2.setMinutes(when2.getMinutes() + 2);
+      const when3 = new Date();
+      when3.setSeconds(when3.getSeconds() - 1);
+
+      const { _id: id1 } = await notifyParamsModel.create(generateParams(when1));
+      const { _id: id2 } = await notifyParamsModel.create(generateParams(when2));
+      const { _id: id3 } = await notifyParamsModel.create(generateParams(when3));
+
+      await scheduler.init(callback);
+
+      const timeouts = schedulerRegistry.getTimeouts();
+
+      expect(timeouts).toContainEqual(id1);
+      expect(timeouts).toContainEqual(id2);
+      expect(timeouts).not.toContainEqual(id3);
+    });
+
+    it('should not register schedulerRegistry with future messages more than 1 month', async () => {
+      const { _id } = await notifyParamsModel.create(generateParams(whenNotInRange));
+
+      await scheduler.init(callback);
+
+      const timeouts = schedulerRegistry.getTimeouts();
+      expect(timeouts).not.toContainEqual(_id);
+    });
+  });
+
+  describe('registerToFutureNotify', () => {
+    afterEach(async () => {
+      await clear();
+    });
+
+    it('should add a notification params on a new params', async () => {
+      const params = [generateParams(), generateParams(), generateParams()];
+      const ids = await Promise.all(
+        params.map(async (param) => (await scheduler.registerToFutureNotify(param)).id),
+      );
+
+      const timeouts = schedulerRegistry.getTimeouts();
+      ids.map((id) => expect(timeouts).toContainEqual(id));
+    });
+
+    it('should not add notification params if metadata.when is > 1 month', async () => {
+      const param = generateParams(whenNotInRange);
+
+      const result = await scheduler.registerToFutureNotify(param);
+      expect(result).toBeUndefined();
+    });
+
+    it('should set timeout and check that it occurs and notifying', async () => {
+      await scheduler.init(callback);
+
+      //Adding 1 second to scheduler.alertBeforeInMin
+      const when = new Date();
+      when.setSeconds(when.getSeconds() + 1);
+      const param = generateParams(when);
+
+      const { id } = await scheduler.registerToFutureNotify(param);
+      let timeouts = schedulerRegistry.getTimeouts();
+      expect(timeouts).toContainEqual(id);
+
+      await delay(3000);
+
+      timeouts = schedulerRegistry.getTimeouts();
+      expect(timeouts).not.toContainEqual(id);
+
+      delete param.metadata.when;
+      expect(callback).toBeCalledWith(param);
+    });
+  });
+});

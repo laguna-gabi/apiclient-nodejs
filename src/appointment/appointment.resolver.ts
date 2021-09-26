@@ -73,7 +73,7 @@ export class AppointmentResolver extends AppointmentBase {
     };
     this.eventEmitter.emit(EventType.updatedAppointment, eventParams);
 
-    await this.appointmentScheduler.deleteAppointmentAlert({ id: appointment.id });
+    await this.appointmentScheduler.deleteTimeout({ id: appointment.id });
 
     return appointment;
   }

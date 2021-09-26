@@ -1,12 +1,12 @@
 import * as request from 'supertest';
 import {
+  generateCancelNotifyParams,
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateCreateUserParams,
   generateDateOnly,
   generateId,
   generateNotifyParams,
-  generateCancelNotifyParams,
   generateOrgParams,
   generateRandomName,
   generateSetGeneralNotesParams,
@@ -27,12 +27,12 @@ import {
   getHonorificKeyName,
 } from '../../src/member';
 import {
+  CancelNotificationType,
   Errors,
   ErrorType,
   Language,
-  Platform,
   NotificationType,
-  CancelNotificationType,
+  Platform,
 } from '../../src/common';
 import { Handler } from '../aux/handler';
 
@@ -291,19 +291,60 @@ describe('Validations - member', () => {
       },
     );
 
-    /* eslint-disable max-len */
     test.each`
-      field        | input                                 | error
-      ${'textSms'} | ${{ type: NotificationType.textSms }} | ${[Errors.get(ErrorType.notificationMetadataInvalid)]}
-      ${'text'}    | ${{ type: NotificationType.text }}    | ${[Errors.get(ErrorType.notificationMetadataInvalid)]}
-      ${'call'}    | ${{ type: NotificationType.call }}    | ${[Errors.get(ErrorType.notificationMetadataInvalid)]}
-      ${'video'}   | ${{ type: NotificationType.video }}   | ${[Errors.get(ErrorType.notificationMetadataInvalid)]}
+      field        | input
+      ${'textSms'} | ${{ type: NotificationType.textSms }}
+      ${'text'}    | ${{ type: NotificationType.text }}
+      ${'call'}    | ${{ type: NotificationType.call }}
+      ${'video'}   | ${{ type: NotificationType.video }}
     `('should throw an error when metadata is not provided with type $field', async (params) => {
-      /* eslint-enable max-len */
       const notifyParams: NotifyParams = generateNotifyParams({ ...params.input, metadata: {} });
-      await handler.mutations.notify({ notifyParams, invalidFieldsErrors: params.error });
+      await handler.mutations.notify({
+        notifyParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.notificationMetadataInvalid)],
+      });
     });
 
+    test.each([NotificationType.text, NotificationType.textSms])(
+      'should fail on sending metadata.when in the past for type %p',
+      async (type) => {
+        const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
+        const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
+        const { id } = await handler.mutations.createMember({ memberParams });
+        const member = await handler.queries.getMember({ id });
+
+        const notifyParams: NotifyParams = generateNotifyParams({
+          memberId: member.id,
+          userId: member.primaryUserId,
+          type,
+        });
+
+        notifyParams.metadata.when = new Date();
+        notifyParams.metadata.when.setSeconds(notifyParams.metadata.when.getSeconds() - 1);
+
+        await handler.mutations.notify({
+          notifyParams,
+          invalidFieldsErrors: [Errors.get(ErrorType.notificationMetadataWhenPast)],
+        });
+      },
+    );
+
+    test.each([NotificationType.call, NotificationType.video])(
+      'should fail on sending metadata.when is provided with not allowed type %p',
+      async (type) => {
+        const notifyParams: NotifyParams = generateNotifyParams({
+          type,
+          metadata: { when: faker.date.soon(1) },
+        });
+        await handler.mutations.notify({
+          notifyParams,
+          invalidFieldsErrors: [Errors.get(ErrorType.notificationMetadataInvalid)],
+        });
+      },
+    );
+  });
+
+  describe('cancel', () => {
     test.each`
       input                            | error
       ${{ memberId: 123 }}             | ${stringError}
@@ -317,18 +358,19 @@ describe('Validations - member', () => {
       await handler.mutations.cancel({ cancelNotifyParams, missingFieldError: params.error });
     });
 
-    /* eslint-disable max-len */
     test.each`
-      field            | input                                           | error
-      ${'cancelCall'}  | ${{ type: CancelNotificationType.cancelCall }}  | ${[Errors.get(ErrorType.notificationMetadataInvalid)]}
-      ${'cancelVideo'} | ${{ type: CancelNotificationType.cancelVideo }} | ${[Errors.get(ErrorType.notificationMetadataInvalid)]}
+      field            | input
+      ${'cancelCall'}  | ${{ type: CancelNotificationType.cancelCall }}
+      ${'cancelVideo'} | ${{ type: CancelNotificationType.cancelVideo }}
     `('should throw an error when metadata is not provided with type $field', async (params) => {
-      /* eslint-enable max-len */
       const cancelNotifyParams: CancelNotifyParams = generateCancelNotifyParams({
         ...params.input,
         metadata: {},
       });
-      await handler.mutations.cancel({ cancelNotifyParams, invalidFieldsErrors: params.error });
+      await handler.mutations.cancel({
+        cancelNotifyParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.notificationMetadataInvalid)],
+      });
     });
 
     /* eslint-disable max-len */

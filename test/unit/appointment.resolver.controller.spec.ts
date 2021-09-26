@@ -202,15 +202,15 @@ describe('AppointmentResolver', () => {
 
   describe('endAppointment', () => {
     let spyOnServiceEnd;
-    let spyOnSchedulerDeleteAppointmentAlert;
+    let spyOnSchedulerDeleteTimeoutAlert;
     beforeEach(() => {
       spyOnServiceEnd = jest.spyOn(service, 'end');
-      spyOnSchedulerDeleteAppointmentAlert = jest.spyOn(scheduler, 'deleteAppointmentAlert');
+      spyOnSchedulerDeleteTimeoutAlert = jest.spyOn(scheduler, 'deleteTimeout');
     });
 
     afterEach(() => {
       spyOnServiceEnd.mockReset();
-      spyOnSchedulerDeleteAppointmentAlert.mockReset();
+      spyOnSchedulerDeleteTimeoutAlert.mockReset();
       spyOnEventEmitter.mockReset();
     });
 
@@ -225,7 +225,7 @@ describe('AppointmentResolver', () => {
 
       const result = await resolver.endAppointment({ id: appointment.id });
       expect(spyOnServiceEnd).toBeCalledWith({ id: appointment.id });
-      expect(spyOnSchedulerDeleteAppointmentAlert).toBeCalledWith({ id: appointment.id });
+      expect(spyOnSchedulerDeleteTimeoutAlert).toBeCalledWith({ id: appointment.id });
       expect(result).toEqual(appointment);
     });
 

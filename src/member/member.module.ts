@@ -11,6 +11,9 @@ import {
   MemberResolver,
   MemberService,
   MemberController,
+  MemberScheduler,
+  NotifyParamsDto,
+  NotifyParams,
 } from '.';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HttpModule } from '@nestjs/axios';
@@ -29,9 +32,10 @@ import { UserModule } from '../user';
       { name: ActionItem.name, schema: ActionItemDto },
       { name: MemberConfig.name, schema: MemberConfigDto },
       { name: Appointment.name, schema: AppointmentDto },
+      { name: NotifyParams.name, schema: NotifyParamsDto },
     ]),
   ],
-  providers: [MemberResolver, MemberService, ConfigsService],
+  providers: [MemberResolver, MemberService, MemberScheduler, ConfigsService],
   controllers: [MemberController],
 })
 export class MemberModule {}

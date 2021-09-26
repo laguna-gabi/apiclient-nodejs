@@ -36,7 +36,7 @@
     },
     "androidChannelId": "00349af6-be67-4729-9d48-9057a5507b14"
   },
-  "appointments": {
+  "scheduler": {
     "alertBeforeInMin": 5,
     "maxAlertGapInMin": 43800
   },

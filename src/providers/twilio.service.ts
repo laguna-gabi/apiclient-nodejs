@@ -35,7 +35,14 @@ export class TwilioService implements OnModuleInit {
 
   async send({ body, to }: { body: string; to: string }) {
     if (process.env.NODE_ENV === environments.production && !to.startsWith('+972')) {
-      return this.client.messages.create({ body, to, from: this.source });
+      /**
+       * KEEP return await when its inside try catch
+       */
+      try {
+        return await this.client.messages.create({ body, to, from: this.source });
+      } catch (ex) {
+        console.error(ex);
+      }
     } else {
       const params: IEventSlackMessage = {
         message: `*SMS to ${to}*\n${body}`,
