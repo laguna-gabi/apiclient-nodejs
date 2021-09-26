@@ -39,12 +39,10 @@ export class SendBird implements OnModuleInit {
         console.log(`Sendbird: Successfully created a user ${params.user_id}`);
         return result.data.access_token;
       } else {
-        console.error(`${failure} ${result.status} ${this.formatMessage(result.data)}`);
+        console.error(`${failure} ${result.status} ${result.data}`);
       }
     } catch (ex) {
-      console.error(
-        `${failure} ${this.formatMessage(ex.config)} ${this.formatMessage(ex.response.data)}`,
-      );
+      console.error(`${failure} ${ex.config} ${ex.response.data}`);
     }
   }
 
@@ -86,10 +84,6 @@ export class SendBird implements OnModuleInit {
         },
       )
       .toPromise();
-  }
-
-  private formatMessage(message: string): string {
-    return JSON.stringify(message, undefined, 2);
   }
 
   private async update(

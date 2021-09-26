@@ -47,7 +47,7 @@ export class OneSignal {
       console.error(
         `Onesignal: Failure to register a user for voip project`,
         ex.response?.status,
-        JSON.stringify(ex.response?.config, undefined, 2),
+        ex.response?.config,
       );
     }
   }
@@ -81,7 +81,7 @@ export class OneSignal {
         return result.data.id;
       }
     } catch (ex) {
-      console.error(JSON.stringify(ex.message, undefined, 2));
+      console.error(ex);
     }
   }
 
@@ -119,7 +119,7 @@ export class OneSignal {
             return result.data.id;
           }
         } catch (ex) {
-          console.error(JSON.stringify(ex.message, undefined, 2));
+          console.error(ex);
         }
       }
     }

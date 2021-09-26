@@ -86,7 +86,7 @@ export class CommunicationService {
         await this.sendBird.freezeGroupChannel(params.channel_url, platform === Platform.web);
       }
     } catch (ex) {
-      console.error(JSON.stringify(ex.message, undefined, 2));
+      console.error(ex);
     }
   }
 

@@ -80,7 +80,7 @@ export class CommunicationResolver {
     try {
       return this.communicationService.onUpdatedAppointment(params);
     } catch (ex) {
-      console.error(JSON.stringify(ex.message, undefined, 2));
+      console.error(ex);
     }
   }
 

@@ -307,7 +307,7 @@ export class MemberResolver extends MemberBase implements OnModuleInit {
 
       await this.notify(notifyParams);
     } catch (ex) {
-      console.error(JSON.stringify(ex.message, undefined, 2));
+      console.error(ex);
     }
   }
 
