@@ -25,6 +25,10 @@ export class MemberConfig {
   @Prop()
   @Field(() => String, { nullable: true })
   accessToken: string;
+
+  @Prop({ type: Boolean, default: false })
+  @Field(() => Boolean)
+  isPushNotificationsEnabled: boolean;
 }
 
 /**************************************************************************************************

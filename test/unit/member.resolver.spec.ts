@@ -500,6 +500,7 @@ describe('MemberResolver', () => {
       const params: RegisterForNotificationParams = {
         memberId: member.id,
         platform: Platform.android,
+        isPushNotificationsEnabled: true,
       };
       await resolver.registerMemberForNotifications(params);
 
@@ -510,6 +511,7 @@ describe('MemberResolver', () => {
       expect(spyOnServiceUpdateMemberConfig).toBeCalledWith({
         memberId: Types.ObjectId(member.id),
         platform: params.platform,
+        isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       });
     });
 
@@ -525,6 +527,7 @@ describe('MemberResolver', () => {
       const params: RegisterForNotificationParams = {
         memberId: member.id,
         platform: Platform.ios,
+        isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
         token: faker.lorem.word(),
       };
       await resolver.registerMemberForNotifications(params);
@@ -538,6 +541,7 @@ describe('MemberResolver', () => {
       expect(spyOnServiceUpdateMemberConfig).toBeCalledWith({
         memberId: memberConfig.memberId,
         platform: params.platform,
+        isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       });
       const eventParams: IEventUpdateMemberPlatform = {
         memberId: params.memberId,
@@ -606,6 +610,7 @@ describe('MemberResolver', () => {
         sendNotificationToMemberParams: {
           externalUserId: memberConfig.externalUserId,
           platform: memberConfig.platform,
+          isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
           data: {
             user: {
               id: user.id,
@@ -662,6 +667,7 @@ describe('MemberResolver', () => {
         sendNotificationToMemberParams: {
           externalUserId: memberConfig.externalUserId,
           platform: memberConfig.platform,
+          isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
           data: {
             user: {
               id: user.id,
@@ -711,6 +717,7 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
         sendNotificationToMemberParams: {
           externalUserId: memberConfig.externalUserId,
+          isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
           platform: memberConfig.platform,
           data: {
             user: {
@@ -747,6 +754,7 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceCancel).toBeCalledWith({
         externalUserId: memberConfig.externalUserId,
         platform: memberConfig.platform,
+        isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
         data: {
           type: cancelNotifyParams.type,
           peerId: cancelNotifyParams.metadata.peerId,
@@ -794,6 +802,7 @@ describe('MemberResolver', () => {
         sendNotificationToMemberParams: {
           externalUserId: memberConfig.externalUserId,
           platform: memberConfig.platform,
+          isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
           data: {
             user: {
               id: user.id,

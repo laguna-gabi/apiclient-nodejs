@@ -509,15 +509,7 @@ describe('MemberService', () => {
     };
 
     it('should check that createdAt and updatedAt exists in the collection', async () => {
-      const primaryUser = await modelUser.create(generateCreateRawUserParams());
-      const org = await modelOrg.create(generateOrgParams());
-
-      const { id } = await service.insert(
-        generateCreateMemberParams({
-          orgId: org._id,
-        }),
-        primaryUser._id,
-      );
+      const id = await generateMember();
 
       const createdMember: any = await memberModel.findById(id);
       expect(createdMember.createdAt).toEqual(expect.any(Date));
@@ -592,12 +584,7 @@ describe('MemberService', () => {
     });
 
     it('should not change no nullable params if null is passed', async () => {
-      const primaryUser = await modelUser.create(generateCreateRawUserParams());
-      const org = await modelOrg.create(generateOrgParams());
-
-      const createMemberParams = generateCreateMemberParams({ orgId: org._id });
-
-      const { id } = await service.insert(createMemberParams, primaryUser._id);
+      const id = await generateMember();
       const beforeObject = await memberModel.findById(id);
 
       const updateMemberParams = generateUpdateMemberParams();
@@ -614,11 +601,7 @@ describe('MemberService', () => {
     });
 
     const updateMember = async (updateMemberParams?: Omit<UpdateMemberParams, 'id'>) => {
-      const primaryUser = await modelUser.create(generateCreateRawUserParams());
-      const org = await modelOrg.create(generateOrgParams());
-
-      const createMemberParams = generateCreateMemberParams({ orgId: org._id });
-      const { id } = await service.insert(createMemberParams, primaryUser._id);
+      const id = await generateMember();
 
       const beforeObject: any = await memberModel.findById(id);
 
@@ -689,13 +672,7 @@ describe('MemberService', () => {
 
   describe('setGeneralNotes', () => {
     it('should set general notes for a member', async () => {
-      const { _id: primaryUserId } = await modelUser.create(generateCreateRawUserParams());
-      const { _id: orgId } = await modelOrg.create(generateOrgParams());
-
-      const { id: memberId } = await service.insert(
-        generateCreateMemberParams({ orgId }),
-        primaryUserId,
-      );
+      const memberId = await generateMember();
 
       const generalNotes = generateSetGeneralNotesParams({ memberId });
       await service.setGeneralNotes(generalNotes);
@@ -713,16 +690,88 @@ describe('MemberService', () => {
     });
   });
 
+  describe('updateMemberConfig', () => {
+    it('should update memberConfig multiple times', async () => {
+      //1st memberConfig is inserted in generateMember with externalUserId only
+      const id = await generateMember();
+
+      const params1 = {
+        memberId: new Types.ObjectId(id),
+        platform: Platform.android,
+        isPushNotificationsEnabled: true,
+      };
+      params1.memberId = new Types.ObjectId(id);
+      await service.updateMemberConfig(params1);
+
+      const configs1 = await service.getMemberConfig(id);
+      expect(configs1.externalUserId).toEqual(expect.any(String));
+      expect(configs1.isPushNotificationsEnabled).toEqual(params1.isPushNotificationsEnabled);
+      expect(configs1.platform).toEqual(params1.platform);
+
+      const params2 = {
+        memberId: new Types.ObjectId(id),
+        platform: Platform.ios,
+        isPushNotificationsEnabled: false,
+      };
+      params2.memberId = new Types.ObjectId(id);
+      await service.updateMemberConfig(params2);
+
+      const configs2 = await service.getMemberConfig(id);
+      expect(configs1.memberId).toEqual(configs2.memberId);
+      expect(configs1.externalUserId).toEqual(configs2.externalUserId);
+      expect(configs2.isPushNotificationsEnabled).toEqual(params2.isPushNotificationsEnabled);
+      expect(configs2.platform).toEqual(params2.platform);
+    });
+
+    it('should update only isPushNotificationsEnabled', async () => {
+      //1st memberConfig is inserted in generateMember with externalUserId only
+      const id = await generateMember();
+
+      const params = {
+        memberId: new Types.ObjectId(id),
+        platform: Platform.android,
+        isPushNotificationsEnabled: true,
+      };
+      params.memberId = new Types.ObjectId(id);
+      await service.updateMemberConfig(params);
+
+      let configs = await service.getMemberConfig(id);
+      expect(configs.externalUserId).toEqual(expect.any(String));
+      expect(configs.isPushNotificationsEnabled).toEqual(params.isPushNotificationsEnabled);
+      expect(configs.platform).toEqual(params.platform);
+
+      await service.updateMemberConfig({
+        memberId: new Types.ObjectId(id),
+        platform: Platform.android,
+        isPushNotificationsEnabled: true,
+      });
+
+      configs = await service.getMemberConfig(id);
+      expect(configs.isPushNotificationsEnabled).toEqual(true);
+    });
+
+    it('should not override isPushNotificationsEnabled on input undefined', async () => {
+      //1st memberConfig is inserted in generateMember with externalUserId only
+      const id = await generateMember();
+
+      const params = {
+        memberId: new Types.ObjectId(id),
+        platform: Platform.android,
+      };
+      params.memberId = new Types.ObjectId(id);
+      await service.updateMemberConfig(params);
+
+      const configs = await service.getMemberConfig(id);
+      expect(configs.isPushNotificationsEnabled).toEqual(false);
+    });
+  });
+
   describe('getMemberConfig', () => {
     it('should create memberConfig on memberCreate', async () => {
-      const { _id: primaryUserId } = await modelUser.create(generateCreateRawUserParams());
-      const { _id: orgId } = await modelOrg.create(generateOrgParams());
+      const id = await generateMember();
+      const CreatedConfigMember = await service.getMemberConfig(id);
 
-      const member = generateCreateMemberParams({ orgId });
-      const createdMember = await service.insert(member, primaryUserId);
-      const CreatedConfigMember = await service.getMemberConfig(createdMember.id);
-
-      expect(createdMember.id).toEqual(CreatedConfigMember.memberId);
+      expect(id).toEqual(CreatedConfigMember.memberId);
     });
 
     it('should fail to fetch member config on non existing member', async () => {
@@ -732,12 +781,7 @@ describe('MemberService', () => {
     });
 
     it('should insert member config on member insert, and fetch it', async () => {
-      const { _id: primaryUserId } = await modelUser.create(generateCreateRawUserParams());
-      const { _id: orgId } = await modelOrg.create(generateOrgParams());
-
-      const createMemberParams = generateCreateMemberParams({ orgId });
-
-      const { id } = await service.insert(createMemberParams, primaryUserId);
+      const id = await generateMember();
       const memberConfig = await service.getMemberConfig(id);
 
       expect(memberConfig).toEqual(
@@ -749,4 +793,13 @@ describe('MemberService', () => {
       );
     });
   });
+
+  const generateMember = async (): Promise<string> => {
+    const { _id: primaryUserId } = await modelUser.create(generateCreateRawUserParams());
+    const { _id: orgId } = await modelOrg.create(generateOrgParams());
+    const createMemberParams = generateCreateMemberParams({ orgId });
+
+    const { id } = await service.insert(createMemberParams, primaryUserId);
+    return id;
+  };
 });

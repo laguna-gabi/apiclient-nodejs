@@ -406,6 +406,7 @@ export class Queries {
             memberId
             externalUserId
             platform
+            isPushNotificationsEnabled
           }
         }
       `,

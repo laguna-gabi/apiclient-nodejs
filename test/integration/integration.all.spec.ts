@@ -619,6 +619,7 @@ describe('Integration tests: all', () => {
     const registerForNotificationParams: RegisterForNotificationParams = {
       memberId: member.id,
       platform: Platform.android,
+      isPushNotificationsEnabled: true,
     };
     await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
 
@@ -637,6 +638,7 @@ describe('Integration tests: all', () => {
       sendNotificationToMemberParams: {
         externalUserId: memberConfig.externalUserId,
         platform: memberConfig.platform,
+        isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
         data: {
           user: {
             id: primaryUser.id,
@@ -672,6 +674,12 @@ describe('Integration tests: all', () => {
      */
     handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
 
+    const registerForNotificationParams: RegisterForNotificationParams = {
+      memberId: member.id,
+      platform: Platform.android,
+      isPushNotificationsEnabled: true,
+    };
+    await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
     const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
 
     const when = new Date();
@@ -692,6 +700,7 @@ describe('Integration tests: all', () => {
       sendNotificationToMemberParams: {
         externalUserId: memberConfig.externalUserId,
         platform: memberConfig.platform,
+        isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
         data: {
           user: {
             id: primaryUser.id,
@@ -725,6 +734,7 @@ describe('Integration tests: all', () => {
     const registerForNotificationParams: RegisterForNotificationParams = {
       memberId: member.id,
       platform: Platform.android,
+      isPushNotificationsEnabled: true,
     };
     await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
 
@@ -739,6 +749,7 @@ describe('Integration tests: all', () => {
     expect(handler.notificationsService.spyOnNotificationsServiceCancel).toBeCalledWith({
       externalUserId: memberConfig.externalUserId,
       platform: memberConfig.platform,
+      isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       data: {
         type: cancelNotifyParams.type,
         peerId: cancelNotifyParams.metadata.peerId,
@@ -833,6 +844,7 @@ describe('Integration tests: all', () => {
       sendNotificationToMemberParams: {
         externalUserId: expect.any(String),
         platform: expect.any(String),
+        isPushNotificationsEnabled: false,
         data: {
           user: {
             id: primaryUser.id,

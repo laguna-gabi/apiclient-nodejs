@@ -291,13 +291,16 @@ export class MemberService extends BaseService {
   async updateMemberConfig({
     memberId,
     platform,
+    isPushNotificationsEnabled,
   }: {
     memberId: Types.ObjectId;
     platform: Platform;
+    isPushNotificationsEnabled?: boolean;
   }): Promise<boolean> {
+    const setPush = isPushNotificationsEnabled !== undefined ? { isPushNotificationsEnabled } : {};
     const result = await this.memberConfigModel.updateOne(
       { memberId },
-      { $set: { memberId, platform } },
+      { $set: { memberId, platform, ...setPush } },
     );
 
     return result.ok === 1;

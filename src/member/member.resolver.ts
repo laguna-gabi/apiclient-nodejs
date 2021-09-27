@@ -201,6 +201,7 @@ export class MemberResolver extends MemberBase implements OnModuleInit {
     await this.memberService.updateMemberConfig({
       memberId: memberConfig.memberId,
       platform: registerForNotificationParams.platform,
+      isPushNotificationsEnabled: registerForNotificationParams.isPushNotificationsEnabled,
     });
 
     member.users.map((user) => {
@@ -240,6 +241,7 @@ export class MemberResolver extends MemberBase implements OnModuleInit {
       sendNotificationToMemberParams: {
         externalUserId: memberConfig.externalUserId,
         platform: memberConfig.platform,
+        isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
         data: {
           user: {
             id: user.id,
@@ -268,6 +270,7 @@ export class MemberResolver extends MemberBase implements OnModuleInit {
     return this.notificationsService.cancel({
       externalUserId: memberConfig.externalUserId,
       platform: memberConfig.platform,
+      isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       data: {
         type,
         peerId: metadata.peerId,

@@ -80,6 +80,10 @@ export class RegisterForNotificationParams {
    */
   @IsAlphanumeric(undefined, { message: Errors.get(ErrorType.memberRegisterForNotificationToken) })
   token?: string;
+
+  @Field(() => Boolean, { nullable: true })
+  @IsOptional()
+  isPushNotificationsEnabled?: boolean;
 }
 
 /**************************************************************************************************
@@ -108,6 +112,7 @@ export abstract class BaseService {
 export class SendNotificationToMemberParams {
   externalUserId: string;
   platform: Platform;
+  isPushNotificationsEnabled: boolean;
   data: {
     user: {
       id: string;
@@ -137,6 +142,7 @@ export class SendNotificationToUserParams {
 export class CancelNotificationParams {
   externalUserId: string;
   platform: Platform;
+  isPushNotificationsEnabled: boolean;
   data: {
     peerId?: string;
     type: CancelNotificationType;

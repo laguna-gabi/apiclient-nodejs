@@ -247,6 +247,7 @@ export const mockGenerateMemberConfig = (): MemberConfig => {
     memberId: generateObjectId(),
     externalUserId: v4(),
     platform: Platform.ios,
+    isPushNotificationsEnabled: true,
     accessToken: generateId(),
   };
 };

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import {
+  CancelNotificationParams,
   NotificationType,
   Platform,
-  CancelNotificationParams,
   SendNotificationToMemberParams,
   SendNotificationToUserParams,
 } from '../common';
@@ -43,7 +43,8 @@ export class NotificationsService {
     if (sendNotificationToMemberParams) {
       if (
         sendNotificationToMemberParams.platform === Platform.web ||
-        sendNotificationToMemberParams.data.type === NotificationType.textSms
+        sendNotificationToMemberParams.data.type === NotificationType.textSms ||
+        !sendNotificationToMemberParams.isPushNotificationsEnabled
       ) {
         await this.twilio.send({
           body: sendNotificationToMemberParams.metadata.content,

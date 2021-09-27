@@ -2,11 +2,11 @@ import { ConfigsService, NotificationsService, TwilioService } from '../../src/p
 import { HttpService } from '@nestjs/axios';
 import { v4 } from 'uuid';
 import {
-  Platform,
-  NotificationType,
   CancelNotificationType,
   Errors,
   ErrorType,
+  NotificationType,
+  Platform,
 } from '../../src/common';
 import * as faker from 'faker';
 import { delay } from '../common';
@@ -33,6 +33,7 @@ describe('live: notifications (one signal)', () => {
         token: 'sampleiospushkittoken',
         externalUserId: v4(),
         platform: Platform.ios,
+        isPushNotificationsEnabled: true,
       };
       const playerId = await notificationsService.register(params);
       expect(playerId).not.toBeUndefined();
@@ -51,6 +52,7 @@ describe('live: notifications (one signal)', () => {
         token: 'sampleioscancelkittoken',
         externalUserId: v4(),
         platform: Platform.ios,
+        isPushNotificationsEnabled: true,
       };
       const playerId = await notificationsService.register(params);
       expect(playerId).not.toBeUndefined();
@@ -63,6 +65,7 @@ describe('live: notifications (one signal)', () => {
       await notificationsService.cancel({
         externalUserId: params.externalUserId,
         platform: params.platform,
+        isPushNotificationsEnabled: params.isPushNotificationsEnabled,
         data: {
           peerId: v4(),
           type: CancelNotificationType.cancelVideo,
@@ -80,6 +83,7 @@ describe('live: notifications (one signal)', () => {
       token: 'sampleioscancelkittoken',
       externalUserId: v4(),
       platform: Platform.ios,
+      isPushNotificationsEnabled: true,
     };
     const playerId = await notificationsService.register(params);
     expect(playerId).not.toBeUndefined();
@@ -88,6 +92,7 @@ describe('live: notifications (one signal)', () => {
       notificationsService.cancel({
         externalUserId: params.externalUserId,
         platform: params.platform,
+        isPushNotificationsEnabled: params.isPushNotificationsEnabled,
         data: {
           peerId: v4(),
           type: CancelNotificationType.cancelVideo,
@@ -112,12 +117,14 @@ describe('live: notifications (one signal)', () => {
     const params = {
       externalUserId: 'eb0ef495-0e63-4a48-b45a-a58248f6b775',
       platform: Platform.android,
+      isPushNotificationsEnabled: true,
     };
 
     const result = await notificationsService.send({
       sendNotificationToMemberParams: {
         externalUserId: params.externalUserId,
         platform: params.platform,
+        isPushNotificationsEnabled: params.isPushNotificationsEnabled,
         data: {
           user: {
             id: faker.datatype.uuid(),
@@ -147,6 +154,7 @@ describe('live: notifications (one signal)', () => {
     token: string;
     externalUserId: string;
     platform: Platform;
+    isPushNotificationsEnabled: boolean;
   }) => {
     let result;
     let current = 0;
@@ -163,6 +171,7 @@ describe('live: notifications (one signal)', () => {
         sendNotificationToMemberParams: {
           externalUserId: params.externalUserId,
           platform: params.platform,
+          isPushNotificationsEnabled: params.isPushNotificationsEnabled,
           data: {
             user: {
               id: v4(),
