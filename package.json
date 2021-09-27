@@ -39,7 +39,7 @@
     "@nestjs/terminus": "^7.2.0",
     "@slack/webhook": "^6.0.0",
     "@types/aws-sdk": "^2.7.0",
-    "@types/lodash": "^4.14.170",
+    "@types/lodash": "^4.14.172",
     "@types/mongoose": "^5.11.97",
     "apollo-server-express": "^2.25.2",
     "aws-sdk": "^2.983.0",
