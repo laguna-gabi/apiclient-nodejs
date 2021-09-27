@@ -24,6 +24,8 @@ import { Member, NotifyParams } from '../member';
 import { User } from '../user';
 import * as config from 'config';
 import { add } from 'date-fns';
+import { Bitly } from '../providers';
+import { OrgService } from '../org';
 
 @Resolver(() => Appointment)
 export class AppointmentResolver extends AppointmentBase {
@@ -31,6 +33,8 @@ export class AppointmentResolver extends AppointmentBase {
     readonly appointmentService: AppointmentService,
     readonly appointmentScheduler: AppointmentScheduler,
     readonly eventEmitter: EventEmitter2,
+    readonly bitly: Bitly,
+    readonly orgService: OrgService,
   ) {
     super(appointmentService, appointmentScheduler, eventEmitter);
   }
@@ -92,8 +96,9 @@ export class AppointmentResolver extends AppointmentBase {
       userId: user.id,
       notBefore: add(new Date(), { hours: 2 }),
     };
-    const appointment = await this.appointmentService.request(requestAppointmentParams);
-    this.notifyRegistration({ appointment, member, user });
+    const { id } = await this.appointmentService.request(requestAppointmentParams);
+    const url = await this.bitly.shortenLink(`${config.get('hosts.webApp')}/download/${id}`);
+    await this.notifyRegistration({ member, user, url });
   }
 
   /*************************************************************************************************
@@ -115,21 +120,26 @@ export class AppointmentResolver extends AppointmentBase {
     this.eventEmitter.emit(EventType.notify, params);
   }
 
-  private notifyRegistration({
-    appointment,
+  private async notifyRegistration({
     member,
     user,
+    url,
   }: {
-    appointment: Appointment;
     member: Member;
     user: User;
+    url: string;
   }) {
+    const org = await this.orgService.get(member.org.toString());
     const metadata = {
       content: replaceConfigs({
-        content: config.get('contents.downloadPage'),
+        content: org
+          ? config.get('contents.downloadPage')
+          : config.get('contents.downloadPageWithoutOrg'),
         member,
         user,
-      }).replace('@downloadLink@', `\n${config.get('hosts.webApp')}/download/${appointment.id}`),
+      })
+        .replace('@org.name@', org?.name)
+        .replace('@downloadLink@', `\n${url}`),
     };
     const params: NotifyParams = {
       memberId: member.id,

@@ -5,5 +5,6 @@ import { Org, OrgDto, OrgResolver, OrgService } from '.';
 @Module({
   imports: [MongooseModule.forFeature([{ name: Org.name, schema: OrgDto }])],
   providers: [OrgResolver, OrgService],
+  exports: [OrgService],
 })
 export class OrgModule {}

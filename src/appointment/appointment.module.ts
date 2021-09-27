@@ -12,6 +12,7 @@ import {
 } from '.';
 import { ProvidersModule } from '../providers';
 import { CommunicationModule } from '../communication';
+import { OrgModule } from '../org';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { CommunicationModule } from '../communication';
       { name: Appointment.name, schema: AppointmentDto },
       { name: Notes.name, schema: NotesDto },
     ]),
+    OrgModule,
   ],
   providers: [AppointmentResolver, AppointmentService, AppointmentScheduler],
   controllers: [AppointmentController],
