@@ -5,6 +5,7 @@ import {
   generateCancelNotifyParams,
   generateCreateMemberParams,
   generateId,
+  generateOrgParams,
   generatePath,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
@@ -277,6 +278,14 @@ describe('Integration tests: all', () => {
       id: generateId(),
       invalidFieldsErrors: [Errors.get(ErrorType.availabilityNotFound)],
     });
+  });
+
+  it('should successfully create an org and then get it by id', async () => {
+    const orgParams = generateOrgParams();
+    const { id } = await handler.mutations.createOrg({ orgParams });
+    const createdOrg = await handler.queries.getOrg({ id });
+
+    expect(createdOrg).toEqual(expect.objectContaining({ ...orgParams, id }));
   });
 
   it('should return members appointment filtered by orgId', async () => {

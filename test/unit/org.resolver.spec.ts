@@ -33,19 +33,39 @@ describe('OrgResolver', () => {
       spyOnServiceInsert.mockReset();
     });
 
-    describe('createOrg', () => {
-      it('should successfully create an org', async () => {
-        const params = generateOrgParams();
-        spyOnServiceInsert.mockImplementationOnce(async () => ({
-          id: generateId(),
-          ...params,
-        }));
+    it('should successfully create an org', async () => {
+      const id = generateId();
+      spyOnServiceInsert.mockImplementationOnce(() => id);
 
-        await resolver.createOrg(params);
+      const params = generateOrgParams();
+      const result = await resolver.createOrg(params);
 
-        expect(spyOnServiceInsert).toBeCalledTimes(1);
-        expect(spyOnServiceInsert).toBeCalledWith(params);
-      });
+      expect(spyOnServiceInsert).toBeCalledTimes(1);
+      expect(spyOnServiceInsert).toBeCalledWith(params);
+      expect(result).toEqual(id);
+    });
+  });
+
+  describe('getOrg', () => {
+    let spyOnServiceGet;
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'get');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+    });
+
+    it('should successfully get org by id', async () => {
+      const generatedOrgParams = generateOrgParams();
+      spyOnServiceGet.mockImplementationOnce(() => generatedOrgParams);
+
+      const id = generateId();
+      const result = await resolver.getOrg(id);
+
+      expect(spyOnServiceGet).toBeCalledTimes(1);
+      expect(spyOnServiceGet).toBeCalledWith(id);
+      expect(result).toEqual(generatedOrgParams);
     });
   });
 });

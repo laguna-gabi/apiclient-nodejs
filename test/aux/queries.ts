@@ -443,4 +443,23 @@ export class Queries {
       return result.data.getUserConfig;
     }
   };
+
+  getOrg = async ({ id }: { id: string }) => {
+    const result = await this.apolloClient.query({
+      variables: { id },
+      query: gql`
+        query getOrg($id: String!) {
+          getOrg(id: $id) {
+            id
+            name
+            type
+            zipCode
+            trialDuration
+          }
+        }
+      `,
+    });
+
+    return result.data.getOrg;
+  };
 }

@@ -1,4 +1,4 @@
-import { generateOrgParams } from '../index';
+import { generateId, generateOrgParams } from '../index';
 import { Errors, ErrorType } from '../../src/common';
 import { CreateOrgParams } from '../../src/org';
 import { Handler } from '../aux/handler';
@@ -53,5 +53,12 @@ describe('Validations - org', () => {
       orgParams,
       invalidFieldsErrors: [Errors.get(ErrorType.orgTrialDurationOutOfRange)],
     });
+  });
+
+  it('should return null for non existing org', async () => {
+    const result = await handler.queries.getOrg({
+      id: generateId(),
+    });
+    expect(result).toBeNull();
   });
 });
