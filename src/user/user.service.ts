@@ -222,13 +222,10 @@ export class UserService extends BaseService {
           as: 'member',
         },
       },
-      {
-        $limit:
-          process.env.NODE_ENV === environments.production ||
-          process.env.NODE_ENV === environments.development
-            ? 0
-            : 10,
-      },
+      ...(process.env.NODE_ENV === environments.production ||
+      process.env.NODE_ENV === environments.development
+        ? []
+        : [{ $limit: 10 }]),
       { $project: { members: { $size: '$member' } } },
       { $sort: { members: 1 } },
     ]);
