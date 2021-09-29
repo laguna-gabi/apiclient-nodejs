@@ -3,6 +3,7 @@
   "rootDir": "../validations",
   "testEnvironment": "node",
   "testRegex": ".*.spec.ts$",
+  "maxWorkers": 4,
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   }

@@ -24,6 +24,7 @@ import {
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { cloneDeep } from 'lodash';
 import { UserConfig, UserConfigDocument } from './userConfig.dto';
+import { environments } from '../providers';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -205,6 +206,12 @@ export class UserService extends BaseService {
     ]);
   }
 
+  /**
+   * This method takes a long time to process with a lot of users in the db.
+   * As a hot fix for debugging environments(test/localhost),
+   * we'll limit the number of lookup results to 10.
+   * In production and dev we're NOT limiting the number of results.
+   */
   async getAvailableUser(): Promise<string> {
     const users = await this.userModel.aggregate([
       {
@@ -215,12 +222,14 @@ export class UserService extends BaseService {
           as: 'member',
         },
       },
-
       {
-        $project: {
-          members: { $size: '$member' },
-        },
+        $limit:
+          process.env.NODE_ENV === environments.production ||
+          process.env.NODE_ENV === environments.development
+            ? 0
+            : 10,
       },
+      { $project: { members: { $size: '$member' } } },
       { $sort: { members: 1 } },
     ]);
     return users[0]._id;
