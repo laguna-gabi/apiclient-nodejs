@@ -3,7 +3,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Appointment, AppointmentDocument, AppointmentStatus } from '.';
 import { Model } from 'mongoose';
-import { BaseScheduler, EventType, log, NotificationType } from '../common';
+import { BaseScheduler, EventType, Logger, NotificationType } from '../common';
 import { Bitly, NotificationsService } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotifyParams } from '../member';
@@ -12,6 +12,8 @@ import { CommunicationResolver } from '../communication';
 
 @Injectable()
 export class AppointmentScheduler extends BaseScheduler {
+  private readonly logger = new Logger(AppointmentScheduler.name);
+
   constructor(
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument>,
@@ -41,7 +43,7 @@ export class AppointmentScheduler extends BaseScheduler {
       });
     });
 
-    log(`Finish init scheduler for ${appointments.length} appointments`, AppointmentScheduler.name);
+    this.logger.log(`Finish init scheduler for ${appointments.length} appointments`);
   }
 
   async updateAppointmentAlert({
@@ -83,7 +85,7 @@ export class AppointmentScheduler extends BaseScheduler {
     const milliseconds = start.getTime() - gapDate.getTime();
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
-        log(`${id}: notifying appointment reminder`, AppointmentScheduler.name);
+        this.logger.log(`${id}: notifying appointment reminder`);
 
         const chatLink = await this.getChatLink(memberId, userId);
         if (!chatLink) {
@@ -111,7 +113,7 @@ export class AppointmentScheduler extends BaseScheduler {
   private async getChatLink(memberId: string, userId: string) {
     const communication = await this.communicationResolver.getCommunication({ memberId, userId });
     if (!communication) {
-      console.warn(
+      this.logger.warn(
         `NOT sending appointment reminder since no member-user communication exists ` +
           `for member ${memberId} and user ${userId}`,
       );

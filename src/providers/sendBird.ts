@@ -2,6 +2,7 @@ import { HttpService, Injectable, OnModuleInit } from '@nestjs/common';
 import { CreateSendbirdGroupChannelParams, RegisterSendbirdUserParams } from '../communication';
 import { ConfigsService, ExternalConfigs } from '.';
 import { AppointmentStatus } from '../appointment';
+import { Logger } from '../common';
 
 enum suffix {
   users = 'users',
@@ -10,6 +11,7 @@ enum suffix {
 
 @Injectable()
 export class SendBird implements OnModuleInit {
+  private readonly logger = new Logger(SendBird.name);
   private appId;
   private appToken;
   public basePath;
@@ -27,7 +29,7 @@ export class SendBird implements OnModuleInit {
   private readonly httpService: HttpService = new HttpService();
 
   async createUser(params: RegisterSendbirdUserParams): Promise<string | undefined> {
-    const failure = `Sendbird: Failed to create a user`;
+    const failure = `Failed to create a user`;
     try {
       const result = await this.httpService
         .post(`${this.basePath}${suffix.users}`, params, {
@@ -36,13 +38,13 @@ export class SendBird implements OnModuleInit {
         .toPromise();
 
       if (result.status === 200) {
-        console.log(`Sendbird: Successfully created a user ${params.user_id}`);
+        this.logger.log(`Successfully created a user ${params.user_id}`);
         return result.data.access_token;
       } else {
-        console.error(`${failure} ${result.status} ${result.data}`);
+        this.logger.error(`${failure} ${result.status} ${result.data}`);
       }
     } catch (ex) {
-      console.error(`${failure} ${ex.config} ${ex.response.data}`);
+      this.logger.error(`${failure} ${ex.config} ${ex.response.data}`);
     }
   }
 
@@ -54,10 +56,10 @@ export class SendBird implements OnModuleInit {
       .toPromise();
 
     if (result.status === 200) {
-      console.log(`Sendbird: Successfully created a group channel for users ${params.user_ids}`);
+      this.logger.log(`Successfully created a group channel for users ${params.user_ids}`);
       return true;
     } else {
-      console.error(`Sendbird: Failed to create a group channel`, result.status, result.data);
+      this.logger.error(`Failed to create a group channel`, result.status, result.data);
       return false;
     }
   }

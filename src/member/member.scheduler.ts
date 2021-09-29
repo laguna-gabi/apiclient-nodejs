@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { NotifyParams, NotifyParamsDocument } from './member.dto';
-import { BaseScheduler, Errors, ErrorType, Identifier, log } from '../common';
+import { BaseScheduler, Errors, ErrorType, Identifier, Logger } from '../common';
 import { cloneDeep } from 'lodash';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -9,6 +9,7 @@ import { Model } from 'mongoose';
 @Injectable()
 export class MemberScheduler extends BaseScheduler {
   private callback: (notifyParams: NotifyParams) => any;
+  private logger = new Logger(MemberScheduler.name);
 
   constructor(
     @InjectModel(NotifyParams.name)
@@ -33,7 +34,7 @@ export class MemberScheduler extends BaseScheduler {
       }),
     );
 
-    log(
+    this.logger.log(
       `Finish init scheduler for ${notifications.length} future notifications`,
       MemberScheduler.name,
     );

@@ -2,15 +2,6 @@ import * as config from 'config';
 import { Member } from '../member';
 import { User } from '../user';
 
-export function log(text: string, className?: string) {
-  const now = new Date();
-  console.debug(
-    `${now.toLocaleDateString()}, ${now.toLocaleTimeString()}   ${
-      className ? `[${className}]` : ``
-    } ${text}`,
-  );
-}
-
 export function replaceConfigs(params: { content: string; member: Member; user: User }): string {
   const { content, member, user } = params;
   return content

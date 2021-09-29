@@ -6,6 +6,7 @@ import {
   IEventNewMember,
   IEventNewUser,
   IEventUpdateMemberPlatform,
+  Logger,
   UpdatedAppointmentAction,
 } from '../common';
 import { AppointmentStatus } from '../appointment';
@@ -14,6 +15,8 @@ import * as config from 'config';
 
 @Resolver(() => CommunicationInfo)
 export class CommunicationResolver {
+  private readonly logger = new Logger(CommunicationResolver.name);
+
   constructor(private readonly communicationService: CommunicationService) {}
 
   @Query(() => CommunicationInfo, { nullable: true })
@@ -80,7 +83,7 @@ export class CommunicationResolver {
     try {
       return this.communicationService.onUpdatedAppointment(params);
     } catch (ex) {
-      console.error(ex);
+      this.logger.error(ex);
     }
   }
 

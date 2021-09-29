@@ -1,4 +1,4 @@
-import { Platform, slackChannel, SlackIcon, UpdatedAppointmentAction } from './interfaces.dto';
+import { Platform, UpdatedAppointmentAction } from './interfaces.dto';
 import { Types } from 'mongoose';
 import { Scores, AppointmentStatus } from '../appointment';
 import { Member } from '../member';
@@ -11,7 +11,6 @@ export enum EventType {
   appointmentScoresUpdated = 'appointmentScoresUpdated',
   newMember = 'newMember',
   newUser = 'newUser',
-  slackMessage = 'slackMessage',
   updateMemberConfig = 'updateMemberConfig',
   updateUserConfig = 'updateUserConfig',
   addUserToMemberList = 'addUserToMemberList',
@@ -50,12 +49,6 @@ export interface IEventNewMember {
 
 export interface IEventNewUser {
   user: User;
-}
-
-export interface IEventSlackMessage {
-  message: string;
-  icon: SlackIcon;
-  channel: slackChannel;
 }
 
 export interface IEventUpdateMemberConfig {

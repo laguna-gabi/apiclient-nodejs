@@ -17,6 +17,7 @@ import {
   EventType,
   IEventUpdateMemberConfig,
   IEventUpdateUserConfig,
+  Logger,
   Platform,
   UpdatedAppointmentAction,
 } from '../common';
@@ -24,6 +25,8 @@ import { AppointmentStatus } from '../appointment';
 
 @Injectable()
 export class CommunicationService {
+  private readonly logger = new Logger(CommunicationService.name);
+
   constructor(
     @InjectModel(Communication.name)
     private readonly communicationModel: Model<CommunicationDocument>,
@@ -86,7 +89,7 @@ export class CommunicationService {
         await this.sendBird.freezeGroupChannel(params.channel_url, platform === Platform.web);
       }
     } catch (ex) {
-      console.error(ex);
+      this.logger.error(ex);
     }
   }
 
@@ -99,7 +102,7 @@ export class CommunicationService {
   }) {
     const communication = await this.get({ memberId: params.memberId, userId: params.userId });
     if (!communication) {
-      console.warn(
+      this.logger.warn(
         'NOT updating sendbird appointment metadata since no member-user communication exists',
       );
       return;
@@ -129,7 +132,7 @@ export class CommunicationService {
   }) {
     const communication = await this.get({ memberId, userId });
     if (!communication) {
-      console.warn('NOT freezing group channel since no member-user communication exists');
+      this.logger.warn('NOT freezing group channel since no member-user communication exists');
       return;
     }
     await this.sendBird.freezeGroupChannel(

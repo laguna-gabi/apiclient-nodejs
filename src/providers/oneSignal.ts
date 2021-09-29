@@ -5,6 +5,7 @@ import {
   CancelNotificationType,
   Errors,
   ErrorType,
+  Logger,
   NotificationType,
   Platform,
   SendNotificationToMemberParams,
@@ -14,6 +15,7 @@ import * as config from 'config';
 
 @Injectable()
 export class OneSignal {
+  private readonly logger = new Logger(OneSignal.name);
   private readonly oneSignalUrl = 'https://onesignal.com/api/v1';
   private readonly playersUrl = `${this.oneSignalUrl}/players`;
   private readonly notificationsUrl = `${this.oneSignalUrl}/notifications`;
@@ -44,7 +46,7 @@ export class OneSignal {
       const result = await this.httpService.post(this.playersUrl, data).toPromise();
       return this.validateRegisterResult(externalUserId, result);
     } catch (ex) {
-      console.error(
+      this.logger.error(
         `Onesignal: Failure to register a user for voip project`,
         ex.response?.status,
         ex.response?.config,
@@ -81,7 +83,7 @@ export class OneSignal {
         return result.data.id;
       }
     } catch (ex) {
-      console.error(ex);
+      this.logger.error(ex);
     }
   }
 
@@ -119,7 +121,7 @@ export class OneSignal {
             return result.data.id;
           }
         } catch (ex) {
-          console.error(ex);
+          this.logger.error(ex);
         }
       }
     }
@@ -149,14 +151,11 @@ export class OneSignal {
 
   private validateRegisterResult(externalUserId, result): string | undefined {
     if (result.status === 200) {
-      console.log(
-        `Onesignal: Successfully registered externalUserId ${externalUserId} for voip project`,
-      );
+      this.logger.log(`Successfully registered externalUserId ${externalUserId} for voip project`);
       return result.data.id;
     } else {
-      console.error(
-        `Onesignal: Failure to register externalUserId 
-          ${externalUserId} for voip project ${result.statusText}`,
+      this.logger.error(
+        `Failed to register externalUserId ${externalUserId} for voip project ${result.statusText}`,
       );
       return undefined;
     }

@@ -7,13 +7,13 @@ import {
   Member,
   MemberConfig,
   MemberConfigDto,
+  MemberController,
   MemberDto,
   MemberResolver,
-  MemberService,
-  MemberController,
   MemberScheduler,
-  NotifyParamsDto,
+  MemberService,
   NotifyParams,
+  NotifyParamsDto,
 } from '.';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HttpModule } from '@nestjs/axios';

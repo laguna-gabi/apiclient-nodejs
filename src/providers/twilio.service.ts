@@ -1,12 +1,13 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ConfigsService, environments, ExternalConfigs } from '.';
-import { Twilio, jwt } from 'twilio';
+import { ConfigsService, environments, ExternalConfigs, SlackBot, SlackMessageParams } from '.';
+import { jwt, Twilio } from 'twilio';
 import * as config from 'config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EventType, IEventSlackMessage, slackChannel, SlackIcon } from '../common';
+import { Logger, slackChannel, SlackIcon } from '../common';
 
 @Injectable()
 export class TwilioService implements OnModuleInit {
+  private readonly logger = new Logger(TwilioService.name);
   private accountSid;
   private appSid;
   private authToken;
@@ -15,6 +16,7 @@ export class TwilioService implements OnModuleInit {
   private client;
   private source;
   private identity;
+  private slackBot: SlackBot;
 
   constructor(
     private readonly configsService: ConfigsService,
@@ -22,6 +24,7 @@ export class TwilioService implements OnModuleInit {
   ) {
     this.source = config.get('twilio.source');
     this.identity = config.get('twilio.identity');
+    this.slackBot = new SlackBot(configsService);
   }
 
   async onModuleInit() {
@@ -41,15 +44,15 @@ export class TwilioService implements OnModuleInit {
       try {
         return await this.client.messages.create({ body, to, from: this.source });
       } catch (ex) {
-        console.error(ex);
+        this.logger.error(ex);
       }
     } else {
-      const params: IEventSlackMessage = {
+      const params: SlackMessageParams = {
         message: `*SMS to ${to}*\n${body}`,
         icon: SlackIcon.phone,
         channel: slackChannel.testingSms,
       };
-      this.eventEmitter.emit(EventType.slackMessage, params);
+      await this.slackBot.sendMessage(params);
     }
   }
 

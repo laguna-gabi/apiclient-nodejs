@@ -21,6 +21,7 @@ import {
   EventType,
   Identifier,
   IEventUpdateMemberPlatform,
+  Logger,
   NotificationType,
   Platform,
   RegisterForNotificationParams,
@@ -40,6 +41,7 @@ import { OnModuleInit } from '@nestjs/common';
 
 @Resolver(() => Member)
 export class MemberResolver extends MemberBase implements OnModuleInit {
+  private readonly logger = new Logger(MemberResolver.name);
   private readonly authenticationPrefix = 'Bearer ';
 
   constructor(
@@ -308,7 +310,7 @@ export class MemberResolver extends MemberBase implements OnModuleInit {
 
       await this.notify(notifyParams);
     } catch (ex) {
-      console.error(ex);
+      this.logger.error(ex);
     }
   }
 
