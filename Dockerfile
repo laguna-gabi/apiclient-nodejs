@@ -5,7 +5,7 @@ COPY . /hepius
 RUN yarn
 
 # lean output image
-FROM node:16.6.1-alpine3.14
+FROM node:16.8-alpine3.14
 ARG GIT_COMMIT=unspecified
 ARG GIT_BRANCH=unspecified
 LABEL git_commit=${GIT_COMMIT}
