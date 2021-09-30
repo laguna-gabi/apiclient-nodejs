@@ -29,14 +29,11 @@ describe('Validations - user', () => {
   });
 
   test.each`
-    field            | error
-    ${'email'}       | ${`Field "email" of required type "String!" was not provided.`}
-    ${'firstName'}   | ${`Field "firstName" of required type "String!" was not provided.`}
-    ${'lastName'}    | ${`Field "lastName" of required type "String!" was not provided.`}
-    ${'roles'}       | ${`Field "roles" of required type "[UserRole!]!" was not provided.`}
-    ${'avatar'}      | ${`Field "avatar" of required type "String!" was not provided.`}
-    ${'description'} | ${`Field "description" of required type "String!" was not provided.`}
-    ${'phone'}       | ${`Field "phone" of required type "String!" was not provided.`}
+    field          | error
+    ${'email'}     | ${`Field "email" of required type "String!" was not provided.`}
+    ${'firstName'} | ${`Field "firstName" of required type "String!" was not provided.`}
+    ${'lastName'}  | ${`Field "lastName" of required type "String!" was not provided.`}
+    ${'phone'}     | ${`Field "phone" of required type "String!" was not provided.`}
   `(`should fail to create a user since mandatory field $field is missing`, async (params) => {
     const userParams: CreateUserParams = generateCreateUserParams();
     delete userParams[params.field];
@@ -93,6 +90,8 @@ describe('Validations - user', () => {
     field             | defaultValue
     ${'maxCustomers'} | ${defaultUserParams.maxCustomers}
     ${'languages'}    | ${defaultUserParams.languages}
+    ${'avatar'}       | ${defaultUserParams.avatar}
+    ${'roles'}        | ${defaultUserParams.roles}
   `(`should set default value if exists for optional field $field`, async (params) => {
     /* eslint-enable max-len */
     const userParams: CreateUserParams = generateCreateUserParams();

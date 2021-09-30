@@ -2,14 +2,14 @@ import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { Errors, ErrorType, Identifier, Language, validPhoneExamples } from '../common';
-import { IsEmail, IsPhoneNumber, IsUrl, Length } from 'class-validator';
+import { IsEmail, IsOptional, IsPhoneNumber, IsUrl, Length } from 'class-validator';
 import * as config from 'config';
 import { Appointment, AppointmentData } from '../appointment';
 
 export enum UserRole {
-  admin = 'Admin',
-  coach = 'Coach',
-  nurse = 'Nurse',
+  admin = 'admin',
+  coach = 'coach',
+  nurse = 'nurse',
 }
 
 registerEnumType(UserRole, { name: 'UserRole' });
@@ -19,9 +19,15 @@ const validatorsConfig = config.get('graphql.validators');
 export const defaultUserParams = {
   maxCustomers: 7,
   languages: [Language.en],
+  roles: [UserRole.coach],
+  //TODO replace in real default image
+  /* eslint-disable max-len */
+  avatar:
+    'https://e7.pngegg.com/pngimages/413/779/png-clipart-black-person-symbol-art-computer-icons-user-profile-avatar-profile-heroes-profile.png',
+  /* eslint-enable max-len */
 };
 
-export const NotNullableUserKeys = ['maxCustomers'];
+export const NotNullableUserKeys = ['maxCustomers', 'languages', 'roles', 'avatar'];
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -44,20 +50,19 @@ export class CreateUserParams {
   lastName: string;
 
   @Field()
-  @IsEmail(undefined, {
-    message: Errors.get(ErrorType.userEmailFormat),
-  })
+  @IsEmail(undefined, { message: Errors.get(ErrorType.userEmailFormat) })
   email: string;
 
-  @Field(() => [UserRole])
-  roles: UserRole[];
+  @Field(() => [UserRole], { nullable: true })
+  roles?: UserRole[];
 
-  @Field()
+  @Field({ nullable: true })
+  @IsOptional()
   @IsUrl(undefined, { message: Errors.get(ErrorType.userAvatarFormat) })
-  avatar: string;
+  avatar?: string;
 
-  @Field()
-  description: string;
+  @Field({ nullable: true })
+  description?: string;
 
   @Field({ description: validPhoneExamples })
   @IsPhoneNumber(undefined, { message: Errors.get(ErrorType.userPhone) })
@@ -94,23 +99,23 @@ export class User extends Identifier {
   @Field(() => String)
   email: string;
 
-  @Prop()
+  @Prop({ default: defaultUserParams.roles })
   @Field(() => [UserRole], {
     description: 'role of the user: admin/user/nurse/nutrition/doctor/...',
   })
   roles: UserRole[];
 
-  @Prop()
-  @Field(() => String)
-  avatar: string;
+  @Prop({ default: defaultUserParams.avatar })
+  @Field(() => String, { nullable: true })
+  avatar?: string;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: Appointment.name }] })
   @Field(() => [AppointmentData], { nullable: true })
   appointments?: AppointmentData[];
 
-  @Prop()
-  @Field(() => String)
-  description: string;
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  description?: string;
 
   @Field(() => Date)
   createdAt: Date;

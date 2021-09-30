@@ -88,6 +88,9 @@ describe('UserService', () => {
       delete user.title;
       delete user.languages;
       delete user.maxCustomers;
+      delete user.roles;
+      delete user.avatar;
+      delete user.description;
 
       const { id } = await service.insert(user);
       const result = await service.get(id);
@@ -96,6 +99,8 @@ describe('UserService', () => {
         ...user,
         languages: defaultUserParams.languages,
         maxCustomers: defaultUserParams.maxCustomers,
+        roles: defaultUserParams.roles,
+        avatar: defaultUserParams.avatar,
       });
     });
 
