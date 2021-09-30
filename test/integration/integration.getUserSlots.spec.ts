@@ -14,6 +14,7 @@ import { AppointmentsIntegrationActions } from '../aux/appointments';
 import { Creators } from '../aux/creators';
 import { Handler } from '../aux/handler';
 import { v4 } from 'uuid';
+import { slackChannel, SlackIcon } from '../../src/common';
 
 describe('Integration tests : getUserSlots', () => {
   const handler: Handler = new Handler();
@@ -217,7 +218,9 @@ describe('Integration tests : getUserSlots', () => {
     ).toEqual(true);
   });
 
-  it('should return no slots if availability in the past', async () => {
+  // eslint-disable-next-line max-len
+  it('should return 6 default slots and send message to slack if availability in the past', async () => {
+    handler.slackBot.spyOnSlackBotSendMessage.mockReset();
     const { primaryUser, member } = await createUserMember();
 
     await handler.mutations.createAvailabilities({
@@ -242,10 +245,17 @@ describe('Integration tests : getUserSlots', () => {
       notBefore: add(startOfToday(), { hours: 12 }),
     });
 
-    expect(result.slots.length).toEqual(0);
+    expect(result.slots.length).toEqual(6);
+    expect(handler.slackBot.spyOnSlackBotSendMessage).toBeCalledWith({
+      message: `*No availability*\nUser ${primaryUser.id}`,
+      icon: SlackIcon.warning,
+      channel: slackChannel.notifications,
+    });
   });
 
-  it('should return no slots if there is no availability', async () => {
+  // eslint-disable-next-line max-len
+  it('should return 6 default slots and send message to slack if there is no availability', async () => {
+    handler.slackBot.spyOnSlackBotSendMessage.mockReset();
     const { primaryUser, member } = await createUserMember();
 
     await appointmentsActions.scheduleAppointmentWithDate(
@@ -260,7 +270,12 @@ describe('Integration tests : getUserSlots', () => {
       notBefore: add(startOfToday(), { hours: 10 }),
     });
 
-    expect(result.slots.length).toEqual(0);
+    expect(result.slots.length).toEqual(6);
+    expect(handler.slackBot.spyOnSlackBotSendMessage).toBeCalledWith({
+      message: `*No availability*\nUser ${primaryUser.id}`,
+      icon: SlackIcon.warning,
+      channel: slackChannel.notifications,
+    });
   });
 
   it('should return 5 slots from today and the next from tomorrow', async () => {

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ProvidersModule } from '../providers';
 import {
   User,
   UserDto,
@@ -13,6 +14,7 @@ import {
 
 @Module({
   imports: [
+    ProvidersModule,
     MongooseModule.forFeature([
       { name: User.name, schema: UserDto },
       { name: UserConfig.name, schema: UserConfigDto },

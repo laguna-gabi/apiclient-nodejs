@@ -2,7 +2,13 @@ import { User } from '../src/user';
 import { connect, disconnect } from 'mongoose';
 import * as config from 'config';
 import { TestingModule } from '@nestjs/testing';
-import { NotificationsService, SendBird, StorageService, TwilioService } from '../src/providers';
+import {
+  NotificationsService,
+  SendBird,
+  SlackBot,
+  StorageService,
+  TwilioService,
+} from '../src/providers';
 import { apiPrefix } from '../src/common';
 import { v4 } from 'uuid';
 import { DbModule } from '../src/db/db.module';
@@ -44,11 +50,12 @@ export const defaultModules = () => {
 
 export const mockProviders = (
   module: TestingModule,
-): { sendBird; notificationsService; twilioService } => {
+): { sendBird; notificationsService; twilioService; slackBot } => {
   const sendBird = module.get<SendBird>(SendBird);
   const storage = module.get<StorageService>(StorageService);
   const notificationsService = module.get<NotificationsService>(NotificationsService);
   const twilioService = module.get<TwilioService>(TwilioService);
+  const slackBot = module.get<SlackBot>(SlackBot);
 
   const spyOnSendBirdCreateUser = jest.spyOn(sendBird, 'createUser');
   const spyOnSendBirdCreateGroupChannel = jest.spyOn(sendBird, 'createGroupChannel');
@@ -67,6 +74,7 @@ export const mockProviders = (
   const spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
   const spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
   const spyOnTwilioGetToken = jest.spyOn(twilioService, 'getAccessToken');
+  const spyOnSlackBotSendMessage = jest.spyOn(slackBot, 'sendMessage');
 
   spyOnSendBirdCreateUser.mockResolvedValue(v4());
   spyOnSendBirdCreateGroupChannel.mockResolvedValue(true);
@@ -79,6 +87,7 @@ export const mockProviders = (
   spyOnNotificationsServiceSend.mockResolvedValue(v4());
   spyOnNotificationsServiceCancel.mockResolvedValue(v4());
   spyOnTwilioGetToken.mockReturnValue('token');
+  spyOnSlackBotSendMessage.mockReturnValue(undefined);
 
   return {
     sendBird: {
@@ -94,5 +103,6 @@ export const mockProviders = (
       spyOnNotificationsServiceCancel,
     },
     twilioService: { spyOnTwilioGetToken },
+    slackBot: { spyOnSlackBotSendMessage },
   };
 };

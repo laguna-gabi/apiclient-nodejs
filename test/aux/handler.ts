@@ -22,6 +22,7 @@ export class Handler {
   sendBird;
   notificationsService;
   twilioService;
+  slackBot;
   memberModel;
   communicationService: CommunicationService;
 
@@ -42,6 +43,7 @@ export class Handler {
     this.sendBird = providers.sendBird;
     this.notificationsService = providers.notificationsService;
     this.twilioService = providers.twilioService;
+    this.slackBot = providers.slackBot;
 
     const apolloServer = createTestClient((this.module as any).apolloServer);
     this.mutations = new Mutations(apolloServer);
@@ -65,6 +67,7 @@ export class Handler {
     this.notificationsService.spyOnNotificationsServiceSend.mockReset();
     this.notificationsService.spyOnNotificationsServiceCancel.mockReset();
     this.twilioService.spyOnTwilioGetToken.mockReset();
+    this.slackBot.spyOnSlackBotSendMessage.mockReset();
 
     await dbDisconnect();
   }

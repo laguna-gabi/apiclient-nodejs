@@ -20,11 +20,14 @@ import {
   EventType,
   IEventNewAppointment,
   IEventUpdateUserConfig,
+  slackChannel,
+  SlackIcon,
 } from '../common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { cloneDeep } from 'lodash';
 import { UserConfig, UserConfigDocument } from './userConfig.dto';
-import { environments } from '../providers';
+import { environments, SlackBot, SlackMessageParams } from '../providers';
+import { add, getHours, startOfTomorrow } from 'date-fns';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -35,6 +38,7 @@ export class UserService extends BaseService {
     private slotService: SlotService,
     @InjectModel(UserConfig.name)
     private readonly userConfigModel: Model<UserConfigDocument>,
+    private readonly slackBot: SlackBot,
   ) {
     super();
   }
@@ -172,7 +176,30 @@ export class UserService extends BaseService {
       delete slotsObject.appointment;
     }
 
+    if (slotsObject.slots.length === 0) {
+      slotsObject.slots = this.generateDefaultSlots();
+      const params: SlackMessageParams = {
+        message: `*No availability*\nUser ${userId}`,
+        icon: SlackIcon.warning,
+        channel: slackChannel.notifications,
+      };
+      await this.slackBot.sendMessage(params);
+    }
+
     return slotsObject;
+  }
+
+  generateDefaultSlots() {
+    const slots: Date[] = [];
+    let nextSlot = add(new Date(), { hours: 2 });
+    for (let index = 0; index < 6; index++) {
+      nextSlot = add(nextSlot, { hours: 1 });
+      if (getHours(nextSlot) < 17 || getHours(nextSlot) > 23) {
+        nextSlot = add(startOfTomorrow(), { hours: 17 });
+      }
+      slots.push(nextSlot);
+    }
+    return slots;
   }
 
   async getUserConfig(userId: string): Promise<UserConfig> {
