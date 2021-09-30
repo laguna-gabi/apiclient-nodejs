@@ -9,13 +9,13 @@ import {
   MemberConfig,
   MemberService,
   MemberSummary,
-  NotifyParams,
   SetGeneralNotesParams,
   TaskStatus,
   UpdateMemberParams,
   UpdateTaskStatusParams,
 } from '.';
 import {
+  CancelNotifyParams,
   Errors,
   ErrorType,
   EventType,
@@ -23,6 +23,7 @@ import {
   IEventUpdateMemberPlatform,
   Logger,
   NotificationType,
+  NotifyParams,
   Platform,
   RegisterForNotificationParams,
   replaceConfigs,
@@ -34,31 +35,23 @@ import { millisecondsInHour } from 'date-fns';
 import { lookup } from 'zipcode-to-timezone';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { NotificationsService, StorageService } from '../providers';
-import { CancelNotifyParams } from './member.dto';
 import { User, UserService } from '../user';
-import { MemberScheduler } from './member.scheduler';
-import { OnModuleInit } from '@nestjs/common';
+import { SchedulerService } from '../scheduler';
 
 @Resolver(() => Member)
-export class MemberResolver extends MemberBase implements OnModuleInit {
+export class MemberResolver extends MemberBase {
   private readonly logger = new Logger(MemberResolver.name);
   private readonly authenticationPrefix = 'Bearer ';
 
   constructor(
     readonly memberService: MemberService,
+    readonly schedulerService: SchedulerService,
     readonly eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
     private readonly notificationsService: NotificationsService,
     readonly userService: UserService,
-    private readonly memberScheduler: MemberScheduler,
   ) {
     super(memberService, eventEmitter, userService);
-  }
-
-  async onModuleInit(): Promise<void> {
-    await this.memberScheduler.init(
-      async (notifyParams: NotifyParams) => await this.notify(notifyParams),
-    );
   }
 
   @Mutation(() => Identifier)
@@ -221,7 +214,7 @@ export class MemberResolver extends MemberBase implements OnModuleInit {
     const { memberId, userId, type, metadata } = notifyParams;
     const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId);
     if (metadata.when) {
-      await this.memberScheduler.registerToFutureNotify(notifyParams);
+      await this.schedulerService.registerCustomFutureNotify(notifyParams);
       return;
     }
 

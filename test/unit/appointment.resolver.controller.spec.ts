@@ -4,7 +4,6 @@ import {
   AppointmentMethod,
   AppointmentModule,
   AppointmentResolver,
-  AppointmentScheduler,
   AppointmentService,
 } from '../../src/appointment';
 import {
@@ -23,9 +22,10 @@ import {
   EventType,
   IEventUpdatedAppointment,
   NotificationType,
+  NotifyParams,
   UpdatedAppointmentAction,
 } from '../../src/common';
-import { NotifyParams } from '../../src/member';
+import { SchedulerService } from '../../src/scheduler';
 import * as config from 'config';
 
 describe('AppointmentResolver', () => {
@@ -33,7 +33,7 @@ describe('AppointmentResolver', () => {
   let resolver: AppointmentResolver;
   let controller: AppointmentController;
   let service: AppointmentService;
-  let scheduler: AppointmentScheduler;
+  let schedulerService: SchedulerService;
   let eventEmitter: EventEmitter2;
   let spyOnEventEmitter;
 
@@ -45,7 +45,7 @@ describe('AppointmentResolver', () => {
     resolver = module.get<AppointmentResolver>(AppointmentResolver);
     controller = module.get<AppointmentController>(AppointmentController);
     service = module.get<AppointmentService>(AppointmentService);
-    scheduler = module.get<AppointmentScheduler>(AppointmentScheduler);
+    schedulerService = module.get<SchedulerService>(SchedulerService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
   });
@@ -129,15 +129,18 @@ describe('AppointmentResolver', () => {
 
   describe('scheduleAppointment', () => {
     let spyOnServiceSchedule;
-    let spyOnSchedulerUpdateAppointmentAlert;
+    let spyOnSchedulerregisterAppointmentAlert;
     beforeEach(() => {
       spyOnServiceSchedule = jest.spyOn(service, 'schedule');
-      spyOnSchedulerUpdateAppointmentAlert = jest.spyOn(scheduler, 'updateAppointmentAlert');
+      spyOnSchedulerregisterAppointmentAlert = jest.spyOn(
+        schedulerService,
+        'registerAppointmentAlert',
+      );
     });
 
     afterEach(() => {
       spyOnServiceSchedule.mockReset();
-      spyOnSchedulerUpdateAppointmentAlert.mockReset();
+      spyOnSchedulerregisterAppointmentAlert.mockReset();
       spyOnEventEmitter.mockReset();
     });
 
@@ -153,7 +156,7 @@ describe('AppointmentResolver', () => {
       const result = await params.method(appointment);
 
       expect(result).toEqual(mockResult);
-      expect(spyOnSchedulerUpdateAppointmentAlert).toBeCalledWith({
+      expect(spyOnSchedulerregisterAppointmentAlert).toBeCalledWith({
         id: mockResult.id,
         memberId: appointment.memberId.toString(),
         userId: appointment.userId,
@@ -205,7 +208,7 @@ describe('AppointmentResolver', () => {
     let spyOnSchedulerDeleteTimeoutAlert;
     beforeEach(() => {
       spyOnServiceEnd = jest.spyOn(service, 'end');
-      spyOnSchedulerDeleteTimeoutAlert = jest.spyOn(scheduler, 'deleteTimeout');
+      spyOnSchedulerDeleteTimeoutAlert = jest.spyOn(schedulerService, 'deleteTimeout');
     });
 
     afterEach(() => {

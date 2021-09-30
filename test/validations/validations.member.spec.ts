@@ -18,20 +18,20 @@ import {
 import * as config from 'config';
 import * as faker from 'faker';
 import {
-  CancelNotifyParams,
   CreateMemberParams,
   defaultMemberParams,
-  NotifyParams,
   Sex,
   UpdateMemberParams,
   getHonorificKeyName,
 } from '../../src/member';
 import {
   CancelNotificationType,
+  CancelNotifyParams,
   Errors,
   ErrorType,
   Language,
   NotificationType,
+  NotifyParams,
   Platform,
 } from '../../src/common';
 import { Handler } from '../aux/handler';

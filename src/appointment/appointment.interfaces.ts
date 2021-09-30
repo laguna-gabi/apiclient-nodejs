@@ -1,23 +1,19 @@
-import {
-  AppointmentService,
-  ScheduleAppointmentParams,
-  AppointmentScheduler,
-  Appointment,
-} from '.';
+import { AppointmentService, ScheduleAppointmentParams, Appointment } from '.';
 import {
   EventType,
   IEventUpdatedAppointment,
   NotificationType,
+  NotifyParams,
   UpdatedAppointmentAction,
 } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { NotifyParams } from '../member';
 import * as config from 'config';
+import { SchedulerService } from '../scheduler';
 
 export class AppointmentBase {
   constructor(
     protected readonly appointmentService: AppointmentService,
-    protected readonly appointmentScheduler: AppointmentScheduler,
+    protected readonly schedulerService: SchedulerService,
     protected readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -26,7 +22,7 @@ export class AppointmentBase {
 
     this.updateAppointmentExternalData(appointment);
     this.notifyAppointment(appointment);
-    await this.updateAppointmentAlert(appointment);
+    await this.registerAppointmentAlert(appointment);
 
     return appointment;
   }
@@ -63,8 +59,8 @@ export class AppointmentBase {
     this.eventEmitter.emit(EventType.notify, params);
   }
 
-  private async updateAppointmentAlert(appointment: Appointment) {
-    await this.appointmentScheduler.updateAppointmentAlert({
+  private async registerAppointmentAlert(appointment: Appointment) {
+    await this.schedulerService.registerAppointmentAlert({
       id: appointment.id,
       memberId: appointment.memberId.toString(),
       userId: appointment.userId,

@@ -1,8 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { AppointmentScheduler } from './appointment';
 import { Logger } from './common';
+import { SchedulerService } from './scheduler';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: new Logger('Main') });
@@ -11,11 +11,11 @@ async function bootstrap() {
   await app.listen(3000);
 
   /**
-   * Registering reminders for all scheduled appointments
+   * Registering reminders for all scheduled notifiactions
    * DON'T DELETE THIS!
    */
-  const appointmentScheduler = app.get<AppointmentScheduler>(AppointmentScheduler);
-  await appointmentScheduler.init();
+  const schedulerService = app.get<SchedulerService>(SchedulerService);
+  await schedulerService.init();
 }
 
 bootstrap();

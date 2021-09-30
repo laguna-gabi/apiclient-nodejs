@@ -18,22 +18,16 @@ import { AppointmentMethod } from '../../src/appointment';
 import { Handler } from '../aux/handler';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
 import { Creators } from '../aux/creators';
-import {
-  CancelNotifyParams,
-  CreateTaskParams,
-  Member,
-  MemberConfig,
-  NotifyParams,
-  Task,
-  TaskStatus,
-} from '../../src/member';
+import { CreateTaskParams, Member, MemberConfig, Task, TaskStatus } from '../../src/member';
 import {
   AppointmentStatus,
   CancelNotificationType,
+  CancelNotifyParams,
   Errors,
   ErrorType,
   Identifiers,
   NotificationType,
+  NotifyParams,
   Platform,
   RegisterForNotificationParams,
 } from '../../src/common';
