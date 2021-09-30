@@ -216,6 +216,15 @@ export class SetGeneralNotesParams {
   note?: string;
 }
 
+@InputType()
+export class RecordingLinkParams {
+  @Field(() => String)
+  id: string;
+
+  @Field(() => String)
+  memberId: string;
+}
+
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/

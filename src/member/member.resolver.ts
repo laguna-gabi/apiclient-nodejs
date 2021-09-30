@@ -9,6 +9,7 @@ import {
   MemberConfig,
   MemberService,
   MemberSummary,
+  RecordingLinkParams,
   SetGeneralNotesParams,
   TaskStatus,
   UpdateMemberParams,
@@ -27,6 +28,7 @@ import {
   Platform,
   RegisterForNotificationParams,
   replaceConfigs,
+  StorageType,
 } from '../common';
 import { camelCase } from 'lodash';
 import * as jwt from 'jsonwebtoken';
@@ -107,17 +109,75 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => DischargeDocumentsLinks)
-  async getMemberDischargeDocumentsLinks(@Args('id', { type: () => String }) id: string) {
+  async getMemberUploadDischargeDocumentsLinks(@Args('id', { type: () => String }) id: string) {
     const member = await this.memberService.get(id);
 
     const { firstName, lastName } = member;
 
+    const storageType = StorageType.documents;
     const [dischargeNotesLink, dischargeInstructionsLink] = await Promise.all([
-      await this.storageService.getUrl(`${firstName}_${lastName}_Summary.pdf`),
-      await this.storageService.getUrl(`${firstName}_${lastName}_Instructions.pdf`),
+      await this.storageService.getUploadUrl({
+        storageType,
+        memberId: id,
+        id: `${firstName}_${lastName}_Summary.pdf`,
+      }),
+      await this.storageService.getUploadUrl({
+        storageType,
+        memberId: id,
+        id: `${firstName}_${lastName}_Instructions.pdf`,
+      }),
     ]);
 
     return { dischargeNotesLink, dischargeInstructionsLink };
+  }
+
+  @Query(() => DischargeDocumentsLinks)
+  async getMemberDownloadDischargeDocumentsLinks(@Args('id', { type: () => String }) id: string) {
+    const member = await this.memberService.get(id);
+
+    const { firstName, lastName } = member;
+
+    const storageType = StorageType.documents;
+    const [dischargeNotesLink, dischargeInstructionsLink] = await Promise.all([
+      await this.storageService.getDownloadUrl({
+        storageType,
+        memberId: id,
+        id: `${firstName}_${lastName}_Summary.pdf`,
+      }),
+      await this.storageService.getDownloadUrl({
+        storageType,
+        memberId: id,
+        id: `${firstName}_${lastName}_Instructions.pdf`,
+      }),
+    ]);
+
+    return { dischargeNotesLink, dischargeInstructionsLink };
+  }
+
+  @Query(() => String)
+  async getMemberUploadRecordingLink(
+    @Args(camelCase(RecordingLinkParams.name))
+    recordingLinkParams: RecordingLinkParams,
+  ) {
+    // Validating member exists
+    await this.memberService.get(recordingLinkParams.memberId);
+    return this.storageService.getUploadUrl({
+      ...recordingLinkParams,
+      storageType: StorageType.recordings,
+    });
+  }
+
+  @Query(() => String)
+  async getMemberDownloadRecordingLink(
+    @Args(camelCase(RecordingLinkParams.name))
+    recordingLinkParams: RecordingLinkParams,
+  ) {
+    // Validating member exists
+    await this.memberService.get(recordingLinkParams.memberId);
+    return this.storageService.getDownloadUrl({
+      ...recordingLinkParams,
+      storageType: StorageType.recordings,
+    });
   }
 
   /*************************************************************************************************

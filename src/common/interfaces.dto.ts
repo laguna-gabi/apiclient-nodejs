@@ -231,3 +231,14 @@ export enum UpdatedAppointmentAction {
   edit = 'edit',
   delete = 'delete',
 }
+
+export enum StorageType {
+  documents = 'documents',
+  recordings = 'recordings',
+}
+
+export interface StorageUrlParams {
+  storageType: StorageType;
+  memberId: string;
+  id: string;
+}

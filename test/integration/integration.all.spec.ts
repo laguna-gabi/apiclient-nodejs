@@ -528,7 +528,7 @@ describe('Integration tests: all', () => {
     expect(memberResult.generalNotes).toBeNull();
   });
 
-  it('should be able to get dispatch links of a member', async () => {
+  it('should be able to get upload dispatch links of a member', async () => {
     const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
     const { id } = await creators.createAndValidateMember({
@@ -537,11 +537,63 @@ describe('Integration tests: all', () => {
       users: [primaryUser],
     });
 
-    const result = await handler.queries.getMemberDischargeDocumentsLinks({ id });
+    const result = await handler.queries.getMemberUploadDischargeDocumentsLinks({ id });
     expect(result).toEqual({
-      dischargeNotesLink: 'https://some-url',
-      dischargeInstructionsLink: 'https://some-url',
+      dischargeNotesLink: 'https://some-url/upload',
+      dischargeInstructionsLink: 'https://some-url/upload',
     });
+  });
+
+  it('should be able to get download dispatch links of a member', async () => {
+    const primaryUser = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+    const { id } = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+
+    const result = await handler.queries.getMemberDownloadDischargeDocumentsLinks({ id });
+    expect(result).toEqual({
+      dischargeNotesLink: 'https://some-url/download',
+      dischargeInstructionsLink: 'https://some-url/download',
+    });
+  });
+
+  it('should be able to get upload recordings of a member', async () => {
+    const primaryUser = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+    const { id } = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+
+    const result = await handler.queries.getMemberUploadRecordingLink({
+      recordingLinkParams: {
+        memberId: id,
+        id: `${faker.lorem.word()}.mp4`,
+      },
+    });
+    expect(result).toEqual('https://some-url/upload');
+  });
+
+  it('should be able to get download recordings of a member', async () => {
+    const primaryUser = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+    const { id } = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+
+    const result = await handler.queries.getMemberDownloadRecordingLink({
+      recordingLinkParams: {
+        memberId: id,
+        id: `${faker.lorem.word()}.mp4`,
+      },
+    });
+    expect(result).toEqual('https://some-url/download');
   });
 
   // https://app.clubhouse.io/laguna-health/story/1625/add-edit-for-member-s-users-and-primaryuserid

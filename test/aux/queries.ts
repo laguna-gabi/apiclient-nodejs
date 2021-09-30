@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 import { ApolloServerTestClient } from 'apollo-server-testing';
 import { GetCommunicationParams } from '../../src/communication';
-import { DischargeDocumentsLinks } from '../../src/member';
+import { DischargeDocumentsLinks, RecordingLinkParams } from '../../src/member';
 import { GetSlotsParams } from '../../src/user/slot.dto';
 
 export class Queries {
@@ -219,15 +219,20 @@ export class Queries {
     return resultGetMember.data.getMember;
   };
 
-  getMemberDischargeDocumentsLinks = async ({
+  getMemberUploadDischargeDocumentsLinks = async ({
     id,
     invalidFieldsError,
-  }: { id?: string; invalidFieldsError?: string } = {}): Promise<DischargeDocumentsLinks> => {
+    missingFieldError,
+  }: {
+    id?: string;
+    invalidFieldsError?: string;
+    missingFieldError?: string;
+  } = {}): Promise<DischargeDocumentsLinks> => {
     const result = await this.apolloClient.query({
       variables: { id },
       query: gql`
-        query getMemberDischargeDocumentsLinks($id: String!) {
-          getMemberDischargeDocumentsLinks(id: $id) {
+        query getMemberUploadDischargeDocumentsLinks($id: String!) {
+          getMemberUploadDischargeDocumentsLinks(id: $id) {
             dischargeNotesLink
             dischargeInstructionsLink
           }
@@ -237,8 +242,86 @@ export class Queries {
 
     if (invalidFieldsError) {
       expect(invalidFieldsError).toEqual(result.errors[0].message);
+    } else if (missingFieldError) {
+      expect(result.errors[0].message).toMatch(missingFieldError);
     } else {
-      return result.data.getMemberDischargeDocumentsLinks;
+      return result.data.getMemberUploadDischargeDocumentsLinks;
+    }
+  };
+
+  getMemberDownloadDischargeDocumentsLinks = async ({
+    id,
+    invalidFieldsError,
+    missingFieldError,
+  }: {
+    id?: string;
+    invalidFieldsError?: string;
+    missingFieldError?: string;
+  } = {}): Promise<DischargeDocumentsLinks> => {
+    const result = await this.apolloClient.query({
+      variables: { id },
+      query: gql`
+        query getMemberDownloadDischargeDocumentsLinks($id: String!) {
+          getMemberDownloadDischargeDocumentsLinks(id: $id) {
+            dischargeNotesLink
+            dischargeInstructionsLink
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(invalidFieldsError).toEqual(result.errors[0].message);
+    } else if (missingFieldError) {
+      expect(result.errors[0].message).toMatch(missingFieldError);
+    } else {
+      return result.data.getMemberDownloadDischargeDocumentsLinks;
+    }
+  };
+
+  getMemberUploadRecordingLink = async ({
+    recordingLinkParams,
+    invalidFieldsError,
+  }: {
+    recordingLinkParams?: RecordingLinkParams;
+    invalidFieldsError?: string;
+  } = {}): Promise<string> => {
+    const result = await this.apolloClient.query({
+      variables: { recordingLinkParams },
+      query: gql`
+        query getMemberUploadRecordingLink($recordingLinkParams: RecordingLinkParams!) {
+          getMemberUploadRecordingLink(recordingLinkParams: $recordingLinkParams)
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(invalidFieldsError).toEqual(result.errors[0].message);
+    } else {
+      return result.data.getMemberUploadRecordingLink;
+    }
+  };
+
+  getMemberDownloadRecordingLink = async ({
+    recordingLinkParams,
+    invalidFieldsError,
+  }: {
+    recordingLinkParams?: RecordingLinkParams;
+    invalidFieldsError?: string;
+  } = {}): Promise<string> => {
+    const result = await this.apolloClient.query({
+      variables: { recordingLinkParams },
+      query: gql`
+        query getMemberDownloadRecordingLink($recordingLinkParams: RecordingLinkParams!) {
+          getMemberDownloadRecordingLink(recordingLinkParams: $recordingLinkParams)
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(invalidFieldsError).toEqual(result.errors[0].message);
+    } else {
+      return result.data.getMemberDownloadRecordingLink;
     }
   };
 

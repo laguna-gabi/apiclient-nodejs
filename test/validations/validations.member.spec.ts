@@ -227,10 +227,55 @@ describe('Validations - member', () => {
     });
   });
 
-  describe('getMemberDischargeDocumentsLinks', () => {
+  describe('getMemberUploadDischargeDocumentsLinks', () => {
+    it('should fail to get upload links since mandatory field id is missing', async () => {
+      await handler.queries.getMemberUploadDischargeDocumentsLinks({
+        missingFieldError: 'Expected non-nullable type "String!" not to be null.',
+      });
+    });
+
     it('should throw error on non existing member', async () => {
-      await handler.queries.getMemberDischargeDocumentsLinks({
+      await handler.queries.getMemberUploadDischargeDocumentsLinks({
         id: generateId(),
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+      });
+    });
+  });
+
+  describe('getMemberDownloadDischargeDocumentsLinks', () => {
+    it('should fail to get download links since mandatory field id is missing', async () => {
+      await handler.queries.getMemberDownloadDischargeDocumentsLinks({
+        missingFieldError: 'Expected non-nullable type "String!" not to be null.',
+      });
+    });
+
+    it('should throw error on non existing member', async () => {
+      await handler.queries.getMemberDownloadDischargeDocumentsLinks({
+        id: generateId(),
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+      });
+    });
+  });
+
+  describe('getMemberUploadRecordingLink', () => {
+    it('should throw error on non existing member', async () => {
+      await handler.queries.getMemberUploadRecordingLink({
+        recordingLinkParams: {
+          memberId: generateId(),
+          id: generateId(),
+        },
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+      });
+    });
+  });
+
+  describe('getMemberDownloadRecordingLink', () => {
+    it('should throw error on non existing member', async () => {
+      await handler.queries.getMemberDownloadRecordingLink({
+        recordingLinkParams: {
+          memberId: generateId(),
+          id: generateId(),
+        },
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
     });
