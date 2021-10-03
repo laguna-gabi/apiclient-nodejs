@@ -89,7 +89,7 @@ export class CommunicationService {
         await this.sendBird.freezeGroupChannel(params.channel_url, platform === Platform.web);
       }
     } catch (ex) {
-      this.logger.error(ex);
+      this.logger.error(ex, this.connectMemberToUser.name);
     }
   }
 
@@ -104,6 +104,7 @@ export class CommunicationService {
     if (!communication) {
       this.logger.warn(
         'NOT updating sendbird appointment metadata since no member-user communication exists',
+        this.onUpdatedAppointment.name,
       );
       return;
     }
@@ -132,7 +133,10 @@ export class CommunicationService {
   }) {
     const communication = await this.get({ memberId, userId });
     if (!communication) {
-      this.logger.warn('NOT freezing group channel since no member-user communication exists');
+      this.logger.warn(
+        'NOT freezing group channel since no member-user communication exists',
+        this.onUpdateMemberPlatform.name,
+      );
       return;
     }
     await this.sendBird.freezeGroupChannel(

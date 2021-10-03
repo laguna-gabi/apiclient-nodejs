@@ -7,12 +7,15 @@ import {
   IEventNewUser,
   IEventUpdateMemberPlatform,
   Logger,
+  LoggingInterceptor,
   UpdatedAppointmentAction,
 } from '../common';
 import { AppointmentStatus } from '../appointment';
 import { camelCase } from 'lodash';
 import * as config from 'config';
+import { UseInterceptors } from '@nestjs/common';
 
+@UseInterceptors(LoggingInterceptor)
 @Resolver(() => CommunicationInfo)
 export class CommunicationResolver {
   private readonly logger = new Logger(CommunicationResolver.name);
@@ -83,7 +86,7 @@ export class CommunicationResolver {
     try {
       return this.communicationService.onUpdatedAppointment(params);
     } catch (ex) {
-      this.logger.error(ex);
+      this.logger.error(ex, this.handleUpdatedAppointment.name);
     }
   }
 

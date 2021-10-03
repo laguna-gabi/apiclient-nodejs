@@ -149,7 +149,7 @@ export class SchedulerService {
     );
     this.logger.log(
       `Finish init scheduler for ${notifications.length} future notifications`,
-      SchedulerService.name,
+      this.initRegisterCustomFutureNotify.name,
     );
   }
   private async initRegisterAppointmentAlert() {
@@ -168,7 +168,7 @@ export class SchedulerService {
     });
     this.logger.log(
       `Finish init scheduler for ${appointments.length} appointments`,
-      SchedulerService.name,
+      this.initRegisterCustomFutureNotify.name,
     );
   }
 
