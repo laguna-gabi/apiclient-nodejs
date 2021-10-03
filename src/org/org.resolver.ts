@@ -1,8 +1,10 @@
 import { Args, Mutation, Resolver, Query } from '@nestjs/graphql';
 import { CreateOrgParams, Org, OrgService } from '.';
-import { Identifier } from '../common';
+import { Identifier, LoggingInterceptor } from '../common';
 import { camelCase } from 'lodash';
+import { UseInterceptors } from '@nestjs/common';
 
+@UseInterceptors(LoggingInterceptor)
 @Resolver(() => Org)
 export class OrgResolver {
   constructor(private readonly orgService: OrgService) {}

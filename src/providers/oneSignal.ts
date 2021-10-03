@@ -83,7 +83,7 @@ export class OneSignal {
         return result.data.id;
       }
     } catch (ex) {
-      this.logger.error(ex);
+      this.logger.error(ex, this.send.name);
     }
   }
 
@@ -121,7 +121,7 @@ export class OneSignal {
             return result.data.id;
           }
         } catch (ex) {
-          this.logger.error(ex);
+          this.logger.error(ex, this.cancel.name);
         }
       }
     }
@@ -150,12 +150,17 @@ export class OneSignal {
   }
 
   private validateRegisterResult(externalUserId, result): string | undefined {
+    const methodName = this.validateRegisterResult.name;
     if (result.status === 200) {
-      this.logger.log(`Successfully registered externalUserId ${externalUserId} for voip project`);
+      this.logger.log(
+        `Successfully registered externalUserId ${externalUserId} for voip project`,
+        methodName,
+      );
       return result.data.id;
     } else {
       this.logger.error(
         `Failed to register externalUserId ${externalUserId} for voip project ${result.statusText}`,
+        methodName,
       );
       return undefined;
     }

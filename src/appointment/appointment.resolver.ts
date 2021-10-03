@@ -14,6 +14,7 @@ import {
   EventType,
   IEventRequestAppointment,
   IEventUpdatedAppointment,
+  LoggingInterceptor,
   NotificationType,
   NotifyParams,
   replaceConfigs,
@@ -27,7 +28,9 @@ import { add } from 'date-fns';
 import { Bitly } from '../providers';
 import { OrgService } from '../org';
 import { SchedulerService } from '../scheduler';
+import { UseInterceptors } from '@nestjs/common';
 
+@UseInterceptors(LoggingInterceptor)
 @Resolver(() => Appointment)
 export class AppointmentResolver extends AppointmentBase {
   constructor(

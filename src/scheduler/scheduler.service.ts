@@ -112,7 +112,10 @@ export class SchedulerService {
     const milliseconds = start.getTime() - gapDate.getTime();
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
-        this.logger.log(`${id}: notifying appointment reminder`, SchedulerService.name);
+        this.logger.log(
+          `${id}: notifying appointment reminder`,
+          this.scheduleAppointmentAlert.name,
+        );
 
         const chatLink = await this.getChatLink(memberId, userId);
         if (!chatLink) {
@@ -149,7 +152,7 @@ export class SchedulerService {
     );
     this.logger.log(
       `Finish init scheduler for ${notifications.length} future notifications`,
-      SchedulerService.name,
+      this.initRegisterCustomFutureNotify.name,
     );
   }
   private async initRegisterAppointmentAlert() {
@@ -168,7 +171,7 @@ export class SchedulerService {
     });
     this.logger.log(
       `Finish init scheduler for ${appointments.length} appointments`,
-      SchedulerService.name,
+      this.initRegisterAppointmentAlert.name,
     );
   }
 
