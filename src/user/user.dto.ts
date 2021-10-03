@@ -20,11 +20,7 @@ export const defaultUserParams = {
   maxCustomers: 7,
   languages: [Language.en],
   roles: [UserRole.coach],
-  //TODO replace in real default image
-  /* eslint-disable max-len */
-  avatar:
-    'https://e7.pngegg.com/pngimages/413/779/png-clipart-black-person-symbol-art-computer-icons-user-profile-avatar-profile-heroes-profile.png',
-  /* eslint-enable max-len */
+  avatar: 'https://i.imgur.com/bvuKGXB.png',
 };
 
 export const NotNullableUserKeys = ['maxCustomers', 'languages', 'roles', 'avatar'];
