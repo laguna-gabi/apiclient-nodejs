@@ -1,8 +1,9 @@
-import { Controller, Get, HttpException, HttpStatus, Param } from '@nestjs/common';
-import { apiPrefix } from '../common';
+import { Controller, Get, HttpException, HttpStatus, Param, UseInterceptors } from '@nestjs/common';
+import { apiPrefix, LoggingInterceptor } from '../common';
 import { Slots } from './slot.dto';
 import { UserService } from './user.service';
 
+@UseInterceptors(LoggingInterceptor)
 @Controller(`${apiPrefix}/users`)
 export class UserController {
   constructor(private readonly userService: UserService) {}

@@ -44,7 +44,7 @@ export class TwilioService implements OnModuleInit {
       try {
         return await this.client.messages.create({ body, to, from: this.source });
       } catch (ex) {
-        this.logger.error(ex);
+        this.logger.error(ex, this.send.name);
       }
     } else {
       const params: SlackMessageParams = {
