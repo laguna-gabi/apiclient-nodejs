@@ -10,9 +10,11 @@ import {
   MemberService,
   MemberSummary,
   RecordingLinkParams,
+  RecordingOutput,
   SetGeneralNotesParams,
   TaskStatus,
   UpdateMemberParams,
+  UpdateRecordingParams,
   UpdateTaskStatusParams,
 } from '.';
 import {
@@ -108,6 +110,10 @@ export class MemberResolver extends MemberBase {
     return this.memberService.getMembersAppointments(orgId);
   }
 
+  /*************************************************************************************************
+   ************************************ DischargeDocumentsLinks ************************************
+   ************************************************************************************************/
+
   @Query(() => DischargeDocumentsLinks)
   async getMemberUploadDischargeDocumentsLinks(@Args('id', { type: () => String }) id: string) {
     const member = await this.memberService.get(id);
@@ -154,6 +160,10 @@ export class MemberResolver extends MemberBase {
     return { dischargeNotesLink, dischargeInstructionsLink };
   }
 
+  /*************************************************************************************************
+   ******************************************* Recording *******************************************
+   ************************************************************************************************/
+
   @Query(() => String)
   async getMemberUploadRecordingLink(
     @Args(camelCase(RecordingLinkParams.name))
@@ -178,6 +188,18 @@ export class MemberResolver extends MemberBase {
       ...recordingLinkParams,
       storageType: StorageType.recordings,
     });
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async updateRecording(
+    @Args(camelCase(UpdateRecordingParams.name)) updateRecordingParams: UpdateRecordingParams,
+  ) {
+    return this.memberService.updateRecording(updateRecordingParams);
+  }
+
+  @Query(() => [RecordingOutput])
+  async getRecordings(@Args('memberId', { type: () => String }) memberId: string) {
+    return this.memberService.getRecordings(memberId);
   }
 
   /*************************************************************************************************

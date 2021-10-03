@@ -14,7 +14,6 @@ import { Appointment, AppointmentStatus, EndAppointmentParams } from '../../src/
 import { Handler } from './handler';
 import { AppointmentsIntegrationActions } from './appointments';
 import { Types } from 'mongoose';
-import { delay } from '../common';
 
 export class Creators {
   constructor(
@@ -67,7 +66,6 @@ export class Creators {
     });
     const usersIds = users.map((i) => i.id);
     const { id } = await this.handler.mutations.createMember({ memberParams });
-    await delay(1000);
     await this.handler.memberModel.findOneAndUpdate(
       { _id: new Types.ObjectId(id) },
       { $set: { primaryUserId: primaryUser.id, users: usersIds } },

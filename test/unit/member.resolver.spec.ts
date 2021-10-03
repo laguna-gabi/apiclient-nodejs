@@ -10,6 +10,7 @@ import {
   generateId,
   generateNotifyParams,
   generatePath,
+  generateUpdateRecordingParams,
   generateSetGeneralNotesParams,
   generateUpdateMemberParams,
   generateUpdateTaskStatusParams,
@@ -692,6 +693,47 @@ describe('MemberResolver', () => {
         userId: member.primaryUserId,
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.updateMemberPlatform, eventParams);
+    });
+  });
+
+  describe('generateRecording', () => {
+    let spyOnServiceUpdate;
+    beforeEach(() => {
+      spyOnServiceUpdate = jest.spyOn(service, 'updateRecording');
+    });
+
+    afterEach(() => {
+      spyOnServiceUpdate.mockReset();
+    });
+
+    it('should get a member upload discharge documents links for a given context', async () => {
+      const memberId = generateId();
+      spyOnServiceUpdate.mockResolvedValue(undefined);
+
+      const recording = generateUpdateRecordingParams({ memberId });
+      await resolver.updateRecording(recording);
+
+      expect(spyOnServiceUpdate).toBeCalledTimes(1);
+      expect(spyOnServiceUpdate).toBeCalledWith(recording);
+    });
+  });
+
+  describe('generateRecording', () => {
+    let spyOnServiceGet;
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'getRecordings');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+    });
+
+    it('should get a member upload discharge documents links for a given context', async () => {
+      const memberId = generateId();
+      await resolver.getRecordings(memberId);
+
+      expect(spyOnServiceGet).toBeCalledTimes(1);
+      expect(spyOnServiceGet).toBeCalledWith(memberId);
     });
   });
 

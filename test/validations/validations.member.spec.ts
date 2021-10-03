@@ -9,6 +9,7 @@ import {
   generateNotifyParams,
   generateOrgParams,
   generateRandomName,
+  generateUpdateRecordingParams,
   generateSetGeneralNotesParams,
   generateUpdateMemberParams,
   generateUpdateTaskStatusParams,
@@ -607,14 +608,41 @@ describe('Validations - member', () => {
     );
 
     test.each`
-      field                | error
-      ${{ memberId: 123 }} | ${stringError}
-      ${{ note: 123 }}     | ${stringError}
+      field
+      ${{ memberId: 123 }}
+      ${{ note: 123 }}
     `(`should fail to set general notes since $input is not a valid type`, async (params) => {
       const setGeneralNotesParams = generateSetGeneralNotesParams({ ...params.field });
       await handler.mutations.setGeneralNotes({
         setGeneralNotesParams,
+        missingFieldError: stringError,
+      });
+    });
+  });
+
+  describe('updateRecording', () => {
+    test.each`
+      field         | error
+      ${'id'}       | ${`Field "id" of required type "String!" was not provided.`}
+      ${'memberId'} | ${`Field "memberId" of required type "String!" was not provided.`}
+    `(`should fail to update recording since mandatory field $field is missing`, async (params) => {
+      const updateRecordingParams = generateUpdateRecordingParams();
+      delete updateRecordingParams[params.field];
+      await handler.mutations.updateRecording({
+        updateRecordingParams,
         missingFieldError: params.error,
+      });
+    });
+
+    test.each`
+      input
+      ${{ id: 123 }}
+      ${{ memberId: 123 }}
+    `(`should fail to update recording since $input is not a valid type`, async (params) => {
+      const updateRecordingParams = generateUpdateRecordingParams({ ...params.input });
+      await handler.mutations.updateRecording({
+        updateRecordingParams,
+        missingFieldError: stringError,
       });
     });
   });

@@ -14,6 +14,7 @@ import {
   UpdateMemberParams,
   UpdateTaskStatusParams,
   getHonorificKeyName,
+  UpdateRecordingParams,
 } from '../src/member';
 import {
   AppointmentMethod,
@@ -498,4 +499,13 @@ export const generatePhone = () => {
   }
 
   return phone;
+};
+
+export const generateUpdateRecordingParams = ({
+  id = generateId(),
+  memberId = generateId(),
+  start = faker.date.soon(1),
+  end = faker.date.soon(2),
+}: { id?: string; memberId?: string; start?: Date; end?: Date } = {}): UpdateRecordingParams => {
+  return { id, memberId, start, end };
 };

@@ -546,4 +546,21 @@ export class Queries {
 
     return result.data.getOrg;
   };
+
+  getRecordings = async ({ memberId }: { memberId: string }) => {
+    const result = await this.apolloClient.query({
+      variables: { memberId },
+      query: gql`
+        query getRecordings($memberId: String!) {
+          getRecordings(memberId: $memberId) {
+            id
+            start
+            end
+          }
+        }
+      `,
+    });
+
+    return result.data.getRecordings;
+  };
 }

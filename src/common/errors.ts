@@ -30,6 +30,7 @@ export enum ErrorType {
   memberAdmitDate = 9212,
   memberRegisterForNotificationToken = 9213,
   memberInvalidHonorific = 9214,
+  memberRecordingIdAlreadyExists = 9215,
   // Notifications
   notificationMetadataInvalid = 9270,
   notificationMemberPlatformWeb = 9271,
@@ -93,6 +94,7 @@ export const Errors: Map<ErrorType, string> = new Map([
       config.get('contents.honorific'),
     ).join()}`,
   ],
+  [ErrorType.memberRecordingIdAlreadyExists.valueOf(), `id already exists`],
   [
     ErrorType.memberRegisterForNotificationToken.valueOf(),
     `token must contain only letters and numbers`,

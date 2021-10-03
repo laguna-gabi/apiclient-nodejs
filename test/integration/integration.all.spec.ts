@@ -7,6 +7,7 @@ import {
   generateId,
   generateOrgParams,
   generatePath,
+  generateUpdateRecordingParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
@@ -18,7 +19,15 @@ import { AppointmentMethod } from '../../src/appointment';
 import { Handler } from '../aux/handler';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
 import { Creators } from '../aux/creators';
-import { CreateTaskParams, Member, MemberConfig, Task, TaskStatus } from '../../src/member';
+import {
+  CreateTaskParams,
+  Member,
+  MemberConfig,
+  RecordingOutput,
+  Task,
+  TaskStatus,
+  UpdateRecordingParams,
+} from '../../src/member';
 import {
   AppointmentStatus,
   CancelNotificationType,
@@ -714,6 +723,8 @@ describe('Integration tests: all', () => {
       primaryUser,
       users: [primaryUser],
     });
+
+    await delay(1000);
     /**
      * reset mock on NotificationsService so we dont count
      * the notifications that are made on member creation
@@ -849,6 +860,43 @@ describe('Integration tests: all', () => {
     expect(ids[1]).toEqual(user.id);
   });
 
+  it('should update recordings for multiple members and get those recordings', async () => {
+    const compareRecording = (rec1: RecordingOutput, rec2: UpdateRecordingParams) => {
+      expect(rec1.id).toEqual(rec2.id);
+      expect(new Date(rec1.start)).toEqual(rec2.start);
+      expect(new Date(rec1.end)).toEqual(rec2.end);
+    };
+
+    const primaryUser = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+    const { id: memberId1 } = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+
+    const { id: memberId2 } = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+
+    const rec1a = generateUpdateRecordingParams({ memberId: memberId1 });
+    const rec1b = generateUpdateRecordingParams({ memberId: memberId1 });
+    const rec2 = generateUpdateRecordingParams({ memberId: memberId2 });
+    await handler.mutations.updateRecording({ updateRecordingParams: rec1a });
+    await handler.mutations.updateRecording({ updateRecordingParams: rec1b });
+    await handler.mutations.updateRecording({ updateRecordingParams: rec2 });
+
+    const result1 = await handler.queries.getRecordings({ memberId: memberId1 });
+    expect(result1.length).toEqual(2);
+    compareRecording(result1[0], rec1a);
+    compareRecording(result1[1], rec1b);
+    const result2 = await handler.queries.getRecordings({ memberId: memberId2 });
+    expect(result2.length).toEqual(1);
+    compareRecording(result2[0], rec2);
+  });
+
   it('should register scheduled appointment reminder and notify it to member', async () => {
     const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
@@ -857,6 +905,8 @@ describe('Integration tests: all', () => {
       primaryUser,
       users: [primaryUser],
     });
+
+    await delay(1000);
 
     const milliseconds = (config.get('scheduler.alertBeforeInMin') + 1 / 60) * 60 * 1000;
     const start = new Date();
@@ -907,6 +957,7 @@ describe('Integration tests: all', () => {
 
     handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
   });
+
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

@@ -28,9 +28,13 @@ import {
   MemberDocument,
   MemberSummary,
   NotNullableMemberKeys,
+  Recording,
+  RecordingDocument,
+  RecordingOutput,
   SetGeneralNotesParams,
   TaskStatus,
   UpdateMemberParams,
+  UpdateRecordingParams,
   UpdateTaskStatusParams,
 } from '.';
 import { cloneDeep } from 'lodash';
@@ -51,6 +55,8 @@ export class MemberService extends BaseService {
     private readonly memberConfigModel: Model<MemberConfigDocument>,
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument>,
+    @InjectModel(Recording.name)
+    private readonly recordingModel: Model<RecordingDocument>,
   ) {
     super();
   }
@@ -336,6 +342,40 @@ export class MemberService extends BaseService {
     if (result.nModified === 0) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
+  }
+
+  /*************************************************************************************************
+   ******************************************** Recording ******************************************
+   ************************************************************************************************/
+  async updateRecording(updateRecordingParams: UpdateRecordingParams): Promise<void> {
+    const { start, end, memberId, id } = updateRecordingParams;
+    const member = await this.memberModel.findById(memberId, { _id: 1 });
+    if (!member) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
+
+    const objectMemberId = new Types.ObjectId(memberId);
+    let setParams: any = { memberId: objectMemberId };
+    setParams = start ? { ...setParams, start } : setParams;
+    setParams = end ? { ...setParams, end } : setParams;
+
+    try {
+      await this.recordingModel.updateOne(
+        { id, memberId: objectMemberId },
+        { $set: setParams },
+        { new: true, upsert: true },
+      );
+    } catch (ex) {
+      throw new Error(
+        ex.code === DbErrors.duplicateKey
+          ? Errors.get(ErrorType.memberRecordingIdAlreadyExists)
+          : ex,
+      );
+    }
+  }
+
+  async getRecordings(memberId: string): Promise<RecordingOutput[]> {
+    return this.recordingModel.find({ memberId: new Types.ObjectId(memberId) });
   }
 
   /*************************************************************************************************

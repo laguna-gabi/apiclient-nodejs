@@ -7,6 +7,7 @@ import {
   Member,
   SetGeneralNotesParams,
   UpdateMemberParams,
+  UpdateRecordingParams,
   UpdateTaskStatusParams,
 } from '../../src/member';
 import { ApolloServerTestClient } from 'apollo-server-testing';
@@ -613,6 +614,30 @@ export class Mutations {
     return (
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.cancelNotify
+    );
+  };
+
+  updateRecording = async ({
+    updateRecordingParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    updateRecordingParams?: UpdateRecordingParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<void> => {
+    const result = await this.apolloClient.mutate({
+      variables: { updateRecordingParams: updateRecordingParams },
+      mutation: gql`
+        mutation updateRecording($updateRecordingParams: UpdateRecordingParams!) {
+          updateRecording(updateRecordingParams: $updateRecordingParams)
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.updateRecording
     );
   };
 

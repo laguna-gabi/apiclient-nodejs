@@ -12,6 +12,7 @@ import {
   generateId,
   generateObjectId,
   generateOrgParams,
+  generateUpdateRecordingParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
@@ -791,6 +792,97 @@ describe('MemberService', () => {
           platform: Platform.web,
         }),
       );
+    });
+  });
+
+  describe('updateRecording + getRecordings', () => {
+    it('should fail to update recording on non existing member', async () => {
+      await expect(service.updateRecording(generateUpdateRecordingParams())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
+    });
+
+    it('should fail to update an existing id for different member', async () => {
+      const memberId1 = await generateMember();
+      const recording1 = generateUpdateRecordingParams({ memberId: memberId1 });
+      await service.updateRecording(recording1);
+
+      const memberId2 = await generateMember();
+      const recording2 = generateUpdateRecordingParams({ id: recording1.id, memberId: memberId2 });
+      await expect(service.updateRecording(recording2)).rejects.toThrow(
+        Errors.get(ErrorType.memberRecordingIdAlreadyExists),
+      );
+    });
+
+    it('should update a member recording', async () => {
+      const memberId = await generateMember();
+      const recording = generateUpdateRecordingParams({ memberId });
+      await service.updateRecording(recording);
+
+      const recordings = await service.getRecordings(memberId);
+      expect(recordings.length).toEqual(1);
+      expect(recordings[0].id).toEqual(recording.id);
+      expect(recordings[0]).toEqual(expect.objectContaining(recording));
+    });
+
+    it('should not override start when not set from params', async () => {
+      const memberId = await generateMember();
+      const recording1 = generateUpdateRecordingParams({ memberId });
+      await service.updateRecording(recording1);
+      const recording2 = generateUpdateRecordingParams({ id: recording1.id, memberId });
+      recording2.start = undefined;
+      await service.updateRecording(recording2);
+
+      const recordings = await service.getRecordings(memberId);
+      expect(recordings.length).toEqual(1);
+      expect(recordings[0]).toEqual(
+        expect.objectContaining({
+          id: recording1.id,
+          memberId,
+          start: recording1.start,
+          end: recording2.end,
+        }),
+      );
+    });
+
+    it('should not override end when not set from params', async () => {
+      const memberId = await generateMember();
+      const recording1 = generateUpdateRecordingParams({ memberId });
+      await service.updateRecording(recording1);
+      const recording2 = generateUpdateRecordingParams({ id: recording1.id, memberId });
+      recording2.end = undefined;
+      await service.updateRecording(recording2);
+
+      const recordings = await service.getRecordings(memberId);
+      expect(recordings.length).toEqual(1);
+      expect(recordings[0]).toEqual(
+        expect.objectContaining({
+          id: recording1.id,
+          start: recording2.start,
+          end: recording1.end,
+        }),
+      );
+    });
+
+    it('should multiple update members recordings', async () => {
+      const memberId1 = await generateMember();
+      const recording1a = generateUpdateRecordingParams({ memberId: memberId1 });
+      await service.updateRecording(recording1a);
+      const recording1b = generateUpdateRecordingParams({ memberId: memberId1 });
+      recording1b.end = undefined;
+      await service.updateRecording(recording1b);
+      const memberId2 = await generateMember();
+      const recording2 = generateUpdateRecordingParams({ memberId: memberId2 });
+      await service.updateRecording(recording2);
+
+      const recordings1 = await service.getRecordings(memberId1);
+      expect(recordings1.length).toEqual(2);
+      expect(recordings1[0]).toEqual(expect.objectContaining(recording1a));
+      expect(recordings1[1]).toEqual(expect.objectContaining(recording1b));
+
+      const recordings2 = await service.getRecordings(memberId2);
+      expect(recordings2.length).toEqual(1);
+      expect(recordings2[0]).toEqual(expect.objectContaining(recording2));
     });
   });
 

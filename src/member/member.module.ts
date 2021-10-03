@@ -9,8 +9,10 @@ import {
   MemberConfigDto,
   MemberController,
   MemberDto,
+  MemberRecordingDto,
   MemberResolver,
   MemberService,
+  Recording,
 } from '.';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HttpModule } from '@nestjs/axios';
@@ -33,6 +35,7 @@ import { NotifyParams, NotifyParamsDto } from '../common';
       { name: MemberConfig.name, schema: MemberConfigDto },
       { name: Appointment.name, schema: AppointmentDto },
       { name: NotifyParams.name, schema: NotifyParamsDto },
+      { name: Recording.name, schema: MemberRecordingDto },
     ]),
   ],
   providers: [MemberResolver, MemberService, ConfigsService],
