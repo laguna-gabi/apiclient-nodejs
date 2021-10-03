@@ -13,7 +13,6 @@ export class StorageService implements OnModuleInit {
   constructor(private readonly configsService: ConfigsService) {}
 
   async onModuleInit(): Promise<void> {
-    console.log('process.env.NODE_ENV', process.env.NODE_ENV);
     this.bucket =
       !process.env.NODE_ENV || process.env.NODE_ENV === environments.test
         ? config.get('storage')
