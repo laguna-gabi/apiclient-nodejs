@@ -23,7 +23,6 @@ import {
   Identifier,
   IEventUpdateMemberPlatform,
   Logger,
-  LoggingInterceptor,
   NotificationType,
   NotifyParams,
   Platform,
@@ -40,9 +39,7 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { NotificationsService, StorageService } from '../providers';
 import { User, UserService } from '../user';
 import { SchedulerService } from '../scheduler';
-import { UseInterceptors } from '@nestjs/common';
 
-@UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
 export class MemberResolver extends MemberBase {
   private readonly logger = new Logger(MemberResolver.name);
@@ -366,7 +363,7 @@ export class MemberResolver extends MemberBase {
 
       await this.notify(notifyParams);
     } catch (ex) {
-      this.logger.error(ex, this.notifyInternal.name);
+      this.logger.error(ex);
     }
   }
 

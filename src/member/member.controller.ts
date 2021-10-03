@@ -1,11 +1,10 @@
-import { Body, Controller, HttpException, HttpStatus, Post, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, HttpException, HttpStatus, Post } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateMemberParams, MemberService } from '.';
-import { apiPrefix, Identifier, LoggingInterceptor } from '../common';
+import { apiPrefix, Identifier } from '../common';
 import { UserService } from '../user';
 import { MemberBase } from './member.interfaces';
 
-@UseInterceptors(LoggingInterceptor)
 @Controller(`${apiPrefix}/members`)
 export class MemberController extends MemberBase {
   constructor(

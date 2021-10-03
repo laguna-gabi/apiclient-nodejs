@@ -2,76 +2,29 @@ import { Injectable, LoggerService } from '@nestjs/common';
 
 @Injectable()
 export class Logger implements LoggerService {
-  constructor(private readonly className?: string) {}
+  constructor(private readonly className: string) {}
 
-  private VALID_KEYS = [
-    'id',
-    'memberId',
-    'userId',
-    'orgId',
-    'appointmentId',
-    'start',
-    'end',
-    'notBefore',
-    'type',
-    'availabilities',
-    'externalUserId',
-    'sendbirdChannelUrl',
-  ];
-
-  log(message: any, methodName: string, ...optionalParams: any[]) {
-    console.info(this.logFormat(message, COLOR.fgWhite, methodName), optionalParams);
+  log(message: any, ...optionalParams: any[]) {
+    console.info(this.logFormat(message), optionalParams);
   }
 
-  error(message: any, methodName: string, ...optionalParams: any[]) {
-    console.error(this.logFormat(message, COLOR.fgRed, methodName), optionalParams);
+  error(message: any, ...optionalParams: any[]) {
+    console.error(this.logFormat(message), optionalParams);
   }
 
-  warn(message: any, methodName: string, ...optionalParams: any[]) {
-    console.warn(this.logFormat(message, COLOR.fgYellow, methodName), optionalParams);
+  warn(message: any, ...optionalParams: any[]) {
+    console.warn(this.logFormat(message), optionalParams);
   }
 
-  debug(message: any, methodName: string, className?: string) {
-    console.debug(this.logFormat(message, COLOR.fgWhite, methodName, className));
+  debug(message: any, ...optionalParams: any[]) {
+    console.debug(this.logFormat(message), optionalParams);
   }
 
-  logFormat(text: string, color, methodName: string, className?: string) {
+  logFormat(text: string) {
     const now = new Date();
-    const cName = className ? className : this.className;
-    const mName = `${COLOR.fgMagenta}${methodName}${COLOR.reset}`;
-    return `${COLOR.fgBlue}${now.toLocaleString()}     ${
-      COLOR.fgYellow
-    }[${cName}] ${mName} ${color}${text}${COLOR.reset}`;
-  }
-
-  /**
-   * @params is the input of params to the method.
-   * @params can be:
-   * 1. object of key value pairs : params = {memberId: '123abc', type: 'call'}
-   *    we'll keep only the hipaa compliance fields. for example-'firstName' will not be logged.
-   * 2. a string value representing an id: params = '123abc'
-   *    we'll log this id.
-   */
-  getCalledLog(params) {
-    if (Object.keys(params).length === 0) {
-      return params;
-    }
-
-    const dupParams = Object.values(params)[0];
-    let safeLog = {};
-    if (!dupParams) {
-      safeLog = {};
-    } else if (typeof dupParams === 'string') {
-      safeLog = dupParams;
-    } else {
-      this.VALID_KEYS.forEach((validKey) => {
-        if (dupParams[validKey]) {
-          safeLog[validKey] = dupParams[validKey];
-        }
-      });
-    }
-
-    return `was called with params ${JSON.stringify(safeLog)}`;
+    return `${COLOR.fgBlue}${now.toLocaleString()}     ${COLOR.fgYellow}[${this.className}] ${
+      COLOR.fgWhite
+    }${text}${COLOR.reset}`;
   }
 }
 

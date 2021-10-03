@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import {
   CancelNotificationParams,
-  Logger,
   NotificationType,
   Platform,
   SendNotificationToMemberParams,
@@ -15,7 +14,6 @@ import { TwilioService } from './twilio.service';
 @Injectable()
 export class NotificationsService {
   private readonly oneSignal: OneSignal;
-  private logger = new Logger(NotificationsService.name);
 
   constructor(
     private readonly configsService: ConfigsService,
@@ -42,9 +40,7 @@ export class NotificationsService {
     sendNotificationToMemberParams?: SendNotificationToMemberParams;
     sendNotificationToUserParams?: SendNotificationToUserParams;
   }): Promise<boolean> {
-    const methodName = this.send.name;
     if (sendNotificationToMemberParams) {
-      this.logger.debug(this.logger.getCalledLog(sendNotificationToMemberParams), methodName);
       if (
         sendNotificationToMemberParams.platform === Platform.web ||
         sendNotificationToMemberParams.data.type === NotificationType.textSms ||
@@ -60,7 +56,6 @@ export class NotificationsService {
     }
 
     if (sendNotificationToUserParams) {
-      this.logger.debug(this.logger.getCalledLog(sendNotificationToUserParams), methodName);
       return this.twilio.send({
         body: sendNotificationToUserParams.metadata.content,
         to: sendNotificationToUserParams.data.user.phone,

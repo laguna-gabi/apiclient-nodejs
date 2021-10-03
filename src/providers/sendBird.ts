@@ -30,7 +30,6 @@ export class SendBird implements OnModuleInit {
 
   async createUser(params: RegisterSendbirdUserParams): Promise<string | undefined> {
     const failure = `Failed to create a user`;
-    const methodName = this.createUser.name;
     try {
       const result = await this.httpService
         .post(`${this.basePath}${suffix.users}`, params, {
@@ -39,13 +38,13 @@ export class SendBird implements OnModuleInit {
         .toPromise();
 
       if (result.status === 200) {
-        this.logger.log(`Successfully created a user ${params.user_id}`, methodName);
+        this.logger.log(`Successfully created a user ${params.user_id}`);
         return result.data.access_token;
       } else {
-        this.logger.error(`${failure} ${result.status} ${result.data}`, methodName);
+        this.logger.error(`${failure} ${result.status} ${result.data}`);
       }
     } catch (ex) {
-      this.logger.error(`${failure} ${ex.config} ${ex.response.data}`, methodName);
+      this.logger.error(`${failure} ${ex.config} ${ex.response.data}`);
     }
   }
 
@@ -56,15 +55,11 @@ export class SendBird implements OnModuleInit {
       })
       .toPromise();
 
-    const methodName = this.createGroupChannel.name;
     if (result.status === 200) {
-      this.logger.log(
-        `Successfully created a group channel for users ${params.user_ids}`,
-        methodName,
-      );
+      this.logger.log(`Successfully created a group channel for users ${params.user_ids}`);
       return true;
     } else {
-      this.logger.error(`Failed to create a group channel`, methodName, result.status, result.data);
+      this.logger.error(`Failed to create a group channel`, result.status, result.data);
       return false;
     }
   }

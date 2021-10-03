@@ -1,9 +1,7 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Availability, AvailabilityInput, AvailabilityService, AvailabilitySlot } from '.';
-import { Identifiers, LoggingInterceptor } from '../common';
-import { UseInterceptors } from '@nestjs/common';
+import { Identifiers } from '../common';
 
-@UseInterceptors(LoggingInterceptor)
 @Resolver(() => Availability)
 export class AvailabilityResolver {
   constructor(private readonly availabilityService: AvailabilityService) {}

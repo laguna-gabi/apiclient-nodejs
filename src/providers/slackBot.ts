@@ -25,7 +25,7 @@ export class SlackBot implements OnModuleInit {
 
   async sendMessage(params: SlackMessageParams) {
     if (!process.env.NODE_ENV || process.env.NODE_ENV === environments.test) {
-      this.logger.debug(`${config.get(params.channel)}: ${params.message}`, this.sendMessage.name);
+      this.logger.debug(`${config.get(params.channel)}: ${params.message}`);
     } else {
       await this.webhook.send({
         username: 'LagunaBot',
