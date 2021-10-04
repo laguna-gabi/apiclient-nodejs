@@ -499,8 +499,19 @@ export const generatePhone = () => {
 export const generateUpdateRecordingParams = ({
   id = generateId(),
   memberId = generateId(),
+  userId = v4(),
   start = faker.date.soon(1),
   end = faker.date.soon(2),
-}: { id?: string; memberId?: string; start?: Date; end?: Date } = {}): UpdateRecordingParams => {
-  return { id, memberId, start, end };
+  answered = true,
+  phone = generatePhone(),
+}: {
+  id?: string;
+  memberId?: string;
+  userId?: string;
+  start?: Date;
+  end?: Date;
+  answered?: boolean;
+  phone?: string;
+} = {}): UpdateRecordingParams => {
+  return { id, memberId, userId, start, end, answered, phone };
 };

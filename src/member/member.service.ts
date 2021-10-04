@@ -428,7 +428,7 @@ export class MemberService extends BaseService {
    ******************************************** Recording ******************************************
    ************************************************************************************************/
   async updateRecording(updateRecordingParams: UpdateRecordingParams): Promise<void> {
-    const { start, end, memberId, id } = updateRecordingParams;
+    const { start, end, memberId, id, userId, phone, answered } = updateRecordingParams;
     const member = await this.memberModel.findById(memberId, { _id: 1 });
     if (!member) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
@@ -438,6 +438,9 @@ export class MemberService extends BaseService {
     let setParams: any = { memberId: objectMemberId };
     setParams = start ? { ...setParams, start } : setParams;
     setParams = end ? { ...setParams, end } : setParams;
+    setParams = userId ? { ...setParams, userId } : setParams;
+    setParams = phone ? { ...setParams, phone } : setParams;
+    setParams = answered ? { ...setParams, answered } : setParams;
 
     try {
       await this.recordingModel.updateOne(

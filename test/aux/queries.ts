@@ -585,8 +585,11 @@ export class Queries {
         query getRecordings($memberId: String!) {
           getRecordings(memberId: $memberId) {
             id
+            userId
             start
             end
+            answered
+            phone
           }
         }
       `,

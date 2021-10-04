@@ -14,11 +14,20 @@ export class UpdateRecordingParams {
   @Field(() => String)
   memberId: string;
 
+  @Field(() => String, { nullable: true })
+  userId?: string;
+
   @Field(() => Date, { nullable: true })
   start?: Date;
 
   @Field(() => Date, { nullable: true })
   end?: Date;
+
+  @Field(() => Boolean, { nullable: true })
+  answered?: boolean;
+
+  @Field(() => String, { nullable: true })
+  phone?: string;
 }
 
 /**************************************************************************************************
@@ -36,6 +45,10 @@ export class Recording {
   @Field(() => String)
   memberId: Types.ObjectId;
 
+  @Prop({ type: Types.ObjectId, index: true })
+  @Field(() => String, { nullable: true })
+  userId?: string;
+
   @Prop()
   @Field(() => Date, { nullable: true })
   start?: Date;
@@ -43,6 +56,14 @@ export class Recording {
   @Prop()
   @Field(() => Date, { nullable: true })
   end?: Date;
+
+  @Prop({ default: false })
+  @Field(() => Boolean, { nullable: true })
+  answered?: boolean;
+
+  @Prop()
+  @Field(() => String, { nullable: true })
+  phone?: string;
 }
 
 @ObjectType()

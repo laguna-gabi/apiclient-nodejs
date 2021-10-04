@@ -863,8 +863,11 @@ describe('Integration tests: all', () => {
   it('should update recordings for multiple members and get those recordings', async () => {
     const compareRecording = (rec1: RecordingOutput, rec2: UpdateRecordingParams) => {
       expect(rec1.id).toEqual(rec2.id);
+      expect(rec1.userId).toEqual(rec2.userId);
       expect(new Date(rec1.start)).toEqual(rec2.start);
       expect(new Date(rec1.end)).toEqual(rec2.end);
+      expect(rec1.answered).toEqual(rec2.answered);
+      expect(rec1.phone).toEqual(rec2.phone);
     };
 
     const primaryUser = await creators.createAndValidateUser();

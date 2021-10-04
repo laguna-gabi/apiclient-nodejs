@@ -393,7 +393,7 @@ describe('MemberResolver', () => {
     });
   });
 
-  describe('getUploadRecordingLink + getDownloadRecordingLink', () => {
+  describe('getMemberUploadRecordingLink', () => {
     let spyOnServiceGet;
     let spyOnStorageUpload;
     let spyOnStorageDownload;
@@ -438,7 +438,7 @@ describe('MemberResolver', () => {
     });
   });
 
-  describe('getDownloadRecordingLink', () => {
+  describe('getMemberDownloadRecordingLink', () => {
     let spyOnServiceGet;
     let spyOnStorage;
 
@@ -706,7 +706,7 @@ describe('MemberResolver', () => {
     });
   });
 
-  describe('generateRecording', () => {
+  describe('updateRecording', () => {
     let spyOnServiceUpdate;
     beforeEach(() => {
       spyOnServiceUpdate = jest.spyOn(service, 'updateRecording');
@@ -728,7 +728,7 @@ describe('MemberResolver', () => {
     });
   });
 
-  describe('generateRecording', () => {
+  describe('getRecordings', () => {
     let spyOnServiceGet;
     beforeEach(() => {
       spyOnServiceGet = jest.spyOn(service, 'getRecordings');

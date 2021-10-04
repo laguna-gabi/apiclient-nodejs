@@ -825,43 +825,21 @@ describe('MemberService', () => {
       expect(recordings[0]).toEqual(expect.objectContaining(recording));
     });
 
-    it('should not override start when not set from params', async () => {
+    it('should not override optional fields when not set from params', async () => {
       const memberId = await generateMember();
       const recording1 = generateUpdateRecordingParams({ memberId });
       await service.updateRecording(recording1);
       const recording2 = generateUpdateRecordingParams({ id: recording1.id, memberId });
       recording2.start = undefined;
-      await service.updateRecording(recording2);
-
-      const recordings = await service.getRecordings(memberId);
-      expect(recordings.length).toEqual(1);
-      expect(recordings[0]).toEqual(
-        expect.objectContaining({
-          id: recording1.id,
-          memberId,
-          start: recording1.start,
-          end: recording2.end,
-        }),
-      );
-    });
-
-    it('should not override end when not set from params', async () => {
-      const memberId = await generateMember();
-      const recording1 = generateUpdateRecordingParams({ memberId });
-      await service.updateRecording(recording1);
-      const recording2 = generateUpdateRecordingParams({ id: recording1.id, memberId });
       recording2.end = undefined;
+      recording2.userId = undefined;
+      recording2.phone = undefined;
+      recording2.answered = undefined;
       await service.updateRecording(recording2);
 
       const recordings = await service.getRecordings(memberId);
       expect(recordings.length).toEqual(1);
-      expect(recordings[0]).toEqual(
-        expect.objectContaining({
-          id: recording1.id,
-          start: recording2.start,
-          end: recording1.end,
-        }),
-      );
+      expect(recordings[0]).toEqual(expect.objectContaining(recording1));
     });
 
     it('should multiple update members recordings', async () => {
