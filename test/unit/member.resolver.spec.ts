@@ -18,7 +18,13 @@ import {
   mockGenerateMemberConfig,
   mockGenerateUser,
 } from '../index';
-import { MemberModule, MemberResolver, MemberService, TaskStatus } from '../../src/member';
+import {
+  MemberModule,
+  MemberResolver,
+  MemberScheduler,
+  MemberService,
+  TaskStatus,
+} from '../../src/member';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   CancelNotificationType,
@@ -40,13 +46,12 @@ import { UserService } from '../../src/user';
 import { Types } from 'mongoose';
 import * as config from 'config';
 import { v4 } from 'uuid';
-import { SchedulerService } from '../../src/scheduler';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
   let resolver: MemberResolver;
   let service: MemberService;
-  let schedulerService: SchedulerService;
+  let memberScheduler: MemberScheduler;
   let userService: UserService;
   let storage: StorageService;
   let notificationsService: NotificationsService;
@@ -65,7 +70,7 @@ describe('MemberResolver', () => {
     notificationsService = module.get<NotificationsService>(NotificationsService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
-    schedulerService = module.get<SchedulerService>(SchedulerService);
+    memberScheduler = module.get<MemberScheduler>(MemberScheduler);
   });
 
   afterAll(async () => {
@@ -879,8 +884,9 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockImplementation(async () => member);
       spyOnServiceGetMemberConfig.mockImplementation(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementation(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
 
-      await schedulerService.init();
+      await memberScheduler.init();
 
       const when = new Date();
       when.setMilliseconds(when.getMilliseconds() + 100);

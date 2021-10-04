@@ -2,9 +2,11 @@ import { camelCase } from 'lodash';
 import gql from 'graphql-tag';
 import { CreateUserParams } from '../../src/user';
 import {
+  CancelNotifyParams,
   CreateMemberParams,
   CreateTaskParams,
   Member,
+  NotifyParams,
   SetGeneralNotesParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -19,13 +21,7 @@ import {
   Notes,
   UpdateNotesParams,
 } from '../../src/appointment';
-import {
-  CancelNotifyParams,
-  Identifier,
-  Identifiers,
-  NotifyParams,
-  RegisterForNotificationParams,
-} from '../../src/common';
+import { Identifier, Identifiers, RegisterForNotificationParams } from '../../src/common';
 import { CreateOrgParams } from '../../src/org';
 import { AvailabilityInput } from '../../src/availability';
 

@@ -3,12 +3,15 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { User } from '../user';
 import {
+  CancelNotificationType,
   Errors,
   ErrorType,
   Identifier,
   IsHonorific,
   IsStringDate,
+  IsTypeMetadataProvided,
   Language,
+  NotificationType,
   validPhoneExamples,
 } from '../common';
 import {
@@ -225,6 +228,65 @@ export class RecordingLinkParams {
   memberId: string;
 }
 
+/************************************************************************************************
+ ***************************************** Notifications ****************************************
+ ************************************************************************************************/
+
+@InputType()
+export class NotificationMetadata {
+  @Field(() => String, { nullable: true })
+  peerId?: string;
+
+  @Field(() => String, { nullable: true })
+  content?: string;
+
+  @Field(() => Date, { nullable: true })
+  when?: Date;
+}
+
+@Schema({ versionKey: false, timestamps: true })
+@InputType()
+export class NotifyParams {
+  @Prop()
+  @Field(() => String)
+  userId: string;
+
+  @Prop()
+  @Field(() => String)
+  memberId: string;
+
+  @Prop()
+  @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataInvalid) })
+  @Field(() => NotificationType)
+  type: NotificationType;
+
+  @Prop()
+  @Field(() => NotificationMetadata)
+  metadata: NotificationMetadata;
+}
+
+@InputType()
+export class CancelNotificationMetadata {
+  @Field(() => String, { nullable: true })
+  peerId?: string;
+}
+
+@InputType()
+export class CancelNotifyParams {
+  @Field(() => String)
+  memberId: string;
+
+  @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataInvalid) })
+  @Field(() => CancelNotificationType)
+  type: CancelNotificationType;
+
+  @Field(() => String)
+  notificationId: string;
+
+  @Field(() => CancelNotificationMetadata)
+  metadata: CancelNotificationMetadata;
+}
+
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
@@ -412,3 +474,5 @@ export class DischargeDocumentsLinks {
  *************************************************************************************************/
 export type MemberDocument = Member & Document;
 export const MemberDto = SchemaFactory.createForClass(Member);
+export type NotifyParamsDocument = NotifyParams & Document;
+export const NotifyParamsDto = SchemaFactory.createForClass(NotifyParams);

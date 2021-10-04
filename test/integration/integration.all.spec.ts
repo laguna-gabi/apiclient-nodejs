@@ -20,9 +20,11 @@ import { Handler } from '../aux/handler';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
 import { Creators } from '../aux/creators';
 import {
+  CancelNotifyParams,
   CreateTaskParams,
   Member,
   MemberConfig,
+  NotifyParams,
   RecordingOutput,
   Task,
   TaskStatus,
@@ -31,12 +33,10 @@ import {
 import {
   AppointmentStatus,
   CancelNotificationType,
-  CancelNotifyParams,
   Errors,
   ErrorType,
   Identifiers,
   NotificationType,
-  NotifyParams,
   Platform,
   RegisterForNotificationParams,
 } from '../../src/common';

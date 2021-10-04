@@ -1,14 +1,17 @@
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   AppointmentCompose,
+  CancelNotifyParams,
   CreateMemberParams,
   CreateTaskParams,
   DischargeDocumentsLinks,
   Member,
   MemberBase,
   MemberConfig,
+  MemberScheduler,
   MemberService,
   MemberSummary,
+  NotifyParams,
   RecordingLinkParams,
   RecordingOutput,
   SetGeneralNotesParams,
@@ -18,7 +21,6 @@ import {
   UpdateTaskStatusParams,
 } from '.';
 import {
-  CancelNotifyParams,
   Errors,
   ErrorType,
   EventType,
@@ -27,7 +29,6 @@ import {
   Logger,
   LoggingInterceptor,
   NotificationType,
-  NotifyParams,
   Platform,
   RegisterForNotificationParams,
   replaceConfigs,
@@ -41,7 +42,6 @@ import { lookup } from 'zipcode-to-timezone';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { NotificationsService, StorageService } from '../providers';
 import { User, UserService } from '../user';
-import { SchedulerService } from '../scheduler';
 import { UseInterceptors } from '@nestjs/common';
 
 @UseInterceptors(LoggingInterceptor)
@@ -52,7 +52,7 @@ export class MemberResolver extends MemberBase {
 
   constructor(
     readonly memberService: MemberService,
-    readonly schedulerService: SchedulerService,
+    private readonly memberScheduler: MemberScheduler,
     readonly eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
     private readonly notificationsService: NotificationsService,
@@ -299,7 +299,7 @@ export class MemberResolver extends MemberBase {
     const { memberId, userId, type, metadata } = notifyParams;
     const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId);
     if (metadata.when) {
-      await this.schedulerService.registerCustomFutureNotify(notifyParams);
+      await this.memberScheduler.registerCustomFutureNotify(notifyParams);
       return;
     }
 

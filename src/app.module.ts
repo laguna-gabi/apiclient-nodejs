@@ -14,7 +14,6 @@ import { AvailabilityModule } from './availability';
 import { CommunicationModule } from './communication';
 import { ProvidersModule } from './providers';
 import { ScheduleModule } from '@nestjs/schedule';
-import { SchedulerModule } from './scheduler';
 
 const badRequestException = 'Bad Request Exception';
 
@@ -26,7 +25,6 @@ const badRequestException = 'Bad Request Exception';
     OrgModule,
     AvailabilityModule,
     CommunicationModule,
-    SchedulerModule,
     ProvidersModule,
     DbModule,
     TerminusModule,

@@ -11,7 +11,10 @@ import {
   MemberDto,
   MemberRecordingDto,
   MemberResolver,
+  MemberScheduler,
   MemberService,
+  NotifyParams,
+  NotifyParamsDto,
   Recording,
 } from '.';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -19,15 +22,12 @@ import { HttpModule } from '@nestjs/axios';
 import { Appointment, AppointmentDto } from '../appointment';
 import { ConfigsService, ProvidersModule } from '../providers';
 import { UserModule } from '../user';
-import { SchedulerModule } from '../scheduler';
-import { NotifyParams, NotifyParamsDto } from '../common';
 
 @Module({
   imports: [
     UserModule,
     ProvidersModule,
     HttpModule,
-    SchedulerModule,
     MongooseModule.forFeature([
       { name: Member.name, schema: MemberDto },
       { name: Goal.name, schema: GoalDto },
@@ -38,7 +38,7 @@ import { NotifyParams, NotifyParamsDto } from '../common';
       { name: Recording.name, schema: MemberRecordingDto },
     ]),
   ],
-  providers: [MemberResolver, MemberService, ConfigsService],
+  providers: [MemberResolver, MemberService, MemberScheduler, ConfigsService],
   controllers: [MemberController],
 })
 export class MemberModule {}

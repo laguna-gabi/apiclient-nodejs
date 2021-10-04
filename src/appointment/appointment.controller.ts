@@ -1,18 +1,23 @@
 import { Body, Controller, NotFoundException, Post, UseInterceptors } from '@nestjs/common';
 import { apiPrefix, LoggingInterceptor } from '../common';
-import { Appointment, AppointmentBase, ScheduleAppointmentParams, AppointmentService } from '.';
+import {
+  Appointment,
+  AppointmentBase,
+  ScheduleAppointmentParams,
+  AppointmentService,
+  AppointmentScheduler,
+} from '.';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { SchedulerService } from '../scheduler';
 
 @UseInterceptors(LoggingInterceptor)
 @Controller(`${apiPrefix}/appointments`)
 export class AppointmentController extends AppointmentBase {
   constructor(
     readonly appointmentService: AppointmentService,
-    readonly schedulerService: SchedulerService,
+    readonly appointmentScheduler: AppointmentScheduler,
     readonly eventEmitter: EventEmitter2,
   ) {
-    super(appointmentService, schedulerService, eventEmitter);
+    super(appointmentService, appointmentScheduler, eventEmitter);
   }
 
   @Post('schedule')

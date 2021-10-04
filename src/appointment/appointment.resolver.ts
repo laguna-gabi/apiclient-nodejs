@@ -2,6 +2,7 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
 import {
   Appointment,
+  AppointmentScheduler,
   AppointmentService,
   EndAppointmentParams,
   Notes,
@@ -16,18 +17,16 @@ import {
   IEventUpdatedAppointment,
   LoggingInterceptor,
   NotificationType,
-  NotifyParams,
   replaceConfigs,
   UpdatedAppointmentAction,
 } from '../common';
 import { AppointmentBase } from './appointment.interfaces';
-import { Member } from '../member';
+import { Member, NotifyParams } from '../member';
 import { User } from '../user';
 import * as config from 'config';
 import { add } from 'date-fns';
 import { Bitly } from '../providers';
 import { OrgService } from '../org';
-import { SchedulerService } from '../scheduler';
 import { UseInterceptors } from '@nestjs/common';
 
 @UseInterceptors(LoggingInterceptor)
@@ -35,12 +34,12 @@ import { UseInterceptors } from '@nestjs/common';
 export class AppointmentResolver extends AppointmentBase {
   constructor(
     readonly appointmentService: AppointmentService,
-    readonly schedulerService: SchedulerService,
+    readonly appointmentScheduler: AppointmentScheduler,
     readonly eventEmitter: EventEmitter2,
     readonly bitly: Bitly,
     readonly orgService: OrgService,
   ) {
-    super(appointmentService, schedulerService, eventEmitter);
+    super(appointmentService, appointmentScheduler, eventEmitter);
   }
 
   @Mutation(() => Appointment)
@@ -82,7 +81,7 @@ export class AppointmentResolver extends AppointmentBase {
     };
     this.eventEmitter.emit(EventType.updatedAppointment, eventParams);
 
-    await this.schedulerService.deleteTimeout({ id: appointment.id });
+    await this.appointmentScheduler.deleteTimeout({ id: appointment.id });
 
     return appointment;
   }

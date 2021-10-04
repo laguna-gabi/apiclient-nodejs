@@ -1,9 +1,8 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Schema } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { IsAlphanumeric, IsOptional } from 'class-validator';
-import { Errors, ErrorType } from '.';
-import { IsTypeMetadataProvided } from './customValidators';
+import { Errors, ErrorType } from './errors';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -14,6 +13,23 @@ export enum Language {
 }
 
 registerEnumType(Language, { name: 'Language' });
+
+export enum NotificationType {
+  video = 'video',
+  call = 'call',
+  text = 'text',
+  textSms = 'textSms',
+}
+
+registerEnumType(NotificationType, { name: 'NotificationType' });
+
+export enum CancelNotificationType {
+  cancelVideo = 'cancelVideo',
+  cancelCall = 'cancelCall',
+  cancelText = 'cancelText',
+}
+
+registerEnumType(CancelNotificationType, { name: 'CancelNotificationType' });
 
 export enum Platform {
   ios = 'ios',
@@ -69,84 +85,6 @@ export class RegisterForNotificationParams {
   @IsOptional()
   isPushNotificationsEnabled?: boolean;
 }
-
-/************************************************************************************************
- ***************************************** Notifications ****************************************
- ************************************************************************************************/
-
-export enum NotificationType {
-  video = 'video',
-  call = 'call',
-  text = 'text',
-  textSms = 'textSms',
-}
-
-registerEnumType(NotificationType, { name: 'NotificationType' });
-
-export enum CancelNotificationType {
-  cancelVideo = 'cancelVideo',
-  cancelCall = 'cancelCall',
-  cancelText = 'cancelText',
-}
-
-registerEnumType(CancelNotificationType, { name: 'CancelNotificationType' });
-@InputType()
-export class NotificationMetadata {
-  @Field(() => String, { nullable: true })
-  peerId?: string;
-
-  @Field(() => String, { nullable: true })
-  content?: string;
-
-  @Field(() => Date, { nullable: true })
-  when?: Date;
-}
-
-@Schema({ versionKey: false, timestamps: true })
-@InputType()
-export class NotifyParams {
-  @Prop()
-  @Field(() => String)
-  userId: string;
-
-  @Prop()
-  @Field(() => String)
-  memberId: string;
-
-  @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataInvalid) })
-  @Field(() => NotificationType)
-  @Prop()
-  type: NotificationType;
-
-  @Prop()
-  @Field(() => NotificationMetadata)
-  metadata: NotificationMetadata;
-}
-
-@InputType()
-export class CancelNotificationMetadata {
-  @Field(() => String, { nullable: true })
-  peerId?: string;
-}
-
-@InputType()
-export class CancelNotifyParams {
-  @Field(() => String)
-  memberId: string;
-
-  @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataInvalid) })
-  @Field(() => CancelNotificationType)
-  type: CancelNotificationType;
-
-  @Field(() => String)
-  notificationId: string;
-
-  @Field(() => CancelNotificationMetadata)
-  metadata: CancelNotificationMetadata;
-}
-
-export type NotifyParamsDocument = NotifyParams & Document;
-export const NotifyParamsDto = SchemaFactory.createForClass(NotifyParams);
 
 /**************************************************************************************************
  ******************************************** Internals *******************************************

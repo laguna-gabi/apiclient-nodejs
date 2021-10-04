@@ -3,11 +3,15 @@ import { Types } from 'mongoose';
 import { CreateUserParams, defaultUserParams, User, UserRole } from '../src/user';
 import {
   AppointmentCompose,
+  CancelNotificationMetadata,
+  CancelNotifyParams,
   CreateMemberParams,
   CreateTaskParams,
   defaultMemberParams,
   Member,
   MemberConfig,
+  NotificationMetadata,
+  NotifyParams,
   SetGeneralNotesParams,
   Sex,
   TaskStatus,
@@ -25,16 +29,7 @@ import {
   UpdateNotesParams,
 } from '../src/appointment';
 import { CreateOrgParams, OrgType } from '../src/org';
-import {
-  Language,
-  Platform,
-  NotificationType,
-  CancelNotificationType,
-  NotificationMetadata,
-  NotifyParams,
-  CancelNotificationMetadata,
-  CancelNotifyParams,
-} from '../src/common';
+import { Language, Platform, NotificationType, CancelNotificationType } from '../src/common';
 import { lookup } from 'zipcode-to-timezone';
 import { AvailabilityInput } from '../src/availability';
 import { GetCommunicationParams } from '../src/communication';
