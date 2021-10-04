@@ -1,5 +1,10 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
-import { CommunicationInfo, CommunicationService, GetCommunicationParams } from '.';
+import {
+  CommunicationInfo,
+  CommunicationService,
+  GetCommunicationParams,
+  UnreadMessagesCount,
+} from '.';
 import { OnEvent } from '@nestjs/event-emitter';
 import {
   EventType,
@@ -48,6 +53,11 @@ export class CommunicationResolver {
     } else {
       return null;
     }
+  }
+
+  @Query(() => UnreadMessagesCount)
+  getMemberUnreadMessagesCount(@Args('memberId', { type: () => String }) memberId: string) {
+    return this.communicationService.getMemberUnreadMessagesCount(memberId);
   }
 
   @Query(() => String)

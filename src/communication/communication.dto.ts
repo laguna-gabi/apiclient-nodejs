@@ -69,6 +69,18 @@ export class CommunicationInfo {
   chat: Chat;
 }
 
+@ObjectType()
+export class UnreadMessagesCount {
+  @Field(() => String)
+  memberId: string;
+
+  @Field(() => String)
+  userId: string;
+
+  @Field(() => Number)
+  count: number;
+}
+
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/

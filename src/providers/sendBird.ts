@@ -115,4 +115,23 @@ export class SendBird implements OnModuleInit {
       .put(url, { data: JSON.stringify(data) }, { headers: this.headers })
       .toPromise();
   }
+
+  async countUnreadMessages(channelUrl: string, userId: string): Promise<number> {
+    const failure = `Failed to get user unread messages`;
+    const methodName = this.countUnreadMessages.name;
+    const result = await this.httpService
+      .get(
+        // eslint-disable-next-line max-len
+        `${this.basePath}${suffix.groupChannels}/${channelUrl}/messages/unread_count?user_ids=${userId}`,
+        {
+          headers: this.headers,
+        },
+      )
+      .toPromise();
+    if (result.status === 200) {
+      return result.data.unread[userId];
+    } else {
+      this.logger.error(`${failure} ${result.status} ${JSON.stringify(result.data)}`, methodName);
+    }
+  }
 }

@@ -462,6 +462,37 @@ export class Queries {
     return result.data.getCommunication;
   };
 
+  getMemberUnreadMessagesCount = async ({
+    memberId,
+    missingFieldError,
+    invalidFieldsError,
+  }: {
+    memberId;
+    invalidFieldsError?: string;
+    missingFieldError?: string;
+  }) => {
+    const result = await this.apolloClient.query({
+      variables: { memberId },
+      query: gql`
+        query getMemberUnreadMessagesCount($memberId: String!) {
+          getMemberUnreadMessagesCount(memberId: $memberId) {
+            memberId
+            userId
+            count
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(invalidFieldsError).toEqual(result.errors[0].message);
+    } else if (missingFieldError) {
+      expect(result.errors[0].message).toMatch(missingFieldError);
+    } else {
+      return result.data.getMemberUnreadMessagesCount;
+    }
+  };
+
   getTwilioAccessToken = async () => {
     const result = await this.apolloClient.query({
       query: gql`

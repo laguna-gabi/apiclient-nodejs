@@ -14,6 +14,8 @@ import { v4 } from 'uuid';
 import { SendBird, TwilioService } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
+  Errors,
+  ErrorType,
   EventType,
   IEventUpdateMemberConfig,
   IEventUpdateUserConfig,
@@ -182,6 +184,17 @@ export class CommunicationService {
       },
     ]);
     return result[0];
+  }
+
+  async getMemberUnreadMessagesCount(memberId: string) {
+    const [result] = await this.communicationModel.find({
+      memberId: new Types.ObjectId(memberId),
+    });
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
+    const count = await this.sendBird.countUnreadMessages(result.sendbirdChannelUrl, memberId);
+    return { count, memberId, userId: result.userId };
   }
 
   getTwilioAccessToken() {
