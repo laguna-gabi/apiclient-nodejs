@@ -6,6 +6,7 @@ import {
   StorageService,
   SlackBot,
   TwilioService,
+  WebhooksController,
   Bitly,
 } from '.';
 import { HttpModule } from '@nestjs/axios';
@@ -30,5 +31,6 @@ import { HttpModule } from '@nestjs/axios';
     ConfigsService,
     NotificationsService,
   ],
+  controllers: [WebhooksController],
 })
 export class ProvidersModule {}
