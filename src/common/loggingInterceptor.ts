@@ -13,7 +13,9 @@ export class LoggingInterceptor implements NestInterceptor {
     let args;
     if (context.getType() === 'http') {
       const res = context.switchToHttp();
-      args = res.getRequest().params;
+      const { params, body } = res.getRequest();
+      args = Object.keys(params).length > 0 ? { params } : {};
+      args = Object.keys(body).length > 0 ? { ...args, body } : args;
     } else {
       args = context.getArgByIndex(1);
     }

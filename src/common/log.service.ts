@@ -54,7 +54,7 @@ export class Logger implements LoggerService {
    */
   getCalledLog(params) {
     if (Object.keys(params).length === 0) {
-      return params;
+      return 'was called';
     }
 
     const dupParams = Object.values(params)[0];
