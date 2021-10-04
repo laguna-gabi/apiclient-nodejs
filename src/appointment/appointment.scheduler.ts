@@ -19,35 +19,20 @@ export class AppointmentScheduler extends BaseScheduler {
     private readonly appointmentModel: Model<AppointmentDocument>,
     private readonly notificationsService: NotificationsService,
     private readonly communicationResolver: CommunicationResolver,
-    private readonly bitly: Bitly,
-    private eventEmitter: EventEmitter2,
     protected readonly schedulerRegistry: SchedulerRegistry,
+    protected eventEmitter: EventEmitter2,
+    protected readonly bitly: Bitly,
   ) {
-    super(schedulerRegistry);
+    super(schedulerRegistry, eventEmitter, bitly);
   }
 
   async init() {
-    const { gapDate, maxDate } = this.getCurrentDateConfigs();
-
-    const appointments = await this.appointmentModel
-      .find({ status: AppointmentStatus.scheduled, start: { $gte: gapDate, $lte: maxDate } })
-      .sort({ start: 1 });
-
-    appointments.map((appointment) => {
-      this.scheduleAppointmentAlert({
-        id: appointment._id,
-        memberId: appointment.memberId.toString(),
-        userId: appointment.userId,
-        start: appointment.start,
-        gapDate,
-      });
-    });
-
-    this.logger.log(
-      `Finish init scheduler for ${appointments.length} appointments`,
-      AppointmentScheduler.name,
-    );
+    await this.initRegisterAppointmentAlert();
   }
+
+  /*************************************************************************************************
+   ********************************************* Public ********************************************
+   ************************************************************************************************/
 
   async registerAppointmentAlert({
     id,
@@ -67,6 +52,30 @@ export class AppointmentScheduler extends BaseScheduler {
     if (start.getTime() <= maxDate.getTime()) {
       this.scheduleAppointmentAlert({ id, memberId, userId, start, gapDate });
     }
+  }
+
+  /************************************************************************************************
+   ******************************************* Initializers ***************************************
+   ************************************************************************************************/
+
+  private async initRegisterAppointmentAlert() {
+    const { gapDate, maxDate } = this.getCurrentDateConfigs();
+    const appointments = await this.appointmentModel
+      .find({ status: AppointmentStatus.scheduled, start: { $gte: gapDate, $lte: maxDate } })
+      .sort({ start: 1 });
+    appointments.map((appointment) => {
+      this.scheduleAppointmentAlert({
+        id: appointment._id,
+        memberId: appointment.memberId.toString(),
+        userId: appointment.userId,
+        start: appointment.start,
+        gapDate,
+      });
+    });
+    this.logger.log(
+      `Finish init scheduler for ${appointments.length} appointments`,
+      AppointmentScheduler.name,
+    );
   }
 
   /*************************************************************************************************

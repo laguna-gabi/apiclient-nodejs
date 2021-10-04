@@ -1,8 +1,18 @@
 import * as config from 'config';
 import { SchedulerRegistry } from '@nestjs/schedule';
+import { add } from 'date-fns';
+import { Member, NotifyParams } from '../member';
+import { User } from '../user';
+import { replaceConfigs, NotificationType, EventType } from '.';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Bitly } from '../providers';
 
 export class BaseScheduler {
-  constructor(protected readonly schedulerRegistry: SchedulerRegistry) {}
+  constructor(
+    protected readonly schedulerRegistry: SchedulerRegistry,
+    protected readonly eventEmitter: EventEmitter2,
+    protected readonly bitly: Bitly,
+  ) {}
 
   public deleteTimeout({ id }: { id: string }) {
     if (this.schedulerRegistry.doesExists('timeout', id)) {
@@ -21,5 +31,43 @@ export class BaseScheduler {
     maxDate.setMinutes(maxDate.getMinutes() + config.get('scheduler.maxAlertGapInMin'));
 
     return { gapDate, maxDate };
+  }
+
+  public async registerNewMemberNudge({
+    member,
+    user,
+    appointmentId,
+  }: {
+    member: Member;
+    user: User;
+    appointmentId: string;
+  }) {
+    const memberId = member.id.toString();
+    const milliseconds = add(member.createdAt, { days: 2 }).getTime() - new Date().getTime();
+    if (milliseconds > 0) {
+      const timeout = setTimeout(async () => {
+        const url = await this.bitly.shortenLink(
+          `${config.get('hosts.webApp')}/download/${appointmentId}`,
+        );
+
+        const metadata = {
+          content: replaceConfigs({
+            content: config.get('contents.newMemberNudge'),
+            member,
+            user,
+          }).replace('@downloadLink@', `\n${url}`),
+        };
+        const params: NotifyParams = {
+          memberId,
+          userId: user.id,
+          type: NotificationType.textSms,
+          metadata,
+        };
+
+        this.eventEmitter.emit(EventType.notify, params);
+        this.deleteTimeout({ id: memberId });
+      }, milliseconds);
+      this.schedulerRegistry.addTimeout(memberId, timeout);
+    }
   }
 }

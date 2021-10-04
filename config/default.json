@@ -46,6 +46,7 @@
     "appointmentUser": "Hello @user.firstName@, an appointment has been added to your schedule on @appointment.start@",
     "downloadPage": "Hello @member.honorific@ @member.lastName@, I'm @user.firstName@ from Laguna Health. We partnered with @org.name@ to provide you free post-hospital recovery support. Click below to schedule the first visit: @downloadLink@",
     "downloadPageWithoutOrg": "Hello @member.honorific@ @member.lastName@, I'm @user.firstName@ from Laguna Health. We are here to provide you free post-hospital recovery support. Click below to schedule the first visit: @downloadLink@",
+    "newMemberNudge": "Hello @member.honorific@ @member.lastName@, I'm @user.firstName@ from Laguna Health. Friendly reminder to schedule your first visit: @downloadLink@",
     "honorific": {
       "mr": "Mr",
       "mrs": "Mrs",

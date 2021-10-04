@@ -28,6 +28,7 @@ export class AppointmentBase {
     this.notifyAppointment(appointment);
     await this.registerAppointmentAlert(appointment);
 
+    this.appointmentScheduler.deleteTimeout({ id: appointment.memberId.toString() });
     return appointment;
   }
 

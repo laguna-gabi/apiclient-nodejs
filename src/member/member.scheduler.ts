@@ -6,6 +6,8 @@ import { cloneDeep } from 'lodash';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { MemberService } from '.';
+import { Bitly } from '../providers';
 
 @Injectable()
 export class MemberScheduler extends BaseScheduler {
@@ -15,29 +17,21 @@ export class MemberScheduler extends BaseScheduler {
     @InjectModel(NotifyParams.name)
     private readonly notifyParamsModel: Model<NotifyParamsDocument>,
     protected readonly schedulerRegistry: SchedulerRegistry,
-    private eventEmitter: EventEmitter2,
+    protected readonly eventEmitter: EventEmitter2,
+    protected readonly bitly: Bitly,
+    private readonly memberService: MemberService,
   ) {
-    super(schedulerRegistry);
+    super(schedulerRegistry, eventEmitter, bitly);
   }
 
   async init() {
-    const { maxDate } = this.getCurrentDateConfigs();
-
-    const notifications = await this.notifyParamsModel
-      .find({ 'metadata.when': { $gte: new Date(), $lte: maxDate } })
-      .sort({ 'metadata.when': -1 });
-
-    await Promise.all(
-      notifications.map(async (notification) => {
-        return this.registerCustomFutureNotify(notification);
-      }),
-    );
-
-    this.logger.log(
-      `Finish init scheduler for ${notifications.length} future notifications`,
-      MemberScheduler.name,
-    );
+    await this.initRegisterCustomFutureNotify();
+    await this.initRegisterNewMemberNudge();
   }
+
+  /*************************************************************************************************
+   ********************************************* Public ********************************************
+   ************************************************************************************************/
 
   public async registerCustomFutureNotify(
     notifyParams: NotifyParams,
@@ -61,5 +55,41 @@ export class MemberScheduler extends BaseScheduler {
 
       return { id };
     }
+  }
+
+  /************************************************************************************************
+   ******************************************* Initializers ***************************************
+   ************************************************************************************************/
+
+  private async initRegisterCustomFutureNotify() {
+    const { maxDate } = this.getCurrentDateConfigs();
+    const notifications = await this.notifyParamsModel
+      .find({ 'metadata.when': { $gte: new Date(), $lte: maxDate } })
+      .sort({ 'metadata.when': -1 });
+    await Promise.all(
+      notifications.map(async (notification) => {
+        return this.registerCustomFutureNotify(notification);
+      }),
+    );
+    this.logger.log(
+      `Finish init scheduler for ${notifications.length} future notifications`,
+      MemberScheduler.name,
+    );
+  }
+
+  private async initRegisterNewMemberNudge() {
+    const newUnregisteredMembers = await this.memberService.getNewUnregisteredMembers();
+    newUnregisteredMembers.map(async (newMember) => {
+      const { member, user, appointmentId } = newMember;
+      this.registerNewMemberNudge({
+        member,
+        user,
+        appointmentId,
+      });
+    });
+    this.logger.log(
+      `Finish init new member nudge for ${newUnregisteredMembers.length} members`,
+      MemberScheduler.name,
+    );
   }
 }

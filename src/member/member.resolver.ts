@@ -291,6 +291,8 @@ export class MemberResolver extends MemberBase {
         userId: user._id,
       };
       this.eventEmitter.emit(EventType.updateMemberPlatform, eventParams);
+
+      this.memberScheduler.deleteTimeout({ id: member.id });
     });
   }
 

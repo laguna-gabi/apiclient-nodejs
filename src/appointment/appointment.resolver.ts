@@ -99,9 +99,9 @@ export class AppointmentResolver extends AppointmentBase {
       userId: user.id,
       notBefore: add(new Date(), { hours: 2 }),
     };
-    const { id } = await this.appointmentService.request(requestAppointmentParams);
-    const url = await this.bitly.shortenLink(`${config.get('hosts.webApp')}/download/${id}`);
-    await this.notifyRegistration({ member, user, url });
+    const { id: appointmentId } = await this.appointmentService.request(requestAppointmentParams);
+    await this.notifyRegistration({ member, user, appointmentId });
+    await this.appointmentScheduler.registerNewMemberNudge({ member, user, appointmentId });
   }
 
   /*************************************************************************************************
@@ -126,12 +126,15 @@ export class AppointmentResolver extends AppointmentBase {
   private async notifyRegistration({
     member,
     user,
-    url,
+    appointmentId,
   }: {
     member: Member;
     user: User;
-    url: string;
+    appointmentId: string;
   }) {
+    const url = await this.bitly.shortenLink(
+      `${config.get('hosts.webApp')}/download/${appointmentId}`,
+    );
     const org = await this.orgService.get(member.org.toString());
     const metadata = {
       content: replaceConfigs({

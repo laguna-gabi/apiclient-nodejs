@@ -621,12 +621,14 @@ describe('MemberResolver', () => {
     let spyOnServiceGetMember;
     let spyOnServiceGetMemberConfig;
     let spyOnServiceUpdateMemberConfig;
+    let spyOnSchedulerDeleteTimeout;
 
     beforeEach(() => {
       spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnServiceUpdateMemberConfig = jest.spyOn(service, 'updateMemberConfig');
+      spyOnSchedulerDeleteTimeout = jest.spyOn(memberScheduler, 'deleteTimeout');
     });
 
     afterEach(() => {
@@ -634,6 +636,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockReset();
       spyOnServiceGetMemberConfig.mockReset();
       spyOnServiceUpdateMemberConfig.mockReset();
+      spyOnSchedulerDeleteTimeout.mockReset();
     });
 
     it('should not call notificationsService on platform=android', async () => {
@@ -662,6 +665,7 @@ describe('MemberResolver', () => {
         platform: params.platform,
         isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       });
+      expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: member.id });
     });
 
     it('should call notificationsService on platform=ios', async () => {
@@ -698,6 +702,7 @@ describe('MemberResolver', () => {
         userId: member.primaryUserId,
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.updateMemberPlatform, eventParams);
+      expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: member.id });
     });
   });
 

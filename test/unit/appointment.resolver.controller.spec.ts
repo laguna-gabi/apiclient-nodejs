@@ -130,15 +130,19 @@ describe('AppointmentResolver', () => {
   describe('scheduleAppointment', () => {
     let spyOnServiceSchedule;
     let spyOnSchedulerRegisterAppointmentAlert;
+    let spyOnSchedulerDeleteTimeout;
+
     beforeEach(() => {
       spyOnServiceSchedule = jest.spyOn(service, 'schedule');
       spyOnSchedulerRegisterAppointmentAlert = jest.spyOn(scheduler, 'registerAppointmentAlert');
+      spyOnSchedulerDeleteTimeout = jest.spyOn(scheduler, 'deleteTimeout');
     });
 
     afterEach(() => {
       spyOnServiceSchedule.mockReset();
       spyOnSchedulerRegisterAppointmentAlert.mockReset();
       spyOnEventEmitter.mockReset();
+      spyOnSchedulerDeleteTimeout.mockReset();
     });
 
     test.each`
@@ -159,6 +163,7 @@ describe('AppointmentResolver', () => {
         userId: appointment.userId,
         start: appointment.start,
       });
+      expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: appointment.memberId.toString() });
     });
 
     it('should validate that on schedule appointment, internal events are sent', async () => {
@@ -197,6 +202,7 @@ describe('AppointmentResolver', () => {
         },
       };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notify, notifyParams);
+      expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: appointment.memberId.toString() });
     });
   });
 
