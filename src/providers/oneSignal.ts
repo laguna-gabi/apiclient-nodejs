@@ -56,6 +56,7 @@ export class OneSignal {
 
   async send(sendNotificationToMemberParams: SendNotificationToMemberParams) {
     const { platform, externalUserId, data, metadata } = sendNotificationToMemberParams;
+    this.logger.debug(this.logger.getCalledLog(data), this.send.name);
 
     const config = await this.getConfig(platform, data.type);
     const app_id = await this.getApiId(platform, data.type);

@@ -25,6 +25,7 @@ import {
   ErrorType,
   EventType,
   Identifier,
+  IEventNotifyChatMessage,
   IEventUpdateMemberPlatform,
   Logger,
   LoggingInterceptor,
@@ -316,8 +317,12 @@ export class MemberResolver extends MemberBase {
       metadata.content = replaceConfigs({ content: metadata.content, member, user });
     }
 
-    const path =
-      type === NotificationType.call || type === NotificationType.video ? { path: 'call' } : {};
+    let path = {};
+    if (type === NotificationType.call || type === NotificationType.video) {
+      path = { path: 'call' };
+    } else if (type === NotificationType.chat) {
+      path = { path: `connect/${memberId}/${userId}` };
+    }
 
     return this.notificationsService.send({
       sendNotificationToMemberParams: {
@@ -392,6 +397,27 @@ export class MemberResolver extends MemberBase {
     } catch (ex) {
       this.logger.error(ex, this.notifyInternal.name);
     }
+  }
+
+  /**
+   * Listening to chat message from sendbird webhook.
+   * A message can be from a user or a member, we'll need to check first if the sender is the user.
+   */
+  @OnEvent(EventType.notifyChatMessage, { async: true })
+  async notifyChatMessage(params: IEventNotifyChatMessage) {
+    const { senderUserId, receiverUserId } = params;
+
+    const user = await this.userService.get(senderUserId);
+    if (!user) {
+      return;
+    }
+
+    return this.notify({
+      memberId: receiverUserId,
+      userId: senderUserId,
+      type: NotificationType.chat,
+      metadata: {},
+    });
   }
 
   /************************************************************************************************

@@ -11,6 +11,7 @@ import { dbConnect, dbDisconnect, mockProviders } from '../common';
 import { model } from 'mongoose';
 import { MemberDto } from '../../src/member';
 import { CommunicationService } from '../../src/communication';
+import { WebhooksController } from '../../src/providers';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -25,6 +26,7 @@ export class Handler {
   slackBot;
   memberModel;
   communicationService: CommunicationService;
+  webhooksController: WebhooksController;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -53,6 +55,7 @@ export class Handler {
     this.memberModel = model('members', MemberDto);
 
     this.communicationService = moduleFixture.get<CommunicationService>(CommunicationService);
+    this.webhooksController = moduleFixture.get<WebhooksController>(WebhooksController);
   }
 
   async afterAll() {

@@ -9,7 +9,7 @@ import {
   StorageService,
   TwilioService,
 } from '../src/providers';
-import { apiPrefix } from '../src/common';
+import { apiPrefix, webhooks } from '../src/common';
 import { v4 } from 'uuid';
 import { DbModule } from '../src/db/db.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -19,6 +19,7 @@ export const urls = {
   scheduleAppointments: `/${apiPrefix}/appointments/schedule`,
   slots: `/${apiPrefix}/users/slots`,
   members: `/${apiPrefix}/members/create`,
+  webhooks: `/${apiPrefix}/${webhooks}`,
 };
 
 export const compareUsers = (user: User, userBase) => {

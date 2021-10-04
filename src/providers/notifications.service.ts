@@ -45,17 +45,25 @@ export class NotificationsService {
     const methodName = this.send.name;
     if (sendNotificationToMemberParams) {
       this.logger.debug(this.logger.getCalledLog(sendNotificationToMemberParams), methodName);
-      if (
-        sendNotificationToMemberParams.platform === Platform.web ||
-        sendNotificationToMemberParams.data.type === NotificationType.textSms ||
-        !sendNotificationToMemberParams.isPushNotificationsEnabled
-      ) {
-        await this.twilio.send({
-          body: sendNotificationToMemberParams.metadata.content,
-          to: sendNotificationToMemberParams.data.member.phone,
-        });
-      } else {
-        return this.oneSignal.send(sendNotificationToMemberParams);
+      const { platform, isPushNotificationsEnabled, data, metadata } =
+        sendNotificationToMemberParams;
+
+      switch (data.type) {
+        case NotificationType.textSms:
+          await this.twilio.send({ body: metadata.content, to: data.member.phone });
+          break;
+        case NotificationType.chat:
+          if (platform !== Platform.web && isPushNotificationsEnabled) {
+            return this.oneSignal.send(sendNotificationToMemberParams);
+          }
+          break;
+        default:
+          if (platform !== Platform.web && isPushNotificationsEnabled) {
+            return this.oneSignal.send(sendNotificationToMemberParams);
+          } else {
+            await this.twilio.send({ body: metadata.content, to: data.member.phone });
+          }
+          break;
       }
     }
 

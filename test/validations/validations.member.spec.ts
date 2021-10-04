@@ -9,9 +9,9 @@ import {
   generateNotifyParams,
   generateOrgParams,
   generateRandomName,
-  generateUpdateRecordingParams,
   generateSetGeneralNotesParams,
   generateUpdateMemberParams,
+  generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
   generateZipCode,
   urls,
@@ -22,10 +22,10 @@ import {
   CancelNotifyParams,
   CreateMemberParams,
   defaultMemberParams,
+  getHonorificKeyName,
   NotifyParams,
   Sex,
   UpdateMemberParams,
-  getHonorificKeyName,
 } from '../../src/member';
 import {
   CancelNotificationType,
@@ -388,6 +388,14 @@ describe('Validations - member', () => {
         });
       },
     );
+
+    it(`should fail to notify when attaching ${NotificationType.chat}`, async () => {
+      const notifyParams: NotifyParams = generateNotifyParams({ type: NotificationType.chat });
+      await handler.mutations.notify({
+        notifyParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.notificationMetadataInvalid)],
+      });
+    });
   });
 
   describe('cancel', () => {

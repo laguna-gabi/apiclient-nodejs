@@ -19,6 +19,7 @@ export enum NotificationType {
   call = 'call',
   text = 'text',
   textSms = 'textSms',
+  chat = 'chat',
 }
 
 registerEnumType(NotificationType, { name: 'NotificationType' });

@@ -19,6 +19,7 @@ import {
   mockGenerateUser,
 } from '../index';
 import {
+  MemberConfig,
   MemberModule,
   MemberResolver,
   MemberScheduler,
@@ -32,6 +33,7 @@ import {
   ErrorType,
   EventType,
   IEventNewMember,
+  IEventNotifyChatMessage,
   IEventRequestAppointment,
   IEventUpdateMemberPlatform,
   NotificationType,
@@ -1034,6 +1036,79 @@ describe('MemberResolver', () => {
           metadata: notifyParams.metadata,
         },
       });
+    });
+  });
+
+  describe('notifyChatMessage', () => {
+    let spyOnServiceGetMember;
+    let spyOnServiceGetMemberConfig;
+    let spyOnUserServiceGetUser;
+    let spyOnNotificationsServiceSend;
+
+    beforeEach(() => {
+      spyOnServiceGetMember = jest.spyOn(service, 'get');
+      spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
+      spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
+      spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetMember.mockReset();
+      spyOnServiceGetMemberConfig.mockReset();
+      spyOnUserServiceGetUser.mockReset();
+      spyOnNotificationsServiceSend.mockReset();
+    });
+
+    it('should handle notify chat message sent from user', async () => {
+      const member = mockGenerateMember();
+      const user = mockGenerateUser();
+      const memberConfig: MemberConfig = {
+        memberId: new Types.ObjectId(member.id),
+        externalUserId: v4(),
+        platform: Platform.android,
+        isPushNotificationsEnabled: true,
+        accessToken: '123-abc',
+      };
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnUserServiceGetUser.mockImplementation(async () => user);
+
+      const params: IEventNotifyChatMessage = { senderUserId: user.id, receiverUserId: member.id };
+
+      await resolver.notifyChatMessage(params);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendNotificationToMemberParams: {
+          externalUserId: memberConfig.externalUserId,
+          platform: memberConfig.platform,
+          isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
+          data: {
+            user: {
+              id: user.id,
+              firstName: user.firstName,
+              avatar: user.avatar,
+            },
+            member: {
+              phone: member.phone,
+            },
+            type: NotificationType.chat,
+            peerId: undefined,
+            isVideo: false,
+            path: `connect/${member.id}/${user.id}`,
+          },
+          metadata: {},
+        },
+      });
+    });
+
+    it('should disregard notify chat message when sent from member', async () => {
+      spyOnUserServiceGetUser.mockImplementation(async () => undefined);
+
+      const params: IEventNotifyChatMessage = { senderUserId: v4(), receiverUserId: v4() };
+
+      await resolver.notifyChatMessage(params);
+
+      expect(spyOnNotificationsServiceSend).not.toBeCalled();
     });
   });
 });

@@ -97,6 +97,10 @@ export class SendBird implements OnModuleInit {
       .toPromise();
   }
 
+  getAppToken() {
+    return this.appToken;
+  }
+
   private async update(
     channelUrl: string,
     appointmentId: string,

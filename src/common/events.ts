@@ -16,6 +16,7 @@ export enum EventType {
   addUserToMemberList = 'addUserToMemberList',
   updateMemberPlatform = 'updateMemberPlatform',
   notify = 'notify',
+  notifyChatMessage = 'notifyChatMessage',
 }
 
 export interface IEventRequestAppointment {
@@ -70,4 +71,9 @@ export interface IEventUpdateMemberPlatform {
   memberId: string;
   userId: string;
   platform: Platform;
+}
+
+export interface IEventNotifyChatMessage {
+  senderUserId: string;
+  receiverUserId: string;
 }
