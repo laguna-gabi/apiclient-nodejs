@@ -25,27 +25,12 @@ describe('WebhooksController', () => {
   });
 
   describe('sendbird', () => {
-    let spyOnValidation;
-
-    beforeAll(() => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      spyOnValidation = jest.spyOn(controller, 'validateMessageSentFromSendbird');
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      spyOnValidation.mockImplementation(() => undefined);
-    });
-
-    afterAll(() => {
-      spyOnValidation.mockReset();
-    });
-
     afterEach(() => {
       spyOnEventEmitter.mockReset();
     });
 
     it('should generate an event with a payload sent by a user', async () => {
-      await controller.sendbird(sendbirdUserPayload, {});
+      await controller.sendbird({ body: sendbirdUserPayload });
 
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyChatMessage, {
         senderUserId: sendbirdUserPayload.sender.user_id,
@@ -54,7 +39,7 @@ describe('WebhooksController', () => {
     });
 
     it('should generate an event with a payload sent by a member', async () => {
-      await controller.sendbird(sendbirdMemberPayload, {});
+      await controller.sendbird({ body: sendbirdMemberPayload });
 
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyChatMessage, {
         senderUserId: sendbirdMemberPayload.sender.user_id,

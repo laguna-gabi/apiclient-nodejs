@@ -1,4 +1,5 @@
 import { Injectable, LoggerService } from '@nestjs/common';
+import { environments } from '../providers';
 
 @Injectable()
 export class Logger implements LoggerService {
@@ -38,13 +39,14 @@ export class Logger implements LoggerService {
   logFormat(text: string, color, methodName: string, className?: string) {
     const cName = className ? className : this.className;
     const now = new Date();
-    if (!process.env.NODE_ENV) {
+    if (!process.env.NODE_ENV || process.env.NODE_ENV === environments.test) {
+      const mName = `${COLOR.fgMagenta}${methodName}${COLOR.reset}`;
+      return `${COLOR.fgBlue}${now.toLocaleString()}     ${
+        COLOR.fgYellow
+      }[${cName}] ${mName} ${color}${text}${COLOR.reset}`;
+    } else {
       return `${now.toLocaleString()}     [${cName}] ${methodName} ${text}`;
     }
-    const mName = `${COLOR.fgMagenta}${methodName}${COLOR.reset}`;
-    return `${COLOR.fgBlue}${now.toLocaleString()}     ${
-      COLOR.fgYellow
-    }[${cName}] ${mName} ${color}${text}${COLOR.reset}`;
   }
 
   /**
