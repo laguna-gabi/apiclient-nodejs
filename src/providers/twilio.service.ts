@@ -2,7 +2,6 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigsService, environments, ExternalConfigs, SlackBot, SlackMessageParams } from '.';
 import { jwt, Twilio } from 'twilio';
 import * as config from 'config';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Logger, slackChannel, SlackIcon } from '../common';
 
 @Injectable()
@@ -18,13 +17,11 @@ export class TwilioService implements OnModuleInit {
   private identity;
   private slackBot: SlackBot;
 
-  constructor(
-    private readonly configsService: ConfigsService,
-    private eventEmitter: EventEmitter2,
-  ) {
+  constructor(private readonly configsService: ConfigsService) {
     this.source = config.get('twilio.source');
     this.identity = config.get('twilio.identity');
     this.slackBot = new SlackBot(configsService);
+    this.slackBot.onModuleInit();
   }
 
   async onModuleInit() {

@@ -11,7 +11,6 @@ import {
 import * as faker from 'faker';
 import { delay } from '../common';
 import { generatePath, generatePhone } from '../generators';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('live: notifications (one signal)', () => {
   let notificationsService: NotificationsService;
@@ -21,8 +20,7 @@ describe('live: notifications (one signal)', () => {
   beforeAll(() => {
     const configService = new ConfigsService();
     const httpService = new HttpService();
-    const eventEmitter = new EventEmitter2();
-    const twilio = new TwilioService(configService, eventEmitter);
+    const twilio = new TwilioService(configService);
     notificationsService = new NotificationsService(configService, httpService, twilio);
   });
 

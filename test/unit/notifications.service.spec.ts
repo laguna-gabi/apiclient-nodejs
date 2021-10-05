@@ -4,7 +4,6 @@ import { v4 } from 'uuid';
 import { NotificationType, Platform, SendNotificationToMemberParams } from '../../src/common';
 import * as faker from 'faker';
 import { generatePhone } from '../generators';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('NotificationsService (offline)', () => {
   let notificationsService: NotificationsService;
@@ -13,8 +12,7 @@ describe('NotificationsService (offline)', () => {
   beforeAll(() => {
     const configService = new ConfigsService();
     const httpService = new HttpService();
-    const eventEmitter = new EventEmitter2();
-    twilio = new TwilioService(configService, eventEmitter);
+    twilio = new TwilioService(configService);
     notificationsService = new NotificationsService(configService, httpService, twilio);
   });
 
