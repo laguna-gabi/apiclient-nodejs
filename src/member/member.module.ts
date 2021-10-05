@@ -22,9 +22,11 @@ import { HttpModule } from '@nestjs/axios';
 import { Appointment, AppointmentDto } from '../appointment';
 import { ConfigsService, ProvidersModule } from '../providers';
 import { UserModule } from '../user';
+import { CommunicationModule } from '../communication';
 
 @Module({
   imports: [
+    CommunicationModule,
     UserModule,
     ProvidersModule,
     HttpModule,

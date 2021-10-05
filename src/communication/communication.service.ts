@@ -186,6 +186,10 @@ export class CommunicationService {
     return result[0];
   }
 
+  async getByChannelUrl(sendbirdChannelUrl: string): Promise<Communication> {
+    return this.communicationModel.findOne({ sendbirdChannelUrl });
+  }
+
   async getMemberUnreadMessagesCount(memberId: string) {
     const [result] = await this.communicationModel.find({
       memberId: new Types.ObjectId(memberId),

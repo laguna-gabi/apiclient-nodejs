@@ -44,6 +44,7 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { NotificationsService, StorageService } from '../providers';
 import { User, UserService } from '../user';
 import { UseInterceptors } from '@nestjs/common';
+import { CommunicationService } from '../communication';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
@@ -58,6 +59,7 @@ export class MemberResolver extends MemberBase {
     private readonly storageService: StorageService,
     private readonly notificationsService: NotificationsService,
     readonly userService: UserService,
+    readonly communicationService: CommunicationService,
   ) {
     super(memberService, eventEmitter, userService);
   }
@@ -405,15 +407,26 @@ export class MemberResolver extends MemberBase {
    */
   @OnEvent(EventType.notifyChatMessage, { async: true })
   async notifyChatMessage(params: IEventNotifyChatMessage) {
-    const { senderUserId, receiverUserId } = params;
+    const { senderUserId, sendbirdChannelUrl } = params;
+
+    console.log({ params });
 
     const user = await this.userService.get(senderUserId);
     if (!user) {
       return;
     }
 
+    const communication = await this.communicationService.getByChannelUrl(sendbirdChannelUrl);
+    if (!communication) {
+      this.logger.warn(
+        `${sendbirdChannelUrl} webhook received from sendbird doesnt exists`,
+        this.notifyChatMessage.name,
+      );
+      return;
+    }
+
     return this.notify({
-      memberId: receiverUserId,
+      memberId: communication.memberId.toString(),
       userId: senderUserId,
       type: NotificationType.chat,
       metadata: {},

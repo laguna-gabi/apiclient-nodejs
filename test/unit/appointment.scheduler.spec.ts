@@ -13,7 +13,7 @@ import * as config from 'config';
 import { cloneDeep, difference } from 'lodash';
 import { v4 } from 'uuid';
 import * as faker from 'faker';
-import { CommunicationResolver } from '../../src/communication';
+import { CommunicationService } from '../../src/communication';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventType, NotificationType } from '../../src/common';
 import { NotifyParams } from '../../src/member';
@@ -23,7 +23,7 @@ describe('AppointmentScheduler', () => {
   let module: TestingModule;
   let scheduler: AppointmentScheduler;
   let schedulerRegistry: SchedulerRegistry;
-  let communicationResolver: CommunicationResolver;
+  let communicationService: CommunicationService;
   let eventEmitter: EventEmitter2;
   let appointmentModel: Model<typeof AppointmentDto>;
   let bitly: Bitly;
@@ -41,7 +41,7 @@ describe('AppointmentScheduler', () => {
     scheduler = module.get<AppointmentScheduler>(AppointmentScheduler);
     schedulerRegistry = module.get<SchedulerRegistry>(SchedulerRegistry);
     appointmentModel = model(Appointment.name, AppointmentDto);
-    communicationResolver = module.get<CommunicationResolver>(CommunicationResolver);
+    communicationService = module.get<CommunicationService>(CommunicationService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     bitly = module.get<Bitly>(Bitly);
 
@@ -180,8 +180,8 @@ describe('AppointmentScheduler', () => {
       const { memberId, userId } = param;
       const chat = { memberLink: faker.internet.url(), userLink: faker.internet.url() };
 
-      const spyOnCommunicationResolverGet = jest.spyOn(communicationResolver, 'getCommunication');
-      spyOnCommunicationResolverGet.mockResolvedValue({ memberId, userId, chat });
+      const spyOnCommunicationServiceGet = jest.spyOn(communicationService, 'get');
+      spyOnCommunicationServiceGet.mockResolvedValue({ memberId, userId, chat });
       const spyOnBitlyShortenLink = jest.spyOn(bitly, 'shortenLink');
       const chatLink = 'https://bit.ly/abc';
       spyOnBitlyShortenLink.mockResolvedValue(chatLink);
@@ -197,8 +197,8 @@ describe('AppointmentScheduler', () => {
       timeouts = schedulerRegistry.getTimeouts();
       expect(timeouts.length).toEqual(0);
 
-      expect(spyOnCommunicationResolverGet).toBeCalledTimes(1);
-      expect(spyOnCommunicationResolverGet).toBeCalledWith({ memberId, userId });
+      expect(spyOnCommunicationServiceGet).toBeCalledTimes(1);
+      expect(spyOnCommunicationServiceGet).toBeCalledWith({ memberId, userId });
 
       expect(spyOnEventEmitter).toBeCalledTimes(1);
       const eventParams: NotifyParams = {
@@ -215,7 +215,7 @@ describe('AppointmentScheduler', () => {
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notify, eventParams);
       expect(spyOnBitlyShortenLink).toBeCalledWith(chat.memberLink);
 
-      spyOnCommunicationResolverGet.mockReset();
+      spyOnCommunicationServiceGet.mockReset();
       spyOnEventEmitter.mockReset();
       spyOnBitlyShortenLink.mockReset();
     });

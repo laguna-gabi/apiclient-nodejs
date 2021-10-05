@@ -1,0 +1,46 @@
+{
+  "category":"group_channel:message_send",
+  "sender":{
+    "nickname":"asdddds asdasgg",
+    "user_id":"8137b467-6cf4-5183-9827-f020332b4f10",
+    "profile_url":"http://placeimg.com/640/480",
+    "metadata":{
+
+    }
+  },
+  "silent":false,
+  "custom_type":"",
+  "mention_type":"users",
+  "mentioned_users":[],
+  "app_id":"SOME_APP_ID",
+  "sender_ip_addr":"SOME_IP_ADDRESS",
+  "type":"MESG",
+  "payload":{
+    "custom_type":"",
+    "created_at":1633423189881,
+    "translations":{
+
+    },
+    "message":"asdfasdf",
+    "data":"",
+    "message_id":1537573885
+  },
+  "channel":{
+    "is_distinct":false,
+    "name":"Channel 123",
+    "custom_type":"",
+    "is_ephemeral":false,
+    "channel_url":"f24a5adc-2144-4ba3-8168-f6b7c13409aa",
+    "is_public":false,
+    "is_super":false,
+    "data":{
+      "appointments":{
+        "615c058f50effb73f0fc7158":{
+          "status":"scheduled",
+          "start":"2021-10-07T21:08:37.970Z"
+        }
+      }
+    },
+    "is_discoverable":false
+  }
+}

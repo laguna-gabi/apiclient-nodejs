@@ -8,7 +8,7 @@ import { Bitly, NotificationsService } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotifyParams } from '../member';
 import * as config from 'config';
-import { CommunicationResolver } from '../communication';
+import { CommunicationService } from '../communication';
 
 @Injectable()
 export class AppointmentScheduler extends BaseScheduler {
@@ -18,7 +18,7 @@ export class AppointmentScheduler extends BaseScheduler {
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument>,
     private readonly notificationsService: NotificationsService,
-    private readonly communicationResolver: CommunicationResolver,
+    private readonly communicationService: CommunicationService,
     protected readonly schedulerRegistry: SchedulerRegistry,
     protected eventEmitter: EventEmitter2,
     protected readonly bitly: Bitly,
@@ -123,7 +123,7 @@ export class AppointmentScheduler extends BaseScheduler {
    ************************************************************************************************/
 
   private async getChatLink(memberId: string, userId: string) {
-    const communication = await this.communicationResolver.getCommunication({ memberId, userId });
+    const communication = await this.communicationService.get({ memberId, userId });
     if (!communication) {
       this.logger.warn(
         `NOT sending appointment reminder since no member-user communication exists ` +

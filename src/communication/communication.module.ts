@@ -11,6 +11,6 @@ import { ProvidersModule } from '../providers/providers.module';
     MongooseModule.forFeature([{ name: Communication.name, schema: CommunicationDto }]),
   ],
   providers: [CommunicationResolver, CommunicationService],
-  exports: [CommunicationResolver],
+  exports: [CommunicationResolver, CommunicationService],
 })
 export class CommunicationModule {}

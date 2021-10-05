@@ -2,7 +2,7 @@ import * as request from 'supertest';
 import { Handler } from '../aux/handler';
 import { Creators } from '../aux/creators';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
-import { urls } from '../common';
+import { delay, urls } from '../common';
 import {
   generateAvailabilityInput,
   generateCreateMemberParams,
@@ -13,7 +13,6 @@ import { add, startOfToday, startOfTomorrow } from 'date-fns';
 import { defaultSlotsParams } from '../../src/user';
 import { v4 } from 'uuid';
 import { AppointmentStatus } from '../../src/appointment';
-import * as sendbirdUserPayload from '../unit/mocks/webhookSendbirdPayloadMessageFromUser.json';
 
 describe('Integration tests: rest', () => {
   const handler: Handler = new Handler();
@@ -145,28 +144,6 @@ describe('Integration tests: rest', () => {
 
       const { body } = await request(server).post(urls.members).send(memberParams).expect(201);
       expect(body).toEqual({ id: expect.any(String) });
-    });
-  });
-
-  describe('webhook', () => {
-    it('should fail to handle sendbird message when not sent from sendbird', async () => {
-      await request(server).post(`${urls.webhooks}/sendbird`).send(sendbirdUserPayload).expect(400);
-    });
-
-    it('should handle sendbird message', async () => {
-      const spyOnValidation = jest.spyOn(
-        handler.webhooksController,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        'validateMessageSentFromSendbird',
-      );
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      spyOnValidation.mockImplementationOnce(() => undefined);
-
-      await request(server).post(`${urls.webhooks}/sendbird`).send(sendbirdUserPayload).expect(201);
-
-      spyOnValidation.mockReset();
     });
   });
 });

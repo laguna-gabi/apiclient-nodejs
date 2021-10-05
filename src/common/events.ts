@@ -75,5 +75,5 @@ export interface IEventUpdateMemberPlatform {
 
 export interface IEventNotifyChatMessage {
   senderUserId: string;
-  receiverUserId: string;
+  sendbirdChannelUrl: string;
 }

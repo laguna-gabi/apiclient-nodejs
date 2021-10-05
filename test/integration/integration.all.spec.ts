@@ -59,6 +59,7 @@ describe('Integration tests: all', () => {
       memberId: generateId(),
       userId: v4(),
       sendbirdChannelUrl: v4(),
+      chat: { memberLink: faker.internet.url(), userLink: faker.internet.url() },
     }));
   });
 

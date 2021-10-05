@@ -1,8 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { dbDisconnect, defaultModules } from '../index';
 import { WebhooksController } from '../../src/providers';
-import * as sendbirdUserPayload from './mocks/webhookSendbirdPayloadMessageFromUser.json';
-import * as sendbirdMemberPayload from './mocks/webhookSendbirdPayloadMessageFromMember.json';
+import * as sendbirdUserPayload from './mocks/webhookSendbirdPayload.json';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventType } from '../../src/common';
 
@@ -29,21 +28,12 @@ describe('WebhooksController', () => {
       spyOnEventEmitter.mockReset();
     });
 
-    it('should generate an event with a payload sent by a user', async () => {
+    it('should generate an event with a payload', async () => {
       await controller.sendbird(sendbirdUserPayload);
 
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyChatMessage, {
         senderUserId: sendbirdUserPayload.sender.user_id,
-        receiverUserId: sendbirdUserPayload.members[0].user_id,
-      });
-    });
-
-    it('should generate an event with a payload sent by a member', async () => {
-      await controller.sendbird(sendbirdMemberPayload);
-
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyChatMessage, {
-        senderUserId: sendbirdMemberPayload.sender.user_id,
-        receiverUserId: sendbirdMemberPayload.members[1].user_id,
+        sendbirdChannelUrl: sendbirdUserPayload.channel.channel_url,
       });
     });
   });

@@ -48,6 +48,7 @@ import { UserService } from '../../src/user';
 import { Types } from 'mongoose';
 import * as config from 'config';
 import { v4 } from 'uuid';
+import { Communication, CommunicationService } from '../../src/communication';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
@@ -57,6 +58,7 @@ describe('MemberResolver', () => {
   let userService: UserService;
   let storage: StorageService;
   let notificationsService: NotificationsService;
+  let communicationService: CommunicationService;
   let eventEmitter: EventEmitter2;
   let spyOnEventEmitter;
 
@@ -70,6 +72,7 @@ describe('MemberResolver', () => {
     userService = module.get<UserService>(UserService);
     storage = module.get<StorageService>(StorageService);
     notificationsService = module.get<NotificationsService>(NotificationsService);
+    communicationService = module.get<CommunicationService>(CommunicationService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
     memberScheduler = module.get<MemberScheduler>(MemberScheduler);
@@ -1044,12 +1047,14 @@ describe('MemberResolver', () => {
     let spyOnServiceGetMemberConfig;
     let spyOnUserServiceGetUser;
     let spyOnNotificationsServiceSend;
+    let spyOnCommunicationGetByUrl;
 
     beforeEach(() => {
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
       spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
+      spyOnCommunicationGetByUrl = jest.spyOn(communicationService, 'getByChannelUrl');
     });
 
     afterEach(() => {
@@ -1057,6 +1062,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig.mockReset();
       spyOnUserServiceGetUser.mockReset();
       spyOnNotificationsServiceSend.mockReset();
+      spyOnCommunicationGetByUrl.mockReset();
     });
 
     it('should handle notify chat message sent from user', async () => {
@@ -1069,11 +1075,20 @@ describe('MemberResolver', () => {
         isPushNotificationsEnabled: true,
         accessToken: '123-abc',
       };
+      const communication: Communication = {
+        memberId: new Types.ObjectId(member.id),
+        userId: user.id,
+        sendbirdChannelUrl: faker.internet.url(),
+      };
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnUserServiceGetUser.mockImplementation(async () => user);
+      spyOnCommunicationGetByUrl.mockImplementation(async () => communication);
 
-      const params: IEventNotifyChatMessage = { senderUserId: user.id, receiverUserId: member.id };
+      const params: IEventNotifyChatMessage = {
+        senderUserId: user.id,
+        sendbirdChannelUrl: communication.sendbirdChannelUrl,
+      };
 
       await resolver.notifyChatMessage(params);
 
@@ -1101,12 +1116,24 @@ describe('MemberResolver', () => {
       });
     });
 
+    const fakeData: IEventNotifyChatMessage = {
+      senderUserId: v4(),
+      sendbirdChannelUrl: faker.internet.url(),
+    };
+
     it('should disregard notify chat message when sent from member', async () => {
       spyOnUserServiceGetUser.mockImplementation(async () => undefined);
 
-      const params: IEventNotifyChatMessage = { senderUserId: v4(), receiverUserId: v4() };
+      await resolver.notifyChatMessage(fakeData);
 
-      await resolver.notifyChatMessage(params);
+      expect(spyOnNotificationsServiceSend).not.toBeCalled();
+    });
+
+    it('should disregard notify on non existing sendbirdChannelUrl', async () => {
+      spyOnUserServiceGetUser.mockImplementation(async () => mockGenerateUser());
+      spyOnCommunicationGetByUrl.mockImplementation(async () => undefined);
+
+      await resolver.notifyChatMessage(fakeData);
 
       expect(spyOnNotificationsServiceSend).not.toBeCalled();
     });

@@ -3,7 +3,7 @@ import { apiPrefix, EventType, IEventNotifyChatMessage, Logger, webhooks } from 
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 /**
- * Go to '../../test/unit/mocks/webhookSendbirdPayloadMessageFromUser.json' for a payload example
+ * Go to '../../test/unit/mocks/webhookSendbirdPayload.json' for a payload example
  */
 @Controller(`${apiPrefix}/${webhooks}`)
 export class WebhooksController {
@@ -13,17 +13,12 @@ export class WebhooksController {
 
   @Post(`sendbird`)
   async sendbird(@Body() payload) {
-    console.log({ payload });
     const { user_id: senderUserId } = payload.sender;
+    const { channel_url: sendbirdChannelUrl } = payload.channel;
 
-    const userIds = payload.members.filter((item) => item.user_id !== senderUserId);
+    this.logger.debug(this.logger.getCalledLog(payload), this.sendbird.name);
 
-    if (userIds.length !== 1) {
-      this.logger.error('failed to process webhook payload - users dont match', this.sendbird.name);
-      return;
-    }
-
-    const event: IEventNotifyChatMessage = { senderUserId, receiverUserId: userIds[0].user_id };
+    const event: IEventNotifyChatMessage = { senderUserId, sendbirdChannelUrl };
     this.eventEmitter.emit(EventType.notifyChatMessage, event);
   }
 }
