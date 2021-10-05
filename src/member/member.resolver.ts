@@ -409,8 +409,6 @@ export class MemberResolver extends MemberBase {
   async notifyChatMessage(params: IEventNotifyChatMessage) {
     const { senderUserId, sendbirdChannelUrl } = params;
 
-    console.log({ params });
-
     const user = await this.userService.get(senderUserId);
     if (!user) {
       return;

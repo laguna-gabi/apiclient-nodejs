@@ -43,14 +43,14 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-#      - name: unit test
-#        run: yarn test
-#      - name: validation test
-#        run: yarn test:validation
-#      - name: integration test
-#        run: yarn test:integration
-#      - name: live test
-#        run: yarn test:live
+      - name: unit test
+        run: yarn test
+      - name: validation test
+        run: yarn test:validation
+      - name: integration test
+        run: yarn test:integration
+      - name: live test
+        run: yarn test:live
 
   deploy:
     name: Deploy
