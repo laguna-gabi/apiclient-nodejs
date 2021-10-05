@@ -2,12 +2,18 @@ import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nes
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Logger } from './log.service';
+import { environments } from '../providers';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
   private readonly logger: Logger = new Logger();
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    if (process.env.NODE_ENV === environments.test) {
+      //disabling intercept log on tests, it causes a dump
+      return next.handle().pipe(tap(() => undefined));
+    }
+
     const methodName = context.getHandler().name;
     const className = context.getClass().name;
     let args;

@@ -36,8 +36,11 @@ export class Logger implements LoggerService {
   }
 
   logFormat(text: string, color, methodName: string, className?: string) {
-    const now = new Date();
     const cName = className ? className : this.className;
+    const now = new Date();
+    if (!process.env.NODE_ENV) {
+      return `${now.toLocaleString()}     [${cName}] ${methodName} ${text}`;
+    }
     const mName = `${COLOR.fgMagenta}${methodName}${COLOR.reset}`;
     return `${COLOR.fgBlue}${now.toLocaleString()}     ${
       COLOR.fgYellow
