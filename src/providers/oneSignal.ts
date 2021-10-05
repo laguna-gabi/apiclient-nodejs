@@ -82,6 +82,13 @@ export class OneSignal {
       const result = await this.httpService.post(this.notificationsUrl, body, config).toPromise();
       if (result.status === 200 && result.data.recipients >= 1) {
         return result.data.id;
+      } else {
+        this.logger.error(
+          `Failed to send message of type ${data.type}: ${this.logger.getCalledLog(
+            sendNotificationToMemberParams,
+          )}`,
+          this.send.name,
+        );
       }
     } catch (ex) {
       this.logger.error(ex, this.send.name);
@@ -126,14 +133,6 @@ export class OneSignal {
         }
       }
     }
-  }
-
-  async unregister(playerId: string, platform: Platform) {
-    const appId = await this.getApiId(platform);
-    const url = `${this.playersUrl}/${playerId}?app_id=${appId}`;
-    const config = await this.getConfig(platform);
-
-    await this.httpService.delete(url, config).toPromise();
   }
 
   /*************************************************************************************************

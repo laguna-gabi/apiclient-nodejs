@@ -79,8 +79,4 @@ export class NotificationsService {
   async cancel(cancelNotificationParams: CancelNotificationParams) {
     return this.oneSignal.cancel(cancelNotificationParams);
   }
-
-  async unregister(playerId: string, platform: Platform): Promise<void> {
-    return this.oneSignal.unregister(playerId, platform);
-  }
 }

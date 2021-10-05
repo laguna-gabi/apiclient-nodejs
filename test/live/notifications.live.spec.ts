@@ -37,8 +37,6 @@ describe('live: notifications (one signal)', () => {
       expect(playerId).not.toBeUndefined();
 
       await sendNotification(params);
-
-      await notificationsService.unregister(playerId, params.platform);
     },
     delayTime * RETRY_MAX + 5000,
   );
@@ -70,8 +68,6 @@ describe('live: notifications (one signal)', () => {
           notificationId: result,
         },
       });
-
-      await notificationsService.unregister(playerId, params.platform);
     },
     delayTime * RETRY_MAX + 6000,
   );
@@ -98,8 +94,6 @@ describe('live: notifications (one signal)', () => {
         },
       }),
     ).rejects.toThrow(Errors.get(ErrorType.notificationNotFound));
-
-    await notificationsService.unregister(playerId, params.platform);
   });
 
   /* eslint-disable max-len */
