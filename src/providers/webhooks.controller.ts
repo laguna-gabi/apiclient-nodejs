@@ -57,12 +57,18 @@ export class WebhooksController {
   /* eslint-enable max-len */
   private validateMessageSentFromSendbird(@Body() payload, @Req() request) {
     const signature = request.headers['x-sendbird-signature'];
-    console.log({ signature });
+    console.log('validateMessageSentFromSendbird1', { signature });
+    console.log('validateMessageSentFromSendbird2 apptoken', this.sendbirdService.getAppToken());
+    console.log('validateMessageSentFromSendbird3 payload', payload);
+    console.log('validateMessageSentFromSendbird4 payload type', typeof payload);
+    console.log('validateMessageSentFromSendbird5 payload json', JSON.stringify(payload));
 
     const hash = crypto
       .createHmac('sha256', this.sendbirdService.getAppToken())
       .update(JSON.stringify(payload))
       .digest('hex');
+
+    console.log('validateMessageSentFromSendbird6 hash', hash);
 
     if (signature !== hash) {
       const message = 'The source of the request DID NOT comes from Sendbird server';
