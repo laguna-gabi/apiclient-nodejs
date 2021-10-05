@@ -55,7 +55,8 @@
       "mx": "Mx",
       "dr": "Dr",
       "reverend": "Reverend"
-    }
+    },
+    "newChatMessage": "You have a new message from @user.firstName@"
   },
   "storage": "hepius-test"
 }

@@ -1103,15 +1103,17 @@ describe('MemberResolver', () => {
               firstName: user.firstName,
               avatar: user.avatar,
             },
-            member: {
-              phone: member.phone,
-            },
+            member: { phone: member.phone },
             type: NotificationType.chat,
             peerId: undefined,
             isVideo: false,
             path: `connect/${member.id}/${user.id}`,
           },
-          metadata: {},
+          metadata: {
+            content: config
+              .get('contents.newChatMessage')
+              .replace('@user.firstName@', user.firstName),
+          },
         },
       });
     });

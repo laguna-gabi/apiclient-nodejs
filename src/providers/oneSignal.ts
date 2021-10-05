@@ -61,16 +61,16 @@ export class OneSignal {
     const config = await this.getConfig(platform, data.type);
     const app_id = await this.getApiId(platform, data.type);
     const extraData = this.getExtraDataByPlatform(platform);
+    const onlyChatData = data.type === NotificationType.chat ? { collapse_id: data.user.id } : {};
 
     const body: any = {
       app_id,
       include_external_user_ids: [externalUserId],
       content_available: true,
-      contents: {
-        en: metadata.content,
-      },
+      contents: { en: metadata.content },
       headings: { en: 'Laguna' },
       ...extraData,
+      ...onlyChatData,
       data,
     };
 

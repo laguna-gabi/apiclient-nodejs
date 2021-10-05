@@ -45,6 +45,7 @@ import { NotificationsService, StorageService } from '../providers';
 import { User, UserService } from '../user';
 import { UseInterceptors } from '@nestjs/common';
 import { CommunicationService } from '../communication';
+import * as config from 'config';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
@@ -324,6 +325,11 @@ export class MemberResolver extends MemberBase {
       path = { path: 'call' };
     } else if (type === NotificationType.chat) {
       path = { path: `connect/${memberId}/${userId}` };
+      metadata.content = replaceConfigs({
+        content: config.get('contents.newChatMessage'),
+        member,
+        user,
+      });
     }
 
     return this.notificationsService.send({
