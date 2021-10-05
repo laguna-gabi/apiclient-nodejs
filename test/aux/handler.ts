@@ -12,6 +12,9 @@ import { model } from 'mongoose';
 import { MemberDto } from '../../src/member';
 import { CommunicationService } from '../../src/communication';
 import { WebhooksController } from '../../src/providers';
+import { generateId } from '../generators';
+import * as faker from 'faker';
+import { v4 } from 'uuid';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -27,6 +30,7 @@ export class Handler {
   memberModel;
   communicationService: CommunicationService;
   webhooksController: WebhooksController;
+  spyOnGetCommunicationService;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -71,6 +75,7 @@ export class Handler {
     this.notificationsService.spyOnNotificationsServiceCancel.mockReset();
     this.twilioService.spyOnTwilioGetToken.mockReset();
     this.slackBot.spyOnSlackBotSendMessage.mockReset();
+    this.spyOnGetCommunicationService.mockReset();
 
     await dbDisconnect();
   }
@@ -84,4 +89,14 @@ export class Handler {
       },
     });
   };
+
+  mockCommunication() {
+    this.spyOnGetCommunicationService = jest.spyOn(this.communicationService, 'get');
+    this.spyOnGetCommunicationService.mockImplementation(async () => ({
+      memberId: generateId(),
+      userId: v4(),
+      sendbirdChannelUrl: v4(),
+      chat: { memberLink: faker.internet.url(), userLink: faker.internet.url() },
+    }));
+  }
 }

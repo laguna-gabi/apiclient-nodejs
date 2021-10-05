@@ -48,24 +48,16 @@ describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
   let creators: Creators;
   let appointmentsActions: AppointmentsIntegrationActions;
-  let spyOnGet;
 
   beforeAll(async () => {
     await handler.beforeAll();
     appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
     creators = new Creators(handler, appointmentsActions);
-    spyOnGet = jest.spyOn(handler.communicationService, 'get');
-    spyOnGet.mockImplementation(async () => ({
-      memberId: generateId(),
-      userId: v4(),
-      sendbirdChannelUrl: v4(),
-      chat: { memberLink: faker.internet.url(), userLink: faker.internet.url() },
-    }));
+    handler.mockCommunication();
   });
 
   afterAll(async () => {
     await handler.afterAll();
-    spyOnGet.mockReset();
   });
 
   it('should throw error if member is not found', async () => {
