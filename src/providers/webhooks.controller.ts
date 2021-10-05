@@ -1,4 +1,4 @@
-import { Controller, Post, Req } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { apiPrefix, EventType, IEventNotifyChatMessage, Logger, webhooks } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
@@ -12,8 +12,7 @@ export class WebhooksController {
   constructor(protected readonly eventEmitter: EventEmitter2) {}
 
   @Post(`sendbird`)
-  async sendbird(@Req() request) {
-    const { body } = request;
+  async sendbird(@Body() body) {
     const { user_id: senderUserId } = body.sender;
 
     const userIds = body.members.filter((item) => item.user_id !== senderUserId);

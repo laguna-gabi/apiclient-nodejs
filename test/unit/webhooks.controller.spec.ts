@@ -30,7 +30,7 @@ describe('WebhooksController', () => {
     });
 
     it('should generate an event with a payload sent by a user', async () => {
-      await controller.sendbird({ body: sendbirdUserPayload });
+      await controller.sendbird(sendbirdUserPayload);
 
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyChatMessage, {
         senderUserId: sendbirdUserPayload.sender.user_id,
@@ -39,7 +39,7 @@ describe('WebhooksController', () => {
     });
 
     it('should generate an event with a payload sent by a member', async () => {
-      await controller.sendbird({ body: sendbirdMemberPayload });
+      await controller.sendbird(sendbirdMemberPayload);
 
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyChatMessage, {
         senderUserId: sendbirdMemberPayload.sender.user_id,
