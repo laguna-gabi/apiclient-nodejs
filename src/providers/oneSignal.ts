@@ -80,7 +80,7 @@ export class OneSignal {
 
     try {
       const result = await this.httpService.post(this.notificationsUrl, body, config).toPromise();
-      if (result.status === 200 && result.data.recipients === 1) {
+      if (result.status === 200 && result.data.recipients >= 1) {
         return result.data.id;
       }
     } catch (ex) {
@@ -118,7 +118,7 @@ export class OneSignal {
           const result = await this.httpService
             .post(this.notificationsUrl, body, config)
             .toPromise();
-          if (result.status === 200 && result.data.recipients === 1) {
+          if (result.status === 200 && result.data.recipients >= 1) {
             return result.data.id;
           }
         } catch (ex) {
