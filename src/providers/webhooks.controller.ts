@@ -12,10 +12,11 @@ export class WebhooksController {
   constructor(protected readonly eventEmitter: EventEmitter2) {}
 
   @Post(`sendbird`)
-  async sendbird(@Body() body) {
-    const { user_id: senderUserId } = body.sender;
+  async sendbird(@Body() payload) {
+    console.log({ payload });
+    const { user_id: senderUserId } = payload.sender;
 
-    const userIds = body.members.filter((item) => item.user_id !== senderUserId);
+    const userIds = payload.members.filter((item) => item.user_id !== senderUserId);
 
     if (userIds.length !== 1) {
       this.logger.error('failed to process webhook payload - users dont match', this.sendbird.name);
@@ -24,7 +25,5 @@ export class WebhooksController {
 
     const event: IEventNotifyChatMessage = { senderUserId, receiverUserId: userIds[0].user_id };
     this.eventEmitter.emit(EventType.notifyChatMessage, event);
-
-    this.logger.log(this.logger.getCalledLog(body), this.sendbird.name);
   }
 }
