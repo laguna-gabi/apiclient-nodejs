@@ -7,12 +7,12 @@ import {
   generateId,
   generateOrgParams,
   generatePath,
-  generateUpdateRecordingParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
   generateUpdateMemberParams,
   generateUpdateNotesParams,
+  generateUpdateRecordingParams,
 } from '../index';
 import { UserRole } from '../../src/user';
 import { AppointmentMethod } from '../../src/appointment';

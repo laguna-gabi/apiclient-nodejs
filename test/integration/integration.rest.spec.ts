@@ -2,7 +2,7 @@ import * as request from 'supertest';
 import { Handler } from '../aux/handler';
 import { Creators } from '../aux/creators';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
-import { delay, urls } from '../common';
+import { urls } from '../common';
 import {
   generateAvailabilityInput,
   generateCreateMemberParams,
