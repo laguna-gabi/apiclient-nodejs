@@ -3,7 +3,7 @@ import { HttpService } from '@nestjs/axios';
 import { v4 } from 'uuid';
 import { NotificationType, Platform, SendNotificationToMemberParams } from '../../src/common';
 import * as faker from 'faker';
-import { generatePhone } from '../generators';
+import { generateId, generatePhone } from '../generators';
 
 describe('NotificationsService (offline)', () => {
   let notificationsService: NotificationsService;
@@ -41,12 +41,18 @@ describe('NotificationsService (offline)', () => {
     async (platform) => {
       const twilioMock = jest.spyOn(notificationsService, 'send');
       twilioMock.mockRestore();
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const spyOnOneSignal = jest.spyOn(notificationsService.oneSignal, 'send');
+      spyOnOneSignal.mockResolvedValue(generateId());
 
       await notificationsService.send({
         sendNotificationToMemberParams: generateSendNotificationToMemberParams({ platform }),
       });
 
       expect(twilioMock).not.toBeCalled();
+      expect(spyOnOneSignal).toBeCalledTimes(1);
+      spyOnOneSignal.mockReset();
     },
   );
 
