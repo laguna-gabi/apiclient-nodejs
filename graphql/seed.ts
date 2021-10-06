@@ -1,28 +1,19 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { GraphQLModule } from '@nestjs/graphql';
-import { Test, TestingModule } from '@nestjs/testing';
-import { createTestClient } from 'apollo-server-testing';
-import { AppModule } from '../src/app.module';
-import { Mutations } from '../test/aux/mutations';
-import { Queries } from '../test/aux/queries';
+import * as faker from 'faker';
+import * as jwt from 'jsonwebtoken';
+import { Identifier } from '../src/common';
 import { UserRole, UserService } from '../src/user';
 import {
-  generateAvailabilityInput,
+  delay, generateAvailabilityInput,
   generateCreateMemberParams,
   generateCreateTaskParams,
-  generateCreateUserParams,
-  generateNotesParams,
-  generateDateOnly,
-  generateOrgParams,
+  generateCreateUserParams, generateDateOnly, generateNotesParams, generateOrgParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
-  generateSetGeneralNotesParams,
-  delay,
-  generateUpdateMemberParams,
+  generateSetGeneralNotesParams, generateUpdateMemberParams
 } from '../test';
-import * as jwt from 'jsonwebtoken';
-import * as faker from 'faker';
-import { Identifier } from '../src/common';
+import { Mutations } from '../test/aux/mutations';
+import { Queries } from '../test/aux/queries';
+import { SeedBase } from './seedBase';
 
 /**
  * This is a seed file for initial local db creation.
@@ -39,11 +30,14 @@ import { Identifier } from '../src/common';
 let mutations: Mutations;
 let queries: Queries;
 let userService: UserService; //used for internal method, isn't exposed on queries
-let app: INestApplication;
 type TaskType = 'goal' | 'actionItem';
 
 async function main() {
-  await init();
+  const base = new SeedBase();
+  await base.init();
+  mutations = base.mutations;
+  queries = base.queries;
+  userService = base.userService;
 
   const users = await userService.getRegisteredUsers();
   if (users.length === 0) {
@@ -141,40 +135,13 @@ async function main() {
   );
   await setGeneralNotes(memberId);
 
-  await cleanUp();
+  await base.cleanUp();
 }
 
 /**************************************************************************************************
  **************************************** Internal methods ****************************************
  *************************************************************************************************/
-const init = async () => {
-  const moduleFixture: TestingModule = await Test.createTestingModule({
-    imports: [AppModule],
-  }).compile();
 
-  app = moduleFixture.createNestApplication();
-  app.useGlobalPipes(new ValidationPipe());
-  await app.init();
-
-  const module: GraphQLModule = moduleFixture.get<GraphQLModule>(GraphQLModule);
-
-  const apolloServer = createTestClient((module as any).apolloServer);
-  mutations = new Mutations(apolloServer);
-  queries = new Queries(apolloServer);
-
-  userService = moduleFixture.get<UserService>(UserService);
-};
-
-const cleanUp = async () => {
-  /**
-   * Since we have an eventEmitter updating db, we need to postpone closing the
-   * db until after the update occurs.
-   * @see [UserService#handleOrderCreatedEvent]
-   */
-  await new Promise((f) => setTimeout(f, 100));
-
-  await app.close();
-};
 
 const createUser = async (roles: UserRole[], userText: string): Promise<Identifier> => {
   const { id } = await mutations.createUser({
