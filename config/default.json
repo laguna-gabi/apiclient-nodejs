@@ -43,7 +43,7 @@
   },
   "contents": {
     "appointmentReminder": "Hello @member.honorific@ @member.lastName@, your appointment with @user.firstName@ from Laguna Health starts in @gapMinutes@ minutes",
-    "appointmentReminderChatLink": "to join, click: @chatLink@",
+    "appointmentReminderChatLink": "; to join, click: @chatLink@",
     "appointmentLongReminder": "Reminder for @member.honorific@ @member.lastName@'s appointment on @appointment.time@ with @user.firstName@ from Laguna Health.",
     "appointmentRequest": "Hello @member.honorific@ @member.lastName@, It's @user.firstName@ from Laguna Health. Click below to schedule your next meeting: @appLink@",
     "appointmentUser": "Hello @user.firstName@, an appointment has been added to your schedule on @appointment.start@",

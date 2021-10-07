@@ -414,12 +414,9 @@ export class MemberResolver extends MemberBase {
         const memberConfig = await this.memberService.getMemberConfig(notifyParams.memberId);
 
         if (memberConfig.platform === Platform.web || !memberConfig.isPushNotificationsEnabled) {
-          notifyParams.metadata.content = notifyParams.metadata.content.concat(
-            `; `,
-            `${config
-              .get('contents.appointmentReminderChatLink')
-              .replace('@chatLink@', notifyParams.metadata.chatLink)}`,
-          );
+          notifyParams.metadata.content += `${config
+            .get('contents.appointmentReminderChatLink')
+            .replace('@chatLink@', notifyParams.metadata.chatLink)}`;
         }
       }
 
