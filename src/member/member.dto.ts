@@ -242,6 +242,8 @@ export class NotificationMetadata {
 
   @Field(() => Date, { nullable: true })
   when?: Date;
+
+  chatLink?: string;
 }
 
 @Schema({ versionKey: false, timestamps: true })

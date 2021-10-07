@@ -401,6 +401,21 @@ export class MemberResolver extends MemberBase {
         return;
       }
 
+      /* if we got a chat link in the notify parameters we will include it for users
+      without a device [sc-1779] */
+      if (notifyParams.metadata.chatLink) {
+        const memberConfig = await this.memberService.getMemberConfig(notifyParams.memberId);
+
+        if (memberConfig.platform === Platform.web || !memberConfig.isPushNotificationsEnabled) {
+          notifyParams.metadata.content = notifyParams.metadata.content.concat(
+            `; `,
+            `${config
+              .get('contents.appointmentReminderChatLink')
+              .replace('@chatLink@', notifyParams.metadata.chatLink)}`,
+          );
+        }
+      }
+
       await this.notify(notifyParams);
     } catch (ex) {
       this.logger.error(ex, this.notifyInternal.name);

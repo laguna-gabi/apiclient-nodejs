@@ -151,8 +151,8 @@ export class AppointmentScheduler extends BaseScheduler {
         const metadata = {
           content: `${config
             .get('contents.appointmentReminder')
-            .replace('@gapMinutes@', config.get('scheduler.alertBeforeInMin'))
-            .replace('@chatLink@', chatLink)}`,
+            .replace('@gapMinutes@', config.get('scheduler.alertBeforeInMin'))}`,
+          chatLink: chatLink,
         };
         const params: NotifyParams = { memberId, userId, type: NotificationType.text, metadata };
 

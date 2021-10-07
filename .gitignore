@@ -35,3 +35,4 @@ lerna-debug.log*
 
 # Graphql
 schema.gql
+test/unit/coverage/*

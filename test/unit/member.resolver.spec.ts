@@ -17,6 +17,7 @@ import {
   mockGenerateMember,
   mockGenerateMemberConfig,
   mockGenerateUser,
+  generateMemberConfig,
 } from '../index';
 import {
   MemberConfig,
@@ -752,6 +753,51 @@ describe('MemberResolver', () => {
     });
   });
 
+  describe('notifyInternal', () => {
+    let spyOnServiceGetMemberConfig;
+    let spyOnResolverNotifyMember;
+
+    beforeEach(() => {
+      spyOnResolverNotifyMember = jest.spyOn(resolver, 'notify');
+      spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
+    });
+
+    afterEach(() => {
+      spyOnResolverNotifyMember.mockReset();
+      spyOnResolverNotifyMember.mockRestore();
+      spyOnServiceGetMemberConfig.mockReset();
+    });
+
+    /* eslint-disable max-len */
+    test.each`
+      metadata                                         | expectedContent                         | pushNotificationEnabled | platform
+      ${{ content: 'text', chatLink: 'my.chat.link' }} | ${'text; to join, click: my.chat.link'} | ${false}                | ${Platform.web}
+      ${{ content: 'text', chatLink: 'my.chat.link' }} | ${'text'}                               | ${true}                 | ${Platform.ios}
+      ${{ content: 'text', chatLink: 'my.chat.link' }} | ${'text'}                               | ${true}                 | ${Platform.android}
+      ${{ content: 'text', chatLink: 'my.chat.link' }} | ${'text; to join, click: my.chat.link'} | ${false}                | ${Platform.android}
+      ${{ content: 'text' }}                           | ${'text'}                               | ${false}                | ${Platform.android}
+    `(`should notify a member with/out chat link`, async (params) => {
+      /* eslint-disable max-len */
+
+      const memberConfig = generateMemberConfig({
+        isPushNotificationsEnabled: params.pushNotificationEnabled,
+        platform: params.platform,
+      });
+
+      spyOnServiceGetMemberConfig.mockImplementation(async () => memberConfig);
+      spyOnResolverNotifyMember.mockImplementationOnce(async () => undefined);
+
+      const notifyParams = generateNotifyParams({
+        type: NotificationType.text,
+        metadata: params.metadata,
+      });
+
+      await resolver.notifyInternal(notifyParams);
+
+      expect(notifyParams.metadata.content).toEqual(params.expectedContent);
+    });
+  });
+
   describe('notify', () => {
     let spyOnServiceGetMember;
     let spyOnServiceGetMemberConfig;
@@ -965,17 +1011,18 @@ describe('MemberResolver', () => {
       const memberConfig = mockGenerateMemberConfig();
       const user = mockGenerateUser();
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
-      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnServiceGetMemberConfig.mockImplementation(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
 
-      const content = `${configs
-        .replace('@gapMinutes@', config.get('scheduler.alertBeforeInMin'))
-        .replace('@chatLink@', faker.internet.url())}`;
+      const content = `${configs.replace(
+        '@gapMinutes@',
+        config.get('scheduler.alertBeforeInMin'),
+      )}`;
 
       const notifyParams = generateNotifyParams({
         type: NotificationType.text,
-        metadata: { content },
+        metadata: { content, chatLink: faker.internet.url() },
       });
 
       await resolver.notifyInternal(notifyParams);

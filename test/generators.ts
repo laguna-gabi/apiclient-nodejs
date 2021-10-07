@@ -78,6 +78,28 @@ export const generateCreateUserParams = ({
   };
 };
 
+export const generateMemberConfig = ({
+  memberId = generateObjectId(),
+  externalUserId = v4(),
+  platform = Platform.ios,
+  isPushNotificationsEnabled = true,
+  accessToken = generateId(),
+}: {
+  memberId?: Types.ObjectId;
+  externalUserId?: string;
+  isPushNotificationsEnabled?: boolean;
+  platform?: Platform;
+  accessToken?: string;
+} = {}): MemberConfig => {
+  return {
+    memberId,
+    externalUserId,
+    platform,
+    accessToken,
+    isPushNotificationsEnabled,
+  };
+};
+
 export const mockGenerateUser = (): User => {
   const firstName = faker.name.firstName();
   const lastName = faker.name.lastName();

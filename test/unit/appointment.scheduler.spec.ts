@@ -270,8 +270,8 @@ describe('AppointmentScheduler', () => {
         metadata: {
           content: `${config
             .get('contents.appointmentReminder')
-            .replace('@gapMinutes@', config.get('scheduler.alertBeforeInMin'))
-            .replace('@chatLink@', chatLink)}`,
+            .replace('@gapMinutes@', config.get('scheduler.alertBeforeInMin'))}`,
+          chatLink,
         },
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notify, eventParams);
