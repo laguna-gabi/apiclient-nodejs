@@ -1,18 +1,40 @@
 import * as config from 'config';
-import { SchedulerRegistry } from '@nestjs/schedule';
+import { Cron, SchedulerRegistry } from '@nestjs/schedule';
 import { add } from 'date-fns';
 import { Member, NotifyParams } from '../member';
 import { User } from '../user';
-import { replaceConfigs, NotificationType, EventType } from '.';
+import { EventType, NotificationType, replaceConfigs } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Bitly } from '../providers';
+import { InternalSchedulerService } from '.';
+import { v4 } from 'uuid';
+
+export enum LeaderType {
+  appointment = 'appointment',
+  member = 'member',
+}
 
 export class BaseScheduler {
-  constructor(
+  protected amITheLeader = false;
+  protected readonly identifier = v4();
+  initCallbacks: () => any;
+
+  public constructor(
+    protected readonly internalSchedulerService: InternalSchedulerService,
     protected readonly schedulerRegistry: SchedulerRegistry,
     protected readonly eventEmitter: EventEmitter2,
     protected readonly bitly: Bitly,
+    protected readonly leaderType: LeaderType,
   ) {}
+
+  protected async init(callbacks) {
+    this.initCallbacks = callbacks;
+    /**
+     * cron job doesn't start after 1 minute, but we want the initiation to happen at
+     * the first moment the service is alive
+     */
+    await this.runEveryMinute();
+  }
 
   public deleteTimeout({ id }: { id: string }) {
     if (this.schedulerRegistry.doesExists('timeout', id)) {
@@ -31,6 +53,26 @@ export class BaseScheduler {
     maxDate.setMinutes(maxDate.getMinutes() + config.get('scheduler.maxAlertGapInMin'));
 
     return { gapDate, maxDate };
+  }
+
+  @Cron(`*/${config.get('scheduler.cronJobIntervalInMin')} * * * *`)
+  async runEveryMinute() {
+    if (this.amITheLeader) {
+      await this.internalSchedulerService.updateLeader({
+        id: this.identifier,
+        leaderType: this.leaderType,
+      });
+    } else {
+      const leader = await this.internalSchedulerService.getLeader(this.leaderType);
+      if (!leader) {
+        await this.internalSchedulerService.updateLeader({
+          id: this.identifier,
+          leaderType: this.leaderType,
+        });
+        this.amITheLeader = true;
+        await this.initCallbacks();
+      }
+    }
   }
 
   public async registerNewMemberNudge({

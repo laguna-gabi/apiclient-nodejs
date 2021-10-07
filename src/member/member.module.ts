@@ -23,11 +23,13 @@ import { Appointment, AppointmentDto } from '../appointment';
 import { ConfigsService, ProvidersModule } from '../providers';
 import { UserModule } from '../user';
 import { CommunicationModule } from '../communication';
+import { InternalSchedulerModule } from '../scheduler';
 
 @Module({
   imports: [
     CommunicationModule,
     UserModule,
+    InternalSchedulerModule,
     ProvidersModule,
     HttpModule,
     MongooseModule.forFeature([

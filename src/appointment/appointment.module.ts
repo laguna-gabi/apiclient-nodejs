@@ -13,9 +13,11 @@ import {
 import { ProvidersModule } from '../providers';
 import { CommunicationModule } from '../communication';
 import { OrgModule } from '../org';
+import { InternalSchedulerModule } from '../scheduler';
 
 @Module({
   imports: [
+    InternalSchedulerModule,
     ProvidersModule,
     CommunicationModule,
     MongooseModule.forFeature([

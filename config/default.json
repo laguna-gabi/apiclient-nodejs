@@ -38,7 +38,8 @@
   },
   "scheduler": {
     "alertBeforeInMin": 5,
-    "maxAlertGapInMin": 43800
+    "maxAlertGapInMin": 43800,
+    "cronJobIntervalInMin": 1
   },
   "contents": {
     "appointmentReminder": "Hello @member.honorific@ @member.lastName@, this is @user.firstName@. Our meeting will start in @gapMinutes@ minutes; to join, click: @chatLink@",

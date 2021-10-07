@@ -24,6 +24,7 @@ import { v4 } from 'uuid';
 import * as config from 'config';
 import { Org, OrgDto } from '../../src/org';
 import { User, UserDto } from '../../src/user';
+import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
 
 describe('MemberScheduler', () => {
   let module: TestingModule;
@@ -33,7 +34,7 @@ describe('MemberScheduler', () => {
   let schedulerRegistry: SchedulerRegistry;
   let modelUser: Model<typeof UserDto>;
   let modelOrg: Model<typeof OrgDto>;
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  let internalSchedulerService: InternalSchedulerService;
 
   const days = (config.get('scheduler.maxAlertGapInMin') + 1) * 60 * 1000;
   const whenNotInRange = new Date();
@@ -45,6 +46,7 @@ describe('MemberScheduler', () => {
 
     //Clearing test inserts
     await notifyParamsModel.deleteMany({});
+    await internalSchedulerService.resetLeader(LeaderType.member);
   };
 
   const generateParams = (when: Date = faker.date.soon()): NotifyParams => {
@@ -71,8 +73,10 @@ describe('MemberScheduler', () => {
     scheduler = module.get<MemberScheduler>(MemberScheduler);
     notifyParamsModel = model(NotifyParams.name, NotifyParamsDto);
     schedulerRegistry = module.get<SchedulerRegistry>(SchedulerRegistry);
+    internalSchedulerService = module.get<InternalSchedulerService>(InternalSchedulerService);
 
     await dbConnect();
+    await internalSchedulerService.resetLeader(LeaderType.member);
   });
 
   afterAll(async () => {
@@ -81,73 +85,50 @@ describe('MemberScheduler', () => {
   });
 
   describe('init', () => {
-    describe('registerCustomFutureNotify', () => {
-      afterEach(async () => {
-        await clear();
-      });
-
-      it('should register schedulerRegistry with all scheduled messages', async () => {
-        const when1 = new Date();
-        when1.setMinutes(when1.getMinutes() + 1);
-        const when2 = new Date();
-        when2.setMinutes(when2.getMinutes() + 2);
-        const when3 = new Date();
-        when3.setSeconds(when3.getSeconds() - 1);
-
-        const { _id: id1 } = await notifyParamsModel.create(generateParams(when1));
-        const { _id: id2 } = await notifyParamsModel.create(generateParams(when2));
-        const { _id: id3 } = await notifyParamsModel.create(generateParams(when3));
-
-        await scheduler.init();
-
-        const timeouts = schedulerRegistry.getTimeouts();
-
-        expect(timeouts).toContainEqual(id1);
-        expect(timeouts).toContainEqual(id2);
-        expect(timeouts).not.toContainEqual(id3);
-      });
-
-      // eslint-disable-next-line max-len
-      it('should not register schedulerRegistry with future messages more than 1 month', async () => {
-        const { _id } = await notifyParamsModel.create(generateParams(whenNotInRange));
-
-        await scheduler.init();
-
-        const timeouts = schedulerRegistry.getTimeouts();
-        expect(timeouts).not.toContainEqual(_id);
-      });
+    afterEach(async () => {
+      await clear();
     });
 
-    describe('registerNewMemberNudge', () => {
-      afterEach(async () => {
-        await clear();
+    it('should schedule with all scheduled new member nudge and future', async () => {
+      //input for registerCustomFutureNotify
+      const whens = [1, 2, -1].map((minutes) => {
+        const date = new Date();
+        date.setMinutes(date.getMinutes() + minutes);
+        return date;
       });
+      const ids = await Promise.all(
+        whens.map(async (when) => notifyParamsModel.create(generateParams(when))),
+      );
+      //end input for registerCustomFutureNotify
 
-      it('should register schedulerRegistry with all scheduled new member nudge', async () => {
-        const { _id: primaryUserId } = await modelUser.create(generateCreateRawUserParams());
-        const { _id: orgId } = await modelOrg.create(generateOrgParams());
+      //input for initRegisterNewMemberNudge
+      const { _id: pId } = await modelUser.create(generateCreateRawUserParams());
+      const { _id: orgId } = await modelOrg.create(generateOrgParams());
+      const members = await Promise.all(
+        [1, 2, 3].map(async () => service.insert(generateCreateMemberParams({ orgId }), pId)),
+      );
+      //end input for initRegisterNewMemberNudge
 
-        const { id: memberId1 } = await service.insert(
-          generateCreateMemberParams({ orgId }),
-          primaryUserId,
-        );
-        const { id: memberId2 } = await service.insert(
-          generateCreateMemberParams({ orgId }),
-          primaryUserId,
-        );
-        const { id: memberId3 } = await service.insert(
-          generateCreateMemberParams({ orgId }),
-          primaryUserId,
-        );
+      await scheduler.init();
 
-        await scheduler.init();
+      const timeouts = schedulerRegistry.getTimeouts();
 
-        const timeouts = schedulerRegistry.getTimeouts();
+      //timeouts of registerCustomFutureNotify
+      expect(timeouts).toContainEqual(ids[0]._id);
+      expect(timeouts).toContainEqual(ids[1]._id);
+      expect(timeouts).not.toContainEqual(ids[2]._id);
+      //timeouts of initRegisterNewMemberNudge
+      members.map((member) => expect(timeouts).toContainEqual(member.id.toString()));
+    });
 
-        expect(timeouts).toContainEqual(memberId1.toString());
-        expect(timeouts).toContainEqual(memberId2.toString());
-        expect(timeouts).toContainEqual(memberId3.toString());
-      });
+    // eslint-disable-next-line max-len
+    it('should not register schedulerRegistry with future messages more than 1 month', async () => {
+      const { _id } = await notifyParamsModel.create(generateParams(whenNotInRange));
+
+      await scheduler.init();
+
+      const timeouts = schedulerRegistry.getTimeouts();
+      expect(timeouts).not.toContainEqual(_id);
     });
   });
 

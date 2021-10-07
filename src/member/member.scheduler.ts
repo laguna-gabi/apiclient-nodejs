@@ -1,19 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { NotifyParams, NotifyParamsDocument } from './member.dto';
-import { BaseScheduler, Errors, ErrorType, EventType, Identifier, Logger } from '../common';
+import { Errors, ErrorType, EventType, Identifier, Logger } from '../common';
 import { cloneDeep } from 'lodash';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MemberService } from '.';
 import { Bitly } from '../providers';
+import { BaseScheduler, InternalSchedulerService, LeaderType } from '../scheduler';
 
 @Injectable()
 export class MemberScheduler extends BaseScheduler {
   private logger = new Logger(MemberScheduler.name);
 
   constructor(
+    protected readonly internalSchedulerService: InternalSchedulerService,
     @InjectModel(NotifyParams.name)
     private readonly notifyParamsModel: Model<NotifyParamsDocument>,
     protected readonly schedulerRegistry: SchedulerRegistry,
@@ -21,12 +23,14 @@ export class MemberScheduler extends BaseScheduler {
     protected readonly bitly: Bitly,
     private readonly memberService: MemberService,
   ) {
-    super(schedulerRegistry, eventEmitter, bitly);
+    super(internalSchedulerService, schedulerRegistry, eventEmitter, bitly, LeaderType.member);
   }
 
   async init() {
-    await this.initRegisterCustomFutureNotify();
-    await this.initRegisterNewMemberNudge();
+    await super.init(async () => {
+      await this.initRegisterCustomFutureNotify();
+      await this.initRegisterNewMemberNudge();
+    });
   }
 
   /*************************************************************************************************

@@ -3,18 +3,20 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Appointment, AppointmentDocument, AppointmentStatus } from '.';
 import { Model } from 'mongoose';
-import { BaseScheduler, EventType, Logger, NotificationType } from '../common';
+import { EventType, Logger, NotificationType } from '../common';
 import { Bitly, NotificationsService } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotifyParams } from '../member';
 import * as config from 'config';
 import { CommunicationService } from '../communication';
+import { BaseScheduler, InternalSchedulerService, LeaderType } from '../scheduler';
 
 @Injectable()
 export class AppointmentScheduler extends BaseScheduler {
   private readonly logger = new Logger(AppointmentScheduler.name);
 
   constructor(
+    protected readonly internalSchedulerService: InternalSchedulerService,
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument>,
     private readonly notificationsService: NotificationsService,
@@ -23,11 +25,11 @@ export class AppointmentScheduler extends BaseScheduler {
     protected eventEmitter: EventEmitter2,
     protected readonly bitly: Bitly,
   ) {
-    super(schedulerRegistry, eventEmitter, bitly);
+    super(internalSchedulerService, schedulerRegistry, eventEmitter, bitly, LeaderType.appointment);
   }
 
   async init() {
-    await this.initRegisterAppointmentAlert();
+    await super.init(async () => await this.initRegisterAppointmentAlert());
   }
 
   /*************************************************************************************************
