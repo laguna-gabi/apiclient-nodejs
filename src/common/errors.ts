@@ -31,6 +31,7 @@ export enum ErrorType {
   memberRegisterForNotificationToken = 9213,
   memberInvalidHonorific = 9214,
   memberRecordingIdAlreadyExists = 9215,
+  memberRegisterWebPlatform = 9216,
   // Notifications
   notificationMetadataInvalid = 9270,
   notificationMemberPlatformWeb = 9271,
@@ -95,6 +96,7 @@ export const Errors: Map<ErrorType, string> = new Map([
     ).join()}`,
   ],
   [ErrorType.memberRecordingIdAlreadyExists.valueOf(), `id already exists`],
+  [ErrorType.memberRegisterWebPlatform.valueOf(), `cant register member with platform web`],
   [
     ErrorType.memberRegisterForNotificationToken.valueOf(),
     `token must contain only letters and numbers`,

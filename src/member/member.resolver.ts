@@ -287,6 +287,7 @@ export class MemberResolver extends MemberBase {
       platform: registerForNotificationParams.platform,
       isPushNotificationsEnabled: registerForNotificationParams.isPushNotificationsEnabled,
     });
+    await this.memberService.updateMemberConfigRegisteredAt(memberConfig.memberId);
 
     member.users.map((user) => {
       const eventParams: IEventUpdateMemberPlatform = {
@@ -295,8 +296,14 @@ export class MemberResolver extends MemberBase {
         userId: user._id,
       };
       this.eventEmitter.emit(EventType.updateMemberPlatform, eventParams);
+    });
 
-      this.memberScheduler.deleteTimeout({ id: member.id });
+    this.memberScheduler.deleteTimeout({ id: member.id });
+
+    await this.memberScheduler.registerNewRegisteredMemberNotify({
+      memberId: member.id,
+      userId: member.primaryUserId,
+      firstLoggedInAt: new Date(),
     });
   }
 

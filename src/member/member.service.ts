@@ -392,6 +392,15 @@ export class MemberService extends BaseService {
     return result.ok === 1;
   }
 
+  async updateMemberConfigRegisteredAt(memberId: Types.ObjectId) {
+    const result = await this.memberConfigModel.updateOne(
+      { memberId },
+      { $set: { firstLoggedInAt: new Date() } },
+    );
+
+    return result.ok === 1;
+  }
+
   async getMemberConfig(id: string): Promise<MemberConfig> {
     const object = await this.memberConfigModel.findOne({ memberId: new Types.ObjectId(id) });
     if (!object) {

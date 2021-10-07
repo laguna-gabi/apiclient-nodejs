@@ -627,14 +627,24 @@ describe('MemberResolver', () => {
     let spyOnServiceGetMember;
     let spyOnServiceGetMemberConfig;
     let spyOnServiceUpdateMemberConfig;
+    let spyOnServiceUpdateMemberConfigRegisteredAt;
     let spyOnSchedulerDeleteTimeout;
+    let spyOnSchedulerNewRegisteredMember;
 
     beforeEach(() => {
       spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnServiceUpdateMemberConfig = jest.spyOn(service, 'updateMemberConfig');
+      spyOnServiceUpdateMemberConfigRegisteredAt = jest.spyOn(
+        service,
+        'updateMemberConfigRegisteredAt',
+      );
       spyOnSchedulerDeleteTimeout = jest.spyOn(memberScheduler, 'deleteTimeout');
+      spyOnSchedulerNewRegisteredMember = jest.spyOn(
+        memberScheduler,
+        'registerNewRegisteredMemberNotify',
+      );
     });
 
     afterEach(() => {
@@ -642,7 +652,9 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockReset();
       spyOnServiceGetMemberConfig.mockReset();
       spyOnServiceUpdateMemberConfig.mockReset();
+      spyOnServiceUpdateMemberConfigRegisteredAt.mockReset();
       spyOnSchedulerDeleteTimeout.mockReset();
+      spyOnSchedulerNewRegisteredMember.mockReset();
     });
 
     it('should not call notificationsService on platform=android', async () => {
@@ -671,7 +683,13 @@ describe('MemberResolver', () => {
         platform: params.platform,
         isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       });
+      expect(spyOnServiceUpdateMemberConfigRegisteredAt).toBeCalledWith(memberConfig.memberId);
       expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: member.id });
+      expect(spyOnSchedulerNewRegisteredMember).toBeCalledWith({
+        memberId: member.id,
+        userId: member.primaryUserId,
+        firstLoggedInAt: expect.any(Date),
+      });
     });
 
     it('should call notificationsService on platform=ios', async () => {
@@ -1121,6 +1139,7 @@ describe('MemberResolver', () => {
         platform: Platform.android,
         isPushNotificationsEnabled: true,
         accessToken: '123-abc',
+        firstLoggedInAt: faker.date.past(1),
       };
       const communication: Communication = {
         memberId: new Types.ObjectId(member.id),

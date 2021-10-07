@@ -15,6 +15,7 @@ import { WebhooksController } from '../../src/providers';
 import { generateId } from '../generators';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
+import { SchedulerRegistry } from '@nestjs/schedule';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -30,6 +31,7 @@ export class Handler {
   memberModel;
   communicationService: CommunicationService;
   webhooksController: WebhooksController;
+  schedulerRegistry: SchedulerRegistry;
   spyOnGetCommunicationService;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
@@ -45,6 +47,7 @@ export class Handler {
     await this.app.init();
 
     this.module = moduleFixture.get<GraphQLModule>(GraphQLModule);
+    this.schedulerRegistry = moduleFixture.get<SchedulerRegistry>(SchedulerRegistry);
     const providers = mockProviders(moduleFixture);
     this.sendBird = providers.sendBird;
     this.notificationsService = providers.notificationsService;

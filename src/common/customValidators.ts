@@ -1,6 +1,7 @@
 import { registerDecorator, ValidationArguments, ValidationOptions } from 'class-validator';
 import { CancelNotificationType, NotificationType } from './interfaces.dto';
 import * as config from 'config';
+import { Platform } from '.';
 
 /**
  * When there are 2 params of dates, and we want to make sure that one param is
@@ -152,6 +153,22 @@ export function IsHonorific(options: ValidationOptions) {
       validator: {
         validate(honorific: string) {
           return Object.keys(config.get('contents.honorific')).includes(honorific);
+        },
+      },
+    });
+  };
+}
+
+export function IsNotPlatformWeb(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(platform: Platform) {
+          console.log(platform);
+          return platform !== Platform.web;
         },
       },
     });

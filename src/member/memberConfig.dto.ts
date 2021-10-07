@@ -29,6 +29,10 @@ export class MemberConfig {
   @Prop({ type: Boolean, default: false })
   @Field(() => Boolean)
   isPushNotificationsEnabled: boolean;
+
+  @Prop()
+  @Field(() => Date, { nullable: true })
+  firstLoggedInAt: Date;
 }
 
 /**************************************************************************************************

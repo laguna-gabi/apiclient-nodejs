@@ -11,6 +11,8 @@ import {
 } from '../index';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import {
+  MemberConfig,
+  MemberConfigDto,
   MemberModule,
   MemberScheduler,
   MemberService,
@@ -25,6 +27,7 @@ import * as config from 'config';
 import { Org, OrgDto } from '../../src/org';
 import { User, UserDto } from '../../src/user';
 import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
+import { sub } from 'date-fns';
 
 describe('MemberScheduler', () => {
   let module: TestingModule;
@@ -35,6 +38,7 @@ describe('MemberScheduler', () => {
   let modelUser: Model<typeof UserDto>;
   let modelOrg: Model<typeof OrgDto>;
   let internalSchedulerService: InternalSchedulerService;
+  let memberConfigModel: Model<typeof MemberConfigDto>;
 
   const days = (config.get('scheduler.maxAlertGapInMin') + 1) * 60 * 1000;
   const whenNotInRange = new Date();
@@ -74,6 +78,7 @@ describe('MemberScheduler', () => {
     service = module.get<MemberService>(MemberService);
     modelUser = model(User.name, UserDto);
     modelOrg = model(Org.name, OrgDto);
+    memberConfigModel = model(MemberConfig.name, MemberConfigDto);
 
     scheduler = module.get<MemberScheduler>(MemberScheduler);
     notifyParamsModel = model(NotifyParams.name, NotifyParamsDto);
@@ -90,112 +95,148 @@ describe('MemberScheduler', () => {
   });
 
   describe('init', () => {
-    afterEach(async () => {
-      await clear();
-    });
-
-    it('should schedule with all scheduled new member nudge and future', async () => {
-      //input for registerCustomFutureNotify
-      const whens = [1, 2, -1].map((minutes) => {
-        const date = new Date();
-        date.setMinutes(date.getMinutes() + minutes);
-        return date;
+    describe('registerCustomFutureNotify', () => {
+      afterEach(async () => {
+        await clear();
       });
-      const ids = await Promise.all(
-        whens.map(async (when) => notifyParamsModel.create(generateParams(when))),
-      );
-      //end input for registerCustomFutureNotify
 
-      //input for initRegisterNewMemberNudge
-      const { _id: pId } = await modelUser.create(generateCreateRawUserParams());
-      const { _id: orgId } = await modelOrg.create(generateOrgParams());
-      const members = await Promise.all(
-        [1, 2, 3].map(async () => service.insert(generateCreateMemberParams({ orgId }), pId)),
-      );
-      //end input for initRegisterNewMemberNudge
+      it('should schedule with all scheduled new member nudge and future', async () => {
+        //input for registerCustomFutureNotify
+        const whens = [1, 2, -1].map((minutes) => {
+          const date = new Date();
+          date.setMinutes(date.getMinutes() + minutes);
+          return date;
+        });
+        const ids = await Promise.all(
+          whens.map(async (when) => notifyParamsModel.create(generateParams(when))),
+        );
+        //end input for registerCustomFutureNotify
 
-      await scheduler.init();
+        //input for initRegisterNewMemberNudge
+        const { _id: pId } = await modelUser.create(generateCreateRawUserParams());
+        const { _id: orgId } = await modelOrg.create(generateOrgParams());
+        const members = await Promise.all(
+          [1, 2, 3].map(async () => service.insert(generateCreateMemberParams({ orgId }), pId)),
+        );
+        //end input for initRegisterNewMemberNudge
 
-      const timeouts = schedulerRegistry.getTimeouts();
+        await scheduler.init();
 
-      //timeouts of registerCustomFutureNotify
-      expect(timeouts).toContainEqual(ids[0]._id);
-      expect(timeouts).toContainEqual(ids[1]._id);
-      expect(timeouts).not.toContainEqual(ids[2]._id);
-      //timeouts of initRegisterNewMemberNudge
-      members.map((member) => expect(timeouts).toContainEqual(member.id.toString()));
-    }, 10000);
+        const timeouts = schedulerRegistry.getTimeouts();
 
-    // eslint-disable-next-line max-len
-    it('should not register schedulerRegistry with future messages more than 1 month', async () => {
-      const { _id } = await notifyParamsModel.create(generateParams(whenNotInRange));
+        //timeouts of registerCustomFutureNotify
+        expect(timeouts).toContainEqual(ids[0]._id);
+        expect(timeouts).toContainEqual(ids[1]._id);
+        expect(timeouts).not.toContainEqual(ids[2]._id);
+        //timeouts of initRegisterNewMemberNudge
+        members.map((member) => expect(timeouts).toContainEqual(member.id.toString()));
+      }, 10000);
 
-      await scheduler.init();
+      // eslint-disable-next-line max-len
+      it('should not register schedulerRegistry with future messages more than 1 month', async () => {
+        const { _id } = await notifyParamsModel.create(generateParams(whenNotInRange));
 
-      const timeouts = schedulerRegistry.getTimeouts();
-      expect(timeouts).not.toContainEqual(_id);
-    }, 10000);
-  });
+        await scheduler.init();
+        const timeouts = schedulerRegistry.getTimeouts();
+        expect(timeouts).not.toContainEqual(_id);
+      }, 10000);
 
-  describe('registerCustomFutureNotify', () => {
-    afterEach(async () => {
-      await clear();
+      describe('registerNewRegisteredMemberNotify', () => {
+        afterEach(async () => {
+          await clear();
+        });
+
+        it.only('should register new registered member notifications', async () => {
+          await scheduler.init();
+
+          const newRegisteredMembers = await memberConfigModel.aggregate([
+            {
+              $match: {
+                firstLoggedInAt: { $gte: sub(new Date(), { days: 1 }) },
+              },
+            },
+            {
+              $lookup: {
+                from: 'members',
+                localField: 'memberId',
+                foreignField: '_id',
+                as: 'member',
+              },
+            },
+            {
+              $unwind: {
+                path: '$member',
+              },
+            },
+          ]);
+
+          expect(schedulerRegistry.getTimeouts()).toEqual(
+            expect.arrayContaining(newRegisteredMembers.map((member) => member._id)),
+          );
+        }, 10000);
+      });
     });
 
-    it('should add a notification params on a new params', async () => {
-      const params = [generateParams(), generateParams(), generateParams()];
-      const ids = await Promise.all(
-        params.map(async (param) => (await scheduler.registerCustomFutureNotify(param)).id),
-      );
+    describe('registerCustomFutureNotify', () => {
+      afterEach(async () => {
+        await clear();
+      });
 
-      const timeouts = schedulerRegistry.getTimeouts();
-      ids.map((id) => expect(timeouts).toContainEqual(id));
+      it('should add a notification params on a new params', async () => {
+        const params = [generateParams(), generateParams(), generateParams()];
+        const ids = await Promise.all(
+          params.map(async (param) => (await scheduler.registerCustomFutureNotify(param)).id),
+        );
+
+        const timeouts = schedulerRegistry.getTimeouts();
+        ids.map((id) => expect(timeouts).toContainEqual(id));
+      });
+
+      it('should not add notification params if metadata.when is > 1 month', async () => {
+        const param = generateParams(whenNotInRange);
+
+        const result = await scheduler.registerCustomFutureNotify(param);
+        expect(result).toBeUndefined();
+      });
+
+      it('should set timeout and check that it occurs and notifying', async () => {
+        await scheduler.init();
+
+        //Adding 1 second to scheduler.alertBeforeInMin
+        const when = new Date();
+        when.setSeconds(when.getSeconds() + 1);
+        const param = generateParams(when);
+
+        const { id } = await scheduler.registerCustomFutureNotify(param);
+        let timeouts = schedulerRegistry.getTimeouts();
+        expect(timeouts).toContainEqual(id);
+
+        await delay(3000);
+
+        timeouts = schedulerRegistry.getTimeouts();
+        expect(timeouts).not.toContainEqual(id);
+      }, 12000);
     });
 
-    it('should not add notification params if metadata.when is > 1 month', async () => {
-      const param = generateParams(whenNotInRange);
+    describe('delete', () => {
+      afterEach(async () => {
+        await clear();
+      });
 
-      const result = await scheduler.registerCustomFutureNotify(param);
-      expect(result).toBeUndefined();
-    });
+      it('should not fail on deleting a non existing appointment', async () => {
+        await scheduler.deleteTimeout({ id: generateId() });
+      });
 
-    it('should set timeout and check that it occurs and notifying', async () => {
-      await scheduler.init();
+      it('should delete an existing notification', async () => {
+        const id = generateId();
+        await schedulerRegistry.addTimeout(id, generateId());
+        let timeouts = schedulerRegistry.getTimeouts();
+        expect(timeouts[0]).toEqual(id);
 
-      //Adding 1 second to scheduler.alertBeforeInMin
-      const when = new Date();
-      when.setSeconds(when.getSeconds() + 1);
-      const param = generateParams(when);
-
-      const { id } = await scheduler.registerCustomFutureNotify(param);
-      let timeouts = schedulerRegistry.getTimeouts();
-      expect(timeouts).toContainEqual(id);
-
-      await delay(3000);
-
-      timeouts = schedulerRegistry.getTimeouts();
-      expect(timeouts).not.toContainEqual(id);
-    }, 12000);
-  });
-
-  describe('delete', () => {
-    afterEach(async () => {
-      await clear();
-    });
-
-    it('should not fail on deleting a non existing appointment', async () => {
-      await scheduler.deleteTimeout({ id: generateId() });
-    });
-
-    it('should delete an existing notification', async () => {
-      const id = generateId();
-      await schedulerRegistry.addTimeout(id, generateId());
-      let timeouts = schedulerRegistry.getTimeouts();
-      expect(timeouts[0]).toEqual(id);
-
-      await scheduler.deleteTimeout({ id });
-      timeouts = schedulerRegistry.getTimeouts();
-      expect(timeouts.length).toEqual(0);
+        await scheduler.deleteTimeout({ id });
+        timeouts = schedulerRegistry.getTimeouts();
+        expect(timeouts.length).toEqual(0);
+      });
     });
   });
 });

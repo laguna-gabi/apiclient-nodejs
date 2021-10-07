@@ -3,6 +3,7 @@ import { Schema } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { IsAlphanumeric, IsOptional } from 'class-validator';
 import { Errors, ErrorType } from './errors';
+import { IsNotPlatformWeb } from './customValidators';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -70,6 +71,7 @@ export class RegisterForNotificationParams {
   @Field(() => String)
   memberId: string;
 
+  @IsNotPlatformWeb({ message: Errors.get(ErrorType.memberRegisterWebPlatform) })
   @Field(() => Platform)
   platform: Platform;
 

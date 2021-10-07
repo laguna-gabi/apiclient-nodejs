@@ -15,7 +15,11 @@ import {
   generateUpdateRecordingParams,
 } from '../index';
 import { UserRole } from '../../src/user';
-import { AppointmentMethod } from '../../src/appointment';
+import {
+  AppointmentMethod,
+  RequestAppointmentParams,
+  ScheduleAppointmentParams,
+} from '../../src/appointment';
 import { Handler } from '../aux/handler';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
 import { Creators } from '../aux/creators';
@@ -952,6 +956,66 @@ describe('Integration tests: all', () => {
     });
 
     handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+  });
+  describe('new member + member registration scheduling', () => {
+    it('should create timeout on member creation', async () => {
+      const primaryUser = await creators.createAndValidateUser();
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({
+        org,
+        primaryUser,
+        users: [primaryUser],
+      });
+      console.log(handler.schedulerRegistry.getTimeouts());
+      expect(handler.schedulerRegistry.getTimeouts()).toEqual(expect.arrayContaining([member.id]));
+    });
+
+    it('should create timeout for registered member', async () => {
+      const primaryUser = await creators.createAndValidateUser();
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({
+        org,
+        primaryUser,
+        users: [primaryUser],
+      });
+      const registerForNotificationParams: RegisterForNotificationParams = {
+        isPushNotificationsEnabled: true,
+        platform: Platform.ios,
+        memberId: member.id,
+        token: 'sampleiospushkittokentest',
+      };
+      await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+      console.log(handler.schedulerRegistry.getTimeouts());
+      expect(handler.schedulerRegistry.getTimeouts()).toEqual(expect.arrayContaining([member.id]));
+    });
+
+    it('should delete timeout for member if an appointment is scheduled', async () => {
+      const primaryUser = await creators.createAndValidateUser();
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({
+        org,
+        primaryUser,
+        users: [primaryUser],
+      });
+      const requestAppointmentParams: RequestAppointmentParams = generateRequestAppointmentParams({
+        memberId: member.id,
+        userId: primaryUser.id,
+      });
+      const requestedAppointment = await handler.mutations.requestAppointment({
+        appointmentParams: requestAppointmentParams,
+      });
+      const scheduleAppointmentParams: ScheduleAppointmentParams =
+        generateScheduleAppointmentParams({
+          memberId: member.id,
+          userId: primaryUser.id,
+          id: requestedAppointment.id,
+        });
+      await handler.mutations.scheduleAppointment({ appointmentParams: scheduleAppointmentParams });
+
+      expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(
+        expect.arrayContaining([member.id]),
+      );
+    });
   });
 
   /************************************************************************************************

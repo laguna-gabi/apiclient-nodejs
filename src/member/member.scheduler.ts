@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { NotifyParams, NotifyParamsDocument } from './member.dto';
-import { Errors, ErrorType, EventType, Identifier } from '../common';
+import { Errors, ErrorType, EventType, Identifier, NotificationType } from '../common';
 import { cloneDeep } from 'lodash';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { MemberService } from '.';
+import { MemberConfig, MemberConfigDocument, MemberService } from '.';
 import { Bitly } from '../providers';
 import { BaseScheduler, InternalSchedulerService, LeaderType } from '../scheduler';
+import { add, sub } from 'date-fns';
+import * as config from 'config';
 
 @Injectable()
 export class MemberScheduler extends BaseScheduler {
@@ -16,6 +18,8 @@ export class MemberScheduler extends BaseScheduler {
     protected readonly internalSchedulerService: InternalSchedulerService,
     @InjectModel(NotifyParams.name)
     private readonly notifyParamsModel: Model<NotifyParamsDocument>,
+    @InjectModel(MemberConfig.name)
+    private readonly memberConfigModel: Model<MemberConfigDocument>,
     protected readonly schedulerRegistry: SchedulerRegistry,
     protected readonly eventEmitter: EventEmitter2,
     protected readonly bitly: Bitly,
@@ -35,6 +39,7 @@ export class MemberScheduler extends BaseScheduler {
     await super.init(async () => {
       await this.initRegisterCustomFutureNotify();
       await this.initRegisterNewMemberNudge();
+      await this.initRegisterNewRegisteredMemberNotify();
     });
   }
 
@@ -63,6 +68,31 @@ export class MemberScheduler extends BaseScheduler {
       this.addTimeout(id, timeout);
 
       return { id };
+    }
+  }
+
+  public async registerNewRegisteredMemberNotify({
+    memberId,
+    userId,
+    firstLoggedInAt,
+  }: {
+    memberId: string;
+    userId: string;
+    firstLoggedInAt: Date;
+  }) {
+    const milliseconds = add(firstLoggedInAt, { days: 1 }).getTime() - Date.now();
+    if (milliseconds > 0) {
+      const timeout = setTimeout(async () => {
+        this.logger.log(`${memberId}: notifying new registered member`, MemberScheduler.name);
+        const metadata = {
+          content: `${config.get('contents.newRegisteredMember')}`,
+        };
+        const params: NotifyParams = { memberId, userId, type: NotificationType.text, metadata };
+
+        this.eventEmitter.emit(EventType.notify, params);
+        this.deleteTimeout({ id: memberId });
+      }, milliseconds);
+      this.schedulerRegistry.addTimeout(memberId, timeout);
     }
   }
 
@@ -101,6 +131,43 @@ export class MemberScheduler extends BaseScheduler {
       newUnregisteredMembers.length,
       'new member nudge',
       this.initRegisterNewMemberNudge.name,
+    );
+  }
+
+  private async initRegisterNewRegisteredMemberNotify() {
+    const newRegisteredMembers = await this.memberConfigModel.aggregate([
+      {
+        $match: {
+          firstLoggedInAt: { $gte: sub(new Date(), { days: 1 }) },
+        },
+      },
+      {
+        $lookup: {
+          from: 'members',
+          localField: 'memberId',
+          foreignField: '_id',
+          as: 'member',
+        },
+      },
+      {
+        $unwind: {
+          path: '$member',
+        },
+      },
+    ]);
+    await Promise.all(
+      newRegisteredMembers.map(async ({ _id, firstLoggedInAt, member }) => {
+        return this.registerNewRegisteredMemberNotify({
+          memberId: _id,
+          userId: member.primaryUserId,
+          firstLoggedInAt,
+        });
+      }),
+    );
+
+    this.logger.log(
+      `Finish init scheduler for ${newRegisteredMembers.length} New Registered Members`,
+      MemberScheduler.name,
     );
   }
 }

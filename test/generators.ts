@@ -84,12 +84,14 @@ export const generateMemberConfig = ({
   platform = Platform.ios,
   isPushNotificationsEnabled = true,
   accessToken = generateId(),
+  firstLoggedInAt = faker.date.past(1),
 }: {
   memberId?: Types.ObjectId;
   externalUserId?: string;
   isPushNotificationsEnabled?: boolean;
   platform?: Platform;
   accessToken?: string;
+  firstLoggedInAt?: Date;
 } = {}): MemberConfig => {
   return {
     memberId,
@@ -97,6 +99,7 @@ export const generateMemberConfig = ({
     platform,
     accessToken,
     isPushNotificationsEnabled,
+    firstLoggedInAt,
   };
 };
 
@@ -272,6 +275,7 @@ export const mockGenerateMemberConfig = (): MemberConfig => {
     platform: Platform.ios,
     isPushNotificationsEnabled: true,
     accessToken: generateId(),
+    firstLoggedInAt: faker.date.past(1),
   };
 };
 
