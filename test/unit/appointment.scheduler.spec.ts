@@ -8,7 +8,7 @@ import {
 } from '../../src/appointment';
 import { dbConnect, dbDisconnect, defaultModules, delay, generateId } from '../index';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import { model, Model, Types } from 'mongoose';
+import { model, Model } from 'mongoose';
 import * as config from 'config';
 import { cloneDeep, difference } from 'lodash';
 import { v4 } from 'uuid';
@@ -98,13 +98,8 @@ describe('AppointmentScheduler', () => {
           scheduledAppointments.map((item) => item._id + ReminderType.appointmentReminder),
         );
 
-        diff.map(async (appointmentId) => {
-          const appointment: any = await appointmentModel.findById(
-            new Types.ObjectId(appointmentId.replace(ReminderType.appointmentReminder, '')),
-          );
-          expect(appointment.status).not.toEqual(AppointmentStatus.scheduled);
-        });
-      });
+        expect(diff).toEqual([]);
+      }, 10000);
     });
 
     describe('scheduleAppointmentLongAlert', () => {
@@ -134,13 +129,8 @@ describe('AppointmentScheduler', () => {
           scheduledAppointments.map((item) => item._id + ReminderType.appointmentLongReminder),
         );
 
-        diff.map(async (appointmentId) => {
-          const appointment: any = await appointmentModel.find(
-            new Types.ObjectId(appointmentId.replace(ReminderType.appointmentLongReminder, '')),
-          );
-          expect(appointment.status).not.toEqual(AppointmentStatus.scheduled);
-        });
-      });
+        expect(diff).toEqual([]);
+      }, 10000);
     });
   });
 
@@ -280,7 +270,7 @@ describe('AppointmentScheduler', () => {
       spyOnCommunicationServiceGet.mockReset();
       spyOnEventEmitter.mockReset();
       spyOnBitlyShortenLink.mockReset();
-    });
+    }, 12000);
   });
 
   describe('scheduleAppointmentLongAlert', () => {

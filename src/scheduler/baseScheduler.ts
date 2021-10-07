@@ -1,9 +1,9 @@
 import * as config from 'config';
 import { Cron, SchedulerRegistry } from '@nestjs/schedule';
-import { add } from 'date-fns';
+import { add, secondsToMilliseconds } from 'date-fns';
 import { Member, NotifyParams } from '../member';
 import { User } from '../user';
-import { EventType, NotificationType, replaceConfigs } from '../common';
+import { EventType, Logger, NotificationType, replaceConfigs } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Bitly } from '../providers';
 import { InternalSchedulerService } from '.';
@@ -18,6 +18,7 @@ export enum LeaderType {
 export class BaseScheduler {
   protected amITheLeader = false;
   protected readonly identifier = v4();
+  protected readonly logger: Logger;
   initCallbacks: () => any;
 
   public constructor(
@@ -26,7 +27,10 @@ export class BaseScheduler {
     protected readonly eventEmitter: EventEmitter2,
     protected readonly bitly: Bitly,
     protected readonly leaderType: LeaderType,
-  ) {}
+    protected readonly className: string,
+  ) {
+    this.logger = new Logger(this.className);
+  }
 
   protected async init(callbacks) {
     this.initCallbacks = callbacks;
@@ -64,6 +68,10 @@ export class BaseScheduler {
         leaderType: this.leaderType,
       });
     } else {
+      //rolling number between [0,5] seconds: if 2 service start together, they'll both be leaders
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.floor(Math.random() * secondsToMilliseconds(5)) + 1),
+      );
       const leader = await this.internalSchedulerService.getLeader(this.leaderType);
       if (!leader) {
         await this.internalSchedulerService.updateLeader({
@@ -139,5 +147,12 @@ export class BaseScheduler {
     if (!this.schedulerRegistry.doesExists('timeout', id)) {
       this.schedulerRegistry.addTimeout(id, timeout);
     }
+  }
+
+  protected logEndInit(lengthResults: number, customText, methodName: string) {
+    this.logger.log(
+      `Finish init scheduler ${this.identifier} for ${lengthResults} ${customText}`,
+      methodName,
+    );
   }
 }

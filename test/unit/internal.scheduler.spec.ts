@@ -85,6 +85,6 @@ describe('BaseScheduler + InternalSchedulerService', () => {
 
       const current = await internalSchedulerService.getLeader(leaderType);
       expect(current.id).toEqual(saveId);
-    });
+    }, 12000);
   });
 });

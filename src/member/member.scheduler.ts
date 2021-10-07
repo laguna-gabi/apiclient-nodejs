@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { NotifyParams, NotifyParamsDocument } from './member.dto';
-import { Errors, ErrorType, EventType, Identifier, Logger } from '../common';
+import { Errors, ErrorType, EventType, Identifier } from '../common';
 import { cloneDeep } from 'lodash';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -12,8 +12,6 @@ import { BaseScheduler, InternalSchedulerService, LeaderType } from '../schedule
 
 @Injectable()
 export class MemberScheduler extends BaseScheduler {
-  private logger = new Logger(MemberScheduler.name);
-
   constructor(
     protected readonly internalSchedulerService: InternalSchedulerService,
     @InjectModel(NotifyParams.name)
@@ -23,7 +21,14 @@ export class MemberScheduler extends BaseScheduler {
     protected readonly bitly: Bitly,
     private readonly memberService: MemberService,
   ) {
-    super(internalSchedulerService, schedulerRegistry, eventEmitter, bitly, LeaderType.member);
+    super(
+      internalSchedulerService,
+      schedulerRegistry,
+      eventEmitter,
+      bitly,
+      LeaderType.member,
+      MemberScheduler.name,
+    );
   }
 
   async init() {
@@ -75,9 +80,10 @@ export class MemberScheduler extends BaseScheduler {
         return this.registerCustomFutureNotify(notification);
       }),
     );
-    this.logger.log(
-      `Finish init scheduler for ${notifications.length} future notifications`,
-      MemberScheduler.name,
+    this.logEndInit(
+      notifications.length,
+      'member future notifications',
+      this.initRegisterCustomFutureNotify.name,
     );
   }
 
@@ -85,15 +91,16 @@ export class MemberScheduler extends BaseScheduler {
     const newUnregisteredMembers = await this.memberService.getNewUnregisteredMembers();
     newUnregisteredMembers.map(async (newMember) => {
       const { member, user, appointmentId } = newMember;
-      this.registerNewMemberNudge({
+      await this.registerNewMemberNudge({
         member,
         user,
         appointmentId,
       });
     });
-    this.logger.log(
-      `Finish init new member nudge for ${newUnregisteredMembers.length} members`,
-      MemberScheduler.name,
+    this.logEndInit(
+      newUnregisteredMembers.length,
+      'new member nudge',
+      this.initRegisterNewMemberNudge.name,
     );
   }
 }

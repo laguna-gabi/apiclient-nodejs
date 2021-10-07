@@ -964,7 +964,7 @@ describe('MemberResolver', () => {
         type: notifyParams.type,
         metadata: notifyParams.metadata,
       });
-    });
+    }, 10000);
 
     test.each([
       CancelNotificationType.cancelVideo,

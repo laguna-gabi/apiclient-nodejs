@@ -124,7 +124,7 @@ describe('MemberScheduler', () => {
       expect(timeouts).not.toContainEqual(ids[2]._id);
       //timeouts of initRegisterNewMemberNudge
       members.map((member) => expect(timeouts).toContainEqual(member.id.toString()));
-    });
+    }, 10000);
 
     // eslint-disable-next-line max-len
     it('should not register schedulerRegistry with future messages more than 1 month', async () => {
@@ -134,7 +134,7 @@ describe('MemberScheduler', () => {
 
       const timeouts = schedulerRegistry.getTimeouts();
       expect(timeouts).not.toContainEqual(_id);
-    });
+    }, 10000);
   });
 
   describe('registerCustomFutureNotify', () => {
@@ -175,7 +175,7 @@ describe('MemberScheduler', () => {
 
       timeouts = schedulerRegistry.getTimeouts();
       expect(timeouts).not.toContainEqual(id);
-    });
+    }, 12000);
   });
 
   describe('delete', () => {

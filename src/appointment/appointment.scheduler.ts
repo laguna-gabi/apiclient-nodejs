@@ -3,7 +3,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Appointment, AppointmentDocument, AppointmentStatus } from '.';
 import { Model } from 'mongoose';
-import { ReminderType, EventType, Logger, NotificationType } from '../common';
+import { EventType, NotificationType, ReminderType } from '../common';
 import { Bitly } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotifyParams } from '../member';
@@ -14,8 +14,6 @@ import { BaseScheduler, InternalSchedulerService, LeaderType } from '../schedule
 
 @Injectable()
 export class AppointmentScheduler extends BaseScheduler {
-  private readonly logger = new Logger(AppointmentScheduler.name);
-
   constructor(
     protected readonly internalSchedulerService: InternalSchedulerService,
     @InjectModel(Appointment.name)
@@ -25,7 +23,14 @@ export class AppointmentScheduler extends BaseScheduler {
     protected eventEmitter: EventEmitter2,
     protected readonly bitly: Bitly,
   ) {
-    super(internalSchedulerService, schedulerRegistry, eventEmitter, bitly, LeaderType.appointment);
+    super(
+      internalSchedulerService,
+      schedulerRegistry,
+      eventEmitter,
+      bitly,
+      LeaderType.appointment,
+      AppointmentScheduler.name,
+    );
   }
 
   async init() {
@@ -92,22 +97,23 @@ export class AppointmentScheduler extends BaseScheduler {
         });
       }),
     );
-    this.logger.log(
-      `Finish init scheduler for ${appointments.length} appointments reminders`,
-      AppointmentScheduler.name,
+    this.logEndInit(
+      appointments.length,
+      'appointments reminders',
+      this.initRegisterAppointmentAlert.name,
     );
   }
 
   private async initRegisterAppointmentLongAlert() {
     const { maxDate } = this.getCurrentDateConfigs();
-    const longAppointments = await this.appointmentModel
+    const appointments = await this.appointmentModel
       .find({
         status: AppointmentStatus.scheduled,
         start: { $gte: add(new Date(), { days: 1 }), $lte: maxDate },
       })
       .sort({ start: 1 });
     await Promise.all(
-      longAppointments.map(async (appointment) => {
+      appointments.map(async (appointment) => {
         return this.scheduleAppointmentLongAlert({
           id: appointment._id + ReminderType.appointmentLongReminder,
           memberId: appointment.memberId.toString(),
@@ -116,9 +122,10 @@ export class AppointmentScheduler extends BaseScheduler {
         });
       }),
     );
-    this.logger.log(
-      `Finish init scheduler for ${longAppointments.length} appointments long reminders`,
-      AppointmentScheduler.name,
+    this.logEndInit(
+      appointments.length,
+      'appointments long reminders',
+      this.initRegisterAppointmentLongAlert.name,
     );
   }
 
