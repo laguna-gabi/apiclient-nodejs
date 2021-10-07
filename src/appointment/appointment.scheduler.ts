@@ -116,7 +116,7 @@ export class AppointmentScheduler extends BaseScheduler {
         this.eventEmitter.emit(EventType.notify, params);
         this.deleteTimeout({ id });
       }, milliseconds);
-      this.schedulerRegistry.addTimeout(id, timeout);
+      this.addTimeout(id, timeout);
     }
   }
 

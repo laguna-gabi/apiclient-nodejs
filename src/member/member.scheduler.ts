@@ -55,7 +55,7 @@ export class MemberScheduler extends BaseScheduler {
         this.eventEmitter.emit(EventType.notify, notifyParamsDuplicated);
         this.deleteTimeout({ id });
       }, delayTime);
-      this.schedulerRegistry.addTimeout(id, timeout);
+      this.addTimeout(id, timeout);
 
       return { id };
     }

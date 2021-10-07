@@ -8,6 +8,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Bitly } from '../providers';
 import { InternalSchedulerService } from '.';
 import { v4 } from 'uuid';
+import Timeout = NodeJS.Timeout;
 
 export enum LeaderType {
   appointment = 'appointment',
@@ -109,7 +110,34 @@ export class BaseScheduler {
         this.eventEmitter.emit(EventType.notify, params);
         this.deleteTimeout({ id: memberId });
       }, milliseconds);
-      this.schedulerRegistry.addTimeout(memberId, timeout);
+      this.addTimeout(memberId, timeout);
+    }
+  }
+
+  /**
+   * Since we're running on multiple services at once, we might have a scerio like:
+   * 1. service1 is the leaders
+   * 2. service2 receives event for adding new member to schedule messages
+   * 3. service1 crashes
+   * 4. service2 takes ownership for being a leader
+   * 5. service2 calls init and loads all the schedule notifications
+   * 6. service2 already has the event for adding a new member, so the timeout already exists
+   * For this scenario we're checking that the timeout id doesn't exists.
+   * This handles this exception :
+   *
+   * Error: Timeout with the given name (615eb7b6874e0300276a400c) already exists. Ignored.
+   * at SchedulerRegistry.addTimeout (@nestjs/schedule/dist/scheduler.registry.js:68:19)
+   * at MemberScheduler.registerNewMemberNudge (baseScheduler.js:90:36)
+   * at src/member/member.scheduler.js:77:18
+   * at Array.map (<anonymous>)
+   * at MemberScheduler.initRegisterNewMemberNudge (src/member/member.scheduler.js:75:32)
+   * at processTicksAndRejections (node:internal/process/task_queues:96:5)
+   * at async MemberScheduler.initCallbacks (src/member/member.scheduler.js:42:13)
+   * at async MemberScheduler.runEveryMinute (src/scheduler/baseScheduler.js:64:17)
+   */
+  protected addTimeout(id: string, timeout: Timeout) {
+    if (!this.schedulerRegistry.doesExists('timeout', id)) {
+      this.schedulerRegistry.addTimeout(id, timeout);
     }
   }
 }
