@@ -176,6 +176,11 @@ export enum StorageType {
   recordings = 'recordings',
 }
 
+export enum ReminderType {
+  appointmentReminder = '_appointmentReminder',
+  appointmentLongReminder = '_appointmentLongReminder',
+}
+
 export interface StorageUrlParams {
   storageType: StorageType;
   memberId: string;

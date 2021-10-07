@@ -8,16 +8,18 @@ import {
 } from '../../src/appointment';
 import { dbConnect, dbDisconnect, defaultModules, delay, generateId } from '../index';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import { model, Model } from 'mongoose';
+import { model, Model, Types } from 'mongoose';
 import * as config from 'config';
 import { cloneDeep, difference } from 'lodash';
 import { v4 } from 'uuid';
 import * as faker from 'faker';
 import { CommunicationService } from '../../src/communication';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EventType, NotificationType } from '../../src/common';
+import { ReminderType, EventType, NotificationType } from '../../src/common';
 import { NotifyParams } from '../../src/member';
 import { Bitly } from '../../src/providers';
+import { add } from 'date-fns';
+import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
 
 describe('AppointmentScheduler', () => {
   let module: TestingModule;
@@ -27,10 +29,17 @@ describe('AppointmentScheduler', () => {
   let eventEmitter: EventEmitter2;
   let appointmentModel: Model<typeof AppointmentDto>;
   let bitly: Bitly;
+  let internalSchedulerService: InternalSchedulerService;
 
   const clear = async () => {
     const timeouts = schedulerRegistry.getTimeouts();
     timeouts.map((timeout) => schedulerRegistry.deleteTimeout(timeout));
+    await internalSchedulerService.resetLeader(LeaderType.appointment);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    scheduler.amITheLeader = false;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
   };
 
   beforeAll(async () => {
@@ -44,8 +53,10 @@ describe('AppointmentScheduler', () => {
     communicationService = module.get<CommunicationService>(CommunicationService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     bitly = module.get<Bitly>(Bitly);
+    internalSchedulerService = module.get<InternalSchedulerService>(InternalSchedulerService);
 
     await dbConnect();
+    await internalSchedulerService.resetLeader(LeaderType.appointment);
   });
 
   afterAll(async () => {
@@ -54,31 +65,82 @@ describe('AppointmentScheduler', () => {
   });
 
   describe('init', () => {
-    afterEach(async () => {
-      await clear();
+    /* eslint-disable max-len */
+    /**
+     * In this test we compare the appointments from the database to the ones that should ne scheduled
+     * some times there are appointments that are ended in the middle of this test (status done),
+     * so we test the difference between the compares and check if its status is not scheduled.
+     */
+    /* eslint-enable max-len */
+    describe('registerAppointmentAlert', () => {
+      afterEach(async () => {
+        await clear();
+      });
+
+      it('should register schedulerRegistry with all scheduled appointments', async () => {
+        const gapDate = new Date();
+        gapDate.setMinutes(gapDate.getMinutes() + config.get('scheduler.alertBeforeInMin'));
+        const maxDate = new Date();
+        maxDate.setMinutes(maxDate.getMinutes() + config.get('scheduler.maxAlertGapInMin'));
+
+        await scheduler.init();
+
+        const scheduledAppointments = await appointmentModel
+          .find({ status: AppointmentStatus.scheduled, start: { $gte: gapDate, $lte: maxDate } })
+          .sort({ start: 1 });
+
+        const filterTimeouts = schedulerRegistry
+          .getTimeouts()
+          .filter((timeout) => timeout.includes(ReminderType.appointmentReminder));
+
+        const diff = difference(
+          filterTimeouts,
+          scheduledAppointments.map((item) => item._id + ReminderType.appointmentReminder),
+        );
+
+        diff.map(async (appointmentId) => {
+          const appointment: any = await appointmentModel.findById(
+            new Types.ObjectId(appointmentId.replace(ReminderType.appointmentReminder, '')),
+          );
+          expect(appointment.status).not.toEqual(AppointmentStatus.scheduled);
+        });
+      });
     });
 
-    it('should register schedulerRegistry with all scheduled appointments', async () => {
-      const gapDate = new Date();
-      gapDate.setMinutes(gapDate.getMinutes() + config.get('scheduler.alertBeforeInMin'));
-      const maxDate = new Date();
-      maxDate.setMinutes(maxDate.getMinutes() + config.get('scheduler.maxAlertGapInMin'));
+    describe('scheduleAppointmentLongAlert', () => {
+      afterEach(async () => {
+        await clear();
+      });
 
-      await scheduler.init();
+      // eslint-disable-next-line max-len
+      it('should register scheduleAppointmentLongAlert with all scheduled appointments', async () => {
+        const maxDate = new Date();
+        maxDate.setMinutes(maxDate.getMinutes() + config.get('scheduler.maxAlertGapInMin'));
+        const scheduledAppointments = await appointmentModel
+          .find({
+            status: AppointmentStatus.scheduled,
+            start: { $gte: add(new Date(), { days: 1 }), $lte: maxDate },
+          })
+          .sort({ start: 1 });
 
-      const scheduledAppointments = await appointmentModel
-        .find({ status: AppointmentStatus.scheduled, start: { $gte: gapDate, $lte: maxDate } })
-        .sort({ start: 1 });
+        await scheduler.init();
 
-      const timeouts = schedulerRegistry.getTimeouts();
-      const timeoutAppointments: any = await appointmentModel.find({ _id: { $in: timeouts } });
+        const filterTimeouts = schedulerRegistry
+          .getTimeouts()
+          .filter((timeout) => timeout.includes(ReminderType.appointmentLongReminder));
 
-      const diff = difference(
-        timeoutAppointments.map((item) => item._id.toString()),
-        scheduledAppointments.map((item) => item._id.toString()),
-      );
+        const diff = difference(
+          filterTimeouts,
+          scheduledAppointments.map((item) => item._id + ReminderType.appointmentLongReminder),
+        );
 
-      expect(diff).toEqual([]);
+        diff.map(async (appointmentId) => {
+          const appointment: any = await appointmentModel.find(
+            new Types.ObjectId(appointmentId.replace(ReminderType.appointmentLongReminder, '')),
+          );
+          expect(appointment.status).not.toEqual(AppointmentStatus.scheduled);
+        });
+      });
     });
   });
 
@@ -96,7 +158,7 @@ describe('AppointmentScheduler', () => {
       };
     };
 
-    it('should update appointment alert with new appointments', async () => {
+    it('should schedule appointment alert with new appointments', async () => {
       const params = [generateParam(), generateParam(), generateParam()];
       await Promise.all(params.map(async (param) => scheduler.registerAppointmentAlert(param)));
 
@@ -104,7 +166,7 @@ describe('AppointmentScheduler', () => {
 
       expect(timeouts.length).toEqual(params.length);
       for (let i = 0; i < params.length; i++) {
-        expect(timeouts[i]).toEqual(params[i].id);
+        expect(timeouts[i]).toEqual(params[i].id + ReminderType.appointmentReminder);
       }
     });
 
@@ -113,7 +175,7 @@ describe('AppointmentScheduler', () => {
       await scheduler.registerAppointmentAlert(param);
       let timeouts = schedulerRegistry.getTimeouts();
       expect(timeouts.length).toEqual(1);
-      expect(timeouts[0]).toEqual(param.id);
+      expect(timeouts[0]).toEqual(param.id + ReminderType.appointmentReminder);
 
       const updateParam = cloneDeep(param);
       updateParam.start = faker.date.soon(1);
@@ -122,7 +184,7 @@ describe('AppointmentScheduler', () => {
 
       timeouts = schedulerRegistry.getTimeouts();
       expect(timeouts.length).toEqual(1);
-      expect(timeouts[0]).toEqual(param.id);
+      expect(timeouts[0]).toEqual(param.id + ReminderType.appointmentReminder);
     });
 
     it('should not add appointment is start > 1 month', async () => {
@@ -155,8 +217,8 @@ describe('AppointmentScheduler', () => {
 
       await scheduler.registerAppointmentAlert(param);
       const timeouts = schedulerRegistry.getTimeouts();
-      expect(timeouts.length).toEqual(1);
-      expect(timeouts[0]).toEqual(param.id);
+      expect(timeouts.length).toEqual(2);
+      expect(timeouts[0]).toEqual(param.id + ReminderType.appointmentReminder);
     });
 
     it('should add an appointment on start >= alertBeforeInMin', async () => {
@@ -168,7 +230,7 @@ describe('AppointmentScheduler', () => {
       await scheduler.registerAppointmentAlert(param);
       const timeouts = schedulerRegistry.getTimeouts();
       expect(timeouts.length).toEqual(1);
-      expect(timeouts[0]).toEqual(param.id);
+      expect(timeouts[0]).toEqual(param.id + ReminderType.appointmentReminder);
     });
 
     it('should set timeout and check that it occurs and notifying', async () => {
@@ -190,7 +252,7 @@ describe('AppointmentScheduler', () => {
       await scheduler.registerAppointmentAlert(param);
       let timeouts = schedulerRegistry.getTimeouts();
       expect(timeouts.length).toEqual(1);
-      expect(timeouts[0]).toEqual(param.id);
+      expect(timeouts[0]).toEqual(param.id + ReminderType.appointmentReminder);
 
       await delay(3000);
 
@@ -218,6 +280,71 @@ describe('AppointmentScheduler', () => {
       spyOnCommunicationServiceGet.mockReset();
       spyOnEventEmitter.mockReset();
       spyOnBitlyShortenLink.mockReset();
+    });
+  });
+
+  describe('scheduleAppointmentLongAlert', () => {
+    afterEach(async () => {
+      await clear();
+    });
+
+    const generateParam = (start = add(faker.date.soon(1), { days: 1 })) => {
+      return {
+        id: generateId(),
+        memberId: generateId(),
+        userId: v4(),
+        start,
+      };
+    };
+
+    it('should schedule appointment long alert with new appointments', async () => {
+      const params = [generateParam(), generateParam(), generateParam()];
+      await Promise.all(params.map(async (param) => scheduler.registerAppointmentAlert(param)));
+
+      const timeouts = schedulerRegistry.getTimeouts();
+
+      const longTimeouts = params.map(
+        (appointment) => appointment.id + ReminderType.appointmentLongReminder,
+      );
+
+      expect(timeouts.length).toEqual(params.length * 2);
+      expect(timeouts).toEqual(expect.arrayContaining(longTimeouts));
+    });
+
+    it('should update appointment long alert with an existing appointment', async () => {
+      const param = generateParam();
+      await scheduler.registerAppointmentAlert(param);
+      let timeouts = schedulerRegistry.getTimeouts();
+      expect(timeouts.length).toEqual(2);
+      expect(timeouts[0]).toEqual(param.id + ReminderType.appointmentReminder);
+
+      const updateParam = cloneDeep(param);
+      updateParam.start = add(faker.date.soon(1), { days: 2 });
+
+      await scheduler.registerAppointmentAlert(updateParam);
+
+      timeouts = schedulerRegistry.getTimeouts();
+      expect(timeouts.length).toEqual(2);
+      expect(timeouts[1]).toEqual(param.id + ReminderType.appointmentLongReminder);
+    });
+
+    // eslint-disable-next-line max-len
+    it('should add appointment long alert for an existing appointment if starts in more than 1 day', async () => {
+      const param = generateParam(faker.date.soon(1));
+      await scheduler.registerAppointmentAlert(param);
+      let timeouts = schedulerRegistry.getTimeouts();
+      expect(timeouts.length).toEqual(1);
+      expect(timeouts[0]).toEqual(param.id + ReminderType.appointmentReminder);
+
+      const updateParam = cloneDeep(param);
+      updateParam.start = add(faker.date.soon(1), { days: 2 });
+
+      await scheduler.registerAppointmentAlert(updateParam);
+
+      timeouts = schedulerRegistry.getTimeouts();
+
+      expect(timeouts.length).toEqual(2);
+      expect(timeouts[1]).toEqual(param.id + ReminderType.appointmentLongReminder);
     });
   });
 

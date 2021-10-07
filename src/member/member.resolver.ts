@@ -476,6 +476,7 @@ export class MemberResolver extends MemberBase {
     userId: string,
   ): Promise<{ member: Member; memberConfig: MemberConfig; user: User }> {
     const member = await this.memberService.get(memberId);
+    member.zipCode = member.zipCode || member.org.zipCode;
     if (!member) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }

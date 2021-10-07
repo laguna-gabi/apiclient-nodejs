@@ -43,10 +43,15 @@ describe('MemberScheduler', () => {
   const clear = async () => {
     const timeouts = schedulerRegistry.getTimeouts();
     timeouts.map((timeout) => schedulerRegistry.deleteTimeout(timeout));
+    await internalSchedulerService.resetLeader(LeaderType.member);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    scheduler.amITheLeader = false;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
 
     //Clearing test inserts
     await notifyParamsModel.deleteMany({});
-    await internalSchedulerService.resetLeader(LeaderType.member);
   };
 
   const generateParams = (when: Date = faker.date.soon()): NotifyParams => {

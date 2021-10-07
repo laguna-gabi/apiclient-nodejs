@@ -3,13 +3,19 @@ import * as jwt from 'jsonwebtoken';
 import { Identifier } from '../src/common';
 import { UserRole, UserService } from '../src/user';
 import {
-  delay, generateAvailabilityInput,
+  delay,
+  generateAvailabilityInput,
   generateCreateMemberParams,
   generateCreateTaskParams,
-  generateCreateUserParams, generateDateOnly, generateNotesParams, generateOrgParams,
+  generateCreateUserParams,
+  generateDateOnly,
+  generateNotesParams,
+  generateOrgParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
-  generateSetGeneralNotesParams, generateUpdateMemberParams
+  generateSetGeneralNotesParams,
+  generateUpdateMemberParams,
+  generateZipCode,
 } from '../test';
 import { Mutations } from '../test/aux/mutations';
 import { Queries } from '../test/aux/queries';
@@ -65,7 +71,7 @@ async function main() {
   const memberParams = generateCreateMemberParams({
     orgId: org.id,
     email: faker.internet.email(),
-    zipCode: faker.address.zipCode(),
+    zipCode: generateZipCode(),
     dischargeDate: generateDateOnly(faker.date.future(1)),
   });
 
@@ -141,7 +147,6 @@ async function main() {
 /**************************************************************************************************
  **************************************** Internal methods ****************************************
  *************************************************************************************************/
-
 
 const createUser = async (roles: UserRole[], userText: string): Promise<Identifier> => {
   const { id } = await mutations.createUser({

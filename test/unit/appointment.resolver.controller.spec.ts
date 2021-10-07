@@ -19,6 +19,7 @@ import {
 } from '../index';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
+  ReminderType,
   AppointmentStatus,
   EventType,
   IEventUpdatedAppointment,
@@ -231,7 +232,12 @@ describe('AppointmentResolver', () => {
 
       const result = await resolver.endAppointment({ id: appointment.id });
       expect(spyOnServiceEnd).toBeCalledWith({ id: appointment.id });
-      expect(spyOnSchedulerDeleteTimeoutAlert).toBeCalledWith({ id: appointment.id });
+      expect(spyOnSchedulerDeleteTimeoutAlert).toHaveBeenNthCalledWith(1, {
+        id: appointment.id + ReminderType.appointmentReminder,
+      });
+      expect(spyOnSchedulerDeleteTimeoutAlert).toHaveBeenNthCalledWith(2, {
+        id: appointment.id + ReminderType.appointmentLongReminder,
+      });
       expect(result).toEqual(appointment);
     });
 

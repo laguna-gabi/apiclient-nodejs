@@ -12,6 +12,7 @@ import {
 } from '.';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import {
+  ReminderType,
   EventType,
   IEventRequestAppointment,
   IEventUpdatedAppointment,
@@ -81,7 +82,12 @@ export class AppointmentResolver extends AppointmentBase {
     };
     this.eventEmitter.emit(EventType.updatedAppointment, eventParams);
 
-    await this.appointmentScheduler.deleteTimeout({ id: appointment.id });
+    await this.appointmentScheduler.deleteTimeout({
+      id: appointment.id + ReminderType.appointmentReminder,
+    });
+    await this.appointmentScheduler.deleteTimeout({
+      id: appointment.id + ReminderType.appointmentLongReminder,
+    });
 
     return appointment;
   }
