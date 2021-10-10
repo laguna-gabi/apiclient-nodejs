@@ -92,7 +92,7 @@ export class MemberScheduler extends BaseScheduler {
 
         this.eventEmitter.emit(EventType.notify, params);
         this.deleteTimeout({ id: memberId });
-        this.registerNewRegisteredMemberNudgeNotify({ memberId, userId, firstLoggedInAt });
+        await this.registerNewRegisteredMemberNudgeNotify({ memberId, userId, firstLoggedInAt });
       }, milliseconds);
       this.schedulerRegistry.addTimeout(memberId, timeout);
     }
