@@ -3,14 +3,12 @@ import { Types } from 'mongoose';
 import { CreateUserParams, defaultUserParams, User, UserRole } from '../src/user';
 import {
   AppointmentCompose,
-  CancelNotificationMetadata,
   CancelNotifyParams,
   CreateMemberParams,
   CreateTaskParams,
   defaultMemberParams,
   Member,
   MemberConfig,
-  NotificationMetadata,
   NotifyParams,
   SetGeneralNotesParams,
   Sex,
@@ -26,6 +24,7 @@ import {
   Notes,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
+  Scores,
   UpdateNotesParams,
 } from '../src/appointment';
 import { CreateOrgParams, OrgType } from '../src/org';
@@ -50,19 +49,7 @@ export const generateCreateUserParams = ({
   title = faker.name.title(),
   maxCustomers = defaultUserParams.maxCustomers,
   languages = [Language.en, Language.es],
-}: {
-  id?: string;
-  roles?: UserRole[];
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  avatar?: string;
-  description?: string;
-  phone?: string;
-  title?: string;
-  maxCustomers?: number;
-  languages?: Language[];
-} = {}): CreateUserParams => {
+}: Partial<CreateUserParams> = {}): CreateUserParams => {
   return {
     id,
     firstName,
@@ -85,14 +72,7 @@ export const generateMemberConfig = ({
   isPushNotificationsEnabled = true,
   accessToken = generateId(),
   firstLoggedInAt = faker.date.past(1),
-}: {
-  memberId?: Types.ObjectId;
-  externalUserId?: string;
-  isPushNotificationsEnabled?: boolean;
-  platform?: Platform;
-  accessToken?: string;
-  firstLoggedInAt?: Date;
-} = {}): MemberConfig => {
+}: Partial<MemberConfig> = {}): MemberConfig => {
   return {
     memberId,
     externalUserId,
@@ -133,11 +113,7 @@ export const generateGetSlotsParams = ({
   userId = null,
   appointmentId = null,
   notBefore = null,
-}: {
-  userId?: string;
-  appointmentId?: string;
-  notBefore?: Date;
-} = {}): GetSlotsParams => {
+}: Partial<GetSlotsParams> = {}): GetSlotsParams => {
   return {
     userId,
     appointmentId,
@@ -157,19 +133,7 @@ export const generateCreateMemberParams = ({
   zipCode = generateZipCode(),
   dischargeDate,
   honorific,
-}: {
-  phone?: string;
-  firstName?: string;
-  lastName?: string;
-  dateOfBirth?: string;
-  orgId: string;
-  sex?: Sex;
-  email?: string;
-  language?: Language;
-  zipCode?: string;
-  dischargeDate?: string;
-  honorific?: string;
-}): CreateMemberParams => {
+}: Partial<CreateMemberParams> & { orgId: string }): CreateMemberParams => {
   return {
     phone,
     firstName,
@@ -228,25 +192,7 @@ export const generateUpdateMemberParams = ({
   },
   honorific = getHonorificKeyName(),
   deviceId = faker.datatype.uuid(),
-}: {
-  id?: string;
-  firstName?: string;
-  lastName?: string;
-  sex?: Sex;
-  email?: string;
-  language?: Language;
-  zipCode?: string;
-  dischargeDate?: string;
-  fellowName?: string;
-  drgDesc?: string;
-  readmissionRisk?: string;
-  phoneSecondary?: string;
-  admitDate?: string;
-  dateOfBirth?: string;
-  address?: { street?: string; city?: string; state?: string };
-  honorific?: string;
-  deviceId?: string;
-} = {}): UpdateMemberParams => {
+}: Partial<UpdateMemberParams> = {}): UpdateMemberParams => {
   return {
     id,
     firstName,
@@ -283,14 +229,14 @@ export const generateCreateTaskParams = ({
   memberId = generateId(),
   title = faker.lorem.words(2),
   deadline = faker.date.soon(3),
-}: { memberId?: string; title?: string; deadline?: Date } = {}): CreateTaskParams => {
+}: Partial<CreateTaskParams> = {}): CreateTaskParams => {
   return { memberId, title, deadline };
 };
 
 export const generateUpdateTaskStatusParams = ({
   id = generateId(),
   status = TaskStatus.reached,
-}: { id?: string; status?: TaskStatus } = {}): UpdateTaskStatusParams => {
+}: Partial<UpdateTaskStatusParams> = {}): UpdateTaskStatusParams => {
   return { id, status };
 };
 
@@ -298,11 +244,7 @@ export const generateRequestAppointmentParams = ({
   userId = v4(),
   memberId = generateId(),
   notBefore = faker.date.soon(3),
-}: {
-  userId?: string;
-  memberId?: string;
-  notBefore?: Date;
-} = {}): RequestAppointmentParams => {
+}: Partial<RequestAppointmentParams> = {}): RequestAppointmentParams => {
   return { userId, memberId, notBefore };
 };
 
@@ -313,14 +255,7 @@ export const generateScheduleAppointmentParams = ({
   method = AppointmentMethod.chat,
   start = faker.date.soon(4),
   end,
-}: {
-  id?: string;
-  userId?: string;
-  memberId?: string;
-  method?: AppointmentMethod;
-  start?: Date;
-  end?: Date;
-} = {}): ScheduleAppointmentParams => {
+}: Partial<ScheduleAppointmentParams> = {}): ScheduleAppointmentParams => {
   const endNew = new Date(start);
   endNew.setHours(endNew.getHours() + 2);
   return { id, userId, memberId, method, start, end: end || endNew };
@@ -331,12 +266,7 @@ export const generateEndAppointmentParams = ({
   noShow = true,
   noShowReason = faker.lorem.sentence(),
   notes = generateNotesParams(),
-}: {
-  id?: string;
-  noShow?: boolean;
-  noShowReason?: string;
-  notes?: Notes;
-} = {}): EndAppointmentParams => {
+}: Partial<EndAppointmentParams> = {}): EndAppointmentParams => {
   return { id, noShow, noShowReason, notes };
 };
 
@@ -349,16 +279,7 @@ export const generateNotesParams = ({
   adherenceText = faker.lorem.sentence(),
   wellbeing = faker.datatype.number({ min: 1, max: 10 }),
   wellbeingText = faker.lorem.sentence(),
-}: {
-  recap?: string;
-  strengths?: string;
-  userActionItem?: string;
-  memberActionItem?: string;
-  adherence?: number;
-  adherenceText?: string;
-  wellbeing?: number;
-  wellbeingText?: string;
-} = {}): Notes => {
+}: Partial<Notes & Scores> = {}): Notes => {
   return {
     recap,
     strengths,
@@ -376,10 +297,7 @@ export const generateNotesParams = ({
 export const generateUpdateNotesParams = ({
   appointmentId = generateId(),
   notes = generateNotesParams(),
-}: {
-  appointmentId?: string;
-  notes?: Notes;
-} = {}): UpdateNotesParams => {
+}: Partial<UpdateNotesParams> = {}): UpdateNotesParams => {
   return { appointmentId, notes };
 };
 
@@ -388,12 +306,7 @@ export const generateOrgParams = ({
   name = `${faker.lorem.word()}.${faker.datatype.uuid()}`,
   trialDuration = faker.datatype.number({ min: 1, max: 100 }),
   zipCode = generateZipCode(),
-}: {
-  type?: OrgType;
-  name?: string;
-  trialDuration?: number;
-  zipCode?: string;
-} = {}): CreateOrgParams => {
+}: Partial<CreateOrgParams> = {}): CreateOrgParams => {
   return { type, name, trialDuration: trialDuration, zipCode };
 };
 
@@ -435,11 +348,7 @@ export const generateAvailabilityInput = ({
   userId = v4(),
   start = faker.date.soon(),
   end,
-}: {
-  userId?: string;
-  start?: Date;
-  end?: Date;
-} = {}): AvailabilityInput => {
+}: Partial<AvailabilityInput> = {}): AvailabilityInput => {
   const endNew = new Date(start);
   endNew.setHours(endNew.getHours() + 5);
   return { userId, start, end: end || endNew };
@@ -448,7 +357,7 @@ export const generateAvailabilityInput = ({
 export const generateGetCommunicationParams = ({
   userId = v4(),
   memberId = generateId(),
-}: { userId?: string; memberId?: string } = {}): GetCommunicationParams => {
+}: Partial<GetCommunicationParams> = {}): GetCommunicationParams => {
   return { userId, memberId };
 };
 
@@ -471,7 +380,7 @@ export const generatePath = (type: NotificationType) => {
 export const generateSetGeneralNotesParams = ({
   memberId = generateId(),
   note = faker.lorem.sentence(),
-}: { memberId?: string; note?: string } = {}): SetGeneralNotesParams => {
+}: Partial<SetGeneralNotesParams> = {}): SetGeneralNotesParams => {
   return { memberId, note };
 };
 
@@ -484,12 +393,7 @@ export const generateNotifyParams = ({
   memberId = generateId(),
   type = NotificationType.call,
   metadata = { peerId: v4(), content: 'test' },
-}: {
-  userId?: string;
-  memberId?: string;
-  type?: NotificationType;
-  metadata?: NotificationMetadata;
-} = {}): NotifyParams => {
+}: Partial<NotifyParams> = {}): NotifyParams => {
   return { userId, memberId, type, metadata };
 };
 
@@ -498,12 +402,7 @@ export const generateCancelNotifyParams = ({
   memberId = generateId(),
   type = CancelNotificationType.cancelCall,
   metadata = { peerId: v4() },
-}: {
-  notificationId?: string;
-  memberId?: string;
-  type?: CancelNotificationType;
-  metadata?: CancelNotificationMetadata;
-} = {}): CancelNotifyParams => {
+}: Partial<CancelNotifyParams> = {}): CancelNotifyParams => {
   return { notificationId, memberId, type, metadata };
 };
 
@@ -530,14 +429,6 @@ export const generateUpdateRecordingParams = ({
   end = faker.date.soon(2),
   answered = true,
   phone = generatePhone(),
-}: {
-  id?: string;
-  memberId?: string;
-  userId?: string;
-  start?: Date;
-  end?: Date;
-  answered?: boolean;
-  phone?: string;
-} = {}): UpdateRecordingParams => {
+}: Partial<UpdateRecordingParams> = {}): UpdateRecordingParams => {
   return { id, memberId, userId, start, end, answered, phone };
 };
