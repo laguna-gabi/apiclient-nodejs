@@ -165,9 +165,10 @@ export class MemberScheduler extends BaseScheduler {
       }),
     );
 
-    this.logger.log(
-      `Finish init scheduler for ${newRegisteredMembers.length} New Registered Members`,
-      MemberScheduler.name,
+    this.logEndInit(
+      newRegisteredMembers.length,
+      'new registered members',
+      this.initRegisterNewRegisteredMemberNotify.name,
     );
   }
 }
