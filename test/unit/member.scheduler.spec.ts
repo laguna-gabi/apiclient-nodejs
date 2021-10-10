@@ -11,8 +11,6 @@ import {
 } from '../index';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import {
-  MemberConfig,
-  MemberConfigDto,
   MemberModule,
   MemberScheduler,
   MemberService,
@@ -27,7 +25,6 @@ import * as config from 'config';
 import { Org, OrgDto } from '../../src/org';
 import { User, UserDto } from '../../src/user';
 import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
-import { sub } from 'date-fns';
 
 describe('MemberScheduler', () => {
   let module: TestingModule;
@@ -38,7 +35,6 @@ describe('MemberScheduler', () => {
   let modelUser: Model<typeof UserDto>;
   let modelOrg: Model<typeof OrgDto>;
   let internalSchedulerService: InternalSchedulerService;
-  let memberConfigModel: Model<typeof MemberConfigDto>;
 
   const days = (config.get('scheduler.maxAlertGapInMin') + 1) * 60 * 1000;
   const whenNotInRange = new Date();
@@ -78,7 +74,6 @@ describe('MemberScheduler', () => {
     service = module.get<MemberService>(MemberService);
     modelUser = model(User.name, UserDto);
     modelOrg = model(Org.name, OrgDto);
-    memberConfigModel = model(MemberConfig.name, MemberConfigDto);
 
     scheduler = module.get<MemberScheduler>(MemberScheduler);
     notifyParamsModel = model(NotifyParams.name, NotifyParamsDto);
@@ -146,32 +141,29 @@ describe('MemberScheduler', () => {
           await clear();
         });
 
-        it.only('should register new registered member notifications', async () => {
+        it('should register new registered member notifications', async () => {
           await scheduler.init();
 
-          const newRegisteredMembers = await memberConfigModel.aggregate([
-            {
-              $match: {
-                firstLoggedInAt: { $gte: sub(new Date(), { days: 1 }) },
-              },
-            },
-            {
-              $lookup: {
-                from: 'members',
-                localField: 'memberId',
-                foreignField: '_id',
-                as: 'member',
-              },
-            },
-            {
-              $unwind: {
-                path: '$member',
-              },
-            },
-          ]);
+          const newRegisteredMembers = await service.getNewRegisteredMembers({ nudge: false });
 
           expect(schedulerRegistry.getTimeouts()).toEqual(
-            expect.arrayContaining(newRegisteredMembers.map((member) => member._id)),
+            expect.arrayContaining(newRegisteredMembers.map(({ member }) => member.id)),
+          );
+        }, 10000);
+      });
+
+      describe('registerNewRegisteredMemberNudgeNotify', () => {
+        afterEach(async () => {
+          await clear();
+        });
+
+        it('should register new registered member nudge notifications', async () => {
+          await scheduler.init();
+
+          const newRegisteredMembers = await service.getNewRegisteredMembers({ nudge: true });
+
+          expect(schedulerRegistry.getTimeouts()).toEqual(
+            expect.arrayContaining(newRegisteredMembers.map(({ member }) => member.id)),
           );
         }, 10000);
       });

@@ -51,6 +51,7 @@
     "downloadPageWithoutOrg": "Hello @member.honorific@ @member.lastName@, I'm @user.firstName@ from Laguna Health. We are here to provide you free post-hospital recovery support. Click below to schedule the first visit: @downloadLink@",
     "newMemberNudge": "Hello @member.honorific@ @member.lastName@, I'm @user.firstName@ from Laguna Health. Friendly reminder to schedule your first visit: @downloadLink@",
     "newRegisteredMember": "Welcome to Laguna Health. To get started on your recovery journey schedule a meeting with your coach here",
+    "newRegisteredMemberNudge": "Friendly reminder from @user.firstName@ at Laguna Health. I'm looking forward to supporting you on your recovery journey. To get started schedule your first visit here",
     "honorific": {
       "mr": "Mr",
       "mrs": "Mrs",

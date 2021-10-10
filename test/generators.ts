@@ -71,7 +71,7 @@ export const generateMemberConfig = ({
   platform = Platform.ios,
   isPushNotificationsEnabled = true,
   accessToken = generateId(),
-  firstLoggedInAt = faker.date.past(1),
+  firstLoggedInAt = faker.date.past(2),
 }: Partial<MemberConfig> = {}): MemberConfig => {
   return {
     memberId,
@@ -221,7 +221,7 @@ export const mockGenerateMemberConfig = (): MemberConfig => {
     platform: Platform.ios,
     isPushNotificationsEnabled: true,
     accessToken: generateId(),
-    firstLoggedInAt: faker.date.past(1),
+    firstLoggedInAt: faker.date.past(2),
   };
 };
 

@@ -216,6 +216,23 @@ export class MemberService extends BaseService {
    ******************************************* Scheduler *******************************************
    ************************************************************************************************/
 
+  private ScheduledOrDoneAppointmentsCount = {
+    ScheduledOrDoneAppointmentsCount: {
+      $size: {
+        $filter: {
+          input: '$appointments',
+          as: 'appointments',
+          cond: {
+            $or: [
+              { $eq: ['$$appointments.status', 'done'] },
+              { $eq: ['$$appointments.status', 'scheduled'] },
+            ],
+          },
+        },
+      },
+    },
+  };
+
   async getNewUnregisteredMembers() {
     const result = await this.memberModel.aggregate([
       { $match: { createdAt: { $gte: sub(new Date(), { days: 2 }) } } },
@@ -240,18 +257,18 @@ export class MemberService extends BaseService {
       },
       {
         $lookup: {
-          from: 'appointments',
-          localField: 'member._id',
-          foreignField: 'memberId',
-          as: 'appointments',
-        },
-      },
-      {
-        $lookup: {
           from: 'users',
           localField: 'primaryUserId',
           foreignField: 'member._id',
           as: 'user',
+        },
+      },
+      {
+        $lookup: {
+          from: 'appointments',
+          localField: 'member._id',
+          foreignField: 'memberId',
+          as: 'appointments',
         },
       },
       {
@@ -264,20 +281,7 @@ export class MemberService extends BaseService {
               $arrayElemAt: ['$appointments._id', 0],
             },
           },
-          ScheduledOrDoneAppointments: {
-            $size: {
-              $filter: {
-                input: '$appointments',
-                as: 'appointments',
-                cond: {
-                  $or: [
-                    { $eq: ['$$appointments.status', 'done'] },
-                    { $eq: ['$$appointments.status', 'scheduled'] },
-                  ],
-                },
-              },
-            },
-          },
+          ...this.ScheduledOrDoneAppointmentsCount,
         },
       },
     ]);
@@ -286,9 +290,64 @@ export class MemberService extends BaseService {
       newMember.member.id = newMember.member._id;
       delete newMember.user._id;
       delete newMember.member._id;
-      return newMember.ScheduledOrDoneAppointments === 0;
+      return newMember.ScheduledOrDoneAppointmentsCount === 0;
     });
     return newUnregisteredMembers;
+  }
+
+  async getNewRegisteredMembers({ nudge }: { nudge: boolean }) {
+    const result = await this.memberConfigModel.aggregate([
+      {
+        $match: {
+          firstLoggedInAt: nudge
+            ? {
+                $gte: sub(new Date(), { days: 3 }),
+                $lte: sub(new Date(), { days: 1 }),
+              }
+            : {
+                $gte: sub(new Date(), { days: 1 }),
+              },
+        },
+      },
+      { $project: { memberConfig: '$$ROOT' } },
+      {
+        $lookup: {
+          from: 'members',
+          localField: 'memberConfig.memberId',
+          foreignField: '_id',
+          as: 'member',
+        },
+      },
+      {
+        $unwind: {
+          path: '$member',
+        },
+      },
+      {
+        $lookup: {
+          from: 'appointments',
+          localField: 'memberConfig.memberId',
+          foreignField: 'memberId',
+          as: 'appointments',
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          memberConfig: 1,
+          member: 1,
+          ...this.ScheduledOrDoneAppointmentsCount,
+        },
+      },
+    ]);
+    const newRegisteredMembers = result.filter((newMember) => {
+      newMember.memberConfig.id = newMember.memberConfig._id;
+      newMember.member.id = newMember.member._id;
+      delete newMember.memberConfig._id;
+      delete newMember.member._id;
+      return newMember.ScheduledOrDoneAppointmentsCount === 0;
+    });
+    return newRegisteredMembers;
   }
 
   /*************************************************************************************************

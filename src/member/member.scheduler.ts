@@ -9,7 +9,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MemberConfig, MemberConfigDocument, MemberService } from '.';
 import { Bitly } from '../providers';
 import { BaseScheduler, InternalSchedulerService, LeaderType } from '../scheduler';
-import { add, sub } from 'date-fns';
+import { add } from 'date-fns';
 import * as config from 'config';
 
 @Injectable()
@@ -40,6 +40,7 @@ export class MemberScheduler extends BaseScheduler {
       await this.initRegisterCustomFutureNotify();
       await this.initRegisterNewMemberNudge();
       await this.initRegisterNewRegisteredMemberNotify();
+      await this.initRegisterNewRegisteredMemberNudgeNotify();
     });
   }
 
@@ -91,6 +92,32 @@ export class MemberScheduler extends BaseScheduler {
 
         this.eventEmitter.emit(EventType.notify, params);
         this.deleteTimeout({ id: memberId });
+        this.registerNewRegisteredMemberNudgeNotify({ memberId, userId, firstLoggedInAt });
+      }, milliseconds);
+      this.schedulerRegistry.addTimeout(memberId, timeout);
+    }
+  }
+
+  public async registerNewRegisteredMemberNudgeNotify({
+    memberId,
+    userId,
+    firstLoggedInAt,
+  }: {
+    memberId: string;
+    userId: string;
+    firstLoggedInAt: Date;
+  }) {
+    const milliseconds = add(firstLoggedInAt, { days: 3 }).getTime() - Date.now();
+    if (milliseconds > 0) {
+      const timeout = setTimeout(async () => {
+        this.logger.log(`${memberId}: notifying new registered member nudge`, MemberScheduler.name);
+        const metadata = {
+          content: `${config.get('contents.newRegisteredMemberNudge')}`,
+        };
+        const params: NotifyParams = { memberId, userId, type: NotificationType.text, metadata };
+
+        this.eventEmitter.emit(EventType.notify, params);
+        this.deleteTimeout({ id: memberId });
       }, milliseconds);
       this.schedulerRegistry.addTimeout(memberId, timeout);
     }
@@ -119,8 +146,7 @@ export class MemberScheduler extends BaseScheduler {
 
   private async initRegisterNewMemberNudge() {
     const newUnregisteredMembers = await this.memberService.getNewUnregisteredMembers();
-    newUnregisteredMembers.map(async (newMember) => {
-      const { member, user, appointmentId } = newMember;
+    newUnregisteredMembers.map(async ({ member, user, appointmentId }) => {
       await this.registerNewMemberNudge({
         member,
         user,
@@ -135,40 +161,38 @@ export class MemberScheduler extends BaseScheduler {
   }
 
   private async initRegisterNewRegisteredMemberNotify() {
-    const newRegisteredMembers = await this.memberConfigModel.aggregate([
-      {
-        $match: {
-          firstLoggedInAt: { $gte: sub(new Date(), { days: 1 }) },
-        },
-      },
-      {
-        $lookup: {
-          from: 'members',
-          localField: 'memberId',
-          foreignField: '_id',
-          as: 'member',
-        },
-      },
-      {
-        $unwind: {
-          path: '$member',
-        },
-      },
-    ]);
+    const newRegisteredMembers = await this.memberService.getNewRegisteredMembers({ nudge: false });
     await Promise.all(
-      newRegisteredMembers.map(async ({ _id, firstLoggedInAt, member }) => {
+      newRegisteredMembers.map(async ({ memberConfig, member }) => {
         return this.registerNewRegisteredMemberNotify({
-          memberId: _id,
+          memberId: member.id,
           userId: member.primaryUserId,
-          firstLoggedInAt,
+          firstLoggedInAt: memberConfig.firstLoggedInAt,
         });
       }),
     );
-
     this.logEndInit(
       newRegisteredMembers.length,
       'new registered members',
       this.initRegisterNewRegisteredMemberNotify.name,
+    );
+  }
+
+  private async initRegisterNewRegisteredMemberNudgeNotify() {
+    const newRegisteredMembers = await this.memberService.getNewRegisteredMembers({ nudge: true });
+    await Promise.all(
+      newRegisteredMembers.map(async ({ memberConfig, member }) => {
+        return this.registerNewRegisteredMemberNudgeNotify({
+          memberId: member.id,
+          userId: member.primaryUserId,
+          firstLoggedInAt: memberConfig.firstLoggedInAt,
+        });
+      }),
+    );
+    this.logEndInit(
+      newRegisteredMembers.length,
+      'new registered members nudge',
+      this.initRegisterNewRegisteredMemberNudgeNotify.name,
     );
   }
 }
