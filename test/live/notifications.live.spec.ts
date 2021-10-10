@@ -12,7 +12,10 @@ import * as faker from 'faker';
 import { delay } from '../common';
 import { generatePath, generatePhone } from '../generators';
 
-describe('live: notifications (one signal)', () => {
+/**
+ * one signal is very unstable, disabling this test, open only for internal debugging
+ */
+describe.skip('live: notifications (one signal)', () => {
   let notificationsService: NotificationsService;
   const delayTime = 5000;
   const RETRY_MAX = 5;
