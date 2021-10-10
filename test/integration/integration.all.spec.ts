@@ -966,7 +966,6 @@ describe('Integration tests: all', () => {
         primaryUser,
         users: [primaryUser],
       });
-      console.log(handler.schedulerRegistry.getTimeouts());
       expect(handler.schedulerRegistry.getTimeouts()).toEqual(expect.arrayContaining([member.id]));
     });
 
@@ -985,7 +984,6 @@ describe('Integration tests: all', () => {
         token: 'sampleiospushkittokentest',
       };
       await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
-      console.log(handler.schedulerRegistry.getTimeouts());
       expect(handler.schedulerRegistry.getTimeouts()).toEqual(expect.arrayContaining([member.id]));
     });
 

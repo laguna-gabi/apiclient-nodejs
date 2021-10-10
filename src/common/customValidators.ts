@@ -167,7 +167,6 @@ export function IsNotPlatformWeb(options: ValidationOptions) {
       options,
       validator: {
         validate(platform: Platform) {
-          console.log(platform);
           return platform !== Platform.web;
         },
       },
