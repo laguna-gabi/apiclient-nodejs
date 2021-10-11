@@ -3,7 +3,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Appointment, AppointmentDocument, AppointmentStatus } from '.';
 import { Model } from 'mongoose';
-import { EventType, NotificationType, ReminderType } from '../common';
+import { EventType, Logger, NotificationType, ReminderType } from '../common';
 import { Bitly } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotifyParams } from '../member';
@@ -22,6 +22,7 @@ export class AppointmentScheduler extends BaseScheduler {
     protected readonly schedulerRegistry: SchedulerRegistry,
     protected eventEmitter: EventEmitter2,
     protected readonly bitly: Bitly,
+    protected readonly logger: Logger,
   ) {
     super(
       internalSchedulerService,
@@ -30,6 +31,7 @@ export class AppointmentScheduler extends BaseScheduler {
       bitly,
       LeaderType.appointment,
       AppointmentScheduler.name,
+      logger,
     );
   }
 
@@ -149,7 +151,11 @@ export class AppointmentScheduler extends BaseScheduler {
     const milliseconds = start.getTime() - gapDate.getTime();
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
-        this.logger.log(`${id}: notifying appointment reminder`, AppointmentScheduler.name);
+        this.logger.log(
+          `${id}: notifying appointment reminder`,
+          this.className,
+          AppointmentScheduler.name,
+        );
 
         const chatLink = await this.getChatLink(memberId, userId);
         if (!chatLink) {
@@ -184,10 +190,12 @@ export class AppointmentScheduler extends BaseScheduler {
     const milliseconds = sub(start, { days: 1 }).getTime() - Date.now();
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
-        this.logger.log(`${id}: notifying appointment long reminder`, AppointmentScheduler.name);
-        const metadata = {
-          content: `${config.get('contents.appointmentLongReminder')}`,
-        };
+        this.logger.log(
+          `${id}: notifying appointment long reminder`,
+          this.className,
+          AppointmentScheduler.name,
+        );
+        const metadata = { content: `${config.get('contents.appointmentLongReminder')}` };
         const params: NotifyParams = { memberId, userId, type: NotificationType.text, metadata };
 
         this.eventEmitter.emit(EventType.notify, params);
@@ -207,6 +215,7 @@ export class AppointmentScheduler extends BaseScheduler {
       this.logger.warn(
         `NOT sending appointment reminder since no member-user communication exists ` +
           `for member ${memberId} and user ${userId}`,
+        this.className,
         AppointmentScheduler.name,
       );
       return;

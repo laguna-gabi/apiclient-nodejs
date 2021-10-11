@@ -23,9 +23,10 @@ import { UseInterceptors } from '@nestjs/common';
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => CommunicationInfo)
 export class CommunicationResolver {
-  private readonly logger = new Logger(CommunicationResolver.name);
-
-  constructor(private readonly communicationService: CommunicationService) {}
+  constructor(
+    private readonly communicationService: CommunicationService,
+    private readonly logger: Logger,
+  ) {}
 
   @Query(() => CommunicationInfo, { nullable: true })
   async getCommunication(
@@ -96,7 +97,7 @@ export class CommunicationResolver {
     try {
       return this.communicationService.onUpdatedAppointment(params);
     } catch (ex) {
-      this.logger.error(ex, this.handleUpdatedAppointment.name);
+      this.logger.error(ex, CommunicationResolver.name, this.handleUpdatedAppointment.name);
     }
   }
 

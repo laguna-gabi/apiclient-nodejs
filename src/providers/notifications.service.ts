@@ -15,14 +15,14 @@ import { TwilioService } from './twilio.service';
 @Injectable()
 export class NotificationsService {
   private readonly oneSignal: OneSignal;
-  private logger = new Logger(NotificationsService.name);
 
   constructor(
     private readonly configsService: ConfigsService,
     private readonly httpService: HttpService,
     private readonly twilio: TwilioService,
+    private readonly logger: Logger,
   ) {
-    this.oneSignal = new OneSignal(configsService, httpService);
+    this.oneSignal = new OneSignal(configsService, httpService, logger);
   }
 
   async register({
@@ -44,7 +44,11 @@ export class NotificationsService {
   }): Promise<boolean> {
     const methodName = this.send.name;
     if (sendNotificationToMemberParams) {
-      this.logger.debug(this.logger.getCalledLog(sendNotificationToMemberParams), methodName);
+      this.logger.debug(
+        this.logger.getCalledLog(sendNotificationToMemberParams),
+        NotificationsService.name,
+        methodName,
+      );
       const { platform, isPushNotificationsEnabled, data, metadata } =
         sendNotificationToMemberParams;
 
@@ -68,7 +72,11 @@ export class NotificationsService {
     }
 
     if (sendNotificationToUserParams) {
-      this.logger.debug(this.logger.getCalledLog(sendNotificationToUserParams), methodName);
+      this.logger.debug(
+        this.logger.getCalledLog(sendNotificationToUserParams),
+        NotificationsService.name,
+        methodName,
+      );
       return this.twilio.send({
         body: sendNotificationToUserParams.metadata.content,
         to: sendNotificationToUserParams.data.user.phone,

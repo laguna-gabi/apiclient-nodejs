@@ -13,22 +13,28 @@ import { generateAvailabilityInput } from './../generators';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
 import { Creators } from '../aux/creators';
 import { Handler } from '../aux/handler';
-import { slackChannel, SlackIcon } from '../../src/common';
+import { EventType, SlackChannel, SlackIcon } from '../../src/common';
 
 describe('Integration tests : getUserSlots', () => {
   const handler: Handler = new Handler();
   let creators: Creators;
   let appointmentsActions: AppointmentsIntegrationActions;
+  let spyOnEventEmitter;
 
   beforeAll(async () => {
     await handler.beforeAll();
     appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
     creators = new Creators(handler, appointmentsActions);
     handler.mockCommunication();
+    spyOnEventEmitter = jest.spyOn(handler.eventEmitter, 'emit');
   });
 
   afterAll(async () => {
     await handler.afterAll();
+  });
+
+  afterEach(async () => {
+    spyOnEventEmitter.mockReset();
   });
 
   it('should return objects with all slots', async () => {
@@ -212,7 +218,6 @@ describe('Integration tests : getUserSlots', () => {
 
   // eslint-disable-next-line max-len
   it('should return 6 default slots and send message to slack if availability in the past', async () => {
-    handler.slackBot.spyOnSlackBotSendMessage.mockReset();
     const { primaryUser, member } = await createUserMember();
 
     await handler.mutations.createAvailabilities({
@@ -238,16 +243,17 @@ describe('Integration tests : getUserSlots', () => {
     });
 
     expect(result.slots.length).toEqual(6);
-    expect(handler.slackBot.spyOnSlackBotSendMessage).toBeCalledWith({
+    expect(spyOnEventEmitter).toBeCalledWith(EventType.slackMessage, {
       message: `*No availability*\nUser ${primaryUser.id}`,
       icon: SlackIcon.warning,
-      channel: slackChannel.notifications,
+      channel: SlackChannel.notifications,
     });
+
+    spyOnEventEmitter.mockReset();
   });
 
   // eslint-disable-next-line max-len
   it('should return 6 default slots and send message to slack if there is no availability', async () => {
-    handler.slackBot.spyOnSlackBotSendMessage.mockReset();
     const { primaryUser, member } = await createUserMember();
 
     await appointmentsActions.scheduleAppointmentWithDate(
@@ -257,17 +263,21 @@ describe('Integration tests : getUserSlots', () => {
       add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
     );
 
+    spyOnEventEmitter.mockReset();
+
     const result = await handler.queries.getUserSlots({
       userId: primaryUser.id,
       notBefore: add(startOfToday(), { hours: 10 }),
     });
 
     expect(result.slots.length).toEqual(6);
-    expect(handler.slackBot.spyOnSlackBotSendMessage).toBeCalledWith({
+    expect(spyOnEventEmitter).toBeCalledWith(EventType.slackMessage, {
       message: `*No availability*\nUser ${primaryUser.id}`,
       icon: SlackIcon.warning,
-      channel: slackChannel.notifications,
+      channel: SlackChannel.notifications,
     });
+
+    spyOnEventEmitter.mockReset();
   });
 
   it('should return 5 slots from today and the next from tomorrow', async () => {

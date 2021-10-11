@@ -7,16 +7,18 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
  */
 @Controller(`${apiPrefix}/${webhooks}`)
 export class WebhooksController {
-  private readonly logger = new Logger(WebhooksController.name);
-
-  constructor(protected readonly eventEmitter: EventEmitter2) {}
+  constructor(protected readonly eventEmitter: EventEmitter2, private readonly logger: Logger) {}
 
   @Post(`sendbird`)
   async sendbird(@Body() payload) {
     const { user_id: senderUserId } = payload.sender;
     const { channel_url: sendbirdChannelUrl } = payload.channel;
 
-    this.logger.debug(this.logger.getCalledLog(payload), this.sendbird.name);
+    this.logger.debug(
+      this.logger.getCalledLog(payload),
+      WebhooksController.name,
+      this.sendbird.name,
+    );
 
     const event: IEventNotifyChatMessage = { senderUserId, sendbirdChannelUrl };
     this.eventEmitter.emit(EventType.notifyChatMessage, event);

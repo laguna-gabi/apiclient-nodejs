@@ -11,13 +11,12 @@ enum suffix {
 
 @Injectable()
 export class SendBird implements OnModuleInit {
-  private readonly logger = new Logger(SendBird.name);
   private appId;
   private appToken;
   public basePath;
   public headers;
 
-  constructor(private readonly configsService: ConfigsService) {}
+  constructor(private readonly configsService: ConfigsService, private readonly logger: Logger) {}
 
   async onModuleInit(): Promise<void> {
     this.appId = await this.configsService.getConfig(ExternalConfigs.sendbird.apiId);
@@ -39,13 +38,13 @@ export class SendBird implements OnModuleInit {
         .toPromise();
 
       if (result.status === 200) {
-        this.logger.log(`Successfully created a user ${params.user_id}`, methodName);
+        this.logger.log(`Successfully created a user ${params.user_id}`, SendBird.name, methodName);
         return result.data.access_token;
       } else {
-        this.logger.error(`${failure} ${result.status} ${result.data}`, methodName);
+        this.logger.error(`${failure} ${result.status} ${result.data}`, SendBird.name, methodName);
       }
     } catch (ex) {
-      this.logger.error(`${failure} ${ex.config} ${ex.response.data}`, methodName);
+      this.logger.error(`${failure} ${ex.config} ${ex.response.data}`, SendBird.name, methodName);
     }
   }
 
@@ -59,15 +58,15 @@ export class SendBird implements OnModuleInit {
     if (result.status === 200) {
       this.logger.log(
         `Successfully created a group channel for users ${params.user_ids}`,
+        SendBird.name,
         this.createGroupChannel.name,
       );
       return true;
     } else {
       this.logger.error(
-        `Failed to create a group channel`,
+        `Failed to create a group channel status: ${result.status}, data: ${result.data}`,
+        SendBird.name,
         this.createGroupChannel.name,
-        result.status,
-        result.data,
       );
       return false;
     }
@@ -135,7 +134,11 @@ export class SendBird implements OnModuleInit {
     if (result.status === 200) {
       return result.data.unread[userId];
     } else {
-      this.logger.error(`${failure} ${result.status} ${JSON.stringify(result.data)}`, methodName);
+      this.logger.error(
+        `${failure} ${result.status} ${JSON.stringify(result.data)}`,
+        SendBird.name,
+        methodName,
+      );
     }
   }
 }

@@ -18,7 +18,6 @@ export enum LeaderType {
 export class BaseScheduler {
   protected amITheLeader = false;
   protected readonly identifier = v4();
-  protected readonly logger: Logger;
   initCallbacks: () => any;
 
   public constructor(
@@ -28,9 +27,8 @@ export class BaseScheduler {
     protected readonly bitly: Bitly,
     protected readonly leaderType: LeaderType,
     protected readonly className: string,
-  ) {
-    this.logger = new Logger(this.className);
-  }
+    protected readonly logger: Logger,
+  ) {}
 
   protected async init(callbacks) {
     this.initCallbacks = callbacks;
@@ -152,6 +150,7 @@ export class BaseScheduler {
   protected logEndInit(lengthResults: number, customText, methodName: string) {
     this.logger.log(
       `Finish init scheduler ${this.identifier} for ${lengthResults} ${customText}`,
+      this.className,
       methodName,
     );
   }

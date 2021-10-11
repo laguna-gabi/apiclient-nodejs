@@ -6,3 +6,4 @@ export * from './constants';
 export * from './utils';
 export * from './log.service';
 export * from './loggingInterceptor';
+export * from './commonModule';

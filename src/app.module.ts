@@ -5,7 +5,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { UserModule } from './user';
 import { AppointmentModule } from './appointment';
 import { GraphQLError } from 'graphql';
-import { Errors } from './common';
+import { Errors, CommonModule } from './common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { OrgModule } from './org';
 import { TerminusModule } from '@nestjs/terminus';
@@ -25,6 +25,7 @@ const badRequestException = 'Bad Request Exception';
     OrgModule,
     AvailabilityModule,
     CommunicationModule,
+    CommonModule,
     ProvidersModule,
     DbModule,
     TerminusModule,

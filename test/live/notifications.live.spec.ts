@@ -1,5 +1,4 @@
-import { ConfigsService, NotificationsService, TwilioService } from '../../src/providers';
-import { HttpService } from '@nestjs/axios';
+import { NotificationsService } from '../../src/providers';
 import { v4 } from 'uuid';
 import {
   CancelNotificationType,
@@ -9,22 +8,28 @@ import {
   Platform,
 } from '../../src/common';
 import * as faker from 'faker';
-import { delay } from '../common';
+import { dbDisconnect, defaultModules, delay } from '../common';
 import { generatePath, generatePhone } from '../generators';
+import { Test, TestingModule } from '@nestjs/testing';
 
 /**
  * one signal is very unstable, disabling this test, open only for internal debugging
  */
 describe.skip('live: notifications (one signal)', () => {
-  let notificationsService: NotificationsService;
   const delayTime = 5000;
   const RETRY_MAX = 5;
 
-  beforeAll(() => {
-    const configService = new ConfigsService();
-    const httpService = new HttpService();
-    const twilio = new TwilioService(configService);
-    notificationsService = new NotificationsService(configService, httpService, twilio);
+  let module: TestingModule;
+  let notificationsService: NotificationsService;
+
+  beforeAll(async () => {
+    module = await Test.createTestingModule({ imports: defaultModules() }).compile();
+    notificationsService = module.get<NotificationsService>(NotificationsService);
+  });
+
+  afterAll(async () => {
+    await module.close();
+    await dbDisconnect();
   });
 
   it(

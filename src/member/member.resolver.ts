@@ -50,7 +50,6 @@ import * as config from 'config';
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
 export class MemberResolver extends MemberBase {
-  private readonly logger = new Logger(MemberResolver.name);
   private readonly authenticationPrefix = 'Bearer ';
 
   constructor(
@@ -61,6 +60,7 @@ export class MemberResolver extends MemberBase {
     private readonly notificationsService: NotificationsService,
     readonly userService: UserService,
     readonly communicationService: CommunicationService,
+    readonly logger: Logger,
   ) {
     super(memberService, eventEmitter, userService);
   }
@@ -422,7 +422,7 @@ export class MemberResolver extends MemberBase {
 
       await this.notify(notifyParams);
     } catch (ex) {
-      this.logger.error(ex, this.notifyInternal.name);
+      this.logger.error(ex, MemberResolver.name, this.notifyInternal.name);
     }
   }
 
@@ -443,6 +443,7 @@ export class MemberResolver extends MemberBase {
     if (!communication) {
       this.logger.warn(
         `${sendbirdChannelUrl} webhook received from sendbird doesnt exists`,
+        MemberResolver.name,
         this.notifyChatMessage.name,
       );
       return;

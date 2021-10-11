@@ -1,4 +1,4 @@
-import { Platform, UpdatedAppointmentAction } from './interfaces.dto';
+import { Platform, SlackChannel, SlackIcon, UpdatedAppointmentAction } from './interfaces.dto';
 import { Types } from 'mongoose';
 import { Scores, AppointmentStatus } from '../appointment';
 import { Member } from '../member';
@@ -17,6 +17,7 @@ export enum EventType {
   updateMemberPlatform = 'updateMemberPlatform',
   notify = 'notify',
   notifyChatMessage = 'notifyChatMessage',
+  slackMessage = 'slackMessage',
 }
 
 export interface IEventRequestAppointment {
@@ -76,4 +77,10 @@ export interface IEventUpdateMemberPlatform {
 export interface IEventNotifyChatMessage {
   senderUserId: string;
   sendbirdChannelUrl: string;
+}
+
+export interface IEventSlackMessage {
+  message: string;
+  icon: SlackIcon;
+  channel: SlackChannel;
 }

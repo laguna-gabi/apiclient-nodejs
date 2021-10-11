@@ -1,18 +1,19 @@
 import { Module } from '@nestjs/common';
 import {
+  Bitly,
   ConfigsService,
   NotificationsService,
   SendBird,
-  StorageService,
   SlackBot,
+  StorageService,
   TwilioService,
   WebhooksController,
-  Bitly,
 } from '.';
 import { HttpModule } from '@nestjs/axios';
+import { CommonModule } from '../common';
 
 @Module({
-  imports: [HttpModule],
+  imports: [HttpModule, CommonModule],
   providers: [
     Bitly,
     SendBird,

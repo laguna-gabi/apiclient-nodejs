@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ConfigsService, environments, ExternalConfigs } from '.';
+import { ConfigsService, ExternalConfigs } from '.';
 import { HttpService } from '@nestjs/axios';
+import { Environments } from '../common';
 
 @Injectable()
 export class Bitly implements OnModuleInit {
@@ -28,7 +29,7 @@ export class Bitly implements OnModuleInit {
    * 4. production - process.env.NODE_ENV = production - generating a link.
    */
   async shortenLink(url): Promise<string> {
-    if (!process.env.NODE_ENV || process.env.NODE_ENV === environments.test) {
+    if (!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test) {
       return url;
     }
     const data = { long_url: url, group_guid: this.groupGuid };

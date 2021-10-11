@@ -3,30 +3,31 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
   CreateUserParams,
-  NotNullableUserKeys,
-  User,
-  UserDocument,
-  SlotService,
   defaultSlotsParams,
   GetSlotsParams,
   NotNullableSlotsKeys,
+  NotNullableUserKeys,
   Slots,
+  SlotService,
+  User,
+  UserDocument,
 } from '.';
 import {
   BaseService,
   DbErrors,
+  Environments,
   Errors,
   ErrorType,
   EventType,
   IEventNewAppointment,
+  IEventSlackMessage,
   IEventUpdateUserConfig,
-  slackChannel,
+  SlackChannel,
   SlackIcon,
 } from '../common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { cloneDeep } from 'lodash';
 import { UserConfig, UserConfigDocument } from './userConfig.dto';
-import { environments, SlackBot, SlackMessageParams } from '../providers';
 import { add, getHours, startOfTomorrow } from 'date-fns';
 
 @Injectable()
@@ -38,7 +39,6 @@ export class UserService extends BaseService {
     private slotService: SlotService,
     @InjectModel(UserConfig.name)
     private readonly userConfigModel: Model<UserConfigDocument>,
-    private readonly slackBot: SlackBot,
   ) {
     super();
   }
@@ -178,12 +178,12 @@ export class UserService extends BaseService {
 
     if (slotsObject.slots.length === 0) {
       slotsObject.slots = this.generateDefaultSlots();
-      const params: SlackMessageParams = {
+      const params: IEventSlackMessage = {
         message: `*No availability*\nUser ${userId}`,
         icon: SlackIcon.warning,
-        channel: slackChannel.notifications,
+        channel: SlackChannel.notifications,
       };
-      await this.slackBot.sendMessage(params);
+      this.eventEmitter.emit(EventType.slackMessage, params);
     }
 
     return slotsObject;
@@ -249,8 +249,8 @@ export class UserService extends BaseService {
           as: 'member',
         },
       },
-      ...(process.env.NODE_ENV === environments.production ||
-      process.env.NODE_ENV === environments.development
+      ...(process.env.NODE_ENV === Environments.production ||
+      process.env.NODE_ENV === Environments.development
         ? []
         : [{ $limit: 10 }]),
       { $project: { members: { $size: '$member' } } },

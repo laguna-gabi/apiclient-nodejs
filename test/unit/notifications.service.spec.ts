@@ -1,19 +1,26 @@
-import { ConfigsService, NotificationsService, TwilioService } from '../../src/providers';
-import { HttpService } from '@nestjs/axios';
+import { NotificationsService, TwilioService } from '../../src/providers';
 import { v4 } from 'uuid';
 import { NotificationType, Platform, SendNotificationToMemberParams } from '../../src/common';
 import * as faker from 'faker';
 import { generateId, generatePhone } from '../generators';
+import { Test, TestingModule } from '@nestjs/testing';
+import { dbDisconnect, defaultModules } from '../common';
 
 describe('NotificationsService (offline)', () => {
+  let module: TestingModule;
   let notificationsService: NotificationsService;
   let twilio: TwilioService;
 
-  beforeAll(() => {
-    const configService = new ConfigsService();
-    const httpService = new HttpService();
-    twilio = new TwilioService(configService);
-    notificationsService = new NotificationsService(configService, httpService, twilio);
+  beforeAll(async () => {
+    module = await Test.createTestingModule({ imports: defaultModules() }).compile();
+
+    notificationsService = module.get<NotificationsService>(NotificationsService);
+    twilio = module.get<TwilioService>(TwilioService);
+  });
+
+  afterAll(async () => {
+    await module.close();
+    await dbDisconnect();
   });
 
   /* eslint-disable max-len */

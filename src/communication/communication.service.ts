@@ -27,14 +27,13 @@ import { AppointmentStatus } from '../appointment';
 
 @Injectable()
 export class CommunicationService {
-  private readonly logger = new Logger(CommunicationService.name);
-
   constructor(
     @InjectModel(Communication.name)
     private readonly communicationModel: Model<CommunicationDocument>,
     private readonly sendBird: SendBird,
     private eventEmitter: EventEmitter2,
     private readonly twilio: TwilioService,
+    private readonly logger: Logger,
   ) {}
 
   /**
@@ -91,7 +90,7 @@ export class CommunicationService {
         await this.sendBird.freezeGroupChannel(params.channel_url, platform === Platform.web);
       }
     } catch (ex) {
-      this.logger.error(ex, this.connectMemberToUser.name);
+      this.logger.error(ex, CommunicationService.name, this.connectMemberToUser.name);
     }
   }
 
@@ -106,6 +105,7 @@ export class CommunicationService {
     if (!communication) {
       this.logger.warn(
         'NOT updating sendbird appointment metadata since no member-user communication exists',
+        CommunicationService.name,
         this.onUpdatedAppointment.name,
       );
       return;
@@ -137,6 +137,7 @@ export class CommunicationService {
     if (!communication) {
       this.logger.warn(
         'NOT freezing group channel since no member-user communication exists',
+        CommunicationService.name,
         this.onUpdateMemberPlatform.name,
       );
       return;

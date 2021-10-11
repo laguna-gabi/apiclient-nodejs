@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
 import * as config from 'config';
 import { MongooseModuleOptions, MongooseOptionsFactory } from '@nestjs/mongoose';
+import { Environments } from '../../common';
 
 export const ExternalConfigs = {
   aws: {
@@ -36,19 +37,13 @@ export const ExternalConfigs = {
   },
 };
 
-export enum environments {
-  production = 'production',
-  development = 'development',
-  test = 'test',
-}
-
 @Injectable()
 export class ConfigsService implements MongooseOptionsFactory {
   private data;
 
   async createMongooseOptions(): Promise<MongooseModuleOptions> {
     const uri =
-      !process.env.NODE_ENV || process.env.NODE_ENV === environments.test
+      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
         ? config.get('db.connection')
         : await this.getConfig(ExternalConfigs.db.connection);
     return { uri, useFindAndModify: false, useCreateIndex: true, useUnifiedTopology: true };
@@ -65,9 +60,9 @@ export class ConfigsService implements MongooseOptionsFactory {
       const result = await secretsManager
         .getSecretValue({
           SecretId:
-            process.env.NODE_ENV === environments.production
-              ? environments.production
-              : environments.development,
+            process.env.NODE_ENV === Environments.production
+              ? Environments.production
+              : Environments.development,
         })
         .promise();
       this.data = JSON.parse(result.SecretString);

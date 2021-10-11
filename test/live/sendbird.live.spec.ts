@@ -1,4 +1,4 @@
-import { ConfigsService, SendBird } from '../../src/providers';
+import { SendBird } from '../../src/providers';
 import { v4 } from 'uuid';
 import * as faker from 'faker';
 import { CreateSendbirdGroupChannelParams } from '../../src/communication';
@@ -6,14 +6,22 @@ import { UserRole } from '../../src/user';
 import { generateId } from '../generators';
 import { AppointmentStatus } from '../../src/appointment';
 import axios from 'axios';
+import { Test, TestingModule } from '@nestjs/testing';
+import { dbDisconnect, defaultModules } from '../common';
 
 describe('live: sendbird actions', () => {
+  let module: TestingModule;
   let sendBird: SendBird;
 
   beforeAll(async () => {
-    const configService = new ConfigsService();
-    sendBird = new SendBird(configService);
+    module = await Test.createTestingModule({ imports: defaultModules() }).compile();
+    sendBird = module.get<SendBird>(SendBird);
     await sendBird.onModuleInit();
+  });
+
+  afterAll(async () => {
+    await module.close();
+    await dbDisconnect();
   });
 
   /**

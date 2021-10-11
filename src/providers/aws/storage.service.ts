@@ -1,7 +1,13 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
-import { ConfigsService, environments, ExternalConfigs } from '.';
-import { StorageUrlParams, EventType, IEventNewMember, StorageType } from '../../common';
+import { ConfigsService, ExternalConfigs } from '.';
+import {
+  StorageUrlParams,
+  EventType,
+  IEventNewMember,
+  StorageType,
+  Environments,
+} from '../../common';
 import { OnEvent } from '@nestjs/event-emitter';
 import * as config from 'config';
 
@@ -14,7 +20,7 @@ export class StorageService implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     this.bucket =
-      !process.env.NODE_ENV || process.env.NODE_ENV === environments.test
+      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
         ? config.get('storage')
         : await this.configsService.getConfig(ExternalConfigs.aws.memberBucketName);
   }

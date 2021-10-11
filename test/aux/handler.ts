@@ -16,6 +16,7 @@ import { generateId } from '../generators';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
 import { SchedulerRegistry } from '@nestjs/schedule';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -28,6 +29,7 @@ export class Handler {
   notificationsService;
   twilioService;
   slackBot;
+  eventEmitter: EventEmitter2;
   memberModel;
   communicationService: CommunicationService;
   webhooksController: WebhooksController;
@@ -48,6 +50,7 @@ export class Handler {
 
     this.module = moduleFixture.get<GraphQLModule>(GraphQLModule);
     this.schedulerRegistry = moduleFixture.get<SchedulerRegistry>(SchedulerRegistry);
+    this.eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
     const providers = mockProviders(moduleFixture);
     this.sendBird = providers.sendBird;
     this.notificationsService = providers.notificationsService;

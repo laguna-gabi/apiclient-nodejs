@@ -24,6 +24,7 @@ import { ConfigsService, ProvidersModule } from '../providers';
 import { UserModule } from '../user';
 import { CommunicationModule } from '../communication';
 import { InternalSchedulerModule } from '../scheduler';
+import { CommonModule } from '../common';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { InternalSchedulerModule } from '../scheduler';
     InternalSchedulerModule,
     ProvidersModule,
     HttpModule,
+    CommonModule,
     MongooseModule.forFeature([
       { name: Member.name, schema: MemberDto },
       { name: Goal.name, schema: GoalDto },

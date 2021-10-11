@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { NotifyParams, NotifyParamsDocument } from './member.dto';
-import { Errors, ErrorType, EventType, Identifier, NotificationType } from '../common';
+import { Errors, ErrorType, EventType, Identifier, Logger, NotificationType } from '../common';
 import { cloneDeep } from 'lodash';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -24,6 +24,7 @@ export class MemberScheduler extends BaseScheduler {
     protected readonly eventEmitter: EventEmitter2,
     protected readonly bitly: Bitly,
     private readonly memberService: MemberService,
+    protected readonly logger: Logger,
   ) {
     super(
       internalSchedulerService,
@@ -32,6 +33,7 @@ export class MemberScheduler extends BaseScheduler {
       bitly,
       LeaderType.member,
       MemberScheduler.name,
+      logger,
     );
   }
 
@@ -84,7 +86,11 @@ export class MemberScheduler extends BaseScheduler {
     const milliseconds = add(firstLoggedInAt, { days: 1 }).getTime() - Date.now();
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
-        this.logger.log(`${memberId}: notifying new registered member`, MemberScheduler.name);
+        this.logger.log(
+          `${memberId}: notifying new registered member`,
+          this.className,
+          MemberScheduler.name,
+        );
         const metadata = {
           content: `${config.get('contents.newRegisteredMember')}`,
         };
@@ -110,7 +116,11 @@ export class MemberScheduler extends BaseScheduler {
     const milliseconds = add(firstLoggedInAt, { days: 3 }).getTime() - Date.now();
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
-        this.logger.log(`${memberId}: notifying new registered member nudge`, MemberScheduler.name);
+        this.logger.log(
+          `${memberId}: notifying new registered member nudge`,
+          MemberScheduler.name,
+          this.registerNewRegisteredMemberNudgeNotify.name,
+        );
         const metadata = {
           content: `${config.get('contents.newRegisteredMemberNudge')}`,
         };

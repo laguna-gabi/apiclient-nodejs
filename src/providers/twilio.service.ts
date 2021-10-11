@@ -1,12 +1,19 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ConfigsService, environments, ExternalConfigs, SlackBot, SlackMessageParams } from '.';
+import { ConfigsService, ExternalConfigs } from '.';
 import { jwt, Twilio } from 'twilio';
 import * as config from 'config';
-import { Logger, slackChannel, SlackIcon } from '../common';
+import {
+  EventType,
+  IEventSlackMessage,
+  Logger,
+  SlackChannel,
+  SlackIcon,
+  Environments,
+} from '../common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class TwilioService implements OnModuleInit {
-  private readonly logger = new Logger(TwilioService.name);
   private accountSid;
   private appSid;
   private authToken;
@@ -15,13 +22,14 @@ export class TwilioService implements OnModuleInit {
   private client;
   private source;
   private identity;
-  private slackBot: SlackBot;
 
-  constructor(private readonly configsService: ConfigsService) {
+  constructor(
+    private readonly configsService: ConfigsService,
+    private eventEmitter: EventEmitter2,
+    private readonly logger: Logger,
+  ) {
     this.source = config.get('twilio.source');
     this.identity = config.get('twilio.identity');
-    this.slackBot = new SlackBot(configsService);
-    this.slackBot.onModuleInit();
   }
 
   async onModuleInit() {
@@ -34,22 +42,22 @@ export class TwilioService implements OnModuleInit {
   }
 
   async send({ body, to }: { body: string; to: string }) {
-    if (process.env.NODE_ENV === environments.production && !to.startsWith('+972')) {
+    if (process.env.NODE_ENV === Environments.production && !to.startsWith('+972')) {
       /**
        * KEEP return await when its inside try catch
        */
       try {
         return await this.client.messages.create({ body, to, from: this.source });
       } catch (ex) {
-        this.logger.error(ex, this.send.name);
+        this.logger.error(ex, TwilioService.name, this.send.name);
       }
     } else {
-      const params: SlackMessageParams = {
+      const params: IEventSlackMessage = {
         message: `*SMS to ${to}*\n${body}`,
         icon: SlackIcon.phone,
-        channel: slackChannel.testingSms,
+        channel: SlackChannel.testingSms,
       };
-      await this.slackBot.sendMessage(params);
+      this.eventEmitter.emit(EventType.slackMessage, params);
     }
   }
 

@@ -153,7 +153,7 @@ export class CancelNotificationParams {
   };
 }
 
-export enum slackChannel {
+export enum SlackChannel {
   support = 'slack.support',
   testingSms = 'slack.testingSms',
   notifications = 'slack.notifications',
@@ -187,4 +187,10 @@ export interface StorageUrlParams {
   storageType: StorageType;
   memberId: string;
   id: string;
+}
+
+export enum Environments {
+  production = 'production',
+  development = 'development',
+  test = 'test',
 }

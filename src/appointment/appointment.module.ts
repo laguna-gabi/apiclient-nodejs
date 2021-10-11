@@ -14,12 +14,14 @@ import { ProvidersModule } from '../providers';
 import { CommunicationModule } from '../communication';
 import { OrgModule } from '../org';
 import { InternalSchedulerModule } from '../scheduler';
+import { CommonModule } from '../common';
 
 @Module({
   imports: [
     InternalSchedulerModule,
     ProvidersModule,
     CommunicationModule,
+    CommonModule,
     MongooseModule.forFeature([
       { name: Appointment.name, schema: AppointmentDto },
       { name: Notes.name, schema: NotesDto },

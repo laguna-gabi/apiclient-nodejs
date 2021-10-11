@@ -11,10 +11,12 @@ import {
   UserConfigDto,
   UserController,
 } from '.';
+import { CommonModule } from '../common';
 
 @Module({
   imports: [
     ProvidersModule,
+    CommonModule,
     MongooseModule.forFeature([
       { name: User.name, schema: UserDto },
       { name: UserConfig.name, schema: UserConfigDto },

@@ -3,10 +3,9 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { AppointmentScheduler } from './appointment';
 import { MemberScheduler } from './member';
-import { Logger } from './common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { logger: new Logger('Main') });
+  const app = await NestFactory.create(AppModule);
   app.enableCors();
   app.useGlobalPipes(new ValidationPipe({ transform: true })); //Transform is for rest api
   await app.listen(3000);
