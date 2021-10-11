@@ -41,7 +41,7 @@ export class NotificationsService {
   }: {
     sendNotificationToMemberParams?: SendNotificationToMemberParams;
     sendNotificationToUserParams?: SendNotificationToUserParams;
-  }): Promise<boolean> {
+  }): Promise<string> {
     const methodName = this.send.name;
     if (sendNotificationToMemberParams) {
       this.logger.debug(
@@ -77,7 +77,7 @@ export class NotificationsService {
         NotificationsService.name,
         methodName,
       );
-      return this.twilio.send({
+      await this.twilio.send({
         body: sendNotificationToUserParams.metadata.content,
         to: sendNotificationToUserParams.data.user.phone,
       });

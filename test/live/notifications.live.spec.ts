@@ -12,31 +12,31 @@ import { dbDisconnect, defaultModules, delay } from '../common';
 import { generatePath, generatePhone } from '../generators';
 import { Test, TestingModule } from '@nestjs/testing';
 
-/**
- * one signal is very unstable, disabling this test, open only for internal debugging
- */
-describe.skip('live: notifications (one signal)', () => {
-  const delayTime = 5000;
-  const RETRY_MAX = 5;
+describe('live: notifications (one signal)', () => {
+  const delayTime = 25000;
 
-  let module: TestingModule;
-  let notificationsService: NotificationsService;
+  const beforeEachCustom = async () => {
+    const module = await Test.createTestingModule({ imports: defaultModules() }).compile();
+    const notificationsService = module.get<NotificationsService>(NotificationsService);
 
-  beforeAll(async () => {
-    module = await Test.createTestingModule({ imports: defaultModules() }).compile();
-    notificationsService = module.get<NotificationsService>(NotificationsService);
-  });
+    return { module, notificationsService };
+  };
+
+  const afterEachCustom = async (module: TestingModule) => {
+    await module.close();
+  };
 
   afterAll(async () => {
-    await module.close();
     await dbDisconnect();
   });
 
-  it(
+  it.concurrent(
     'should register an ios device on voip onesignal project and send video notification',
     async () => {
+      const { notificationsService, module } = await beforeEachCustom();
       const params = {
-        token: 'sampleiospushkittoken',
+        notificationsService,
+        token: 'sampleiospushkittoken1',
         externalUserId: v4(),
         platform: Platform.ios,
         isPushNotificationsEnabled: true,
@@ -45,15 +45,18 @@ describe.skip('live: notifications (one signal)', () => {
       expect(playerId).not.toBeUndefined();
 
       await sendNotification(params);
+      await afterEachCustom(module);
     },
-    delayTime * RETRY_MAX + 5000,
+    delayTime + 5000,
   );
 
-  it(
+  it.concurrent(
     'should send video notification and then cancel it',
     async () => {
+      const { notificationsService, module } = await beforeEachCustom();
       const params = {
-        token: 'sampleioscancelkittoken',
+        notificationsService,
+        token: 'sampleiospushkittoken2',
         externalUserId: v4(),
         platform: Platform.ios,
         isPushNotificationsEnabled: true,
@@ -76,13 +79,16 @@ describe.skip('live: notifications (one signal)', () => {
           notificationId: result,
         },
       });
+      await afterEachCustom(module);
     },
-    delayTime * RETRY_MAX + 6000,
+    delayTime + 6000,
   );
 
-  it('should throw an error for not existing notificationId', async () => {
+  it.concurrent('should throw an error for not existing notificationId', async () => {
+    const { notificationsService, module } = await beforeEachCustom();
     const params = {
-      token: 'sampleioscancelkittoken',
+      notificationsService,
+      token: 'sampleiospushkittoken3',
       externalUserId: v4(),
       platform: Platform.ios,
       isPushNotificationsEnabled: true,
@@ -102,6 +108,7 @@ describe.skip('live: notifications (one signal)', () => {
         },
       }),
     ).rejects.toThrow(Errors.get(ErrorType.notificationNotFound));
+    await afterEachCustom(module);
   });
 
   /* eslint-disable max-len */
@@ -113,90 +120,90 @@ describe.skip('live: notifications (one signal)', () => {
    * one signal is 'un-subscribed' which will cause the `send` api to return 400 http response.
    */
   /* eslint-enable max-len */
-  it.skip('should send android video notification for default onesignal project', async () => {
-    const params = {
-      externalUserId: 'eb0ef495-0e63-4a48-b45a-a58248f6b775',
-      platform: Platform.android,
-      isPushNotificationsEnabled: true,
-    };
+  it.concurrent.skip(
+    'should send android video notification for default onesignal project',
+    async () => {
+      const { notificationsService, module } = await beforeEachCustom();
+      const params = {
+        externalUserId: 'eb0ef495-0e63-4a48-b45a-a58248f6b775',
+        platform: Platform.android,
+        isPushNotificationsEnabled: true,
+      };
 
-    const result = await notificationsService.send({
-      sendNotificationToMemberParams: {
-        externalUserId: params.externalUserId,
-        platform: params.platform,
-        isPushNotificationsEnabled: params.isPushNotificationsEnabled,
-        data: {
-          user: {
-            id: faker.datatype.uuid(),
-            firstName: faker.name.firstName(),
-            avatar: faker.image.avatar(),
-          },
-          member: {
-            phone: generatePhone(),
-          },
-          type: NotificationType.call,
-          peerId: v4(),
-          isVideo: false,
-          ...generatePath(NotificationType.call),
-        },
-        metadata: undefined,
-      },
-    });
-
-    expect(result).toBeTruthy();
-  });
-
-  /************************************************************************************************
-   *************************************** Internal methods ***************************************
-   ***********************************************************************************************/
-
-  const sendNotification = async (params: {
-    token: string;
-    externalUserId: string;
-    platform: Platform;
-    isPushNotificationsEnabled: boolean;
-  }) => {
-    let result;
-    let current = 0;
-
-    /**
-     * If sent immediately after registering a device, calling send notification causes an error.
-     * We'll retry and delay sending a notification for a few seconds.
-     * result.data.errors: ["All included players are not subscribed"]
-     */
-    while (current < RETRY_MAX) {
-      await delay(delayTime);
-
-      result = await notificationsService.send({
+      const result = await notificationsService.send({
         sendNotificationToMemberParams: {
           externalUserId: params.externalUserId,
           platform: params.platform,
           isPushNotificationsEnabled: params.isPushNotificationsEnabled,
           data: {
             user: {
-              id: v4(),
+              id: faker.datatype.uuid(),
               firstName: faker.name.firstName(),
               avatar: faker.image.avatar(),
             },
             member: {
               phone: generatePhone(),
             },
-            type: NotificationType.video,
+            type: NotificationType.call,
             peerId: v4(),
-            isVideo: true,
-            path: 'call',
+            isVideo: false,
+            ...generatePath(NotificationType.call),
           },
-          metadata: { peerId: v4(), content: 'test' },
+          metadata: undefined,
         },
       });
 
-      current = result ? RETRY_MAX : current + 1;
-      if (current === RETRY_MAX || result) {
-        expect(result).toMatch(
-          /\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b/,
-        );
-        return result;
-      }
+      expect(result).toBeTruthy();
+      await afterEachCustom(module);
+    },
+  );
+
+  /************************************************************************************************
+   *************************************** Internal methods ***************************************
+   ***********************************************************************************************/
+
+  const sendNotification = async (params: {
+    notificationsService: NotificationsService;
+    token: string;
+    externalUserId: string;
+    platform: Platform;
+    isPushNotificationsEnabled: boolean;
+  }): Promise<string> => {
+    /**
+     * If sent immediately after registering a device, calling send notification causes an error.
+     * We'll retry and delay sending a notification for a few seconds.
+     * result.data.errors: ["All included players are not subscribed"]
+     */
+    await delay(delayTime);
+
+    const result = await params.notificationsService.send({
+      sendNotificationToMemberParams: {
+        externalUserId: params.externalUserId,
+        platform: params.platform,
+        isPushNotificationsEnabled: params.isPushNotificationsEnabled,
+        data: {
+          user: {
+            id: v4(),
+            firstName: faker.name.firstName(),
+            avatar: faker.image.avatar(),
+          },
+          member: {
+            phone: generatePhone(),
+          },
+          type: NotificationType.video,
+          peerId: v4(),
+          isVideo: true,
+          path: 'call',
+        },
+        metadata: { peerId: v4(), content: 'test' },
+      },
+    });
+
+    if (result) {
+      expect(result).toMatch(
+        /\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b/,
+      );
+      return result;
     }
   };
 });
