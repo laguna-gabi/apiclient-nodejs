@@ -148,7 +148,7 @@ export class BaseScheduler {
   }
 
   protected logEndInit(lengthResults: number, customText, methodName: string) {
-    this.logger.log(
+    this.logger.debug(
       {
         schedulerIdentifier: this.identifier,
         lengthResults,

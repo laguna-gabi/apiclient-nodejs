@@ -151,7 +151,7 @@ export class OneSignal {
   private validateRegisterResult(externalUserId, result): string | undefined {
     const methodName = this.register.name;
     if (result.status === 200) {
-      this.logger.log({ externalUserId }, OneSignal.name, methodName);
+      this.logger.debug({ externalUserId }, OneSignal.name, methodName);
       return result.data.id;
     } else {
       this.logger.error({ externalUserId }, OneSignal.name, methodName, result.status);

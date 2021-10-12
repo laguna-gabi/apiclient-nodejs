@@ -86,7 +86,7 @@ export class MemberScheduler extends BaseScheduler {
     const milliseconds = add(firstLoggedInAt, { days: 1 }).getTime() - Date.now();
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
-        this.logger.log(
+        this.logger.debug(
           { memberId, userId, firstLoggedInAt },
           this.className,
           MemberScheduler.name,
@@ -116,7 +116,7 @@ export class MemberScheduler extends BaseScheduler {
     const milliseconds = add(firstLoggedInAt, { days: 3 }).getTime() - Date.now();
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
-        this.logger.log(
+        this.logger.debug(
           { memberId, userId, firstLoggedInAt },
           MemberScheduler.name,
           this.registerNewRegisteredMemberNudgeNotify.name,

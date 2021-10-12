@@ -151,7 +151,7 @@ export class AppointmentScheduler extends BaseScheduler {
     const milliseconds = start.getTime() - gapDate.getTime();
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
-        this.logger.log(
+        this.logger.debug(
           { id, memberId, userId, start, gapDate },
           this.className,
           this.scheduleAppointmentAlert.name,
@@ -190,7 +190,7 @@ export class AppointmentScheduler extends BaseScheduler {
     const milliseconds = sub(start, { days: 1 }).getTime() - Date.now();
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
-        this.logger.log(
+        this.logger.debug(
           { id, memberId, userId, start },
           this.className,
           this.scheduleAppointmentLongAlert.name,

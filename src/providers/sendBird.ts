@@ -37,7 +37,7 @@ export class SendBird implements OnModuleInit {
         .toPromise();
 
       if (result.status === 200) {
-        this.logger.log(params, SendBird.name, methodName);
+        this.logger.debug(params, SendBird.name, methodName);
         return result.data.access_token;
       } else {
         this.logger.error(params, SendBird.name, methodName, result.status, result.data);
@@ -57,7 +57,7 @@ export class SendBird implements OnModuleInit {
         .toPromise();
 
       if (status === 200) {
-        this.logger.log(params, SendBird.name, methodName);
+        this.logger.debug(params, SendBird.name, methodName);
         return true;
       } else {
         this.logger.error(params, SendBird.name, methodName, status, data);
