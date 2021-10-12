@@ -14,11 +14,7 @@ export class WebhooksController {
     const { user_id: senderUserId } = payload.sender;
     const { channel_url: sendbirdChannelUrl } = payload.channel;
 
-    this.logger.debug(
-      this.logger.getCalledLog(payload),
-      WebhooksController.name,
-      this.sendbird.name,
-    );
+    this.logger.debug(payload, WebhooksController.name, this.sendbird.name);
 
     const event: IEventNotifyChatMessage = { senderUserId, sendbirdChannelUrl };
     this.eventEmitter.emit(EventType.notifyChatMessage, event);

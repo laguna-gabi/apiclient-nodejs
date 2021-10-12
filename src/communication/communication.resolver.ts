@@ -97,7 +97,7 @@ export class CommunicationResolver {
     try {
       return this.communicationService.onUpdatedAppointment(params);
     } catch (ex) {
-      this.logger.error(ex, CommunicationResolver.name, this.handleUpdatedAppointment.name);
+      this.logger.error(params, CommunicationResolver.name, this.handleUpdatedAppointment.name, ex);
     }
   }
 

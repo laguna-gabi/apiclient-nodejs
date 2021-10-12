@@ -149,7 +149,10 @@ export class BaseScheduler {
 
   protected logEndInit(lengthResults: number, customText, methodName: string) {
     this.logger.log(
-      `Finish init scheduler ${this.identifier} for ${lengthResults} ${customText}`,
+      {
+        schedulerIdentifier: this.identifier,
+        lengthResults,
+      },
       this.className,
       methodName,
     );

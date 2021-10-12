@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { EventType } from './events';
 import { SlackChannel, SlackIcon } from './interfaces.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Errors, Environments } from '.';
+import { Environments } from '.';
+import { cloneDeep } from 'lodash';
 
 @Injectable()
 export class Logger {
@@ -21,34 +22,38 @@ export class Logger {
     'availabilities',
     'externalUserId',
     'sendbirdChannelUrl',
+    'senderUserId',
+    //baseSchedulers
+    'schedulerIdentifier',
+    'lengthResults',
+    //sendbird create user params
+    'channel_url',
+    'cover_url',
+    'inviter_id',
+    'user_ids',
+    'user_id',
+    //general finish method time
+    'finishedAndItTook',
   ];
 
-  log(message: any, className: string, methodName: string) {
-    const { colorLog, log } = this.logFormat(message, className, methodName, COLOR.fgWhite);
+  log(params: any = {}, className: string, methodName: string) {
+    const { colorLog, log } = this.logFormat(
+      this.getCalledLog(params),
+      className,
+      methodName,
+      COLOR.fgWhite,
+    );
+
     console.info(this.isColorLog() ? colorLog : log);
   }
 
-  error(message: any, className: string, methodName: string) {
-    for (const value of Errors.values()) {
-      if (value === message) {
-        const { colorLog, log } = this.logFormat(className, 'Exception', '', COLOR.fgRed);
-        console.error(this.isColorLog() ? colorLog : log);
-        return;
-      }
-    }
-
-    const { colorLog, log } = this.logFormat(message, className, methodName, COLOR.fgRed);
-    console.error(this.isColorLog() ? colorLog : log);
-
-    this.eventEmitter.emit(EventType.slackMessage, {
-      message: log,
-      icon: SlackIcon.critical,
-      channel: SlackChannel.notifications,
-    });
-  }
-
-  warn(message: any, className: string, methodName: string) {
-    const { colorLog, log } = this.logFormat(message, className, methodName, COLOR.fgYellow);
+  warn(params: any = {}, className: string, methodName: string, ...reasons: any[]) {
+    const { colorLog, log } = this.logFormat(
+      `${this.getCalledLog(params)} WARN with result ${reasons}`,
+      className,
+      methodName,
+      COLOR.fgYellow,
+    );
     console.warn(this.isColorLog() ? colorLog : log);
 
     this.eventEmitter.emit(EventType.slackMessage, {
@@ -58,31 +63,30 @@ export class Logger {
     });
   }
 
-  debug(message: any, className: string, methodName: string) {
-    const { colorLog, log } = this.logFormat(message, className, methodName, COLOR.fgWhite);
+  error(params: any = {}, className: string, methodName: string, ...reasons: any[]) {
+    const { colorLog, log } = this.logFormat(
+      `${this.getCalledLog(params)} FAILED with result ${reasons}`,
+      className,
+      methodName,
+      COLOR.fgRed,
+    );
+    console.error(this.isColorLog() ? colorLog : log);
+
+    this.eventEmitter.emit(EventType.slackMessage, {
+      message: log,
+      icon: SlackIcon.critical,
+      channel: SlackChannel.notifications,
+    });
+  }
+
+  debug(params: any = {}, className: string, methodName: string) {
+    const { colorLog, log } = this.logFormat(
+      this.getCalledLog(params),
+      className,
+      methodName,
+      COLOR.fgWhite,
+    );
     console.debug(this.isColorLog() ? colorLog : log);
-  }
-
-  logFormat(
-    text: string,
-    className: string,
-    methodName: string,
-    color,
-  ): { colorLog: string; log: string } {
-    const now = new Date();
-    const date = this.generateText(now.toLocaleString(), COLOR.fgWhite);
-    const mName = this.generateText(methodName, COLOR.fgMagenta);
-    const cName = this.generateText(`[${className}]`, COLOR.fgYellow);
-    const textFormatted = this.generateText(text, color);
-
-    const colorLog = `${date}    ${cName} ${mName} ${textFormatted}`;
-    const log = `${now.toLocaleString()}     [${className}] ${methodName} ${text}`;
-
-    return { colorLog, log };
-  }
-
-  private generateText(text: string, color): string {
-    return `${color}${text}${COLOR.reset}`;
   }
 
   /**
@@ -93,12 +97,16 @@ export class Logger {
    * 2. a string value representing an id: params = '123abc'
    *    we'll log this id.
    */
-  getCalledLog(params) {
+  private getCalledLog(params) {
     if (Object.keys(params).length === 0) {
       return 'was called';
     }
 
-    const dupParams = Object.values(params)[0];
+    if (params.finishedAndItTook) {
+      return `finished in ${params.finishedAndItTook}`;
+    }
+
+    const dupParams = cloneDeep(params);
     let safeLog = {};
     if (!dupParams) {
       safeLog = {};
@@ -115,6 +123,28 @@ export class Logger {
     return `was called with params ${JSON.stringify(safeLog)}`;
   }
 
+  private logFormat(
+    text: string,
+    className: string,
+    methodName: string,
+    color,
+  ): { colorLog: string; log: string } {
+    const now = new Date();
+    const date = this.generateText(now.toLocaleString(), COLOR.fgWhite);
+    const mName = this.generateText(methodName, COLOR.fgMagenta);
+    const cName = this.generateText(`[${className}]`, COLOR.fgYellow);
+    const textFormatted = this.generateText(text, color);
+
+    const colorLog = `${date}    ${cName} ${mName} ${textFormatted}`;
+    const log = `${now.toLocaleString()}    [${className}] ${methodName} ${text}`;
+
+    return { colorLog, log };
+  }
+
+  private generateText(text: string, color): string {
+    return `${color}${text}${COLOR.reset}`;
+  }
+
   private isColorLog(): boolean {
     return !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test;
   }
@@ -122,12 +152,6 @@ export class Logger {
 
 const COLOR = {
   reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  dim: '\x1b[2m',
-  underscore: '\x1b[4m',
-  blink: '\x1b[5m',
-  reverse: '\x1b[7m',
-  hidden: '\x1b[8m',
 
   fgBlack: '\x1b[30m',
   fgRed: '\x1b[31m',
@@ -137,13 +161,4 @@ const COLOR = {
   fgMagenta: '\x1b[35m',
   fgCyan: '\x1b[36m',
   fgWhite: '\x1b[37m',
-
-  bgBlack: '\x1b[40m',
-  bgRed: '\x1b[31m',
-  bgGreen: '\x1b[32m',
-  bgYellow: '\x1b[33m',
-  bgBlue: '\x1b[44m',
-  bgMagenta: '\x1b[45m',
-  bgCyan: '\x1b[46m',
-  bgWhite: '\x1b[47m',
 };

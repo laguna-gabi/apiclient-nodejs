@@ -47,16 +47,18 @@ export class OneSignal {
       return this.validateRegisterResult(externalUserId, result);
     } catch (ex) {
       this.logger.error(
-        `Onesignal: Failure to register a user for voip project`,
+        { token, externalUserId },
+        OneSignal.name,
+        this.register.name,
         ex.response?.status,
         ex.response?.config,
       );
     }
   }
 
-  async send(sendNotificationToMemberParams: SendNotificationToMemberParams) {
-    const { platform, externalUserId, data, metadata } = sendNotificationToMemberParams;
-    this.logger.debug(this.logger.getCalledLog(data), OneSignal.name, this.send.name);
+  async send(params: SendNotificationToMemberParams) {
+    const { platform, externalUserId, data, metadata } = params;
+    this.logger.debug(data, OneSignal.name, this.send.name);
 
     const config = await this.getConfig(platform, data.type);
     const app_id = await this.getApiId(platform, data.type);
@@ -79,25 +81,21 @@ export class OneSignal {
     }
 
     try {
-      const result = await this.httpService.post(this.notificationsUrl, body, config).toPromise();
-      if (result.status === 200 && result.data.recipients >= 1) {
-        return result.data.id;
+      const { status, data } = await this.httpService
+        .post(this.notificationsUrl, body, config)
+        .toPromise();
+      if (status === 200 && data.recipients >= 1) {
+        return data.id;
       } else {
-        this.logger.error(
-          `Failed to send message of type ${data.type}: ${this.logger.getCalledLog(
-            sendNotificationToMemberParams,
-          )}`,
-          OneSignal.name,
-          this.send.name,
-        );
+        this.logger.error(params, OneSignal.name, this.send.name, status, data);
       }
     } catch (ex) {
-      this.logger.error(ex, OneSignal.name, this.send.name);
+      this.logger.error(params, OneSignal.name, this.send.name, ex);
     }
   }
 
-  async cancel(cancelNotificationParams: CancelNotificationParams) {
-    const { platform, externalUserId, data } = cancelNotificationParams;
+  async cancel(params: CancelNotificationParams) {
+    const { platform, externalUserId, data } = params;
 
     const config = await this.getConfig(platform, data.type);
     const app_id = await this.getApiId(platform, data.type);
@@ -130,7 +128,7 @@ export class OneSignal {
             return result.data.id;
           }
         } catch (ex) {
-          this.logger.error(ex, OneSignal.name, this.cancel.name);
+          this.logger.error(params, OneSignal.name, this.cancel.name, ex);
         }
       }
     }
@@ -151,20 +149,12 @@ export class OneSignal {
   }
 
   private validateRegisterResult(externalUserId, result): string | undefined {
-    const methodName = this.validateRegisterResult.name;
+    const methodName = this.register.name;
     if (result.status === 200) {
-      this.logger.log(
-        `Successfully registered externalUserId ${externalUserId} for voip project`,
-        OneSignal.name,
-        methodName,
-      );
+      this.logger.log({ externalUserId }, OneSignal.name, methodName);
       return result.data.id;
     } else {
-      this.logger.error(
-        `Failed to register externalUserId ${externalUserId} for voip project ${result.statusText}`,
-        OneSignal.name,
-        methodName,
-      );
+      this.logger.error({ externalUserId }, OneSignal.name, methodName, result.status);
       return undefined;
     }
   }

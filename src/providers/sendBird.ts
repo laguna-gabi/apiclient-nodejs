@@ -28,7 +28,6 @@ export class SendBird implements OnModuleInit {
   private readonly httpService: HttpService = new HttpService();
 
   async createUser(params: RegisterSendbirdUserParams): Promise<string | undefined> {
-    const failure = `Failed to create a user`;
     const methodName = this.createUser.name;
     try {
       const result = await this.httpService
@@ -38,37 +37,34 @@ export class SendBird implements OnModuleInit {
         .toPromise();
 
       if (result.status === 200) {
-        this.logger.log(`Successfully created a user ${params.user_id}`, SendBird.name, methodName);
+        this.logger.log(params, SendBird.name, methodName);
         return result.data.access_token;
       } else {
-        this.logger.error(`${failure} ${result.status} ${result.data}`, SendBird.name, methodName);
+        this.logger.error(params, SendBird.name, methodName, result.status, result.data);
       }
     } catch (ex) {
-      this.logger.error(`${failure} ${ex.config} ${ex.response.data}`, SendBird.name, methodName);
+      this.logger.error(params, SendBird.name, methodName, ex.config);
     }
   }
 
   async createGroupChannel(params: CreateSendbirdGroupChannelParams): Promise<boolean> {
-    const result = await this.httpService
-      .post(`${this.basePath}${suffix.groupChannels}`, params, {
-        headers: this.headers,
-      })
-      .toPromise();
+    const methodName = this.createGroupChannel.name;
+    try {
+      const { status, data } = await this.httpService
+        .post(`${this.basePath}${suffix.groupChannels}`, params, {
+          headers: this.headers,
+        })
+        .toPromise();
 
-    if (result.status === 200) {
-      this.logger.log(
-        `Successfully created a group channel for users ${params.user_ids}`,
-        SendBird.name,
-        this.createGroupChannel.name,
-      );
-      return true;
-    } else {
-      this.logger.error(
-        `Failed to create a group channel status: ${result.status}, data: ${result.data}`,
-        SendBird.name,
-        this.createGroupChannel.name,
-      );
-      return false;
+      if (status === 200) {
+        this.logger.log(params, SendBird.name, methodName);
+        return true;
+      } else {
+        this.logger.error(params, SendBird.name, methodName, status, data);
+        return false;
+      }
+    } catch (ex) {
+      this.logger.error(params, SendBird.name, methodName, ex);
     }
   }
 
@@ -120,9 +116,7 @@ export class SendBird implements OnModuleInit {
   }
 
   async countUnreadMessages(channelUrl: string, userId: string): Promise<number> {
-    const failure = `Failed to get user unread messages`;
-    const methodName = this.countUnreadMessages.name;
-    const result = await this.httpService
+    const { status, data } = await this.httpService
       .get(
         // eslint-disable-next-line max-len
         `${this.basePath}${suffix.groupChannels}/${channelUrl}/messages/unread_count?user_ids=${userId}`,
@@ -131,13 +125,15 @@ export class SendBird implements OnModuleInit {
         },
       )
       .toPromise();
-    if (result.status === 200) {
-      return result.data.unread[userId];
+    if (status === 200) {
+      return data.unread[userId];
     } else {
       this.logger.error(
-        `${failure} ${result.status} ${JSON.stringify(result.data)}`,
+        { channelUrl, userId },
         SendBird.name,
-        methodName,
+        this.countUnreadMessages.name,
+        status,
+        data,
       );
     }
   }

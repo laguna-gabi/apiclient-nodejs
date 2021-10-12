@@ -23,13 +23,7 @@ export class SlackBot implements OnModuleInit {
 
   @OnEvent(EventType.slackMessage, { async: true })
   async sendMessage(params: IEventSlackMessage) {
-    if (!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test) {
-      this.logger.debug(
-        `${config.get(params.channel)}: ${params.message}`,
-        SlackBot.name,
-        this.sendMessage.name,
-      );
-    } else {
+    if (process.env.NODE_ENV && process.env.NODE_ENV !== Environments.test) {
       await this.webhook.send({
         username: 'LagunaBot',
         icon_emoji: params.icon,

@@ -49,7 +49,7 @@ export class TwilioService implements OnModuleInit {
       try {
         return await this.client.messages.create({ body, to, from: this.source });
       } catch (ex) {
-        this.logger.error(ex, TwilioService.name, this.send.name);
+        this.logger.error(undefined, TwilioService.name, this.send.name, ex);
       }
     } else {
       const params: IEventSlackMessage = {

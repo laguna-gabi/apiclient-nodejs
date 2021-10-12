@@ -87,7 +87,7 @@ export class MemberScheduler extends BaseScheduler {
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
         this.logger.log(
-          `${memberId}: notifying new registered member`,
+          { memberId, userId, firstLoggedInAt },
           this.className,
           MemberScheduler.name,
         );
@@ -117,7 +117,7 @@ export class MemberScheduler extends BaseScheduler {
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
         this.logger.log(
-          `${memberId}: notifying new registered member nudge`,
+          { memberId, userId, firstLoggedInAt },
           MemberScheduler.name,
           this.registerNewRegisteredMemberNudgeNotify.name,
         );

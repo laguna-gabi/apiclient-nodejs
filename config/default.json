@@ -36,6 +36,7 @@
     },
     "androidChannelId": "00349af6-be67-4729-9d48-9057a5507b14"
   },
+  "storage": "hepius-test",
   "scheduler": {
     "alertBeforeInMin": 5,
     "maxAlertGapInMin": 43800,
@@ -52,6 +53,7 @@
     "newMemberNudge": "Hello @member.honorific@ @member.lastName@, I'm @user.firstName@ from Laguna Health. Friendly reminder to schedule your first visit: @downloadLink@",
     "newRegisteredMember": "Welcome to Laguna Health. To get started on your recovery journey schedule a meeting with your coach here",
     "newRegisteredMemberNudge": "Friendly reminder from @user.firstName@ at Laguna Health. I'm looking forward to supporting you on your recovery journey. To get started schedule your first visit here",
+    "newChatMessage": "You have a new message from @user.firstName@",
     "honorific": {
       "mr": "Mr",
       "mrs": "Mrs",
@@ -60,8 +62,6 @@
       "mx": "Mx",
       "dr": "Dr",
       "reverend": "Reverend"
-    },
-    "newChatMessage": "You have a new message from @user.firstName@"
-  },
-  "storage": "hepius-test"
+    }
+  }
 }

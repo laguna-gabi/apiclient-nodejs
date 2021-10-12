@@ -422,7 +422,7 @@ export class MemberResolver extends MemberBase {
 
       await this.notify(notifyParams);
     } catch (ex) {
-      this.logger.error(ex, MemberResolver.name, this.notifyInternal.name);
+      this.logger.error(notifyParams, MemberResolver.name, this.notifyInternal.name, ex);
     }
   }
 
@@ -442,9 +442,10 @@ export class MemberResolver extends MemberBase {
     const communication = await this.communicationService.getByChannelUrl(sendbirdChannelUrl);
     if (!communication) {
       this.logger.warn(
-        `${sendbirdChannelUrl} webhook received from sendbird doesnt exists`,
+        params,
         MemberResolver.name,
         this.notifyChatMessage.name,
+        'sendbirdChannelUrl doesnt exists',
       );
       return;
     }

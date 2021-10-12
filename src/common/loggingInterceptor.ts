@@ -25,13 +25,15 @@ export class LoggingInterceptor implements NestInterceptor {
       args = context.getArgByIndex(1);
     }
 
-    this.logger.debug(this.logger.getCalledLog(args), className, methodName);
+    this.logger.debug(Object.values(args)[0], className, methodName);
 
     const now = Date.now();
     return next
       .handle()
       .pipe(
-        tap(() => this.logger.debug(`finished in ${Date.now() - now}ms`, methodName, className)),
+        tap(() =>
+          this.logger.debug({ finishedAndItTook: `${Date.now() - now}ms` }, className, methodName),
+        ),
       );
   }
 }

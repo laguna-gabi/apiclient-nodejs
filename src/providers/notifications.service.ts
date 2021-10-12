@@ -44,11 +44,7 @@ export class NotificationsService {
   }): Promise<string> {
     const methodName = this.send.name;
     if (sendNotificationToMemberParams) {
-      this.logger.debug(
-        this.logger.getCalledLog(sendNotificationToMemberParams),
-        NotificationsService.name,
-        methodName,
-      );
+      this.logger.debug(sendNotificationToMemberParams, NotificationsService.name, methodName);
       const { platform, isPushNotificationsEnabled, data, metadata } =
         sendNotificationToMemberParams;
 
@@ -72,11 +68,7 @@ export class NotificationsService {
     }
 
     if (sendNotificationToUserParams) {
-      this.logger.debug(
-        this.logger.getCalledLog(sendNotificationToUserParams),
-        NotificationsService.name,
-        methodName,
-      );
+      this.logger.debug(sendNotificationToUserParams, NotificationsService.name, methodName);
       await this.twilio.send({
         body: sendNotificationToUserParams.metadata.content,
         to: sendNotificationToUserParams.data.user.phone,

@@ -3,7 +3,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Appointment, AppointmentDocument, AppointmentStatus } from '.';
 import { Model } from 'mongoose';
-import { EventType, Logger, NotificationType, ReminderType } from '../common';
+import { Errors, ErrorType, EventType, Logger, NotificationType, ReminderType } from '../common';
 import { Bitly } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotifyParams } from '../member';
@@ -152,9 +152,9 @@ export class AppointmentScheduler extends BaseScheduler {
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
         this.logger.log(
-          `${id}: notifying appointment reminder`,
+          { id, memberId, userId, start, gapDate },
           this.className,
-          AppointmentScheduler.name,
+          this.scheduleAppointmentAlert.name,
         );
 
         const chatLink = await this.getChatLink(memberId, userId);
@@ -191,9 +191,9 @@ export class AppointmentScheduler extends BaseScheduler {
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
         this.logger.log(
-          `${id}: notifying appointment long reminder`,
+          { id, memberId, userId, start },
           this.className,
-          AppointmentScheduler.name,
+          this.scheduleAppointmentLongAlert.name,
         );
         const metadata = { content: `${config.get('contents.appointmentLongReminder')}` };
         const params: NotifyParams = { memberId, userId, type: NotificationType.text, metadata };
@@ -213,10 +213,10 @@ export class AppointmentScheduler extends BaseScheduler {
     const communication = await this.communicationService.get({ memberId, userId });
     if (!communication) {
       this.logger.warn(
-        `NOT sending appointment reminder since no member-user communication exists ` +
-          `for member ${memberId} and user ${userId}`,
+        { memberId, userId },
         this.className,
         AppointmentScheduler.name,
+        Errors.get(ErrorType.communicationMemberUserNotFound),
       );
       return;
     }
