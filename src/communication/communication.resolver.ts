@@ -32,7 +32,7 @@ export class CommunicationResolver {
   async getCommunication(
     @Args(camelCase(GetCommunicationParams.name))
     getCommunicationParams: GetCommunicationParams,
-  ) {
+  ): Promise<CommunicationInfo> {
     const result = await this.communicationService.get(getCommunicationParams);
     if (result) {
       return {

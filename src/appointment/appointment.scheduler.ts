@@ -9,7 +9,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotifyParams } from '../member';
 import * as config from 'config';
 import { add, sub } from 'date-fns';
-import { CommunicationService } from '../communication';
+import { CommunicationResolver } from '../communication';
 import { BaseScheduler, InternalSchedulerService, LeaderType } from '../scheduler';
 
 @Injectable()
@@ -18,7 +18,7 @@ export class AppointmentScheduler extends BaseScheduler {
     protected readonly internalSchedulerService: InternalSchedulerService,
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument>,
-    private readonly communicationService: CommunicationService,
+    private readonly communicationResolver: CommunicationResolver,
     protected readonly schedulerRegistry: SchedulerRegistry,
     protected eventEmitter: EventEmitter2,
     protected readonly bitly: Bitly,
@@ -210,7 +210,7 @@ export class AppointmentScheduler extends BaseScheduler {
    ************************************************************************************************/
 
   private async getChatLink(memberId: string, userId: string) {
-    const communication = await this.communicationService.get({ memberId, userId });
+    const communication = await this.communicationResolver.getCommunication({ memberId, userId });
     if (!communication) {
       this.logger.warn(
         { memberId, userId },
