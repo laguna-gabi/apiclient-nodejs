@@ -40,6 +40,7 @@ import {
   Errors,
   ErrorType,
   Identifiers,
+  InternalNotificationType,
   NotificationType,
   Platform,
   RegisterForNotificationParams,
@@ -655,12 +656,11 @@ describe('Integration tests: all', () => {
   );
 
   test.each`
-    type                        | isVideo  | metadata
-    ${NotificationType.video}   | ${true}  | ${{ peerId: v4() }}
-    ${NotificationType.call}    | ${false} | ${{ peerId: v4() }}
-    ${NotificationType.text}    | ${false} | ${{ content: 'text' }}
-    ${NotificationType.textSms} | ${false} | ${{ content: 'text' }}
-  `(`should send a notification of type $type`, async (params) => {
+    type                      | isVideo  | metadata
+    ${NotificationType.video} | ${true}  | ${{ peerId: v4() }}
+    ${NotificationType.call}  | ${false} | ${{ peerId: v4() }}
+    ${NotificationType.text}  | ${false} | ${{ content: 'text' }}
+  `(`should send push notification of type $type`, async (params) => {
     const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({
@@ -687,10 +687,9 @@ describe('Integration tests: all', () => {
     await handler.mutations.notify({ notifyParams });
 
     expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
-      sendNotificationToMemberParams: {
+      sendOneSignalNotification: {
         externalUserId: memberConfig.externalUserId,
         platform: memberConfig.platform,
-        isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
         data: {
           user: {
             id: primaryUser.id,
@@ -706,6 +705,40 @@ describe('Integration tests: all', () => {
           ...generatePath(params.type),
         },
         metadata: notifyParams.metadata,
+      },
+    });
+
+    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+  });
+
+  it(`should send SMS notification of type textSms`, async () => {
+    const primaryUser = await creators.createAndValidateUser();
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({
+      org,
+      primaryUser,
+      users: [primaryUser],
+    });
+    const registerForNotificationParams: RegisterForNotificationParams = {
+      memberId: member.id,
+      platform: Platform.android,
+      isPushNotificationsEnabled: true,
+    };
+    await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+
+    const notifyParams: NotifyParams = {
+      memberId: member.id,
+      userId: primaryUser.id,
+      type: NotificationType.textSms,
+      metadata: { content: 'text' },
+    };
+
+    await handler.mutations.notify({ notifyParams });
+
+    expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
+      sendTwilioNotification: {
+        to: member.phone,
+        body: notifyParams.metadata.content,
       },
     });
 
@@ -751,10 +784,9 @@ describe('Integration tests: all', () => {
     await delay(1500);
     delete notifyParams.metadata.when;
     expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
-      sendNotificationToMemberParams: {
+      sendOneSignalNotification: {
         externalUserId: memberConfig.externalUserId,
         platform: memberConfig.platform,
-        isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
         data: {
           user: {
             id: primaryUser.id,
@@ -762,8 +794,7 @@ describe('Integration tests: all', () => {
             avatar: primaryUser.avatar,
           },
           member: { phone: member.phone },
-          type: NotificationType.text,
-          peerId: notifyParams.metadata.peerId,
+          type: InternalNotificationType.textToMember,
           isVideo: false,
         },
         metadata: notifyParams.metadata,
@@ -803,7 +834,6 @@ describe('Integration tests: all', () => {
     expect(handler.notificationsService.spyOnNotificationsServiceCancel).toBeCalledWith({
       externalUserId: memberConfig.externalUserId,
       platform: memberConfig.platform,
-      isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       data: {
         type: cancelNotifyParams.type,
         peerId: cancelNotifyParams.metadata.peerId,
@@ -930,28 +960,16 @@ describe('Integration tests: all', () => {
     await delay(2000);
 
     expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenNthCalledWith(1, {
-      sendNotificationToUserParams: {
-        data: { user: { phone: primaryUser.phone } },
-        metadata: { content: expect.any(String) },
+      sendTwilioNotification: {
+        to: primaryUser.phone,
+        body: expect.any(String),
       },
     });
 
     expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenNthCalledWith(2, {
-      sendNotificationToMemberParams: {
-        externalUserId: expect.any(String),
-        platform: expect.any(String),
-        isPushNotificationsEnabled: false,
-        data: {
-          user: {
-            id: primaryUser.id,
-            firstName: primaryUser.firstName,
-            avatar: primaryUser.avatar,
-          },
-          member: { phone: member.phone },
-          isVideo: false,
-          type: NotificationType.text,
-        },
-        metadata: { content: expect.any(String) },
+      sendTwilioNotification: {
+        to: member.phone,
+        body: expect.any(String),
       },
     });
 

@@ -115,9 +115,6 @@ export function IsTypeMetadataProvided(options: ValidationOptions) {
             case NotificationType.textSms: {
               return 'content' in args.object['metadata'];
             }
-            case NotificationType.chat: {
-              return false;
-            }
             case CancelNotificationType.cancelText: {
               return whenNotInMetadata;
             }

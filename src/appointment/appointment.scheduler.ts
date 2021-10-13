@@ -3,10 +3,17 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Appointment, AppointmentDocument, AppointmentStatus } from '.';
 import { Model } from 'mongoose';
-import { Errors, ErrorType, EventType, Logger, NotificationType, ReminderType } from '../common';
+import {
+  Errors,
+  ErrorType,
+  EventType,
+  InternalNotificationType,
+  InternalNotifyParams,
+  Logger,
+  ReminderType,
+} from '../common';
 import { Bitly } from '../providers';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { NotifyParams } from '../member';
 import * as config from 'config';
 import { add, sub } from 'date-fns';
 import { CommunicationResolver } from '../communication';
@@ -165,11 +172,16 @@ export class AppointmentScheduler extends BaseScheduler {
           content: `${config
             .get('contents.appointmentReminder')
             .replace('@gapMinutes@', config.get('scheduler.alertBeforeInMin'))}`,
-          chatLink: chatLink,
+          chatLink,
         };
-        const params: NotifyParams = { memberId, userId, type: NotificationType.text, metadata };
+        const params: InternalNotifyParams = {
+          memberId,
+          userId,
+          type: InternalNotificationType.textToMember,
+          metadata,
+        };
 
-        this.eventEmitter.emit(EventType.notify, params);
+        this.eventEmitter.emit(EventType.internalNotify, params);
         this.deleteTimeout({ id });
       }, milliseconds);
       this.addTimeout(id, timeout);
@@ -196,9 +208,14 @@ export class AppointmentScheduler extends BaseScheduler {
           this.scheduleAppointmentLongAlert.name,
         );
         const metadata = { content: `${config.get('contents.appointmentLongReminder')}` };
-        const params: NotifyParams = { memberId, userId, type: NotificationType.text, metadata };
+        const params: InternalNotifyParams = {
+          memberId,
+          userId,
+          type: InternalNotificationType.textToMember,
+          metadata,
+        };
 
-        this.eventEmitter.emit(EventType.notify, params);
+        this.eventEmitter.emit(EventType.internalNotify, params);
         this.deleteTimeout({ id });
       }, milliseconds);
       this.schedulerRegistry.addTimeout(id, timeout);

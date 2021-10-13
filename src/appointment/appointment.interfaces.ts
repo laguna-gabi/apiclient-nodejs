@@ -7,11 +7,11 @@ import {
 import {
   EventType,
   IEventUpdatedAppointment,
-  NotificationType,
+  InternalNotificationType,
+  InternalNotifyParams,
   UpdatedAppointmentAction,
 } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { NotifyParams } from '../member';
 import * as config from 'config';
 
 export class AppointmentBase {
@@ -51,17 +51,16 @@ export class AppointmentBase {
   }
 
   private notifyAppointment(appointment: Appointment) {
-    const params: NotifyParams = {
-      memberId: '',
+    const params: InternalNotifyParams = {
       userId: appointment.userId,
-      type: NotificationType.textSms,
+      type: InternalNotificationType.textSmsToUser,
       metadata: {
         content: `${config
           .get('contents.appointmentUser')
           .replace('@appointment.start@', appointment.start.toLocaleString())}`,
       },
     };
-    this.eventEmitter.emit(EventType.notify, params);
+    this.eventEmitter.emit(EventType.internalNotify, params);
   }
 
   private async registerAppointmentAlert(appointment: Appointment) {

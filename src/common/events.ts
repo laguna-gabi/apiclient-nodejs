@@ -15,7 +15,7 @@ export enum EventType {
   updateUserConfig = 'updateUserConfig',
   addUserToMemberList = 'addUserToMemberList',
   updateMemberPlatform = 'updateMemberPlatform',
-  notify = 'notify',
+  internalNotify = 'internalNotify',
   notifyChatMessage = 'notifyChatMessage',
   slackMessage = 'slackMessage',
 }

@@ -9,6 +9,7 @@ import {
   MemberConfigDto,
   MemberController,
   MemberDto,
+  NotificationBuilder,
   MemberRecordingDto,
   MemberResolver,
   MemberScheduler,
@@ -44,7 +45,7 @@ import { CommonModule } from '../common';
       { name: Recording.name, schema: MemberRecordingDto },
     ]),
   ],
-  providers: [MemberResolver, MemberService, MemberScheduler, ConfigsService],
+  providers: [MemberResolver, MemberService, NotificationBuilder, MemberScheduler, ConfigsService],
   controllers: [MemberController],
 })
 export class MemberModule {}

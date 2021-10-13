@@ -388,14 +388,6 @@ describe('Validations - member', () => {
         });
       },
     );
-
-    it(`should fail to notify when attaching ${NotificationType.chat}`, async () => {
-      const notifyParams: NotifyParams = generateNotifyParams({ type: NotificationType.chat });
-      await handler.mutations.notify({
-        notifyParams,
-        invalidFieldsErrors: [Errors.get(ErrorType.notificationMetadataInvalid)],
-      });
-    });
   });
 
   describe('cancel', () => {

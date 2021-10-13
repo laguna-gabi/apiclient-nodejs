@@ -3,10 +3,9 @@ import { HttpService } from '@nestjs/axios';
 import {
   CancelNotificationParams,
   Logger,
-  NotificationType,
-  Platform,
-  SendNotificationToMemberParams,
-  SendNotificationToUserParams,
+  SendOneSignalNotification,
+  // SendSendbirdNotification,
+  SendTwilioNotification,
 } from '../common';
 import { ConfigsService } from './aws';
 import { OneSignal } from './oneSignal';
@@ -36,44 +35,30 @@ export class NotificationsService {
   }
 
   async send({
-    sendNotificationToMemberParams,
-    sendNotificationToUserParams,
-  }: {
-    sendNotificationToMemberParams?: SendNotificationToMemberParams;
-    sendNotificationToUserParams?: SendNotificationToUserParams;
+    sendOneSignalNotification,
+    sendTwilioNotification,
+  }: // sendSendbirdNotification,
+  {
+    sendOneSignalNotification?: SendOneSignalNotification;
+    sendTwilioNotification?: SendTwilioNotification;
+    // sendSendbirdNotification?: SendSendbirdNotification;
   }): Promise<string> {
-    const methodName = this.send.name;
-    if (sendNotificationToMemberParams) {
-      this.logger.debug(sendNotificationToMemberParams, NotificationsService.name, methodName);
-      const { platform, isPushNotificationsEnabled, data, metadata } =
-        sendNotificationToMemberParams;
-
-      switch (data.type) {
-        case NotificationType.textSms:
-          await this.twilio.send({ body: metadata.content, to: data.member.phone });
-          break;
-        case NotificationType.chat:
-          if (platform !== Platform.web && isPushNotificationsEnabled) {
-            return this.oneSignal.send(sendNotificationToMemberParams);
-          }
-          break;
-        default:
-          if (platform !== Platform.web && isPushNotificationsEnabled) {
-            return this.oneSignal.send(sendNotificationToMemberParams);
-          } else {
-            await this.twilio.send({ body: metadata.content, to: data.member.phone });
-          }
-          break;
-      }
+    if (sendOneSignalNotification) {
+      this.logger.debug(sendOneSignalNotification, NotificationsService.name, this.send.name);
+      return this.oneSignal.send(sendOneSignalNotification);
     }
-
-    if (sendNotificationToUserParams) {
-      this.logger.debug(sendNotificationToUserParams, NotificationsService.name, methodName);
-      await this.twilio.send({
-        body: sendNotificationToUserParams.metadata.content,
-        to: sendNotificationToUserParams.data.user.phone,
-      });
+    if (sendTwilioNotification) {
+      this.logger.debug(sendTwilioNotification, NotificationsService.name, this.send.name);
+      return this.twilio.send(sendTwilioNotification);
     }
+    // if (sendSendbirdNotification) {
+    //   this.logger.debug(
+    //     sendSendbirdNotification,
+    //     NotificationsService.name,
+    //     this.send.name,
+    //   );
+    //   return this.sendbird.send(sendSendbirdNotification);
+    // }
   }
 
   async cancel(cancelNotificationParams: CancelNotificationParams) {

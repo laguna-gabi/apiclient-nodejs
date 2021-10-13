@@ -1,9 +1,9 @@
 import * as config from 'config';
 import { Cron, SchedulerRegistry } from '@nestjs/schedule';
 import { add, secondsToMilliseconds } from 'date-fns';
-import { Member, NotifyParams } from '../member';
+import { Member } from '../member';
 import { User } from '../user';
-import { EventType, Logger, NotificationType, replaceConfigs } from '../common';
+import { EventType, InternalNotificationType, InternalNotifyParams, Logger } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Bitly } from '../providers';
 import { InternalSchedulerService } from '.';
@@ -96,24 +96,21 @@ export class BaseScheduler {
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
         const url = await this.bitly.shortenLink(
-          `${config.get('hosts.webApp')}/download/${appointmentId}`,
+          `${config.get('contents.newMemberNudge')}/download/${appointmentId}`,
         );
 
         const metadata = {
-          content: replaceConfigs({
-            content: config.get('contents.newMemberNudge'),
-            member,
-            user,
-          }).replace('@downloadLink@', `\n${url}`),
+          content: `${config
+            .get('contents.appointmentRequest')
+            .replace('@downloadLink@', `\n${url}`)}`,
         };
-        const params: NotifyParams = {
+        const params: InternalNotifyParams = {
           memberId,
           userId: user.id,
-          type: NotificationType.textSms,
+          type: InternalNotificationType.textSmsToMember,
           metadata,
         };
-
-        this.eventEmitter.emit(EventType.notify, params);
+        this.eventEmitter.emit(EventType.internalNotify, params);
         this.deleteTimeout({ id: memberId });
       }, milliseconds);
       this.addTimeout(memberId, timeout);

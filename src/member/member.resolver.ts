@@ -8,6 +8,7 @@ import {
   Member,
   MemberBase,
   MemberConfig,
+  NotificationBuilder,
   MemberScheduler,
   MemberService,
   MemberSummary,
@@ -27,12 +28,13 @@ import {
   Identifier,
   IEventNotifyChatMessage,
   IEventUpdateMemberPlatform,
+  InternalNotificationType,
+  InternalNotifyParams,
   Logger,
   LoggingInterceptor,
   NotificationType,
   Platform,
   RegisterForNotificationParams,
-  replaceConfigs,
   StorageType,
 } from '../common';
 import { camelCase } from 'lodash';
@@ -40,6 +42,8 @@ import * as jwt from 'jsonwebtoken';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { millisecondsInHour } from 'date-fns';
 import { lookup } from 'zipcode-to-timezone';
+import { utcToZonedTime } from 'date-fns-tz';
+import { format } from 'date-fns';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { NotificationsService, StorageService } from '../providers';
 import { User, UserService } from '../user';
@@ -55,6 +59,7 @@ export class MemberResolver extends MemberBase {
   constructor(
     readonly memberService: MemberService,
     private readonly memberScheduler: MemberScheduler,
+    private readonly notificationBuilder: NotificationBuilder,
     readonly eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
     private readonly notificationsService: NotificationsService,
@@ -324,41 +329,10 @@ export class MemberResolver extends MemberBase {
     }
 
     if (metadata.content) {
-      metadata.content = replaceConfigs({ content: metadata.content, member, user });
+      metadata.content = this.replaceConfigs({ content: metadata.content, member, user });
     }
 
-    let path = {};
-    if (type === NotificationType.call || type === NotificationType.video) {
-      path = { path: 'call' };
-    } else if (type === NotificationType.chat) {
-      path = { path: `connect/${memberId}/${userId}` };
-      metadata.content = replaceConfigs({
-        content: config.get('contents.newChatMessage'),
-        member,
-        user,
-      });
-    }
-
-    return this.notificationsService.send({
-      sendNotificationToMemberParams: {
-        externalUserId: memberConfig.externalUserId,
-        platform: memberConfig.platform,
-        isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
-        data: {
-          user: {
-            id: user.id,
-            firstName: user.firstName,
-            avatar: user.avatar,
-          },
-          member: { phone: member.phone },
-          type,
-          ...path,
-          isVideo: type === NotificationType.video,
-          peerId: metadata.peerId,
-        },
-        metadata,
-      },
-    });
+    return this.notificationBuilder.notify({ member, memberConfig, user, type, metadata });
   }
 
   @Mutation(() => String, { nullable: true })
@@ -370,9 +344,8 @@ export class MemberResolver extends MemberBase {
     const memberConfig = await this.memberService.getMemberConfig(memberId);
 
     return this.notificationsService.cancel({
-      externalUserId: memberConfig.externalUserId,
       platform: memberConfig.platform,
-      isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
+      externalUserId: memberConfig.externalUserId,
       data: {
         type,
         peerId: metadata.peerId,
@@ -382,48 +355,32 @@ export class MemberResolver extends MemberBase {
   }
 
   /**
-   * Event is coming from appointment.scheduler - scheduling appointments reminders.
-   * We have to specify an event method here, instead of just adding to @notify method,
-   * since the app freezes when not catching the internal exception.
+   * Event is coming from appointment.scheduler or
+   * member.scheduler - scheduling reminders and nudges.
    */
-  @OnEvent(EventType.notify, { async: true })
-  async notifyInternal(notifyParams: NotifyParams) {
-    try {
-      if (notifyParams.memberId === '') {
-        //send to sms to user
-        const user = await this.userService.get(notifyParams.userId);
-        if (!user) {
-          throw new Error(Errors.get(ErrorType.userNotFound));
-        }
-        notifyParams.metadata.content = notifyParams.metadata.content.replace(
-          '@user.firstName@',
-          user.firstName,
-        );
-        await this.notificationsService.send({
-          sendNotificationToUserParams: {
-            data: { user: { phone: user.phone } },
-            metadata: notifyParams.metadata,
-          },
-        });
-        return;
+  @OnEvent(EventType.internalNotify, { async: true })
+  async internalNotify(internalNotifyParams: InternalNotifyParams) {
+    const { memberId, userId, type, metadata } = internalNotifyParams;
+    let member: Member;
+    let memberConfig: MemberConfig;
+    let user: User;
+
+    if (type === InternalNotificationType.textSmsToUser) {
+      user = await this.userService.get(userId);
+      if (!user) {
+        throw new Error(Errors.get(ErrorType.userNotFound));
       }
-
-      /* if we got a chat link in the notify parameters we will include it for users
-      without a device [sc-1779] */
-      if (notifyParams.metadata.chatLink) {
-        const memberConfig = await this.memberService.getMemberConfig(notifyParams.memberId);
-
-        if (memberConfig.platform === Platform.web || !memberConfig.isPushNotificationsEnabled) {
-          notifyParams.metadata.content += `${config
-            .get('contents.appointmentReminderChatLink')
-            .replace('@chatLink@', notifyParams.metadata.chatLink)}`;
-        }
-      }
-
-      await this.notify(notifyParams);
-    } catch (ex) {
-      this.logger.error(notifyParams, MemberResolver.name, this.notifyInternal.name, ex);
+      metadata.content = metadata.content.replace('@user.firstName@', user.firstName);
+    } else {
+      ({ member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId));
+      metadata.content = this.replaceConfigs({
+        content: metadata.content,
+        member,
+        user,
+      });
     }
+
+    return this.notificationBuilder.internalNotify({ member, memberConfig, user, type, metadata });
   }
 
   /**
@@ -450,11 +407,11 @@ export class MemberResolver extends MemberBase {
       return;
     }
 
-    return this.notify({
+    return this.internalNotify({
       memberId: communication.memberId.toString(),
       userId: senderUserId,
-      type: NotificationType.chat,
-      metadata: {},
+      type: InternalNotificationType.chatMessageToMember,
+      metadata: { content: config.get('contents.newChatMessage') },
     });
   }
 
@@ -497,10 +454,10 @@ export class MemberResolver extends MemberBase {
     userId: string,
   ): Promise<{ member: Member; memberConfig: MemberConfig; user: User }> {
     const member = await this.memberService.get(memberId);
-    member.zipCode = member.zipCode || member.org.zipCode;
     if (!member) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
+    member.zipCode = member.zipCode || member.org.zipCode;
     const memberConfig = await this.memberService.getMemberConfig(memberId);
     const user = await this.userService.get(userId);
     if (!user) {
@@ -508,5 +465,21 @@ export class MemberResolver extends MemberBase {
     }
 
     return { member, memberConfig, user };
+  }
+
+  private replaceConfigs(params: { content: string; member: Member; user: User }): string {
+    const { content, member, user } = params;
+    return content
+      .replace('@member.honorific@', config.get(`contents.honorific.${member.honorific}`))
+      .replace('@member.lastName@', this.capitalize(member.lastName))
+      .replace('@user.firstName@', this.capitalize(user.firstName))
+      .replace(
+        '@appointment.time@',
+        format(utcToZonedTime(new Date(), lookup(member.zipCode)), "EEEE LLLL do 'at' p"),
+      );
+  }
+
+  private capitalize(content: string): string {
+    return content[0].toUpperCase() + content.slice(1);
   }
 }

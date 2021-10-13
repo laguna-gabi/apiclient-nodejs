@@ -15,8 +15,12 @@ import { v4 } from 'uuid';
 import * as faker from 'faker';
 import { CommunicationResolver } from '../../src/communication';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ReminderType, EventType, NotificationType } from '../../src/common';
-import { NotifyParams } from '../../src/member';
+import {
+  ReminderType,
+  EventType,
+  InternalNotifyParams,
+  InternalNotificationType,
+} from '../../src/common';
 import { Bitly } from '../../src/providers';
 import { add } from 'date-fns';
 import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
@@ -253,10 +257,10 @@ describe('AppointmentScheduler', () => {
       expect(spyOnCommunicationResolverGet).toBeCalledWith({ memberId, userId });
 
       expect(spyOnEventEmitter).toBeCalledTimes(1);
-      const eventParams: NotifyParams = {
+      const eventParams: InternalNotifyParams = {
         memberId,
         userId,
-        type: NotificationType.text,
+        type: InternalNotificationType.textToMember,
         metadata: {
           content: `${config
             .get('contents.appointmentReminder')
@@ -264,7 +268,7 @@ describe('AppointmentScheduler', () => {
           chatLink,
         },
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notify, eventParams);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.internalNotify, eventParams);
       expect(spyOnBitlyShortenLink).toBeCalledWith(chat.memberLink);
 
       spyOnCommunicationResolverGet.mockReset();

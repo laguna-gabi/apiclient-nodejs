@@ -20,7 +20,6 @@ export enum NotificationType {
   call = 'call',
   text = 'text',
   textSms = 'textSms',
-  chat = 'chat',
 }
 
 registerEnumType(NotificationType, { name: 'NotificationType' });
@@ -32,6 +31,14 @@ export enum CancelNotificationType {
 }
 
 registerEnumType(CancelNotificationType, { name: 'CancelNotificationType' });
+
+export enum InternalNotificationType {
+  textToMember = 'textToMember',
+  textSmsToMember = 'textSmsToMember',
+  textSmsToUser = 'textSmsToUser',
+  chatMessageToMember = 'chatMessageToMember',
+  chatMessageToUser = 'chatMessageToUser',
+}
 
 export enum Platform {
   ios = 'ios',
@@ -112,40 +119,59 @@ export abstract class BaseService {
   }
 }
 
-export class SendNotificationToMemberParams {
-  externalUserId: string;
+export class InternalNotificationMetadata {
+  content: string;
+
+  chatLink?: string;
+}
+
+export class InternalNotifyParams {
+  memberId?: string;
+
+  userId: string;
+
+  type: InternalNotificationType;
+
+  metadata: InternalNotificationMetadata;
+}
+
+export type AllNotificationTypes =
+  | NotificationType
+  | CancelNotificationType
+  | InternalNotificationType;
+
+export class SendOneSignalNotification {
   platform: Platform;
-  isPushNotificationsEnabled: boolean;
+  externalUserId: string;
   data: {
     user: {
       id: string;
       firstName: string;
       avatar: string;
     };
-    member: {
-      phone: string;
-    };
+    member: { phone: string };
     peerId?: string;
-    type: NotificationType;
+    type: AllNotificationTypes;
     path?: string;
     isVideo: boolean;
   };
   metadata: Record<string, any>;
 }
 
-export class SendNotificationToUserParams {
-  data: {
-    user: {
-      phone: string;
-    };
-  };
-  metadata: Record<string, any>;
+export class SendTwilioNotification {
+  body: string;
+  to: string;
 }
+
+// export class SendSendbirdNotification {
+//   userId: string;
+//   channelUrl: string;
+//   message: string;
+// }
 
 export class CancelNotificationParams {
   externalUserId: string;
   platform: Platform;
-  isPushNotificationsEnabled: boolean;
   data: {
     peerId?: string;
     type: CancelNotificationType;

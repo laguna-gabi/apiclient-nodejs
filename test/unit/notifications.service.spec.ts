@@ -1,16 +1,17 @@
-import { NotificationsService, TwilioService } from '../../src/providers';
-import { v4 } from 'uuid';
-import { NotificationType, Platform, SendNotificationToMemberParams } from '../../src/common';
-import * as faker from 'faker';
-import { generateId, generatePhone } from '../generators';
 import { Test, TestingModule } from '@nestjs/testing';
+import { v4 } from 'uuid';
+import { NotificationsService, TwilioService } from '../../src/providers';
 import { dbDisconnect, defaultModules } from '../common';
+import {
+  generateCancelNotificationParams,
+  generateSendOneSignalNotificationParams,
+  generateSendTwilioNotificationParams,
+} from '../generators';
 
 describe('NotificationsService (offline)', () => {
   let module: TestingModule;
   let notificationsService: NotificationsService;
   let twilio: TwilioService;
-
   beforeAll(async () => {
     module = await Test.createTestingModule({ imports: defaultModules() }).compile();
 
@@ -23,70 +24,33 @@ describe('NotificationsService (offline)', () => {
     await dbDisconnect();
   });
 
-  /* eslint-disable max-len */
-  test.each`
-    text                                  | params
-    ${'platform=web'}                     | ${{ platform: Platform.web, isPushNotificationsEnabled: true }}
-    ${'isPushNotificationsEnabled=false'} | ${{ platform: Platform.ios, isPushNotificationsEnabled: false }}
-  `(`should notify for twilio on $text`, async (params) => {
-    /* eslint-enable max-len */
-    const twilioMock = jest.spyOn(twilio, 'send');
-    twilioMock.mockResolvedValue(true);
-
-    const sendNotificationToMemberParams = generateSendNotificationToMemberParams(params.params);
-    await notificationsService.send({ sendNotificationToMemberParams });
-
-    expect(twilioMock).toBeCalledWith({
-      body: sendNotificationToMemberParams.metadata.content,
-      to: sendNotificationToMemberParams.data.member.phone,
-    });
-    twilioMock.mockReset();
+  it('should send oneSignal notification', async () => {
+    const twilioSendMock = jest.spyOn(twilio, 'send');
+    const params = { sendTwilioNotification: generateSendTwilioNotificationParams() };
+    await notificationsService.send(params);
+    expect(twilioSendMock).toBeCalledWith(params.sendTwilioNotification);
+    twilioSendMock.mockReset();
   });
 
-  test.each([Platform.ios, Platform.android])(
-    'should not notify twilio on platform %p and isPushNotificationsEnabled=true',
-    async (platform) => {
-      const twilioMock = jest.spyOn(notificationsService, 'send');
-      twilioMock.mockRestore();
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const spyOnOneSignal = jest.spyOn(notificationsService.oneSignal, 'send');
-      spyOnOneSignal.mockResolvedValue(generateId());
+  it('should send twilio notification', async () => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const oneSignalSendMock = jest.spyOn(notificationsService.oneSignal, 'send');
+    oneSignalSendMock.mockResolvedValue(v4());
+    const params = { sendOneSignalNotification: generateSendOneSignalNotificationParams() };
+    await notificationsService.send(params);
+    expect(oneSignalSendMock).toBeCalledWith(params.sendOneSignalNotification);
+    oneSignalSendMock.mockReset();
+  });
 
-      await notificationsService.send({
-        sendNotificationToMemberParams: generateSendNotificationToMemberParams({ platform }),
-      });
-
-      expect(twilioMock).not.toBeCalled();
-      expect(spyOnOneSignal).toBeCalledTimes(1);
-      spyOnOneSignal.mockReset();
-    },
-  );
-
-  const generateSendNotificationToMemberParams = ({
-    platform,
-    isPushNotificationsEnabled = true,
-  }: {
-    platform: Platform;
-    isPushNotificationsEnabled?: boolean;
-  }): SendNotificationToMemberParams => {
-    return {
-      externalUserId: v4(),
-      platform,
-      isPushNotificationsEnabled,
-      data: {
-        user: {
-          id: faker.datatype.uuid(),
-          firstName: faker.name.firstName(),
-          avatar: faker.image.avatar(),
-        },
-        member: {
-          phone: generatePhone(),
-        },
-        type: NotificationType.text,
-        isVideo: false,
-      },
-      metadata: { content: faker.lorem.sentence() },
-    };
-  };
+  it('should send twilio cancel notification', async () => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const oneSignalCancelMock = jest.spyOn(notificationsService.oneSignal, 'cancel');
+    oneSignalCancelMock.mockResolvedValue(v4());
+    const params = generateCancelNotificationParams();
+    await notificationsService.cancel(params);
+    expect(oneSignalCancelMock).toBeCalledWith(params);
+    oneSignalCancelMock.mockReset();
+  });
 });

@@ -17,12 +17,12 @@ import {
   IEventRequestAppointment,
   IEventUpdatedAppointment,
   LoggingInterceptor,
-  NotificationType,
-  replaceConfigs,
   UpdatedAppointmentAction,
+  InternalNotificationType,
+  InternalNotifyParams,
 } from '../common';
 import { AppointmentBase } from './appointment.interfaces';
-import { Member, NotifyParams } from '../member';
+import { Member } from '../member';
 import { User } from '../user';
 import * as config from 'config';
 import { add } from 'date-fns';
@@ -120,13 +120,13 @@ export class AppointmentResolver extends AppointmentBase {
         .get('contents.appointmentRequest')
         .replace('@appLink@', appointment.link)}`,
     };
-    const params: NotifyParams = {
+    const params: InternalNotifyParams = {
       memberId: appointment.memberId.toString(),
       userId: appointment.userId,
-      type: NotificationType.text,
+      type: InternalNotificationType.textToMember,
       metadata,
     };
-    this.eventEmitter.emit(EventType.notify, params);
+    this.eventEmitter.emit(EventType.internalNotify, params);
   }
 
   private async notifyRegistration({
@@ -143,22 +143,19 @@ export class AppointmentResolver extends AppointmentBase {
     );
     const org = await this.orgService.get(member.org.toString());
     const metadata = {
-      content: replaceConfigs({
-        content: org
-          ? config.get('contents.downloadPage')
-          : config.get('contents.downloadPageWithoutOrg'),
-        member,
-        user,
-      })
+      content: `${(org
+        ? config.get('contents.downloadPage')
+        : config.get('contents.downloadPageWithoutOrg')
+      )
         .replace('@org.name@', org?.name)
-        .replace('@downloadLink@', `\n${url}`),
+        .replace('@downloadLink@', `\n${url}`)}`,
     };
-    const params: NotifyParams = {
+    const params: InternalNotifyParams = {
       memberId: member.id,
       userId: user.id,
-      type: NotificationType.textSms,
+      type: InternalNotificationType.textSmsToMember,
       metadata,
     };
-    this.eventEmitter.emit(EventType.notify, params);
+    this.eventEmitter.emit(EventType.internalNotify, params);
   }
 }

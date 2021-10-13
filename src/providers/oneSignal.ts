@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigsService, ExternalConfigs } from '.';
 import {
+  AllNotificationTypes,
   CancelNotificationParams,
   CancelNotificationType,
   Errors,
   ErrorType,
+  InternalNotificationType,
   Logger,
   NotificationType,
   Platform,
-  SendNotificationToMemberParams,
+  SendOneSignalNotification,
 } from '../common';
 import { HttpService } from '@nestjs/axios';
 import * as config from 'config';
@@ -56,14 +58,17 @@ export class OneSignal {
     }
   }
 
-  async send(params: SendNotificationToMemberParams) {
-    const { platform, externalUserId, data, metadata } = params;
+  async send(sendOneSignalNotification: SendOneSignalNotification) {
+    const { platform, externalUserId, data, metadata } = sendOneSignalNotification;
     this.logger.debug(data, OneSignal.name, this.send.name);
 
     const config = await this.getConfig(platform, data.type);
     const app_id = await this.getApiId(platform, data.type);
     const extraData = this.getExtraDataByPlatform(platform);
-    const onlyChatData = data.type === NotificationType.chat ? { collapse_id: data.user.id } : {};
+    const onlyChatData =
+      data.type === InternalNotificationType.chatMessageToMember
+        ? { collapse_id: data.user.id }
+        : {};
 
     const body: any = {
       app_id,
@@ -87,10 +92,10 @@ export class OneSignal {
       if (status === 200 && data.recipients >= 1) {
         return data.id;
       } else {
-        this.logger.error(params, OneSignal.name, this.send.name, status, data);
+        this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, status, data);
       }
     } catch (ex) {
-      this.logger.error(params, OneSignal.name, this.send.name, ex);
+      this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, ex);
     }
   }
 
@@ -137,14 +142,12 @@ export class OneSignal {
   /*************************************************************************************************
    **************************************** Private methods ****************************************
    ************************************************************************************************/
-  private isVoipProject(
-    platform: Platform,
-    notificationType?: NotificationType | CancelNotificationType,
-  ): boolean {
+  private isVoipProject(platform: Platform, notificationType?: AllNotificationTypes): boolean {
     return (
       platform === Platform.ios &&
       notificationType !== NotificationType.text &&
-      notificationType !== CancelNotificationType.cancelText
+      notificationType !== CancelNotificationType.cancelText &&
+      !(notificationType in InternalNotificationType)
     );
   }
 
@@ -161,7 +164,7 @@ export class OneSignal {
 
   private async getApiId(
     platform: Platform,
-    notificationType?: NotificationType | CancelNotificationType,
+    notificationType?: AllNotificationTypes,
   ): Promise<string> {
     return this.configsService.getConfig(
       this.isVoipProject(platform, notificationType)
@@ -170,10 +173,7 @@ export class OneSignal {
     );
   }
 
-  private async getConfig(
-    platform: Platform,
-    notificationType?: NotificationType | CancelNotificationType,
-  ) {
+  private async getConfig(platform: Platform, notificationType?: AllNotificationTypes) {
     const config = await this.configsService.getConfig(
       this.isVoipProject(platform, notificationType)
         ? ExternalConfigs.oneSignal.voipApiKey

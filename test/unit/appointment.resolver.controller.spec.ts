@@ -23,10 +23,10 @@ import {
   AppointmentStatus,
   EventType,
   IEventUpdatedAppointment,
-  NotificationType,
   UpdatedAppointmentAction,
+  InternalNotificationType,
+  InternalNotifyParams,
 } from '../../src/common';
-import { NotifyParams } from '../../src/member';
 import * as config from 'config';
 
 describe('AppointmentResolver', () => {
@@ -84,17 +84,17 @@ describe('AppointmentResolver', () => {
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith(appointment);
 
-      const eventParams: NotifyParams = {
+      const eventParams: InternalNotifyParams = {
         memberId: params.memberId,
         userId: params.userId,
-        type: NotificationType.text,
+        type: InternalNotificationType.textToMember,
         metadata: {
           content: `${config
             .get('contents.appointmentRequest')
             .replace('@appLink@', appointment.link)}`,
         },
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notify, eventParams);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.internalNotify, eventParams);
     });
   });
 
@@ -192,17 +192,16 @@ describe('AppointmentResolver', () => {
         eventParams,
       );
 
-      const notifyParams: NotifyParams = {
-        memberId: '',
+      const notifyParams: InternalNotifyParams = {
         userId: appointment.userId,
-        type: NotificationType.textSms,
+        type: InternalNotificationType.textSmsToUser,
         metadata: {
           content: `${config
             .get('contents.appointmentUser')
             .replace('@appointment.start@', appointment.start.toLocaleString())}`,
         },
       };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notify, notifyParams);
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.internalNotify, notifyParams);
       expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: appointment.memberId.toString() });
     });
   });

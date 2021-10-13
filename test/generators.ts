@@ -28,7 +28,17 @@ import {
   UpdateNotesParams,
 } from '../src/appointment';
 import { CreateOrgParams, OrgType } from '../src/org';
-import { Language, Platform, NotificationType, CancelNotificationType } from '../src/common';
+import {
+  Language,
+  Platform,
+  NotificationType,
+  CancelNotificationType,
+  SendOneSignalNotification,
+  SendTwilioNotification,
+  CancelNotificationParams,
+  InternalNotificationType,
+  InternalNotifyParams,
+} from '../src/common';
 import { lookup } from 'zipcode-to-timezone';
 import { AvailabilityInput } from '../src/availability';
 import { GetCommunicationParams } from '../src/communication';
@@ -404,6 +414,55 @@ export const generateCancelNotifyParams = ({
   metadata = { peerId: v4() },
 }: Partial<CancelNotifyParams> = {}): CancelNotifyParams => {
   return { notificationId, memberId, type, metadata };
+};
+
+export const generateCancelNotificationParams = (): CancelNotificationParams => {
+  return {
+    externalUserId: v4(),
+    platform: Platform.ios,
+    data: {
+      peerId: v4(),
+      type: CancelNotificationType.cancelCall,
+      notificationId: v4(),
+    },
+  };
+};
+
+export const generateInternalNotifyParams = ({
+  memberId = v4(),
+  userId = v4(),
+  type = InternalNotificationType.textToMember,
+  metadata = {
+    content: faker.lorem.sentence(),
+    chatLink: faker.lorem.sentence(),
+  },
+}: Partial<InternalNotifyParams> = {}): InternalNotifyParams => {
+  return { memberId, userId, type, metadata };
+};
+
+export const generateSendOneSignalNotificationParams = (): SendOneSignalNotification => {
+  return {
+    platform: Platform.ios,
+    externalUserId: v4(),
+    data: {
+      user: {
+        id: faker.datatype.uuid(),
+        firstName: faker.name.firstName(),
+        avatar: faker.image.avatar(),
+      },
+      member: { phone: generatePhone() },
+      type: NotificationType.text,
+      isVideo: false,
+    },
+    metadata: { content: faker.lorem.sentence() },
+  };
+};
+
+export const generateSendTwilioNotificationParams = (): SendTwilioNotification => {
+  return {
+    body: faker.lorem.sentence(),
+    to: faker.phone.phoneNumber(),
+  };
 };
 
 const generateEmail = () => {

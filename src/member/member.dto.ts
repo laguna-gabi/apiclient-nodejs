@@ -242,8 +242,6 @@ export class NotificationMetadata {
 
   @Field(() => Date, { nullable: true })
   when?: Date;
-
-  chatLink?: string;
 }
 
 @Schema({ versionKey: false, timestamps: true })
@@ -251,11 +249,11 @@ export class NotificationMetadata {
 export class NotifyParams {
   @Prop()
   @Field(() => String)
-  userId: string;
+  memberId: string;
 
   @Prop()
   @Field(() => String)
-  memberId: string;
+  userId: string;
 
   @Prop()
   @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataInvalid) })

@@ -9,7 +9,6 @@ import {
   generateCreateTaskParams,
   generateId,
   generateNotifyParams,
-  generatePath,
   generateUpdateRecordingParams,
   generateSetGeneralNotesParams,
   generateUpdateMemberParams,
@@ -17,7 +16,7 @@ import {
   mockGenerateMember,
   mockGenerateMemberConfig,
   mockGenerateUser,
-  generateMemberConfig,
+  generateInternalNotifyParams,
 } from '../index';
 import {
   Member,
@@ -38,10 +37,10 @@ import {
   IEventNotifyChatMessage,
   IEventRequestAppointment,
   IEventUpdateMemberPlatform,
+  InternalNotificationType,
   NotificationType,
   Platform,
   RegisterForNotificationParams,
-  replaceConfigs,
   StorageType,
 } from '../../src/common';
 import { NotificationsService, StorageService } from '../../src/providers';
@@ -757,51 +756,6 @@ describe('MemberResolver', () => {
     });
   });
 
-  describe('notifyInternal', () => {
-    let spyOnServiceGetMemberConfig;
-    let spyOnResolverNotifyMember;
-
-    beforeEach(() => {
-      spyOnResolverNotifyMember = jest.spyOn(resolver, 'notify');
-      spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
-    });
-
-    afterEach(() => {
-      spyOnResolverNotifyMember.mockReset();
-      spyOnResolverNotifyMember.mockRestore();
-      spyOnServiceGetMemberConfig.mockReset();
-    });
-
-    /* eslint-disable max-len */
-    test.each`
-      metadata                                         | expectedContent                         | pushNotificationEnabled | platform
-      ${{ content: 'text', chatLink: 'my.chat.link' }} | ${'text; to join, click: my.chat.link'} | ${false}                | ${Platform.web}
-      ${{ content: 'text', chatLink: 'my.chat.link' }} | ${'text'}                               | ${true}                 | ${Platform.ios}
-      ${{ content: 'text', chatLink: 'my.chat.link' }} | ${'text'}                               | ${true}                 | ${Platform.android}
-      ${{ content: 'text', chatLink: 'my.chat.link' }} | ${'text; to join, click: my.chat.link'} | ${false}                | ${Platform.android}
-      ${{ content: 'text' }}                           | ${'text'}                               | ${false}                | ${Platform.android}
-    `(`should notify a member with/out chat link`, async (params) => {
-      /* eslint-disable max-len */
-
-      const memberConfig = generateMemberConfig({
-        isPushNotificationsEnabled: params.pushNotificationEnabled,
-        platform: params.platform,
-      });
-
-      spyOnServiceGetMemberConfig.mockImplementation(async () => memberConfig);
-      spyOnResolverNotifyMember.mockImplementationOnce(async () => undefined);
-
-      const notifyParams = generateNotifyParams({
-        type: NotificationType.text,
-        metadata: params.metadata,
-      });
-
-      await resolver.notifyInternal(notifyParams);
-
-      expect(notifyParams.metadata.content).toEqual(params.expectedContent);
-    });
-  });
-
   describe('notify', () => {
     let spyOnServiceGetMember;
     let spyOnServiceGetMemberConfig;
@@ -837,47 +791,17 @@ describe('MemberResolver', () => {
       );
     });
 
-    test.each`
-      type                        | isVideo  | metadata
-      ${NotificationType.video}   | ${true}  | ${{ peerId: v4() }}
-      ${NotificationType.call}    | ${false} | ${{ peerId: v4() }}
-      ${NotificationType.text}    | ${false} | ${{ content: 'text' }}
-      ${NotificationType.textSms} | ${false} | ${{ content: 'text' }}
-    `(`should notify a member`, async (params) => {
-      const member = mockGenerateMember();
+    it('should catch notify exception on non existing member', async () => {
       const memberConfig = mockGenerateMemberConfig();
       const user = mockGenerateUser();
-      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMember.mockImplementationOnce(async () => undefined);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
 
-      const notifyParams = generateNotifyParams({ type: params.type, metadata: params.metadata });
-
-      await resolver.notify(notifyParams);
-
-      expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendNotificationToMemberParams: {
-          externalUserId: memberConfig.externalUserId,
-          platform: memberConfig.platform,
-          isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
-          data: {
-            user: {
-              id: user.id,
-              firstName: user.firstName,
-              avatar: user.avatar,
-            },
-            member: {
-              phone: member.phone,
-            },
-            type: notifyParams.type,
-            peerId: notifyParams.metadata.peerId,
-            isVideo: params.isVideo,
-            ...generatePath(notifyParams.type),
-          },
-          metadata: params.metadata,
-        },
-      });
+      await expect(resolver.notify(generateNotifyParams())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
     });
 
     test.each([NotificationType.call, NotificationType.video])(
@@ -900,7 +824,7 @@ describe('MemberResolver', () => {
       },
     );
 
-    it('should notify a message', async () => {
+    it('should replace content in metadata', async () => {
       const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();
       const user = mockGenerateUser();
@@ -909,33 +833,128 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
 
-      const notifyParams = generateNotifyParams();
+      const notifyParams = generateNotifyParams({
+        type: NotificationType.textSms,
+        metadata: { content: '@member.honorific@ @member.lastName@ @user.firstName@' },
+      });
 
       await resolver.notify(notifyParams);
 
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendNotificationToMemberParams: {
-          externalUserId: memberConfig.externalUserId,
-          platform: memberConfig.platform,
-          isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
-          data: {
-            user: {
-              id: user.id,
-              firstName: user.firstName,
-              avatar: user.avatar,
-            },
-            member: {
-              phone: member.phone,
-            },
-            type: notifyParams.type,
-            peerId: notifyParams.metadata.peerId,
-            isVideo: false,
-            ...generatePath(notifyParams.type),
-          },
-          metadata: notifyParams.metadata,
+        sendTwilioNotification: {
+          body: `${config.get(`contents.honorific.${member.honorific}`)} ${member.lastName} ${
+            user.firstName
+          }`,
+          to: member.phone,
         },
       });
     });
+
+    it('should send SMS on type textSms', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const notifyParams = generateNotifyParams({
+        type: NotificationType.textSms,
+      });
+
+      await resolver.notify(notifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendTwilioNotification: {
+          body: notifyParams.metadata.content,
+          to: member.phone,
+        },
+      });
+    });
+
+    it('should send SMS on type text if platform', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      memberConfig.platform = Platform.web;
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const notifyParams = generateNotifyParams({
+        type: NotificationType.text,
+      });
+
+      await resolver.notify(notifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendTwilioNotification: {
+          body: notifyParams.metadata.content,
+          to: member.phone,
+        },
+      });
+    });
+
+    it('should send SMS on type text if notification disabled', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      memberConfig.isPushNotificationsEnabled = false;
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const notifyParams = generateNotifyParams({
+        type: NotificationType.text,
+      });
+
+      await resolver.notify(notifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendTwilioNotification: {
+          body: notifyParams.metadata.content,
+          to: member.phone,
+        },
+      });
+    });
+
+    test.each([NotificationType.call, NotificationType.video])(
+      'should send push notification if type video or call',
+      async (type) => {
+        const member = mockGenerateMember();
+        const memberConfig = mockGenerateMemberConfig();
+        const user = mockGenerateUser();
+        spyOnServiceGetMember.mockImplementationOnce(async () => member);
+        spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+        spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+        spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+        const notifyParams = generateNotifyParams({
+          type,
+        });
+
+        await resolver.notify(notifyParams);
+
+        expect(spyOnNotificationsServiceSend).toBeCalledWith({
+          sendOneSignalNotification: {
+            platform: memberConfig.platform,
+            externalUserId: memberConfig.externalUserId,
+            data: {
+              user: { id: user.id, firstName: user.firstName, avatar: user.avatar },
+              member: { phone: member.phone },
+              type,
+              path: 'call',
+              isVideo: type === NotificationType.video,
+              peerId: notifyParams.metadata.peerId,
+            },
+            metadata: notifyParams.metadata,
+          },
+        });
+      },
+    );
 
     it('should register for future notify', async () => {
       const member = mockGenerateMember();
@@ -962,13 +981,40 @@ describe('MemberResolver', () => {
 
       await delay(300);
       delete notifyParams.metadata.when;
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notify, {
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.internalNotify, {
         memberId: member.id,
         userId: member.primaryUserId,
-        type: notifyParams.type,
-        metadata: notifyParams.metadata,
+        type:
+          notifyParams.type === NotificationType.text
+            ? InternalNotificationType.textToMember
+            : InternalNotificationType.textSmsToMember,
+        metadata: { content: notifyParams.metadata.content },
       });
     }, 10000);
+  });
+
+  describe('cancelNotify', () => {
+    let spyOnServiceGetMember;
+    let spyOnServiceGetMemberConfig;
+    let spyOnNotificationsServiceCancel;
+
+    beforeEach(() => {
+      spyOnServiceGetMember = jest.spyOn(service, 'get');
+      spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
+      spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetMember.mockReset();
+      spyOnServiceGetMemberConfig.mockReset();
+      spyOnNotificationsServiceCancel.mockReset();
+    });
+
+    afterEach(() => {
+      spyOnServiceGetMember.mockReset();
+      spyOnServiceGetMemberConfig.mockReset();
+      spyOnNotificationsServiceCancel.mockReset();
+    });
 
     test.each([
       CancelNotificationType.cancelVideo,
@@ -988,7 +1034,6 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceCancel).toBeCalledWith({
         externalUserId: memberConfig.externalUserId,
         platform: memberConfig.platform,
-        isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
         data: {
           type: cancelNotifyParams.type,
           peerId: cancelNotifyParams.metadata.peerId,
@@ -996,100 +1041,260 @@ describe('MemberResolver', () => {
         },
       });
     });
+  });
 
-    it('should handle exception locally on calling internal notify(user not found)', async () => {
+  describe('internalNotify', () => {
+    let spyOnServiceGetMember;
+    let spyOnServiceGetMemberConfig;
+    let spyOnUserServiceGetUser;
+    let spyOnNotificationsServiceSend;
+    let spyOnNotificationsServiceCancel;
+
+    beforeEach(() => {
+      spyOnServiceGetMember = jest.spyOn(service, 'get');
+      spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
+      spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
+      spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
+      spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetMember.mockReset();
+      spyOnServiceGetMemberConfig.mockReset();
+      spyOnUserServiceGetUser.mockReset();
+      spyOnNotificationsServiceSend.mockReset();
+      spyOnNotificationsServiceCancel.mockReset();
+    });
+
+    test.each([InternalNotificationType.textSmsToUser, InternalNotificationType.textSmsToMember])(
+      'should catch internalNotify exception on non existing user',
+      async (type) => {
+        const member = mockGenerateMember();
+        const memberConfig = mockGenerateMemberConfig();
+        spyOnServiceGetMember.mockImplementationOnce(async () => member);
+        spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+        spyOnUserServiceGetUser.mockImplementationOnce(async () => undefined);
+        spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+        await expect(
+          resolver.internalNotify(generateInternalNotifyParams({ type })),
+        ).rejects.toThrow(Errors.get(ErrorType.userNotFound));
+      },
+    );
+
+    it('should catch internalNotify exception on non existing member', async () => {
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => undefined);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      await expect(resolver.internalNotify(generateInternalNotifyParams())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
+    });
+
+    test.each`
+      type                                        | isMember
+      ${InternalNotificationType.textSmsToMember} | ${true}
+      ${InternalNotificationType.textSmsToUser}   | ${false}
+    `('should send SMS notification for $type', async (params) => {
       const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-      spyOnUserServiceGetUser.mockImplementationOnce(async () => undefined);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
 
-      await resolver.notifyInternal(generateNotifyParams());
+      const internalNotifyParams = generateInternalNotifyParams({
+        type: params.type,
+      });
+
+      await resolver.internalNotify(internalNotifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendTwilioNotification: {
+          body: internalNotifyParams.metadata.content,
+          to: params.isMember ? member.phone : user.phone,
+        },
+      });
     });
 
-    test.each([
-      config.get('contents.appointmentReminder'),
-      config.get('contents.appointmentRequest'),
-    ])(`should notify a member via notify.internal with appointment reminder`, async (configs) => {
+    it('should send SMS notification for textToMember if platform web', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      memberConfig.platform = Platform.web;
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const internalNotifyParams = generateInternalNotifyParams({
+        type: InternalNotificationType.textToMember,
+      });
+
+      await resolver.internalNotify(internalNotifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendTwilioNotification: {
+          body: internalNotifyParams.metadata.content,
+          to: member.phone,
+        },
+      });
+    });
+
+    it('should send SMS notification for textToMember if notification is disabled', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      memberConfig.isPushNotificationsEnabled = false;
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const internalNotifyParams = generateInternalNotifyParams({
+        type: InternalNotificationType.textToMember,
+      });
+
+      await resolver.internalNotify(internalNotifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendTwilioNotification: {
+          body: internalNotifyParams.metadata.content,
+          to: member.phone,
+        },
+      });
+    });
+
+    it('should send push notification for textToMember', async () => {
       const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();
       const user = mockGenerateUser();
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
-      spyOnServiceGetMemberConfig.mockImplementation(async () => memberConfig);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
 
-      const content = `${configs.replace(
-        '@gapMinutes@',
-        config.get('scheduler.alertBeforeInMin'),
-      )}`;
-
-      const notifyParams = generateNotifyParams({
-        type: NotificationType.text,
-        metadata: { content, chatLink: faker.internet.url() },
+      const internalNotifyParams = generateInternalNotifyParams({
+        type: InternalNotificationType.textToMember,
       });
 
-      await resolver.notifyInternal(notifyParams);
-
-      expect(notifyParams.metadata.content).toEqual(replaceConfigs({ content, member, user }));
+      await resolver.internalNotify(internalNotifyParams);
 
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendNotificationToMemberParams: {
-          externalUserId: memberConfig.externalUserId,
+        sendOneSignalNotification: {
           platform: memberConfig.platform,
-          isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
+          externalUserId: memberConfig.externalUserId,
           data: {
-            user: {
-              id: user.id,
-              firstName: user.firstName,
-              avatar: user.avatar,
-            },
-            member: {
-              phone: member.phone,
-            },
-            type: notifyParams.type,
-            peerId: notifyParams.metadata.peerId,
+            user: { id: user.id, firstName: user.firstName, avatar: user.avatar },
+            member: { phone: member.phone },
+            type: InternalNotificationType.textToMember,
             isVideo: false,
-            ...generatePath(notifyParams.type),
           },
-          metadata: notifyParams.metadata,
+          metadata: internalNotifyParams.metadata,
         },
       });
     });
 
-    it('should notify a user via notify.internal with appointment reminder', async () => {
+    it('should replace chatLink if chatLink in metadata', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      memberConfig.platform = Platform.web;
       const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
 
-      const now = new Date();
-      const content = `${config
-        .get('contents.appointmentUser')
-        .replace('@user.firstName@', user.firstName)
-        .replace('@appointment.start@', now)}`;
-
-      const notifyParams = generateNotifyParams({
-        memberId: '',
-        type: NotificationType.textSms,
-        metadata: { content },
+      const internalNotifyParams = generateInternalNotifyParams({
+        type: InternalNotificationType.textToMember,
+        metadata: { content: 'test', chatLink: 'chatLink' },
       });
 
-      await resolver.notifyInternal(notifyParams);
-
-      expect(notifyParams.metadata.content).toEqual(
-        content.replace('@user.firstName@', user.firstName),
-      );
+      await resolver.internalNotify(internalNotifyParams);
 
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendNotificationToUserParams: {
-          data: {
-            user: {
-              phone: user.phone,
-            },
-          },
-          metadata: notifyParams.metadata,
+        sendTwilioNotification: {
+          body: `test${config
+            .get('contents.appointmentReminderChatLink')
+            .replace('@chatLink@', internalNotifyParams.metadata.chatLink)}`,
+          to: member.phone,
         },
       });
+    });
+
+    it('should send push notification for chatMessageToMember', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const internalNotifyParams = generateInternalNotifyParams({
+        type: InternalNotificationType.chatMessageToMember,
+      });
+
+      await resolver.internalNotify(internalNotifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendOneSignalNotification: {
+          platform: memberConfig.platform,
+          externalUserId: memberConfig.externalUserId,
+          data: {
+            user: { id: user.id, firstName: user.firstName, avatar: user.avatar },
+            member: { phone: member.phone },
+            type: InternalNotificationType.chatMessageToMember,
+            isVideo: false,
+            path: `connect/${member.id}/${user.id}`,
+          },
+          metadata: internalNotifyParams.metadata,
+        },
+      });
+    });
+
+    it('should NOT send push notification for chatMessageToMember if platform web', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      memberConfig.platform = Platform.web;
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const internalNotifyParams = generateInternalNotifyParams({
+        type: InternalNotificationType.chatMessageToMember,
+      });
+
+      await resolver.internalNotify(internalNotifyParams);
+
+      expect(spyOnNotificationsServiceSend).not.toBeCalled();
+    });
+
+    // eslint-disable-next-line max-len
+    it('should NOT send push notification for chatMessageToMember if notification is disabled', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      memberConfig.isPushNotificationsEnabled = false;
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const internalNotifyParams = generateInternalNotifyParams({
+        type: InternalNotificationType.chatMessageToMember,
+      });
+
+      await resolver.internalNotify(internalNotifyParams);
+
+      expect(spyOnNotificationsServiceSend).not.toBeCalled();
     });
   });
 
@@ -1145,10 +1350,9 @@ describe('MemberResolver', () => {
       await resolver.notifyChatMessage(params);
 
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendNotificationToMemberParams: {
+        sendOneSignalNotification: {
           externalUserId: memberConfig.externalUserId,
           platform: memberConfig.platform,
-          isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
           data: {
             user: {
               id: user.id,
@@ -1156,8 +1360,7 @@ describe('MemberResolver', () => {
               avatar: user.avatar,
             },
             member: { phone: member.phone },
-            type: NotificationType.chat,
-            peerId: undefined,
+            type: InternalNotificationType.chatMessageToMember,
             isVideo: false,
             path: `connect/${member.id}/${user.id}`,
           },

@@ -72,7 +72,6 @@ describe('live: notifications (one signal)', () => {
       await notificationsService.cancel({
         externalUserId: params.externalUserId,
         platform: params.platform,
-        isPushNotificationsEnabled: params.isPushNotificationsEnabled,
         data: {
           peerId: v4(),
           type: CancelNotificationType.cancelVideo,
@@ -100,7 +99,6 @@ describe('live: notifications (one signal)', () => {
       notificationsService.cancel({
         externalUserId: params.externalUserId,
         platform: params.platform,
-        isPushNotificationsEnabled: params.isPushNotificationsEnabled,
         data: {
           peerId: v4(),
           type: CancelNotificationType.cancelVideo,
@@ -131,10 +129,9 @@ describe('live: notifications (one signal)', () => {
       };
 
       const result = await notificationsService.send({
-        sendNotificationToMemberParams: {
-          externalUserId: params.externalUserId,
+        sendOneSignalNotification: {
           platform: params.platform,
-          isPushNotificationsEnabled: params.isPushNotificationsEnabled,
+          externalUserId: params.externalUserId,
           data: {
             user: {
               id: faker.datatype.uuid(),
@@ -149,7 +146,7 @@ describe('live: notifications (one signal)', () => {
             isVideo: false,
             ...generatePath(NotificationType.call),
           },
-          metadata: undefined,
+          metadata: { content: undefined },
         },
       });
 
@@ -177,25 +174,24 @@ describe('live: notifications (one signal)', () => {
     await delay(delayTime);
 
     const result = await params.notificationsService.send({
-      sendNotificationToMemberParams: {
-        externalUserId: params.externalUserId,
+      sendOneSignalNotification: {
         platform: params.platform,
-        isPushNotificationsEnabled: params.isPushNotificationsEnabled,
+        externalUserId: params.externalUserId,
         data: {
           user: {
-            id: v4(),
+            id: faker.datatype.uuid(),
             firstName: faker.name.firstName(),
             avatar: faker.image.avatar(),
           },
           member: {
             phone: generatePhone(),
           },
-          type: NotificationType.video,
+          type: NotificationType.call,
           peerId: v4(),
-          isVideo: true,
-          path: 'call',
+          isVideo: false,
+          ...generatePath(NotificationType.call),
         },
-        metadata: { peerId: v4(), content: 'test' },
+        metadata: { content: undefined },
       },
     });
 
