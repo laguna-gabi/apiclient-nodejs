@@ -304,38 +304,35 @@ describe('AppointmentScheduler', () => {
     it('should update appointment long alert with an existing appointment', async () => {
       const param = generateParam();
       await scheduler.registerAppointmentAlert(param);
-      let timeouts = schedulerRegistry.getTimeouts();
+      const timeouts = schedulerRegistry.getTimeouts();
       expect(timeouts.length).toEqual(2);
       expect(timeouts[0]).toEqual(param.id + ReminderType.appointmentReminder);
 
-      const updateParam = cloneDeep(param);
-      updateParam.start = add(faker.date.soon(1), { days: 2 });
-
-      await scheduler.registerAppointmentAlert(updateParam);
-
-      timeouts = schedulerRegistry.getTimeouts();
-      expect(timeouts.length).toEqual(2);
-      expect(timeouts[1]).toEqual(param.id + ReminderType.appointmentLongReminder);
+      await updateAppointmentWithParams(param);
     });
 
     // eslint-disable-next-line max-len
     it('should add appointment long alert for an existing appointment if starts in more than 1 day', async () => {
       const param = generateParam(faker.date.soon(1));
       await scheduler.registerAppointmentAlert(param);
-      let timeouts = schedulerRegistry.getTimeouts();
+      const timeouts = schedulerRegistry.getTimeouts();
       expect(timeouts.length).toEqual(1);
       expect(timeouts[0]).toEqual(param.id + ReminderType.appointmentReminder);
 
+      await updateAppointmentWithParams(param);
+    });
+
+    const updateAppointmentWithParams = async (param) => {
       const updateParam = cloneDeep(param);
       updateParam.start = add(faker.date.soon(1), { days: 2 });
 
       await scheduler.registerAppointmentAlert(updateParam);
 
-      timeouts = schedulerRegistry.getTimeouts();
+      const timeouts = schedulerRegistry.getTimeouts();
 
       expect(timeouts.length).toEqual(2);
       expect(timeouts[1]).toEqual(param.id + ReminderType.appointmentLongReminder);
-    });
+    };
   });
 
   describe('delete', () => {
@@ -345,17 +342,6 @@ describe('AppointmentScheduler', () => {
 
     it('should not fail on deleting a non existing appointment', async () => {
       await scheduler.deleteTimeout({ id: generateId() });
-    });
-
-    it('should delete an existing appointment', async () => {
-      const id = generateId();
-      await schedulerRegistry.addTimeout(id, generateId());
-      let timeouts = schedulerRegistry.getTimeouts();
-      expect(timeouts[0]).toEqual(id);
-
-      await scheduler.deleteTimeout({ id });
-      timeouts = schedulerRegistry.getTimeouts();
-      expect(timeouts.length).toEqual(0);
     });
   });
 });

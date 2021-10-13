@@ -34,6 +34,8 @@ export class Logger {
     'user_id',
     //general finish method time
     'finishedAndItTook',
+    //slackbot
+    'channel',
   ];
 
   log(params: any = {}, className: string, methodName: string) {

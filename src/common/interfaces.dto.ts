@@ -160,8 +160,6 @@ export enum SlackChannel {
 }
 
 export enum SlackIcon {
-  exclamationPoint = ':exclamation:',
-  questionMark = ':question:',
   phone = ':telephone_receiver:',
   info = ':information_source:',
   warning = ':warning:',

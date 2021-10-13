@@ -285,14 +285,13 @@ export class MemberService extends BaseService {
         },
       },
     ]);
-    const newUnregisteredMembers = result.filter((newMember) => {
+    return result.filter((newMember) => {
       newMember.user.id = newMember.user._id;
       newMember.member.id = newMember.member._id;
       delete newMember.user._id;
       delete newMember.member._id;
       return newMember.ScheduledOrDoneAppointmentsCount === 0;
     });
-    return newUnregisteredMembers;
   }
 
   async getNewRegisteredMembers({ nudge }: { nudge: boolean }) {
@@ -340,14 +339,13 @@ export class MemberService extends BaseService {
         },
       },
     ]);
-    const newRegisteredMembers = result.filter((newMember) => {
+    return result.filter((newMember) => {
       newMember.memberConfig.id = newMember.memberConfig._id;
       newMember.member.id = newMember.member._id;
       delete newMember.memberConfig._id;
       delete newMember.member._id;
       return newMember.ScheduledOrDoneAppointmentsCount === 0;
     });
-    return newRegisteredMembers;
   }
 
   /*************************************************************************************************

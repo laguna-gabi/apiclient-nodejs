@@ -6,10 +6,16 @@ import {
   mockGenerateUser,
 } from '../index';
 import { DbModule } from '../../src/db/db.module';
-import { UserController, UserModule, UserResolver, UserRole, UserService } from '../../src/user';
+import {
+  UserController,
+  UserModule,
+  UserResolver,
+  UserRole,
+  UserService,
+  GetSlotsParams,
+} from '../../src/user';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { v4 } from 'uuid';
-import { GetSlotsParams } from '../../src/user/slot.dto';
 import { EventType, IEventNewUser } from '../../src/common';
 
 describe('UserResolver', () => {

@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { IncomingWebhook } from '@slack/webhook';
 import * as config from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
-import { EventType, IEventSlackMessage, Logger, Environments } from '../common';
+import { Environments, EventType, IEventSlackMessage, Logger } from '../common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class SlackBot implements OnModuleInit {
   constructor(
     private readonly configsService: ConfigsService,
     readonly eventEmitter: EventEmitter2,
-    private readonly logger: Logger,
+    readonly logger: Logger,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -23,7 +23,9 @@ export class SlackBot implements OnModuleInit {
 
   @OnEvent(EventType.slackMessage, { async: true })
   async sendMessage(params: IEventSlackMessage) {
-    if (process.env.NODE_ENV && process.env.NODE_ENV !== Environments.test) {
+    if (!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test) {
+      this.logger.debug(params, SlackBot.name, this.sendMessage.name);
+    } else {
       await this.webhook.send({
         username: 'LagunaBot',
         icon_emoji: params.icon,

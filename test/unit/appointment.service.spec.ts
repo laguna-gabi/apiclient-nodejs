@@ -186,13 +186,9 @@ describe('AppointmentService', () => {
       });
       validateNewAppointmentEvent(memberId, userId2, id2);
 
-      expect(id1).not.toEqual(id2);
       expect(record1.memberId).toEqual(record2.memberId);
-      expect(record1.status).toEqual(record2.status);
-      expect(record1.createdAt).not.toEqual(record2.createdAt);
       expect(record1.userId).not.toEqual(record2.userId);
-      expect(record1.notBefore).not.toEqual(record2.notBefore);
-      expect(record1.updatedAt).not.toEqual(record2.updatedAt);
+      compare(record1, record2);
     });
 
     it('should crate a new appointment for an existing userId and different memberId', async () => {
@@ -214,13 +210,9 @@ describe('AppointmentService', () => {
       });
       validateNewAppointmentEvent(memberId2, userId, id2);
 
-      expect(id1).not.toEqual(id2);
       expect(record1.userId).toEqual(record2.userId);
-      expect(record1.status).toEqual(record2.status);
       expect(record1.memberId).not.toEqual(record2.memberId);
-      expect(record1.createdAt).not.toEqual(record2.createdAt);
-      expect(record1.notBefore).not.toEqual(record2.notBefore);
-      expect(record1.updatedAt).not.toEqual(record2.updatedAt);
+      compare(record1, record2);
     });
 
     it('should check that createdAt and updatedAt exists in the collection', async () => {
@@ -249,6 +241,13 @@ describe('AppointmentService', () => {
 
       expect(scheduleAppointment.id).not.toEqual(requestAppointment.id);
     });
+
+    const compare = (record1, record2) => {
+      expect(record1.status).toEqual(record2.status);
+      expect(record1.createdAt).not.toEqual(record2.createdAt);
+      expect(record1.notBefore).not.toEqual(record2.notBefore);
+      expect(record1.updatedAt).not.toEqual(record2.updatedAt);
+    };
   });
 
   describe('schedule', () => {

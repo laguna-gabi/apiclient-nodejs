@@ -1,10 +1,9 @@
 import { generateCreateUserParams, generateRandomName, urls } from '../index';
-import { CreateUserParams, defaultUserParams } from '../../src/user';
+import { CreateUserParams, defaultUserParams, GetSlotsParams } from '../../src/user';
 import * as config from 'config';
 import * as faker from 'faker';
 import { Errors, ErrorType } from '../../src/common';
 import { Handler } from '../aux/handler';
-import { GetSlotsParams } from '../../src/user/slot.dto';
 import { generateGetSlotsParams, generateId } from '../generators';
 import * as request from 'supertest';
 import { v4 } from 'uuid';
@@ -149,7 +148,7 @@ describe('Validations - user', () => {
   });
 
   it('rest: should return 400 on bad appointmentId', async () => {
-    const result = await request(server).get(`${urls.slots}/${'not-valid'}`).expect(400);
+    const result = await request(server).get(`${urls.slots}/not-valid`).expect(400);
     expect(result).toEqual(
       expect.objectContaining({
         text: '{"statusCode":400,"message":"Argument passed in must be a single String of 12 bytes or a string of 24 hex characters"}',

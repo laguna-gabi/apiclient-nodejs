@@ -167,39 +167,16 @@ describe('Integration tests : getMembers', () => {
   /* eslint-disable max-len*/
   it('should return most recent scheduled appointment (start time) when it was scheduled before', async () => {
     /* eslint-enable max-len*/
-    const primaryUser = await creators.createAndValidateUser();
-    const org = await creators.createAndValidateOrg();
-
-    const { id: userId } = primaryUser;
-    const { id: memberId }: Member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
-
-    const start1 = new Date();
-    start1.setHours(start1.getHours() + 2);
-    const appointment1 = await generateAppointment({ userId, memberId, start: start1 });
-    const start2 = new Date();
-    start2.setHours(start2.getHours() + 4);
-    const appointment2 = await generateAppointment({ userId, memberId, start: start2 });
-
-    const membersResult = await handler.queries.getMembers(org.id);
-
-    expect(appointment1.id).not.toEqual(appointment2.id);
-
-    expect(membersResult.length).toEqual(1);
-    expect(membersResult[0]).toEqual(
-      expect.objectContaining({
-        nextAppointment: appointment1.start,
-        appointmentsCount: 2,
-      }),
-    );
+    await generate2Appointments(1);
   });
 
   /* eslint-disable max-len*/
   it('should return most recent scheduled appointment (start time) when it was scheduled after', async () => {
     /* eslint-enable max-len*/
+    await generate2Appointments(-1);
+  });
+
+  const generate2Appointments = async (secondAppointmentGap: number) => {
     const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
 
@@ -214,7 +191,7 @@ describe('Integration tests : getMembers', () => {
     start1.setHours(start1.getHours() + 2);
     const appointment1 = await generateAppointment({ userId, memberId, start: start1 });
     const start2 = new Date();
-    start2.setHours(start2.getHours() + 1);
+    start2.setHours(start1.getHours() + secondAppointmentGap);
     const appointment2 = await generateAppointment({ userId, memberId, start: start2 });
 
     const membersResult = await handler.queries.getMembers(org.id);
@@ -224,11 +201,11 @@ describe('Integration tests : getMembers', () => {
     expect(membersResult.length).toEqual(1);
     expect(membersResult[0]).toEqual(
       expect.objectContaining({
-        nextAppointment: appointment2.start,
+        nextAppointment: secondAppointmentGap > 0 ? appointment1.start : appointment2.start,
         appointmentsCount: 2,
       }),
     );
-  });
+  };
 
   /* eslint-disable max-len*/
   it('should handle primaryUser and users appointments in nextAppointment calculations', async () => {

@@ -160,15 +160,13 @@ export class UserService extends BaseService {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
 
-    const slots = this.slotService.getSlots(
+    slotsObject.slots = this.slotService.getSlots(
       slotsObject.av,
       slotsObject.ap,
       defaultSlotsParams.duration,
       defaultSlotsParams.maxSlots,
       getSlotsParams.notBefore,
     );
-
-    slotsObject.slots = slots;
     delete slotsObject.ap;
     delete slotsObject.av;
     if (userId) {
@@ -179,7 +177,7 @@ export class UserService extends BaseService {
     if (slotsObject.slots.length === 0) {
       slotsObject.slots = this.generateDefaultSlots();
       const params: IEventSlackMessage = {
-        message: `*No availability*\nUser ${userId}`,
+        message: `*No availability*\nUser ${userId} to fulfill slots request`,
         icon: SlackIcon.warning,
         channel: SlackChannel.notifications,
       };

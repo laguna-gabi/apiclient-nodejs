@@ -218,17 +218,6 @@ describe('MemberScheduler', () => {
       it('should not fail on deleting a non existing appointment', async () => {
         await scheduler.deleteTimeout({ id: generateId() });
       });
-
-      it('should delete an existing notification', async () => {
-        const id = generateId();
-        await schedulerRegistry.addTimeout(id, generateId());
-        let timeouts = schedulerRegistry.getTimeouts();
-        expect(timeouts[0]).toEqual(id);
-
-        await scheduler.deleteTimeout({ id });
-        timeouts = schedulerRegistry.getTimeouts();
-        expect(timeouts.length).toEqual(0);
-      });
     });
   });
 });

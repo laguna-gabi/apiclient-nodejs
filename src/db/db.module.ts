@@ -1,6 +1,5 @@
 import { MongooseModule } from '@nestjs/mongoose';
-import { ProvidersModule } from '../providers';
-import { ConfigsService } from '../providers/aws/configs.service';
+import { ProvidersModule, ConfigsService } from '../providers';
 import { Module } from '@nestjs/common';
 
 @Module({

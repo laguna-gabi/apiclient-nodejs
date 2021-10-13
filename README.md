@@ -11,7 +11,7 @@ Laguna health backend infrastructure.
 - [Running the app](#running-the-app)
 - [Testing the app](#testing-the-app)
 - [Troubleshooting](#troubleshooting)
-   - [How to view the db locally?](#how-to-view-the-db-locally-)
+   - [How to view the db locally?](#how-to-view-the-db-locally)
    - [Error at connection to mongo locally](#error-at-connection-to-mongo-locally)
 
 <br/><br/>
@@ -50,7 +50,7 @@ In order to work locally with aws cli and `package.json` dependencies, install
 2. [set up](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html) credentials on your local computer (make sure to set region to `us-east-1`)
 > **_Don't skip aws setup:_** This step is critical to develop locally on this project. 
    We're loading configurations(api keys and tokens for external providers such as 
-   [sendbird](https://sendbird.com), [onesignal](https://onesignal.com), [twilio](https://www.twilio.com), etc..) 
+   [sendbird](https://sendbird.com), [onesignal](https://onesignal.com), [twilio](https://www.twilio.com), etc...) 
    from [aws secrets manager](https://aws.amazon.com/secrets-manager/). 
 
 ### Shared code settings

@@ -6,10 +6,10 @@ services:
     environment:
       - MONGODB_DATABASE="laguna"
     ports:
-      - 27017:27017
+      - "27017:27017"
   mongodb-test:
     image: mongo:latest
     environment:
       - MONGODB_DATABASE="test"
     ports:
-      - 27018:27017
+      - "27018:27017"

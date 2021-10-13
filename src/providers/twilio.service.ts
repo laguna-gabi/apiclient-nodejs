@@ -20,8 +20,8 @@ export class TwilioService implements OnModuleInit {
   private apiKey;
   private apiSecret;
   private client;
-  private source;
-  private identity;
+  private readonly source;
+  private readonly identity;
 
   constructor(
     private readonly configsService: ConfigsService,

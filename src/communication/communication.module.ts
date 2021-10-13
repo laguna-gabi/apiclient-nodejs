@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { Communication, CommunicationDto, CommunicationResolver, CommunicationService } from '.';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HttpModule } from '@nestjs/axios';
-import { ProvidersModule } from '../providers/providers.module';
+import { ProvidersModule } from '../providers';
 import { CommonModule } from '../common';
 
 @Module({

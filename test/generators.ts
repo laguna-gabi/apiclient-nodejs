@@ -35,7 +35,7 @@ import { GetCommunicationParams } from '../src/communication';
 import * as config from 'config';
 import { format } from 'date-fns';
 import { v4 } from 'uuid';
-import { GetSlotsParams } from '../src/user/slot.dto';
+import { GetSlotsParams } from '../src/user';
 
 export const generateCreateUserParams = ({
   id = v4(),

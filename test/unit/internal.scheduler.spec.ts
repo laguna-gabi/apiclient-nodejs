@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppointmentModule, AppointmentScheduler } from '../../src/appointment';
-import { dbConnect, dbDisconnect, defaultModules } from '../index';
+import { dbConnect, dbDisconnect, defaultModules, generateId } from '../index';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
 import { v4 } from 'uuid';
@@ -86,5 +86,16 @@ describe('BaseScheduler + InternalSchedulerService', () => {
       const current = await internalSchedulerService.getLeader(leaderType);
       expect(current.id).toEqual(saveId);
     }, 12000);
+
+    it('should delete an existing notification', async () => {
+      const id = generateId();
+      await schedulerRegistry.addTimeout(id, generateId());
+      let timeouts = schedulerRegistry.getTimeouts();
+      expect(timeouts[0]).toEqual(id);
+
+      await scheduler.deleteTimeout({ id });
+      timeouts = schedulerRegistry.getTimeouts();
+      expect(timeouts.length).toEqual(0);
+    });
   });
 });

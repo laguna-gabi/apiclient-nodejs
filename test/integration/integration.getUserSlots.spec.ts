@@ -9,7 +9,7 @@ import {
 } from 'date-fns';
 import { Member } from '../../src/member';
 import { defaultSlotsParams } from '../../src/user';
-import { generateAvailabilityInput } from './../generators';
+import { generateAvailabilityInput } from './../';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
 import { Creators } from '../aux/creators';
 import { Handler } from '../aux/handler';
@@ -39,21 +39,7 @@ describe('Integration tests : getUserSlots', () => {
 
   it('should return objects with all slots', async () => {
     const { primaryUser, member } = await createUserMember();
-
-    await handler.mutations.createAvailabilities({
-      availabilities: [
-        generateAvailabilityInput({
-          start: add(startOfToday(), { hours: 10 }),
-          end: add(startOfToday(), { hours: 22 }),
-          userId: primaryUser.id,
-        }),
-        generateAvailabilityInput({
-          start: add(startOfTomorrow(), { hours: 10 }),
-          end: add(startOfTomorrow(), { hours: 22 }),
-          userId: primaryUser.id,
-        }),
-      ],
-    });
+    await createDefaultAvailabilities(primaryUser.id);
 
     const appointment = await appointmentsActions.scheduleAppointmentWithDate(
       primaryUser.id,
@@ -92,21 +78,7 @@ describe('Integration tests : getUserSlots', () => {
 
   it('there should not be a slot overlapping a scheduled appointment', async () => {
     const { primaryUser, member } = await createUserMember();
-
-    await handler.mutations.createAvailabilities({
-      availabilities: [
-        generateAvailabilityInput({
-          start: add(startOfToday(), { hours: 10 }),
-          end: add(startOfToday(), { hours: 22 }),
-          userId: primaryUser.id,
-        }),
-        generateAvailabilityInput({
-          start: add(startOfTomorrow(), { hours: 10 }),
-          end: add(startOfTomorrow(), { hours: 22 }),
-          userId: primaryUser.id,
-        }),
-      ],
-    });
+    await createDefaultAvailabilities(primaryUser.id);
 
     const appointment = await appointmentsActions.scheduleAppointmentWithDate(
       primaryUser.id,
@@ -140,22 +112,8 @@ describe('Integration tests : getUserSlots', () => {
 
   it('should get slots that overlap appointments that are not scheduled', async () => {
     const { primaryUser, member } = await createUserMember();
+    await createDefaultAvailabilities(primaryUser.id);
     await createUserMember();
-
-    await handler.mutations.createAvailabilities({
-      availabilities: [
-        generateAvailabilityInput({
-          start: add(startOfToday(), { hours: 10 }),
-          end: add(startOfToday(), { hours: 22 }),
-          userId: primaryUser.id,
-        }),
-        generateAvailabilityInput({
-          start: add(startOfTomorrow(), { hours: 10 }),
-          end: add(startOfTomorrow(), { hours: 22 }),
-          userId: primaryUser.id,
-        }),
-      ],
-    });
 
     await appointmentsActions.scheduleAppointmentWithDate(
       primaryUser.id,
@@ -244,7 +202,7 @@ describe('Integration tests : getUserSlots', () => {
 
     expect(result.slots.length).toEqual(6);
     expect(spyOnEventEmitter).toBeCalledWith(EventType.slackMessage, {
-      message: `*No availability*\nUser ${primaryUser.id}`,
+      message: `*No availability*\nUser ${primaryUser.id} to fulfill slots request`,
       icon: SlackIcon.warning,
       channel: SlackChannel.notifications,
     });
@@ -272,7 +230,7 @@ describe('Integration tests : getUserSlots', () => {
 
     expect(result.slots.length).toEqual(6);
     expect(spyOnEventEmitter).toBeCalledWith(EventType.slackMessage, {
-      message: `*No availability*\nUser ${primaryUser.id}`,
+      message: `*No availability*\nUser ${primaryUser.id} to fulfill slots request`,
       icon: SlackIcon.warning,
       channel: SlackChannel.notifications,
     });
@@ -281,34 +239,7 @@ describe('Integration tests : getUserSlots', () => {
   });
 
   it('should return 5 slots from today and the next from tomorrow', async () => {
-    const { primaryUser, member } = await createUserMember();
-
-    await handler.mutations.createAvailabilities({
-      availabilities: [
-        generateAvailabilityInput({
-          start: add(startOfToday(), { hours: 10 }),
-          end: add(startOfToday(), { hours: 22 }),
-          userId: primaryUser.id,
-        }),
-        generateAvailabilityInput({
-          start: add(startOfTomorrow(), { hours: 10 }),
-          end: add(startOfTomorrow(), { hours: 22 }),
-          userId: primaryUser.id,
-        }),
-      ],
-    });
-
-    await appointmentsActions.scheduleAppointmentWithDate(
-      primaryUser.id,
-      member,
-      add(startOfToday(), { hours: 9 }),
-      add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
-    );
-
-    const result = await handler.queries.getUserSlots({
-      userId: primaryUser.id,
-      notBefore: add(startOfToday(), { hours: 10 }),
-    });
+    const result = await preformGetUserSlots();
 
     for (let index = 0; index < 5; index++) {
       expect(isSameDay(new Date(result.slots[index]), add(startOfToday(), { hours: 12 }))).toEqual(
@@ -323,34 +254,7 @@ describe('Integration tests : getUserSlots', () => {
   });
 
   it('check slots default properties and order', async () => {
-    const { primaryUser, member } = await createUserMember();
-
-    await handler.mutations.createAvailabilities({
-      availabilities: [
-        generateAvailabilityInput({
-          start: add(startOfToday(), { hours: 10 }),
-          end: add(startOfToday(), { hours: 22 }),
-          userId: primaryUser.id,
-        }),
-        generateAvailabilityInput({
-          start: add(startOfTomorrow(), { hours: 10 }),
-          end: add(startOfTomorrow(), { hours: 22 }),
-          userId: primaryUser.id,
-        }),
-      ],
-    });
-
-    await appointmentsActions.scheduleAppointmentWithDate(
-      primaryUser.id,
-      member,
-      add(startOfToday(), { hours: 9 }),
-      add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
-    );
-
-    const result = await handler.queries.getUserSlots({
-      userId: primaryUser.id,
-      notBefore: add(startOfToday(), { hours: 10 }),
-    });
+    const result = await preformGetUserSlots();
 
     for (let index = 1; index < defaultSlotsParams.maxSlots; index++) {
       expect(
@@ -363,6 +267,23 @@ describe('Integration tests : getUserSlots', () => {
     expect(result.slots.length).toEqual(defaultSlotsParams.maxSlots);
   });
 
+  const preformGetUserSlots = async () => {
+    const { primaryUser, member } = await createUserMember();
+    await createDefaultAvailabilities(primaryUser.id);
+
+    await appointmentsActions.scheduleAppointmentWithDate(
+      primaryUser.id,
+      member,
+      add(startOfToday(), { hours: 9 }),
+      add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
+    );
+
+    return handler.queries.getUserSlots({
+      userId: primaryUser.id,
+      notBefore: add(startOfToday(), { hours: 10 }),
+    });
+  };
+
   const createUserMember = async () => {
     const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
@@ -372,5 +293,22 @@ describe('Integration tests : getUserSlots', () => {
       users: [primaryUser],
     });
     return { primaryUser, member };
+  };
+
+  const createDefaultAvailabilities = async (primaryUserId: string) => {
+    await handler.mutations.createAvailabilities({
+      availabilities: [
+        generateAvailabilityInput({
+          start: add(startOfToday(), { hours: 10 }),
+          end: add(startOfToday(), { hours: 22 }),
+          userId: primaryUserId,
+        }),
+        generateAvailabilityInput({
+          start: add(startOfTomorrow(), { hours: 10 }),
+          end: add(startOfTomorrow(), { hours: 22 }),
+          userId: primaryUserId,
+        }),
+      ],
+    });
   };
 });

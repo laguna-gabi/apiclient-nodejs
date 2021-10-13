@@ -20,6 +20,7 @@ import {
   generateMemberConfig,
 } from '../index';
 import {
+  Member,
   MemberConfig,
   MemberModule,
   MemberResolver,
@@ -315,26 +316,9 @@ describe('MemberResolver', () => {
       spyOnServiceGet.mockImplementationOnce(async () => member);
       spyOnStorage.mockImplementation(async () => 'https://aws-bucket-path/extras');
 
-      const id = generateId();
+      await resolver.getMemberUploadDischargeDocumentsLinks(member.id);
 
-      await resolver.getMemberUploadDischargeDocumentsLinks(id);
-
-      const prefix = `${member.firstName}_${member.lastName}`;
-      const storageType = StorageType.documents;
-
-      expect(spyOnServiceGet).toBeCalledTimes(1);
-      expect(spyOnServiceGet).toBeCalledWith(id);
-      expect(spyOnStorage).toBeCalledTimes(2);
-      expect(spyOnStorage).toHaveBeenNthCalledWith(1, {
-        storageType,
-        memberId: id,
-        id: `${prefix}_Summary.pdf`,
-      });
-      expect(spyOnStorage).toHaveBeenNthCalledWith(2, {
-        storageType,
-        memberId: id,
-        id: `${prefix}_Instructions.pdf`,
-      });
+      checkDocumentsCall(member, spyOnServiceGet, spyOnStorage);
     });
 
     it('should throw exception on a non valid member', async () => {
@@ -347,6 +331,25 @@ describe('MemberResolver', () => {
       );
     });
   });
+
+  const checkDocumentsCall = (member: Member, spyOnServiceGet, spyOnStorage) => {
+    const prefix = `${member.firstName}_${member.lastName}`;
+    const storageType = StorageType.documents;
+
+    expect(spyOnServiceGet).toBeCalledTimes(1);
+    expect(spyOnServiceGet).toBeCalledWith(member.id);
+    expect(spyOnStorage).toBeCalledTimes(2);
+    expect(spyOnStorage).toHaveBeenNthCalledWith(1, {
+      storageType,
+      memberId: member.id,
+      id: `${prefix}_Summary.pdf`,
+    });
+    expect(spyOnStorage).toHaveBeenNthCalledWith(2, {
+      storageType,
+      memberId: member.id,
+      id: `${prefix}_Instructions.pdf`,
+    });
+  };
 
   describe('getMemberDownloadDischargeDocumentsLinks', () => {
     let spyOnServiceGet;
@@ -366,26 +369,9 @@ describe('MemberResolver', () => {
       spyOnServiceGet.mockImplementationOnce(async () => member);
       spyOnStorage.mockImplementation(async () => 'https://aws-bucket-path/extras');
 
-      const id = generateId();
+      await resolver.getMemberDownloadDischargeDocumentsLinks(member.id);
 
-      await resolver.getMemberDownloadDischargeDocumentsLinks(id);
-
-      const prefix = `${member.firstName}_${member.lastName}`;
-      const storageType = StorageType.documents;
-
-      expect(spyOnServiceGet).toBeCalledTimes(1);
-      expect(spyOnServiceGet).toBeCalledWith(id);
-      expect(spyOnStorage).toBeCalledTimes(2);
-      expect(spyOnStorage).toHaveBeenNthCalledWith(1, {
-        storageType,
-        memberId: id,
-        id: `${prefix}_Summary.pdf`,
-      });
-      expect(spyOnStorage).toHaveBeenNthCalledWith(2, {
-        storageType,
-        memberId: id,
-        id: `${prefix}_Instructions.pdf`,
-      });
+      checkDocumentsCall(member, spyOnServiceGet, spyOnStorage);
     });
 
     it('should throw exception on a non valid member', async () => {
