@@ -11,17 +11,23 @@ import { Mutations } from './mutations';
 export class AppointmentsIntegrationActions {
   constructor(private readonly mutations: Mutations) {}
 
-  requestAppointment = async (userId: string, member: Member): Promise<Appointment> => {
+  requestAppointment = async ({
+    userId,
+    member,
+  }: {
+    userId?: string;
+    member: Member;
+  }): Promise<Appointment> => {
     const appointmentParams = generateRequestAppointmentParams({
       memberId: member.id,
-      userId,
+      userId: userId || member.primaryUserId,
     });
     const appointmentResult = await this.mutations.requestAppointment({
       appointmentParams,
     });
 
-    expect(appointmentResult.userId).toEqual(userId);
-    expect(appointmentResult.memberId).toEqual(member.id);
+    expect(appointmentResult.userId).toEqual(appointmentParams.userId);
+    expect(appointmentResult.memberId).toEqual(appointmentParams.memberId);
     expect(new Date(appointmentResult.notBefore)).toEqual(new Date(appointmentParams.notBefore));
     expect(appointmentResult.status).toEqual(AppointmentStatus.requested);
     expect(appointmentResult.link).toEqual(generateAppointmentLink(appointmentResult.id));
@@ -29,10 +35,16 @@ export class AppointmentsIntegrationActions {
     return appointmentResult;
   };
 
-  scheduleAppointment = async (userId: string, member: Member): Promise<Appointment> => {
+  scheduleAppointment = async ({
+    userId,
+    member,
+  }: {
+    userId?: string;
+    member: Member;
+  }): Promise<Appointment> => {
     const scheduleAppointment = generateScheduleAppointmentParams({
       memberId: member.id,
-      userId,
+      userId: userId || member.primaryUserId,
     });
     const appointmentResult = await this.mutations.scheduleAppointment({
       appointmentParams: scheduleAppointment,
@@ -50,35 +62,28 @@ export class AppointmentsIntegrationActions {
   };
 
   scheduleAppointmentWithDate = async (
-    userId: string,
     member: Member,
     start: Date,
     end: Date,
   ): Promise<Appointment> => {
-    const scheduleAppointment = generateScheduleAppointmentParams({
+    const appointmentParams = generateScheduleAppointmentParams({
       memberId: member.id,
-      userId,
+      userId: member.primaryUserId,
       start,
       end,
     });
 
-    const appointmentResult = await this.mutations.scheduleAppointment({
-      appointmentParams: scheduleAppointment,
-    });
+    const appointmentResult = await this.mutations.scheduleAppointment({ appointmentParams });
 
     expect(appointmentResult.status).toEqual(AppointmentStatus.scheduled);
 
     return appointmentResult;
   };
 
-  requestAppointmentWithDate = async (
-    userId: string,
-    member: Member,
-    notBefore: Date,
-  ): Promise<Appointment> => {
+  requestAppointmentWithDate = async (member: Member, notBefore: Date): Promise<Appointment> => {
     const appointmentParams = generateRequestAppointmentParams({
       memberId: member.id,
-      userId,
+      userId: member.primaryUserId,
       notBefore,
     });
     return this.mutations.requestAppointment({

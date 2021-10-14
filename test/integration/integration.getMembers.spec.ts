@@ -5,6 +5,7 @@ import { AppointmentsIntegrationActions } from '../aux/appointments';
 import { Creators } from '../aux/creators';
 import { Handler } from '../aux/handler';
 import { generateId, generateScheduleAppointmentParams } from '../index';
+import { User } from '../../src/user';
 
 describe('Integration tests : getMembers', () => {
   const handler: Handler = new Handler();
@@ -16,6 +17,7 @@ describe('Integration tests : getMembers', () => {
     appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
     creators = new Creators(handler, appointmentsActions);
     handler.mockCommunication();
+    await creators.createFirstUserInDbfNecessary();
   });
 
   afterAll(async () => {
@@ -34,22 +36,15 @@ describe('Integration tests : getMembers', () => {
   });
 
   it('should call with a default member(no: appointments, goals, ai, ..)', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member1: Member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
-    const member2: Member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member1: Member = await creators.createAndValidateMember({ org });
+    const member2: Member = await creators.createAndValidateMember({ org });
+    const primaryUser1 = member1.users[0];
+    const primaryUser2 = member2.users[0];
 
     const membersResult = await handler.queries.getMembers(org.id);
 
-    const compareResults = (result: MemberSummary, member: Member) => {
+    const compareResults = (result: MemberSummary, member: Member, primaryUser: User) => {
       expect(result).toEqual(
         expect.objectContaining({
           id: member.id,
@@ -74,20 +69,17 @@ describe('Integration tests : getMembers', () => {
     };
 
     expect(membersResult.length).toEqual(2);
-    compareResults(membersResult[0], member1);
-    compareResults(membersResult[1], member2);
+    compareResults(membersResult[0], member1, primaryUser1);
+    compareResults(membersResult[1], member2, primaryUser2);
   });
 
   it('should call with a all member parameters', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member: Member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
-    await creators.createAndValidateAppointment({ userId: primaryUser.id, member });
-    const appointment = await appointmentsActions.scheduleAppointment(primaryUser.id, member);
+    const member: Member = await creators.createAndValidateMember({ org });
+    const primaryUser = member.users[0];
+
+    await creators.createAndValidateAppointment({ member });
+    const appointment = await appointmentsActions.scheduleAppointment({ member });
     await creators.createAndValidateTask(member.id, handler.mutations.createGoal);
     await creators.createAndValidateTask(member.id, handler.mutations.createGoal);
     await creators.createAndValidateTask(member.id, handler.mutations.createActionItem);
@@ -120,14 +112,9 @@ describe('Integration tests : getMembers', () => {
   });
 
   it('should call having a single scheduled appointment', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member: Member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
-    const appointment = await appointmentsActions.scheduleAppointment(primaryUser.id, member);
+    const member: Member = await creators.createAndValidateMember({ org });
+    const appointment = await appointmentsActions.scheduleAppointment({ member });
 
     const membersResult = await handler.queries.getMembers(org.id);
 
@@ -142,15 +129,10 @@ describe('Integration tests : getMembers', () => {
   });
 
   it('should return no nextAppointment on no scheduled appointments', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member: Member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
-    await appointmentsActions.requestAppointment(primaryUser.id, member);
-    const appointment = await appointmentsActions.scheduleAppointment(primaryUser.id, member);
+    const member: Member = await creators.createAndValidateMember({ org });
+    await appointmentsActions.requestAppointment({ member });
+    const appointment = await appointmentsActions.scheduleAppointment({ member });
     await handler.mutations.endAppointment({ endAppointmentParams: { id: appointment.id } });
 
     const membersResult = await handler.queries.getMembers(org.id);
@@ -177,22 +159,16 @@ describe('Integration tests : getMembers', () => {
   });
 
   const generate2Appointments = async (secondAppointmentGap: number) => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
 
-    const { id: userId } = primaryUser;
-    const { id: memberId }: Member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member: Member = await creators.createAndValidateMember({ org });
 
     const start1 = new Date();
     start1.setHours(start1.getHours() + 2);
-    const appointment1 = await generateAppointment({ userId, memberId, start: start1 });
+    const appointment1 = await generateAppointment({ member, start: start1 });
     const start2 = new Date();
     start2.setHours(start1.getHours() + secondAppointmentGap);
-    const appointment2 = await generateAppointment({ userId, memberId, start: start2 });
+    const appointment2 = await generateAppointment({ member, start: start2 });
 
     const membersResult = await handler.queries.getMembers(org.id);
 
@@ -210,35 +186,32 @@ describe('Integration tests : getMembers', () => {
   /* eslint-disable max-len*/
   it('should handle primaryUser and users appointments in nextAppointment calculations', async () => {
     /* eslint-enable max-len*/
-    const primaryUser = await creators.createAndValidateUser();
     const user1 = await creators.createAndValidateUser();
     const user2 = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
 
-    const { id: memberId } = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [user1, primaryUser, user2],
-    });
+    const member = await creators.createAndValidateMember({ org });
+
+    await creators.createAndValidateAppointment({ member });
 
     let startPrimaryUser = new Date();
     startPrimaryUser.setHours(startPrimaryUser.getHours() + 10);
-    await generateAppointment({ userId: primaryUser.id, memberId, start: startPrimaryUser });
+    await generateAppointment({ userId: user1.id, member, start: startPrimaryUser });
     startPrimaryUser = new Date();
     startPrimaryUser.setHours(startPrimaryUser.getHours() + 6);
-    await generateAppointment({ userId: primaryUser.id, memberId, start: startPrimaryUser });
+    await generateAppointment({ userId: user2.id, member, start: startPrimaryUser });
 
     const startUser1 = new Date();
     startUser1.setHours(startUser1.getHours() + 4);
     const appointment = await generateAppointment({
       userId: user1.id,
-      memberId,
+      member,
       start: startUser1,
     });
 
     const startUser2 = new Date();
     startUser2.setHours(startUser2.getHours() + 8);
-    await generateAppointment({ userId: user2.id, memberId, start: startUser2 });
+    await generateAppointment({ userId: user2.id, member, start: startUser2 });
 
     const membersResult = await handler.queries.getMembers(org.id);
 
@@ -246,30 +219,20 @@ describe('Integration tests : getMembers', () => {
     expect(membersResult[0]).toEqual(
       expect.objectContaining({
         nextAppointment: appointment.start,
-        appointmentsCount: 4,
+        appointmentsCount: 5,
       }),
     );
   });
 
   it('should handle just users appointments in nextAppointment calculations', async () => {
-    const primaryUser = await creators.createAndValidateUser();
-    const user1 = await creators.createAndValidateUser();
-    const user2 = await creators.createAndValidateUser();
+    const user = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
 
-    const { id: memberId } = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [user1, user2, primaryUser],
-    });
+    const member = await creators.createAndValidateMember({ org });
 
     const start = new Date();
     start.setHours(start.getHours() + 4);
-    const appointment = await generateAppointment({
-      userId: user1.id,
-      memberId,
-      start,
-    });
+    const appointment = await generateAppointment({ userId: user.id, member, start });
 
     const membersResult = await handler.queries.getMembers(org.id);
 
@@ -285,18 +248,13 @@ describe('Integration tests : getMembers', () => {
   /* eslint-disable max-len*/
   it('should not take longer than 1 second to process 10 members with 3 appointments each', async () => {
     /* eslint-enable max-len*/
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
 
     for (let i = 0; i < 10; i++) {
-      const member = await creators.createAndValidateMember({
-        org,
-        primaryUser,
-        users: [primaryUser],
-      });
-      await generateAppointment({ userId: primaryUser.id, memberId: member.id });
-      await generateAppointment({ userId: primaryUser.id, memberId: member.id });
-      await generateAppointment({ userId: primaryUser.id, memberId: member.id });
+      const member = await creators.createAndValidateMember({ org });
+      await generateAppointment({ member });
+      await generateAppointment({ member });
+      await generateAppointment({ member });
     }
 
     const startTime = performance.now();
@@ -311,19 +269,19 @@ describe('Integration tests : getMembers', () => {
    ***********************************************************************************************/
 
   const generateAppointment = async ({
+    member,
     userId,
-    memberId,
     start = date.future(1),
   }: {
-    userId: string;
-    memberId: string;
+    member: Member;
+    userId?: string;
     start?: Date;
   }) => {
     const end = new Date(start.getTime() + 1000 * 60 * 60);
 
     const appointmentParams = generateScheduleAppointmentParams({
-      memberId,
-      userId,
+      memberId: member.id,
+      userId: userId || member.primaryUserId,
       start,
       end,
     });

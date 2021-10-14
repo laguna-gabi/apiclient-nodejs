@@ -546,7 +546,8 @@ export class MemberService extends BaseService {
   ): { appointmentsCount: number; nextAppointment: Date } => {
     const allAppointments = member.users
       .map((user) => user.appointments)
-      .reduce((acc = [], current) => acc.concat(current), []);
+      .reduce((acc = [], current) => acc.concat(current), [])
+      .filter((app: Appointment) => app.memberId.toString() === member.id.toString());
 
     const nextAppointment = allAppointments
       .filter(

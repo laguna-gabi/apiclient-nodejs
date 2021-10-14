@@ -9,7 +9,7 @@ import {
 } from 'date-fns';
 import { EventType, SlackChannel, SlackIcon } from '../../src/common';
 import { Member } from '../../src/member';
-import { defaultSlotsParams } from '../../src/user';
+import { defaultSlotsParams, User } from '../../src/user';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
 import { Creators } from '../aux/creators';
 import { Handler } from '../aux/handler';
@@ -26,6 +26,7 @@ describe('Integration tests : getUserSlots', () => {
     appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
     creators = new Creators(handler, appointmentsActions);
     handler.mockCommunication();
+    await creators.createFirstUserInDbfNecessary();
     spyOnEventEmitter = jest.spyOn(handler.eventEmitter, 'emit');
   });
 
@@ -38,11 +39,12 @@ describe('Integration tests : getUserSlots', () => {
   });
 
   it('should return objects with all slots', async () => {
-    const { primaryUser, member } = await createUserMember();
+    const org = await creators.createAndValidateOrg();
+    const member: Member = await creators.createAndValidateMember({ org });
+    const primaryUser: User = member.users[0];
     await createDefaultAvailabilities(primaryUser.id);
 
     const appointment = await appointmentsActions.scheduleAppointmentWithDate(
-      primaryUser.id,
       member,
       add(startOfToday(), { hours: 9 }),
       add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
@@ -77,18 +79,18 @@ describe('Integration tests : getUserSlots', () => {
   });
 
   it('there should not be a slot overlapping a scheduled appointment', async () => {
-    const { primaryUser, member } = await createUserMember();
-    await createDefaultAvailabilities(primaryUser.id);
+    const org = await creators.createAndValidateOrg();
+    const member: Member = await creators.createAndValidateMember({ org });
+    await createDefaultAvailabilities(member.primaryUserId);
 
     const appointment = await appointmentsActions.scheduleAppointmentWithDate(
-      primaryUser.id,
       member,
       add(startOfToday(), { hours: 11 }),
       add(startOfToday(), { hours: 11, minutes: defaultSlotsParams.duration }),
     );
 
     const result = await handler.queries.getUserSlots({
-      userId: primaryUser.id,
+      userId: member.primaryUserId,
       notBefore: add(startOfToday(), { hours: 10 }),
     });
 
@@ -111,25 +113,22 @@ describe('Integration tests : getUserSlots', () => {
   });
 
   it('should get slots that overlap appointments that are not scheduled', async () => {
-    const { primaryUser, member } = await createUserMember();
-    await createDefaultAvailabilities(primaryUser.id);
-    await createUserMember();
+    const org = await creators.createAndValidateOrg();
+    const member: Member = await creators.createAndValidateMember({ org });
+    await createDefaultAvailabilities(member.primaryUserId);
 
     await appointmentsActions.scheduleAppointmentWithDate(
-      primaryUser.id,
       member,
       add(startOfToday(), { hours: 9 }),
       add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
     );
 
     const requestedAppointment = await appointmentsActions.requestAppointmentWithDate(
-      primaryUser.id,
       member,
       add(startOfTomorrow(), { hours: 10 }),
     );
 
     const scheduleAppointmentResult = await appointmentsActions.scheduleAppointmentWithDate(
-      primaryUser.id,
       member,
       add(startOfToday(), { hours: 11 }),
       add(startOfToday(), { hours: 11, minutes: defaultSlotsParams.duration }),
@@ -138,7 +137,7 @@ describe('Integration tests : getUserSlots', () => {
     await appointmentsActions.endAppointment(scheduleAppointmentResult.id);
 
     const result = await handler.queries.getUserSlots({
-      userId: primaryUser.id,
+      userId: member.primaryUserId,
       notBefore: add(startOfToday(), { hours: 10 }),
     });
 
@@ -176,33 +175,26 @@ describe('Integration tests : getUserSlots', () => {
 
   // eslint-disable-next-line max-len
   it('should return 6 default slots and send message to slack if availability in the past', async () => {
-    const { primaryUser, member } = await createUserMember();
+    const user = await creators.createAndValidateUser();
 
     await handler.mutations.createAvailabilities({
       availabilities: [
         generateAvailabilityInput({
           start: add(startOfToday(), { hours: 8 }),
           end: add(startOfToday(), { hours: 10 }),
-          userId: primaryUser.id,
+          userId: user.id,
         }),
       ],
     });
 
-    await appointmentsActions.scheduleAppointmentWithDate(
-      primaryUser.id,
-      member,
-      add(startOfToday(), { hours: 8 }),
-      add(startOfToday(), { hours: 8, minutes: defaultSlotsParams.duration }),
-    );
-
     const result = await handler.queries.getUserSlots({
-      userId: primaryUser.id,
+      userId: user.id,
       notBefore: add(startOfToday(), { hours: 12 }),
     });
 
     expect(result.slots.length).toEqual(6);
     expect(spyOnEventEmitter).toBeCalledWith(EventType.slackMessage, {
-      message: `*No availability*\nUser ${primaryUser.id} to fulfill slots request`,
+      message: `*No availability*\nUser ${user.id} to fulfill slots request`,
       icon: SlackIcon.warning,
       channel: SlackChannel.notifications,
     });
@@ -212,25 +204,16 @@ describe('Integration tests : getUserSlots', () => {
 
   // eslint-disable-next-line max-len
   it('should return 6 default slots and send message to slack if there is no availability', async () => {
-    const { primaryUser, member } = await createUserMember();
-
-    await appointmentsActions.scheduleAppointmentWithDate(
-      primaryUser.id,
-      member,
-      add(startOfToday(), { hours: 9 }),
-      add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
-    );
-
-    spyOnEventEmitter.mockReset();
+    const user = await creators.createAndValidateUser();
 
     const result = await handler.queries.getUserSlots({
-      userId: primaryUser.id,
-      notBefore: add(startOfToday(), { hours: 10 }),
+      userId: user.id,
+      notBefore: add(startOfToday(), { hours: 12 }),
     });
 
     expect(result.slots.length).toEqual(6);
     expect(spyOnEventEmitter).toBeCalledWith(EventType.slackMessage, {
-      message: `*No availability*\nUser ${primaryUser.id} to fulfill slots request`,
+      message: `*No availability*\nUser ${user.id} to fulfill slots request`,
       icon: SlackIcon.warning,
       channel: SlackChannel.notifications,
     });
@@ -268,31 +251,20 @@ describe('Integration tests : getUserSlots', () => {
   });
 
   const preformGetUserSlots = async () => {
-    const { primaryUser, member } = await createUserMember();
-    await createDefaultAvailabilities(primaryUser.id);
+    const org = await creators.createAndValidateOrg();
+    const member: Member = await creators.createAndValidateMember({ org });
+    await createDefaultAvailabilities(member.primaryUserId);
 
     await appointmentsActions.scheduleAppointmentWithDate(
-      primaryUser.id,
       member,
       add(startOfToday(), { hours: 9 }),
       add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
     );
 
     return handler.queries.getUserSlots({
-      userId: primaryUser.id,
+      userId: member.primaryUserId,
       notBefore: add(startOfToday(), { hours: 10 }),
     });
-  };
-
-  const createUserMember = async () => {
-    const primaryUser = await creators.createAndValidateUser();
-    const org = await creators.createAndValidateOrg();
-    const member: Member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
-    return { primaryUser, member };
   };
 
   const createDefaultAvailabilities = async (primaryUserId: string) => {

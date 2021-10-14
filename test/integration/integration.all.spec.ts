@@ -59,6 +59,7 @@ describe('Integration tests: all', () => {
     appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
     creators = new Creators(handler, appointmentsActions);
     handler.mockCommunication();
+    await creators.createFirstUserInDbfNecessary();
   });
 
   afterAll(async () => {
@@ -88,85 +89,80 @@ describe('Integration tests: all', () => {
      * 12. Update action items for a member
      * 13. Fetch member and checks all related appointments
      */
-    const resultCoach = await creators.createAndValidateUser();
     const resultNurse1 = await creators.createAndValidateUser([UserRole.nurse, UserRole.coach]);
     const resultNurse2 = await creators.createAndValidateUser([UserRole.nurse]);
 
     const resultOrg = await creators.createAndValidateOrg();
-    const resultMember = await creators.createAndValidateMember({
-      org: resultOrg,
-      primaryUser: resultCoach,
-      users: [resultNurse1, resultNurse2, resultCoach],
-    });
+    const member = await creators.createAndValidateMember({ org: resultOrg });
+    const primaryCoach = member.users[0];
 
     const scheduledAppointmentPrimaryUser = await creators.createAndValidateAppointment({
-      userId: resultCoach.id,
-      member: resultMember,
+      member,
     });
 
     const scheduledAppointmentNurse1 = await creators.createAndValidateAppointment({
+      member,
       userId: resultNurse1.id,
-      member: resultMember,
     });
 
     const scheduledAppointmentNurse2 = await creators.createAndValidateAppointment({
+      member,
       userId: resultNurse2.id,
-      member: resultMember,
     });
 
     const { createTaskParams: goal1, id: idGoal1 } = await creators.createAndValidateTask(
-      resultMember.id,
+      member.id,
       handler.mutations.createGoal,
     );
     const { createTaskParams: goal2, id: idGoal2 } = await creators.createAndValidateTask(
-      resultMember.id,
+      member.id,
       handler.mutations.createGoal,
     );
     await updateTaskStatus(idGoal1, handler.mutations.updateGoalStatus);
     await updateTaskStatus(idGoal2, handler.mutations.updateGoalStatus);
 
     const { createTaskParams: ai1, id: idAi1 } = await creators.createAndValidateTask(
-      resultMember.id,
+      member.id,
       handler.mutations.createActionItem,
     );
     const { createTaskParams: ai2, id: idAi2 } = await creators.createAndValidateTask(
-      resultMember.id,
+      member.id,
       handler.mutations.createActionItem,
     );
     await updateTaskStatus(idAi1, handler.mutations.updateActionItemStatus);
     await updateTaskStatus(idAi2, handler.mutations.updateActionItemStatus);
 
-    const member = await handler.queries.getMember({ id: resultMember.id });
+    const resultMember = await handler.queries.getMember({ id: member.id });
 
-    expect(member.users.filter((user) => user.id === resultCoach.id)[0].appointments[0]).toEqual(
-      expect.objectContaining({ status: AppointmentStatus.done }),
-    );
+    expect(
+      resultMember.users.filter((user) => user.id === primaryCoach.id)[0].appointments[0],
+    ).toEqual(expect.objectContaining({ status: AppointmentStatus.done }));
     expect(scheduledAppointmentPrimaryUser).toEqual(
       expect.objectContaining(
-        member.users.filter((user) => user.id === resultCoach.id)[0].appointments[0],
+        resultMember.users.filter((user) => user.id === primaryCoach.id)[0].appointments[0],
       ),
     );
 
-    expect(member.users[0].appointments[0]).toEqual(
+    expect(resultMember.users[0].appointments[0]).toEqual(
       expect.objectContaining({ status: AppointmentStatus.done }),
     );
     expect(scheduledAppointmentNurse1).toEqual(
-      expect.objectContaining(member.users[0].appointments[0]),
+      expect.objectContaining(resultMember.users[1].appointments[0]),
     );
 
-    expect(member.users[1].appointments[0]).toEqual(
+    expect(resultMember.users[1].appointments[0]).toEqual(
       expect.objectContaining({ status: AppointmentStatus.done }),
     );
     expect(scheduledAppointmentNurse2).toEqual(
-      expect.objectContaining(member.users[1].appointments[0]),
+      expect.objectContaining(resultMember.users[2].appointments[0]),
     );
-    expect(member.scores).toEqual(scheduledAppointmentNurse2.notes.scores);
+    expect(resultMember.scores).toEqual(scheduledAppointmentNurse2.notes.scores);
 
     //Goals and action items are desc sorted, so the last inserted goal is the 1st in the list
-    compareTasks(member.goals[0], goal2);
-    compareTasks(member.goals[1], goal1);
-    compareTasks(member.actionItems[0], ai2);
-    compareTasks(member.actionItems[1], ai1);
+    compareTasks(resultMember.goals[0], goal2);
+    compareTasks(resultMember.goals[1], goal1);
+    compareTasks(resultMember.actionItems[0], ai2);
+    compareTasks(resultMember.actionItems[1], ai1);
   });
 
   /**
@@ -179,36 +175,12 @@ describe('Integration tests: all', () => {
    * it'll return just the related appointment of a user, and not all appointments.
    */
   it('getAppointments should return just the member appointment of a user', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member1 = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
-    const member2 = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member1 = await creators.createAndValidateMember({ org });
+    const member2 = await creators.createAndValidateMember({ org });
 
-    const appointmentMember1 = await creators.createAndValidateAppointment({
-      userId: primaryUser.id,
-      member: member1,
-    });
-
-    const appointmentMember2 = await creators.createAndValidateAppointment({
-      userId: primaryUser.id,
-      member: member2,
-    });
-
-    const primaryUserWithAppointments = await handler.queries.getUser(primaryUser.id);
-    expect(appointmentMember1).toEqual(
-      expect.objectContaining(primaryUserWithAppointments.appointments[0]),
-    );
-    expect(appointmentMember2).toEqual(
-      expect.objectContaining(primaryUserWithAppointments.appointments[1]),
-    );
+    const appointmentMember1 = await creators.createAndValidateAppointment({ member: member1 });
+    const appointmentMember2 = await creators.createAndValidateAppointment({ member: member2 });
 
     const memberResult1 = await handler.queries.getMember({ id: member1.id });
     expect(appointmentMember1).toEqual(
@@ -222,13 +194,8 @@ describe('Integration tests: all', () => {
   });
 
   it('should update a member fields', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member = await creators.createAndValidateMember({ org });
 
     const updateMemberParams = generateUpdateMemberParams({ id: member.id });
     const updatedMemberResult = await handler.mutations.updateMember({ updateMemberParams });
@@ -252,13 +219,8 @@ describe('Integration tests: all', () => {
   });
 
   it('should calculate utcDelta if zipCode exists', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member = await creators.createAndValidateMember({ org });
 
     const memberResult = await handler.queries.getMember({ id: member.id });
     expect(memberResult.utcDelta).toBeLessThan(0);
@@ -290,35 +252,28 @@ describe('Integration tests: all', () => {
   });
 
   it('should return members appointment filtered by orgId', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const { id: memberId1 } = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
-    const { id: memberId2 } = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member1 = await creators.createAndValidateMember({ org });
+    const primaryUser1 = member1.users[0];
+    const member2 = await creators.createAndValidateMember({ org });
+    const primaryUser2 = member1.users[0];
 
     const params1a = generateScheduleAppointmentParams({
-      memberId: memberId1,
-      userId: primaryUser.id,
+      memberId: member1.id,
+      userId: primaryUser1.id,
     });
     const params1b = generateScheduleAppointmentParams({
-      memberId: memberId1,
-      userId: primaryUser.id,
+      memberId: member1.id,
+      userId: primaryUser1.id,
     });
     const params2a = generateScheduleAppointmentParams({
-      memberId: memberId2,
-      userId: primaryUser.id,
+      memberId: member2.id,
+      userId: primaryUser2.id,
     });
     // Request appointment should not be on results, only showing status scheduled
     const params2b = generateRequestAppointmentParams({
-      memberId: memberId2,
-      userId: primaryUser.id,
+      memberId: member2.id,
+      userId: primaryUser2.id,
     });
 
     await creators.handler.mutations.scheduleAppointment({ appointmentParams: params1a });
@@ -327,34 +282,34 @@ describe('Integration tests: all', () => {
     await creators.handler.mutations.requestAppointment({ appointmentParams: params2b });
 
     const result = await creators.handler.queries.getMembersAppointments(org.id);
-    const member1 = await creators.handler.queries.getMember({ id: memberId1 });
-    const member2 = await creators.handler.queries.getMember({ id: memberId2 });
+    const resultMember1 = await creators.handler.queries.getMember({ id: member1.id });
+    const resultMember2 = await creators.handler.queries.getMember({ id: member2.id });
 
     expect(result.length).toEqual(3);
 
     expect(result).toEqual(
       expect.arrayContaining([
         {
-          memberId: memberId1,
-          memberName: `${member1.firstName} ${member1.lastName}`,
-          userId: primaryUser.id,
-          userName: `${primaryUser.firstName} ${primaryUser.lastName}`,
+          memberId: member1.id,
+          memberName: `${resultMember1.firstName} ${resultMember1.lastName}`,
+          userId: primaryUser1.id,
+          userName: `${primaryUser1.firstName} ${primaryUser1.lastName}`,
           start: expect.any(String),
           end: expect.any(String),
         },
         {
-          memberId: memberId1,
-          memberName: `${member1.firstName} ${member1.lastName}`,
-          userId: primaryUser.id,
-          userName: `${primaryUser.firstName} ${primaryUser.lastName}`,
+          memberId: member1.id,
+          memberName: `${resultMember1.firstName} ${resultMember1.lastName}`,
+          userId: primaryUser1.id,
+          userName: `${primaryUser1.firstName} ${primaryUser1.lastName}`,
           start: expect.any(String),
           end: expect.any(String),
         },
         {
-          memberId: memberId2,
-          memberName: `${member2.firstName} ${member2.lastName}`,
-          userId: primaryUser.id,
-          userName: `${primaryUser.firstName} ${primaryUser.lastName}`,
+          memberId: member2.id,
+          memberName: `${resultMember2.firstName} ${resultMember2.lastName}`,
+          userId: primaryUser2.id,
+          userName: `${primaryUser2.firstName} ${primaryUser2.lastName}`,
           start: expect.any(String),
           end: expect.any(String),
         },
@@ -363,25 +318,20 @@ describe('Integration tests: all', () => {
   });
 
   it('should override requested appointment when calling schedule appointment', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const { id: memberId } = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member = await creators.createAndValidateMember({ org });
 
     const requestedAppointment = generateRequestAppointmentParams({
-      memberId,
-      userId: primaryUser.id,
+      memberId: member.id,
+      userId: member.primaryUserId,
     });
     const { id: requestedId } = await creators.handler.mutations.requestAppointment({
       appointmentParams: requestedAppointment,
     });
 
     const scheduledAppointment = generateScheduleAppointmentParams({
-      memberId,
-      userId: primaryUser.id,
+      memberId: member.id,
+      userId: member.primaryUserId,
     });
     const { id: scheduledId } = await creators.handler.mutations.scheduleAppointment({
       appointmentParams: scheduledAppointment,
@@ -394,17 +344,12 @@ describe('Integration tests: all', () => {
   });
 
   it('should create multiple new scheduled appointments', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const { id: memberId } = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member = await creators.createAndValidateMember({ org });
 
     const scheduledAppointment1 = generateScheduleAppointmentParams({
-      memberId,
-      userId: primaryUser.id,
+      memberId: member.id,
+      userId: member.primaryUserId,
       method: AppointmentMethod.chat,
     });
     const { id: requestedId } = await creators.handler.mutations.scheduleAppointment({
@@ -412,8 +357,8 @@ describe('Integration tests: all', () => {
     });
 
     const scheduledAppointment2 = generateScheduleAppointmentParams({
-      memberId,
-      userId: primaryUser.id,
+      memberId: member.id,
+      userId: member.primaryUserId,
       method: AppointmentMethod.videoCall,
     });
     const { id: scheduledId } = await creators.handler.mutations.scheduleAppointment({
@@ -424,16 +369,11 @@ describe('Integration tests: all', () => {
   });
 
   it('should create update and delete appointment notes', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const { id: memberId }: Member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member: Member = await creators.createAndValidateMember({ org });
     const scheduledAppointment = generateScheduleAppointmentParams({
-      memberId,
-      userId: primaryUser.id,
+      memberId: member.id,
+      userId: member.primaryUserId,
       method: AppointmentMethod.chat,
     });
     const { id: appointmentId } = await creators.handler.mutations.scheduleAppointment({
@@ -463,18 +403,10 @@ describe('Integration tests: all', () => {
   });
 
   it('should validate that getMember attach chat app link to each appointment', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member = await creators.createAndValidateMember({ org });
 
-    const appointmentMember = await creators.createAndValidateAppointment({
-      userId: primaryUser.id,
-      member,
-    });
+    const appointmentMember = await creators.createAndValidateAppointment({ member });
 
     const memberResult = await handler.queries.getMember({ id: member.id });
     expect(appointmentMember).toEqual(
@@ -485,26 +417,16 @@ describe('Integration tests: all', () => {
   });
 
   it('web: should be able to getMember with member id', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member = await creators.createAndValidateMember({ org });
 
     const memberResult = await handler.queries.getMember({ id: member.id });
     expect(memberResult).toEqual(expect.objectContaining({ ...member }));
   });
 
   it('should be able to set note for a member', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member = await creators.createAndValidateMember({ org });
 
     const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: member.id });
     await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
@@ -514,13 +436,8 @@ describe('Integration tests: all', () => {
   });
 
   it('should be able to set null note for a member', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member = await creators.createAndValidateMember({ org });
 
     const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: member.id });
     await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
@@ -536,13 +453,8 @@ describe('Integration tests: all', () => {
   });
 
   it('should be able to get upload dispatch links of a member', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const { id } = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const { id } = await creators.createAndValidateMember({ org });
 
     const result = await handler.queries.getMemberUploadDischargeDocumentsLinks({ id });
     expect(result).toEqual({
@@ -552,13 +464,8 @@ describe('Integration tests: all', () => {
   });
 
   it('should be able to get download dispatch links of a member', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const { id } = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const { id } = await creators.createAndValidateMember({ org });
 
     const result = await handler.queries.getMemberDownloadDischargeDocumentsLinks({ id });
     expect(result).toEqual({
@@ -568,13 +475,8 @@ describe('Integration tests: all', () => {
   });
 
   it('should be able to get upload recordings of a member', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const { id } = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const { id } = await creators.createAndValidateMember({ org });
 
     const result = await handler.queries.getMemberUploadRecordingLink({
       recordingLinkParams: {
@@ -586,13 +488,8 @@ describe('Integration tests: all', () => {
   });
 
   it('should be able to get download recordings of a member', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const { id } = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const { id } = await creators.createAndValidateMember({ org });
 
     const result = await handler.queries.getMemberDownloadRecordingLink({
       recordingLinkParams: {
@@ -612,13 +509,8 @@ describe('Integration tests: all', () => {
     /* eslint-enable max-len */
     `should registerMemberForNotifications and update MemberConfig on $register.platform`,
     async (params) => {
-      const primaryUser = await creators.createAndValidateUser();
       const org = await creators.createAndValidateOrg();
-      const { id } = await creators.createAndValidateMember({
-        org,
-        primaryUser,
-        users: [primaryUser],
-      });
+      const { id } = await creators.createAndValidateMember({ org });
 
       const memberConfigDefault: MemberConfig = await handler.queries.getMemberConfig({ id });
       expect(memberConfigDefault).toEqual({
@@ -661,13 +553,10 @@ describe('Integration tests: all', () => {
     ${NotificationType.call}  | ${false} | ${{ peerId: v4() }}
     ${NotificationType.text}  | ${false} | ${{ content: 'text' }}
   `(`should send push notification of type $type`, async (params) => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member = await creators.createAndValidateMember({ org });
+    const primaryUser = member.users[0];
+
     const registerForNotificationParams: RegisterForNotificationParams = {
       memberId: member.id,
       platform: Platform.android,
@@ -712,13 +601,8 @@ describe('Integration tests: all', () => {
   });
 
   it(`should send SMS notification of type textSms`, async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member = await creators.createAndValidateMember({ org });
     const registerForNotificationParams: RegisterForNotificationParams = {
       memberId: member.id,
       platform: Platform.android,
@@ -728,7 +612,7 @@ describe('Integration tests: all', () => {
 
     const notifyParams: NotifyParams = {
       memberId: member.id,
-      userId: primaryUser.id,
+      userId: member.primaryUserId,
       type: NotificationType.textSms,
       metadata: { content: 'text' },
     };
@@ -746,13 +630,9 @@ describe('Integration tests: all', () => {
   });
 
   it(`should send a future notification`, async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member = await creators.createAndValidateMember({ org });
+    const primaryUser = member.users[0];
 
     await delay(1000);
     /**
@@ -809,13 +689,8 @@ describe('Integration tests: all', () => {
     CancelNotificationType.cancelCall,
     CancelNotificationType.cancelText,
   ])(`should cancel a notification of type $type`, async (params) => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member = await creators.createAndValidateMember({ org });
     const registerForNotificationParams: RegisterForNotificationParams = {
       memberId: member.id,
       platform: Platform.android,
@@ -844,9 +719,8 @@ describe('Integration tests: all', () => {
     handler.notificationsService.spyOnNotificationsServiceCancel.mockReset();
   });
 
-  //https://app.clubhouse.io/laguna-health/story/1625/add-edit-for-member-s-users-and-primaryuserid
   /* eslint-disable max-len */
-  test.skip.each`
+  test.each`
     title | method
     ${'requestAppointment'} | ${async ({ memberId, userId }) => await handler.mutations.requestAppointment({
     appointmentParams: generateRequestAppointmentParams({
@@ -862,18 +736,13 @@ describe('Integration tests: all', () => {
   })}
   `(`should add a not existed user to member users list on $title`, async (params) => {
     /* eslint-enable max-len */
-    const primaryUser = await creators.createAndValidateUser();
     const user = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member = await creators.createAndValidateMember({ org });
 
     const initialMember = await handler.queries.getMember({ id: member.id });
     expect(initialMember.users.length).toEqual(1);
-    expect(initialMember.users[0].id).toEqual(primaryUser.id);
+    expect(initialMember.users[0].id).toEqual(member.primaryUserId);
 
     //calling twice, to check that the user wasn't added twice to users list
     await params.method({ userId: user.id, memberId: member.id });
@@ -883,7 +752,7 @@ describe('Integration tests: all', () => {
 
     const ids = users.map((user) => user.id);
     expect(ids.length).toEqual(2);
-    expect(ids[0]).toEqual(primaryUser.id);
+    expect(ids[0]).toEqual(member.primaryUserId);
     expect(ids[1]).toEqual(user.id);
   });
 
@@ -897,19 +766,9 @@ describe('Integration tests: all', () => {
       expect(rec1.phone).toEqual(rec2.phone);
     };
 
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const { id: memberId1 } = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
-
-    const { id: memberId2 } = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const { id: memberId1 } = await creators.createAndValidateMember({ org });
+    const { id: memberId2 } = await creators.createAndValidateMember({ org });
 
     const rec1a = generateUpdateRecordingParams({ memberId: memberId1 });
     const rec1b = generateUpdateRecordingParams({ memberId: memberId1 });
@@ -928,13 +787,8 @@ describe('Integration tests: all', () => {
   });
 
   it('should register scheduled appointment reminder and notify it to member', async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member = await creators.createAndValidateMember({ org });
 
     await delay(1000);
 
@@ -945,7 +799,7 @@ describe('Integration tests: all', () => {
 
     const appointmentParams = generateScheduleAppointmentParams({
       memberId: member.id,
-      userId: primaryUser.id,
+      userId: member.users[0].id,
       start,
     });
 
@@ -961,7 +815,7 @@ describe('Integration tests: all', () => {
 
     expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenNthCalledWith(1, {
       sendTwilioNotification: {
-        to: primaryUser.phone,
+        to: member.users[0].phone,
         body: expect.any(String),
       },
     });
@@ -977,24 +831,14 @@ describe('Integration tests: all', () => {
   });
   describe('new member + member registration scheduling', () => {
     it('should create timeout on member creation', async () => {
-      const primaryUser = await creators.createAndValidateUser();
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({
-        org,
-        primaryUser,
-        users: [primaryUser],
-      });
+      const member = await creators.createAndValidateMember({ org });
       expect(handler.schedulerRegistry.getTimeouts()).toEqual(expect.arrayContaining([member.id]));
     });
 
     it('should create timeout for registered member', async () => {
-      const primaryUser = await creators.createAndValidateUser();
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({
-        org,
-        primaryUser,
-        users: [primaryUser],
-      });
+      const member = await creators.createAndValidateMember({ org });
       const registerForNotificationParams: RegisterForNotificationParams = {
         isPushNotificationsEnabled: true,
         platform: Platform.ios,
@@ -1008,17 +852,13 @@ describe('Integration tests: all', () => {
     it('should delete timeout for member if an appointment is scheduled', async () => {
       const primaryUser = await creators.createAndValidateUser();
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({
-        org,
-        primaryUser,
-        users: [primaryUser],
-      });
-      const requestAppointmentParams: RequestAppointmentParams = generateRequestAppointmentParams({
+      const member = await creators.createAndValidateMember({ org });
+      const appointmentParams: RequestAppointmentParams = generateRequestAppointmentParams({
         memberId: member.id,
         userId: primaryUser.id,
       });
       const requestedAppointment = await handler.mutations.requestAppointment({
-        appointmentParams: requestAppointmentParams,
+        appointmentParams,
       });
       const scheduleAppointmentParams: ScheduleAppointmentParams =
         generateScheduleAppointmentParams({

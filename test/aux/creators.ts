@@ -1,5 +1,4 @@
 import { camelCase, omit } from 'lodash';
-import { Types } from 'mongoose';
 import { Appointment, AppointmentStatus, EndAppointmentParams } from '../../src/appointment';
 import { CreateTaskParams, defaultMemberParams, Member } from '../../src/member';
 import { Org } from '../../src/org';
@@ -12,14 +11,21 @@ import {
   generateEndAppointmentParams,
   generateOrgParams,
 } from '../generators';
-import { AppointmentsIntegrationActions } from './appointments';
 import { Handler } from './handler';
+import { AppointmentsIntegrationActions } from './appointments';
 
 export class Creators {
   constructor(
     readonly handler: Handler,
     private readonly appointmentsActions: AppointmentsIntegrationActions,
   ) {}
+
+  createFirstUserInDbfNecessary = async () => {
+    const users = await this.handler.queries.getUsers();
+    if (users.length === 0) {
+      await this.createAndValidateUser();
+    }
+  };
 
   createAndValidateUser = async (roles?: UserRole[]): Promise<User> => {
     const userParams: CreateUserParams = generateCreateUserParams({ roles });
@@ -52,25 +58,9 @@ export class Creators {
     return { id, ...orgParams };
   };
 
-  createAndValidateMember = async ({
-    org,
-    primaryUser,
-    users,
-  }: {
-    org: Org;
-    primaryUser: User;
-    users: User[];
-  }): Promise<Member> => {
-    const memberParams = generateCreateMemberParams({
-      orgId: org.id,
-    });
-    const usersIds = users.map((i) => i.id);
+  createAndValidateMember = async ({ org }: { org: Org }): Promise<Member> => {
+    const memberParams = generateCreateMemberParams({ orgId: org.id });
     const { id } = await this.handler.mutations.createMember({ memberParams });
-    await this.handler.memberModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(id) },
-      { $set: { primaryUserId: primaryUser.id, users: usersIds } },
-      { upsert: true, new: true, rawResult: true },
-    );
 
     const member = await this.handler.queries.getMember({ id });
 
@@ -79,7 +69,7 @@ export class Creators {
     expect(member.lastName).toEqual(memberParams.lastName);
 
     expect(new Date(member.dateOfBirth)).toEqual(new Date(memberParams.dateOfBirth));
-    expect(member.primaryUserId).toEqual(primaryUser.id);
+    expect(member.primaryUserId).toEqual(expect.any(String));
     expect(member.org).toEqual(org);
     expect(member.sex).toEqual(defaultMemberParams.sex);
     expect(member.email).toBeNull();
@@ -104,15 +94,18 @@ export class Creators {
     userId,
     member,
   }: {
-    userId: string;
+    userId?: string;
     member: Member;
   }): Promise<Appointment> => {
-    const requestAppointmentResult = await this.appointmentsActions.requestAppointment(
-      userId,
+    const requestAppointmentResult = await this.appointmentsActions.requestAppointment({
+      userId: userId || member.primaryUserId,
       member,
-    );
+    });
 
-    const appointment = await this.appointmentsActions.scheduleAppointment(userId, member);
+    const appointment = await this.appointmentsActions.scheduleAppointment({
+      userId: userId || member.primaryUserId,
+      member,
+    });
     expect(appointment.status).toEqual(AppointmentStatus.scheduled);
     expect(requestAppointmentResult.id).toEqual(appointment.id);
 
