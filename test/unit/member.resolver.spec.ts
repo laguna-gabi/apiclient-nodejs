@@ -645,6 +645,7 @@ describe('MemberResolver', () => {
     it('should not call notificationsService on platform=android', async () => {
       spyOnNotificationsServiceRegister.mockImplementationOnce(async () => undefined);
       const memberConfig = mockGenerateMemberConfig();
+      delete memberConfig.firstLoggedInAt;
       const member = mockGenerateMember();
       member.id = memberConfig.memberId.toString();
 
@@ -680,6 +681,7 @@ describe('MemberResolver', () => {
     it('should call notificationsService on platform=ios', async () => {
       spyOnNotificationsServiceRegister.mockImplementationOnce(async () => undefined);
       const memberConfig = mockGenerateMemberConfig();
+      delete memberConfig.firstLoggedInAt;
       const member = mockGenerateMember();
       member.id = memberConfig.memberId.toString();
 
@@ -712,6 +714,24 @@ describe('MemberResolver', () => {
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.updateMemberPlatform, eventParams);
       expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: member.id });
+    });
+
+    it('should not call updateMemberConfigRegisteredAt if firstLoggedInAt exists', async () => {
+      const memberConfig = mockGenerateMemberConfig();
+      const member = mockGenerateMember();
+      member.id = memberConfig.memberId.toString();
+
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+
+      const params: RegisterForNotificationParams = {
+        memberId: member.id,
+        platform: Platform.android,
+        isPushNotificationsEnabled: true,
+      };
+      await resolver.registerMemberForNotifications(params);
+
+      expect(spyOnServiceUpdateMemberConfigRegisteredAt).not.toBeCalled();
     });
   });
 

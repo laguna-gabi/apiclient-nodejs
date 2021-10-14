@@ -287,12 +287,14 @@ export class MemberResolver extends MemberBase {
         externalUserId: memberConfig.externalUserId,
       });
     }
+    if (!memberConfig.firstLoggedInAt) {
+      await this.memberService.updateMemberConfigRegisteredAt(memberConfig.memberId);
+    }
     await this.memberService.updateMemberConfig({
       memberId: memberConfig.memberId,
       platform: registerForNotificationParams.platform,
       isPushNotificationsEnabled: registerForNotificationParams.isPushNotificationsEnabled,
     });
-    await this.memberService.updateMemberConfigRegisteredAt(memberConfig.memberId);
 
     member.users.map((user) => {
       const eventParams: IEventUpdateMemberPlatform = {
