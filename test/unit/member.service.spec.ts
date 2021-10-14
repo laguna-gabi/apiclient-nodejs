@@ -1,25 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import * as config from 'config';
+import * as faker from 'faker';
+import { datatype, date, internet } from 'faker';
 import { Model, model, Types } from 'mongoose';
+import { v4 } from 'uuid';
 import {
-  compareUsers,
-  dbConnect,
-  dbDisconnect,
-  defaultModules,
-  generateCreateMemberParams,
-  generateCreateRawUserParams,
-  generateCreateTaskParams,
-  generateDateOnly,
-  generateId,
-  generateObjectId,
-  generateOrgParams,
-  generateUpdateRecordingParams,
-  generateRequestAppointmentParams,
-  generateScheduleAppointmentParams,
-  generateSetGeneralNotesParams,
-  generateUpdateMemberParams,
-  generateUpdateTaskStatusParams,
-  generateZipCode,
-} from '../index';
+  Appointment,
+  AppointmentDto,
+  AppointmentModule,
+  AppointmentStatus,
+} from '../../src/appointment';
+import { Errors, ErrorType, Language, Platform } from '../../src/common';
 import {
   CreateMemberParams,
   defaultMemberParams,
@@ -32,19 +23,28 @@ import {
   TaskStatus,
   UpdateMemberParams,
 } from '../../src/member';
-import { Errors, ErrorType, Language, Platform } from '../../src/common';
-import { User, UserDto } from '../../src/user';
-import * as faker from 'faker';
-import { datatype, date, internet } from 'faker';
-import {
-  Appointment,
-  AppointmentDto,
-  AppointmentModule,
-  AppointmentStatus,
-} from '../../src/appointment';
 import { Org, OrgDto } from '../../src/org';
-import { v4 } from 'uuid';
-import * as config from 'config';
+import { User, UserDto } from '../../src/user';
+import {
+  compareUsers,
+  dbConnect,
+  dbDisconnect,
+  defaultModules,
+  generateCreateMemberParams,
+  generateCreateRawUserParams,
+  generateCreateTaskParams,
+  generateDateOnly,
+  generateId,
+  generateObjectId,
+  generateOrgParams,
+  generateRequestAppointmentParams,
+  generateScheduleAppointmentParams,
+  generateSetGeneralNotesParams,
+  generateUpdateMemberParams,
+  generateUpdateRecordingParams,
+  generateUpdateTaskStatusParams,
+  generateZipCode,
+} from '../index';
 
 describe('MemberService', () => {
   let module: TestingModule;

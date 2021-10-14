@@ -1,9 +1,9 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { IncomingWebhook } from '@slack/webhook';
 import * as config from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
 import { Environments, EventType, IEventSlackMessage, Logger } from '../common';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
 export class SlackBot implements OnModuleInit {

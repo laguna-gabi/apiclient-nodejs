@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Availability, AvailabilityDocument, AvailabilityInput, AvailabilitySlot } from '.';
-import { Model } from 'mongoose';
-import { cloneDeep } from 'lodash';
 import { InjectModel } from '@nestjs/mongoose';
+import { cloneDeep } from 'lodash';
+import { Model } from 'mongoose';
+import { Availability, AvailabilityDocument, AvailabilityInput, AvailabilitySlot } from '.';
 import { Errors, ErrorType, Identifiers } from '../common';
 
 @Injectable()
