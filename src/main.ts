@@ -3,12 +3,29 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AppointmentScheduler } from './appointment';
 import { MemberScheduler } from './member';
+import { exec } from 'child_process';
+import * as packageJson from '../package.json';
+import { internalLogs, Logger } from './common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
   app.useGlobalPipes(new ValidationPipe({ transform: true })); //Transform is for rest api
   await app.listen(3000);
+
+  const logger = app.get<Logger>(Logger);
+  logger.internal(
+    internalLogs.hepiusVersion.replace('@version@', packageJson.version),
+    'Main',
+    bootstrap.name,
+  );
+  exec('git rev-parse HEAD', (err, stdout) => {
+    logger.internal(
+      internalLogs.lastCommit.replace('@hash@', stdout.replace('\n', '')),
+      'Main',
+      bootstrap.name,
+    );
+  });
 
   /**
    * Registering reminders for all scheduled notifications

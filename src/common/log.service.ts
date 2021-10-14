@@ -43,6 +43,7 @@ export class Logger {
       this.getCalledLog(params),
       className,
       methodName,
+      LogType.log,
       COLOR.fgWhite,
     );
 
@@ -54,6 +55,7 @@ export class Logger {
       `${this.getCalledLog(params)} WARN with result ${reasons}`,
       className,
       methodName,
+      LogType.warn,
       COLOR.fgYellow,
     );
     console.warn(this.isColorLog() ? colorLog : log);
@@ -70,6 +72,7 @@ export class Logger {
       `${this.getCalledLog(params)} FAILED with result ${reasons}`,
       className,
       methodName,
+      LogType.error,
       COLOR.fgRed,
     );
     console.error(this.isColorLog() ? colorLog : log);
@@ -86,7 +89,19 @@ export class Logger {
       this.getCalledLog(params),
       className,
       methodName,
+      LogType.debug,
       COLOR.fgWhite,
+    );
+    console.debug(this.isColorLog() ? colorLog : log);
+  }
+
+  internal(params: string, className: string, methodName: string) {
+    const { colorLog, log } = this.logFormat(
+      params,
+      className,
+      methodName,
+      LogType.internal,
+      COLOR.fgGreen,
     );
     console.debug(this.isColorLog() ? colorLog : log);
   }
@@ -129,16 +144,18 @@ export class Logger {
     text: string,
     className: string,
     methodName: string,
+    logType: LogType,
     color,
   ): { colorLog: string; log: string } {
     const now = new Date();
     const date = this.generateText(now.toLocaleString(), COLOR.fgWhite);
     const mName = this.generateText(methodName, COLOR.fgMagenta);
     const cName = this.generateText(`[${className}]`, COLOR.fgYellow);
+    const lType = this.generateText(`[${logType}]`.padEnd(11), COLOR.fgWhite);
     const textFormatted = this.generateText(text, color);
 
-    const colorLog = `${date}    ${cName} ${mName} ${textFormatted}`;
-    const log = `${now.toLocaleString()}    [${className}] ${methodName} ${text}`;
+    const colorLog = `${date}   ${lType} ${cName} ${mName} ${textFormatted}`;
+    const log = `${now.toLocaleString()}   [${logType}] [${className}] ${methodName} ${text}`;
 
     return { colorLog, log };
   }
@@ -152,6 +169,14 @@ export class Logger {
   }
 }
 
+enum LogType {
+  log = 'log',
+  warn = 'warn',
+  error = 'error',
+  debug = 'debug',
+  internal = 'internal',
+}
+
 const COLOR = {
   reset: '\x1b[0m',
 
@@ -163,4 +188,11 @@ const COLOR = {
   fgMagenta: '\x1b[35m',
   fgCyan: '\x1b[36m',
   fgWhite: '\x1b[37m',
+};
+
+export const internalLogs = {
+  hepiusVersion: 'Starting Hepius application version: @version@',
+  lastCommit: 'Last commit hash on this branch is: @hash@',
+  schedulerLeader:
+    'Current instance is now leader of @type@ scheduler with identifier: @identifier@',
 };

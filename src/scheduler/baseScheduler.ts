@@ -4,7 +4,13 @@ import * as config from 'config';
 import { add, secondsToMilliseconds } from 'date-fns';
 import { v4 } from 'uuid';
 import { InternalSchedulerService } from '.';
-import { EventType, InternalNotificationType, InternalNotifyParams, Logger } from '../common';
+import {
+  EventType,
+  internalLogs,
+  InternalNotificationType,
+  InternalNotifyParams,
+  Logger,
+} from '../common';
 import { Member } from '../member';
 import { Bitly } from '../providers';
 import { User } from '../user';
@@ -77,6 +83,13 @@ export class BaseScheduler {
           leaderType: this.leaderType,
         });
         this.amITheLeader = true;
+        this.logger.internal(
+          internalLogs.schedulerLeader
+            .replace('@type@', this.leaderType)
+            .replace('@identifier@', this.identifier),
+          this.className,
+          this.runEveryMinute.name,
+        );
         await this.initCallbacks();
       }
     }
