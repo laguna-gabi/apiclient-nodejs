@@ -3,6 +3,7 @@ import axios from 'axios';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
 import { AppointmentStatus } from '../../src/appointment';
+import { InternalNotificationType, SendSendbirdNotification } from '../../src/common';
 import { CreateSendbirdGroupChannelParams } from '../../src/communication';
 import { SendBird } from '../../src/providers';
 import { UserRole } from '../../src/user';
@@ -34,6 +35,8 @@ describe('live: sendbird actions', () => {
    * 6. update metadata for appointment1
    * 7. update metadata for appointment2 (check that we have 2 appointments in the metadata now)
    * 8. delete metadata for appointment2
+   * 9. send message from coach
+   * 10. get member's unread messages
    */
   it('should do sendbird flow', async () => {
     const user = {
@@ -85,6 +88,21 @@ describe('live: sendbird actions', () => {
 
     await sendBird.deleteGroupChannelMetadata(params.channel_url, appointmentId2);
     await validateGroupChannel(params.channel_url, [appointmentId1], [value1]);
+
+    const sendSendbirdNotification: SendSendbirdNotification = {
+      userId: user.user_id,
+      sendbirdChannelUrl: params.channel_url,
+      message: 'test',
+      notificationType: InternalNotificationType.chatMessageToUser,
+    };
+    const message = await sendBird.send(sendSendbirdNotification);
+    expect(message).toEqual(expect.any(Number));
+
+    const unreadMessagesCount = await sendBird.countUnreadMessages(
+      params.channel_url,
+      member.user_id,
+    );
+    expect(unreadMessagesCount).toEqual(1);
   }, 20000);
 
   const validateGroupChannel = async (

@@ -121,17 +121,14 @@ export abstract class BaseService {
 
 export class InternalNotificationMetadata {
   content: string;
-
   chatLink?: string;
+  sendbirdChannelUrl?: string;
 }
 
 export class InternalNotifyParams {
   memberId?: string;
-
   userId: string;
-
   type: InternalNotificationType;
-
   metadata: InternalNotificationMetadata;
 }
 
@@ -163,11 +160,12 @@ export class SendTwilioNotification {
   to: string;
 }
 
-// export class SendSendbirdNotification {
-//   userId: string;
-//   channelUrl: string;
-//   message: string;
-// }
+export class SendSendbirdNotification {
+  userId: string;
+  sendbirdChannelUrl: string;
+  message: string;
+  notificationType: AllNotificationTypes;
+}
 
 export class CancelNotificationParams {
   externalUserId: string;

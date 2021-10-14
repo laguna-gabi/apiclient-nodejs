@@ -4,12 +4,12 @@ import {
   CancelNotificationParams,
   Logger,
   SendOneSignalNotification,
-  // SendSendbirdNotification,
+  SendSendbirdNotification,
   SendTwilioNotification,
 } from '../common';
-import { ConfigsService } from './aws';
-import { OneSignal } from './oneSignal';
+import { SendBird } from './sendBird';
 import { TwilioService } from './twilio.service';
+import { ConfigsService, OneSignal } from '.';
 
 @Injectable()
 export class NotificationsService {
@@ -19,6 +19,7 @@ export class NotificationsService {
     private readonly configsService: ConfigsService,
     private readonly httpService: HttpService,
     private readonly twilio: TwilioService,
+    private readonly sendBird: SendBird,
     private readonly logger: Logger,
   ) {
     this.oneSignal = new OneSignal(configsService, httpService, logger);
@@ -37,11 +38,11 @@ export class NotificationsService {
   async send({
     sendOneSignalNotification,
     sendTwilioNotification,
-  }: // sendSendbirdNotification,
-  {
+    sendSendBirdNotification,
+  }: {
     sendOneSignalNotification?: SendOneSignalNotification;
     sendTwilioNotification?: SendTwilioNotification;
-    // sendSendbirdNotification?: SendSendbirdNotification;
+    sendSendBirdNotification?: SendSendbirdNotification;
   }): Promise<string> {
     if (sendOneSignalNotification) {
       this.logger.debug(sendOneSignalNotification, NotificationsService.name, this.send.name);
@@ -51,14 +52,10 @@ export class NotificationsService {
       this.logger.debug(sendTwilioNotification, NotificationsService.name, this.send.name);
       return this.twilio.send(sendTwilioNotification);
     }
-    // if (sendSendbirdNotification) {
-    //   this.logger.debug(
-    //     sendSendbirdNotification,
-    //     NotificationsService.name,
-    //     this.send.name,
-    //   );
-    //   return this.sendbird.send(sendSendbirdNotification);
-    // }
+    if (sendSendBirdNotification) {
+      this.logger.debug(sendSendBirdNotification, NotificationsService.name, this.send.name);
+      return this.sendBird.send(sendSendBirdNotification);
+    }
   }
 
   async cancel(cancelNotificationParams: CancelNotificationParams) {

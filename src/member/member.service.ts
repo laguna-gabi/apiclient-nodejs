@@ -125,6 +125,17 @@ export class MemberService extends BaseService {
     return this.getById(member._id);
   }
 
+  async getByPhone(phone: string): Promise<Member> {
+    const member = await this.memberModel.findOne(
+      { $or: [{ phone }, { phoneSecondary: phone }] },
+      { _id: 1 },
+    );
+    if (!member) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
+    return this.getById(member._id);
+  }
+
   async getByOrg(orgId?: string): Promise<MemberSummary[]> {
     const filter = orgId ? { org: new Types.ObjectId(orgId) } : {};
 

@@ -23,6 +23,7 @@ import {
   NotificationType,
   Platform,
   SendOneSignalNotification,
+  SendSendbirdNotification,
   SendTwilioNotification,
 } from '../src/common';
 import { GetCommunicationParams } from '../src/communication';
@@ -434,6 +435,7 @@ export const generateInternalNotifyParams = ({
   metadata = {
     content: faker.lorem.sentence(),
     chatLink: faker.lorem.sentence(),
+    sendbirdChannelUrl: v4(),
   },
 }: Partial<InternalNotifyParams> = {}): InternalNotifyParams => {
   return { memberId, userId, type, metadata };
@@ -461,6 +463,15 @@ export const generateSendTwilioNotificationParams = (): SendTwilioNotification =
   return {
     body: faker.lorem.sentence(),
     to: faker.phone.phoneNumber(),
+  };
+};
+
+export const generateSendSendbirdNotificationParams = (): SendSendbirdNotification => {
+  return {
+    userId: v4(),
+    sendbirdChannelUrl: v4(),
+    message: faker.lorem.sentence(),
+    notificationType: InternalNotificationType.chatMessageToUser,
   };
 };
 

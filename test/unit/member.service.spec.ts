@@ -44,6 +44,7 @@ import {
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
   generateZipCode,
+  generatePhone,
 } from '../index';
 
 describe('MemberService', () => {
@@ -122,6 +123,71 @@ describe('MemberService', () => {
         compareUsers(result.users[0], primaryUser);
       },
     );
+
+    it('should get member by phone', async () => {
+      const primaryUserParams = generateCreateRawUserParams();
+      const primaryUser = await modelUser.create(primaryUserParams);
+      const orgParams = generateOrgParams();
+      const org = await modelOrg.create(orgParams);
+
+      const deviceId = datatype.uuid();
+      const member = generateCreateMemberParams({ orgId: generateId() });
+
+      const { _id } = await memberModel.create({
+        phone: member.phone,
+        deviceId,
+        firstName: member.firstName,
+        lastName: member.lastName,
+        org: generateObjectId(org.id),
+        primaryUserId: primaryUser.id,
+        users: [primaryUser.id],
+      });
+
+      const result = await service.getByPhone(member.phone);
+
+      expect(result.id).toEqual(_id.toString());
+      expect(result.phone).toEqual(member.phone);
+      expect(result.deviceId).toEqual(deviceId);
+      expect(result.firstName).toEqual(member.firstName);
+      expect(result.lastName).toEqual(member.lastName);
+      expect(result.org).toEqual(expect.objectContaining(orgParams));
+      expect(result.primaryUserId).toEqual(primaryUser._id);
+      expect(result.users.length).toEqual(1);
+      compareUsers(result.users[0], primaryUser);
+    });
+
+    it('should get member by Secondary phone', async () => {
+      const primaryUserParams = generateCreateRawUserParams();
+      const primaryUser = await modelUser.create(primaryUserParams);
+      const orgParams = generateOrgParams();
+      const org = await modelOrg.create(orgParams);
+
+      const deviceId = datatype.uuid();
+      const member = generateCreateMemberParams({ orgId: generateId() });
+
+      const { _id } = await memberModel.create({
+        phone: generatePhone(),
+        phoneSecondary: member.phone,
+        deviceId,
+        firstName: member.firstName,
+        lastName: member.lastName,
+        org: generateObjectId(org.id),
+        primaryUserId: primaryUser.id,
+        users: [primaryUser.id],
+      });
+
+      const result = await service.getByPhone(member.phone);
+
+      expect(result.id).toEqual(_id.toString());
+      expect(result.phoneSecondary).toEqual(member.phone);
+      expect(result.deviceId).toEqual(deviceId);
+      expect(result.firstName).toEqual(member.firstName);
+      expect(result.lastName).toEqual(member.lastName);
+      expect(result.org).toEqual(expect.objectContaining(orgParams));
+      expect(result.primaryUserId).toEqual(primaryUser._id);
+      expect(result.users.length).toEqual(1);
+      compareUsers(result.users[0], primaryUser);
+    });
   });
 
   describe('getMembers', () => {

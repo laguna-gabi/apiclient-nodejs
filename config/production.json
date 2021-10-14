@@ -9,5 +9,8 @@
   },
   "oneSignal": {
     "voipRegistrationPayload": {}
+  },
+  "twilio": {
+    "source": "+18337090314"
   }
 }

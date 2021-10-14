@@ -1316,6 +1316,32 @@ describe('MemberResolver', () => {
 
       expect(spyOnNotificationsServiceSend).not.toBeCalled();
     });
+
+    it('should send sendBird message for chatMessageToUser', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      memberConfig.isPushNotificationsEnabled = false;
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const internalNotifyParams = generateInternalNotifyParams({
+        type: InternalNotificationType.chatMessageToUser,
+      });
+
+      await resolver.internalNotify(internalNotifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendSendBirdNotification: {
+          userId: member.id,
+          sendbirdChannelUrl: internalNotifyParams.metadata.sendbirdChannelUrl,
+          message: internalNotifyParams.metadata.content,
+          notificationType: InternalNotificationType.chatMessageToUser,
+        },
+      });
+    });
   });
 
   describe('notifyChatMessage', () => {

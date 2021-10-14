@@ -35,6 +35,7 @@ import {
   EventType,
   Identifier,
   IEventNotifyChatMessage,
+  IEventSendSmsToChat,
   IEventUpdateMemberPlatform,
   InternalNotificationType,
   InternalNotifyParams,
@@ -412,6 +413,35 @@ export class MemberResolver extends MemberBase {
       userId: senderUserId,
       type: InternalNotificationType.chatMessageToMember,
       metadata: { content: config.get('contents.newChatMessage') },
+    });
+  }
+
+  /**
+   * Listening to incoming sms from twilio webhook.
+   * Send message from member to chat.
+   */
+  @OnEvent(EventType.sendSmsToChat, { async: true })
+  async sendSmsToChat(params: IEventSendSmsToChat) {
+    const member = await this.memberService.getByPhone(params.phone);
+    const communication = await this.communicationService.get({
+      memberId: member.id,
+      userId: member.primaryUserId,
+    });
+    if (!communication) {
+      this.logger.warn(
+        params,
+        MemberResolver.name,
+        this.notifyChatMessage.name,
+        'sendbirdChannelUrl doesnt exists',
+      );
+      return;
+    }
+
+    return this.internalNotify({
+      memberId: member.id,
+      userId: member.primaryUserId,
+      type: InternalNotificationType.chatMessageToUser,
+      metadata: { content: params.message, sendbirdChannelUrl: communication.sendbirdChannelUrl },
     });
   }
 

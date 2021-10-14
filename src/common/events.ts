@@ -17,6 +17,7 @@ export enum EventType {
   updateMemberPlatform = 'updateMemberPlatform',
   internalNotify = 'internalNotify',
   notifyChatMessage = 'notifyChatMessage',
+  sendSmsToChat = 'sendSmsToChat',
   slackMessage = 'slackMessage',
 }
 
@@ -77,6 +78,11 @@ export interface IEventUpdateMemberPlatform {
 export interface IEventNotifyChatMessage {
   senderUserId: string;
   sendbirdChannelUrl: string;
+}
+
+export interface IEventSendSmsToChat {
+  phone: string;
+  message: string;
 }
 
 export interface IEventSlackMessage {
