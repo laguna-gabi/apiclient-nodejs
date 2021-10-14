@@ -38,7 +38,7 @@
   },
   "storage": "hepius-test",
   "scheduler": {
-    "alertBeforeInMin": 5,
+    "alertBeforeInMin": 15,
     "maxAlertGapInMin": 43800,
     "cronJobIntervalInMin": 1
   },
