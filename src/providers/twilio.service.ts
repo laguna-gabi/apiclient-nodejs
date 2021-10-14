@@ -80,7 +80,7 @@ export class TwilioService implements OnModuleInit {
     return validateRequest(
       this.authToken,
       signature,
-      `${config.get('hosts.webApp')}/${route}`,
+      `${config.get('hosts.root')}/${route}`,
       params,
     );
   }
