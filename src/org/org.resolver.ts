@@ -1,8 +1,8 @@
-import { Args, Mutation, Resolver, Query } from '@nestjs/graphql';
+import { UseInterceptors } from '@nestjs/common';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { camelCase } from 'lodash';
 import { CreateOrgParams, Org, OrgService } from '.';
 import { Identifier, LoggingInterceptor } from '../common';
-import { camelCase } from 'lodash';
-import { UseInterceptors } from '@nestjs/common';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Org)

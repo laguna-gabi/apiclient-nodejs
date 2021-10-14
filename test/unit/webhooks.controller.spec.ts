@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { dbDisconnect, defaultModules } from '../index';
-import { WebhooksController } from '../../src/providers';
-import * as sendbirdUserPayload from './mocks/webhookSendbirdPayload.json';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Test, TestingModule } from '@nestjs/testing';
 import { EventType } from '../../src/common';
+import { WebhooksController } from '../../src/providers';
+import { dbDisconnect, defaultModules } from '../index';
+import * as sendbirdUserPayload from './mocks/webhookSendbirdPayload.json';
 
 describe('WebhooksController', () => {
   let module: TestingModule;

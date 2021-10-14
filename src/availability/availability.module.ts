@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AvailabilityService, AvailabilityResolver, Availability, AvailabilityDto } from '.';
 import { MongooseModule } from '@nestjs/mongoose';
+import { Availability, AvailabilityDto, AvailabilityResolver, AvailabilityService } from '.';
 import { CommonModule } from '../common';
 
 @Module({

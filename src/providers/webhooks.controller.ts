@@ -1,6 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { apiPrefix, EventType, IEventNotifyChatMessage, Logger, webhooks } from '../common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { apiPrefix, EventType, IEventNotifyChatMessage, Logger, webhooks } from '../common';
 
 /**
  * Go to '../../test/unit/mocks/webhookSendbirdPayload.json' for a payload example

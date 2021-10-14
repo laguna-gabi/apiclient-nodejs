@@ -1,16 +1,16 @@
+import { add, startOfToday, startOfTomorrow } from 'date-fns';
 import * as request from 'supertest';
-import { Handler } from '../aux/handler';
-import { Creators } from '../aux/creators';
+import { AppointmentStatus } from '../../src/appointment';
+import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
+import { Creators } from '../aux/creators';
+import { Handler } from '../aux/handler';
 import { urls } from '../common';
 import {
   generateAvailabilityInput,
   generateCreateMemberParams,
   generateScheduleAppointmentParams,
 } from '../generators';
-import { add, startOfToday, startOfTomorrow } from 'date-fns';
-import { defaultSlotsParams } from '../../src/user';
-import { AppointmentStatus } from '../../src/appointment';
 
 describe('Integration tests: rest', () => {
   const handler: Handler = new Handler();

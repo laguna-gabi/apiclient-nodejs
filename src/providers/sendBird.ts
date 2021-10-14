@@ -1,8 +1,8 @@
 import { HttpService, Injectable, OnModuleInit } from '@nestjs/common';
-import { CreateSendbirdGroupChannelParams, RegisterSendbirdUserParams } from '../communication';
 import { ConfigsService, ExternalConfigs } from '.';
 import { AppointmentStatus } from '../appointment';
 import { Logger } from '../common';
+import { CreateSendbirdGroupChannelParams, RegisterSendbirdUserParams } from '../communication';
 
 enum suffix {
   users = 'users',

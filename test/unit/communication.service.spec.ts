@@ -1,5 +1,18 @@
+import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import * as faker from 'faker';
+import { v4 } from 'uuid';
+import { AppointmentStatus } from '../../src/appointment';
+import {
+  EventType,
+  IEventUpdateMemberConfig,
+  IEventUpdateUserConfig,
+  Platform,
+  UpdatedAppointmentAction,
+} from '../../src/common';
+import { CommunicationModule, CommunicationService } from '../../src/communication';
 import { DbModule } from '../../src/db/db.module';
+import { UserRole } from '../../src/user';
 import {
   dbConnect,
   dbDisconnect,
@@ -8,19 +21,6 @@ import {
   mockGenerateUser,
   mockProviders,
 } from '../index';
-import { CommunicationModule, CommunicationService } from '../../src/communication';
-import { UserRole } from '../../src/user';
-import { v4 } from 'uuid';
-import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
-import {
-  EventType,
-  IEventUpdateMemberConfig,
-  IEventUpdateUserConfig,
-  Platform,
-  UpdatedAppointmentAction,
-} from '../../src/common';
-import { AppointmentStatus } from '../../src/appointment';
-import * as faker from 'faker';
 
 describe('CommunicationService', () => {
   let module: TestingModule;

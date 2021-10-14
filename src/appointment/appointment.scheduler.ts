@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { SchedulerRegistry } from '@nestjs/schedule';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import { Appointment, AppointmentDocument, AppointmentStatus } from '.';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import * as config from 'config';
+import { add, sub } from 'date-fns';
 import { Model } from 'mongoose';
+import { Appointment, AppointmentDocument, AppointmentStatus } from '.';
 import {
   Errors,
   ErrorType,
@@ -12,11 +15,8 @@ import {
   Logger,
   ReminderType,
 } from '../common';
-import { Bitly } from '../providers';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import * as config from 'config';
-import { add, sub } from 'date-fns';
 import { CommunicationResolver } from '../communication';
+import { Bitly } from '../providers';
 import { BaseScheduler, InternalSchedulerService, LeaderType } from '../scheduler';
 
 @Injectable()

@@ -1,4 +1,6 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 import {
   ActionItem,
   ActionItemDto,
@@ -9,23 +11,21 @@ import {
   MemberConfigDto,
   MemberController,
   MemberDto,
-  NotificationBuilder,
   MemberRecordingDto,
   MemberResolver,
   MemberScheduler,
   MemberService,
+  NotificationBuilder,
   NotifyParams,
   NotifyParamsDto,
   Recording,
 } from '.';
-import { MongooseModule } from '@nestjs/mongoose';
-import { HttpModule } from '@nestjs/axios';
 import { Appointment, AppointmentDto } from '../appointment';
-import { ConfigsService, ProvidersModule } from '../providers';
-import { UserModule } from '../user';
-import { CommunicationModule } from '../communication';
-import { InternalSchedulerModule } from '../scheduler';
 import { CommonModule } from '../common';
+import { CommunicationModule } from '../communication';
+import { ConfigsService, ProvidersModule } from '../providers';
+import { InternalSchedulerModule } from '../scheduler';
+import { UserModule } from '../user';
 
 @Module({
   imports: [

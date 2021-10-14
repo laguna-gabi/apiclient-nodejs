@@ -7,13 +7,13 @@ import {
   startOfToday,
   startOfTomorrow,
 } from 'date-fns';
+import { EventType, SlackChannel, SlackIcon } from '../../src/common';
 import { Member } from '../../src/member';
 import { defaultSlotsParams } from '../../src/user';
-import { generateAvailabilityInput } from './../';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
 import { Creators } from '../aux/creators';
 import { Handler } from '../aux/handler';
-import { EventType, SlackChannel, SlackIcon } from '../../src/common';
+import { generateAvailabilityInput } from './../';
 
 describe('Integration tests : getUserSlots', () => {
   const handler: Handler = new Handler();

@@ -1,16 +1,16 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ConfigsService, ExternalConfigs } from '.';
-import { jwt, Twilio } from 'twilio';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as config from 'config';
+import { jwt, Twilio } from 'twilio';
+import { ConfigsService, ExternalConfigs } from '.';
 import {
+  Environments,
   EventType,
   IEventSlackMessage,
   Logger,
   SlackChannel,
   SlackIcon,
-  Environments,
 } from '../common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class TwilioService implements OnModuleInit {

@@ -1,3 +1,8 @@
+import { camelCase, omit } from 'lodash';
+import { Types } from 'mongoose';
+import { Appointment, AppointmentStatus, EndAppointmentParams } from '../../src/appointment';
+import { CreateTaskParams, defaultMemberParams, Member } from '../../src/member';
+import { Org } from '../../src/org';
 import { CreateUserParams, User, UserRole } from '../../src/user';
 import {
   generateAppointmentLink,
@@ -7,13 +12,8 @@ import {
   generateEndAppointmentParams,
   generateOrgParams,
 } from '../generators';
-import { camelCase, omit } from 'lodash';
-import { Org } from '../../src/org';
-import { CreateTaskParams, defaultMemberParams, Member } from '../../src/member';
-import { Appointment, AppointmentStatus, EndAppointmentParams } from '../../src/appointment';
-import { Handler } from './handler';
 import { AppointmentsIntegrationActions } from './appointments';
-import { Types } from 'mongoose';
+import { Handler } from './handler';
 
 export class Creators {
   constructor(

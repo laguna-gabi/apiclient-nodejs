@@ -1,15 +1,15 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import * as AWS from 'aws-sdk';
+import * as config from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
 import {
-  StorageUrlParams,
+  Environments,
   EventType,
   IEventNewMember,
   StorageType,
-  Environments,
+  StorageUrlParams,
 } from '../../common';
-import { OnEvent } from '@nestjs/event-emitter';
-import * as config from 'config';
 
 @Injectable()
 export class StorageService implements OnModuleInit {

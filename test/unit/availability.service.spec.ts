@@ -1,6 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, model } from 'mongoose';
 import {
+  Availability,
+  AvailabilityDto,
+  AvailabilityModule,
+  AvailabilityService,
+} from '../../src/availability';
+import { Errors, ErrorType } from '../../src/common';
+import { User, UserDto } from '../../src/user';
+import {
   dbConnect,
   dbDisconnect,
   defaultModules,
@@ -8,14 +16,6 @@ import {
   generateCreateRawUserParams,
   generateId,
 } from '../index';
-import {
-  Availability,
-  AvailabilityDto,
-  AvailabilityModule,
-  AvailabilityService,
-} from '../../src/availability';
-import { User, UserDto } from '../../src/user';
-import { Errors, ErrorType } from '../../src/common';
 
 describe('AvailabilityService', () => {
   let module: TestingModule;

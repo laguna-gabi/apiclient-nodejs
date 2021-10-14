@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { dbDisconnect, defaultModules, generateAvailabilityInput, generateId } from '../index';
 import {
   AvailabilityModule,
   AvailabilityResolver,
   AvailabilityService,
 } from '../../src/availability';
+import { dbDisconnect, defaultModules, generateAvailabilityInput, generateId } from '../index';
 
 describe('AvailabilityResolver', () => {
   let module: TestingModule;

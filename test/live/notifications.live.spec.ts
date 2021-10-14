@@ -1,4 +1,5 @@
-import { NotificationsService } from '../../src/providers';
+import { Test, TestingModule } from '@nestjs/testing';
+import * as faker from 'faker';
 import { v4 } from 'uuid';
 import {
   CancelNotificationType,
@@ -7,10 +8,9 @@ import {
   NotificationType,
   Platform,
 } from '../../src/common';
-import * as faker from 'faker';
+import { NotificationsService } from '../../src/providers';
 import { dbDisconnect, defaultModules, delay } from '../common';
 import { generatePath, generatePhone } from '../generators';
-import { Test, TestingModule } from '@nestjs/testing';
 
 describe('live: notifications (one signal)', () => {
   const delayTime = 25000;

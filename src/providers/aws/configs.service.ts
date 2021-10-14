@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { MongooseModuleOptions, MongooseOptionsFactory } from '@nestjs/mongoose';
 import * as AWS from 'aws-sdk';
 import * as config from 'config';
-import { MongooseModuleOptions, MongooseOptionsFactory } from '@nestjs/mongoose';
 import { Environments } from '../../common';
 
 export const ExternalConfigs = {

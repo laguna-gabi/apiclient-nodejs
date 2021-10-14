@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
 import { IsBoolean, IsOptional } from 'class-validator';
+import { Document } from 'mongoose';
 import { Errors, ErrorType, IsNoShowValid } from '../common';
 
 /**************************************************************************************************

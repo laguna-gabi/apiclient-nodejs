@@ -1,4 +1,12 @@
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
+import * as config from 'config';
+import { add } from 'date-fns';
+import * as faker from 'faker';
+import { cloneDeep, difference } from 'lodash';
+import { model, Model } from 'mongoose';
+import { v4 } from 'uuid';
 import {
   Appointment,
   AppointmentDto,
@@ -6,24 +14,16 @@ import {
   AppointmentScheduler,
   AppointmentStatus,
 } from '../../src/appointment';
-import { dbConnect, dbDisconnect, defaultModules, delay, generateId } from '../index';
-import { SchedulerRegistry } from '@nestjs/schedule';
-import { model, Model } from 'mongoose';
-import * as config from 'config';
-import { cloneDeep, difference } from 'lodash';
-import { v4 } from 'uuid';
-import * as faker from 'faker';
-import { CommunicationResolver } from '../../src/communication';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
-  ReminderType,
   EventType,
-  InternalNotifyParams,
   InternalNotificationType,
+  InternalNotifyParams,
+  ReminderType,
 } from '../../src/common';
+import { CommunicationResolver } from '../../src/communication';
 import { Bitly } from '../../src/providers';
-import { add } from 'date-fns';
 import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
+import { dbConnect, dbDisconnect, defaultModules, delay, generateId } from '../index';
 
 describe('AppointmentScheduler', () => {
   let module: TestingModule;

@@ -1,6 +1,6 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
 import { AppointmentScheduler } from './appointment';
 import { MemberScheduler } from './member';
 

@@ -1,9 +1,9 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Schema } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
 import { IsAlphanumeric, IsOptional } from 'class-validator';
-import { Errors, ErrorType } from './errors';
+import { Types } from 'mongoose';
 import { IsNotPlatformWeb } from './customValidators';
+import { Errors, ErrorType } from './errors';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************

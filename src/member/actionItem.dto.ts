@@ -1,6 +1,6 @@
-import { Document } from 'mongoose';
-import { Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ObjectType } from '@nestjs/graphql';
+import { Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
 import { Task } from '.';
 
 /**************************************************************************************************

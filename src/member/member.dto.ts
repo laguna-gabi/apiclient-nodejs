@@ -1,7 +1,19 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  Length,
+  ValidateIf,
+} from 'class-validator';
+import * as config from 'config';
 import { Document, Types } from 'mongoose';
-import { User } from '../user';
+import { ActionItem, Goal } from '.';
+import { Scores } from '../appointment';
 import {
   CancelNotificationType,
   Errors,
@@ -14,20 +26,8 @@ import {
   NotificationType,
   validPhoneExamples,
 } from '../common';
-import {
-  IsEmail,
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsPhoneNumber,
-  IsString,
-  Length,
-  ValidateIf,
-} from 'class-validator';
-import * as config from 'config';
 import { Org } from '../org';
-import { ActionItem, Goal } from '.';
-import { Scores } from '../appointment';
+import { User } from '../user';
 
 const validatorsConfig = config.get('graphql.validators');
 

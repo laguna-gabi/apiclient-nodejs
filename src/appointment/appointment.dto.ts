@@ -1,10 +1,10 @@
 import { Field, InputType, ObjectType, OmitType, registerEnumType } from '@nestjs/graphql';
-import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Errors, ErrorType, Identifier, IsDateAfter, IsFutureDate } from '../common';
-import { Document, Types } from 'mongoose';
-import { Notes } from './note.dto';
 import { Type } from 'class-transformer';
+import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Document, Types } from 'mongoose';
+import { Errors, ErrorType, Identifier, IsDateAfter, IsFutureDate } from '../common';
+import { Notes } from './note.dto';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************

@@ -1,19 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
+import { sub } from 'date-fns';
+import { cloneDeep } from 'lodash';
 import { Model, Types } from 'mongoose';
-import {
-  AppointmentStatus,
-  BaseService,
-  DbErrors,
-  Errors,
-  ErrorType,
-  EventType,
-  Identifier,
-  IEventAddUserToMemberList,
-  IEventAppointmentScoresUpdated,
-  IEventUpdateMemberConfig,
-  Platform,
-} from '../common';
+import { v4 } from 'uuid';
 import {
   ActionItem,
   ActionItemDocument,
@@ -37,11 +28,20 @@ import {
   UpdateRecordingParams,
   UpdateTaskStatusParams,
 } from '.';
-import { cloneDeep } from 'lodash';
-import { OnEvent } from '@nestjs/event-emitter';
 import { Appointment, AppointmentDocument } from '../appointment';
-import { v4 } from 'uuid';
-import { sub } from 'date-fns';
+import {
+  AppointmentStatus,
+  BaseService,
+  DbErrors,
+  Errors,
+  ErrorType,
+  EventType,
+  Identifier,
+  IEventAddUserToMemberList,
+  IEventAppointmentScoresUpdated,
+  IEventUpdateMemberConfig,
+  Platform,
+} from '../common';
 
 @Injectable()
 export class MemberService extends BaseService {

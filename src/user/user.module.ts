@@ -1,17 +1,17 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ProvidersModule } from '../providers';
 import {
-  User,
-  UserDto,
-  UserResolver,
-  UserService,
   SlotService,
+  User,
   UserConfig,
   UserConfigDto,
   UserController,
+  UserDto,
+  UserResolver,
+  UserService,
 } from '.';
 import { CommonModule } from '../common';
+import { ProvidersModule } from '../providers';
 
 @Module({
   imports: [

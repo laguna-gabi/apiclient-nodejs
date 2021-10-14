@@ -1,22 +1,22 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
+import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
 import { createTestClient } from 'apollo-server-testing';
+import * as config from 'config';
+import * as faker from 'faker';
+import * as jwt from 'jsonwebtoken';
+import { model } from 'mongoose';
+import { v4 } from 'uuid';
 import { AppModule } from '../../src/app.module';
+import { CommunicationService } from '../../src/communication';
+import { MemberDto } from '../../src/member';
+import { WebhooksController } from '../../src/providers';
+import { dbConnect, dbDisconnect, mockProviders } from '../common';
+import { generateId } from '../generators';
 import { Mutations } from './mutations';
 import { Queries } from './queries';
-import * as config from 'config';
-import * as jwt from 'jsonwebtoken';
-import { dbConnect, dbDisconnect, mockProviders } from '../common';
-import { model } from 'mongoose';
-import { MemberDto } from '../../src/member';
-import { CommunicationService } from '../../src/communication';
-import { WebhooksController } from '../../src/providers';
-import { generateId } from '../generators';
-import * as faker from 'faker';
-import { v4 } from 'uuid';
-import { SchedulerRegistry } from '@nestjs/schedule';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 
 const validatorsConfig = config.get('graphql.validators');
 

@@ -1,10 +1,10 @@
-import { generateId, generateScheduleAppointmentParams } from '../index';
-import { Member, MemberSummary } from '../../src/member';
-import { Handler } from '../aux/handler';
-import { AppointmentsIntegrationActions } from '../aux/appointments';
-import { Creators } from '../aux/creators';
 import { date } from 'faker';
 import { performance } from 'perf_hooks';
+import { Member, MemberSummary } from '../../src/member';
+import { AppointmentsIntegrationActions } from '../aux/appointments';
+import { Creators } from '../aux/creators';
+import { Handler } from '../aux/handler';
+import { generateId, generateScheduleAppointmentParams } from '../index';
 
 describe('Integration tests : getMembers', () => {
   const handler: Handler = new Handler();

@@ -1,6 +1,6 @@
-import { ConfigsService, Bitly } from '../../src/providers';
 import { HttpService } from '@nestjs/axios';
 import * as config from 'config';
+import { Bitly, ConfigsService } from '../../src/providers';
 
 /**
  * Currently we're on a bit.ly free plan, which has 1000 links for a month.

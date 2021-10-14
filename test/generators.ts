@@ -1,23 +1,9 @@
+import * as config from 'config';
+import { format } from 'date-fns';
 import * as faker from 'faker';
 import { Types } from 'mongoose';
-import { CreateUserParams, defaultUserParams, User, UserRole } from '../src/user';
-import {
-  AppointmentCompose,
-  CancelNotifyParams,
-  CreateMemberParams,
-  CreateTaskParams,
-  defaultMemberParams,
-  Member,
-  MemberConfig,
-  NotifyParams,
-  SetGeneralNotesParams,
-  Sex,
-  TaskStatus,
-  UpdateMemberParams,
-  UpdateTaskStatusParams,
-  getHonorificKeyName,
-  UpdateRecordingParams,
-} from '../src/member';
+import { v4 } from 'uuid';
+import { lookup } from 'zipcode-to-timezone';
 import {
   AppointmentMethod,
   EndAppointmentParams,
@@ -27,25 +13,38 @@ import {
   Scores,
   UpdateNotesParams,
 } from '../src/appointment';
-import { CreateOrgParams, OrgType } from '../src/org';
+import { AvailabilityInput } from '../src/availability';
 import {
-  Language,
-  Platform,
-  NotificationType,
-  CancelNotificationType,
-  SendOneSignalNotification,
-  SendTwilioNotification,
   CancelNotificationParams,
+  CancelNotificationType,
   InternalNotificationType,
   InternalNotifyParams,
+  Language,
+  NotificationType,
+  Platform,
+  SendOneSignalNotification,
+  SendTwilioNotification,
 } from '../src/common';
-import { lookup } from 'zipcode-to-timezone';
-import { AvailabilityInput } from '../src/availability';
 import { GetCommunicationParams } from '../src/communication';
-import * as config from 'config';
-import { format } from 'date-fns';
-import { v4 } from 'uuid';
-import { GetSlotsParams } from '../src/user';
+import {
+  AppointmentCompose,
+  CancelNotifyParams,
+  CreateMemberParams,
+  CreateTaskParams,
+  defaultMemberParams,
+  getHonorificKeyName,
+  Member,
+  MemberConfig,
+  NotifyParams,
+  SetGeneralNotesParams,
+  Sex,
+  TaskStatus,
+  UpdateMemberParams,
+  UpdateRecordingParams,
+  UpdateTaskStatusParams,
+} from '../src/member';
+import { CreateOrgParams, OrgType } from '../src/org';
+import { CreateUserParams, defaultUserParams, GetSlotsParams, User, UserRole } from '../src/user';
 
 export const generateCreateUserParams = ({
   id = v4(),

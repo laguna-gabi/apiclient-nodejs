@@ -1,17 +1,8 @@
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import * as faker from 'faker';
 import { model, Model } from 'mongoose';
-import {
-  dbConnect,
-  dbDisconnect,
-  defaultModules,
-  generateAppointmentLink,
-  generateId,
-  generateNotesParams,
-  generateObjectId,
-  generateRequestAppointmentParams,
-  generateScheduleAppointmentParams,
-  generateUpdateNotesParams,
-} from '../index';
+import { v4 } from 'uuid';
 import {
   Appointment,
   AppointmentDto,
@@ -29,9 +20,18 @@ import {
   IEventAppointmentScoresUpdated,
   IEventNewAppointment,
 } from '../../src/common';
-import * as faker from 'faker';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { v4 } from 'uuid';
+import {
+  dbConnect,
+  dbDisconnect,
+  defaultModules,
+  generateAppointmentLink,
+  generateId,
+  generateNotesParams,
+  generateObjectId,
+  generateRequestAppointmentParams,
+  generateScheduleAppointmentParams,
+  generateUpdateNotesParams,
+} from '../index';
 
 describe('AppointmentService', () => {
   let module: TestingModule;

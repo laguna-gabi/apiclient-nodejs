@@ -1,3 +1,37 @@
+import * as config from 'config';
+import * as faker from 'faker';
+import { v4 } from 'uuid';
+import {
+  AppointmentMethod,
+  RequestAppointmentParams,
+  ScheduleAppointmentParams,
+} from '../../src/appointment';
+import {
+  AppointmentStatus,
+  CancelNotificationType,
+  Errors,
+  ErrorType,
+  Identifiers,
+  InternalNotificationType,
+  NotificationType,
+  Platform,
+  RegisterForNotificationParams,
+} from '../../src/common';
+import {
+  CancelNotifyParams,
+  CreateTaskParams,
+  Member,
+  MemberConfig,
+  NotifyParams,
+  RecordingOutput,
+  Task,
+  TaskStatus,
+  UpdateRecordingParams,
+} from '../../src/member';
+import { UserRole } from '../../src/user';
+import { AppointmentsIntegrationActions } from '../aux/appointments';
+import { Creators } from '../aux/creators';
+import { Handler } from '../aux/handler';
 import {
   delay,
   generateAppointmentLink,
@@ -14,40 +48,6 @@ import {
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
 } from '../index';
-import { UserRole } from '../../src/user';
-import {
-  AppointmentMethod,
-  RequestAppointmentParams,
-  ScheduleAppointmentParams,
-} from '../../src/appointment';
-import { Handler } from '../aux/handler';
-import { AppointmentsIntegrationActions } from '../aux/appointments';
-import { Creators } from '../aux/creators';
-import {
-  CancelNotifyParams,
-  CreateTaskParams,
-  Member,
-  MemberConfig,
-  NotifyParams,
-  RecordingOutput,
-  Task,
-  TaskStatus,
-  UpdateRecordingParams,
-} from '../../src/member';
-import {
-  AppointmentStatus,
-  CancelNotificationType,
-  Errors,
-  ErrorType,
-  Identifiers,
-  InternalNotificationType,
-  NotificationType,
-  Platform,
-  RegisterForNotificationParams,
-} from '../../src/common';
-import { v4 } from 'uuid';
-import * as faker from 'faker';
-import * as config from 'config';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();

@@ -1,13 +1,13 @@
-import { SendBird } from '../../src/providers';
-import { v4 } from 'uuid';
-import * as faker from 'faker';
-import { CreateSendbirdGroupChannelParams } from '../../src/communication';
-import { UserRole } from '../../src/user';
-import { generateId } from '../generators';
-import { AppointmentStatus } from '../../src/appointment';
-import axios from 'axios';
 import { Test, TestingModule } from '@nestjs/testing';
+import axios from 'axios';
+import * as faker from 'faker';
+import { v4 } from 'uuid';
+import { AppointmentStatus } from '../../src/appointment';
+import { CreateSendbirdGroupChannelParams } from '../../src/communication';
+import { SendBird } from '../../src/providers';
+import { UserRole } from '../../src/user';
 import { dbDisconnect, defaultModules } from '../common';
+import { generateId } from '../generators';
 
 describe('live: sendbird actions', () => {
   let module: TestingModule;

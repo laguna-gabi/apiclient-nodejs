@@ -1,6 +1,16 @@
-import { camelCase } from 'lodash';
+import { ApolloServerTestClient } from 'apollo-server-testing';
 import gql from 'graphql-tag';
-import { CreateUserParams } from '../../src/user';
+import { camelCase } from 'lodash';
+import {
+  Appointment,
+  EndAppointmentParams,
+  Notes,
+  RequestAppointmentParams,
+  ScheduleAppointmentParams,
+  UpdateNotesParams,
+} from '../../src/appointment';
+import { AvailabilityInput } from '../../src/availability';
+import { Identifier, Identifiers, RegisterForNotificationParams } from '../../src/common';
 import {
   CancelNotifyParams,
   CreateMemberParams,
@@ -12,18 +22,8 @@ import {
   UpdateRecordingParams,
   UpdateTaskStatusParams,
 } from '../../src/member';
-import { ApolloServerTestClient } from 'apollo-server-testing';
-import {
-  Appointment,
-  RequestAppointmentParams,
-  ScheduleAppointmentParams,
-  EndAppointmentParams,
-  Notes,
-  UpdateNotesParams,
-} from '../../src/appointment';
-import { Identifier, Identifiers, RegisterForNotificationParams } from '../../src/common';
 import { CreateOrgParams } from '../../src/org';
-import { AvailabilityInput } from '../../src/availability';
+import { CreateUserParams } from '../../src/user';
 
 const FRAGMENT_APPOINTMENT = gql`
   fragment appointmentFragment on Appointment {

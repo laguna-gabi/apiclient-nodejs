@@ -1,4 +1,12 @@
+import { UseInterceptors } from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import * as config from 'config';
+import { format, millisecondsInHour } from 'date-fns';
+import { getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
+import * as jwt from 'jsonwebtoken';
+import { camelCase } from 'lodash';
+import { lookup } from 'zipcode-to-timezone';
 import {
   AppointmentCompose,
   CancelNotifyParams,
@@ -8,10 +16,10 @@ import {
   Member,
   MemberBase,
   MemberConfig,
-  NotificationBuilder,
   MemberScheduler,
   MemberService,
   MemberSummary,
+  NotificationBuilder,
   NotifyParams,
   RecordingLinkParams,
   RecordingOutput,
@@ -37,19 +45,9 @@ import {
   RegisterForNotificationParams,
   StorageType,
 } from '../common';
-import { camelCase } from 'lodash';
-import * as jwt from 'jsonwebtoken';
-import { getTimezoneOffset } from 'date-fns-tz';
-import { millisecondsInHour } from 'date-fns';
-import { lookup } from 'zipcode-to-timezone';
-import { utcToZonedTime } from 'date-fns-tz';
-import { format } from 'date-fns';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { CommunicationService } from '../communication';
 import { NotificationsService, StorageService } from '../providers';
 import { User, UserService } from '../user';
-import { UseInterceptors } from '@nestjs/common';
-import { CommunicationService } from '../communication';
-import * as config from 'config';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)

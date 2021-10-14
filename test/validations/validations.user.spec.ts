@@ -1,12 +1,12 @@
-import { generateCreateUserParams, generateRandomName, urls } from '../index';
-import { CreateUserParams, defaultUserParams, GetSlotsParams } from '../../src/user';
 import * as config from 'config';
 import * as faker from 'faker';
-import { Errors, ErrorType } from '../../src/common';
-import { Handler } from '../aux/handler';
-import { generateGetSlotsParams, generateId } from '../generators';
 import * as request from 'supertest';
 import { v4 } from 'uuid';
+import { Errors, ErrorType } from '../../src/common';
+import { CreateUserParams, defaultUserParams, GetSlotsParams } from '../../src/user';
+import { Handler } from '../aux/handler';
+import { generateGetSlotsParams, generateId } from '../generators';
+import { generateCreateUserParams, generateRandomName, urls } from '../index';
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;

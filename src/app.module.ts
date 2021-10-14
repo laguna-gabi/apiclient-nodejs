@@ -1,19 +1,19 @@
 import { Module } from '@nestjs/common';
-import { DbModule } from './db/db.module';
-import { MemberModule } from './member';
-import { GraphQLModule } from '@nestjs/graphql';
-import { UserModule } from './user';
-import { AppointmentModule } from './appointment';
-import { GraphQLError } from 'graphql';
-import { Errors, CommonModule } from './common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { OrgModule } from './org';
-import { TerminusModule } from '@nestjs/terminus';
-import { HealthController } from './health/health.controller';
-import { AvailabilityModule } from './availability';
-import { CommunicationModule } from './communication';
-import { ProvidersModule } from './providers';
+import { GraphQLModule } from '@nestjs/graphql';
 import { ScheduleModule } from '@nestjs/schedule';
+import { TerminusModule } from '@nestjs/terminus';
+import { GraphQLError } from 'graphql';
+import { AppointmentModule } from './appointment';
+import { AvailabilityModule } from './availability';
+import { CommonModule, Errors } from './common';
+import { CommunicationModule } from './communication';
+import { DbModule } from './db/db.module';
+import { HealthController } from './health/health.controller';
+import { MemberModule } from './member';
+import { OrgModule } from './org';
+import { ProvidersModule } from './providers';
+import { UserModule } from './user';
 
 const badRequestException = 'Bad Request Exception';
 

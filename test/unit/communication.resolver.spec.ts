@@ -1,4 +1,15 @@
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import * as config from 'config';
+import * as faker from 'faker';
+import { v4 } from 'uuid';
+import { Platform, UpdatedAppointmentAction } from '../../src/common';
+import {
+  CommunicationModule,
+  CommunicationResolver,
+  CommunicationService,
+} from '../../src/communication';
+import { DbModule } from '../../src/db/db.module';
 import {
   dbDisconnect,
   generateGetCommunicationParams,
@@ -6,17 +17,6 @@ import {
   mockGenerateMember,
   mockGenerateUser,
 } from '../index';
-import { DbModule } from '../../src/db/db.module';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-import {
-  CommunicationModule,
-  CommunicationResolver,
-  CommunicationService,
-} from '../../src/communication';
-import * as config from 'config';
-import * as faker from 'faker';
-import { v4 } from 'uuid';
-import { Platform, UpdatedAppointmentAction } from '../../src/common';
 
 describe('CommunicationResolver', () => {
   let module: TestingModule;

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { cloneDeep } from 'lodash';
+import { Environments } from '.';
 import { EventType } from './events';
 import { SlackChannel, SlackIcon } from './interfaces.dto';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Environments } from '.';
-import { cloneDeep } from 'lodash';
 
 @Injectable()
 export class Logger {

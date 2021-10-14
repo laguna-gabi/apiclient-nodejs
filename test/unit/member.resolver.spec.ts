@@ -1,33 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import {
-  dbDisconnect,
-  defaultModules,
-  delay,
-  generateAppointmentComposeParams,
-  generateCancelNotifyParams,
-  generateCreateMemberParams,
-  generateCreateTaskParams,
-  generateId,
-  generateNotifyParams,
-  generateUpdateRecordingParams,
-  generateSetGeneralNotesParams,
-  generateUpdateMemberParams,
-  generateUpdateTaskStatusParams,
-  mockGenerateMember,
-  mockGenerateMemberConfig,
-  mockGenerateUser,
-  generateInternalNotifyParams,
-} from '../index';
-import {
-  Member,
-  MemberConfig,
-  MemberModule,
-  MemberResolver,
-  MemberScheduler,
-  MemberService,
-  TaskStatus,
-} from '../../src/member';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Test, TestingModule } from '@nestjs/testing';
+import * as config from 'config';
+import * as faker from 'faker';
+import { Types } from 'mongoose';
+import { v4 } from 'uuid';
 import {
   CancelNotificationType,
   Errors,
@@ -43,13 +19,37 @@ import {
   RegisterForNotificationParams,
   StorageType,
 } from '../../src/common';
-import { NotificationsService, StorageService } from '../../src/providers';
-import * as faker from 'faker';
-import { UserService } from '../../src/user';
-import { Types } from 'mongoose';
-import * as config from 'config';
-import { v4 } from 'uuid';
 import { Communication, CommunicationService } from '../../src/communication';
+import {
+  Member,
+  MemberConfig,
+  MemberModule,
+  MemberResolver,
+  MemberScheduler,
+  MemberService,
+  TaskStatus,
+} from '../../src/member';
+import { NotificationsService, StorageService } from '../../src/providers';
+import { UserService } from '../../src/user';
+import {
+  dbDisconnect,
+  defaultModules,
+  delay,
+  generateAppointmentComposeParams,
+  generateCancelNotifyParams,
+  generateCreateMemberParams,
+  generateCreateTaskParams,
+  generateId,
+  generateInternalNotifyParams,
+  generateNotifyParams,
+  generateSetGeneralNotesParams,
+  generateUpdateMemberParams,
+  generateUpdateRecordingParams,
+  generateUpdateTaskStatusParams,
+  mockGenerateMember,
+  mockGenerateMemberConfig,
+  mockGenerateUser,
+} from '../index';
 
 describe('MemberResolver', () => {
   let module: TestingModule;

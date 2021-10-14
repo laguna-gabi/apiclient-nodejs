@@ -1,16 +1,16 @@
+import * as faker from 'faker';
+import * as request from 'supertest';
+import { EndAppointmentParams, RequestAppointmentParams } from '../../src/appointment';
+import { Errors, ErrorType } from '../../src/common';
+import { Handler } from '../aux/handler';
 import {
   generateEndAppointmentParams,
   generateId,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
-  urls,
   generateUpdateNotesParams,
+  urls,
 } from '../index';
-import * as faker from 'faker';
-import { EndAppointmentParams, RequestAppointmentParams } from '../../src/appointment';
-import { Errors, ErrorType } from '../../src/common';
-import { Handler } from '../aux/handler';
-import * as request from 'supertest';
 
 const stringError = `String cannot represent a non string value`;
 const floatError = `Float cannot represent non numeric value`;
