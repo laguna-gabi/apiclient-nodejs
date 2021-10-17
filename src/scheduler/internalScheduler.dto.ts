@@ -1,5 +1,5 @@
-import { Document } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
 import { LeaderType } from '.';
 
 @Schema({ versionKey: false, timestamps: true })

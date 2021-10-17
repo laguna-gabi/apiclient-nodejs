@@ -1,5 +1,5 @@
-import gql from 'graphql-tag';
 import { ApolloServerTestClient } from 'apollo-server-testing';
+import gql from 'graphql-tag';
 import { GetCommunicationParams } from '../../src/communication';
 import { DischargeDocumentsLinks, RecordingLinkParams } from '../../src/member';
 import { GetSlotsParams } from '../../src/user';

@@ -1,5 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, model } from 'mongoose';
+import { v4 } from 'uuid';
+import { AppointmentModule } from '../../src/appointment';
+import { Errors, ErrorType } from '../../src/common';
 import {
   defaultUserParams,
   NotNullableUserKeys,
@@ -16,9 +19,6 @@ import {
   defaultModules,
   generateCreateUserParams,
 } from '../index';
-import { Errors, ErrorType } from '../../src/common';
-import { AppointmentModule } from '../../src/appointment';
-import { v4 } from 'uuid';
 
 describe('UserService', () => {
   let module: TestingModule;

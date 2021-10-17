@@ -1,34 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import {
-  dbDisconnect,
-  defaultModules,
-  delay,
-  generateAppointmentComposeParams,
-  generateCancelNotifyParams,
-  generateCreateMemberParams,
-  generateCreateTaskParams,
-  generateId,
-  generateNotifyParams,
-  generateUpdateRecordingParams,
-  generateSetGeneralNotesParams,
-  generateUpdateMemberParams,
-  generateUpdateTaskStatusParams,
-  mockGenerateMember,
-  mockGenerateMemberConfig,
-  generateCommunication,
-  mockGenerateUser,
-  generateInternalNotifyParams,
-} from '../index';
-import {
-  Member,
-  MemberConfig,
-  MemberModule,
-  MemberResolver,
-  MemberScheduler,
-  MemberService,
-  TaskStatus,
-} from '../../src/member';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Test, TestingModule } from '@nestjs/testing';
+import * as config from 'config';
+import * as faker from 'faker';
+import { Types } from 'mongoose';
+import { v4 } from 'uuid';
 import {
   CancelNotificationType,
   Errors,
@@ -44,13 +19,38 @@ import {
   RegisterForNotificationParams,
   StorageType,
 } from '../../src/common';
-import { NotificationsService, StorageService } from '../../src/providers';
-import * as faker from 'faker';
-import { UserService } from '../../src/user';
-import { Types } from 'mongoose';
-import * as config from 'config';
-import { v4 } from 'uuid';
 import { Communication, CommunicationService } from '../../src/communication';
+import {
+  Member,
+  MemberConfig,
+  MemberModule,
+  MemberResolver,
+  MemberScheduler,
+  MemberService,
+  TaskStatus,
+} from '../../src/member';
+import { NotificationsService, StorageService } from '../../src/providers';
+import { UserService } from '../../src/user';
+import {
+  dbDisconnect,
+  defaultModules,
+  delay,
+  generateAppointmentComposeParams,
+  generateCancelNotifyParams,
+  generateCreateMemberParams,
+  generateCreateTaskParams,
+  generateId,
+  generateInternalNotifyParams,
+  generateNotifyParams,
+  generateSetGeneralNotesParams,
+  generateUpdateMemberParams,
+  generateUpdateRecordingParams,
+  generateUpdateTaskStatusParams,
+  generateCommunication,
+  mockGenerateMember,
+  mockGenerateMemberConfig,
+  mockGenerateUser,
+} from '../index';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
@@ -646,6 +646,7 @@ describe('MemberResolver', () => {
     it('should not call notificationsService on platform=android', async () => {
       spyOnNotificationsServiceRegister.mockImplementationOnce(async () => undefined);
       const memberConfig = mockGenerateMemberConfig();
+      delete memberConfig.firstLoggedInAt;
       const member = mockGenerateMember();
       member.id = memberConfig.memberId.toString();
 
@@ -681,6 +682,7 @@ describe('MemberResolver', () => {
     it('should call notificationsService on platform=ios', async () => {
       spyOnNotificationsServiceRegister.mockImplementationOnce(async () => undefined);
       const memberConfig = mockGenerateMemberConfig();
+      delete memberConfig.firstLoggedInAt;
       const member = mockGenerateMember();
       member.id = memberConfig.memberId.toString();
 
@@ -713,6 +715,24 @@ describe('MemberResolver', () => {
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.updateMemberPlatform, eventParams);
       expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: member.id });
+    });
+
+    it('should not call updateMemberConfigRegisteredAt if firstLoggedInAt exists', async () => {
+      const memberConfig = mockGenerateMemberConfig();
+      const member = mockGenerateMember();
+      member.id = memberConfig.memberId.toString();
+
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+
+      const params: RegisterForNotificationParams = {
+        memberId: member.id,
+        platform: Platform.android,
+        isPushNotificationsEnabled: true,
+      };
+      await resolver.registerMemberForNotifications(params);
+
+      expect(spyOnServiceUpdateMemberConfigRegisteredAt).not.toBeCalled();
     });
   });
 
@@ -1330,6 +1350,32 @@ describe('MemberResolver', () => {
       await resolver.internalNotify(internalNotifyParams);
 
       expect(spyOnNotificationsServiceSend).not.toBeCalled();
+    });
+
+    it('should send sendBird message for chatMessageToUser', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      memberConfig.isPushNotificationsEnabled = false;
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const internalNotifyParams = generateInternalNotifyParams({
+        type: InternalNotificationType.chatMessageToUser,
+      });
+
+      await resolver.internalNotify(internalNotifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendSendBirdNotification: {
+          userId: member.id,
+          sendbirdChannelUrl: internalNotifyParams.metadata.sendbirdChannelUrl,
+          message: internalNotifyParams.metadata.content,
+          notificationType: InternalNotificationType.chatMessageToUser,
+        },
+      });
     });
   });
 

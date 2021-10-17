@@ -1,8 +1,10 @@
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import * as config from 'config';
 import {
+  Appointment,
+  AppointmentScheduler,
   AppointmentService,
   ScheduleAppointmentParams,
-  AppointmentScheduler,
-  Appointment,
 } from '.';
 import {
   EventType,
@@ -11,8 +13,6 @@ import {
   InternalNotifyParams,
   UpdatedAppointmentAction,
 } from '../common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import * as config from 'config';
 
 export class AppointmentBase {
   constructor(

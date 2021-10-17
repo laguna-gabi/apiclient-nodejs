@@ -2,12 +2,15 @@
   "hosts": {
     "chat": "https://www.chat.getlaguna.com",
     "app": "https://www.app.getlaguna.com",
-    "webApp": "https://app.lagunahealth.com"
+    "root": "https://api.lagunahealth.com"
   },
   "slack": {
     "notifications": "#production-notifications"
   },
   "oneSignal": {
     "voipRegistrationPayload": {}
+  },
+  "twilio": {
+    "source": "+18337090314"
   }
 }

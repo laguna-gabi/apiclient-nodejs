@@ -1,4 +1,24 @@
+import * as config from 'config';
+import * as faker from 'faker';
 import * as request from 'supertest';
+import {
+  CancelNotificationType,
+  Errors,
+  ErrorType,
+  Language,
+  NotificationType,
+  Platform,
+} from '../../src/common';
+import {
+  CancelNotifyParams,
+  CreateMemberParams,
+  defaultMemberParams,
+  getHonorificKeyName,
+  NotifyParams,
+  Sex,
+  UpdateMemberParams,
+} from '../../src/member';
+import { Handler } from '../aux/handler';
 import {
   generateCancelNotifyParams,
   generateCreateMemberParams,
@@ -16,26 +36,6 @@ import {
   generateZipCode,
   urls,
 } from '../index';
-import * as config from 'config';
-import * as faker from 'faker';
-import {
-  CancelNotifyParams,
-  CreateMemberParams,
-  defaultMemberParams,
-  getHonorificKeyName,
-  NotifyParams,
-  Sex,
-  UpdateMemberParams,
-} from '../../src/member';
-import {
-  CancelNotificationType,
-  Errors,
-  ErrorType,
-  Language,
-  NotificationType,
-  Platform,
-} from '../../src/common';
-import { Handler } from '../aux/handler';
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;

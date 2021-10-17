@@ -1,23 +1,9 @@
+import * as config from 'config';
+import { format } from 'date-fns';
 import * as faker from 'faker';
 import { Types } from 'mongoose';
-import { CreateUserParams, defaultUserParams, User, UserRole } from '../src/user';
-import {
-  AppointmentCompose,
-  CancelNotifyParams,
-  CreateMemberParams,
-  CreateTaskParams,
-  defaultMemberParams,
-  Member,
-  MemberConfig,
-  NotifyParams,
-  SetGeneralNotesParams,
-  Sex,
-  TaskStatus,
-  UpdateMemberParams,
-  UpdateTaskStatusParams,
-  getHonorificKeyName,
-  UpdateRecordingParams,
-} from '../src/member';
+import { v4 } from 'uuid';
+import { lookup } from 'zipcode-to-timezone';
 import {
   AppointmentMethod,
   EndAppointmentParams,
@@ -27,26 +13,39 @@ import {
   Scores,
   UpdateNotesParams,
 } from '../src/appointment';
-import { CreateOrgParams, OrgType } from '../src/org';
+import { AvailabilityInput } from '../src/availability';
 import {
-  Language,
-  Platform,
-  NotificationType,
-  CancelNotificationType,
-  SendOneSignalNotification,
-  SendTwilioNotification,
-  SendSendbirdNotification,
   CancelNotificationParams,
+  CancelNotificationType,
   InternalNotificationType,
   InternalNotifyParams,
+  Language,
+  NotificationType,
+  Platform,
+  SendOneSignalNotification,
+  SendSendbirdNotification,
+  SendTwilioNotification,
 } from '../src/common';
-import { lookup } from 'zipcode-to-timezone';
-import { AvailabilityInput } from '../src/availability';
 import { GetCommunicationParams, Communication } from '../src/communication';
-import * as config from 'config';
-import { format } from 'date-fns';
-import { v4 } from 'uuid';
-import { GetSlotsParams } from '../src/user';
+import {
+  AppointmentCompose,
+  CancelNotifyParams,
+  CreateMemberParams,
+  CreateTaskParams,
+  defaultMemberParams,
+  getHonorificKeyName,
+  Member,
+  MemberConfig,
+  NotifyParams,
+  SetGeneralNotesParams,
+  Sex,
+  TaskStatus,
+  UpdateMemberParams,
+  UpdateRecordingParams,
+  UpdateTaskStatusParams,
+} from '../src/member';
+import { CreateOrgParams, OrgType } from '../src/org';
+import { CreateUserParams, defaultUserParams, GetSlotsParams, User, UserRole } from '../src/user';
 
 export const generateCreateUserParams = ({
   id = v4(),
@@ -444,6 +443,7 @@ export const generateInternalNotifyParams = ({
   metadata = {
     content: faker.lorem.sentence(),
     chatLink: faker.lorem.sentence(),
+    sendbirdChannelUrl: v4(),
   },
 }: Partial<InternalNotifyParams> = {}): InternalNotifyParams => {
   return { memberId, userId, type, metadata };
@@ -474,12 +474,14 @@ export const generateSendTwilioNotificationParams = (): SendTwilioNotification =
   };
 };
 
-export const generateSendBirdSignalNotificationParams = (): SendSendbirdNotification => {
+export const generateSendSendbirdNotificationParams = (
+  notificationType,
+): SendSendbirdNotification => {
   return {
-    userId: faker.datatype.uuid(),
-    sendbirdChannelUrl: faker.datatype.uuid(),
+    userId: v4(),
+    sendbirdChannelUrl: v4(),
     message: faker.lorem.sentence(),
-    notificationType: NotificationType.textSms,
+    notificationType: notificationType,
   };
 };
 

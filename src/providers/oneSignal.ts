@@ -1,4 +1,6 @@
+import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
+import * as config from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
 import {
   AllNotificationTypes,
@@ -12,8 +14,6 @@ import {
   Platform,
   SendOneSignalNotification,
 } from '../common';
-import { HttpService } from '@nestjs/axios';
-import * as config from 'config';
 
 @Injectable()
 export class OneSignal {

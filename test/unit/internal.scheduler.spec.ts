@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AppointmentModule, AppointmentScheduler } from '../../src/appointment';
-import { dbConnect, dbDisconnect, defaultModules, generateId } from '../index';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
+import { Test, TestingModule } from '@nestjs/testing';
 import { v4 } from 'uuid';
+import { AppointmentModule, AppointmentScheduler } from '../../src/appointment';
+import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
+import { dbConnect, dbDisconnect, defaultModules, generateId } from '../index';
 
 describe('BaseScheduler + InternalSchedulerService', () => {
   let module: TestingModule;

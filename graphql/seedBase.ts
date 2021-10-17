@@ -13,7 +13,7 @@ export class SeedBase {
   queries: Queries;
   userService: UserService; //used for internal method, isn't exposed on queries
   app: INestApplication;
-  
+
   async init() {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],

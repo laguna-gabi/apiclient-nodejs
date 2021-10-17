@@ -1,6 +1,6 @@
+import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigsService, ExternalConfigs } from '.';
-import { HttpService } from '@nestjs/axios';
 import { Environments } from '../common';
 
 @Injectable()

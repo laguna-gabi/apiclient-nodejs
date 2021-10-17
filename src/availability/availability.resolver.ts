@@ -1,7 +1,7 @@
+import { UseInterceptors } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Availability, AvailabilityInput, AvailabilityService, AvailabilitySlot } from '.';
 import { Identifiers, LoggingInterceptor } from '../common';
-import { UseInterceptors } from '@nestjs/common';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Availability)

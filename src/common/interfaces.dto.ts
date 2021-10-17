@@ -1,9 +1,9 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Schema } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
 import { IsAlphanumeric, IsOptional } from 'class-validator';
-import { Errors, ErrorType } from './errors';
+import { Types } from 'mongoose';
 import { IsNotPlatformWeb } from './customValidators';
+import { Errors, ErrorType } from './errors';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -121,17 +121,14 @@ export abstract class BaseService {
 
 export class InternalNotificationMetadata {
   content: string;
-
   chatLink?: string;
+  sendbirdChannelUrl?: string;
 }
 
 export class InternalNotifyParams {
   memberId?: string;
-
   userId: string;
-
   type: InternalNotificationType;
-
   metadata: InternalNotificationMetadata;
 }
 
@@ -164,10 +161,10 @@ export class SendTwilioNotification {
 }
 
 export class SendSendbirdNotification {
-  userId: string; // Sender
+  userId: string; //sender
   sendbirdChannelUrl: string;
   message: string;
-  notificationType: string;
+  notificationType: AllNotificationTypes;
 }
 
 export class CancelNotificationParams {

@@ -1,16 +1,16 @@
+import { add, startOfToday, startOfTomorrow } from 'date-fns';
 import * as request from 'supertest';
-import { Handler } from '../aux/handler';
-import { Creators } from '../aux/creators';
+import { AppointmentStatus } from '../../src/appointment';
+import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
+import { Creators } from '../aux/creators';
+import { Handler } from '../aux/handler';
 import { urls } from '../common';
 import {
   generateAvailabilityInput,
   generateCreateMemberParams,
   generateScheduleAppointmentParams,
 } from '../generators';
-import { add, startOfToday, startOfTomorrow } from 'date-fns';
-import { defaultSlotsParams } from '../../src/user';
-import { AppointmentStatus } from '../../src/appointment';
 
 describe('Integration tests: rest', () => {
   const handler: Handler = new Handler();
@@ -24,6 +24,7 @@ describe('Integration tests: rest', () => {
     creators = new Creators(handler, appointmentsActions);
     server = handler.app.getHttpServer();
     handler.mockCommunication();
+    await creators.createFirstUserInDbfNecessary();
   });
 
   afterAll(async () => {
@@ -32,31 +33,22 @@ describe('Integration tests: rest', () => {
 
   describe('getSlots', () => {
     it('should get slots', async () => {
-      const resultCoach = await creators.createAndValidateUser();
-
       const resultOrg = await creators.createAndValidateOrg();
-      const resultMember = await creators.createAndValidateMember({
-        org: resultOrg,
-        primaryUser: resultCoach,
-        users: [resultCoach],
-      });
+      const resultMember = await creators.createAndValidateMember({ org: resultOrg });
 
-      const appointment = await creators.createAndValidateAppointment({
-        userId: resultCoach.id,
-        member: resultMember,
-      });
+      const appointment = await creators.createAndValidateAppointment({ member: resultMember });
 
       await handler.mutations.createAvailabilities({
         availabilities: [
           generateAvailabilityInput({
             start: add(startOfToday(), { hours: 10 }),
             end: add(startOfToday(), { hours: 22 }),
-            userId: resultCoach.id,
+            userId: resultMember.primaryUserId,
           }),
           generateAvailabilityInput({
             start: add(startOfTomorrow(), { hours: 10 }),
             end: add(startOfTomorrow(), { hours: 22 }),
-            userId: resultCoach.id,
+            userId: resultMember.primaryUserId,
           }),
         ],
       });
@@ -65,11 +57,11 @@ describe('Integration tests: rest', () => {
       expect(body).toEqual(
         expect.objectContaining({
           user: {
-            id: resultCoach.id,
-            firstName: resultCoach.firstName,
+            id: resultMember.primaryUserId,
+            firstName: resultMember.users[0].firstName,
             roles: expect.any(Array),
-            avatar: resultCoach.avatar,
-            description: resultCoach.description,
+            avatar: resultMember.users[0].avatar,
+            description: resultMember.users[0].description,
           },
           member: {
             id: resultMember.id,
@@ -89,17 +81,11 @@ describe('Integration tests: rest', () => {
 
   describe('scheduleAppointment', () => {
     it('should schedule an appointment via rest', async () => {
-      const resultCoach = await creators.createAndValidateUser();
-
       const resultOrg = await creators.createAndValidateOrg();
-      const resultMember = await creators.createAndValidateMember({
-        org: resultOrg,
-        primaryUser: resultCoach,
-        users: [resultCoach],
-      });
+      const resultMember = await creators.createAndValidateMember({ org: resultOrg });
 
       const appointmentsParams = generateScheduleAppointmentParams({
-        userId: resultCoach.id,
+        userId: resultMember.primaryUserId,
         memberId: resultMember.id,
       });
 
@@ -112,7 +98,7 @@ describe('Integration tests: rest', () => {
         expect.objectContaining({
           id: expect.any(String),
           memberId: resultMember.id,
-          userId: resultCoach.id,
+          userId: resultMember.primaryUserId,
           method: appointmentsParams.method,
           status: AppointmentStatus.scheduled,
           createdAt: expect.any(String),

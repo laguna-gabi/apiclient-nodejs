@@ -1,4 +1,6 @@
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import * as config from 'config';
 import {
   AppointmentController,
   AppointmentMethod,
@@ -7,6 +9,15 @@ import {
   AppointmentScheduler,
   AppointmentService,
 } from '../../src/appointment';
+import {
+  AppointmentStatus,
+  EventType,
+  IEventUpdatedAppointment,
+  InternalNotificationType,
+  InternalNotifyParams,
+  ReminderType,
+  UpdatedAppointmentAction,
+} from '../../src/common';
 import {
   dbDisconnect,
   defaultModules,
@@ -17,17 +28,6 @@ import {
   generateScheduleAppointmentParams,
   generateUpdateNotesParams,
 } from '../index';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import {
-  ReminderType,
-  AppointmentStatus,
-  EventType,
-  IEventUpdatedAppointment,
-  UpdatedAppointmentAction,
-  InternalNotificationType,
-  InternalNotifyParams,
-} from '../../src/common';
-import * as config from 'config';
 
 describe('AppointmentResolver', () => {
   let module: TestingModule;

@@ -10,11 +10,11 @@ import {
   Notes,
   NotesDto,
 } from '.';
-import { ProvidersModule } from '../providers';
+import { CommonModule } from '../common';
 import { CommunicationModule } from '../communication';
 import { OrgModule } from '../org';
+import { ProvidersModule } from '../providers';
 import { InternalSchedulerModule } from '../scheduler';
-import { CommonModule } from '../common';
 
 @Module({
   imports: [

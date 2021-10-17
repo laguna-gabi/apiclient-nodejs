@@ -1,8 +1,8 @@
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { dbDisconnect, generateId, generateOrgParams } from '../index';
 import { DbModule } from '../../src/db/db.module';
 import { OrgModule, OrgResolver, OrgService } from '../../src/org';
-import { EventEmitterModule } from '@nestjs/event-emitter';
+import { dbDisconnect, generateId, generateOrgParams } from '../index';
 
 describe('OrgResolver', () => {
   let module: TestingModule;

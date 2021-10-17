@@ -1,4 +1,20 @@
+import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
+import * as config from 'config';
+import * as faker from 'faker';
+import { model, Model } from 'mongoose';
+import { v4 } from 'uuid';
+import { NotificationType } from '../../src/common';
+import {
+  MemberModule,
+  MemberScheduler,
+  MemberService,
+  NotifyParams,
+  NotifyParamsDto,
+} from '../../src/member';
+import { Org, OrgDto } from '../../src/org';
+import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
+import { User, UserDto } from '../../src/user';
 import {
   dbConnect,
   dbDisconnect,
@@ -9,22 +25,6 @@ import {
   generateId,
   generateOrgParams,
 } from '../index';
-import { SchedulerRegistry } from '@nestjs/schedule';
-import {
-  MemberModule,
-  MemberScheduler,
-  MemberService,
-  NotifyParams,
-  NotifyParamsDto,
-} from '../../src/member';
-import { model, Model } from 'mongoose';
-import { NotificationType } from '../../src/common';
-import * as faker from 'faker';
-import { v4 } from 'uuid';
-import * as config from 'config';
-import { Org, OrgDto } from '../../src/org';
-import { User, UserDto } from '../../src/user';
-import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
 
 describe('MemberScheduler', () => {
   let module: TestingModule;

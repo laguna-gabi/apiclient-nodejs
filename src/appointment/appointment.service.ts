@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
+import * as config from 'config';
 import { Model, Types } from 'mongoose';
 import {
   Appointment,
@@ -21,8 +23,6 @@ import {
   IEventAppointmentScoresUpdated,
   IEventNewAppointment,
 } from '../common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import * as config from 'config';
 
 @Injectable()
 export class AppointmentService extends BaseService {

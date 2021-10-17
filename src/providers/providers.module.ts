@@ -1,3 +1,4 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import {
   Bitly,
@@ -9,7 +10,6 @@ import {
   TwilioService,
   WebhooksController,
 } from '.';
-import { HttpModule } from '@nestjs/axios';
 import { CommonModule } from '../common';
 
 @Module({

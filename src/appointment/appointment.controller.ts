@@ -1,13 +1,13 @@
 import { Body, Controller, NotFoundException, Post, UseInterceptors } from '@nestjs/common';
-import { apiPrefix, LoggingInterceptor } from '../common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   Appointment,
   AppointmentBase,
-  ScheduleAppointmentParams,
-  AppointmentService,
   AppointmentScheduler,
+  AppointmentService,
+  ScheduleAppointmentParams,
 } from '.';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { apiPrefix, LoggingInterceptor } from '../common';
 
 @UseInterceptors(LoggingInterceptor)
 @Controller(`${apiPrefix}/appointments`)

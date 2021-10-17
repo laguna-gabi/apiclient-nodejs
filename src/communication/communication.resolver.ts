@@ -1,11 +1,15 @@
+import { UseInterceptors } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { Args, Query, Resolver } from '@nestjs/graphql';
+import * as config from 'config';
+import { camelCase } from 'lodash';
 import {
   CommunicationInfo,
   CommunicationService,
   GetCommunicationParams,
   UnreadMessagesCount,
 } from '.';
-import { OnEvent } from '@nestjs/event-emitter';
+import { AppointmentStatus } from '../appointment';
 import {
   EventType,
   IEventNewMember,
@@ -15,10 +19,6 @@ import {
   LoggingInterceptor,
   UpdatedAppointmentAction,
 } from '../common';
-import { AppointmentStatus } from '../appointment';
-import { camelCase } from 'lodash';
-import * as config from 'config';
-import { UseInterceptors } from '@nestjs/common';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => CommunicationInfo)

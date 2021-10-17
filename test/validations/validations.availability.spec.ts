@@ -1,5 +1,5 @@
-import { Handler } from '../aux/handler';
 import { AvailabilityInput } from '../../src/availability';
+import { Handler } from '../aux/handler';
 import { generateAvailabilityInput } from '../generators';
 
 const stringError = `String cannot represent a non string value`;

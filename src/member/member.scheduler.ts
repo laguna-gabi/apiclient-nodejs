@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { InjectModel } from '@nestjs/mongoose';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import { NotifyParams, NotifyParamsDocument } from './member.dto';
+import * as config from 'config';
+import { add } from 'date-fns';
+import { Model } from 'mongoose';
+import { MemberConfig, MemberConfigDocument, MemberService } from '.';
 import {
   Errors,
   ErrorType,
@@ -11,14 +16,9 @@ import {
   Logger,
   NotificationType,
 } from '../common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { MemberConfig, MemberConfigDocument, MemberService } from '.';
 import { Bitly } from '../providers';
 import { BaseScheduler, InternalSchedulerService, LeaderType } from '../scheduler';
-import { add } from 'date-fns';
-import * as config from 'config';
+import { NotifyParams, NotifyParamsDocument } from './member.dto';
 
 @Injectable()
 export class MemberScheduler extends BaseScheduler {

@@ -1,4 +1,12 @@
+import { UseInterceptors } from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import * as config from 'config';
+import { format, millisecondsInHour } from 'date-fns';
+import { getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
+import * as jwt from 'jsonwebtoken';
+import { camelCase } from 'lodash';
+import { lookup } from 'zipcode-to-timezone';
 import {
   AppointmentCompose,
   CancelNotifyParams,
@@ -8,10 +16,10 @@ import {
   Member,
   MemberBase,
   MemberConfig,
-  NotificationBuilder,
   MemberScheduler,
   MemberService,
   MemberSummary,
+  NotificationBuilder,
   NotifyParams,
   RecordingLinkParams,
   RecordingOutput,
@@ -27,6 +35,7 @@ import {
   EventType,
   Identifier,
   IEventNotifyChatMessage,
+  IEventSendSmsToChat,
   IEventUpdateMemberPlatform,
   InternalNotificationType,
   InternalNotifyParams,
@@ -37,19 +46,9 @@ import {
   RegisterForNotificationParams,
   StorageType,
 } from '../common';
-import { camelCase } from 'lodash';
-import * as jwt from 'jsonwebtoken';
-import { getTimezoneOffset } from 'date-fns-tz';
-import { millisecondsInHour } from 'date-fns';
-import { lookup } from 'zipcode-to-timezone';
-import { utcToZonedTime } from 'date-fns-tz';
-import { format } from 'date-fns';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { NotificationsService, StorageService } from '../providers';
 import { User, UserService } from '../user';
-import { UseInterceptors } from '@nestjs/common';
 import { CommunicationService, GetCommunicationParams } from '../communication';
-import * as config from 'config';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
@@ -287,12 +286,14 @@ export class MemberResolver extends MemberBase {
         externalUserId: memberConfig.externalUserId,
       });
     }
+    if (!memberConfig.firstLoggedInAt) {
+      await this.memberService.updateMemberConfigRegisteredAt(memberConfig.memberId);
+    }
     await this.memberService.updateMemberConfig({
       memberId: memberConfig.memberId,
       platform: registerForNotificationParams.platform,
       isPushNotificationsEnabled: registerForNotificationParams.isPushNotificationsEnabled,
     });
-    await this.memberService.updateMemberConfigRegisteredAt(memberConfig.memberId);
 
     member.users.map((user) => {
       const eventParams: IEventUpdateMemberPlatform = {
@@ -425,6 +426,35 @@ export class MemberResolver extends MemberBase {
       userId: senderUserId,
       type: InternalNotificationType.chatMessageToMember,
       metadata: { content: config.get('contents.newChatMessage') },
+    });
+  }
+
+  /**
+   * Listening to incoming sms from twilio webhook.
+   * Send message from member to chat.
+   */
+  @OnEvent(EventType.sendSmsToChat, { async: true })
+  async sendSmsToChat(params: IEventSendSmsToChat) {
+    const member = await this.memberService.getByPhone(params.phone);
+    const communication = await this.communicationService.get({
+      memberId: member.id,
+      userId: member.primaryUserId,
+    });
+    if (!communication) {
+      this.logger.warn(
+        params,
+        MemberResolver.name,
+        this.notifyChatMessage.name,
+        'sendbirdChannelUrl doesnt exists',
+      );
+      return;
+    }
+
+    return this.internalNotify({
+      memberId: member.id,
+      userId: member.primaryUserId,
+      type: InternalNotificationType.chatMessageToUser,
+      metadata: { content: params.message, sendbirdChannelUrl: communication.sendbirdChannelUrl },
     });
   }
 

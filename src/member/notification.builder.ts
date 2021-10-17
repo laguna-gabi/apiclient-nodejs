@@ -6,6 +6,7 @@ import {
   NotificationType,
   Platform,
   SendOneSignalNotification,
+  SendSendbirdNotification,
   SendTwilioNotification,
   SendSendbirdNotification,
 } from '../common';
@@ -123,6 +124,16 @@ export class NotificationBuilder {
           };
           return this.notificationsService.send({ sendOneSignalNotification });
         }
+        return;
+      }
+      case InternalNotificationType.chatMessageToUser: {
+        const sendSendBirdNotification: SendSendbirdNotification = {
+          userId: member.id,
+          sendbirdChannelUrl: metadata.sendbirdChannelUrl,
+          message: metadata.content,
+          notificationType: type,
+        };
+        return this.notificationsService.send({ sendSendBirdNotification });
       }
     }
   }

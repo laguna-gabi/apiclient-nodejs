@@ -2,7 +2,8 @@
   "hosts": {
     "chat": "https://www.dev.chat.getlaguna.com",
     "app": "https://www.dev.app.getlaguna.com",
-    "webApp": "https://dev.app.lagunahealth.com"
+    "webApp": "https://dev.app.lagunahealth.com",
+    "root": "https://dev.api.lagunahealth.com"
   },
   "db": {
     "connection": "mongodb://localhost:27017/laguna"
@@ -22,7 +23,7 @@
     }
   },
   "twilio": {
-    "source": "+18337090314",
+    "source": "+12058511112",
     "identity": "the_user_id"
   },
   "slack": {
@@ -38,7 +39,7 @@
   },
   "storage": "hepius-test",
   "scheduler": {
-    "alertBeforeInMin": 5,
+    "alertBeforeInMin": 15,
     "maxAlertGapInMin": 43800,
     "cronJobIntervalInMin": 1
   },

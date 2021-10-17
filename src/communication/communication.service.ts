@@ -1,6 +1,8 @@
 import { Injectable, NotImplementedException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { v4 } from 'uuid';
 import {
   Communication,
   CommunicationDocument,
@@ -8,11 +10,7 @@ import {
   GetCommunicationParams,
   RegisterSendbirdUserParams,
 } from '.';
-import { User, UserRole } from '../user';
-import { Member } from '../member';
-import { v4 } from 'uuid';
-import { SendBird, TwilioService } from '../providers';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { AppointmentStatus } from '../appointment';
 import {
   Errors,
   ErrorType,
@@ -23,7 +21,9 @@ import {
   Platform,
   UpdatedAppointmentAction,
 } from '../common';
-import { AppointmentStatus } from '../appointment';
+import { Member } from '../member';
+import { SendBird, TwilioService } from '../providers';
+import { User, UserRole } from '../user';
 
 @Injectable()
 export class CommunicationService {

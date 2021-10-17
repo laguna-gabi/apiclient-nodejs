@@ -1,4 +1,8 @@
+import { UseInterceptors } from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import * as config from 'config';
+import { add } from 'date-fns';
 import { camelCase } from 'lodash';
 import {
   Appointment,
@@ -10,25 +14,21 @@ import {
   ScheduleAppointmentParams,
   UpdateNotesParams,
 } from '.';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import {
-  ReminderType,
   EventType,
   IEventRequestAppointment,
   IEventUpdatedAppointment,
-  LoggingInterceptor,
-  UpdatedAppointmentAction,
   InternalNotificationType,
   InternalNotifyParams,
+  LoggingInterceptor,
+  ReminderType,
+  UpdatedAppointmentAction,
 } from '../common';
-import { AppointmentBase } from './appointment.interfaces';
 import { Member } from '../member';
-import { User } from '../user';
-import * as config from 'config';
-import { add } from 'date-fns';
-import { Bitly } from '../providers';
 import { OrgService } from '../org';
-import { UseInterceptors } from '@nestjs/common';
+import { Bitly } from '../providers';
+import { User } from '../user';
+import { AppointmentBase } from './appointment.interfaces';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Appointment)

@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
+import { add, getHours, startOfTomorrow } from 'date-fns';
+import { cloneDeep } from 'lodash';
 import { Model, Types } from 'mongoose';
 import {
   CreateUserParams,
@@ -25,10 +28,7 @@ import {
   SlackChannel,
   SlackIcon,
 } from '../common';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { cloneDeep } from 'lodash';
 import { UserConfig, UserConfigDocument } from './userConfig.dto';
-import { add, getHours, startOfTomorrow } from 'date-fns';
 
 @Injectable()
 export class UserService extends BaseService {

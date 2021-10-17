@@ -1,10 +1,10 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
-import { Errors, ErrorType, Identifier, Language, validPhoneExamples } from '../common';
 import { IsEmail, IsOptional, IsPhoneNumber, IsUrl, Length } from 'class-validator';
 import * as config from 'config';
+import { Document, Types } from 'mongoose';
 import { Appointment, AppointmentData } from '../appointment';
+import { Errors, ErrorType, Identifier, Language, validPhoneExamples } from '../common';
 
 export enum UserRole {
   admin = 'admin',

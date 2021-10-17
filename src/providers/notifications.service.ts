@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { Injectable } from '@nestjs/common';
 import {
   CancelNotificationParams,
   Logger,
@@ -7,10 +7,9 @@ import {
   SendSendbirdNotification,
   SendTwilioNotification,
 } from '../common';
-import { ConfigsService } from './aws';
-import { OneSignal } from './oneSignal';
-import { TwilioService } from './twilio.service';
 import { SendBird } from './sendBird';
+import { TwilioService } from './twilio.service';
+import { ConfigsService, OneSignal } from '.';
 
 @Injectable()
 export class NotificationsService {
@@ -20,6 +19,7 @@ export class NotificationsService {
     private readonly configsService: ConfigsService,
     private readonly httpService: HttpService,
     private readonly twilio: TwilioService,
+    private readonly sendBird: SendBird,
     private readonly logger: Logger,
     private readonly sendbird: SendBird,
   ) {

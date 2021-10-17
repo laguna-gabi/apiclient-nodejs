@@ -1,14 +1,14 @@
-import { SendBird } from '../../src/providers';
-import { v4 } from 'uuid';
-import * as faker from 'faker';
-import { CreateSendbirdGroupChannelParams } from '../../src/communication';
-import { UserRole } from '../../src/user';
-import { generateId } from '../generators';
-import { AppointmentStatus } from '../../src/appointment';
-import axios from 'axios';
 import { Test, TestingModule } from '@nestjs/testing';
-import { dbDisconnect, defaultModules } from '../common';
+import axios from 'axios';
+import * as faker from 'faker';
+import { v4 } from 'uuid';
+import { AppointmentStatus } from '../../src/appointment';
 import { SendSendbirdNotification, NotificationType } from '../../src/common';
+import { CreateSendbirdGroupChannelParams } from '../../src/communication';
+import { SendBird } from '../../src/providers';
+import { UserRole } from '../../src/user';
+import { dbDisconnect, defaultModules } from '../common';
+import { generateId } from '../generators';
 
 describe('live: sendbird actions', () => {
   let module: TestingModule;
@@ -32,10 +32,11 @@ describe('live: sendbird actions', () => {
    * 3. create a group channel between user(coach) and user(member)
    * 4. freeze group channel
    * 5. send message (should work even though the channel is frozen)
-   * 5. un-freeze group channel
-   * 6. update metadata for appointment1
-   * 7. update metadata for appointment2 (check that we have 2 appointments in the metadata now)
-   * 8. delete metadata for appointment2
+   * 6. un-freeze group channel
+   * 7. update metadata for appointment1
+   * 8. update metadata for appointment2 (check that we have 2 appointments in the metadata now)
+   * 9. delete metadata for appointment2
+   * 10. get member's unread messages
    */
   it('should do sendbird flow', async () => {
     const user = {
@@ -97,6 +98,12 @@ describe('live: sendbird actions', () => {
 
     await sendBird.deleteGroupChannelMetadata(params.channel_url, appointmentId2);
     await validateGroupChannel(params.channel_url, [appointmentId1], [value1]);
+
+    const unreadMessagesCount = await sendBird.countUnreadMessages(
+      params.channel_url,
+      member.user_id,
+    );
+    expect(unreadMessagesCount).toEqual(1);
   }, 20000);
 
   const validateGroupChannel = async (

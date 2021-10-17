@@ -1,10 +1,10 @@
-import { ConfigsService, StorageService } from '../../src/providers';
+import * as AWS from 'aws-sdk';
 import axios from 'axios';
+import * as config from 'config';
 import * as faker from 'faker';
 import { Platform, StorageType } from '../../src/common';
+import { ConfigsService, StorageService } from '../../src/providers';
 import { mockGenerateMember, mockGenerateUser } from '../generators';
-import * as AWS from 'aws-sdk';
-import * as config from 'config';
 
 describe('live: aws', () => {
   describe('storage', () => {

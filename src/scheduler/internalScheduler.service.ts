@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { InternalSchedulerDocument, LeaderType, Scheduler } from '.';
-import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import * as config from 'config';
+import { Model } from 'mongoose';
+import { InternalSchedulerDocument, LeaderType, Scheduler } from '.';
 
 @Injectable()
 export class InternalSchedulerService {

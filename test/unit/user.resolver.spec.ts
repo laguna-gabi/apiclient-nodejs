@@ -1,22 +1,22 @@
+import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import { v4 } from 'uuid';
+import { EventType, IEventNewUser } from '../../src/common';
+import { DbModule } from '../../src/db/db.module';
+import {
+  GetSlotsParams,
+  UserController,
+  UserModule,
+  UserResolver,
+  UserRole,
+  UserService,
+} from '../../src/user';
 import {
   dbDisconnect,
   generateCreateUserParams,
   generateGetSlotsParams,
   mockGenerateUser,
 } from '../index';
-import { DbModule } from '../../src/db/db.module';
-import {
-  UserController,
-  UserModule,
-  UserResolver,
-  UserRole,
-  UserService,
-  GetSlotsParams,
-} from '../../src/user';
-import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
-import { v4 } from 'uuid';
-import { EventType, IEventNewUser } from '../../src/common';
 
 describe('UserResolver', () => {
   let module: TestingModule;

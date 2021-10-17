@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { InternalSchedulerDto, InternalSchedulerService, Scheduler } from '.';
 import { MongooseModule } from '@nestjs/mongoose';
+import { InternalSchedulerDto, InternalSchedulerService, Scheduler } from '.';
 
 @Module({
   imports: [MongooseModule.forFeature([{ name: Scheduler.name, schema: InternalSchedulerDto }])],
