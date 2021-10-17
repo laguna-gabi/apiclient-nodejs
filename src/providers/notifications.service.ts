@@ -21,7 +21,6 @@ export class NotificationsService {
     private readonly twilio: TwilioService,
     private readonly sendBird: SendBird,
     private readonly logger: Logger,
-    private readonly sendbird: SendBird,
   ) {
     this.oneSignal = new OneSignal(configsService, httpService, logger);
   }
@@ -55,7 +54,7 @@ export class NotificationsService {
     }
     if (sendSendBirdNotification) {
       this.logger.debug(sendSendBirdNotification, NotificationsService.name, this.send.name);
-      return this.sendbird.send(sendSendBirdNotification);
+      return this.sendBird.send(sendSendBirdNotification);
     }
   }
 

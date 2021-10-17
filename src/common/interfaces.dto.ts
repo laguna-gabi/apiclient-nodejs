@@ -122,7 +122,7 @@ export abstract class BaseService {
 export class InternalNotificationMetadata {
   content: string;
   chatLink?: string;
-  sendbirdChannelUrl?: string;
+  sendBirdChannelUrl?: string;
 }
 
 export class InternalNotifyParams {
@@ -162,7 +162,7 @@ export class SendTwilioNotification {
 
 export class SendSendBirdNotification {
   userId: string; //sender
-  sendbirdChannelUrl: string;
+  sendBirdChannelUrl: string;
   message: string;
   notificationType: AllNotificationTypes;
 }

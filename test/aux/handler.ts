@@ -101,7 +101,7 @@ export class Handler {
     const mockCommunicationParams = {
       memberId: generateId(),
       userId: v4(),
-      sendbirdChannelUrl: v4(),
+      sendBirdChannelUrl: v4(),
       chat: { memberLink: faker.internet.url(), userLink: faker.internet.url() },
     };
     this.spyOnGetCommunicationService = jest.spyOn(this.communicationService, 'get');

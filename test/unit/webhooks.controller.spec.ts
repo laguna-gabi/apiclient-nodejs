@@ -3,7 +3,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { apiPrefix, EventType, SlackChannel, SlackIcon, webhooks } from '../../src/common';
 import { TwilioService, WebhooksController } from '../../src/providers';
 import { dbDisconnect, defaultModules } from '../index';
-import * as sendbirdUserPayload from './mocks/webhookSendbirdPayload.json';
+import * as sendBirdNewMessagePayload from './mocks/webhookSendbirdNewMessagePayload.json';
+import * as sendBirdAdminMessagePayload from './mocks/webhookSendbirdAdminMessagePayload.json';
 import * as twilioPayload from './mocks/webhookTwilioPayload.json';
 
 describe('WebhooksController', () => {
@@ -31,40 +32,46 @@ describe('WebhooksController', () => {
       spyOnEventEmitter.mockReset();
     });
 
-    it('should generate an event with a payload', async () => {
-      await controller.sendbird(sendbirdUserPayload);
+    it('should generate an event with a normal new message payload', async () => {
+      await controller.sendbird(sendBirdNewMessagePayload);
 
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyChatMessage, {
-        senderUserId: sendbirdUserPayload.sender.user_id,
-        sendbirdChannelUrl: sendbirdUserPayload.channel.channel_url,
-      });
-    });
-  });
-
-  describe('twilio', () => {
-    afterEach(() => {
-      spyOnEventEmitter.mockReset();
-    });
-
-    it('should call send SMS event on valid request', async () => {
-      await twilioService.onModuleInit();
-      await controller.incomingSms(twilioPayload.body, twilioPayload.signature);
-
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.sendSmsToChat, {
-        phone: twilioPayload.body.From,
-        message: twilioPayload.body.Body,
+        senderUserId: sendBirdNewMessagePayload.sender.user_id,
+        sendBirdChannelUrl: sendBirdNewMessagePayload.channel.channel_url,
       });
     });
 
-    it('should call slackMessage event on invalid request', async () => {
-      await twilioService.onModuleInit();
-      await controller.incomingSms({ not: 'valid' }, 'not-valid');
+    it('should NOT generate an event with an admin message payload', async () => {
+      await controller.sendbird(sendBirdAdminMessagePayload);
+      expect(spyOnEventEmitter).not.toHaveBeenCalled();
 
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.slackMessage, {
-        // eslint-disable-next-line max-len
-        message: `*TWILIO WEBHOOK*\nrequest from an unknown client was made to Post ${apiPrefix}/${webhooks}/twilio/incoming-sms`,
-        icon: SlackIcon.warning,
-        channel: SlackChannel.notifications,
+    });
+
+    describe('twilio', () => {
+      afterEach(() => {
+        spyOnEventEmitter.mockReset();
+      });
+
+      it('should call send SMS event on valid request', async () => {
+        await twilioService.onModuleInit();
+        await controller.incomingSms(twilioPayload.body, twilioPayload.signature);
+
+        expect(spyOnEventEmitter).toBeCalledWith(EventType.sendSmsToChat, {
+          phone: twilioPayload.body.From,
+          message: twilioPayload.body.Body,
+        });
+      });
+
+      it('should call slackMessage event on invalid request', async () => {
+        await twilioService.onModuleInit();
+        await controller.incomingSms({ not: 'valid' }, 'not-valid');
+
+        expect(spyOnEventEmitter).toBeCalledWith(EventType.slackMessage, {
+          // eslint-disable-next-line max-len
+          message: `*TWILIO WEBHOOK*\nrequest from an unknown client was made to Post ${apiPrefix}/${webhooks}/twilio/incoming-sms`,
+          icon: SlackIcon.warning,
+          channel: SlackChannel.notifications,
+        });
       });
     });
   });

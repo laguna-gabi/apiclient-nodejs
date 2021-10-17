@@ -85,7 +85,7 @@ export class CommunicationService {
         await this.communicationModel.create({
           memberId: new Types.ObjectId(member.id),
           userId: user.id,
-          sendbirdChannelUrl: params.channel_url,
+          sendBirdChannelUrl: params.channel_url,
         });
         await this.sendBird.freezeGroupChannel(params.channel_url, platform === Platform.web);
       }
@@ -119,12 +119,12 @@ export class CommunicationService {
 
     if (params.updatedAppointmentAction === UpdatedAppointmentAction.edit) {
       await this.sendBird.updateGroupChannelMetadata(
-        communication.sendbirdChannelUrl,
+        communication.sendBirdChannelUrl,
         params.key,
         params.value,
       );
     } else if (params.updatedAppointmentAction === UpdatedAppointmentAction.delete) {
-      await this.sendBird.deleteGroupChannelMetadata(communication.sendbirdChannelUrl, params.key);
+      await this.sendBird.deleteGroupChannelMetadata(communication.sendBirdChannelUrl, params.key);
     } else {
       throw new NotImplementedException();
     }
@@ -150,7 +150,7 @@ export class CommunicationService {
       return;
     }
     await this.sendBird.freezeGroupChannel(
-      communication.sendbirdChannelUrl,
+      communication.sendBirdChannelUrl,
       platform === Platform.web,
     );
   }
@@ -187,15 +187,15 @@ export class CommunicationService {
           memberId: '$memberId',
           memberToken: '$member.accessToken',
           userToken: '$user.accessToken',
-          sendbirdChannelUrl: '$sendbirdChannelUrl',
+          sendBirdChannelUrl: '$sendBirdChannelUrl',
         },
       },
     ]);
     return result[0];
   }
 
-  async getByChannelUrl(sendbirdChannelUrl: string): Promise<Communication> {
-    return this.communicationModel.findOne({ sendbirdChannelUrl });
+  async getByChannelUrl(sendBirdChannelUrl: string): Promise<Communication> {
+    return this.communicationModel.findOne({ sendBirdChannelUrl });
   }
 
   async getMemberUnreadMessagesCount(memberId: string) {
@@ -205,7 +205,7 @@ export class CommunicationService {
     if (!result) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
-    const count = await this.sendBird.countUnreadMessages(result.sendbirdChannelUrl, memberId);
+    const count = await this.sendBird.countUnreadMessages(result.sendBirdChannelUrl, memberId);
     return { count, memberId, userId: result.userId };
   }
 

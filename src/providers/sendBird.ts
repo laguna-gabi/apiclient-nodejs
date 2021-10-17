@@ -139,12 +139,12 @@ export class SendBird implements OnModuleInit {
   }
 
   async send(sendSendBirdNotification: SendSendBirdNotification) {
-    const { userId, sendbirdChannelUrl, message, notificationType } = sendSendBirdNotification;
+    const { userId, sendBirdChannelUrl, message, notificationType } = sendSendBirdNotification;
     const methodName = this.send.name;
     try {
       const result = await this.httpService
         .post(
-          `${this.basePath}${suffix.groupChannels}/${sendbirdChannelUrl}/messages`,
+          `${this.basePath}${suffix.groupChannels}/${sendBirdChannelUrl}/messages`,
           {
             message_type: 'ADMM', // Only admin type can be sent to a frozen chat
             user_id: userId,

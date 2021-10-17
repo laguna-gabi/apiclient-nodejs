@@ -73,7 +73,7 @@ describe('NotificationsService (offline)', () => {
   it('should send sendbird notification', async () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const sendBirdSendMock = jest.spyOn(notificationsService.sendbird, 'send');
+    const sendBirdSendMock = jest.spyOn(notificationsService.sendBird, 'send');
     sendBirdSendMock.mockResolvedValue(v4());
     const params = {
       sendSendBirdNotification: generateSendSendBirdNotificationParams(NotificationType.textSms),

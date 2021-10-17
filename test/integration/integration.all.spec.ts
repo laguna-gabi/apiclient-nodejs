@@ -653,7 +653,7 @@ describe('Integration tests: all', () => {
     expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
       sendSendBirdNotification: {
         userId: member.primaryUserId,
-        sendbirdChannelUrl: mockCommunicationParams.sendbirdChannelUrl,
+        sendBirdChannelUrl: mockCommunicationParams.sendBirdChannelUrl,
         message: notifyParams.metadata.content,
         notificationType: NotificationType.textSms,
       },
@@ -893,13 +893,12 @@ describe('Integration tests: all', () => {
       const requestedAppointment = await handler.mutations.requestAppointment({
         appointmentParams,
       });
-      const scheduleAppointmentParams: ScheduleAppointmentParams = generateScheduleAppointmentParams(
-        {
+      const scheduleAppointmentParams: ScheduleAppointmentParams =
+        generateScheduleAppointmentParams({
           memberId: member.id,
           userId: primaryUser.id,
           id: requestedAppointment.id,
-        },
-      );
+        });
       await handler.mutations.scheduleAppointment({ appointmentParams: scheduleAppointmentParams });
 
       expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(

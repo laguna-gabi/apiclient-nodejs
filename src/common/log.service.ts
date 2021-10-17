@@ -21,7 +21,7 @@ export class Logger {
     'type',
     'availabilities',
     'externalUserId',
-    'sendbirdChannelUrl',
+    'sendBirdChannelUrl',
     'senderUserId',
     //baseSchedulers
     'schedulerIdentifier',

@@ -13,7 +13,7 @@ import {
 } from '../common';
 
 /**
- * Go to '../../test/unit/mocks/webhookSendbirdPayload.json' for a payload example
+ * Go to '../../test/unit/mocks/webhookSendbirdNewMessagePayload.json' for a payload example
  */
 @Controller(`${apiPrefix}/${webhooks}`)
 export class WebhooksController {
@@ -28,13 +28,13 @@ export class WebhooksController {
     // If there's no sender, it's an admin message (and we don't want to notify)
     if (payload.sender) {
       const { user_id: senderUserId } = payload.sender;
-      const { channel_url: sendbirdChannelUrl } = payload.channel;
+      const { channel_url: sendBirdChannelUrl } = payload.channel;
 
-      this.logger.debug(payload, WebhooksController.name, this.sendbird.name);
+      const event: IEventNotifyChatMessage = { senderUserId, sendBirdChannelUrl };
 
-      const event: IEventNotifyChatMessage = { senderUserId, sendbirdChannelUrl };
       this.eventEmitter.emit(EventType.notifyChatMessage, event);
     }
+    this.logger.debug(payload, WebhooksController.name, this.sendbird.name);
   }
 
   @Post('twilio/incoming-sms')

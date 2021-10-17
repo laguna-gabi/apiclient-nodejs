@@ -375,8 +375,8 @@ export const generateCommunication = ({
   userId = v4(),
   memberId = v4(),
 }: Partial<Communication> = {}): Communication => {
-  const sendbirdChannelUrl = faker.datatype.uuid();
-  return { memberId, userId, sendbirdChannelUrl };
+  const sendBirdChannelUrl = faker.datatype.uuid();
+  return { memberId, userId, sendBirdChannelUrl };
 };
 
 export const generateAppointmentLink = (appointmentId: string) => {
@@ -443,7 +443,7 @@ export const generateInternalNotifyParams = ({
   metadata = {
     content: faker.lorem.sentence(),
     chatLink: faker.lorem.sentence(),
-    sendbirdChannelUrl: v4(),
+    sendBirdChannelUrl: v4(),
   },
 }: Partial<InternalNotifyParams> = {}): InternalNotifyParams => {
   return { memberId, userId, type, metadata };
@@ -479,9 +479,9 @@ export const generateSendSendBirdNotificationParams = (
 ): SendSendBirdNotification => {
   return {
     userId: v4(),
-    sendbirdChannelUrl: v4(),
+    sendBirdChannelUrl: v4(),
     message: faker.lorem.sentence(),
-    notificationType: notificationType,
+    notificationType,
   };
 };
 

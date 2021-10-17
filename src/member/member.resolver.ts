@@ -317,7 +317,8 @@ export class MemberResolver extends MemberBase {
   async notify(@Args(camelCase(NotifyParams.name)) notifyParams: NotifyParams) {
     const { memberId, userId, type, metadata } = notifyParams;
     const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId);
-    let sendbirdChannelUrl: string;
+    const extendedMetadata = {...metadata} as any;
+
     if (metadata.when) {
       await this.memberScheduler.registerCustomFutureNotify(notifyParams);
       return;
@@ -331,13 +332,13 @@ export class MemberResolver extends MemberBase {
     }
 
     if (metadata.content) {
-      metadata.content = this.replaceConfigs({ content: metadata.content, member, user });
+      extendedMetadata.content = this.replaceConfigs({ content: metadata.content, member, user });
     }
 
     if (type === NotificationType.textSms) {
-      const getCommunicationParams: GetCommunicationParams = { memberId, userId };
-      const communication = await this.communicationService.get(getCommunicationParams);
-      sendbirdChannelUrl = communication.sendbirdChannelUrl;
+      extendedMetadata.sendBirdChannelUrl = await this.getSendBirdChannelUrl(
+        { memberId, userId }
+      );
     }
 
     return this.notificationBuilder.notify({
@@ -345,7 +346,7 @@ export class MemberResolver extends MemberBase {
       memberConfig,
       user,
       type,
-      metadata: sendbirdChannelUrl ? { ...metadata, sendbirdChannelUrl } : metadata,
+      metadata: extendedMetadata
     });
   }
 
@@ -403,20 +404,20 @@ export class MemberResolver extends MemberBase {
    */
   @OnEvent(EventType.notifyChatMessage, { async: true })
   async notifyChatMessage(params: IEventNotifyChatMessage) {
-    const { senderUserId, sendbirdChannelUrl } = params;
+    const { senderUserId, sendBirdChannelUrl } = params;
 
     const user = await this.userService.get(senderUserId);
     if (!user) {
       return;
     }
 
-    const communication = await this.communicationService.getByChannelUrl(sendbirdChannelUrl);
+    const communication = await this.communicationService.getByChannelUrl(sendBirdChannelUrl);
     if (!communication) {
       this.logger.warn(
         params,
         MemberResolver.name,
         this.notifyChatMessage.name,
-        'sendbirdChannelUrl doesnt exists',
+        'sendBirdChannelUrl doesnt exists',
       );
       return;
     }
@@ -436,25 +437,18 @@ export class MemberResolver extends MemberBase {
   @OnEvent(EventType.sendSmsToChat, { async: true })
   async sendSmsToChat(params: IEventSendSmsToChat) {
     const member = await this.memberService.getByPhone(params.phone);
-    const communication = await this.communicationService.get({
-      memberId: member.id,
-      userId: member.primaryUserId,
-    });
-    if (!communication) {
-      this.logger.warn(
-        params,
-        MemberResolver.name,
-        this.notifyChatMessage.name,
-        'sendbirdChannelUrl doesnt exists',
-      );
-      return;
-    }
+    const sendBirdChannelUrl = await this.getSendBirdChannelUrl(
+      {
+        memberId: member.id,
+        userId: member.primaryUserId,
+      }
+    );
 
     return this.internalNotify({
       memberId: member.id,
       userId: member.primaryUserId,
       type: InternalNotificationType.chatMessageToUser,
-      metadata: { content: params.message, sendbirdChannelUrl: communication.sendbirdChannelUrl },
+      metadata: { content: params.message, sendBirdChannelUrl },
     });
   }
 
@@ -525,4 +519,15 @@ export class MemberResolver extends MemberBase {
   private capitalize(content: string): string {
     return content[0].toUpperCase() + content.slice(1);
   }
+
+
+  private async getSendBirdChannelUrl(getCommunicationParams: GetCommunicationParams) {
+    const communication = await this.communicationService.get(getCommunicationParams);
+    if (!communication) {
+      throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
+    } else {
+      return communication.sendBirdChannelUrl;
+    }
+  }
 }
+

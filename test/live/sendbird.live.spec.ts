@@ -27,16 +27,16 @@ describe('live: sendbird actions', () => {
 
   /**
    * Flow:
-   * 1. create a user (coach)
-   * 2. create a user (member)
-   * 3. create a group channel between user(coach) and user(member)
-   * 4. freeze group channel
-   * 5. send message (should work even though the channel is frozen)
-   * 6. un-freeze group channel
-   * 7. update metadata for appointment1
-   * 8. update metadata for appointment2 (check that we have 2 appointments in the metadata now)
-   * 9. delete metadata for appointment2
-   * 10. get member's unread messages
+   * 1. Create a user (coach)
+   * 2. Create a user (member)
+   * 3. Create a group channel between user(coach) and user(member)
+   * 4. Freeze group channel
+   * 5. Send message (should work even though the channel is frozen)
+   * 6. Get member's unread messages
+   * 7. Un-freeze group channel
+   * 8. Update metadata for appointment1
+   * 9. Update metadata for appointment2 (check that we have 2 appointments in the metadata now)
+   * 10. Delete metadata for appointment2
    */
   it('should do sendbird flow', async () => {
     const user = {
@@ -73,7 +73,7 @@ describe('live: sendbird actions', () => {
 
     const sendSendBirdNotification: SendSendBirdNotification = {
       userId: user.user_id,
-      sendbirdChannelUrl: params.channel_url,
+      sendBirdChannelUrl: params.channel_url,
       message: 'test',
       notificationType: NotificationType.textSms,
     };

@@ -122,7 +122,7 @@ describe('CommunicationResolver', () => {
       const payload = {
         userId: v4(),
         memberId: generateId(),
-        sendbirdChannelUrl: faker.datatype.uuid(),
+        sendBirdChannelUrl: faker.datatype.uuid(),
         userToken: faker.datatype.uuid(),
         memberToken: faker.datatype.uuid(),
       };
@@ -133,7 +133,7 @@ describe('CommunicationResolver', () => {
 
       const link = (id, token) => {
         return `${config.get('hosts.chat')}/?uid=${id}&mid=${
-          payload.sendbirdChannelUrl
+          payload.sendBirdChannelUrl
         }&token=${token}`;
       };
 

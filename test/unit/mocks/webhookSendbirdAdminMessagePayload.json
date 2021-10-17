@@ -1,0 +1,48 @@
+{
+  "category": "group_channel:message_send",
+  "silent": true,
+  "sender_ip_addr": "xxx.xxx.xxx.xx",
+  "custom_type": "",
+  "mention_type": "users",
+  "mentioned_users": [],
+  "members": [
+    {
+      "user_id": "Jeff",
+      "nickname": "Oldies but goodies",
+      "profile_url": "https://sendbird.com/main/img/profiles/profile_38_512px.png",
+      "is_active": true,
+      "is_online": false,
+      "is_hidden": 0,
+      "state": "joined",
+      "unread_message_count": 16,
+      "total_unread_message_count": 16,
+      "channel_unread_message_count": 5,
+      "channel_mention_count": 0,
+      "push_enabled": false,
+      "push_trigger_option": "default",
+      "do_not_disturb": false,
+      "metadata": {}
+    }
+  ],
+  "type": "ADMM",
+  "payload": {
+    "message_id": 1918124600,
+    "custom_type": "",
+    "message": "Regular inspection will be conducted.",
+    "data": "",
+    "created_at": 1540783278180
+  },
+  "channel": {
+    "name": "Sendbird engineers talking room",
+    "channel_url": "sendbird_group_channel_47226288_21c0d617e45a7db4e12a7f5efdb4df4743b11c16",
+    "custom_type": "business",
+    "is_distinct": false,
+    "is_public": false,
+    "is_super": false,
+    "is_ephemeral": false,
+    "is_discoverable": false,
+    "data": ""
+  },
+  "sdk": "API",
+  "app_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+}

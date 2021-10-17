@@ -896,7 +896,7 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
         sendSendBirdNotification: {
           userId: user.id,
-          sendbirdChannelUrl: communication.sendbirdChannelUrl,
+          sendBirdChannelUrl: communication.sendBirdChannelUrl,
           message: notifyParams.metadata.content,
           notificationType: NotificationType.textSms,
         },
@@ -1371,7 +1371,7 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
         sendSendBirdNotification: {
           userId: member.id,
-          sendbirdChannelUrl: internalNotifyParams.metadata.sendbirdChannelUrl,
+          sendBirdChannelUrl: internalNotifyParams.metadata.sendBirdChannelUrl,
           message: internalNotifyParams.metadata.content,
           notificationType: InternalNotificationType.chatMessageToUser,
         },
@@ -1416,7 +1416,7 @@ describe('MemberResolver', () => {
       const communication: Communication = {
         memberId: new Types.ObjectId(member.id),
         userId: user.id,
-        sendbirdChannelUrl: faker.internet.url(),
+        sendBirdChannelUrl: faker.internet.url(),
       };
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
@@ -1425,7 +1425,7 @@ describe('MemberResolver', () => {
 
       const params: IEventNotifyChatMessage = {
         senderUserId: user.id,
-        sendbirdChannelUrl: communication.sendbirdChannelUrl,
+        sendBirdChannelUrl: communication.sendBirdChannelUrl,
       };
 
       await resolver.notifyChatMessage(params);
@@ -1456,7 +1456,7 @@ describe('MemberResolver', () => {
 
     const fakeData: IEventNotifyChatMessage = {
       senderUserId: v4(),
-      sendbirdChannelUrl: faker.internet.url(),
+      sendBirdChannelUrl: faker.internet.url(),
     };
 
     it('should disregard notify chat message when sent from member', async () => {
@@ -1467,7 +1467,7 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceSend).not.toBeCalled();
     });
 
-    it('should disregard notify on non existing sendbirdChannelUrl', async () => {
+    it('should disregard notify on non existing sendBirdChannelUrl', async () => {
       spyOnUserServiceGetUser.mockImplementation(async () => mockGenerateUser());
       spyOnCommunicationGetByUrl.mockImplementation(async () => undefined);
 
