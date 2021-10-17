@@ -6,6 +6,7 @@ import {
   generateCancelNotificationParams,
   generateSendOneSignalNotificationParams,
   generateSendTwilioNotificationParams,
+  generateSendBirdSignalNotificationParams,
 } from '../generators';
 
 describe('NotificationsService (offline)', () => {
@@ -52,5 +53,16 @@ describe('NotificationsService (offline)', () => {
     await notificationsService.cancel(params);
     expect(oneSignalCancelMock).toBeCalledWith(params);
     oneSignalCancelMock.mockReset();
+  });
+
+  it('should send sendbird notification', async () => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const sendBirdSendMock = jest.spyOn(notificationsService.sendbird, 'send');
+    sendBirdSendMock.mockResolvedValue(v4());
+    const params = { sendSendbirdNotification: generateSendBirdSignalNotificationParams() };
+    await notificationsService.send(params);
+    expect(sendBirdSendMock).toBeCalledWith(params.sendSendbirdNotification);
+    sendBirdSendMock.mockReset();
   });
 });

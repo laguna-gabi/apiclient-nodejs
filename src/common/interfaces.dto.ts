@@ -163,11 +163,12 @@ export class SendTwilioNotification {
   to: string;
 }
 
-// export class SendSendbirdNotification {
-//   userId: string;
-//   channelUrl: string;
-//   message: string;
-// }
+export class SendSendbirdNotification {
+  userId: string; // Sender
+  sendbirdChannelUrl: string;
+  message: string;
+  notificationType: string;
+}
 
 export class CancelNotificationParams {
   externalUserId: string;

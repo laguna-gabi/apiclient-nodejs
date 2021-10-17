@@ -35,13 +35,14 @@ import {
   CancelNotificationType,
   SendOneSignalNotification,
   SendTwilioNotification,
+  SendSendbirdNotification,
   CancelNotificationParams,
   InternalNotificationType,
   InternalNotifyParams,
 } from '../src/common';
 import { lookup } from 'zipcode-to-timezone';
 import { AvailabilityInput } from '../src/availability';
-import { GetCommunicationParams } from '../src/communication';
+import { GetCommunicationParams, Communication } from '../src/communication';
 import * as config from 'config';
 import { format } from 'date-fns';
 import { v4 } from 'uuid';
@@ -371,6 +372,14 @@ export const generateGetCommunicationParams = ({
   return { userId, memberId };
 };
 
+export const generateCommunication = ({
+  userId = v4(),
+  memberId = v4(),
+}: Partial<Communication> = {}): Communication => {
+  const sendbirdChannelUrl = faker.datatype.uuid();
+  return { memberId, userId, sendbirdChannelUrl };
+};
+
 export const generateAppointmentLink = (appointmentId: string) => {
   return `${config.get('hosts.app')}/${appointmentId}`;
 };
@@ -462,6 +471,15 @@ export const generateSendTwilioNotificationParams = (): SendTwilioNotification =
   return {
     body: faker.lorem.sentence(),
     to: faker.phone.phoneNumber(),
+  };
+};
+
+export const generateSendBirdSignalNotificationParams = (): SendSendbirdNotification => {
+  return {
+    userId: faker.datatype.uuid(),
+    sendbirdChannelUrl: faker.datatype.uuid(),
+    message: faker.lorem.sentence(),
+    notificationType: NotificationType.textSms,
   };
 };
 

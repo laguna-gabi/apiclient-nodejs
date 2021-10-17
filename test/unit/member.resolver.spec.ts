@@ -15,6 +15,7 @@ import {
   generateUpdateTaskStatusParams,
   mockGenerateMember,
   mockGenerateMemberConfig,
+  generateCommunication,
   mockGenerateUser,
   generateInternalNotifyParams,
 } from '../index';
@@ -762,6 +763,7 @@ describe('MemberResolver', () => {
     let spyOnUserServiceGetUser;
     let spyOnNotificationsServiceSend;
     let spyOnNotificationsServiceCancel;
+    let spyOnCommunicationServiceGet;
 
     beforeEach(() => {
       spyOnServiceGetMember = jest.spyOn(service, 'get');
@@ -769,6 +771,7 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
       spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
       spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
+      spyOnCommunicationServiceGet = jest.spyOn(communicationService, 'get');
     });
 
     afterEach(() => {
@@ -777,6 +780,7 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser.mockReset();
       spyOnNotificationsServiceSend.mockReset();
       spyOnNotificationsServiceCancel.mockReset();
+      spyOnCommunicationServiceGet.mockReset();
     });
 
     it('should catch notify exception on non existing user', async () => {
@@ -828,10 +832,12 @@ describe('MemberResolver', () => {
       const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();
       const user = mockGenerateUser();
+      const communication = generateCommunication();
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+      spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
 
       const notifyParams = generateNotifyParams({
         type: NotificationType.textSms,
@@ -850,14 +856,43 @@ describe('MemberResolver', () => {
       });
     });
 
-    it('should send SMS on type textSms', async () => {
+    it('should send to Sendbird on type textSms', async () => {
       const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();
       const user = mockGenerateUser();
+      const communication = generateCommunication();
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+      spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
+
+      const notifyParams = generateNotifyParams({
+        type: NotificationType.textSms,
+      });
+
+      await resolver.notify(notifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendSendbirdNotification: {
+          userId: user.id,
+          sendbirdChannelUrl: communication.sendbirdChannelUrl,
+          message: notifyParams.metadata.content,
+          notificationType: NotificationType.textSms,
+        },
+      });
+    });
+
+    it('should send SMS on type textSms', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      const communication = generateCommunication();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+      spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
 
       const notifyParams = generateNotifyParams({
         type: NotificationType.textSms,

@@ -4,12 +4,13 @@ import {
   CancelNotificationParams,
   Logger,
   SendOneSignalNotification,
-  // SendSendbirdNotification,
+  SendSendbirdNotification,
   SendTwilioNotification,
 } from '../common';
 import { ConfigsService } from './aws';
 import { OneSignal } from './oneSignal';
 import { TwilioService } from './twilio.service';
+import { SendBird } from './sendBird';
 
 @Injectable()
 export class NotificationsService {
@@ -20,6 +21,7 @@ export class NotificationsService {
     private readonly httpService: HttpService,
     private readonly twilio: TwilioService,
     private readonly logger: Logger,
+    private readonly sendbird: SendBird,
   ) {
     this.oneSignal = new OneSignal(configsService, httpService, logger);
   }
@@ -37,11 +39,11 @@ export class NotificationsService {
   async send({
     sendOneSignalNotification,
     sendTwilioNotification,
-  }: // sendSendbirdNotification,
-  {
+    sendSendbirdNotification,
+  }: {
     sendOneSignalNotification?: SendOneSignalNotification;
     sendTwilioNotification?: SendTwilioNotification;
-    // sendSendbirdNotification?: SendSendbirdNotification;
+    sendSendbirdNotification?: SendSendbirdNotification;
   }): Promise<string> {
     if (sendOneSignalNotification) {
       this.logger.debug(sendOneSignalNotification, NotificationsService.name, this.send.name);
@@ -51,14 +53,10 @@ export class NotificationsService {
       this.logger.debug(sendTwilioNotification, NotificationsService.name, this.send.name);
       return this.twilio.send(sendTwilioNotification);
     }
-    // if (sendSendbirdNotification) {
-    //   this.logger.debug(
-    //     sendSendbirdNotification,
-    //     NotificationsService.name,
-    //     this.send.name,
-    //   );
-    //   return this.sendbird.send(sendSendbirdNotification);
-    // }
+    if (sendSendbirdNotification) {
+      this.logger.debug(sendSendbirdNotification, NotificationsService.name, this.send.name);
+      return this.sendbird.send(sendSendbirdNotification);
+    }
   }
 
   async cancel(cancelNotificationParams: CancelNotificationParams) {

@@ -8,6 +8,7 @@ import { AppointmentStatus } from '../../src/appointment';
 import axios from 'axios';
 import { Test, TestingModule } from '@nestjs/testing';
 import { dbDisconnect, defaultModules } from '../common';
+import { SendSendbirdNotification, NotificationType } from '../../src/common';
 
 describe('live: sendbird actions', () => {
   let module: TestingModule;
@@ -30,6 +31,7 @@ describe('live: sendbird actions', () => {
    * 2. create a user (member)
    * 3. create a group channel between user(coach) and user(member)
    * 4. freeze group channel
+   * 5. send message (should work even though the channel is frozen)
    * 5. un-freeze group channel
    * 6. update metadata for appointment1
    * 7. update metadata for appointment2 (check that we have 2 appointments in the metadata now)
@@ -67,6 +69,16 @@ describe('live: sendbird actions', () => {
     expect(groupChannelResult).toBeTruthy();
 
     await sendBird.freezeGroupChannel(params.channel_url, true);
+
+    const sendSendbirdNotification: SendSendbirdNotification = {
+      userId: user.user_id,
+      sendbirdChannelUrl: params.channel_url,
+      message: 'test',
+      notificationType: NotificationType.textSms,
+    };
+    const messageId = await sendBird.send(sendSendbirdNotification);
+    expect(messageId).toEqual(expect.any(Number));
+
     await sendBird.freezeGroupChannel(params.channel_url, false);
 
     const appointmentId1 = generateId();

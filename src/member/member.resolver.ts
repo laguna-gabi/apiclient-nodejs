@@ -48,7 +48,7 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { NotificationsService, StorageService } from '../providers';
 import { User, UserService } from '../user';
 import { UseInterceptors } from '@nestjs/common';
-import { CommunicationService } from '../communication';
+import { CommunicationService, GetCommunicationParams } from '../communication';
 import * as config from 'config';
 
 @UseInterceptors(LoggingInterceptor)
@@ -316,6 +316,7 @@ export class MemberResolver extends MemberBase {
   async notify(@Args(camelCase(NotifyParams.name)) notifyParams: NotifyParams) {
     const { memberId, userId, type, metadata } = notifyParams;
     const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId);
+    let sendbirdChannelUrl: string;
     if (metadata.when) {
       await this.memberScheduler.registerCustomFutureNotify(notifyParams);
       return;
@@ -332,7 +333,19 @@ export class MemberResolver extends MemberBase {
       metadata.content = this.replaceConfigs({ content: metadata.content, member, user });
     }
 
-    return this.notificationBuilder.notify({ member, memberConfig, user, type, metadata });
+    if (type === NotificationType.textSms) {
+      const getCommunicationParams: GetCommunicationParams = { memberId, userId };
+      const communication = await this.communicationService.get(getCommunicationParams);
+      sendbirdChannelUrl = communication.sendbirdChannelUrl;
+    }
+
+    return this.notificationBuilder.notify({
+      member,
+      memberConfig,
+      user,
+      type,
+      metadata: sendbirdChannelUrl ? { ...metadata, sendbirdChannelUrl } : metadata,
+    });
   }
 
   @Mutation(() => String, { nullable: true })
