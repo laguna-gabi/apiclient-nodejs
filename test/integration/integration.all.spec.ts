@@ -631,13 +631,8 @@ describe('Integration tests: all', () => {
   });
 
   it(`should send Sendbird message for type textSms`, async () => {
-    const primaryUser = await creators.createAndValidateUser();
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({
-      org,
-      primaryUser,
-      users: [primaryUser],
-    });
+    const member = await creators.createAndValidateMember({ org });
 
     const registerForNotificationParams: RegisterForNotificationParams = {
       memberId: member.id,
@@ -648,7 +643,7 @@ describe('Integration tests: all', () => {
 
     const notifyParams: NotifyParams = {
       memberId: member.id,
-      userId: primaryUser.id,
+      userId: member.primaryUserId,
       type: NotificationType.textSms,
       metadata: { content: 'text' },
     };
@@ -656,8 +651,8 @@ describe('Integration tests: all', () => {
     await handler.mutations.notify({ notifyParams });
 
     expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
-      sendSendbirdNotification: {
-        userId: primaryUser.id,
+      sendSendBirdNotification: {
+        userId: member.primaryUserId,
         sendbirdChannelUrl: mockCommunicationParams.sendbirdChannelUrl,
         message: notifyParams.metadata.content,
         notificationType: NotificationType.textSms,

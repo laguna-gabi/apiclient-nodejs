@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { InternalNotificationType, NotificationType } from '../../src/common';
 import { v4 } from 'uuid';
 import { NotificationsService, SendBird, TwilioService } from '../../src/providers';
 import { dbDisconnect, defaultModules } from '../common';
 import {
   generateCancelNotificationParams,
   generateSendOneSignalNotificationParams,
-  generateSendSendbirdNotificationParams,
+  generateSendSendBirdNotificationParams,
   generateSendTwilioNotificationParams,
-  generateSendBirdSignalNotificationParams,
 } from '../generators';
 
 describe('NotificationsService (offline)', () => {
@@ -49,7 +49,11 @@ describe('NotificationsService (offline)', () => {
 
   it('should send oneSignal notification', async () => {
     const sendBirdSendMock = jest.spyOn(sendBird, 'send');
-    const params = { sendSendBirdNotification: generateSendSendbirdNotificationParams() };
+    const params = {
+      sendSendBirdNotification: generateSendSendBirdNotificationParams(
+        InternalNotificationType.chatMessageToUser,
+      ),
+    };
     await notificationsService.send(params);
     expect(sendBirdSendMock).toBeCalledWith(params.sendSendBirdNotification);
     sendBirdSendMock.mockReset();
@@ -71,9 +75,11 @@ describe('NotificationsService (offline)', () => {
     // @ts-ignore
     const sendBirdSendMock = jest.spyOn(notificationsService.sendbird, 'send');
     sendBirdSendMock.mockResolvedValue(v4());
-    const params = { sendSendbirdNotification: generateSendBirdSignalNotificationParams() };
+    const params = {
+      sendSendBirdNotification: generateSendSendBirdNotificationParams(NotificationType.textSms),
+    };
     await notificationsService.send(params);
-    expect(sendBirdSendMock).toBeCalledWith(params.sendSendbirdNotification);
+    expect(sendBirdSendMock).toBeCalledWith(params.sendSendBirdNotification);
     sendBirdSendMock.mockReset();
   });
 });

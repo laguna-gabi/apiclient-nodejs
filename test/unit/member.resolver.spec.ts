@@ -894,7 +894,7 @@ describe('MemberResolver', () => {
       await resolver.notify(notifyParams);
 
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendSendbirdNotification: {
+        sendSendBirdNotification: {
           userId: user.id,
           sendbirdChannelUrl: communication.sendbirdChannelUrl,
           message: notifyParams.metadata.content,

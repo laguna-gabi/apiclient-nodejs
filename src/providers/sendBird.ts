@@ -1,7 +1,7 @@
 import { HttpService, Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigsService, ExternalConfigs } from '.';
 import { AppointmentStatus } from '../appointment';
-import { Logger, SendSendbirdNotification } from '../common';
+import { Logger, SendSendBirdNotification } from '../common';
 import { CreateSendbirdGroupChannelParams, RegisterSendbirdUserParams } from '../communication';
 
 enum suffix {
@@ -138,8 +138,8 @@ export class SendBird implements OnModuleInit {
     }
   }
 
-  async send(sendSendbirdNotification: SendSendbirdNotification) {
-    const { userId, sendbirdChannelUrl, message, notificationType } = sendSendbirdNotification;
+  async send(sendSendBirdNotification: SendSendBirdNotification) {
+    const { userId, sendbirdChannelUrl, message, notificationType } = sendSendBirdNotification;
     const methodName = this.send.name;
     try {
       const result = await this.httpService
@@ -159,13 +159,13 @@ export class SendBird implements OnModuleInit {
         )
         .toPromise();
       if (result.status === 200) {
-        this.logger.debug(sendSendbirdNotification, SendBird.name, methodName);
+        this.logger.debug(sendSendBirdNotification, SendBird.name, methodName);
         return result.data.message_id;
       } else {
-        this.logger.error(sendSendbirdNotification, SendBird.name, methodName);
+        this.logger.error(sendSendBirdNotification, SendBird.name, methodName);
       }
     } catch (ex) {
-      this.logger.error(sendSendbirdNotification, SendBird.name, methodName);
+      this.logger.error(sendSendBirdNotification, SendBird.name, methodName);
     }
   }
 }

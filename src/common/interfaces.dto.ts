@@ -160,7 +160,7 @@ export class SendTwilioNotification {
   to: string;
 }
 
-export class SendSendbirdNotification {
+export class SendSendBirdNotification {
   userId: string; //sender
   sendbirdChannelUrl: string;
   message: string;

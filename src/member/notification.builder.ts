@@ -6,9 +6,8 @@ import {
   NotificationType,
   Platform,
   SendOneSignalNotification,
-  SendSendbirdNotification,
+  SendSendBirdNotification,
   SendTwilioNotification,
-  SendSendbirdNotification,
 } from '../common';
 import { NotificationsService } from '../providers';
 
@@ -26,13 +25,13 @@ export class NotificationBuilder {
     }
 
     if (type === NotificationType.textSms) {
-      const sendSendbirdNotification: SendSendbirdNotification = {
+      const sendSendBirdNotification: SendSendBirdNotification = {
         userId: user.id,
         sendbirdChannelUrl: metadata.sendbirdChannelUrl,
         message: metadata.content,
         notificationType: type,
       };
-      this.notificationsService.send({ sendSendbirdNotification });
+      this.notificationsService.send({ sendSendBirdNotification });
 
       const sendTwilioNotification: SendTwilioNotification = {
         body: metadata.content,
@@ -127,7 +126,7 @@ export class NotificationBuilder {
         return;
       }
       case InternalNotificationType.chatMessageToUser: {
-        const sendSendBirdNotification: SendSendbirdNotification = {
+        const sendSendBirdNotification: SendSendBirdNotification = {
           userId: member.id,
           sendbirdChannelUrl: metadata.sendbirdChannelUrl,
           message: metadata.content,

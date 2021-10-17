@@ -23,7 +23,7 @@ import {
   NotificationType,
   Platform,
   SendOneSignalNotification,
-  SendSendbirdNotification,
+  SendSendBirdNotification,
   SendTwilioNotification,
 } from '../src/common';
 import { GetCommunicationParams, Communication } from '../src/communication';
@@ -474,9 +474,9 @@ export const generateSendTwilioNotificationParams = (): SendTwilioNotification =
   };
 };
 
-export const generateSendSendbirdNotificationParams = (
+export const generateSendSendBirdNotificationParams = (
   notificationType,
-): SendSendbirdNotification => {
+): SendSendBirdNotification => {
   return {
     userId: v4(),
     sendbirdChannelUrl: v4(),

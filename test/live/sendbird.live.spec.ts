@@ -3,7 +3,7 @@ import axios from 'axios';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
 import { AppointmentStatus } from '../../src/appointment';
-import { SendSendbirdNotification, NotificationType } from '../../src/common';
+import { SendSendBirdNotification, NotificationType } from '../../src/common';
 import { CreateSendbirdGroupChannelParams } from '../../src/communication';
 import { SendBird } from '../../src/providers';
 import { UserRole } from '../../src/user';
@@ -71,13 +71,13 @@ describe('live: sendbird actions', () => {
 
     await sendBird.freezeGroupChannel(params.channel_url, true);
 
-    const sendSendbirdNotification: SendSendbirdNotification = {
+    const sendSendBirdNotification: SendSendBirdNotification = {
       userId: user.user_id,
       sendbirdChannelUrl: params.channel_url,
       message: 'test',
       notificationType: NotificationType.textSms,
     };
-    const messageId = await sendBird.send(sendSendbirdNotification);
+    const messageId = await sendBird.send(sendSendBirdNotification);
     expect(messageId).toEqual(expect.any(Number));
 
     await sendBird.freezeGroupChannel(params.channel_url, false);
