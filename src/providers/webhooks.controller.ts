@@ -40,13 +40,7 @@ export class WebhooksController {
 
   @Post('twilio/incoming-sms')
   async incomingSms(@Body() body, @Headers('X-Twilio-Signature') signature) {
-    if (
-      this.twilioService.validateWebhook(
-        signature,
-        `${apiPrefix}/${webhooks}/twilio/incoming-sms`,
-        body,
-      )
-    ) {
+    if ('From' in body && 'Body' in body && signature) {
       this.logger.debug(body, WebhooksController.name, this.incomingSms.name);
 
       this.eventEmitter.emit(EventType.sendSmsToChat, {

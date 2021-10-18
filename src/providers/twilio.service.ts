@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as config from 'config';
-import { jwt, Twilio, validateRequest } from 'twilio';
+import { jwt, Twilio } from 'twilio';
 import { ConfigsService, ExternalConfigs } from '.';
 import {
   Environments,
@@ -74,14 +74,5 @@ export class TwilioService implements OnModuleInit {
     token.addGrant(voiceGrant);
 
     return token.toJwt();
-  }
-
-  validateWebhook(signature: string, route: string, params) {
-    return validateRequest(
-      this.authToken,
-      signature,
-      `${config.get('hosts.root')}/${route}`,
-      params,
-    );
   }
 }
