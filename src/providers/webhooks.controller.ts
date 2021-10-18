@@ -25,16 +25,17 @@ export class WebhooksController {
 
   @Post(`sendbird`)
   async sendbird(@Body() payload) {
+    this.logger.debug(payload, WebhooksController.name, this.sendbird.name);
+
     // If there's no sender, it's an admin message (and we don't want to notify)
     if (payload.sender) {
       const { user_id: senderUserId } = payload.sender;
+
       const { channel_url: sendBirdChannelUrl } = payload.channel;
 
       const event: IEventNotifyChatMessage = { senderUserId, sendBirdChannelUrl };
-
       this.eventEmitter.emit(EventType.notifyChatMessage, event);
     }
-    this.logger.debug(payload, WebhooksController.name, this.sendbird.name);
   }
 
   @Post('twilio/incoming-sms')
