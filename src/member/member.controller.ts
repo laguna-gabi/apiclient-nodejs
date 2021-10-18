@@ -1,8 +1,8 @@
 import { Body, Controller, HttpException, HttpStatus, Post, UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { LoggingInterceptor, apiPrefix } from '../common';
 import { CreateMemberParams, Member, MemberService } from '.';
 import { Public } from '../auth/decorators/public.decorator';
-import { apiPrefix, LoggingInterceptor } from '../common';
 import { UserService } from '../user';
 import { MemberBase } from './member.interfaces';
 

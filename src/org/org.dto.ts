@@ -1,7 +1,7 @@
 import { Field, InputType, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Min } from 'class-validator';
-import { Errors, ErrorType, Identifier } from '../common';
+import { ErrorType, Errors, Identifier } from '../common';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************

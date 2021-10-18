@@ -12,8 +12,8 @@ import {
 } from '.';
 import { AppointmentStatus } from '../appointment';
 import {
-  Errors,
   ErrorType,
+  Errors,
   EventType,
   IEventUpdateMemberConfig,
   IEventUpdateUserConfig,

@@ -1,7 +1,7 @@
 import * as faker from 'faker';
 import * as request from 'supertest';
 import { EndAppointmentParams, RequestAppointmentParams } from '../../src/appointment';
-import { Errors, ErrorType } from '../../src/common';
+import { ErrorType, Errors } from '../../src/common';
 import { Handler } from '../aux/handler';
 import {
   generateEndAppointmentParams,

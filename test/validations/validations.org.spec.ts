@@ -1,4 +1,4 @@
-import { Errors, ErrorType } from '../../src/common';
+import { ErrorType, Errors } from '../../src/common';
 import { CreateOrgParams } from '../../src/org';
 import { Handler } from '../aux/handler';
 import { generateId, generateOrgParams } from '../index';

@@ -9,8 +9,8 @@ import {
 import {
   AppointmentStatus,
   CancelNotificationType,
-  Errors,
   ErrorType,
+  Errors,
   Identifiers,
   InternalNotificationType,
   NotificationType,

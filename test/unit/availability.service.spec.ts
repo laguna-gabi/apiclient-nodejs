@@ -6,7 +6,7 @@ import {
   AvailabilityModule,
   AvailabilityService,
 } from '../../src/availability';
-import { Errors, ErrorType } from '../../src/common';
+import { ErrorType, Errors } from '../../src/common';
 import { User, UserDto } from '../../src/user';
 import {
   dbConnect,

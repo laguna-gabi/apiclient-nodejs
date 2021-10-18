@@ -3,13 +3,13 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Public } from '../auth/decorators/public.decorator';
 import { TwilioService } from '.';
 import {
-  apiPrefix,
   EventType,
   IEventNotifyChatMessage,
   IEventSlackMessage,
   Logger,
   SlackChannel,
   SlackIcon,
+  apiPrefix,
   webhooks,
 } from '../common';
 

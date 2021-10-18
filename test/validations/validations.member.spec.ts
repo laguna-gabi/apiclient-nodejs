@@ -3,8 +3,8 @@ import * as faker from 'faker';
 import * as request from 'supertest';
 import {
   CancelNotificationType,
-  Errors,
   ErrorType,
+  Errors,
   Language,
   NotificationType,
   Platform,
@@ -12,11 +12,11 @@ import {
 import {
   CancelNotifyParams,
   CreateMemberParams,
-  defaultMemberParams,
-  getHonorificKeyName,
   NotifyParams,
   Sex,
   UpdateMemberParams,
+  defaultMemberParams,
+  getHonorificKeyName,
 } from '../../src/member';
 import { Handler } from '../aux/handler';
 import {

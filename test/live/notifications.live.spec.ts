@@ -3,8 +3,8 @@ import * as faker from 'faker';
 import { v4 } from 'uuid';
 import {
   CancelNotificationType,
-  Errors,
   ErrorType,
+  Errors,
   NotificationType,
   Platform,
 } from '../../src/common';

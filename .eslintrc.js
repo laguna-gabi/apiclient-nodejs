@@ -26,5 +26,14 @@ module.exports = {
     'no-multiple-empty-lines': 'error',
     'prefer-const': 'error',
     'no-unexpected-multiline': 'error',
+    'sort-imports': [
+      'error',
+      {
+        ignoreCase: false,
+        ignoreMemberSort: false,
+        allowSeparatedGroups: false,
+        ignoreDeclarationSort: true,
+      },
+    ],
   },
 };

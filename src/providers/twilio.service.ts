@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as config from 'config';
-import { jwt, Twilio } from 'twilio';
+import { Twilio, jwt } from 'twilio';
 import { ConfigsService, ExternalConfigs } from '.';
 import {
   Environments,

@@ -1,4 +1,4 @@
-import { registerDecorator, ValidationArguments, ValidationOptions } from 'class-validator';
+import { ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
 import * as config from 'config';
 import { Platform } from '.';
 import { CancelNotificationType, NotificationType } from './interfaces.dto';

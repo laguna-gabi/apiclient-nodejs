@@ -2,7 +2,7 @@ import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { IsDate, IsOptional } from 'class-validator';
 import { UserRole } from '.';
 import { AppointmentMethod } from '../appointment';
-import { Errors, ErrorType, Identifier, IsUserIdOrAppointmentId } from '../common';
+import { ErrorType, Errors, Identifier, IsUserIdOrAppointmentId } from '../common';
 
 export const defaultSlotsParams = {
   duration: 30,

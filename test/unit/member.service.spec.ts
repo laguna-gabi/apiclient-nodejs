@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import * as faker from 'faker';
 import { datatype, date, internet } from 'faker';
-import { Model, model, Types } from 'mongoose';
+import { Model, Types, model } from 'mongoose';
 import { v4 } from 'uuid';
 import {
   Appointment,
@@ -10,10 +10,9 @@ import {
   AppointmentModule,
   AppointmentStatus,
 } from '../../src/appointment';
-import { Errors, ErrorType, Language, Platform } from '../../src/common';
+import { ErrorType, Errors, Language, Platform } from '../../src/common';
 import {
   CreateMemberParams,
-  defaultMemberParams,
   Member,
   MemberDto,
   MemberModule,
@@ -22,6 +21,7 @@ import {
   Sex,
   TaskStatus,
   UpdateMemberParams,
+  defaultMemberParams,
 } from '../../src/member';
 import { Org, OrgDto } from '../../src/org';
 import { User, UserDto } from '../../src/user';
@@ -37,6 +37,7 @@ import {
   generateId,
   generateObjectId,
   generateOrgParams,
+  generatePhone,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
@@ -44,7 +45,6 @@ import {
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
   generateZipCode,
-  generatePhone,
 } from '../index';
 
 describe('MemberService', () => {

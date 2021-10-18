@@ -6,10 +6,10 @@ import { v4 } from 'uuid';
 import { InternalSchedulerService } from '.';
 import {
   EventType,
-  internalLogs,
   InternalNotificationType,
   InternalNotifyParams,
   Logger,
+  internalLogs,
 } from '../common';
 import { Member } from '../member';
 import { Bitly } from '../providers';

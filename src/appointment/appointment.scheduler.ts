@@ -7,8 +7,8 @@ import { add, sub } from 'date-fns';
 import { Model } from 'mongoose';
 import { Appointment, AppointmentDocument, AppointmentStatus } from '.';
 import {
-  Errors,
   ErrorType,
+  Errors,
   EventType,
   InternalNotificationType,
   InternalNotifyParams,

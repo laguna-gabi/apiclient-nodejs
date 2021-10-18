@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { cloneDeep } from 'lodash';
 import { Model } from 'mongoose';
 import { Availability, AvailabilityDocument, AvailabilityInput, AvailabilitySlot } from '.';
-import { Errors, ErrorType, Identifiers } from '../common';
+import { ErrorType, Errors, Identifiers } from '../common';
 
 @Injectable()
 export class AvailabilityService {

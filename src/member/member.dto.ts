@@ -16,8 +16,8 @@ import { ActionItem, Goal } from '.';
 import { Scores } from '../appointment';
 import {
   CancelNotificationType,
-  Errors,
   ErrorType,
+  Errors,
   Identifier,
   IsHonorific,
   IsStringDate,

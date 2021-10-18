@@ -7,8 +7,8 @@ import { add } from 'date-fns';
 import { Model } from 'mongoose';
 import { MemberConfig, MemberConfigDocument, MemberService } from '.';
 import {
-  Errors,
   ErrorType,
+  Errors,
   EventType,
   Identifier,
   InternalNotificationType,

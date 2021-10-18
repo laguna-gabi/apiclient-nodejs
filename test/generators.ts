@@ -32,8 +32,6 @@ import {
   CancelNotifyParams,
   CreateMemberParams,
   CreateTaskParams,
-  defaultMemberParams,
-  getHonorificKeyName,
   Member,
   MemberConfig,
   NotifyParams,
@@ -43,9 +41,11 @@ import {
   UpdateMemberParams,
   UpdateRecordingParams,
   UpdateTaskStatusParams,
+  defaultMemberParams,
+  getHonorificKeyName,
 } from '../src/member';
 import { CreateOrgParams, OrgType } from '../src/org';
-import { CreateUserParams, defaultUserParams, GetSlotsParams, User, UserRole } from '../src/user';
+import { CreateUserParams, GetSlotsParams, User, UserRole, defaultUserParams } from '../src/user';
 
 export const generateCreateUserParams = ({
   id = v4(),

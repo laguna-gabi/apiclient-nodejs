@@ -4,7 +4,7 @@ import { IsEmail, IsOptional, IsPhoneNumber, IsUrl, Length } from 'class-validat
 import * as config from 'config';
 import { Document, Types } from 'mongoose';
 import { Appointment, AppointmentData } from '../appointment';
-import { Errors, ErrorType, Identifier, Language, validPhoneExamples } from '../common';
+import { ErrorType, Errors, Identifier, Language, validPhoneExamples } from '../common';
 
 export enum UserRole {
   admin = 'admin',

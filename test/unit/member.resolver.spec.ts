@@ -6,8 +6,8 @@ import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import {
   CancelNotificationType,
-  Errors,
   ErrorType,
+  Errors,
   EventType,
   IEventNewMember,
   IEventNotifyChatMessage,
@@ -37,6 +37,7 @@ import {
   delay,
   generateAppointmentComposeParams,
   generateCancelNotifyParams,
+  generateCommunication,
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateId,
@@ -46,7 +47,6 @@ import {
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
-  generateCommunication,
   mockGenerateMember,
   mockGenerateMemberConfig,
   mockGenerateUser,

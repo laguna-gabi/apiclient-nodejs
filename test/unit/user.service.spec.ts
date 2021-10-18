@@ -2,15 +2,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Model, model } from 'mongoose';
 import { v4 } from 'uuid';
 import { AppointmentModule } from '../../src/appointment';
-import { Errors, ErrorType } from '../../src/common';
+import { ErrorType, Errors } from '../../src/common';
 import {
-  defaultUserParams,
   NotNullableUserKeys,
   User,
   UserDto,
   UserModule,
   UserRole,
   UserService,
+  defaultUserParams,
 } from '../../src/user';
 import {
   compareUsers,

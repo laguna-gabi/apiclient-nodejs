@@ -30,13 +30,13 @@ import {
 import { Roles } from '../auth/decorators/role.decorator';
 import { Roles as RoleTypes } from '../auth/roles';
 import {
-  Errors,
   ErrorType,
+  Errors,
   EventType,
-  Identifier,
   IEventNotifyChatMessage,
   IEventSendSmsToChat,
   IEventUpdateMemberPlatform,
+  Identifier,
   InternalNotificationType,
   InternalNotifyParams,
   Logger,

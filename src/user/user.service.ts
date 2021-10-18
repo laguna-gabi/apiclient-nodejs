@@ -6,21 +6,21 @@ import { cloneDeep } from 'lodash';
 import { Model, Types } from 'mongoose';
 import {
   CreateUserParams,
-  defaultSlotsParams,
   GetSlotsParams,
   NotNullableSlotsKeys,
   NotNullableUserKeys,
-  Slots,
   SlotService,
+  Slots,
   User,
   UserDocument,
+  defaultSlotsParams,
 } from '.';
 import {
   BaseService,
   DbErrors,
   Environments,
-  Errors,
   ErrorType,
+  Errors,
   EventType,
   IEventNewAppointment,
   IEventSlackMessage,

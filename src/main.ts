@@ -6,7 +6,7 @@ import { GlobalAuthGuard } from './auth/guards/globalAuth.guard';
 import { RolesGuard } from './auth/guards/role.guard';
 import { MemberScheduler } from './member';
 import * as packageJson from '../package.json';
-import { internalLogs, Logger } from './common';
+import { Logger, internalLogs } from './common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

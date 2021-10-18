@@ -1,4 +1,4 @@
-import { Errors, ErrorType } from '../../src/common';
+import { ErrorType, Errors } from '../../src/common';
 import { Handler } from '../aux/handler';
 import { generateGetCommunicationParams, generateId } from '../generators';
 

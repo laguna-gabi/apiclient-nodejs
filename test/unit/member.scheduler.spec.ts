@@ -2,7 +2,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import * as faker from 'faker';
-import { model, Model } from 'mongoose';
+import { Model, model } from 'mongoose';
 import { v4 } from 'uuid';
 import { NotificationType } from '../../src/common';
 import {

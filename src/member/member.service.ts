@@ -33,13 +33,13 @@ import {
   AppointmentStatus,
   BaseService,
   DbErrors,
-  Errors,
   ErrorType,
+  Errors,
   EventType,
-  Identifier,
   IEventAddUserToMemberList,
   IEventAppointmentScoresUpdated,
   IEventUpdateMemberConfig,
+  Identifier,
   Platform,
 } from '../common';
 

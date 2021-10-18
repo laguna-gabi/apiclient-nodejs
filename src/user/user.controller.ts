@@ -1,6 +1,6 @@
 import { Controller, Get, HttpException, HttpStatus, Param, UseInterceptors } from '@nestjs/common';
 import { Public } from '../auth/decorators/public.decorator';
-import { apiPrefix, LoggingInterceptor } from '../common';
+import { LoggingInterceptor, apiPrefix } from '../common';
 import { Slots } from './slot.dto';
 import { UserService } from './user.service';
 

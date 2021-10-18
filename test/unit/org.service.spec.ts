@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Errors, ErrorType } from '../../src/common';
+import { ErrorType, Errors } from '../../src/common';
 import { OrgModule, OrgService, OrgType } from '../../src/org';
 import { generateId } from '../generators';
 import { dbConnect, dbDisconnect, defaultModules, generateOrgParams } from '../index';

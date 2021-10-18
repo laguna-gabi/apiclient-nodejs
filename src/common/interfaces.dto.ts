@@ -3,7 +3,7 @@ import { Schema } from '@nestjs/mongoose';
 import { IsAlphanumeric, IsOptional } from 'class-validator';
 import { Types } from 'mongoose';
 import { IsNotPlatformWeb } from './customValidators';
-import { Errors, ErrorType } from './errors';
+import { ErrorType, Errors } from './errors';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************

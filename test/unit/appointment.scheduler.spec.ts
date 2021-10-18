@@ -5,7 +5,7 @@ import * as config from 'config';
 import { add } from 'date-fns';
 import * as faker from 'faker';
 import { cloneDeep, difference } from 'lodash';
-import { model, Model } from 'mongoose';
+import { Model, model } from 'mongoose';
 import { v4 } from 'uuid';
 import {
   Appointment,

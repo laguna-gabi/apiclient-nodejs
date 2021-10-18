@@ -1,6 +1,6 @@
 import { camelCase, omit } from 'lodash';
 import { Appointment, AppointmentStatus, EndAppointmentParams } from '../../src/appointment';
-import { CreateTaskParams, defaultMemberParams, Member } from '../../src/member';
+import { CreateTaskParams, Member, defaultMemberParams } from '../../src/member';
 import { Org } from '../../src/org';
 import { CreateUserParams, User, UserRole } from '../../src/user';
 import {

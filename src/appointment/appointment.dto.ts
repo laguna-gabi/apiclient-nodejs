@@ -3,7 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Type } from 'class-transformer';
 import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Document, Types } from 'mongoose';
-import { Errors, ErrorType, Identifier, IsDateAfter, IsFutureDate } from '../common';
+import { ErrorType, Errors, Identifier, IsDateAfter, IsFutureDate } from '../common';
 import { Notes } from './note.dto';
 
 /**************************************************************************************************

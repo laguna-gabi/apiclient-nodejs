@@ -1,6 +1,6 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { apiPrefix, EventType, SlackChannel, SlackIcon, webhooks } from '../../src/common';
+import { EventType, SlackChannel, SlackIcon, apiPrefix, webhooks } from '../../src/common';
 import { TwilioService, WebhooksController } from '../../src/providers';
 import { dbDisconnect, defaultModules } from '../index';
 import * as sendBirdNewMessagePayload from './mocks/webhookSendbirdNewMessagePayload.json';

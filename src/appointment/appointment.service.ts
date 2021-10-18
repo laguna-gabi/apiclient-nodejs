@@ -16,8 +16,8 @@ import {
 import {
   AppointmentStatus,
   BaseService,
-  Errors,
   ErrorType,
+  Errors,
   EventType,
   IEventAddUserToMemberList,
   IEventAppointmentScoresUpdated,

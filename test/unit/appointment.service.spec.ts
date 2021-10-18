@@ -1,7 +1,7 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
-import { model, Model } from 'mongoose';
+import { Model, model } from 'mongoose';
 import { v4 } from 'uuid';
 import {
   Appointment,
@@ -13,8 +13,8 @@ import {
 } from '../../src/appointment';
 import {
   AppointmentStatus,
-  Errors,
   ErrorType,
+  Errors,
   EventType,
   IEventAddUserToMemberList,
   IEventAppointmentScoresUpdated,
