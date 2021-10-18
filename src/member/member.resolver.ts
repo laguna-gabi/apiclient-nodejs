@@ -317,7 +317,6 @@ export class MemberResolver extends MemberBase {
   async notify(@Args(camelCase(NotifyParams.name)) notifyParams: NotifyParams) {
     const { memberId, userId, type, metadata } = notifyParams;
     const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId);
-    const extendedMetadata = {...metadata} as any;
 
     if (metadata.when) {
       await this.memberScheduler.registerCustomFutureNotify(notifyParams);
@@ -332,13 +331,11 @@ export class MemberResolver extends MemberBase {
     }
 
     if (metadata.content) {
-      extendedMetadata.content = this.replaceConfigs({ content: metadata.content, member, user });
+      metadata.content = this.replaceConfigs({ content: metadata.content, member, user });
     }
 
     if (type === NotificationType.textSms) {
-      extendedMetadata.sendBirdChannelUrl = await this.getSendBirdChannelUrl(
-        { memberId, userId }
-      );
+      metadata.sendBirdChannelUrl = await this.getSendBirdChannelUrl({ memberId, userId });
     }
 
     return this.notificationBuilder.notify({
@@ -346,7 +343,7 @@ export class MemberResolver extends MemberBase {
       memberConfig,
       user,
       type,
-      metadata: extendedMetadata
+      metadata,
     });
   }
 
@@ -437,12 +434,10 @@ export class MemberResolver extends MemberBase {
   @OnEvent(EventType.sendSmsToChat, { async: true })
   async sendSmsToChat(params: IEventSendSmsToChat) {
     const member = await this.memberService.getByPhone(params.phone);
-    const sendBirdChannelUrl = await this.getSendBirdChannelUrl(
-      {
-        memberId: member.id,
-        userId: member.primaryUserId,
-      }
-    );
+    const sendBirdChannelUrl = await this.getSendBirdChannelUrl({
+      memberId: member.id,
+      userId: member.primaryUserId,
+    });
 
     return this.internalNotify({
       memberId: member.id,
@@ -520,7 +515,6 @@ export class MemberResolver extends MemberBase {
     return content[0].toUpperCase() + content.slice(1);
   }
 
-
   private async getSendBirdChannelUrl(getCommunicationParams: GetCommunicationParams) {
     const communication = await this.communicationService.get(getCommunicationParams);
     if (!communication) {
@@ -530,4 +524,3 @@ export class MemberResolver extends MemberBase {
     }
   }
 }
-
