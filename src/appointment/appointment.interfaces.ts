@@ -25,7 +25,8 @@ export class AppointmentBase {
     const appointment = await this.appointmentService.schedule(scheduleAppointmentParams);
 
     this.updateAppointmentExternalData(appointment);
-    this.notifyAppointment(appointment);
+    this.notifyUserAppointment(appointment);
+    this.notifyMemberAppointment(appointment);
     await this.registerAppointmentAlert(appointment);
 
     this.appointmentScheduler.deleteTimeout({ id: appointment.memberId.toString() });
@@ -50,7 +51,7 @@ export class AppointmentBase {
     this.eventEmitter.emit(EventType.updatedAppointment, eventParams);
   }
 
-  private notifyAppointment(appointment: Appointment) {
+  private notifyUserAppointment(appointment: Appointment) {
     const params: InternalNotifyParams = {
       userId: appointment.userId,
       type: InternalNotificationType.textSmsToUser,
@@ -58,6 +59,19 @@ export class AppointmentBase {
         content: `${config
           .get('contents.appointmentUser')
           .replace('@appointment.start@', appointment.start.toLocaleString())}`,
+      },
+    };
+    this.eventEmitter.emit(EventType.internalNotify, params);
+  }
+
+  private notifyMemberAppointment(appointment: Appointment) {
+    const params: InternalNotifyParams = {
+      memberId: appointment.memberId.toString(),
+      userId: appointment.userId,
+      type: InternalNotificationType.textSmsToMember,
+      metadata: {
+        content: `${config.get('contents.meetingScheduledMsg')}`,
+        appointmentTime: appointment.start,
       },
     };
     this.eventEmitter.emit(EventType.internalNotify, params);

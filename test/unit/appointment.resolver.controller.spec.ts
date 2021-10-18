@@ -192,7 +192,7 @@ describe('AppointmentResolver', () => {
         eventParams,
       );
 
-      const notifyParams: InternalNotifyParams = {
+      const notifyUserParams: InternalNotifyParams = {
         userId: appointment.userId,
         type: InternalNotificationType.textSmsToUser,
         metadata: {
@@ -201,7 +201,26 @@ describe('AppointmentResolver', () => {
             .replace('@appointment.start@', appointment.start.toLocaleString())}`,
         },
       };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.internalNotify, notifyParams);
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+        2,
+        EventType.internalNotify,
+        notifyUserParams,
+      );
+
+      const notifyMemberParams: InternalNotifyParams = {
+        memberId: appointment.memberId.toString(),
+        userId: appointment.userId,
+        type: InternalNotificationType.textSmsToMember,
+        metadata: {
+          content: `${config.get('contents.meetingScheduledMsg')}`,
+          appointmentTime: appointment.start,
+        },
+      };
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+        3,
+        EventType.internalNotify,
+        notifyMemberParams,
+      );
       expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: appointment.memberId.toString() });
     });
   });

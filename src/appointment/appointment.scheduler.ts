@@ -207,7 +207,10 @@ export class AppointmentScheduler extends BaseScheduler {
           this.className,
           this.scheduleAppointmentLongAlert.name,
         );
-        const metadata = { content: `${config.get('contents.appointmentLongReminder')}` };
+        const metadata = {
+          content: `${config.get('contents.appointmentLongReminder')}`,
+          appointmentTime: start,
+        };
         const params: InternalNotifyParams = {
           memberId,
           userId,

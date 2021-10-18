@@ -2,8 +2,8 @@ import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import * as config from 'config';
-import { format, millisecondsInHour } from 'date-fns';
-import { getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
+import { millisecondsInHour } from 'date-fns';
+import { format, getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
 import * as jwt from 'jsonwebtoken';
 import { camelCase } from 'lodash';
 import { lookup } from 'zipcode-to-timezone';
@@ -391,6 +391,16 @@ export class MemberResolver extends MemberBase {
         user,
       });
     }
+    if (metadata.appointmentTime) {
+      metadata.content = metadata.content.replace(
+        '@appointment.time@',
+        format(
+          utcToZonedTime(metadata.appointmentTime, lookup(member.zipCode)),
+          "EEEE LLLL do 'at' p (z)",
+          { timeZone: lookup(member.zipCode) },
+        ),
+      );
+    }
 
     return this.notificationBuilder.internalNotify({ member, memberConfig, user, type, metadata });
   }
@@ -504,11 +514,7 @@ export class MemberResolver extends MemberBase {
     return content
       .replace('@member.honorific@', config.get(`contents.honorific.${member.honorific}`))
       .replace('@member.lastName@', this.capitalize(member.lastName))
-      .replace('@user.firstName@', this.capitalize(user.firstName))
-      .replace(
-        '@appointment.time@',
-        format(utcToZonedTime(new Date(), lookup(member.zipCode)), "EEEE LLLL do 'at' p"),
-      );
+      .replace('@user.firstName@', this.capitalize(user.firstName));
   }
 
   private capitalize(content: string): string {

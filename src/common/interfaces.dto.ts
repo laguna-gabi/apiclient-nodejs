@@ -123,6 +123,7 @@ export class InternalNotificationMetadata {
   content: string;
   chatLink?: string;
   sendBirdChannelUrl?: string;
+  appointmentTime?: Date;
 }
 
 export class InternalNotifyParams {
