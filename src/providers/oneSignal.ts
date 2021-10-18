@@ -92,7 +92,13 @@ export class OneSignal {
       if (status === 200 && data.recipients >= 1) {
         return data.id;
       } else {
-        this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, status, data);
+        this.logger.error(
+          sendOneSignalNotification,
+          OneSignal.name,
+          this.send.name,
+          status,
+          JSON.stringify(data),
+        );
       }
     } catch (ex) {
       this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, ex);
