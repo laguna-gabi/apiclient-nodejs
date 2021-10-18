@@ -10,6 +10,8 @@ import {
   UnreadMessagesCount,
 } from '.';
 import { AppointmentStatus } from '../appointment';
+import { Roles } from '../auth/decorators/role.decorator';
+import { Roles as RoleTypes } from '../auth/roles';
 import {
   EventType,
   IEventNewMember,
@@ -57,6 +59,7 @@ export class CommunicationResolver {
   }
 
   @Query(() => UnreadMessagesCount)
+  @Roles(RoleTypes.Member, RoleTypes.User)
   getMemberUnreadMessagesCount(@Args('memberId', { type: () => String }) memberId: string) {
     return this.communicationService.getMemberUnreadMessagesCount(memberId);
   }

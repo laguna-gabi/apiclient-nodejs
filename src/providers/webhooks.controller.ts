@@ -1,5 +1,6 @@
 import { Body, Controller, Headers, Post } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Public } from '../auth/decorators/public.decorator';
 import { TwilioService } from '.';
 import {
   apiPrefix,
@@ -23,6 +24,7 @@ export class WebhooksController {
     private readonly logger: Logger,
   ) {}
 
+  @Public()
   @Post(`sendbird`)
   async sendbird(@Body() payload) {
     this.logger.debug(payload, WebhooksController.name, this.sendbird.name);

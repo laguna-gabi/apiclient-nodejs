@@ -1,7 +1,8 @@
 import { Body, Controller, HttpException, HttpStatus, Post, UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { CreateMemberParams, MemberService } from '.';
-import { apiPrefix, Identifier, LoggingInterceptor } from '../common';
+import { CreateMemberParams, Member, MemberService } from '.';
+import { Public } from '../auth/decorators/public.decorator';
+import { apiPrefix, LoggingInterceptor } from '../common';
 import { UserService } from '../user';
 import { MemberBase } from './member.interfaces';
 
@@ -16,11 +17,12 @@ export class MemberController extends MemberBase {
     super(memberService, eventEmitter, userService);
   }
 
+  @Public()
   @Post('create')
-  async createMember(@Body() createMemberParams: CreateMemberParams): Promise<Identifier> {
+  async createMember(@Body() createMemberParams: CreateMemberParams): Promise<Member> {
     try {
       const { id } = await super.createMember(createMemberParams);
-      return { id };
+      return { id } as Member;
     } catch (ex) {
       throw new HttpException(ex.message, HttpStatus.BAD_REQUEST);
     }

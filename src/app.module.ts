@@ -5,8 +5,11 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TerminusModule } from '@nestjs/terminus';
 import { GraphQLError } from 'graphql';
 import { AppointmentModule } from './appointment';
+import { AuthModule } from './auth/auth.module';
+import { UserSecurityModule } from './auth/auth.security.module';
+import { AuthService } from './auth/auth.service';
 import { AvailabilityModule } from './availability';
-import { CommonModule, Errors } from './common';
+import { Errors } from './common';
 import { CommunicationModule } from './communication';
 import { DbModule } from './db/db.module';
 import { HealthController } from './health/health.controller';
@@ -19,13 +22,14 @@ const badRequestException = 'Bad Request Exception';
 
 @Module({
   imports: [
+    AuthModule,
+    UserSecurityModule,
     MemberModule,
+    CommunicationModule,
     UserModule,
     AppointmentModule,
     OrgModule,
     AvailabilityModule,
-    CommunicationModule,
-    CommonModule,
     ProvidersModule,
     DbModule,
     TerminusModule,
@@ -51,5 +55,6 @@ const badRequestException = 'Bad Request Exception';
     }),
   ],
   controllers: [HealthController],
+  providers: [AuthService],
 })
 export class AppModule {}

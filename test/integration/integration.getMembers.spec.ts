@@ -25,14 +25,16 @@ describe('Integration tests : getMembers', () => {
   });
 
   it('should return nothing for none existing org', async () => {
-    const membersResult = await handler.queries.getMembers(generateId());
-    expect(membersResult.length).toEqual(0);
+    const { errors, members } = await handler.queries.getMembers(generateId());
+    expect(errors).toEqual(undefined);
+    expect(members.length).toEqual(0);
   });
 
   it('should return nothing for no members on org', async () => {
     const org = await creators.createAndValidateOrg();
-    const membersResult = await handler.queries.getMembers(org.id);
-    expect(membersResult.length).toEqual(0);
+    const { errors, members } = await handler.queries.getMembers(org.id);
+    expect(errors).toEqual(undefined);
+    expect(members.length).toEqual(0);
   });
 
   it('should call with a default member(no: appointments, goals, ai, ..)', async () => {
@@ -68,9 +70,9 @@ describe('Integration tests : getMembers', () => {
       );
     };
 
-    expect(membersResult.length).toEqual(2);
-    compareResults(membersResult[0], member1, primaryUser1);
-    compareResults(membersResult[1], member2, primaryUser2);
+    expect(membersResult.members.length).toEqual(2);
+    compareResults(membersResult.members[0], member1, primaryUser1);
+    compareResults(membersResult.members[1], member2, primaryUser2);
   });
 
   it('should call with a all member parameters', async () => {
@@ -85,10 +87,10 @@ describe('Integration tests : getMembers', () => {
     await creators.createAndValidateTask(member.id, handler.mutations.createActionItem);
 
     const memberResult = await handler.queries.getMember({ id: member.id });
-    const membersResult = await handler.queries.getMembers(org.id);
-
-    expect(membersResult.length).toEqual(1);
-    expect(membersResult[0]).toEqual(
+    const { errors, members } = await handler.queries.getMembers(org.id);
+    expect(errors).toEqual(undefined);
+    expect(members.length).toEqual(1);
+    expect(members[0]).toEqual(
       expect.objectContaining({
         id: memberResult.id,
         name: `${memberResult.firstName} ${memberResult.lastName}`,
@@ -116,10 +118,10 @@ describe('Integration tests : getMembers', () => {
     const member: Member = await creators.createAndValidateMember({ org });
     const appointment = await appointmentsActions.scheduleAppointment({ member });
 
-    const membersResult = await handler.queries.getMembers(org.id);
-
-    expect(membersResult.length).toEqual(1);
-    expect(membersResult[0]).toEqual(
+    const { errors, members } = await handler.queries.getMembers(org.id);
+    expect(errors).toEqual(undefined);
+    expect(members.length).toEqual(1);
+    expect(members[0]).toEqual(
       expect.objectContaining({
         id: member.id,
         nextAppointment: appointment.start,
@@ -135,10 +137,10 @@ describe('Integration tests : getMembers', () => {
     const appointment = await appointmentsActions.scheduleAppointment({ member });
     await handler.mutations.endAppointment({ endAppointmentParams: { id: appointment.id } });
 
-    const membersResult = await handler.queries.getMembers(org.id);
-
-    expect(membersResult.length).toEqual(1);
-    expect(membersResult[0]).toEqual(
+    const { errors, members } = await handler.queries.getMembers(org.id);
+    expect(errors).toEqual(undefined);
+    expect(members.length).toEqual(1);
+    expect(members[0]).toEqual(
       expect.objectContaining({
         nextAppointment: null,
         appointmentsCount: 1,
@@ -148,7 +150,6 @@ describe('Integration tests : getMembers', () => {
 
   /* eslint-disable max-len*/
   it('should return most recent scheduled appointment (start time) when it was scheduled before', async () => {
-    /* eslint-enable max-len*/
     await generate2Appointments(1);
   });
 
@@ -170,12 +171,12 @@ describe('Integration tests : getMembers', () => {
     start2.setHours(start1.getHours() + secondAppointmentGap);
     const appointment2 = await generateAppointment({ member, start: start2 });
 
-    const membersResult = await handler.queries.getMembers(org.id);
-
+    const { errors, members } = await handler.queries.getMembers(org.id);
+    expect(errors).toEqual(undefined);
     expect(appointment1.id).not.toEqual(appointment2.id);
 
-    expect(membersResult.length).toEqual(1);
-    expect(membersResult[0]).toEqual(
+    expect(members.length).toEqual(1);
+    expect(members[0]).toEqual(
       expect.objectContaining({
         nextAppointment: secondAppointmentGap > 0 ? appointment1.start : appointment2.start,
         appointmentsCount: 2,
@@ -213,10 +214,10 @@ describe('Integration tests : getMembers', () => {
     startUser2.setHours(startUser2.getHours() + 8);
     await generateAppointment({ userId: user2.id, member, start: startUser2 });
 
-    const membersResult = await handler.queries.getMembers(org.id);
-
-    expect(membersResult.length).toEqual(1);
-    expect(membersResult[0]).toEqual(
+    const { errors, members } = await handler.queries.getMembers(org.id);
+    expect(errors).toEqual(undefined);
+    expect(members.length).toEqual(1);
+    expect(members[0]).toEqual(
       expect.objectContaining({
         nextAppointment: appointment.start,
         appointmentsCount: 5,
@@ -234,10 +235,10 @@ describe('Integration tests : getMembers', () => {
     start.setHours(start.getHours() + 4);
     const appointment = await generateAppointment({ userId: user.id, member, start });
 
-    const membersResult = await handler.queries.getMembers(org.id);
-
-    expect(membersResult.length).toEqual(1);
-    expect(membersResult[0]).toEqual(
+    const { errors, members } = await handler.queries.getMembers(org.id);
+    expect(errors).toEqual(undefined);
+    expect(members.length).toEqual(1);
+    expect(members[0]).toEqual(
       expect.objectContaining({
         nextAppointment: appointment.start,
         appointmentsCount: 1,
@@ -258,9 +259,10 @@ describe('Integration tests : getMembers', () => {
     }
 
     const startTime = performance.now();
-    const membersResult = await handler.queries.getMembers(org.id);
+    const { errors, members } = await handler.queries.getMembers(org.id);
+    expect(errors).toEqual(undefined);
     const endTime = performance.now();
-    expect(membersResult.length).toEqual(10);
+    expect(members.length).toEqual(10);
     expect(endTime - startTime).toBeLessThan(1000);
   }, 15000);
 

@@ -7,6 +7,7 @@ import {
   AppointmentService,
   ScheduleAppointmentParams,
 } from '.';
+import { Public } from '../auth/decorators/public.decorator';
 import { apiPrefix, LoggingInterceptor } from '../common';
 
 @UseInterceptors(LoggingInterceptor)
@@ -20,6 +21,7 @@ export class AppointmentController extends AppointmentBase {
     super(appointmentService, appointmentScheduler, eventEmitter);
   }
 
+  @Public()
   @Post('schedule')
   async scheduleAppointment(@Body() params: ScheduleAppointmentParams): Promise<Appointment> {
     const result = await super.scheduleAppointment(params);

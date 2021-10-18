@@ -1,4 +1,5 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { SchedulerRegistry } from '@nestjs/schedule';
@@ -8,13 +9,23 @@ import * as config from 'config';
 import * as faker from 'faker';
 import * as jwt from 'jsonwebtoken';
 import { model } from 'mongoose';
+import { Org, OrgService } from '../../src/org';
+import { User, UserService } from '../../src/user';
 import { v4 } from 'uuid';
 import { AppModule } from '../../src/app.module';
+import { GlobalAuthGuard } from '../../src/auth/guards/globalAuth.guard';
+import { RolesGuard } from '../../src/auth/guards/role.guard';
+import { bearerToken } from '../../src/common';
 import { CommunicationService } from '../../src/communication';
-import { MemberDto } from '../../src/member';
+import { Member, MemberDto, MemberService } from '../../src/member';
 import { WebhooksController } from '../../src/providers';
 import { dbConnect, dbDisconnect, mockProviders } from '../common';
-import { generateId } from '../generators';
+import {
+  generateCreateMemberParams,
+  generateId,
+  generateOrgParams,
+  generateCreateUserParams,
+} from '../generators';
 import { Mutations } from './mutations';
 import { Queries } from './queries';
 
@@ -32,20 +43,33 @@ export class Handler {
   eventEmitter: EventEmitter2;
   memberModel;
   communicationService: CommunicationService;
+  userService: UserService;
+  memberService: MemberService;
+  orgService: OrgService;
   webhooksController: WebhooksController;
   schedulerRegistry: SchedulerRegistry;
   spyOnGetCommunicationService;
+  adminUser: User;
+  patientZero: Member;
+  lagunaOrg: Org;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
 
-  async beforeAll() {
+  async beforeAll(withGuards = false) {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     this.app = moduleFixture.createNestApplication();
     this.app.useGlobalPipes(new ValidationPipe());
+
+    if (withGuards) {
+      const reflector = this.app.get(Reflector);
+      this.app.useGlobalGuards(new GlobalAuthGuard());
+      this.app.useGlobalGuards(new RolesGuard(reflector));
+    }
+
     await this.app.init();
 
     this.module = moduleFixture.get<GraphQLModule>(GraphQLModule);
@@ -65,7 +89,12 @@ export class Handler {
     this.memberModel = model('members', MemberDto);
 
     this.communicationService = moduleFixture.get<CommunicationService>(CommunicationService);
+    this.userService = moduleFixture.get<UserService>(UserService);
+    this.memberService = moduleFixture.get<MemberService>(MemberService);
+    this.orgService = moduleFixture.get<OrgService>(OrgService);
     this.webhooksController = moduleFixture.get<WebhooksController>(WebhooksController);
+
+    await this.buildFixtures();
   }
 
   async afterAll() {
@@ -87,14 +116,16 @@ export class Handler {
     await dbDisconnect();
   }
 
-  setContextUser = (deviceId: string) => {
+  setContextUser = (deviceId?: string, sub?: string): Handler => {
     (this.module as any).apolloServer.context = () => ({
       req: {
         headers: {
-          authorization: jwt.sign({ username: deviceId }, 'shhh'),
+          authorization: bearerToken + jwt.sign({ username: deviceId, sub }, 'shhh'),
         },
       },
     });
+
+    return this;
   };
 
   mockCommunication() {
@@ -107,5 +138,20 @@ export class Handler {
     this.spyOnGetCommunicationService = jest.spyOn(this.communicationService, 'get');
     this.spyOnGetCommunicationService.mockImplementation(async () => mockCommunicationParams);
     return mockCommunicationParams;
+  }
+
+  // Description: Generate a set of pre-defined fixtures
+  async buildFixtures() {
+    // Admin User - generated with the user service (circumventing the guards)
+    this.adminUser = await this.userService.insert(generateCreateUserParams({ authId: v4() }));
+    this.lagunaOrg = await this.orgService.get(
+      (
+        await this.orgService.insert(generateOrgParams())
+      ).id,
+    );
+    this.patientZero = await this.memberService.insert(
+      generateCreateMemberParams({ authId: v4(), orgId: this.lagunaOrg.id }),
+      this.adminUser.id,
+    );
   }
 }

@@ -9,12 +9,27 @@ import { SeedBase } from './seedBase';
  * The objects we're creating are:
  * 1. laguna employees users
  * 2. laguna clients organizations
+ *
+ * Note (!): Note: authId should have the same value as cognito 'sub'
+ * for this user to be allowed access
  */
 
 const lagunaEmployeesList = [
-  { name: 'Gilli', id: '1fa97144-0a9e-432a-94c2-ce04f31b15c3' },
-  { name: 'Sharon', id: '1fa97143-0a9e-432a-94c2-ce04fb4j1ec4' },
-  { name: 'Hadas', id: '1fa47143-0a9e-432a-94c2-ce04fb4j1ec4' },
+  {
+    name: 'Gilli',
+    id: '1fa97144-0a9e-432a-94c2-ce04f31b15c3',
+    authId: '1fa97144-0a9e-432a-94c2-ce04f31b15c4',
+  },
+  {
+    name: 'Sharon',
+    id: '1fa97143-0a9e-432a-94c2-ce04fb4j1ec4',
+    authId: '1fa97143-0a9e-432a-94c2-ce04fb4j1ec5',
+  },
+  {
+    name: 'Hadas',
+    id: '1fa47143-0a9e-432a-94c2-ce04fb4j1ec4',
+    authId: '1fa47143-0a9e-432a-94c2-ce04fb4j1ec5',
+  },
 ];
 
 const lagunaClientsOrganizations = [
@@ -30,9 +45,13 @@ async function main() {
 
   // --------- Functions ---------
 
-  const createLagunaEmployeeUser = async (name: string, id: string): Promise<Identifier> => {
+  const createLagunaEmployeeUser = async (
+    name: string,
+    id: string,
+    authId: string,
+  ): Promise<Identifier> => {
     const user = await mutations.createUser({
-      userParams: generateCreateUserParams({ id, firstName: name }),
+      userParams: generateCreateUserParams({ id, firstName: name, authId }),
     });
     console.log(`created a user for ${name} with id: ${user.id}`);
     return { id };
@@ -40,7 +59,9 @@ async function main() {
 
   const createLagunaEmployeeUsers = async () => {
     await Promise.all(
-      lagunaEmployeesList.map(async ({ name, id }) => createLagunaEmployeeUser(name, id)),
+      lagunaEmployeesList.map(async ({ name, id, authId }) =>
+        createLagunaEmployeeUser(name, id, authId),
+      ),
     );
   };
 

@@ -49,6 +49,7 @@ import { CreateUserParams, defaultUserParams, GetSlotsParams, User, UserRole } f
 
 export const generateCreateUserParams = ({
   id = v4(),
+  authId = v4(),
   roles = [UserRole.coach],
   firstName = faker.name.firstName(21),
   lastName = faker.name.lastName(21),
@@ -62,6 +63,7 @@ export const generateCreateUserParams = ({
 }: Partial<CreateUserParams> = {}): CreateUserParams => {
   return {
     id,
+    authId,
     firstName,
     lastName,
     email,
@@ -108,6 +110,7 @@ export const mockGenerateUser = (): User => {
     description: faker.lorem.sentence(),
     createdAt: faker.date.past(1),
     phone: generatePhone(),
+    authId: v4(),
   };
 };
 
@@ -132,6 +135,7 @@ export const generateGetSlotsParams = ({
 };
 
 export const generateCreateMemberParams = ({
+  authId = v4(),
   phone = generatePhone(),
   firstName = faker.name.firstName(),
   lastName = faker.name.lastName(),
@@ -145,6 +149,7 @@ export const generateCreateMemberParams = ({
   honorific,
 }: Partial<CreateMemberParams> & { orgId: string }): CreateMemberParams => {
   return {
+    authId,
     phone,
     firstName,
     lastName,
@@ -165,6 +170,7 @@ export const mockGenerateMember = (): Member => {
   const user = mockGenerateUser();
   return {
     id: generateId(),
+    authId: v4(),
     primaryUserId: user.id,
     phone: generatePhone(),
     deviceId: faker.datatype.uuid(),
@@ -182,6 +188,7 @@ export const mockGenerateMember = (): Member => {
 
 export const generateUpdateMemberParams = ({
   id = generateId(),
+  authId = v4(),
   firstName = faker.name.firstName(),
   lastName = faker.name.lastName(),
   sex = Sex.female,
@@ -205,6 +212,7 @@ export const generateUpdateMemberParams = ({
 }: Partial<UpdateMemberParams> = {}): UpdateMemberParams => {
   return {
     id,
+    authId,
     firstName,
     lastName,
     fellowName,

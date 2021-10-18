@@ -2,17 +2,26 @@
 Laguna health backend infrastructure.
 <br/>Written in typescript by using [Nest](https://github.com/nestjs/nest) framework.
 
-- [Project introduction](#project-introduction)
-    - [Entities](#entities)
-- [Prerequisites](#prerequisites)
-   - [Installation](#installation)
-   - [Docker](#docker)
-   - [Shared code settings](#shared-code-settings)
-- [Running the app](#running-the-app)
-- [Testing the app](#testing-the-app)
-- [Troubleshooting](#troubleshooting)
-   - [How to view the db locally?](#how-to-view-the-db-locally)
-   - [Error at connection to mongo locally](#error-at-connection-to-mongo-locally)
+- [Hepius](#hepius)
+  - [Project introduction](#project-introduction)
+    - [entities](#entities)
+  - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Docker](#docker)
+    - [Aws](#aws)
+    - [Shared code settings](#shared-code-settings)
+  - [Running the app](#running-the-app)
+  - [Testing the app](#testing-the-app)
+  - [Using the API](#using-the-api)
+    - [REST](#rest)
+    - [GraphQL](#graphql)
+  - [Role Based Access Control: RBAC](#role-based-access-control-rbac)
+  - [Troubleshooting](#troubleshooting)
+    - [How to view the db locally?](#how-to-view-the-db-locally)
+    - [Error at connection to mongo locally](#error-at-connection-to-mongo-locally)
+- [Appendix](#appendix)
+  - [jwt.io token generation](#jwtio-token-generation)
+  - [GraphQL Playground](#graphql-playground)
 
 <br/><br/>
 
@@ -79,8 +88,48 @@ $ yarn test:integration
 $ yarn test:cov
 ```
 
+## Using the API
+Hepius is serving endpoints via REST (controller handlers) as well as GraphQL (resolvers).
+
+Role based access control is implemented so a (Bearer) token carrying a valid 'authId' 
+claim should be provided in the Authorization header.
+
+The 'authId' can be found in all user and member entities (mongoDb) - every provisioned member 
+and user should have a unique authId.
+
+When running on localhost we can generate a token (does not have to be signed and valid) in the jwt.io debugger - see [jwt.io-token generation](#appendix)
+### REST
+
+Example (GET request to get slots for an appointment): 
+```
+curl --location --request GET 'localhost:3000/api/users/slots/61682dab90669d1f1297caad' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MTY2ZTliMDBjMjFjNzdlY2ZiYzEwNzMiLCJuYW1lIjoiSm9obiBEb2UiLCJpYXQiOjE1MTYyMzkwMjJ9._9zqXpkuffqbXA1IJ0kp9gp0YYyvb4BMo2mQ5qOLh6E' \
+--header 'Content-Type: application/json'
+```
+
+### GraphQL
+To send GraphQL resolvers / mutation requests you need to use the GQL Playgroud - you should make sure to update the headers to include a valid token - see [appendix](#graphql-playground).
 <br/><br/>
 
+## Role Based Access Control: RBAC 
+
+- A route (GQL or REST) is protected if not marked as 'IsPublic' - only users with admin priviliges
+- Routes can be annotated with the 'Roles' annotation to include 1 or more allowed roles.
+- If a route is allowed for role1 (example) amd role2 has a higher weight in hierarchy it will be allowed for users with role2 (Example: 'User' role can be allowed where 'Member' role is allowed).
+
+The role hierarchy can be found in [here](src/auth/roles.ts):
+
+```
+export const SystemRoles = {
+  User: { isAdmin: true, weight: 100 },
+  Member: { isAdmin: false, weight: 10 },
+  Anonymous: { isAdmin: false, weight: 1 },
+};
+```
+more details can be found [here](https://app.shortcut.com/laguna-health/story/1852/define-role-base-access-to-all-secure-apis).
+
+When adding a new route or 
+Current implementation 
 ## Troubleshooting
 ### How to view the db locally?
 1. Download and install [robomongo](https://robomongo.org/download) or any other mongodb visualizer you like
@@ -93,3 +142,16 @@ $ yarn test:cov
 connect ECONNREFUSED 127.0.0.1:27017
 ```
 An instance of mongo is not running locally, go over [docker section](#docker) again. 
+
+# Appendix
+
+## jwt.io token generation
+
+[link to jwt.io](https://jwt.io/)
+![alt text](./assets/jwt.io.png)
+
+## GraphQL Playground
+
+[link to a local GQL](http://localhost:3000/graphql)
+![alt text](./assets/graphql.png)
+

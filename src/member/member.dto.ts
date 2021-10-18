@@ -125,6 +125,11 @@ export class CreateMemberParams extends ExtraMemberParams {
   @IsString() /* for rest api */
   phone: string;
 
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString() /* for rest api */
+  authId?: string;
+
   @Field(() => String)
   @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
     message: Errors.get(ErrorType.memberMinMaxLength),
@@ -157,6 +162,10 @@ export class CreateMemberParams extends ExtraMemberParams {
 export class UpdateMemberParams extends ExtraMemberParams {
   @Field(() => String)
   id: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  authId?: string;
 
   @Field(() => String, { nullable: true })
   @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
@@ -295,6 +304,10 @@ export class CancelNotifyParams {
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class Member extends Identifier {
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  authId?: string;
+
   @Prop({ unique: true, index: true })
   @Field(() => String)
   phone: string;

@@ -1,5 +1,6 @@
 import * as faker from 'faker';
 import * as jwt from 'jsonwebtoken';
+import { v4 } from 'uuid';
 import { Identifier } from '../src/common';
 import { UserRole, UserService } from '../src/user';
 import {
@@ -20,7 +21,6 @@ import {
 import { Mutations } from '../test/aux/mutations';
 import { Queries } from '../test/aux/queries';
 import { SeedBase } from './seedBase';
-
 /**
  * This is a seed file for initial local db creation.
  * The objects we're creating are:
@@ -96,7 +96,7 @@ async function main() {
   //we need to wait a while for the register of group chat to be finished.
   await delay(4000);
 
-  const signed = jwt.sign({ username: member.deviceId }, 'key-123');
+  const signed = jwt.sign({ username: member.deviceId, sub: member.authId }, 'key-123');
 
   console.debug(
     `If you wish to call getMember this header should be added:\n` +
@@ -149,12 +149,19 @@ async function main() {
  *************************************************************************************************/
 
 const createUser = async (roles: UserRole[], userText: string): Promise<Identifier> => {
+  const authId = v4();
   const { id } = await mutations.createUser({
     userParams: generateCreateUserParams({
+      authId,
       roles,
     }),
   });
-  console.log(`${id} : ${userText} of type ${roles}`);
+  console.log(
+    `${id} : ${userText} of type ${roles} - valid token: ${jwt.sign(
+      { username: id, sub: authId },
+      'key-123',
+    )}`,
+  );
 
   return { id };
 };

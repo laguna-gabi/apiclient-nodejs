@@ -11,7 +11,7 @@ import { generateCreateUserParams, generateRandomName, urls } from '../index';
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
 
-describe('Validations - user', () => {
+describe.only('Validations - user', () => {
   const handler: Handler = new Handler();
   let server;
 
@@ -33,6 +33,7 @@ describe('Validations - user', () => {
     ${'firstName'} | ${`Field "firstName" of required type "String!" was not provided.`}
     ${'lastName'}  | ${`Field "lastName" of required type "String!" was not provided.`}
     ${'phone'}     | ${`Field "phone" of required type "String!" was not provided.`}
+    ${'authId'}    | ${`Field "authId" of required type "String!" was not provided.`}
   `(`should fail to create a user since mandatory field $field is missing`, async (params) => {
     const userParams: CreateUserParams = generateCreateUserParams();
     delete userParams[params.field];

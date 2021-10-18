@@ -14,6 +14,7 @@ export class Queries {
         query getUser($id: String!) {
           getUser(id: $id) {
             id
+            authId
             firstName
             lastName
             email
@@ -47,6 +48,7 @@ export class Queries {
         query getUsers {
           getUsers {
             id
+            authId
             firstName
             lastName
             email
@@ -216,7 +218,9 @@ export class Queries {
     });
 
     invalidFieldsError && expect(invalidFieldsError).toEqual(resultGetMember.errors[0].message);
-    return resultGetMember.data.getMember;
+    const { errors, data } = resultGetMember || {};
+
+    return { ...data?.getMember, errors };
   };
 
   getMemberUploadDischargeDocumentsLinks = async ({
@@ -353,8 +357,8 @@ export class Queries {
         }
       `,
     });
-
-    return resultGetMembers.data.getMembers;
+    const { errors, data } = resultGetMembers || {};
+    return { errors, members: data?.getMembers };
   };
 
   getMembersAppointments = async (orgId?: string) => {

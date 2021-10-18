@@ -29,6 +29,8 @@ import {
   UpdateRecordingParams,
   UpdateTaskStatusParams,
 } from '.';
+import { Roles } from '../auth/decorators/role.decorator';
+import { Roles as RoleTypes } from '../auth/roles';
 import {
   Errors,
   ErrorType,
@@ -83,6 +85,7 @@ export class MemberResolver extends MemberBase {
    * @param id : web - by using a query param of member id
    */
   @Query(() => Member, { nullable: true })
+  @Roles(RoleTypes.Member, RoleTypes.User)
   async getMember(
     @Context() context,
     @Args('id', { type: () => String, nullable: true }) id?: string,
@@ -149,6 +152,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => DischargeDocumentsLinks)
+  @Roles(RoleTypes.Member, RoleTypes.User)
   async getMemberDownloadDischargeDocumentsLinks(@Args('id', { type: () => String }) id: string) {
     const member = await this.memberService.get(id);
 
@@ -270,6 +274,7 @@ export class MemberResolver extends MemberBase {
    ***************************************** Notifications ****************************************
    ************************************************************************************************/
   @Mutation(() => Boolean, { nullable: true })
+  @Roles(RoleTypes.Member, RoleTypes.User)
   async registerMemberForNotifications(
     @Args(camelCase(RegisterForNotificationParams.name))
     registerForNotificationParams: RegisterForNotificationParams,
@@ -461,6 +466,7 @@ export class MemberResolver extends MemberBase {
    **************************************** Member Internal ***************************************
    ************************************************************************************************/
   @Query(() => MemberConfig)
+  @Roles(RoleTypes.Member, RoleTypes.User)
   async getMemberConfig(@Args('id', { type: () => String }) id: string) {
     return this.memberService.getMemberConfig(id);
   }
@@ -475,7 +481,7 @@ export class MemberResolver extends MemberBase {
       '',
     );
 
-    const authorization = jwt.decode(authorizationHeader);
+    const authorization = jwt.decode(authorizationHeader) as jwt.JwtPayload;
 
     if (!authorization?.username) {
       throw new Error(Errors.get(ErrorType.memberNotFound));

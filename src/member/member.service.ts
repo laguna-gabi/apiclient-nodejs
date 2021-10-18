@@ -62,7 +62,7 @@ export class MemberService extends BaseService {
     super();
   }
 
-  async insert(createMemberParams: CreateMemberParams, primaryUserId: string) {
+  async insert(createMemberParams: CreateMemberParams, primaryUserId: string): Promise<Member> {
     try {
       this.removeNotNullable(createMemberParams, NotNullableMemberKeys);
       const primitiveValues = cloneDeep(createMemberParams);

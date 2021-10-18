@@ -1,7 +1,7 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventType, IEventNewMember, IEventRequestAppointment } from '../common';
 import { UserService } from '../user';
-import { CreateMemberParams } from './member.dto';
+import { CreateMemberParams, Member } from './member.dto';
 import { MemberService } from './member.service';
 
 export class MemberBase {
@@ -11,7 +11,7 @@ export class MemberBase {
     readonly userService: UserService,
   ) {}
 
-  async createMember(createMemberParams: CreateMemberParams) {
+  async createMember(createMemberParams: CreateMemberParams): Promise<Member> {
     const primaryUserId = await this.userService.getAvailableUser();
 
     const member = await this.memberService.insert(createMemberParams, primaryUserId);

@@ -34,6 +34,9 @@ export class CreateUserParams {
   id: string;
 
   @Field()
+  authId: string;
+
+  @Field()
   @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
     message: Errors.get(ErrorType.userMinMaxLength),
   })
@@ -80,6 +83,10 @@ export class CreateUserParams {
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class User extends Identifier {
+  @Prop()
+  @Field(() => String)
+  authId: string;
+
   @Prop(() => String)
   _id: string;
 

@@ -647,6 +647,7 @@ describe('MemberService', () => {
     it('should handle updating all fields', async () => {
       const params = generateUpdateMemberParams();
       delete params.id;
+      delete params.authId;
       await updateMember(params);
     });
 
@@ -667,7 +668,7 @@ describe('MemberService', () => {
       });
     });
 
-    const updateMember = async (updateMemberParams?: Omit<UpdateMemberParams, 'id'>) => {
+    const updateMember = async (updateMemberParams?: Omit<UpdateMemberParams, 'id' | 'authId'>) => {
       const id = await generateMember();
 
       const beforeObject: any = await memberModel.findById(id);
