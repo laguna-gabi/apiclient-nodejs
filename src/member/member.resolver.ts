@@ -1,6 +1,7 @@
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import * as config from 'config';
 import { millisecondsInHour } from 'date-fns';
 import { format, getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
 import { camelCase } from 'lodash';
@@ -47,10 +48,13 @@ import {
   StorageType,
   extractHeader,
 } from '../common';
-import { NotificationsService, StorageService } from '../providers';
+import {
+  CommunicationResolver,
+  CommunicationService,
+  GetCommunicationParams,
+} from '../communication';
+import { Bitly, NotificationsService, StorageService } from '../providers';
 import { User, UserService } from '../user';
-import * as config from 'config';
-import { CommunicationService, GetCommunicationParams } from '../communication';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
@@ -64,6 +68,8 @@ export class MemberResolver extends MemberBase {
     private readonly notificationsService: NotificationsService,
     readonly userService: UserService,
     readonly communicationService: CommunicationService,
+    private readonly communicationResolver: CommunicationResolver,
+    protected readonly bitly: Bitly,
     readonly logger: Logger,
   ) {
     super(memberService, eventEmitter, userService);
@@ -326,6 +332,15 @@ export class MemberResolver extends MemberBase {
       return;
     }
 
+    if (metadata.chatLink) {
+      const communication = await this.communicationResolver.getCommunication({ memberId, userId });
+      if (!communication) {
+        throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
+      }
+      const chatLink = await this.bitly.shortenLink(communication.chat.memberLink);
+      metadata.content = metadata.content.concat(` ${chatLink}`);
+    }
+
     if (
       memberConfig.platform === Platform.web &&
       (type === NotificationType.call || type === NotificationType.video)
@@ -341,13 +356,7 @@ export class MemberResolver extends MemberBase {
       metadata.sendBirdChannelUrl = await this.getSendBirdChannelUrl({ memberId, userId });
     }
 
-    return this.notificationBuilder.notify({
-      member,
-      memberConfig,
-      user,
-      type,
-      metadata,
-    });
+    return this.notificationBuilder.notify({ member, memberConfig, user, type, metadata });
   }
 
   @Mutation(() => String, { nullable: true })

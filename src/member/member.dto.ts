@@ -252,6 +252,9 @@ export class NotificationMetadata {
   @Field(() => Date, { nullable: true })
   when?: Date;
 
+  @Field(() => Boolean, { nullable: true })
+  chatLink?: boolean;
+
   sendBirdChannelUrl?: string;
 }
 

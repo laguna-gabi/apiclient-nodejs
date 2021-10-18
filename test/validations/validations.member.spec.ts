@@ -400,6 +400,20 @@ describe('Validations - member', () => {
         });
       },
     );
+
+    test.each([NotificationType.call, NotificationType.video])(
+      'should fail on sending metadata.chatLink is provided with not allowed type %p',
+      async (type) => {
+        const notifyParams: NotifyParams = generateNotifyParams({
+          type,
+          metadata: { chatLink: true },
+        });
+        await handler.mutations.notify({
+          notifyParams,
+          invalidFieldsErrors: [Errors.get(ErrorType.notificationMetadataInvalid)],
+        });
+      },
+    );
   });
 
   describe('cancel', () => {

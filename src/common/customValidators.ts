@@ -104,19 +104,22 @@ export function IsTypeMetadataProvided(options: ValidationOptions) {
       validator: {
         validate(type: string, args: ValidationArguments) {
           const whenNotInMetadata = !('when' in args.object['metadata']);
+          const chatLinkNotInMetadata = !('chatLink' in args.object['metadata']);
           switch (type) {
             case NotificationType.call:
             case NotificationType.video:
             case CancelNotificationType.cancelCall:
             case CancelNotificationType.cancelVideo: {
-              return 'peerId' in args.object['metadata'] && whenNotInMetadata;
+              return (
+                'peerId' in args.object['metadata'] && whenNotInMetadata && chatLinkNotInMetadata
+              );
             }
             case NotificationType.text:
             case NotificationType.textSms: {
               return 'content' in args.object['metadata'];
             }
             case CancelNotificationType.cancelText: {
-              return whenNotInMetadata;
+              return whenNotInMetadata && chatLinkNotInMetadata;
             }
           }
         },

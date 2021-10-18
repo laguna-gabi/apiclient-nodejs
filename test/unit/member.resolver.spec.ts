@@ -19,7 +19,11 @@ import {
   RegisterForNotificationParams,
   StorageType,
 } from '../../src/common';
-import { Communication, CommunicationService } from '../../src/communication';
+import {
+  Communication,
+  CommunicationResolver,
+  CommunicationService,
+} from '../../src/communication';
 import {
   Member,
   MemberConfig,
@@ -50,6 +54,7 @@ import {
   mockGenerateMember,
   mockGenerateMemberConfig,
   mockGenerateUser,
+  generateGetCommunication,
 } from '../index';
 
 describe('MemberResolver', () => {
@@ -59,6 +64,7 @@ describe('MemberResolver', () => {
   let memberScheduler: MemberScheduler;
   let userService: UserService;
   let storage: StorageService;
+  let communicationResolver: CommunicationResolver;
   let notificationsService: NotificationsService;
   let communicationService: CommunicationService;
   let eventEmitter: EventEmitter2;
@@ -74,6 +80,7 @@ describe('MemberResolver', () => {
     userService = module.get<UserService>(UserService);
     storage = module.get<StorageService>(StorageService);
     notificationsService = module.get<NotificationsService>(NotificationsService);
+    communicationResolver = module.get<CommunicationResolver>(CommunicationResolver);
     communicationService = module.get<CommunicationService>(CommunicationService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
@@ -783,6 +790,7 @@ describe('MemberResolver', () => {
     let spyOnUserServiceGetUser;
     let spyOnNotificationsServiceSend;
     let spyOnNotificationsServiceCancel;
+    let spyOnCommunicationResolverGetCommunication;
     let spyOnCommunicationServiceGet;
 
     beforeEach(() => {
@@ -791,6 +799,10 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
       spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
       spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
+      spyOnCommunicationResolverGetCommunication = jest.spyOn(
+        communicationResolver,
+        'getCommunication',
+      );
       spyOnCommunicationServiceGet = jest.spyOn(communicationService, 'get');
     });
 
@@ -800,6 +812,7 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser.mockReset();
       spyOnNotificationsServiceSend.mockReset();
       spyOnNotificationsServiceCancel.mockReset();
+      spyOnCommunicationResolverGetCommunication.mockReset();
       spyOnCommunicationServiceGet.mockReset();
     });
 
@@ -1046,6 +1059,33 @@ describe('MemberResolver', () => {
         metadata: { content: notifyParams.metadata.content },
       });
     }, 10000);
+
+    it('should call getCommunication if metadata.chatLink true', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementation(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementation(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementation(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+      spyOnCommunicationResolverGetCommunication.mockImplementationOnce(async () =>
+        generateGetCommunication(),
+      );
+
+      const notifyParams = generateNotifyParams({
+        memberId: member.id,
+        userId: member.primaryUserId,
+        type: NotificationType.text,
+        metadata: { content: faker.lorem.word(), chatLink: true },
+      });
+
+      await resolver.notify(notifyParams);
+
+      expect(spyOnCommunicationResolverGetCommunication).toBeCalledWith({
+        memberId: member.id,
+        userId: member.primaryUserId,
+      });
+    });
   });
 
   describe('cancelNotify', () => {

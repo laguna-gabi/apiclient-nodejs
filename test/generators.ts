@@ -387,6 +387,17 @@ export const generateCommunication = ({
   return { memberId, userId, sendBirdChannelUrl };
 };
 
+export const generateGetCommunication = () => {
+  return {
+    memberId: generateId(),
+    userId: v4(),
+    chat: {
+      memberLink: faker.datatype.uuid(),
+      userLink: faker.datatype.uuid(),
+    },
+  };
+};
+
 export const generateAppointmentLink = (appointmentId: string) => {
   return `${config.get('hosts.app')}/${appointmentId}`;
 };

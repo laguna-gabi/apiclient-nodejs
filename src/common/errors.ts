@@ -106,10 +106,9 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [
     ErrorType.notificationMetadataInvalid.valueOf(),
-    `when calling type 'text' or 'textSms', 'content' in metadata is required` +
-      `when calling type 'video' or 'call', 'peerId' in metadata is required` +
-      `when calling type 'video' or 'call', 'when' in metadata is not allowed` +
-      `calling type 'chat' is not allowed in this method`,
+    `when calling type 'text' or 'textSms', 'content' in metadata is required ` +
+      `when calling type 'video' or 'call', 'peerId' in metadata is required ` +
+      `when calling type 'video' or 'call', 'when' and 'chatLink' in metadata is not allowed`,
   ],
   [
     ErrorType.notificationMemberPlatformWeb.valueOf(),
