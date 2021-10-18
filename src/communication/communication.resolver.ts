@@ -41,12 +41,12 @@ export class CommunicationResolver {
         chat: {
           memberLink: this.buildUrl({
             uid: result.memberId,
-            mid: result.sendbirdChannelUrl,
+            mid: result.sendBirdChannelUrl,
             token: result.memberToken,
           }),
           userLink: this.buildUrl({
             uid: result.userId,
-            mid: result.sendbirdChannelUrl,
+            mid: result.sendBirdChannelUrl,
             token: result.userToken,
           }),
         },

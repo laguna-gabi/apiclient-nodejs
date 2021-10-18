@@ -4,7 +4,7 @@ import {
   CancelNotificationParams,
   Logger,
   SendOneSignalNotification,
-  SendSendbirdNotification,
+  SendSendBirdNotification,
   SendTwilioNotification,
 } from '../common';
 import { SendBird } from './sendBird';
@@ -42,7 +42,7 @@ export class NotificationsService {
   }: {
     sendOneSignalNotification?: SendOneSignalNotification;
     sendTwilioNotification?: SendTwilioNotification;
-    sendSendBirdNotification?: SendSendbirdNotification;
+    sendSendBirdNotification?: SendSendBirdNotification;
   }): Promise<string> {
     if (sendOneSignalNotification) {
       this.logger.debug(sendOneSignalNotification, NotificationsService.name, this.send.name);

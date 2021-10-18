@@ -53,12 +53,13 @@ describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
   let creators: Creators;
   let appointmentsActions: AppointmentsIntegrationActions;
+  let mockCommunicationParams;
 
   beforeAll(async () => {
     await handler.beforeAll();
     appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
     creators = new Creators(handler, appointmentsActions);
-    handler.mockCommunication();
+    mockCommunicationParams = handler.mockCommunication();
     await creators.createFirstUserInDbfNecessary();
   });
 
@@ -623,6 +624,38 @@ describe('Integration tests: all', () => {
       sendTwilioNotification: {
         to: member.phone,
         body: notifyParams.metadata.content,
+      },
+    });
+
+    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+  });
+
+  it(`should send Sendbird message for type textSms`, async () => {
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({ org });
+
+    const registerForNotificationParams: RegisterForNotificationParams = {
+      memberId: member.id,
+      platform: Platform.android,
+      isPushNotificationsEnabled: true,
+    };
+    await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+
+    const notifyParams: NotifyParams = {
+      memberId: member.id,
+      userId: member.primaryUserId,
+      type: NotificationType.textSms,
+      metadata: { content: 'text' },
+    };
+
+    await handler.mutations.notify({ notifyParams });
+
+    expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
+      sendSendBirdNotification: {
+        userId: member.primaryUserId,
+        sendBirdChannelUrl: mockCommunicationParams.sendBirdChannelUrl,
+        message: notifyParams.metadata.content,
+        notificationType: NotificationType.textSms,
       },
     });
 

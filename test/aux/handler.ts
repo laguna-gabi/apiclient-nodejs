@@ -74,6 +74,7 @@ export class Handler {
     this.sendBird.spyOnSendBirdCreateUser.mockReset();
     this.sendBird.spyOnSendBirdCreateGroupChannel.mockReset();
     this.sendBird.spyOnSendBirdFreeze.mockReset();
+    this.sendBird.spyOnSendBirdSend.mockReset();
     this.sendBird.spyOnSendBirdUpdateGroupChannelMetadata.mockReset();
     this.sendBird.spyOnSendBirdDeleteGroupChannelMetadata.mockReset();
     this.notificationsService.spyOnNotificationsServiceRegister.mockReset();
@@ -97,12 +98,14 @@ export class Handler {
   };
 
   mockCommunication() {
-    this.spyOnGetCommunicationService = jest.spyOn(this.communicationService, 'get');
-    this.spyOnGetCommunicationService.mockImplementation(async () => ({
+    const mockCommunicationParams = {
       memberId: generateId(),
       userId: v4(),
-      sendbirdChannelUrl: v4(),
+      sendBirdChannelUrl: v4(),
       chat: { memberLink: faker.internet.url(), userLink: faker.internet.url() },
-    }));
+    };
+    this.spyOnGetCommunicationService = jest.spyOn(this.communicationService, 'get');
+    this.spyOnGetCommunicationService.mockImplementation(async () => mockCommunicationParams);
+    return mockCommunicationParams;
   }
 }

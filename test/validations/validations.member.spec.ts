@@ -351,6 +351,18 @@ describe('Validations - member', () => {
       });
     });
 
+    /* eslint-disable max-len */
+    it('Should throw an error when sendBirdChannelUrl field is provided in NotificationMetadata', async () => {
+      const notifyParams: NotifyParams = generateNotifyParams({
+        metadata: { sendBirdChannelUrl: 'test' },
+      });
+      const error = 'Field "sendBirdChannelUrl" is not defined by type "NotificationMetadata".';
+      await handler.mutations.notify({
+        notifyParams,
+        missingFieldError: error,
+      });
+    });
+
     test.each([NotificationType.text, NotificationType.textSms])(
       'should fail on sending metadata.when in the past for type %p',
       async (type) => {

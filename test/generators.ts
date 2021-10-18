@@ -23,10 +23,10 @@ import {
   NotificationType,
   Platform,
   SendOneSignalNotification,
-  SendSendbirdNotification,
+  SendSendBirdNotification,
   SendTwilioNotification,
 } from '../src/common';
-import { GetCommunicationParams } from '../src/communication';
+import { GetCommunicationParams, Communication } from '../src/communication';
 import {
   AppointmentCompose,
   CancelNotifyParams,
@@ -371,6 +371,14 @@ export const generateGetCommunicationParams = ({
   return { userId, memberId };
 };
 
+export const generateCommunication = ({
+  userId = v4(),
+  memberId = v4(),
+}: Partial<Communication> = {}): Communication => {
+  const sendBirdChannelUrl = faker.datatype.uuid();
+  return { memberId, userId, sendBirdChannelUrl };
+};
+
 export const generateAppointmentLink = (appointmentId: string) => {
   return `${config.get('hosts.app')}/${appointmentId}`;
 };
@@ -435,7 +443,7 @@ export const generateInternalNotifyParams = ({
   metadata = {
     content: faker.lorem.sentence(),
     chatLink: faker.lorem.sentence(),
-    sendbirdChannelUrl: v4(),
+    sendBirdChannelUrl: v4(),
   },
 }: Partial<InternalNotifyParams> = {}): InternalNotifyParams => {
   return { memberId, userId, type, metadata };
@@ -466,12 +474,14 @@ export const generateSendTwilioNotificationParams = (): SendTwilioNotification =
   };
 };
 
-export const generateSendSendbirdNotificationParams = (): SendSendbirdNotification => {
+export const generateSendSendBirdNotificationParams = (
+  notificationType,
+): SendSendBirdNotification => {
   return {
     userId: v4(),
-    sendbirdChannelUrl: v4(),
+    sendBirdChannelUrl: v4(),
     message: faker.lorem.sentence(),
-    notificationType: InternalNotificationType.chatMessageToUser,
+    notificationType,
   };
 };
 

@@ -117,7 +117,7 @@ describe('CommunicationService', () => {
       mockServiceGet.mockImplementationOnce(async () => ({
         memberId: member.id,
         userId: user.id,
-        sendbirdChannelUrl: 'test123',
+        sendBirdChannelUrl: 'test123',
       }));
 
       await service.connectMemberToUser(member, user, Platform.android);
@@ -152,7 +152,7 @@ describe('CommunicationService', () => {
       const data = {
         memberId: generateId(),
         userId: v4(),
-        sendbirdChannelUrl: 'test123',
+        sendBirdChannelUrl: 'test123',
       };
       mockServiceGet.mockImplementationOnce(async () => data);
 
@@ -174,12 +174,12 @@ describe('CommunicationService', () => {
     it('should handle updated appointment according to the action - edit', async () => {
       const member = mockGenerateMember();
       const user = mockGenerateUser();
-      const sendbirdChannelUrl = faker.internet.url();
+      const sendBirdChannelUrl = faker.internet.url();
       const mockServiceGet = jest.spyOn(service, 'get');
       mockServiceGet.mockImplementationOnce(async () => ({
         memberId: member.id,
         userId: user.id,
-        sendbirdChannelUrl,
+        sendBirdChannelUrl,
       }));
 
       const params = {
@@ -196,7 +196,7 @@ describe('CommunicationService', () => {
       await service.onUpdatedAppointment(params);
 
       expect(sendBirdMock.spyOnSendBirdUpdateGroupChannelMetadata).toBeCalledWith(
-        sendbirdChannelUrl,
+        sendBirdChannelUrl,
         params.key,
         params.value,
       );
@@ -205,12 +205,12 @@ describe('CommunicationService', () => {
     it('should handle updated appointment according to the action - delete', async () => {
       const member = mockGenerateMember();
       const user = mockGenerateUser();
-      const sendbirdChannelUrl = faker.internet.url();
+      const sendBirdChannelUrl = faker.internet.url();
       const mockServiceGet = jest.spyOn(service, 'get');
       mockServiceGet.mockImplementationOnce(async () => ({
         memberId: member.id,
         userId: user.id,
-        sendbirdChannelUrl,
+        sendBirdChannelUrl,
       }));
 
       const params = {
@@ -223,7 +223,7 @@ describe('CommunicationService', () => {
       await service.onUpdatedAppointment(params);
 
       expect(sendBirdMock.spyOnSendBirdDeleteGroupChannelMetadata).toBeCalledWith(
-        sendbirdChannelUrl,
+        sendBirdChannelUrl,
         params.key,
       );
     });

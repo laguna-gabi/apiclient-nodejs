@@ -6,7 +6,7 @@ import {
   NotificationType,
   Platform,
   SendOneSignalNotification,
-  SendSendbirdNotification,
+  SendSendBirdNotification,
   SendTwilioNotification,
 } from '../common';
 import { NotificationsService } from '../providers';
@@ -25,11 +25,19 @@ export class NotificationBuilder {
     }
 
     if (type === NotificationType.textSms) {
+      const sendSendBirdNotification: SendSendBirdNotification = {
+        userId: user.id,
+        sendBirdChannelUrl: metadata.sendBirdChannelUrl,
+        message: metadata.content,
+        notificationType: type,
+      };
+      await this.notificationsService.send({ sendSendBirdNotification });
+
       const sendTwilioNotification: SendTwilioNotification = {
         body: metadata.content,
         to: member.phone,
       };
-      this.notificationsService.send({ sendTwilioNotification });
+      return this.notificationsService.send({ sendTwilioNotification });
     } else {
       if (memberConfig.platform !== Platform.web && memberConfig.isPushNotificationsEnabled) {
         const sendOneSignalNotification: SendOneSignalNotification = {
@@ -118,9 +126,9 @@ export class NotificationBuilder {
         return;
       }
       case InternalNotificationType.chatMessageToUser: {
-        const sendSendBirdNotification: SendSendbirdNotification = {
+        const sendSendBirdNotification: SendSendBirdNotification = {
           userId: member.id,
-          sendbirdChannelUrl: metadata.sendbirdChannelUrl,
+          sendBirdChannelUrl: metadata.sendBirdChannelUrl,
           message: metadata.content,
           notificationType: type,
         };
