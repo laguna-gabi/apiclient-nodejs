@@ -39,6 +39,8 @@ describe('Integration tests : getUserSlots', () => {
   });
 
   it('should return objects with all slots', async () => {
+    await creators.createAndValidateUser();
+
     const org = await creators.createAndValidateOrg();
     const member: Member = await creators.createAndValidateMember({ org });
     const primaryUser: User = member.users[0];
@@ -79,6 +81,8 @@ describe('Integration tests : getUserSlots', () => {
   });
 
   it('there should not be a slot overlapping a scheduled appointment', async () => {
+    await creators.createAndValidateUser();
+
     const org = await creators.createAndValidateOrg();
     const member: Member = await creators.createAndValidateMember({ org });
     await createDefaultAvailabilities(member.primaryUserId);
@@ -113,6 +117,8 @@ describe('Integration tests : getUserSlots', () => {
   });
 
   it('should get slots that overlap appointments that are not scheduled', async () => {
+    await creators.createAndValidateUser();
+
     const org = await creators.createAndValidateOrg();
     const member: Member = await creators.createAndValidateMember({ org });
     await createDefaultAvailabilities(member.primaryUserId);
