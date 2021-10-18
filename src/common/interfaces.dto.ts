@@ -217,3 +217,13 @@ export enum Environments {
   development = 'development',
   test = 'test',
 }
+
+export enum QueueType {
+  audit = 'audit',
+}
+
+export enum AuditType {
+  write = 'write',
+  read = 'read',
+  message = 'message',
+}

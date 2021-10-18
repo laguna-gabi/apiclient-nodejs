@@ -2,7 +2,13 @@ import { Types } from 'mongoose';
 import { AppointmentStatus, Scores } from '../appointment';
 import { Member } from '../member';
 import { User } from '../user';
-import { Platform, SlackChannel, SlackIcon, UpdatedAppointmentAction } from './interfaces.dto';
+import {
+  Platform,
+  QueueType,
+  SlackChannel,
+  SlackIcon,
+  UpdatedAppointmentAction,
+} from './interfaces.dto';
 
 export enum EventType {
   requestAppointment = 'requestAppointment',
@@ -19,6 +25,7 @@ export enum EventType {
   notifyChatMessage = 'notifyChatMessage',
   sendSmsToChat = 'sendSmsToChat',
   slackMessage = 'slackMessage',
+  queueMessage = 'queueMessage',
 }
 
 export interface IEventRequestAppointment {
@@ -89,4 +96,9 @@ export interface IEventSlackMessage {
   message: string;
   icon: SlackIcon;
   channel: SlackChannel;
+}
+
+export interface IEventQueueMessage {
+  type: QueueType;
+  message: string;
 }

@@ -7,6 +7,7 @@ import { Environments } from '../../common';
 export const ExternalConfigs = {
   aws: {
     memberBucketName: 'aws.storage.memberBucketName',
+    auditUrl: 'aws.sqs.auditUrl',
   },
   db: {
     connection: 'db.connection',

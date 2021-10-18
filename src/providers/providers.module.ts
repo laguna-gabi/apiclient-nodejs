@@ -4,6 +4,7 @@ import {
   Bitly,
   ConfigsService,
   NotificationsService,
+  QueueService,
   SendBird,
   SlackBot,
   StorageService,
@@ -21,6 +22,7 @@ import { CommonModule } from '../common';
     TwilioService,
     StorageService,
     ConfigsService,
+    QueueService,
     NotificationsService,
   ],
   exports: [

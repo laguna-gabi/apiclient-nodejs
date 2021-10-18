@@ -1,10 +1,8 @@
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
-import * as config from 'config';
 import { millisecondsInHour } from 'date-fns';
 import { format, getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
-import * as jwt from 'jsonwebtoken';
 import { camelCase } from 'lodash';
 import { lookup } from 'zipcode-to-timezone';
 import {
@@ -47,16 +45,16 @@ import {
   Platform,
   RegisterForNotificationParams,
   StorageType,
+  extractHeader,
 } from '../common';
 import { NotificationsService, StorageService } from '../providers';
 import { User, UserService } from '../user';
+import * as config from 'config';
 import { CommunicationService, GetCommunicationParams } from '../communication';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
 export class MemberResolver extends MemberBase {
-  private readonly authenticationPrefix = 'Bearer ';
-
   constructor(
     readonly memberService: MemberService,
     private readonly memberScheduler: MemberScheduler,
@@ -476,12 +474,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   private extractDeviceId(@Context() context) {
-    const authorizationHeader = context.req?.headers.authorization.replace(
-      this.authenticationPrefix,
-      '',
-    );
-
-    const authorization = jwt.decode(authorizationHeader) as jwt.JwtPayload;
+    const authorization = extractHeader(context);
 
     if (!authorization?.username) {
       throw new Error(Errors.get(ErrorType.memberNotFound));

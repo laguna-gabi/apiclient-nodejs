@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { cloneDeep } from 'lodash';
-import { Environments } from '.';
+import { Environments, IEventQueueMessage, QueueType, AuditType } from '.';
 import { EventType } from './events';
 import { SlackChannel, SlackIcon } from './interfaces.dto';
 
@@ -104,6 +104,16 @@ export class Logger {
       COLOR.fgGreen,
     );
     console.debug(this.isColorLog() ? colorLog : log);
+  }
+
+  audit(type: AuditType, params, methodName: string, authId?: string) {
+    const eventParams: IEventQueueMessage = {
+      type: QueueType.audit,
+      message:
+        `user: ${authId}, type: ${type}, date: ${new Date().toLocaleString()}, description: ` +
+        `Hepius ${methodName} ${this.getCalledLog(params)}`,
+    };
+    this.eventEmitter.emit(EventType.queueMessage, eventParams);
   }
 
   /**
