@@ -9,7 +9,7 @@ import {
 } from 'date-fns';
 import { EventType, SlackChannel, SlackIcon } from '../../src/common';
 import { Member } from '../../src/member';
-import { defaultSlotsParams, User } from '../../src/user';
+import { User, defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
 import { Creators } from '../aux/creators';
 import { Handler } from '../aux/handler';
@@ -114,69 +114,6 @@ describe('Integration tests : getUserSlots', () => {
         ),
       ).toEqual(false);
     }
-  });
-
-  it('should get slots that overlap appointments that are not scheduled', async () => {
-    await creators.createAndValidateUser();
-
-    const org = await creators.createAndValidateOrg();
-    const member: Member = await creators.createAndValidateMember({ org });
-    await createDefaultAvailabilities(member.primaryUserId);
-
-    await appointmentsActions.scheduleAppointmentWithDate(
-      member,
-      add(startOfToday(), { hours: 9 }),
-      add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
-    );
-
-    const requestedAppointment = await appointmentsActions.requestAppointmentWithDate(
-      member,
-      add(startOfTomorrow(), { hours: 10 }),
-    );
-
-    const scheduleAppointmentResult = await appointmentsActions.scheduleAppointmentWithDate(
-      member,
-      add(startOfToday(), { hours: 11 }),
-      add(startOfToday(), { hours: 11, minutes: defaultSlotsParams.duration }),
-    );
-
-    await appointmentsActions.endAppointment(scheduleAppointmentResult.id);
-
-    const result = await handler.queries.getUserSlots({
-      userId: member.primaryUserId,
-      notBefore: add(startOfToday(), { hours: 10 }),
-    });
-
-    expect(
-      result.slots.some((slot) => {
-        return areIntervalsOverlapping(
-          {
-            start: new Date(requestedAppointment.notBefore),
-            end: add(new Date(requestedAppointment.notBefore), {
-              minutes: defaultSlotsParams.duration,
-            }),
-          },
-          {
-            start: new Date(slot),
-            end: add(new Date(slot), { minutes: defaultSlotsParams.duration }),
-          },
-        );
-      }),
-    ).toEqual(true);
-    expect(
-      result.slots.some((slot) => {
-        return areIntervalsOverlapping(
-          {
-            start: new Date(scheduleAppointmentResult.start),
-            end: new Date(scheduleAppointmentResult.end),
-          },
-          {
-            start: new Date(slot),
-            end: add(new Date(slot), { minutes: defaultSlotsParams.duration }),
-          },
-        );
-      }),
-    ).toEqual(true);
   });
 
   // eslint-disable-next-line max-len
