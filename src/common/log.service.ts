@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { cloneDeep } from 'lodash';
-import { Environments, IEventQueueMessage, QueueType, AuditType } from '.';
+import { AuditType, Environments, IEventQueueMessage, QueueType } from '.';
 import { EventType } from './events';
 import { SlackChannel, SlackIcon } from './interfaces.dto';
 
@@ -125,7 +125,7 @@ export class Logger {
    *    we'll log this id.
    */
   private getCalledLog(params) {
-    if (Object.keys(params).length === 0) {
+    if (!params || Object.keys(params).length === 0) {
       return 'was called';
     }
 
