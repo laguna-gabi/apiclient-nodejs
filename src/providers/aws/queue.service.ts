@@ -2,14 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
 import * as config from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
-import {
-  Environments,
-  EventType,
-  IEventQueueMessage,
-  QueueType,
-  SlackChannel,
-  SlackIcon,
-} from '../../common';
+import { Environments, EventType, IEventQueueMessage, Logger, QueueType } from '../../common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
@@ -23,13 +16,17 @@ export class QueueService implements OnModuleInit {
   constructor(
     private readonly configsService: ConfigsService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly logger: Logger,
   ) {}
 
   async onModuleInit(): Promise<void> {
-    this.auditQueueUrl =
-      process.env.NODE_ENV === Environments.production
-        ? await this.configsService.getConfig(ExternalConfigs.aws.auditUrl)
-        : undefined;
+    if (process.env.NODE_ENV === Environments.production) {
+      const queueNameAudit = await this.configsService.getConfig(
+        ExternalConfigs.aws.queueNameAudit,
+      );
+      const { QueueUrl } = await this.sqs.getQueueUrl({ QueueName: queueNameAudit }).promise();
+      this.auditQueueUrl = QueueUrl;
+    }
   }
 
   /**
@@ -47,12 +44,10 @@ export class QueueService implements OnModuleInit {
           })
           .promise();
       } catch (ex) {
-        this.eventEmitter.emit(EventType.slackMessage, {
-          message: `failed to log audit message:\n${params.message}\n${ex}`,
-          icon: SlackIcon.critical,
-          channel: SlackChannel.notifications,
-        });
+        this.logger.error(params, QueueService.name, this.sendMessage.name, ex);
       }
+    } else if (process.env.NODE_ENV === Environments.development) {
+      this.logger.debug(params, QueueService.name, this.sendMessage.name);
     }
   }
 }
