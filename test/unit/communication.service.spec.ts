@@ -17,6 +17,7 @@ import {
   dbConnect,
   dbDisconnect,
   generateId,
+  generateUniqueUrl,
   mockGenerateMember,
   mockGenerateUser,
   mockProviders,
@@ -117,7 +118,7 @@ describe('CommunicationService', () => {
       mockServiceGet.mockImplementationOnce(async () => ({
         memberId: member.id,
         userId: user.id,
-        sendBirdChannelUrl: 'test123',
+        sendBirdChannelUrl: generateUniqueUrl(),
       }));
 
       await service.connectMemberToUser(member, user, Platform.android);
@@ -152,7 +153,7 @@ describe('CommunicationService', () => {
       const data = {
         memberId: generateId(),
         userId: v4(),
-        sendBirdChannelUrl: 'test123',
+        sendBirdChannelUrl: generateUniqueUrl(),
       };
       mockServiceGet.mockImplementationOnce(async () => data);
 

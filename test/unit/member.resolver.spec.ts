@@ -44,17 +44,18 @@ import {
   generateCommunication,
   generateCreateMemberParams,
   generateCreateTaskParams,
+  generateGetCommunication,
   generateId,
   generateInternalNotifyParams,
   generateNotifyParams,
   generateSetGeneralNotesParams,
+  generateUniqueUrl,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
   mockGenerateMember,
   mockGenerateMemberConfig,
   mockGenerateUser,
-  generateGetCommunication,
 } from '../index';
 
 describe('MemberResolver', () => {
@@ -1457,7 +1458,7 @@ describe('MemberResolver', () => {
       const communication: Communication = {
         memberId: new Types.ObjectId(member.id),
         userId: user.id,
-        sendBirdChannelUrl: faker.internet.url(),
+        sendBirdChannelUrl: generateUniqueUrl(),
       };
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
@@ -1497,7 +1498,7 @@ describe('MemberResolver', () => {
 
     const fakeData: IEventNotifyChatMessage = {
       senderUserId: v4(),
-      sendBirdChannelUrl: faker.internet.url(),
+      sendBirdChannelUrl: generateUniqueUrl(),
     };
 
     it('should disregard notify chat message when sent from member', async () => {

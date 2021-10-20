@@ -326,7 +326,7 @@ export const generateUpdateNotesParams = ({
 
 export const generateOrgParams = ({
   type = OrgType.hospital,
-  name = `${faker.lorem.word()}.${faker.datatype.uuid()}`,
+  name = `${faker.lorem.word()}.${v4()}`,
   trialDuration = faker.datatype.number({ min: 1, max: 100 }),
   zipCode = generateZipCode(),
 }: Partial<CreateOrgParams> = {}): CreateOrgParams => {
@@ -467,7 +467,7 @@ export const generateInternalNotifyParams = ({
   metadata = {
     content: faker.lorem.sentence(),
     chatLink: faker.lorem.sentence(),
-    sendBirdChannelUrl: v4(),
+    sendBirdChannelUrl: generateUniqueUrl(),
   },
 }: Partial<InternalNotifyParams> = {}): InternalNotifyParams => {
   return { memberId, userId, type, metadata };
@@ -503,14 +503,14 @@ export const generateSendSendBirdNotificationParams = (
 ): SendSendBirdNotification => {
   return {
     userId: v4(),
-    sendBirdChannelUrl: v4(),
+    sendBirdChannelUrl: generateUniqueUrl(),
     message: faker.lorem.sentence(),
     notificationType,
   };
 };
 
 const generateEmail = () => {
-  return `${faker.datatype.uuid()}.${faker.internet.email()}`;
+  return `${new Date().getMilliseconds()}.${faker.internet.email()}`;
 };
 
 export const generatePhone = () => {
@@ -522,6 +522,10 @@ export const generatePhone = () => {
   }
 
   return phone;
+};
+
+export const generateUniqueUrl = () => {
+  return `${v4()}.${faker.internet.url()}`;
 };
 
 export const generateUpdateRecordingParams = ({

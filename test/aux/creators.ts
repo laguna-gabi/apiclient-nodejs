@@ -30,14 +30,9 @@ export class Creators {
   createAndValidateUser = async (roles?: UserRole[]): Promise<User> => {
     const userParams: CreateUserParams = generateCreateUserParams({ roles });
     const { id: primaryUserId } = await this.handler.mutations.createUser({ userParams });
-
     const result = await this.handler.queries.getUser(primaryUserId);
 
-    const expectedUser = {
-      ...userParams,
-      id: primaryUserId,
-      appointments: [],
-    };
+    const expectedUser = { ...userParams, id: primaryUserId, appointments: [] };
 
     const resultUserNew = omit(result, 'roles');
     const expectedUserNew = omit(expectedUser, 'roles');

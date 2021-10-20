@@ -8,7 +8,6 @@ import { createTestClient } from 'apollo-server-testing';
 import * as config from 'config';
 import * as faker from 'faker';
 import * as jwt from 'jsonwebtoken';
-import { model } from 'mongoose';
 import { Org, OrgService } from '../../src/org';
 import { User, UserService } from '../../src/user';
 import { v4 } from 'uuid';
@@ -17,14 +16,15 @@ import { GlobalAuthGuard } from '../../src/auth/guards/globalAuth.guard';
 import { RolesGuard } from '../../src/auth/guards/role.guard';
 import { bearerToken } from '../../src/common';
 import { CommunicationService } from '../../src/communication';
-import { Member, MemberDto, MemberService } from '../../src/member';
+import { Member, MemberService } from '../../src/member';
 import { WebhooksController } from '../../src/providers';
 import { dbConnect, dbDisconnect, mockProviders } from '../common';
 import {
   generateCreateMemberParams,
+  generateCreateUserParams,
   generateId,
   generateOrgParams,
-  generateCreateUserParams,
+  generateUniqueUrl,
 } from '../generators';
 import { Mutations } from './mutations';
 import { Queries } from './queries';
@@ -41,7 +41,6 @@ export class Handler {
   twilioService;
   slackBot;
   eventEmitter: EventEmitter2;
-  memberModel;
   communicationService: CommunicationService;
   userService: UserService;
   memberService: MemberService;
@@ -86,7 +85,6 @@ export class Handler {
     this.queries = new Queries(apolloServer);
 
     await dbConnect();
-    this.memberModel = model('members', MemberDto);
 
     this.communicationService = moduleFixture.get<CommunicationService>(CommunicationService);
     this.userService = moduleFixture.get<UserService>(UserService);
@@ -132,7 +130,7 @@ export class Handler {
     const mockCommunicationParams = {
       memberId: generateId(),
       userId: v4(),
-      sendBirdChannelUrl: v4(),
+      sendBirdChannelUrl: generateUniqueUrl(),
       chat: { memberLink: faker.internet.url(), userLink: faker.internet.url() },
     };
     this.spyOnGetCommunicationService = jest.spyOn(this.communicationService, 'get');

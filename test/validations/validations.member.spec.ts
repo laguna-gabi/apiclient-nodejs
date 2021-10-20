@@ -30,6 +30,7 @@ import {
   generateOrgParams,
   generateRandomName,
   generateSetGeneralNotesParams,
+  generateUniqueUrl,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
@@ -355,7 +356,7 @@ describe('Validations - member', () => {
     /* eslint-disable max-len */
     it('Should throw an error when sendBirdChannelUrl field is provided in NotificationMetadata', async () => {
       const notifyParams: NotifyParams = generateNotifyParams({
-        metadata: { sendBirdChannelUrl: 'test' },
+        metadata: { sendBirdChannelUrl: generateUniqueUrl() },
       });
       const error = 'Field "sendBirdChannelUrl" is not defined by type "NotificationMetadata".';
       await handler.mutations.notify({

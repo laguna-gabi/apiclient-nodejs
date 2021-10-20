@@ -14,6 +14,7 @@ import {
   dbDisconnect,
   generateGetCommunicationParams,
   generateId,
+  generateUniqueUrl,
   mockGenerateMember,
   mockGenerateUser,
 } from '../index';
@@ -122,7 +123,7 @@ describe('CommunicationResolver', () => {
       const payload = {
         userId: v4(),
         memberId: generateId(),
-        sendBirdChannelUrl: faker.datatype.uuid(),
+        sendBirdChannelUrl: generateUniqueUrl(),
         userToken: faker.datatype.uuid(),
         memberToken: faker.datatype.uuid(),
       };
