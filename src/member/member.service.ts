@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { sub } from 'date-fns';
+import * as config from 'config';
 import { cloneDeep } from 'lodash';
 import { Model, Types } from 'mongoose';
 import { v4 } from 'uuid';
@@ -470,11 +471,13 @@ export class MemberService extends BaseService {
   }
 
   async getMemberConfig(id: string): Promise<MemberConfig> {
-    const object = await this.memberConfigModel.findOne({ memberId: new Types.ObjectId(id) });
-    if (!object) {
+    const memberConfig = await this.memberConfigModel.findOne({ memberId: new Types.ObjectId(id) });
+    if (!memberConfig) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
-    return this.replaceId(object.toObject());
+
+    memberConfig.articlesPath = await this.getArticlesPath(id);
+    return this.replaceId(memberConfig);
   }
 
   @OnEvent(EventType.updateMemberConfig, { async: true })
@@ -581,5 +584,10 @@ export class MemberService extends BaseService {
       .populate({ path: 'goals', options })
       .populate({ path: 'actionItems', options })
       .populate({ path: 'users', populate: subPopulate });
+  }
+
+  private async getArticlesPath(id: string) {
+    const { drg } = await this.get(id);
+    return config.get('articlesByDrg')[drg] || config.get('articlesByDrg.default');
   }
 }

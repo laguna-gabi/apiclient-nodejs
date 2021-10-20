@@ -604,7 +604,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig.mockReset();
     });
 
-    it('should set general notes', async () => {
+    it('should call MemberConfig', async () => {
       const memberConfig = mockGenerateMemberConfig();
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
 
@@ -1452,6 +1452,7 @@ describe('MemberResolver', () => {
         isPushNotificationsEnabled: true,
         accessToken: '123-abc',
         firstLoggedInAt: faker.date.past(1),
+        articlesPath: faker.system.directoryPath(),
       };
       const communication: Communication = {
         memberId: new Types.ObjectId(member.id),

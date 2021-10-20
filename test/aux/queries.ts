@@ -525,6 +525,7 @@ export class Queries {
             externalUserId
             platform
             isPushNotificationsEnabled
+            articlesPath
           }
         }
       `,

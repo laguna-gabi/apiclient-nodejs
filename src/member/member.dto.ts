@@ -185,6 +185,10 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @IsOptional()
   fellowName?: string;
 
+  @Field(() => Number, { nullable: true })
+  @IsOptional()
+  drg?: number;
+
   @Field(() => String, { nullable: true })
   @IsOptional()
   drgDesc?: string;
@@ -379,6 +383,11 @@ export class Member extends Identifier {
   @Field(() => String, { nullable: true })
   @IsOptional()
   fellowName?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => Number, { nullable: true })
+  @IsOptional()
+  drg?: number;
 
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })

@@ -601,6 +601,25 @@ describe('Integration tests: all', () => {
     handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
   });
 
+  it('should return the default path for a non existing drg on getMemberConfig', async () => {
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({ org });
+
+    const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
+    expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.default'));
+  });
+
+  it('should return the configured path for a configured drg on getMemberConfig', async () => {
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({ org });
+
+    const updateMemberParams = generateUpdateMemberParams({ id: member.id, drg: 123 });
+    await handler.mutations.updateMember({ updateMemberParams });
+
+    const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
+    expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.123'));
+  });
+
   it(`should send SMS notification of type textSms`, async () => {
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({ org });

@@ -39,6 +39,7 @@ import {
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
+const floatError = `Float cannot represent non numeric value`;
 
 describe('Validations - member', () => {
   const handler: Handler = new Handler();
@@ -475,6 +476,7 @@ describe('Validations - member', () => {
       ${{ lastName: 123 }}              | ${{ missingFieldError: stringError }}
       ${{ fellowName: 123 }}            | ${{ missingFieldError: stringError }}
       ${{ drgDesc: 123 }}               | ${{ missingFieldError: stringError }}
+      ${{ drg: 'not-valid' }}           | ${{ missingFieldError: floatError }}
       ${{ readmissionRisk: 123 }}       | ${{ missingFieldError: stringError }}
       ${{ phoneSecondary: 123 }}        | ${{ missingFieldError: stringError }}
       ${{ email: 'not-valid' }}         | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberEmailFormat)] }}

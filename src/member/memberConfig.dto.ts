@@ -33,6 +33,9 @@ export class MemberConfig {
   @Prop()
   @Field(() => Date, { nullable: true })
   firstLoggedInAt: Date;
+
+  @Field(() => String, { nullable: false })
+  articlesPath: string;
 }
 
 /**************************************************************************************************

@@ -862,6 +862,25 @@ describe('MemberService', () => {
     });
   });
 
+  describe('getArticlesPath', () => {
+    it('should return the default path for a non existing drg', async () => {
+      const id = await generateMember();
+      const memberConfig = await service.getMemberConfig(id);
+
+      expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.default'));
+    });
+
+    it('should return the configured path for a configured drg', async () => {
+      const id = await generateMember();
+      const updateMemberParams = generateUpdateMemberParams({ id, drg: 123 });
+      await service.update({ id, ...updateMemberParams });
+
+      const memberConfig = await service.getMemberConfig(id);
+
+      expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.123'));
+    });
+  });
+
   describe('updateRecording + getRecordings', () => {
     it('should fail to update recording on non existing member', async () => {
       await expect(service.updateRecording(generateUpdateRecordingParams())).rejects.toThrow(

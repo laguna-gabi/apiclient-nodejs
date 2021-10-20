@@ -26,7 +26,7 @@ import {
   SendSendBirdNotification,
   SendTwilioNotification,
 } from '../src/common';
-import { GetCommunicationParams, Communication } from '../src/communication';
+import { Communication, GetCommunicationParams } from '../src/communication';
 import {
   AppointmentCompose,
   CancelNotifyParams,
@@ -84,6 +84,7 @@ export const generateMemberConfig = ({
   isPushNotificationsEnabled = true,
   accessToken = generateId(),
   firstLoggedInAt = faker.date.past(2),
+  articlesPath = faker.system.directoryPath(),
 }: Partial<MemberConfig> = {}): MemberConfig => {
   return {
     memberId,
@@ -92,6 +93,7 @@ export const generateMemberConfig = ({
     accessToken,
     isPushNotificationsEnabled,
     firstLoggedInAt,
+    articlesPath,
   };
 };
 
@@ -198,6 +200,7 @@ export const generateUpdateMemberParams = ({
   dischargeDate = generateDateOnly(faker.date.soon(10)),
   fellowName = faker.name.firstName(),
   drgDesc = faker.name.firstName(),
+  drg = faker.datatype.number({ min: 1, max: 1000 }),
   readmissionRisk = faker.name.firstName(),
   phoneSecondary = generatePhone(),
   admitDate = generateDateOnly(faker.date.soon(1)),
@@ -222,6 +225,7 @@ export const generateUpdateMemberParams = ({
     zipCode,
     dischargeDate,
     drgDesc,
+    drg,
     readmissionRisk,
     phoneSecondary,
     admitDate,
@@ -240,6 +244,7 @@ export const mockGenerateMemberConfig = (): MemberConfig => {
     isPushNotificationsEnabled: true,
     accessToken: generateId(),
     firstLoggedInAt: faker.date.past(2),
+    articlesPath: faker.system.directoryPath(),
   };
 };
 
