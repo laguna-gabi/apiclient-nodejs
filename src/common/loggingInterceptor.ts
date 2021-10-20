@@ -1,7 +1,7 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { AuditType, Environments, extractHeader, Logger } from '.';
+import { AuditType, Environments, Logger, extractAuthorizationHeader } from '.';
 import { GqlExecutionContext } from '@nestjs/graphql';
 
 @Injectable()
@@ -17,27 +17,31 @@ export class LoggingInterceptor implements NestInterceptor {
     const methodName = context.getHandler().name;
     const className = context.getClass().name;
     let args;
-    let headers;
+    let authorizationHeader;
+    let deviceId;
     let type;
 
     if (context.getType() === 'http') {
       const res = context.switchToHttp();
-      headers = extractHeader(context);
+      authorizationHeader = extractAuthorizationHeader(context);
       const { params, body } = res.getRequest();
       args = Object.keys(params).length > 0 ? { params } : {};
       args = Object.keys(body).length > 0 ? { ...args, body } : args;
       type = res.getRequest().method === 'GET' ? AuditType.read : AuditType.write;
     } else {
       args = context.getArgByIndex(1);
-      headers = extractHeader(GqlExecutionContext.create(context).getContext());
+      authorizationHeader = extractAuthorizationHeader(
+        GqlExecutionContext.create(context).getContext(),
+      );
+      deviceId = GqlExecutionContext.create(context).getContext().req?.headers?.deviceid;
       type =
         GqlExecutionContext.create(context).getInfo().operation.operation === 'mutation'
           ? AuditType.write
           : AuditType.read;
     }
 
-    this.logger.debug(Object.values(args)[0], className, methodName);
-    this.logger.audit(type, Object.values(args)[0], methodName, headers?.sub);
+    this.logger.debug(Object.values(args)[0] || { deviceId }, className, methodName);
+    this.logger.audit(type, Object.values(args)[0], methodName, authorizationHeader?.sub);
 
     const now = Date.now();
     return next

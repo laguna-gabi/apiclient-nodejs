@@ -23,6 +23,7 @@ export class Logger {
     'externalUserId',
     'sendBirdChannelUrl',
     'senderUserId',
+    'deviceId',
     //baseSchedulers
     'schedulerIdentifier',
     'lengthResults',

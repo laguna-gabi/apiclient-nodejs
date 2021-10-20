@@ -46,7 +46,7 @@ import {
   Platform,
   RegisterForNotificationParams,
   StorageType,
-  extractHeader,
+  extractAuthorizationHeader,
 } from '../common';
 import {
   CommunicationResolver,
@@ -483,7 +483,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   private extractDeviceId(@Context() context) {
-    const authorization = extractHeader(context);
+    const authorization = extractAuthorizationHeader(context);
 
     if (!authorization?.username) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
