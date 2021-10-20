@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { InternalNotificationType, NotificationType } from '../../src/common';
 import { v4 } from 'uuid';
+import { InternalNotificationType } from '../../src/common';
 import { NotificationsService, SendBird, TwilioService } from '../../src/providers';
 import { dbDisconnect, defaultModules } from '../common';
 import {
@@ -28,7 +28,7 @@ describe('NotificationsService (offline)', () => {
     await dbDisconnect();
   });
 
-  it('should send oneSignal notification', async () => {
+  it('should send twilio notification', async () => {
     const twilioSendMock = jest.spyOn(twilio, 'send');
     const params = { sendTwilioNotification: generateSendTwilioNotificationParams() };
     await notificationsService.send(params);
@@ -36,7 +36,7 @@ describe('NotificationsService (offline)', () => {
     twilioSendMock.mockReset();
   });
 
-  it('should send twilio notification', async () => {
+  it('should send oneSignal notification', async () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const oneSignalSendMock = jest.spyOn(notificationsService.oneSignal, 'send');
@@ -47,7 +47,7 @@ describe('NotificationsService (offline)', () => {
     oneSignalSendMock.mockReset();
   });
 
-  it('should send oneSignal notification', async () => {
+  it('should send sendBird notification', async () => {
     const sendBirdSendMock = jest.spyOn(sendBird, 'send');
     const params = {
       sendSendBirdNotification: generateSendSendBirdNotificationParams(
@@ -59,7 +59,7 @@ describe('NotificationsService (offline)', () => {
     sendBirdSendMock.mockReset();
   });
 
-  it('should send twilio cancel notification', async () => {
+  it('should send oneSignal cancel notification', async () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const oneSignalCancelMock = jest.spyOn(notificationsService.oneSignal, 'cancel');
@@ -68,18 +68,5 @@ describe('NotificationsService (offline)', () => {
     await notificationsService.cancel(params);
     expect(oneSignalCancelMock).toBeCalledWith(params);
     oneSignalCancelMock.mockReset();
-  });
-
-  it('should send sendbird notification', async () => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const sendBirdSendMock = jest.spyOn(notificationsService.sendBird, 'send');
-    sendBirdSendMock.mockResolvedValue(v4());
-    const params = {
-      sendSendBirdNotification: generateSendSendBirdNotificationParams(NotificationType.textSms),
-    };
-    await notificationsService.send(params);
-    expect(sendBirdSendMock).toBeCalledWith(params.sendSendBirdNotification);
-    sendBirdSendMock.mockReset();
   });
 });
