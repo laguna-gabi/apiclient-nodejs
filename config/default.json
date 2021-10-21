@@ -67,7 +67,7 @@
     }
   },
   "articlesByDrg": {
-    "000": "/articles/cardiac/cardiac",
-    "default": "/articles/default/default"
+    "000": "articles/cardiac/cardiac",
+    "default": "articles/default/default"
   }
 }
