@@ -1,18 +1,19 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
+import * as packageJson from '../package.json';
 import { AppModule } from './app.module';
 import { AppointmentScheduler } from './appointment';
 import { GlobalAuthGuard } from './auth/guards/globalAuth.guard';
 import { RolesGuard } from './auth/guards/role.guard';
+import { AllExceptionsFilter, Logger, internalLogs } from './common';
 import { MemberScheduler } from './member';
-import * as packageJson from '../package.json';
-import { Logger, internalLogs } from './common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { logger: false });
 
   app.enableCors();
 
+  app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalPipes(new ValidationPipe({ transform: true })); //Transform is for rest api
 
   // Guard ALL routes (GQL and REST) - new routes must be explicitly annotated
