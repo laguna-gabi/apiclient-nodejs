@@ -602,7 +602,7 @@ describe('Integration tests: all', () => {
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({ org });
 
-    const updateMemberParams = generateUpdateMemberParams({ id: member.id, drg: 123 });
+    const updateMemberParams = generateUpdateMemberParams({ id: member.id, drg: '123' });
     await handler.mutations.updateMember({ updateMemberParams });
 
     const memberConfig = await handler.queries.getMemberConfig({ id: member.id });

@@ -872,7 +872,7 @@ describe('MemberService', () => {
 
     it('should return the configured path for a configured drg', async () => {
       const id = await generateMember();
-      const updateMemberParams = generateUpdateMemberParams({ id, drg: 123 });
+      const updateMemberParams = generateUpdateMemberParams({ id, drg: '123' });
       await service.update({ id, ...updateMemberParams });
 
       const memberConfig = await service.getMemberConfig(id);
