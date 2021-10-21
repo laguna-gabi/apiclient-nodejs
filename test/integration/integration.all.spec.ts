@@ -776,9 +776,6 @@ describe('Integration tests: all', () => {
     }),
   })}
   `(`should add a not existed user to member users list on $title`, async (params) => {
-    /* eslint-enable max-len */
-    await creators.createAndValidateUser(); //making sure there is at least 1 user in the db
-
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({ org });
 

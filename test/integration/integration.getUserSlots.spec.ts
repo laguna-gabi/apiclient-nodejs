@@ -39,8 +39,6 @@ describe('Integration tests : getUserSlots', () => {
   });
 
   it('should return objects with all slots', async () => {
-    await creators.createAndValidateUser();
-
     const org = await creators.createAndValidateOrg();
     const member: Member = await creators.createAndValidateMember({ org });
     const primaryUser: User = member.users[0];
@@ -81,8 +79,6 @@ describe('Integration tests : getUserSlots', () => {
   });
 
   it('there should not be a slot overlapping a scheduled appointment', async () => {
-    await creators.createAndValidateUser();
-
     const org = await creators.createAndValidateOrg();
     const member: Member = await creators.createAndValidateMember({ org });
     await createDefaultAvailabilities(member.primaryUserId);
@@ -119,7 +115,6 @@ describe('Integration tests : getUserSlots', () => {
   // eslint-disable-next-line max-len
   it('should return 6 default slots and send message to slack if availability in the past', async () => {
     const user = await creators.createAndValidateUser();
-
     await handler.mutations.createAvailabilities({
       availabilities: [
         generateAvailabilityInput({
@@ -148,7 +143,6 @@ describe('Integration tests : getUserSlots', () => {
   // eslint-disable-next-line max-len
   it('should return 6 default slots and send message to slack if there is no availability', async () => {
     const user = await creators.createAndValidateUser();
-
     const result = await handler.queries.getUserSlots({
       userId: user.id,
       notBefore: add(startOfToday(), { hours: 12 }),
