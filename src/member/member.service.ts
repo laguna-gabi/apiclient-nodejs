@@ -41,6 +41,7 @@ import {
   IEventAppointmentScoresUpdated,
   IEventUpdateMemberConfig,
   Identifier,
+  Logger,
   Platform,
 } from '../common';
 
@@ -59,6 +60,7 @@ export class MemberService extends BaseService {
     private readonly appointmentModel: Model<AppointmentDocument>,
     @InjectModel(Recording.name)
     private readonly recordingModel: Model<RecordingDocument>,
+    readonly logger: Logger,
   ) {
     super();
   }
@@ -217,11 +219,15 @@ export class MemberService extends BaseService {
 
   @OnEvent(EventType.addUserToMemberList, { async: true })
   async handleAddUserToMemberList(params: IEventAddUserToMemberList) {
-    const { memberId, userId } = params;
-    await this.memberModel.updateOne(
-      { _id: Types.ObjectId(memberId) },
-      { $addToSet: { users: userId } },
-    );
+    try {
+      const { memberId, userId } = params;
+      await this.memberModel.updateOne(
+        { _id: Types.ObjectId(memberId) },
+        { $addToSet: { users: userId } },
+      );
+    } catch (ex) {
+      this.logger.error(params, MemberService.name, this.handleAddUserToMemberList.name, ex);
+    }
   }
 
   /*************************************************************************************************
@@ -399,7 +405,14 @@ export class MemberService extends BaseService {
 
   @OnEvent(EventType.appointmentScoresUpdated, { async: true })
   async handleAppointmentScoreUpdated(params: IEventAppointmentScoresUpdated) {
-    await this.memberModel.updateOne({ _id: params.memberId }, { $set: { scores: params.scores } });
+    try {
+      await this.memberModel.updateOne(
+        { _id: params.memberId },
+        { $set: { scores: params.scores } },
+      );
+    } catch (ex) {
+      this.logger.error(params, MemberService.name, this.handleAppointmentScoreUpdated.name, ex);
+    }
   }
 
   /*************************************************************************************************
@@ -482,12 +495,16 @@ export class MemberService extends BaseService {
 
   @OnEvent(EventType.updateMemberConfig, { async: true })
   async handleUpdateMemberConfig(params: IEventUpdateMemberConfig): Promise<boolean> {
-    const result = await this.memberConfigModel.updateOne(
-      { memberId: new Types.ObjectId(params.memberId) },
-      { $set: { accessToken: params.accessToken } },
-    );
+    try {
+      const result = await this.memberConfigModel.updateOne(
+        { memberId: new Types.ObjectId(params.memberId) },
+        { $set: { accessToken: params.accessToken } },
+      );
 
-    return result.ok === 1;
+      return result.ok === 1;
+    } catch (ex) {
+      this.logger.error(params, MemberService.name, this.handleUpdateMemberConfig.name, ex);
+    }
   }
 
   /*************************************************************************************************

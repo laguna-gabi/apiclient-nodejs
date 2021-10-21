@@ -141,13 +141,7 @@ export class CommunicationService {
   }) {
     const communication = await this.get({ memberId, userId });
     if (!communication) {
-      this.logger.warn(
-        { memberId, userId, platform },
-        CommunicationService.name,
-        this.onUpdateMemberPlatform.name,
-        Errors.get(ErrorType.communicationMemberUserNotFound),
-      );
-      return;
+      throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
     }
     await this.sendBird.freezeGroupChannel(
       communication.sendBirdChannelUrl,

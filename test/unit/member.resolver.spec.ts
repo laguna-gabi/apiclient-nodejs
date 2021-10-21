@@ -1162,35 +1162,6 @@ describe('MemberResolver', () => {
       spyOnNotificationsServiceCancel.mockReset();
     });
 
-    test.each([InternalNotificationType.textSmsToUser, InternalNotificationType.textSmsToMember])(
-      'should catch internalNotify exception on non existing user',
-      async (type) => {
-        const member = mockGenerateMember();
-        const memberConfig = mockGenerateMemberConfig();
-        spyOnServiceGetMember.mockImplementationOnce(async () => member);
-        spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-        spyOnUserServiceGetUser.mockImplementationOnce(async () => undefined);
-        spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
-
-        await expect(
-          resolver.internalNotify(generateInternalNotifyParams({ type })),
-        ).rejects.toThrow(Errors.get(ErrorType.userNotFound));
-      },
-    );
-
-    it('should catch internalNotify exception on non existing member', async () => {
-      const memberConfig = mockGenerateMemberConfig();
-      const user = mockGenerateUser();
-      spyOnServiceGetMember.mockImplementationOnce(async () => undefined);
-      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
-
-      await expect(resolver.internalNotify(generateInternalNotifyParams())).rejects.toThrow(
-        Errors.get(ErrorType.memberNotFound),
-      );
-    });
-
     test.each`
       type                                        | isMember
       ${InternalNotificationType.textSmsToMember} | ${true}

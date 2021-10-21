@@ -71,22 +71,49 @@ export class CommunicationResolver {
 
   @OnEvent(EventType.newUser, { async: true })
   async handleNewUser(params: IEventNewUser) {
-    await this.communicationService.createUser(params.user);
+    try {
+      await this.communicationService.createUser(params.user);
+    } catch (ex) {
+      this.logger.error(
+        { userId: params.user.id },
+        CommunicationResolver.name,
+        this.handleNewUser.name,
+        ex,
+      );
+    }
   }
 
   @OnEvent(EventType.newMember, { async: true })
   async handleNewMember(params: IEventNewMember) {
-    await this.communicationService.createMember(params.member);
-    await this.communicationService.connectMemberToUser(
-      params.member,
-      params.user,
-      params.platform,
-    );
+    try {
+      await this.communicationService.createMember(params.member);
+      await this.communicationService.connectMemberToUser(
+        params.member,
+        params.user,
+        params.platform,
+      );
+    } catch (ex) {
+      this.logger.error(
+        { memberId: params.member.id, userId: params.user.id },
+        CommunicationResolver.name,
+        this.handleNewMember.name,
+        ex,
+      );
+    }
   }
 
   @OnEvent(EventType.updateMemberPlatform, { async: true })
   async handleUpdateMemberPlatform(params: IEventUpdateMemberPlatform) {
-    return this.communicationService.onUpdateMemberPlatform(params);
+    try {
+      return await this.communicationService.onUpdateMemberPlatform(params);
+    } catch (ex) {
+      this.logger.error(
+        params,
+        CommunicationResolver.name,
+        this.handleUpdateMemberPlatform.name,
+        ex,
+      );
+    }
   }
 
   @OnEvent(EventType.updatedAppointment, { async: true })

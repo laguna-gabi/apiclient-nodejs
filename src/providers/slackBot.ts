@@ -26,25 +26,29 @@ export class SlackBot implements OnModuleInit {
     if (!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test) {
       this.logger.debug(params, SlackBot.name, this.sendMessage.name);
     } else {
-      await this.webhook.send({
-        username: 'LagunaBot',
-        icon_emoji: params.icon,
-        channel: config.get(params.channel),
-        attachments: [
-          {
-            color: '#9733EE',
-            blocks: [
-              {
-                type: 'section',
-                text: {
-                  type: 'mrkdwn',
-                  text: params.message,
+      try {
+        await this.webhook.send({
+          username: 'LagunaBot',
+          icon_emoji: params.icon,
+          channel: config.get(params.channel),
+          attachments: [
+            {
+              color: '#9733EE',
+              blocks: [
+                {
+                  type: 'section',
+                  text: {
+                    type: 'mrkdwn',
+                    text: params.message,
+                  },
                 },
-              },
-            ],
-          },
-        ],
-      });
+              ],
+            },
+          ],
+        });
+      } catch (ex) {
+        this.logger.error(params, SlackBot.name, this.sendMessage.name, ex);
+      }
     }
   }
 }

@@ -25,6 +25,7 @@ import {
   IEventNewAppointment,
   IEventSlackMessage,
   IEventUpdateUserConfig,
+  Logger,
   SlackChannel,
   SlackIcon,
 } from '../common';
@@ -36,6 +37,7 @@ export class UserService extends BaseService {
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
     private eventEmitter: EventEmitter2,
+    readonly logger: Logger,
     private slotService: SlotService,
     @InjectModel(UserConfig.name)
     private readonly userConfigModel: Model<UserConfigDocument>,
@@ -259,17 +261,25 @@ export class UserService extends BaseService {
 
   @OnEvent(EventType.updateUserConfig, { async: true })
   async handleUpdateUserConfig(params: IEventUpdateUserConfig): Promise<boolean> {
-    const { userId, accessToken } = params;
-    const result = await this.userConfigModel.updateOne({ userId }, { $set: { accessToken } });
+    try {
+      const { userId, accessToken } = params;
+      const result = await this.userConfigModel.updateOne({ userId }, { $set: { accessToken } });
 
-    return result.ok === 1;
+      return result.ok === 1;
+    } catch (ex) {
+      this.logger.error(params, UserService.name, this.handleUpdateUserConfig.name, ex);
+    }
   }
 
   @OnEvent(EventType.newAppointment, { async: true })
   async handleOrderCreatedEvent(params: IEventNewAppointment) {
-    await this.userModel.updateOne(
-      { _id: params.userId },
-      { $push: { appointments: new Types.ObjectId(params.appointmentId) } },
-    );
+    try {
+      await this.userModel.updateOne(
+        { _id: params.userId },
+        { $push: { appointments: new Types.ObjectId(params.appointmentId) } },
+      );
+    } catch (ex) {
+      this.logger.error(params, UserService.name, this.handleOrderCreatedEvent.name, ex);
+    }
   }
 }

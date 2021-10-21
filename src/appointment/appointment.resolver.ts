@@ -20,6 +20,7 @@ import {
   IEventUpdatedAppointment,
   InternalNotificationType,
   InternalNotifyParams,
+  Logger,
   LoggingInterceptor,
   ReminderType,
   UpdatedAppointmentAction,
@@ -39,6 +40,7 @@ export class AppointmentResolver extends AppointmentBase {
     readonly eventEmitter: EventEmitter2,
     readonly bitly: Bitly,
     readonly orgService: OrgService,
+    readonly logger: Logger,
   ) {
     super(appointmentService, appointmentScheduler, eventEmitter);
   }
@@ -100,14 +102,23 @@ export class AppointmentResolver extends AppointmentBase {
   @OnEvent(EventType.requestAppointment, { async: true })
   async handleRequestAppointment(params: IEventRequestAppointment) {
     const { member, user } = params;
-    const requestAppointmentParams: RequestAppointmentParams = {
-      memberId: member.id,
-      userId: user.id,
-      notBefore: add(new Date(), { hours: 2 }),
-    };
-    const { id: appointmentId } = await this.appointmentService.request(requestAppointmentParams);
-    await this.notifyRegistration({ member, user, appointmentId });
-    await this.appointmentScheduler.registerNewMemberNudge({ member, user, appointmentId });
+    try {
+      const requestAppointmentParams: RequestAppointmentParams = {
+        memberId: member.id,
+        userId: user.id,
+        notBefore: add(new Date(), { hours: 2 }),
+      };
+      const { id: appointmentId } = await this.appointmentService.request(requestAppointmentParams);
+      await this.notifyRegistration({ member, user, appointmentId });
+      await this.appointmentScheduler.registerNewMemberNudge({ member, user, appointmentId });
+    } catch (ex) {
+      this.logger.error(
+        { memberId: member.id, userId: user.id },
+        AppointmentResolver.name,
+        this.handleRequestAppointment.name,
+        ex,
+      );
+    }
   }
 
   /*************************************************************************************************

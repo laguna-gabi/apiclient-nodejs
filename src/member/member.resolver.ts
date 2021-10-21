@@ -383,38 +383,47 @@ export class MemberResolver extends MemberBase {
    * member.scheduler - scheduling reminders and nudges.
    */
   @OnEvent(EventType.internalNotify, { async: true })
-  async internalNotify(internalNotifyParams: InternalNotifyParams) {
-    const { memberId, userId, type, metadata } = internalNotifyParams;
+  async internalNotify(params: InternalNotifyParams) {
+    const { memberId, userId, type, metadata } = params;
     let member: Member;
     let memberConfig: MemberConfig;
     let user: User;
 
-    if (type === InternalNotificationType.textSmsToUser) {
-      user = await this.userService.get(userId);
-      if (!user) {
-        throw new Error(Errors.get(ErrorType.userNotFound));
+    try {
+      if (type === InternalNotificationType.textSmsToUser) {
+        user = await this.userService.get(userId);
+        if (!user) {
+          throw new Error(Errors.get(ErrorType.userNotFound));
+        }
+        metadata.content = metadata.content.replace('@user.firstName@', user.firstName);
+      } else {
+        ({ member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId));
+        metadata.content = this.replaceConfigs({
+          content: metadata.content,
+          member,
+          user,
+        });
       }
-      metadata.content = metadata.content.replace('@user.firstName@', user.firstName);
-    } else {
-      ({ member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId));
-      metadata.content = this.replaceConfigs({
-        content: metadata.content,
+      if (metadata.appointmentTime) {
+        metadata.content = metadata.content.replace(
+          '@appointment.time@',
+          format(
+            utcToZonedTime(metadata.appointmentTime, lookup(member.zipCode)),
+            "EEEE LLLL do 'at' p (z)",
+            { timeZone: lookup(member.zipCode) },
+          ),
+        );
+      }
+      return await this.notificationBuilder.internalNotify({
         member,
+        memberConfig,
         user,
+        type,
+        metadata,
       });
+    } catch (ex) {
+      this.logger.error(params, MemberResolver.name, this.internalNotify.name, ex);
     }
-    if (metadata.appointmentTime) {
-      metadata.content = metadata.content.replace(
-        '@appointment.time@',
-        format(
-          utcToZonedTime(metadata.appointmentTime, lookup(member.zipCode)),
-          "EEEE LLLL do 'at' p (z)",
-          { timeZone: lookup(member.zipCode) },
-        ),
-      );
-    }
-
-    return this.notificationBuilder.internalNotify({ member, memberConfig, user, type, metadata });
   }
 
   /**
@@ -425,28 +434,26 @@ export class MemberResolver extends MemberBase {
   async notifyChatMessage(params: IEventNotifyChatMessage) {
     const { senderUserId, sendBirdChannelUrl } = params;
 
-    const user = await this.userService.get(senderUserId);
-    if (!user) {
-      return;
-    }
+    try {
+      const user = await this.userService.get(senderUserId);
+      if (!user) {
+        throw new Error(Errors.get(ErrorType.userNotFound));
+      }
 
-    const communication = await this.communicationService.getByChannelUrl(sendBirdChannelUrl);
-    if (!communication) {
-      this.logger.warn(
-        params,
-        MemberResolver.name,
-        this.notifyChatMessage.name,
-        'sendBirdChannelUrl doesnt exists',
-      );
-      return;
-    }
+      const communication = await this.communicationService.getByChannelUrl(sendBirdChannelUrl);
+      if (!communication) {
+        throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
+      }
 
-    return this.internalNotify({
-      memberId: communication.memberId.toString(),
-      userId: senderUserId,
-      type: InternalNotificationType.chatMessageToMember,
-      metadata: { content: config.get('contents.newChatMessage') },
-    });
+      return await this.internalNotify({
+        memberId: communication.memberId.toString(),
+        userId: senderUserId,
+        type: InternalNotificationType.chatMessageToMember,
+        metadata: { content: config.get('contents.newChatMessage') },
+      });
+    } catch (ex) {
+      this.logger.error(params, MemberResolver.name, this.notifyChatMessage.name, ex);
+    }
   }
 
   /**
@@ -455,18 +462,22 @@ export class MemberResolver extends MemberBase {
    */
   @OnEvent(EventType.sendSmsToChat, { async: true })
   async sendSmsToChat(params: IEventSendSmsToChat) {
-    const member = await this.memberService.getByPhone(params.phone);
-    const sendBirdChannelUrl = await this.getSendBirdChannelUrl({
-      memberId: member.id,
-      userId: member.primaryUserId,
-    });
+    try {
+      const member = await this.memberService.getByPhone(params.phone);
+      const sendBirdChannelUrl = await this.getSendBirdChannelUrl({
+        memberId: member.id,
+        userId: member.primaryUserId,
+      });
 
-    return this.internalNotify({
-      memberId: member.id,
-      userId: member.primaryUserId,
-      type: InternalNotificationType.chatMessageToUser,
-      metadata: { content: params.message, sendBirdChannelUrl },
-    });
+      return await this.internalNotify({
+        memberId: member.id,
+        userId: member.primaryUserId,
+        type: InternalNotificationType.chatMessageToUser,
+        metadata: { content: params.message, sendBirdChannelUrl },
+      });
+    } catch (ex) {
+      this.logger.error(params, MemberResolver.name, this.sendSmsToChat.name, ex);
+    }
   }
 
   /************************************************************************************************
