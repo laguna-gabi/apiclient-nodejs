@@ -82,10 +82,8 @@ describe('AppointmentScheduler', () => {
       });
 
       it('should register schedulerRegistry with all scheduled appointments', async () => {
-        const gapDate = new Date();
-        gapDate.setMinutes(gapDate.getMinutes() + config.get('scheduler.alertBeforeInMin'));
-        const maxDate = new Date();
-        maxDate.setMinutes(maxDate.getMinutes() + config.get('scheduler.maxAlertGapInMin'));
+        const gapDate = add(new Date(), { minutes: config.get('scheduler.alertBeforeInMin') });
+        const maxDate = add(new Date(), { minutes: config.get('scheduler.maxAlertGapInMin') });
 
         await scheduler.init();
 
@@ -103,7 +101,7 @@ describe('AppointmentScheduler', () => {
         );
 
         expect(diff).toEqual([]);
-      }, 10000);
+      });
     });
 
     describe('scheduleAppointmentLongAlert', () => {
@@ -113,8 +111,7 @@ describe('AppointmentScheduler', () => {
 
       // eslint-disable-next-line max-len
       it('should register scheduleAppointmentLongAlert with all scheduled appointments', async () => {
-        const maxDate = new Date();
-        maxDate.setMinutes(maxDate.getMinutes() + config.get('scheduler.maxAlertGapInMin'));
+        const maxDate = add(new Date(), { minutes: config.get('scheduler.maxAlertGapInMin') });
         const scheduledAppointments = await appointmentModel
           .find({
             status: AppointmentStatus.scheduled,
@@ -134,7 +131,7 @@ describe('AppointmentScheduler', () => {
         );
 
         expect(diff).toEqual([]);
-      }, 10000);
+      });
     });
   });
 
@@ -143,7 +140,13 @@ describe('AppointmentScheduler', () => {
       await clear();
     });
 
-    const generateParam = (start = faker.date.soon(1)) => {
+    /**
+     * making sure delay time is at least scheduler.alertBeforeInMin + 5 min from now,
+     * since the minimum time for appointments delay is alertBeforeInMin = 15 minutes
+     */
+    const generateParam = (
+      start = add(new Date(), { minutes: config.get('scheduler.alertBeforeInMin') + 1 }),
+    ) => {
       return {
         id: generateId(),
         memberId: generateId(),
@@ -193,9 +196,7 @@ describe('AppointmentScheduler', () => {
     });
 
     it('should not add an appointment on start < alertBeforeInMin', async () => {
-      const minutes = config.get('scheduler.alertBeforeInMin') - 0.1;
-      const start = new Date();
-      start.setMinutes(start.getMinutes() + minutes);
+      const start = add(new Date(), { minutes: config.get('scheduler.alertBeforeInMin') - 0.1 });
       const param = generateParam(start);
 
       await scheduler.registerAppointmentAlert(param);
@@ -305,38 +306,24 @@ describe('AppointmentScheduler', () => {
       expect(timeouts).toEqual(expect.arrayContaining(longTimeouts));
     });
 
-    it('should update appointment long alert with an existing appointment', async () => {
-      const param = generateParam();
+    // eslint-disable-next-line max-len
+    it('should add appointment long alert for an existing appointment if starts in more than 1 day', async () => {
+      const param = generateParam(add(new Date(), { days: 1, minutes: 5 }));
       await scheduler.registerAppointmentAlert(param);
       const timeouts = schedulerRegistry.getTimeouts();
       expect(timeouts.length).toEqual(2);
-      expect(timeouts[0]).toEqual(param.id + ReminderType.appointmentReminder);
+      expect(timeouts[1]).toEqual(param.id + ReminderType.appointmentLongReminder);
 
-      await updateAppointmentWithParams(param);
-    });
-
-    // eslint-disable-next-line max-len
-    it('should add appointment long alert for an existing appointment if starts in more than 1 day', async () => {
-      const param = generateParam(faker.date.soon(1));
-      await scheduler.registerAppointmentAlert(param);
-      const timeouts = schedulerRegistry.getTimeouts();
-      expect(timeouts.length).toEqual(1);
-      expect(timeouts[0]).toEqual(param.id + ReminderType.appointmentReminder);
-
-      await updateAppointmentWithParams(param);
-    });
-
-    const updateAppointmentWithParams = async (param) => {
       const updateParam = cloneDeep(param);
       updateParam.start = add(faker.date.soon(1), { days: 2 });
 
       await scheduler.registerAppointmentAlert(updateParam);
 
-      const timeouts = schedulerRegistry.getTimeouts();
+      const timeoutsNew = schedulerRegistry.getTimeouts();
 
-      expect(timeouts.length).toEqual(2);
-      expect(timeouts[1]).toEqual(param.id + ReminderType.appointmentLongReminder);
-    };
+      expect(timeoutsNew.length).toEqual(2);
+      expect(timeoutsNew[1]).toEqual(param.id + ReminderType.appointmentLongReminder);
+    });
   });
 
   describe('delete', () => {
