@@ -189,6 +189,8 @@ export enum SlackIcon {
   info = ':information_source:',
   warning = ':warning:',
   critical = ':no_entry:',
+  exclamationPoint = ':exclamation:',
+  questionMark = ':question:',
 }
 
 export enum UpdatedAppointmentAction {
