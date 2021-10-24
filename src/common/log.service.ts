@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { cloneDeep } from 'lodash';
-import { AuditType, Environments, IEventQueueMessage, QueueType } from '.';
+import { AuditType, Environments, IEventQueueMessage, QueueType, generateOrgNamePrefix } from '.';
 import { EventType } from './events';
 import { SlackChannel, SlackIcon } from './interfaces.dto';
 
@@ -58,6 +58,7 @@ export class Logger {
       methodName,
       LogType.warn,
       COLOR.fgYellow,
+      params?.orgName,
     );
     console.warn(this.isColorLog() ? colorLog : log);
 
@@ -75,6 +76,7 @@ export class Logger {
       methodName,
       LogType.error,
       COLOR.fgRed,
+      params?.orgName,
     );
     console.error(this.isColorLog() ? colorLog : log);
 
@@ -157,6 +159,7 @@ export class Logger {
     methodName: string,
     logType: LogType,
     color,
+    orgName?: string,
   ): { colorLog: string; log: string } {
     const now = new Date();
     const date = this.generateText(now.toLocaleString(), COLOR.fgWhite);
@@ -166,7 +169,9 @@ export class Logger {
     const textFormatted = this.generateText(text, color);
 
     const colorLog = `${date}   ${lType} ${cName} ${mName} ${textFormatted}`;
-    const log = `${now.toLocaleString()}   [${logType}] [${className}] ${methodName} ${text}`;
+    const log = `${now.toLocaleString()}   [${logType}] [${className}]${generateOrgNamePrefix(
+      orgName,
+    )}${methodName} ${text}`;
 
     return { colorLog, log };
   }

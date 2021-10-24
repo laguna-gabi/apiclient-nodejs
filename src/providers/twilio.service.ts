@@ -10,6 +10,7 @@ import {
   Logger,
   SlackChannel,
   SlackIcon,
+  generateOrgNamePrefix,
 } from '../common';
 
 @Injectable()
@@ -41,7 +42,7 @@ export class TwilioService implements OnModuleInit {
     this.client = new Twilio(this.accountSid, this.authToken);
   }
 
-  async send({ body, to }: { body: string; to: string }) {
+  async send({ body, to, orgName }: { body: string; to: string; orgName?: string }) {
     if (process.env.NODE_ENV === Environments.production && !to.startsWith('+972')) {
       /**
        * KEEP return await when its inside try catch
@@ -53,7 +54,7 @@ export class TwilioService implements OnModuleInit {
       }
     } else {
       const params: IEventSlackMessage = {
-        message: `*SMS to ${to}*\n${body}`,
+        message: `*SMS to ${to}${generateOrgNamePrefix(orgName)}*\n${body}`,
         icon: SlackIcon.phone,
         channel: SlackChannel.testingSms,
       };

@@ -584,6 +584,7 @@ describe('Integration tests: all', () => {
           ...generatePath(params.type),
         },
         metadata: notifyParams.metadata,
+        orgName: org.name,
       },
     });
 
@@ -632,6 +633,7 @@ describe('Integration tests: all', () => {
       sendTwilioNotification: {
         to: member.phone,
         body: notifyParams.metadata.content,
+        orgName: org.name,
       },
     });
 
@@ -664,6 +666,7 @@ describe('Integration tests: all', () => {
         sendBirdChannelUrl: mockCommunicationParams.sendBirdChannelUrl,
         message: notifyParams.metadata.content,
         notificationType: NotificationType.textSms,
+        orgName: org.name,
       },
     });
 
@@ -719,6 +722,7 @@ describe('Integration tests: all', () => {
           isVideo: false,
         },
         metadata: notifyParams.metadata,
+        orgName: org.name,
       },
     });
 
@@ -857,6 +861,7 @@ describe('Integration tests: all', () => {
       sendTwilioNotification: {
         to: member.users[0].phone,
         body: expect.any(String),
+        orgName: undefined,
       },
     });
 
@@ -864,6 +869,7 @@ describe('Integration tests: all', () => {
       sendTwilioNotification: {
         to: member.phone,
         body: expect.any(String),
+        orgName: org.name,
       },
     });
 

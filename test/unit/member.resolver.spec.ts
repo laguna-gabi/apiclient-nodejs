@@ -886,6 +886,7 @@ describe('MemberResolver', () => {
             user.firstName
           }`,
           to: member.phone,
+          orgName: member.org.name,
         },
       });
     });
@@ -913,6 +914,7 @@ describe('MemberResolver', () => {
           sendBirdChannelUrl: communication.sendBirdChannelUrl,
           message: notifyParams.metadata.content,
           notificationType: NotificationType.textSms,
+          orgName: member.org.name,
         },
       });
     });
@@ -938,6 +940,7 @@ describe('MemberResolver', () => {
         sendTwilioNotification: {
           body: notifyParams.metadata.content,
           to: member.phone,
+          orgName: member.org.name,
         },
       });
     });
@@ -962,6 +965,7 @@ describe('MemberResolver', () => {
         sendTwilioNotification: {
           body: notifyParams.metadata.content,
           to: member.phone,
+          orgName: member.org.name,
         },
       });
     });
@@ -986,6 +990,7 @@ describe('MemberResolver', () => {
         sendTwilioNotification: {
           body: notifyParams.metadata.content,
           to: member.phone,
+          orgName: member.org.name,
         },
       });
     });
@@ -1020,6 +1025,7 @@ describe('MemberResolver', () => {
               peerId: notifyParams.metadata.peerId,
             },
             metadata: notifyParams.metadata,
+            orgName: member.org.name,
           },
         });
       },
@@ -1183,6 +1189,7 @@ describe('MemberResolver', () => {
 
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
         sendTwilioNotification: {
+          orgName: params.isMember ? member.org.name : undefined,
           body: internalNotifyParams.metadata.content,
           to: params.isMember ? member.phone : user.phone,
         },
@@ -1207,6 +1214,7 @@ describe('MemberResolver', () => {
 
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
         sendTwilioNotification: {
+          orgName: member.org.name,
           body: internalNotifyParams.metadata.content,
           to: member.phone,
         },
@@ -1231,6 +1239,7 @@ describe('MemberResolver', () => {
 
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
         sendTwilioNotification: {
+          orgName: member.org.name,
           body: internalNotifyParams.metadata.content,
           to: member.phone,
         },
@@ -1263,6 +1272,7 @@ describe('MemberResolver', () => {
             isVideo: false,
           },
           metadata: internalNotifyParams.metadata,
+          orgName: member.org.name,
         },
       });
     });
@@ -1290,6 +1300,7 @@ describe('MemberResolver', () => {
             .get('contents.appointmentReminderChatLink')
             .replace('@chatLink@', internalNotifyParams.metadata.chatLink)}`,
           to: member.phone,
+          orgName: member.org.name,
         },
       });
     });
@@ -1321,6 +1332,7 @@ describe('MemberResolver', () => {
             path: `connect/${member.id}/${user.id}`,
           },
           metadata: internalNotifyParams.metadata,
+          orgName: member.org.name,
         },
       });
     });
@@ -1386,6 +1398,7 @@ describe('MemberResolver', () => {
           sendBirdChannelUrl: internalNotifyParams.metadata.sendBirdChannelUrl,
           message: internalNotifyParams.metadata.content,
           notificationType: InternalNotificationType.chatMessageToUser,
+          orgName: member.org.name,
         },
       });
     });
@@ -1463,6 +1476,7 @@ describe('MemberResolver', () => {
               .get('contents.newChatMessage')
               .replace('@user.firstName@', user.firstName),
           },
+          orgName: member.org.name,
         },
       });
     });

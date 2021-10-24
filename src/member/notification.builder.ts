@@ -19,6 +19,7 @@ export class NotificationBuilder {
   ) {}
 
   async notify({ member, memberConfig, user, type, metadata }) {
+    const orgName = member?.org.name;
     let path = {};
     if (type === NotificationType.call || type === NotificationType.video) {
       path = { path: 'call' };
@@ -30,12 +31,14 @@ export class NotificationBuilder {
         sendBirdChannelUrl: metadata.sendBirdChannelUrl,
         message: metadata.content,
         notificationType: type,
+        orgName,
       };
       await this.notificationsService.send({ sendSendBirdNotification });
 
       const sendTwilioNotification: SendTwilioNotification = {
         body: metadata.content,
         to: member.phone,
+        orgName,
       };
       return this.notificationsService.send({ sendTwilioNotification });
     } else {
@@ -52,12 +55,14 @@ export class NotificationBuilder {
             peerId: metadata.peerId,
           },
           metadata,
+          orgName,
         };
         return this.notificationsService.send({ sendOneSignalNotification });
       } else {
         const sendTwilioNotification: SendTwilioNotification = {
           body: metadata.content,
           to: member.phone,
+          orgName,
         };
         return this.notificationsService.send({ sendTwilioNotification });
       }
@@ -65,6 +70,7 @@ export class NotificationBuilder {
   }
 
   async internalNotify({ member, memberConfig, user, type, metadata }) {
+    const orgName = member?.org.name;
     switch (type) {
       case InternalNotificationType.textToMember: {
         if (memberConfig.platform === Platform.web || !memberConfig.isPushNotificationsEnabled) {
@@ -74,6 +80,7 @@ export class NotificationBuilder {
               .replace('@chatLink@', metadata.chatLink)}`;
           }
           const sendTwilioNotification: SendTwilioNotification = {
+            orgName,
             body: metadata.content,
             to: member.phone,
           };
@@ -89,6 +96,7 @@ export class NotificationBuilder {
               isVideo: false,
             },
             metadata,
+            orgName,
           };
           return this.notificationsService.send({ sendOneSignalNotification });
         }
@@ -97,6 +105,7 @@ export class NotificationBuilder {
         const sendTwilioNotification: SendTwilioNotification = {
           body: metadata.content,
           to: member.phone,
+          orgName,
         };
         return this.notificationsService.send({ sendTwilioNotification });
       }
@@ -104,6 +113,7 @@ export class NotificationBuilder {
         const sendTwilioNotification: SendTwilioNotification = {
           body: metadata.content,
           to: user.phone,
+          orgName,
         };
         return this.notificationsService.send({ sendTwilioNotification });
       }
@@ -120,6 +130,7 @@ export class NotificationBuilder {
               isVideo: false,
             },
             metadata,
+            orgName,
           };
           return this.notificationsService.send({ sendOneSignalNotification });
         }
@@ -131,6 +142,7 @@ export class NotificationBuilder {
           sendBirdChannelUrl: metadata.sendBirdChannelUrl,
           message: metadata.content,
           notificationType: type,
+          orgName,
         };
         return this.notificationsService.send({ sendSendBirdNotification });
       }

@@ -138,7 +138,11 @@ export type AllNotificationTypes =
   | CancelNotificationType
   | InternalNotificationType;
 
-export class SendOneSignalNotification {
+export class BaseSendNotification {
+  orgName?: string;
+}
+
+export class SendOneSignalNotification extends BaseSendNotification {
   platform: Platform;
   externalUserId: string;
   data: {
@@ -156,19 +160,19 @@ export class SendOneSignalNotification {
   metadata: Record<string, any>;
 }
 
-export class SendTwilioNotification {
+export class SendTwilioNotification extends BaseSendNotification {
   body: string;
   to: string;
 }
 
-export class SendSendBirdNotification {
+export class SendSendBirdNotification extends BaseSendNotification {
   userId: string; //sender
   sendBirdChannelUrl: string;
   message: string;
   notificationType: AllNotificationTypes;
 }
 
-export class CancelNotificationParams {
+export class CancelNotificationParams extends BaseSendNotification {
   externalUserId: string;
   platform: Platform;
   data: {
