@@ -7,7 +7,10 @@
     "notifications": "#production-notifications"
   },
   "oneSignal": {
-    "voipRegistrationPayload": {}
+    "voipRegistrationPayload": {
+      "test_type": null
+    },
+    "androidChannelId": "2e2293d6-7dc6-4e2f-9f83-c87e684d458f"
   },
   "twilio": {
     "source": "+18337090314"
