@@ -873,6 +873,7 @@ describe('Integration tests: all', () => {
     it('should create timeout on member creation', async () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org });
+      await delay(500); // wait for event to finish
       expect(handler.schedulerRegistry.getTimeouts()).toEqual(expect.arrayContaining([member.id]));
     });
 

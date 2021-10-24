@@ -178,6 +178,7 @@ describe('AppointmentScheduler', () => {
       updateParam.start = faker.date.soon(1);
 
       await scheduler.registerAppointmentAlert(updateParam);
+      await delay(500); // wait for event to finish
 
       timeouts = schedulerRegistry.getTimeouts();
       expect(timeouts.length).toEqual(1);
