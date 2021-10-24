@@ -1,8 +1,7 @@
 {
   "hosts": {
-    "chat": "https://www.chat.lagunahealth.com",
-    "app": "https://www.app.lagunahealth.com",
-    "root": "https://api.lagunahealth.com"
+    "chat": "https://staging.chat.lagunahealth.com",
+    "app": "https://staging.app.lagunahealth.com"
   },
   "slack": {
     "notifications": "#production-notifications"

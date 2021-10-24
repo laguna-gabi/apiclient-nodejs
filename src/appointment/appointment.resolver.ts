@@ -150,7 +150,7 @@ export class AppointmentResolver extends AppointmentBase {
     appointmentId: string;
   }) {
     const url = await this.bitly.shortenLink(
-      `${config.get('hosts.webApp')}/download/${appointmentId}`,
+      `${config.get('hosts.app')}/download/${appointmentId}`,
     );
     const org = await this.orgService.get(member.org.toString());
     const metadata = {

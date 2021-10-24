@@ -1,9 +1,7 @@
 {
   "hosts": {
-    "chat": "https://www.dev.chat.getlaguna.com",
-    "app": "https://www.dev.app.getlaguna.com",
-    "webApp": "https://dev.app.lagunahealth.com",
-    "root": "https://dev.api.lagunahealth.com"
+    "chat": "https://dev.chat.lagunahealth.com",
+    "app": "https://dev.app.lagunahealth.com"
   },
   "db": {
     "connection": "mongodb://localhost:27017/laguna"
