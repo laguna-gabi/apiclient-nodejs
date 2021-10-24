@@ -17,31 +17,31 @@ export class LoggingInterceptor implements NestInterceptor {
     const methodName = context.getHandler().name;
     const className = context.getClass().name;
     let args;
-    let authorizationHeader;
-    let deviceId;
+    let headers;
     let type;
 
     if (context.getType() === 'http') {
       const res = context.switchToHttp();
-      authorizationHeader = extractAuthorizationHeader(context);
+      headers = extractAuthorizationHeader(context);
       const { params, body } = res.getRequest();
       args = Object.keys(params).length > 0 ? { params } : {};
       args = Object.keys(body).length > 0 ? { ...args, body } : args;
       type = res.getRequest().method === 'GET' ? AuditType.read : AuditType.write;
     } else {
       args = context.getArgByIndex(1);
-      authorizationHeader = extractAuthorizationHeader(
-        GqlExecutionContext.create(context).getContext(),
-      );
-      deviceId = GqlExecutionContext.create(context).getContext().req?.headers?.deviceid;
+      headers = extractAuthorizationHeader(GqlExecutionContext.create(context).getContext());
       type =
         GqlExecutionContext.create(context).getInfo().operation.operation === 'mutation'
           ? AuditType.write
           : AuditType.read;
     }
 
-    this.logger.debug(Object.values(args)[0] || { deviceId }, className, methodName);
-    this.logger.audit(type, Object.values(args)[0], methodName, authorizationHeader?.sub);
+    this.logger.debug(
+      Object.values(args)[0] || { deviceId: headers?.username },
+      className,
+      methodName,
+    );
+    this.logger.audit(type, Object.values(args)[0], methodName, headers?.sub);
 
     const now = Date.now();
     return next
