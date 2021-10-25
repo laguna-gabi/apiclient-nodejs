@@ -12,7 +12,7 @@ import { NotificationsService } from '../../src/providers';
 import { dbDisconnect, defaultModules, delay } from '../common';
 import { generatePath, generatePhone } from '../generators';
 
-describe('live: notifications (one signal)', () => {
+describe.skip('live: notifications (one signal)', () => {
   const delayTime = 25000;
 
   const beforeEachCustom = async () => {
