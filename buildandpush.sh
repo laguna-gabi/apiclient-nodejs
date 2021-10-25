@@ -8,11 +8,12 @@
 set -o errexit
 
 # setting up variables
-readonly repo=hepius
+readonly name=hepius
 readonly region=us-east-1
 readonly ecr_url=757492387178.dkr.ecr.us-east-1.amazonaws.com
-readonly git_commit=$(git log -1 --format=%h)
+readonly git_commit=$(git log -1 --format=%H)
 readonly git_branch=$(git branch --show-current)
+readonly repo=${name}-${git_branch}
 
 # ECR authentication (https://docs.aws.amazon.com/AmazonECR/latest/userguide/registry_auth.html)
 aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${ecr_url}
