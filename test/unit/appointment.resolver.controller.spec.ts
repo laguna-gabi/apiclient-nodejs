@@ -91,7 +91,7 @@ describe('AppointmentResolver', () => {
         metadata: {
           content: `${config
             .get('contents.appointmentRequest')
-            .replace('@appLink@', appointment.link)}`,
+            .replace('@downloadLink@', appointment.link)}`,
         },
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.internalNotify, eventParams);

@@ -129,7 +129,7 @@ export class AppointmentResolver extends AppointmentBase {
     const metadata = {
       content: `${config
         .get('contents.appointmentRequest')
-        .replace('@appLink@', appointment.link)}`,
+        .replace('@downloadLink@', appointment.link)}`,
     };
     const params: InternalNotifyParams = {
       memberId: appointment.memberId.toString(),

@@ -45,7 +45,7 @@
     "appointmentReminder": "Hello @member.honorific@ @member.lastName@, your appointment with @user.firstName@ from Laguna Health starts in @gapMinutes@ minutes",
     "appointmentReminderChatLink": "; to join, click: @chatLink@",
     "appointmentLongReminder": "Reminder for @member.honorific@ @member.lastName@'s appointment on @appointment.time@ with @user.firstName@ from Laguna Health.",
-    "appointmentRequest": "Hello @member.honorific@ @member.lastName@, It's @user.firstName@ from Laguna Health. Click below to schedule your next meeting: @appLink@",
+    "appointmentRequest": "Hello @member.honorific@ @member.lastName@, It's @user.firstName@ from Laguna Health. Click below to schedule your next meeting: @downloadLink@",
     "appointmentUser": "Hello @user.firstName@, an appointment has been added to your schedule on @appointment.start@",
     "meetingScheduledMsg": "Hello @member.honorific@ @member.lastName@, your appointment with @user.firstName@ from Laguna Health is scheduled for @appointment.time@",
     "downloadPage": "Hello @member.honorific@ @member.lastName@, I'm @user.firstName@ from Laguna Health. We partnered with @org.name@ to provide you free post-hospital recovery support. Click below to schedule the first visit: @downloadLink@",
