@@ -65,11 +65,11 @@ export class OneSignal {
       if (memberConfig.platform === Platform.ios) {
         const appId = await this.configsService.getConfig(ExternalConfigs.oneSignal.voipApiId);
         const config = await this.configsService.getConfig(ExternalConfigs.oneSignal.voipApiKey);
-        this.findAndUnregister(memberConfig, appId, config);
+        await this.findAndUnregister(memberConfig, appId, config);
       }
       const appId = await this.configsService.getConfig(ExternalConfigs.oneSignal.defaultApiId);
       const config = await this.configsService.getConfig(ExternalConfigs.oneSignal.defaultApiKey);
-      this.findAndUnregister(memberConfig, appId, config);
+      await this.findAndUnregister(memberConfig, appId, config);
     } catch (ex) {
       this.logger.error(memberConfig, OneSignal.name, this.unregister.name, ex);
     }

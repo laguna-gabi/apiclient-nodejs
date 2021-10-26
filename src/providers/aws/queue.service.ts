@@ -8,7 +8,7 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 @Injectable()
 export class QueueService implements OnModuleInit {
   private readonly sqs = new AWS.SQS({
-    region: config.get('providers.aws.region'),
+    region: config.get('aws.region'),
     apiVersion: '2012-11-05',
   });
   private auditQueueUrl;

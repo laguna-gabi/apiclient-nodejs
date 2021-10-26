@@ -6,7 +6,7 @@ import { Logger } from '../../common';
 @Injectable()
 export class CognitoService {
   private readonly cognito = new AWS.CognitoIdentityServiceProvider({
-    region: config.get('providers.aws.region'),
+    region: config.get('aws.region'),
     apiVersion: '2016-04-18',
   });
 
@@ -16,7 +16,7 @@ export class CognitoService {
     this.logger.debug({ deviceId }, CognitoService.name, this.disableMember.name);
     try {
       await this.cognito
-        .adminDisableUser({ UserPoolId: config.get('cognito.userPoolId'), Username: deviceId })
+        .adminDisableUser({ UserPoolId: config.get('aws.cognito.userPoolId'), Username: deviceId })
         .promise();
     } catch (ex) {
       if (ex?.code !== 'UserNotFoundException') {

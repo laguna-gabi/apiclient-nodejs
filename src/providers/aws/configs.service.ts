@@ -57,7 +57,7 @@ export class ConfigsService implements MongooseOptionsFactory {
    */
   async getConfig(configs: string): Promise<string> {
     if (!this.data) {
-      const secretsManager = new AWS.SecretsManager({ region: config.get('providers.aws.region') });
+      const secretsManager = new AWS.SecretsManager({ region: config.get('aws.region') });
       const result = await secretsManager
         .getSecretValue({
           SecretId:

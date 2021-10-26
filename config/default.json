@@ -15,9 +15,10 @@
       }
     }
   },
-  "providers": {
-    "aws": {
-      "region": "us-east-1"
+  "aws": {
+    "region": "us-east-1",
+    "cognito": {
+      "userPoolId": "us-east-1_EZc3XRt6s"
     }
   },
   "twilio": {
@@ -36,9 +37,6 @@
     "androidChannelId": "00349af6-be67-4729-9d48-9057a5507b14"
   },
   "storage": "hepius-test",
-  "cognito": {
-    "userPoolId": "us-east-1_EZc3XRt6s"
-  },
   "scheduler": {
     "alertBeforeInMin": 15,
     "maxAlertGapInMin": 43800,
