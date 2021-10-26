@@ -1,8 +1,9 @@
 import * as AWS from 'aws-sdk';
 import axios from 'axios';
 import * as config from 'config';
+import { EventEmitter2 } from 'eventemitter2';
 import * as faker from 'faker';
-import { Platform, StorageType } from '../../src/common';
+import { Logger, Platform, StorageType } from '../../src/common';
 import { ConfigsService, StorageService } from '../../src/providers';
 import { mockGenerateMember, mockGenerateUser } from '../generators';
 
@@ -16,7 +17,9 @@ describe('live: aws', () => {
 
     beforeAll(async () => {
       const configService = new ConfigsService();
-      storageService = new StorageService(configService);
+      const eventEmitter = new EventEmitter2();
+      const logger = new Logger(eventEmitter);
+      storageService = new StorageService(logger, configService);
       await storageService.onModuleInit();
 
       const user = mockGenerateUser();

@@ -7,6 +7,7 @@ import {
   Environments,
   EventType,
   IEventNewMember,
+  Logger,
   StorageType,
   StorageUrlParams,
 } from '../../common';
@@ -16,7 +17,7 @@ export class StorageService implements OnModuleInit {
   private readonly s3 = new AWS.S3({ signatureVersion: 'v4', apiVersion: '2006-03-01' });
   private bucket: string;
 
-  constructor(private readonly configsService: ConfigsService) {}
+  constructor(readonly logger: Logger, private readonly configsService: ConfigsService) {}
 
   async onModuleInit(): Promise<void> {
     this.bucket =
@@ -26,18 +27,23 @@ export class StorageService implements OnModuleInit {
   }
 
   @OnEvent(EventType.newMember, { async: true })
-  async handleNewMember(eventNewMember: IEventNewMember) {
-    const { id } = eventNewMember.member;
-    await Promise.all(
-      Object.values(StorageType).map(async (type) => {
-        const params = { Bucket: this.bucket, Key: `public/${type}/${id}/` };
-        try {
-          await this.s3.headObject(params).promise();
-        } catch (ex) {
-          await this.s3.putObject(params).promise();
-        }
-      }),
-    );
+  async handleNewMember(params: IEventNewMember) {
+    this.logger.debug(params, StorageService.name, this.handleNewMember.name);
+    const { id } = params.member;
+    try {
+      await Promise.all(
+        Object.values(StorageType).map(async (type) => {
+          const params = { Bucket: this.bucket, Key: `public/${type}/${id}/` };
+          try {
+            await this.s3.headObject(params).promise();
+          } catch (ex) {
+            await this.s3.putObject(params).promise();
+          }
+        }),
+      );
+    } catch (ex) {
+      this.logger.error(params, StorageService.name, this.handleNewMember.name, ex);
+    }
   }
 
   async getDownloadUrl(urlParams: StorageUrlParams): Promise<string | undefined> {
