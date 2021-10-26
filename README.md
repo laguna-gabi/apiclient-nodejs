@@ -98,6 +98,9 @@ In order to work with all graphql endpoints of _hepius_:
 # unit tests
 $ yarn test
 
+# validation tests
+$ yarn test:validation
+
 # integration tests
 $ yarn test:integration
 
