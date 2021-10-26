@@ -14,5 +14,8 @@
   },
   "twilio": {
     "source": "+18337090314"
+  },
+  "cognito": {
+    "userPoolId": "us-east-1_kMLRLqG3r"
   }
 }

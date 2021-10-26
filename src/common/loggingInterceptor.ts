@@ -30,10 +30,7 @@ export class LoggingInterceptor implements NestInterceptor {
     } else {
       args = context.getArgByIndex(1);
       headers = extractAuthorizationHeader(GqlExecutionContext.create(context).getContext());
-      type =
-        GqlExecutionContext.create(context).getInfo().operation.operation === 'mutation'
-          ? AuditType.write
-          : AuditType.read;
+      type = this.getGqlType(context);
     }
 
     this.logger.debug(
@@ -51,5 +48,17 @@ export class LoggingInterceptor implements NestInterceptor {
           this.logger.debug({ finishedAndItTook: `${Date.now() - now}ms` }, className, methodName),
         ),
       );
+  }
+
+  getGqlType(context: ExecutionContext): AuditType {
+    let type: AuditType;
+    if (GqlExecutionContext.create(context).getInfo().fieldName === 'archiveMember') {
+      type = AuditType.archive;
+    } else {
+      GqlExecutionContext.create(context).getInfo().operation.operation === 'mutation'
+        ? (type = AuditType.write)
+        : (type = AuditType.read);
+    }
+    return type;
   }
 }

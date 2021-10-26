@@ -2,6 +2,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import {
   Bitly,
+  CognitoService,
   ConfigsService,
   NotificationsService,
   QueueService,
@@ -21,6 +22,7 @@ import { CommonModule } from '../common';
     SlackBot,
     TwilioService,
     StorageService,
+    CognitoService,
     ConfigsService,
     QueueService,
     NotificationsService,
@@ -31,6 +33,7 @@ import { CommonModule } from '../common';
     SlackBot,
     TwilioService,
     StorageService,
+    CognitoService,
     ConfigsService,
     NotificationsService,
   ],

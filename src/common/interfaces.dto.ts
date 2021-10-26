@@ -231,5 +231,6 @@ export enum QueueType {
 export enum AuditType {
   write = 'write',
   read = 'read',
+  archive = 'archive',
   message = 'message',
 }

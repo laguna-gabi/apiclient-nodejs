@@ -255,4 +255,11 @@ export class AppointmentService extends BaseService {
       return note;
     }
   }
+
+  async getMemberScheduledAppointments(memberId: string): Promise<Appointment[]> {
+    return this.appointmentModel.find({
+      memberId: new Types.ObjectId(memberId),
+      status: AppointmentStatus.scheduled,
+    });
+  }
 }

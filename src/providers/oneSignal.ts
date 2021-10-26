@@ -14,6 +14,7 @@ import {
   Platform,
   SendOneSignalNotification,
 } from '../common';
+import { MemberConfig } from '../member';
 
 @Injectable()
 export class OneSignal {
@@ -55,6 +56,22 @@ export class OneSignal {
         ex.response?.status,
         ex.response?.config,
       );
+    }
+  }
+
+  async unregister(memberConfig: MemberConfig) {
+    this.logger.debug(memberConfig, OneSignal.name, this.unregister.name);
+    try {
+      if (memberConfig.platform === Platform.ios) {
+        const appId = await this.configsService.getConfig(ExternalConfigs.oneSignal.voipApiId);
+        const config = await this.configsService.getConfig(ExternalConfigs.oneSignal.voipApiKey);
+        this.findAndUnregister(memberConfig, appId, config);
+      }
+      const appId = await this.configsService.getConfig(ExternalConfigs.oneSignal.defaultApiId);
+      const config = await this.configsService.getConfig(ExternalConfigs.oneSignal.defaultApiKey);
+      this.findAndUnregister(memberConfig, appId, config);
+    } catch (ex) {
+      this.logger.error(memberConfig, OneSignal.name, this.unregister.name, ex);
     }
   }
 
@@ -199,5 +216,23 @@ export class OneSignal {
     }
 
     return {};
+  }
+
+  private async findAndUnregister(memberConfig, appId, config) {
+    const result = await this.httpService
+      .get(`${this.playersUrl}?app_id=${appId}`, {
+        headers: { Authorization: `Basic ${config}` },
+      })
+      .toPromise();
+    const [player] = result.data.players.filter(
+      (member) => member.external_user_id === memberConfig.externalUserId,
+    );
+    if (player) {
+      await this.httpService
+        .delete(`${this.playersUrl}/${player.id}?app_id=${appId}`, {
+          headers: { Authorization: `Basic ${config}` },
+        })
+        .toPromise();
+    }
   }
 }

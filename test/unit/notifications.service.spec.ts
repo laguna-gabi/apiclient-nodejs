@@ -8,6 +8,7 @@ import {
   generateSendOneSignalNotificationParams,
   generateSendSendBirdNotificationParams,
   generateSendTwilioNotificationParams,
+  mockGenerateMemberConfig,
 } from '../generators';
 
 describe('NotificationsService (offline)', () => {
@@ -26,6 +27,28 @@ describe('NotificationsService (offline)', () => {
   afterAll(async () => {
     await module.close();
     await dbDisconnect();
+  });
+
+  it('should register member for notification', async () => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const oneSignalSendMock = jest.spyOn(notificationsService.oneSignal, 'register');
+    oneSignalSendMock.mockResolvedValue(undefined);
+    const params = { token: v4(), externalUserId: v4() };
+    await notificationsService.register(params);
+    expect(oneSignalSendMock).toBeCalledWith(params);
+    oneSignalSendMock.mockReset();
+  });
+
+  it('should unregister member from notification', async () => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const oneSignalSendMock = jest.spyOn(notificationsService.oneSignal, 'unregister');
+    oneSignalSendMock.mockResolvedValue(undefined);
+    const memberConfig = mockGenerateMemberConfig();
+    await notificationsService.unregister(memberConfig);
+    expect(oneSignalSendMock).toBeCalledWith(memberConfig);
+    oneSignalSendMock.mockReset();
   });
 
   it('should send twilio notification', async () => {

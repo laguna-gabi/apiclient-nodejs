@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import { sub } from 'date-fns';
 import * as config from 'config';
+import { sub } from 'date-fns';
 import { cloneDeep } from 'lodash';
 import { Model, Types } from 'mongoose';
 import { v4 } from 'uuid';
@@ -10,6 +10,10 @@ import {
   ActionItem,
   ActionItemDocument,
   AppointmentCompose,
+  ArchiveMember,
+  ArchiveMemberConfig,
+  ArchiveMemberConfigDocument,
+  ArchiveMemberDocument,
   CreateMemberParams,
   CreateTaskParams,
   Goal,
@@ -20,6 +24,8 @@ import {
   MemberDocument,
   MemberSummary,
   NotNullableMemberKeys,
+  NotifyParams,
+  NotifyParamsDocument,
   Recording,
   RecordingDocument,
   RecordingOutput,
@@ -60,6 +66,12 @@ export class MemberService extends BaseService {
     private readonly appointmentModel: Model<AppointmentDocument>,
     @InjectModel(Recording.name)
     private readonly recordingModel: Model<RecordingDocument>,
+    @InjectModel(ArchiveMember.name)
+    private readonly archiveMemberModel: Model<ArchiveMemberDocument>,
+    @InjectModel(ArchiveMemberConfig.name)
+    private readonly archiveMemberConfigModel: Model<ArchiveMemberConfigDocument>,
+    @InjectModel(NotifyParams.name)
+    private readonly notifyParamsModel: Model<NotifyParamsDocument>,
     readonly logger: Logger,
   ) {
     super();
@@ -364,6 +376,27 @@ export class MemberService extends BaseService {
       delete newMember.member._id;
       return newMember.ScheduledOrDoneAppointmentsCount === 0;
     });
+  }
+
+  async moveMemberToArchive(id: string) {
+    const member = await this.get(id);
+    const memberConfig = await this.getMemberConfig(id);
+
+    await this.archiveMemberModel.insertMany(member);
+    await this.archiveMemberConfigModel.insertMany(memberConfig);
+    await this.memberModel.deleteOne({ _id: new Types.ObjectId(id) });
+    await this.memberConfigModel.deleteOne({ memberId: new Types.ObjectId(id) });
+
+    this.logger.debug({ memberId: id }, MemberService.name, this.moveMemberToArchive.name);
+    return { member, memberConfig };
+  }
+
+  /************************************************************************************************
+   ***************************************** Notifications ****************************************
+   ************************************************************************************************/
+
+  async getMemberNotifications(memberId: string) {
+    return this.notifyParamsModel.find({ memberId });
   }
 
   /*************************************************************************************************

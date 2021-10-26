@@ -16,6 +16,7 @@ import {
 } from '.';
 import {
   EventType,
+  IEventDeleteSchedules,
   IEventRequestAppointment,
   IEventUpdatedAppointment,
   InternalNotificationType,
@@ -118,6 +119,24 @@ export class AppointmentResolver extends AppointmentBase {
         this.handleRequestAppointment.name,
         ex,
       );
+    }
+  }
+
+  @OnEvent(EventType.deleteSchedules, { async: true })
+  async deleteSchedules(params: IEventDeleteSchedules) {
+    const { memberId } = params;
+    try {
+      const appointments = await this.appointmentService.getMemberScheduledAppointments(memberId);
+      appointments.forEach((appointment) => {
+        this.appointmentScheduler.deleteTimeout({
+          id: appointment.id + ReminderType.appointmentReminder,
+        });
+        this.appointmentScheduler.deleteTimeout({
+          id: appointment.id + ReminderType.appointmentLongReminder,
+        });
+      });
+    } catch (ex) {
+      this.logger.error(params, AppointmentResolver.name, this.deleteSchedules.name, ex);
     }
   }
 

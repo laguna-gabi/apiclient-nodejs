@@ -33,7 +33,7 @@ import {
   MemberService,
   TaskStatus,
 } from '../../src/member';
-import { NotificationsService, StorageService } from '../../src/providers';
+import { CognitoService, NotificationsService, StorageService } from '../../src/providers';
 import { UserService } from '../../src/user';
 import {
   dbDisconnect,
@@ -65,6 +65,7 @@ describe('MemberResolver', () => {
   let memberScheduler: MemberScheduler;
   let userService: UserService;
   let storage: StorageService;
+  let cognitoService: CognitoService;
   let communicationResolver: CommunicationResolver;
   let notificationsService: NotificationsService;
   let communicationService: CommunicationService;
@@ -80,6 +81,7 @@ describe('MemberResolver', () => {
     service = module.get<MemberService>(MemberService);
     userService = module.get<UserService>(UserService);
     storage = module.get<StorageService>(StorageService);
+    cognitoService = module.get<CognitoService>(CognitoService);
     notificationsService = module.get<NotificationsService>(NotificationsService);
     communicationResolver = module.get<CommunicationResolver>(CommunicationResolver);
     communicationService = module.get<CommunicationService>(CommunicationService);
@@ -303,6 +305,51 @@ describe('MemberResolver', () => {
       expect(spyOnServiceGet).toBeCalledTimes(1);
       expect(spyOnServiceGet).toBeCalledWith(undefined);
       expect(result).toEqual(appointmentComposes);
+    });
+  });
+
+  describe('archiveMember', () => {
+    let spyOnServiceMoveMemberToArchive;
+    let spyOnCognitoServiceDisableMember;
+    let spyOnCommunicationFreezeGroupChannel;
+    let spyOnNotificationsServiceUnregister;
+    beforeEach(() => {
+      spyOnServiceMoveMemberToArchive = jest.spyOn(service, 'moveMemberToArchive');
+      spyOnCognitoServiceDisableMember = jest.spyOn(cognitoService, 'disableMember');
+      spyOnCommunicationFreezeGroupChannel = jest.spyOn(communicationService, 'freezeGroupChannel');
+      spyOnNotificationsServiceUnregister = jest.spyOn(notificationsService, 'unregister');
+    });
+
+    afterEach(() => {
+      spyOnServiceMoveMemberToArchive.mockReset();
+      spyOnCognitoServiceDisableMember.mockReset();
+      spyOnCommunicationFreezeGroupChannel.mockReset();
+      spyOnNotificationsServiceUnregister.mockReset();
+      spyOnEventEmitter.mockReset();
+    });
+
+    it('should archive a member given an id', async () => {
+      const id = generateId();
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      spyOnServiceMoveMemberToArchive.mockImplementationOnce(async () => ({
+        member,
+        memberConfig,
+      }));
+      spyOnCognitoServiceDisableMember.mockImplementationOnce(() => undefined);
+      spyOnCommunicationFreezeGroupChannel.mockImplementationOnce(() => undefined);
+      spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
+
+      await resolver.archiveMember(id);
+
+      expect(spyOnServiceMoveMemberToArchive).toBeCalledWith(id);
+      expect(spyOnCognitoServiceDisableMember).toBeCalledWith(member.deviceId);
+      expect(spyOnCommunicationFreezeGroupChannel).toBeCalledWith({
+        memberId: id,
+        userId: member.primaryUserId,
+      });
+      expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteSchedules, { memberId: id });
     });
   });
 

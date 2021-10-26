@@ -26,6 +26,7 @@ export enum EventType {
   sendSmsToChat = 'sendSmsToChat',
   slackMessage = 'slackMessage',
   queueMessage = 'queueMessage',
+  deleteSchedules = 'deleteSchedules',
 }
 
 export interface IEventRequestAppointment {
@@ -101,4 +102,8 @@ export interface IEventSlackMessage {
 export interface IEventQueueMessage {
   type: QueueType;
   message: string;
+}
+
+export interface IEventDeleteSchedules {
+  memberId: string;
 }

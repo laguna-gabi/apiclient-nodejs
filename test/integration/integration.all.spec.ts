@@ -875,6 +875,7 @@ describe('Integration tests: all', () => {
 
     handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
   });
+
   describe('new member + member registration scheduling', () => {
     it('should create timeout on member creation', async () => {
       const org = await creators.createAndValidateOrg();
@@ -915,6 +916,33 @@ describe('Integration tests: all', () => {
         });
       await handler.mutations.scheduleAppointment({ appointmentParams: scheduleAppointmentParams });
 
+      expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(
+        expect.arrayContaining([member.id]),
+      );
+    });
+  });
+
+  describe('archive member', () => {
+    it('should archive member', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+
+      await handler.mutations.archiveMember({ id: member.id });
+
+      const memberResult = await handler.queries.getMember({ id: member.id });
+      await expect(memberResult).toEqual({
+        errors: [{ code: ErrorType.memberNotFound, message: Errors.get(ErrorType.memberNotFound) }],
+      });
+    });
+
+    it('should remove member scheduled notifications', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+      await delay(500);
+      expect(handler.schedulerRegistry.getTimeouts()).toEqual(expect.arrayContaining([member.id]));
+
+      await handler.mutations.archiveMember({ id: member.id });
+      await delay(500);
       expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(
         expect.arrayContaining([member.id]),
       );

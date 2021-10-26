@@ -1,5 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
+import { ConfigsService, OneSignal } from '.';
 import {
   AuditType,
   CancelNotificationParams,
@@ -8,9 +9,9 @@ import {
   SendSendBirdNotification,
   SendTwilioNotification,
 } from '../common';
+import { MemberConfig } from '../member';
 import { SendBird } from './sendBird';
 import { TwilioService } from './twilio.service';
-import { ConfigsService, OneSignal } from '.';
 
 @Injectable()
 export class NotificationsService {
@@ -34,6 +35,10 @@ export class NotificationsService {
     externalUserId: string;
   }): Promise<string | undefined> {
     return this.oneSignal.register({ token, externalUserId });
+  }
+
+  async unregister(memberConfig: MemberConfig) {
+    return this.oneSignal.unregister(memberConfig);
   }
 
   async send({

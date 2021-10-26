@@ -203,6 +203,28 @@ export class CommunicationService {
     return { count, memberId, userId: result.userId };
   }
 
+  async freezeGroupChannel({ memberId, userId }: { memberId: string; userId: string }) {
+    this.logger.debug(
+      { memberId, userId },
+      CommunicationService.name,
+      this.freezeGroupChannel.name,
+    );
+    const [communication] = await this.communicationModel.find({
+      memberId: new Types.ObjectId(memberId),
+      userId,
+    });
+    if (!communication) {
+      this.logger.warn(
+        { memberId, userId },
+        CommunicationService.name,
+        this.freezeGroupChannel.name,
+        Errors.get(ErrorType.communicationMemberUserNotFound),
+      );
+      return;
+    }
+    return this.sendBird.freezeGroupChannel(communication.sendBirdChannelUrl, true);
+  }
+
   getTwilioAccessToken() {
     return this.twilio.getAccessToken();
   }

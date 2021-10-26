@@ -677,4 +677,13 @@ describe('Validations - member', () => {
       });
     });
   });
+
+  describe('archiveMember', () => {
+    it('should throw error on non existing member', async () => {
+      await handler.mutations.archiveMember({
+        id: generateId(),
+        invalidFieldsErrors: [Errors.get(ErrorType.memberNotFound)],
+      });
+    });
+  });
 });

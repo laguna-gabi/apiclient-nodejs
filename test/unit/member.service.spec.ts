@@ -627,6 +627,30 @@ describe('MemberService', () => {
 
   describe('update', () => {
     it('should throw when trying to update non existing member', async () => {
+      await expect(service.moveMemberToArchive(generateId())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
+    });
+
+    // eslint-disable-next-line max-len
+    it('should move member and memberConfig from members and memberconfigs collection', async () => {
+      const memberId = await generateMember();
+      const member = await service.get(memberId);
+      const memberConfig = await service.getMemberConfig(memberId);
+
+      const result = await service.moveMemberToArchive(memberId);
+      expect(result.member).toEqual(member);
+      expect(result.memberConfig).toEqual(memberConfig);
+
+      await expect(service.get(memberId)).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+      await expect(service.getMemberConfig(memberId)).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
+    });
+  });
+
+  describe('update', () => {
+    it('should throw when trying to update non existing member', async () => {
       await expect(service.update({ id: generateId(), language: Language.es })).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );

@@ -39,7 +39,16 @@ export class MemberConfig {
 }
 
 /**************************************************************************************************
+ ********************************************* Archive ********************************************
+ *************************************************************************************************/
+
+@Schema({ versionKey: false, timestamps: true })
+export class ArchiveMemberConfig extends MemberConfig {}
+
+/**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 export type MemberConfigDocument = MemberConfig & Document;
 export const MemberConfigDto = SchemaFactory.createForClass(MemberConfig);
+export type ArchiveMemberConfigDocument = ArchiveMemberConfig & Document;
+export const ArchiveMemberConfigDto = SchemaFactory.createForClass(ArchiveMemberConfig);

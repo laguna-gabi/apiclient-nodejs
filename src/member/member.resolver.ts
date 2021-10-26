@@ -34,6 +34,7 @@ import {
   ErrorType,
   Errors,
   EventType,
+  IEventDeleteSchedules,
   IEventNotifyChatMessage,
   IEventSendSmsToChat,
   IEventUpdateMemberPlatform,
@@ -53,7 +54,7 @@ import {
   CommunicationService,
   GetCommunicationParams,
 } from '../communication';
-import { Bitly, NotificationsService, StorageService } from '../providers';
+import { Bitly, CognitoService, NotificationsService, StorageService } from '../providers';
 import { User, UserService } from '../user';
 
 @UseInterceptors(LoggingInterceptor)
@@ -65,6 +66,7 @@ export class MemberResolver extends MemberBase {
     private readonly notificationBuilder: NotificationBuilder,
     readonly eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
+    private readonly cognitoService: CognitoService,
     private readonly notificationsService: NotificationsService,
     readonly userService: UserService,
     readonly communicationService: CommunicationService,
@@ -126,6 +128,20 @@ export class MemberResolver extends MemberBase {
     @Args('orgId', { type: () => String, nullable: true }) orgId?: string,
   ) {
     return this.memberService.getMembersAppointments(orgId);
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async archiveMember(@Args('id', { type: () => String }) id: string) {
+    const { member, memberConfig } = await this.memberService.moveMemberToArchive(id);
+    await this.cognitoService.disableMember(member.deviceId);
+    await this.communicationService.freezeGroupChannel({
+      memberId: id,
+      userId: member.primaryUserId,
+    });
+    await this.notificationsService.unregister(memberConfig);
+
+    const params: IEventDeleteSchedules = { memberId: id };
+    this.eventEmitter.emit(EventType.deleteSchedules, params);
   }
 
   /*************************************************************************************************
@@ -277,6 +293,7 @@ export class MemberResolver extends MemberBase {
   /************************************************************************************************
    ***************************************** Notifications ****************************************
    ************************************************************************************************/
+
   @Mutation(() => Boolean, { nullable: true })
   @Roles(RoleTypes.Member, RoleTypes.User)
   async registerMemberForNotifications(
@@ -477,6 +494,20 @@ export class MemberResolver extends MemberBase {
       });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.sendSmsToChat.name, ex);
+    }
+  }
+
+  @OnEvent(EventType.deleteSchedules, { async: true })
+  async deleteSchedules(params: IEventDeleteSchedules) {
+    const { memberId } = params;
+    try {
+      const notifications = await this.memberService.getMemberNotifications(memberId);
+      notifications.forEach((notification) => {
+        this.memberScheduler.deleteTimeout({ id: notification._id });
+      });
+      this.memberScheduler.deleteTimeout({ id: memberId });
+    } catch (ex) {
+      this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, ex);
     }
   }
 

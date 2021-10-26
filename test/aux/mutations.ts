@@ -566,6 +566,22 @@ export class Mutations {
     );
   };
 
+  archiveMember = async ({
+    id,
+    invalidFieldsErrors,
+  }: { id?: string; invalidFieldsErrors?: string[] } = {}): Promise<Identifiers> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id: id },
+      mutation: gql`
+        mutation archiveMember($id: String!) {
+          archiveMember(id: $id)
+        }
+      `,
+    });
+
+    return this.isResultValid({ result, invalidFieldsErrors }) && result.data.archiveMember;
+  };
+
   notify = async ({
     notifyParams,
     missingFieldError,
