@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - develop
-      - master
+      - staging
   pull_request:
     branches:
       - develop
@@ -57,9 +57,28 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     needs: build-and-test
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging'
 
     steps:
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v5
+
+      - name: Accumulate NODE_ENV
+        id: branch_check
+        run: |
+          echo "Running on branch ${{ github.ref }}"
+          if [ "${{ steps.branch-name.outputs.current_branch }}" = "staging" ]; then
+            echo "::set-output name=env_name::production"
+          elif [ "${{ steps.branch-name.outputs.current_branch }}" = "develop" ]; then
+            echo "::set-output name=env_name::development"
+          fi
+
+      - name: Log environment vars
+        run: |
+          echo "current branch=${{ steps.branch-name.outputs.current_branch }}"
+          echo "current env_name=${{ steps.branch_check.outputs.env_name }}"
+
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -78,19 +97,19 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: hepius
+          ECR_REPOSITORY: hepius-${{ steps.branch-name.outputs.current_branch }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
           # Build a docker container and
           # push it to ECR so that it can
           # be deployed to ECS.
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG . --build-arg GIT_COMMIT=$IMAGE_TAG
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG . --build-arg GIT_COMMIT=$IMAGE_TAG --build-arg NODE_ENV=${{ steps.branch_check.outputs.env_name }}
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
       - name: Download task definition
         run: |
-          aws ecs describe-task-definition --task-definition fargate-task-hepius-develop \
+          aws ecs describe-task-definition --task-definition fargate-task-hepius-${{ steps.branch-name.outputs.current_branch }} \
           --query taskDefinition > task-definition.json
 
       - name: Fill in the new image ID in the Amazon ECS task definition
@@ -98,22 +117,22 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
-          container-name: hepius-develop-container
+          container-name: hepius-${{ steps.branch-name.outputs.current_branch }}-container
           image: ${{ steps.build-image.outputs.image }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: hepius-develop-service
-          cluster: cluster-hepius-develop
+          service: hepius-${{ steps.branch-name.outputs.current_branch }}-service
+          cluster: cluster-hepius-${{ steps.branch-name.outputs.current_branch }}
           wait-for-service-stability: true
 
   bump-version:
     name: 'Bump Version'
     runs-on: ubuntu-latest
     needs: deploy
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
     steps:
       - name: 'Checkout source code'
         uses: 'actions/checkout@v2'
