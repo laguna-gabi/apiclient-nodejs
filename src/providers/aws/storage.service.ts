@@ -1,16 +1,8 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import * as AWS from 'aws-sdk';
-import * as config from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
-import {
-  Environments,
-  EventType,
-  IEventNewMember,
-  Logger,
-  StorageType,
-  StorageUrlParams,
-} from '../../common';
+import { EventType, IEventNewMember, Logger, StorageType, StorageUrlParams } from '../../common';
 
 @Injectable()
 export class StorageService implements OnModuleInit {
@@ -20,10 +12,7 @@ export class StorageService implements OnModuleInit {
   constructor(readonly logger: Logger, private readonly configsService: ConfigsService) {}
 
   async onModuleInit(): Promise<void> {
-    this.bucket =
-      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? config.get('storage')
-        : await this.configsService.getConfig(ExternalConfigs.aws.memberBucketName);
+    this.bucket = await this.configsService.getConfig(ExternalConfigs.aws.memberBucketName);
   }
 
   @OnEvent(EventType.newMember, { async: true })

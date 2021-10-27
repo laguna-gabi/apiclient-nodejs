@@ -1,32 +1,42 @@
 import * as AWS from 'aws-sdk';
 import axios from 'axios';
-import * as config from 'config';
 import { EventEmitter2 } from 'eventemitter2';
 import * as faker from 'faker';
-import { Logger, Platform, StorageType } from '../../src/common';
+import { Environments, Logger, Platform, StorageType } from '../../src/common';
 import { ConfigsService, StorageService } from '../../src/providers';
 import { mockGenerateMember, mockGenerateUser } from '../generators';
 
 describe('live: aws', () => {
   describe('storage', () => {
     let storageService: StorageService;
-    const bucketName = config.get('storage');
+    let bucketName;
     const member = mockGenerateMember();
     member.id = `test-member-${new Date().getTime()}`;
     const s3 = new AWS.S3({ signatureVersion: 'v4', apiVersion: '2006-03-01' });
 
     beforeAll(async () => {
+      //not running on production as this test is too risky for that (we're emptyDir in afterAll)
+      if (process.env.NODE_ENV === Environments.production) {
+        return;
+      }
       const configService = new ConfigsService();
       const eventEmitter = new EventEmitter2();
       const logger = new Logger(eventEmitter);
       storageService = new StorageService(logger, configService);
       await storageService.onModuleInit();
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      bucketName = storageService.bucket;
 
       const user = mockGenerateUser();
       await storageService.handleNewMember({ member, user, platform: Platform.android });
     });
 
     afterAll(async () => {
+      //not running on production as this test is too risky for that (we're emptyDir in afterAll)
+      if (process.env.NODE_ENV === Environments.production) {
+        return;
+      }
       await Promise.all(
         Object.values(StorageType).map(async (type) => {
           await emptyDir(`public/${type}/${member.id}`);
@@ -34,13 +44,14 @@ describe('live: aws', () => {
       );
     });
 
-    //TODO values
-    //TODO values
-    //TODO values
-    //TODO values
     test.each(Object.values(StorageType))(
       `should upload+download a %p file from aws storage`,
       async (storageType) => {
+        //not running on production as this test is too risky for that (we're emptyDir in afterAll)
+        if (process.env.NODE_ENV === Environments.production) {
+          return;
+        }
+
         const params = { memberId: member.id, storageType, id: `${faker.lorem.word()}.mp4` };
         const uploadUrl = await storageService.getUploadUrl(params);
 
