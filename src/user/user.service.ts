@@ -150,6 +150,8 @@ export class UserService extends BaseService {
             id: { $arrayElemAt: ['$userAp._id', 0] },
             start: { $arrayElemAt: ['$userAp.start', 0] },
             method: { $arrayElemAt: ['$userAp.method', 0] },
+            memberId: { $arrayElemAt: ['$userAp.memberId', 0] },
+            userId: { $arrayElemAt: ['$userAp.userId', 0] },
             duration: `${defaultSlotsParams.duration}`,
           },
           ap: '$ap',
@@ -179,7 +181,9 @@ export class UserService extends BaseService {
     if (slotsObject.slots.length === 0) {
       slotsObject.slots = this.generateDefaultSlots();
       const params: IEventSlackMessage = {
-        message: `*No availability*\nUser ${userId} to fulfill slots request`,
+        message: `*No availability*\nUser ${
+          userId ? userId : slotsObject.appointment.userId
+        } doesn't have any availability left.`,
         icon: SlackIcon.warning,
         channel: SlackChannel.notifications,
       };

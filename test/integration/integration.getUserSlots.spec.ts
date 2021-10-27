@@ -132,7 +132,7 @@ describe('Integration tests : getUserSlots', () => {
 
     expect(result.slots.length).toEqual(6);
     expect(spyOnEventEmitter).toBeCalledWith(EventType.slackMessage, {
-      message: `*No availability*\nUser ${user.id} to fulfill slots request`,
+      message: `*No availability*\nUser ${user.id} doesn't have any availability left.`,
       icon: SlackIcon.warning,
       channel: SlackChannel.notifications,
     });
@@ -150,7 +150,7 @@ describe('Integration tests : getUserSlots', () => {
 
     expect(result.slots.length).toEqual(6);
     expect(spyOnEventEmitter).toBeCalledWith(EventType.slackMessage, {
-      message: `*No availability*\nUser ${user.id} to fulfill slots request`,
+      message: `*No availability*\nUser ${user.id} doesn't have any availability left.`,
       icon: SlackIcon.warning,
       channel: SlackChannel.notifications,
     });

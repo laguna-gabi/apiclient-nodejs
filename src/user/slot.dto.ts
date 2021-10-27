@@ -1,5 +1,6 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { IsDate, IsOptional } from 'class-validator';
+import { Types } from 'mongoose';
 import { UserRole } from '.';
 import { AppointmentMethod } from '../appointment';
 import { ErrorType, Errors, Identifier, IsUserIdOrAppointmentId } from '../common';
@@ -38,6 +39,12 @@ export class AppointmentSlotSummary extends Identifier {
 
   @Field(() => AppointmentMethod)
   method: AppointmentMethod;
+
+  @Field(() => String)
+  memberId: Types.ObjectId;
+
+  @Field(() => String)
+  userId: string;
 }
 
 @ObjectType()
