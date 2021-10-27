@@ -74,6 +74,7 @@ export const mockProviders = (
   const spyOnStorageUpload = jest.spyOn(storage, 'getUploadUrl');
   const spyOnStorageHandleNewMember = jest.spyOn(storage, 'handleNewMember');
   const spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
+  const spyOnNotificationsServiceUnregister = jest.spyOn(notificationsService, 'unregister');
   const spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
   const spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
   const spyOnTwilioGetToken = jest.spyOn(twilioService, 'getAccessToken');
@@ -89,6 +90,7 @@ export const mockProviders = (
   spyOnStorageUpload.mockResolvedValue('https://some-url/upload');
   spyOnStorageHandleNewMember.mockResolvedValue(undefined);
   spyOnNotificationsServiceRegister.mockResolvedValue(v4());
+  spyOnNotificationsServiceUnregister.mockResolvedValue(undefined);
   spyOnNotificationsServiceSend.mockResolvedValue(v4());
   spyOnNotificationsServiceCancel.mockResolvedValue(v4());
   spyOnTwilioGetToken.mockReturnValue('token');
