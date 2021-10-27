@@ -11,6 +11,7 @@ import { AuthService } from './auth/auth.service';
 import { AvailabilityModule } from './availability';
 import { Errors } from './common';
 import { CommunicationModule } from './communication';
+import { DailyReportModule } from './dailyReport/dailyReport.module';
 import { DbModule } from './db/db.module';
 import { HealthController } from './health/health.controller';
 import { MemberModule } from './member';
@@ -30,6 +31,7 @@ const badRequestException = 'Bad Request Exception';
     AppointmentModule,
     OrgModule,
     AvailabilityModule,
+    DailyReportModule,
     ProvidersModule,
     DbModule,
     TerminusModule,

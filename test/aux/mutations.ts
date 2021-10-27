@@ -1,6 +1,7 @@
 import { ApolloServerTestClient } from 'apollo-server-testing';
 import gql from 'graphql-tag';
 import { camelCase } from 'lodash';
+import { DailyReportCategoriesInput } from '../../src/dailyReport';
 import {
   Appointment,
   EndAppointmentParams,
@@ -651,6 +652,34 @@ export class Mutations {
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.updateRecording
     );
+  };
+
+  setDailyReportCategories = async ({
+    dailyReportCategoriesInput,
+  }: {
+    dailyReportCategoriesInput: DailyReportCategoriesInput;
+  }) => {
+    const result = await this.apolloClient.mutate({
+      variables: { dailyReportCategoriesInput },
+      mutation: gql`
+        mutation setDailyReportCategories(
+          $dailyReportCategoriesInput: DailyReportCategoriesInput!
+        ) {
+          setDailyReportCategories(dailyReportCategoriesInput: $dailyReportCategoriesInput) {
+            categories {
+              rank
+              category
+            }
+            memberId
+            date
+            statsOverThreshold
+          }
+        }
+      `,
+    });
+
+    const { errors, data } = result || {};
+    return { errors, updatedDailyReport: data?.setDailyReportCategories };
   };
 
   isResultValid = ({ result, invalidFieldsErrors, missingFieldError = undefined }): boolean => {

@@ -22,7 +22,7 @@ export function isAllowed(role: Roles, allowedRoles: Roles[]): boolean {
     return true;
   }
 
-  // if we have an allowed rp;e which has a lower weight we consider our role as allowed
+  // if we have an allowed role which has a lower weight we consider our role as allowed
   return allowedRoles.some((element) => {
     if (SystemRoles[element].weight <= SystemRoles[role].weight) return true;
     else return false;

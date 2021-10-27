@@ -39,7 +39,7 @@ describe('RBAC', () => {
       [Roles.User, Roles.Anonymous],
       true,
     ],
-  ])('should successfully create an org', async (message, role, annotatedRoles, expected) => {
+  ])('%p', async (message, role, annotatedRoles, expected) => {
     expect(isAllowed(role, annotatedRoles)).toBe(expected);
   });
 });

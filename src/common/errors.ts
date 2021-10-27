@@ -32,6 +32,7 @@ export enum ErrorType {
   memberInvalidHonorific = 9214,
   memberRecordingIdAlreadyExists = 9215,
   memberRegisterWebPlatform = 9216,
+
   // Notifications
   notificationMetadataInvalid = 9270,
   notificationMemberPlatformWeb = 9271,
@@ -56,6 +57,10 @@ export enum ErrorType {
 
   // Module communication errors
   communicationMemberUserNotFound = 9601,
+
+  // Module Daily Report
+  dailyReportQueryDateInvalid = 9701,
+  dailyReportMutationDateInvalid = 9702,
 }
 
 const nameFormat = `name must be between ${graphqlConfig.get('minLength')} and ${graphqlConfig.get(
@@ -131,6 +136,9 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.orgTrialDurationOutOfRange.valueOf(), 'trialDuration must not be less than 1'],
   [ErrorType.availabilityNotFound.valueOf(), 'availability id was not found'],
   [ErrorType.communicationMemberUserNotFound.valueOf(), 'member-user communication was not found'],
+
+  [ErrorType.dailyReportQueryDateInvalid.valueOf(), 'daily report query - invalid date format'],
+  [ErrorType.dailyReportMutationDateInvalid.valueOf(), 'daily report query - invalid date format'],
 ]);
 
 export const DbErrors = {

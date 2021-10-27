@@ -54,6 +54,7 @@
     "newRegisteredMember": "Welcome to Laguna Health. To get started on your recovery journey schedule a meeting with your coach here",
     "newRegisteredMemberNudge": "Friendly reminder from @user.firstName@ at Laguna Health. I'm looking forward to supporting you on your recovery journey. To get started schedule your first visit here",
     "newChatMessage": "You have a new message from @user.firstName@",
+    "memberNotFeelingWellMessage": "Your member, @member.honorific@ @member.lastName@, logged a score that requires your attention",
     "honorific": {
       "mr": "Mr",
       "mrs": "Mrs",
@@ -63,6 +64,12 @@
       "dr": "Dr",
       "reverend": "Reverend"
     }
+  },
+  "general": {
+    "dateFormatString": "yyyy/MM/dd"
+  },
+  "dailyReport": {
+    "thresholdIndicator": 3
   },
   "articlesByDrg": {
     "000": "articles/cardiac/cardiac",

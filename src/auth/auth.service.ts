@@ -21,11 +21,18 @@ export class AuthService {
       const user = await this.userSecurityService.getUserByAuthId(decodedToken.sub);
 
       if (user) {
-        return { role: Roles.User };
+        return {
+          // TODO: utilize user roles for RBAC
+          ...user.toObject(),
+          role: Roles.User,
+        };
       } else {
         const member = await this.userSecurityService.getMemberByAuthId(decodedToken.sub);
         if (member) {
-          return { role: Roles.Member };
+          return {
+            ...member.toObject(),
+            role: Roles.Member,
+          };
         }
       }
     }
