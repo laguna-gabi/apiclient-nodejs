@@ -1,7 +1,7 @@
-import { Body, Controller, Headers, Post } from '@nestjs/common';
+import { Body, Controller, HttpException, HttpStatus, Post } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Public } from '../auth/decorators/public.decorator';
 import { TwilioService } from '.';
+import { Public } from '../auth/decorators/public.decorator';
 import {
   EventType,
   IEventNotifyChatMessage,
@@ -40,11 +40,11 @@ export class WebhooksController {
     }
   }
 
+  @Public()
   @Post('twilio/incoming-sms')
-  async incomingSms(@Body() body, @Headers('X-Twilio-Signature') signature) {
-    if ('From' in body && 'Body' in body && signature) {
+  async incomingSms(@Body() body) {
+    if (this.twilioService.validateWebhook(body.Token)) {
       this.logger.debug(body, WebhooksController.name, this.incomingSms.name);
-
       this.eventEmitter.emit(EventType.sendSmsToChat, {
         phone: body.From,
         message: body.Body,
@@ -57,6 +57,7 @@ export class WebhooksController {
         channel: SlackChannel.notifications,
       };
       this.eventEmitter.emit(EventType.slackMessage, params);
+      throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
     }
   }
 }
