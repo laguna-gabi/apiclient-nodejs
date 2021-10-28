@@ -12,50 +12,59 @@ on:
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 3
     steps:
-      - name: Check out Git repository
+      - name: Checkout Git repository
         uses: actions/checkout@v2
-      - name: Install Node.js dependencies
-        run: yarn
+      - name: Install node v16
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - name: Install yarn
+        run: npm install -g yarn
+      - name: Install project dependencies
+        run: yarn install --frozen-lockfile
       - name: Run linters
         run: yarn lint
 
   build-and-test:
     name: Build and Test
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v2
-      - name: install node v16
+      - name: Checkout Git repository
+        uses: actions/checkout@v2
+      - name: Install node v16        
         uses: actions/setup-node@v2
         with:
           node-version: 16
-      - name: install
-        run: yarn install
-      - name: build
+      - name: Install yarn
+        run: npm install -g yarn
+      - name: Install project dependencies       
+        run: yarn install --frozen-lockfile
+      - name: Build project
         run: yarn build
-      - name: Run docker image with mongodb
-        run: docker-compose up -d
+      - name: Start docker image with mongodb to localhost and test db (if not exists)
+        run: docker-compose -f docker-compose.yml up -d
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-      - name: unit test
+          aws-region: us-east-1    
+      - name: Unit tests
         run: yarn test
-      - name: validation test
+      - name: Validation tests
         run: yarn test:validation
-      - name: integration test
+      - name: Integration tests
         run: yarn test:integration
-      - name: live test
+      - name: Live tests
         run: yarn test:live
 
   deploy:
     name: Deploy
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: build-and-test
     if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging'
 
@@ -73,13 +82,11 @@ jobs:
           elif [ "${{ steps.branch-name.outputs.current_branch }}" = "develop" ]; then
             echo "::set-output name=env_name::development"
           fi
-
       - name: Log environment vars
         run: |
           echo "current branch=${{ steps.branch-name.outputs.current_branch }}"
           echo "current env_name=${{ steps.branch_check.outputs.env_name }}"
-
-      - name: Checkout
+      - name: Checkout Git repository
         uses: actions/checkout@v2
 
       - name: Configure AWS credentials
@@ -106,12 +113,10 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG . --build-arg GIT_COMMIT=$IMAGE_TAG --build-arg NODE_ENV=${{ steps.branch_check.outputs.env_name }}
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-
       - name: Download task definition
         run: |
           aws ecs describe-task-definition --task-definition fargate-task-hepius-${{ steps.branch-name.outputs.current_branch }} \
           --query taskDefinition > task-definition.json
-
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -129,27 +134,27 @@ jobs:
           wait-for-service-stability: true
 
   bump-version:
-    name: 'Bump Version'
+    name: Bump Version
     runs-on: ubuntu-latest
     needs: deploy
     if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
     steps:
-      - name: 'Checkout source code'
-        uses: 'actions/checkout@v2'
+      - name: Checkout Git repository
+        uses: actions/checkout@v2
         with:
           ref: ${{ github.ref }}
-      - name: 'cat package.json'
+      - name: cat package.json
         run: cat ./package.json
-      - name: 'Automated Version Bump'
+      - name: Automated Version Bump
         id: version-bump
-        uses: 'phips28/gh-action-bump-version@master'
+        uses: phips28/gh-action-bump-version@master
         with:
           tag-prefix: 'v'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: 'cat package.json'
+      - name: cat package.json
         run: cat ./package.json
-      - name: 'Output Step'
+      - name: Output Step
         env:
           NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
         run: echo "new tag $NEW_TAG"

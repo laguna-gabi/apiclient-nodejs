@@ -1,28 +1,22 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import axios from 'axios';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
 import { AppointmentStatus } from '../../src/appointment';
-import { SendSendBirdNotification, NotificationType } from '../../src/common';
+import { Logger, NotificationType, SendSendBirdNotification } from '../../src/common';
 import { CreateSendbirdGroupChannelParams } from '../../src/communication';
-import { SendBird } from '../../src/providers';
+import { ConfigsService, SendBird } from '../../src/providers';
 import { UserRole } from '../../src/user';
-import { dbDisconnect, defaultModules } from '../common';
 import { generateId } from '../generators';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('live: sendbird actions', () => {
-  let module: TestingModule;
   let sendBird: SendBird;
 
   beforeAll(async () => {
-    module = await Test.createTestingModule({ imports: defaultModules() }).compile();
-    sendBird = module.get<SendBird>(SendBird);
+    const configService = new ConfigsService();
+    const logger = new Logger(new EventEmitter2());
+    sendBird = new SendBird(configService, logger);
     await sendBird.onModuleInit();
-  });
-
-  afterAll(async () => {
-    await module.close();
-    await dbDisconnect();
   });
 
   /**

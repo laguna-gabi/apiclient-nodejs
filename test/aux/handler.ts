@@ -109,7 +109,7 @@ export class Handler {
     this.notificationsService.spyOnNotificationsServiceCancel.mockReset();
     this.twilioService.spyOnTwilioGetToken.mockReset();
     this.slackBot.spyOnSlackBotSendMessage.mockReset();
-    this.spyOnGetCommunicationService.mockReset();
+    this.spyOnGetCommunicationService?.mockReset();
 
     await dbDisconnect();
   }
