@@ -246,20 +246,50 @@ export class UserService extends BaseService {
   async getAvailableUser(): Promise<string> {
     const users = await this.userModel.aggregate([
       {
-        $lookup: {
-          from: 'members',
-          localField: '_id',
-          foreignField: 'users',
-          as: 'member',
+        $match: {
+          maxCustomers: { $ne: 0 }, // users with maxCustomers = 0 should not get members
         },
       },
       ...(process.env.NODE_ENV === Environments.production ||
       process.env.NODE_ENV === Environments.development
         ? []
         : [{ $limit: 10 }]),
-      { $project: { members: { $size: '$member' } } },
-      { $sort: { members: 1 } },
+      {
+        $lookup: {
+          from: 'members',
+          localField: '_id',
+          foreignField: 'primaryUserId',
+          as: 'member',
+        },
+      },
+      {
+        $project: {
+          members: { $size: '$member' },
+          lastMemberAssignedAt: '$lastMemberAssignedAt',
+          maxCustomers: '$maxCustomers',
+        },
+      },
+      { $sort: { lastMemberAssignedAt: 1 } },
     ]);
+    for (let index = 0; index < users.length; index++) {
+      if (users[index].maxCustomers > users[index].members) {
+        await this.userModel.updateOne(
+          { _id: users[index]._id },
+          { $set: { lastMemberAssignedAt: new Date() } },
+        );
+        return users[index]._id;
+      }
+    }
+    const params: IEventSlackMessage = {
+      message: `*NO AVAILABLE USERS*\nAll users are fully booked.`,
+      icon: SlackIcon.warning,
+      channel: SlackChannel.notifications,
+    };
+    this.eventEmitter.emit(EventType.slackMessage, params);
+    await this.userModel.updateOne(
+      { _id: users[0]._id },
+      { $set: { lastMemberAssignedAt: new Date() } },
+    );
     return users[0]._id;
   }
 

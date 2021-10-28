@@ -1,3 +1,4 @@
+import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, model } from 'mongoose';
 import { v4 } from 'uuid';
@@ -23,16 +24,19 @@ import {
 describe('UserService', () => {
   let module: TestingModule;
   let service: UserService;
+  let mockUserModel;
   let userModel: Model<typeof UserDto>;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: defaultModules().concat(UserModule, AppointmentModule),
+      providers: [{ provide: getModelToken(User.name), useValue: Model }],
     }).compile();
 
     service = module.get<UserService>(UserService);
 
     userModel = model(User.name, UserDto);
+    mockUserModel = module.get<Model<User>>(getModelToken(User.name));
 
     await dbConnect();
   });
@@ -125,6 +129,53 @@ describe('UserService', () => {
       await expect(service.insert(user)).rejects.toThrow(
         Errors.get(ErrorType.userIdOrEmailAlreadyExists),
       );
+    });
+
+    it.each([
+      {
+        users: [
+          { _id: 'test1', members: 0, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
+          { _id: 'test2', members: 0, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
+          { _id: 'test3', members: 0, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
+        ],
+        userId: 'test1',
+      },
+      {
+        users: [
+          { _id: 'test1', members: 1, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
+          { _id: 'test2', members: 0, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
+          { _id: 'test3', members: 0, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
+        ],
+        userId: 'test2',
+      },
+      {
+        users: [
+          { _id: 'test1', members: 1, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
+          { _id: 'test2', members: 1, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
+          { _id: 'test3', members: 0, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
+        ],
+        userId: 'test3',
+      },
+      {
+        users: [
+          { _id: 'test1', members: 1, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
+          { _id: 'test2', members: 0, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
+          { _id: 'test3', members: 1, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
+        ],
+        userId: 'test2',
+      },
+      {
+        users: [
+          { _id: 'test1', members: 1, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
+          { _id: 'test2', members: 1, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
+          { _id: 'test3', members: 1, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
+        ],
+        userId: 'test1',
+      },
+    ])('should get available user', async ({ users, userId }) => {
+      jest.spyOn(mockUserModel, 'aggregate').mockResolvedValue(users);
+      const result = await service.getAvailableUser();
+      expect(result).toEqual(userId);
     });
   });
 

@@ -339,7 +339,7 @@ export class Member extends Identifier {
   @Field(() => Org)
   org: Org;
 
-  @Prop(() => String)
+  @Prop({ index: true })
   @Field(() => String, { description: 'primary user id' })
   primaryUserId: string;
 

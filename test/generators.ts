@@ -113,6 +113,7 @@ export const mockGenerateUser = (): User => {
     createdAt: faker.date.past(1),
     phone: generatePhone(),
     authId: v4(),
+    lastMemberAssignedAt: new Date(0),
   };
 };
 
