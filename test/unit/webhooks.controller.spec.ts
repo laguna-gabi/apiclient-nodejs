@@ -27,6 +27,7 @@ describe('WebhooksController', () => {
     twilioService = module.get<TwilioService>(TwilioService);
     configsService = module.get<ConfigsService>(ConfigsService);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
+    jest.spyOn(controller, 'validateMessageSentFromSendbird').mockImplementation();
   });
 
   afterAll(async () => {
@@ -40,7 +41,7 @@ describe('WebhooksController', () => {
     });
 
     it('should generate an event with a normal new message payload', async () => {
-      await controller.sendbird(sendBirdNewMessagePayload);
+      await controller.sendbird(JSON.stringify(sendBirdNewMessagePayload), {});
 
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyChatMessage, {
         senderUserId: sendBirdNewMessagePayload.sender.user_id,
@@ -49,7 +50,7 @@ describe('WebhooksController', () => {
     });
 
     it('should NOT generate an event with an admin message payload', async () => {
-      await controller.sendbird(sendBirdAdminMessagePayload);
+      await controller.sendbird(JSON.stringify(sendBirdAdminMessagePayload), {});
       expect(spyOnEventEmitter).not.toHaveBeenCalled();
     });
 

@@ -21,6 +21,7 @@ export const ExternalConfigs = {
   sendbird: {
     apiId: 'sendbird.apiId',
     apiToken: 'sendbird.apiToken',
+    masterApiToken: 'sendbird.masterApiToken',
   },
   slack: {
     url: 'slack.url',

@@ -13,6 +13,7 @@ enum suffix {
 export class SendBird implements OnModuleInit {
   private appId;
   private appToken;
+  private masterApiToken;
   public basePath;
   public headers;
 
@@ -21,6 +22,9 @@ export class SendBird implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     this.appId = await this.configsService.getConfig(ExternalConfigs.sendbird.apiId);
     this.appToken = await this.configsService.getConfig(ExternalConfigs.sendbird.apiToken);
+    this.masterApiToken = await this.configsService.getConfig(
+      ExternalConfigs.sendbird.masterApiToken,
+    );
     this.basePath = `https://api-${this.appId}.sendbird.com/v3/`;
     this.headers = { 'Api-Token': this.appToken };
   }
@@ -94,6 +98,10 @@ export class SendBird implements OnModuleInit {
 
   getAppToken() {
     return this.appToken;
+  }
+
+  getMasterAppToken() {
+    return this.masterApiToken;
   }
 
   private async update(

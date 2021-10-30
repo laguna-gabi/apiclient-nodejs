@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -10,8 +10,9 @@ import { UserSecurityModule } from './auth/auth.security.module';
 import { AuthService } from './auth/auth.service';
 import { AvailabilityModule } from './availability';
 import { Errors } from './common';
+import { JsonBodyMiddleware, RawBodyMiddleware } from './common';
 import { CommunicationModule } from './communication';
-import { DailyReportModule } from './dailyReport/dailyReport.module';
+import { DailyReportModule } from './dailyReport';
 import { DbModule } from './db/db.module';
 import { HealthController } from './health/health.controller';
 import { MemberModule } from './member';
@@ -59,4 +60,15 @@ const badRequestException = 'Bad Request Exception';
   controllers: [HealthController],
   providers: [AuthService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  public configure(consumer: MiddlewareConsumer): void {
+    consumer
+      .apply(RawBodyMiddleware)
+      .forRoutes({
+        path: '/api/webhooks/sendbird',
+        method: RequestMethod.POST,
+      })
+      .apply(JsonBodyMiddleware)
+      .forRoutes('*');
+  }
+}

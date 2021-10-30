@@ -9,7 +9,7 @@ import { AllExceptionsFilter, Logger, internalLogs } from './common';
 import { MemberScheduler } from './member';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { logger: false });
+  const app = await NestFactory.create(AppModule, { logger: false, bodyParser: false });
 
   app.enableCors();
 
