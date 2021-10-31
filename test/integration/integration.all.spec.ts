@@ -949,6 +949,37 @@ describe('Integration tests: all', () => {
     });
   });
 
+  describe('delete member', () => {
+    it('should delete member', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+      const appointment = await creators.createAndValidateAppointment({ member });
+
+      await handler.mutations.deleteMember({ id: member.id });
+      await delay(500);
+
+      const memberResult = await handler.queries.getMember({ id: member.id });
+      await expect(memberResult).toEqual({
+        errors: [{ code: ErrorType.memberNotFound, message: Errors.get(ErrorType.memberNotFound) }],
+      });
+      const appointmentReult = await handler.queries.getAppointment(appointment.id);
+      expect(appointmentReult).toBeNull();
+    });
+
+    it('should remove member scheduled notifications', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+      await delay(500);
+      expect(handler.schedulerRegistry.getTimeouts()).toEqual(expect.arrayContaining([member.id]));
+
+      await handler.mutations.deleteMember({ id: member.id });
+      await delay(500);
+      expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(
+        expect.arrayContaining([member.id]),
+      );
+    });
+  });
+
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

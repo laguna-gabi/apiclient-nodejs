@@ -96,6 +96,23 @@ export class SendBird implements OnModuleInit {
       .toPromise();
   }
 
+  async deleteGroupChannel(channelUrl: string) {
+    await this.httpService
+      .delete(`${this.basePath}${suffix.groupChannels}/${channelUrl}`, {
+        headers: this.headers,
+      })
+      .toPromise();
+  }
+
+  // userId from sendBird not users
+  async deleteUser(userId: string) {
+    await this.httpService
+      .delete(`${this.basePath}${suffix.users}/${userId}`, {
+        headers: this.headers,
+      })
+      .toPromise();
+  }
+
   getAppToken() {
     return this.appToken;
   }

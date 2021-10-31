@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import * as config from 'config';
 import { Model, Types } from 'mongoose';
@@ -261,5 +261,17 @@ export class AppointmentService extends BaseService {
       memberId: new Types.ObjectId(memberId),
       status: AppointmentStatus.scheduled,
     });
+  }
+
+  @OnEvent(EventType.deleteMember, { async: true })
+  async deleteMemberAppointments(id) {
+    const appointments = await this.appointmentModel.find({ memberId: new Types.ObjectId(id) });
+    for (let index = 0; index < appointments.length; index++) {
+      if (appointments[index].notes) {
+        await this.notesModel.deleteOne({ _id: appointments[index].notes });
+      }
+    }
+    await this.appointmentModel.deleteMany({ memberId: new Types.ObjectId(id) });
+    this.eventEmitter.emit(EventType.removeAppointmentsFromUser, appointments);
   }
 }

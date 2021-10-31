@@ -57,4 +57,40 @@ export class StorageService implements OnModuleInit {
     //expires in 30 minutes
     return this.s3.getSignedUrlPromise('putObject', { ...params, Expires: 0.5 * 60 * 60 });
   }
+
+  async deleteMember(id: string) {
+    this.logger.debug(id, StorageService.name, this.deleteMember.name);
+    try {
+      await Promise.all(
+        Object.values(StorageType).map(async (type) => {
+          await this.emptyDirectory(`public/${type}/${id}/`);
+        }),
+      );
+    } catch (ex) {
+      this.logger.error(id, StorageService.name, this.deleteMember.name, ex);
+    }
+  }
+
+  private async emptyDirectory(dir) {
+    const listParams = {
+      Bucket: this.bucket,
+      Prefix: dir,
+    };
+    const listedObjects = await this.s3.listObjectsV2(listParams).promise();
+
+    if (listedObjects.Contents.length === 0) return;
+
+    const deleteParams = {
+      Bucket: this.bucket,
+      Delete: { Objects: [] },
+    };
+    listedObjects.Contents.forEach(({ Key }) => {
+      deleteParams.Delete.Objects.push({ Key });
+    });
+    await this.s3.deleteObjects(deleteParams).promise();
+
+    if (listedObjects.IsTruncated) {
+      await this.emptyDirectory(dir);
+    }
+  }
 }

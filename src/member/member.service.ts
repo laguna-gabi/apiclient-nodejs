@@ -35,7 +35,7 @@ import {
   UpdateRecordingParams,
   UpdateTaskStatusParams,
 } from '.';
-import { Appointment, AppointmentDocument } from '../appointment';
+import { Appointment } from '../appointment';
 import {
   AppointmentStatus,
   BaseService,
@@ -62,8 +62,6 @@ export class MemberService extends BaseService {
     private readonly actionItemModel: Model<ActionItemDocument>,
     @InjectModel(MemberConfig.name)
     private readonly memberConfigModel: Model<MemberConfigDocument>,
-    @InjectModel(Appointment.name)
-    private readonly appointmentModel: Model<AppointmentDocument>,
     @InjectModel(Recording.name)
     private readonly recordingModel: Model<RecordingDocument>,
     @InjectModel(ArchiveMember.name)
@@ -390,6 +388,25 @@ export class MemberService extends BaseService {
     await this.memberConfigModel.deleteOne({ memberId: new Types.ObjectId(id) });
 
     this.logger.debug({ memberId: id }, MemberService.name, this.moveMemberToArchive.name);
+    return { member, memberConfig };
+  }
+
+  async deleteMember(id: string) {
+    const member = await this.get(id);
+    const memberConfig = await this.getMemberConfig(id);
+
+    await this.memberModel.deleteOne({ _id: new Types.ObjectId(id) });
+    await this.memberConfigModel.deleteOne({ memberId: new Types.ObjectId(id) });
+
+    for (let index = 0; index < member.goals.length; index++) {
+      await this.goalModel.deleteOne({ _id: member.goals[index] });
+    }
+    for (let index = 0; index < member.actionItems.length; index++) {
+      await this.actionItemModel.deleteOne({ _id: member.actionItems[index] });
+    }
+    await this.recordingModel.deleteMany({ memberId: new Types.ObjectId(id) });
+
+    this.logger.debug({ memberId: id }, MemberService.name, this.deleteMember.name);
     return { member, memberConfig };
   }
 

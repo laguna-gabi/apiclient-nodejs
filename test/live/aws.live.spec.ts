@@ -1,4 +1,3 @@
-import * as AWS from 'aws-sdk';
 import axios from 'axios';
 import { EventEmitter2 } from 'eventemitter2';
 import * as faker from 'faker';
@@ -12,7 +11,6 @@ describe('live: aws', () => {
     let bucketName;
     const member = mockGenerateMember();
     member.id = `test-member-${new Date().getTime()}`;
-    const s3 = new AWS.S3({ signatureVersion: 'v4', apiVersion: '2006-03-01' });
 
     beforeAll(async () => {
       //not running on production as this test is too risky for that (we're emptyDir in afterAll)
@@ -39,7 +37,9 @@ describe('live: aws', () => {
       }
       await Promise.all(
         Object.values(StorageType).map(async (type) => {
-          await emptyDir(`public/${type}/${member.id}`);
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          await storageService.emptyDirectory(`public/${type}/${member.id}`);
         }),
       );
     });
@@ -80,25 +80,5 @@ describe('live: aws', () => {
         expect(statusDownload).toEqual(200);
       },
     );
-
-    async function emptyDir(dir: string) {
-      const listParams = { Bucket: bucketName, Prefix: dir };
-
-      const listedObjects = await s3.listObjectsV2(listParams).promise();
-      if (listedObjects.Contents.length === 0) {
-        return;
-      }
-
-      const deleteParams = { Bucket: bucketName, Delete: { Objects: [] } };
-
-      listedObjects.Contents.forEach(({ Key }) => {
-        deleteParams.Delete.Objects.push({ Key });
-      });
-      await s3.deleteObjects(deleteParams).promise();
-
-      if (listedObjects.IsTruncated) {
-        await emptyDir(dir);
-      }
-    }
   });
 });

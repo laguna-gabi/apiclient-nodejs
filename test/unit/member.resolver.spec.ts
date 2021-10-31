@@ -363,6 +363,77 @@ describe('MemberResolver', () => {
     });
   });
 
+  describe('deleteMember', () => {
+    let spyOnServiceDeleteMember;
+    let spyOnUserServiceRemoveAppointmentsFromUser;
+    let spyOnCommunicationGetMemberUserCommunication;
+    let spyOnCommunicationDeleteCommunication;
+    let spyOnNotificationsServiceUnregister;
+    let spyOnCognitoServiceDeleteMember;
+    let spyOnStorageServiceDeleteMember;
+
+    beforeEach(() => {
+      spyOnServiceDeleteMember = jest.spyOn(service, 'deleteMember');
+      spyOnUserServiceRemoveAppointmentsFromUser = jest.spyOn(
+        userService,
+        'removeAppointmentsFromUser',
+      );
+      spyOnCommunicationGetMemberUserCommunication = jest.spyOn(
+        communicationService,
+        'getMemberUserCommunication',
+      );
+      spyOnCommunicationDeleteCommunication = jest.spyOn(
+        communicationService,
+        'deleteCommunication',
+      );
+      spyOnNotificationsServiceUnregister = jest.spyOn(notificationsService, 'unregister');
+      spyOnCognitoServiceDeleteMember = jest.spyOn(cognitoService, 'deleteMember');
+      spyOnStorageServiceDeleteMember = jest.spyOn(storage, 'deleteMember');
+    });
+
+    afterEach(() => {
+      spyOnServiceDeleteMember.mockReset();
+      spyOnUserServiceRemoveAppointmentsFromUser.mockReset();
+      spyOnCommunicationGetMemberUserCommunication.mockReset();
+      spyOnCommunicationDeleteCommunication.mockReset();
+      spyOnCognitoServiceDeleteMember.mockReset();
+      spyOnNotificationsServiceUnregister.mockReset();
+      spyOnStorageServiceDeleteMember.mockReset();
+      spyOnEventEmitter.mockReset();
+    });
+
+    it('', async () => {
+      const id = generateId();
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const appointments = [generateAppointmentComposeParams(), generateAppointmentComposeParams()];
+      const communication = generateCommunication({
+        memberId: new Types.ObjectId(id),
+        userId: member.primaryUserId,
+      });
+      spyOnServiceDeleteMember.mockImplementationOnce(async () => ({
+        member,
+        memberConfig,
+        appointments,
+      }));
+      spyOnUserServiceRemoveAppointmentsFromUser.mockImplementationOnce(() => undefined);
+      spyOnCommunicationGetMemberUserCommunication.mockImplementationOnce(() => communication);
+      spyOnCommunicationDeleteCommunication.mockImplementationOnce(() => undefined);
+      spyOnCognitoServiceDeleteMember.mockImplementationOnce(() => undefined);
+      spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
+      spyOnStorageServiceDeleteMember.mockImplementationOnce(() => undefined);
+
+      await resolver.deleteMember(id);
+
+      expect(spyOnCommunicationDeleteCommunication).toBeCalledWith(communication);
+      expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
+      expect(spyOnCognitoServiceDeleteMember).toBeCalledWith(member.deviceId);
+      expect(spyOnStorageServiceDeleteMember).toBeCalledWith(id);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteMember, id);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteSchedules, { memberId: id });
+    });
+  });
+
   describe('getMemberUploadDischargeDocumentsLinks', () => {
     let spyOnServiceGet;
     let spyOnStorage;

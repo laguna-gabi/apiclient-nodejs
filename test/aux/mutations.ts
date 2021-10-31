@@ -583,6 +583,22 @@ export class Mutations {
     return this.isResultValid({ result, invalidFieldsErrors }) && result.data.archiveMember;
   };
 
+  deleteMember = async ({
+    id,
+    invalidFieldsErrors,
+  }: { id?: string; invalidFieldsErrors?: string[] } = {}): Promise<Identifiers> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id: id },
+      mutation: gql`
+        mutation deleteMember($id: String!) {
+          deleteMember(id: $id)
+        }
+      `,
+    });
+
+    return this.isResultValid({ result, invalidFieldsErrors }) && result.data.deleteMember;
+  };
+
   notify = async ({
     notifyParams,
     missingFieldError,

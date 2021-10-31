@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import * as config from 'config';
 import { format, sub } from 'date-fns';
@@ -11,8 +12,7 @@ import {
   DailyReportQueryInput,
   DailyReportsMetadata,
 } from '.';
-import { BaseService } from '../common';
-
+import { BaseService, EventType } from '../common';
 @Injectable()
 export class DailyReportService extends BaseService {
   constructor(
@@ -169,5 +169,10 @@ export class DailyReportService extends BaseService {
       },
       { $set: { notificationSent: true } },
     );
+  }
+
+  @OnEvent(EventType.deleteMember, { async: true })
+  async deleteDailyReports(id) {
+    await this.dailyReport.deleteMany({ memberId: new Types.ObjectId(id) });
   }
 }

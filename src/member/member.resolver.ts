@@ -130,16 +130,45 @@ export class MemberResolver extends MemberBase {
     return this.memberService.getMembersAppointments(orgId);
   }
 
+  /*************************************************************************************************
+   ************************************ internal admin mutations ***********************************
+   ************************************************************************************************/
+
   @Mutation(() => Boolean, { nullable: true })
   async archiveMember(@Args('id', { type: () => String }) id: string) {
     const { member, memberConfig } = await this.memberService.moveMemberToArchive(id);
-    await this.cognitoService.disableMember(member.deviceId);
     await this.communicationService.freezeGroupChannel({
       memberId: id,
       userId: member.primaryUserId,
     });
     await this.notificationsService.unregister(memberConfig);
+    await this.cognitoService.disableMember(member.deviceId);
 
+    const params: IEventDeleteSchedules = { memberId: id };
+    this.eventEmitter.emit(EventType.deleteSchedules, params);
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async deleteMember(@Args('id', { type: () => String }) id: string) {
+    const { member, memberConfig } = await this.memberService.deleteMember(id);
+    const communication = await this.communicationService.getMemberUserCommunication({
+      memberId: id,
+      userId: member.primaryUserId,
+    });
+    if (!communication) {
+      this.logger.warn(
+        { memberId: id, userId: member.primaryUserId },
+        MemberResolver.name,
+        this.deleteMember.name,
+        Errors.get(ErrorType.communicationMemberUserNotFound),
+      );
+    } else {
+      await this.communicationService.deleteCommunication(communication);
+    }
+    await this.notificationsService.unregister(memberConfig);
+    await this.cognitoService.deleteMember(member.deviceId);
+    await this.storageService.deleteMember(id);
+    this.eventEmitter.emit(EventType.deleteMember, id);
     const params: IEventDeleteSchedules = { memberId: id };
     this.eventEmitter.emit(EventType.deleteSchedules, params);
   }

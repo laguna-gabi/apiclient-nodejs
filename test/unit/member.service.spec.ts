@@ -12,7 +12,11 @@ import {
 } from '../../src/appointment';
 import { ErrorType, Errors, Language, Platform } from '../../src/common';
 import {
+  ActionItem,
+  ActionItemDto,
   CreateMemberParams,
+  Goal,
+  GoalDto,
   Member,
   MemberDto,
   MemberModule,
@@ -53,6 +57,8 @@ describe('MemberService', () => {
   let memberModel: Model<typeof MemberDto>;
   let modelUser: Model<typeof UserDto>;
   let modelOrg: Model<typeof OrgDto>;
+  let modelGoal: Model<typeof GoalDto>;
+  let modelActionItem: Model<typeof ActionItemDto>;
   let modelAppointment: Model<typeof AppointmentDto>;
 
   beforeAll(async () => {
@@ -65,6 +71,8 @@ describe('MemberService', () => {
     memberModel = model(Member.name, MemberDto);
     modelUser = model(User.name, UserDto);
     modelOrg = model(Org.name, OrgDto);
+    modelGoal = model(Goal.name, GoalDto);
+    modelActionItem = model(ActionItem.name, ActionItemDto);
     modelAppointment = model(Appointment.name, AppointmentDto);
     await dbConnect();
   });
@@ -625,8 +633,8 @@ describe('MemberService', () => {
     });
   });
 
-  describe('update', () => {
-    it('should throw when trying to update non existing member', async () => {
+  describe('archive', () => {
+    it('should throw an error when trying to archive non existing member', async () => {
       await expect(service.moveMemberToArchive(generateId())).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
@@ -646,6 +654,39 @@ describe('MemberService', () => {
       await expect(service.getMemberConfig(memberId)).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
+    });
+  });
+
+  describe('delete', () => {
+    it('should throw an error when trying to delete non existing member', async () => {
+      await expect(service.moveMemberToArchive(generateId())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
+    });
+
+    it('should delete member', async () => {
+      const memberId = await generateMember();
+      const member = await service.get(memberId);
+      const memberConfig = await service.getMemberConfig(memberId);
+      const result = await service.deleteMember(memberId);
+      expect(result.member).toEqual(member);
+      expect(result.memberConfig).toEqual(memberConfig);
+      await expect(service.get(memberId)).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+      await expect(service.getMemberConfig(memberId)).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
+      for (let index = 0; index < member.goals.length; index++) {
+        const goalResult = await modelGoal.findById(member.goals[index]);
+        expect(goalResult).toBeNull();
+      }
+      for (let index = 0; index < member.actionItems.length; index++) {
+        const actionItemsResult = await modelActionItem.findById(member.actionItems[index]);
+        expect(actionItemsResult).toBeNull();
+      }
+      const appointmentResult = await modelAppointment.find({
+        memberId: new Types.ObjectId(memberId),
+      });
+      expect(appointmentResult).toEqual([]);
     });
   });
 

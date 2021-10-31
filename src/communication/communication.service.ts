@@ -192,6 +192,16 @@ export class CommunicationService {
     return this.communicationModel.findOne({ sendBirdChannelUrl });
   }
 
+  async getMemberUserCommunication({
+    memberId,
+    userId,
+  }: {
+    memberId: string;
+    userId: string;
+  }): Promise<Communication> {
+    return this.communicationModel.findOne({ memberId: new Types.ObjectId(memberId), userId });
+  }
+
   async getMemberUnreadMessagesCount(memberId: string) {
     const [result] = await this.communicationModel.find({
       memberId: new Types.ObjectId(memberId),
@@ -223,6 +233,16 @@ export class CommunicationService {
       return;
     }
     return this.sendBird.freezeGroupChannel(communication.sendBirdChannelUrl, true);
+  }
+
+  async deleteCommunication(communication) {
+    this.logger.debug(communication, CommunicationService.name, this.deleteCommunication.name);
+    await this.communicationModel.deleteOne({
+      memberId: communication.memberId,
+      userId: communication.userId,
+    });
+    await this.sendBird.deleteGroupChannel(communication.sendBirdChannelUrl);
+    await this.sendBird.deleteUser(communication.memberId.toString());
   }
 
   getTwilioAccessToken() {

@@ -61,6 +61,8 @@ export const mockProviders = (
   const spyOnSendBirdCreateUser = jest.spyOn(sendBird, 'createUser');
   const spyOnSendBirdCreateGroupChannel = jest.spyOn(sendBird, 'createGroupChannel');
   const spyOnSendBirdFreeze = jest.spyOn(sendBird, 'freezeGroupChannel');
+  const spyOnSendBirdDeleteGroupChannel = jest.spyOn(sendBird, 'deleteGroupChannel');
+  const spyOnSendBirdDeleteUser = jest.spyOn(sendBird, 'deleteUser');
   const spyOnSendBirdSend = jest.spyOn(sendBird, 'send');
   const spyOnSendBirdUpdateGroupChannelMetadata = jest.spyOn(
     sendBird,
@@ -83,6 +85,8 @@ export const mockProviders = (
   spyOnSendBirdCreateUser.mockResolvedValue(v4());
   spyOnSendBirdCreateGroupChannel.mockResolvedValue(true);
   spyOnSendBirdFreeze.mockResolvedValue(undefined);
+  spyOnSendBirdDeleteGroupChannel.mockResolvedValue(undefined);
+  spyOnSendBirdDeleteUser.mockResolvedValue(undefined);
   spyOnSendBirdSend.mockResolvedValue(v4());
   spyOnSendBirdUpdateGroupChannelMetadata.mockResolvedValue(undefined);
   spyOnSendBirdDeleteGroupChannelMetadata.mockResolvedValue(undefined);
@@ -101,6 +105,8 @@ export const mockProviders = (
       spyOnSendBirdCreateUser,
       spyOnSendBirdCreateGroupChannel,
       spyOnSendBirdFreeze,
+      spyOnSendBirdDeleteGroupChannel,
+      spyOnSendBirdDeleteUser,
       spyOnSendBirdSend,
       spyOnSendBirdUpdateGroupChannelMetadata,
       spyOnSendBirdDeleteGroupChannelMetadata,

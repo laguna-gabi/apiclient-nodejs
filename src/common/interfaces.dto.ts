@@ -231,5 +231,6 @@ export enum AuditType {
   write = 'write',
   read = 'read',
   archive = 'archive',
+  delete = 'delete',
   message = 'message',
 }

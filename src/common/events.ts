@@ -21,6 +21,8 @@ export enum EventType {
   slackMessage = 'slackMessage',
   queueMessage = 'queueMessage',
   deleteSchedules = 'deleteSchedules',
+  deleteMember = 'deleteMember',
+  removeAppointmentsFromUser = 'removeAppointmentsFromUser',
 }
 
 export interface IEventRequestAppointment {

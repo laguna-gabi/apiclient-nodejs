@@ -54,6 +54,8 @@ export class LoggingInterceptor implements NestInterceptor {
     let type: AuditType;
     if (GqlExecutionContext.create(context).getInfo().fieldName === 'archiveMember') {
       type = AuditType.archive;
+    } else if (GqlExecutionContext.create(context).getInfo().fieldName === 'deleteMember') {
+      type = AuditType.delete;
     } else {
       GqlExecutionContext.create(context).getInfo().operation.operation === 'mutation'
         ? (type = AuditType.write)

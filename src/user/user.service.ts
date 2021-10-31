@@ -316,4 +316,16 @@ export class UserService extends BaseService {
       this.logger.error(params, UserService.name, this.handleOrderCreatedEvent.name, ex);
     }
   }
+
+  @OnEvent(EventType.removeAppointmentsFromUser, { async: true })
+  async removeAppointmentsFromUser(appointments) {
+    await Promise.all(
+      appointments.map(async (appointment) => {
+        await this.userModel.updateOne(
+          { appointments: appointment._id },
+          { $pull: { appointments: appointment._id } },
+        );
+      }),
+    );
+  }
 }
