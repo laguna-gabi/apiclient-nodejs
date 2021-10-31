@@ -95,7 +95,9 @@ export class MemberService extends BaseService {
         externalUserId: v4(),
       });
 
-      return this.replaceId(object.toObject());
+      const member = await this.getById(object._id);
+
+      return this.replaceId(member.toObject());
     } catch (ex) {
       throw new Error(
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.memberPhoneAlreadyExists) : ex,

@@ -12,11 +12,14 @@ import {
   IEventNewMember,
   IEventNotifyChatMessage,
   IEventRequestAppointment,
+  IEventSlackMessage,
   IEventUpdateMemberPlatform,
   InternalNotificationType,
   NotificationType,
   Platform,
   RegisterForNotificationParams,
+  SlackChannel,
+  SlackIcon,
   StorageType,
 } from '../../src/common';
 import {
@@ -155,6 +158,13 @@ describe('MemberResolver', () => {
         EventType.requestAppointment,
         eventRequestAppointmentParams,
       );
+      const eventSlackMessageParams: IEventSlackMessage = {
+        // eslint-disable-next-line max-len
+        message: `*New customer*\n${member.firstName} [${member.id}],\nassigned to ${user.firstName}.`,
+        icon: SlackIcon.info,
+        channel: SlackChannel.support,
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.slackMessage, eventSlackMessageParams);
     });
   });
 

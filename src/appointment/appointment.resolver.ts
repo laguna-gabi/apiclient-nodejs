@@ -171,7 +171,9 @@ export class AppointmentResolver extends AppointmentBase {
     const url = await this.bitly.shortenLink(
       `${config.get('hosts.app')}/download/${appointmentId}`,
     );
-    const org = await this.orgService.get(member.org.toString());
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const org = await this.orgService.get(member.org._id.toString());
     const metadata = {
       content: `${(org
         ? config.get('contents.downloadPage')
