@@ -1,10 +1,8 @@
 import { Body, Controller, HttpException, HttpStatus, Post, UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { LoggingInterceptor, apiPrefix } from '../common';
-import { CreateMemberParams, Member, MemberService } from '.';
-import { Public } from '../auth/decorators/public.decorator';
+import { LoggingInterceptor, Public, apiPrefix } from '../common';
+import { CreateMemberParams, Member, MemberBase, MemberService } from '.';
 import { UserService } from '../user';
-import { MemberBase } from './member.interfaces';
 
 @UseInterceptors(LoggingInterceptor)
 @Controller(`${apiPrefix}/members`)

@@ -4,7 +4,7 @@ import { Type } from 'class-transformer';
 import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, Identifier, IsDateAfter, IsFutureDate } from '../common';
-import { Notes } from './note.dto';
+import { Notes } from '.';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************

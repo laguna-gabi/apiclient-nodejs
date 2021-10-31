@@ -1,13 +1,13 @@
 import { Body, Controller, Headers, HttpException, HttpStatus, Post } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import * as crypto from 'crypto';
 import { SendBird, TwilioService } from '.';
-import { Public } from '../auth/decorators/public.decorator';
+import * as crypto from 'crypto';
 import {
   EventType,
   IEventNotifyChatMessage,
   IEventSlackMessage,
   Logger,
+  Public,
   SlackChannel,
   SlackIcon,
   apiPrefix,

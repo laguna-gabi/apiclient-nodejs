@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { HealthCheck, HealthCheckService, MongooseHealthIndicator } from '@nestjs/terminus';
-import { Public } from '../auth/decorators/public.decorator';
+import { Public } from '../common';
 
 @Controller('health')
 export class HealthController {

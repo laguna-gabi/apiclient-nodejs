@@ -10,8 +10,7 @@ import {
   SendTwilioNotification,
 } from '../common';
 import { MemberConfig } from '../member';
-import { SendBird } from './sendBird';
-import { TwilioService } from './twilio.service';
+import { SendBird, TwilioService } from '.';
 
 @Injectable()
 export class NotificationsService {

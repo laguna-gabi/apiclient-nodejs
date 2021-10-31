@@ -1,6 +1,6 @@
 import { Injectable, PipeTransform } from '@nestjs/common';
 import { DailyReportCategoriesInput, DailyReportQueryInput } from '.';
-import { reformatDate } from '../common/utils';
+import { reformatDate } from '../common';
 import * as config from 'config';
 
 @Injectable()

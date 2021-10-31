@@ -11,14 +11,14 @@ import {
   DailyReportService,
   ParseDailyReportInputTransform,
 } from '.';
-import { Roles } from '../auth/decorators/role.decorator';
-import { Roles as RoleTypes } from '../auth/roles';
 import {
   EventType,
   InternalNotificationType,
   InternalNotifyParams,
   Logger,
   LoggingInterceptor,
+  RoleTypes,
+  Roles,
 } from '../common';
 
 @UseInterceptors(LoggingInterceptor)

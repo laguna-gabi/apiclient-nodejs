@@ -1,11 +1,11 @@
 export type SystemRoles = {
-  [K in Roles]: {
+  [K in RoleTypes]: {
     isAdmin: boolean;
     weight: number;
   };
 };
 
-export enum Roles {
+export enum RoleTypes {
   User = 'User',
   Member = 'Member',
   Anonymous = 'Anonymous',
@@ -17,7 +17,7 @@ export const SystemRoles = {
   Anonymous: { isAdmin: false, weight: 1 },
 };
 
-export function isAllowed(role: Roles, allowedRoles: Roles[]): boolean {
+export function isAllowed(role: RoleTypes, allowedRoles: RoleTypes[]): boolean {
   if (SystemRoles[role].isAdmin) {
     return true;
   }

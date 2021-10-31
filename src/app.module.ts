@@ -5,9 +5,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TerminusModule } from '@nestjs/terminus';
 import { GraphQLError } from 'graphql';
 import { AppointmentModule } from './appointment';
-import { AuthModule } from './auth/auth.module';
-import { UserSecurityModule } from './auth/auth.security.module';
-import { AuthService } from './auth/auth.service';
+import { AuthModule, AuthService } from './auth';
 import { AvailabilityModule } from './availability';
 import { Errors } from './common';
 import { JsonBodyMiddleware, RawBodyMiddleware } from './common';
@@ -25,7 +23,6 @@ const badRequestException = 'Bad Request Exception';
 @Module({
   imports: [
     AuthModule,
-    UserSecurityModule,
     MemberModule,
     CommunicationModule,
     UserModule,

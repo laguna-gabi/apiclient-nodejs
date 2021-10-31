@@ -5,7 +5,13 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import * as config from 'config';
 import { add } from 'date-fns';
 import { Model } from 'mongoose';
-import { MemberConfig, MemberConfigDocument, MemberService } from '.';
+import {
+  MemberConfig,
+  MemberConfigDocument,
+  MemberService,
+  NotifyParams,
+  NotifyParamsDocument,
+} from '.';
 import {
   ErrorType,
   Errors,
@@ -18,7 +24,6 @@ import {
 } from '../common';
 import { Bitly } from '../providers';
 import { BaseScheduler, InternalSchedulerService, LeaderType } from '../scheduler';
-import { NotifyParams, NotifyParamsDocument } from './member.dto';
 
 @Injectable()
 export class MemberScheduler extends BaseScheduler {

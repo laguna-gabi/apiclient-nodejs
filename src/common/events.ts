@@ -2,13 +2,7 @@ import { Types } from 'mongoose';
 import { AppointmentStatus, Scores } from '../appointment';
 import { Member } from '../member';
 import { User } from '../user';
-import {
-  Platform,
-  QueueType,
-  SlackChannel,
-  SlackIcon,
-  UpdatedAppointmentAction,
-} from './interfaces.dto';
+import { Platform, QueueType, SlackChannel, SlackIcon, UpdatedAppointmentAction } from '.';
 
 export enum EventType {
   requestAppointment = 'requestAppointment',

@@ -12,8 +12,7 @@ import { Org, OrgService } from '../../src/org';
 import { User, UserService } from '../../src/user';
 import { v4 } from 'uuid';
 import { AppModule } from '../../src/app.module';
-import { GlobalAuthGuard } from '../../src/auth/guards/globalAuth.guard';
-import { RolesGuard } from '../../src/auth/guards/role.guard';
+import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
 import { bearerToken } from '../../src/common';
 import { CommunicationService } from '../../src/communication';
 import { Member, MemberService } from '../../src/member';
@@ -25,9 +24,8 @@ import {
   generateId,
   generateOrgParams,
   generateUniqueUrl,
-} from '../generators';
-import { Mutations } from './mutations';
-import { Queries } from './queries';
+} from '..';
+import { Mutations, Queries } from '.';
 
 const validatorsConfig = config.get('graphql.validators');
 

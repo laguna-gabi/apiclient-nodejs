@@ -28,8 +28,6 @@ import {
   UpdateRecordingParams,
   UpdateTaskStatusParams,
 } from '.';
-import { Roles } from '../auth/decorators/role.decorator';
-import { Roles as RoleTypes } from '../auth/roles';
 import {
   ErrorType,
   Errors,
@@ -46,6 +44,8 @@ import {
   NotificationType,
   Platform,
   RegisterForNotificationParams,
+  RoleTypes,
+  Roles,
   StorageType,
   extractAuthorizationHeader,
 } from '../common';

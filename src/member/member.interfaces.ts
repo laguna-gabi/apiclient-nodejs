@@ -1,8 +1,7 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventType, IEventNewMember, IEventRequestAppointment } from '../common';
 import { UserService } from '../user';
-import { CreateMemberParams, Member } from './member.dto';
-import { MemberService } from './member.service';
+import { CreateMemberParams, Member, MemberService } from '.';
 
 export class MemberBase {
   constructor(

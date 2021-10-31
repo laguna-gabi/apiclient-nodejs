@@ -30,7 +30,7 @@ import { Member } from '../member';
 import { OrgService } from '../org';
 import { Bitly } from '../providers';
 import { User } from '../user';
-import { AppointmentBase } from './appointment.interfaces';
+import { AppointmentBase } from '.';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Appointment)

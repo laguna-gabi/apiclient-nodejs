@@ -12,6 +12,7 @@ import {
   DailyReportsMetadata,
 } from '.';
 import { BaseService } from '../common';
+
 @Injectable()
 export class DailyReportService extends BaseService {
   constructor(

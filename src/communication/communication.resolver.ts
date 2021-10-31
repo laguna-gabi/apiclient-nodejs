@@ -10,8 +10,6 @@ import {
   UnreadMessagesCount,
 } from '.';
 import { AppointmentStatus } from '../appointment';
-import { Roles } from '../auth/decorators/role.decorator';
-import { Roles as RoleTypes } from '../auth/roles';
 import {
   EventType,
   IEventNewMember,
@@ -19,6 +17,8 @@ import {
   IEventUpdateMemberPlatform,
   Logger,
   LoggingInterceptor,
+  RoleTypes,
+  Roles,
   UpdatedAppointmentAction,
 } from '../common';
 

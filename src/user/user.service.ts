@@ -29,7 +29,7 @@ import {
   SlackChannel,
   SlackIcon,
 } from '../common';
-import { UserConfig, UserConfigDocument } from './userConfig.dto';
+import { UserConfig, UserConfigDocument } from '.';
 
 @Injectable()
 export class UserService extends BaseService {

@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
-import { isAllowed, Roles, SystemRoles } from '../roles';
+import { RoleTypes, SystemRoles, isAllowed } from '../common';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -17,7 +17,7 @@ export class RolesGuard implements CanActivate {
       request = context.switchToHttp().getRequest();
     }
     const user = request?.user as { role: string };
-    if (SystemRoles[user?.role as Roles]?.isAdmin) {
+    if (SystemRoles[user?.role as RoleTypes]?.isAdmin) {
       return true;
     }
 
@@ -32,7 +32,7 @@ export class RolesGuard implements CanActivate {
       return false;
     }
 
-    if (isAllowed(user.role as Roles, roles as Roles[])) {
+    if (isAllowed(user.role as RoleTypes, roles as RoleTypes[])) {
       return true;
     }
     return false;

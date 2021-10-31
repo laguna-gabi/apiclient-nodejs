@@ -10,9 +10,8 @@ import {
   generateCreateUserParams,
   generateEndAppointmentParams,
   generateOrgParams,
-} from '../generators';
-import { Handler } from './handler';
-import { AppointmentsIntegrationActions } from './appointments';
+} from '..';
+import { AppointmentsIntegrationActions, Handler } from '.';
 
 export class Creators {
   constructor(

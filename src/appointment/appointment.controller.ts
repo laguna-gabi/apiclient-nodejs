@@ -7,8 +7,7 @@ import {
   AppointmentService,
   ScheduleAppointmentParams,
 } from '.';
-import { LoggingInterceptor, apiPrefix } from '../common';
-import { Public } from '../auth/decorators/public.decorator';
+import { LoggingInterceptor, Public, apiPrefix } from '../common';
 
 @UseInterceptors(LoggingInterceptor)
 @Controller(`${apiPrefix}/appointments`)
