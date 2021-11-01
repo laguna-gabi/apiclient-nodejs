@@ -498,10 +498,7 @@ export class MemberResolver extends MemberBase {
         metadata: { content: config.get('contents.newChatMessage') },
       });
     } catch (ex) {
-      // temp: reduce noise during testing (avoid slack messages)
-      console.log(
-        `ERROR: ${MemberResolver.name}.${this.notifyChatMessage.name}: received: [${ex}]`,
-      );
+      this.logger.error(params, MemberResolver.name, this.notifyChatMessage.name, ex);
     }
   }
 

@@ -31,16 +31,15 @@ export class WebhooksController {
   async sendbird(@Body() payload, @Headers() headers) {
     this.validateMessageSentFromSendbird(payload, headers);
 
-    const rawBody = payload.toString();
-    this.logger.debug({ rawBody, headers }, WebhooksController.name, this.sendbird.name, false);
+    const parsedBody = JSON.parse(payload);
 
-    const body = JSON.parse(payload.toString());
+    this.logger.debug({ parsedBody, headers }, WebhooksController.name, this.sendbird.name);
 
     // If there's no sender, it's an admin message (and we don't want to notify)
-    if (body.sender) {
-      const { user_id: senderUserId } = body.sender;
+    if (parsedBody.sender) {
+      const { user_id: senderUserId } = parsedBody.sender;
 
-      const { channel_url: sendBirdChannelUrl } = body.channel;
+      const { channel_url: sendBirdChannelUrl } = parsedBody.channel;
 
       const event: IEventNotifyChatMessage = { senderUserId, sendBirdChannelUrl };
       this.eventEmitter.emit(EventType.notifyChatMessage, event);
@@ -77,23 +76,22 @@ export class WebhooksController {
   /* eslint-enable max-len */
   validateMessageSentFromSendbird(@Body() payload, @Headers() headers) {
     const signature = headers['x-sendbird-signature'];
-    console.log({ signature });
 
     const hash = crypto
       .createHmac('sha256', this.sendbirdService.getMasterAppToken())
-      .update(payload.toString().replace(/\//g, '\\/'))
+      .update(payload.toString())
       .digest('hex');
 
     if (signature !== hash) {
       const message = 'The source of the request DID NOT comes from Sendbird server';
-      console.log(`${message}` + `\nexpecting: ${signature}\ngot: ${hash}`); // debug
-      // this.logger.error(
-      //   {},
-      //   WebhooksController.name,
-      //   this.validateMessageSentFromSendbird.name,
-      //   message,
-      // );
-      // throw new HttpException(message, HttpStatus.BAD_REQUEST); // stay in debug mode for now..
+
+      this.logger.error(
+        {},
+        WebhooksController.name,
+        this.validateMessageSentFromSendbird.name,
+        message,
+      );
+      throw new HttpException(message, HttpStatus.BAD_REQUEST);
     }
   }
 }

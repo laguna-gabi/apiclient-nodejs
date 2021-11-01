@@ -94,9 +94,9 @@ export class Logger {
     });
   }
 
-  debug(params: any = {}, className: string, methodName: string, compliant = true) {
+  debug(params: any = {}, className: string, methodName: string) {
     const { colorLog, log } = this.logFormat(
-      this.getCalledLog(params, compliant),
+      this.getCalledLog(params),
       className,
       methodName,
       LogType.debug,
@@ -134,7 +134,7 @@ export class Logger {
    * 2. a string value representing an id: params = '123abc'
    *    we'll log this id.
    */
-  private getCalledLog(params, compliant = true) {
+  private getCalledLog(params) {
     if (!params || Object.keys(params).length === 0) {
       return 'was called';
     }
@@ -147,7 +147,7 @@ export class Logger {
     let safeLog = {};
     if (!dupParams) {
       safeLog = {};
-    } else if (typeof dupParams === 'string' || !compliant) {
+    } else if (typeof dupParams === 'string') {
       safeLog = dupParams;
     } else {
       this.VALID_KEYS.forEach((validKey) => {

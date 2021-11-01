@@ -1,14 +1,15 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { RouteInfo } from '@nestjs/common/interfaces';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TerminusModule } from '@nestjs/terminus';
+import * as config from 'config';
 import { GraphQLError } from 'graphql';
 import { AppointmentModule } from './appointment';
 import { AuthModule, AuthService } from './auth';
 import { AvailabilityModule } from './availability';
-import { Errors } from './common';
-import { JsonBodyMiddleware, RawBodyMiddleware } from './common';
+import { Errors, JsonBodyMiddleware, RawBodyMiddleware } from './common';
 import { CommunicationModule } from './communication';
 import { DailyReportModule } from './dailyReport';
 import { DbModule } from './db/db.module';
@@ -59,12 +60,15 @@ const badRequestException = 'Bad Request Exception';
 })
 export class AppModule implements NestModule {
   public configure(consumer: MiddlewareConsumer): void {
+    const skipBodyParseRouteList: RouteInfo[] = [];
+
+    config.get('skipBodyParseRouteList').forEach((routeListEntry) => {
+      skipBodyParseRouteList.push({ path: routeListEntry.path, method: routeListEntry.method });
+    });
+
     consumer
       .apply(RawBodyMiddleware)
-      .forRoutes({
-        path: '/api/webhooks/sendbird',
-        method: RequestMethod.POST,
-      })
+      .forRoutes(...skipBodyParseRouteList)
       .apply(JsonBodyMiddleware)
       .forRoutes('*');
   }

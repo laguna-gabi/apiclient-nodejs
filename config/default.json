@@ -74,5 +74,8 @@
   "articlesByDrg": {
     "000": "articles/cardiac/cardiac",
     "default": "articles/default/default"
-  }
+  },
+  "skipBodyParseRouteList": [
+    {"path": "/api/webhooks/sendbird", "method": 1}
+  ]
 }

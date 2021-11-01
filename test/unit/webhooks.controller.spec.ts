@@ -5,6 +5,7 @@ import { EventType } from '../../src/common';
 import {
   ConfigsService,
   ExternalConfigs,
+  SendBird,
   TwilioService,
   WebhooksController,
 } from '../../src/providers';
@@ -17,17 +18,22 @@ describe('WebhooksController', () => {
   let controller: WebhooksController;
   let eventEmitter: EventEmitter2;
   let twilioService: TwilioService;
+  let sendbirdService: SendBird;
   let configsService: ConfigsService;
   let spyOnEventEmitter;
+  let spyOnTokenValidation;
+  let spyOnSendbirdServiceGetMasterAppToken;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({ imports: defaultModules() }).compile();
     controller = module.get<WebhooksController>(WebhooksController);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     twilioService = module.get<TwilioService>(TwilioService);
+    sendbirdService = module.get<SendBird>(SendBird);
     configsService = module.get<ConfigsService>(ConfigsService);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
-    jest.spyOn(controller, 'validateMessageSentFromSendbird').mockImplementation();
+    spyOnTokenValidation = jest.spyOn(controller, 'validateMessageSentFromSendbird');
+    spyOnSendbirdServiceGetMasterAppToken = jest.spyOn(sendbirdService, 'getMasterAppToken');
   });
 
   afterAll(async () => {
@@ -36,13 +42,16 @@ describe('WebhooksController', () => {
   });
 
   describe('sendbird', () => {
+    beforeAll(() => {
+      spyOnTokenValidation.mockImplementation();
+    });
+
     afterEach(() => {
       spyOnEventEmitter.mockReset();
     });
 
     it('should generate an event with a normal new message payload', async () => {
       await controller.sendbird(JSON.stringify(sendBirdNewMessagePayload), {});
-
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyChatMessage, {
         senderUserId: sendBirdNewMessagePayload.sender.user_id,
         sendBirdChannelUrl: sendBirdNewMessagePayload.channel.channel_url,
@@ -52,6 +61,18 @@ describe('WebhooksController', () => {
     it('should NOT generate an event with an admin message payload', async () => {
       await controller.sendbird(JSON.stringify(sendBirdAdminMessagePayload), {});
       expect(spyOnEventEmitter).not.toHaveBeenCalled();
+    });
+
+    it('should NOT throw an exception due to invalid sendbird signature', async () => {
+      spyOnTokenValidation.mockRestore();
+      spyOnSendbirdServiceGetMasterAppToken.mockReturnValue('test');
+
+      expect(() => {
+        controller.sendbird(JSON.stringify(sendBirdAdminMessagePayload), {
+          'x-sendbird-signature':
+            '0fd23b3336df400d9537bee51a273da12c31150d30d80873e788d519d016343b',
+        });
+      }).not.toThrow();
     });
 
     describe('twilio', () => {
