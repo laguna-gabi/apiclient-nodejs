@@ -526,6 +526,8 @@ export class Queries {
             externalUserId
             platform
             isPushNotificationsEnabled
+            isAppointmentsReminderEnabled
+            isRecommendationsEnabled
             articlesPath
           }
         }

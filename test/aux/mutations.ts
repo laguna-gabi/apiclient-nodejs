@@ -19,6 +19,7 @@ import {
   Member,
   NotifyParams,
   SetGeneralNotesParams,
+  UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
   UpdateTaskStatusParams,
@@ -536,6 +537,30 @@ export class Mutations {
     return (
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.setGeneralNotes
+    );
+  };
+
+  updateMemberConfig = async ({
+    updateMemberConfigParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    updateMemberConfigParams: UpdateMemberConfigParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<void> => {
+    const result = await this.apolloClient.mutate({
+      variables: { updateMemberConfigParams: updateMemberConfigParams },
+      mutation: gql`
+        mutation updateMemberConfig($updateMemberConfigParams: UpdateMemberConfigParams!) {
+          updateMemberConfig(updateMemberConfigParams: $updateMemberConfigParams)
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.updateMemberConfig
     );
   };
 

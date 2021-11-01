@@ -24,6 +24,7 @@ import {
   RecordingOutput,
   SetGeneralNotesParams,
   TaskStatus,
+  UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
   UpdateTaskStatusParams,
@@ -345,7 +346,7 @@ export class MemberResolver extends MemberBase {
       await this.memberService.updateMemberConfigRegisteredAt(memberConfig.memberId);
     }
     await this.memberService.updateMemberConfig({
-      memberId: memberConfig.memberId,
+      memberId: memberConfig.memberId.toString(),
       platform: registerForNotificationParams.platform,
       isPushNotificationsEnabled: registerForNotificationParams.isPushNotificationsEnabled,
     });
@@ -547,6 +548,16 @@ export class MemberResolver extends MemberBase {
   @Roles(RoleTypes.Member, RoleTypes.User)
   async getMemberConfig(@Args('id', { type: () => String }) id: string) {
     return this.memberService.getMemberConfig(id);
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(RoleTypes.Member, RoleTypes.User)
+  async updateMemberConfig(
+    @Args(camelCase(UpdateMemberConfigParams.name))
+    updateMemberConfigParams: UpdateMemberConfigParams,
+  ) {
+    await this.memberService.get(updateMemberConfigParams.memberId);
+    return this.memberService.updateMemberConfig(updateMemberConfigParams);
   }
 
   /*************************************************************************************************

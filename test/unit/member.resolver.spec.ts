@@ -53,6 +53,7 @@ import {
   generateNotifyParams,
   generateSetGeneralNotesParams,
   generateUniqueUrl,
+  generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
@@ -744,6 +745,39 @@ describe('MemberResolver', () => {
     });
   });
 
+  describe('updateMemberConfig', () => {
+    let spyOnServiceUpdateConfig;
+    let spyOnServiceGetMember;
+
+    beforeEach(() => {
+      spyOnServiceUpdateConfig = jest.spyOn(service, 'updateMemberConfig');
+      spyOnServiceGetMember = jest.spyOn(service, 'get');
+    });
+
+    afterEach(() => {
+      spyOnServiceUpdateConfig.mockReset();
+      spyOnServiceGetMember.mockReset();
+      spyOnServiceGetMember.mockRestore();
+    });
+
+    it('should update a member config', async () => {
+      const updateMemberConfigParams = generateUpdateMemberConfigParams();
+      spyOnServiceUpdateConfig.mockImplementationOnce(async () => true);
+      spyOnServiceGetMember.mockImplementationOnce(async () => mockGenerateMember());
+
+      await resolver.updateMemberConfig(updateMemberConfigParams);
+
+      expect(spyOnServiceUpdateConfig).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateConfig).toBeCalledWith(updateMemberConfigParams);
+    });
+
+    it('should not update member config on non existing member', async () => {
+      await expect(resolver.updateMemberConfig(generateUpdateMemberConfigParams())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
+    });
+  });
+
   describe('registerMemberForNotifications', () => {
     let spyOnNotificationsServiceRegister;
     let spyOnServiceGetMember;
@@ -802,7 +836,7 @@ describe('MemberResolver', () => {
       expect(spyOnServiceGetMember).toBeCalledWith(member.id);
       expect(spyOnServiceUpdateMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceUpdateMemberConfig).toBeCalledWith({
-        memberId: Types.ObjectId(member.id),
+        memberId: member.id,
         platform: params.platform,
         isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       });
@@ -840,7 +874,7 @@ describe('MemberResolver', () => {
       });
       expect(spyOnServiceUpdateMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceUpdateMemberConfig).toBeCalledWith({
-        memberId: memberConfig.memberId,
+        memberId: member.id,
         platform: params.platform,
         isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       });

@@ -38,6 +38,7 @@ import {
   SetGeneralNotesParams,
   Sex,
   TaskStatus,
+  UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
   UpdateTaskStatusParams,
@@ -246,6 +247,22 @@ export const mockGenerateMemberConfig = (): MemberConfig => {
     accessToken: generateId(),
     firstLoggedInAt: faker.date.past(2),
     articlesPath: faker.system.directoryPath(),
+  };
+};
+
+export const generateUpdateMemberConfigParams = ({
+  memberId = generateId(),
+  platform = Platform.web,
+  isPushNotificationsEnabled = true,
+  isAppointmentsReminderEnabled = true,
+  isRecommendationsEnabled = true,
+}: Partial<UpdateMemberConfigParams> = {}): UpdateMemberConfigParams => {
+  return {
+    memberId,
+    platform,
+    isPushNotificationsEnabled,
+    isAppointmentsReminderEnabled,
+    isRecommendationsEnabled,
   };
 };
 

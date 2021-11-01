@@ -31,6 +31,7 @@ import {
   RecordingOutput,
   SetGeneralNotesParams,
   TaskStatus,
+  UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
   UpdateTaskStatusParams,
@@ -48,7 +49,6 @@ import {
   IEventUpdateMemberConfig,
   Identifier,
   Logger,
-  Platform,
 } from '../common';
 
 @Injectable()
@@ -508,21 +508,30 @@ export class MemberService extends BaseService {
    ***************************************** Member Config ****************************************
    ************************************************************************************************/
 
-  async updateMemberConfig({
-    memberId,
-    platform,
-    isPushNotificationsEnabled,
-  }: {
-    memberId: Types.ObjectId;
-    platform: Platform;
-    isPushNotificationsEnabled?: boolean;
-  }): Promise<boolean> {
-    const setPush = isPushNotificationsEnabled !== undefined ? { isPushNotificationsEnabled } : {};
-    const result = await this.memberConfigModel.updateOne(
-      { memberId },
-      { $set: { memberId, platform, ...setPush } },
-    );
+  async updateMemberConfig(updateMemberConfigParams: UpdateMemberConfigParams): Promise<boolean> {
+    const {
+      memberId,
+      platform,
+      isPushNotificationsEnabled,
+      isAppointmentsReminderEnabled,
+      isRecommendationsEnabled,
+    } = updateMemberConfigParams;
 
+    let setParams: any = { memberId: new Types.ObjectId(memberId) };
+    setParams = platform == null ? platform : { ...setParams, platform };
+    setParams =
+      isPushNotificationsEnabled == null ? setParams : { ...setParams, isPushNotificationsEnabled };
+    setParams =
+      isAppointmentsReminderEnabled == null
+        ? setParams
+        : { ...setParams, isAppointmentsReminderEnabled };
+    setParams =
+      isRecommendationsEnabled == null ? setParams : { ...setParams, isRecommendationsEnabled };
+
+    const result = await this.memberConfigModel.updateOne(
+      { memberId: new Types.ObjectId(memberId) },
+      { $set: setParams },
+    );
     return result.ok === 1;
   }
 

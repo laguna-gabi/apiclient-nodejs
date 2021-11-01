@@ -44,6 +44,7 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
+  generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
@@ -608,6 +609,38 @@ describe('Integration tests: all', () => {
 
     const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
     expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.123'));
+  });
+
+  it('should update and get member configs', async () => {
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({ org });
+
+    const memberConfigBefore = await handler.queries.getMemberConfig({ id: member.id });
+    expect(memberConfigBefore).toEqual({
+      memberId: member.id,
+      articlesPath: config.get('articlesByDrg.default'),
+      externalUserId: expect.any(String),
+      platform: Platform.web,
+      isPushNotificationsEnabled: false,
+      isAppointmentsReminderEnabled: false,
+      isRecommendationsEnabled: false,
+    });
+
+    const updateMemberConfigParams = generateUpdateMemberConfigParams({
+      memberId: generateId(member.id),
+    });
+    await handler.mutations.updateMemberConfig({ updateMemberConfigParams });
+    const memberConfigAfter = await handler.queries.getMemberConfig({ id: member.id });
+
+    expect(memberConfigAfter).toEqual({
+      memberId: member.id,
+      externalUserId: memberConfigBefore.externalUserId,
+      articlesPath: memberConfigBefore.articlesPath,
+      platform: Platform.web,
+      isPushNotificationsEnabled: updateMemberConfigParams.isPushNotificationsEnabled,
+      isAppointmentsReminderEnabled: updateMemberConfigParams.isAppointmentsReminderEnabled,
+      isRecommendationsEnabled: updateMemberConfigParams.isRecommendationsEnabled,
+    });
   });
 
   it(`should send SMS notification of type textSms`, async () => {

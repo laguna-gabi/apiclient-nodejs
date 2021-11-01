@@ -45,6 +45,7 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
+  generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
@@ -827,33 +828,40 @@ describe('MemberService', () => {
     it('should update memberConfig multiple times', async () => {
       //1st memberConfig is inserted in generateMember with externalUserId only
       const id = await generateMember();
-
-      const params1 = {
-        memberId: new Types.ObjectId(id),
+      const params1 = await generateUpdateMemberConfigParams({
+        memberId: generateId(id),
         platform: Platform.android,
         isPushNotificationsEnabled: true,
-      };
-      params1.memberId = new Types.ObjectId(id);
+        isAppointmentsReminderEnabled: true,
+        isRecommendationsEnabled: false,
+      });
+
       await service.updateMemberConfig(params1);
 
       const configs1 = await service.getMemberConfig(id);
       expect(configs1.externalUserId).toEqual(expect.any(String));
       expect(configs1.isPushNotificationsEnabled).toEqual(params1.isPushNotificationsEnabled);
+      expect(configs1.isAppointmentsReminderEnabled).toEqual(params1.isAppointmentsReminderEnabled);
+      expect(configs1.isRecommendationsEnabled).toEqual(params1.isRecommendationsEnabled);
       expect(configs1.platform).toEqual(params1.platform);
 
-      const params2 = {
-        memberId: new Types.ObjectId(id),
-        platform: Platform.ios,
+      const params2 = await generateUpdateMemberConfigParams({
+        memberId: generateId(id),
+        platform: Platform.web,
         isPushNotificationsEnabled: false,
-      };
-      params2.memberId = new Types.ObjectId(id);
+        isAppointmentsReminderEnabled: false,
+        isRecommendationsEnabled: true,
+      });
+      params2.memberId = id;
       await service.updateMemberConfig(params2);
 
       const configs2 = await service.getMemberConfig(id);
       expect(configs1.memberId).toEqual(configs2.memberId);
       expect(configs1.externalUserId).toEqual(configs2.externalUserId);
-      expect(configs2.isPushNotificationsEnabled).toEqual(params2.isPushNotificationsEnabled);
       expect(configs2.platform).toEqual(params2.platform);
+      expect(configs2.isPushNotificationsEnabled).toEqual(params2.isPushNotificationsEnabled);
+      expect(configs2.isAppointmentsReminderEnabled).toEqual(params2.isAppointmentsReminderEnabled);
+      expect(configs2.isRecommendationsEnabled).toEqual(params2.isRecommendationsEnabled);
     });
 
     it('should update only isPushNotificationsEnabled', async () => {
@@ -861,11 +869,11 @@ describe('MemberService', () => {
       const id = await generateMember();
 
       const params = {
-        memberId: new Types.ObjectId(id),
+        memberId: id,
         platform: Platform.android,
         isPushNotificationsEnabled: true,
       };
-      params.memberId = new Types.ObjectId(id);
+      params.memberId = id;
       await service.updateMemberConfig(params);
 
       let configs = await service.getMemberConfig(id);
@@ -874,7 +882,7 @@ describe('MemberService', () => {
       expect(configs.platform).toEqual(params.platform);
 
       await service.updateMemberConfig({
-        memberId: new Types.ObjectId(id),
+        memberId: id,
         platform: Platform.android,
         isPushNotificationsEnabled: true,
       });
@@ -883,19 +891,19 @@ describe('MemberService', () => {
       expect(configs.isPushNotificationsEnabled).toEqual(true);
     });
 
-    it('should not override isPushNotificationsEnabled on input undefined', async () => {
-      //1st memberConfig is inserted in generateMember with externalUserId only
+    test.each([
+      { isPushNotificationsEnabled: null },
+      { isAppointmentsReminderEnabled: null },
+      { isRecommendationsEnabled: null },
+    ])('should not override %p since it is not define in input', async (field) => {
       const id = await generateMember();
 
-      const params = {
-        memberId: new Types.ObjectId(id),
-        platform: Platform.android,
-      };
-      params.memberId = new Types.ObjectId(id);
+      let params = generateUpdateMemberConfigParams({ memberId: generateId(id) });
+      params = { ...params, ...field };
       await service.updateMemberConfig(params);
 
       const configs = await service.getMemberConfig(id);
-      expect(configs.isPushNotificationsEnabled).toEqual(false);
+      expect(configs[Object.keys(field)[0]]).toEqual(false);
     });
   });
 
