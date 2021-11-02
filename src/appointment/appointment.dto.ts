@@ -42,6 +42,11 @@ export class RequestAppointmentParams {
   })
   @IsDate({ message: Errors.get(ErrorType.appointmentNotBeforeDate) })
   notBefore: Date;
+
+  // @Field(() => String, { nullable: true })
+  @IsString()
+  @IsOptional()
+  id?: string;
 }
 
 @InputType()

@@ -63,7 +63,9 @@ describe('CommunicationService', () => {
     sendBirdMock.spyOnSendBirdDeleteGroupChannel.mockReset();
     sendBirdMock.spyOnSendBirdDeleteUser.mockReset();
     sendBirdMock.spyOnSendBirdUpdateGroupChannelMetadata.mockReset();
-    sendBirdMock.spyOnSendBirdDeleteGroupChannelMetadata.mockReset();
+    sendBirdMock.spyOnSendBirdLeave.mockReset();
+    sendBirdMock.spyOnSendBirdInvite.mockReset();
+    sendBirdMock.spyOnSendBirdUpdateChannelName.mockReset();
   });
 
   describe('createUser', () => {
@@ -258,6 +260,53 @@ describe('CommunicationService', () => {
       await service.onUpdatedAppointment(params);
 
       expect(sendBirdMock.spyOnSendBirdUpdateGroupChannelMetadata).not.toBeCalled();
+    });
+  });
+
+  describe('updateUserInCommunication', () => {
+    let mockServiceGet;
+
+    beforeEach(() => {
+      mockServiceGet = jest.spyOn(service, 'get');
+    });
+
+    afterEach(() => {
+      mockServiceGet.mockReset();
+    });
+
+    afterEach(() => {
+      sendBirdMock.spyOnSendBirdLeave.mockReset();
+      sendBirdMock.spyOnSendBirdInvite.mockReset();
+      sendBirdMock.spyOnSendBirdUpdateChannelName.mockReset();
+    });
+
+    it('should replace user in communication', async () => {
+      const oldUserId = generateId();
+      const newUser = mockGenerateUser();
+      const memberId = generateId();
+      const sendBirdChannelUrl = faker.internet.url();
+
+      const params = {
+        oldUserId,
+        newUser,
+        memberId,
+      };
+
+      mockServiceGet.mockImplementationOnce(async () => ({
+        memberId: memberId,
+        userId: newUser.id,
+        sendBirdChannelUrl,
+      }));
+
+      await service.updateUserInCommunication(params);
+
+      expect(sendBirdMock.spyOnSendBirdLeave).toBeCalledWith(sendBirdChannelUrl, oldUserId);
+      expect(sendBirdMock.spyOnSendBirdInvite).toBeCalledWith(sendBirdChannelUrl, newUser.id);
+      expect(sendBirdMock.spyOnSendBirdUpdateChannelName).toBeCalledWith(
+        sendBirdChannelUrl,
+        newUser.firstName,
+        newUser.avatar,
+      );
     });
   });
 

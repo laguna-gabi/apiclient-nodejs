@@ -1,9 +1,9 @@
-import { EventEmitterModule } from '@nestjs/event-emitter';
+import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
-import { Platform, UpdatedAppointmentAction } from '../../src/common';
+import { EventType, Platform, UpdatedAppointmentAction } from '../../src/common';
 import {
   CommunicationModule,
   CommunicationResolver,
@@ -23,6 +23,8 @@ describe('CommunicationResolver', () => {
   let module: TestingModule;
   let resolver: CommunicationResolver;
   let service: CommunicationService;
+  let eventEmitter: EventEmitter2;
+  let spyOnEventEmitter;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -31,11 +33,17 @@ describe('CommunicationResolver', () => {
 
     resolver = module.get<CommunicationResolver>(CommunicationResolver);
     service = module.get<CommunicationService>(CommunicationService);
+    eventEmitter = module.get<EventEmitter2>(EventEmitter2);
+    spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
   });
 
   afterAll(async () => {
     await module.close();
     await dbDisconnect();
+  });
+
+  afterEach(() => {
+    spyOnEventEmitter.mockReset();
   });
 
   describe('handleNewUser', () => {
@@ -106,6 +114,39 @@ describe('CommunicationResolver', () => {
       };
       await resolver.handleUpdatedAppointment(params);
       expect(spyOnServiceUpdatedAppointment).toBeCalledWith(params);
+    });
+  });
+
+  describe('updateUserInCommunication', () => {
+    let spyOnServiceUpdateUserInCommunication;
+
+    beforeEach(() => {
+      spyOnServiceUpdateUserInCommunication = jest.spyOn(service, 'updateUserInCommunication');
+    });
+
+    afterEach(() => {
+      spyOnServiceUpdateUserInCommunication.mockReset();
+    });
+
+    it('should successfully replace user in communication', async () => {
+      spyOnServiceUpdateUserInCommunication.mockImplementationOnce(() => undefined);
+      const oldUserId = generateId();
+      const newUser = mockGenerateUser();
+      const memberId = generateId();
+
+      const params = {
+        oldUserId,
+        newUser,
+        memberId,
+      };
+
+      await resolver.updateUserInCommunication(params);
+      expect(spyOnServiceUpdateUserInCommunication).toBeCalledWith(params);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateUserInAppointments, {
+        oldUserId,
+        newUserId: newUser.id,
+        memberId,
+      });
     });
   });
 

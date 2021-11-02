@@ -100,6 +100,9 @@ export class Handler {
     this.sendBird.spyOnSendBirdCreateGroupChannel.mockReset();
     this.sendBird.spyOnSendBirdFreeze.mockReset();
     this.sendBird.spyOnSendBirdSend.mockReset();
+    this.sendBird.spyOnSendBirdLeave.mockReset();
+    this.sendBird.spyOnSendBirdInvite.mockReset();
+    this.sendBird.spyOnSendBirdUpdateChannelName.mockReset();
     this.sendBird.spyOnSendBirdUpdateGroupChannelMetadata.mockReset();
     this.sendBird.spyOnSendBirdDeleteGroupChannelMetadata.mockReset();
     this.notificationsService.spyOnNotificationsServiceRegister.mockReset();

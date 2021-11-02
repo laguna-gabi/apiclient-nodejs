@@ -224,6 +224,15 @@ export class UpdateMemberParams extends ExtraMemberParams {
 }
 
 @InputType()
+export class SetNewUserToMemberParams {
+  @Field(() => String)
+  memberId: string;
+
+  @Field(() => String)
+  userId: string;
+}
+
+@InputType()
 export class SetGeneralNotesParams {
   @Field(() => String)
   memberId: string;

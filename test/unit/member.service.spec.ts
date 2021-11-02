@@ -1023,6 +1023,38 @@ describe('MemberService', () => {
     });
   });
 
+  describe('setNewUserToMember', () => {
+    it('should fail to update on non existing member', async () => {
+      const userId = generateId();
+      const memberId = generateId();
+      await expect(service.setNewUserToMember({ userId, memberId })).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
+    });
+
+    it('should throw an error if the new user equals the old user', async () => {
+      const memberId = await generateMember();
+      const member = await service.get(memberId);
+
+      await expect(
+        service.setNewUserToMember({ userId: member.primaryUserId, memberId }),
+      ).rejects.toThrow(Errors.get(ErrorType.userIdOrEmailAlreadyExists));
+    });
+
+    it('should update the primary user and add new user to the users list', async () => {
+      const memberId = await generateMember();
+      const newUser = await modelUser.create(generateCreateRawUserParams());
+      const oldMember = await service.get(memberId);
+
+      const oldUserId = await service.setNewUserToMember({ userId: newUser._id, memberId });
+
+      const updatedMember = await service.get(memberId);
+      expect(updatedMember.primaryUserId).toEqual(newUser._id);
+      expect(oldUserId).toEqual(oldMember.primaryUserId);
+      compareUsers(updatedMember.users[updatedMember.users.length - 1], newUser);
+    });
+  });
+
   const generateMember = async (): Promise<string> => {
     const { _id: primaryUserId } = await modelUser.create(generateCreateRawUserParams());
     const { _id: orgId } = await modelOrg.create(generateOrgParams());

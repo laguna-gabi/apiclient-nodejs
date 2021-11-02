@@ -1,9 +1,14 @@
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Model, model } from 'mongoose';
+import { Model, Types, model } from 'mongoose';
 import { v4 } from 'uuid';
 import { AppointmentModule } from '../../src/appointment';
-import { ErrorType, Errors } from '../../src/common';
+import {
+  ErrorType,
+  Errors,
+  IEventNewAppointment,
+  IEventUpdateAppointmentsInUser,
+} from '../../src/common';
 import {
   NotNullableUserKeys,
   User,
@@ -19,6 +24,8 @@ import {
   dbDisconnect,
   defaultModules,
   generateCreateUserParams,
+  generateId,
+  generateScheduleAppointmentParams,
 } from '../index';
 
 describe('UserService', () => {
@@ -182,10 +189,45 @@ describe('UserService', () => {
   describe('userConfig', () => {
     it('should create userConfig on userCreate', async () => {
       const user = generateCreateUserParams();
-      const craetedUser = await service.insert(user);
-      const CreatedConfigUser = await service.getUserConfig(craetedUser.id);
+      const createdUser = await service.insert(user);
+      const CreatedConfigUser = await service.getUserConfig(createdUser.id);
 
-      expect(craetedUser.id).toEqual(CreatedConfigUser.userId);
+      expect(createdUser.id).toEqual(CreatedConfigUser.userId);
+    });
+  });
+
+  describe('updateUserAppointments', () => {
+    it('should move appointments from old user to new user', async () => {
+      const oldUser = await service.insert(generateCreateUserParams());
+      const newUser = await service.insert(generateCreateUserParams());
+
+      // Insert appointments to oldUser
+      const mockAppointments = [];
+      for (let step = 0; step < 5; step++) {
+        const appointment = generateScheduleAppointmentParams({ id: generateId() });
+        mockAppointments.push(appointment);
+        const params: IEventNewAppointment = {
+          appointmentId: appointment.id,
+          userId: oldUser.id,
+        };
+        await service.handleOrderCreatedEvent(params);
+      }
+      const params: IEventUpdateAppointmentsInUser = {
+        newUserId: newUser.id,
+        oldUserId: oldUser.id,
+        memberId: generateId(),
+        appointments: mockAppointments,
+      };
+
+      await service.updateUserAppointments(params);
+
+      // Not using service.get because it populates the appointments, and they don't really exist
+      const updatedOldUser = (await userModel.findById(oldUser.id)).toObject();
+      const updatedNewUser = (await userModel.findById(newUser.id)).toObject();
+      const mockAppointmentsIds = mockAppointments.map((app) => Types.ObjectId(app.id));
+
+      expect(updatedNewUser['appointments']).toEqual(mockAppointmentsIds);
+      expect(updatedOldUser['appointments']).toEqual([]);
     });
   });
 });

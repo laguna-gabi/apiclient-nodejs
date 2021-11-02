@@ -6,8 +6,10 @@ import { add } from 'date-fns';
 import { camelCase } from 'lodash';
 import {
   Appointment,
+  AppointmentBase,
   AppointmentScheduler,
   AppointmentService,
+  AppointmentStatus,
   EndAppointmentParams,
   Notes,
   RequestAppointmentParams,
@@ -18,6 +20,7 @@ import {
   EventType,
   IEventDeleteSchedules,
   IEventRequestAppointment,
+  IEventUpdateUserInAppointments,
   IEventUpdatedAppointment,
   InternalNotificationType,
   InternalNotifyParams,
@@ -30,7 +33,6 @@ import { Member } from '../member';
 import { OrgService } from '../org';
 import { Bitly } from '../providers';
 import { User } from '../user';
-import { AppointmentBase } from '.';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Appointment)
@@ -84,14 +86,7 @@ export class AppointmentResolver extends AppointmentBase {
       key: appointment.id,
     };
     this.eventEmitter.emit(EventType.updatedAppointment, eventParams);
-
-    await this.appointmentScheduler.deleteTimeout({
-      id: appointment.id + ReminderType.appointmentReminder,
-    });
-    await this.appointmentScheduler.deleteTimeout({
-      id: appointment.id + ReminderType.appointmentLongReminder,
-    });
-
+    await this.appointmentScheduler.unRegisterAppointmentAlert(appointment.id);
     return appointment;
   }
 
@@ -138,6 +133,53 @@ export class AppointmentResolver extends AppointmentBase {
     } catch (ex) {
       this.logger.error(params, AppointmentResolver.name, this.deleteSchedules.name, ex);
     }
+  }
+
+  @OnEvent(EventType.updateUserInAppointments, { async: true })
+  async updateUserInAppointments(params: IEventUpdateUserInAppointments) {
+    const appointments = await this.appointmentService.getFutureAppointments(
+      params.oldUserId,
+      params.memberId,
+    );
+
+    if (appointments.length == 0) return;
+
+    await Promise.all(
+      appointments.map(async (appointment) => {
+        try {
+          switch (appointment.status) {
+            case AppointmentStatus.scheduled:
+              const newAppointmentParams: ScheduleAppointmentParams = {
+                memberId: appointment.memberId.toString(),
+                userId: params.newUserId,
+                method: appointment.method,
+                start: appointment.start,
+                end: appointment.end,
+                id: appointment.id,
+              };
+              await this.scheduleAppointment(newAppointmentParams);
+              break;
+            case AppointmentStatus.requested:
+              const requestAppointmentParams: RequestAppointmentParams = {
+                memberId: appointment.memberId.toString(),
+                userId: params.newUserId,
+                notBefore: add(new Date(), { hours: 2 }),
+                id: appointment.id,
+              };
+              await this.requestAppointment(requestAppointmentParams);
+              break;
+          }
+        } catch (ex) {
+          this.logger.error(
+            params,
+            AppointmentResolver.name,
+            this.updateUserInAppointments.name,
+            ex,
+          );
+        }
+      }),
+    );
+    this.eventEmitter.emit(EventType.updateAppointmentsInUser, { ...params, appointments });
   }
 
   /*************************************************************************************************

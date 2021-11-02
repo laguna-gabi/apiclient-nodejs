@@ -23,6 +23,7 @@ import {
   RecordingLinkParams,
   RecordingOutput,
   SetGeneralNotesParams,
+  SetNewUserToMemberParams,
   TaskStatus,
   UpdateMemberConfigParams,
   UpdateMemberParams,
@@ -37,6 +38,7 @@ import {
   IEventNotifyChatMessage,
   IEventSendSmsToChat,
   IEventUpdateMemberPlatform,
+  IEventUpdateUserInCommunication,
   Identifier,
   InternalNotificationType,
   InternalNotifyParams,
@@ -172,6 +174,26 @@ export class MemberResolver extends MemberBase {
     this.eventEmitter.emit(EventType.deleteMember, id);
     const params: IEventDeleteSchedules = { memberId: id };
     this.eventEmitter.emit(EventType.deleteSchedules, params);
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async setNewUserToMember(
+    @Args(camelCase(SetNewUserToMemberParams.name))
+    setNewUserToMemberParams: SetNewUserToMemberParams,
+  ) {
+    const newUser = await this.userService.get(setNewUserToMemberParams.userId);
+    if (!newUser) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+    const oldUserId = await this.memberService.setNewUserToMember(setNewUserToMemberParams);
+    const eventParams: IEventUpdateUserInCommunication = {
+      newUser,
+      oldUserId,
+      memberId: setNewUserToMemberParams.memberId,
+    };
+
+    this.eventEmitter.emit(EventType.updateUserInCommunication, eventParams);
+    return true;
   }
 
   /*************************************************************************************************

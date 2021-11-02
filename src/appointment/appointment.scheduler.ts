@@ -64,9 +64,7 @@ export class AppointmentScheduler extends BaseScheduler {
     userId: string;
     start: Date;
   }): Promise<void> {
-    this.deleteTimeout({ id: id + ReminderType.appointmentReminder });
-    this.deleteTimeout({ id: id + ReminderType.appointmentLongReminder });
-
+    await this.unRegisterAppointmentAlert(id);
     const { gapDate, maxDate } = this.getCurrentDateConfigs();
 
     if (start.getTime() <= maxDate.getTime()) {
@@ -84,6 +82,11 @@ export class AppointmentScheduler extends BaseScheduler {
         start,
       });
     }
+  }
+
+  public async unRegisterAppointmentAlert(id: string) {
+    await this.deleteTimeout({ id: id + ReminderType.appointmentReminder });
+    await this.deleteTimeout({ id: id + ReminderType.appointmentLongReminder });
   }
 
   /************************************************************************************************

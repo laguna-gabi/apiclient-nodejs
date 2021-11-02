@@ -947,6 +947,50 @@ describe('MemberResolver', () => {
     });
   });
 
+  describe('setNewUserToMember', () => {
+    let spyOnServiceSetNewUserToMember;
+    let spyOnUserServiceGet;
+
+    beforeEach(() => {
+      spyOnUserServiceGet = jest.spyOn(userService, 'get');
+      spyOnServiceSetNewUserToMember = jest.spyOn(service, 'setNewUserToMember');
+    });
+
+    afterEach(() => {
+      spyOnServiceSetNewUserToMember.mockReset();
+      spyOnUserServiceGet.mockReset();
+      spyOnEventEmitter.mockReset();
+    });
+
+    it('should set new user for a given member', async () => {
+      const memberId = generateId();
+      const user = mockGenerateUser();
+      const oldUserId = generateId();
+      spyOnUserServiceGet.mockImplementationOnce(async () => user);
+      spyOnServiceSetNewUserToMember.mockImplementationOnce(async () => oldUserId);
+
+      await resolver.setNewUserToMember({ memberId, userId: user.id });
+
+      expect(spyOnUserServiceGet).toBeCalledWith(user.id);
+      expect(spyOnServiceSetNewUserToMember).toBeCalledWith({ memberId, userId: user.id });
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateUserInCommunication, {
+        newUser: user,
+        oldUserId,
+        memberId,
+      });
+    });
+
+    it("should throw an error when the new user doesn't exist", async () => {
+      const memberId = generateId();
+      const user = mockGenerateUser();
+      spyOnUserServiceGet.mockImplementationOnce(async () => null);
+
+      await expect(resolver.setNewUserToMember({ memberId, userId: user.id })).rejects.toThrow(
+        Errors.get(ErrorType.userNotFound),
+      );
+    });
+  });
+
   describe('notify', () => {
     let spyOnServiceGetMember;
     let spyOnServiceGetMemberConfig;

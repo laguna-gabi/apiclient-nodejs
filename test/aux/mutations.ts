@@ -19,6 +19,7 @@ import {
   Member,
   NotifyParams,
   SetGeneralNotesParams,
+  SetNewUserToMemberParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -739,5 +740,29 @@ export class Mutations {
     }
 
     return false;
+  };
+
+  setNewUserToMember = async ({
+    setNewUserToMemberParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    setNewUserToMemberParams: SetNewUserToMemberParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }) => {
+    const result = await this.apolloClient.mutate({
+      variables: { setNewUserToMemberParams: setNewUserToMemberParams },
+      mutation: gql`
+        mutation setNewUserToMember($setNewUserToMemberParams: SetNewUserToMemberParams!) {
+          setNewUserToMember(setNewUserToMemberParams: $setNewUserToMemberParams)
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.setNewUserToMemberParams
+    );
   };
 }

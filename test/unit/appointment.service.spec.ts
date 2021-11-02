@@ -167,6 +167,28 @@ describe('AppointmentService', () => {
       );
     });
 
+    it('should override userId when called with existing appointmentId ', async () => {
+      const requestAppointmentParams = generateRequestAppointmentParams();
+      const { id } = await service.request(requestAppointmentParams);
+
+      validateNewAppointmentEvent(
+        requestAppointmentParams.memberId,
+        requestAppointmentParams.userId,
+        id,
+      );
+      expect(id).not.toBeNull();
+
+      const newUserId = generateId();
+      const updatedRequestAppointmentParams = generateRequestAppointmentParams({
+        userId: newUserId,
+      });
+      updatedRequestAppointmentParams['id'] = id;
+      const { id: appId, userId } = await service.request(updatedRequestAppointmentParams);
+
+      expect(id).toEqual(appId);
+      expect(userId).toEqual(newUserId);
+    });
+
     it('should crate a new appointment for an existing memberId and different userId', async () => {
       const memberId = generateId();
       const userId1 = v4();
@@ -328,28 +350,28 @@ describe('AppointmentService', () => {
       expect(appointment1.id).not.toEqual(appointment3.id);
       expect(appointment2.id).not.toEqual(appointment3.id);
     });
-  });
 
-  it('should override requested appointment on scheduled appointment', async () => {
-    const requestAppointmentParams = generateRequestAppointmentParams();
-    const { id } = await service.request(requestAppointmentParams);
+    it('should override requested appointment on scheduled appointment', async () => {
+      const requestAppointmentParams = generateRequestAppointmentParams();
+      const { id } = await service.request(requestAppointmentParams);
 
-    validateNewAppointmentEvent(
-      requestAppointmentParams.memberId,
-      requestAppointmentParams.userId,
-      id,
-    );
-    expect(id).not.toBeNull();
+      validateNewAppointmentEvent(
+        requestAppointmentParams.memberId,
+        requestAppointmentParams.userId,
+        id,
+      );
+      expect(id).not.toBeNull();
 
-    const scheduleAppointmentParams = generateScheduleAppointmentParams({
-      userId: requestAppointmentParams.userId,
-      memberId: requestAppointmentParams.memberId,
+      const scheduleAppointmentParams = generateScheduleAppointmentParams({
+        userId: requestAppointmentParams.userId,
+        memberId: requestAppointmentParams.memberId,
+      });
+
+      const { id: scheduledId } = await service.schedule(scheduleAppointmentParams);
+
+      expect(id).toEqual(scheduledId);
+      expect(spyOnEventEmitter).not.toBeCalled();
     });
-
-    const { id: scheduledId } = await service.schedule(scheduleAppointmentParams);
-
-    expect(id).toEqual(scheduledId);
-    expect(spyOnEventEmitter).not.toBeCalled();
   });
 
   describe('end', () => {
@@ -501,6 +523,41 @@ describe('AppointmentService', () => {
       const result = await service.get(resultAppointment.id);
 
       expect(result.notes).toBeNull();
+    });
+  });
+
+  describe('getFutureAppointments', () => {
+    it('should get only future appointments that are not of status done', async () => {
+      const userId = generateId();
+      const memberId = generateId();
+
+      // schedule past appointments
+      const pastAppointments = [];
+      for (let step = 0; step < 3; step++) {
+        const pastAppointment = generateScheduleAppointmentParams({
+          start: faker.date.recent(4),
+          userId,
+          memberId,
+        });
+        pastAppointments.push(await service.schedule(pastAppointment));
+      }
+
+      // schedule future appointments
+      const futureAppointments = [];
+      for (let step = 0; step < 3; step++) {
+        const futureAppointment = generateScheduleAppointmentParams({
+          userId,
+          memberId,
+        });
+        futureAppointments.push(await service.schedule(futureAppointment));
+      }
+
+      // change one of the future appointments to 'done'
+      await service.end({ id: futureAppointments[0].id.toString() });
+
+      const result = await service.getFutureAppointments(userId, memberId);
+      futureAppointments.shift();
+      expect(result).toEqual(futureAppointments);
     });
   });
 

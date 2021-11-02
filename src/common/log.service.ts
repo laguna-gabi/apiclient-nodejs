@@ -44,6 +44,9 @@ export class Logger {
     'finishedAndItTook',
     //slackbot
     'channel',
+    //replace user
+    'newUserId',
+    'oldUserId',
   ];
 
   log(params: any = {}, className: string, methodName: string) {

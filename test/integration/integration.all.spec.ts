@@ -24,6 +24,7 @@ import {
   MemberConfig,
   NotifyParams,
   RecordingOutput,
+  SetNewUserToMemberParams,
   Task,
   TaskStatus,
   UpdateRecordingParams,
@@ -55,13 +56,12 @@ describe('Integration tests: all', () => {
   let creators: Creators;
   let appointmentsActions: AppointmentsIntegrationActions;
   let mockCommunicationParams;
-
   beforeAll(async () => {
     await handler.beforeAll();
     appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
     creators = new Creators(handler, appointmentsActions);
-    mockCommunicationParams = handler.mockCommunication();
     await creators.createFirstUserInDbfNecessary();
+    mockCommunicationParams = handler.mockCommunication();
   });
 
   afterAll(async () => {
@@ -652,6 +652,7 @@ describe('Integration tests: all', () => {
       isPushNotificationsEnabled: true,
     };
     await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+    await delay(500);
 
     const notifyParams: NotifyParams = {
       memberId: member.id,
@@ -660,8 +661,14 @@ describe('Integration tests: all', () => {
       metadata: { content: 'text' },
     };
 
-    await handler.mutations.notify({ notifyParams });
+    /**
+     * reset mock on NotificationsService so we dont count
+     * the notifications that are made on member creation
+     */
+    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
 
+    await handler.mutations.notify({ notifyParams });
+    await delay(500);
     expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
       sendTwilioNotification: {
         to: member.phone,
@@ -690,6 +697,13 @@ describe('Integration tests: all', () => {
       type: NotificationType.textSms,
       metadata: { content: 'text' },
     };
+
+    /**
+     * reset mock on NotificationsService so we dont count
+     * the notifications that are made on member creation
+     */
+    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+    await delay(500);
 
     await handler.mutations.notify({ notifyParams });
 
@@ -1055,6 +1069,90 @@ describe('Integration tests: all', () => {
       expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(
         expect.arrayContaining([member.id]),
       );
+    });
+  });
+
+  describe('setNewUserToMember', () => {
+    it('should set new user for a given member', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+      const oldUserId = member.primaryUserId;
+      const newUser = await creators.createAndValidateUser();
+      delete newUser.authId;
+
+      // Schedule an appointment
+      const appointmentParams = generateScheduleAppointmentParams({
+        userId: oldUserId,
+        memberId: member.id,
+      });
+      const appointment = await handler.mutations.scheduleAppointment({ appointmentParams });
+
+      // setNewUserToMember
+      const setNewUserToMemberParams: SetNewUserToMemberParams = {
+        memberId: member.id,
+        userId: newUser.id,
+      };
+      await handler.mutations.setNewUserToMember({ setNewUserToMemberParams });
+      await delay(2000); // wait for event to finish
+
+      // Check that the member's primary user changed
+      const updatedMember = await handler.queries.getMember({ id: member.id });
+      expect(updatedMember.primaryUserId).toEqual(newUser.id);
+      expect(updatedMember.users[updatedMember.users.length - 1].id).toEqual(newUser.id);
+
+      // TODO: Check that the communication changed (currently can't because it's mocked)
+      // const communication = await handler.queries.getCommunication({
+      //   getCommunicationParams: { userId: newUser.id, memberId: member.id },
+      // });
+      // expect(communication.memberId).toEqual(member.id);
+      // expect(communication.userId).toEqual(newUser.id);
+
+      // Check that the appointment moved from the old user to the new
+      const { appointments: newUserAppointments } = await handler.queries.getUser(newUser.id);
+      const { appointments: oldUserAppointments } = await handler.queries.getUser(oldUserId);
+      const newUserAppointmentsIds = newUserAppointments.map((app) => app.id);
+      const oldUserAppointmentsIds = oldUserAppointments.map((app) => app.id);
+      expect(newUserAppointmentsIds).toContain(appointment.id);
+      expect(oldUserAppointmentsIds).not.toContain(appointment.id);
+    });
+
+    it("should throw an error when the new user doesn't exist", async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+
+      const setNewUserToMemberParams: SetNewUserToMemberParams = {
+        memberId: member.id,
+        userId: generateId(),
+      };
+      await handler.mutations.setNewUserToMember({
+        setNewUserToMemberParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.userNotFound)],
+      });
+    });
+
+    it('should fail to update on non existing member', async () => {
+      const user = await creators.createAndValidateUser();
+      const setNewUserToMemberParams: SetNewUserToMemberParams = {
+        memberId: generateId(),
+        userId: user.id,
+      };
+      await handler.mutations.setNewUserToMember({
+        setNewUserToMemberParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.memberNotFound)],
+      });
+    });
+
+    it('should throw an error if the new user equals the old user', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+      const setNewUserToMemberParams: SetNewUserToMemberParams = {
+        memberId: member.id,
+        userId: member.primaryUserId,
+      };
+      await handler.mutations.setNewUserToMember({
+        setNewUserToMemberParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.userIdOrEmailAlreadyExists)],
+      });
     });
   });
 

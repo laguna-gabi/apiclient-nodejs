@@ -1,5 +1,5 @@
 import { UseInterceptors } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Query, Resolver } from '@nestjs/graphql';
 import * as config from 'config';
 import { camelCase } from 'lodash';
@@ -15,6 +15,8 @@ import {
   IEventNewMember,
   IEventNewUser,
   IEventUpdateMemberPlatform,
+  IEventUpdateUserInAppointments,
+  IEventUpdateUserInCommunication,
   Logger,
   LoggingInterceptor,
   RoleTypes,
@@ -28,6 +30,7 @@ export class CommunicationResolver {
   constructor(
     private readonly communicationService: CommunicationService,
     private readonly logger: Logger,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   @Query(() => CommunicationInfo, { nullable: true })
@@ -36,25 +39,34 @@ export class CommunicationResolver {
     getCommunicationParams: GetCommunicationParams,
   ): Promise<CommunicationInfo> {
     const result = await this.communicationService.get(getCommunicationParams);
-    if (result) {
-      return {
-        memberId: result.memberId,
-        userId: result.userId,
-        chat: {
-          memberLink: this.buildUrl({
-            uid: result.memberId,
-            mid: result.sendBirdChannelUrl,
-            token: result.memberToken,
-          }),
-          userLink: this.buildUrl({
-            uid: result.userId,
-            mid: result.sendBirdChannelUrl,
-            token: result.userToken,
-          }),
-        },
-      };
-    } else {
-      return null;
+    try {
+      if (result) {
+        return {
+          memberId: result.memberId,
+          userId: result.userId,
+          chat: {
+            memberLink: this.buildUrl({
+              uid: result.memberId,
+              mid: result.sendBirdChannelUrl,
+              token: result.memberToken,
+            }),
+            userLink: this.buildUrl({
+              uid: result.userId,
+              mid: result.sendBirdChannelUrl,
+              token: result.userToken,
+            }),
+          },
+        };
+      } else {
+        return null;
+      }
+    } catch (ex) {
+      this.logger.error(
+        getCommunicationParams,
+        CommunicationResolver.name,
+        this.getCommunication.name,
+        ex,
+      );
     }
   }
 
@@ -133,5 +145,26 @@ export class CommunicationResolver {
 
   private buildUrl({ uid, mid, token }): string {
     return `${config.get('hosts.chat')}/?uid=${uid}&mid=${mid}&token=${token}`;
+  }
+
+  @OnEvent(EventType.updateUserInCommunication, { async: true })
+  async updateUserInCommunication(params: IEventUpdateUserInCommunication) {
+    try {
+      await this.communicationService.updateUserInCommunication(params);
+      const replacedUserInCommunicationParams: IEventUpdateUserInAppointments = {
+        oldUserId: params.oldUserId,
+        newUserId: params.newUser.id,
+        memberId: params.memberId,
+      };
+      this.eventEmitter.emit(EventType.updateUserInAppointments, replacedUserInCommunicationParams);
+      this.logger.debug(params, CommunicationResolver.name, this.updateUserInCommunication.name);
+    } catch (ex) {
+      this.logger.error(
+        params,
+        CommunicationResolver.name,
+        this.updateUserInCommunication.name,
+        ex,
+      );
+    }
   }
 }

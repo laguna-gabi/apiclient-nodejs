@@ -149,6 +149,26 @@ export class CommunicationService {
     );
   }
 
+  async updateUserInCommunication({
+    newUser,
+    oldUserId,
+    memberId,
+  }: {
+    newUser: User;
+    oldUserId: string;
+    memberId: string;
+  }) {
+    const communication = await this.get({ memberId, userId: oldUserId });
+    if (!communication) {
+      throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
+    }
+    await this.sendBird.replaceUserInChannel(communication.sendBirdChannelUrl, oldUserId, newUser);
+    await this.communicationModel.findOneAndUpdate(
+      { sendBirdChannelUrl: communication.sendBirdChannelUrl },
+      { userId: newUser.id },
+    );
+  }
+
   async get(params: GetCommunicationParams) {
     const result = await this.communicationModel.aggregate([
       {

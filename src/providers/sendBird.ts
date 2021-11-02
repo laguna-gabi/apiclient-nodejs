@@ -3,6 +3,7 @@ import { ConfigsService, ExternalConfigs } from '.';
 import { AppointmentStatus } from '../appointment';
 import { Logger, SendSendBirdNotification } from '../common';
 import { CreateSendbirdGroupChannelParams, RegisterSendbirdUserParams } from '../communication';
+import { User } from '../user';
 
 enum suffix {
   users = 'users',
@@ -121,6 +122,7 @@ export class SendBird implements OnModuleInit {
     return this.masterApiToken;
   }
 
+  // TODO: split the appointment logic and turn into a more generic function with updateChannelName
   private async update(
     channelUrl: string,
     appointmentId: string,
@@ -138,6 +140,32 @@ export class SendBird implements OnModuleInit {
     await this.httpService
       .put(url, { data: JSON.stringify(data) }, { headers: this.headers })
       .toPromise();
+  }
+
+  async updateChannelName(sendBirdChannelUrl: string, name: string, cover_url: string) {
+    const methodName = this.updateChannelName.name;
+    try {
+      const result = await this.httpService
+        .put(
+          `${this.basePath}${suffix.groupChannels}/${sendBirdChannelUrl}`,
+          {
+            name,
+            cover_url,
+          },
+          {
+            headers: this.headers,
+          },
+        )
+        .toPromise();
+      if (result.status === 200) {
+        this.logger.debug({ sendBirdChannelUrl }, SendBird.name, methodName);
+        return result;
+      } else {
+        this.logger.error({ sendBirdChannelUrl }, SendBird.name, methodName);
+      }
+    } catch (ex) {
+      this.logger.error({ sendBirdChannelUrl }, SendBird.name, methodName);
+    }
   }
 
   async countUnreadMessages(channelUrl: string, userId: string): Promise<number> {
@@ -192,5 +220,61 @@ export class SendBird implements OnModuleInit {
     } catch (ex) {
       this.logger.error(sendSendBirdNotification, SendBird.name, methodName);
     }
+  }
+
+  async invite(sendBirdChannelUrl: string, userId: string) {
+    const methodName = this.invite.name;
+    try {
+      const result = await this.httpService
+        .post(
+          `${this.basePath}${suffix.groupChannels}/${sendBirdChannelUrl}/invite`,
+          {
+            user_ids: [userId],
+          },
+          {
+            headers: this.headers,
+          },
+        )
+        .toPromise();
+      if (result.status === 200) {
+        this.logger.debug({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
+        return result;
+      } else {
+        this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
+      }
+    } catch (ex) {
+      this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
+    }
+  }
+
+  async leave(sendBirdChannelUrl: string, userId: string) {
+    const methodName = this.leave.name;
+    try {
+      const result = await this.httpService
+        .put(
+          `${this.basePath}${suffix.groupChannels}/${sendBirdChannelUrl}/leave`,
+          {
+            user_ids: [userId],
+          },
+          {
+            headers: this.headers,
+          },
+        )
+        .toPromise();
+      if (result.status === 200) {
+        this.logger.debug({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
+        return result;
+      } else {
+        this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
+      }
+    } catch (ex) {
+      this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
+    }
+  }
+
+  async replaceUserInChannel(sendBirdChannelUrl: string, oldUserId: string, newUser: User) {
+    await this.leave(sendBirdChannelUrl, oldUserId);
+    await this.invite(sendBirdChannelUrl, newUser.id);
+    await this.updateChannelName(sendBirdChannelUrl, newUser.firstName, newUser.avatar);
   }
 }

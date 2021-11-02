@@ -22,7 +22,7 @@ describe('live: sendbird actions', () => {
   /**
    * Flow:
    * 1. Create a user (coach)
-   * 2. Create a user (member)
+   * 2. Create a member
    * 3. Create a group channel between user(coach) and user(member)
    * 4. Freeze group channel
    * 5. Send message (should work even though the channel is frozen)
@@ -31,6 +31,9 @@ describe('live: sendbird actions', () => {
    * 8. Update metadata for appointment1
    * 9. Update metadata for appointment2 (check that we have 2 appointments in the metadata now)
    * 10. Delete metadata for appointment2
+   * 11. Create another user (coach)
+   * 12. replace coach in channel (leave & invite)
+   * 13. replace channel name and image
    */
   // 1. Create a user (coach)
   it('should do sendbird flow', async () => {
@@ -44,7 +47,7 @@ describe('live: sendbird actions', () => {
     const userResult = await sendBird.createUser(user);
     expect(userResult).toEqual(expect.any(String));
 
-    // 2. Create a user (member)
+    // 2. Create a member
     const member = {
       user_id: generateId(),
       nickname: faker.name.firstName(),
@@ -108,7 +111,34 @@ describe('live: sendbird actions', () => {
     // 10. Delete metadata for appointment2
     await sendBird.deleteGroupChannelMetadata(params.channel_url, appointmentId2);
     await validateGroupChannel(params.channel_url, [appointmentId1], [value1]);
-  }, 20000);
+
+    // 11. Create another user (coach)
+    const newUser = {
+      user_id: v4(),
+      nickname: faker.name.firstName(),
+      profile_url: faker.image.avatar(),
+      issue_access_token: true,
+      metadata: { role: UserRole.coach.toLowerCase() },
+    };
+    await sendBird.createUser(newUser);
+
+    // 12. replace coach in channel (leave & invite)
+    const leaveResult = await sendBird.leave(params.channel_url, user.user_id);
+    expect(leaveResult.data).toEqual({});
+
+    const inviteResult = await sendBird.invite(params.channel_url, newUser.user_id);
+    expect(inviteResult.data.members[0].user_id).toEqual(newUser.user_id);
+    expect(inviteResult.data.members[1].user_id).toEqual(member.user_id);
+
+    // 13. replace channel name and image
+    const replaceResult = await sendBird.updateChannelName(
+      params.channel_url,
+      newUser.nickname,
+      newUser.profile_url,
+    );
+    expect(JSON.parse(replaceResult.config.data).name).toEqual(newUser.nickname);
+    expect(JSON.parse(replaceResult.config.data).cover_url).toEqual(newUser.profile_url);
+  }, 30000);
 
   const validateGroupChannel = async (
     channelUrl: string,

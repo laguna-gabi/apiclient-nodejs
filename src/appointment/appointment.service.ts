@@ -39,14 +39,19 @@ export class AppointmentService extends BaseService {
   }
 
   async request(params: RequestAppointmentParams): Promise<Appointment> {
+    const filter = params.id
+      ? { _id: new Types.ObjectId(params.id) }
+      : {
+          userId: params.userId,
+          memberId: new Types.ObjectId(params.memberId),
+          status: AppointmentStatus.requested,
+        };
+
     const result = await this.appointmentModel.findOneAndUpdate(
-      {
-        userId: params.userId,
-        memberId: new Types.ObjectId(params.memberId),
-        status: AppointmentStatus.requested,
-      },
+      filter,
       {
         $set: {
+          userId: params.userId,
           notBefore: params.notBefore,
           status: AppointmentStatus.requested,
         },
@@ -69,6 +74,18 @@ export class AppointmentService extends BaseService {
   async get(id: string): Promise<Appointment> {
     const result = await this.appointmentModel.findById({ _id: id }).populate('notes');
     return this.replaceId(result);
+  }
+
+  async getFutureAppointments(userId: string, memberId: string): Promise<Appointment[]> {
+    const result = await this.appointmentModel.find({
+      userId: userId,
+      memberId: new Types.ObjectId(memberId),
+      status: { $ne: AppointmentStatus.done },
+      start: { $gte: new Date() },
+    });
+    return result.map(
+      (appointment) => this.replaceId(appointment.toObject()) as AppointmentDocument,
+    );
   }
 
   async schedule(params: ScheduleAppointmentParams): Promise<Appointment> {
@@ -177,7 +194,7 @@ export class AppointmentService extends BaseService {
     return this.replaceId(result.toObject() as AppointmentDocument);
   }
 
-  private async updateAppointment(id, setParams): Promise<Appointment> {
+  async updateAppointment(id, setParams): Promise<Appointment> {
     const object = await this.appointmentModel.findOneAndUpdate(
       {
         _id: new Types.ObjectId(id),

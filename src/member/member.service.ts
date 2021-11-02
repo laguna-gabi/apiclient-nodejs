@@ -30,6 +30,7 @@ import {
   RecordingDocument,
   RecordingOutput,
   SetGeneralNotesParams,
+  SetNewUserToMemberParams,
   TaskStatus,
   UpdateMemberConfigParams,
   UpdateMemberParams,
@@ -617,6 +618,30 @@ export class MemberService extends BaseService {
 
   async getRecordings(memberId: string): Promise<RecordingOutput[]> {
     return this.recordingModel.find({ memberId: new Types.ObjectId(memberId) });
+  }
+
+  /************************************************************************************************
+   **************************************** Modifications *****************************************
+   ************************************************************************************************/
+
+  async setNewUserToMember(params: SetNewUserToMemberParams): Promise<string> {
+    const { memberId, userId } = params;
+
+    // replace primary user and add the new user to member's list
+    const member = await this.memberModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(memberId) },
+      { primaryUserId: userId, $addToSet: { users: userId } },
+      { new: false },
+    );
+    if (!member) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
+    // if old user == new user
+    if (member.primaryUserId === params.userId) {
+      throw new Error(Errors.get(ErrorType.userIdOrEmailAlreadyExists));
+    }
+    // return the old primaryUserId
+    return member.primaryUserId;
   }
 
   /*************************************************************************************************

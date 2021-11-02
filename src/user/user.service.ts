@@ -24,6 +24,7 @@ import {
   EventType,
   IEventNewAppointment,
   IEventSlackMessage,
+  IEventUpdateAppointmentsInUser,
   IEventUpdateUserConfig,
   Logger,
   SlackChannel,
@@ -327,5 +328,25 @@ export class UserService extends BaseService {
         );
       }),
     );
+  }
+
+  @OnEvent(EventType.updateAppointmentsInUser, { async: true })
+  async updateUserAppointments(params: IEventUpdateAppointmentsInUser) {
+    const appointmentIds = params.appointments.map((appointment) => Types.ObjectId(appointment.id));
+
+    try {
+      await this.userModel.updateOne(
+        { _id: params.oldUserId },
+        { $pullAll: { appointments: appointmentIds } },
+      );
+
+      await this.userModel.updateOne(
+        { _id: params.newUserId },
+        { $addToSet: { appointments: { $each: appointmentIds } } },
+        { new: true },
+      );
+    } catch (ex) {
+      this.logger.error(params, UserService.name, this.updateUserAppointments.name, ex);
+    }
   }
 }

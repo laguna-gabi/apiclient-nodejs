@@ -64,6 +64,9 @@ export const mockProviders = (
   const spyOnSendBirdDeleteGroupChannel = jest.spyOn(sendBird, 'deleteGroupChannel');
   const spyOnSendBirdDeleteUser = jest.spyOn(sendBird, 'deleteUser');
   const spyOnSendBirdSend = jest.spyOn(sendBird, 'send');
+  const spyOnSendBirdUpdateChannelName = jest.spyOn(sendBird, 'updateChannelName');
+  const spyOnSendBirdInvite = jest.spyOn(sendBird, 'invite');
+  const spyOnSendBirdLeave = jest.spyOn(sendBird, 'leave');
   const spyOnSendBirdUpdateGroupChannelMetadata = jest.spyOn(
     sendBird,
     'updateGroupChannelMetadata',
@@ -99,6 +102,9 @@ export const mockProviders = (
   spyOnNotificationsServiceCancel.mockResolvedValue(v4());
   spyOnTwilioGetToken.mockReturnValue('token');
   spyOnSlackBotSendMessage.mockReturnValue(undefined);
+  spyOnSendBirdUpdateChannelName.mockReturnValue(undefined);
+  spyOnSendBirdInvite.mockReturnValue(undefined);
+  spyOnSendBirdLeave.mockReturnValue(undefined);
 
   return {
     sendBird: {
@@ -110,6 +116,9 @@ export const mockProviders = (
       spyOnSendBirdSend,
       spyOnSendBirdUpdateGroupChannelMetadata,
       spyOnSendBirdDeleteGroupChannelMetadata,
+      spyOnSendBirdUpdateChannelName,
+      spyOnSendBirdInvite,
+      spyOnSendBirdLeave,
     },
     notificationsService: {
       spyOnNotificationsServiceRegister,

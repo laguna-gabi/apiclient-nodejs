@@ -36,6 +36,7 @@ import {
   MemberConfig,
   NotifyParams,
   SetGeneralNotesParams,
+  SetNewUserToMemberParams,
   Sex,
   TaskStatus,
   UpdateMemberConfigParams,
@@ -408,6 +409,13 @@ export const generateCommunication = ({
 }: Partial<Communication> = {}): Communication => {
   const sendBirdChannelUrl = faker.datatype.uuid();
   return { memberId, userId, sendBirdChannelUrl };
+};
+
+export const generateSetNewUserToMemberParams = ({
+  userId = generateId(),
+  memberId = generateId(),
+}: Partial<SetNewUserToMemberParams> = {}): SetNewUserToMemberParams => {
+  return { userId, memberId };
 };
 
 export const generateGetCommunication = () => {
