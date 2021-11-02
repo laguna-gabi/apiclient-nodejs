@@ -179,6 +179,7 @@ export class AppointmentScheduler extends BaseScheduler {
           userId,
           type: InternalNotificationType.textToMember,
           metadata,
+          checkAppointmentReminder: true,
         };
 
         this.eventEmitter.emit(EventType.internalNotify, params);
@@ -216,6 +217,7 @@ export class AppointmentScheduler extends BaseScheduler {
           userId,
           type: InternalNotificationType.textToMember,
           metadata,
+          checkAppointmentReminder: true,
         };
 
         this.eventEmitter.emit(EventType.internalNotify, params);

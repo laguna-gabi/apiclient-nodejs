@@ -863,51 +863,96 @@ describe('Integration tests: all', () => {
     compareRecording(result2[0], rec2);
   });
 
-  it('should register scheduled appointment reminder and notify it to member', async () => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
+  test.each([true, false])(
+    'should register scheduled appointment reminder and notify it to member with isAppointmentsReminderEnabled=%p',
+    async (isAppointmentsReminderEnabled) => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
 
-    await delay(1000);
+      await handler.mutations.updateMemberConfig({
+        updateMemberConfigParams: generateUpdateMemberConfigParams({
+          memberId: member.id,
+          isAppointmentsReminderEnabled,
+        }),
+      });
 
-    const milliseconds = (config.get('scheduler.alertBeforeInMin') + 1 / 60) * 60 * 1000;
-    const start = new Date();
-    start.setMilliseconds(start.getMilliseconds() + milliseconds);
-    Date.now = jest.fn(() => milliseconds - 1000);
+      await delay(1000);
 
-    const appointmentParams = generateScheduleAppointmentParams({
-      memberId: member.id,
-      userId: member.users[0].id,
-      start,
-    });
+      const milliseconds = (config.get('scheduler.alertBeforeInMin') + 1 / 60) * 60 * 1000;
+      const start = new Date();
+      start.setMilliseconds(start.getMilliseconds() + milliseconds);
+      Date.now = jest.fn(() => milliseconds - 1000);
 
-    /**
-     * reset mock on NotificationsService so we dont count
-     * the notifications that are made on member creation
-     */
-    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+      const appointmentParams = generateScheduleAppointmentParams({
+        memberId: member.id,
+        userId: member.users[0].id,
+        start,
+      });
 
-    await creators.handler.mutations.scheduleAppointment({ appointmentParams });
+      /**
+       * reset mock on NotificationsService so we dont count
+       * the notifications that are made on member creation
+       */
+      handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
 
-    await delay(2000);
+      await creators.handler.mutations.scheduleAppointment({ appointmentParams });
 
-    expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenNthCalledWith(1, {
-      sendTwilioNotification: {
-        to: member.users[0].phone,
-        body: expect.any(String),
-        orgName: undefined,
-      },
-    });
+      await delay(2000);
 
-    expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenNthCalledWith(2, {
-      sendTwilioNotification: {
-        to: member.phone,
-        body: expect.any(String),
-        orgName: org.name,
-      },
-    });
+      expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveReturnedTimes(
+        isAppointmentsReminderEnabled ? 4 : 2,
+      );
+      expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenNthCalledWith(
+        1,
+        {
+          sendTwilioNotification: {
+            to: member.users[0].phone,
+            body: expect.any(String),
+            orgName: undefined,
+          },
+        },
+      );
 
-    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-  });
+      expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenNthCalledWith(
+        2,
+        {
+          sendTwilioNotification: {
+            to: member.phone,
+            body: expect.any(String),
+            orgName: org.name,
+          },
+        },
+      );
+
+      if (isAppointmentsReminderEnabled) {
+        expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenNthCalledWith(
+          3,
+          {
+            sendTwilioNotification: {
+              to: member.phone,
+              body: expect.stringContaining('appointment on'),
+              orgName: org.name,
+            },
+          },
+        );
+
+        expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenNthCalledWith(
+          4,
+          {
+            sendTwilioNotification: {
+              to: member.phone,
+              body: expect.stringContaining(
+                `starts in ${config.get('scheduler.alertBeforeInMin')} minutes`,
+              ),
+              orgName: org.name,
+            },
+          },
+        );
+      }
+
+      handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+    },
+  );
 
   describe('new member + member registration scheduling', () => {
     it('should create timeout on member creation', async () => {

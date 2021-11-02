@@ -130,6 +130,7 @@ export class InternalNotifyParams {
   userId: string;
   type: InternalNotificationType;
   metadata: InternalNotificationMetadata;
+  checkAppointmentReminder?: boolean;
 }
 
 export type AllNotificationTypes =

@@ -269,6 +269,7 @@ describe('AppointmentScheduler', () => {
             .replace('@gapMinutes@', config.get('scheduler.alertBeforeInMin'))}`,
           chatLink,
         },
+        checkAppointmentReminder: true,
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.internalNotify, eventParams);
       expect(spyOnBitlyShortenLink).toBeCalledWith(chat.memberLink);

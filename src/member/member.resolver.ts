@@ -431,7 +431,7 @@ export class MemberResolver extends MemberBase {
    */
   @OnEvent(EventType.internalNotify, { async: true })
   async internalNotify(params: InternalNotifyParams) {
-    const { memberId, userId, type, metadata } = params;
+    const { memberId, userId, type, metadata, checkAppointmentReminder } = params;
     let member: Member;
     let memberConfig: MemberConfig;
     let user: User;
@@ -467,6 +467,7 @@ export class MemberResolver extends MemberBase {
         user,
         type,
         metadata,
+        checkAppointmentReminder,
       });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.internalNotify.name, ex);
