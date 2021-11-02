@@ -387,13 +387,12 @@ export const generateZipCode = (): string => {
 };
 
 export const generateAvailabilityInput = ({
-  userId = v4(),
   start = faker.date.soon(),
   end,
 }: Partial<AvailabilityInput> = {}): AvailabilityInput => {
   const endNew = new Date(start);
   endNew.setHours(endNew.getHours() + 5);
-  return { userId, start, end: end || endNew };
+  return { start, end: end || endNew };
 };
 
 export const generateGetCommunicationParams = ({

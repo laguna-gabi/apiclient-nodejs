@@ -13,9 +13,6 @@ export class AvailabilityInput {
 
   @Field(() => Date)
   end: Date;
-
-  @Field(() => String)
-  userId: string;
 }
 
 /**************************************************************************************************

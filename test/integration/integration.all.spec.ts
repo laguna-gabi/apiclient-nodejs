@@ -1174,11 +1174,9 @@ describe('Integration tests: all', () => {
   const createAndValidateAvailabilities = async (count: number): Promise<Identifiers> => {
     const { id: userId } = await creators.createAndValidateUser();
 
-    const availabilities = Array.from(Array(count)).map(() =>
-      generateAvailabilityInput({ userId }),
-    );
+    const availabilities = Array.from(Array(count)).map(() => generateAvailabilityInput());
 
-    const { ids } = await handler.mutations.createAvailabilities({
+    const { ids } = await handler.setContextUserId(userId).mutations.createAvailabilities({
       availabilities,
     });
 

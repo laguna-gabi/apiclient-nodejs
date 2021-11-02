@@ -45,6 +45,14 @@ export const extractAuthorizationHeader = (context) => {
   return jwt.decode(authorizationHeader);
 };
 
+export const extractUserId = (context) => {
+  const userId = context.req?.user?._id;
+  if (!userId) {
+    throw new Error(Errors.get(ErrorType.userNotFound));
+  }
+  return userId;
+};
+
 export const generateOrgNamePrefix = (orgName?: string): string => {
   return `${orgName ? ` [${orgName}] ` : ''}`;
 };

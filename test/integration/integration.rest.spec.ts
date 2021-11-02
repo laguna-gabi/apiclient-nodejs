@@ -35,20 +35,19 @@ describe('Integration tests: rest', () => {
     it('should get slots', async () => {
       const resultOrg = await creators.createAndValidateOrg();
       const resultMember = await creators.createAndValidateMember({ org: resultOrg });
+      const user = await handler.queries.getUser(resultMember.primaryUserId);
 
       const appointment = await creators.createAndValidateAppointment({ member: resultMember });
 
-      await handler.mutations.createAvailabilities({
+      await handler.setContextUserId(user.id).mutations.createAvailabilities({
         availabilities: [
           generateAvailabilityInput({
             start: add(startOfToday(), { hours: 10 }),
             end: add(startOfToday(), { hours: 22 }),
-            userId: resultMember.primaryUserId,
           }),
           generateAvailabilityInput({
             start: add(startOfTomorrow(), { hours: 10 }),
             end: add(startOfTomorrow(), { hours: 22 }),
-            userId: resultMember.primaryUserId,
           }),
         ],
       });

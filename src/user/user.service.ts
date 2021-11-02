@@ -12,6 +12,8 @@ import {
   SlotService,
   Slots,
   User,
+  UserConfig,
+  UserConfigDocument,
   UserDocument,
   defaultSlotsParams,
 } from '.';
@@ -30,7 +32,6 @@ import {
   SlackChannel,
   SlackIcon,
 } from '../common';
-import { UserConfig, UserConfigDocument } from '.';
 
 @Injectable()
 export class UserService extends BaseService {
