@@ -61,6 +61,9 @@ export enum ErrorType {
   // Module Daily Report
   dailyReportQueryDateInvalid = 9701,
   dailyReportMutationDateInvalid = 9702,
+
+  // Providers
+  invalidSenderId = 9801,
 }
 
 const nameFormat = `name must be between ${graphqlConfig.get('minLength')} and ${graphqlConfig.get(
@@ -139,6 +142,7 @@ export const Errors: Map<ErrorType, string> = new Map([
 
   [ErrorType.dailyReportQueryDateInvalid.valueOf(), 'daily report query - invalid date format'],
   [ErrorType.dailyReportMutationDateInvalid.valueOf(), 'daily report query - invalid date format'],
+  [ErrorType.invalidSenderId.valueOf(), 'invalid sender id'],
 ]);
 
 export const DbErrors = {

@@ -9,6 +9,7 @@ import { lookup } from 'zipcode-to-timezone';
 import {
   AppointmentCompose,
   CancelNotifyParams,
+  ChatMessageOrigin,
   CreateMemberParams,
   CreateTaskParams,
   DischargeDocumentsLinks,
@@ -498,29 +499,62 @@ export class MemberResolver extends MemberBase {
 
   /**
    * Listening to chat message from sendbird webhook.
-   * A message can be from a user or a member, we'll need to check first if the sender is the user.
+   * A message can be from a user or a member.
+   * Determine origin (member or user) and decide if a notification should be sent
    */
   @OnEvent(EventType.notifyChatMessage, { async: true })
   async notifyChatMessage(params: IEventNotifyChatMessage) {
     const { senderUserId, sendBirdChannelUrl } = params;
 
+    let origin: ChatMessageOrigin;
+    let member: Member;
     try {
       const user = await this.userService.get(senderUserId);
       if (!user) {
-        throw new Error(Errors.get(ErrorType.userNotFound));
+        member = await this.memberService.get(senderUserId);
+        if (!member) {
+          throw new Error(Errors.get(ErrorType.invalidSenderId));
+        }
+        origin = ChatMessageOrigin.fromMember;
+      } else {
+        origin = ChatMessageOrigin.fromUser;
       }
 
       const communication = await this.communicationService.getByChannelUrl(sendBirdChannelUrl);
+
       if (!communication) {
         throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
       }
 
-      return await this.internalNotify({
-        memberId: communication.memberId.toString(),
-        userId: senderUserId,
-        type: InternalNotificationType.chatMessageToMember,
-        metadata: { content: config.get('contents.newChatMessage') },
-      });
+      if (origin === ChatMessageOrigin.fromUser) {
+        return await this.internalNotify({
+          memberId: communication.memberId.toString(),
+          userId: senderUserId,
+          type: InternalNotificationType.chatMessageToMember,
+          metadata: { content: config.get('contents.newChatMessageFromUser') },
+        });
+      } else {
+        // to avoid spamming the user with multiple SMS message while in a live chat with the member
+        // we avoid sending a notification if the user's unread message count is 0
+        const { count } = await this.communicationService.getParticipantUnreadMessagesCount(
+          communication.userId.toString(),
+          false,
+        );
+
+        if (count != 0) {
+          return await this.internalNotify({
+            memberId: senderUserId,
+            userId: communication.userId.toString(),
+            type: InternalNotificationType.textSmsToUser,
+            metadata: {
+              content: config
+                .get('contents.newChatMessageFromMember')
+                .replace('@member.honorific@', config.get(`contents.honorific.${member.honorific}`))
+                .replace('@member.lastName@', this.capitalize(member.lastName)),
+            },
+          });
+        }
+      }
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.notifyChatMessage.name, ex);
     }

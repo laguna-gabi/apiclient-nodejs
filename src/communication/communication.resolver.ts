@@ -73,7 +73,7 @@ export class CommunicationResolver {
   @Query(() => UnreadMessagesCount)
   @Roles(RoleTypes.Member, RoleTypes.User)
   getMemberUnreadMessagesCount(@Args('memberId', { type: () => String }) memberId: string) {
-    return this.communicationService.getMemberUnreadMessagesCount(memberId);
+    return this.communicationService.getParticipantUnreadMessagesCount(memberId);
   }
 
   @Query(() => String)

@@ -50,7 +50,7 @@ describe('Validations - communication', () => {
   it('should fail to to get member unread messages since member does not exists', async () => {
     await handler.queries.getMemberUnreadMessagesCount({
       memberId: generateId(),
-      invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+      invalidFieldsError: Errors.get(ErrorType.communicationMemberUserNotFound),
     });
   });
 });

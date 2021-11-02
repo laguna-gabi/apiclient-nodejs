@@ -222,15 +222,25 @@ export class CommunicationService {
     return this.communicationModel.findOne({ memberId: new Types.ObjectId(memberId), userId });
   }
 
-  async getMemberUnreadMessagesCount(memberId: string) {
-    const [result] = await this.communicationModel.find({
-      memberId: new Types.ObjectId(memberId),
-    });
-    if (!result) {
-      throw new Error(Errors.get(ErrorType.memberNotFound));
+  async getParticipantUnreadMessagesCount(participantId: string, byMemberId = true) {
+    let result: Communication;
+
+    if (byMemberId) {
+      [result] = await this.communicationModel.find({
+        memberId: new Types.ObjectId(participantId),
+      });
+    } else {
+      [result] = await this.communicationModel.find({
+        userId: participantId,
+      });
     }
-    const count = await this.sendBird.countUnreadMessages(result.sendBirdChannelUrl, memberId);
-    return { count, memberId, userId: result.userId };
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
+    }
+
+    const count = await this.sendBird.countUnreadMessages(result.sendBirdChannelUrl, participantId);
+    return { count, memberId: result.memberId.toString(), userId: result.userId };
   }
 
   async freezeGroupChannel({ memberId, userId }: { memberId: string; userId: string }) {
