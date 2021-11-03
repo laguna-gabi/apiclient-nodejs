@@ -1,7 +1,7 @@
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { v4 } from 'uuid';
-import { EventType, IEventNewUser } from '../../src/common';
+import { ErrorType, Errors, EventType, IEventNewUser } from '../../src/common';
 import { DbModule } from '../../src/db/db.module';
 import {
   GetSlotsParams,
@@ -96,18 +96,18 @@ describe('UserResolver', () => {
     it('should get a user for a given id', async () => {
       const user = mockGenerateUser();
       spyOnServiceGet.mockImplementationOnce(async () => user);
+      const token = { req: { user: { _id: user.id } } };
 
-      const result = await resolver.getUser(user.id);
+      const result = await resolver.getUser(token);
 
       expect(result).toEqual(user);
     });
 
-    it('should fetch empty on a non existing user', async () => {
+    it('should fail to fetch user without userId in token', async () => {
       spyOnServiceGet.mockImplementationOnce(async () => null);
+      const token = { req: { user: { _id: undefined } } };
 
-      const result = await resolver.getUser(v4());
-
-      expect(result).toBeNull();
+      await expect(resolver.getUser(token)).rejects.toThrow(Errors.get(ErrorType.userNotFound));
     });
   });
 

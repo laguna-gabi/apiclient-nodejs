@@ -52,6 +52,7 @@ import {
   RoleTypes,
   Roles,
   StorageType,
+  capitalize,
   extractAuthorizationHeader,
 } from '../common';
 import {
@@ -551,7 +552,7 @@ export class MemberResolver extends MemberBase {
               content: config
                 .get('contents.newChatMessageFromMember')
                 .replace('@member.honorific@', config.get(`contents.honorific.${member.honorific}`))
-                .replace('@member.lastName@', this.capitalize(member.lastName)),
+                .replace('@member.lastName@', capitalize(member.lastName)),
             },
           });
         }
@@ -690,12 +691,8 @@ export class MemberResolver extends MemberBase {
     const { content, member, user } = params;
     return content
       .replace('@member.honorific@', config.get(`contents.honorific.${member.honorific}`))
-      .replace('@member.lastName@', this.capitalize(member.lastName))
-      .replace('@user.firstName@', this.capitalize(user.firstName));
-  }
-
-  private capitalize(content: string): string {
-    return content[0].toUpperCase() + content.slice(1);
+      .replace('@member.lastName@', capitalize(member.lastName))
+      .replace('@user.firstName@', capitalize(user.firstName));
   }
 
   private async getSendBirdChannelUrl(getCommunicationParams: GetCommunicationParams) {

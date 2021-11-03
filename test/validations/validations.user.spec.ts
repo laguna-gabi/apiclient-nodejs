@@ -99,7 +99,7 @@ describe.only('Validations - user', () => {
 
     const { id } = await handler.mutations.createUser({ userParams });
 
-    const user = await handler.queries.getUser(id);
+    const user = await handler.setContextUserId(id).queries.getUser();
     expect(user[params.field]).not.toBeUndefined();
     expect(user[params.field]).toEqual(params.defaultValue);
   });

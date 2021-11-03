@@ -35,7 +35,7 @@ describe('Integration tests: rest', () => {
     it('should get slots', async () => {
       const resultOrg = await creators.createAndValidateOrg();
       const resultMember = await creators.createAndValidateMember({ org: resultOrg });
-      const user = await handler.queries.getUser(resultMember.primaryUserId);
+      const user = await handler.setContextUserId(resultMember.primaryUserId).queries.getUser();
 
       const appointment = await creators.createAndValidateAppointment({ member: resultMember });
 

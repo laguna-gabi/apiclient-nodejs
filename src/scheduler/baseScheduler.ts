@@ -113,9 +113,7 @@ export class BaseScheduler {
         );
 
         const metadata = {
-          content: `${config
-            .get('contents.appointmentRequest')
-            .replace('@downloadLink@', `\n${url}`)}`,
+          content: `${config.get('contents.newMemberNudge').replace('@downloadLink@', `\n${url}`)}`,
         };
         const params: InternalNotifyParams = {
           memberId,

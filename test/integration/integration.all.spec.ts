@@ -1111,8 +1111,12 @@ describe('Integration tests: all', () => {
       // expect(communication.userId).toEqual(newUser.id);
 
       // Check that the appointment moved from the old user to the new
-      const { appointments: newUserAppointments } = await handler.queries.getUser(newUser.id);
-      const { appointments: oldUserAppointments } = await handler.queries.getUser(oldUserId);
+      const { appointments: newUserAppointments } = await handler
+        .setContextUserId(newUser.id)
+        .queries.getUser();
+      const { appointments: oldUserAppointments } = await handler
+        .setContextUserId(oldUserId)
+        .queries.getUser();
       const newUserAppointmentsIds = newUserAppointments.map((app) => app.id);
       const oldUserAppointmentsIds = oldUserAppointments.map((app) => app.id);
       expect(newUserAppointmentsIds).toContain(appointment.id);

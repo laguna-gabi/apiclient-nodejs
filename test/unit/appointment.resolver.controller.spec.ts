@@ -213,7 +213,7 @@ describe('AppointmentResolver', () => {
         userId: appointment.userId,
         type: InternalNotificationType.textSmsToMember,
         metadata: {
-          content: `${config.get('contents.meetingScheduledMsg')}`,
+          content: `${config.get('contents.appointmentScheduled')}`,
           appointmentTime: appointment.start,
         },
       };

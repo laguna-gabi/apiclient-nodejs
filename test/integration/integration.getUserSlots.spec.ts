@@ -41,7 +41,8 @@ describe('Integration tests : getUserSlots', () => {
   it('should return objects with all slots', async () => {
     const org = await creators.createAndValidateOrg();
     const member: Member = await creators.createAndValidateMember({ org });
-    const user = await handler.queries.getUser(member.primaryUserId);
+    const user = await handler.setContextUserId(member.primaryUserId).queries.getUser();
+
     await createDefaultAvailabilities(member.primaryUserId);
 
     const appointment = await appointmentsActions.scheduleAppointmentWithDate(

@@ -138,7 +138,7 @@ export class MemberScheduler extends BaseScheduler {
     userId: string;
     firstLoggedInAt: Date;
   }) {
-    const milliseconds = add(firstLoggedInAt, { days: 3 }).getTime() - Date.now();
+    const milliseconds = add(firstLoggedInAt, { days: 2 }).getTime() - Date.now();
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
         this.logger.debug(
