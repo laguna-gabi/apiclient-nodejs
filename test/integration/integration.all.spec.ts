@@ -646,6 +646,7 @@ describe('Integration tests: all', () => {
   it(`should send SMS notification of type textSms`, async () => {
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({ org });
+    const appointmentId = generateId();
     const registerForNotificationParams: RegisterForNotificationParams = {
       memberId: member.id,
       platform: Platform.android,
@@ -658,7 +659,7 @@ describe('Integration tests: all', () => {
       memberId: member.id,
       userId: member.primaryUserId,
       type: NotificationType.textSms,
-      metadata: { content: 'text' },
+      metadata: { content: 'text', appointmentId },
     };
 
     /**
@@ -683,6 +684,7 @@ describe('Integration tests: all', () => {
   it(`should send Sendbird message for type textSms`, async () => {
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({ org });
+    const appointmentId = generateId();
 
     const registerForNotificationParams: RegisterForNotificationParams = {
       memberId: member.id,
@@ -695,7 +697,7 @@ describe('Integration tests: all', () => {
       memberId: member.id,
       userId: member.primaryUserId,
       type: NotificationType.textSms,
-      metadata: { content: 'text' },
+      metadata: { content: 'text', appointmentId },
     };
 
     /**
@@ -712,6 +714,7 @@ describe('Integration tests: all', () => {
         userId: member.primaryUserId,
         sendBirdChannelUrl: mockCommunicationParams.sendBirdChannelUrl,
         message: notifyParams.metadata.content,
+        appointmentId,
         notificationType: NotificationType.textSms,
         orgName: org.name,
       },

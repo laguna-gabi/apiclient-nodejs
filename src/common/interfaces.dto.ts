@@ -170,6 +170,7 @@ export class SendSendBirdNotification extends BaseSendNotification {
   sendBirdChannelUrl: string;
   message: string;
   notificationType: AllNotificationTypes;
+  appointmentId?: string;
 }
 
 export class CancelNotificationParams extends BaseSendNotification {
@@ -236,3 +237,13 @@ export enum AuditType {
   message = 'message',
   userReplaced = 'userReplaced',
 }
+
+export enum RecordingType {
+  voip = 'voip',
+  video = 'video',
+  phone = 'phone',
+}
+
+registerEnumType(RecordingType, {
+  name: 'RecordingType',
+});
