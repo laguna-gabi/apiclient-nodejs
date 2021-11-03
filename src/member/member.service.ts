@@ -3,7 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import * as config from 'config';
 import { sub } from 'date-fns';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
 import { v4 } from 'uuid';
 import {
@@ -587,19 +587,27 @@ export class MemberService extends BaseService {
    ******************************************** Recording ******************************************
    ************************************************************************************************/
   async updateRecording(updateRecordingParams: UpdateRecordingParams): Promise<void> {
-    const { start, end, memberId, id, userId, phone, answered } = updateRecordingParams;
+    const { start, end, memberId, id, userId, phone, answered, appointmentId, recordingType } =
+      updateRecordingParams;
     const member = await this.memberModel.findById(memberId, { _id: 1 });
     if (!member) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
 
     const objectMemberId = new Types.ObjectId(memberId);
-    let setParams: any = { memberId: objectMemberId };
-    setParams = start ? { ...setParams, start } : setParams;
-    setParams = end ? { ...setParams, end } : setParams;
-    setParams = userId ? { ...setParams, userId } : setParams;
-    setParams = phone ? { ...setParams, phone } : setParams;
-    setParams = answered ? { ...setParams, answered } : setParams;
+    const setParams: any = omitBy(
+      {
+        memberId: objectMemberId,
+        start,
+        end,
+        userId,
+        phone,
+        answered,
+        recordingType,
+        appointmentId: appointmentId ? new Types.ObjectId(appointmentId) : null,
+      },
+      isNil,
+    );
 
     try {
       await this.recordingModel.updateOne(

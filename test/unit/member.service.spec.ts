@@ -3,6 +3,7 @@ import * as config from 'config';
 import * as faker from 'faker';
 import { datatype, date, internet } from 'faker';
 import { Model, Types, model } from 'mongoose';
+import { RecordingType } from '../../src/common/interfaces.dto';
 import { v4 } from 'uuid';
 import {
   Appointment,
@@ -986,7 +987,14 @@ describe('MemberService', () => {
 
     it('should not override optional fields when not set from params', async () => {
       const memberId = await generateMember();
-      const recording1 = generateUpdateRecordingParams({ memberId });
+      const appointmentId = new Types.ObjectId(generateId());
+      const recording1 = generateUpdateRecordingParams({
+        memberId,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        appointmentId: appointmentId as string,
+        recordingType: RecordingType.phone,
+      });
       await service.updateRecording(recording1);
       const recording2 = generateUpdateRecordingParams({ id: recording1.id, memberId });
       recording2.start = undefined;
@@ -994,6 +1002,8 @@ describe('MemberService', () => {
       recording2.userId = undefined;
       recording2.phone = undefined;
       recording2.answered = undefined;
+      recording2.recordingType = undefined;
+      recording2.appointmentId = undefined;
       await service.updateRecording(recording2);
 
       const recordings = await service.getRecordings(memberId);

@@ -561,6 +561,8 @@ export const generateUpdateRecordingParams = ({
   end = faker.date.soon(2),
   answered = true,
   phone = generatePhone(),
+  appointmentId,
+  recordingType,
 }: Partial<UpdateRecordingParams> = {}): UpdateRecordingParams => {
-  return { id, memberId, userId, start, end, answered, phone };
+  return { id, memberId, userId, start, end, answered, phone, appointmentId, recordingType };
 };

@@ -47,6 +47,7 @@ export class NotificationBuilder {
         message: metadata.content,
         notificationType: type,
         orgName,
+        appointmentId: metadata.appointmentId,
       };
       await this.notificationsService.send({ sendSendBirdNotification });
 

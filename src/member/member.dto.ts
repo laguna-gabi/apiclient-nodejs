@@ -269,6 +269,9 @@ export class NotificationMetadata {
   chatLink?: boolean;
 
   sendBirdChannelUrl?: string;
+
+  @Field(() => String, { nullable: true })
+  appointmentId?: string;
 }
 
 @Schema({ versionKey: false, timestamps: true })

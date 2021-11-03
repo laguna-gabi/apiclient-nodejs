@@ -192,7 +192,8 @@ export class SendBird implements OnModuleInit {
   }
 
   async send(sendSendBirdNotification: SendSendBirdNotification) {
-    const { userId, sendBirdChannelUrl, message, notificationType } = sendSendBirdNotification;
+    const { userId, sendBirdChannelUrl, message, notificationType, appointmentId } =
+      sendSendBirdNotification;
     const methodName = this.send.name;
     try {
       const result = await this.httpService
@@ -203,7 +204,10 @@ export class SendBird implements OnModuleInit {
             user_id: userId,
             message,
             custom_type: notificationType, // For use of Laguna Chat
-            data: userId, // For use of Laguna Chat
+            data: JSON.stringify({
+              senderId: userId,
+              appointmentId,
+            }), // For use of Laguna Chat
           },
 
           {
