@@ -217,10 +217,8 @@ export class AppointmentResolver extends AppointmentBase {
     // @ts-ignore
     const org = await this.orgService.get(member.org._id.toString());
     const metadata = {
-      content: `${(org
-        ? config.get('contents.downloadPage')
-        : config.get('contents.downloadPageWithoutOrg')
-      )
+      content: `${config
+        .get('contents.newMember')
         .replace('@org.name@', org?.name)
         .replace('@downloadLink@', `\n${url}`)}`,
     };

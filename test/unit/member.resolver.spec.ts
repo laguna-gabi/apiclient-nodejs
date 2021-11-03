@@ -2,7 +2,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import * as faker from 'faker';
-import { capitalize } from 'lodash';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import {
@@ -22,6 +21,7 @@ import {
   SlackChannel,
   SlackIcon,
   StorageType,
+  capitalize,
 } from '../../src/common';
 import {
   Communication,

@@ -40,6 +40,10 @@ export function reformatDate(date: string, stringFormat: string): string {
   return format(dateObject, stringFormat);
 }
 
+export function capitalize(content: string): string {
+  return content[0].toUpperCase() + content.slice(1);
+}
+
 export const extractAuthorizationHeader = (context) => {
   const authorizationHeader = context.req?.headers?.authorization?.replace('Bearer ', '');
   return jwt.decode(authorizationHeader);

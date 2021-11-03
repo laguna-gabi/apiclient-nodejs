@@ -63,7 +63,7 @@ describe('DailyReportCategoryResolver', () => {
         {
           memberId: memberId,
           metadata: {
-            content: 'Your member, Mr. Levy, logged a score that requires your attention',
+            content: 'Your member, Mr. Levy, logged a score that requires your attention.',
           },
           type: InternalNotificationType.textSmsToUser,
           userId: 'U0001',
