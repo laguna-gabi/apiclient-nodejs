@@ -1,16 +1,19 @@
-import { UseInterceptors } from '@nestjs/common';
+import { Inject, UseInterceptors, forwardRef } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { Args, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, Query, Resolver } from '@nestjs/graphql';
 import * as config from 'config';
 import { camelCase } from 'lodash';
 import {
   CommunicationInfo,
   CommunicationService,
   GetCommunicationParams,
+  MemberCommunicationInfo,
   UnreadMessagesCount,
 } from '.';
 import { AppointmentStatus } from '../appointment';
 import {
+  ErrorType,
+  Errors,
   EventType,
   IEventNewMember,
   IEventNewUser,
@@ -23,6 +26,7 @@ import {
   Roles,
   UpdatedAppointmentAction,
 } from '../common';
+import { UserService } from '../user';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => CommunicationInfo)
@@ -30,6 +34,8 @@ export class CommunicationResolver {
   constructor(
     private readonly communicationService: CommunicationService,
     private readonly logger: Logger,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -74,6 +80,44 @@ export class CommunicationResolver {
   @Roles(RoleTypes.Member, RoleTypes.User)
   getMemberUnreadMessagesCount(@Args('memberId', { type: () => String }) memberId: string) {
     return this.communicationService.getParticipantUnreadMessagesCount(memberId);
+  }
+
+  @Query(() => MemberCommunicationInfo)
+  @Roles(RoleTypes.Member, RoleTypes.User)
+  async getMemberCommunicationInfo(@Context() context) {
+    const userRole = context.req?.user.role;
+    if (userRole != RoleTypes.Member) {
+      throw new Error(Errors.get(ErrorType.communicationInfoIsNotAllowed));
+    }
+
+    const memberId = context.req?.user._id.toString();
+    const userId = context.req?.user.primaryUserId;
+    const communication = await this.communicationService.get({ memberId, userId });
+
+    const user = await this.userService.get(userId);
+
+    if (!user) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+
+    if (!communication) {
+      throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
+    }
+
+    return {
+      memberLink: this.buildUrl({
+        uid: communication.memberId,
+        mid: communication.sendBirdChannelUrl,
+        token: communication.memberToken,
+      }),
+      user: {
+        lastName: user.lastName,
+        firstName: user.firstName,
+        id: user.id,
+        roles: user.roles,
+        avatar: user.avatar,
+      },
+    };
   }
 
   @Query(() => String)

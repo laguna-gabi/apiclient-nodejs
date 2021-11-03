@@ -57,6 +57,7 @@ export enum ErrorType {
 
   // Module communication errors
   communicationMemberUserNotFound = 9601,
+  communicationInfoIsNotAllowed = 9602,
 
   // Module Daily Report
   dailyReportQueryDateInvalid = 9701,
@@ -139,6 +140,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.orgTrialDurationOutOfRange.valueOf(), 'trialDuration must not be less than 1'],
   [ErrorType.availabilityNotFound.valueOf(), 'availability id was not found'],
   [ErrorType.communicationMemberUserNotFound.valueOf(), 'member-user communication was not found'],
+  [ErrorType.communicationInfoIsNotAllowed.valueOf(), 'communication info is not allowed'],
 
   [ErrorType.dailyReportQueryDateInvalid.valueOf(), 'daily report query - invalid date format'],
   [ErrorType.dailyReportMutationDateInvalid.valueOf(), 'daily report query - invalid date format'],
