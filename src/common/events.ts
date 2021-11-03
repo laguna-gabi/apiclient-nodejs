@@ -2,7 +2,14 @@ import { Types } from 'mongoose';
 import { Appointment, AppointmentStatus, Scores } from '../appointment';
 import { Member } from '../member';
 import { User } from '../user';
-import { Platform, QueueType, SlackChannel, SlackIcon, UpdatedAppointmentAction } from '.';
+import {
+  AllNotificationTypes,
+  Platform,
+  QueueType,
+  SlackChannel,
+  SlackIcon,
+  UpdatedAppointmentAction,
+} from '.';
 
 export enum EventType {
   requestAppointment = 'requestAppointment',
@@ -31,6 +38,7 @@ export enum EventType {
   deleteSchedules = 'deleteSchedules',
   deleteMember = 'deleteMember',
   removeAppointmentsFromUser = 'removeAppointmentsFromUser',
+  unregisterMemberFromNotifications = 'unregisterMemberFromNotifications',
 }
 
 export interface IEventRequestAppointment {
@@ -110,6 +118,12 @@ export interface IEventQueueMessage {
 
 export interface IEventDeleteSchedules {
   memberId: string;
+}
+
+export interface IEventUnregisterMemberFromNotifications {
+  phone: string;
+  content: string;
+  type: AllNotificationTypes;
 }
 
 export interface IEventUpdateUserInCommunication {

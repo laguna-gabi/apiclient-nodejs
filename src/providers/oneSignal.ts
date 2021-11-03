@@ -1,5 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as config from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
 import {
@@ -8,6 +9,8 @@ import {
   CancelNotificationType,
   ErrorType,
   Errors,
+  EventType,
+  IEventUnregisterMemberFromNotifications,
   InternalNotificationType,
   Logger,
   NotificationType,
@@ -25,6 +28,7 @@ export class OneSignal {
   constructor(
     private readonly configsService: ConfigsService,
     private readonly httpService: HttpService,
+    readonly eventEmitter: EventEmitter2,
     private readonly logger: Logger,
   ) {}
 
@@ -108,6 +112,16 @@ export class OneSignal {
         .toPromise();
       if (status === 200 && data.recipients >= 1) {
         return data.id;
+      } else if (
+        data.errors[0] === 'All included players are not subscribed' ||
+        data.errors?.invalid_external_user_ids[0] === externalUserId
+      ) {
+        const eventParams: IEventUnregisterMemberFromNotifications = {
+          phone: sendOneSignalNotification.data.member.phone,
+          content: metadata.content,
+          type: sendOneSignalNotification.data.type,
+        };
+        this.eventEmitter.emit(EventType.unregisterMemberFromNotifications, eventParams);
       } else {
         this.logger.error(
           sendOneSignalNotification,

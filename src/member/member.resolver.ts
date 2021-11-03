@@ -38,6 +38,7 @@ import {
   IEventDeleteSchedules,
   IEventNotifyChatMessage,
   IEventSendSmsToChat,
+  IEventUnregisterMemberFromNotifications,
   IEventUpdateMemberPlatform,
   IEventUpdateUserInCommunication,
   Identifier,
@@ -595,6 +596,35 @@ export class MemberResolver extends MemberBase {
       this.memberScheduler.deleteTimeout({ id: memberId });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, ex);
+    }
+  }
+
+  @OnEvent(EventType.unregisterMemberFromNotifications, { async: true })
+  async unregisterMemberFromNotifications(params: IEventUnregisterMemberFromNotifications) {
+    this.logger.debug(params, MemberResolver.name, this.unregisterMemberFromNotifications.name);
+    const { phone, content, type } = params;
+    try {
+      const member = await this.memberService.getByPhone(phone);
+      await this.memberService.updateMemberConfig({
+        memberId: member.id,
+        platform: Platform.web,
+        isPushNotificationsEnabled: false,
+      });
+      if (type === NotificationType.text || type === InternalNotificationType.textToMember) {
+        return await this.internalNotify({
+          memberId: member.id,
+          userId: member.primaryUserId,
+          type: InternalNotificationType.textSmsToMember,
+          metadata: { content },
+        });
+      }
+    } catch (ex) {
+      this.logger.error(
+        params,
+        MemberResolver.name,
+        this.unregisterMemberFromNotifications.name,
+        ex,
+      );
     }
   }
 
