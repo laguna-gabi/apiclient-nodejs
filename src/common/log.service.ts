@@ -1,9 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { cloneDeep } from 'lodash';
-import { AuditType, Environments, IEventQueueMessage, QueueType, generateOrgNamePrefix } from '.';
-import { EventType } from './events';
-import { SlackChannel, SlackIcon } from './interfaces.dto';
+import {
+  AuditType,
+  Environments,
+  EventType,
+  IEventQueueMessage,
+  QueueType,
+  SlackChannel,
+  SlackIcon,
+  generateOrgNamePrefix,
+} from '.';
 
 @Injectable()
 export class Logger {
@@ -37,6 +44,9 @@ export class Logger {
     'finishedAndItTook',
     //slackbot
     'channel',
+    //replace user
+    'newUserId',
+    'oldUserId',
   ];
 
   log(params: any = {}, className: string, methodName: string) {

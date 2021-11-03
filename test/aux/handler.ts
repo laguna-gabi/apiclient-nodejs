@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -8,41 +8,34 @@ import { createTestClient } from 'apollo-server-testing';
 import * as config from 'config';
 import * as faker from 'faker';
 import * as jwt from 'jsonwebtoken';
-import { Org, OrgService } from '../../src/org';
-import { User, UserService } from '../../src/user';
 import { v4 } from 'uuid';
-import { AppModule } from '../../src/app.module';
-import { GlobalAuthGuard } from '../../src/auth/guards/globalAuth.guard';
-import { RolesGuard } from '../../src/auth/guards/role.guard';
-import { bearerToken } from '../../src/common';
-import { CommunicationService } from '../../src/communication';
-import { Member, MemberService } from '../../src/member';
-import { WebhooksController } from '../../src/providers';
-import { dbConnect, dbDisconnect, mockProviders } from '../common';
+import { Mutations, Queries } from '.';
 import {
   generateCreateMemberParams,
   generateCreateUserParams,
   generateId,
   generateOrgParams,
   generateUniqueUrl,
-} from '../generators';
-import { Mutations } from './mutations';
-import { Queries } from './queries';
+} from '..';
+import { AppModule } from '../../src/app.module';
+import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
+import { bearerToken } from '../../src/common';
+import { CommunicationService } from '../../src/communication';
+import { Member, MemberService } from '../../src/member';
+import { Org, OrgService } from '../../src/org';
+import { WebhooksController } from '../../src/providers';
+import { User, UserService } from '../../src/user';
+import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
 
 const validatorsConfig = config.get('graphql.validators');
 
-export class Handler {
-  app: INestApplication;
-  mutations: Mutations;
-  queries: Queries;
-  module: GraphQLModule;
+export class Handler extends BaseHandler {
   sendBird;
   notificationsService;
   twilioService;
   slackBot;
   eventEmitter: EventEmitter2;
   communicationService: CommunicationService;
-  userService: UserService;
   memberService: MemberService;
   orgService: OrgService;
   webhooksController: WebhooksController;
@@ -102,6 +95,9 @@ export class Handler {
     this.sendBird.spyOnSendBirdCreateGroupChannel.mockReset();
     this.sendBird.spyOnSendBirdFreeze.mockReset();
     this.sendBird.spyOnSendBirdSend.mockReset();
+    this.sendBird.spyOnSendBirdLeave.mockReset();
+    this.sendBird.spyOnSendBirdInvite.mockReset();
+    this.sendBird.spyOnSendBirdUpdateChannelName.mockReset();
     this.sendBird.spyOnSendBirdUpdateGroupChannelMetadata.mockReset();
     this.sendBird.spyOnSendBirdDeleteGroupChannelMetadata.mockReset();
     this.notificationsService.spyOnNotificationsServiceRegister.mockReset();
@@ -109,7 +105,7 @@ export class Handler {
     this.notificationsService.spyOnNotificationsServiceCancel.mockReset();
     this.twilioService.spyOnTwilioGetToken.mockReset();
     this.slackBot.spyOnSlackBotSendMessage.mockReset();
-    this.spyOnGetCommunicationService.mockReset();
+    this.spyOnGetCommunicationService?.mockReset();
 
     await dbDisconnect();
   }

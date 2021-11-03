@@ -11,6 +11,11 @@ export enum TaskStatus {
   reached = 'reached',
 }
 
+export enum ChatMessageOrigin {
+  fromUser = 'fromUser',
+  fromMember = 'fromMember',
+}
+
 registerEnumType(TaskStatus, { name: 'TaskStatus' });
 
 /**************************************************************************************************

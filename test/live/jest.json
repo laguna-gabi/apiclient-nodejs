@@ -3,7 +3,7 @@
   "rootDir": "../live",
   "testEnvironment": "node",
   "testRegex": ".spec.ts$",
-  "maxWorkers": 4,
+  "maxWorkers": 1,
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   }

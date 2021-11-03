@@ -12,6 +12,7 @@ import {
 import {
   AppointmentStatus,
   EventType,
+  IEventUpdateUserInAppointments,
   IEventUpdatedAppointment,
   InternalNotificationType,
   InternalNotifyParams,
@@ -299,6 +300,108 @@ describe('AppointmentResolver', () => {
       const result = await resolver.updateNotes(notesParams);
       expect(spyOnServiceUpdateNotes).toBeCalledWith(notesParams);
       expect(result).toEqual(notes);
+    });
+  });
+
+  describe('updateUserInAppointments', () => {
+    let spyOnServiceGetFutureAppointments;
+    let spyOnScheduleAppointment;
+    let spyOnRequestAppointment;
+
+    beforeEach(() => {
+      spyOnServiceGetFutureAppointments = jest.spyOn(service, 'getFutureAppointments');
+      spyOnScheduleAppointment = jest.spyOn(resolver, 'scheduleAppointment');
+      spyOnRequestAppointment = jest.spyOn(resolver, 'requestAppointment');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetFutureAppointments.mockReset();
+      spyOnScheduleAppointment.mockReset();
+      spyOnRequestAppointment.mockReset();
+      spyOnEventEmitter.mockReset();
+    });
+
+    // eslint-disable-next-line max-len
+    it('should reschedule appointments with the new user (for scheduled appointments)', async () => {
+      const oldUserId = generateId();
+      const newUserId = generateId();
+      const memberId = generateId();
+
+      const mockAppointments = [];
+      for (let step = 0; step < 5; step++) {
+        const appointment = generateScheduleAppointmentParams({ userId: oldUserId, memberId });
+        appointment['status'] = AppointmentStatus.scheduled;
+        mockAppointments.push(appointment);
+      }
+      spyOnServiceGetFutureAppointments.mockImplementationOnce(async () => mockAppointments);
+
+      const params: IEventUpdateUserInAppointments = {
+        oldUserId,
+        newUserId,
+        memberId,
+      };
+      await resolver.updateUserInAppointments(params);
+
+      expect(spyOnScheduleAppointment).toHaveBeenCalledTimes(5);
+      mockAppointments.forEach((appointment, index) => {
+        appointment.userId = newUserId; // expected user
+        delete appointment.status;
+        expect(spyOnScheduleAppointment).toHaveBeenNthCalledWith(index + 1, appointment);
+      });
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateAppointmentsInUser, {
+        ...params,
+        appointments: mockAppointments,
+      });
+    });
+
+    // eslint-disable-next-line max-len
+    it('should re-request appointments with the new user (for requested appointments)', async () => {
+      const oldUserId = generateId();
+      const newUserId = generateId();
+      const memberId = generateId();
+
+      const appointment = generateScheduleAppointmentParams({ userId: oldUserId, memberId });
+      appointment['status'] = AppointmentStatus.requested;
+      spyOnServiceGetFutureAppointments.mockImplementationOnce(async () => [appointment]);
+
+      const params: IEventUpdateUserInAppointments = {
+        oldUserId,
+        newUserId,
+        memberId,
+      };
+      await resolver.updateUserInAppointments(params);
+
+      const requestAppointmentParams = {
+        memberId,
+        userId: newUserId,
+        id: appointment.id,
+      };
+
+      expect(spyOnRequestAppointment).toHaveBeenCalledTimes(1);
+
+      // eslint-disable-next-line max-len
+      // using objectContaining because it's not possible to test the 'notBefore' field (current time)
+      expect(spyOnRequestAppointment).toHaveBeenCalledWith(
+        expect.objectContaining(requestAppointmentParams),
+      );
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateAppointmentsInUser, {
+        ...params,
+        appointments: [appointment],
+      });
+    });
+
+    it("shouldn't reschedule appointments if there are no future appointments", async () => {
+      spyOnServiceGetFutureAppointments.mockImplementationOnce(async () => []);
+
+      const params: IEventUpdateUserInAppointments = {
+        oldUserId: generateId(),
+        newUserId: generateId(),
+        memberId: generateId(),
+      };
+      await resolver.updateUserInAppointments(params);
+
+      expect(spyOnScheduleAppointment).not.toHaveBeenCalled();
+      expect(spyOnEventEmitter).not.toHaveBeenCalled();
     });
   });
 });

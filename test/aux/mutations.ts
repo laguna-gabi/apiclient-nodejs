@@ -1,6 +1,7 @@
 import { ApolloServerTestClient } from 'apollo-server-testing';
 import gql from 'graphql-tag';
 import { camelCase } from 'lodash';
+import { DailyReportCategoriesInput } from '../../src/dailyReport';
 import {
   Appointment,
   EndAppointmentParams,
@@ -18,6 +19,8 @@ import {
   Member,
   NotifyParams,
   SetGeneralNotesParams,
+  SetNewUserToMemberParams,
+  UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
   UpdateTaskStatusParams,
@@ -538,6 +541,30 @@ export class Mutations {
     );
   };
 
+  updateMemberConfig = async ({
+    updateMemberConfigParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    updateMemberConfigParams: UpdateMemberConfigParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<void> => {
+    const result = await this.apolloClient.mutate({
+      variables: { updateMemberConfigParams: updateMemberConfigParams },
+      mutation: gql`
+        mutation updateMemberConfig($updateMemberConfigParams: UpdateMemberConfigParams!) {
+          updateMemberConfig(updateMemberConfigParams: $updateMemberConfigParams)
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.updateMemberConfig
+    );
+  };
+
   registerMemberForNotifications = async ({
     registerForNotificationParams,
     missingFieldError,
@@ -580,6 +607,22 @@ export class Mutations {
     });
 
     return this.isResultValid({ result, invalidFieldsErrors }) && result.data.archiveMember;
+  };
+
+  deleteMember = async ({
+    id,
+    invalidFieldsErrors,
+  }: { id?: string; invalidFieldsErrors?: string[] } = {}): Promise<Identifiers> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id: id },
+      mutation: gql`
+        mutation deleteMember($id: String!) {
+          deleteMember(id: $id)
+        }
+      `,
+    });
+
+    return this.isResultValid({ result, invalidFieldsErrors }) && result.data.deleteMember;
   };
 
   notify = async ({
@@ -653,6 +696,34 @@ export class Mutations {
     );
   };
 
+  setDailyReportCategories = async ({
+    dailyReportCategoriesInput,
+  }: {
+    dailyReportCategoriesInput: DailyReportCategoriesInput;
+  }) => {
+    const result = await this.apolloClient.mutate({
+      variables: { dailyReportCategoriesInput },
+      mutation: gql`
+        mutation setDailyReportCategories(
+          $dailyReportCategoriesInput: DailyReportCategoriesInput!
+        ) {
+          setDailyReportCategories(dailyReportCategoriesInput: $dailyReportCategoriesInput) {
+            categories {
+              rank
+              category
+            }
+            memberId
+            date
+            statsOverThreshold
+          }
+        }
+      `,
+    });
+
+    const { errors, data } = result || {};
+    return { errors, updatedDailyReport: data?.setDailyReportCategories };
+  };
+
   isResultValid = ({ result, invalidFieldsErrors, missingFieldError = undefined }): boolean => {
     if (invalidFieldsErrors) {
       for (let i = 0; i < invalidFieldsErrors.length; i++) {
@@ -669,5 +740,29 @@ export class Mutations {
     }
 
     return false;
+  };
+
+  setNewUserToMember = async ({
+    setNewUserToMemberParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    setNewUserToMemberParams: SetNewUserToMemberParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }) => {
+    const result = await this.apolloClient.mutate({
+      variables: { setNewUserToMemberParams: setNewUserToMemberParams },
+      mutation: gql`
+        mutation setNewUserToMember($setNewUserToMemberParams: SetNewUserToMemberParams!) {
+          setNewUserToMember(setNewUserToMemberParams: $setNewUserToMemberParams)
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.setNewUserToMemberParams
+    );
   };
 }

@@ -20,6 +20,7 @@ export class TwilioService implements OnModuleInit {
   private authToken;
   private apiKey;
   private apiSecret;
+  private webhookToken;
   private client;
   private readonly source;
   private readonly identity;
@@ -39,6 +40,7 @@ export class TwilioService implements OnModuleInit {
     this.authToken = await this.configsService.getConfig(ExternalConfigs.twilio.authToken);
     this.apiKey = await this.configsService.getConfig(ExternalConfigs.twilio.apiKey);
     this.apiSecret = await this.configsService.getConfig(ExternalConfigs.twilio.apiSecret);
+    this.webhookToken = await this.configsService.getConfig(ExternalConfigs.twilio.webhookToken);
     this.client = new Twilio(this.accountSid, this.authToken);
   }
 
@@ -75,5 +77,9 @@ export class TwilioService implements OnModuleInit {
     token.addGrant(voiceGrant);
 
     return token.toJwt();
+  }
+
+  validateWebhook(token: string) {
+    return token === this.webhookToken;
   }
 }

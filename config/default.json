@@ -26,7 +26,7 @@
     "identity": "the_user_id"
   },
   "slack": {
-    "support": "#supports",
+    "support": "#support-dev",
     "testingSms": "#testing-sms",
     "notifications": "#development-notifications"
   },
@@ -36,7 +36,6 @@
     },
     "androidChannelId": "00349af6-be67-4729-9d48-9057a5507b14"
   },
-  "storage": "hepius-test",
   "scheduler": {
     "alertBeforeInMin": 15,
     "maxAlertGapInMin": 43800,
@@ -54,7 +53,9 @@
     "newMemberNudge": "Hello @member.honorific@ @member.lastName@, I'm @user.firstName@ from Laguna Health. Friendly reminder to schedule your first visit: @downloadLink@",
     "newRegisteredMember": "Welcome to Laguna Health. To get started on your recovery journey schedule a meeting with your coach here",
     "newRegisteredMemberNudge": "Friendly reminder from @user.firstName@ at Laguna Health. I'm looking forward to supporting you on your recovery journey. To get started schedule your first visit here",
-    "newChatMessage": "You have a new message from @user.firstName@",
+    "newChatMessageFromUser": "You have a new message from @user.firstName@",
+    "newChatMessageFromMember": "You have one new message from your member, @member.honorific@ @member.lastName@",
+    "memberNotFeelingWellMessage": "Your member, @member.honorific@ @member.lastName@, logged a score that requires your attention",
     "honorific": {
       "mr": "Mr",
       "mrs": "Mrs",
@@ -65,8 +66,17 @@
       "reverend": "Reverend"
     }
   },
+  "general": {
+    "dateFormatString": "yyyy/MM/dd"
+  },
+  "dailyReport": {
+    "thresholdIndicator": 3
+  },
   "articlesByDrg": {
     "000": "articles/cardiac/cardiac",
     "default": "articles/default/default"
-  }
+  },
+  "skipBodyParseRouteList": [
+    {"path": "/api/webhooks/sendbird", "method": 1}
+  ]
 }

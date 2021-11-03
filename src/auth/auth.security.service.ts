@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { MemberDocument, Member } from '../member';
-import { User, UserDocument } from '../user';
 import { BaseService } from '../common';
+import { Member, MemberDocument } from '../member';
+import { User, UserDocument } from '../user';
 
 @Injectable()
 export class UserSecurityService extends BaseService {
@@ -16,10 +16,10 @@ export class UserSecurityService extends BaseService {
     super();
   }
 
-  async getUserByAuthId(authId: string): Promise<User> {
+  async getUserByAuthId(authId: string): Promise<UserDocument> {
     return this.userModel.findOne({ authId });
   }
-  async getMemberByAuthId(authId: string): Promise<Member> {
+  async getMemberByAuthId(authId: string): Promise<MemberDocument> {
     return this.memberModel.findOne({ authId });
   }
 }

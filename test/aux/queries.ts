@@ -1,5 +1,6 @@
 import { ApolloServerTestClient } from 'apollo-server-testing';
 import gql from 'graphql-tag';
+import { DailyReportQueryInput } from '../../src/dailyReport';
 import { GetCommunicationParams } from '../../src/communication';
 import { DischargeDocumentsLinks, RecordingLinkParams } from '../../src/member';
 import { GetSlotsParams } from '../../src/user';
@@ -525,6 +526,8 @@ export class Queries {
             externalUserId
             platform
             isPushNotificationsEnabled
+            isAppointmentsReminderEnabled
+            isRecommendationsEnabled
             articlesPath
           }
         }
@@ -601,5 +604,36 @@ export class Queries {
     });
 
     return result.data.getRecordings;
+  };
+
+  getDailyReports = async ({
+    dailyReportQueryInput,
+  }: {
+    dailyReportQueryInput: DailyReportQueryInput;
+  }) => {
+    const result = await this.apolloClient.query({
+      variables: { dailyReportQueryInput },
+      query: gql`
+        query getDailyReports($dailyReportQueryInput: DailyReportQueryInput!) {
+          getDailyReports(dailyReportQueryInput: $dailyReportQueryInput) {
+            data {
+              memberId
+              date
+              categories {
+                rank
+                category
+              }
+              statsOverThreshold
+            }
+            metadata {
+              minDate
+            }
+          }
+        }
+      `,
+    });
+
+    const { errors, data } = result || {};
+    return { errors, dailyReports: data?.getDailyReports };
   };
 }

@@ -3,13 +3,12 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import * as packageJson from '../package.json';
 import { AppModule } from './app.module';
 import { AppointmentScheduler } from './appointment';
-import { GlobalAuthGuard } from './auth/guards/globalAuth.guard';
-import { RolesGuard } from './auth/guards/role.guard';
+import { GlobalAuthGuard, RolesGuard } from './auth';
 import { AllExceptionsFilter, Logger, internalLogs } from './common';
 import { MemberScheduler } from './member';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { logger: false });
+  const app = await NestFactory.create(AppModule, { logger: false, bodyParser: false });
 
   app.enableCors();
 

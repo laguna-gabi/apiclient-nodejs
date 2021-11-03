@@ -24,4 +24,17 @@ export class CognitoService {
       }
     }
   }
+
+  async deleteMember(deviceId) {
+    this.logger.debug({ deviceId }, CognitoService.name, this.deleteMember.name);
+    try {
+      await this.cognito
+        .adminDeleteUser({ UserPoolId: config.get('aws.cognito.userPoolId'), Username: deviceId })
+        .promise();
+    } catch (ex) {
+      if (ex?.code !== 'UserNotFoundException') {
+        this.logger.error(deviceId, CognitoService.name, this.deleteMember.name, ex);
+      }
+    }
+  }
 }

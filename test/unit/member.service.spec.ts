@@ -3,6 +3,7 @@ import * as config from 'config';
 import * as faker from 'faker';
 import { datatype, date, internet } from 'faker';
 import { Model, Types, model } from 'mongoose';
+import { RecordingType } from '../../src/common/interfaces.dto';
 import { v4 } from 'uuid';
 import {
   Appointment,
@@ -12,7 +13,11 @@ import {
 } from '../../src/appointment';
 import { ErrorType, Errors, Language, Platform } from '../../src/common';
 import {
+  ActionItem,
+  ActionItemDto,
   CreateMemberParams,
+  Goal,
+  GoalDto,
   Member,
   MemberDto,
   MemberModule,
@@ -41,6 +46,7 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
+  generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
@@ -53,6 +59,8 @@ describe('MemberService', () => {
   let memberModel: Model<typeof MemberDto>;
   let modelUser: Model<typeof UserDto>;
   let modelOrg: Model<typeof OrgDto>;
+  let modelGoal: Model<typeof GoalDto>;
+  let modelActionItem: Model<typeof ActionItemDto>;
   let modelAppointment: Model<typeof AppointmentDto>;
 
   beforeAll(async () => {
@@ -65,6 +73,8 @@ describe('MemberService', () => {
     memberModel = model(Member.name, MemberDto);
     modelUser = model(User.name, UserDto);
     modelOrg = model(Org.name, OrgDto);
+    modelGoal = model(Goal.name, GoalDto);
+    modelActionItem = model(ActionItem.name, ActionItemDto);
     modelAppointment = model(Appointment.name, AppointmentDto);
     await dbConnect();
   });
@@ -625,8 +635,8 @@ describe('MemberService', () => {
     });
   });
 
-  describe('update', () => {
-    it('should throw when trying to update non existing member', async () => {
+  describe('archive', () => {
+    it('should throw an error when trying to archive non existing member', async () => {
       await expect(service.moveMemberToArchive(generateId())).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
@@ -646,6 +656,39 @@ describe('MemberService', () => {
       await expect(service.getMemberConfig(memberId)).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
+    });
+  });
+
+  describe('delete', () => {
+    it('should throw an error when trying to delete non existing member', async () => {
+      await expect(service.moveMemberToArchive(generateId())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
+    });
+
+    it('should delete member', async () => {
+      const memberId = await generateMember();
+      const member = await service.get(memberId);
+      const memberConfig = await service.getMemberConfig(memberId);
+      const result = await service.deleteMember(memberId);
+      expect(result.member).toEqual(member);
+      expect(result.memberConfig).toEqual(memberConfig);
+      await expect(service.get(memberId)).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+      await expect(service.getMemberConfig(memberId)).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
+      for (let index = 0; index < member.goals.length; index++) {
+        const goalResult = await modelGoal.findById(member.goals[index]);
+        expect(goalResult).toBeNull();
+      }
+      for (let index = 0; index < member.actionItems.length; index++) {
+        const actionItemsResult = await modelActionItem.findById(member.actionItems[index]);
+        expect(actionItemsResult).toBeNull();
+      }
+      const appointmentResult = await modelAppointment.find({
+        memberId: new Types.ObjectId(memberId),
+      });
+      expect(appointmentResult).toEqual([]);
     });
   });
 
@@ -786,33 +829,40 @@ describe('MemberService', () => {
     it('should update memberConfig multiple times', async () => {
       //1st memberConfig is inserted in generateMember with externalUserId only
       const id = await generateMember();
-
-      const params1 = {
-        memberId: new Types.ObjectId(id),
+      const params1 = await generateUpdateMemberConfigParams({
+        memberId: generateId(id),
         platform: Platform.android,
         isPushNotificationsEnabled: true,
-      };
-      params1.memberId = new Types.ObjectId(id);
+        isAppointmentsReminderEnabled: true,
+        isRecommendationsEnabled: false,
+      });
+
       await service.updateMemberConfig(params1);
 
       const configs1 = await service.getMemberConfig(id);
       expect(configs1.externalUserId).toEqual(expect.any(String));
       expect(configs1.isPushNotificationsEnabled).toEqual(params1.isPushNotificationsEnabled);
+      expect(configs1.isAppointmentsReminderEnabled).toEqual(params1.isAppointmentsReminderEnabled);
+      expect(configs1.isRecommendationsEnabled).toEqual(params1.isRecommendationsEnabled);
       expect(configs1.platform).toEqual(params1.platform);
 
-      const params2 = {
-        memberId: new Types.ObjectId(id),
-        platform: Platform.ios,
+      const params2 = await generateUpdateMemberConfigParams({
+        memberId: generateId(id),
+        platform: Platform.web,
         isPushNotificationsEnabled: false,
-      };
-      params2.memberId = new Types.ObjectId(id);
+        isAppointmentsReminderEnabled: false,
+        isRecommendationsEnabled: true,
+      });
+      params2.memberId = id;
       await service.updateMemberConfig(params2);
 
       const configs2 = await service.getMemberConfig(id);
       expect(configs1.memberId).toEqual(configs2.memberId);
       expect(configs1.externalUserId).toEqual(configs2.externalUserId);
-      expect(configs2.isPushNotificationsEnabled).toEqual(params2.isPushNotificationsEnabled);
       expect(configs2.platform).toEqual(params2.platform);
+      expect(configs2.isPushNotificationsEnabled).toEqual(params2.isPushNotificationsEnabled);
+      expect(configs2.isAppointmentsReminderEnabled).toEqual(params2.isAppointmentsReminderEnabled);
+      expect(configs2.isRecommendationsEnabled).toEqual(params2.isRecommendationsEnabled);
     });
 
     it('should update only isPushNotificationsEnabled', async () => {
@@ -820,11 +870,11 @@ describe('MemberService', () => {
       const id = await generateMember();
 
       const params = {
-        memberId: new Types.ObjectId(id),
+        memberId: id,
         platform: Platform.android,
         isPushNotificationsEnabled: true,
       };
-      params.memberId = new Types.ObjectId(id);
+      params.memberId = id;
       await service.updateMemberConfig(params);
 
       let configs = await service.getMemberConfig(id);
@@ -833,7 +883,7 @@ describe('MemberService', () => {
       expect(configs.platform).toEqual(params.platform);
 
       await service.updateMemberConfig({
-        memberId: new Types.ObjectId(id),
+        memberId: id,
         platform: Platform.android,
         isPushNotificationsEnabled: true,
       });
@@ -842,19 +892,19 @@ describe('MemberService', () => {
       expect(configs.isPushNotificationsEnabled).toEqual(true);
     });
 
-    it('should not override isPushNotificationsEnabled on input undefined', async () => {
-      //1st memberConfig is inserted in generateMember with externalUserId only
+    test.each([
+      { isPushNotificationsEnabled: null },
+      { isAppointmentsReminderEnabled: null },
+      { isRecommendationsEnabled: null },
+    ])('should not override %p since it is not define in input', async (field) => {
       const id = await generateMember();
 
-      const params = {
-        memberId: new Types.ObjectId(id),
-        platform: Platform.android,
-      };
-      params.memberId = new Types.ObjectId(id);
+      let params = generateUpdateMemberConfigParams({ memberId: generateId(id) });
+      params = { ...params, ...field };
       await service.updateMemberConfig(params);
 
       const configs = await service.getMemberConfig(id);
-      expect(configs.isPushNotificationsEnabled).toEqual(false);
+      expect(configs[Object.keys(field)[0]]).toEqual(false);
     });
   });
 
@@ -937,7 +987,14 @@ describe('MemberService', () => {
 
     it('should not override optional fields when not set from params', async () => {
       const memberId = await generateMember();
-      const recording1 = generateUpdateRecordingParams({ memberId });
+      const appointmentId = new Types.ObjectId(generateId());
+      const recording1 = generateUpdateRecordingParams({
+        memberId,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        appointmentId: appointmentId as string,
+        recordingType: RecordingType.phone,
+      });
       await service.updateRecording(recording1);
       const recording2 = generateUpdateRecordingParams({ id: recording1.id, memberId });
       recording2.start = undefined;
@@ -945,6 +1002,8 @@ describe('MemberService', () => {
       recording2.userId = undefined;
       recording2.phone = undefined;
       recording2.answered = undefined;
+      recording2.recordingType = undefined;
+      recording2.appointmentId = undefined;
       await service.updateRecording(recording2);
 
       const recordings = await service.getRecordings(memberId);
@@ -971,6 +1030,38 @@ describe('MemberService', () => {
       const recordings2 = await service.getRecordings(memberId2);
       expect(recordings2.length).toEqual(1);
       expect(recordings2[0]).toEqual(expect.objectContaining(recording2));
+    });
+  });
+
+  describe('setNewUserToMember', () => {
+    it('should fail to update on non existing member', async () => {
+      const userId = generateId();
+      const memberId = generateId();
+      await expect(service.setNewUserToMember({ userId, memberId })).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
+    });
+
+    it('should throw an error if the new user equals the old user', async () => {
+      const memberId = await generateMember();
+      const member = await service.get(memberId);
+
+      await expect(
+        service.setNewUserToMember({ userId: member.primaryUserId, memberId }),
+      ).rejects.toThrow(Errors.get(ErrorType.userIdOrEmailAlreadyExists));
+    });
+
+    it('should update the primary user and add new user to the users list', async () => {
+      const memberId = await generateMember();
+      const newUser = await modelUser.create(generateCreateRawUserParams());
+      const oldMember = await service.get(memberId);
+
+      const oldUserId = await service.setNewUserToMember({ userId: newUser._id, memberId });
+
+      const updatedMember = await service.get(memberId);
+      expect(updatedMember.primaryUserId).toEqual(newUser._id);
+      expect(oldUserId).toEqual(oldMember.primaryUserId);
+      compareUsers(updatedMember.users[updatedMember.users.length - 1], newUser);
     });
   });
 

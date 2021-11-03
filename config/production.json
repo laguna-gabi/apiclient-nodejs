@@ -4,6 +4,7 @@
     "app": "https://staging.app.lagunahealth.com"
   },
   "slack": {
+    "support": "#support",
     "notifications": "#production-notifications"
   },
   "oneSignal": {

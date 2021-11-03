@@ -1,6 +1,5 @@
 import * as faker from 'faker';
 import * as jwt from 'jsonwebtoken';
-import { v4 } from 'uuid';
 import { Identifier } from '../src/common';
 import { UserRole, UserService } from '../src/user';
 import {
@@ -109,7 +108,14 @@ async function main() {
       '---------- Creating 3 availabilities for primaryUserId ---------\n' +
       '----------------------------------------------------------------',
   );
-  await createAvailability(primaryUserId);
+  const availabilities = [
+    generateAvailabilityInput(),
+    generateAvailabilityInput(),
+    generateAvailabilityInput(),
+  ];
+  await base
+    .setContextUserId(member.primaryUserId)
+    .mutations.createAvailabilities({ availabilities });
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
@@ -149,30 +155,16 @@ async function main() {
  *************************************************************************************************/
 
 const createUser = async (roles: UserRole[], userText: string): Promise<Identifier> => {
-  const authId = v4();
   const { id } = await mutations.createUser({
     userParams: generateCreateUserParams({
-      authId,
+      authId: 'admin',
       roles,
     }),
   });
-  console.log(
-    `${id} : ${userText} of type ${roles} - valid token: ${jwt.sign(
-      { username: id, sub: authId },
-      'key-123',
-    )}`,
-  );
+  const token = jwt.sign({ username: id, sub: 'admin' }, 'key-123');
+  console.log(`${id} : ${userText} of type ${roles} - valid token: ${token}`);
 
   return { id };
-};
-
-const createAvailability = async (userId: string) => {
-  const availabilities = [
-    generateAvailabilityInput({ userId }),
-    generateAvailabilityInput({ userId }),
-    generateAvailabilityInput({ userId }),
-  ];
-  await mutations.createAvailabilities({ availabilities });
 };
 
 const requestAppointment = async (memberId: string, userId: string) => {

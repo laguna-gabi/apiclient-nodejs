@@ -1,8 +1,14 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EventType, IEventNewMember, IEventRequestAppointment } from '../common';
+import {
+  EventType,
+  IEventNewMember,
+  IEventRequestAppointment,
+  IEventSlackMessage,
+  SlackChannel,
+  SlackIcon,
+} from '../common';
 import { UserService } from '../user';
-import { CreateMemberParams, Member } from './member.dto';
-import { MemberService } from './member.service';
+import { CreateMemberParams, Member, MemberService } from '.';
 
 export class MemberBase {
   constructor(
@@ -23,6 +29,14 @@ export class MemberBase {
 
     const eventRequestAppointmentParams: IEventRequestAppointment = { user, member };
     this.eventEmitter.emit(EventType.requestAppointment, eventRequestAppointmentParams);
+
+    const eventSlackMessageParams: IEventSlackMessage = {
+      // eslint-disable-next-line max-len
+      message: `*New customer*\n${member.firstName} [${member.id}],\nassigned to ${user.firstName}.`,
+      icon: SlackIcon.info,
+      channel: SlackChannel.support,
+    };
+    this.eventEmitter.emit(EventType.slackMessage, eventSlackMessageParams);
 
     return member;
   }

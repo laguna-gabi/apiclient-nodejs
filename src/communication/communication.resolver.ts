@@ -1,26 +1,32 @@
-import { UseInterceptors } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
-import { Args, Query, Resolver } from '@nestjs/graphql';
+import { Inject, UseInterceptors, forwardRef } from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { Args, Context, Query, Resolver } from '@nestjs/graphql';
 import * as config from 'config';
 import { camelCase } from 'lodash';
 import {
   CommunicationInfo,
   CommunicationService,
   GetCommunicationParams,
+  MemberCommunicationInfo,
   UnreadMessagesCount,
 } from '.';
 import { AppointmentStatus } from '../appointment';
-import { Roles } from '../auth/decorators/role.decorator';
-import { Roles as RoleTypes } from '../auth/roles';
 import {
+  ErrorType,
+  Errors,
   EventType,
   IEventNewMember,
   IEventNewUser,
   IEventUpdateMemberPlatform,
+  IEventUpdateUserInAppointments,
+  IEventUpdateUserInCommunication,
   Logger,
   LoggingInterceptor,
+  RoleTypes,
+  Roles,
   UpdatedAppointmentAction,
 } from '../common';
+import { UserService } from '../user';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => CommunicationInfo)
@@ -28,6 +34,9 @@ export class CommunicationResolver {
   constructor(
     private readonly communicationService: CommunicationService,
     private readonly logger: Logger,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   @Query(() => CommunicationInfo, { nullable: true })
@@ -36,32 +45,79 @@ export class CommunicationResolver {
     getCommunicationParams: GetCommunicationParams,
   ): Promise<CommunicationInfo> {
     const result = await this.communicationService.get(getCommunicationParams);
-    if (result) {
-      return {
-        memberId: result.memberId,
-        userId: result.userId,
-        chat: {
-          memberLink: this.buildUrl({
-            uid: result.memberId,
-            mid: result.sendBirdChannelUrl,
-            token: result.memberToken,
-          }),
-          userLink: this.buildUrl({
-            uid: result.userId,
-            mid: result.sendBirdChannelUrl,
-            token: result.userToken,
-          }),
-        },
-      };
-    } else {
-      return null;
+    try {
+      if (result) {
+        return {
+          memberId: result.memberId,
+          userId: result.userId,
+          chat: {
+            memberLink: this.buildUrl({
+              uid: result.memberId,
+              mid: result.sendBirdChannelUrl,
+              token: result.memberToken,
+            }),
+            userLink: this.buildUrl({
+              uid: result.userId,
+              mid: result.sendBirdChannelUrl,
+              token: result.userToken,
+            }),
+          },
+        };
+      } else {
+        return null;
+      }
+    } catch (ex) {
+      this.logger.error(
+        getCommunicationParams,
+        CommunicationResolver.name,
+        this.getCommunication.name,
+        ex,
+      );
     }
   }
 
   @Query(() => UnreadMessagesCount)
   @Roles(RoleTypes.Member, RoleTypes.User)
   getMemberUnreadMessagesCount(@Args('memberId', { type: () => String }) memberId: string) {
-    return this.communicationService.getMemberUnreadMessagesCount(memberId);
+    return this.communicationService.getParticipantUnreadMessagesCount(memberId);
+  }
+
+  @Query(() => MemberCommunicationInfo)
+  @Roles(RoleTypes.Member, RoleTypes.User)
+  async getMemberCommunicationInfo(@Context() context) {
+    const userRole = context.req?.user.role;
+    if (userRole != RoleTypes.Member) {
+      throw new Error(Errors.get(ErrorType.communicationInfoIsNotAllowed));
+    }
+
+    const memberId = context.req?.user._id.toString();
+    const userId = context.req?.user.primaryUserId;
+    const communication = await this.communicationService.get({ memberId, userId });
+
+    const user = await this.userService.get(userId);
+
+    if (!user) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+
+    if (!communication) {
+      throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
+    }
+
+    return {
+      memberLink: this.buildUrl({
+        uid: communication.memberId,
+        mid: communication.sendBirdChannelUrl,
+        token: communication.memberToken,
+      }),
+      user: {
+        lastName: user.lastName,
+        firstName: user.firstName,
+        id: user.id,
+        roles: user.roles,
+        avatar: user.avatar,
+      },
+    };
   }
 
   @Query(() => String)
@@ -133,5 +189,26 @@ export class CommunicationResolver {
 
   private buildUrl({ uid, mid, token }): string {
     return `${config.get('hosts.chat')}/?uid=${uid}&mid=${mid}&token=${token}`;
+  }
+
+  @OnEvent(EventType.updateUserInCommunication, { async: true })
+  async updateUserInCommunication(params: IEventUpdateUserInCommunication) {
+    try {
+      await this.communicationService.updateUserInCommunication(params);
+      const replacedUserInCommunicationParams: IEventUpdateUserInAppointments = {
+        oldUserId: params.oldUserId,
+        newUserId: params.newUser.id,
+        memberId: params.memberId,
+      };
+      this.eventEmitter.emit(EventType.updateUserInAppointments, replacedUserInCommunicationParams);
+      this.logger.debug(params, CommunicationResolver.name, this.updateUserInCommunication.name);
+    } catch (ex) {
+      this.logger.error(
+        params,
+        CommunicationResolver.name,
+        this.updateUserInCommunication.name,
+        ex,
+      );
+    }
   }
 }

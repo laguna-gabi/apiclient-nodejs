@@ -2,8 +2,7 @@ import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Schema } from '@nestjs/mongoose';
 import { IsAlphanumeric, IsOptional } from 'class-validator';
 import { Types } from 'mongoose';
-import { IsNotPlatformWeb } from './customValidators';
-import { ErrorType, Errors } from './errors';
+import { ErrorType, Errors, IsNotPlatformWeb } from '.';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -131,6 +130,7 @@ export class InternalNotifyParams {
   userId: string;
   type: InternalNotificationType;
   metadata: InternalNotificationMetadata;
+  checkAppointmentReminder?: boolean;
 }
 
 export type AllNotificationTypes =
@@ -170,6 +170,7 @@ export class SendSendBirdNotification extends BaseSendNotification {
   sendBirdChannelUrl: string;
   message: string;
   notificationType: AllNotificationTypes;
+  appointmentId?: string;
 }
 
 export class CancelNotificationParams extends BaseSendNotification {
@@ -232,5 +233,17 @@ export enum AuditType {
   write = 'write',
   read = 'read',
   archive = 'archive',
+  delete = 'delete',
   message = 'message',
+  userReplaced = 'userReplaced',
 }
+
+export enum RecordingType {
+  voip = 'voip',
+  video = 'video',
+  phone = 'phone',
+}
+
+registerEnumType(RecordingType, {
+  name: 'RecordingType',
+});

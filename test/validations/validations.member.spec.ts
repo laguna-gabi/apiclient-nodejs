@@ -30,6 +30,7 @@ import {
   generateOrgParams,
   generateRandomName,
   generateSetGeneralNotesParams,
+  generateSetNewUserToMemberParams,
   generateUniqueUrl,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
@@ -673,6 +674,33 @@ describe('Validations - member', () => {
       const updateRecordingParams = generateUpdateRecordingParams({ ...params.input });
       await handler.mutations.updateRecording({
         updateRecordingParams,
+        missingFieldError: params.error,
+      });
+    });
+  });
+
+  describe('setNewUserToMember', () => {
+    test.each`
+      field         | error
+      ${'memberId'} | ${`Field "memberId" of required type "String!" was not provided.`}
+      ${'userId'}   | ${`Field "userId" of required type "String!" was not provided.`}
+    `(`should fail to set new user to member if field $field is missing`, async (params) => {
+      const setNewUserToMemberParams = generateSetNewUserToMemberParams();
+      delete setNewUserToMemberParams[params.field];
+      await handler.mutations.setNewUserToMember({
+        setNewUserToMemberParams,
+        missingFieldError: params.error,
+      });
+    });
+
+    test.each`
+      input                | error
+      ${{ memberId: 123 }} | ${stringError}
+      ${{ userId: 123 }}   | ${stringError}
+    `(`should fail to set new user to member since $input is not a valid type`, async (params) => {
+      const setNewUserToMemberParams = generateSetNewUserToMemberParams({ ...params.input });
+      await handler.mutations.setNewUserToMember({
+        setNewUserToMemberParams,
         missingFieldError: params.error,
       });
     });

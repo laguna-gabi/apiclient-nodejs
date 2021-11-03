@@ -36,8 +36,10 @@ import {
   MemberConfig,
   NotifyParams,
   SetGeneralNotesParams,
+  SetNewUserToMemberParams,
   Sex,
   TaskStatus,
+  UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
   UpdateTaskStatusParams,
@@ -113,6 +115,7 @@ export const mockGenerateUser = (): User => {
     createdAt: faker.date.past(1),
     phone: generatePhone(),
     authId: v4(),
+    lastMemberAssignedAt: new Date(0),
   };
 };
 
@@ -248,6 +251,22 @@ export const mockGenerateMemberConfig = (): MemberConfig => {
   };
 };
 
+export const generateUpdateMemberConfigParams = ({
+  memberId = generateId(),
+  platform = Platform.web,
+  isPushNotificationsEnabled = true,
+  isAppointmentsReminderEnabled = true,
+  isRecommendationsEnabled = true,
+}: Partial<UpdateMemberConfigParams> = {}): UpdateMemberConfigParams => {
+  return {
+    memberId,
+    platform,
+    isPushNotificationsEnabled,
+    isAppointmentsReminderEnabled,
+    isRecommendationsEnabled,
+  };
+};
+
 export const generateCreateTaskParams = ({
   memberId = generateId(),
   title = faker.lorem.words(2),
@@ -368,13 +387,12 @@ export const generateZipCode = (): string => {
 };
 
 export const generateAvailabilityInput = ({
-  userId = v4(),
   start = faker.date.soon(),
   end,
 }: Partial<AvailabilityInput> = {}): AvailabilityInput => {
   const endNew = new Date(start);
   endNew.setHours(endNew.getHours() + 5);
-  return { userId, start, end: end || endNew };
+  return { start, end: end || endNew };
 };
 
 export const generateGetCommunicationParams = ({
@@ -390,6 +408,13 @@ export const generateCommunication = ({
 }: Partial<Communication> = {}): Communication => {
   const sendBirdChannelUrl = faker.datatype.uuid();
   return { memberId, userId, sendBirdChannelUrl };
+};
+
+export const generateSetNewUserToMemberParams = ({
+  userId = generateId(),
+  memberId = generateId(),
+}: Partial<SetNewUserToMemberParams> = {}): SetNewUserToMemberParams => {
+  return { userId, memberId };
 };
 
 export const generateGetCommunication = () => {
@@ -536,6 +561,8 @@ export const generateUpdateRecordingParams = ({
   end = faker.date.soon(2),
   answered = true,
   phone = generatePhone(),
+  appointmentId,
+  recordingType,
 }: Partial<UpdateRecordingParams> = {}): UpdateRecordingParams => {
-  return { id, memberId, userId, start, end, answered, phone };
+  return { id, memberId, userId, start, end, answered, phone, appointmentId, recordingType };
 };

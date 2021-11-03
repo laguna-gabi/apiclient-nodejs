@@ -1,7 +1,6 @@
 import { ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
 import * as config from 'config';
-import { Platform } from '.';
-import { CancelNotificationType, NotificationType } from './interfaces.dto';
+import { CancelNotificationType, NotificationType, Platform } from '.';
 
 /**
  * When there are 2 params of dates, and we want to make sure that one param is

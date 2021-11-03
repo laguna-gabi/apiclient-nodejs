@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { v4 } from 'uuid';
 import {
   AvailabilityModule,
   AvailabilityResolver,
@@ -38,11 +39,19 @@ describe('AvailabilityResolver', () => {
     it('should successfully create availabilities', async () => {
       const params = generateAvailabilityInput();
       spyOnServiceCreate.mockImplementationOnce(async () => undefined);
+      const userId = v4();
+      const token = {
+        req: {
+          user: {
+            _id: userId,
+          },
+        },
+      };
 
-      await resolver.createAvailabilities([params]);
+      await resolver.createAvailabilities(token, [params]);
 
       expect(spyOnServiceCreate).toBeCalledTimes(1);
-      expect(spyOnServiceCreate).toBeCalledWith([params]);
+      expect(spyOnServiceCreate).toBeCalledWith([params], userId);
     });
   });
 

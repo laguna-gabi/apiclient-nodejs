@@ -12,6 +12,9 @@ import { NotificationsService } from '../../src/providers';
 import { dbDisconnect, defaultModules, delay } from '../common';
 import { generatePath, generatePhone } from '../generators';
 
+/**
+ * THIS TEST IS DISABLED
+ */
 describe.skip('live: notifications (one signal)', () => {
   const delayTime = 25000;
 

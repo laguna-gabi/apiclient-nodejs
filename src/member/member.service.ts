@@ -3,7 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import * as config from 'config';
 import { sub } from 'date-fns';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
 import { v4 } from 'uuid';
 import {
@@ -30,12 +30,14 @@ import {
   RecordingDocument,
   RecordingOutput,
   SetGeneralNotesParams,
+  SetNewUserToMemberParams,
   TaskStatus,
+  UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
   UpdateTaskStatusParams,
 } from '.';
-import { Appointment, AppointmentDocument } from '../appointment';
+import { Appointment } from '../appointment';
 import {
   AppointmentStatus,
   BaseService,
@@ -48,7 +50,6 @@ import {
   IEventUpdateMemberConfig,
   Identifier,
   Logger,
-  Platform,
 } from '../common';
 
 @Injectable()
@@ -62,8 +63,6 @@ export class MemberService extends BaseService {
     private readonly actionItemModel: Model<ActionItemDocument>,
     @InjectModel(MemberConfig.name)
     private readonly memberConfigModel: Model<MemberConfigDocument>,
-    @InjectModel(Appointment.name)
-    private readonly appointmentModel: Model<AppointmentDocument>,
     @InjectModel(Recording.name)
     private readonly recordingModel: Model<RecordingDocument>,
     @InjectModel(ArchiveMember.name)
@@ -95,7 +94,9 @@ export class MemberService extends BaseService {
         externalUserId: v4(),
       });
 
-      return this.replaceId(object.toObject());
+      const member = await this.getById(object._id);
+
+      return this.replaceId(member.toObject());
     } catch (ex) {
       throw new Error(
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.memberPhoneAlreadyExists) : ex,
@@ -391,6 +392,25 @@ export class MemberService extends BaseService {
     return { member, memberConfig };
   }
 
+  async deleteMember(id: string) {
+    const member = await this.get(id);
+    const memberConfig = await this.getMemberConfig(id);
+
+    await this.memberModel.deleteOne({ _id: new Types.ObjectId(id) });
+    await this.memberConfigModel.deleteOne({ memberId: new Types.ObjectId(id) });
+
+    for (let index = 0; index < member.goals.length; index++) {
+      await this.goalModel.deleteOne({ _id: member.goals[index] });
+    }
+    for (let index = 0; index < member.actionItems.length; index++) {
+      await this.actionItemModel.deleteOne({ _id: member.actionItems[index] });
+    }
+    await this.recordingModel.deleteMany({ memberId: new Types.ObjectId(id) });
+
+    this.logger.debug({ memberId: id }, MemberService.name, this.deleteMember.name);
+    return { member, memberConfig };
+  }
+
   /************************************************************************************************
    ***************************************** Notifications ****************************************
    ************************************************************************************************/
@@ -489,21 +509,30 @@ export class MemberService extends BaseService {
    ***************************************** Member Config ****************************************
    ************************************************************************************************/
 
-  async updateMemberConfig({
-    memberId,
-    platform,
-    isPushNotificationsEnabled,
-  }: {
-    memberId: Types.ObjectId;
-    platform: Platform;
-    isPushNotificationsEnabled?: boolean;
-  }): Promise<boolean> {
-    const setPush = isPushNotificationsEnabled !== undefined ? { isPushNotificationsEnabled } : {};
-    const result = await this.memberConfigModel.updateOne(
-      { memberId },
-      { $set: { memberId, platform, ...setPush } },
-    );
+  async updateMemberConfig(updateMemberConfigParams: UpdateMemberConfigParams): Promise<boolean> {
+    const {
+      memberId,
+      platform,
+      isPushNotificationsEnabled,
+      isAppointmentsReminderEnabled,
+      isRecommendationsEnabled,
+    } = updateMemberConfigParams;
 
+    let setParams: any = { memberId: new Types.ObjectId(memberId) };
+    setParams = platform == null ? platform : { ...setParams, platform };
+    setParams =
+      isPushNotificationsEnabled == null ? setParams : { ...setParams, isPushNotificationsEnabled };
+    setParams =
+      isAppointmentsReminderEnabled == null
+        ? setParams
+        : { ...setParams, isAppointmentsReminderEnabled };
+    setParams =
+      isRecommendationsEnabled == null ? setParams : { ...setParams, isRecommendationsEnabled };
+
+    const result = await this.memberConfigModel.updateOne(
+      { memberId: new Types.ObjectId(memberId) },
+      { $set: setParams },
+    );
     return result.ok === 1;
   }
 
@@ -558,19 +587,27 @@ export class MemberService extends BaseService {
    ******************************************** Recording ******************************************
    ************************************************************************************************/
   async updateRecording(updateRecordingParams: UpdateRecordingParams): Promise<void> {
-    const { start, end, memberId, id, userId, phone, answered } = updateRecordingParams;
+    const { start, end, memberId, id, userId, phone, answered, appointmentId, recordingType } =
+      updateRecordingParams;
     const member = await this.memberModel.findById(memberId, { _id: 1 });
     if (!member) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
 
     const objectMemberId = new Types.ObjectId(memberId);
-    let setParams: any = { memberId: objectMemberId };
-    setParams = start ? { ...setParams, start } : setParams;
-    setParams = end ? { ...setParams, end } : setParams;
-    setParams = userId ? { ...setParams, userId } : setParams;
-    setParams = phone ? { ...setParams, phone } : setParams;
-    setParams = answered ? { ...setParams, answered } : setParams;
+    const setParams: any = omitBy(
+      {
+        memberId: objectMemberId,
+        start,
+        end,
+        userId,
+        phone,
+        answered,
+        recordingType,
+        appointmentId: appointmentId ? new Types.ObjectId(appointmentId) : null,
+      },
+      isNil,
+    );
 
     try {
       await this.recordingModel.updateOne(
@@ -589,6 +626,30 @@ export class MemberService extends BaseService {
 
   async getRecordings(memberId: string): Promise<RecordingOutput[]> {
     return this.recordingModel.find({ memberId: new Types.ObjectId(memberId) });
+  }
+
+  /************************************************************************************************
+   **************************************** Modifications *****************************************
+   ************************************************************************************************/
+
+  async setNewUserToMember(params: SetNewUserToMemberParams): Promise<string> {
+    const { memberId, userId } = params;
+
+    // replace primary user and add the new user to member's list
+    const member = await this.memberModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(memberId) },
+      { primaryUserId: userId, $addToSet: { users: userId } },
+      { new: false },
+    );
+    if (!member) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
+    // if old user == new user
+    if (member.primaryUserId === params.userId) {
+      throw new Error(Errors.get(ErrorType.userIdOrEmailAlreadyExists));
+    }
+    // return the old primaryUserId
+    return member.primaryUserId;
   }
 
   /*************************************************************************************************

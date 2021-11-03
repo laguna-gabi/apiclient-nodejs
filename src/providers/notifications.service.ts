@@ -10,8 +10,8 @@ import {
   SendTwilioNotification,
 } from '../common';
 import { MemberConfig } from '../member';
-import { SendBird } from './sendBird';
-import { TwilioService } from './twilio.service';
+import { SendBird, TwilioService } from '.';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class NotificationsService {
@@ -21,10 +21,11 @@ export class NotificationsService {
     private readonly configsService: ConfigsService,
     private readonly httpService: HttpService,
     private readonly twilio: TwilioService,
+    readonly eventEmitter: EventEmitter2,
     private readonly sendBird: SendBird,
     private readonly logger: Logger,
   ) {
-    this.oneSignal = new OneSignal(configsService, httpService, logger);
+    this.oneSignal = new OneSignal(configsService, httpService, eventEmitter, logger);
   }
 
   async register({

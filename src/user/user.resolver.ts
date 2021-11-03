@@ -2,9 +2,8 @@ import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
-import { CreateUserParams, User, UserConfig, UserService } from '.';
+import { CreateUserParams, GetSlotsParams, Slots, User, UserConfig, UserService } from '.';
 import { EventType, IEventNewUser, Identifier, LoggingInterceptor } from '../common';
-import { GetSlotsParams, Slots } from './slot.dto';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => User)

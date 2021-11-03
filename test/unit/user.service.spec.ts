@@ -1,8 +1,14 @@
+import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Model, model } from 'mongoose';
+import { Model, Types, model } from 'mongoose';
 import { v4 } from 'uuid';
 import { AppointmentModule } from '../../src/appointment';
-import { ErrorType, Errors } from '../../src/common';
+import {
+  ErrorType,
+  Errors,
+  IEventNewAppointment,
+  IEventUpdateAppointmentsInUser,
+} from '../../src/common';
 import {
   NotNullableUserKeys,
   User,
@@ -18,21 +24,26 @@ import {
   dbDisconnect,
   defaultModules,
   generateCreateUserParams,
+  generateId,
+  generateScheduleAppointmentParams,
 } from '../index';
 
 describe('UserService', () => {
   let module: TestingModule;
   let service: UserService;
+  let mockUserModel;
   let userModel: Model<typeof UserDto>;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: defaultModules().concat(UserModule, AppointmentModule),
+      providers: [{ provide: getModelToken(User.name), useValue: Model }],
     }).compile();
 
     service = module.get<UserService>(UserService);
 
     userModel = model(User.name, UserDto);
+    mockUserModel = module.get<Model<User>>(getModelToken(User.name));
 
     await dbConnect();
   });
@@ -126,15 +137,97 @@ describe('UserService', () => {
         Errors.get(ErrorType.userIdOrEmailAlreadyExists),
       );
     });
+
+    it.each([
+      {
+        users: [
+          { _id: 'test1', members: 0, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
+          { _id: 'test2', members: 0, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
+          { _id: 'test3', members: 0, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
+        ],
+        userId: 'test1',
+      },
+      {
+        users: [
+          { _id: 'test1', members: 1, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
+          { _id: 'test2', members: 0, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
+          { _id: 'test3', members: 0, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
+        ],
+        userId: 'test2',
+      },
+      {
+        users: [
+          { _id: 'test1', members: 1, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
+          { _id: 'test2', members: 1, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
+          { _id: 'test3', members: 0, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
+        ],
+        userId: 'test3',
+      },
+      {
+        users: [
+          { _id: 'test1', members: 1, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
+          { _id: 'test2', members: 0, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
+          { _id: 'test3', members: 1, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
+        ],
+        userId: 'test2',
+      },
+      {
+        users: [
+          { _id: 'test1', members: 1, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
+          { _id: 'test2', members: 1, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
+          { _id: 'test3', members: 1, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
+        ],
+        userId: 'test1',
+      },
+    ])('should get available user', async ({ users, userId }) => {
+      jest.spyOn(mockUserModel, 'aggregate').mockResolvedValue(users);
+      const result = await service.getAvailableUser();
+      expect(result).toEqual(userId);
+    });
   });
 
   describe('userConfig', () => {
     it('should create userConfig on userCreate', async () => {
       const user = generateCreateUserParams();
-      const craetedUser = await service.insert(user);
-      const CreatedConfigUser = await service.getUserConfig(craetedUser.id);
+      const createdUser = await service.insert(user);
+      const CreatedConfigUser = await service.getUserConfig(createdUser.id);
 
-      expect(craetedUser.id).toEqual(CreatedConfigUser.userId);
+      expect(createdUser.id).toEqual(CreatedConfigUser.userId);
+    });
+  });
+
+  describe('updateUserAppointments', () => {
+    it('should move appointments from old user to new user', async () => {
+      const oldUser = await service.insert(generateCreateUserParams());
+      const newUser = await service.insert(generateCreateUserParams());
+
+      // Insert appointments to oldUser
+      const mockAppointments = [];
+      for (let step = 0; step < 5; step++) {
+        const appointment = generateScheduleAppointmentParams({ id: generateId() });
+        mockAppointments.push(appointment);
+        const params: IEventNewAppointment = {
+          appointmentId: appointment.id,
+          userId: oldUser.id,
+        };
+        await service.handleOrderCreatedEvent(params);
+      }
+      const params: IEventUpdateAppointmentsInUser = {
+        newUserId: newUser.id,
+        oldUserId: oldUser.id,
+        memberId: generateId(),
+        appointments: mockAppointments,
+      };
+
+      await service.updateUserAppointments(params);
+
+      // Not using service.get because it populates the appointments, and they don't really exist
+      const updatedOldUser = (await userModel.findById(oldUser.id)).toObject();
+      const updatedNewUser = (await userModel.findById(newUser.id)).toObject();
+      const mockAppointmentsIds = mockAppointments.map((app) => Types.ObjectId(app.id));
+
+      expect(updatedNewUser['appointments']).toEqual(mockAppointmentsIds);
+      expect(updatedOldUser['appointments']).toEqual([]);
     });
   });
 });

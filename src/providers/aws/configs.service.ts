@@ -21,6 +21,7 @@ export const ExternalConfigs = {
   sendbird: {
     apiId: 'sendbird.apiId',
     apiToken: 'sendbird.apiToken',
+    masterApiToken: 'sendbird.masterApiToken',
   },
   slack: {
     url: 'slack.url',
@@ -31,6 +32,7 @@ export const ExternalConfigs = {
     authToken: 'twilio.authToken',
     apiKey: 'twilio.apiKey',
     apiSecret: 'twilio.apiSecret',
+    webhookToken: 'twilio.webhookToken',
   },
   bitly: {
     apiToken: 'bitly.apiToken',

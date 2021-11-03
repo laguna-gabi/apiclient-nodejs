@@ -224,6 +224,15 @@ export class UpdateMemberParams extends ExtraMemberParams {
 }
 
 @InputType()
+export class SetNewUserToMemberParams {
+  @Field(() => String)
+  memberId: string;
+
+  @Field(() => String)
+  userId: string;
+}
+
+@InputType()
 export class SetGeneralNotesParams {
   @Field(() => String)
   memberId: string;
@@ -260,6 +269,9 @@ export class NotificationMetadata {
   chatLink?: boolean;
 
   sendBirdChannelUrl?: string;
+
+  @Field(() => String, { nullable: true })
+  appointmentId?: string;
 }
 
 @Schema({ versionKey: false, timestamps: true })
@@ -339,7 +351,7 @@ export class Member extends Identifier {
   @Field(() => Org)
   org: Org;
 
-  @Prop(() => String)
+  @Prop({ index: true })
   @Field(() => String, { description: 'primary user id' })
   primaryUserId: string;
 

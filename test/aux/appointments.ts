@@ -1,12 +1,12 @@
 import { Appointment, AppointmentStatus } from '../../src/appointment';
 import { Member } from '../../src/member';
-import { generateEndAppointmentParams } from '../generators';
 import {
   generateAppointmentLink,
+  generateEndAppointmentParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
-} from '../index';
-import { Mutations } from './mutations';
+} from '..';
+import { Mutations } from '.';
 
 export class AppointmentsIntegrationActions {
   constructor(private readonly mutations: Mutations) {}

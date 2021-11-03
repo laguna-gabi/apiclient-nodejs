@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { cloneDeep } from 'lodash';
 import { Model } from 'mongoose';
 import { Availability, AvailabilityDocument, AvailabilityInput, AvailabilitySlot } from '.';
 import { ErrorType, Errors, Identifiers } from '../common';
@@ -11,13 +10,9 @@ export class AvailabilityService {
     @InjectModel(Availability.name) private readonly availabilityModel: Model<AvailabilityDocument>,
   ) {}
 
-  async create(params: AvailabilityInput[]): Promise<Identifiers> {
+  async create(params: AvailabilityInput[], userId: string): Promise<Identifiers> {
     const items = params.map((input) => {
-      const { userId } = input;
-      const primitiveValues = cloneDeep(input);
-      delete primitiveValues.userId;
-
-      return { ...primitiveValues, userId };
+      return { ...input, userId };
     });
 
     const result = await this.availabilityModel.insertMany(items);
@@ -64,7 +59,7 @@ export class AvailabilityService {
           id: '$availabilities._id',
           start: '$availabilities.start',
           end: '$availabilities.end',
-          userId: '$availabilities.userId',
+          userId: '$users._id',
           userName: '$users.firstName',
           _id: 0,
         },

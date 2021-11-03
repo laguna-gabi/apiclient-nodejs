@@ -1,45 +1,50 @@
-import { isAllowed, Roles } from '../../src/auth/roles';
+import { RoleTypes, isAllowed } from '../../src/common';
 
 describe('RBAC', () => {
   it.each([
-    ['User is allowed if handler is annotated with Member role', Roles.User, [Roles.Member], true],
     [
       'User is allowed if handler is annotated with Member role',
-      Roles.Member,
-      [Roles.Member],
+      RoleTypes.User,
+      [RoleTypes.Member],
+      true,
+    ],
+    [
+      'User is allowed if handler is annotated with Member role',
+      RoleTypes.Member,
+      [RoleTypes.Member],
       true,
     ],
     [
       'Member is not allowed if handler is annotated with User role',
-      Roles.Member,
-      [Roles.User],
+      RoleTypes.Member,
+      [RoleTypes.User],
       false,
     ],
     [
       'User is allowed if handler is not annotated with Member role (default is User access)',
-      Roles.User,
+      RoleTypes.User,
       [],
       true,
     ],
     [
       'Member is not allowed if handler is not annotated with Member role (default is User access)',
-      Roles.Member,
+      RoleTypes.Member,
       [],
       false,
     ],
     [
       'Member is allowed if handler is annotated with Member role and other roles',
-      Roles.Member,
-      [Roles.User, Roles.Member],
+      RoleTypes.Member,
+      [RoleTypes.User, RoleTypes.Member],
       true,
     ],
     [
       'Member is allowed if handler is annotated with Member role and Anonymous roles',
-      Roles.Member,
-      [Roles.User, Roles.Anonymous],
+      RoleTypes.Member,
+      [RoleTypes.User, RoleTypes.Anonymous],
       true,
     ],
-  ])('should successfully create an org', async (message, role, annotatedRoles, expected) => {
+  ])('%p', async (message, role, annotatedRoles, expected) => {
     expect(isAllowed(role, annotatedRoles)).toBe(expected);
   });
 });

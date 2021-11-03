@@ -1,16 +1,17 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { RouteInfo } from '@nestjs/common/interfaces';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TerminusModule } from '@nestjs/terminus';
+import * as config from 'config';
 import { GraphQLError } from 'graphql';
 import { AppointmentModule } from './appointment';
-import { AuthModule } from './auth/auth.module';
-import { UserSecurityModule } from './auth/auth.security.module';
-import { AuthService } from './auth/auth.service';
+import { AuthModule, AuthService } from './auth';
 import { AvailabilityModule } from './availability';
-import { Errors } from './common';
+import { Errors, JsonBodyMiddleware, RawBodyMiddleware } from './common';
 import { CommunicationModule } from './communication';
+import { DailyReportModule } from './dailyReport';
 import { DbModule } from './db/db.module';
 import { HealthController } from './health/health.controller';
 import { MemberModule } from './member';
@@ -23,13 +24,13 @@ const badRequestException = 'Bad Request Exception';
 @Module({
   imports: [
     AuthModule,
-    UserSecurityModule,
     MemberModule,
     CommunicationModule,
     UserModule,
     AppointmentModule,
     OrgModule,
     AvailabilityModule,
+    DailyReportModule,
     ProvidersModule,
     DbModule,
     TerminusModule,
@@ -57,4 +58,18 @@ const badRequestException = 'Bad Request Exception';
   controllers: [HealthController],
   providers: [AuthService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  public configure(consumer: MiddlewareConsumer): void {
+    const skipBodyParseRouteList: RouteInfo[] = [];
+
+    config.get('skipBodyParseRouteList').forEach((routeListEntry) => {
+      skipBodyParseRouteList.push({ path: routeListEntry.path, method: routeListEntry.method });
+    });
+
+    consumer
+      .apply(RawBodyMiddleware)
+      .forRoutes(...skipBodyParseRouteList)
+      .apply(JsonBodyMiddleware)
+      .forRoutes('*');
+  }
+}

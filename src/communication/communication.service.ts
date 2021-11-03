@@ -149,6 +149,26 @@ export class CommunicationService {
     );
   }
 
+  async updateUserInCommunication({
+    newUser,
+    oldUserId,
+    memberId,
+  }: {
+    newUser: User;
+    oldUserId: string;
+    memberId: string;
+  }) {
+    const communication = await this.get({ memberId, userId: oldUserId });
+    if (!communication) {
+      throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
+    }
+    await this.sendBird.replaceUserInChannel(communication.sendBirdChannelUrl, oldUserId, newUser);
+    await this.communicationModel.findOneAndUpdate(
+      { sendBirdChannelUrl: communication.sendBirdChannelUrl },
+      { userId: newUser.id },
+    );
+  }
+
   async get(params: GetCommunicationParams) {
     const result = await this.communicationModel.aggregate([
       {
@@ -192,15 +212,35 @@ export class CommunicationService {
     return this.communicationModel.findOne({ sendBirdChannelUrl });
   }
 
-  async getMemberUnreadMessagesCount(memberId: string) {
-    const [result] = await this.communicationModel.find({
-      memberId: new Types.ObjectId(memberId),
-    });
-    if (!result) {
-      throw new Error(Errors.get(ErrorType.memberNotFound));
+  async getMemberUserCommunication({
+    memberId,
+    userId,
+  }: {
+    memberId: string;
+    userId: string;
+  }): Promise<Communication> {
+    return this.communicationModel.findOne({ memberId: new Types.ObjectId(memberId), userId });
+  }
+
+  async getParticipantUnreadMessagesCount(participantId: string, byMemberId = true) {
+    let result: Communication;
+
+    if (byMemberId) {
+      [result] = await this.communicationModel.find({
+        memberId: new Types.ObjectId(participantId),
+      });
+    } else {
+      [result] = await this.communicationModel.find({
+        userId: participantId,
+      });
     }
-    const count = await this.sendBird.countUnreadMessages(result.sendBirdChannelUrl, memberId);
-    return { count, memberId, userId: result.userId };
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
+    }
+
+    const count = await this.sendBird.countUnreadMessages(result.sendBirdChannelUrl, participantId);
+    return { count, memberId: result.memberId.toString(), userId: result.userId };
   }
 
   async freezeGroupChannel({ memberId, userId }: { memberId: string; userId: string }) {
@@ -223,6 +263,16 @@ export class CommunicationService {
       return;
     }
     return this.sendBird.freezeGroupChannel(communication.sendBirdChannelUrl, true);
+  }
+
+  async deleteCommunication(communication) {
+    this.logger.debug(communication, CommunicationService.name, this.deleteCommunication.name);
+    await this.communicationModel.deleteOne({
+      memberId: communication.memberId,
+      userId: communication.userId,
+    });
+    await this.sendBird.deleteGroupChannel(communication.sendBirdChannelUrl);
+    await this.sendBird.deleteUser(communication.memberId.toString());
   }
 
   getTwilioAccessToken() {

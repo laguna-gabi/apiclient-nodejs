@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as config from 'config';
 import {
+  InternalNotificationMetadata,
   InternalNotificationType,
   Logger,
   NotificationType,
@@ -10,6 +11,8 @@ import {
   SendTwilioNotification,
 } from '../common';
 import { NotificationsService } from '../providers';
+import { Member, MemberConfig, NotificationMetadata } from '.';
+import { User } from '../user';
 
 @Injectable()
 export class NotificationBuilder {
@@ -18,7 +21,19 @@ export class NotificationBuilder {
     readonly logger: Logger,
   ) {}
 
-  async notify({ member, memberConfig, user, type, metadata }) {
+  async notify({
+    member,
+    memberConfig,
+    user,
+    type,
+    metadata,
+  }: {
+    member: Member;
+    memberConfig: MemberConfig;
+    user: User;
+    type: NotificationType;
+    metadata: NotificationMetadata;
+  }) {
     const orgName = member?.org.name;
     let path = {};
     if (type === NotificationType.call || type === NotificationType.video) {
@@ -32,6 +47,7 @@ export class NotificationBuilder {
         message: metadata.content,
         notificationType: type,
         orgName,
+        appointmentId: metadata.appointmentId,
       };
       await this.notificationsService.send({ sendSendBirdNotification });
 
@@ -69,7 +85,25 @@ export class NotificationBuilder {
     }
   }
 
-  async internalNotify({ member, memberConfig, user, type, metadata }) {
+  async internalNotify({
+    member,
+    memberConfig,
+    user,
+    type,
+    metadata,
+    checkAppointmentReminder,
+  }: {
+    member: Member;
+    memberConfig: MemberConfig;
+    user: User;
+    type: InternalNotificationType;
+    metadata: InternalNotificationMetadata;
+    checkAppointmentReminder?;
+  }) {
+    if (checkAppointmentReminder && memberConfig && !memberConfig.isAppointmentsReminderEnabled) {
+      return;
+    }
+
     const orgName = member?.org.name;
     switch (type) {
       case InternalNotificationType.textToMember: {

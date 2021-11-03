@@ -1,7 +1,13 @@
-import { User } from '../src/user';
-import { connect, disconnect } from 'mongoose';
-import * as config from 'config';
+import { INestApplication } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TestingModule } from '@nestjs/testing';
+import * as config from 'config';
+import { connect, disconnect } from 'mongoose';
+import { v4 } from 'uuid';
+import { apiPrefix, webhooks } from '../src/common';
+import { DbModule } from '../src/db/db.module';
 import {
   NotificationsService,
   SendBird,
@@ -9,11 +15,28 @@ import {
   StorageService,
   TwilioService,
 } from '../src/providers';
-import { apiPrefix, webhooks } from '../src/common';
-import { v4 } from 'uuid';
-import { DbModule } from '../src/db/db.module';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-import { ScheduleModule } from '@nestjs/schedule';
+import { User, UserService } from '../src/user';
+import { Mutations, Queries } from './aux';
+
+export class BaseHandler {
+  app: INestApplication;
+  mutations: Mutations;
+  queries: Queries;
+  module: GraphQLModule;
+  userService: UserService;
+
+  setContextUserId = (userId) => {
+    (this.module as any).apolloServer.context = () => ({
+      req: {
+        user: {
+          _id: userId,
+        },
+      },
+    });
+
+    return this;
+  };
+}
 
 export const urls = {
   scheduleAppointments: `/${apiPrefix}/appointments/schedule`,
@@ -61,7 +84,12 @@ export const mockProviders = (
   const spyOnSendBirdCreateUser = jest.spyOn(sendBird, 'createUser');
   const spyOnSendBirdCreateGroupChannel = jest.spyOn(sendBird, 'createGroupChannel');
   const spyOnSendBirdFreeze = jest.spyOn(sendBird, 'freezeGroupChannel');
+  const spyOnSendBirdDeleteGroupChannel = jest.spyOn(sendBird, 'deleteGroupChannel');
+  const spyOnSendBirdDeleteUser = jest.spyOn(sendBird, 'deleteUser');
   const spyOnSendBirdSend = jest.spyOn(sendBird, 'send');
+  const spyOnSendBirdUpdateChannelName = jest.spyOn(sendBird, 'updateChannelName');
+  const spyOnSendBirdInvite = jest.spyOn(sendBird, 'invite');
+  const spyOnSendBirdLeave = jest.spyOn(sendBird, 'leave');
   const spyOnSendBirdUpdateGroupChannelMetadata = jest.spyOn(
     sendBird,
     'updateGroupChannelMetadata',
@@ -83,6 +111,8 @@ export const mockProviders = (
   spyOnSendBirdCreateUser.mockResolvedValue(v4());
   spyOnSendBirdCreateGroupChannel.mockResolvedValue(true);
   spyOnSendBirdFreeze.mockResolvedValue(undefined);
+  spyOnSendBirdDeleteGroupChannel.mockResolvedValue(undefined);
+  spyOnSendBirdDeleteUser.mockResolvedValue(undefined);
   spyOnSendBirdSend.mockResolvedValue(v4());
   spyOnSendBirdUpdateGroupChannelMetadata.mockResolvedValue(undefined);
   spyOnSendBirdDeleteGroupChannelMetadata.mockResolvedValue(undefined);
@@ -95,15 +125,23 @@ export const mockProviders = (
   spyOnNotificationsServiceCancel.mockResolvedValue(v4());
   spyOnTwilioGetToken.mockReturnValue('token');
   spyOnSlackBotSendMessage.mockReturnValue(undefined);
+  spyOnSendBirdUpdateChannelName.mockReturnValue(undefined);
+  spyOnSendBirdInvite.mockReturnValue(undefined);
+  spyOnSendBirdLeave.mockReturnValue(undefined);
 
   return {
     sendBird: {
       spyOnSendBirdCreateUser,
       spyOnSendBirdCreateGroupChannel,
       spyOnSendBirdFreeze,
+      spyOnSendBirdDeleteGroupChannel,
+      spyOnSendBirdDeleteUser,
       spyOnSendBirdSend,
       spyOnSendBirdUpdateGroupChannelMetadata,
       spyOnSendBirdDeleteGroupChannelMetadata,
+      spyOnSendBirdUpdateChannelName,
+      spyOnSendBirdInvite,
+      spyOnSendBirdLeave,
     },
     notificationsService: {
       spyOnNotificationsServiceRegister,

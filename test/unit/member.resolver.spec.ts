@@ -2,6 +2,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import * as faker from 'faker';
+import { capitalize } from 'lodash';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import {
@@ -12,11 +13,14 @@ import {
   IEventNewMember,
   IEventNotifyChatMessage,
   IEventRequestAppointment,
+  IEventSlackMessage,
   IEventUpdateMemberPlatform,
   InternalNotificationType,
   NotificationType,
   Platform,
   RegisterForNotificationParams,
+  SlackChannel,
+  SlackIcon,
   StorageType,
 } from '../../src/common';
 import {
@@ -50,6 +54,7 @@ import {
   generateNotifyParams,
   generateSetGeneralNotesParams,
   generateUniqueUrl,
+  generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
@@ -79,6 +84,7 @@ describe('MemberResolver', () => {
 
     resolver = module.get<MemberResolver>(MemberResolver);
     service = module.get<MemberService>(MemberService);
+    userService = module.get<UserService>(UserService);
     userService = module.get<UserService>(UserService);
     storage = module.get<StorageService>(StorageService);
     cognitoService = module.get<CognitoService>(CognitoService);
@@ -155,6 +161,13 @@ describe('MemberResolver', () => {
         EventType.requestAppointment,
         eventRequestAppointmentParams,
       );
+      const eventSlackMessageParams: IEventSlackMessage = {
+        // eslint-disable-next-line max-len
+        message: `*New customer*\n${member.firstName} [${member.id}],\nassigned to ${user.firstName}.`,
+        icon: SlackIcon.info,
+        channel: SlackChannel.support,
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.slackMessage, eventSlackMessageParams);
     });
   });
 
@@ -349,6 +362,77 @@ describe('MemberResolver', () => {
         userId: member.primaryUserId,
       });
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteSchedules, { memberId: id });
+    });
+  });
+
+  describe('deleteMember', () => {
+    let spyOnServiceDeleteMember;
+    let spyOnUserServiceRemoveAppointmentsFromUser;
+    let spyOnCommunicationGetMemberUserCommunication;
+    let spyOnCommunicationDeleteCommunication;
+    let spyOnNotificationsServiceUnregister;
+    let spyOnCognitoServiceDeleteMember;
+    let spyOnStorageServiceDeleteMember;
+
+    beforeEach(() => {
+      spyOnServiceDeleteMember = jest.spyOn(service, 'deleteMember');
+      spyOnUserServiceRemoveAppointmentsFromUser = jest.spyOn(
+        userService,
+        'removeAppointmentsFromUser',
+      );
+      spyOnCommunicationGetMemberUserCommunication = jest.spyOn(
+        communicationService,
+        'getMemberUserCommunication',
+      );
+      spyOnCommunicationDeleteCommunication = jest.spyOn(
+        communicationService,
+        'deleteCommunication',
+      );
+      spyOnNotificationsServiceUnregister = jest.spyOn(notificationsService, 'unregister');
+      spyOnCognitoServiceDeleteMember = jest.spyOn(cognitoService, 'deleteMember');
+      spyOnStorageServiceDeleteMember = jest.spyOn(storage, 'deleteMember');
+    });
+
+    afterEach(() => {
+      spyOnServiceDeleteMember.mockReset();
+      spyOnUserServiceRemoveAppointmentsFromUser.mockReset();
+      spyOnCommunicationGetMemberUserCommunication.mockReset();
+      spyOnCommunicationDeleteCommunication.mockReset();
+      spyOnCognitoServiceDeleteMember.mockReset();
+      spyOnNotificationsServiceUnregister.mockReset();
+      spyOnStorageServiceDeleteMember.mockReset();
+      spyOnEventEmitter.mockReset();
+    });
+
+    it('', async () => {
+      const id = generateId();
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const appointments = [generateAppointmentComposeParams(), generateAppointmentComposeParams()];
+      const communication = generateCommunication({
+        memberId: new Types.ObjectId(id),
+        userId: member.primaryUserId,
+      });
+      spyOnServiceDeleteMember.mockImplementationOnce(async () => ({
+        member,
+        memberConfig,
+        appointments,
+      }));
+      spyOnUserServiceRemoveAppointmentsFromUser.mockImplementationOnce(() => undefined);
+      spyOnCommunicationGetMemberUserCommunication.mockImplementationOnce(() => communication);
+      spyOnCommunicationDeleteCommunication.mockImplementationOnce(() => undefined);
+      spyOnCognitoServiceDeleteMember.mockImplementationOnce(() => undefined);
+      spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
+      spyOnStorageServiceDeleteMember.mockImplementationOnce(() => undefined);
+
+      await resolver.deleteMember(id);
+
+      expect(spyOnCommunicationDeleteCommunication).toBeCalledWith(communication);
+      expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
+      expect(spyOnCognitoServiceDeleteMember).toBeCalledWith(member.deviceId);
+      expect(spyOnStorageServiceDeleteMember).toBeCalledWith(id);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteMember, id);
       expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteSchedules, { memberId: id });
     });
   });
@@ -663,6 +747,39 @@ describe('MemberResolver', () => {
     });
   });
 
+  describe('updateMemberConfig', () => {
+    let spyOnServiceUpdateConfig;
+    let spyOnServiceGetMember;
+
+    beforeEach(() => {
+      spyOnServiceUpdateConfig = jest.spyOn(service, 'updateMemberConfig');
+      spyOnServiceGetMember = jest.spyOn(service, 'get');
+    });
+
+    afterEach(() => {
+      spyOnServiceUpdateConfig.mockReset();
+      spyOnServiceGetMember.mockReset();
+      spyOnServiceGetMember.mockRestore();
+    });
+
+    it('should update a member config', async () => {
+      const updateMemberConfigParams = generateUpdateMemberConfigParams();
+      spyOnServiceUpdateConfig.mockImplementationOnce(async () => true);
+      spyOnServiceGetMember.mockImplementationOnce(async () => mockGenerateMember());
+
+      await resolver.updateMemberConfig(updateMemberConfigParams);
+
+      expect(spyOnServiceUpdateConfig).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateConfig).toBeCalledWith(updateMemberConfigParams);
+    });
+
+    it('should not update member config on non existing member', async () => {
+      await expect(resolver.updateMemberConfig(generateUpdateMemberConfigParams())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
+    });
+  });
+
   describe('registerMemberForNotifications', () => {
     let spyOnNotificationsServiceRegister;
     let spyOnServiceGetMember;
@@ -721,7 +838,7 @@ describe('MemberResolver', () => {
       expect(spyOnServiceGetMember).toBeCalledWith(member.id);
       expect(spyOnServiceUpdateMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceUpdateMemberConfig).toBeCalledWith({
-        memberId: Types.ObjectId(member.id),
+        memberId: member.id,
         platform: params.platform,
         isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       });
@@ -759,7 +876,7 @@ describe('MemberResolver', () => {
       });
       expect(spyOnServiceUpdateMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceUpdateMemberConfig).toBeCalledWith({
-        memberId: memberConfig.memberId,
+        memberId: member.id,
         platform: params.platform,
         isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       });
@@ -829,6 +946,50 @@ describe('MemberResolver', () => {
 
       expect(spyOnServiceGet).toBeCalledTimes(1);
       expect(spyOnServiceGet).toBeCalledWith(memberId);
+    });
+  });
+
+  describe('setNewUserToMember', () => {
+    let spyOnServiceSetNewUserToMember;
+    let spyOnUserServiceGet;
+
+    beforeEach(() => {
+      spyOnUserServiceGet = jest.spyOn(userService, 'get');
+      spyOnServiceSetNewUserToMember = jest.spyOn(service, 'setNewUserToMember');
+    });
+
+    afterEach(() => {
+      spyOnServiceSetNewUserToMember.mockReset();
+      spyOnUserServiceGet.mockReset();
+      spyOnEventEmitter.mockReset();
+    });
+
+    it('should set new user for a given member', async () => {
+      const memberId = generateId();
+      const user = mockGenerateUser();
+      const oldUserId = generateId();
+      spyOnUserServiceGet.mockImplementationOnce(async () => user);
+      spyOnServiceSetNewUserToMember.mockImplementationOnce(async () => oldUserId);
+
+      await resolver.setNewUserToMember({ memberId, userId: user.id });
+
+      expect(spyOnUserServiceGet).toBeCalledWith(user.id);
+      expect(spyOnServiceSetNewUserToMember).toBeCalledWith({ memberId, userId: user.id });
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateUserInCommunication, {
+        newUser: user,
+        oldUserId,
+        memberId,
+      });
+    });
+
+    it("should throw an error when the new user doesn't exist", async () => {
+      const memberId = generateId();
+      const user = mockGenerateUser();
+      spyOnUserServiceGet.mockImplementationOnce(async () => null);
+
+      await expect(resolver.setNewUserToMember({ memberId, userId: user.id })).rejects.toThrow(
+        Errors.get(ErrorType.userNotFound),
+      );
     });
   });
 
@@ -1457,6 +1618,7 @@ describe('MemberResolver', () => {
     let spyOnUserServiceGetUser;
     let spyOnNotificationsServiceSend;
     let spyOnCommunicationGetByUrl;
+    let spyOnCommunicationGetUnreadMessageCount;
 
     beforeEach(() => {
       spyOnServiceGetMember = jest.spyOn(service, 'get');
@@ -1464,6 +1626,10 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
       spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
       spyOnCommunicationGetByUrl = jest.spyOn(communicationService, 'getByChannelUrl');
+      spyOnCommunicationGetUnreadMessageCount = jest.spyOn(
+        communicationService,
+        'getParticipantUnreadMessagesCount',
+      );
     });
 
     afterEach(() => {
@@ -1472,6 +1638,7 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser.mockReset();
       spyOnNotificationsServiceSend.mockReset();
       spyOnCommunicationGetByUrl.mockReset();
+      spyOnCommunicationGetUnreadMessageCount.mockReset();
     });
 
     it('should handle notify chat message sent from user', async () => {
@@ -1520,7 +1687,7 @@ describe('MemberResolver', () => {
           },
           metadata: {
             content: config
-              .get('contents.newChatMessage')
+              .get('contents.newChatMessageFromUser')
               .replace('@user.firstName@', user.firstName),
           },
           orgName: member.org.name,
@@ -1528,13 +1695,92 @@ describe('MemberResolver', () => {
       });
     });
 
+    it('should handle notify chat message sent from member with unread messages', async () => {
+      const member = mockGenerateMember();
+      const user = mockGenerateUser();
+      const communication: Communication = {
+        memberId: new Types.ObjectId(member.id),
+        userId: user.id,
+        sendBirdChannelUrl: generateUniqueUrl(),
+      };
+      spyOnServiceGetMember.mockImplementation(async () => member);
+      spyOnUserServiceGetUser.mockImplementation(async (userId: string) => {
+        if (userId === user.id) {
+          return user;
+        }
+        return undefined;
+      });
+
+      spyOnCommunicationGetByUrl.mockImplementation(async () => communication);
+      spyOnCommunicationGetUnreadMessageCount.mockImplementation(async () => ({
+        count: 1,
+      }));
+      const params: IEventNotifyChatMessage = {
+        senderUserId: member.id,
+        sendBirdChannelUrl: communication.sendBirdChannelUrl,
+      };
+
+      await resolver.notifyChatMessage(params);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendTwilioNotification: {
+          body: config
+            .get('contents.newChatMessageFromMember')
+            .replace('@member.honorific@', config.get(`contents.honorific.${member.honorific}`))
+            .replace('@member.lastName@', capitalize(member.lastName)),
+          to: user.phone,
+        },
+      });
+    });
+
+    it('should not notify user on chat message from member - no unread messages', async () => {
+      const member = mockGenerateMember();
+      const user = mockGenerateUser();
+      const communication: Communication = {
+        memberId: new Types.ObjectId(member.id),
+        userId: user.id,
+        sendBirdChannelUrl: generateUniqueUrl(),
+      };
+      spyOnServiceGetMember.mockImplementation(async () => member);
+      spyOnUserServiceGetUser.mockImplementation(async (userId: string) => {
+        if (userId === user.id) {
+          return user;
+        }
+        return undefined;
+      });
+
+      spyOnCommunicationGetByUrl.mockImplementation(async () => communication);
+      spyOnCommunicationGetUnreadMessageCount.mockImplementation(async () => ({
+        count: 0,
+      }));
+      const params: IEventNotifyChatMessage = {
+        senderUserId: member.id,
+        sendBirdChannelUrl: communication.sendBirdChannelUrl,
+      };
+
+      await resolver.notifyChatMessage(params);
+
+      expect(spyOnNotificationsServiceSend).not.toBeCalled();
+    });
+
     const fakeData: IEventNotifyChatMessage = {
       senderUserId: v4(),
       sendBirdChannelUrl: generateUniqueUrl(),
     };
 
-    it('should disregard notify chat message when sent from member', async () => {
+    // eslint-disable-next-line max-len
+    it('should disregard notify chat message when sent from member and member does not exist', async () => {
       spyOnUserServiceGetUser.mockImplementation(async () => undefined);
+      spyOnServiceGetMember.mockImplementation(async () => undefined);
+
+      await resolver.notifyChatMessage(fakeData);
+
+      expect(spyOnNotificationsServiceSend).not.toBeCalled();
+    });
+
+    it('should disregard notify on non existing sendBirdChannelUrl', async () => {
+      spyOnUserServiceGetUser.mockImplementation(async () => mockGenerateUser());
+      spyOnCommunicationGetByUrl.mockImplementation(async () => undefined);
 
       await resolver.notifyChatMessage(fakeData);
 

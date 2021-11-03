@@ -1,19 +1,22 @@
-import { EventEmitterModule } from '@nestjs/event-emitter';
+import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
-import { Platform, UpdatedAppointmentAction } from '../../src/common';
+import { EventType, Platform, RoleTypes, UpdatedAppointmentAction } from '../../src/common';
 import {
   CommunicationModule,
   CommunicationResolver,
   CommunicationService,
 } from '../../src/communication';
 import { DbModule } from '../../src/db/db.module';
+import { UserService } from '../../src/user';
 import {
   dbDisconnect,
+  generateCommunication,
   generateGetCommunicationParams,
   generateId,
+  generateObjectId,
   generateUniqueUrl,
   mockGenerateMember,
   mockGenerateUser,
@@ -23,6 +26,9 @@ describe('CommunicationResolver', () => {
   let module: TestingModule;
   let resolver: CommunicationResolver;
   let service: CommunicationService;
+  let userService: UserService;
+  let eventEmitter: EventEmitter2;
+  let spyOnEventEmitter;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -31,11 +37,18 @@ describe('CommunicationResolver', () => {
 
     resolver = module.get<CommunicationResolver>(CommunicationResolver);
     service = module.get<CommunicationService>(CommunicationService);
+    userService = module.get<UserService>(UserService);
+    eventEmitter = module.get<EventEmitter2>(EventEmitter2);
+    spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
   });
 
   afterAll(async () => {
     await module.close();
     await dbDisconnect();
+  });
+
+  afterEach(() => {
+    spyOnEventEmitter.mockReset();
   });
 
   describe('handleNewUser', () => {
@@ -109,6 +122,39 @@ describe('CommunicationResolver', () => {
     });
   });
 
+  describe('updateUserInCommunication', () => {
+    let spyOnServiceUpdateUserInCommunication;
+
+    beforeEach(() => {
+      spyOnServiceUpdateUserInCommunication = jest.spyOn(service, 'updateUserInCommunication');
+    });
+
+    afterEach(() => {
+      spyOnServiceUpdateUserInCommunication.mockReset();
+    });
+
+    it('should successfully replace user in communication', async () => {
+      spyOnServiceUpdateUserInCommunication.mockImplementationOnce(() => undefined);
+      const oldUserId = generateId();
+      const newUser = mockGenerateUser();
+      const memberId = generateId();
+
+      const params = {
+        oldUserId,
+        newUser,
+        memberId,
+      };
+
+      await resolver.updateUserInCommunication(params);
+      expect(spyOnServiceUpdateUserInCommunication).toBeCalledWith(params);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateUserInAppointments, {
+        oldUserId,
+        newUserId: newUser.id,
+        memberId,
+      });
+    });
+  });
+
   describe('get', () => {
     let spyOnServiceGet;
     beforeEach(() => {
@@ -177,6 +223,79 @@ describe('CommunicationResolver', () => {
 
       const result = resolver.getTwilioAccessToken();
       expect(result).toEqual(token);
+    });
+  });
+
+  describe('getMemberCommunicationInfo', () => {
+    let spyOnServiceGet; // get communication
+    let spyOnUserServiceGet; // Get user
+    const user = mockGenerateUser(); // mock user
+    const communication = generateCommunication(); // mock communication
+
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'get');
+      spyOnUserServiceGet = jest.spyOn(userService, 'get');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+      spyOnUserServiceGet.mockReset();
+    });
+
+    it('should successfully return communication info', async () => {
+      spyOnServiceGet.mockImplementationOnce(() => communication);
+      spyOnUserServiceGet.mockImplementationOnce(() => user);
+
+      const communicationInfo = await resolver.getMemberCommunicationInfo({
+        req: { user: { _id: generateObjectId(), role: RoleTypes.Member } },
+      });
+
+      expect(communicationInfo).toEqual({
+        memberLink:
+          `https://dev.chat.lagunahealth.com/?uid=${communication.memberId}` +
+          `&mid=${communication.sendBirdChannelUrl}&token=undefined`,
+        user: {
+          avatar: user.avatar,
+          firstName: user.firstName,
+          id: `${user.id}`,
+          lastName: user.lastName,
+          roles: user.roles,
+        },
+      });
+    });
+
+    // eslint-disable-next-line max-len
+    it('should throw error for a non-member user attempting to get communication info', async () => {
+      spyOnServiceGet.mockImplementationOnce(() => communication);
+      spyOnUserServiceGet.mockImplementationOnce(() => user);
+
+      await expect(
+        resolver.getMemberCommunicationInfo({
+          req: { user: { _id: generateObjectId(), role: RoleTypes.User } },
+        }),
+      ).rejects.toThrow('communication info is not allowed');
+    });
+
+    it('should throw error if primary user is missing', async () => {
+      spyOnServiceGet.mockImplementationOnce(() => communication);
+      spyOnUserServiceGet.mockImplementationOnce(() => undefined);
+
+      await expect(
+        resolver.getMemberCommunicationInfo({
+          req: { user: { _id: generateObjectId(), role: RoleTypes.Member } },
+        }),
+      ).rejects.toThrow('user id was not found');
+    });
+
+    it('should throw error if no communication between user and member', async () => {
+      spyOnServiceGet.mockImplementationOnce(() => undefined);
+      spyOnUserServiceGet.mockImplementationOnce(() => user);
+
+      await expect(
+        resolver.getMemberCommunicationInfo({
+          req: { user: { _id: generateObjectId(), role: RoleTypes.Member } },
+        }),
+      ).rejects.toThrow('member-user communication was not found');
     });
   });
 });

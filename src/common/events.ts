@@ -1,14 +1,15 @@
 import { Types } from 'mongoose';
-import { AppointmentStatus, Scores } from '../appointment';
+import { Appointment, AppointmentStatus, Scores } from '../appointment';
 import { Member } from '../member';
 import { User } from '../user';
 import {
+  AllNotificationTypes,
   Platform,
   QueueType,
   SlackChannel,
   SlackIcon,
   UpdatedAppointmentAction,
-} from './interfaces.dto';
+} from '.';
 
 export enum EventType {
   requestAppointment = 'requestAppointment',
@@ -17,6 +18,14 @@ export enum EventType {
   appointmentScoresUpdated = 'appointmentScoresUpdated',
   newMember = 'newMember',
   newUser = 'newUser',
+  // setNewUserToMember = 'setNewUserToMember',
+  // replacedUserInCommunication = 'replacedUserInCommunication',
+  // replacedUserInAppointments = 'replacedUserInAppointments',
+
+  updateUserInCommunication = 'updateUserInCommunication',
+  updateUserInAppointments = 'updateUserInAppointments',
+  updateAppointmentsInUser = 'updateAppointmentsInUser',
+
   updateMemberConfig = 'updateMemberConfig',
   updateUserConfig = 'updateUserConfig',
   addUserToMemberList = 'addUserToMemberList',
@@ -27,6 +36,9 @@ export enum EventType {
   slackMessage = 'slackMessage',
   queueMessage = 'queueMessage',
   deleteSchedules = 'deleteSchedules',
+  deleteMember = 'deleteMember',
+  removeAppointmentsFromUser = 'removeAppointmentsFromUser',
+  unregisterMemberFromNotifications = 'unregisterMemberFromNotifications',
 }
 
 export interface IEventRequestAppointment {
@@ -106,4 +118,26 @@ export interface IEventQueueMessage {
 
 export interface IEventDeleteSchedules {
   memberId: string;
+}
+
+export interface IEventUnregisterMemberFromNotifications {
+  phone: string;
+  content: string;
+  type: AllNotificationTypes;
+}
+
+export interface IEventUpdateUserInCommunication {
+  newUser: User;
+  oldUserId: string;
+  memberId: string;
+}
+
+export interface IEventUpdateUserInAppointments {
+  newUserId: string;
+  oldUserId: string;
+  memberId: string;
+}
+
+export interface IEventUpdateAppointmentsInUser extends IEventUpdateUserInAppointments {
+  appointments: Appointment[];
 }

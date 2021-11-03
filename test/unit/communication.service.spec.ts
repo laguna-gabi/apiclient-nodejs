@@ -1,6 +1,7 @@
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
+import { Model, Types, model } from 'mongoose';
 import { v4 } from 'uuid';
 import { AppointmentStatus } from '../../src/appointment';
 import {
@@ -10,7 +11,12 @@ import {
   Platform,
   UpdatedAppointmentAction,
 } from '../../src/common';
-import { CommunicationModule, CommunicationService } from '../../src/communication';
+import {
+  Communication,
+  CommunicationDto,
+  CommunicationModule,
+  CommunicationService,
+} from '../../src/communication';
 import { DbModule } from '../../src/db/db.module';
 import { UserRole } from '../../src/user';
 import {
@@ -29,6 +35,7 @@ describe('CommunicationService', () => {
   let sendBirdMock;
   let eventEmitter: EventEmitter2;
   let spyOnEventEmitter;
+  let communicationModel: Model<typeof CommunicationDto>;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -38,6 +45,8 @@ describe('CommunicationService', () => {
     service = module.get<CommunicationService>(CommunicationService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
+
+    communicationModel = model(Communication.name, CommunicationDto);
 
     sendBirdMock = mockProviders(module).sendBird;
 
@@ -51,8 +60,12 @@ describe('CommunicationService', () => {
     sendBirdMock.spyOnSendBirdCreateUser.mockReset();
     sendBirdMock.spyOnSendBirdCreateGroupChannel.mockReset();
     sendBirdMock.spyOnSendBirdFreeze.mockReset();
+    sendBirdMock.spyOnSendBirdDeleteGroupChannel.mockReset();
+    sendBirdMock.spyOnSendBirdDeleteUser.mockReset();
     sendBirdMock.spyOnSendBirdUpdateGroupChannelMetadata.mockReset();
-    sendBirdMock.spyOnSendBirdDeleteGroupChannelMetadata.mockReset();
+    sendBirdMock.spyOnSendBirdLeave.mockReset();
+    sendBirdMock.spyOnSendBirdInvite.mockReset();
+    sendBirdMock.spyOnSendBirdUpdateChannelName.mockReset();
   });
 
   describe('createUser', () => {
@@ -247,6 +260,77 @@ describe('CommunicationService', () => {
       await service.onUpdatedAppointment(params);
 
       expect(sendBirdMock.spyOnSendBirdUpdateGroupChannelMetadata).not.toBeCalled();
+    });
+  });
+
+  describe('updateUserInCommunication', () => {
+    let mockServiceGet;
+
+    beforeEach(() => {
+      mockServiceGet = jest.spyOn(service, 'get');
+    });
+
+    afterEach(() => {
+      mockServiceGet.mockReset();
+    });
+
+    afterEach(() => {
+      sendBirdMock.spyOnSendBirdLeave.mockReset();
+      sendBirdMock.spyOnSendBirdInvite.mockReset();
+      sendBirdMock.spyOnSendBirdUpdateChannelName.mockReset();
+    });
+
+    it('should replace user in communication', async () => {
+      const oldUserId = generateId();
+      const newUser = mockGenerateUser();
+      const memberId = generateId();
+      const sendBirdChannelUrl = faker.internet.url();
+
+      const params = {
+        oldUserId,
+        newUser,
+        memberId,
+      };
+
+      mockServiceGet.mockImplementationOnce(async () => ({
+        memberId: memberId,
+        userId: newUser.id,
+        sendBirdChannelUrl,
+      }));
+
+      await service.updateUserInCommunication(params);
+
+      expect(sendBirdMock.spyOnSendBirdLeave).toBeCalledWith(sendBirdChannelUrl, oldUserId);
+      expect(sendBirdMock.spyOnSendBirdInvite).toBeCalledWith(sendBirdChannelUrl, newUser.id);
+      expect(sendBirdMock.spyOnSendBirdUpdateChannelName).toBeCalledWith(
+        sendBirdChannelUrl,
+        newUser.firstName,
+        newUser.avatar,
+      );
+    });
+  });
+
+  describe('deleteCommunication', () => {
+    it('should delete member sendBird user and channel', async () => {
+      const member = mockGenerateMember();
+      const user = mockGenerateUser();
+      const mockServiceGet = jest.spyOn(service, 'get');
+      const communication = {
+        memberId: new Types.ObjectId(member.id),
+        userId: user.id,
+        sendBirdChannelUrl: generateUniqueUrl(),
+      };
+      mockServiceGet.mockImplementationOnce(async () => communication);
+      await communicationModel.create(communication);
+
+      await service.deleteCommunication(communication);
+
+      const communicationResult = await communicationModel.find(communication);
+      expect(communicationResult).toEqual([]);
+      expect(sendBirdMock.spyOnSendBirdDeleteGroupChannel).toBeCalledWith(
+        communication.sendBirdChannelUrl,
+      );
+      expect(sendBirdMock.spyOnSendBirdDeleteUser).toBeCalledWith(member.id);
     });
   });
 });

@@ -2,8 +2,8 @@
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": "../validations",
   "testEnvironment": "node",
-  "testRegex": ".*.spec.ts$",
-  "maxWorkers": 4,
+  "testRegex": ".spec.ts$",
+  "maxWorkers": 1,
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   }

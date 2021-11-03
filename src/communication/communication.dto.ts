@@ -1,6 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { UserRole } from '../user';
 
 /**************************************************************************************************
  **************************************** Internal params *****************************************
@@ -79,6 +80,33 @@ export class UnreadMessagesCount {
 
   @Field(() => Number)
   count: number;
+}
+
+@ObjectType()
+export class UserInfo {
+  @Field()
+  id: string;
+
+  @Field()
+  firstName: string;
+
+  @Field()
+  lastName: string;
+
+  @Field({ nullable: true })
+  avatar?: string;
+
+  @Field(() => [UserRole])
+  roles: UserRole[];
+}
+
+@ObjectType()
+export class MemberCommunicationInfo {
+  @Field()
+  memberLink: string;
+
+  @Field(() => UserInfo)
+  user: UserInfo;
 }
 
 /**************************************************************************************************

@@ -109,7 +109,7 @@ export class BaseScheduler {
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
         const url = await this.bitly.shortenLink(
-          `${config.get('contents.newMemberNudge')}/download/${appointmentId}`,
+          `${config.get('hosts.app')}/download/${appointmentId}`,
         );
 
         const metadata = {

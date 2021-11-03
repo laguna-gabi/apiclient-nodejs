@@ -9,6 +9,7 @@ import { lookup } from 'zipcode-to-timezone';
 import {
   AppointmentCompose,
   CancelNotifyParams,
+  ChatMessageOrigin,
   CreateMemberParams,
   CreateTaskParams,
   DischargeDocumentsLinks,
@@ -23,13 +24,13 @@ import {
   RecordingLinkParams,
   RecordingOutput,
   SetGeneralNotesParams,
+  SetNewUserToMemberParams,
   TaskStatus,
+  UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
   UpdateTaskStatusParams,
 } from '.';
-import { Roles } from '../auth/decorators/role.decorator';
-import { Roles as RoleTypes } from '../auth/roles';
 import {
   ErrorType,
   Errors,
@@ -37,7 +38,9 @@ import {
   IEventDeleteSchedules,
   IEventNotifyChatMessage,
   IEventSendSmsToChat,
+  IEventUnregisterMemberFromNotifications,
   IEventUpdateMemberPlatform,
+  IEventUpdateUserInCommunication,
   Identifier,
   InternalNotificationType,
   InternalNotifyParams,
@@ -46,6 +49,8 @@ import {
   NotificationType,
   Platform,
   RegisterForNotificationParams,
+  RoleTypes,
+  Roles,
   StorageType,
   extractAuthorizationHeader,
 } from '../common';
@@ -130,18 +135,67 @@ export class MemberResolver extends MemberBase {
     return this.memberService.getMembersAppointments(orgId);
   }
 
+  /*************************************************************************************************
+   ************************************ internal admin mutations ***********************************
+   ************************************************************************************************/
+
   @Mutation(() => Boolean, { nullable: true })
   async archiveMember(@Args('id', { type: () => String }) id: string) {
     const { member, memberConfig } = await this.memberService.moveMemberToArchive(id);
-    await this.cognitoService.disableMember(member.deviceId);
     await this.communicationService.freezeGroupChannel({
       memberId: id,
       userId: member.primaryUserId,
     });
     await this.notificationsService.unregister(memberConfig);
+    await this.cognitoService.disableMember(member.deviceId);
 
     const params: IEventDeleteSchedules = { memberId: id };
     this.eventEmitter.emit(EventType.deleteSchedules, params);
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async deleteMember(@Args('id', { type: () => String }) id: string) {
+    const { member, memberConfig } = await this.memberService.deleteMember(id);
+    const communication = await this.communicationService.getMemberUserCommunication({
+      memberId: id,
+      userId: member.primaryUserId,
+    });
+    if (!communication) {
+      this.logger.warn(
+        { memberId: id, userId: member.primaryUserId },
+        MemberResolver.name,
+        this.deleteMember.name,
+        Errors.get(ErrorType.communicationMemberUserNotFound),
+      );
+    } else {
+      await this.communicationService.deleteCommunication(communication);
+    }
+    await this.notificationsService.unregister(memberConfig);
+    await this.cognitoService.deleteMember(member.deviceId);
+    await this.storageService.deleteMember(id);
+    this.eventEmitter.emit(EventType.deleteMember, id);
+    const params: IEventDeleteSchedules = { memberId: id };
+    this.eventEmitter.emit(EventType.deleteSchedules, params);
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async setNewUserToMember(
+    @Args(camelCase(SetNewUserToMemberParams.name))
+    setNewUserToMemberParams: SetNewUserToMemberParams,
+  ) {
+    const newUser = await this.userService.get(setNewUserToMemberParams.userId);
+    if (!newUser) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+    const oldUserId = await this.memberService.setNewUserToMember(setNewUserToMemberParams);
+    const eventParams: IEventUpdateUserInCommunication = {
+      newUser,
+      oldUserId,
+      memberId: setNewUserToMemberParams.memberId,
+    };
+
+    this.eventEmitter.emit(EventType.updateUserInCommunication, eventParams);
+    return true;
   }
 
   /*************************************************************************************************
@@ -316,7 +370,7 @@ export class MemberResolver extends MemberBase {
       await this.memberService.updateMemberConfigRegisteredAt(memberConfig.memberId);
     }
     await this.memberService.updateMemberConfig({
-      memberId: memberConfig.memberId,
+      memberId: memberConfig.memberId.toString(),
       platform: registerForNotificationParams.platform,
       isPushNotificationsEnabled: registerForNotificationParams.isPushNotificationsEnabled,
     });
@@ -401,7 +455,7 @@ export class MemberResolver extends MemberBase {
    */
   @OnEvent(EventType.internalNotify, { async: true })
   async internalNotify(params: InternalNotifyParams) {
-    const { memberId, userId, type, metadata } = params;
+    const { memberId, userId, type, metadata, checkAppointmentReminder } = params;
     let member: Member;
     let memberConfig: MemberConfig;
     let user: User;
@@ -437,6 +491,7 @@ export class MemberResolver extends MemberBase {
         user,
         type,
         metadata,
+        checkAppointmentReminder,
       });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.internalNotify.name, ex);
@@ -445,29 +500,62 @@ export class MemberResolver extends MemberBase {
 
   /**
    * Listening to chat message from sendbird webhook.
-   * A message can be from a user or a member, we'll need to check first if the sender is the user.
+   * A message can be from a user or a member.
+   * Determine origin (member or user) and decide if a notification should be sent
    */
   @OnEvent(EventType.notifyChatMessage, { async: true })
   async notifyChatMessage(params: IEventNotifyChatMessage) {
     const { senderUserId, sendBirdChannelUrl } = params;
 
+    let origin: ChatMessageOrigin;
+    let member: Member;
     try {
       const user = await this.userService.get(senderUserId);
       if (!user) {
-        throw new Error(Errors.get(ErrorType.userNotFound));
+        member = await this.memberService.get(senderUserId);
+        if (!member) {
+          throw new Error(Errors.get(ErrorType.invalidSenderId));
+        }
+        origin = ChatMessageOrigin.fromMember;
+      } else {
+        origin = ChatMessageOrigin.fromUser;
       }
 
       const communication = await this.communicationService.getByChannelUrl(sendBirdChannelUrl);
+
       if (!communication) {
         throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
       }
 
-      return await this.internalNotify({
-        memberId: communication.memberId.toString(),
-        userId: senderUserId,
-        type: InternalNotificationType.chatMessageToMember,
-        metadata: { content: config.get('contents.newChatMessage') },
-      });
+      if (origin === ChatMessageOrigin.fromUser) {
+        return await this.internalNotify({
+          memberId: communication.memberId.toString(),
+          userId: senderUserId,
+          type: InternalNotificationType.chatMessageToMember,
+          metadata: { content: config.get('contents.newChatMessageFromUser') },
+        });
+      } else {
+        // to avoid spamming the user with multiple SMS message while in a live chat with the member
+        // we avoid sending a notification if the user's unread message count is 0
+        const { count } = await this.communicationService.getParticipantUnreadMessagesCount(
+          communication.userId.toString(),
+          false,
+        );
+
+        if (count != 0) {
+          return await this.internalNotify({
+            memberId: senderUserId,
+            userId: communication.userId.toString(),
+            type: InternalNotificationType.textSmsToUser,
+            metadata: {
+              content: config
+                .get('contents.newChatMessageFromMember')
+                .replace('@member.honorific@', config.get(`contents.honorific.${member.honorific}`))
+                .replace('@member.lastName@', this.capitalize(member.lastName)),
+            },
+          });
+        }
+      }
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.notifyChatMessage.name, ex);
     }
@@ -511,6 +599,35 @@ export class MemberResolver extends MemberBase {
     }
   }
 
+  @OnEvent(EventType.unregisterMemberFromNotifications, { async: true })
+  async unregisterMemberFromNotifications(params: IEventUnregisterMemberFromNotifications) {
+    this.logger.debug(params, MemberResolver.name, this.unregisterMemberFromNotifications.name);
+    const { phone, content, type } = params;
+    try {
+      const member = await this.memberService.getByPhone(phone);
+      await this.memberService.updateMemberConfig({
+        memberId: member.id,
+        platform: Platform.web,
+        isPushNotificationsEnabled: false,
+      });
+      if (type === NotificationType.text || type === InternalNotificationType.textToMember) {
+        return await this.internalNotify({
+          memberId: member.id,
+          userId: member.primaryUserId,
+          type: InternalNotificationType.textSmsToMember,
+          metadata: { content },
+        });
+      }
+    } catch (ex) {
+      this.logger.error(
+        params,
+        MemberResolver.name,
+        this.unregisterMemberFromNotifications.name,
+        ex,
+      );
+    }
+  }
+
   /************************************************************************************************
    **************************************** Member Internal ***************************************
    ************************************************************************************************/
@@ -518,6 +635,16 @@ export class MemberResolver extends MemberBase {
   @Roles(RoleTypes.Member, RoleTypes.User)
   async getMemberConfig(@Args('id', { type: () => String }) id: string) {
     return this.memberService.getMemberConfig(id);
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(RoleTypes.Member, RoleTypes.User)
+  async updateMemberConfig(
+    @Args(camelCase(UpdateMemberConfigParams.name))
+    updateMemberConfigParams: UpdateMemberConfigParams,
+  ) {
+    await this.memberService.get(updateMemberConfigParams.memberId);
+    return this.memberService.updateMemberConfig(updateMemberConfigParams);
   }
 
   /*************************************************************************************************

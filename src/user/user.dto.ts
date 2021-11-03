@@ -138,6 +138,13 @@ export class User extends Identifier {
   @Prop({ default: defaultUserParams.languages })
   @Field(() => [Language], { nullable: true })
   languages?: Language[];
+
+  /**
+   * we use that start of time (new Date(0)) for the default time for
+   * lastMemberAssignedAt so a new user will get the next new member.
+   */
+  @Prop({ default: new Date(0) })
+  lastMemberAssignedAt: Date;
 }
 
 /**************************************************************************************************

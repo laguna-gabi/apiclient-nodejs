@@ -12,6 +12,8 @@ import {
   SlotService,
   Slots,
   User,
+  UserConfig,
+  UserConfigDocument,
   UserDocument,
   defaultSlotsParams,
 } from '.';
@@ -24,12 +26,12 @@ import {
   EventType,
   IEventNewAppointment,
   IEventSlackMessage,
+  IEventUpdateAppointmentsInUser,
   IEventUpdateUserConfig,
   Logger,
   SlackChannel,
   SlackIcon,
 } from '../common';
-import { UserConfig, UserConfigDocument } from './userConfig.dto';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -150,6 +152,8 @@ export class UserService extends BaseService {
             id: { $arrayElemAt: ['$userAp._id', 0] },
             start: { $arrayElemAt: ['$userAp.start', 0] },
             method: { $arrayElemAt: ['$userAp.method', 0] },
+            memberId: { $arrayElemAt: ['$userAp.memberId', 0] },
+            userId: { $arrayElemAt: ['$userAp.userId', 0] },
             duration: `${defaultSlotsParams.duration}`,
           },
           ap: '$ap',
@@ -179,7 +183,9 @@ export class UserService extends BaseService {
     if (slotsObject.slots.length === 0) {
       slotsObject.slots = this.generateDefaultSlots();
       const params: IEventSlackMessage = {
-        message: `*No availability*\nUser ${userId} to fulfill slots request`,
+        message: `*No availability*\nUser ${
+          userId ? userId : slotsObject.appointment.userId
+        } doesn't have any availability left.`,
         icon: SlackIcon.warning,
         channel: SlackChannel.notifications,
       };
@@ -242,20 +248,50 @@ export class UserService extends BaseService {
   async getAvailableUser(): Promise<string> {
     const users = await this.userModel.aggregate([
       {
-        $lookup: {
-          from: 'members',
-          localField: '_id',
-          foreignField: 'users',
-          as: 'member',
+        $match: {
+          maxCustomers: { $ne: 0 }, // users with maxCustomers = 0 should not get members
         },
       },
       ...(process.env.NODE_ENV === Environments.production ||
       process.env.NODE_ENV === Environments.development
         ? []
         : [{ $limit: 10 }]),
-      { $project: { members: { $size: '$member' } } },
-      { $sort: { members: 1 } },
+      {
+        $lookup: {
+          from: 'members',
+          localField: '_id',
+          foreignField: 'primaryUserId',
+          as: 'member',
+        },
+      },
+      {
+        $project: {
+          members: { $size: '$member' },
+          lastMemberAssignedAt: '$lastMemberAssignedAt',
+          maxCustomers: '$maxCustomers',
+        },
+      },
+      { $sort: { lastMemberAssignedAt: 1 } },
     ]);
+    for (let index = 0; index < users.length; index++) {
+      if (users[index].maxCustomers > users[index].members) {
+        await this.userModel.updateOne(
+          { _id: users[index]._id },
+          { $set: { lastMemberAssignedAt: new Date() } },
+        );
+        return users[index]._id;
+      }
+    }
+    const params: IEventSlackMessage = {
+      message: `*NO AVAILABLE USERS*\nAll users are fully booked.`,
+      icon: SlackIcon.warning,
+      channel: SlackChannel.notifications,
+    };
+    this.eventEmitter.emit(EventType.slackMessage, params);
+    await this.userModel.updateOne(
+      { _id: users[0]._id },
+      { $set: { lastMemberAssignedAt: new Date() } },
+    );
     return users[0]._id;
   }
 
@@ -280,6 +316,38 @@ export class UserService extends BaseService {
       );
     } catch (ex) {
       this.logger.error(params, UserService.name, this.handleOrderCreatedEvent.name, ex);
+    }
+  }
+
+  @OnEvent(EventType.removeAppointmentsFromUser, { async: true })
+  async removeAppointmentsFromUser(appointments) {
+    await Promise.all(
+      appointments.map(async (appointment) => {
+        await this.userModel.updateOne(
+          { appointments: appointment._id },
+          { $pull: { appointments: appointment._id } },
+        );
+      }),
+    );
+  }
+
+  @OnEvent(EventType.updateAppointmentsInUser, { async: true })
+  async updateUserAppointments(params: IEventUpdateAppointmentsInUser) {
+    const appointmentIds = params.appointments.map((appointment) => Types.ObjectId(appointment.id));
+
+    try {
+      await this.userModel.updateOne(
+        { _id: params.oldUserId },
+        { $pullAll: { appointments: appointmentIds } },
+      );
+
+      await this.userModel.updateOne(
+        { _id: params.newUserId },
+        { $addToSet: { appointments: { $each: appointmentIds } } },
+        { new: true },
+      );
+    } catch (ex) {
+      this.logger.error(params, UserService.name, this.updateUserAppointments.name, ex);
     }
   }
 }

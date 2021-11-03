@@ -9,7 +9,7 @@ import {
 } from 'date-fns';
 import { EventType, SlackChannel, SlackIcon } from '../../src/common';
 import { Member } from '../../src/member';
-import { User, defaultSlotsParams } from '../../src/user';
+import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
 import { Creators } from '../aux/creators';
 import { Handler } from '../aux/handler';
@@ -41,8 +41,8 @@ describe('Integration tests : getUserSlots', () => {
   it('should return objects with all slots', async () => {
     const org = await creators.createAndValidateOrg();
     const member: Member = await creators.createAndValidateMember({ org });
-    const primaryUser: User = member.users[0];
-    await createDefaultAvailabilities(primaryUser.id);
+    const user = await handler.queries.getUser(member.primaryUserId);
+    await createDefaultAvailabilities(member.primaryUserId);
 
     const appointment = await appointmentsActions.scheduleAppointmentWithDate(
       member,
@@ -58,11 +58,11 @@ describe('Integration tests : getUserSlots', () => {
     expect(result).toEqual(
       expect.objectContaining({
         user: {
-          id: primaryUser.id,
-          firstName: primaryUser.firstName,
-          roles: primaryUser.roles,
-          avatar: primaryUser.avatar,
-          description: primaryUser.description,
+          id: user.id,
+          firstName: user.firstName,
+          roles: user.roles,
+          avatar: user.avatar,
+          description: user.description,
         },
         member: {
           id: member.id,
@@ -115,12 +115,11 @@ describe('Integration tests : getUserSlots', () => {
   // eslint-disable-next-line max-len
   it('should return 6 default slots and send message to slack if availability in the past', async () => {
     const user = await creators.createAndValidateUser();
-    await handler.mutations.createAvailabilities({
+    await handler.setContextUserId(user.id).mutations.createAvailabilities({
       availabilities: [
         generateAvailabilityInput({
           start: add(startOfToday(), { hours: 8 }),
           end: add(startOfToday(), { hours: 10 }),
-          userId: user.id,
         }),
       ],
     });
@@ -132,7 +131,7 @@ describe('Integration tests : getUserSlots', () => {
 
     expect(result.slots.length).toEqual(6);
     expect(spyOnEventEmitter).toBeCalledWith(EventType.slackMessage, {
-      message: `*No availability*\nUser ${user.id} to fulfill slots request`,
+      message: `*No availability*\nUser ${user.id} doesn't have any availability left.`,
       icon: SlackIcon.warning,
       channel: SlackChannel.notifications,
     });
@@ -150,7 +149,7 @@ describe('Integration tests : getUserSlots', () => {
 
     expect(result.slots.length).toEqual(6);
     expect(spyOnEventEmitter).toBeCalledWith(EventType.slackMessage, {
-      message: `*No availability*\nUser ${user.id} to fulfill slots request`,
+      message: `*No availability*\nUser ${user.id} doesn't have any availability left.`,
       icon: SlackIcon.warning,
       channel: SlackChannel.notifications,
     });
@@ -204,18 +203,16 @@ describe('Integration tests : getUserSlots', () => {
     });
   };
 
-  const createDefaultAvailabilities = async (primaryUserId: string) => {
-    await handler.mutations.createAvailabilities({
+  const createDefaultAvailabilities = async (userId: string) => {
+    await handler.setContextUserId(userId).mutations.createAvailabilities({
       availabilities: [
         generateAvailabilityInput({
           start: add(startOfToday(), { hours: 10 }),
           end: add(startOfToday(), { hours: 22 }),
-          userId: primaryUserId,
         }),
         generateAvailabilityInput({
           start: add(startOfTomorrow(), { hours: 10 }),
           end: add(startOfTomorrow(), { hours: 22 }),
-          userId: primaryUserId,
         }),
       ],
     });
