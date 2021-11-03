@@ -1,9 +1,9 @@
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
 import { CreateUserParams, GetSlotsParams, Slots, User, UserConfig, UserService } from '.';
-import { EventType, IEventNewUser, Identifier, LoggingInterceptor } from '../common';
+import { EventType, IEventNewUser, Identifier, LoggingInterceptor, extractUserId } from '../common';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => User)
@@ -24,8 +24,9 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
-  async getUser(@Args('id', { type: () => String }) id: string) {
-    return this.userService.get(id);
+  async getUser(@Context() context) {
+    const userId = extractUserId(context);
+    return this.userService.get(userId);
   }
 
   @Query(() => [User])

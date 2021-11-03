@@ -8,12 +8,11 @@ import { GetSlotsParams } from '../../src/user';
 export class Queries {
   constructor(private readonly apolloClient: ApolloServerTestClient) {}
 
-  getUser = async (id: string) => {
+  getUser = async () => {
     const resultGetUser = await this.apolloClient.query({
-      variables: { id },
       query: gql`
-        query getUser($id: String!) {
-          getUser(id: $id) {
+        query getUser {
+          getUser {
             id
             authId
             firstName
