@@ -1,5 +1,6 @@
 import { ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
 import * as config from 'config';
+import { lookup } from 'zipcode-to-timezone';
 import { CancelNotificationType, NotificationType, Platform } from '.';
 
 /**
@@ -88,6 +89,21 @@ export function IsStringDate(options: ValidationOptions) {
       validator: {
         validate(date) {
           return !!Date.parse(date);
+        },
+      },
+    });
+  };
+}
+
+export function IsValidZipCode(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(zipCode) {
+          return lookup(zipCode);
         },
       },
     });

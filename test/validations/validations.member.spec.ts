@@ -146,6 +146,7 @@ describe('Validations - member', () => {
       ${{ sex: 'not-valid' }}           | ${{ missingFieldError: 'does not exist in "Sex" enum' }}
       ${{ language: 'not-valid' }}      | ${{ missingFieldError: 'does not exist in "Language" enum' }}
       ${{ zipCode: 123 }}               | ${{ missingFieldError: stringError }}
+      ${{ zipCode: '123' }}             | ${{ invalidFieldsErrors: [Errors.get(ErrorType.invalidZipCode)] }}
       ${{ dateOfBirth: 'not-valid' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
       ${{ dateOfBirth: '2021/13/1' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
       ${{ dischargeDate: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}

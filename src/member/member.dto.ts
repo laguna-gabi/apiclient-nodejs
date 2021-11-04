@@ -22,6 +22,7 @@ import {
   IsHonorific,
   IsStringDate,
   IsTypeMetadataProvided,
+  IsValidZipCode,
   Language,
   NotificationType,
   validPhoneExamples,
@@ -100,6 +101,7 @@ export class ExtraMemberParams {
   language?: Language;
 
   @Field(() => String, { nullable: true })
+  @IsValidZipCode({ message: Errors.get(ErrorType.invalidZipCode) })
   @IsString() /* for rest api */
   @IsOptional()
   zipCode?: string;
