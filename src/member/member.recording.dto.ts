@@ -81,7 +81,7 @@ export class Recording {
   appointmentId?: Types.ObjectId;
 
   @Prop({ type: Boolean })
-  @Field(() => Boolean)
+  @Field(() => Boolean, { nullable: true })
   deletedMedia?: boolean;
 }
 

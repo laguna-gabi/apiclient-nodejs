@@ -585,7 +585,13 @@ export class Queries {
     return result.data.getOrg;
   };
 
-  getRecordings = async ({ memberId }: { memberId: string }) => {
+  getRecordings = async ({
+    memberId,
+    additionalResponseFields = '',
+  }: {
+    memberId: string;
+    additionalResponseFields?: string;
+  }) => {
     const result = await this.apolloClient.query({
       variables: { memberId },
       query: gql`
@@ -597,6 +603,7 @@ export class Queries {
             end
             answered
             phone
+            ${additionalResponseFields}
           }
         }
       `,
