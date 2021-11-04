@@ -37,6 +37,8 @@ export enum EventType {
   removeAppointmentsFromUser = 'removeAppointmentsFromUser',
   unregisterMemberFromNotifications = 'unregisterMemberFromNotifications',
   deleteLogReminder = 'deleteLogReminder',
+
+  unconsentedAppointmentEnded = 'unconsentedAppointmentEnded',
 }
 
 export interface IEventRequestAppointment {
@@ -122,6 +124,10 @@ export interface IEventUnregisterMemberFromNotifications {
   phone: string;
   content: string;
   type: AllNotificationTypes;
+}
+export interface IEventUnconsentedAppointmentEnded {
+  appointmentId: string;
+  memberId: string;
 }
 
 export interface IEventUpdateUserInCommunication {

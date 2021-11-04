@@ -71,6 +71,28 @@ export class StorageService implements OnModuleInit {
     }
   }
 
+  async deleteRecordings(memberId: string, recordingIds: string[]) {
+    this.logger.debug({ memberId, recordingIds }, StorageService.name, this.deleteRecordings.name);
+    try {
+      const deleteParams = {
+        Bucket: this.bucket,
+        Delete: {
+          Objects: recordingIds.map((recordingId) => ({
+            Key: `public/recordings/${memberId}/${recordingId}`,
+          })),
+        },
+      };
+      await this.s3.deleteObjects(deleteParams).promise();
+    } catch (ex) {
+      this.logger.error(
+        { memberId, recordingIds },
+        StorageService.name,
+        this.deleteMember.name,
+        ex,
+      );
+    }
+  }
+
   private async emptyDirectory(dir) {
     const listParams = {
       Bucket: this.bucket,

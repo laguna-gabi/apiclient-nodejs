@@ -138,8 +138,8 @@ export class AppointmentService extends BaseService {
 
   async end(params: EndAppointmentParams): Promise<Appointment> {
     const existing = await this.appointmentModel.findById({ _id: params.id });
+    const { noShow, recordingConsent, id } = params;
     let result;
-
     if (!existing) {
       throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
     }
@@ -189,6 +189,13 @@ export class AppointmentService extends BaseService {
         scores: params.notes.scores,
       };
       this.eventEmitter.emit(EventType.appointmentScoresUpdated, eventParams);
+    }
+
+    if (!noShow && !recordingConsent) {
+      this.eventEmitter.emit(EventType.unconsentedAppointmentEnded, {
+        appointmentId: id,
+        memberId: existing.memberId,
+      });
     }
 
     return this.replaceId(result.toObject() as AppointmentDocument);
