@@ -16,22 +16,19 @@
 Laguna health messages component.
 <br/>Written in typescript by using [Nest](https://github.com/nestjs/nest) framework.
 
-- [Iris](#iris)
-   * [Project introduction](#project-introduction)
+- [📨 Iris](#-iris)
+   * [💡 Project introduction](#-project-introduction)
       + [entities](#entities)
-   * [Prerequisites](#prerequisites)
+   * [📋 Prerequisites](#-prerequisites)
       + [Installation](#installation)
       + [Docker](#docker)
       + [Aws](#aws)
       + [Shared code settings](#shared-code-settings)
-   * [Running the app](#running-the-app)
-   * [Testing the app](#testing-the-app)
-   * [Troubleshooting](#troubleshooting)
+   * [🚀 Running the app](#-running-the-app)
+   * [🧪 Testing the app](#-testing-the-app)
+   * [🎻 Troubleshooting](#-troubleshooting)
       + [How to view the db locally](#how-to-view-the-db-locally)
       + [Error at connection to mongo locally](#error-at-connection-to-mongo-locally)
-
-
-<br/><br/>
 
 ## 💡 Project introduction
 
