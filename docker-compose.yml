@@ -1,15 +1,99 @@
-version: "3.3"
-
+version: '3'
 services:
-  mongodb:
-    image: mongo:latest
-    environment:
-      - MONGODB_DATABASE="iris"
+  # mongo config server
+  mongocfg1:
+    container_name: mongocfg1
+    hostname: mongocfg1
+    image: mongo
+    command: mongod --configsvr --replSet mongors1conf --dbpath /data/db --port 27019 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/config1:/data/db
+
+  mongocfg2:
+    container_name: mongocfg2
+    hostname: mongocfg2
+    image: mongo
+    command: mongod --configsvr --replSet mongors1conf --dbpath /data/db --port 27019 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/config2:/data/db
+
+  mongocfg3:
+    container_name: mongocfg3
+    hostname: mongocfg3
+    image: mongo
+    command: mongod --configsvr --replSet mongors1conf --dbpath /data/db --port 27019 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/config3:/data/db
+
+  # replica set 1
+  mongors1n1:
+    container_name: mongors1n1
+    hostname: mongors1n1
+    image: mongo
+    command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 27018 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/data1:/data/db
+
+  mongors1n2:
+    container_name: mongors1n2
+    hostname: mongors1n2
+    image: mongo
+    command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 27018 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/data2:/data/db
+
+  mongors1n3:
+    container_name: mongors1n3
+    hostname: mongors1n3
+    image: mongo
+    command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 27018 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/data3:/data/db
+
+  # replica set 2
+  mongors2n1:
+    container_name: mongors2n1
+    hostname: mongors2n1
+    image: mongo
+    command: mongod --shardsvr --replSet mongors2 --dbpath /data/db --port 27018 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/data4:/data/db
+
+  mongors2n2:
+    container_name: mongors2n2
+    hostname: mongors2n2
+    image: mongo
+    command: mongod --shardsvr --replSet mongors2 --dbpath /data/db --port 27018 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/data5:/data/db
+
+  mongors2n3:
+    container_name: mongors2n3
+    hostname: mongors2n3
+    image: mongo
+    command: mongod --shardsvr --replSet mongors2 --dbpath /data/db --port 27018 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/data6:/data/db
+
+  # mongos router
+  mongos1:
+    container_name: mongos1
+    hostname: mongos1
+    image: mongo
+    depends_on:
+      - mongocfg1
+      - mongocfg2
+    command: mongos --configdb mongors1conf/mongocfg1:27019,mongocfg2:27019,mongocfg3:27019 --port 27017 --bind_ip_all
     ports:
-      - "27019:27017"
-  mongodb-test:
-    image: mongo:latest
-    environment:
-      - MONGODB_DATABASE="iris-test"
+      - 27020:27017
+
+  mongos2:
+    container_name: mongos2
+    hostname: mongos2
+    image: mongo
+    depends_on:
+      - mongocfg1
+      - mongocfg2
+    command: mongos --configdb mongors1conf/mongocfg1:27019,mongocfg2:27019,mongocfg3:27019 --port 27017 --bind_ip_all
     ports:
-      - "27020:27017"
+      - 27021:27017
