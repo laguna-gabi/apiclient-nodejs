@@ -458,6 +458,41 @@ describe('AppointmentService', () => {
 
       spyOnEventEmitter.mockReset();
     });
+    /* eslint-disable */
+    test.each`
+      recordingConsent | noShow   | expectToDispatch | title
+      ${false}         | ${false} | ${true}          | ${'should dispatch event if showed up and no consent'}
+      ${true}          | ${false} | ${false}         | ${'should not dispatch event if showed up and have consent'}
+      ${true}          | ${true}  | ${false}         | ${'should not dispatch event if didnt show up and have consent'}
+      ${true}          | ${true}  | ${false}         | ${'should not dispatch event if didnt show up and no consent'}
+    `(`$title`, async ({ recordingConsent, noShow, expectToDispatch }) => {
+      /* eslint-enable */
+      const spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
+      const appointmentParams = generateScheduleAppointmentParams();
+      const notes = generateNotesParams();
+      const resultAppointment = await service.schedule(appointmentParams);
+      spyOnEventEmitter.mockClear();
+      expect(spyOnEventEmitter).not.toBeCalled();
+      await service.end({
+        id: resultAppointment.id,
+        notes,
+        noShow,
+        recordingConsent,
+      });
+
+      if (expectToDispatch) {
+        expect(spyOnEventEmitter).toBeCalledWith(EventType.unconsentedAppointmentEnded, {
+          appointmentId: resultAppointment.id,
+          memberId: resultAppointment.memberId,
+        });
+      } else {
+        expect(spyOnEventEmitter).not.toBeCalledWith(
+          EventType.unconsentedAppointmentEnded,
+          expect.anything(),
+        );
+      }
+    });
+    // });
   });
 
   describe('updateNotes', () => {
