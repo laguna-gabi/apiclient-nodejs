@@ -29,8 +29,8 @@ import {
   generateNotifyParams,
   generateOrgParams,
   generateRandomName,
+  generateReplaceUserForMemberParams,
   generateSetGeneralNotesParams,
-  generateSetNewUserToMemberParams,
   generateUniqueUrl,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
@@ -680,16 +680,16 @@ describe('Validations - member', () => {
     });
   });
 
-  describe('setNewUserToMember', () => {
+  describe('replaceUserForMember', () => {
     test.each`
       field         | error
       ${'memberId'} | ${`Field "memberId" of required type "String!" was not provided.`}
       ${'userId'}   | ${`Field "userId" of required type "String!" was not provided.`}
     `(`should fail to set new user to member if field $field is missing`, async (params) => {
-      const setNewUserToMemberParams = generateSetNewUserToMemberParams();
-      delete setNewUserToMemberParams[params.field];
-      await handler.mutations.setNewUserToMember({
-        setNewUserToMemberParams,
+      const replaceUserForMemberParams = generateReplaceUserForMemberParams();
+      delete replaceUserForMemberParams[params.field];
+      await handler.mutations.replaceUserForMember({
+        replaceUserForMemberParams,
         missingFieldError: params.error,
       });
     });
@@ -699,9 +699,9 @@ describe('Validations - member', () => {
       ${{ memberId: 123 }} | ${stringError}
       ${{ userId: 123 }}   | ${stringError}
     `(`should fail to set new user to member since $input is not a valid type`, async (params) => {
-      const setNewUserToMemberParams = generateSetNewUserToMemberParams({ ...params.input });
-      await handler.mutations.setNewUserToMember({
-        setNewUserToMemberParams,
+      const replaceUserForMemberParams = generateReplaceUserForMemberParams({ ...params.input });
+      await handler.mutations.replaceUserForMember({
+        replaceUserForMemberParams,
         missingFieldError: params.error,
       });
     });

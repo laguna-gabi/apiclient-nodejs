@@ -1033,11 +1033,11 @@ describe('MemberService', () => {
     });
   });
 
-  describe('setNewUserToMember', () => {
+  describe('replaceUserForMember', () => {
     it('should fail to update on non existing member', async () => {
       const userId = generateId();
       const memberId = generateId();
-      await expect(service.setNewUserToMember({ userId, memberId })).rejects.toThrow(
+      await expect(service.replaceUserForMember({ userId, memberId })).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
     });
@@ -1047,7 +1047,7 @@ describe('MemberService', () => {
       const member = await service.get(memberId);
 
       await expect(
-        service.setNewUserToMember({ userId: member.primaryUserId, memberId }),
+        service.replaceUserForMember({ userId: member.primaryUserId, memberId }),
       ).rejects.toThrow(Errors.get(ErrorType.userIdOrEmailAlreadyExists));
     });
 
@@ -1056,7 +1056,7 @@ describe('MemberService', () => {
       const newUser = await modelUser.create(generateCreateRawUserParams());
       const oldMember = await service.get(memberId);
 
-      const oldUserId = await service.setNewUserToMember({ userId: newUser._id, memberId });
+      const oldUserId = await service.replaceUserForMember({ userId: newUser._id, memberId });
 
       const updatedMember = await service.get(memberId);
       expect(updatedMember.primaryUserId).toEqual(newUser._id);

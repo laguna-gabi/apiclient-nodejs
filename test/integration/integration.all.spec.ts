@@ -26,7 +26,7 @@ import {
   MemberConfig,
   NotifyParams,
   RecordingOutput,
-  SetNewUserToMemberParams,
+  ReplaceUserForMemberParams,
   Task,
   TaskStatus,
   UpdateRecordingParams,
@@ -1110,7 +1110,7 @@ describe('Integration tests: all', () => {
     });
   });
 
-  describe('setNewUserToMember', () => {
+  describe('replaceUserForMember', () => {
     it('should set new user for a given member', async () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org });
@@ -1125,12 +1125,12 @@ describe('Integration tests: all', () => {
       });
       const appointment = await handler.mutations.scheduleAppointment({ appointmentParams });
 
-      // setNewUserToMember
-      const setNewUserToMemberParams: SetNewUserToMemberParams = {
+      // replaceUserForMember
+      const replaceUserForMemberParams: ReplaceUserForMemberParams = {
         memberId: member.id,
         userId: newUser.id,
       };
-      await handler.mutations.setNewUserToMember({ setNewUserToMemberParams });
+      await handler.mutations.replaceUserForMember({ replaceUserForMemberParams });
       await delay(2000); // wait for event to finish
 
       // Check that the member's primary user changed
@@ -1162,24 +1162,24 @@ describe('Integration tests: all', () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org });
 
-      const setNewUserToMemberParams: SetNewUserToMemberParams = {
+      const replaceUserForMemberParams: ReplaceUserForMemberParams = {
         memberId: member.id,
         userId: generateId(),
       };
-      await handler.mutations.setNewUserToMember({
-        setNewUserToMemberParams,
+      await handler.mutations.replaceUserForMember({
+        replaceUserForMemberParams,
         invalidFieldsErrors: [Errors.get(ErrorType.userNotFound)],
       });
     });
 
     it('should fail to update on non existing member', async () => {
       const user = await creators.createAndValidateUser();
-      const setNewUserToMemberParams: SetNewUserToMemberParams = {
+      const replaceUserForMemberParams: ReplaceUserForMemberParams = {
         memberId: generateId(),
         userId: user.id,
       };
-      await handler.mutations.setNewUserToMember({
-        setNewUserToMemberParams,
+      await handler.mutations.replaceUserForMember({
+        replaceUserForMemberParams,
         invalidFieldsErrors: [Errors.get(ErrorType.memberNotFound)],
       });
     });
@@ -1187,12 +1187,12 @@ describe('Integration tests: all', () => {
     it('should throw an error if the new user equals the old user', async () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org });
-      const setNewUserToMemberParams: SetNewUserToMemberParams = {
+      const replaceUserForMemberParams: ReplaceUserForMemberParams = {
         memberId: member.id,
         userId: member.primaryUserId,
       };
-      await handler.mutations.setNewUserToMember({
-        setNewUserToMemberParams,
+      await handler.mutations.replaceUserForMember({
+        replaceUserForMemberParams,
         invalidFieldsErrors: [Errors.get(ErrorType.userIdOrEmailAlreadyExists)],
       });
     });

@@ -35,8 +35,8 @@ import {
   Member,
   MemberConfig,
   NotifyParams,
+  ReplaceUserForMemberParams,
   SetGeneralNotesParams,
-  SetNewUserToMemberParams,
   Sex,
   TaskStatus,
   UpdateMemberConfigParams,
@@ -410,10 +410,10 @@ export const generateCommunication = ({
   return { memberId, userId, sendBirdChannelUrl };
 };
 
-export const generateSetNewUserToMemberParams = ({
+export const generateReplaceUserForMemberParams = ({
   userId = generateId(),
   memberId = generateId(),
-}: Partial<SetNewUserToMemberParams> = {}): SetNewUserToMemberParams => {
+}: Partial<ReplaceUserForMemberParams> = {}): ReplaceUserForMemberParams => {
   return { userId, memberId };
 };
 

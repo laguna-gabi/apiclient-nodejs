@@ -949,17 +949,17 @@ describe('MemberResolver', () => {
     });
   });
 
-  describe('setNewUserToMember', () => {
-    let spyOnServiceSetNewUserToMember;
+  describe('replaceUserForMember', () => {
+    let spyOnServiceReplaceUserForMember;
     let spyOnUserServiceGet;
 
     beforeEach(() => {
       spyOnUserServiceGet = jest.spyOn(userService, 'get');
-      spyOnServiceSetNewUserToMember = jest.spyOn(service, 'setNewUserToMember');
+      spyOnServiceReplaceUserForMember = jest.spyOn(service, 'replaceUserForMember');
     });
 
     afterEach(() => {
-      spyOnServiceSetNewUserToMember.mockReset();
+      spyOnServiceReplaceUserForMember.mockReset();
       spyOnUserServiceGet.mockReset();
       spyOnEventEmitter.mockReset();
     });
@@ -969,12 +969,12 @@ describe('MemberResolver', () => {
       const user = mockGenerateUser();
       const oldUserId = generateId();
       spyOnUserServiceGet.mockImplementationOnce(async () => user);
-      spyOnServiceSetNewUserToMember.mockImplementationOnce(async () => oldUserId);
+      spyOnServiceReplaceUserForMember.mockImplementationOnce(async () => oldUserId);
 
-      await resolver.setNewUserToMember({ memberId, userId: user.id });
+      await resolver.replaceUserForMember({ memberId, userId: user.id });
 
       expect(spyOnUserServiceGet).toBeCalledWith(user.id);
-      expect(spyOnServiceSetNewUserToMember).toBeCalledWith({ memberId, userId: user.id });
+      expect(spyOnServiceReplaceUserForMember).toBeCalledWith({ memberId, userId: user.id });
       expect(spyOnEventEmitter).toBeCalledWith(EventType.updateUserInCommunication, {
         newUser: user,
         oldUserId,
@@ -987,7 +987,7 @@ describe('MemberResolver', () => {
       const user = mockGenerateUser();
       spyOnUserServiceGet.mockImplementationOnce(async () => null);
 
-      await expect(resolver.setNewUserToMember({ memberId, userId: user.id })).rejects.toThrow(
+      await expect(resolver.replaceUserForMember({ memberId, userId: user.id })).rejects.toThrow(
         Errors.get(ErrorType.userNotFound),
       );
     });

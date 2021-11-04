@@ -29,8 +29,8 @@ import {
   Recording,
   RecordingDocument,
   RecordingOutput,
+  ReplaceUserForMemberParams,
   SetGeneralNotesParams,
-  SetNewUserToMemberParams,
   TaskStatus,
   UpdateMemberConfigParams,
   UpdateMemberParams,
@@ -681,7 +681,7 @@ export class MemberService extends BaseService {
    **************************************** Modifications *****************************************
    ************************************************************************************************/
 
-  async setNewUserToMember(params: SetNewUserToMemberParams): Promise<string> {
+  async replaceUserForMember(params: ReplaceUserForMemberParams): Promise<string> {
     const { memberId, userId } = params;
 
     // replace primary user and add the new user to member's list

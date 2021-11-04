@@ -18,9 +18,6 @@ export enum EventType {
   appointmentScoresUpdated = 'appointmentScoresUpdated',
   newMember = 'newMember',
   newUser = 'newUser',
-  // setNewUserToMember = 'setNewUserToMember',
-  // replacedUserInCommunication = 'replacedUserInCommunication',
-  // replacedUserInAppointments = 'replacedUserInAppointments',
 
   updateUserInCommunication = 'updateUserInCommunication',
   updateUserInAppointments = 'updateUserInAppointments',

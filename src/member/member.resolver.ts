@@ -23,8 +23,8 @@ import {
   NotifyParams,
   RecordingLinkParams,
   RecordingOutput,
+  ReplaceUserForMemberParams,
   SetGeneralNotesParams,
-  SetNewUserToMemberParams,
   TaskStatus,
   UpdateMemberConfigParams,
   UpdateMemberParams,
@@ -181,19 +181,19 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  async setNewUserToMember(
-    @Args(camelCase(SetNewUserToMemberParams.name))
-    setNewUserToMemberParams: SetNewUserToMemberParams,
+  async replaceUserForMember(
+    @Args(camelCase(ReplaceUserForMemberParams.name))
+    replaceUserForMemberParams: ReplaceUserForMemberParams,
   ) {
-    const newUser = await this.userService.get(setNewUserToMemberParams.userId);
+    const newUser = await this.userService.get(replaceUserForMemberParams.userId);
     if (!newUser) {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
-    const oldUserId = await this.memberService.setNewUserToMember(setNewUserToMemberParams);
+    const oldUserId = await this.memberService.replaceUserForMember(replaceUserForMemberParams);
     const eventParams: IEventUpdateUserInCommunication = {
       newUser,
       oldUserId,
-      memberId: setNewUserToMemberParams.memberId,
+      memberId: replaceUserForMemberParams.memberId,
     };
 
     this.eventEmitter.emit(EventType.updateUserInCommunication, eventParams);

@@ -18,8 +18,8 @@ import {
   CreateTaskParams,
   Member,
   NotifyParams,
+  ReplaceUserForMemberParams,
   SetGeneralNotesParams,
-  SetNewUserToMemberParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -742,27 +742,27 @@ export class Mutations {
     return false;
   };
 
-  setNewUserToMember = async ({
-    setNewUserToMemberParams,
+  replaceUserForMember = async ({
+    replaceUserForMemberParams,
     missingFieldError,
     invalidFieldsErrors,
   }: {
-    setNewUserToMemberParams: SetNewUserToMemberParams;
+    replaceUserForMemberParams: ReplaceUserForMemberParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   }) => {
     const result = await this.apolloClient.mutate({
-      variables: { setNewUserToMemberParams: setNewUserToMemberParams },
+      variables: { replaceUserForMemberParams: replaceUserForMemberParams },
       mutation: gql`
-        mutation setNewUserToMember($setNewUserToMemberParams: SetNewUserToMemberParams!) {
-          setNewUserToMember(setNewUserToMemberParams: $setNewUserToMemberParams)
+        mutation replaceUserForMember($replaceUserForMemberParams: ReplaceUserForMemberParams!) {
+          replaceUserForMember(replaceUserForMemberParams: $replaceUserForMemberParams)
         }
       `,
     });
 
     return (
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.setNewUserToMemberParams
+      result.data.replaceUserForMemberParams
     );
   };
 }

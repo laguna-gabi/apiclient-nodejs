@@ -226,7 +226,7 @@ export class UpdateMemberParams extends ExtraMemberParams {
 }
 
 @InputType()
-export class SetNewUserToMemberParams {
+export class ReplaceUserForMemberParams {
   @Field(() => String)
   memberId: string;
 
