@@ -2,7 +2,16 @@
   <a href="https://en.wikipedia.org/wiki/Iris_(mythology)" target="blank"><img src="https://upload.wikimedia.org/wikipedia/commons/a/aa/Winged_goddess_Cdm_Paris_392.jpg" width="320" alt="Iris" /></a>
 </p>
 
-# Iris
+<p align="center">
+  <a href="https://github.com/LagunaHealth/iris/actions?query=branch%3Adevelop">
+    <img src="https://github.com/LagunaHealth/iris/workflows/Iris/badge.svg" alt="Develop ci/cd status." />
+  </a>
+  <a href="https://github.com/LagunaHealth/iris/contributors" alt="Contributors">
+    <img src="https://img.shields.io/github/contributors/badges/shields" />
+  </a>
+</p>
+
+# 📨 Iris
 
 Laguna health messages component.
 <br/>Written in typescript by using [Nest](https://github.com/nestjs/nest) framework.
@@ -24,7 +33,7 @@ Laguna health messages component.
 
 <br/><br/>
 
-## Project introduction
+## 💡 Project introduction
 
 This project handles all the messages' logic for laguna-health.
 <br/>**All** messages to members, users, etc.. will be sent from this component.
@@ -35,9 +44,8 @@ This project handles all the messages' logic for laguna-health.
 ### entities
 
 The main entities in our system:
-//TODO write as we go
 
-## Prerequisites
+## 📋 Prerequisites
 
 ### Installation
 
@@ -71,7 +79,7 @@ In order to work locally with aws cli and `package.json` dependencies, install
 1. Set up your ide to run with `.prettierrc` file which exists on the main root of the project.
 2. Set up your ide to run with `.eslintrc.js` file which exists on the main root of the project.
 
-## Running the app
+## 🚀 Running the app
 
 In order to work with _iris_:
 
@@ -79,14 +87,14 @@ In order to work with _iris_:
 2. start the server by using one of the following methods:
    <br/>2a. run `yarn start` or `yarn start:watch` if you just want to use _iris_ locally
 
-## Testing the app
+## 🧪 Testing the app
 
 ```bash
 # unit tests
 $ yarn test
 ```
 
-## Troubleshooting
+## 🎻 Troubleshooting
 
 ### How to view the db locally
 
