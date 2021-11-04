@@ -211,6 +211,7 @@ export enum StorageType {
 export enum ReminderType {
   appointmentReminder = '_appointmentReminder',
   appointmentLongReminder = '_appointmentLongReminder',
+  logReminder = '_logReminder',
 }
 
 export interface StorageUrlParams {

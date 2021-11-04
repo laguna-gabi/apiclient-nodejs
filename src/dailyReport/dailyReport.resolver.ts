@@ -71,6 +71,7 @@ export class DailyReportResolver {
         dailyReportCategoriesInput.date,
       );
     }
+    this.eventEmitter.emit(EventType.deleteLogReminder, dailyReportCategoriesInput.memberId);
 
     return dailyReportObject;
   }

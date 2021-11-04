@@ -1,5 +1,6 @@
 import * as config from 'config';
 import * as faker from 'faker';
+import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
 import { v4 } from 'uuid';
 import {
   Appointment,
@@ -16,6 +17,7 @@ import {
   NotificationType,
   Platform,
   RegisterForNotificationParams,
+  ReminderType,
 } from '../../src/common';
 import {
   CancelNotifyParams,
@@ -990,6 +992,9 @@ describe('Integration tests: all', () => {
       };
       await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
       expect(handler.schedulerRegistry.getTimeouts()).toEqual(expect.arrayContaining([member.id]));
+      expect(handler.schedulerRegistry.getTimeouts()).toEqual(
+        expect.arrayContaining([member.id + ReminderType.logReminder]),
+      );
     });
 
     it('should delete timeout for member if an appointment is scheduled', async () => {
@@ -1013,6 +1018,36 @@ describe('Integration tests: all', () => {
 
       expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(
         expect.arrayContaining([member.id]),
+      );
+    });
+
+    it('should delete timeout for member if daily report has been set', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+      const registerForNotificationParams: RegisterForNotificationParams = {
+        isPushNotificationsEnabled: true,
+        platform: Platform.ios,
+        memberId: member.id,
+        token: 'sampleiospushkittokentest',
+      };
+      await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+
+      expect(handler.schedulerRegistry.getTimeouts()).toEqual(
+        expect.arrayContaining([member.id + ReminderType.logReminder]),
+      );
+
+      await handler
+        .setContextUser(undefined, handler.patientZero.authId)
+        .mutations.setDailyReportCategories({
+          dailyReportCategoriesInput: {
+            date: '2015/01/01',
+            categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
+            memberId: member.id,
+          } as DailyReportCategoriesInput,
+        });
+
+      expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(
+        expect.arrayContaining([member.id + ReminderType.logReminder]),
       );
     });
   });

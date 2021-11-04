@@ -21,6 +21,7 @@ import {
   InternalNotifyParams,
   Logger,
   NotificationType,
+  ReminderType,
 } from '../common';
 import { Bitly } from '../providers';
 import { BaseScheduler, InternalSchedulerService, LeaderType } from '../scheduler';
@@ -56,6 +57,7 @@ export class MemberScheduler extends BaseScheduler {
       await this.initRegisterNewMemberNudge();
       await this.initRegisterNewRegisteredMemberNotify();
       await this.initRegisterNewRegisteredMemberNudgeNotify();
+      await this.initRegisterLogReminder();
     });
   }
 
@@ -162,6 +164,39 @@ export class MemberScheduler extends BaseScheduler {
     }
   }
 
+  public async registerLogReminder({
+    memberId,
+    userId,
+    firstLoggedInAt,
+  }: {
+    memberId: string;
+    userId: string;
+    firstLoggedInAt: Date;
+  }) {
+    const milliseconds = add(firstLoggedInAt, { days: 3 }).getTime() - Date.now();
+    if (milliseconds > 0) {
+      const timeout = setTimeout(async () => {
+        this.logger.debug(
+          { memberId, userId, firstLoggedInAt },
+          MemberScheduler.name,
+          this.registerLogReminder.name,
+        );
+        const metadata = {
+          content: `${config.get('contents.logReminder')}`,
+        };
+        const params: InternalNotifyParams = {
+          memberId,
+          userId,
+          type: InternalNotificationType.textToMember,
+          metadata,
+        };
+        this.eventEmitter.emit(EventType.internalNotify, params);
+        this.deleteTimeout({ id: memberId + ReminderType.logReminder });
+      }, milliseconds);
+      this.schedulerRegistry.addTimeout(memberId + ReminderType.logReminder, timeout);
+    }
+  }
+
   /************************************************************************************************
    ******************************************* Initializers ***************************************
    ************************************************************************************************/
@@ -232,6 +267,25 @@ export class MemberScheduler extends BaseScheduler {
       newRegisteredMembers.length,
       'new registered members nudge',
       this.initRegisterNewRegisteredMemberNudgeNotify.name,
+    );
+  }
+
+  private async initRegisterLogReminder() {
+    const newRegisteredMembers =
+      await this.memberService.getNewRegisteredMembersWithNoDailyReports();
+    await Promise.all(
+      newRegisteredMembers.map(async ({ memberConfig, member }) => {
+        return this.registerLogReminder({
+          memberId: member.id,
+          userId: member.primaryUserId,
+          firstLoggedInAt: memberConfig.firstLoggedInAt,
+        });
+      }),
+    );
+    this.logEndInit(
+      newRegisteredMembers.length,
+      'new registered members log reminder',
+      this.initRegisterLogReminder.name,
     );
   }
 }

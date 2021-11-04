@@ -39,6 +39,7 @@ export enum EventType {
   deleteMember = 'deleteMember',
   removeAppointmentsFromUser = 'removeAppointmentsFromUser',
   unregisterMemberFromNotifications = 'unregisterMemberFromNotifications',
+  deleteLogReminder = 'deleteLogReminder',
 }
 
 export interface IEventRequestAppointment {

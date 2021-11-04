@@ -121,8 +121,17 @@ describe('DailyReportCategoryResolver', () => {
             EventType.internalNotify,
             emittedEventParams,
           );
+          expect(eventEmitterSpy).toHaveBeenNthCalledWith(
+            2,
+            EventType.deleteLogReminder,
+            dailyReportCategoryInput.memberId,
+          );
         } else {
-          expect(eventEmitterSpy).toHaveBeenCalledTimes(0);
+          expect(eventEmitterSpy).toHaveBeenNthCalledWith(
+            1,
+            EventType.deleteLogReminder,
+            dailyReportCategoryInput.memberId,
+          );
         }
       },
     );

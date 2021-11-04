@@ -4,7 +4,7 @@ import * as config from 'config';
 import * as faker from 'faker';
 import { Model, model } from 'mongoose';
 import { v4 } from 'uuid';
-import { NotificationType } from '../../src/common';
+import { NotificationType, ReminderType } from '../../src/common';
 import {
   MemberModule,
   MemberScheduler,
@@ -164,6 +164,24 @@ describe('MemberScheduler', () => {
 
           expect(schedulerRegistry.getTimeouts()).toEqual(
             expect.arrayContaining(newRegisteredMembers.map(({ member }) => member.id)),
+          );
+        }, 10000);
+      });
+
+      describe('registerLogReminder', () => {
+        afterEach(async () => {
+          await clear();
+        });
+
+        it('should register log reminder', async () => {
+          await scheduler.init();
+
+          const newRegisteredMembers = await service.getNewRegisteredMembersWithNoDailyReports();
+
+          expect(schedulerRegistry.getTimeouts()).toEqual(
+            expect.arrayContaining(
+              newRegisteredMembers.map(({ member }) => member.id + ReminderType.logReminder),
+            ),
           );
         }, 10000);
       });

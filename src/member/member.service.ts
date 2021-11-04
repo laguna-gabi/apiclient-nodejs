@@ -331,7 +331,7 @@ export class MemberService extends BaseService {
         $match: {
           firstLoggedInAt: nudge
             ? {
-                $gte: sub(new Date(), { days: 3 }),
+                $gte: sub(new Date(), { days: 2 }),
                 $lte: sub(new Date(), { days: 1 }),
               }
             : {
@@ -376,6 +376,55 @@ export class MemberService extends BaseService {
       delete newMember.memberConfig._id;
       delete newMember.member._id;
       return newMember.ScheduledOrDoneAppointmentsCount === 0;
+    });
+  }
+
+  async getNewRegisteredMembersWithNoDailyReports() {
+    const result = await this.memberConfigModel.aggregate([
+      {
+        $match: {
+          firstLoggedInAt: {
+            $gte: sub(new Date(), { days: 3 }),
+          },
+        },
+      },
+      { $project: { memberConfig: '$$ROOT' } },
+      {
+        $lookup: {
+          from: 'members',
+          localField: 'memberConfig.memberId',
+          foreignField: '_id',
+          as: 'member',
+        },
+      },
+      {
+        $unwind: {
+          path: '$member',
+        },
+      },
+      {
+        $lookup: {
+          from: 'dailyreports',
+          localField: 'memberConfig.memberId',
+          foreignField: 'memberId',
+          as: 'dailyreports',
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          memberConfig: 1,
+          member: 1,
+          dailyreportsCount: { $size: '$dailyreports' },
+        },
+      },
+    ]);
+    return result.filter((newMember) => {
+      newMember.memberConfig.id = newMember.memberConfig._id;
+      newMember.member.id = newMember.member._id;
+      delete newMember.memberConfig._id;
+      delete newMember.member._id;
+      return newMember.dailyreportsCount === 0;
     });
   }
 

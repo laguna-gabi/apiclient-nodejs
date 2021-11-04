@@ -49,6 +49,7 @@ import {
   NotificationType,
   Platform,
   RegisterForNotificationParams,
+  ReminderType,
   RoleTypes,
   Roles,
   StorageType,
@@ -392,6 +393,12 @@ export class MemberResolver extends MemberBase {
       userId: member.primaryUserId,
       firstLoggedInAt: new Date(),
     });
+
+    await this.memberScheduler.registerLogReminder({
+      memberId: member.id,
+      userId: member.primaryUserId,
+      firstLoggedInAt: new Date(),
+    });
   }
 
   @Mutation(() => String, { nullable: true })
@@ -595,8 +602,18 @@ export class MemberResolver extends MemberBase {
         this.memberScheduler.deleteTimeout({ id: notification._id });
       });
       this.memberScheduler.deleteTimeout({ id: memberId });
+      this.memberScheduler.deleteTimeout({ id: memberId + ReminderType.logReminder });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, ex);
+    }
+  }
+
+  @OnEvent(EventType.deleteLogReminder, { async: true })
+  async deleteLogReminder(memberId: string) {
+    try {
+      this.memberScheduler.deleteTimeout({ id: memberId + ReminderType.logReminder });
+    } catch (ex) {
+      this.logger.error({ memberId }, MemberResolver.name, this.deleteLogReminder.name, ex);
     }
   }
 
