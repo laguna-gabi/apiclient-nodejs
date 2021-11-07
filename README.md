@@ -1,33 +1,46 @@
-# Hepius
+<p align="center">
+  <a href="https://en.wikipedia.org/wiki/Asclepius" target="blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Asklepios_-_Epidauros.jpg/440px-Asklepios_-_Epidauros.jpg" width="320" alt="Hepius" /></a>
+</p>
+
+<br/>
+
+<p align="center">
+  <a href="https://github.com/LagunaHealth/hepius/actions?query=branch%3Adevelop">
+    <img src="https://github.com/LagunaHealth/hepius/workflows/Laguna/badge.svg" alt="Develop ci/cd status." />
+  </a>
+  <a href="https://github.com/LagunaHealth/hepius/contributors" alt="Contributors">
+    <img src="https://img.shields.io/github/contributors/badges/shields" />
+  </a>
+</p>
+
+# 🏥 Hepius
 
 Laguna health backend infrastructure.
 <br/>Written in typescript by using [Nest](https://github.com/nestjs/nest) framework.
 
-- [Hepius](#hepius)
-  - [Project introduction](#project-introduction)
+- [🏥 Hepius](#-hepius)
+  - [💡 Project introduction](#-project-introduction)
     - [entities](#entities)
-  - [Prerequisites](#prerequisites)
+  - [📋 Prerequisites](#-prerequisites)
     - [Installation](#installation)
     - [Docker](#docker)
     - [Aws](#aws)
     - [Shared code settings](#shared-code-settings)
-  - [Running the app](#running-the-app)
-  - [Testing the app](#testing-the-app)
-  - [Using the API](#using-the-api)
+  - [🚀 Running the app](#-running-the-app)
+  - [🧪 Testing the app](#-testing-the-app)
+  - [👨‍💻 Using the API](#-using-the-api)
     - [REST](#rest)
     - [GraphQL](#graphql)
-  - [Role Based Access Control: RBAC](#role-based-access-control-rbac)
-    - [Access token snippet](#token-snippet)
-  - [Troubleshooting](#troubleshooting)
+  - [🚧 Role Based Access Control: RBAC](#-role-based-access-control-rbac)
+  - [🪀 Token snippet](#-token-snippet)
+  - [🎻 Troubleshooting](#-troubleshooting)
     - [How to view the db locally?](#how-to-view-the-db-locally)
     - [Error at connection to mongo locally](#error-at-connection-to-mongo-locally)
-- [Appendix](#appendix)
+- [✂️ Appendix](#%EF%B8%8F-appendix)
   - [jwt.io token generation](#jwtio-token-generation)
   - [GraphQL Playground](#graphql-playground)
 
-<br/><br/>
-
-## Project introduction
+## 💡 Project introduction
 
 This project handles all the backend logic for laguna-health.
 
@@ -47,7 +60,7 @@ The main entities in our system:
 4. <b>Appointment</b>: a schedule appointment between a member and a user.
 5. <b>Availabilities</b>: a user's time availabilities (for example, `start: 10/02/2022 10:00:00 end: 10/02/2022 12:00:00`)
 
-## Prerequisites
+## 📋 Prerequisites
 
 ### Installation
 
@@ -63,7 +76,7 @@ We're loading a local mongodb by using [docker](https://hub.docker.com/).
 
 1. install [docker](https://docs.docker.com/get-docker/).
 2. run `docker-compose up -d` for [starting docker](./docker-compose.yml) with 2 mongodb instances(localhost and test).
-   > **_Stop:_** After running the sample, you can stop the Docker container with `docker-compose down` > <br/><br/>
+   > **_Stop:_** After running the sample, you can stop the Docker container with `docker-compose down`<br/>
 
 ### Aws
 
@@ -81,7 +94,7 @@ In order to work locally with aws cli and `package.json` dependencies, install
 1. Set up your ide to run with `.prettierrc` file which exists on the main root of the project.
 2. Set up your ide to run with `.eslintrc.js` file which exists on the main root of the project.
 
-## Running the app
+## 🚀 Running the app
 
 In order to work with all graphql endpoints of _hepius_:
 
@@ -92,7 +105,7 @@ In order to work with all graphql endpoints of _hepius_:
 3. run `yarn seed` : generates initial org, users, members and appointments on you local station
 4. go to [graphql playground](http://localhost:3000/graphql) and create queries and mutations according to the docs.
 
-## Testing the app
+## 🧪 Testing the app
 
 ```bash
 # unit tests
@@ -103,12 +116,9 @@ $ yarn test:validation
 
 # integration tests
 $ yarn test:integration
-
-# test coverage
-$ yarn test:cov
 ```
 
-## Using the API
+## 👨‍💻 Using the API
 
 Hepius is serving endpoints via REST (controller handlers) as well as GraphQL (resolvers).
 
@@ -135,7 +145,7 @@ curl --location --request GET 'localhost:3000/api/users/slots/61682dab90669d1f12
 To send GraphQL resolvers / mutation requests you need to use the GQL Playgroud - you should make sure to update the headers to include a valid token - see [appendix](#graphql-playground).
 <br/><br/>
 
-## Role Based Access Control: RBAC
+## 🚧 Role Based Access Control: RBAC
 
 - A route (GQL or REST) is protected if not marked as 'IsPublic' - only users with admin priviliges
 - Routes can be annotated with the 'Roles' annotation to include 1 or more allowed roles.
@@ -156,7 +166,7 @@ more details can be found [here](https://app.shortcut.com/laguna-health/story/18
 When adding a new route or
 Current implementation
 
-## Token snippet
+## 🪀 Token snippet
 
 Because of the RBAC we are forced to provide an access token for most of the api requests. To work locally fast we could use the same token by updating user's `authId` instead of updating the token everywhere.
 
@@ -168,7 +178,7 @@ Start by going to the database and change one of the user's `authId` to `"admin"
 }
 ```
 
-## Troubleshooting
+## 🎻 Troubleshooting
 
 ### How to view the db locally?
 
@@ -185,7 +195,7 @@ connect ECONNREFUSED 127.0.0.1:27017
 
 An instance of mongo is not running locally, go over [docker section](#docker) again.
 
-# Appendix
+# ✂️ Appendix
 
 ## jwt.io token generation
 
