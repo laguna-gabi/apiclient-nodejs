@@ -1,0 +1,33 @@
+{
+  "name": "@lagunahealth/pandora",
+  "version": "0.1.0",
+  "description": "",
+  "author": "",
+  "license": "UNLICENSED",
+  "main": "dist/index.js",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/lagunahealth"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lagunahealth/pandora"
+  },
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "lint": "eslint \"{src,libs}/**/*.ts\" --fix"
+  },
+  "devDependencies": {
+    "@types/node": "^16.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.3.2",
+    "source-map-support": "^0.5.20",
+    "ts-node": "^10.0.0",
+    "tsconfig-paths": "^3.10.1",
+    "typescript": "^4.3.5"
+  }
+}

@@ -1,0 +1,87 @@
+name: Pandora
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: self-hosted
+    timeout-minutes: 3
+    steps:
+      - name: Checkout Git repository
+        uses: actions/checkout@v2
+      - name: Install node v16
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - name: Install yarn
+        run: npm install -g yarn
+      - name: Install project dependencies
+        run: yarn install --frozen-lockfile
+      - name: Run linters
+        run: yarn lint
+
+  build:
+    name: Build
+    runs-on: self-hosted
+    timeout-minutes: 5
+    steps:
+      - name: Checkout Git repository
+        uses: actions/checkout@v2
+      - name: Install node v16
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - name: Install yarn
+        run: npm install -g yarn
+      - name: Install project dependencies
+        run: yarn install --frozen-lockfile
+      - name: Build project
+        run: yarn tsc
+
+  bump-version:
+    name: Bump Version
+    runs-on: self-hosted
+    needs: build
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    steps:
+      - name: Checkout Git repository
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+      - uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
+      - uses: actions-ecosystem/action-bump-semver@v1
+        id: bump-semver
+        with:
+          current_version: ${{ steps.get-latest-tag.outputs.tag }}
+          level: minor
+      - uses: actions-ecosystem/action-push-tag@v1
+        with:
+          tag: ${{ steps.bump-semver.outputs.new_version }}
+          message: '${{ steps.bump-semver.outputs.new_version }}: PR #${{ github.event.pull_request.number }} ${{ github.event.pull_request.title }}'
+
+  deploy:
+    runs-on: self-hosted
+    needs: bump-version
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout Git repository
+        uses: actions/checkout@v2
+      - name: Install node v16
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          registry-url: 'https://registry.npmjs.org'
+          always-auth: true
+      - name: Install yarn
+        run: npm install -g yarn
+      - run: yarn publish
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
