@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://en.wikipedia.org/wiki/Asclepius" target="blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Asklepios_-_Epidauros.jpg/440px-Asklepios_-_Epidauros.jpg" width="320" alt="Hepius" /></a>
+  <a href="https://en.wikipedia.org/wiki/Asclepius" target="blank"><img src="https://www.greeka.com/photos/greece-myths/asclepius/hero/asclepius-1280.webp" width="320" alt="Hepius" /></a>
 </p>
 
 <br/>
