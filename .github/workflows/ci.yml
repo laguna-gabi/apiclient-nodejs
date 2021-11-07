@@ -27,6 +27,17 @@ jobs:
         run: yarn install --frozen-lockfile
       - name: Run linters
         run: yarn lint
+        
+      - name: WhiteSource Unified Agent Scan
+        env:
+          WS_APIKEY: fe3e454ca1fd4d4cab0fd6a63cc13d0985ef3fe21016429d8d39aeafcfa3cc12
+          WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
+          WS_PRODUCTNAME: GH_${{github.event.repository.name}}
+          WS_PROJECTNAME: ${{github.ref}}_ghaction
+        run: |
+          curl -LJO https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar
+          echo Unified Agent downloaded successfully
+          java -jar wss-unified-agent.jar
 
   build-and-test:
     name: Build and Test
