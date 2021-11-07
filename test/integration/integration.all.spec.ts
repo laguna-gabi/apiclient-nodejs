@@ -1228,7 +1228,6 @@ describe('Integration tests: all', () => {
 
     const result2 = await handler.queries.getRecordings({
       memberId: memberId,
-      additionalResponseFields: 'deletedMedia',
     });
     expect(result2.length).toBe(2);
     await handler.mutations.endAppointment({
@@ -1241,7 +1240,6 @@ describe('Integration tests: all', () => {
     await delay(500); // wait for event to finish
     const result3 = await handler.queries.getRecordings({
       memberId: memberId,
-      additionalResponseFields: 'deletedMedia',
     });
     expect(result3.length).toBe(2);
     expect(result3.every(({ deletedMedia }) => deletedMedia === true)).toBe(true);

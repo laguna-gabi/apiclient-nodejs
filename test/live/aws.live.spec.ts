@@ -44,6 +44,42 @@ describe('live: aws', () => {
       );
     });
 
+    it('should delete given recordings for a specific member', async () => {
+      if (process.env.NODE_ENV === Environments.production) {
+        return;
+      }
+      const getParams = (id: string) => ({
+        memberId: member.id,
+        storageType: StorageType.recordings,
+        id,
+      });
+      const uploadFile = async (fileName: string) => {
+        const uploadUrl = await storageService.getUploadUrl(getParams(fileName));
+        expect(uploadUrl).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
+        expect(uploadUrl).toMatch(`Amz-Expires=1800`); //expiration: 30 minutes
+
+        const { status: uploadStatus } = await axios.put(uploadUrl, faker.lorem.sentence());
+        expect(uploadStatus).toEqual(200);
+      };
+      const files = [`${faker.lorem.word()}1.mp4`, `${faker.lorem.word()}2.mp4`];
+      await Promise.all(files.map(uploadFile));
+      const existingUrls = await Promise.all(
+        files.map((file) => storageService.getDownloadUrl(getParams(file))),
+      );
+      expect(existingUrls[0]).toMatch(
+        `${bucketName}.s3.amazonaws.com/public/${StorageType.recordings}/${member.id}/${files[0]}`,
+      );
+      expect(existingUrls[1]).toMatch(
+        `${bucketName}.s3.amazonaws.com/public/${StorageType.recordings}/${member.id}/${files[1]}`,
+      );
+      await storageService.deleteRecordings(member.id, files);
+      const nonExistingUrls = await Promise.all(
+        files.map((file) => storageService.getDownloadUrl(getParams(file))),
+      );
+      expect(nonExistingUrls[0]).toBeUndefined();
+      expect(nonExistingUrls[1]).toBeUndefined();
+    });
+
     test.each(Object.values(StorageType))(
       `should upload+download a %p file from aws storage`,
       async (storageType) => {
