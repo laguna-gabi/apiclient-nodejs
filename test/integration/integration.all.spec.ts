@@ -1197,7 +1197,7 @@ describe('Integration tests: all', () => {
       });
     });
   });
-  it.only('should delete recordings and media files on unconsented appointment end', async () => {
+  it('should delete recordings and media files on unconsented appointment end', async () => {
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({ org });
     const appointmentParams = generateScheduleAppointmentParams({

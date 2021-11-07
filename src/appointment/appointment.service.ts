@@ -23,6 +23,7 @@ import {
   IEventAppointmentScoresUpdated,
   IEventNewAppointment,
 } from '../common';
+import { isUndefined, omitBy } from 'lodash';
 
 @Injectable()
 export class AppointmentService extends BaseService {
@@ -138,19 +139,20 @@ export class AppointmentService extends BaseService {
 
   async end(params: EndAppointmentParams): Promise<Appointment> {
     const existing = await this.appointmentModel.findById({ _id: params.id });
-    const { noShow, recordingConsent, id } = params;
+    const { noShow, recordingConsent, id, noShowReason } = params;
     let result;
     if (!existing) {
       throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
     }
-
-    const update: any = { status: AppointmentStatus.done };
-    if (params.noShow !== undefined) {
-      update.noShow = params.noShow;
-    }
-    if (params.noShowReason !== undefined) {
-      update.noShowReason = params.noShowReason;
-    }
+    const update: any = omitBy(
+      {
+        status: AppointmentStatus.done,
+        noShow,
+        noShowReason,
+        recordingConsent,
+      },
+      isUndefined,
+    );
 
     if (params.notes === undefined) {
       result = await this.appointmentModel
