@@ -81,7 +81,6 @@ export class EndAppointmentParams {
 
   @Field(() => Boolean, { nullable: true })
   @IsOptional()
-  @IsNoShowValid({ message: Errors.get(ErrorType.appointmentNoShow) })
   recordingConsent?: boolean;
 }
 

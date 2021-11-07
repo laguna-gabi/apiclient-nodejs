@@ -78,7 +78,7 @@ export class StorageService implements OnModuleInit {
         Bucket: this.bucket,
         Delete: {
           Objects: recordingIds.map((recordingId) => ({
-            Key: `public/recordings/${memberId}/${recordingId}`,
+            Key: `public/${StorageType.recordings}/${memberId}/${recordingId}`,
           })),
         },
       };

@@ -458,6 +458,7 @@ describe('AppointmentService', () => {
 
       spyOnEventEmitter.mockReset();
     });
+
     /* eslint-disable */
     test.each`
       recordingConsent | noShow   | expectToDispatch | title
@@ -491,8 +492,9 @@ describe('AppointmentService', () => {
           expect.anything(),
         );
       }
+
+      spyOnEventEmitter.mockReset();
     });
-    // });
   });
 
   describe('updateNotes', () => {

@@ -76,7 +76,7 @@ export class Recording {
   @Field(() => RecordingType, { nullable: true })
   recordingType?: RecordingType;
 
-  @Prop({ type: Types.ObjectId })
+  @Prop({ type: Types.ObjectId, index: true })
   @Field(() => String)
   appointmentId?: Types.ObjectId;
 
