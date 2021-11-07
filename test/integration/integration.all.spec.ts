@@ -1,6 +1,5 @@
 import * as config from 'config';
 import * as faker from 'faker';
-import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
 import { v4 } from 'uuid';
 import {
   Appointment,
@@ -18,7 +17,9 @@ import {
   Platform,
   RegisterForNotificationParams,
   ReminderType,
+  delay,
 } from '../../src/common';
+import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
 import {
   CancelNotifyParams,
   CreateTaskParams,
@@ -36,7 +37,6 @@ import { AppointmentsIntegrationActions } from '../aux/appointments';
 import { Creators } from '../aux/creators';
 import { Handler } from '../aux/handler';
 import {
-  delay,
   generateAppointmentLink,
   generateAvailabilityInput,
   generateCancelNotifyParams,

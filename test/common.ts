@@ -64,10 +64,6 @@ export const dbDisconnect = async () => {
   await disconnect();
 };
 
-export const delay = async (milliseconds: number) => {
-  await new Promise((resolve) => setTimeout(resolve, milliseconds));
-};
-
 export const defaultModules = () => {
   return [DbModule, EventEmitterModule.forRoot(), ScheduleModule.forRoot()];
 };

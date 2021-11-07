@@ -22,6 +22,7 @@ import {
   SlackIcon,
   StorageType,
   capitalize,
+  delay,
 } from '../../src/common';
 import {
   Communication,
@@ -42,7 +43,6 @@ import { UserService } from '../../src/user';
 import {
   dbDisconnect,
   defaultModules,
-  delay,
   generateAppointmentComposeParams,
   generateCancelNotifyParams,
   generateCommunication,
@@ -1731,7 +1731,7 @@ describe('MemberResolver', () => {
           to: user.phone,
         },
       });
-    });
+    }, 10000);
 
     it('should not notify user on chat message from member - no unread messages', async () => {
       const member = mockGenerateMember();
@@ -1750,9 +1750,10 @@ describe('MemberResolver', () => {
       });
 
       spyOnCommunicationGetByUrl.mockImplementation(async () => communication);
-      spyOnCommunicationGetUnreadMessageCount.mockImplementation(async () => ({
-        count: 0,
-      }));
+      spyOnCommunicationGetUnreadMessageCount
+        .mockReturnValueOnce({ count: 1 })
+        .mockReturnValueOnce({ count: 1 })
+        .mockReturnValue({ count: 0 });
       const params: IEventNotifyChatMessage = {
         senderUserId: member.id,
         sendBirdChannelUrl: communication.sendBirdChannelUrl,

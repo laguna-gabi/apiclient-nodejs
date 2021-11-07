@@ -1,9 +1,8 @@
 import * as faker from 'faker';
 import * as jwt from 'jsonwebtoken';
-import { Identifier } from '../src/common';
+import { Identifier, delay } from '../src/common';
 import { UserRole, UserService } from '../src/user';
 import {
-  delay,
   generateAvailabilityInput,
   generateCreateMemberParams,
   generateCreateTaskParams,

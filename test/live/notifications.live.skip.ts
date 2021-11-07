@@ -7,9 +7,10 @@ import {
   Errors,
   NotificationType,
   Platform,
+  delay,
 } from '../../src/common';
 import { NotificationsService } from '../../src/providers';
-import { dbDisconnect, defaultModules, delay } from '../common';
+import { dbDisconnect, defaultModules } from '../common';
 import { generatePath, generatePhone } from '../generators';
 
 /**

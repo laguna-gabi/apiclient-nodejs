@@ -4,7 +4,7 @@ import * as config from 'config';
 import * as faker from 'faker';
 import { Model, model } from 'mongoose';
 import { v4 } from 'uuid';
-import { NotificationType, ReminderType } from '../../src/common';
+import { NotificationType, ReminderType, delay } from '../../src/common';
 import {
   MemberModule,
   MemberScheduler,
@@ -19,7 +19,6 @@ import {
   dbConnect,
   dbDisconnect,
   defaultModules,
-  delay,
   generateCreateMemberParams,
   generateCreateRawUserParams,
   generateId,
