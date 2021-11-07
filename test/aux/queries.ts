@@ -597,6 +597,7 @@ export class Queries {
             end
             answered
             phone
+            deletedMedia
           }
         }
       `,

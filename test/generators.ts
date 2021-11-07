@@ -308,8 +308,9 @@ export const generateEndAppointmentParams = ({
   noShow = true,
   noShowReason = faker.lorem.sentence(),
   notes = generateNotesParams(),
+  recordingConsent = true,
 }: Partial<EndAppointmentParams> = {}): EndAppointmentParams => {
-  return { id, noShow, noShowReason, notes };
+  return { id, noShow, noShowReason, notes, recordingConsent };
 };
 
 export const generateNotesParams = ({
