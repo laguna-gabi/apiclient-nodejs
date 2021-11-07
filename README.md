@@ -1,10 +1,10 @@
 <p align="center">
-  <a href="https://en.wikipedia.org/wiki/Asclepius" target="blank"><img src="https://www.greeka.com/photos/greece-myths/asclepius/hero/asclepius-1280.webp" width="320" alt="Hepius" /></a>
-</p>
-
-<br/>
-
-<p align="center">
+  <a href="https://en.wikipedia.org/wiki/Asclepius" target="blank">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Asklepios_-_Epidauros.jpg" 
+       height="250" 
+       alt="Hepius" />
+  </a>
+  <br/>
   <a href="https://github.com/LagunaHealth/hepius/actions?query=branch%3Adevelop">
     <img src="https://github.com/LagunaHealth/hepius/workflows/Laguna/badge.svg" alt="Develop ci/cd status." />
   </a>
@@ -14,7 +14,6 @@
 </p>
 
 # 🏥 Hepius
-
 Laguna health backend infrastructure.
 <br/>Written in typescript by using [Nest](https://github.com/nestjs/nest) framework.
 

@@ -54,6 +54,7 @@ import {
   Roles,
   StorageType,
   capitalize,
+  delay,
   extractAuthorizationHeader,
 } from '../common';
 import {
@@ -544,13 +545,25 @@ export class MemberResolver extends MemberBase {
         });
       } else {
         // to avoid spamming the user with multiple SMS message while in a live chat with the member
-        // we avoid sending a notification if the user's unread message count is 0
-        const { count } = await this.communicationService.getParticipantUnreadMessagesCount(
-          communication.userId.toString(),
-          false,
-        );
+        // we avoid sending a notification if the user's unread message count is 0 in the next 2
+        // seconds
+        let isCoachOffline = true;
+        for (let i = 0; i < 5; i++) {
+          const { count } = await this.communicationService.getParticipantUnreadMessagesCount(
+            communication.userId,
+            false,
+          );
 
-        if (count != 0) {
+          // indicate that the user is in front of the chat
+          if (count === 0) {
+            isCoachOffline = false;
+            break;
+          }
+
+          await delay(400);
+        }
+
+        if (isCoachOffline) {
           return await this.internalNotify({
             memberId: senderUserId,
             userId: communication.userId.toString(),

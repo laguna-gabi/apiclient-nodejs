@@ -19,11 +19,12 @@ import {
   InternalNotificationType,
   InternalNotifyParams,
   ReminderType,
+  delay,
 } from '../../src/common';
 import { CommunicationResolver } from '../../src/communication';
 import { Bitly } from '../../src/providers';
 import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
-import { dbConnect, dbDisconnect, defaultModules, delay, generateId } from '../index';
+import { dbConnect, dbDisconnect, defaultModules, generateId } from '../index';
 
 describe('AppointmentScheduler', () => {
   let module: TestingModule;
