@@ -96,6 +96,7 @@ export const mockProviders = (
   );
   const spyOnStorageDownload = jest.spyOn(storage, 'getDownloadUrl');
   const spyOnStorageUpload = jest.spyOn(storage, 'getUploadUrl');
+  const spyOnStorageDeleteRecordings = jest.spyOn(storage, 'deleteRecordings');
   const spyOnStorageHandleNewMember = jest.spyOn(storage, 'handleNewMember');
   const spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
   const spyOnNotificationsServiceUnregister = jest.spyOn(notificationsService, 'unregister');
@@ -114,6 +115,7 @@ export const mockProviders = (
   spyOnSendBirdDeleteGroupChannelMetadata.mockResolvedValue(undefined);
   spyOnStorageDownload.mockResolvedValue('https://some-url/download');
   spyOnStorageUpload.mockResolvedValue('https://some-url/upload');
+  spyOnStorageDeleteRecordings.mockResolvedValue(undefined);
   spyOnStorageHandleNewMember.mockResolvedValue(undefined);
   spyOnNotificationsServiceRegister.mockResolvedValue(v4());
   spyOnNotificationsServiceUnregister.mockResolvedValue(undefined);

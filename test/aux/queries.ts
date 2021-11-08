@@ -209,6 +209,7 @@ export class Queries {
             readmissionRisk
             phoneSecondary
             generalNotes
+            nurseNotes
             admitDate
             createdAt
             honorific
@@ -597,6 +598,7 @@ export class Queries {
             end
             answered
             phone
+            deletedMedia
           }
         }
       `,

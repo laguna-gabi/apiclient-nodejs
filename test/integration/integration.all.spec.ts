@@ -417,7 +417,7 @@ describe('Integration tests: all', () => {
     expect(memberResult).toEqual(expect.objectContaining({ ...member }));
   });
 
-  it('should be able to set note for a member', async () => {
+  it('should be able to set note for and nurseNotes for a member', async () => {
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({ org });
 
@@ -426,9 +426,10 @@ describe('Integration tests: all', () => {
 
     const memberResult = await handler.queries.getMember({ id: member.id });
     expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
+    expect(memberResult.nurseNotes).toEqual(setGeneralNotesParams.nurseNotes);
   });
 
-  it('should be able to set null note for a member', async () => {
+  it('should be able to set null note and nurseNotes for a member', async () => {
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({ org });
 
@@ -439,10 +440,12 @@ describe('Integration tests: all', () => {
     expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
 
     delete setGeneralNotesParams.note;
+    delete setGeneralNotesParams.nurseNotes;
     await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
 
     memberResult = await handler.queries.getMember({ id: member.id });
     expect(memberResult.generalNotes).toBeNull();
+    expect(memberResult.nurseNotes).toBeNull();
   });
 
   it('should be able to get upload dispatch links of a member', async () => {
@@ -1198,6 +1201,52 @@ describe('Integration tests: all', () => {
     });
   });
 
+  it('should delete recordings and media files on unconsented appointment end', async () => {
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({ org });
+    const appointmentParams = generateScheduleAppointmentParams({
+      memberId: member.id,
+      userId: member.users[0].id,
+      start: new Date(),
+    });
+
+    const appointment = await creators.handler.mutations.scheduleAppointment({ appointmentParams });
+    const memberId = appointment.memberId.toString();
+    const appointmentId = appointment.id.toString();
+
+    const recording1 = generateUpdateRecordingParams({
+      memberId,
+      appointmentId,
+      end: new Date(),
+    });
+    const recording2 = generateUpdateRecordingParams({
+      memberId,
+      appointmentId,
+      end: new Date(),
+    });
+    const result1 = await handler.queries.getRecordings({ memberId: memberId });
+    expect(result1.length).toBe(0);
+    await handler.mutations.updateRecording({ updateRecordingParams: recording1 });
+    await handler.mutations.updateRecording({ updateRecordingParams: recording2 });
+
+    const result2 = await handler.queries.getRecordings({
+      memberId: memberId,
+    });
+    expect(result2.length).toBe(2);
+    await handler.mutations.endAppointment({
+      endAppointmentParams: {
+        id: appointmentId,
+        noShow: false,
+        recordingConsent: false,
+      },
+    });
+    await delay(500); // wait for event to finish
+    const result3 = await handler.queries.getRecordings({
+      memberId: memberId,
+    });
+    expect(result3.length).toBe(2);
+    expect(result3.every(({ deletedMedia }) => deletedMedia === true)).toBe(true);
+  });
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

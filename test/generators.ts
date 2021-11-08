@@ -308,8 +308,9 @@ export const generateEndAppointmentParams = ({
   noShow = true,
   noShowReason = faker.lorem.sentence(),
   notes = generateNotesParams(),
+  recordingConsent = true,
 }: Partial<EndAppointmentParams> = {}): EndAppointmentParams => {
-  return { id, noShow, noShowReason, notes };
+  return { id, noShow, noShowReason, notes, recordingConsent };
 };
 
 export const generateNotesParams = ({
@@ -447,8 +448,9 @@ export const generatePath = (type: NotificationType) => {
 export const generateSetGeneralNotesParams = ({
   memberId = generateId(),
   note = faker.lorem.sentence(),
+  nurseNotes = faker.lorem.sentence(),
 }: Partial<SetGeneralNotesParams> = {}): SetGeneralNotesParams => {
-  return { memberId, note };
+  return { memberId, note, nurseNotes };
 };
 
 export const generateDateOnly = (date: Date): string => {

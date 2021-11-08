@@ -5,6 +5,7 @@ import * as config from 'config';
 import { sub } from 'date-fns';
 import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
+import { StorageService } from '../providers';
 import { v4 } from 'uuid';
 import {
   ActionItem,
@@ -47,6 +48,7 @@ import {
   EventType,
   IEventAddUserToMemberList,
   IEventAppointmentScoresUpdated,
+  IEventUnconsentedAppointmentEnded,
   IEventUpdateMemberConfig,
   Identifier,
   Logger,
@@ -71,6 +73,7 @@ export class MemberService extends BaseService {
     private readonly archiveMemberConfigModel: Model<ArchiveMemberConfigDocument>,
     @InjectModel(NotifyParams.name)
     private readonly notifyParamsModel: Model<NotifyParamsDocument>,
+    private readonly storageService: StorageService,
     readonly logger: Logger,
   ) {
     super();
@@ -240,6 +243,35 @@ export class MemberService extends BaseService {
       );
     } catch (ex) {
       this.logger.error(params, MemberService.name, this.handleAddUserToMemberList.name, ex);
+    }
+  }
+
+  @OnEvent(EventType.unconsentedAppointmentEnded, { async: true })
+  async handleUnconsentedAppointmentEnded(params: IEventUnconsentedAppointmentEnded) {
+    try {
+      const { appointmentId, memberId } = params;
+      const recordingsToDeleteMedia = await this.recordingModel.find({
+        appointmentId: Types.ObjectId(appointmentId),
+        answered: true,
+      });
+      const recordingIds = recordingsToDeleteMedia.map((doc) => doc.id);
+      await this.storageService.deleteRecordings(memberId, recordingIds);
+      await this.recordingModel.updateMany(
+        {
+          appointmentId: Types.ObjectId(appointmentId),
+          answered: true,
+        },
+        {
+          deletedMedia: true,
+        },
+      );
+    } catch (ex) {
+      this.logger.error(
+        params,
+        MemberService.name,
+        this.handleUnconsentedAppointmentEnded.name,
+        ex,
+      );
     }
   }
 
@@ -624,7 +656,12 @@ export class MemberService extends BaseService {
   async setGeneralNotes(setGeneralNotesParams: SetGeneralNotesParams): Promise<void> {
     const result = await this.memberModel.updateOne(
       { _id: new Types.ObjectId(setGeneralNotesParams.memberId) },
-      { $set: { generalNotes: setGeneralNotesParams.note } },
+      {
+        $set: {
+          generalNotes: setGeneralNotesParams.note,
+          nurseNotes: setGeneralNotesParams.nurseNotes,
+        },
+      },
     );
 
     if (result.nModified === 0) {

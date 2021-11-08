@@ -641,7 +641,8 @@ describe('Validations - member', () => {
       field
       ${{ memberId: 123 }}
       ${{ note: 123 }}
-    `(`should fail to set general notes since $input is not a valid type`, async (params) => {
+      ${{ nurseNotes: 123 }}
+    `(`should fail to set notes since $input is not a valid type`, async (params) => {
       const setGeneralNotesParams = generateSetGeneralNotesParams({ ...params.field });
       await handler.mutations.setGeneralNotes({
         setGeneralNotesParams,

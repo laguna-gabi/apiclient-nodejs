@@ -78,7 +78,11 @@ export class Recording {
 
   @Prop({ type: Types.ObjectId, index: true })
   @Field(() => String)
-  appointmentId?: string;
+  appointmentId?: Types.ObjectId;
+
+  @Prop({ type: Boolean })
+  @Field(() => Boolean, { nullable: true })
+  deletedMedia?: boolean;
 }
 
 @ObjectType()
