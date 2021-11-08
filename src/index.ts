@@ -1,3 +1,1 @@
-export interface ITestDoSomething {
-  name: string;
-}
+export * from './interfaces';

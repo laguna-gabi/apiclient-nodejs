@@ -1,10 +1,12 @@
 {
   "name": "@lagunahealth/pandora",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "",
   "author": "",
   "license": "UNLICENSED",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["/dist"],
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/lagunahealth"
   },
