@@ -96,7 +96,7 @@ jobs:
   deploy:
     name: Deploy
     runs-on: self-hosted
-    needs: deploy
+    needs: bump-version
     if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging'
 
     steps:
