@@ -10,156 +10,169 @@ on:
       - develop
 
 jobs:
-  lint:
-    name: Lint
+  test-npm:
+    name: test npm
     runs-on: self-hosted
     timeout-minutes: 3
     steps:
-      - name: Checkout Git repository
-        uses: actions/checkout@v2
-      - name: Install node v16
-        uses: actions/setup-node@v2
-        with:
-          node-version: 16
-      - name: Install yarn
-        run: npm install -g yarn
-      - name: Install project dependencies
-        run: yarn install --frozen-lockfile
-      - name: Run linters
-        run: yarn lint
-
-  build-and-test:
-    name: Build and Test
-    runs-on: self-hosted
-    timeout-minutes: 10
-    steps:
-      - name: Checkout Git repository
-        uses: actions/checkout@v2
-      - name: Install node v16
-        uses: actions/setup-node@v2
-        with:
-          node-version: 16
-      - name: Install yarn
-        run: npm install -g yarn
-      - name: Install project dependencies
-        run: yarn install --frozen-lockfile
-      - name: Build project
-        run: yarn build
-      - name: Start docker image with mongodb to localhost and test db
-        run: docker-compose -f docker-compose.yml up -d
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-      - name: Unit tests
-        run: yarn test
-      - name: Validation tests
-        run: yarn test:validation
-      - name: Integration tests
-        run: yarn test:integration
-      - name: Live tests
-        run: yarn test:live
-      - name: Cleanup docker
-        if: ${{ always() }}
+      - name: Create NPMRC
         run: |
-          docker-compose down
-          docker system prune -a --volumes --force
+          echo "registry=https://registry.npmjs.org/" >> ~/.npmrc
+          echo "registry.npmjs.org/:_authToken=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" >> ~/.npmrc
+          echo "npm.pkg.github.com/:_authToken=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" >> ~/.npmrc
+          echo 'registry "https://registry.yarnpkg.com"' >> ~/.yarnrc
+      - run: yarn install
 
-  bump-version:
-    name: Bump Version
-    runs-on: ubuntu-latest
-    needs: build-and-test
-    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
-    steps:
-      - name: Checkout Git repository
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.ref }}
-      - name: cat package.json
-        run: cat ./package.json
-      - name: Automated Version Bump
-        id: version-bump
-        uses: phips28/gh-action-bump-version@master
-        with:
-          tag-prefix: 'v'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: cat package.json
-        run: cat ./package.json
-      - name: Output Step
-        env:
-          NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
-        run: echo "new tag $NEW_TAG"
-
-  deploy:
-    name: Deploy
-    runs-on: self-hosted
-    needs: bump-version
-    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging'
-
-    steps:
-      - name: Get branch name
-        id: branch-name
-        uses: tj-actions/branch-names@v5
-
-      - name: Accumulate NODE_ENV
-        id: branch_check
-        run: |
-          echo "Running on branch ${{ github.ref }}"
-          if [ "${{ steps.branch-name.outputs.current_branch }}" = "staging" ]; then
-            echo "::set-output name=env_name::production"
-          elif [ "${{ steps.branch-name.outputs.current_branch }}" = "develop" ]; then
-            echo "::set-output name=env_name::development"
-          fi
-      - name: Log environment vars
-        run: |
-          echo "current branch=${{ steps.branch-name.outputs.current_branch }}"
-          echo "current env_name=${{ steps.branch_check.outputs.env_name }}"
-      - name: Checkout Git repository
-        uses: actions/checkout@v2
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: hepius-${{ steps.branch-name.outputs.current_branch }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          # Build a docker container and
-          # push it to ECR so that it can
-          # be deployed to ECS.
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG . --build-arg GIT_COMMIT=$IMAGE_TAG --build-arg NODE_ENV=${{ steps.branch_check.outputs.env_name }}
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-      - name: Download task definition
-        run: |
-          aws ecs describe-task-definition --task-definition fargate-task-hepius-${{ steps.branch-name.outputs.current_branch }} \
-          --query taskDefinition > task-definition.json
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-definition.json
-          container-name: hepius-${{ steps.branch-name.outputs.current_branch }}-container
-          image: ${{ steps.build-image.outputs.image }}
-
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: hepius-${{ steps.branch-name.outputs.current_branch }}-service
-          cluster: cluster-hepius-${{ steps.branch-name.outputs.current_branch }}
-          wait-for-service-stability: true
+#  lint:
+#    name: Lint
+#    runs-on: self-hosted
+#    timeout-minutes: 3
+#    steps:
+#      - name: Checkout Git repository
+#        uses: actions/checkout@v2
+#      - name: Install node v16
+#        uses: actions/setup-node@v2
+#        with:
+#          node-version: 16
+#      - name: Install yarn
+#        run: npm install -g yarn
+#      - name: Install project dependencies
+#        run: yarn install --frozen-lockfile
+#      - name: Run linters
+#        run: yarn lint
+#
+#  build-and-test:
+#    name: Build and Test
+#    runs-on: self-hosted
+#    timeout-minutes: 10
+#    steps:
+#      - name: Checkout Git repository
+#        uses: actions/checkout@v2
+#      - name: Install node v16
+#        uses: actions/setup-node@v2
+#        with:
+#          node-version: 16
+#      - name: Install yarn
+#        run: npm install -g yarn
+#      - name: Install project dependencies
+#        run: yarn install --frozen-lockfile
+#      - name: Build project
+#        run: yarn build
+#      - name: Start docker image with mongodb to localhost and test db
+#        run: docker-compose -f docker-compose.yml up -d
+#      - name: Configure AWS Credentials
+#        uses: aws-actions/configure-aws-credentials@v1
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws-region: us-east-1
+#      - name: Unit tests
+#        run: yarn test
+#      - name: Validation tests
+#        run: yarn test:validation
+#      - name: Integration tests
+#        run: yarn test:integration
+#      - name: Live tests
+#        run: yarn test:live
+#      - name: Cleanup docker
+#        if: ${{ always() }}
+#        run: |
+#          docker-compose down
+#          docker system prune -a --volumes --force
+#
+#  bump-version:
+#    name: Bump Version
+#    runs-on: ubuntu-latest
+#    needs: build-and-test
+#    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
+#    steps:
+#      - name: Checkout Git repository
+#        uses: actions/checkout@v2
+#        with:
+#          ref: ${{ github.ref }}
+#      - name: cat package.json
+#        run: cat ./package.json
+#      - name: Automated Version Bump
+#        id: version-bump
+#        uses: phips28/gh-action-bump-version@master
+#        with:
+#          tag-prefix: 'v'
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      - name: cat package.json
+#        run: cat ./package.json
+#      - name: Output Step
+#        env:
+#          NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
+#        run: echo "new tag $NEW_TAG"
+#
+#  deploy:
+#    name: Deploy
+#    runs-on: self-hosted
+#    needs: bump-version
+#    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging'
+#
+#    steps:
+#      - name: Get branch name
+#        id: branch-name
+#        uses: tj-actions/branch-names@v5
+#
+#      - name: Accumulate NODE_ENV
+#        id: branch_check
+#        run: |
+#          echo "Running on branch ${{ github.ref }}"
+#          if [ "${{ steps.branch-name.outputs.current_branch }}" = "staging" ]; then
+#            echo "::set-output name=env_name::production"
+#          elif [ "${{ steps.branch-name.outputs.current_branch }}" = "develop" ]; then
+#            echo "::set-output name=env_name::development"
+#          fi
+#      - name: Log environment vars
+#        run: |
+#          echo "current branch=${{ steps.branch-name.outputs.current_branch }}"
+#          echo "current env_name=${{ steps.branch_check.outputs.env_name }}"
+#      - name: Checkout Git repository
+#        uses: actions/checkout@v2
+#
+#      - name: Configure AWS credentials
+#        uses: aws-actions/configure-aws-credentials@v1
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws-region: us-east-1
+#
+#      - name: Login to Amazon ECR
+#        id: login-ecr
+#        uses: aws-actions/amazon-ecr-login@v1
+#
+#      - name: Build, tag, and push image to Amazon ECR
+#        id: build-image
+#        env:
+#          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#          ECR_REPOSITORY: hepius-${{ steps.branch-name.outputs.current_branch }}
+#          IMAGE_TAG: ${{ github.sha }}
+#        run: |
+#          # Build a docker container and
+#          # push it to ECR so that it can
+#          # be deployed to ECS.
+#          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG . --build-arg GIT_COMMIT=$IMAGE_TAG --build-arg NODE_ENV=${{ steps.branch_check.outputs.env_name }}
+#          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+#          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+#      - name: Download task definition
+#        run: |
+#          aws ecs describe-task-definition --task-definition fargate-task-hepius-${{ steps.branch-name.outputs.current_branch }} \
+#          --query taskDefinition > task-definition.json
+#      - name: Fill in the new image ID in the Amazon ECS task definition
+#        id: task-def
+#        uses: aws-actions/amazon-ecs-render-task-definition@v1
+#        with:
+#          task-definition: task-definition.json
+#          container-name: hepius-${{ steps.branch-name.outputs.current_branch }}-container
+#          image: ${{ steps.build-image.outputs.image }}
+#
+#      - name: Deploy Amazon ECS task definition
+#        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+#        with:
+#          task-definition: ${{ steps.task-def.outputs.task-definition }}
+#          service: hepius-${{ steps.branch-name.outputs.current_branch }}-service
+#          cluster: cluster-hepius-${{ steps.branch-name.outputs.current_branch }}
+#          wait-for-service-stability: true
