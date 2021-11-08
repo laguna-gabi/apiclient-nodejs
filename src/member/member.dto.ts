@@ -241,6 +241,9 @@ export class SetGeneralNotesParams {
 
   @Field(() => String, { nullable: true })
   note?: string;
+
+  @Field(() => String, { nullable: true })
+  nurseNotes?: string;
 }
 
 @InputType()
@@ -434,6 +437,10 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   generalNotes?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  nurseNotes?: string;
 
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })

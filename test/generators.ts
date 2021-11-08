@@ -448,8 +448,9 @@ export const generatePath = (type: NotificationType) => {
 export const generateSetGeneralNotesParams = ({
   memberId = generateId(),
   note = faker.lorem.sentence(),
+  nurseNotes = faker.lorem.sentence(),
 }: Partial<SetGeneralNotesParams> = {}): SetGeneralNotesParams => {
-  return { memberId, note };
+  return { memberId, note, nurseNotes };
 };
 
 export const generateDateOnly = (date: Date): string => {

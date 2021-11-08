@@ -417,7 +417,7 @@ describe('Integration tests: all', () => {
     expect(memberResult).toEqual(expect.objectContaining({ ...member }));
   });
 
-  it('should be able to set note for a member', async () => {
+  it('should be able to set note for and nurseNotes for a member', async () => {
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({ org });
 
@@ -426,9 +426,10 @@ describe('Integration tests: all', () => {
 
     const memberResult = await handler.queries.getMember({ id: member.id });
     expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
+    expect(memberResult.nurseNotes).toEqual(setGeneralNotesParams.nurseNotes);
   });
 
-  it('should be able to set null note for a member', async () => {
+  it('should be able to set null note and nurseNotes for a member', async () => {
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({ org });
 
@@ -439,10 +440,12 @@ describe('Integration tests: all', () => {
     expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
 
     delete setGeneralNotesParams.note;
+    delete setGeneralNotesParams.nurseNotes;
     await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
 
     memberResult = await handler.queries.getMember({ id: member.id });
     expect(memberResult.generalNotes).toBeNull();
+    expect(memberResult.nurseNotes).toBeNull();
   });
 
   it('should be able to get upload dispatch links of a member', async () => {
