@@ -12,7 +12,9 @@ import {
   InternalNotificationType,
   InternalNotifyParams,
   UpdatedAppointmentAction,
+  scheduleAppointmentDateFormat,
 } from '../common';
+import { format } from 'date-fns';
 
 export class AppointmentBase {
   constructor(
@@ -57,8 +59,14 @@ export class AppointmentBase {
       type: InternalNotificationType.textSmsToUser,
       metadata: {
         content: `${config
-          .get('contents.appointmentUser')
-          .replace('@appointment.start@', appointment.start.toLocaleString())}`,
+          .get('contents.appointmentScheduledUser')
+          .replace(
+            '@appointment.time@',
+            `${format(
+              new Date(appointment.start.toUTCString()),
+              scheduleAppointmentDateFormat,
+            )} (UTC)`,
+          )}`,
       },
     };
     this.eventEmitter.emit(EventType.internalNotify, params);
@@ -70,7 +78,7 @@ export class AppointmentBase {
       userId: appointment.userId,
       type: InternalNotificationType.textSmsToMember,
       metadata: {
-        content: `${config.get('contents.appointmentScheduled')}`,
+        content: `${config.get('contents.appointmentScheduledMember')}`,
         appointmentTime: appointment.start,
       },
     };

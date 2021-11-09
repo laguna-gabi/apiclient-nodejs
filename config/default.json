@@ -46,7 +46,6 @@
     "newMemberNudge": "Hello @member.honorific@ @member.lastName@, I'm @user.firstName@ from Laguna Health. Friendly reminder to download the app and schedule your first check-in: @downloadLink@.",
     "newRegisteredMember": "Welcome to Laguna Health. To get started on your recovery journey schedule a check-in with your Laguna coach here.",
     "newRegisteredMemberNudge": "Friendly reminder from @user.firstName@ at Laguna Health. I'm looking forward to supporting you on your recovery journey. To get started schedule your first check-in here.",
-    "appointmentScheduled": "Hello @member.honorific@ @member.lastName@, your appointment with @user.firstName@, your Laguna Health coach is scheduled for @appointment.time@.",
     "appointmentLongReminder": "Reminder for @member.honorific@ @member.lastName@'s appointment on @appointment.time@ with @user.firstName@, your Laguna Health coach.",
     "appointmentReminder": "Hello @member.honorific@ @member.lastName@, your appointment with @user.firstName@ from Laguna Health starts in @gapMinutes@ minutes",
     "appointmentReminderChatLink": "; to join, click: @chatLink@.",
@@ -54,7 +53,8 @@
     "newChatMessageFromUser": "Your coach, @user.firstName@, sent you a new message.",
     "logReminder": "Track your recovery progress, and share it with your your coach.",
     "newChatMessageFromMember": "You have one new message from your member, @member.honorific@ @member.lastName@.",
-    "appointmentUser": "Hello @user.firstName@, an appointment has been added to your schedule on @appointment.start@.",
+    "appointmentScheduledMember": "Hello @member.honorific@ @member.lastName@, your appointment with @user.firstName@, your Laguna Health coach is scheduled for @appointment.time@.",
+    "appointmentScheduledUser": "Hello @user.firstName@, an appointment has been added to your schedule on @appointment.time@.",
     "memberNotFeelingWellMessage": "Your member, @member.honorific@ @member.lastName@, logged a score that requires your attention.",
     "honorific": {
       "mr": "Mr",

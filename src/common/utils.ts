@@ -64,3 +64,5 @@ export const generateOrgNamePrefix = (orgName?: string): string => {
 export const delay = async (milliseconds: number) => {
   await new Promise((resolve) => setTimeout(resolve, milliseconds));
 };
+
+export const scheduleAppointmentDateFormat = `EEEE LLLL do 'at' p`;

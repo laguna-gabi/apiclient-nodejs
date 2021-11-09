@@ -56,6 +56,7 @@ import {
   capitalize,
   delay,
   extractAuthorizationHeader,
+  scheduleAppointmentDateFormat,
 } from '../common';
 import {
   CommunicationResolver,
@@ -489,7 +490,7 @@ export class MemberResolver extends MemberBase {
           '@appointment.time@',
           format(
             utcToZonedTime(metadata.appointmentTime, lookup(member.zipCode)),
-            "EEEE LLLL do 'at' p (z)",
+            `${scheduleAppointmentDateFormat} (z)`,
             { timeZone: lookup(member.zipCode) },
           ),
         );

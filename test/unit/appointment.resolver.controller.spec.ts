@@ -18,6 +18,7 @@ import {
   InternalNotifyParams,
   ReminderType,
   UpdatedAppointmentAction,
+  scheduleAppointmentDateFormat,
 } from '../../src/common';
 import {
   dbDisconnect,
@@ -29,6 +30,7 @@ import {
   generateScheduleAppointmentParams,
   generateUpdateNotesParams,
 } from '../index';
+import { format } from 'date-fns-tz';
 
 describe('AppointmentResolver', () => {
   let module: TestingModule;
@@ -198,8 +200,14 @@ describe('AppointmentResolver', () => {
         type: InternalNotificationType.textSmsToUser,
         metadata: {
           content: `${config
-            .get('contents.appointmentUser')
-            .replace('@appointment.start@', appointment.start.toLocaleString())}`,
+            .get('contents.appointmentScheduledUser')
+            .replace(
+              '@appointment.time@',
+              `${format(
+                new Date(appointment.start.toUTCString()),
+                scheduleAppointmentDateFormat,
+              )} (UTC)`,
+            )}`,
         },
       };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
@@ -213,7 +221,7 @@ describe('AppointmentResolver', () => {
         userId: appointment.userId,
         type: InternalNotificationType.textSmsToMember,
         metadata: {
-          content: `${config.get('contents.appointmentScheduled')}`,
+          content: `${config.get('contents.appointmentScheduledMember')}`,
           appointmentTime: appointment.start,
         },
       };
