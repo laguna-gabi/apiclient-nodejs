@@ -24,7 +24,6 @@ import {
   CancelNotifyParams,
   CreateTaskParams,
   Member,
-  MemberConfig,
   NotifyParams,
   RecordingOutput,
   ReplaceUserForMemberParams,
@@ -40,7 +39,6 @@ import {
   generateAppointmentLink,
   generateAvailabilityInput,
   generateCancelNotifyParams,
-  generateCreateMemberParams,
   generateId,
   generateOrgParams,
   generatePath,
@@ -58,6 +56,7 @@ describe('Integration tests: all', () => {
   let creators: Creators;
   let appointmentsActions: AppointmentsIntegrationActions;
   let mockCommunicationParams;
+
   beforeAll(async () => {
     await handler.beforeAll();
     appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
@@ -70,13 +69,7 @@ describe('Integration tests: all', () => {
     await handler.afterAll();
   });
 
-  it('should throw error if member is not found', async () => {
-    await creators.handler.queries.getMember({
-      invalidFieldsError: Errors.get(ErrorType.memberNotFound),
-    });
-  });
-
-  it('should be able to call all gql handler.mutations and handler.queries', async () => {
+  it('should be able to call all gql mutations and queries', async () => {
     /**
      * 1. Create a user with a single role - coach
      * 2. Create a user with 2 roles - coach and nurse
@@ -164,7 +157,7 @@ describe('Integration tests: all', () => {
    * In this case, user has 2 appointments, but when a member requests an appointment,
    * it'll return just the related appointment of a user, and not all appointments.
    */
-  it('getAppointments should return just the member appointment of a user', async () => {
+  it('get should return just the member appointment of a user', async () => {
     const org = await creators.createAndValidateOrg();
     const member1 = await creators.createAndValidateMember({ org });
     const member2 = await creators.createAndValidateMember({ org });
@@ -183,54 +176,11 @@ describe('Integration tests: all', () => {
     );
   });
 
-  it('should update a member fields', async () => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
-
-    const updateMemberParams = generateUpdateMemberParams({ id: member.id });
-    const updatedMemberResult = await handler.mutations.updateMember({ updateMemberParams });
-
-    const memberResult = await handler.queries.getMember({ id: member.id });
-
-    expect(memberResult).toEqual(expect.objectContaining(updatedMemberResult));
-  });
-
-  // https://app.clubhouse.io/laguna-health/story/1625/add-edit-for-member-s-users-and-primaryuserid
-  it.skip('should return org zip code if member does not have one', async () => {
-    const org = await creators.createAndValidateOrg();
-
-    const memberParams = generateCreateMemberParams({ orgId: org.id });
-    delete memberParams.zipCode;
-
-    const member = await creators.handler.mutations.createMember({ memberParams });
-
-    const memberResult = await handler.queries.getMember({ id: member.id });
-    expect(memberResult.zipCode).toEqual(org.zipCode);
-  });
-
-  it('should calculate utcDelta if zipCode exists', async () => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
-
-    const memberResult = await handler.queries.getMember({ id: member.id });
-    expect(memberResult.utcDelta).toBeLessThan(0);
-  });
-
-  it('should set and get availability for users', async () => {
+  it('should set,get,delete availability of users', async () => {
     await createAndValidateAvailabilities(2);
-    await createAndValidateAvailabilities(5);
-  });
+    const { ids } = await createAndValidateAvailabilities(5);
 
-  it('should be able to delete an availability', async () => {
-    const { ids } = await createAndValidateAvailabilities(1);
     await handler.mutations.deleteAvailability({ id: ids[0] });
-  });
-
-  it('should throw error on delete a non existing availability', async () => {
-    await handler.mutations.deleteAvailability({
-      id: generateId(),
-      invalidFieldsErrors: [Errors.get(ErrorType.availabilityNotFound)],
-    });
   });
 
   it('should successfully create an org and then get it by id', async () => {
@@ -307,57 +257,6 @@ describe('Integration tests: all', () => {
     );
   });
 
-  it('should override requested appointment when calling schedule appointment', async () => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
-
-    const requestedAppointment = generateRequestAppointmentParams({
-      memberId: member.id,
-      userId: member.primaryUserId,
-    });
-    const { id: requestedId } = await creators.handler.mutations.requestAppointment({
-      appointmentParams: requestedAppointment,
-    });
-
-    const scheduledAppointment = generateScheduleAppointmentParams({
-      memberId: member.id,
-      userId: member.primaryUserId,
-    });
-    const { id: scheduledId } = await creators.handler.mutations.scheduleAppointment({
-      appointmentParams: scheduledAppointment,
-    });
-
-    expect(requestedId).toEqual(scheduledId);
-    const result = await creators.handler.queries.getAppointment(scheduledId);
-    expect(new Date(result.end)).toEqual(scheduledAppointment.end);
-    expect(new Date(result.start)).toEqual(scheduledAppointment.start);
-  });
-
-  it('should create multiple new scheduled appointments', async () => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
-
-    const scheduledAppointment1 = generateScheduleAppointmentParams({
-      memberId: member.id,
-      userId: member.primaryUserId,
-      method: AppointmentMethod.chat,
-    });
-    const { id: requestedId } = await creators.handler.mutations.scheduleAppointment({
-      appointmentParams: scheduledAppointment1,
-    });
-
-    const scheduledAppointment2 = generateScheduleAppointmentParams({
-      memberId: member.id,
-      userId: member.primaryUserId,
-      method: AppointmentMethod.videoCall,
-    });
-    const { id: scheduledId } = await creators.handler.mutations.scheduleAppointment({
-      appointmentParams: scheduledAppointment2,
-    });
-
-    expect(requestedId).not.toEqual(scheduledId);
-  });
-
   it('should create update and delete appointment notes', async () => {
     const org = await creators.createAndValidateOrg();
     const member: Member = await creators.createAndValidateMember({ org });
@@ -404,17 +303,6 @@ describe('Integration tests: all', () => {
         link: generateAppointmentLink(memberResult.users[0].appointments[0].id),
       }),
     );
-  });
-
-  //ignoring sub appointment comparison - this isn't consistence well in jest.
-  it('web: should be able to getMember with member id', async () => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
-    member.users.forEach((user) => (user.appointments = []));
-
-    const memberResult = await handler.queries.getMember({ id: member.id });
-    memberResult.users.forEach((user) => (user.appointments = []));
-    expect(memberResult).toEqual(expect.objectContaining({ ...member }));
   });
 
   it('should be able to set note for and nurseNotes for a member', async () => {
@@ -469,79 +357,6 @@ describe('Integration tests: all', () => {
       dischargeInstructionsLink: 'https://some-url/download',
     });
   });
-
-  it('should be able to get upload recordings of a member', async () => {
-    const org = await creators.createAndValidateOrg();
-    const { id } = await creators.createAndValidateMember({ org });
-
-    const result = await handler.queries.getMemberUploadRecordingLink({
-      recordingLinkParams: {
-        memberId: id,
-        id: `${faker.lorem.word()}.mp4`,
-      },
-    });
-    expect(result).toEqual('https://some-url/upload');
-  });
-
-  it('should be able to get download recordings of a member', async () => {
-    const org = await creators.createAndValidateOrg();
-    const { id } = await creators.createAndValidateMember({ org });
-
-    const result = await handler.queries.getMemberDownloadRecordingLink({
-      recordingLinkParams: {
-        memberId: id,
-        id: `${faker.lorem.word()}.mp4`,
-      },
-    });
-    expect(result).toEqual('https://some-url/download');
-  });
-
-  // https://app.clubhouse.io/laguna-health/story/1625/add-edit-for-member-s-users-and-primaryuserid
-  test.skip.each`
-    register
-    ${{ platform: Platform.ios, token: faker.lorem.word() }}
-    ${{ platform: Platform.android }}
-  `(
-    /* eslint-enable max-len */
-    `should registerMemberForNotifications and update MemberConfig on $register.platform`,
-    async (params) => {
-      const org = await creators.createAndValidateOrg();
-      const { id } = await creators.createAndValidateMember({ org });
-
-      const memberConfigDefault: MemberConfig = await handler.queries.getMemberConfig({ id });
-      expect(memberConfigDefault).toEqual({
-        memberId: id,
-        externalUserId: expect.any(String),
-        platform: Platform.web,
-      });
-
-      const registerForNotificationParams: RegisterForNotificationParams = {
-        memberId: id,
-        ...params.register,
-      };
-      await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
-
-      if (params.register.platform === Platform.ios) {
-        expect(handler.notificationsService.spyOnNotificationsServiceRegister).toBeCalledWith({
-          sendNotificationToMemberParams: {
-            token: registerForNotificationParams.token,
-            externalUserId: memberConfigDefault.externalUserId,
-          },
-        });
-      } else {
-        expect(handler.notificationsService.spyOnNotificationsServiceRegister).not.toBeCalled();
-      }
-
-      const newMemberConfig: MemberConfig = await handler.queries.getMemberConfig({ id });
-      expect(newMemberConfig).toEqual({
-        memberId: id,
-        externalUserId: expect.any(String),
-        platform: params.register.platform,
-      });
-
-      handler.notificationsService.spyOnNotificationsServiceRegister.mockReset();
-    },
-  );
 
   test.each`
     type                      | isVideo  | metadata
@@ -788,7 +603,7 @@ describe('Integration tests: all', () => {
     CancelNotificationType.cancelVideo,
     CancelNotificationType.cancelCall,
     CancelNotificationType.cancelText,
-  ])(`should cancel a notification of type $type`, async (params) => {
+  ])(`should cancel a notification of type %p`, async (params) => {
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({ org });
     const registerForNotificationParams: RegisterForNotificationParams = {
@@ -855,34 +670,111 @@ describe('Integration tests: all', () => {
     expect(ids[1]).toEqual(newUser.id);
   });
 
-  it('should update recordings for multiple members and get those recordings', async () => {
-    const compareRecording = (rec1: RecordingOutput, rec2: UpdateRecordingParams) => {
-      expect(rec1.id).toEqual(rec2.id);
-      expect(rec1.userId).toEqual(rec2.userId);
-      expect(new Date(rec1.start)).toEqual(rec2.start);
-      expect(new Date(rec1.end)).toEqual(rec2.end);
-      expect(rec1.answered).toEqual(rec2.answered);
-      expect(rec1.phone).toEqual(rec2.phone);
-    };
+  describe('recordings', () => {
+    it('should be able to get upload recordings of a member', async () => {
+      const org = await creators.createAndValidateOrg();
+      const { id } = await creators.createAndValidateMember({ org });
 
-    const org = await creators.createAndValidateOrg();
-    const { id: memberId1 } = await creators.createAndValidateMember({ org });
-    const { id: memberId2 } = await creators.createAndValidateMember({ org });
+      const result = await handler.queries.getMemberUploadRecordingLink({
+        recordingLinkParams: {
+          memberId: id,
+          id: `${faker.lorem.word()}.mp4`,
+        },
+      });
+      expect(result).toEqual('https://some-url/upload');
+    });
 
-    const rec1a = generateUpdateRecordingParams({ memberId: memberId1 });
-    const rec1b = generateUpdateRecordingParams({ memberId: memberId1 });
-    const rec2 = generateUpdateRecordingParams({ memberId: memberId2 });
-    await handler.mutations.updateRecording({ updateRecordingParams: rec1a });
-    await handler.mutations.updateRecording({ updateRecordingParams: rec1b });
-    await handler.mutations.updateRecording({ updateRecordingParams: rec2 });
+    it('should be able to get download recordings of a member', async () => {
+      const org = await creators.createAndValidateOrg();
+      const { id } = await creators.createAndValidateMember({ org });
 
-    const result1 = await handler.queries.getRecordings({ memberId: memberId1 });
-    expect(result1.length).toEqual(2);
-    compareRecording(result1[0], rec1a);
-    compareRecording(result1[1], rec1b);
-    const result2 = await handler.queries.getRecordings({ memberId: memberId2 });
-    expect(result2.length).toEqual(1);
-    compareRecording(result2[0], rec2);
+      const result = await handler.queries.getMemberDownloadRecordingLink({
+        recordingLinkParams: {
+          memberId: id,
+          id: `${faker.lorem.word()}.mp4`,
+        },
+      });
+      expect(result).toEqual('https://some-url/download');
+    });
+
+    it('should update recordings for multiple members and get those recordings', async () => {
+      const compareRecording = (rec1: RecordingOutput, rec2: UpdateRecordingParams) => {
+        expect(rec1.id).toEqual(rec2.id);
+        expect(rec1.userId).toEqual(rec2.userId);
+        expect(new Date(rec1.start)).toEqual(rec2.start);
+        expect(new Date(rec1.end)).toEqual(rec2.end);
+        expect(rec1.answered).toEqual(rec2.answered);
+        expect(rec1.phone).toEqual(rec2.phone);
+      };
+
+      const org = await creators.createAndValidateOrg();
+      const { id: memberId1 } = await creators.createAndValidateMember({ org });
+      const { id: memberId2 } = await creators.createAndValidateMember({ org });
+
+      const rec1a = generateUpdateRecordingParams({ memberId: memberId1 });
+      const rec1b = generateUpdateRecordingParams({ memberId: memberId1 });
+      const rec2 = generateUpdateRecordingParams({ memberId: memberId2 });
+      await handler.mutations.updateRecording({ updateRecordingParams: rec1a });
+      await handler.mutations.updateRecording({ updateRecordingParams: rec1b });
+      await handler.mutations.updateRecording({ updateRecordingParams: rec2 });
+
+      const result1 = await handler.queries.getRecordings({ memberId: memberId1 });
+      expect(result1.length).toEqual(2);
+      compareRecording(result1[0], rec1a);
+      compareRecording(result1[1], rec1b);
+      const result2 = await handler.queries.getRecordings({ memberId: memberId2 });
+      expect(result2.length).toEqual(1);
+      compareRecording(result2[0], rec2);
+    });
+
+    it('should delete recordings and media files on unconsented appointment end', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+      const appointmentParams = generateScheduleAppointmentParams({
+        memberId: member.id,
+        userId: member.users[0].id,
+        start: new Date(),
+      });
+
+      const appointment = await creators.handler.mutations.scheduleAppointment({
+        appointmentParams,
+      });
+      const memberId = appointment.memberId.toString();
+      const appointmentId = appointment.id.toString();
+
+      const recording1 = generateUpdateRecordingParams({
+        memberId,
+        appointmentId,
+        end: new Date(),
+      });
+      const recording2 = generateUpdateRecordingParams({
+        memberId,
+        appointmentId,
+        end: new Date(),
+      });
+      const result1 = await handler.queries.getRecordings({ memberId: memberId });
+      expect(result1.length).toBe(0);
+      await handler.mutations.updateRecording({ updateRecordingParams: recording1 });
+      await handler.mutations.updateRecording({ updateRecordingParams: recording2 });
+
+      const result2 = await handler.queries.getRecordings({
+        memberId: memberId,
+      });
+      expect(result2.length).toBe(2);
+      await handler.mutations.endAppointment({
+        endAppointmentParams: {
+          id: appointmentId,
+          noShow: false,
+          recordingConsent: false,
+        },
+      });
+      await delay(500); // wait for event to finish
+      const result3 = await handler.queries.getRecordings({
+        memberId: memberId,
+      });
+      expect(result3.length).toBe(2);
+      expect(result3.every(({ deletedMedia }) => deletedMedia === true)).toBe(true);
+    });
   });
 
   test.each([true, false])(
@@ -1202,52 +1094,6 @@ describe('Integration tests: all', () => {
     });
   });
 
-  it('should delete recordings and media files on unconsented appointment end', async () => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
-    const appointmentParams = generateScheduleAppointmentParams({
-      memberId: member.id,
-      userId: member.users[0].id,
-      start: new Date(),
-    });
-
-    const appointment = await creators.handler.mutations.scheduleAppointment({ appointmentParams });
-    const memberId = appointment.memberId.toString();
-    const appointmentId = appointment.id.toString();
-
-    const recording1 = generateUpdateRecordingParams({
-      memberId,
-      appointmentId,
-      end: new Date(),
-    });
-    const recording2 = generateUpdateRecordingParams({
-      memberId,
-      appointmentId,
-      end: new Date(),
-    });
-    const result1 = await handler.queries.getRecordings({ memberId: memberId });
-    expect(result1.length).toBe(0);
-    await handler.mutations.updateRecording({ updateRecordingParams: recording1 });
-    await handler.mutations.updateRecording({ updateRecordingParams: recording2 });
-
-    const result2 = await handler.queries.getRecordings({
-      memberId: memberId,
-    });
-    expect(result2.length).toBe(2);
-    await handler.mutations.endAppointment({
-      endAppointmentParams: {
-        id: appointmentId,
-        noShow: false,
-        recordingConsent: false,
-      },
-    });
-    await delay(500); // wait for event to finish
-    const result3 = await handler.queries.getRecordings({
-      memberId: memberId,
-    });
-    expect(result3.length).toBe(2);
-    expect(result3.every(({ deletedMedia }) => deletedMedia === true)).toBe(true);
-  });
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

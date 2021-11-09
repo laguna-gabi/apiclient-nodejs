@@ -195,14 +195,17 @@ describe('MemberResolver', () => {
   describe('getMember', () => {
     let spyOnServiceGetByDeviceId;
     let spyOnServiceGet;
+    let spyOnServiceGetByOrg;
     beforeEach(() => {
       spyOnServiceGetByDeviceId = jest.spyOn(service, 'getByDeviceId');
       spyOnServiceGet = jest.spyOn(service, 'get');
+      spyOnServiceGetByOrg = jest.spyOn(service, 'getByOrg');
     });
 
     afterEach(() => {
       spyOnServiceGetByDeviceId.mockReset();
       spyOnServiceGet.mockReset();
+      spyOnServiceGetByOrg.mockReset();
     });
 
     it('should get a member for a given context', async () => {
@@ -248,6 +251,23 @@ describe('MemberResolver', () => {
           req: { headers: { authorization: 'not-valid' } },
         }),
       ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+    });
+
+    it('should return org zip code if member does not have one', async () => {
+      const member: any = mockGenerateMember();
+      delete member.zipCode;
+      spyOnServiceGet.mockResolvedValue(member);
+
+      const result = await resolver.getMember({}, member.id);
+      expect(result.zipCode).toEqual(member.org.zipCode);
+    });
+
+    it('should calculate utcDelta if zipCode exists', async () => {
+      const member: any = mockGenerateMember();
+      spyOnServiceGet.mockResolvedValue(member);
+
+      const result = await resolver.getMember({}, member.id);
+      expect(result.utcDelta).toBeLessThan(0);
     });
   });
 

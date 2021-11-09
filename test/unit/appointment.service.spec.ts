@@ -372,6 +372,38 @@ describe('AppointmentService', () => {
       expect(id).toEqual(scheduledId);
       expect(spyOnEventEmitter).not.toBeCalled();
     });
+
+    it('should override requested appointment when calling schedule appointment', async () => {
+      const requestAppointmentParams = generateRequestAppointmentParams();
+      const { id: requestedId } = await service.request(requestAppointmentParams);
+
+      const scheduledAppointmentParams = generateScheduleAppointmentParams({
+        memberId: requestAppointmentParams.memberId,
+        userId: requestAppointmentParams.userId,
+      });
+      const { id: scheduledId } = await service.schedule(scheduledAppointmentParams);
+
+      expect(requestedId).toEqual(scheduledId);
+      const result = await service.get(scheduledId);
+      expect(new Date(result.end)).toEqual(scheduledAppointmentParams.end);
+      expect(new Date(result.start)).toEqual(scheduledAppointmentParams.start);
+    });
+
+    it('should create multiple new scheduled appointments', async () => {
+      const scheduledAppointment1 = generateScheduleAppointmentParams({
+        method: AppointmentMethod.chat,
+      });
+      const { id: requestedId } = await service.schedule(scheduledAppointment1);
+
+      const scheduledAppointment2 = generateScheduleAppointmentParams({
+        memberId: scheduledAppointment1.memberId,
+        userId: scheduledAppointment1.userId,
+        method: AppointmentMethod.videoCall,
+      });
+      const { id: scheduledId } = await service.schedule(scheduledAppointment2);
+
+      expect(requestedId).not.toEqual(scheduledId);
+    });
   });
 
   describe('end', () => {
