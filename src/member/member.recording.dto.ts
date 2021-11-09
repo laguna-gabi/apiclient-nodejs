@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType, OmitType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
-import { RecordingType } from '../common/interfaces.dto';
+import { RecordingType } from '../common';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************

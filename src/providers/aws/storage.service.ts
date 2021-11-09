@@ -87,7 +87,7 @@ export class StorageService implements OnModuleInit {
       this.logger.error(
         { memberId, recordingIds },
         StorageService.name,
-        this.deleteMember.name,
+        this.deleteRecordings.name,
         ex,
       );
     }

@@ -3,7 +3,6 @@ import * as config from 'config';
 import * as faker from 'faker';
 import { datatype, date, internet } from 'faker';
 import { Model, Types, model } from 'mongoose';
-import { RecordingType } from '../../src/common/interfaces.dto';
 import { v4 } from 'uuid';
 import {
   Appointment,
@@ -11,7 +10,7 @@ import {
   AppointmentModule,
   AppointmentStatus,
 } from '../../src/appointment';
-import { ErrorType, Errors, Language, Platform } from '../../src/common';
+import { ErrorType, Errors, Language, Platform, RecordingType } from '../../src/common';
 import {
   ActionItem,
   ActionItemDto,
