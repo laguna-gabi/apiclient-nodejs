@@ -4,7 +4,7 @@
     "configExternalURL": "",
     "enableLicenseViolations": "true",
     "projectToken": "",
-    "enableIaC": "true",
+    "enableIaC": "false",
     "baseBranches": []
   },
   "checkRunSettings": {
