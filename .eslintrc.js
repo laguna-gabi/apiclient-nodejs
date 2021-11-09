@@ -4,7 +4,7 @@ module.exports = {
     project: 'tsconfig.json',
     sourceType: 'module',
   },
-  plugins: ['@typescript-eslint/eslint-plugin'],
+  plugins: ['@typescript-eslint/eslint-plugin','jest-formatting'],
   extends: ['plugin:@typescript-eslint/recommended'],
   root: true,
   env: {
@@ -13,6 +13,13 @@ module.exports = {
   },
   ignorePatterns: ['.eslintrc.js'],
   rules: {
+    "jest-formatting/padding-around-describe-blocks": 2,
+    "jest-formatting/padding-around-test-blocks": 2,
+    'space-before-blocks': "error",
+    'padding-line-between-statements': [
+      'error',
+      { blankLine: 'always', prev: 'block-like', next: 'block-like' },
+    ],
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
@@ -21,6 +28,7 @@ module.exports = {
     'max-len': ['error', { code: 100 }],
     'no-var': 'error',
     semi: 'error',
+    'no-trailing-spaces': "error",
     'no-multi-spaces': 'error',
     'space-in-parens': 'error',
     'no-multiple-empty-lines': 'error',
