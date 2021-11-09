@@ -389,6 +389,7 @@ export class MemberResolver extends MemberBase {
     });
 
     this.memberScheduler.deleteTimeout({ id: member.id });
+    this.memberScheduler.deleteTimeout({ id: member.id + ReminderType.logReminder });
 
     await this.memberScheduler.registerNewRegisteredMemberNotify({
       memberId: member.id,

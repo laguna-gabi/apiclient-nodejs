@@ -1087,6 +1087,7 @@ describe('Integration tests: all', () => {
         memberId: member.id,
         userId: member.primaryUserId,
       };
+
       await handler.mutations.replaceUserForMember({
         replaceUserForMemberParams,
         invalidFieldsErrors: [Errors.get(ErrorType.userIdOrEmailAlreadyExists)],

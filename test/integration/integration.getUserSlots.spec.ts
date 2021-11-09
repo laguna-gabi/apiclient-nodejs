@@ -166,6 +166,7 @@ describe('Integration tests : getUserSlots', () => {
         true,
       );
     }
+
     for (let index = 5; index < defaultSlotsParams.maxSlots; index++) {
       expect(
         isSameDay(new Date(result.slots[index]), add(startOfTomorrow(), { hours: 12 })),
