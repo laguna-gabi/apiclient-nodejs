@@ -626,9 +626,9 @@ describe('Integration tests: all', () => {
       articlesPath: config.get('articlesByDrg.default'),
       externalUserId: expect.any(String),
       platform: Platform.web,
-      isPushNotificationsEnabled: false,
-      isAppointmentsReminderEnabled: false,
-      isRecommendationsEnabled: false,
+      isPushNotificationsEnabled: true,
+      isAppointmentsReminderEnabled: true,
+      isRecommendationsEnabled: true,
     });
 
     const updateMemberConfigParams = generateUpdateMemberConfigParams({
@@ -973,6 +973,7 @@ describe('Integration tests: all', () => {
       }
 
       handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+      handler.notificationsService.spyOnNotificationsServiceSend.mockClear();
     },
   );
 

@@ -254,9 +254,9 @@ export const mockGenerateMemberConfig = (): MemberConfig => {
 export const generateUpdateMemberConfigParams = ({
   memberId = generateId(),
   platform = Platform.web,
-  isPushNotificationsEnabled = true,
-  isAppointmentsReminderEnabled = true,
-  isRecommendationsEnabled = true,
+  isPushNotificationsEnabled = false,
+  isAppointmentsReminderEnabled = false,
+  isRecommendationsEnabled = false,
 }: Partial<UpdateMemberConfigParams> = {}): UpdateMemberConfigParams => {
   return {
     memberId,

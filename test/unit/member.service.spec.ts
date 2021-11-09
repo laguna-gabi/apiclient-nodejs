@@ -831,9 +831,9 @@ describe('MemberService', () => {
       const params1 = await generateUpdateMemberConfigParams({
         memberId: generateId(id),
         platform: Platform.android,
-        isPushNotificationsEnabled: true,
-        isAppointmentsReminderEnabled: true,
-        isRecommendationsEnabled: false,
+        isPushNotificationsEnabled: false,
+        isAppointmentsReminderEnabled: false,
+        isRecommendationsEnabled: true,
       });
 
       await service.updateMemberConfig(params1);
@@ -848,9 +848,9 @@ describe('MemberService', () => {
       const params2 = await generateUpdateMemberConfigParams({
         memberId: generateId(id),
         platform: Platform.web,
-        isPushNotificationsEnabled: false,
-        isAppointmentsReminderEnabled: false,
-        isRecommendationsEnabled: true,
+        isPushNotificationsEnabled: true,
+        isAppointmentsReminderEnabled: true,
+        isRecommendationsEnabled: false,
       });
       params2.memberId = id;
       await service.updateMemberConfig(params2);
@@ -903,7 +903,7 @@ describe('MemberService', () => {
       await service.updateMemberConfig(params);
 
       const configs = await service.getMemberConfig(id);
-      expect(configs[Object.keys(field)[0]]).toEqual(false);
+      expect(configs[Object.keys(field)[0]]).toEqual(true);
     });
   });
 

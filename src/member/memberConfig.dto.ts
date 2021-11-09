@@ -52,15 +52,15 @@ export class MemberConfig {
   @Field(() => String, { nullable: true })
   accessToken: string;
 
-  @Prop({ type: Boolean, default: false })
+  @Prop({ type: Boolean, default: true })
   @Field(() => Boolean)
   isPushNotificationsEnabled: boolean;
 
-  @Prop({ type: Boolean, default: false })
+  @Prop({ type: Boolean, default: true })
   @Field(() => Boolean)
   isAppointmentsReminderEnabled?: boolean;
 
-  @Prop({ type: Boolean, default: false })
+  @Prop({ type: Boolean, default: true })
   @Field(() => Boolean)
   isRecommendationsEnabled?: boolean;
 
