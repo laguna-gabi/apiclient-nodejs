@@ -372,6 +372,7 @@ export class MemberResolver extends MemberBase {
         externalUserId: memberConfig.externalUserId,
       });
     }
+
     if (!memberConfig.firstLoggedInAt) {
       await this.memberService.updateMemberConfigRegisteredAt(memberConfig.memberId);
     }
@@ -430,6 +431,14 @@ export class MemberResolver extends MemberBase {
       (type === NotificationType.call || type === NotificationType.video)
     ) {
       throw new Error(Errors.get(ErrorType.notificationMemberPlatformWeb));
+    }
+
+    if (metadata.content) {
+      metadata.content = metadata.content.trim();
+      if (!metadata.content) {
+        // nothing remained after trim -> was only whitespaces
+        throw new Error(Errors.get(ErrorType.invalidContent));
+      }
     }
 
     if (type === NotificationType.textSms) {

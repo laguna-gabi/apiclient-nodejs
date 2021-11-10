@@ -1299,6 +1299,56 @@ describe('MemberResolver', () => {
         userId: member.primaryUserId,
       });
     });
+
+    it('should trim leading and trailing whitespaces from message', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      const communication = generateCommunication();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+      spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
+
+      const notifyParams = generateNotifyParams({
+        type: NotificationType.textSms,
+        metadata: { peerId: v4(), content: '    test message     ' },
+      });
+
+      await resolver.notify(notifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendSendBirdNotification: {
+          userId: user.id,
+          sendBirdChannelUrl: communication.sendBirdChannelUrl,
+          message: 'test message',
+          notificationType: NotificationType.textSms,
+          orgName: member.org.name,
+        },
+      });
+    });
+
+    it('should fail sending a message with only whitespaces', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      const communication = generateCommunication();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+      spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
+
+      const notifyParams = generateNotifyParams({
+        type: NotificationType.textSms,
+        metadata: { peerId: v4(), content: '            ' },
+      });
+
+      await expect(resolver.notify(notifyParams)).rejects.toThrow(
+        Errors.get(ErrorType.invalidContent),
+      );
+    });
   });
 
   describe('cancelNotify', () => {
