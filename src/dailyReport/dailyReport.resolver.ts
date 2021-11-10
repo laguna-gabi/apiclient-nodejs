@@ -1,7 +1,6 @@
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
-import * as config from 'config';
 import { camelCase } from 'lodash';
 import {
   DailyReport,
@@ -12,6 +11,7 @@ import {
   ParseDailyReportInputTransform,
 } from '.';
 import {
+  ContentKey,
   EventType,
   InternalNotificationType,
   InternalNotifyParams,
@@ -52,14 +52,9 @@ export class DailyReportResolver {
     ) {
       const params: InternalNotifyParams = {
         memberId: dailyReportCategoriesInput.memberId,
-        type: InternalNotificationType.textSmsToUser,
         userId: context.req?.user?.primaryUserId,
-        metadata: {
-          content: `${config
-            .get('contents.memberNotFeelingWellMessage')
-            .replace('@member.honorific@', context.req?.user?.honorific)
-            .replace('@member.lastName@', context.req?.user?.lastName)}`,
-        },
+        type: InternalNotificationType.textSmsToUser,
+        metadata: { contentType: ContentKey.memberNotFeelingWellMessage },
       };
 
       this.eventEmitter.emit(EventType.internalNotify, params);

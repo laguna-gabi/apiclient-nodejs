@@ -150,7 +150,6 @@ describe.skip('live: notifications (one signal)', () => {
             isVideo: false,
             ...generatePath(NotificationType.call),
           },
-          metadata: { content: undefined },
         },
       });
 
@@ -195,7 +194,6 @@ describe.skip('live: notifications (one signal)', () => {
           isVideo: false,
           ...generatePath(NotificationType.call),
         },
-        metadata: { content: undefined },
       },
     });
 

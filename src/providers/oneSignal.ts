@@ -80,7 +80,7 @@ export class OneSignal {
   }
 
   async send(sendOneSignalNotification: SendOneSignalNotification) {
-    const { platform, externalUserId, data, metadata } = sendOneSignalNotification;
+    const { platform, externalUserId, data, content } = sendOneSignalNotification;
     this.logger.debug(data, OneSignal.name, this.send.name);
 
     const config = await this.getConfig(platform, data.type);
@@ -95,7 +95,7 @@ export class OneSignal {
       app_id,
       include_external_user_ids: [externalUserId],
       content_available: true,
-      contents: { en: metadata.content },
+      contents: { en: content },
       headings: { en: 'Laguna' },
       ...extraData,
       ...onlyChatData,
@@ -118,7 +118,7 @@ export class OneSignal {
       ) {
         const eventParams: IEventUnregisterMemberFromNotifications = {
           phone: sendOneSignalNotification.data.member.phone,
-          content: metadata.content,
+          content,
           type: sendOneSignalNotification.data.type,
         };
         this.eventEmitter.emit(EventType.unregisterMemberFromNotifications, eventParams);

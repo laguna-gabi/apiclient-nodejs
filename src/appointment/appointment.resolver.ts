@@ -17,6 +17,7 @@ import {
   UpdateNotesParams,
 } from '.';
 import {
+  ContentKey,
   EventType,
   IEventDeleteSchedules,
   IEventRequestAppointment,
@@ -187,16 +188,14 @@ export class AppointmentResolver extends AppointmentBase {
    ************************************************************************************************/
 
   private notifyRequestAppointment(appointment: Appointment) {
-    const metadata = {
-      content: `${config
-        .get('contents.appointmentRequest')
-        .replace('@downloadLink@', appointment.link)}`,
-    };
     const params: InternalNotifyParams = {
       memberId: appointment.memberId.toString(),
       userId: appointment.userId,
       type: InternalNotificationType.textToMember,
-      metadata,
+      metadata: {
+        contentType: ContentKey.appointmentRequest,
+        scheduleLink: appointment.link,
+      },
     };
     this.eventEmitter.emit(EventType.internalNotify, params);
   }
@@ -210,23 +209,20 @@ export class AppointmentResolver extends AppointmentBase {
     user: User;
     appointmentId: string;
   }) {
-    const url = await this.bitly.shortenLink(
-      `${config.get('hosts.app')}/download/${appointmentId}`,
-    );
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const org = await this.orgService.get(member.org._id.toString());
-    const metadata = {
-      content: `${config
-        .get('contents.newMember')
-        .replace('@org.name@', org?.name)
-        .replace('@downloadLink@', `\n${url}`)}`,
-    };
+    const downloadLink = await this.bitly.shortenLink(
+      `${config.get('hosts.app')}/download/${appointmentId}`,
+    );
     const params: InternalNotifyParams = {
       memberId: member.id,
       userId: user.id,
       type: InternalNotificationType.textSmsToMember,
-      metadata,
+      metadata: {
+        contentType: ContentKey.newMember,
+        extraData: { org, downloadLink },
+      },
     };
     this.eventEmitter.emit(EventType.internalNotify, params);
   }

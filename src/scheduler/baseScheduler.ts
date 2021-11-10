@@ -5,6 +5,7 @@ import { add, secondsToMilliseconds } from 'date-fns';
 import { v4 } from 'uuid';
 import { InternalSchedulerService } from '.';
 import {
+  ContentKey,
   EventType,
   InternalNotificationType,
   InternalNotifyParams,
@@ -108,18 +109,18 @@ export class BaseScheduler {
     const milliseconds = add(member.createdAt, { days: 2 }).getTime() - new Date().getTime();
     if (milliseconds > 0) {
       const timeout = setTimeout(async () => {
-        const url = await this.bitly.shortenLink(
+        const downloadLink = await this.bitly.shortenLink(
           `${config.get('hosts.app')}/download/${appointmentId}`,
         );
 
-        const metadata = {
-          content: `${config.get('contents.newMemberNudge').replace('@downloadLink@', `\n${url}`)}`,
-        };
         const params: InternalNotifyParams = {
           memberId,
           userId: user.id,
           type: InternalNotificationType.textSmsToMember,
-          metadata,
+          metadata: {
+            contentType: ContentKey.newMemberNudge,
+            extraData: { downloadLink },
+          },
         };
         this.eventEmitter.emit(EventType.internalNotify, params);
         this.deleteTimeout({ id: memberId });

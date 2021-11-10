@@ -1,11 +1,11 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as config from 'config';
 import * as faker from 'faker';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import {
   CancelNotificationType,
+  ContentKey,
   ErrorType,
   Errors,
   EventType,
@@ -15,13 +15,14 @@ import {
   IEventSlackMessage,
   IEventUpdateMemberPlatform,
   InternalNotificationType,
+  InternationalizationService,
+  Language,
   NotificationType,
   Platform,
   RegisterForNotificationParams,
   SlackChannel,
   SlackIcon,
   StorageType,
-  capitalize,
   delay,
 } from '../../src/common';
 import {
@@ -75,6 +76,7 @@ describe('MemberResolver', () => {
   let notificationsService: NotificationsService;
   let communicationService: CommunicationService;
   let eventEmitter: EventEmitter2;
+  let internationalizationService: InternationalizationService;
   let spyOnEventEmitter;
 
   beforeAll(async () => {
@@ -94,6 +96,10 @@ describe('MemberResolver', () => {
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
     memberScheduler = module.get<MemberScheduler>(MemberScheduler);
+    internationalizationService = module.get<InternationalizationService>(
+      InternationalizationService,
+    );
+    await internationalizationService.onModuleInit();
   });
 
   afterAll(async () => {
@@ -1090,35 +1096,6 @@ describe('MemberResolver', () => {
       },
     );
 
-    it('should replace content in metadata', async () => {
-      const member = mockGenerateMember();
-      const memberConfig = mockGenerateMemberConfig();
-      const user = mockGenerateUser();
-      const communication = generateCommunication();
-      spyOnServiceGetMember.mockImplementationOnce(async () => member);
-      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
-      spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
-
-      const notifyParams = generateNotifyParams({
-        type: NotificationType.textSms,
-        metadata: { content: '@member.honorific@ @member.lastName@ @user.firstName@' },
-      });
-
-      await resolver.notify(notifyParams);
-
-      expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendTwilioNotification: {
-          body: `${config.get(`contents.honorific.${member.honorific}`)} ${member.lastName} ${
-            user.firstName
-          }`,
-          to: member.phone,
-          orgName: member.org.name,
-        },
-      });
-    });
-
     it('should send to Sendbird on type textSms', async () => {
       const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();
@@ -1252,7 +1229,7 @@ describe('MemberResolver', () => {
               isVideo: type === NotificationType.video,
               peerId: notifyParams.metadata.peerId,
             },
-            metadata: notifyParams.metadata,
+            content: notifyParams.metadata.content,
             orgName: member.org.name,
           },
         });
@@ -1291,7 +1268,8 @@ describe('MemberResolver', () => {
           notifyParams.type === NotificationType.text
             ? InternalNotificationType.textToMember
             : InternalNotificationType.textSmsToMember,
-        metadata: { content: notifyParams.metadata.content },
+        metadata: {},
+        content: notifyParams.metadata.content,
       });
     }, 10000);
 
@@ -1417,8 +1395,8 @@ describe('MemberResolver', () => {
 
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
         sendTwilioNotification: {
-          orgName: params.isMember ? member.org.name : undefined,
-          body: internalNotifyParams.metadata.content,
+          orgName: member.org.name,
+          body: internalNotifyParams.content,
           to: params.isMember ? member.phone : user.phone,
         },
       });
@@ -1443,7 +1421,7 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
         sendTwilioNotification: {
           orgName: member.org.name,
-          body: internalNotifyParams.metadata.content,
+          body: internalNotifyParams.content,
           to: member.phone,
         },
       });
@@ -1468,7 +1446,7 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
         sendTwilioNotification: {
           orgName: member.org.name,
-          body: internalNotifyParams.metadata.content,
+          body: internalNotifyParams.content,
           to: member.phone,
         },
       });
@@ -1499,7 +1477,7 @@ describe('MemberResolver', () => {
             type: InternalNotificationType.textToMember,
             isVideo: false,
           },
-          metadata: internalNotifyParams.metadata,
+          content: internalNotifyParams.content,
           orgName: member.org.name,
         },
       });
@@ -1517,16 +1495,90 @@ describe('MemberResolver', () => {
 
       const internalNotifyParams = generateInternalNotifyParams({
         type: InternalNotificationType.textToMember,
-        metadata: { content: 'test', chatLink: 'chatLink' },
+        metadata: { chatLink: 'chatLink' },
+        content: 'test',
       });
 
       await resolver.internalNotify(internalNotifyParams);
 
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
         sendTwilioNotification: {
-          body: `test${config
-            .get('contents.appointmentReminderChatLink')
-            .replace('@chatLink@', internalNotifyParams.metadata.chatLink)}`,
+          body:
+            'test' +
+            internationalizationService.getContents({
+              member,
+              user,
+              extraData: { chatLink: 'chatLink' },
+              contentType: ContentKey.appointmentReminderLink,
+              language: Language.en,
+            }),
+          to: member.phone,
+          orgName: member.org.name,
+        },
+      });
+    });
+
+    it('should replace scheduleLink if scheduleLink in metadata', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      memberConfig.platform = Platform.web;
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const internalNotifyParams = generateInternalNotifyParams({
+        type: InternalNotificationType.textToMember,
+        metadata: { scheduleLink: 'scheduleLink' },
+        content: 'test',
+      });
+
+      await resolver.internalNotify(internalNotifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendTwilioNotification: {
+          body:
+            'test' +
+            internationalizationService.getContents({
+              member,
+              user,
+              extraData: { scheduleLink: 'scheduleLink' },
+              contentType: ContentKey.appointmentRequestLink,
+              language: Language.en,
+            }),
+          to: member.phone,
+          orgName: member.org.name,
+        },
+      });
+    });
+
+    it('should send notification in spanish if member language = es', async () => {
+      const member = mockGenerateMember();
+      member.language = Language.es;
+      const memberConfig = mockGenerateMemberConfig();
+      memberConfig.platform = Platform.web;
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const internalNotifyParams = generateInternalNotifyParams({
+        type: InternalNotificationType.textToMember,
+        metadata: { contentType: ContentKey.newMember },
+      });
+
+      await resolver.internalNotify(internalNotifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendTwilioNotification: {
+          body: internationalizationService.getContents({
+            member,
+            user,
+            contentType: ContentKey.newMember,
+            language: Language.es,
+          }),
           to: member.phone,
           orgName: member.org.name,
         },
@@ -1559,7 +1611,7 @@ describe('MemberResolver', () => {
             isVideo: false,
             path: `connect/${member.id}/${user.id}`,
           },
-          metadata: internalNotifyParams.metadata,
+          content: internalNotifyParams.content,
           orgName: member.org.name,
         },
       });
@@ -1624,7 +1676,7 @@ describe('MemberResolver', () => {
         sendSendBirdNotification: {
           userId: member.id,
           sendBirdChannelUrl: internalNotifyParams.metadata.sendBirdChannelUrl,
-          message: internalNotifyParams.metadata.content,
+          message: internalNotifyParams.content,
           notificationType: InternalNotificationType.chatMessageToUser,
           orgName: member.org.name,
         },
@@ -1705,11 +1757,12 @@ describe('MemberResolver', () => {
             isVideo: false,
             path: `connect/${member.id}/${user.id}`,
           },
-          metadata: {
-            content: config
-              .get('contents.newChatMessageFromUser')
-              .replace('@user.firstName@', user.firstName),
-          },
+          content: internationalizationService.getContents({
+            member,
+            user,
+            contentType: ContentKey.newChatMessageFromUser,
+            language: Language.en,
+          }),
           orgName: member.org.name,
         },
       });
@@ -1744,11 +1797,14 @@ describe('MemberResolver', () => {
 
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
         sendTwilioNotification: {
-          body: config
-            .get('contents.newChatMessageFromMember')
-            .replace('@member.honorific@', config.get(`contents.honorific.${member.honorific}`))
-            .replace('@member.lastName@', capitalize(member.lastName)),
+          body: internationalizationService.getContents({
+            member,
+            user,
+            contentType: ContentKey.newChatMessageFromMember,
+            language: Language.en,
+          }),
           to: user.phone,
+          orgName: member.org.name,
         },
       });
     }, 10000);

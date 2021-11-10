@@ -405,6 +405,13 @@
   dependencies:
     "@babel/helper-plugin-utils" "^7.14.5"
 
+"@babel/runtime@^7.12.0":
+  version "7.16.0"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.16.0.tgz#e27b977f2e2088ba24748bf99b5e1dece64e4f0b"
+  integrity sha512-Nht8L0O8YCktmsDV6FqFue7vQLRx3Hb0B37lS5y0jDRqRxlBG4wIJHnf9/bgSE2UyipKFA01YtS+npRdTWBUyw==
+  dependencies:
+    regenerator-runtime "^0.13.4"
+
 "@babel/template@^7.14.5", "@babel/template@^7.3.3":
   version "7.14.5"
   resolved "https://registry.npmjs.org/@babel/template/-/template-7.14.5.tgz"
@@ -1144,6 +1151,13 @@
   version "1.8.0"
   resolved "https://registry.npmjs.org/@types/http-errors/-/http-errors-1.8.0.tgz"
   integrity sha512-2aoSC4UUbHDj2uCsCxcG/vRMXey/m17bC7UwitVm5hn22nI8O8Y9iDpA76Orc+DWkQ4zZrOKEshCqR/jSuXAHA==
+
+"@types/i18next@^13.0.0":
+  version "13.0.0"
+  resolved "https://registry.yarnpkg.com/@types/i18next/-/i18next-13.0.0.tgz#403ef338add0104e74d9759f1b39217e7c5d4084"
+  integrity sha512-gp/SIShAuf4WOqi8ey0nuI7qfWaVpMNCcs/xLygrh/QTQIXmlDC1E0TtVejweNW+7SGDY7g0lyxyKZIJuCKIJw==
+  dependencies:
+    i18next "*"
 
 "@types/istanbul-lib-coverage@*", "@types/istanbul-lib-coverage@^2.0.0", "@types/istanbul-lib-coverage@^2.0.1":
   version "2.0.3"
@@ -3882,6 +3896,13 @@ humanize-ms@^1.2.1:
   dependencies:
     ms "^2.0.0"
 
+i18next@*, i18next@^21.4.0:
+  version "21.4.0"
+  resolved "https://registry.yarnpkg.com/i18next/-/i18next-21.4.0.tgz#59d0129e9e3974313300b0f60a0e01812ba5689e"
+  integrity sha512-H8QwhJXxnPWDvRlLn3nqDvbry7PM7i3UYa0+5EHWvlVkvNNy5WJVTzZe2tZH+HnaGVAE5MaujasyOca8mbQN+w==
+  dependencies:
+    "@babel/runtime" "^7.12.0"
+
 iconv-lite@0.4.24, iconv-lite@^0.4.24:
   version "0.4.24"
   resolved "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.24.tgz"
@@ -6123,6 +6144,11 @@ reflect-metadata@^0.1.13:
   version "0.1.13"
   resolved "https://registry.npmjs.org/reflect-metadata/-/reflect-metadata-0.1.13.tgz"
   integrity sha512-Ts1Y/anZELhSsjMcU605fU9RE4Oi3p5ORujwbIKXfWa+0Zxs510Qrmrce5/Jowq3cHSZSJqBjypxmHarc+vEWg==
+
+regenerator-runtime@^0.13.4:
+  version "0.13.9"
+  resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.13.9.tgz#8925742a98ffd90814988d7566ad30ca3b263b52"
+  integrity sha512-p3VT+cOEgxFsRRA9X4lkI1E+k2/CtnKtU4gcxyaCUreilL/vqI6CdZ3wxVUx3UOUg+gnUOQQcRI7BmSI656MYA==
 
 regex-not@^1.0.0, regex-not@^1.0.2:
   version "1.0.2"

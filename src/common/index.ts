@@ -8,6 +8,7 @@ export * from './constants';
 export * from './exception.filter';
 export * from './log.service';
 export * from './loggingInterceptor';
+export * from './internationalization';
 export * from './commonModule';
 export * from './utils';
 export * from './json-body.middleware';

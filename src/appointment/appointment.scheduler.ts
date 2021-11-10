@@ -7,6 +7,7 @@ import { add, sub } from 'date-fns';
 import { Model } from 'mongoose';
 import { Appointment, AppointmentDocument, AppointmentStatus } from '.';
 import {
+  ContentKey,
   ErrorType,
   Errors,
   EventType,
@@ -171,18 +172,16 @@ export class AppointmentScheduler extends BaseScheduler {
         if (!chatLink) {
           return;
         }
-        const metadata = {
-          content: `${config
-            .get('contents.appointmentReminder')
-            .replace('@gapMinutes@', config.get('scheduler.alertBeforeInMin'))}`,
-          chatLink,
-        };
         const params: InternalNotifyParams = {
           memberId,
           userId,
           type: InternalNotificationType.textToMember,
-          metadata,
-          checkAppointmentReminder: true,
+          metadata: {
+            contentType: ContentKey.appointmentReminder,
+            extraData: { gapMinutes: config.get('scheduler.alertBeforeInMin') },
+            chatLink,
+            checkAppointmentReminder: true,
+          },
         };
 
         this.eventEmitter.emit(EventType.internalNotify, params);
@@ -211,16 +210,15 @@ export class AppointmentScheduler extends BaseScheduler {
           this.className,
           this.scheduleAppointmentLongAlert.name,
         );
-        const metadata = {
-          content: `${config.get('contents.appointmentLongReminder')}`,
-          appointmentTime: start,
-        };
         const params: InternalNotifyParams = {
           memberId,
           userId,
           type: InternalNotificationType.textToMember,
-          metadata,
-          checkAppointmentReminder: true,
+          metadata: {
+            contentType: ContentKey.appointmentLongReminder,
+            appointmentTime: start,
+            checkAppointmentReminder: true,
+          },
         };
 
         this.eventEmitter.emit(EventType.internalNotify, params);

@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Schema } from '@nestjs/mongoose';
 import { IsAlphanumeric, IsOptional } from 'class-validator';
 import { Types } from 'mongoose';
-import { ErrorType, Errors, IsNotPlatformWeb } from '.';
+import { ContentKey, ErrorType, Errors, IsNotPlatformWeb } from '.';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -118,19 +118,32 @@ export abstract class BaseService {
   }
 }
 
-export class InternalNotificationMetadata {
-  content: string;
+export class ExtraData {
+  org?: { name: string };
+  downloadLink?: string;
+  appointmentStart?: string;
+  gapMinutes?: string;
+  appointmentTime?: string;
   chatLink?: string;
+  scheduleLink?: string;
+}
+
+export class InternalNotificationMetadata {
+  contentType?: ContentKey;
+  extraData?: ExtraData;
+  chatLink?: string;
+  scheduleLink?: string;
   sendBirdChannelUrl?: string;
   appointmentTime?: Date;
+  checkAppointmentReminder?: boolean;
 }
 
 export class InternalNotifyParams {
-  memberId?: string;
+  memberId: string;
   userId: string;
   type: InternalNotificationType;
   metadata: InternalNotificationMetadata;
-  checkAppointmentReminder?: boolean;
+  content?: string;
 }
 
 export type AllNotificationTypes =
@@ -157,7 +170,7 @@ export class SendOneSignalNotification extends BaseSendNotification {
     path?: string;
     isVideo: boolean;
   };
-  metadata: Record<string, any>;
+  content?: string;
 }
 
 export class SendTwilioNotification extends BaseSendNotification {

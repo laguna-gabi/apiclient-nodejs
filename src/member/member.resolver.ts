@@ -1,7 +1,6 @@
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
-import * as config from 'config';
 import { millisecondsInHour } from 'date-fns';
 import { format, getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
 import { camelCase } from 'lodash';
@@ -32,9 +31,11 @@ import {
   UpdateTaskStatusParams,
 } from '.';
 import {
+  ContentKey,
   ErrorType,
   Errors,
   EventType,
+  GetContentsParams,
   IEventDeleteSchedules,
   IEventNotifyChatMessage,
   IEventSendSmsToChat,
@@ -44,6 +45,8 @@ import {
   Identifier,
   InternalNotificationType,
   InternalNotifyParams,
+  InternationalizationService,
+  Language,
   Logger,
   LoggingInterceptor,
   NotificationType,
@@ -53,7 +56,6 @@ import {
   RoleTypes,
   Roles,
   StorageType,
-  capitalize,
   delay,
   extractAuthorizationHeader,
   scheduleAppointmentDateFormat,
@@ -80,6 +82,7 @@ export class MemberResolver extends MemberBase {
     readonly userService: UserService,
     readonly communicationService: CommunicationService,
     private readonly communicationResolver: CommunicationResolver,
+    readonly internationalizationService: InternationalizationService,
     protected readonly bitly: Bitly,
     readonly logger: Logger,
   ) {
@@ -430,10 +433,6 @@ export class MemberResolver extends MemberBase {
       throw new Error(Errors.get(ErrorType.notificationMemberPlatformWeb));
     }
 
-    if (metadata.content) {
-      metadata.content = this.replaceConfigs({ content: metadata.content, member, user });
-    }
-
     if (type === NotificationType.textSms) {
       metadata.sendBirdChannelUrl = await this.getSendBirdChannelUrl({ memberId, userId });
     }
@@ -466,43 +465,70 @@ export class MemberResolver extends MemberBase {
    */
   @OnEvent(EventType.internalNotify, { async: true })
   async internalNotify(params: InternalNotifyParams) {
-    const { memberId, userId, type, metadata, checkAppointmentReminder } = params;
-    let member: Member;
-    let memberConfig: MemberConfig;
-    let user: User;
+    const { memberId, userId, type, metadata } = params;
+    let content = params.content;
 
     try {
-      if (type === InternalNotificationType.textSmsToUser) {
-        user = await this.userService.get(userId);
-        if (!user) {
-          throw new Error(Errors.get(ErrorType.userNotFound));
-        }
-        metadata.content = metadata.content.replace('@user.firstName@', user.firstName);
-      } else {
-        ({ member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId));
-        metadata.content = this.replaceConfigs({
-          content: metadata.content,
-          member,
-          user,
-        });
+      const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(
+        memberId,
+        userId,
+      );
+
+      if (
+        metadata.checkAppointmentReminder &&
+        memberConfig &&
+        !memberConfig.isAppointmentsReminderEnabled
+      ) {
+        return;
       }
+
       if (metadata.appointmentTime) {
-        metadata.content = metadata.content.replace(
-          '@appointment.time@',
-          format(
+        metadata.extraData = {
+          ...metadata.extraData,
+          appointmentTime: format(
             utcToZonedTime(metadata.appointmentTime, lookup(member.zipCode)),
             `${scheduleAppointmentDateFormat} (z)`,
             { timeZone: lookup(member.zipCode) },
           ),
-        );
+        };
       }
+
+      if (metadata.contentType) {
+        const getContentsParams: GetContentsParams = {
+          contentType: metadata.contentType,
+          member,
+          user,
+          extraData: metadata.extraData,
+          language: type === InternalNotificationType.textSmsToUser ? Language.en : member.language,
+        };
+        content = this.internationalizationService.getContents(getContentsParams);
+      }
+
+      if (
+        (metadata.scheduleLink || metadata?.chatLink) &&
+        (memberConfig.platform === Platform.web || !memberConfig.isPushNotificationsEnabled)
+      ) {
+        const getContentsParams: GetContentsParams = {
+          contentType: metadata.chatLink
+            ? ContentKey.appointmentReminderLink
+            : ContentKey.appointmentRequestLink,
+          member,
+          user,
+          extraData: metadata.chatLink
+            ? { chatLink: metadata.chatLink }
+            : { scheduleLink: metadata.scheduleLink },
+          language: member.language,
+        };
+        content += this.internationalizationService.getContents(getContentsParams);
+      }
+
       return await this.notificationBuilder.internalNotify({
         member,
         memberConfig,
         user,
         type,
+        content,
         metadata,
-        checkAppointmentReminder,
       });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.internalNotify.name, ex);
@@ -543,7 +569,7 @@ export class MemberResolver extends MemberBase {
           memberId: communication.memberId.toString(),
           userId: senderUserId,
           type: InternalNotificationType.chatMessageToMember,
-          metadata: { content: config.get('contents.newChatMessageFromUser') },
+          metadata: { contentType: ContentKey.newChatMessageFromUser },
         });
       } else {
         // to avoid spamming the user with multiple SMS message while in a live chat with the member
@@ -570,12 +596,7 @@ export class MemberResolver extends MemberBase {
             memberId: senderUserId,
             userId: communication.userId.toString(),
             type: InternalNotificationType.textSmsToUser,
-            metadata: {
-              content: config
-                .get('contents.newChatMessageFromMember')
-                .replace('@member.honorific@', config.get(`contents.honorific.${member.honorific}`))
-                .replace('@member.lastName@', capitalize(member.lastName)),
-            },
+            metadata: { contentType: ContentKey.newChatMessageFromMember },
           });
         }
       }
@@ -601,7 +622,8 @@ export class MemberResolver extends MemberBase {
         memberId: member.id,
         userId: member.primaryUserId,
         type: InternalNotificationType.chatMessageToUser,
-        metadata: { content: params.message, sendBirdChannelUrl },
+        metadata: { sendBirdChannelUrl },
+        content: params.message,
       });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.sendSmsToChat.name, ex);
@@ -648,7 +670,8 @@ export class MemberResolver extends MemberBase {
           memberId: member.id,
           userId: member.primaryUserId,
           type: InternalNotificationType.textSmsToMember,
-          metadata: { content },
+          metadata: {},
+          content,
         });
       }
     } catch (ex) {
@@ -717,14 +740,6 @@ export class MemberResolver extends MemberBase {
     }
 
     return { member, memberConfig, user };
-  }
-
-  private replaceConfigs(params: { content: string; member: Member; user: User }): string {
-    const { content, member, user } = params;
-    return content
-      .replace('@member.honorific@', config.get(`contents.honorific.${member.honorific}`))
-      .replace('@member.lastName@', capitalize(member.lastName))
-      .replace('@user.firstName@', capitalize(user.firstName));
   }
 
   private async getSendBirdChannelUrl(getCommunicationParams: GetCommunicationParams) {

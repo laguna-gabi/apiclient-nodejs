@@ -4,6 +4,7 @@ import * as faker from 'faker';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import { lookup } from 'zipcode-to-timezone';
+import * as en from '../languages/en.json';
 import {
   AppointmentMethod,
   EndAppointmentParams,
@@ -17,6 +18,7 @@ import { AvailabilityInput } from '../src/availability';
 import {
   CancelNotificationParams,
   CancelNotificationType,
+  ContentKey,
   InternalNotificationType,
   InternalNotifyParams,
   Language,
@@ -492,12 +494,12 @@ export const generateInternalNotifyParams = ({
   userId = v4(),
   type = InternalNotificationType.textToMember,
   metadata = {
-    content: faker.lorem.sentence(),
-    chatLink: faker.lorem.sentence(),
+    contentType: ContentKey.logReminder,
     sendBirdChannelUrl: generateUniqueUrl(),
   },
+  content = en.translation.contents.logReminder,
 }: Partial<InternalNotifyParams> = {}): InternalNotifyParams => {
-  return { memberId, userId, type, metadata };
+  return { memberId, userId, type, metadata, content };
 };
 
 export const generateSendOneSignalNotificationParams = (): SendOneSignalNotification => {
@@ -514,7 +516,7 @@ export const generateSendOneSignalNotificationParams = (): SendOneSignalNotifica
       type: NotificationType.text,
       isVideo: false,
     },
-    metadata: { content: faker.lorem.sentence() },
+    content: faker.lorem.sentence(),
   };
 };
 

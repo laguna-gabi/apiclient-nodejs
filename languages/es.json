@@ -1,0 +1,14 @@
+{
+  "translation": {
+    "contents": {},
+    "honorific": {
+      "mr": "Señor",
+      "mrs": "señora",
+      "ms": "Sra",
+      "miss": "pierda",
+      "mx": "Mx",
+      "dr": "Dr",
+      "reverend": "Reverend"
+    }
+  }
+}

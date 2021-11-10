@@ -404,7 +404,7 @@ describe('Integration tests: all', () => {
           isVideo: params.isVideo,
           ...generatePath(params.type),
         },
-        metadata: notifyParams.metadata,
+        content: notifyParams.metadata.content,
         orgName: org.name,
       },
     });
@@ -591,7 +591,7 @@ describe('Integration tests: all', () => {
           type: InternalNotificationType.textToMember,
           isVideo: false,
         },
-        metadata: notifyParams.metadata,
+        content: notifyParams.metadata.content,
         orgName: org.name,
       },
     });
@@ -816,52 +816,38 @@ describe('Integration tests: all', () => {
       expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveReturnedTimes(
         isAppointmentsReminderEnabled ? 4 : 2,
       );
-      expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenNthCalledWith(
-        1,
-        {
-          sendTwilioNotification: {
-            to: member.users[0].phone,
-            body: expect.any(String),
-            orgName: undefined,
-          },
+      expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenCalledWith({
+        sendTwilioNotification: {
+          to: member.users[0].phone,
+          body: expect.any(String),
+          orgName: org.name,
         },
-      );
-
-      expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenNthCalledWith(
-        2,
-        {
-          sendTwilioNotification: {
-            to: member.phone,
-            body: expect.any(String),
-            orgName: org.name,
-          },
+      });
+      expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenCalledWith({
+        sendTwilioNotification: {
+          to: member.phone,
+          body: expect.any(String),
+          orgName: org.name,
         },
-      );
+      });
 
       if (isAppointmentsReminderEnabled) {
-        expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenNthCalledWith(
-          3,
-          {
-            sendTwilioNotification: {
-              to: member.phone,
-              body: expect.stringContaining('appointment on'),
-              orgName: org.name,
-            },
+        expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenCalledWith({
+          sendTwilioNotification: {
+            to: member.phone,
+            body: expect.stringContaining('appointment on'),
+            orgName: org.name,
           },
-        );
-
-        expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenNthCalledWith(
-          4,
-          {
-            sendTwilioNotification: {
-              to: member.phone,
-              body: expect.stringContaining(
-                `starts in ${config.get('scheduler.alertBeforeInMin')} minutes`,
-              ),
-              orgName: org.name,
-            },
+        });
+        expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenCalledWith({
+          sendTwilioNotification: {
+            to: member.phone,
+            body: expect.stringContaining(
+              `starts in ${config.get('scheduler.alertBeforeInMin')} minutes`,
+            ),
+            orgName: org.name,
           },
-        );
+        });
       }
 
       handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
@@ -941,6 +927,8 @@ describe('Integration tests: all', () => {
             memberId: member.id,
           } as DailyReportCategoriesInput,
         });
+
+      await delay(500);
 
       expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(
         expect.arrayContaining([member.id + ReminderType.logReminder]),

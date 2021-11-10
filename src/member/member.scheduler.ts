@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import * as config from 'config';
 import { add } from 'date-fns';
 import { Model } from 'mongoose';
 import {
@@ -13,6 +12,7 @@ import {
   NotifyParamsDocument,
 } from '.';
 import {
+  ContentKey,
   ErrorType,
   Errors,
   EventType,
@@ -84,7 +84,8 @@ export class MemberScheduler extends BaseScheduler {
           type === NotificationType.text
             ? InternalNotificationType.textToMember
             : InternalNotificationType.textSmsToMember,
-        metadata: { content: metadata.content },
+        metadata: {},
+        content: metadata.content,
       };
 
       const timeout = setTimeout(async () => {
@@ -111,17 +112,14 @@ export class MemberScheduler extends BaseScheduler {
       const timeout = setTimeout(async () => {
         this.logger.debug(
           { memberId, userId, firstLoggedInAt },
-          this.className,
           MemberScheduler.name,
+          this.registerNewRegisteredMemberNotify.name,
         );
-        const metadata = {
-          content: `${config.get('contents.newRegisteredMember')}`,
-        };
         const params: InternalNotifyParams = {
           memberId,
           userId,
           type: InternalNotificationType.textToMember,
-          metadata,
+          metadata: { contentType: ContentKey.newRegisteredMember },
         };
         this.eventEmitter.emit(EventType.internalNotify, params);
         this.deleteTimeout({ id: memberId });
@@ -148,14 +146,11 @@ export class MemberScheduler extends BaseScheduler {
           MemberScheduler.name,
           this.registerNewRegisteredMemberNudgeNotify.name,
         );
-        const metadata = {
-          content: `${config.get('contents.newRegisteredMemberNudge')}`,
-        };
         const params: InternalNotifyParams = {
           memberId,
           userId,
           type: InternalNotificationType.textToMember,
-          metadata,
+          metadata: { contentType: ContentKey.newRegisteredMemberNudge },
         };
         this.eventEmitter.emit(EventType.internalNotify, params);
         this.deleteTimeout({ id: memberId });
@@ -181,14 +176,11 @@ export class MemberScheduler extends BaseScheduler {
           MemberScheduler.name,
           this.registerLogReminder.name,
         );
-        const metadata = {
-          content: `${config.get('contents.logReminder')}`,
-        };
         const params: InternalNotifyParams = {
           memberId,
           userId,
           type: InternalNotificationType.textToMember,
-          metadata,
+          metadata: { contentType: ContentKey.logReminder },
         };
         this.eventEmitter.emit(EventType.internalNotify, params);
         this.deleteTimeout({ id: memberId + ReminderType.logReminder });

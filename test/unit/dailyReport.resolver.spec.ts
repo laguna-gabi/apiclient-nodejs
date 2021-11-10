@@ -2,7 +2,7 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Types } from 'mongoose';
-import { EventType, InternalNotificationType, Logger } from '../../src/common';
+import { ContentKey, EventType, InternalNotificationType, Logger } from '../../src/common';
 import {
   DailyReport,
   DailyReportCategoriesInput,
@@ -13,7 +13,6 @@ import {
   DailyReportResolver,
   DailyReportService,
 } from '../../src/dailyReport';
-
 import { dbDisconnect, defaultModules, generateId } from '../index';
 
 describe('DailyReportCategoryResolver', () => {
@@ -63,7 +62,7 @@ describe('DailyReportCategoryResolver', () => {
         {
           memberId: memberId,
           metadata: {
-            content: 'Your member, Mr. Levy, logged a score that requires your attention.',
+            contentType: ContentKey.memberNotFeelingWellMessage,
           },
           type: InternalNotificationType.textSmsToUser,
           userId: 'U0001',

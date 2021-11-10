@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import * as config from 'config';
+import { Member, MemberConfig, NotificationMetadata } from '.';
 import {
   InternalNotificationMetadata,
   InternalNotificationType,
@@ -11,7 +11,6 @@ import {
   SendTwilioNotification,
 } from '../common';
 import { NotificationsService } from '../providers';
-import { Member, MemberConfig, NotificationMetadata } from '.';
 import { User } from '../user';
 
 @Injectable()
@@ -70,7 +69,7 @@ export class NotificationBuilder {
             isVideo: type === NotificationType.video,
             peerId: metadata.peerId,
           },
-          metadata,
+          content: metadata.content,
           orgName,
         };
         return this.notificationsService.send({ sendOneSignalNotification });
@@ -90,32 +89,23 @@ export class NotificationBuilder {
     memberConfig,
     user,
     type,
+    content,
     metadata,
-    checkAppointmentReminder,
   }: {
     member: Member;
     memberConfig: MemberConfig;
     user: User;
     type: InternalNotificationType;
+    content: string;
     metadata: InternalNotificationMetadata;
-    checkAppointmentReminder?;
   }) {
-    if (checkAppointmentReminder && memberConfig && !memberConfig.isAppointmentsReminderEnabled) {
-      return;
-    }
-
     const orgName = member?.org.name;
     switch (type) {
       case InternalNotificationType.textToMember: {
         if (memberConfig.platform === Platform.web || !memberConfig.isPushNotificationsEnabled) {
-          if (metadata.chatLink) {
-            metadata.content += `${config
-              .get('contents.appointmentReminderChatLink')
-              .replace('@chatLink@', metadata.chatLink)}`;
-          }
           const sendTwilioNotification: SendTwilioNotification = {
             orgName,
-            body: metadata.content,
+            body: content,
             to: member.phone,
           };
           return this.notificationsService.send({ sendTwilioNotification });
@@ -129,7 +119,7 @@ export class NotificationBuilder {
               type,
               isVideo: false,
             },
-            metadata,
+            content,
             orgName,
           };
           return this.notificationsService.send({ sendOneSignalNotification });
@@ -137,7 +127,7 @@ export class NotificationBuilder {
       }
       case InternalNotificationType.textSmsToMember: {
         const sendTwilioNotification: SendTwilioNotification = {
-          body: metadata.content,
+          body: content,
           to: member.phone,
           orgName,
         };
@@ -145,7 +135,7 @@ export class NotificationBuilder {
       }
       case InternalNotificationType.textSmsToUser: {
         const sendTwilioNotification: SendTwilioNotification = {
-          body: metadata.content,
+          body: content,
           to: user.phone,
           orgName,
         };
@@ -163,7 +153,7 @@ export class NotificationBuilder {
               path: `connect/${member.id}/${user.id}`,
               isVideo: false,
             },
-            metadata,
+            content,
             orgName,
           };
           return this.notificationsService.send({ sendOneSignalNotification });
@@ -174,7 +164,7 @@ export class NotificationBuilder {
         const sendSendBirdNotification: SendSendBirdNotification = {
           userId: member.id,
           sendBirdChannelUrl: metadata.sendBirdChannelUrl,
-          message: metadata.content,
+          message: content,
           notificationType: type,
           orgName,
         };

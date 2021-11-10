@@ -1,5 +1,5 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import * as config from 'config';
+import { format } from 'date-fns';
 import {
   Appointment,
   AppointmentScheduler,
@@ -7,14 +7,14 @@ import {
   ScheduleAppointmentParams,
 } from '.';
 import {
+  ContentKey,
   EventType,
   IEventUpdatedAppointment,
   InternalNotificationType,
   InternalNotifyParams,
-  UpdatedAppointmentAction,
   scheduleAppointmentDateFormat,
+  UpdatedAppointmentAction,
 } from '../common';
-import { format } from 'date-fns';
 
 export class AppointmentBase {
   constructor(
@@ -55,18 +55,17 @@ export class AppointmentBase {
 
   private notifyUserAppointment(appointment: Appointment) {
     const params: InternalNotifyParams = {
+      memberId: appointment.memberId.toString(),
       userId: appointment.userId,
       type: InternalNotificationType.textSmsToUser,
       metadata: {
-        content: `${config
-          .get('contents.appointmentScheduledUser')
-          .replace(
-            '@appointment.time@',
-            `${format(
-              new Date(appointment.start.toUTCString()),
-              scheduleAppointmentDateFormat,
-            )} (UTC)`,
-          )}`,
+        contentType: ContentKey.appointmentScheduledUser,
+        extraData: {
+          appointmentTime: `${format(
+            new Date(appointment.start.toUTCString()),
+            scheduleAppointmentDateFormat,
+          )} (UTC)`,
+        },
       },
     };
     this.eventEmitter.emit(EventType.internalNotify, params);
@@ -78,7 +77,7 @@ export class AppointmentBase {
       userId: appointment.userId,
       type: InternalNotificationType.textSmsToMember,
       metadata: {
-        content: `${config.get('contents.appointmentScheduledMember')}`,
+        contentType: ContentKey.appointmentScheduledMember,
         appointmentTime: appointment.start,
       },
     };

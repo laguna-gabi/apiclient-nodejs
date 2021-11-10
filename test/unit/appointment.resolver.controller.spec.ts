@@ -1,6 +1,5 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as config from 'config';
 import {
   AppointmentController,
   AppointmentMethod,
@@ -11,6 +10,7 @@ import {
 } from '../../src/appointment';
 import {
   AppointmentStatus,
+  ContentKey,
   EventType,
   IEventUpdateUserInAppointments,
   IEventUpdatedAppointment,
@@ -92,9 +92,8 @@ describe('AppointmentResolver', () => {
         userId: params.userId,
         type: InternalNotificationType.textToMember,
         metadata: {
-          content: `${config
-            .get('contents.appointmentRequest')
-            .replace('@downloadLink@', appointment.link)}`,
+          contentType: ContentKey.appointmentRequest,
+          scheduleLink: `${appointment.link}`,
         },
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.internalNotify, eventParams);
@@ -196,18 +195,17 @@ describe('AppointmentResolver', () => {
       );
 
       const notifyUserParams: InternalNotifyParams = {
+        memberId: appointment.memberId,
         userId: appointment.userId,
         type: InternalNotificationType.textSmsToUser,
         metadata: {
-          content: `${config
-            .get('contents.appointmentScheduledUser')
-            .replace(
-              '@appointment.time@',
-              `${format(
-                new Date(appointment.start.toUTCString()),
-                scheduleAppointmentDateFormat,
-              )} (UTC)`,
-            )}`,
+          contentType: ContentKey.appointmentScheduledUser,
+          extraData: {
+            appointmentTime: `${format(
+              new Date(appointment.start.toUTCString()),
+              scheduleAppointmentDateFormat,
+            )} (UTC)`,
+          },
         },
       };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
@@ -221,7 +219,7 @@ describe('AppointmentResolver', () => {
         userId: appointment.userId,
         type: InternalNotificationType.textSmsToMember,
         metadata: {
-          content: `${config.get('contents.appointmentScheduledMember')}`,
+          contentType: ContentKey.appointmentScheduledMember,
           appointmentTime: appointment.start,
         },
       };

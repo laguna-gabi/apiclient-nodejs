@@ -15,6 +15,7 @@ import {
   AppointmentStatus,
 } from '../../src/appointment';
 import {
+  ContentKey,
   EventType,
   InternalNotificationType,
   InternalNotifyParams,
@@ -265,12 +266,11 @@ describe('AppointmentScheduler', () => {
         userId,
         type: InternalNotificationType.textToMember,
         metadata: {
-          content: `${config
-            .get('contents.appointmentReminder')
-            .replace('@gapMinutes@', config.get('scheduler.alertBeforeInMin'))}`,
+          contentType: ContentKey.appointmentReminder,
+          extraData: { gapMinutes: config.get('scheduler.alertBeforeInMin') },
           chatLink,
+          checkAppointmentReminder: true,
         },
-        checkAppointmentReminder: true,
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.internalNotify, eventParams);
       expect(spyOnBitlyShortenLink).toBeCalledWith(chat.memberLink);
