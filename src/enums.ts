@@ -1,3 +1,24 @@
+/*******************************************************************************
+ *********************************** Member ************************************
+ ******************************************************************************/
+export enum Platform {
+  ios = 'ios',
+  android = 'android',
+  web = 'web',
+}
+
+/*******************************************************************************
+ ********************************** Dispatch ***********************************
+ ******************************************************************************/
+export enum TriggeredApi {
+  graphql = 'graphql',
+  rest = 'rest',
+  internal = 'internal',
+}
+
+/*******************************************************************************
+ ***************************** Notification types ******************************
+ ******************************************************************************/
 export enum NotificationType {
   video = 'video',
   call = 'call',
@@ -19,8 +40,7 @@ export enum InternalNotificationType {
   chatMessageToUser = 'chatMessageToUser',
 }
 
-export enum Platform {
-  ios = 'ios',
-  android = 'android',
-  web = 'web',
-}
+export type AllNotificationTypes =
+  | NotificationType
+  | CancelNotificationType
+  | InternalNotificationType;
