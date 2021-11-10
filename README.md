@@ -24,6 +24,7 @@ Laguna health backend infrastructure.
     - [Installation](#installation)
     - [Docker](#docker)
     - [Aws](#aws)
+    - [Shared private library - Pandora](#shared-private-library---pandora)
     - [Shared code settings](#shared-code-settings)
   - [🚀 Running the app](#-running-the-app)
   - [🧪 Testing the app](#-testing-the-app)
@@ -38,6 +39,7 @@ Laguna health backend infrastructure.
 - [✂️ Appendix](#%EF%B8%8F-appendix)
   - [jwt.io token generation](#jwtio-token-generation)
   - [GraphQL Playground](#graphql-playground)
+  - [Github generate developer token](#github-generate-developer-token)
 
 ## 💡 Project introduction
 
@@ -87,6 +89,35 @@ In order to work locally with aws cli and `package.json` dependencies, install
    > We're loading configurations(api keys and tokens for external providers such as
    > [sendbird](https://sendbird.com), [onesignal](https://onesignal.com), [twilio](https://www.twilio.com), etc...)
    > from [aws secrets manager](https://aws.amazon.com/secrets-manager/).
+
+### Shared private library - Pandora
+
+We have a Laguna shared library called [Pandora](https://github.com/LagunaHealth/pandora), which is an interface for sending messages.
+<br/>This package is installed when running `yarn install`, and since it is private, each developer needs to create his/her own
+[github access token](https://github.com/settings/tokens/new), so pulling this library will be possible. 
+> **_Don't skip library setup:_** This step is critical to develop locally on this project.
+
+1. Create a personal access token
+   1. go to [github - generate new developer tokens](https://github.com/settings/tokens/new)
+   2. select `repo` - all and `write:package`. In the end it should look like [this](#github-generate-developer-token).
+   3. in the bottom press `Generate token`
+   4. copy the token which was generated (you won't be able to update it or see it when you re-open the page)
+2. Login to npm/yarn private repository in order to fetch [pandora npm package](https://github.com/LagunaHealth/pandora/packages/1084197)
+   ```
+    npm login --registry=https://npm.pkg.github.com
+    Username: GitHub-username
+    Password: your-github-access-token-from-previous-step
+    Email: (this IS public) your-email@example.com
+    Logged in as XXXX on https://npm.pkg.github.com/.
+   ``` 
+   > You have to see the `Logged in as XXXX on https://npm.pkg.github.com/`, or otherwise `yarn install` won't work.
+   
+In the end of this process, you need to have a `~/.npmrc` file (located in the root of your computer), having 3 fields:
+```bash
+registry=https://registry.npmjs.org/
+//registry.npmjs.org/:_authToken=token_which_was_generated_when_you_login_to_npm
+//npm.pkg.github.com/:_authToken=your-github-access-token-from-previous-step
+```
 
 ### Shared code settings
 
@@ -205,3 +236,6 @@ An instance of mongo is not running locally, go over [docker section](#docker) a
 
 [link to a local GQL](http://localhost:3000/graphql)
 ![alt text](./assets/graphql.png)
+
+## Github generate developer token
+![alt text](./assets/githubAccessToken.png)

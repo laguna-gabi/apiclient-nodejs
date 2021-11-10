@@ -684,6 +684,11 @@
   resolved "https://registry.npmjs.org/@josephg/resolvable/-/resolvable-1.0.1.tgz"
   integrity sha512-CtzORUwWTTOTqfVtHaKRJ0I1kNQd1bpn3sUh8I3nJDVY+5/M/Oe1DnEWzPQvqq/xPIIkzzzIP7mfCoAjFRvDhg==
 
+"@lagunahealth/pandora@0.0.1":
+  version "0.0.1"
+  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.0.1/0fc8096a3b8efd7a122d226c2ea6e4541a2e347325048ea2b17263f6e24ad4f6#59a68c64b3ca18b636b364d65a2af423cc2db022"
+  integrity sha512-qbW6NRE5JPhclqcTGBHUUe94YKo60iPFAgBYaWlvu+8Jwm0Gn2sxLeMKhy0fqniL6N8w4CZvllM1moSK3k1w1A==
+
 "@nestjs/axios@^0.0.1":
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/@nestjs/axios/-/axios-0.0.1.tgz#c32a1c11e25765a69f3f9012ea5b8f49915db7cb"

@@ -23,6 +23,14 @@ jobs:
           node-version: 16
       - name: Install yarn
         run: npm install -g yarn
+      - name: Create npmrc and yarnrc files
+        run: |
+          rm ~/.npmrc --force
+          rm ~/.yarnrc
+          echo "registry=https://registry.npmjs.org/" >> ~/.npmrc
+          echo "//registry.npmjs.org/:_authToken=${{secrets.NPM_PRIVATE_AUTH_TOKEN_REGISTRY}}" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{secrets.NPM_PRIVATE_GITHUB_AUTH_TOKEN_REGISTRY}}" >> ~/.npmrc
+          echo 'registry "https://registry.npmjs.org/"' >> ~/.yarnrc
       - name: Install project dependencies
         run: yarn install --frozen-lockfile
       - name: Run linters
@@ -41,6 +49,14 @@ jobs:
           node-version: 16
       - name: Install yarn
         run: npm install -g yarn
+      - name: Create npmrc and yarnrc files
+        run: |
+          rm ~/.npmrc --force
+          rm ~/.yarnrc
+          echo "registry=https://registry.npmjs.org/" >> ~/.npmrc
+          echo "//registry.npmjs.org/:_authToken=${{secrets.NPM_PRIVATE_AUTH_TOKEN_REGISTRY}}" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{secrets.NPM_PRIVATE_GITHUB_AUTH_TOKEN_REGISTRY}}" >> ~/.npmrc
+          echo 'registry "https://registry.npmjs.org/"' >> ~/.yarnrc
       - name: Install project dependencies
         run: yarn install --frozen-lockfile
       - name: Build project
