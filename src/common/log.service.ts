@@ -47,6 +47,8 @@ export class Logger {
     //replace user
     'newUserId',
     'oldUserId',
+    //notifyChatMessage
+    'unreadMessageCount',
   ];
 
   log(params: any = {}, className: string, methodName: string) {

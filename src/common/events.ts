@@ -98,6 +98,7 @@ export interface IEventUpdateMemberPlatform {
 export interface IEventNotifyChatMessage {
   senderUserId: string;
   sendBirdChannelUrl: string;
+  sendBirdMemberInfo?: { memberId: string; isOnline: boolean }[];
 }
 
 export interface IEventSendSmsToChat {

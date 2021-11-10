@@ -8,6 +8,16 @@
 
     }
   },
+  "members": [
+    {
+        "is_online": true,
+        "user_id": "user001"
+    },
+    {
+        "is_online": true,
+        "user_id": "member001"
+    }
+  ],
   "silent":false,
   "custom_type":"",
   "mention_type":"users",

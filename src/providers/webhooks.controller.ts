@@ -41,7 +41,14 @@ export class WebhooksController {
 
       const { channel_url: sendBirdChannelUrl } = parsedBody.channel;
 
-      const event: IEventNotifyChatMessage = { senderUserId, sendBirdChannelUrl };
+      const event: IEventNotifyChatMessage = {
+        senderUserId,
+        sendBirdChannelUrl,
+        sendBirdMemberInfo: parsedBody.members.map((memberInfo) => ({
+          memberId: memberInfo.user_id,
+          isOnline: memberInfo.is_online,
+        })),
+      };
       this.eventEmitter.emit(EventType.notifyChatMessage, event);
     }
   }

@@ -32,17 +32,18 @@ import {
 } from '.';
 import {
   ContentKey,
-  ErrorType,
   Errors,
+  ErrorType,
   EventType,
+  extractAuthorizationHeader,
   GetContentsParams,
+  Identifier,
   IEventDeleteSchedules,
   IEventNotifyChatMessage,
   IEventSendSmsToChat,
   IEventUnregisterMemberFromNotifications,
   IEventUpdateMemberPlatform,
   IEventUpdateUserInCommunication,
-  Identifier,
   InternalNotificationType,
   InternalNotifyParams,
   InternationalizationService,
@@ -53,12 +54,10 @@ import {
   Platform,
   RegisterForNotificationParams,
   ReminderType,
-  RoleTypes,
   Roles,
-  StorageType,
-  delay,
-  extractAuthorizationHeader,
+  RoleTypes,
   scheduleAppointmentDateFormat,
+  StorageType,
 } from '../common';
 import {
   CommunicationResolver,
@@ -572,26 +571,10 @@ export class MemberResolver extends MemberBase {
           metadata: { contentType: ContentKey.newChatMessageFromUser },
         });
       } else {
-        // to avoid spamming the user with multiple SMS message while in a live chat with the member
-        // we avoid sending a notification if the user's unread message count is 0 in the next 2
-        // seconds
-        let isCoachOffline = true;
-        for (let i = 0; i < 5; i++) {
-          const { count } = await this.communicationService.getParticipantUnreadMessagesCount(
-            communication.userId,
-            false,
-          );
-
-          // indicate that the user is in front of the chat
-          if (count === 0) {
-            isCoachOffline = false;
-            break;
-          }
-
-          await delay(400);
-        }
-
-        if (isCoachOffline) {
+        const coachInfo = params.sendBirdMemberInfo.find(
+          (member) => member.memberId === communication.userId,
+        );
+        if (coachInfo && !coachInfo.isOnline) {
           return await this.internalNotify({
             memberId: senderUserId,
             userId: communication.userId.toString(),

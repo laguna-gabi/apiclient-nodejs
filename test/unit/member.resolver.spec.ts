@@ -1690,7 +1690,6 @@ describe('MemberResolver', () => {
     let spyOnUserServiceGetUser;
     let spyOnNotificationsServiceSend;
     let spyOnCommunicationGetByUrl;
-    let spyOnCommunicationGetUnreadMessageCount;
 
     beforeEach(() => {
       spyOnServiceGetMember = jest.spyOn(service, 'get');
@@ -1698,10 +1697,6 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
       spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
       spyOnCommunicationGetByUrl = jest.spyOn(communicationService, 'getByChannelUrl');
-      spyOnCommunicationGetUnreadMessageCount = jest.spyOn(
-        communicationService,
-        'getParticipantUnreadMessagesCount',
-      );
     });
 
     afterEach(() => {
@@ -1710,7 +1705,6 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser.mockReset();
       spyOnNotificationsServiceSend.mockReset();
       spyOnCommunicationGetByUrl.mockReset();
-      spyOnCommunicationGetUnreadMessageCount.mockReset();
     });
 
     it('should handle notify chat message sent from user', async () => {
@@ -1768,7 +1762,7 @@ describe('MemberResolver', () => {
       });
     });
 
-    it('should handle notify chat message sent from member with unread messages', async () => {
+    it('should notify the coach on chat message sent from member - coach is offline', async () => {
       const member = mockGenerateMember();
       const user = mockGenerateUser();
       const communication: Communication = {
@@ -1785,12 +1779,13 @@ describe('MemberResolver', () => {
       });
 
       spyOnCommunicationGetByUrl.mockImplementation(async () => communication);
-      spyOnCommunicationGetUnreadMessageCount.mockImplementation(async () => ({
-        count: 1,
-      }));
       const params: IEventNotifyChatMessage = {
         senderUserId: member.id,
         sendBirdChannelUrl: communication.sendBirdChannelUrl,
+        sendBirdMemberInfo: [
+          { memberId: member.id, isOnline: true },
+          { memberId: user.id, isOnline: false },
+        ],
       };
 
       await resolver.notifyChatMessage(params);
@@ -1809,7 +1804,8 @@ describe('MemberResolver', () => {
       });
     }, 10000);
 
-    it('should not notify user on chat message from member - no unread messages', async () => {
+    // eslint-disable-next-line max-len
+    it('should not notify the coach on chat message sent from member - coach is online', async () => {
       const member = mockGenerateMember();
       const user = mockGenerateUser();
       const communication: Communication = {
@@ -1826,13 +1822,13 @@ describe('MemberResolver', () => {
       });
 
       spyOnCommunicationGetByUrl.mockImplementation(async () => communication);
-      spyOnCommunicationGetUnreadMessageCount
-        .mockReturnValueOnce({ count: 1 })
-        .mockReturnValueOnce({ count: 1 })
-        .mockReturnValue({ count: 0 });
       const params: IEventNotifyChatMessage = {
         senderUserId: member.id,
         sendBirdChannelUrl: communication.sendBirdChannelUrl,
+        sendBirdMemberInfo: [
+          { memberId: member.id, isOnline: true },
+          { memberId: user.id, isOnline: true },
+        ],
       };
 
       await resolver.notifyChatMessage(params);
@@ -1849,15 +1845,6 @@ describe('MemberResolver', () => {
     it('should disregard notify chat message when sent from member and member does not exist', async () => {
       spyOnUserServiceGetUser.mockImplementation(async () => undefined);
       spyOnServiceGetMember.mockImplementation(async () => undefined);
-
-      await resolver.notifyChatMessage(fakeData);
-
-      expect(spyOnNotificationsServiceSend).not.toBeCalled();
-    });
-
-    it('should disregard notify on non existing sendBirdChannelUrl', async () => {
-      spyOnUserServiceGetUser.mockImplementation(async () => mockGenerateUser());
-      spyOnCommunicationGetByUrl.mockImplementation(async () => undefined);
 
       await resolver.notifyChatMessage(fakeData);
 
