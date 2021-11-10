@@ -2,6 +2,10 @@
 FROM node:16 as builder
 WORKDIR /hepius
 COPY . /hepius
+
+# install packages
+ARG NPM_TOKEN
+RUN echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN" > ~/.npmrc
 RUN yarn
 
 # lean output image

@@ -112,12 +112,11 @@ We have a Laguna shared library called [Pandora](https://github.com/LagunaHealth
    ``` 
    > You have to see the `Logged in as XXXX on https://npm.pkg.github.com/`, or otherwise `yarn install` won't work.
    
-In the end of this process, you need to have a `~/.npmrc` file (located in the root of your computer), having 3 fields:
+In the end of this process, you need to have a `~/.npmrc` file (located in the root of your computer), having 1 field:
 ```bash
-registry=https://registry.npmjs.org/
-//registry.npmjs.org/:_authToken=token_which_was_generated_when_you_login_to_npm
 //npm.pkg.github.com/:_authToken=your-github-access-token-from-previous-step
 ```
+That's it, you can run `yarn` now, and it'll install the pandora private library as well.
 
 ### Shared code settings
 

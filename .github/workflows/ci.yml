@@ -25,12 +25,7 @@ jobs:
         run: npm install -g yarn
       - name: Create npmrc and yarnrc files
         run: |
-          rm ~/.npmrc --force
-          rm ~/.yarnrc
-          echo "registry=https://registry.npmjs.org/" >> ~/.npmrc
-          echo "//registry.npmjs.org/:_authToken=${{secrets.NPM_PRIVATE_AUTH_TOKEN_REGISTRY}}" >> ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{secrets.NPM_PRIVATE_GITHUB_AUTH_TOKEN_REGISTRY}}" >> ~/.npmrc
-          echo 'registry "https://registry.npmjs.org/"' >> ~/.yarnrc
+          echo "//npm.pkg.github.com/:_authToken=${{secrets.NPM_PRIVATE_GITHUB_AUTH_TOKEN_REGISTRY}}" > ~/.npmrc
       - name: Install project dependencies
         run: yarn install --frozen-lockfile
       - name: Run linters
@@ -51,12 +46,7 @@ jobs:
         run: npm install -g yarn
       - name: Create npmrc and yarnrc files
         run: |
-          rm ~/.npmrc --force
-          rm ~/.yarnrc
-          echo "registry=https://registry.npmjs.org/" >> ~/.npmrc
-          echo "//registry.npmjs.org/:_authToken=${{secrets.NPM_PRIVATE_AUTH_TOKEN_REGISTRY}}" >> ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{secrets.NPM_PRIVATE_GITHUB_AUTH_TOKEN_REGISTRY}}" >> ~/.npmrc
-          echo 'registry "https://registry.npmjs.org/"' >> ~/.yarnrc
+          echo "//npm.pkg.github.com/:_authToken=${{secrets.NPM_PRIVATE_GITHUB_AUTH_TOKEN_REGISTRY}}" > ~/.npmrc
       - name: Install project dependencies
         run: yarn install --frozen-lockfile
       - name: Build project
@@ -131,7 +121,7 @@ jobs:
           # Build a docker container and
           # push it to ECR so that it can
           # be deployed to ECS.
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG . --build-arg GIT_COMMIT=$IMAGE_TAG --build-arg NODE_ENV=${{ steps.branch_check.outputs.env_name }}
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG . --build-arg NPM_TOKEN=${{ secrets.NPM_PRIVATE_GITHUB_AUTH_TOKEN_REGISTRY }} --build-arg GIT_COMMIT=${{ github.sha }} --build-arg NODE_ENV=${{ steps.branch_check.outputs.env_name }}
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
       - name: Download task definition
