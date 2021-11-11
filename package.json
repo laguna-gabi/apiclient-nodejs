@@ -11,8 +11,8 @@
     "start:watch": "nest start --watch",
     "start:dev": "export NODE_ENV=development && nest start",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest --config test/jest.json",
-    "test:watch": "jest --config test/jest.json --watch"
+    "test": "jest --config test/unit/jest.json",
+    "test:watch": "jest --config test/unit/jest.json --watch"
   },
   "dependencies": {
     "@lagunahealth/pandora": "^0.1.0",
@@ -20,6 +20,7 @@
     "@nestjs/core": "^8.0.0",
     "@nestjs/mongoose": "^9.0.1",
     "@nestjs/platform-express": "^8.0.0",
+    "config": "^3.3.6",
     "date-fns": "^2.25.0",
     "mongoose": "^6.0.12",
     "reflect-metadata": "^0.1.13",

@@ -1,0 +1,5 @@
+{
+  "db": {
+    "connection": "mongodb://localhost:27020,localhost:27021/iris"
+  }
+}

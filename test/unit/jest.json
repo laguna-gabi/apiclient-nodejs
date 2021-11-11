@@ -1,6 +1,6 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "rootDir": "../unit",
   "testEnvironment": "node",
   "testRegex": ".spec.ts$",
   "maxWorkers": 1,
