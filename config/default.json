@@ -1,5 +1,8 @@
 {
+  "aws": {
+    "region": "us-east-1"
+  },
   "db": {
-    "connection": "mongodb://localhost:27020,localhost:27021/iris"
+    "name": "iris-localhost"
   }
 }

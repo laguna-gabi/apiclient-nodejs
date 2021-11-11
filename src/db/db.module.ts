@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { db } from 'config';
+import { ConfigsService, ProvidersModule } from '../providers';
 
 @Module({
-  imports: [MongooseModule.forRoot(db.connection)],
+  imports: [
+    MongooseModule.forRootAsync({ imports: [ProvidersModule], useExisting: ConfigsService }),
+  ],
 })
 export class DbModule {}
