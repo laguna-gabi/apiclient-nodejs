@@ -415,6 +415,7 @@ describe('AppointmentService', () => {
 
     const noShowReason = faker.lorem.sentence();
     /* eslint-disable max-len */
+
     test.each`
       update1                               | update2
       ${{ noShow: true, noShowReason }} | ${{

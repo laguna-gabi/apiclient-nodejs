@@ -44,6 +44,7 @@ describe('DailyReportCategoryResolver', () => {
     afterEach(() => {
       eventEmitterSpy.mockReset();
     });
+
     it.each([
       [
         'expect to emit notification - no stats-over-threshold',

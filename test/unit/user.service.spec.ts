@@ -9,25 +9,25 @@ import {
   startOfToday,
   startOfTomorrow,
 } from 'date-fns';
-import { Model, model, Types } from 'mongoose';
+import { Model, Types, model } from 'mongoose';
 import { v4 } from 'uuid';
 import { Appointment, AppointmentModule, AppointmentResolver } from '../../src/appointment';
 import { AvailabilityModule, AvailabilityResolver } from '../../src/availability';
 import {
-  Errors,
   ErrorType,
+  Errors,
   IEventNewAppointment,
   IEventUpdateAppointmentsInUser,
 } from '../../src/common';
 import {
-  defaultSlotsParams,
-  defaultUserParams,
   NotNullableUserKeys,
   User,
   UserDto,
   UserModule,
   UserRole,
   UserService,
+  defaultSlotsParams,
+  defaultUserParams,
 } from '../../src/user';
 import {
   compareUsers,

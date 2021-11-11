@@ -12,8 +12,8 @@ import {
   IEventUpdatedAppointment,
   InternalNotificationType,
   InternalNotifyParams,
-  scheduleAppointmentDateFormat,
   UpdatedAppointmentAction,
+  scheduleAppointmentDateFormat,
 } from '../common';
 
 export class AppointmentBase {
