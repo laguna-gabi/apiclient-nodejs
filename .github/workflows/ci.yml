@@ -34,7 +34,7 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: self-hosted
-    timeout-minutes: 10
+    timeout-minutes: 3
     steps:
       - name: Checkout Git repository
         uses: actions/checkout@v2
@@ -51,8 +51,6 @@ jobs:
         run: yarn install --frozen-lockfile
       - name: Build project
         run: yarn build
-      - name: Start docker image with mongodb to localhost and test db
-        run: docker-compose -f docker-compose.yml up -d
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -61,8 +59,5 @@ jobs:
           aws-region: us-east-1
       - name: Unit tests
         run: yarn test
-      - name: Cleanup docker
-        if: ${{ always() }}
-        run: |
-          docker-compose down
-          docker system prune -a --volumes --force
+      - name: check how start looks like
+        run: yarn start
