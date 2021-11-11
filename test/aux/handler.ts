@@ -34,6 +34,7 @@ export class Handler extends BaseHandler {
   notificationsService;
   twilioService;
   slackBot;
+  cognitoService;
   eventEmitter: EventEmitter2;
   communicationService: CommunicationService;
   memberService: MemberService;
@@ -72,6 +73,7 @@ export class Handler extends BaseHandler {
     this.notificationsService = providers.notificationsService;
     this.twilioService = providers.twilioService;
     this.slackBot = providers.slackBot;
+    this.cognitoService = providers.cognitoService;
 
     const apolloServer = createTestClient((this.module as any).apolloServer);
     this.mutations = new Mutations(apolloServer);
@@ -105,6 +107,8 @@ export class Handler extends BaseHandler {
     this.notificationsService.spyOnNotificationsServiceCancel.mockReset();
     this.twilioService.spyOnTwilioGetToken.mockReset();
     this.slackBot.spyOnSlackBotSendMessage.mockReset();
+    this.cognitoService.spyOnCognitoServiceDisableMember.mockReset();
+    this.cognitoService.spyOnCognitoServiceDeleteMember.mockReset();
     this.spyOnGetCommunicationService?.mockReset();
 
     await dbDisconnect();

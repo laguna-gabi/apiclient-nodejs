@@ -9,6 +9,7 @@ import { v4 } from 'uuid';
 import { apiPrefix, webhooks } from '../src/common';
 import { DbModule } from '../src/db/db.module';
 import {
+  CognitoService,
   NotificationsService,
   SendBird,
   SlackBot,
@@ -70,12 +71,13 @@ export const defaultModules = () => {
 
 export const mockProviders = (
   module: TestingModule,
-): { sendBird; notificationsService; twilioService; slackBot } => {
+): { sendBird; notificationsService; twilioService; slackBot; cognitoService } => {
   const sendBird = module.get<SendBird>(SendBird);
   const storage = module.get<StorageService>(StorageService);
   const notificationsService = module.get<NotificationsService>(NotificationsService);
   const twilioService = module.get<TwilioService>(TwilioService);
   const slackBot = module.get<SlackBot>(SlackBot);
+  const cognitoService = module.get<CognitoService>(CognitoService);
 
   const spyOnSendBirdCreateUser = jest.spyOn(sendBird, 'createUser');
   const spyOnSendBirdCreateGroupChannel = jest.spyOn(sendBird, 'createGroupChannel');
@@ -104,6 +106,8 @@ export const mockProviders = (
   const spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
   const spyOnTwilioGetToken = jest.spyOn(twilioService, 'getAccessToken');
   const spyOnSlackBotSendMessage = jest.spyOn(slackBot, 'sendMessage');
+  const spyOnCognitoServiceDisableMember = jest.spyOn(cognitoService, 'disableMember');
+  const spyOnCognitoServiceDeleteMember = jest.spyOn(cognitoService, 'deleteMember');
 
   spyOnSendBirdCreateUser.mockResolvedValue(v4());
   spyOnSendBirdCreateGroupChannel.mockResolvedValue(true);
@@ -126,6 +130,8 @@ export const mockProviders = (
   spyOnSendBirdUpdateChannelName.mockReturnValue(undefined);
   spyOnSendBirdInvite.mockReturnValue(undefined);
   spyOnSendBirdLeave.mockReturnValue(undefined);
+  spyOnCognitoServiceDisableMember.mockReturnValue(undefined);
+  spyOnCognitoServiceDeleteMember.mockReturnValue(undefined);
 
   return {
     sendBird: {
@@ -148,5 +154,6 @@ export const mockProviders = (
     },
     twilioService: { spyOnTwilioGetToken },
     slackBot: { spyOnSlackBotSendMessage },
+    cognitoService: { spyOnCognitoServiceDisableMember, spyOnCognitoServiceDeleteMember },
   };
 };
