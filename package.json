@@ -15,6 +15,7 @@
     "test:watch": "jest --config test/jest.json --watch"
   },
   "dependencies": {
+    "@lagunahealth/pandora": "^0.1.0",
     "@nestjs/common": "^8.0.0",
     "@nestjs/core": "^8.0.0",
     "@nestjs/mongoose": "^9.0.1",
