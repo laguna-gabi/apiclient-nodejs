@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { db } from 'config';
 
 @Module({
-  imports: [MongooseModule.forRoot('mongodb://localhost:27020,localhost:27021')],
+  imports: [MongooseModule.forRoot(db.connection)],
 })
 export class DbModule {}
