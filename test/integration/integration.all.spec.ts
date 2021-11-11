@@ -1,4 +1,5 @@
 import * as config from 'config';
+import { add, startOfToday, startOfTomorrow } from 'date-fns';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
 import {
@@ -31,7 +32,7 @@ import {
   TaskStatus,
   UpdateRecordingParams,
 } from '../../src/member';
-import { User, UserRole } from '../../src/user';
+import { User, UserRole, defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
 import { Creators } from '../aux/creators';
 import { Handler } from '../aux/handler';
@@ -1080,6 +1081,62 @@ describe('Integration tests: all', () => {
         replaceUserForMemberParams,
         invalidFieldsErrors: [Errors.get(ErrorType.userIdOrEmailAlreadyExists)],
       });
+    });
+  });
+
+  describe('user', () => {
+    it.only('should get user slots', async () => {
+      const user = await creators.createAndValidateUser();
+      const org = await creators.createAndValidateOrg();
+      const member: Member = await creators.createAndValidateMember({ org });
+
+      await handler.setContextUserId(user.id).mutations.createAvailabilities({
+        availabilities: [
+          generateAvailabilityInput({
+            start: add(startOfToday(), { hours: 10 }),
+            end: add(startOfToday(), { hours: 22 }),
+          }),
+          generateAvailabilityInput({
+            start: add(startOfTomorrow(), { hours: 10 }),
+            end: add(startOfTomorrow(), { hours: 22 }),
+          }),
+        ],
+      });
+
+      const appointmentParams = generateScheduleAppointmentParams({
+        memberId: member.id,
+        userId: user.id,
+        start: add(startOfToday(), { hours: 9 }),
+        end: add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
+      });
+      const appointment = await handler.mutations.scheduleAppointment({ appointmentParams });
+
+      const result = await handler.queries.getUserSlots({
+        appointmentId: appointment.id,
+        notBefore: add(startOfToday(), { hours: 10 }),
+      });
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          user: {
+            id: user.id,
+            firstName: user.firstName,
+            roles: user.roles,
+            avatar: user.avatar,
+            description: user.description,
+          },
+          member: {
+            id: member.id,
+            firstName: member.firstName,
+          },
+          appointment: {
+            id: appointment.id,
+            start: appointment.start,
+            method: appointment.method,
+            duration: defaultSlotsParams.duration,
+          },
+        }),
+      );
     });
   });
 

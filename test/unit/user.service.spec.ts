@@ -1,28 +1,40 @@
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Model, Types, model } from 'mongoose';
-import { v4 } from 'uuid';
-import { AppointmentModule } from '../../src/appointment';
 import {
-  ErrorType,
+  add,
+  areIntervalsOverlapping,
+  differenceInMinutes,
+  isAfter,
+  isSameDay,
+  startOfToday,
+  startOfTomorrow,
+} from 'date-fns';
+import { Model, model, Types } from 'mongoose';
+import { v4 } from 'uuid';
+import { Appointment, AppointmentModule, AppointmentResolver } from '../../src/appointment';
+import { AvailabilityModule, AvailabilityResolver } from '../../src/availability';
+import {
   Errors,
+  ErrorType,
   IEventNewAppointment,
   IEventUpdateAppointmentsInUser,
 } from '../../src/common';
 import {
+  defaultSlotsParams,
+  defaultUserParams,
   NotNullableUserKeys,
   User,
   UserDto,
   UserModule,
   UserRole,
   UserService,
-  defaultUserParams,
 } from '../../src/user';
 import {
   compareUsers,
   dbConnect,
   dbDisconnect,
   defaultModules,
+  generateAvailabilityInput,
   generateCreateUserParams,
   generateId,
   generateScheduleAppointmentParams,
@@ -31,16 +43,20 @@ import {
 describe('UserService', () => {
   let module: TestingModule;
   let service: UserService;
+  let availabilityResolver: AvailabilityResolver;
+  let appointmentResolver: AppointmentResolver;
   let mockUserModel;
   let userModel: Model<typeof UserDto>;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: defaultModules().concat(UserModule, AppointmentModule),
+      imports: defaultModules().concat(UserModule, AppointmentModule, AvailabilityModule),
       providers: [{ provide: getModelToken(User.name), useValue: Model }],
     }).compile();
 
     service = module.get<UserService>(UserService);
+    availabilityResolver = module.get<AvailabilityResolver>(AvailabilityResolver);
+    appointmentResolver = module.get<AppointmentResolver>(AppointmentResolver);
 
     userModel = model(User.name, UserDto);
     mockUserModel = module.get<Model<User>>(getModelToken(User.name));
@@ -183,6 +199,7 @@ describe('UserService', () => {
       jest.spyOn(mockUserModel, 'aggregate').mockResolvedValue(users);
       const result = await service.getAvailableUser();
       expect(result).toEqual(userId);
+      jest.spyOn(mockUserModel, 'aggregate').mockRestore();
     });
   });
 
@@ -229,5 +246,149 @@ describe('UserService', () => {
       expect(updatedNewUser['appointments']).toEqual(mockAppointmentsIds);
       expect(updatedOldUser['appointments']).toEqual([]);
     });
+  });
+
+  describe('getUserSlots', () => {
+    it('there should not be a slot overlapping a scheduled appointment', async () => {
+      const user = await service.insert(generateCreateUserParams());
+      await createDefaultAvailabilities(user.id);
+
+      const appointment = await scheduleAppointmentWithDate({
+        memberId: generateId(),
+        userId: user.id,
+        start: add(startOfToday(), { hours: 11 }),
+        end: add(startOfToday(), { hours: 11, minutes: defaultSlotsParams.duration }),
+      });
+
+      const result = await service.getSlots({
+        userId: user.id,
+        notBefore: add(startOfToday(), { hours: 10 }),
+      });
+
+      for (let index = 0; index < defaultSlotsParams.maxSlots; index++) {
+        expect(
+          areIntervalsOverlapping(
+            {
+              start: new Date(result.slots[index]),
+              end: add(new Date(result.slots[index]), {
+                minutes: defaultSlotsParams.duration,
+              }),
+            },
+            {
+              start: new Date(appointment.start),
+              end: new Date(appointment.end),
+            },
+          ),
+        ).toEqual(false);
+      }
+    });
+
+    it('should return 6 default slots if availability in the past', async () => {
+      const user = await service.insert(generateCreateUserParams());
+      await availabilityResolver.createAvailabilities({ req: { user: { _id: user.id } } }, [
+        generateAvailabilityInput({
+          start: add(startOfToday(), { hours: 8 }),
+          end: add(startOfToday(), { hours: 10 }),
+        }),
+      ]);
+
+      const result = await service.getSlots({
+        userId: user.id,
+        notBefore: add(startOfToday(), { hours: 10 }),
+      });
+
+      expect(result.slots.length).toEqual(6);
+    });
+
+    it('should return 6 default slots if there is no availability', async () => {
+      const user = await service.insert(generateCreateUserParams());
+      const result = await service.getSlots({
+        userId: user.id,
+        notBefore: add(startOfToday(), { hours: 10 }),
+      });
+
+      expect(result.slots.length).toEqual(6);
+    });
+
+    it('should return 5 slots from today and the next from tomorrow', async () => {
+      const result = await preformGetUserSlots();
+
+      for (let index = 0; index < 5; index++) {
+        expect(
+          isSameDay(new Date(result.slots[index]), add(startOfToday(), { hours: 12 })),
+        ).toEqual(true);
+      }
+
+      for (let index = 5; index < defaultSlotsParams.maxSlots; index++) {
+        expect(
+          isSameDay(new Date(result.slots[index]), add(startOfTomorrow(), { hours: 12 })),
+        ).toEqual(true);
+      }
+    });
+
+    it('check slots default properties and order', async () => {
+      const result = await preformGetUserSlots();
+
+      for (let index = 1; index < defaultSlotsParams.maxSlots; index++) {
+        expect(
+          differenceInMinutes(new Date(result.slots[index]), new Date(result.slots[index - 1])),
+        ).toBeGreaterThanOrEqual(defaultSlotsParams.duration);
+        expect(isAfter(new Date(result.slots[index]), new Date(result.slots[index - 1]))).toEqual(
+          true,
+        );
+      }
+      expect(result.slots.length).toEqual(defaultSlotsParams.maxSlots);
+    });
+
+    const preformGetUserSlots = async () => {
+      const user = await service.insert(generateCreateUserParams());
+      await createDefaultAvailabilities(user.id);
+
+      await scheduleAppointmentWithDate({
+        memberId: generateId(),
+        userId: user.id,
+        start: add(startOfToday(), { hours: 9 }),
+        end: add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
+      });
+
+      return service.getSlots({
+        userId: user.id,
+        notBefore: add(startOfToday(), { hours: 10 }),
+      });
+    };
+
+    const scheduleAppointmentWithDate = async ({
+      memberId,
+      userId,
+      start,
+      end,
+    }: {
+      memberId: string;
+      userId: string;
+      start: Date;
+      end: Date;
+    }): Promise<Appointment> => {
+      const appointmentParams = generateScheduleAppointmentParams({
+        memberId,
+        userId,
+        start,
+        end,
+      });
+
+      return appointmentResolver.scheduleAppointment(appointmentParams);
+    };
+
+    const createDefaultAvailabilities = async (userId: string) => {
+      return availabilityResolver.createAvailabilities({ req: { user: { _id: userId } } }, [
+        generateAvailabilityInput({
+          start: add(startOfToday(), { hours: 10 }),
+          end: add(startOfToday(), { hours: 22 }),
+        }),
+        generateAvailabilityInput({
+          start: add(startOfTomorrow(), { hours: 10 }),
+          end: add(startOfTomorrow(), { hours: 22 }),
+        }),
+      ]);
+    };
   });
 });
