@@ -24,8 +24,7 @@ jobs:
       - name: Install yarn
         run: npm install -g yarn
       - name: Create npmrc and yarnrc files
-        run: |
-          echo "//npm.pkg.github.com/:_authToken=${{secrets.NPM_PRIVATE_GITHUB_AUTH_TOKEN_REGISTRY}}" > ~/.npmr
+        run: echo "//npm.pkg.github.com/:_authToken=${{secrets.NPM_PRIVATE_GITHUB_AUTH_TOKEN_REGISTRY}}" > ~/.npmr
       - name: Install project dependencies
         run: yarn install --frozen-lockfile
       - name: Run linters
@@ -45,8 +44,7 @@ jobs:
       - name: Install yarn
         run: npm install -g yarn
       - name: Create npmrc and yarnrc files
-        run: |
-          echo "//npm.pkg.github.com/:_authToken=${{secrets.NPM_PRIVATE_GITHUB_AUTH_TOKEN_REGISTRY}}" > ~/.npmr
+        run: echo "//npm.pkg.github.com/:_authToken=${{secrets.NPM_PRIVATE_GITHUB_AUTH_TOKEN_REGISTRY}}" > ~/.npmr
       - name: Install project dependencies
         run: yarn install --frozen-lockfile
       - name: Build project
@@ -59,5 +57,3 @@ jobs:
           aws-region: us-east-1
       - name: Unit tests
         run: yarn test
-      - name: check how start looks like
-        run: yarn start
