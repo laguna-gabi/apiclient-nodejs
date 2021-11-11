@@ -1,6 +1,6 @@
 {
   "name": "@lagunahealth/pandora",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "",
   "author": "",
   "license": "UNLICENSED",
@@ -29,7 +29,6 @@
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-jest-formatting": "^3.0.0",
-    "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-prettier": "^4.0.0",
     "prettier": "^2.3.2",
     "source-map-support": "^0.5.20",
