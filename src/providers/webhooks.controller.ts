@@ -1,4 +1,12 @@
-import { Body, Controller, Headers, HttpException, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Headers,
+  HttpException,
+  HttpStatus,
+  Post,
+  UseInterceptors,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SendBird, TwilioService } from '.';
 import * as crypto from 'crypto';
@@ -7,6 +15,7 @@ import {
   IEventNotifyChatMessage,
   IEventSlackMessage,
   Logger,
+  LoggingInterceptor,
   Public,
   SlackChannel,
   SlackIcon,
@@ -17,6 +26,7 @@ import {
 /**
  * Go to '../../test/unit/mocks/webhookSendbirdNewMessagePayload.json' for a payload example
  */
+@UseInterceptors(LoggingInterceptor)
 @Controller(`${apiPrefix}/${webhooks}`)
 export class WebhooksController {
   constructor(
@@ -33,7 +43,11 @@ export class WebhooksController {
 
     const parsedBody = JSON.parse(payload);
 
-    this.logger.debug({ parsedBody, headers }, WebhooksController.name, this.sendbird.name);
+    this.logger.debug(
+      { sender: parsedBody.sender?.user_id, channel: parsedBody.channel.channel_url },
+      WebhooksController.name,
+      this.sendbird.name,
+    );
 
     // If there's no sender, it's an admin message (and we don't want to notify)
     if (parsedBody.sender) {
@@ -57,7 +71,6 @@ export class WebhooksController {
   @Post('twilio/incoming-sms')
   async incomingSms(@Body() body) {
     if (this.twilioService.validateWebhook(body.Token)) {
-      this.logger.debug(body, WebhooksController.name, this.incomingSms.name);
       this.eventEmitter.emit(EventType.sendSmsToChat, {
         phone: body.From,
         message: body.Body,

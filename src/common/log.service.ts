@@ -47,8 +47,8 @@ export class Logger {
     //replace user
     'newUserId',
     'oldUserId',
-    //notifyChatMessage
-    'unreadMessageCount',
+    //sendbird webhook
+    'sender',
   ];
 
   log(params: any = {}, className: string, methodName: string) {
