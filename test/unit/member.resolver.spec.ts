@@ -461,6 +461,38 @@ describe('MemberResolver', () => {
       expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteMember, id);
       expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteSchedules, { memberId: id });
     });
+
+    it('to not call cognito service with undefined device id', async () => {
+      const id = generateId();
+      const member = mockGenerateMember();
+      delete member.deviceId;
+      const memberConfig = mockGenerateMemberConfig();
+      const appointments = [generateAppointmentComposeParams(), generateAppointmentComposeParams()];
+      const communication = generateCommunication({
+        memberId: new Types.ObjectId(id),
+        userId: member.primaryUserId,
+      });
+      spyOnServiceDeleteMember.mockImplementationOnce(async () => ({
+        member,
+        memberConfig,
+        appointments,
+      }));
+      spyOnUserServiceRemoveAppointmentsFromUser.mockImplementationOnce(() => undefined);
+      spyOnCommunicationGetMemberUserCommunication.mockImplementationOnce(() => communication);
+      spyOnCommunicationDeleteCommunication.mockImplementationOnce(() => undefined);
+      spyOnCognitoServiceDeleteMember.mockImplementationOnce(() => undefined);
+      spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
+      spyOnStorageServiceDeleteMember.mockImplementationOnce(() => undefined);
+
+      await resolver.deleteMember(id);
+
+      expect(spyOnCommunicationDeleteCommunication).toBeCalledWith(communication);
+      expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
+      expect(spyOnCognitoServiceDeleteMember).not.toHaveBeenCalled();
+      expect(spyOnStorageServiceDeleteMember).toBeCalledWith(id);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteMember, id);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteSchedules, { memberId: id });
+    });
   });
 
   describe('getMemberUploadDischargeDocumentsLinks', () => {

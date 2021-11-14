@@ -177,7 +177,9 @@ export class MemberResolver extends MemberBase {
       await this.communicationService.deleteCommunication(communication);
     }
     await this.notificationsService.unregister(memberConfig);
-    await this.cognitoService.deleteMember(member.deviceId);
+    if (member.deviceId) {
+      await this.cognitoService.deleteMember(member.deviceId);
+    }
     await this.storageService.deleteMember(id);
     this.eventEmitter.emit(EventType.deleteMember, id);
     const params: IEventDeleteSchedules = { memberId: id };
