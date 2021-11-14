@@ -1,7 +1,9 @@
-import { Platform } from '@lagunahealth/pandora';
-import { image, name, phone } from 'faker';
+import { NotificationType, Platform, SourceApi, TriggeredApi } from '@lagunahealth/pandora';
+import { add } from 'date-fns';
+import { image, internet, lorem, name, phone } from 'faker';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
+import { defaultDispatchParams, Dispatch } from '../src/dispatches';
 import { ClientSettings } from '../src/settings';
 
 export const generateObjectId = (id?): Types.ObjectId => {
@@ -30,5 +32,47 @@ export const generateClientSettings = ({
     isAppointmentsReminderEnabled,
     firstName,
     avatar,
+  };
+};
+
+export const generateDispatch = ({
+  dispatchId = v4(),
+  correlationId = v4(),
+  triggeredApi = TriggeredApi.graphql,
+  sourceApi = SourceApi.hepius,
+  notificationType = NotificationType.text,
+  recipientClientId = v4(),
+  senderClientId = v4(),
+  sendBirdChannelUrl = internet.url(),
+  appointmentId = v4(),
+  peerId = v4(),
+  content = lorem.sentence(),
+  chatLink = true,
+  triggeredAt = add(new Date(), { seconds: 1 }),
+  notificationId = v4(),
+  status = defaultDispatchParams.status,
+  deliveredAt = add(new Date(), { seconds: 2 }),
+  retryCount = defaultDispatchParams.retryCount,
+  failureReason = lorem.sentence(),
+}: Partial<Dispatch> = {}): Dispatch => {
+  return {
+    dispatchId,
+    correlationId,
+    triggeredApi,
+    sourceApi,
+    notificationType,
+    recipientClientId,
+    senderClientId,
+    sendBirdChannelUrl,
+    appointmentId,
+    peerId,
+    content,
+    chatLink,
+    triggeredAt,
+    notificationId,
+    status,
+    deliveredAt,
+    retryCount,
+    failureReason,
   };
 };
