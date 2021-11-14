@@ -762,10 +762,10 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
-"@lagunahealth/pandora@^0.1.3":
-  version "0.1.3"
-  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.1.3/fc1a2a49d31a854c72309285164eb44dbe98382f600ec3aea267c5c0141de0e2#2ae7dcfb32375ca93eff206f9f03c590907fdbec"
-  integrity sha512-cMDZIPiiZyB7d8ChOk8MXUmJPVdARgKc89h7DFHuPPSBL+iWNHb1gZv8wvrteR6ZsvSip+DSwJhYx2e6sO6y5w==
+"@lagunahealth/pandora@^0.1.5":
+  version "0.1.5"
+  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.1.5/d7d66fd298cd0cb4e3eea762faeac338efb1739d04ad53e29fa87aef6b173813#349757a0092f20f8f57908944d50041cb7bbe862"
+  integrity sha512-tX3xQkxckFjdeQDV4B4M4yINuu9g8dW/vZkIxah5yI0IXq3iToPyjSsrccrPcSoxBb0POGxJzAFRsePfDfvqgA==
 
 "@nestjs/cli@^8.0.0":
   version "8.1.4"

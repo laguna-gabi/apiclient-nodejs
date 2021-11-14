@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ClientSettings, ClientSettingsDocument } from '.';
+import { filterNonNullFields } from '../common';
 
 @Injectable()
 export class SettingsService {
@@ -11,10 +12,7 @@ export class SettingsService {
   ) {}
 
   async update(settings: ClientSettings): Promise<ClientSettings> {
-    const setParams = Object.keys(settings)
-      .filter((k) => settings[k] !== null)
-      .reduce((a, k) => ({ ...a, [k]: settings[k] }), {});
-
+    const setParams = filterNonNullFields(settings);
     return this.clientSettingsModel.findOneAndUpdate(
       { id: settings.id },
       { $set: setParams },
