@@ -14,20 +14,21 @@ export interface IUpdateClientSettings {
 
 interface IDispatch {
   dispatchId: string;
-  correlationId?: string;
-  clientId?: string;
 }
 
 export interface ICreateDispatch extends IDispatch {
+  correlationId: string;
   triggeredApi: TriggeredApi;
   sourceApi: SourceApi;
   notificationType: AllNotificationTypes;
+  recipientClientId: string;
+  senderClientId?: string;
   sendBirdChannelUrl?: string;
   appointmentId?: string;
   peerId?: string;
   content?: string;
   chatLink?: boolean;
-  when?: Date;
+  triggeredAt?: Date;
   notificationId?: string;
 }
 
