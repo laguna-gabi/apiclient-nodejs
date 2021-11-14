@@ -193,14 +193,16 @@ export class MemberResolver extends MemberBase {
     if (!newUser) {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
-    const oldUserId = await this.memberService.replaceUserForMember(replaceUserForMemberParams);
-    const eventParams: IEventUpdateUserInCommunication = {
+    const member = await this.memberService.updatePrimaryUser(replaceUserForMemberParams);
+    const { platform } = await this.memberService.getMemberConfig(member.id);
+    const updateUserInCommunicationParams: IEventUpdateUserInCommunication = {
       newUser,
-      oldUserId,
-      memberId: replaceUserForMemberParams.memberId,
+      oldUserId: member.primaryUserId,
+      member,
+      platform,
     };
 
-    this.eventEmitter.emit(EventType.updateUserInCommunication, eventParams);
+    this.eventEmitter.emit(EventType.updateUserInCommunication, updateUserInCommunicationParams);
     return true;
   }
 

@@ -152,21 +152,28 @@ export class CommunicationService {
   async updateUserInCommunication({
     newUser,
     oldUserId,
-    memberId,
+    member,
+    platform,
   }: {
     newUser: User;
     oldUserId: string;
-    memberId: string;
+    member: Member;
+    platform: Platform;
   }) {
-    const communication = await this.get({ memberId, userId: oldUserId });
+    const communication = await this.get({ memberId: member.id, userId: oldUserId });
     if (!communication) {
-      throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
+      await this.connectMemberToUser(member, newUser, platform);
+    } else {
+      await this.sendBird.replaceUserInChannel(
+        communication.sendBirdChannelUrl,
+        oldUserId,
+        newUser,
+      );
+      await this.communicationModel.findOneAndUpdate(
+        { sendBirdChannelUrl: communication.sendBirdChannelUrl },
+        { userId: newUser.id },
+      );
     }
-    await this.sendBird.replaceUserInChannel(communication.sendBirdChannelUrl, oldUserId, newUser);
-    await this.communicationModel.findOneAndUpdate(
-      { sendBirdChannelUrl: communication.sendBirdChannelUrl },
-      { userId: newUser.id },
-    );
   }
 
   async get(params: GetCommunicationParams) {

@@ -483,6 +483,7 @@ export class MemberService extends BaseService {
     for (let index = 0; index < member.goals.length; index++) {
       await this.goalModel.deleteOne({ _id: member.goals[index] });
     }
+
     for (let index = 0; index < member.actionItems.length; index++) {
       await this.actionItemModel.deleteOne({ _id: member.actionItems[index] });
     }
@@ -718,7 +719,7 @@ export class MemberService extends BaseService {
    **************************************** Modifications *****************************************
    ************************************************************************************************/
 
-  async replaceUserForMember(params: ReplaceUserForMemberParams): Promise<string> {
+  async updatePrimaryUser(params: ReplaceUserForMemberParams): Promise<Member> {
     const { memberId, userId } = params;
 
     // replace primary user and add the new user to member's list
@@ -730,12 +731,13 @@ export class MemberService extends BaseService {
     if (!member) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
+
     // if old user == new user
     if (member.primaryUserId === params.userId) {
       throw new Error(Errors.get(ErrorType.userIdOrEmailAlreadyExists));
     }
-    // return the old primaryUserId
-    return member.primaryUserId;
+    // return the old member (with the old primaryUserId)
+    return this.replaceId(member);
   }
 
   /*************************************************************************************************
