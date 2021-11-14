@@ -1,6 +1,6 @@
 import { AllNotificationTypes, Platform, TriggeredApi } from '.';
 
-export interface IUpdateMemberSettings {
+export interface IUpdateClientSettings {
   id: string;
   orgName?: string;
   phone?: string;
@@ -8,22 +8,20 @@ export interface IUpdateMemberSettings {
   externalUserId?: string;
   isPushNotificationsEnabled?: boolean;
   isAppointmentsReminderEnabled?: boolean;
-}
-
-export interface IUpdateUserSettings {
-  id: string;
   firstName?: string;
   avatar?: string;
 }
 
-export interface IDeleteDispatch {
+interface IDispatch {
   dispatchId: string;
-  correlationId: string;
+  correlationId?: string;
   memberId?: string;
   userId?: string;
 }
 
-export interface ICreateDispatch extends IDeleteDispatch {
+export type IDeleteDispatch = IDispatch;
+
+export interface ICreateDispatch extends IDispatch {
   triggeredApi: TriggeredApi;
   notificationType: AllNotificationTypes;
   sendBirdChannelUrl?: string;

@@ -62,8 +62,6 @@ jobs:
         run: npm install -g yarn
       - name: Install project dependencies
         run: yarn install --frozen-lockfile
-      - name: what-package-json
-        run: cat package.json
       - name: Build project
         run: yarn tsc
       - name: deploy
