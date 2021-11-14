@@ -478,6 +478,7 @@ export class MemberResolver extends MemberBase {
    */
   @OnEvent(EventType.internalNotify, { async: true })
   async internalNotify(params: InternalNotifyParams) {
+    this.logger.debug(params, MemberResolver.name, this.internalNotify.name);
     const { memberId, userId, type, metadata } = params;
     let content = params.content;
 

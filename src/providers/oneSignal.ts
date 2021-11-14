@@ -42,6 +42,7 @@ export class OneSignal {
     token: string;
     externalUserId: string;
   }): Promise<string | undefined> {
+    this.logger.debug({ token, externalUserId }, OneSignal.name, this.register.name);
     try {
       const data = {
         app_id: await this.getApiId(Platform.ios),
@@ -80,6 +81,7 @@ export class OneSignal {
   }
 
   async send(sendOneSignalNotification: SendOneSignalNotification) {
+    this.logger.debug(sendOneSignalNotification, OneSignal.name, this.send.name);
     const { platform, externalUserId, data, content } = sendOneSignalNotification;
     this.logger.debug(data, OneSignal.name, this.send.name);
 
@@ -136,8 +138,9 @@ export class OneSignal {
     }
   }
 
-  async cancel(params: CancelNotificationParams) {
-    const { platform, externalUserId, data } = params;
+  async cancel(cancelNotificationParams: CancelNotificationParams) {
+    this.logger.debug(cancelNotificationParams, OneSignal.name, this.cancel.name);
+    const { platform, externalUserId, data } = cancelNotificationParams;
 
     const config = await this.getConfig(platform, data.type);
     const app_id = await this.getApiId(platform, data.type);
@@ -170,7 +173,7 @@ export class OneSignal {
             return result.data.id;
           }
         } catch (ex) {
-          this.logger.error(params, OneSignal.name, this.cancel.name, ex);
+          this.logger.error(cancelNotificationParams, OneSignal.name, this.cancel.name, ex);
         }
       }
     }

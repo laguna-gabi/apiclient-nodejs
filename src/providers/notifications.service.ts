@@ -52,24 +52,20 @@ export class NotificationsService {
     sendSendBirdNotification?: SendSendBirdNotification;
   }): Promise<string> {
     if (sendOneSignalNotification) {
-      this.logger.debug(sendOneSignalNotification, NotificationsService.name, this.send.name);
       this.logger.audit(AuditType.message, sendOneSignalNotification, this.send.name);
       return this.oneSignal.send(sendOneSignalNotification);
     }
     if (sendTwilioNotification) {
-      this.logger.debug(sendTwilioNotification, NotificationsService.name, this.send.name);
       this.logger.audit(AuditType.message, sendTwilioNotification, this.send.name);
       return this.twilio.send(sendTwilioNotification);
     }
     if (sendSendBirdNotification) {
-      this.logger.debug(sendSendBirdNotification, NotificationsService.name, this.send.name);
       this.logger.audit(AuditType.message, sendSendBirdNotification, this.send.name);
       return this.sendBird.send(sendSendBirdNotification);
     }
   }
 
   async cancel(cancelNotificationParams: CancelNotificationParams) {
-    this.logger.debug(cancelNotificationParams, NotificationsService.name, this.cancel.name);
     this.logger.audit(AuditType.message, cancelNotificationParams, this.cancel.name);
     return this.oneSignal.cancel(cancelNotificationParams);
   }

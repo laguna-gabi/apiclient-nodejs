@@ -192,6 +192,7 @@ export class SendBird implements OnModuleInit {
   }
 
   async send(sendSendBirdNotification: SendSendBirdNotification) {
+    this.logger.debug(sendSendBirdNotification, SendBird.name, this.send.name);
     const { userId, sendBirdChannelUrl, message, notificationType, appointmentId } =
       sendSendBirdNotification;
     const methodName = this.send.name;
