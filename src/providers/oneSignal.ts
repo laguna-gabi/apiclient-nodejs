@@ -121,7 +121,7 @@ export class OneSignal {
           content,
           type: sendOneSignalNotification.data.type,
         };
-        this.eventEmitter.emit(EventType.unregisterMemberFromNotifications, eventParams);
+        this.eventEmitter.emit(EventType.notifyOfflineMember, eventParams);
       } else {
         this.logger.error(
           sendOneSignalNotification,

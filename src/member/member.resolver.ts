@@ -1,6 +1,7 @@
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import * as config from 'config';
 import { millisecondsInHour } from 'date-fns';
 import { format, getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
 import { camelCase } from 'lodash';
@@ -650,18 +651,14 @@ export class MemberResolver extends MemberBase {
     }
   }
 
-  @OnEvent(EventType.unregisterMemberFromNotifications, { async: true })
-  async unregisterMemberFromNotifications(params: IEventUnregisterMemberFromNotifications) {
-    this.logger.debug(params, MemberResolver.name, this.unregisterMemberFromNotifications.name);
-    const { phone, content, type } = params;
+  @OnEvent(EventType.notifyOfflineMember, { async: true })
+  async notifyOfflineMember(params: IEventUnregisterMemberFromNotifications) {
+    this.logger.debug(params, MemberResolver.name, this.notifyOfflineMember.name);
+    const { phone, type } = params;
+    const content = (params.content += `\n${config.get('hosts.dynamicLink')}`);
     try {
-      const member = await this.memberService.getByPhone(phone);
-      await this.memberService.updateMemberConfig({
-        memberId: member.id,
-        platform: Platform.web,
-        isPushNotificationsEnabled: false,
-      });
-      if (type === NotificationType.text || type === InternalNotificationType.textToMember) {
+      if (type === NotificationType.text) {
+        const member = await this.memberService.getByPhone(phone);
         return await this.internalNotify({
           memberId: member.id,
           userId: member.primaryUserId,
@@ -671,12 +668,7 @@ export class MemberResolver extends MemberBase {
         });
       }
     } catch (ex) {
-      this.logger.error(
-        params,
-        MemberResolver.name,
-        this.unregisterMemberFromNotifications.name,
-        ex,
-      );
+      this.logger.error(params, MemberResolver.name, this.notifyOfflineMember.name, ex);
     }
   }
 

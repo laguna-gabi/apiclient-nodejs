@@ -35,7 +35,7 @@ export enum EventType {
   deleteSchedules = 'deleteSchedules',
   deleteMember = 'deleteMember',
   removeAppointmentsFromUser = 'removeAppointmentsFromUser',
-  unregisterMemberFromNotifications = 'unregisterMemberFromNotifications',
+  notifyOfflineMember = 'notifyOfflineMember',
   deleteLogReminder = 'deleteLogReminder',
 
   unconsentedAppointmentEnded = 'unconsentedAppointmentEnded',
