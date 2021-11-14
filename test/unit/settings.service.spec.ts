@@ -17,13 +17,13 @@ describe(SettingsService.name, () => {
     await module.close();
   });
 
-  it('should update for a new member', async () => {
+  it('should update for a new client', async () => {
     const settings: ClientSettings = generateClientSettings();
     const result = await service.update(settings);
     expect(result).toEqual(expect.objectContaining(settings));
   });
 
-  it('should update for an existing member', async () => {
+  it('should update for an existing client', async () => {
     const settings: ClientSettings = generateClientSettings();
     const result = await service.update(settings);
     expect(result).toEqual(expect.objectContaining(settings));
