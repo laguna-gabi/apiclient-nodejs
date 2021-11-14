@@ -762,10 +762,10 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
-"@lagunahealth/pandora@^0.1.2":
-  version "0.1.2"
-  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.1.2/ea0cfe5eb85a5fd90bdd2e468d73fa0a957e6a2cc431a8a8f9687bca0141b8dd#e886fe2d4e76a8d026821e1fd9bd75b89ddb4b47"
-  integrity sha512-1bqaFn4qaodQt4HCiUjxD5h7f9HAA+NO3PNh3rHTq1rWex/GwQwGHP60Tt8iz3CdjnAyx17mIdLg94NiXpGYDg==
+"@lagunahealth/pandora@^0.1.3":
+  version "0.1.3"
+  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.1.3/fc1a2a49d31a854c72309285164eb44dbe98382f600ec3aea267c5c0141de0e2#2ae7dcfb32375ca93eff206f9f03c590907fdbec"
+  integrity sha512-cMDZIPiiZyB7d8ChOk8MXUmJPVdARgKc89h7DFHuPPSBL+iWNHb1gZv8wvrteR6ZsvSip+DSwJhYx2e6sO6y5w==
 
 "@nestjs/cli@^8.0.0":
   version "8.1.4"
@@ -5293,14 +5293,9 @@ uuid@3.3.2:
   resolved "https://registry.npmjs.org/uuid/-/uuid-3.3.2.tgz#1b4af4955eb3077c501c23872fc6513811587131"
   integrity sha512-yXJmeNaw3DnnKAOKJE51sL/ZaYfWJRl1pK9dr19YFCu0ObS231AB1/LbqTKRAQ5kw8A90rA6fr4riOUpTZvQZA==
 
-uuid@8.3.2:
+uuid@8.3.2, uuid@^8.3.2:
   version "8.3.2"
   resolved "https://registry.npmjs.org/uuid/-/uuid-8.3.2.tgz"
-  integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
-
-uuid@^8.3.2:
-  version "8.3.2"
-  resolved "https://registry.npmjs.org/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
   integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
 
 v8-compile-cache@^2.0.3:
