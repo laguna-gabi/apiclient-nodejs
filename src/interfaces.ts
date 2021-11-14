@@ -1,4 +1,4 @@
-import { AllNotificationTypes, Platform, TriggeredApi } from '.';
+import { AllNotificationTypes, Platform, SourceApi, TriggeredApi } from '.';
 
 export interface IUpdateClientSettings {
   id: string;
@@ -19,10 +19,9 @@ interface IDispatch {
   userId?: string;
 }
 
-export type IDeleteDispatch = IDispatch;
-
 export interface ICreateDispatch extends IDispatch {
   triggeredApi: TriggeredApi;
+  sourceApi: SourceApi;
   notificationType: AllNotificationTypes;
   sendBirdChannelUrl?: string;
   appointmentId?: string;
@@ -32,3 +31,5 @@ export interface ICreateDispatch extends IDispatch {
   when?: Date;
   notificationId?: string;
 }
+
+export type IDeleteDispatch = IDispatch;
