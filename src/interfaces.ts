@@ -15,8 +15,7 @@ export interface IUpdateClientSettings {
 interface IDispatch {
   dispatchId: string;
   correlationId?: string;
-  memberId?: string;
-  userId?: string;
+  clientId?: string;
 }
 
 export interface ICreateDispatch extends IDispatch {
