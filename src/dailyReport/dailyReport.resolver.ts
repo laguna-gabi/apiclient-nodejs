@@ -59,7 +59,7 @@ export class DailyReportResolver {
 
       this.eventEmitter.emit(EventType.internalNotify, params);
 
-      this.logMemberOverThresholdIndication(dailyReportCategoriesInput.memberId);
+      this.dailyReportService.logMemberOverThresholdIndication(dailyReportCategoriesInput.memberId);
 
       await this.dailyReportService.setNotificationIndication(
         dailyReportCategoriesInput.memberId,
@@ -89,16 +89,5 @@ export class DailyReportResolver {
         ),
       },
     };
-  }
-
-  //----------------------------------------------------------------
-  // Service Methods
-  //----------------------------------------------------------------
-  logMemberOverThresholdIndication(memberId: string) {
-    this.logger.log(
-      { memberId },
-      DailyReportService.name,
-      this.logMemberOverThresholdIndication.name,
-    );
   }
 }

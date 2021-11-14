@@ -8,6 +8,7 @@ import {
   EventType,
   IEventSlackMessage,
   Logger,
+  SendTwilioNotification,
   SlackChannel,
   SlackIcon,
   generateOrgNamePrefix,
@@ -44,15 +45,15 @@ export class TwilioService implements OnModuleInit {
     this.client = new Twilio(this.accountSid, this.authToken);
   }
 
-  async send({ body, to, orgName }: { body: string; to: string; orgName?: string }) {
+  async send(sendTwilioNotification: SendTwilioNotification) {
+    this.logger.debug(sendTwilioNotification, TwilioService.name, this.send.name);
+    const { body, to, orgName } = sendTwilioNotification;
     if (process.env.NODE_ENV === Environments.production && !to.startsWith('+972')) {
-      /**
-       * KEEP return await when its inside try catch
-       */
       try {
+        //KEEP return await when its inside try catch
         return await this.client.messages.create({ body, to, from: this.source });
       } catch (ex) {
-        this.logger.error(undefined, TwilioService.name, this.send.name, ex);
+        this.logger.error(sendTwilioNotification, TwilioService.name, this.send.name, ex);
       }
     } else {
       const params: IEventSlackMessage = {

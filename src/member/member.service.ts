@@ -461,6 +461,7 @@ export class MemberService extends BaseService {
   }
 
   async moveMemberToArchive(id: string) {
+    this.logger.debug({ memberId: id }, MemberService.name, this.moveMemberToArchive.name);
     const member = await this.get(id);
     const memberConfig = await this.getMemberConfig(id);
 
@@ -469,11 +470,11 @@ export class MemberService extends BaseService {
     await this.memberModel.deleteOne({ _id: new Types.ObjectId(id) });
     await this.memberConfigModel.deleteOne({ memberId: new Types.ObjectId(id) });
 
-    this.logger.debug({ memberId: id }, MemberService.name, this.moveMemberToArchive.name);
     return { member, memberConfig };
   }
 
   async deleteMember(id: string) {
+    this.logger.debug({ memberId: id }, MemberService.name, this.deleteMember.name);
     const member = await this.get(id);
     const memberConfig = await this.getMemberConfig(id);
 
@@ -483,12 +484,12 @@ export class MemberService extends BaseService {
     for (let index = 0; index < member.goals.length; index++) {
       await this.goalModel.deleteOne({ _id: member.goals[index] });
     }
+
     for (let index = 0; index < member.actionItems.length; index++) {
       await this.actionItemModel.deleteOne({ _id: member.actionItems[index] });
     }
     await this.recordingModel.deleteMany({ memberId: new Types.ObjectId(id) });
 
-    this.logger.debug({ memberId: id }, MemberService.name, this.deleteMember.name);
     return { member, memberConfig };
   }
 
@@ -618,6 +619,7 @@ export class MemberService extends BaseService {
   }
 
   async updateMemberConfigRegisteredAt(memberId: Types.ObjectId) {
+    this.logger.debug({ memberId }, MemberService.name, this.updateMemberConfigRegisteredAt.name);
     const result = await this.memberConfigModel.updateOne(
       { memberId },
       { $set: { firstLoggedInAt: new Date() } },
@@ -718,7 +720,8 @@ export class MemberService extends BaseService {
    **************************************** Modifications *****************************************
    ************************************************************************************************/
 
-  async replaceUserForMember(params: ReplaceUserForMemberParams): Promise<string> {
+  async updatePrimaryUser(params: ReplaceUserForMemberParams): Promise<Member> {
+    this.logger.debug(params, MemberService.name, this.updatePrimaryUser.name);
     const { memberId, userId } = params;
 
     // replace primary user and add the new user to member's list
@@ -730,12 +733,13 @@ export class MemberService extends BaseService {
     if (!member) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
+
     // if old user == new user
     if (member.primaryUserId === params.userId) {
       throw new Error(Errors.get(ErrorType.userIdOrEmailAlreadyExists));
     }
-    // return the old primaryUserId
-    return member.primaryUserId;
+    // return the old member (with the old primaryUserId)
+    return this.replaceId(member);
   }
 
   /*************************************************************************************************

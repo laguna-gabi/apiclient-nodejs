@@ -1,6 +1,7 @@
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import * as config from 'config';
 import { millisecondsInHour } from 'date-fns';
 import { format, getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
 import { camelCase } from 'lodash';
@@ -177,7 +178,9 @@ export class MemberResolver extends MemberBase {
       await this.communicationService.deleteCommunication(communication);
     }
     await this.notificationsService.unregister(memberConfig);
-    await this.cognitoService.deleteMember(member.deviceId);
+    if (member.deviceId) {
+      await this.cognitoService.deleteMember(member.deviceId);
+    }
     await this.storageService.deleteMember(id);
     this.eventEmitter.emit(EventType.deleteMember, id);
     const params: IEventDeleteSchedules = { memberId: id };
@@ -193,14 +196,16 @@ export class MemberResolver extends MemberBase {
     if (!newUser) {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
-    const oldUserId = await this.memberService.replaceUserForMember(replaceUserForMemberParams);
-    const eventParams: IEventUpdateUserInCommunication = {
+    const member = await this.memberService.updatePrimaryUser(replaceUserForMemberParams);
+    const { platform } = await this.memberService.getMemberConfig(member.id);
+    const updateUserInCommunicationParams: IEventUpdateUserInCommunication = {
       newUser,
-      oldUserId,
-      memberId: replaceUserForMemberParams.memberId,
+      oldUserId: member.primaryUserId,
+      member,
+      platform,
     };
 
-    this.eventEmitter.emit(EventType.updateUserInCommunication, eventParams);
+    this.eventEmitter.emit(EventType.updateUserInCommunication, updateUserInCommunicationParams);
     return true;
   }
 
@@ -473,6 +478,7 @@ export class MemberResolver extends MemberBase {
    */
   @OnEvent(EventType.internalNotify, { async: true })
   async internalNotify(params: InternalNotifyParams) {
+    this.logger.debug(params, MemberResolver.name, this.internalNotify.name);
     const { memberId, userId, type, metadata } = params;
     let content = params.content;
 
@@ -646,18 +652,14 @@ export class MemberResolver extends MemberBase {
     }
   }
 
-  @OnEvent(EventType.unregisterMemberFromNotifications, { async: true })
-  async unregisterMemberFromNotifications(params: IEventUnregisterMemberFromNotifications) {
-    this.logger.debug(params, MemberResolver.name, this.unregisterMemberFromNotifications.name);
-    const { phone, content, type } = params;
+  @OnEvent(EventType.notifyOfflineMember, { async: true })
+  async notifyOfflineMember(params: IEventUnregisterMemberFromNotifications) {
+    this.logger.debug(params, MemberResolver.name, this.notifyOfflineMember.name);
+    const { phone, type } = params;
+    const content = (params.content += `\n${config.get('hosts.dynamicLink')}`);
     try {
-      const member = await this.memberService.getByPhone(phone);
-      await this.memberService.updateMemberConfig({
-        memberId: member.id,
-        platform: Platform.web,
-        isPushNotificationsEnabled: false,
-      });
-      if (type === NotificationType.text || type === InternalNotificationType.textToMember) {
+      if (type === NotificationType.text) {
+        const member = await this.memberService.getByPhone(phone);
         return await this.internalNotify({
           memberId: member.id,
           userId: member.primaryUserId,
@@ -667,12 +669,7 @@ export class MemberResolver extends MemberBase {
         });
       }
     } catch (ex) {
-      this.logger.error(
-        params,
-        MemberResolver.name,
-        this.unregisterMemberFromNotifications.name,
-        ex,
-      );
+      this.logger.error(params, MemberResolver.name, this.notifyOfflineMember.name, ex);
     }
   }
 

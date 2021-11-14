@@ -16,10 +16,10 @@ export class UserSecurityService extends BaseService {
     super();
   }
 
-  async getUserByAuthId(authId: string): Promise<UserDocument> {
+  async getUserByAuthId(authId: string): Promise<User> {
     return this.userModel.findOne({ authId });
   }
-  async getMemberByAuthId(authId: string): Promise<MemberDocument> {
+  async getMemberByAuthId(authId: string): Promise<Member> {
     return this.memberModel.findOne({ authId });
   }
 }

@@ -195,12 +195,12 @@ export class CommunicationResolver {
   async updateUserInCommunication(params: IEventUpdateUserInCommunication) {
     try {
       await this.communicationService.updateUserInCommunication(params);
-      const replacedUserInCommunicationParams: IEventUpdateUserInAppointments = {
+      const updateUserInAppointmentsParams: IEventUpdateUserInAppointments = {
         oldUserId: params.oldUserId,
         newUserId: params.newUser.id,
-        memberId: params.memberId,
+        memberId: params.member.id,
       };
-      this.eventEmitter.emit(EventType.updateUserInAppointments, replacedUserInCommunicationParams);
+      this.eventEmitter.emit(EventType.updateUserInAppointments, updateUserInAppointmentsParams);
       this.logger.debug(params, CommunicationResolver.name, this.updateUserInCommunication.name);
     } catch (ex) {
       this.logger.error(

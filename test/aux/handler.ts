@@ -18,7 +18,7 @@ import {
   generateUniqueUrl,
 } from '..';
 import { AppModule } from '../../src/app.module';
-import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
+import { AuthService, GlobalAuthGuard, RolesGuard } from '../../src/auth';
 import { bearerToken } from '../../src/common';
 import { CommunicationService } from '../../src/communication';
 import { Member, MemberService } from '../../src/member';
@@ -60,7 +60,7 @@ export class Handler extends BaseHandler {
     if (withGuards) {
       const reflector = this.app.get(Reflector);
       this.app.useGlobalGuards(new GlobalAuthGuard());
-      this.app.useGlobalGuards(new RolesGuard(reflector));
+      this.app.useGlobalGuards(new RolesGuard(reflector, this.app.get(AuthService)));
     }
 
     await this.app.init();

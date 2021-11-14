@@ -137,12 +137,14 @@ describe('CommunicationResolver', () => {
       spyOnServiceUpdateUserInCommunication.mockImplementationOnce(() => undefined);
       const oldUserId = generateId();
       const newUser = mockGenerateUser();
-      const memberId = generateId();
+      const member = mockGenerateMember();
+      const platform = Platform.android;
 
       const params = {
         oldUserId,
         newUser,
-        memberId,
+        member,
+        platform,
       };
 
       await resolver.updateUserInCommunication(params);
@@ -150,7 +152,7 @@ describe('CommunicationResolver', () => {
       expect(spyOnEventEmitter).toBeCalledWith(EventType.updateUserInAppointments, {
         oldUserId,
         newUserId: newUser.id,
-        memberId,
+        memberId: member.id,
       });
     });
   });

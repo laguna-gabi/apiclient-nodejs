@@ -283,17 +283,18 @@ describe('CommunicationService', () => {
     it('should replace user in communication', async () => {
       const oldUserId = generateId();
       const newUser = mockGenerateUser();
-      const memberId = generateId();
+      const member = mockGenerateMember();
       const sendBirdChannelUrl = faker.internet.url();
 
       const params = {
         oldUserId,
         newUser,
-        memberId,
+        member,
+        platform: Platform.android,
       };
 
       mockServiceGet.mockImplementationOnce(async () => ({
-        memberId: memberId,
+        memberId: member.id,
         userId: newUser.id,
         sendBirdChannelUrl,
       }));
@@ -307,6 +308,25 @@ describe('CommunicationService', () => {
         newUser.firstName,
         newUser.avatar,
       );
+    });
+
+    it('should create new communication if old communication doesnt exist', async () => {
+      const oldUserId = generateId();
+      const newUser = mockGenerateUser();
+      const member = mockGenerateMember();
+      const platform = Platform.android;
+      const spyOnServicesConnectMemberToUser = jest.spyOn(service, 'connectMemberToUser');
+
+      const params = {
+        oldUserId,
+        newUser,
+        member,
+        platform,
+      };
+      mockServiceGet.mockImplementationOnce(async () => undefined);
+
+      await service.updateUserInCommunication(params);
+      expect(spyOnServicesConnectMemberToUser).toBeCalledWith(member, newUser, platform);
     });
   });
 

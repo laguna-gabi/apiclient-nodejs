@@ -461,6 +461,38 @@ describe('MemberResolver', () => {
       expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteMember, id);
       expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteSchedules, { memberId: id });
     });
+
+    it('to not call cognito service with undefined device id', async () => {
+      const id = generateId();
+      const member = mockGenerateMember();
+      delete member.deviceId;
+      const memberConfig = mockGenerateMemberConfig();
+      const appointments = [generateAppointmentComposeParams(), generateAppointmentComposeParams()];
+      const communication = generateCommunication({
+        memberId: new Types.ObjectId(id),
+        userId: member.primaryUserId,
+      });
+      spyOnServiceDeleteMember.mockImplementationOnce(async () => ({
+        member,
+        memberConfig,
+        appointments,
+      }));
+      spyOnUserServiceRemoveAppointmentsFromUser.mockImplementationOnce(() => undefined);
+      spyOnCommunicationGetMemberUserCommunication.mockImplementationOnce(() => communication);
+      spyOnCommunicationDeleteCommunication.mockImplementationOnce(() => undefined);
+      spyOnCognitoServiceDeleteMember.mockImplementationOnce(() => undefined);
+      spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
+      spyOnStorageServiceDeleteMember.mockImplementationOnce(() => undefined);
+
+      await resolver.deleteMember(id);
+
+      expect(spyOnCommunicationDeleteCommunication).toBeCalledWith(communication);
+      expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
+      expect(spyOnCognitoServiceDeleteMember).not.toHaveBeenCalled();
+      expect(spyOnStorageServiceDeleteMember).toBeCalledWith(id);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteMember, id);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteSchedules, { memberId: id });
+    });
   });
 
   describe('getMemberUploadDischargeDocumentsLinks', () => {
@@ -978,37 +1010,45 @@ describe('MemberResolver', () => {
   describe('replaceUserForMember', () => {
     let spyOnServiceReplaceUserForMember;
     let spyOnUserServiceGet;
+    let spyOnServiceGetMemberConfig;
 
     beforeEach(() => {
       spyOnUserServiceGet = jest.spyOn(userService, 'get');
-      spyOnServiceReplaceUserForMember = jest.spyOn(service, 'replaceUserForMember');
+      spyOnServiceReplaceUserForMember = jest.spyOn(service, 'updatePrimaryUser');
+      spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
     });
 
     afterEach(() => {
       spyOnServiceReplaceUserForMember.mockReset();
       spyOnUserServiceGet.mockReset();
       spyOnEventEmitter.mockReset();
+      spyOnServiceGetMemberConfig.mockReset();
     });
 
     it('should set new user for a given member', async () => {
-      const memberId = generateId();
+      const member = mockGenerateMember();
       const user = mockGenerateUser();
-      const oldUserId = generateId();
+      const memberConfig = mockGenerateMemberConfig();
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGet.mockImplementationOnce(async () => user);
-      spyOnServiceReplaceUserForMember.mockImplementationOnce(async () => oldUserId);
+      spyOnServiceReplaceUserForMember.mockImplementationOnce(async () => member);
 
-      await resolver.replaceUserForMember({ memberId, userId: user.id });
+      await resolver.replaceUserForMember({ memberId: member.id, userId: user.id });
 
       expect(spyOnUserServiceGet).toBeCalledWith(user.id);
-      expect(spyOnServiceReplaceUserForMember).toBeCalledWith({ memberId, userId: user.id });
+      expect(spyOnServiceReplaceUserForMember).toBeCalledWith({
+        memberId: member.id,
+        userId: user.id,
+      });
       expect(spyOnEventEmitter).toBeCalledWith(EventType.updateUserInCommunication, {
         newUser: user,
-        oldUserId,
-        memberId,
+        oldUserId: member.primaryUserId,
+        member,
+        platform: memberConfig.platform,
       });
     });
 
-    it("should throw an error when the new user doesn't exist", async () => {
+    it("should throw an exception when the new user doesn't exist", async () => {
       const memberId = generateId();
       const user = mockGenerateUser();
       spyOnUserServiceGet.mockImplementationOnce(async () => null);
@@ -1017,6 +1057,23 @@ describe('MemberResolver', () => {
         Errors.get(ErrorType.userNotFound),
       );
     });
+
+    test.each([ErrorType.memberNotFound, ErrorType.userIdOrEmailAlreadyExists])(
+      `should raise an exception when the service raises exception: %p`,
+      async (error) => {
+        const memberId = generateId();
+        const user = mockGenerateUser();
+        spyOnUserServiceGet.mockImplementationOnce(async () => user);
+        spyOnServiceReplaceUserForMember.mockImplementationOnce(async () => {
+          throw new Error(Errors.get(error));
+        });
+
+        await expect(resolver.replaceUserForMember({ memberId, userId: user.id })).rejects.toThrow(
+          Errors.get(error),
+        );
+        expect(spyOnEventEmitter).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('notify', () => {

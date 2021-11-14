@@ -788,6 +788,7 @@ describe('MemberService', () => {
         const goalResult = await modelGoal.findById(member.goals[index]);
         expect(goalResult).toBeNull();
       }
+
       for (let index = 0; index < member.actionItems.length; index++) {
         const actionItemsResult = await modelActionItem.findById(member.actionItems[index]);
         expect(actionItemsResult).toBeNull();
@@ -1140,11 +1141,11 @@ describe('MemberService', () => {
     });
   });
 
-  describe('replaceUserForMember', () => {
+  describe('updatePrimaryUser', () => {
     it('should fail to update on non existing member', async () => {
       const userId = generateId();
       const memberId = generateId();
-      await expect(service.replaceUserForMember({ userId, memberId })).rejects.toThrow(
+      await expect(service.updatePrimaryUser({ userId, memberId })).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
     });
@@ -1154,7 +1155,7 @@ describe('MemberService', () => {
       const member = await service.get(memberId);
 
       await expect(
-        service.replaceUserForMember({ userId: member.primaryUserId, memberId }),
+        service.updatePrimaryUser({ userId: member.primaryUserId, memberId }),
       ).rejects.toThrow(Errors.get(ErrorType.userIdOrEmailAlreadyExists));
     });
 
@@ -1163,11 +1164,11 @@ describe('MemberService', () => {
       const newUser = await modelUser.create(generateCreateRawUserParams());
       const oldMember = await service.get(memberId);
 
-      const oldUserId = await service.replaceUserForMember({ userId: newUser._id, memberId });
+      const result = await service.updatePrimaryUser({ userId: newUser._id, memberId });
 
       const updatedMember = await service.get(memberId);
       expect(updatedMember.primaryUserId).toEqual(newUser._id);
-      expect(oldUserId).toEqual(oldMember.primaryUserId);
+      expect(result.primaryUserId).toEqual(oldMember.primaryUserId);
       compareUsers(updatedMember.users[updatedMember.users.length - 1], newUser);
     });
   });

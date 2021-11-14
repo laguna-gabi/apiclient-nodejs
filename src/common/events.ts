@@ -35,7 +35,7 @@ export enum EventType {
   deleteSchedules = 'deleteSchedules',
   deleteMember = 'deleteMember',
   removeAppointmentsFromUser = 'removeAppointmentsFromUser',
-  unregisterMemberFromNotifications = 'unregisterMemberFromNotifications',
+  notifyOfflineMember = 'notifyOfflineMember',
   deleteLogReminder = 'deleteLogReminder',
 
   unconsentedAppointmentEnded = 'unconsentedAppointmentEnded',
@@ -134,7 +134,8 @@ export interface IEventUnconsentedAppointmentEnded {
 export interface IEventUpdateUserInCommunication {
   newUser: User;
   oldUserId: string;
-  memberId: string;
+  member: Member;
+  platform: Platform;
 }
 
 export interface IEventUpdateUserInAppointments {

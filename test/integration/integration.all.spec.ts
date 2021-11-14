@@ -20,7 +20,11 @@ import {
   ReminderType,
   delay,
 } from '../../src/common';
-import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
+import {
+  DailyReportCategoriesInput,
+  DailyReportCategoryTypes,
+  DailyReportQueryInput,
+} from '../../src/dailyReport';
 import {
   CancelNotifyParams,
   CreateTaskParams,
@@ -1084,62 +1088,104 @@ describe('Integration tests: all', () => {
     });
   });
 
-  describe('user', () => {
-    it.only('should get user slots', async () => {
-      const user = await creators.createAndValidateUser();
-      const org = await creators.createAndValidateOrg();
-      const member: Member = await creators.createAndValidateMember({ org });
+  describe('Integration tests : Daily Reports Module', () => {
+    it('set/get a dailyReport', async () => {
+      const { updatedDailyReport } = await handler
+        .setContextUser(undefined, handler.patientZero.authId)
+        .mutations.setDailyReportCategories({
+          dailyReportCategoriesInput: {
+            date: '2015/01/01',
+            categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
+            memberId: handler.patientZero.id.toString(),
+          } as DailyReportCategoriesInput,
+        });
+      console.log(JSON.stringify(updatedDailyReport));
+      expect(updatedDailyReport).toEqual({
+        categories: [{ rank: 1, category: 'Pain' }],
+        memberId: handler.patientZero.id.toString(),
+        date: '2015/01/01',
+        statsOverThreshold: null,
+      });
 
-      await handler.setContextUserId(user.id).mutations.createAvailabilities({
-        availabilities: [
-          generateAvailabilityInput({
-            start: add(startOfToday(), { hours: 10 }),
-            end: add(startOfToday(), { hours: 22 }),
-          }),
-          generateAvailabilityInput({
-            start: add(startOfTomorrow(), { hours: 10 }),
-            end: add(startOfTomorrow(), { hours: 22 }),
-          }),
+      const { dailyReports } = await handler
+        .setContextUser(undefined, handler.patientZero.authId)
+        .queries.getDailyReports({
+          dailyReportQueryInput: {
+            startDate: '2015/01/01',
+            endDate: '2015/01/01',
+            memberId: handler.patientZero.id.toString(),
+          } as DailyReportQueryInput,
+        });
+
+      expect(dailyReports).toEqual({
+        data: [
+          {
+            categories: [{ category: 'Pain', rank: 1 }],
+            date: '2015/01/01',
+            statsOverThreshold: null,
+            memberId: handler.patientZero.id.toString(),
+          },
         ],
+        metadata: { minDate: '2015/01/01' },
       });
 
-      const appointmentParams = generateScheduleAppointmentParams({
-        memberId: member.id,
-        userId: user.id,
-        start: add(startOfToday(), { hours: 9 }),
-        end: add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
-      });
-      const appointment = await handler.mutations.scheduleAppointment({ appointmentParams });
+      describe('user', () => {
+        it.only('should get user slots', async () => {
+          const user = await creators.createAndValidateUser();
+          const org = await creators.createAndValidateOrg();
+          const member: Member = await creators.createAndValidateMember({ org });
 
-      const result = await handler.queries.getUserSlots({
-        appointmentId: appointment.id,
-        notBefore: add(startOfToday(), { hours: 10 }),
-      });
+          await handler.setContextUserId(user.id).mutations.createAvailabilities({
+            availabilities: [
+              generateAvailabilityInput({
+                start: add(startOfToday(), { hours: 10 }),
+                end: add(startOfToday(), { hours: 22 }),
+              }),
+              generateAvailabilityInput({
+                start: add(startOfTomorrow(), { hours: 10 }),
+                end: add(startOfTomorrow(), { hours: 22 }),
+              }),
+            ],
+          });
 
-      expect(result).toEqual(
-        expect.objectContaining({
-          user: {
-            id: user.id,
-            firstName: user.firstName,
-            roles: user.roles,
-            avatar: user.avatar,
-            description: user.description,
-          },
-          member: {
-            id: member.id,
-            firstName: member.firstName,
-          },
-          appointment: {
-            id: appointment.id,
-            start: appointment.start,
-            method: appointment.method,
-            duration: defaultSlotsParams.duration,
-          },
-        }),
-      );
+          const appointmentParams = generateScheduleAppointmentParams({
+            memberId: member.id,
+            userId: user.id,
+            start: add(startOfToday(), { hours: 9 }),
+            end: add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
+          });
+          const appointment = await handler.mutations.scheduleAppointment({ appointmentParams });
+
+          const result = await handler.queries.getUserSlots({
+            appointmentId: appointment.id,
+            notBefore: add(startOfToday(), { hours: 10 }),
+          });
+
+          expect(result).toEqual(
+            expect.objectContaining({
+              user: {
+                id: user.id,
+                firstName: user.firstName,
+                roles: user.roles,
+                avatar: user.avatar,
+                description: user.description,
+              },
+              member: {
+                id: member.id,
+                firstName: member.firstName,
+              },
+              appointment: {
+                id: appointment.id,
+                start: appointment.start,
+                method: appointment.method,
+                duration: defaultSlotsParams.duration,
+              },
+            }),
+          );
+        });
+      });
     });
   });
-
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

@@ -12,12 +12,13 @@ import {
   DailyReportQueryInput,
   DailyReportsMetadata,
 } from '.';
-import { BaseService, EventType } from '../common';
+import { BaseService, EventType, Logger } from '../common';
 @Injectable()
 export class DailyReportService extends BaseService {
   constructor(
     @InjectModel(DailyReport.name)
     private readonly dailyReport: Model<DailyReportDocument>,
+    private readonly logger: Logger,
   ) {
     super();
   }
@@ -130,19 +131,14 @@ export class DailyReportService extends BaseService {
     return statsOverThreshold.length ? statsOverThreshold : undefined;
   }
 
-  // Description: find oldest (daily report) record inserted for a given member id
-  async getOldestRecordDate(memberId: string): Promise<DailyReport[]> {
-    return this.dailyReport.aggregate([
+  // Description: fetch date of oldest daily report record for member
+  async getOldestDailyReportRecord(memberId: string): Promise<string> {
+    const oldestRecord: DailyReport[] = await this.dailyReport.aggregate([
       { $match: { memberId: new Types.ObjectId(memberId) } },
       { $sort: { date: 1 } },
       { $limit: 1 },
       { $project: { date: 1 } },
     ]);
-  }
-
-  // Description: fetch date of oldest daily report record for member
-  async getOldestDailyReportRecord(memberId: string): Promise<string> {
-    const oldestRecord: DailyReport[] = await this.getOldestRecordDate(memberId);
 
     if (oldestRecord.length > 0) {
       return oldestRecord[0].date;
@@ -168,6 +164,14 @@ export class DailyReportService extends BaseService {
         date,
       },
       { $set: { notificationSent: true } },
+    );
+  }
+
+  logMemberOverThresholdIndication(memberId: string) {
+    this.logger.debug(
+      { memberId },
+      DailyReportService.name,
+      this.logMemberOverThresholdIndication.name,
     );
   }
 
