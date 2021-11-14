@@ -15,7 +15,7 @@ import {
 } from '../../src/dailyReport';
 import { dbDisconnect, defaultModules, generateId } from '../index';
 
-describe('DailyReportCategoryResolver', () => {
+describe('DailyReportResolver', () => {
   let resolver: DailyReportResolver;
   let service: DailyReportService;
   let eventEmitter: EventEmitter2;
@@ -38,7 +38,7 @@ describe('DailyReportCategoryResolver', () => {
     await dbDisconnect();
   });
 
-  describe('test setDailyReportCategories', () => {
+  describe('setDailyReportCategories', () => {
     let eventEmitterSpy;
 
     afterEach(() => {
@@ -137,7 +137,7 @@ describe('DailyReportCategoryResolver', () => {
     );
   });
 
-  describe('test getDailyReports', () => {
+  describe('getDailyReports', () => {
     it.each([
       [
         'valid start/end dates and records exists in db',

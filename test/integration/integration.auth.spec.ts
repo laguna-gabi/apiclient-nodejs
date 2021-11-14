@@ -31,18 +31,6 @@ describe('Integration tests : RBAC', () => {
       EndpointType.USER_ALLOWED,
       undefined,
     ],
-    [
-      'expecting invalid user to not be allowed to access a secure (admin only) endpoint',
-      RoleTypes.Anonymous,
-      EndpointType.USER_ALLOWED,
-      'Forbidden resource',
-    ],
-    [
-      'expecting member to be allowed to access a secure (member-allowed) endpoint',
-      RoleTypes.Member,
-      EndpointType.MEMBER_ALLOWED,
-      undefined,
-    ],
   ])('Auth Integration tests: %s', async (message, role, endpointType, expectedError) => {
     let authId;
     switch (role) {
@@ -50,10 +38,12 @@ describe('Integration tests : RBAC', () => {
         authId = handler.patientZero.authId;
         break;
       }
+
       case RoleTypes.User: {
         authId = handler.adminUser.authId;
         break;
       }
+
       case RoleTypes.Anonymous: {
         authId = handler.adminUser.authId + 'invalid';
         break;
@@ -69,6 +59,7 @@ describe('Integration tests : RBAC', () => {
         expect(errors?.[0]?.message).toBe(expectedError);
         break;
       }
+
       case EndpointType.MEMBER_ALLOWED: {
         const { errors } = await handler
           .setContextUser(undefined, authId)
