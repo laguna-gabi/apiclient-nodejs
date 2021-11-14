@@ -762,10 +762,10 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
-"@lagunahealth/pandora@^0.1.0":
-  version "0.1.0"
-  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.1.0/8bf5031a08864aecd944efc9611ed3533c99137254517902ab6fff22389e9374#f765abe2c66c377050c8b4f7cf08e4c1ddbc9a83"
-  integrity sha512-uvA0usmt6ScjcqOkpQ8yJ1Rx5rSmF4SHNLX7r23GzwhwPX5U8R1wBaSA9DVPp9rAdbNI5qCcvkoxQ+mSaFhKKg==
+"@lagunahealth/pandora@^0.1.5":
+  version "0.1.5"
+  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.1.5/d7d66fd298cd0cb4e3eea762faeac338efb1739d04ad53e29fa87aef6b173813#349757a0092f20f8f57908944d50041cb7bbe862"
+  integrity sha512-tX3xQkxckFjdeQDV4B4M4yINuu9g8dW/vZkIxah5yI0IXq3iToPyjSsrccrPcSoxBb0POGxJzAFRsePfDfvqgA==
 
 "@nestjs/cli@^8.0.0":
   version "8.1.4"
@@ -1030,6 +1030,11 @@
     "@types/express-serve-static-core" "^4.17.18"
     "@types/qs" "*"
     "@types/serve-static" "*"
+
+"@types/faker@^5.5.9":
+  version "5.5.9"
+  resolved "https://registry.npmjs.org/@types/faker/-/faker-5.5.9.tgz#588ede92186dc557bff8341d294335d50d255f0c"
+  integrity sha512-uCx6mP3UY5SIO14XlspxsGjgaemrxpssJI0Ol+GfhxtcKpv9pgRZYsS4eeKeHVLje6Qtc8lGszuBI461+gVZBA==
 
 "@types/graceful-fs@^4.1.2":
   version "4.1.5"
@@ -2581,6 +2586,11 @@ external-editor@^3.0.3:
     chardet "^0.7.0"
     iconv-lite "^0.4.24"
     tmp "^0.0.33"
+
+faker@^5.5.3:
+  version "5.5.3"
+  resolved "https://registry.npmjs.org/faker/-/faker-5.5.3.tgz#c57974ee484431b25205c2c8dc09fda861e51e0e"
+  integrity sha512-wLTv2a28wjUyWkbnX7u/ABZBkUkIF2fCd73V6P2oFqEGEktDfzWx4UxrSqtPRw0xPRAcjeAOIiJWqZm3pP4u3g==
 
 fast-deep-equal@^3.1.1, fast-deep-equal@^3.1.3:
   version "3.1.3"
@@ -5283,7 +5293,7 @@ uuid@3.3.2:
   resolved "https://registry.npmjs.org/uuid/-/uuid-3.3.2.tgz#1b4af4955eb3077c501c23872fc6513811587131"
   integrity sha512-yXJmeNaw3DnnKAOKJE51sL/ZaYfWJRl1pK9dr19YFCu0ObS231AB1/LbqTKRAQ5kw8A90rA6fr4riOUpTZvQZA==
 
-uuid@8.3.2:
+uuid@8.3.2, uuid@^8.3.2:
   version "8.3.2"
   resolved "https://registry.npmjs.org/uuid/-/uuid-8.3.2.tgz"
   integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
