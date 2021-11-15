@@ -2,16 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { Member, MemberConfig, NotificationMetadata } from '.';
 import {
   InternalNotificationMetadata,
-  InternalNotificationType,
   Logger,
-  NotificationType,
-  Platform,
   SendOneSignalNotification,
   SendSendBirdNotification,
   SendTwilioNotification,
 } from '../common';
 import { NotificationsService } from '../providers';
 import { User } from '../user';
+import { InternalNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 
 @Injectable()
 export class NotificationBuilder {

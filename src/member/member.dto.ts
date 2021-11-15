@@ -15,7 +15,6 @@ import { Document, Types } from 'mongoose';
 import { ActionItem, Goal } from '.';
 import { Scores } from '../appointment';
 import {
-  CancelNotificationType,
   ErrorType,
   Errors,
   Identifier,
@@ -23,11 +22,11 @@ import {
   IsTypeMetadataProvided,
   IsValidZipCode,
   Language,
-  NotificationType,
   validPhoneExamples,
 } from '../common';
 import { Org } from '../org';
 import { User } from '../user';
+import { CancelNotificationType, NotificationType } from '@lagunahealth/pandora';
 
 const validatorsConfig = config.get('graphql.validators');
 

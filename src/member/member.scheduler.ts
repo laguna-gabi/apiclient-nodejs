@@ -17,14 +17,13 @@ import {
   Errors,
   EventType,
   Identifier,
-  InternalNotificationType,
   InternalNotifyParams,
   Logger,
-  NotificationType,
   ReminderType,
 } from '../common';
 import { Bitly } from '../providers';
 import { BaseScheduler, InternalSchedulerService, LeaderType } from '../scheduler';
+import { InternalNotificationType, NotificationType } from '@lagunahealth/pandora';
 
 @Injectable()
 export class MemberScheduler extends BaseScheduler {

@@ -23,7 +23,6 @@ import {
   IEventRequestAppointment,
   IEventUpdateUserInAppointments,
   IEventUpdatedAppointment,
-  InternalNotificationType,
   InternalNotifyParams,
   Logger,
   LoggingInterceptor,
@@ -34,6 +33,7 @@ import { Member } from '../member';
 import { OrgService } from '../org';
 import { Bitly } from '../providers';
 import { User } from '../user';
+import { InternalNotificationType } from '@lagunahealth/pandora';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Appointment)

@@ -1,6 +1,6 @@
 import { ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
 import { lookup } from 'zipcode-to-timezone';
-import { CancelNotificationType, NotificationType, Platform } from '.';
+import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 
 /**
  * When there are 2 params of dates, and we want to make sure that one param is

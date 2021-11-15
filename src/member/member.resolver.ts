@@ -44,14 +44,11 @@ import {
   IEventUpdateMemberPlatform,
   IEventUpdateUserInCommunication,
   Identifier,
-  InternalNotificationType,
   InternalNotifyParams,
   InternationalizationService,
   Language,
   Logger,
   LoggingInterceptor,
-  NotificationType,
-  Platform,
   RegisterForNotificationParams,
   ReminderType,
   RoleTypes,
@@ -67,6 +64,7 @@ import {
 } from '../communication';
 import { Bitly, CognitoService, NotificationsService, StorageService } from '../providers';
 import { User, UserService } from '../user';
+import { InternalNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)

@@ -14,7 +14,6 @@ import {
   EventType,
   IEventUpdateUserInAppointments,
   IEventUpdatedAppointment,
-  InternalNotificationType,
   InternalNotifyParams,
   ReminderType,
   UpdatedAppointmentAction,
@@ -31,6 +30,7 @@ import {
   generateUpdateNotesParams,
 } from '../index';
 import { format } from 'date-fns-tz';
+import { InternalNotificationType } from '@lagunahealth/pandora';
 
 describe('AppointmentResolver', () => {
   let module: TestingModule;

@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
-import { EventType, Platform, RoleTypes, UpdatedAppointmentAction } from '../../src/common';
+import { EventType, RoleTypes, UpdatedAppointmentAction } from '../../src/common';
 import {
   CommunicationModule,
   CommunicationResolver,
@@ -21,6 +21,7 @@ import {
   mockGenerateMember,
   mockGenerateUser,
 } from '../index';
+import { Platform } from '@lagunahealth/pandora';
 
 describe('CommunicationResolver', () => {
   let module: TestingModule;

@@ -13,13 +13,13 @@ import {
 import {
   ContentKey,
   EventType,
-  InternalNotificationType,
   InternalNotifyParams,
   Logger,
   LoggingInterceptor,
   RoleTypes,
   Roles,
 } from '../common';
+import { InternalNotificationType } from '@lagunahealth/pandora';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()
