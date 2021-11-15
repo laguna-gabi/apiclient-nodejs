@@ -5,6 +5,7 @@ import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import { Dispatch, defaultDispatchParams } from '../src/dispatches';
 import { ClientSettings } from '../src/settings';
+import { Trigger } from '../src/triggers';
 
 export const generateObjectId = (id?): Types.ObjectId => {
   return new Types.ObjectId(id);
@@ -74,5 +75,15 @@ export const generateDispatch = ({
     deliveredAt,
     retryCount,
     failureReason,
+  };
+};
+
+export const generateTriggers = ({
+  dispatchId = v4(),
+  expiresAt = add(new Date(), { seconds: 2 }),
+} = {}): Trigger => {
+  return {
+    dispatchId,
+    expiresAt,
   };
 };

@@ -5,8 +5,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
  *************************************************************************************************/
 @Schema({ versionKey: false, timestamps: true })
 export class Trigger {
-  @Prop({ index: true })
-  id: string;
+  @Prop({ index: true, unique: true })
+  dispatchId: string;
 
   @Prop({ index: true, expiresAt: 0 })
   expiresAt: Date;
