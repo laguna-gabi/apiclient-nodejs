@@ -34,6 +34,7 @@ import {
   CancelNotifyParams,
   CreateMemberParams,
   CreateTaskParams,
+  Honorific,
   Member,
   MemberConfig,
   NotifyParams,
@@ -46,7 +47,6 @@ import {
   UpdateRecordingParams,
   UpdateTaskStatusParams,
   defaultMemberParams,
-  getHonorificKeyName,
 } from '../src/member';
 import { CreateOrgParams, OrgType } from '../src/org';
 import { CreateUserParams, GetSlotsParams, User, UserRole, defaultUserParams } from '../src/user';
@@ -215,7 +215,7 @@ export const generateUpdateMemberParams = ({
     city: faker.address.city(),
     state: faker.address.state(),
   },
-  honorific = getHonorificKeyName(),
+  honorific = Honorific.mr,
   deviceId = faker.datatype.uuid(),
 }: Partial<UpdateMemberParams> = {}): UpdateMemberParams => {
   return {

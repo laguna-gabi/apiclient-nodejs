@@ -1,5 +1,4 @@
 import { ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
-import * as config from 'config';
 import { lookup } from 'zipcode-to-timezone';
 import { CancelNotificationType, NotificationType, Platform } from '.';
 
@@ -137,21 +136,6 @@ export function IsTypeMetadataProvided(options: ValidationOptions) {
               return whenNotInMetadata && chatLinkNotInMetadata;
             }
           }
-        },
-      },
-    });
-  };
-}
-
-export function IsHonorific(options: ValidationOptions) {
-  return (object, propertyName: string) => {
-    registerDecorator({
-      target: object.constructor,
-      propertyName,
-      options,
-      validator: {
-        validate(honorific: string) {
-          return Object.keys(config.get('contents.honorific')).includes(honorific);
         },
       },
     });

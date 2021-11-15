@@ -3,6 +3,7 @@ import * as config from 'config';
 import * as faker from 'faker';
 import { datatype, date, internet } from 'faker';
 import { Model, Types, model } from 'mongoose';
+import { performance } from 'perf_hooks';
 import { v4 } from 'uuid';
 import {
   Appointment,
@@ -18,6 +19,7 @@ import {
   CreateMemberParams,
   Goal,
   GoalDto,
+  Honorific,
   Member,
   MemberDto,
   MemberModule,
@@ -52,7 +54,6 @@ import {
   generateUpdateTaskStatusParams,
   generateZipCode,
 } from '../index';
-import { performance } from 'perf_hooks';
 
 describe('MemberService', () => {
   let module: TestingModule;
@@ -660,7 +661,7 @@ describe('MemberService', () => {
         language: Language.es,
         zipCode: generateZipCode(),
         dischargeDate: generateDateOnly(date.future(1)),
-        honorific: config.get('contents.honorific.dr'),
+        honorific: Honorific.dr,
       });
       const { id } = await service.insert(createMemberParams, primaryUser._id);
 
