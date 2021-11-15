@@ -71,13 +71,13 @@ export class Dispatch {
    * Internal Iris fields for dispatching a message
    */
   @Prop({ default: defaultDispatchParams.status })
-  status: DispatchStatus;
+  status?: DispatchStatus;
 
   @Prop({ isNaN: true })
   deliveredAt?: Date;
 
   @Prop({ default: defaultDispatchParams.retryCount })
-  retryCount: number;
+  retryCount?: number;
 
   @Prop({ isNan: true })
   failureReason?: string;
