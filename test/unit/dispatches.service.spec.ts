@@ -2,10 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { v4 } from 'uuid';
 import { DbModule } from '../../src/db/db.module';
 import {
-  defaultDispatchParams,
   Dispatch,
   DispatchesModule,
   DispatchesService,
+  defaultDispatchParams,
 } from '../../src/dispatches';
 import { generateDispatch } from '../generators';
 

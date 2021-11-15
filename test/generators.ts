@@ -3,7 +3,7 @@ import { add } from 'date-fns';
 import { image, internet, lorem, name, phone } from 'faker';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
-import { defaultDispatchParams, Dispatch } from '../src/dispatches';
+import { Dispatch, defaultDispatchParams } from '../src/dispatches';
 import { ClientSettings } from '../src/settings';
 
 export const generateObjectId = (id?): Types.ObjectId => {
