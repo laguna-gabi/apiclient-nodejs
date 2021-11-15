@@ -91,7 +91,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.slotsParams.valueOf(), 'userId or appointmentId must be provided'],
   [ErrorType.userPhone.valueOf(), phoneFormat],
   [ErrorType.memberMinMaxLength.valueOf(), `member ${nameFormat}`],
-  [ErrorType.memberPhoneAlreadyExists.valueOf(), 'phone already exists'],
+  [ErrorType.memberPhoneAlreadyExists.valueOf(), 'An error has occurred'],
   [ErrorType.memberPhone.valueOf(), phoneFormat],
   [ErrorType.memberDateOfBirth.valueOf(), `dateOfBirth ${dateInstanceFormat}`],
   [ErrorType.memberDischargeDate.valueOf(), `dischargeDate ${dateInstanceFormat}`],
