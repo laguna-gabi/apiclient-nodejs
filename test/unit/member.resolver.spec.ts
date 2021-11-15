@@ -4,7 +4,6 @@ import * as faker from 'faker';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import {
-  CancelNotificationType,
   ContentKey,
   ErrorType,
   Errors,
@@ -14,11 +13,8 @@ import {
   IEventRequestAppointment,
   IEventSlackMessage,
   IEventUpdateMemberPlatform,
-  InternalNotificationType,
   InternationalizationService,
   Language,
-  NotificationType,
-  Platform,
   RegisterForNotificationParams,
   SlackChannel,
   SlackIcon,
@@ -63,6 +59,12 @@ import {
   mockGenerateMemberConfig,
   mockGenerateUser,
 } from '../index';
+import {
+  CancelNotificationType,
+  InternalNotificationType,
+  NotificationType,
+  Platform,
+} from '@lagunahealth/pandora';
 
 describe('MemberResolver', () => {
   let module: TestingModule;

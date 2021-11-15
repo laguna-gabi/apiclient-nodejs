@@ -1,17 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
-import {
-  CancelNotificationType,
-  ErrorType,
-  Errors,
-  NotificationType,
-  Platform,
-  delay,
-} from '../../src/common';
+import { ErrorType, Errors, delay } from '../../src/common';
 import { NotificationsService } from '../../src/providers';
 import { dbDisconnect, defaultModules } from '../common';
 import { generatePath, generatePhone } from '../generators';
+import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 
 /**
  * THIS TEST IS DISABLED

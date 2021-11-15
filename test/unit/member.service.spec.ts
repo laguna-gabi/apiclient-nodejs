@@ -11,7 +11,7 @@ import {
   AppointmentModule,
   AppointmentStatus,
 } from '../../src/appointment';
-import { ErrorType, Errors, Language, Platform, RecordingType } from '../../src/common';
+import { ErrorType, Errors, Language, RecordingType } from '../../src/common';
 import {
   ActionItem,
   ActionItemDto,
@@ -53,6 +53,7 @@ import {
   generateZipCode,
 } from '../index';
 import { performance } from 'perf_hooks';
+import { Platform } from '@lagunahealth/pandora';
 
 describe('MemberService', () => {
   let module: TestingModule;

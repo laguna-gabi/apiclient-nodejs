@@ -2,12 +2,13 @@ import axios from 'axios';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
 import { AppointmentStatus } from '../../src/appointment';
-import { Logger, NotificationType, SendSendBirdNotification } from '../../src/common';
+import { Logger, SendSendBirdNotification } from '../../src/common';
 import { CreateSendbirdGroupChannelParams } from '../../src/communication';
 import { ConfigsService, SendBird } from '../../src/providers';
 import { UserRole } from '../../src/user';
 import { generateId } from '../generators';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NotificationType } from '@lagunahealth/pandora';
 
 describe('live: sendbird actions', () => {
   let sendBird: SendBird;

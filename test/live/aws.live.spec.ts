@@ -1,9 +1,10 @@
 import axios from 'axios';
 import { EventEmitter2 } from 'eventemitter2';
 import * as faker from 'faker';
-import { Environments, Logger, Platform, StorageType } from '../../src/common';
+import { Environments, Logger, StorageType } from '../../src/common';
 import { ConfigsService, StorageService } from '../../src/providers';
 import { mockGenerateMember, mockGenerateUser } from '../generators';
+import { Platform } from '@lagunahealth/pandora';
 
 describe('live: aws', () => {
   describe('storage', () => {

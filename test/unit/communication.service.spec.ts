@@ -8,7 +8,6 @@ import {
   EventType,
   IEventUpdateMemberConfig,
   IEventUpdateUserConfig,
-  Platform,
   UpdatedAppointmentAction,
 } from '../../src/common';
 import {
@@ -28,6 +27,7 @@ import {
   mockGenerateUser,
   mockProviders,
 } from '../index';
+import { Platform } from '@lagunahealth/pandora';
 
 describe('CommunicationService', () => {
   let module: TestingModule;

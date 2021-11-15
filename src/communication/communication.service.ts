@@ -18,12 +18,12 @@ import {
   IEventUpdateMemberConfig,
   IEventUpdateUserConfig,
   Logger,
-  Platform,
   UpdatedAppointmentAction,
 } from '../common';
 import { Member } from '../member';
 import { SendBird, TwilioService } from '../providers';
 import { User, UserRole } from '../user';
+import { Platform } from '@lagunahealth/pandora';
 
 @Injectable()
 export class CommunicationService {

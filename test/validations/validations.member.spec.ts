@@ -1,14 +1,7 @@
 import * as config from 'config';
 import * as faker from 'faker';
 import * as request from 'supertest';
-import {
-  CancelNotificationType,
-  ErrorType,
-  Errors,
-  Language,
-  NotificationType,
-  Platform,
-} from '../../src/common';
+import { ErrorType, Errors, Language } from '../../src/common';
 import {
   CancelNotifyParams,
   CreateMemberParams,
@@ -38,6 +31,7 @@ import {
   generateZipCode,
   urls,
 } from '../index';
+import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;

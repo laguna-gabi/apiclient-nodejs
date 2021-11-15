@@ -4,7 +4,7 @@ import * as config from 'config';
 import * as faker from 'faker';
 import { Model, model } from 'mongoose';
 import { v4 } from 'uuid';
-import { NotificationType, ReminderType, delay } from '../../src/common';
+import { ReminderType, delay } from '../../src/common';
 import {
   MemberModule,
   MemberScheduler,
@@ -24,6 +24,7 @@ import {
   generateId,
   generateOrgParams,
 } from '../index';
+import { NotificationType } from '@lagunahealth/pandora';
 
 describe('MemberScheduler', () => {
   let module: TestingModule;

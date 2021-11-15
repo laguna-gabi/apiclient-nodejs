@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { v4 } from 'uuid';
-import { InternalNotificationType } from '../../src/common';
 import { NotificationsService, SendBird, TwilioService } from '../../src/providers';
 import { dbDisconnect, defaultModules } from '../common';
 import {
@@ -10,6 +9,7 @@ import {
   generateSendTwilioNotificationParams,
   mockGenerateMemberConfig,
 } from '../generators';
+import { InternalNotificationType } from '@lagunahealth/pandora';
 
 describe('NotificationsService (offline)', () => {
   let module: TestingModule;

@@ -11,7 +11,6 @@ import {
   ErrorType,
   Errors,
   EventType,
-  InternalNotificationType,
   InternalNotifyParams,
   Logger,
   ReminderType,
@@ -19,6 +18,7 @@ import {
 import { CommunicationResolver } from '../communication';
 import { Bitly } from '../providers';
 import { BaseScheduler, InternalSchedulerService, LeaderType } from '../scheduler';
+import { InternalNotificationType } from '@lagunahealth/pandora';
 
 @Injectable()
 export class AppointmentScheduler extends BaseScheduler {

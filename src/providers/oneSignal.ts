@@ -6,18 +6,20 @@ import { ConfigsService, ExternalConfigs } from '.';
 import {
   AllNotificationTypes,
   CancelNotificationParams,
-  CancelNotificationType,
   ErrorType,
   Errors,
   EventType,
   IEventUnregisterMemberFromNotifications,
-  InternalNotificationType,
   Logger,
-  NotificationType,
-  Platform,
   SendOneSignalNotification,
 } from '../common';
 import { MemberConfig } from '../member';
+import {
+  CancelNotificationType,
+  InternalNotificationType,
+  NotificationType,
+  Platform,
+} from '@lagunahealth/pandora';
 
 @Injectable()
 export class OneSignal {

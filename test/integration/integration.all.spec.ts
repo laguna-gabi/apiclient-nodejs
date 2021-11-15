@@ -9,13 +9,9 @@ import {
   ScheduleAppointmentParams,
 } from '../../src/appointment';
 import {
-  CancelNotificationType,
   ErrorType,
   Errors,
   Identifiers,
-  InternalNotificationType,
-  NotificationType,
-  Platform,
   RegisterForNotificationParams,
   ReminderType,
   delay,
@@ -55,6 +51,12 @@ import {
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
 } from '../index';
+import {
+  CancelNotificationType,
+  InternalNotificationType,
+  NotificationType,
+  Platform,
+} from '@lagunahealth/pandora';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();

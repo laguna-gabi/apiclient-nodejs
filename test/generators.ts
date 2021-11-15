@@ -17,17 +17,19 @@ import {
 import { AvailabilityInput } from '../src/availability';
 import {
   CancelNotificationParams,
-  CancelNotificationType,
   ContentKey,
-  InternalNotificationType,
   InternalNotifyParams,
   Language,
-  NotificationType,
-  Platform,
   SendOneSignalNotification,
   SendSendBirdNotification,
   SendTwilioNotification,
 } from '../src/common';
+import {
+  CancelNotificationType,
+  InternalNotificationType,
+  NotificationType,
+  Platform,
+} from '@lagunahealth/pandora';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import {
   AppointmentCompose,

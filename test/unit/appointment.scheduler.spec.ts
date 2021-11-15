@@ -14,18 +14,12 @@ import {
   AppointmentScheduler,
   AppointmentStatus,
 } from '../../src/appointment';
-import {
-  ContentKey,
-  EventType,
-  InternalNotificationType,
-  InternalNotifyParams,
-  ReminderType,
-  delay,
-} from '../../src/common';
+import { ContentKey, EventType, InternalNotifyParams, ReminderType, delay } from '../../src/common';
 import { CommunicationResolver } from '../../src/communication';
 import { Bitly } from '../../src/providers';
 import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
 import { dbConnect, dbDisconnect, defaultModules, generateId } from '../index';
+import { InternalNotificationType } from '@lagunahealth/pandora';
 
 describe('AppointmentScheduler', () => {
   let module: TestingModule;

@@ -10,11 +10,11 @@ import {
   ContentKey,
   EventType,
   IEventUpdatedAppointment,
-  InternalNotificationType,
   InternalNotifyParams,
   UpdatedAppointmentAction,
   scheduleAppointmentDateFormat,
 } from '../common';
+import { InternalNotificationType } from '@lagunahealth/pandora';
 
 export class AppointmentBase {
   constructor(
