@@ -17,9 +17,17 @@ export class UserSecurityService extends BaseService {
   }
 
   async getUserByAuthId(authId: string): Promise<User> {
-    return this.userModel.findOne({ authId });
+    const userDocument = await this.userModel.findOne({ authId });
+
+    if (userDocument) {
+      return userDocument.toObject();
+    }
   }
   async getMemberByAuthId(authId: string): Promise<Member> {
-    return this.memberModel.findOne({ authId });
+    const memberDocument = await this.memberModel.findOne({ authId });
+
+    if (memberDocument) {
+      return memberDocument.toObject();
+    }
   }
 }
