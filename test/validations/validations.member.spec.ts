@@ -5,11 +5,11 @@ import { ErrorType, Errors, Language } from '../../src/common';
 import {
   CancelNotifyParams,
   CreateMemberParams,
+  Honorific,
   NotifyParams,
   Sex,
   UpdateMemberParams,
   defaultMemberParams,
-  getHonorificKeyName,
 } from '../../src/member';
 import { Handler } from '../aux/handler';
 import {
@@ -103,7 +103,7 @@ describe('Validations - member', () => {
       ${'email'}     | ${faker.internet.email()}
       ${'language'}  | ${Language.es}
       ${'zipCode'}   | ${generateZipCode()}
-      ${'honorific'} | ${getHonorificKeyName(config.get('contents.honorific.dr'))}
+      ${'honorific'} | ${Honorific.dr}
     `(`should be able to set value for optional field $field`, async (params) => {
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
       const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
@@ -145,7 +145,7 @@ describe('Validations - member', () => {
       ${{ dateOfBirth: '2021/13/1' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
       ${{ dischargeDate: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
       ${{ dischargeDate: '2021/13/1' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
-      ${{ honorific: 'not-valid' }}     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberInvalidHonorific)] }}
+      ${{ honorific: 'not-valid' }}     | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
     `(
       /* eslint-enable max-len */
       `should fail to create a member since setting $input is not a valid`,
@@ -484,7 +484,7 @@ describe('Validations - member', () => {
       ${{ address: { street: 123 } }}   | ${{ missingFieldError: stringError }}
       ${{ address: { city: 123 } }}     | ${{ missingFieldError: stringError }}
       ${{ address: { state: 123 } }}    | ${{ missingFieldError: stringError }}
-      ${{ honorific: 'not-valid' }}     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberInvalidHonorific)] }}
+      ${{ honorific: 'not-valid' }}     | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
       ${{ deviceId: 123 }}              | ${{ missingFieldError: stringError }}
     `(`should fail to update a member since setting $input is not a valid`, async (params) => {
       /* eslint-enable max-len */

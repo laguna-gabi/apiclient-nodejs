@@ -18,13 +18,17 @@
       "memberNotFeelingWellMessage": "Your member, {{member.honorific}} {{member.lastName}}, logged a score that requires your attention."
     },
     "honorific": {
-      "mr": "Mr",
-      "mrs": "Mrs",
-      "ms": "Ms",
-      "miss": "Miss",
-      "mx": "Mx",
-      "dr": "Dr",
-      "reverend": "Reverend"
+      "mr": "Mr.",
+      "mrs": "Mrs.",
+      "ms": "Ms.",
+      "miss": "Miss.",
+      "mx": "Mx.",
+      "dr": "Dr.",
+      "reverend": "Reverend.",
+      "professor": "Professor.",
+      "captain": "Captain.",
+      "coach": "Coach.",
+      "father": "Father."
     }
   }
 }

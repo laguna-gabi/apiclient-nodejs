@@ -2,13 +2,17 @@
   "translation": {
     "contents": {},
     "honorific": {
-      "mr": "Señor",
-      "mrs": "señora",
-      "ms": "Sra",
-      "miss": "pierda",
-      "mx": "Mx",
-      "dr": "Dr",
-      "reverend": "Reverend"
+      "mr": "Señor.",
+      "mrs": "Señora.",
+      "ms": "Sra.",
+      "miss": "Señorita.",
+      "mx": "Mx.",
+      "dr": "Dr.",
+      "reverend": "Reverend.",
+      "professor": "Profesor.",
+      "captain": "Capitán.",
+      "coach": "Entrenador.",
+      "father": "El padre."
     }
   }
 }
