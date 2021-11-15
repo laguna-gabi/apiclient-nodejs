@@ -3,6 +3,20 @@ import { Schema } from '@nestjs/mongoose';
 import { IsAlphanumeric, IsOptional } from 'class-validator';
 import { Types } from 'mongoose';
 import { ContentKey, ErrorType, Errors, IsNotPlatformWeb } from '.';
+import {
+  CancelNotificationType,
+  InternalNotificationType,
+  NotificationType,
+  Platform,
+} from '@lagunahealth/pandora';
+
+/**************************************************************************************************
+ *************************** Enum registration for external gql methods ***************************
+ *************************************************************************************************/
+registerEnumType(CancelNotificationType, { name: 'CancelNotificationType' });
+registerEnumType(InternalNotificationType, { name: 'InternalNotificationType' });
+registerEnumType(NotificationType, { name: 'NotificationType' });
+registerEnumType(Platform, { name: 'Platform' });
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -13,39 +27,6 @@ export enum Language {
 }
 
 registerEnumType(Language, { name: 'Language' });
-
-export enum NotificationType {
-  video = 'video',
-  call = 'call',
-  text = 'text',
-  textSms = 'textSms',
-}
-
-registerEnumType(NotificationType, { name: 'NotificationType' });
-
-export enum CancelNotificationType {
-  cancelVideo = 'cancelVideo',
-  cancelCall = 'cancelCall',
-  cancelText = 'cancelText',
-}
-
-registerEnumType(CancelNotificationType, { name: 'CancelNotificationType' });
-
-export enum InternalNotificationType {
-  textToMember = 'textToMember',
-  textSmsToMember = 'textSmsToMember',
-  textSmsToUser = 'textSmsToUser',
-  chatMessageToMember = 'chatMessageToMember',
-  chatMessageToUser = 'chatMessageToUser',
-}
-
-export enum Platform {
-  ios = 'ios',
-  android = 'android',
-  web = 'web',
-}
-
-registerEnumType(Platform, { name: 'Platform' });
 
 export enum AppointmentStatus {
   requested = 'requested',

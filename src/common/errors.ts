@@ -29,11 +29,10 @@ export enum ErrorType {
   memberPrimaryUserIdNotInUsers = 9211,
   memberAdmitDate = 9212,
   memberRegisterForNotificationToken = 9213,
-  memberInvalidHonorific = 9214,
-  memberRecordingIdAlreadyExists = 9215,
-  memberRegisterWebPlatform = 9216,
-  invalidZipCode = 9217,
-  invalidContent = 9218,
+  memberRecordingIdAlreadyExists = 9214,
+  memberRegisterWebPlatform = 9215,
+  invalidZipCode = 9216,
+  invalidContent = 9217,
 
   // Notifications
   notificationMetadataInvalid = 9270,
@@ -103,12 +102,6 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberNotFound.valueOf(), 'member id was not found'],
   [ErrorType.memberPrimaryUserIdNotInUsers.valueOf(), 'primaryUserId must exists in usersIds list'],
   [ErrorType.memberAdmitDate.valueOf(), `admitDate ${dateInstanceFormat}`],
-  [
-    ErrorType.memberInvalidHonorific.valueOf(),
-    `invalid honorific provided. Should be : ${Object.keys(
-      config.get('contents.honorific'),
-    ).join()}`,
-  ],
   [ErrorType.memberRecordingIdAlreadyExists.valueOf(), `id already exists`],
   [ErrorType.memberRegisterWebPlatform.valueOf(), `cant register member with platform web`],
   [ErrorType.invalidZipCode.valueOf(), `invalid ZIP code`],

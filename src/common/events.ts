@@ -4,12 +4,12 @@ import { Member } from '../member';
 import { User } from '../user';
 import {
   AllNotificationTypes,
-  Platform,
   QueueType,
   SlackChannel,
   SlackIcon,
   UpdatedAppointmentAction,
 } from '.';
+import { Platform } from '@lagunahealth/pandora';
 
 export enum EventType {
   requestAppointment = 'requestAppointment',

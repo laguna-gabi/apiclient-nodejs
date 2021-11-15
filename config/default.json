@@ -42,17 +42,6 @@
     "maxAlertGapInMin": 43800,
     "cronJobIntervalInMin": 1
   },
-  "contents": {
-    "honorific": {
-      "mr": "Mr",
-      "mrs": "Mrs",
-      "ms": "Ms",
-      "miss": "Miss",
-      "mx": "Mx",
-      "dr": "Dr",
-      "reverend": "Reverend"
-    }
-  },
   "general": {
     "dateFormatString": "yyyy/MM/dd"
   },

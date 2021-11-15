@@ -3,6 +3,7 @@ import { Request } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { AuthModule, AuthService, UserSecurityService } from '../../src/auth';
 import { RoleTypes } from '../../src/common';
+import { User } from '../../src/user';
 import { dbDisconnect, defaultModules, mockGenerateMember, mockGenerateUser } from '../index';
 
 describe('AuthService', () => {
@@ -60,6 +61,7 @@ describe('AuthService', () => {
       expect(spyOnSecurityService).toBeCalledWith('my-sub');
 
       expect(user).toEqual({ ...mockUser, role: RoleTypes.User });
+      expect((user as User).id).toEqual(mockUser.id);
     });
 
     // eslint-disable-next-line max-len
@@ -82,6 +84,7 @@ describe('AuthService', () => {
       expect(spyOnSecurityServiceGetMember).toBeCalledWith('my-sub');
 
       expect(user).toEqual({ ...mockMember, role: RoleTypes.Member });
+      expect((user as User).id).toEqual(mockMember.id);
     });
 
     // eslint-disable-next-line max-len

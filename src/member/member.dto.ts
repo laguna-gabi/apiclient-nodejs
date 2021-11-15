@@ -15,20 +15,18 @@ import { Document, Types } from 'mongoose';
 import { ActionItem, Goal } from '.';
 import { Scores } from '../appointment';
 import {
-  CancelNotificationType,
   ErrorType,
   Errors,
   Identifier,
-  IsHonorific,
   IsStringDate,
   IsTypeMetadataProvided,
   IsValidZipCode,
   Language,
-  NotificationType,
   validPhoneExamples,
 } from '../common';
 import { Org } from '../org';
 import { User } from '../user';
+import { CancelNotificationType, NotificationType } from '@lagunahealth/pandora';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -43,15 +41,26 @@ export enum Sex {
 
 registerEnumType(Sex, { name: 'Sex' });
 
-export const getHonorificKeyName = (honorificKey = config.get('contents.honorific.mx')) => {
-  const honorificConfigs = config.get('contents.honorific');
-  return Object.keys(honorificConfigs).find((key) => honorificConfigs[key] === honorificKey);
-};
+export enum Honorific {
+  mr = 'mr',
+  mrs = 'mrs',
+  ms = 'ms',
+  miss = 'miss',
+  mx = 'mx',
+  dr = 'dr',
+  reverend = 'reverend',
+  professor = 'professor',
+  captain = 'captain',
+  coach = 'coach',
+  father = 'father',
+}
+
+registerEnumType(Honorific, { name: 'Honorific' });
 
 export const defaultMemberParams = {
   sex: Sex.male,
   language: Language.en,
-  honorific: getHonorificKeyName(config.get('contents.honorific.mx')),
+  honorific: Honorific.mx,
 };
 
 export const NotNullableMemberKeys = [
@@ -112,10 +121,10 @@ export class ExtraMemberParams {
   @IsOptional()
   dischargeDate?: string;
 
-  @Field(() => String, { nullable: true })
-  @IsHonorific({ message: Errors.get(ErrorType.memberInvalidHonorific) })
+  @Field(() => Honorific, { nullable: true })
+  @IsEnum(Honorific) /* for rest api */
   @IsOptional()
-  honorific?: string;
+  honorific?: Honorific;
 }
 
 @InputType()
@@ -447,8 +456,8 @@ export class Member extends Identifier {
   admitDate?: string;
 
   @Prop({ default: defaultMemberParams.honorific })
-  @Field(() => String)
-  honorific: string;
+  @Field(() => Honorific)
+  honorific: Honorific;
 }
 
 @ObjectType()
