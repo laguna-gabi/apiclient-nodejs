@@ -80,7 +80,10 @@ export class UserService extends BaseService {
 
   async getSlots(getSlotsParams: GetSlotsParams): Promise<Slots> {
     this.removeNotNullable(getSlotsParams, NotNullableSlotsKeys);
-    const { appointmentId, userId } = getSlotsParams;
+    const {
+      appointmentId, userId,defaultSlotsCount,allowEmptySlotsResponse, maxSlots
+    } = getSlotsParams;
+
     const [slotsObject] = await this.userModel.aggregate([
       ...(userId
         ? [
@@ -170,8 +173,9 @@ export class UserService extends BaseService {
       slotsObject.av,
       slotsObject.ap,
       defaultSlotsParams.duration,
-      defaultSlotsParams.maxSlots,
+      maxSlots || defaultSlotsParams.maxSlots,
       getSlotsParams.notBefore,
+      getSlotsParams.notAfter
     );
     delete slotsObject.ap;
     delete slotsObject.av;
@@ -180,8 +184,8 @@ export class UserService extends BaseService {
       delete slotsObject.appointment;
     }
 
-    if (slotsObject.slots.length === 0) {
-      slotsObject.slots = this.generateDefaultSlots();
+    if (slotsObject.slots.length === 0 && !allowEmptySlotsResponse) {
+      slotsObject.slots = this.generateDefaultSlots(defaultSlotsCount);
       const params: IEventSlackMessage = {
         message: `*No availability*\nUser ${
           userId ? userId : slotsObject.appointment.userId
@@ -195,10 +199,10 @@ export class UserService extends BaseService {
     return slotsObject;
   }
 
-  generateDefaultSlots() {
+  generateDefaultSlots(count:number = defaultSlotsParams.defaultSlots) {
     const slots: Date[] = [];
     let nextSlot = add(new Date(), { hours: 2 });
-    for (let index = 0; index < 6; index++) {
+    for (let index = 0; index < count; index++) {
       nextSlot = add(nextSlot, { hours: 1 });
       if (getHours(nextSlot) < 17 || getHours(nextSlot) > 23) {
         nextSlot = add(startOfTomorrow(), { hours: 17 });

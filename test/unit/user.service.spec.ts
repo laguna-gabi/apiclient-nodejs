@@ -20,6 +20,7 @@ import {
   IEventUpdateAppointmentsInUser,
 } from '../../src/common';
 import {
+  GetSlotsParams,
   NotNullableUserKeys,
   User,
   UserDto,
@@ -27,7 +28,7 @@ import {
   UserRole,
   UserService,
   defaultSlotsParams,
-  defaultUserParams,
+  defaultUserParams
 } from '../../src/user';
 import {
   compareUsers,
@@ -310,6 +311,31 @@ describe('UserService', () => {
       expect(result.slots.length).toEqual(6);
     });
 
+    it('should return specific default slots if there is no availability and got defaultSlotsCount',
+    async () => {
+      const user = await service.insert(generateCreateUserParams());
+      const result = await service.getSlots({
+        userId: user.id,
+        notBefore: add(startOfToday(), { hours: 10 }),
+        defaultSlotsCount: 9
+      });
+
+      expect(result.slots.length).toEqual(9);
+    });
+
+    it('should return 0 slots if there is no availability and allowEmptySlotsResponse=true',
+    async () => {
+      const user = await service.insert(generateCreateUserParams());
+      const result = await service.getSlots({
+        userId: user.id,
+        notBefore: add(startOfToday(), { hours: 10 }),
+        defaultSlotsCount: 9,
+        allowEmptySlotsResponse: true
+      });
+
+      expect(result.slots.length).toEqual(0);
+    });
+
     it('should return 5 slots from today and the next from tomorrow', async () => {
       const result = await preformGetUserSlots();
 
@@ -322,6 +348,21 @@ describe('UserService', () => {
       for (let index = 5; index < defaultSlotsParams.maxSlots; index++) {
         expect(
           isSameDay(new Date(result.slots[index]), add(startOfTomorrow(), { hours: 12 })),
+        ).toEqual(true);
+      }
+    });
+
+    it('should return more then default(9) slots if maxSlots is given', async () => {
+      const result = await preformGetUserSlots({maxSlots:10});
+      expect(result.slots.length).toBe(10);
+    });
+
+    it('should return 5 slots only from today if capped by notAfter to this midnight', async () => {
+      const result = await preformGetUserSlots({notAfter:startOfTomorrow()});
+      expect(result.slots.length).toBe(5);
+      for (let index = 0; index < 5; index++) {
+        expect(
+          isSameDay(new Date(result.slots[index]), add(startOfToday(), { hours: 12 })),
         ).toEqual(true);
       }
     });
@@ -340,7 +381,7 @@ describe('UserService', () => {
       expect(result.slots.length).toEqual(defaultSlotsParams.maxSlots);
     });
 
-    const preformGetUserSlots = async () => {
+    const preformGetUserSlots = async (override:Partial<GetSlotsParams> = {}) => {
       const user = await service.insert(generateCreateUserParams());
       await createDefaultAvailabilities(user.id);
 
@@ -354,6 +395,7 @@ describe('UserService', () => {
       return service.getSlots({
         userId: user.id,
         notBefore: add(startOfToday(), { hours: 10 }),
+        ...override
       });
     };
 

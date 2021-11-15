@@ -8,6 +8,7 @@ import { ErrorType, Errors, Identifier, IsUserIdOrAppointmentId } from '../commo
 export const defaultSlotsParams = {
   duration: 30,
   maxSlots: 9,
+  defaultSlots: 6,
 };
 
 export const NotNullableSlotsKeys = ['notBefore', 'userId', 'appointmentId'];
@@ -81,4 +82,21 @@ export class GetSlotsParams {
   @IsDate()
   @Field(() => Date, { nullable: true })
   notBefore?: Date;
+
+  @IsOptional()
+  @IsDate()
+  @Field(() => Date, { nullable: true })
+  notAfter?: Date;
+
+  @IsOptional()
+  @Field(() => Boolean, { nullable:true })
+  allowEmptySlotsResponse?: boolean;
+
+  @IsOptional()
+  @Field(() => Number, {defaultValue: defaultSlotsParams.defaultSlots})
+  defaultSlotsCount?: number;
+
+  @IsOptional()
+  @Field(() => Number, {defaultValue: defaultSlotsParams.maxSlots})
+  maxSlots?: number;
 }

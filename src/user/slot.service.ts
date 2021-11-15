@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { add, areIntervalsOverlapping, isSameDay, startOfDay } from 'date-fns';
+import { add, areIntervalsOverlapping, isBefore, isSameDay,startOfDay } from 'date-fns';
 import { Appointment, AppointmentStatus } from '../appointment';
 import { Availability } from '../availability';
 
@@ -11,6 +11,7 @@ export class SlotService {
     duration: number,
     maxNumOfSlots: number,
     start: Date = new Date(Date.now()),
+    end?: Date
   ): Date[] {
     // sort by start date
     availabilities.sort((a: any, b: any) => {
@@ -22,7 +23,9 @@ export class SlotService {
 
     for (let index = 0; index < maxNumOfSlots; index++) {
       start = this.findSlot(availabilities, appointments, duration, start);
-      slots.push(start);
+      if (!end || isBefore(start, end)) {
+        slots.push(start);
+      }
 
       if (slots.length >= 5 && isSameDay(slots[slots.length - 1], slots[slots.length - 5])) {
         start = startOfDay(add(start, { days: 1 }));
