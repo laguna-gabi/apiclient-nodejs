@@ -11,7 +11,7 @@ import { generateCreateUserParams, generateRandomName, urls } from '../index';
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
 
-describe.only('Validations - user', () => {
+describe('Validations - user', () => {
   const handler: Handler = new Handler();
   let server;
 
