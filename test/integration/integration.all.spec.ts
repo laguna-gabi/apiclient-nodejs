@@ -881,31 +881,31 @@ describe('Integration tests: all', () => {
     });
 
     test.each`
-        additionalGetSlotsParams            | expectedDefaultSlots    | testTitle
-        ${{}}                               | ${6}                    | ${'should get default slots count not available'}
-        ${{allowEmptySlotsResponse: true}}  | ${0}                    | ${'should get empty slots when enabling empty response'}
-        ${{defaultSlotsCount:20}}           | ${20}                   | ${'should get specific default slots count if defaultSlotsCount'}
-        `('$testTitle',async ({additionalGetSlotsParams,expectedDefaultSlots})=>{
-          const user = await creators.createAndValidateUser();
-          const org = await creators.createAndValidateOrg();
-          const member: Member = await creators.createAndValidateMember({ org });
+      additionalGetSlotsParams             | expectedDefaultSlots | testTitle
+      ${{}}                                | ${6}                 | ${'should get default slots count not available'}
+      ${{ allowEmptySlotsResponse: true }} | ${0}                 | ${'should get empty slots when enabling empty response'}
+      ${{ defaultSlotsCount: 20 }}         | ${20}                | ${'should get specific default slots count if defaultSlotsCount'}
+    `('$testTitle', async ({ additionalGetSlotsParams, expectedDefaultSlots }) => {
+      const user = await creators.createAndValidateUser();
+      const org = await creators.createAndValidateOrg();
+      const member: Member = await creators.createAndValidateMember({ org });
 
-          const appointmentParams = generateScheduleAppointmentParams({
-            memberId: member.id,
-            userId: user.id,
-            start: add(startOfToday(), { hours: 9 }),
-            end: add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
-          });
-          const appointment = await handler.mutations.scheduleAppointment({ appointmentParams });
+      const appointmentParams = generateScheduleAppointmentParams({
+        memberId: member.id,
+        userId: user.id,
+        start: add(startOfToday(), { hours: 9 }),
+        end: add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
+      });
+      const appointment = await handler.mutations.scheduleAppointment({ appointmentParams });
 
-          const result = await handler.queries.getUserSlots({
-            appointmentId: appointment.id,
-            notBefore: add(startOfToday(), { hours: 10 }),
-            ...additionalGetSlotsParams
-          });
+      const result = await handler.queries.getUserSlots({
+        appointmentId: appointment.id,
+        notBefore: add(startOfToday(), { hours: 10 }),
+        ...additionalGetSlotsParams,
+      });
 
-          expect(result.slots.length).toBe(expectedDefaultSlots);
-        });
+      expect(result.slots.length).toBe(expectedDefaultSlots);
+    });
 
     it('should get user slots', async () => {
       const user = await creators.createAndValidateUser();

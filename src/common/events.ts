@@ -12,33 +12,70 @@ import {
 import { Platform } from '@lagunahealth/pandora';
 
 export enum EventType {
+  //member
+  onNewMember = 'onNewMember',
+  onNewMemberCommunication = 'onNewMemberCommunication',
+  onUpdatedMemberPlatform = 'onUpdatedMemberPlatform',
+  onReplacedUserForMember = 'onReplacedUserForMember',
+  onMemberBecameOffline = 'onMemberBecameOffline',
+  onDeletedMember = 'onDeletedMember',
+  onArchivedMember = 'onArchivedMember',
+
   requestAppointment = 'requestAppointment',
   newAppointment = 'newAppointment',
   updatedAppointment = 'updatedAppointment',
   appointmentScoresUpdated = 'appointmentScoresUpdated',
-  newMember = 'newMember',
   newUser = 'newUser',
 
-  updateUserInCommunication = 'updateUserInCommunication',
   updateUserInAppointments = 'updateUserInAppointments',
   updateAppointmentsInUser = 'updateAppointmentsInUser',
 
-  updateMemberConfig = 'updateMemberConfig',
   updateUserConfig = 'updateUserConfig',
   addUserToMemberList = 'addUserToMemberList',
-  updateMemberPlatform = 'updateMemberPlatform',
   internalNotify = 'internalNotify',
   notifyChatMessage = 'notifyChatMessage',
   sendSmsToChat = 'sendSmsToChat',
   slackMessage = 'slackMessage',
   queueMessage = 'queueMessage',
-  deleteSchedules = 'deleteSchedules',
-  deleteMember = 'deleteMember',
   removeAppointmentsFromUser = 'removeAppointmentsFromUser',
-  notifyOfflineMember = 'notifyOfflineMember',
   deleteLogReminder = 'deleteLogReminder',
 
   unconsentedAppointmentEnded = 'unconsentedAppointmentEnded',
+}
+
+/*************************************************************************************************
+ *************************************** Member interfaces ***************************************
+ *************************************************************************************************/
+export interface IEventMember {
+  memberId: string;
+}
+
+export interface IEventOnNewMember {
+  member: Member;
+  user: User;
+  platform: Platform;
+}
+
+export interface IEventOnNewMemberCommunication extends IEventMember {
+  accessToken?: string;
+}
+
+export interface IEventOnUpdatedMemberPlatform extends IEventMember {
+  userId: string;
+  platform: Platform;
+}
+
+export interface IEventOnReplacedUserForMember {
+  newUser: User;
+  oldUserId: string;
+  member: Member;
+  platform: Platform;
+}
+
+export interface IEventOnMemberBecameOffline {
+  phone: string;
+  content: string;
+  type: AllNotificationTypes;
 }
 
 export interface IEventRequestAppointment {
@@ -51,8 +88,7 @@ export interface IEventNewAppointment {
   appointmentId: string;
 }
 
-export interface IEventUpdatedAppointment {
-  memberId: string;
+export interface IEventUpdatedAppointment extends IEventMember {
   userId: string;
   key: string;
   value?: { status: AppointmentStatus; start: Date };
@@ -64,19 +100,8 @@ export interface IEventAppointmentScoresUpdated {
   scores: Scores;
 }
 
-export interface IEventNewMember {
-  member: Member;
-  user: User;
-  platform: Platform;
-}
-
 export interface IEventNewUser {
   user: User;
-}
-
-export interface IEventUpdateMemberConfig {
-  memberId: string;
-  accessToken?: string;
 }
 
 export interface IEventUpdateUserConfig {
@@ -84,15 +109,8 @@ export interface IEventUpdateUserConfig {
   accessToken: string;
 }
 
-export interface IEventAddUserToMemberList {
-  memberId: string;
+export interface IEventAddUserToMemberList extends IEventMember {
   userId: string;
-}
-
-export interface IEventUpdateMemberPlatform {
-  memberId: string;
-  userId: string;
-  platform: Platform;
 }
 
 export interface IEventNotifyChatMessage {
@@ -117,25 +135,8 @@ export interface IEventQueueMessage {
   message: string;
 }
 
-export interface IEventDeleteSchedules {
-  memberId: string;
-}
-
-export interface IEventUnregisterMemberFromNotifications {
-  phone: string;
-  content: string;
-  type: AllNotificationTypes;
-}
-export interface IEventUnconsentedAppointmentEnded {
+export interface IEventUnconsentedAppointmentEnded extends IEventMember {
   appointmentId: string;
-  memberId: string;
-}
-
-export interface IEventUpdateUserInCommunication {
-  newUser: User;
-  oldUserId: string;
-  member: Member;
-  platform: Platform;
 }
 
 export interface IEventUpdateUserInAppointments {

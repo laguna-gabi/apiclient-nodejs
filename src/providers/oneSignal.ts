@@ -9,7 +9,7 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventUnregisterMemberFromNotifications,
+  IEventOnMemberBecameOffline,
   Logger,
   SendOneSignalNotification,
 } from '../common';
@@ -120,12 +120,12 @@ export class OneSignal {
         data.errors[0] === 'All included players are not subscribed' ||
         data.errors?.invalid_external_user_ids[0] === externalUserId
       ) {
-        const eventParams: IEventUnregisterMemberFromNotifications = {
+        const eventParams: IEventOnMemberBecameOffline = {
           phone: sendOneSignalNotification.data.member.phone,
           content,
           type: sendOneSignalNotification.data.type,
         };
-        this.eventEmitter.emit(EventType.notifyOfflineMember, eventParams);
+        this.eventEmitter.emit(EventType.onMemberBecameOffline, eventParams);
       } else {
         this.logger.error(
           sendOneSignalNotification,

@@ -1,7 +1,7 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   EventType,
-  IEventNewMember,
+  IEventOnNewMember,
   IEventRequestAppointment,
   IEventSlackMessage,
   SlackChannel,
@@ -24,8 +24,8 @@ export class MemberBase {
     const { platform } = await this.memberService.getMemberConfig(member.id);
 
     const user = await this.userService.get(primaryUserId);
-    const eventNewMemberParams: IEventNewMember = { member, user, platform };
-    this.eventEmitter.emit(EventType.newMember, eventNewMemberParams);
+    const eventNewMemberParams: IEventOnNewMember = { member, user, platform };
+    this.eventEmitter.emit(EventType.onNewMember, eventNewMemberParams);
 
     const eventRequestAppointmentParams: IEventRequestAppointment = { user, member };
     this.eventEmitter.emit(EventType.requestAppointment, eventRequestAppointmentParams);

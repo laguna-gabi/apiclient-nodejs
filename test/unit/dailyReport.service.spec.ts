@@ -352,7 +352,7 @@ describe('DailyReportCategoryService', () => {
 
       const memberId = generateId();
 
-      service.deleteDailyReports(memberId);
+      service.deleteDailyReports({ memberId });
 
       expect(spyOnDailyReportCategoryModel).toBeCalledWith({
         memberId: new Types.ObjectId(memberId),

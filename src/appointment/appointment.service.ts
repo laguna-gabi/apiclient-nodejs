@@ -21,6 +21,7 @@ import {
   EventType,
   IEventAddUserToMemberList,
   IEventAppointmentScoresUpdated,
+  IEventMember,
   IEventNewAppointment,
 } from '../common';
 import { isUndefined, omitBy } from 'lodash';
@@ -289,15 +290,18 @@ export class AppointmentService extends BaseService {
     });
   }
 
-  @OnEvent(EventType.deleteMember, { async: true })
-  async deleteMemberAppointments(id) {
-    const appointments = await this.appointmentModel.find({ memberId: new Types.ObjectId(id) });
+  @OnEvent(EventType.onDeletedMember, { async: true })
+  async deleteMemberAppointments(params: IEventMember) {
+    const { memberId } = params;
+    const appointments = await this.appointmentModel.find({
+      memberId: new Types.ObjectId(memberId),
+    });
     for (let index = 0; index < appointments.length; index++) {
       if (appointments[index].notes) {
         await this.notesModel.deleteOne({ _id: appointments[index].notes });
       }
     }
-    await this.appointmentModel.deleteMany({ memberId: new Types.ObjectId(id) });
+    await this.appointmentModel.deleteMany({ memberId: new Types.ObjectId(memberId) });
     this.eventEmitter.emit(EventType.removeAppointmentsFromUser, appointments);
   }
 }

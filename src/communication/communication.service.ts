@@ -15,7 +15,7 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventUpdateMemberConfig,
+  IEventOnNewMemberCommunication,
   IEventUpdateUserConfig,
   Logger,
   UpdatedAppointmentAction,
@@ -66,8 +66,8 @@ export class CommunicationService {
 
     const accessToken = await this.sendBird.createUser(params);
 
-    const eventParams: IEventUpdateMemberConfig = { memberId: member.id, accessToken };
-    this.eventEmitter.emit(EventType.updateMemberConfig, eventParams);
+    const eventParams: IEventOnNewMemberCommunication = { memberId: member.id, accessToken };
+    this.eventEmitter.emit(EventType.onNewMemberCommunication, eventParams);
   }
 
   async connectMemberToUser(member: Member, user: User, platform: Platform) {

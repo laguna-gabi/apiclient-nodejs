@@ -8,11 +8,12 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventNewMember,
+  IEventMember,
   IEventNotifyChatMessage,
+  IEventOnNewMember,
+  IEventOnUpdatedMemberPlatform,
   IEventRequestAppointment,
   IEventSlackMessage,
-  IEventUpdateMemberPlatform,
   InternationalizationService,
   Language,
   RegisterForNotificationParams,
@@ -155,12 +156,12 @@ describe('MemberResolver', () => {
       expect(spyOnServiceGetAvailableUser).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
-      const eventNewMemberParams: IEventNewMember = {
+      const eventNewMemberParams: IEventOnNewMember = {
         member,
         user,
         platform: memberConfig.platform,
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.newMember, eventNewMemberParams);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onNewMember, eventNewMemberParams);
       const eventRequestAppointmentParams: IEventRequestAppointment = {
         member,
         user,
@@ -390,7 +391,8 @@ describe('MemberResolver', () => {
         userId: member.primaryUserId,
       });
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteSchedules, { memberId: id });
+      const eventParams: IEventMember = { memberId: id };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onArchivedMember, eventParams);
     });
   });
 
@@ -460,8 +462,8 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
       expect(spyOnCognitoServiceDeleteMember).toBeCalledWith(member.deviceId);
       expect(spyOnStorageServiceDeleteMember).toBeCalledWith(id);
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteMember, id);
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteSchedules, { memberId: id });
+      const eventParams: IEventMember = { memberId: id };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onDeletedMember, eventParams);
     });
 
     it('to not call cognito service with undefined device id', async () => {
@@ -492,8 +494,8 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
       expect(spyOnCognitoServiceDeleteMember).not.toHaveBeenCalled();
       expect(spyOnStorageServiceDeleteMember).toBeCalledWith(id);
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteMember, id);
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteSchedules, { memberId: id });
+      const eventParams: IEventMember = { memberId: id };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onDeletedMember, eventParams);
     });
   });
 
@@ -940,12 +942,12 @@ describe('MemberResolver', () => {
         platform: params.platform,
         isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       });
-      const eventParams: IEventUpdateMemberPlatform = {
+      const eventParams: IEventOnUpdatedMemberPlatform = {
         memberId: params.memberId,
         platform: params.platform,
         userId: member.primaryUserId,
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateMemberPlatform, eventParams);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedMemberPlatform, eventParams);
       expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: member.id });
     });
 
@@ -1042,7 +1044,7 @@ describe('MemberResolver', () => {
         memberId: member.id,
         userId: user.id,
       });
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateUserInCommunication, {
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onReplacedUserForMember, {
         newUser: user,
         oldUserId: member.primaryUserId,
         member,

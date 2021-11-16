@@ -48,8 +48,8 @@ import {
   EventType,
   IEventAddUserToMemberList,
   IEventAppointmentScoresUpdated,
+  IEventOnNewMemberCommunication,
   IEventUnconsentedAppointmentEnded,
-  IEventUpdateMemberConfig,
   Identifier,
   Logger,
 } from '../common';
@@ -638,8 +638,8 @@ export class MemberService extends BaseService {
     return this.replaceId(memberConfig);
   }
 
-  @OnEvent(EventType.updateMemberConfig, { async: true })
-  async handleUpdateMemberConfig(params: IEventUpdateMemberConfig): Promise<boolean> {
+  @OnEvent(EventType.onNewMemberCommunication, { async: true })
+  async handleUpdateMemberConfig(params: IEventOnNewMemberCommunication): Promise<boolean> {
     try {
       const result = await this.memberConfigModel.updateOne(
         { memberId: new Types.ObjectId(params.memberId) },

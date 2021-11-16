@@ -15,11 +15,11 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventNewMember,
   IEventNewUser,
-  IEventUpdateMemberPlatform,
+  IEventOnNewMember,
+  IEventOnReplacedUserForMember,
+  IEventOnUpdatedMemberPlatform,
   IEventUpdateUserInAppointments,
-  IEventUpdateUserInCommunication,
   Logger,
   LoggingInterceptor,
   RoleTypes,
@@ -139,8 +139,8 @@ export class CommunicationResolver {
     }
   }
 
-  @OnEvent(EventType.newMember, { async: true })
-  async handleNewMember(params: IEventNewMember) {
+  @OnEvent(EventType.onNewMember, { async: true })
+  async handleNewMember(params: IEventOnNewMember) {
     try {
       await this.communicationService.createMember(params.member);
       await this.communicationService.connectMemberToUser(
@@ -158,8 +158,8 @@ export class CommunicationResolver {
     }
   }
 
-  @OnEvent(EventType.updateMemberPlatform, { async: true })
-  async handleUpdateMemberPlatform(params: IEventUpdateMemberPlatform) {
+  @OnEvent(EventType.onUpdatedMemberPlatform, { async: true })
+  async handleUpdateMemberPlatform(params: IEventOnUpdatedMemberPlatform) {
     try {
       return await this.communicationService.onUpdateMemberPlatform(params);
     } catch (ex) {
@@ -191,8 +191,8 @@ export class CommunicationResolver {
     return `${config.get('hosts.chat')}/?uid=${uid}&mid=${mid}&token=${token}`;
   }
 
-  @OnEvent(EventType.updateUserInCommunication, { async: true })
-  async updateUserInCommunication(params: IEventUpdateUserInCommunication) {
+  @OnEvent(EventType.onReplacedUserForMember, { async: true })
+  async updateUserInCommunication(params: IEventOnReplacedUserForMember) {
     try {
       await this.communicationService.updateUserInCommunication(params);
       const updateUserInAppointmentsParams: IEventUpdateUserInAppointments = {

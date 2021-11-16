@@ -19,7 +19,7 @@ import {
 import {
   ContentKey,
   EventType,
-  IEventDeleteSchedules,
+  IEventMember,
   IEventRequestAppointment,
   IEventUpdateUserInAppointments,
   IEventUpdatedAppointment,
@@ -118,8 +118,8 @@ export class AppointmentResolver extends AppointmentBase {
     }
   }
 
-  @OnEvent(EventType.deleteSchedules, { async: true })
-  async deleteSchedules(params: IEventDeleteSchedules) {
+  @OnEvent(EventType.onDeletedMember, { async: true })
+  async deleteSchedules(params: IEventMember) {
     const { memberId } = params;
     try {
       const appointments = await this.appointmentService.getMemberScheduledAppointments(memberId);
