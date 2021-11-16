@@ -38,7 +38,8 @@ import {
   generateAvailabilityInput,
   generateCreateUserParams,
   generateId,
-  generateScheduleAppointmentParams,
+  generateRequestAppointmentParams,
+  generateScheduleAppointmentParams
 } from '../index';
 
 describe('UserService', () => {
@@ -379,6 +380,26 @@ describe('UserService', () => {
         );
       }
       expect(result.slots.length).toEqual(defaultSlotsParams.maxSlots);
+    });
+
+    it('should return default slots from appointments "notBefore" if not specified in params',
+      async ()=>{
+      const user = await service.insert(generateCreateUserParams());
+      const tomorrow = startOfTomorrow();
+      const appointmentParams = generateRequestAppointmentParams({
+        memberId:generateId(),
+        userId:user.id,
+        notBefore: tomorrow
+      });
+
+      const appointment = await appointmentResolver.requestAppointment(appointmentParams);
+      const result = await service.getSlots({
+        appointmentId: appointment.id,
+        userId:user.id
+      });
+
+      expect(isAfter(result.slots[0],tomorrow)).toBeTruthy();
+      expect(isAfter(result.slots[0],add(tomorrow, { days: 1 }))).toBeFalsy();
     });
 
     const preformGetUserSlots = async (override:Partial<GetSlotsParams> = {}) => {

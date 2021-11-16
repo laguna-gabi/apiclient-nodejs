@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import { add, getHours, startOfTomorrow } from 'date-fns';
+import { add, differenceInDays, getHours, startOfDay, startOfTomorrow } from 'date-fns';
 import { cloneDeep } from 'lodash';
 import { Model, Types } from 'mongoose';
 import {
@@ -80,9 +80,8 @@ export class UserService extends BaseService {
 
   async getSlots(getSlotsParams: GetSlotsParams): Promise<Slots> {
     this.removeNotNullable(getSlotsParams, NotNullableSlotsKeys);
-    const {
-      appointmentId, userId,defaultSlotsCount,allowEmptySlotsResponse, maxSlots
-    } = getSlotsParams;
+    const { appointmentId, userId, defaultSlotsCount, allowEmptySlotsResponse, maxSlots } =
+      getSlotsParams;
 
     const [slotsObject] = await this.userModel.aggregate([
       ...(userId
@@ -157,6 +156,7 @@ export class UserService extends BaseService {
             method: { $arrayElemAt: ['$userAp.method', 0] },
             memberId: { $arrayElemAt: ['$userAp.memberId', 0] },
             userId: { $arrayElemAt: ['$userAp.userId', 0] },
+            notBefore: { $arrayElemAt: ['$userAp.notBefore', 0] },
             duration: `${defaultSlotsParams.duration}`,
           },
           ap: '$ap',
@@ -169,13 +169,15 @@ export class UserService extends BaseService {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
 
+    const notBefore = getSlotsParams.notBefore || slotsObject.ap?.[0].notBefore;
+
     slotsObject.slots = this.slotService.getSlots(
       slotsObject.av,
       slotsObject.ap,
       defaultSlotsParams.duration,
       maxSlots || defaultSlotsParams.maxSlots,
-      getSlotsParams.notBefore,
-      getSlotsParams.notAfter
+      notBefore,
+      getSlotsParams.notAfter,
     );
     delete slotsObject.ap;
     delete slotsObject.av;
@@ -185,7 +187,7 @@ export class UserService extends BaseService {
     }
 
     if (slotsObject.slots.length === 0 && !allowEmptySlotsResponse) {
-      slotsObject.slots = this.generateDefaultSlots(defaultSlotsCount);
+      slotsObject.slots = this.generateDefaultSlots(defaultSlotsCount, notBefore);
       const params: IEventSlackMessage = {
         message: `*No availability*\nUser ${
           userId ? userId : slotsObject.appointment.userId
@@ -199,9 +201,16 @@ export class UserService extends BaseService {
     return slotsObject;
   }
 
-  generateDefaultSlots(count:number = defaultSlotsParams.defaultSlots) {
+  generateDefaultSlots(count: number = defaultSlotsParams.defaultSlots, notBefore?: Date) {
     const slots: Date[] = [];
-    let nextSlot = add(new Date(), { hours: 2 });
+    const getStartDate = () => {
+      const now = new Date();
+      return notBefore && differenceInDays(now, notBefore) !== 0
+        ? add(startOfDay(notBefore), { hours: 2 })
+        : add(now, { hours: 2 });
+    };
+
+    let nextSlot = getStartDate();
     for (let index = 0; index < count; index++) {
       nextSlot = add(nextSlot, { hours: 1 });
       if (getHours(nextSlot) < 17 || getHours(nextSlot) > 23) {
