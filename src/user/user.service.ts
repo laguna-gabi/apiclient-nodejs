@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import { add, differenceInDays, getHours, startOfDay, startOfTomorrow } from 'date-fns';
+import { add, differenceInDays, getHours, startOfDay } from 'date-fns';
 import { cloneDeep } from 'lodash';
 import { Model, Types } from 'mongoose';
 import {
@@ -185,7 +185,6 @@ export class UserService extends BaseService {
       delete slotsObject.member;
       delete slotsObject.appointment;
     }
-
     if (slotsObject.slots.length === 0 && !allowEmptySlotsResponse) {
       slotsObject.slots = this.generateDefaultSlots(defaultSlotsCount, notBefore);
       const params: IEventSlackMessage = {
@@ -206,7 +205,7 @@ export class UserService extends BaseService {
     const getStartDate = () => {
       const now = new Date();
       return notBefore && differenceInDays(now, notBefore) !== 0
-        ? add(startOfDay(notBefore), { hours: 2 })
+        ? notBefore
         : add(now, { hours: 2 });
     };
 
@@ -214,7 +213,7 @@ export class UserService extends BaseService {
     for (let index = 0; index < count; index++) {
       nextSlot = add(nextSlot, { hours: 1 });
       if (getHours(nextSlot) < 17 || getHours(nextSlot) > 23) {
-        nextSlot = add(startOfTomorrow(), { hours: 17 });
+        nextSlot = add(startOfDay(add(nextSlot, { days: 1 })), { hours: 17 });
       }
       slots.push(nextSlot);
     }

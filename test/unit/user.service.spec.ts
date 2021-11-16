@@ -28,7 +28,7 @@ import {
   UserRole,
   UserService,
   defaultSlotsParams,
-  defaultUserParams
+  defaultUserParams,
 } from '../../src/user';
 import {
   compareUsers,
@@ -39,7 +39,7 @@ import {
   generateCreateUserParams,
   generateId,
   generateRequestAppointmentParams,
-  generateScheduleAppointmentParams
+  generateScheduleAppointmentParams,
 } from '../index';
 
 describe('UserService', () => {
@@ -312,26 +312,26 @@ describe('UserService', () => {
       expect(result.slots.length).toEqual(6);
     });
 
-    it('should return specific default slots if there is no availability and got defaultSlotsCount',
-    async () => {
-      const user = await service.insert(generateCreateUserParams());
-      const result = await service.getSlots({
-        userId: user.id,
-        notBefore: add(startOfToday(), { hours: 10 }),
-        defaultSlotsCount: 9
-      });
-
-      expect(result.slots.length).toEqual(9);
-    });
-
-    it('should return 0 slots if there is no availability and allowEmptySlotsResponse=true',
-    async () => {
+    // eslint-disable-next-line max-len
+    it('should return specific default slots if there is no availability and got defaultSlotsCount', async () => {
       const user = await service.insert(generateCreateUserParams());
       const result = await service.getSlots({
         userId: user.id,
         notBefore: add(startOfToday(), { hours: 10 }),
         defaultSlotsCount: 9,
-        allowEmptySlotsResponse: true
+      });
+
+      expect(result.slots.length).toEqual(9);
+    });
+
+    // eslint-disable-next-line max-len
+    it('should return 0 slots if there is no availability and allowEmptySlotsResponse=true', async () => {
+      const user = await service.insert(generateCreateUserParams());
+      const result = await service.getSlots({
+        userId: user.id,
+        notBefore: add(startOfToday(), { hours: 10 }),
+        defaultSlotsCount: 9,
+        allowEmptySlotsResponse: true,
       });
 
       expect(result.slots.length).toEqual(0);
@@ -354,12 +354,12 @@ describe('UserService', () => {
     });
 
     it('should return more then default(9) slots if maxSlots is given', async () => {
-      const result = await preformGetUserSlots({maxSlots:10});
+      const result = await preformGetUserSlots({ maxSlots: 10 });
       expect(result.slots.length).toBe(10);
     });
 
     it('should return 5 slots only from today if capped by notAfter to this midnight', async () => {
-      const result = await preformGetUserSlots({notAfter:startOfTomorrow()});
+      const result = await preformGetUserSlots({ notAfter: startOfTomorrow() });
       expect(result.slots.length).toBe(5);
       for (let index = 0; index < 5; index++) {
         expect(
@@ -382,27 +382,27 @@ describe('UserService', () => {
       expect(result.slots.length).toEqual(defaultSlotsParams.maxSlots);
     });
 
-    it('should return default slots from appointments "notBefore" if not specified in params',
-      async ()=>{
+    // eslint-disable-next-line max-len
+    it('should return default slots from appointments "notBefore" if not specified in params', async () => {
       const user = await service.insert(generateCreateUserParams());
-      const tomorrow = startOfTomorrow();
+      const future = add(startOfToday(), { days: 2, hours: 17 });
       const appointmentParams = generateRequestAppointmentParams({
-        memberId:generateId(),
-        userId:user.id,
-        notBefore: tomorrow
+        memberId: generateId(),
+        userId: user.id,
+        notBefore: future,
       });
 
       const appointment = await appointmentResolver.requestAppointment(appointmentParams);
       const result = await service.getSlots({
         appointmentId: appointment.id,
-        userId:user.id
+        userId: user.id,
       });
 
-      expect(isAfter(result.slots[0],tomorrow)).toBeTruthy();
-      expect(isAfter(result.slots[0],add(tomorrow, { days: 1 }))).toBeFalsy();
+      expect(isAfter(result.slots[0], future)).toBeTruthy();
+      expect(isAfter(result.slots[0], add(future, { days: 1 }))).toBeFalsy();
     });
 
-    const preformGetUserSlots = async (override:Partial<GetSlotsParams> = {}) => {
+    const preformGetUserSlots = async (override: Partial<GetSlotsParams> = {}) => {
       const user = await service.insert(generateCreateUserParams());
       await createDefaultAvailabilities(user.id);
 
@@ -416,7 +416,7 @@ describe('UserService', () => {
       return service.getSlots({
         userId: user.id,
         notBefore: add(startOfToday(), { hours: 10 }),
-        ...override
+        ...override,
       });
     };
 
