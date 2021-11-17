@@ -1,5 +1,5 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { format } from 'date-fns';
+import { format, isAfter } from 'date-fns';
 import {
   Appointment,
   AppointmentScheduler,
@@ -27,9 +27,12 @@ export class AppointmentBase {
     const appointment = await this.appointmentService.schedule(scheduleAppointmentParams);
 
     this.updateAppointmentExternalData(appointment);
-    this.notifyUserAppointment(appointment);
-    this.notifyMemberAppointment(appointment);
-    await this.registerAppointmentAlert(appointment);
+
+    if (isAfter(appointment.start, new Date())) {
+      this.notifyUserAppointment(appointment);
+      this.notifyMemberAppointment(appointment);
+      await this.registerAppointmentAlert(appointment);
+    }
 
     this.appointmentScheduler.deleteTimeout({ id: appointment.memberId.toString() });
     return appointment;

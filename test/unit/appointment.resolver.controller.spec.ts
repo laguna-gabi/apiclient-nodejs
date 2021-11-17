@@ -31,6 +31,7 @@ import {
 } from '../index';
 import { format } from 'date-fns-tz';
 import { InternalNotificationType } from '@lagunahealth/pandora';
+import { addMinutes } from 'date-fns';
 
 describe('AppointmentResolver', () => {
   let module: TestingModule;
@@ -97,6 +98,25 @@ describe('AppointmentResolver', () => {
         },
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyInternal, eventParams);
+    });
+
+    it('should not notify user & member for past appointments', async () => {
+      const spyOnSchedulerRegisterAppointmentAlert = jest.spyOn(
+        scheduler,
+        'registerAppointmentAlert',
+      );
+      const appointment = generateScheduleAppointmentParams({
+        start: addMinutes(new Date(), -10),
+        end: addMinutes(new Date(), 20),
+      });
+      spyOnServiceInsert.mockImplementationOnce(async () => appointment);
+
+      await resolver.scheduleAppointment(appointment);
+      expect(spyOnSchedulerRegisterAppointmentAlert).not.toBeCalled();
+      expect(spyOnEventEmitter).not.toHaveBeenCalledWith(
+        EventType.internalNotify,
+        expect.anything(),
+      );
     });
   });
 
