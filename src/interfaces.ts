@@ -33,3 +33,12 @@ export interface ICreateDispatch extends IDispatch {
 }
 
 export type IDeleteDispatch = IDispatch;
+
+export const BaseExternalConfigs = {
+  oneSignal: {
+    defaultApiId: 'onesignal.default.apiId',
+    defaultApiKey: 'onesignal.default.apiKey',
+    voipApiId: 'onesignal.voip.apiId',
+    voipApiKey: 'onesignal.voip.apiKey',
+  },
+};
