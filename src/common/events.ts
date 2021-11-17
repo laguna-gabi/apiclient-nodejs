@@ -38,9 +38,11 @@ export enum EventType {
   slackMessage = 'slackMessage',
   queueMessage = 'queueMessage',
   removeAppointmentsFromUser = 'removeAppointmentsFromUser',
-  deleteLogReminder = 'deleteLogReminder',
 
   unconsentedAppointmentEnded = 'unconsentedAppointmentEnded',
+
+  //daily logs
+  onSetDailyLogCategories = 'onSetDailyLogCategories',
 }
 
 /*************************************************************************************************
@@ -139,7 +141,7 @@ export interface IEventUnconsentedAppointmentEnded extends IEventMember {
   appointmentId: string;
 }
 
-export interface IEventUpdateUserInAppointments {
+export interface IEventUpdateUserInAppointments extends IEventMember {
   newUserId: string;
   oldUserId: string;
   memberId: string;

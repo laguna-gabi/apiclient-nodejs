@@ -635,8 +635,9 @@ export class MemberResolver extends MemberBase {
     await this.deleteSchedules(params);
   }
 
-  @OnEvent(EventType.deleteLogReminder, { async: true })
-  async deleteLogReminder(memberId: string) {
+  @OnEvent(EventType.onSetDailyLogCategories, { async: true })
+  async deleteLogReminder(params: IEventMember) {
+    const { memberId } = params;
     try {
       this.memberScheduler.deleteTimeout({ id: memberId + ReminderType.logReminder });
     } catch (ex) {

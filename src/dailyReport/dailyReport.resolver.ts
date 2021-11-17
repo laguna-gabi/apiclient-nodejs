@@ -13,6 +13,7 @@ import {
 import {
   ContentKey,
   EventType,
+  IEventMember,
   InternalNotifyParams,
   Logger,
   LoggingInterceptor,
@@ -66,7 +67,10 @@ export class DailyReportResolver {
         dailyReportCategoriesInput.date,
       );
     }
-    this.eventEmitter.emit(EventType.deleteLogReminder, dailyReportCategoriesInput.memberId);
+    const eventParam: IEventMember = {
+      memberId: dailyReportCategoriesInput.memberId,
+    };
+    this.eventEmitter.emit(EventType.onSetDailyLogCategories, eventParam);
 
     return dailyReportObject;
   }
