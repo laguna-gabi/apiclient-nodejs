@@ -9,10 +9,11 @@ import {
   Errors,
   EventType,
   IEventMember,
-  IEventNotifyChatMessage,
+  IEventNotifySlack,
   IEventOnNewMember,
+  IEventOnReceivedChatMessage,
   IEventOnUpdatedMemberPlatform,
-  IEventSlackMessage,
+  InternalNotifyParams,
   InternationalizationService,
   Language,
   RegisterForNotificationParams,
@@ -161,13 +162,13 @@ describe('MemberResolver', () => {
         platform: memberConfig.platform,
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onNewMember, eventNewMemberParams);
-      const eventSlackMessageParams: IEventSlackMessage = {
+      const eventSlackMessageParams: IEventNotifySlack = {
         // eslint-disable-next-line max-len
         message: `*New customer*\n${member.firstName} [${member.id}],\nassigned to ${user.firstName}.`,
         icon: SlackIcon.info,
         channel: SlackChannel.support,
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.slackMessage, eventSlackMessageParams);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifySlack, eventSlackMessageParams);
     });
   });
 
@@ -1310,7 +1311,7 @@ describe('MemberResolver', () => {
 
       await delay(300);
       delete notifyParams.metadata.when;
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.internalNotify, {
+      const eventParams: InternalNotifyParams = {
         memberId: member.id,
         userId: member.primaryUserId,
         type:
@@ -1319,7 +1320,8 @@ describe('MemberResolver', () => {
             : InternalNotificationType.textSmsToMember,
         metadata: {},
         content: notifyParams.metadata.content,
-      });
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyInternal, eventParams);
     }, 10000);
 
     it('should call getCommunication if metadata.chatLink true', async () => {
@@ -1828,7 +1830,7 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser.mockImplementation(async () => user);
       spyOnCommunicationGetByUrl.mockImplementation(async () => communication);
 
-      const params: IEventNotifyChatMessage = {
+      const params: IEventOnReceivedChatMessage = {
         senderUserId: user.id,
         sendBirdChannelUrl: communication.sendBirdChannelUrl,
       };
@@ -1878,7 +1880,7 @@ describe('MemberResolver', () => {
       });
 
       spyOnCommunicationGetByUrl.mockImplementation(async () => communication);
-      const params: IEventNotifyChatMessage = {
+      const params: IEventOnReceivedChatMessage = {
         senderUserId: member.id,
         sendBirdChannelUrl: communication.sendBirdChannelUrl,
         sendBirdMemberInfo: [
@@ -1921,7 +1923,7 @@ describe('MemberResolver', () => {
       });
 
       spyOnCommunicationGetByUrl.mockImplementation(async () => communication);
-      const params: IEventNotifyChatMessage = {
+      const params: IEventOnReceivedChatMessage = {
         senderUserId: member.id,
         sendBirdChannelUrl: communication.sendBirdChannelUrl,
         sendBirdMemberInfo: [
@@ -1935,7 +1937,7 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceSend).not.toBeCalled();
     });
 
-    const fakeData: IEventNotifyChatMessage = {
+    const fakeData: IEventOnReceivedChatMessage = {
       senderUserId: v4(),
       sendBirdChannelUrl: generateUniqueUrl(),
     };

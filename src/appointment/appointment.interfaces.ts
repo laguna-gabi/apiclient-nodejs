@@ -68,7 +68,7 @@ export class AppointmentBase {
         },
       },
     };
-    this.eventEmitter.emit(EventType.internalNotify, params);
+    this.eventEmitter.emit(EventType.notifyInternal, params);
   }
 
   private notifyMemberAppointment(appointment: Appointment) {
@@ -81,7 +81,7 @@ export class AppointmentBase {
         appointmentTime: appointment.start,
       },
     };
-    this.eventEmitter.emit(EventType.internalNotify, params);
+    this.eventEmitter.emit(EventType.notifyInternal, params);
   }
 
   private async registerAppointmentAlert(appointment: Appointment) {

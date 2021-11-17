@@ -88,7 +88,7 @@ export class MemberScheduler extends BaseScheduler {
       };
 
       const timeout = setTimeout(async () => {
-        this.eventEmitter.emit(EventType.internalNotify, params);
+        this.eventEmitter.emit(EventType.notifyInternal, params);
         this.deleteTimeout({ id });
       }, delayTime);
       this.addTimeout(id, timeout);
@@ -120,7 +120,7 @@ export class MemberScheduler extends BaseScheduler {
           type: InternalNotificationType.textToMember,
           metadata: { contentType: ContentKey.newRegisteredMember },
         };
-        this.eventEmitter.emit(EventType.internalNotify, params);
+        this.eventEmitter.emit(EventType.notifyInternal, params);
         this.deleteTimeout({ id: memberId });
         await this.registerNewRegisteredMemberNudgeNotify({ memberId, userId, firstLoggedInAt });
       }, milliseconds);
@@ -151,7 +151,7 @@ export class MemberScheduler extends BaseScheduler {
           type: InternalNotificationType.textToMember,
           metadata: { contentType: ContentKey.newRegisteredMemberNudge },
         };
-        this.eventEmitter.emit(EventType.internalNotify, params);
+        this.eventEmitter.emit(EventType.notifyInternal, params);
         this.deleteTimeout({ id: memberId });
       }, milliseconds);
       this.schedulerRegistry.addTimeout(memberId, timeout);
@@ -181,7 +181,7 @@ export class MemberScheduler extends BaseScheduler {
           type: InternalNotificationType.textToMember,
           metadata: { contentType: ContentKey.logReminder },
         };
-        this.eventEmitter.emit(EventType.internalNotify, params);
+        this.eventEmitter.emit(EventType.notifyInternal, params);
         this.deleteTimeout({ id: memberId + ReminderType.logReminder });
       }, milliseconds);
       this.schedulerRegistry.addTimeout(memberId + ReminderType.logReminder, timeout);

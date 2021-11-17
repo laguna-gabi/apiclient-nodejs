@@ -122,7 +122,7 @@ describe('DailyReportResolver', () => {
         if (emittedEventParams) {
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(
             1,
-            EventType.internalNotify,
+            EventType.notifyInternal,
             emittedEventParams,
           );
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(

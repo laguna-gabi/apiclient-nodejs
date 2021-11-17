@@ -5,7 +5,7 @@ import {
   AuditType,
   Environments,
   EventType,
-  IEventQueueMessage,
+  IEventNotifyQueue,
   QueueType,
   SlackChannel,
   SlackIcon,
@@ -74,7 +74,7 @@ export class Logger {
     );
     console.warn(this.isColorLog() ? colorLog : log);
 
-    this.eventEmitter.emit(EventType.slackMessage, {
+    this.eventEmitter.emit(EventType.notifySlack, {
       message: log,
       icon: SlackIcon.warning,
       channel: SlackChannel.notifications,
@@ -92,7 +92,7 @@ export class Logger {
     );
     console.error(this.isColorLog() ? colorLog : log);
 
-    this.eventEmitter.emit(EventType.slackMessage, {
+    this.eventEmitter.emit(EventType.notifySlack, {
       message: log,
       icon: SlackIcon.critical,
       channel: SlackChannel.notifications,
@@ -111,13 +111,13 @@ export class Logger {
   }
 
   audit(type: AuditType, params, methodName: string, authId?: string) {
-    const eventParams: IEventQueueMessage = {
+    const eventParams: IEventNotifyQueue = {
       type: QueueType.audit,
       message:
         `user: ${authId}, type: ${type}, date: ${new Date().toLocaleString()}, description: ` +
         `Hepius ${methodName} ${this.getCalledLog(params)}`,
     };
-    this.eventEmitter.emit(EventType.queueMessage, eventParams);
+    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
   }
 
   /**

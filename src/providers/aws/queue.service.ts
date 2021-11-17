@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
 import * as config from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
-import { Environments, EventType, IEventQueueMessage, Logger, QueueType } from '../../common';
+import { Environments, EventType, IEventNotifyQueue, Logger, QueueType } from '../../common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
@@ -32,8 +32,8 @@ export class QueueService implements OnModuleInit {
   /**
    * audit log only exists in production
    */
-  @OnEvent(EventType.queueMessage, { async: true })
-  async sendMessage(params: IEventQueueMessage) {
+  @OnEvent(EventType.notifyQueue, { async: true })
+  async sendMessage(params: IEventNotifyQueue) {
     if (process.env.NODE_ENV === Environments.production) {
       try {
         await this.sqs

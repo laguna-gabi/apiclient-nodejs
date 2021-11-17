@@ -58,7 +58,7 @@ export class DailyReportResolver {
         metadata: { contentType: ContentKey.memberNotFeelingWellMessage },
       };
 
-      this.eventEmitter.emit(EventType.internalNotify, params);
+      this.eventEmitter.emit(EventType.notifyInternal, params);
 
       this.dailyReportService.logMemberOverThresholdIndication(dailyReportCategoriesInput.memberId);
 

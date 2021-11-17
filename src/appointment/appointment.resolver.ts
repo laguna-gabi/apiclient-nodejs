@@ -199,7 +199,7 @@ export class AppointmentResolver extends AppointmentBase {
         scheduleLink: appointment.link,
       },
     };
-    this.eventEmitter.emit(EventType.internalNotify, params);
+    this.eventEmitter.emit(EventType.notifyInternal, params);
   }
 
   private async notifyRegistration({
@@ -226,6 +226,6 @@ export class AppointmentResolver extends AppointmentBase {
         extraData: { org, downloadLink },
       },
     };
-    this.eventEmitter.emit(EventType.internalNotify, params);
+    this.eventEmitter.emit(EventType.notifyInternal, params);
   }
 }

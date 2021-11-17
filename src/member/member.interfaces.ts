@@ -1,8 +1,8 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   EventType,
+  IEventNotifySlack,
   IEventOnNewMember,
-  IEventSlackMessage,
   SlackChannel,
   SlackIcon,
 } from '../common';
@@ -26,13 +26,13 @@ export class MemberBase {
     const eventNewMemberParams: IEventOnNewMember = { member, user, platform };
     this.eventEmitter.emit(EventType.onNewMember, eventNewMemberParams);
 
-    const eventSlackMessageParams: IEventSlackMessage = {
+    const eventSlackMessageParams: IEventNotifySlack = {
       // eslint-disable-next-line max-len
       message: `*New customer*\n${member.firstName} [${member.id}],\nassigned to ${user.firstName}.`,
       icon: SlackIcon.info,
       channel: SlackChannel.support,
     };
-    this.eventEmitter.emit(EventType.slackMessage, eventSlackMessageParams);
+    this.eventEmitter.emit(EventType.notifySlack, eventSlackMessageParams);
 
     return member;
   }

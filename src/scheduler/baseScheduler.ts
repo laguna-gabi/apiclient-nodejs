@@ -116,7 +116,7 @@ export class BaseScheduler {
             extraData: { downloadLink },
           },
         };
-        this.eventEmitter.emit(EventType.internalNotify, params);
+        this.eventEmitter.emit(EventType.notifyInternal, params);
         this.deleteTimeout({ id: memberId });
       }, milliseconds);
       this.addTimeout(memberId, timeout);

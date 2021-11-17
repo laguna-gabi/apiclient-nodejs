@@ -96,7 +96,7 @@ describe('AppointmentResolver', () => {
           scheduleLink: `${appointment.link}`,
         },
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.internalNotify, eventParams);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyInternal, eventParams);
     });
   });
 
@@ -210,7 +210,7 @@ describe('AppointmentResolver', () => {
       };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
         2,
-        EventType.internalNotify,
+        EventType.notifyInternal,
         notifyUserParams,
       );
 
@@ -225,7 +225,7 @@ describe('AppointmentResolver', () => {
       };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
         3,
-        EventType.internalNotify,
+        EventType.notifyInternal,
         notifyMemberParams,
       );
       expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: appointment.memberId.toString() });

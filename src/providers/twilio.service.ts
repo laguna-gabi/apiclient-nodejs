@@ -6,7 +6,7 @@ import { ConfigsService, ExternalConfigs } from '.';
 import {
   Environments,
   EventType,
-  IEventSlackMessage,
+  IEventNotifySlack,
   Logger,
   SendTwilioNotification,
   SlackChannel,
@@ -56,12 +56,12 @@ export class TwilioService implements OnModuleInit {
         this.logger.error(sendTwilioNotification, TwilioService.name, this.send.name, ex);
       }
     } else {
-      const params: IEventSlackMessage = {
+      const params: IEventNotifySlack = {
         message: `*SMS to ${to}${generateOrgNamePrefix(orgName)}*\n${body}`,
         icon: SlackIcon.phone,
         channel: SlackChannel.testingSms,
       };
-      this.eventEmitter.emit(EventType.slackMessage, params);
+      this.eventEmitter.emit(EventType.notifySlack, params);
     }
   }
 

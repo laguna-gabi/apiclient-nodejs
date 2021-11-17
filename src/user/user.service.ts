@@ -24,11 +24,11 @@ import {
   ErrorType,
   Errors,
   EventType,
+  IEventNotifySlack,
   IEventOnDeletedMemberAppointments,
   IEventOnNewAppointment,
   IEventOnUpdateUserConfig,
   IEventOnUpdatedUserAppointments,
-  IEventSlackMessage,
   Logger,
   SlackChannel,
   SlackIcon,
@@ -188,14 +188,14 @@ export class UserService extends BaseService {
     }
     if (slotsObject.slots.length === 0 && !allowEmptySlotsResponse) {
       slotsObject.slots = this.generateDefaultSlots(defaultSlotsCount, notBefore);
-      const params: IEventSlackMessage = {
+      const params: IEventNotifySlack = {
         message: `*No availability*\nUser ${
           userId ? userId : slotsObject.appointment.userId
         } doesn't have any availability left.`,
         icon: SlackIcon.warning,
         channel: SlackChannel.notifications,
       };
-      this.eventEmitter.emit(EventType.slackMessage, params);
+      this.eventEmitter.emit(EventType.notifySlack, params);
     }
 
     return slotsObject;
@@ -295,12 +295,12 @@ export class UserService extends BaseService {
         return users[index]._id;
       }
     }
-    const params: IEventSlackMessage = {
+    const params: IEventNotifySlack = {
       message: `*NO AVAILABLE USERS*\nAll users are fully booked.`,
       icon: SlackIcon.warning,
       channel: SlackChannel.notifications,
     };
-    this.eventEmitter.emit(EventType.slackMessage, params);
+    this.eventEmitter.emit(EventType.notifySlack, params);
     await this.userModel.updateOne(
       { _id: users[0]._id },
       { $set: { lastMemberAssignedAt: new Date() } },

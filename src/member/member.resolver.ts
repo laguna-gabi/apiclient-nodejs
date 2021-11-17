@@ -38,11 +38,11 @@ import {
   EventType,
   GetContentsParams,
   IEventMember,
-  IEventNotifyChatMessage,
   IEventOnMemberBecameOffline,
+  IEventOnReceivedChatMessage,
+  IEventOnReceivedTextMessage,
   IEventOnReplacedUserForMember,
   IEventOnUpdatedMemberPlatform,
-  IEventSendSmsToChat,
   Identifier,
   InternalNotifyParams,
   InternationalizationService,
@@ -473,7 +473,7 @@ export class MemberResolver extends MemberBase {
    * Event is coming from appointment.scheduler or
    * member.scheduler - scheduling reminders and nudges.
    */
-  @OnEvent(EventType.internalNotify, { async: true })
+  @OnEvent(EventType.notifyInternal, { async: true })
   async internalNotify(params: InternalNotifyParams) {
     this.logger.debug(params, MemberResolver.name, this.internalNotify.name);
     const { memberId, userId, type, metadata } = params;
@@ -551,8 +551,8 @@ export class MemberResolver extends MemberBase {
    * A message can be from a user or a member.
    * Determine origin (member or user) and decide if a notification should be sent
    */
-  @OnEvent(EventType.notifyChatMessage, { async: true })
-  async notifyChatMessage(params: IEventNotifyChatMessage) {
+  @OnEvent(EventType.onReceivedChatMessage, { async: true })
+  async notifyChatMessage(params: IEventOnReceivedChatMessage) {
     const { senderUserId, sendBirdChannelUrl } = params;
 
     let origin: ChatMessageOrigin;
@@ -604,8 +604,8 @@ export class MemberResolver extends MemberBase {
    * Listening to incoming sms from twilio webhook.
    * Send message from member to chat.
    */
-  @OnEvent(EventType.sendSmsToChat, { async: true })
-  async sendSmsToChat(params: IEventSendSmsToChat) {
+  @OnEvent(EventType.onReceivedTextMessage, { async: true })
+  async sendSmsToChat(params: IEventOnReceivedTextMessage) {
     try {
       const member = await this.memberService.getByPhone(params.phone);
       const sendBirdChannelUrl = await this.getSendBirdChannelUrl({

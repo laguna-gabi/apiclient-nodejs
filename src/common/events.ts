@@ -34,11 +34,12 @@ export enum EventType {
   onUnconsentedAppointmentEnded = 'onUnconsentedAppointmentEnded',
   onDeletedMemberAppointments = 'onDeletedMemberAppointments',
 
-  internalNotify = 'internalNotify',
-  notifyChatMessage = 'notifyChatMessage',
-  sendSmsToChat = 'sendSmsToChat',
-  slackMessage = 'slackMessage',
-  queueMessage = 'queueMessage',
+  //notifications
+  onReceivedChatMessage = 'onReceivedChatMessage',
+  onReceivedTextMessage = 'onReceivedTextMessage',
+  notifyInternal = 'notifyInternal',
+  notifySlack = 'notifySlack',
+  notifyQueue = 'notifyQueue',
 
   //daily logs
   onSetDailyLogCategories = 'onSetDailyLogCategories',
@@ -128,24 +129,27 @@ export interface IEventOnDeletedMemberAppointments {
   appointments: AppointmentDocument[];
 }
 
-export interface IEventNotifyChatMessage {
+/*************************************************************************************************
+ ************************************ Notification interfaces ************************************
+ *************************************************************************************************/
+export interface IEventOnReceivedChatMessage {
   senderUserId: string;
   sendBirdChannelUrl: string;
   sendBirdMemberInfo?: { memberId: string; isOnline: boolean }[];
 }
 
-export interface IEventSendSmsToChat {
+export interface IEventOnReceivedTextMessage {
   phone: string;
   message: string;
 }
 
-export interface IEventSlackMessage {
+export interface IEventNotifySlack {
   message: string;
   icon: SlackIcon;
   channel: SlackChannel;
 }
 
-export interface IEventQueueMessage {
+export interface IEventNotifyQueue {
   type: QueueType;
   message: string;
 }
