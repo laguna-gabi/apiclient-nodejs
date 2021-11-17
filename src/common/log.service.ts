@@ -110,17 +110,6 @@ export class Logger {
     console.debug(this.isColorLog() ? colorLog : log);
   }
 
-  internal(params: string, className: string, methodName: string) {
-    const { colorLog, log } = this.logFormat(
-      params,
-      className,
-      methodName,
-      LogType.internal,
-      COLOR.fgGreen,
-    );
-    console.debug(this.isColorLog() ? colorLog : log);
-  }
-
   audit(type: AuditType, params, methodName: string, authId?: string) {
     const eventParams: IEventQueueMessage = {
       type: QueueType.audit,
@@ -202,7 +191,6 @@ enum LogType {
   warn = 'warn',
   error = 'error',
   debug = 'debug',
-  internal = 'internal',
 }
 
 const COLOR = {

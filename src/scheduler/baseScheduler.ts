@@ -78,7 +78,7 @@ export class BaseScheduler {
           leaderType: this.leaderType,
         });
         this.amITheLeader = true;
-        this.logger.internal(
+        this.logger.debug(
           internalLogs.schedulerLeader
             .replace('@type@', this.leaderType)
             .replace('@identifier@', this.identifier),
