@@ -114,7 +114,7 @@ describe('AppointmentResolver', () => {
       await resolver.scheduleAppointment(appointment);
       expect(spyOnSchedulerRegisterAppointmentAlert).not.toBeCalled();
       expect(spyOnEventEmitter).not.toHaveBeenCalledWith(
-        EventType.internalNotify,
+        EventType.notifyInternal,
         expect.anything(),
       );
     });
