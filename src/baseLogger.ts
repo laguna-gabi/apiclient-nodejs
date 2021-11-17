@@ -126,17 +126,13 @@ export class BaseLogger {
     const lType = this.generateText(`[${logType}]`.padEnd(11), this.COLOR.fgWhite);
     const textFormatted = this.generateText(text, color);
 
-    if (this.isColorLog()) {
+    if (!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test) {
       return `${date}   ${lType} ${cName} ${mName} ${textFormatted}`;
     } else {
       `${now.toLocaleString()}   [${logType}] [${className}]${generateOrgNamePrefix(
         orgName,
       )}${methodName} ${text}`;
     }
-  }
-
-  protected isColorLog(): boolean {
-    return !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test;
   }
 
   private generateText(text: string, color): string {
