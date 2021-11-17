@@ -12,7 +12,6 @@ import {
   IEventNotifyChatMessage,
   IEventOnNewMember,
   IEventOnUpdatedMemberPlatform,
-  IEventRequestAppointment,
   IEventSlackMessage,
   InternationalizationService,
   Language,
@@ -162,14 +161,6 @@ describe('MemberResolver', () => {
         platform: memberConfig.platform,
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onNewMember, eventNewMemberParams);
-      const eventRequestAppointmentParams: IEventRequestAppointment = {
-        member,
-        user,
-      };
-      expect(spyOnEventEmitter).toBeCalledWith(
-        EventType.requestAppointment,
-        eventRequestAppointmentParams,
-      );
       const eventSlackMessageParams: IEventSlackMessage = {
         // eslint-disable-next-line max-len
         message: `*New customer*\n${member.firstName} [${member.id}],\nassigned to ${user.firstName}.`,
@@ -407,10 +398,7 @@ describe('MemberResolver', () => {
 
     beforeEach(() => {
       spyOnServiceDeleteMember = jest.spyOn(service, 'deleteMember');
-      spyOnUserServiceRemoveAppointmentsFromUser = jest.spyOn(
-        userService,
-        'removeAppointmentsFromUser',
-      );
+      spyOnUserServiceRemoveAppointmentsFromUser = jest.spyOn(userService, 'deleteAppointments');
       spyOnCommunicationGetMemberUserCommunication = jest.spyOn(
         communicationService,
         'getMemberUserCommunication',

@@ -9,7 +9,7 @@ import {
 import {
   ContentKey,
   EventType,
-  IEventUpdatedAppointment,
+  IEventOnUpdatedAppointment,
   InternalNotifyParams,
   UpdatedAppointmentAction,
   scheduleAppointmentDateFormat,
@@ -40,7 +40,7 @@ export class AppointmentBase {
    ************************************************************************************************/
 
   private updateAppointmentExternalData(appointment: Appointment) {
-    const eventParams: IEventUpdatedAppointment = {
+    const eventParams: IEventOnUpdatedAppointment = {
       updatedAppointmentAction: UpdatedAppointmentAction.edit,
       memberId: appointment.memberId.toString(),
       userId: appointment.userId,
@@ -50,7 +50,7 @@ export class AppointmentBase {
         start: appointment.start,
       },
     };
-    this.eventEmitter.emit(EventType.updatedAppointment, eventParams);
+    this.eventEmitter.emit(EventType.onUpdatedAppointment, eventParams);
   }
 
   private notifyUserAppointment(appointment: Appointment) {

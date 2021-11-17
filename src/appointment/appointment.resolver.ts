@@ -20,9 +20,10 @@ import {
   ContentKey,
   EventType,
   IEventMember,
-  IEventRequestAppointment,
-  IEventUpdateUserInAppointments,
-  IEventUpdatedAppointment,
+  IEventOnNewMember,
+  IEventOnUpdatedAppointment,
+  IEventOnUpdatedUserAppointments,
+  IEventOnUpdatedUserCommunication,
   InternalNotifyParams,
   Logger,
   LoggingInterceptor,
@@ -80,13 +81,13 @@ export class AppointmentResolver extends AppointmentBase {
   ) {
     const appointment = await this.appointmentService.end(endAppointmentParams);
 
-    const eventParams: IEventUpdatedAppointment = {
+    const eventParams: IEventOnUpdatedAppointment = {
       updatedAppointmentAction: UpdatedAppointmentAction.delete,
       memberId: appointment.memberId.toString(),
       userId: appointment.userId,
       key: appointment.id,
     };
-    this.eventEmitter.emit(EventType.updatedAppointment, eventParams);
+    this.eventEmitter.emit(EventType.onUpdatedAppointment, eventParams);
     await this.appointmentScheduler.unRegisterAppointmentAlert(appointment.id);
     return appointment;
   }
@@ -96,8 +97,8 @@ export class AppointmentResolver extends AppointmentBase {
     return this.appointmentService.updateNotes(updateNotesParams);
   }
 
-  @OnEvent(EventType.requestAppointment, { async: true })
-  async handleRequestAppointment(params: IEventRequestAppointment) {
+  @OnEvent(EventType.onNewMember, { async: true })
+  async onNewMember(params: IEventOnNewMember) {
     const { member, user } = params;
     try {
       const requestAppointmentParams: RequestAppointmentParams = {
@@ -112,7 +113,7 @@ export class AppointmentResolver extends AppointmentBase {
       this.logger.error(
         { memberId: member.id, userId: user.id },
         AppointmentResolver.name,
-        this.handleRequestAppointment.name,
+        this.onNewMember.name,
         ex,
       );
     }
@@ -136,8 +137,8 @@ export class AppointmentResolver extends AppointmentBase {
     }
   }
 
-  @OnEvent(EventType.updateUserInAppointments, { async: true })
-  async updateUserInAppointments(params: IEventUpdateUserInAppointments) {
+  @OnEvent(EventType.onUpdatedUserCommunication, { async: true })
+  async updateUserInAppointments(params: IEventOnUpdatedUserCommunication) {
     const appointments = await this.appointmentService.getFutureAppointments(
       params.oldUserId,
       params.memberId,
@@ -180,7 +181,8 @@ export class AppointmentResolver extends AppointmentBase {
         }
       }),
     );
-    this.eventEmitter.emit(EventType.updateAppointmentsInUser, { ...params, appointments });
+    const eventParams: IEventOnUpdatedUserAppointments = { ...params, appointments };
+    this.eventEmitter.emit(EventType.onUpdatedUserAppointments, eventParams);
   }
 
   /*************************************************************************************************

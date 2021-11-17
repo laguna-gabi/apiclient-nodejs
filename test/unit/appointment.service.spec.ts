@@ -16,9 +16,9 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventAddUserToMemberList,
-  IEventAppointmentScoresUpdated,
-  IEventNewAppointment,
+  IEventOnNewAppointment,
+  IEventOnUpdatedAppointmentScores,
+  IEventUnconsentedAppointmentEnded,
 } from '../../src/common';
 import {
   dbConnect,
@@ -483,11 +483,11 @@ describe('AppointmentService', () => {
       const endAppointmentParams: EndAppointmentParams = { id: resultAppointment.id, notes };
       await service.end(endAppointmentParams);
 
-      const eventParams: IEventAppointmentScoresUpdated = {
+      const eventParams: IEventOnUpdatedAppointmentScores = {
         memberId: generateObjectId(appointmentParams.memberId),
         scores: notes.scores,
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.appointmentScoresUpdated, eventParams);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedAppointmentScores, eventParams);
 
       spyOnEventEmitter.mockReset();
     });
@@ -515,13 +515,17 @@ describe('AppointmentService', () => {
       });
 
       if (expectToDispatch) {
-        expect(spyOnEventEmitter).toBeCalledWith(EventType.unconsentedAppointmentEnded, {
+        const eventParams: IEventUnconsentedAppointmentEnded = {
           appointmentId: resultAppointment.id,
-          memberId: resultAppointment.memberId,
-        });
+          memberId: resultAppointment.memberId.toString(),
+        };
+        expect(spyOnEventEmitter).toBeCalledWith(
+          EventType.onUnconsentedAppointmentEnded,
+          eventParams,
+        );
       } else {
         expect(spyOnEventEmitter).not.toBeCalledWith(
-          EventType.unconsentedAppointmentEnded,
+          EventType.onUnconsentedAppointmentEnded,
           expect.anything(),
         );
       }
@@ -657,14 +661,8 @@ describe('AppointmentService', () => {
   };
 
   const validateNewAppointmentEvent = (memberId: string, userId: string, appointmentId: string) => {
-    const eventParams1: IEventNewAppointment = { appointmentId, userId };
-    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.newAppointment, eventParams1);
-    const eventParams2: IEventAddUserToMemberList = { memberId, userId };
-    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
-      2,
-      EventType.addUserToMemberList,
-      eventParams2,
-    );
+    const eventParams: IEventOnNewAppointment = { memberId, appointmentId, userId };
+    expect(spyOnEventEmitter).toBeCalledWith(EventType.onNewAppointment, eventParams);
     spyOnEventEmitter.mockReset();
   };
 });

@@ -7,7 +7,7 @@ import { AppointmentStatus } from '../../src/appointment';
 import {
   EventType,
   IEventOnNewMemberCommunication,
-  IEventUpdateUserConfig,
+  IEventOnUpdateUserConfig,
   UpdatedAppointmentAction,
 } from '../../src/common';
 import {
@@ -85,11 +85,11 @@ describe('CommunicationService', () => {
       const user = mockGenerateUser();
       await service.createUser(user);
 
-      const eventParams: IEventUpdateUserConfig = {
+      const eventParams: IEventOnUpdateUserConfig = {
         userId: user.id,
         accessToken: expect.any(String),
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateUserConfig, eventParams);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedUserConfig, eventParams);
 
       spyOnEventEmitter.mockReset();
     });

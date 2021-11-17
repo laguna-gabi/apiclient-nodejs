@@ -16,8 +16,8 @@ import { AvailabilityModule, AvailabilityResolver } from '../../src/availability
 import {
   ErrorType,
   Errors,
-  IEventNewAppointment,
-  IEventUpdateAppointmentsInUser,
+  IEventOnNewAppointment,
+  IEventOnUpdatedUserAppointments,
 } from '../../src/common';
 import {
   GetSlotsParams,
@@ -219,22 +219,24 @@ describe('UserService', () => {
     it('should move appointments from old user to new user', async () => {
       const oldUser = await service.insert(generateCreateUserParams());
       const newUser = await service.insert(generateCreateUserParams());
+      const memberId = generateId();
 
       // Insert appointments to oldUser
       const mockAppointments = [];
       for (let step = 0; step < 5; step++) {
         const appointment = generateScheduleAppointmentParams({ id: generateId() });
         mockAppointments.push(appointment);
-        const params: IEventNewAppointment = {
+        const params: IEventOnNewAppointment = {
           appointmentId: appointment.id,
           userId: oldUser.id,
+          memberId,
         };
-        await service.handleOrderCreatedEvent(params);
+        await service.addAppointmentToUser(params);
       }
-      const params: IEventUpdateAppointmentsInUser = {
+      const params: IEventOnUpdatedUserAppointments = {
         newUserId: newUser.id,
         oldUserId: oldUser.id,
-        memberId: generateId(),
+        memberId,
         appointments: mockAppointments,
       };
 

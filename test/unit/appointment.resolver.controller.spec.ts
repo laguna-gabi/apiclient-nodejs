@@ -12,8 +12,8 @@ import {
   AppointmentStatus,
   ContentKey,
   EventType,
-  IEventUpdateUserInAppointments,
-  IEventUpdatedAppointment,
+  IEventOnUpdatedAppointment,
+  IEventOnUpdatedUserCommunication,
   InternalNotifyParams,
   ReminderType,
   UpdatedAppointmentAction,
@@ -178,7 +178,7 @@ describe('AppointmentResolver', () => {
       }));
 
       const result = await resolver.scheduleAppointment(appointment);
-      const eventParams: IEventUpdatedAppointment = {
+      const eventParams: IEventOnUpdatedAppointment = {
         updatedAppointmentAction: UpdatedAppointmentAction.edit,
         memberId: result.memberId.toString(),
         userId: result.userId,
@@ -190,7 +190,7 @@ describe('AppointmentResolver', () => {
       };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
         1,
-        EventType.updatedAppointment,
+        EventType.onUpdatedAppointment,
         eventParams,
       );
 
@@ -276,13 +276,13 @@ describe('AppointmentResolver', () => {
       spyOnServiceEnd.mockImplementationOnce(async () => appointment);
 
       const result = await resolver.endAppointment({ id: generateId() });
-      const eventParams: IEventUpdatedAppointment = {
+      const eventParams: IEventOnUpdatedAppointment = {
         updatedAppointmentAction: UpdatedAppointmentAction.delete,
         memberId: result.memberId.toString(),
         userId: result.userId,
         key: result.id,
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.updatedAppointment, eventParams);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedAppointment, eventParams);
     });
   });
 
@@ -341,7 +341,7 @@ describe('AppointmentResolver', () => {
       }
       spyOnServiceGetFutureAppointments.mockImplementationOnce(async () => mockAppointments);
 
-      const params: IEventUpdateUserInAppointments = {
+      const params: IEventOnUpdatedUserCommunication = {
         oldUserId,
         newUserId,
         memberId,
@@ -354,7 +354,7 @@ describe('AppointmentResolver', () => {
         delete appointment.status;
         expect(spyOnScheduleAppointment).toHaveBeenNthCalledWith(index + 1, appointment);
       });
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateAppointmentsInUser, {
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedUserAppointments, {
         ...params,
         appointments: mockAppointments,
       });
@@ -370,7 +370,7 @@ describe('AppointmentResolver', () => {
       appointment['status'] = AppointmentStatus.requested;
       spyOnServiceGetFutureAppointments.mockImplementationOnce(async () => [appointment]);
 
-      const params: IEventUpdateUserInAppointments = {
+      const params: IEventOnUpdatedUserCommunication = {
         oldUserId,
         newUserId,
         memberId,
@@ -390,7 +390,7 @@ describe('AppointmentResolver', () => {
       expect(spyOnRequestAppointment).toHaveBeenCalledWith(
         expect.objectContaining(requestAppointmentParams),
       );
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateAppointmentsInUser, {
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedUserAppointments, {
         ...params,
         appointments: [appointment],
       });
@@ -399,7 +399,7 @@ describe('AppointmentResolver', () => {
     it("shouldn't reschedule appointments if there are no future appointments", async () => {
       spyOnServiceGetFutureAppointments.mockImplementationOnce(async () => []);
 
-      const params: IEventUpdateUserInAppointments = {
+      const params: IEventOnUpdatedUserCommunication = {
         oldUserId: generateId(),
         newUserId: generateId(),
         memberId: generateId(),

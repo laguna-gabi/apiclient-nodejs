@@ -46,9 +46,9 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventAddUserToMemberList,
-  IEventAppointmentScoresUpdated,
+  IEventOnNewAppointment,
   IEventOnNewMemberCommunication,
+  IEventOnUpdatedAppointmentScores,
   IEventUnconsentedAppointmentEnded,
   Identifier,
   Logger,
@@ -233,8 +233,8 @@ export class MemberService extends BaseService {
     ]);
   }
 
-  @OnEvent(EventType.addUserToMemberList, { async: true })
-  async handleAddUserToMemberList(params: IEventAddUserToMemberList) {
+  @OnEvent(EventType.onNewAppointment, { async: true })
+  async handleAddUserToMemberList(params: IEventOnNewAppointment) {
     try {
       const { memberId, userId } = params;
       await this.memberModel.updateOne(
@@ -246,7 +246,7 @@ export class MemberService extends BaseService {
     }
   }
 
-  @OnEvent(EventType.unconsentedAppointmentEnded, { async: true })
+  @OnEvent(EventType.onUnconsentedAppointmentEnded, { async: true })
   async handleUnconsentedAppointmentEnded(params: IEventUnconsentedAppointmentEnded) {
     try {
       const { appointmentId, memberId } = params;
@@ -538,8 +538,8 @@ export class MemberService extends BaseService {
     }
   }
 
-  @OnEvent(EventType.appointmentScoresUpdated, { async: true })
-  async handleAppointmentScoreUpdated(params: IEventAppointmentScoresUpdated) {
+  @OnEvent(EventType.onUpdatedAppointmentScores, { async: true })
+  async handleAppointmentScoreUpdated(params: IEventOnUpdatedAppointmentScores) {
     try {
       await this.memberModel.updateOne(
         { _id: params.memberId },

@@ -15,11 +15,11 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventNewUser,
   IEventOnNewMember,
+  IEventOnNewUser,
   IEventOnReplacedUserForMember,
   IEventOnUpdatedMemberPlatform,
-  IEventUpdateUserInAppointments,
+  IEventOnUpdatedUserCommunication,
   Logger,
   LoggingInterceptor,
   RoleTypes,
@@ -125,8 +125,8 @@ export class CommunicationResolver {
     return this.communicationService.getTwilioAccessToken();
   }
 
-  @OnEvent(EventType.newUser, { async: true })
-  async handleNewUser(params: IEventNewUser) {
+  @OnEvent(EventType.onNewUser, { async: true })
+  async handleNewUser(params: IEventOnNewUser) {
     try {
       await this.communicationService.createUser(params.user);
     } catch (ex) {
@@ -172,7 +172,7 @@ export class CommunicationResolver {
     }
   }
 
-  @OnEvent(EventType.updatedAppointment, { async: true })
+  @OnEvent(EventType.onUpdatedAppointment, { async: true })
   async handleUpdatedAppointment(params: {
     memberId: string;
     userId: string;
@@ -195,12 +195,12 @@ export class CommunicationResolver {
   async updateUserInCommunication(params: IEventOnReplacedUserForMember) {
     try {
       await this.communicationService.updateUserInCommunication(params);
-      const updateUserInAppointmentsParams: IEventUpdateUserInAppointments = {
+      const eventParams: IEventOnUpdatedUserCommunication = {
         oldUserId: params.oldUserId,
         newUserId: params.newUser.id,
         memberId: params.member.id,
       };
-      this.eventEmitter.emit(EventType.updateUserInAppointments, updateUserInAppointmentsParams);
+      this.eventEmitter.emit(EventType.onUpdatedUserCommunication, eventParams);
       this.logger.debug(params, CommunicationResolver.name, this.updateUserInCommunication.name);
     } catch (ex) {
       this.logger.error(

@@ -24,10 +24,11 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventNewAppointment,
+  IEventOnDeletedMemberAppointments,
+  IEventOnNewAppointment,
+  IEventOnUpdateUserConfig,
+  IEventOnUpdatedUserAppointments,
   IEventSlackMessage,
-  IEventUpdateAppointmentsInUser,
-  IEventUpdateUserConfig,
   Logger,
   SlackChannel,
   SlackIcon,
@@ -307,8 +308,8 @@ export class UserService extends BaseService {
     return users[0]._id;
   }
 
-  @OnEvent(EventType.updateUserConfig, { async: true })
-  async handleUpdateUserConfig(params: IEventUpdateUserConfig): Promise<boolean> {
+  @OnEvent(EventType.onUpdatedUserConfig, { async: true })
+  async handleUpdateUserConfig(params: IEventOnUpdateUserConfig): Promise<boolean> {
     try {
       const { userId, accessToken } = params;
       const result = await this.userConfigModel.updateOne({ userId }, { $set: { accessToken } });
@@ -319,20 +320,21 @@ export class UserService extends BaseService {
     }
   }
 
-  @OnEvent(EventType.newAppointment, { async: true })
-  async handleOrderCreatedEvent(params: IEventNewAppointment) {
+  @OnEvent(EventType.onNewAppointment, { async: true })
+  async addAppointmentToUser(params: IEventOnNewAppointment) {
     try {
       await this.userModel.updateOne(
         { _id: params.userId },
         { $push: { appointments: new Types.ObjectId(params.appointmentId) } },
       );
     } catch (ex) {
-      this.logger.error(params, UserService.name, this.handleOrderCreatedEvent.name, ex);
+      this.logger.error(params, UserService.name, this.addAppointmentToUser.name, ex);
     }
   }
 
-  @OnEvent(EventType.removeAppointmentsFromUser, { async: true })
-  async removeAppointmentsFromUser(appointments) {
+  @OnEvent(EventType.onDeletedMemberAppointments, { async: true })
+  async deleteAppointments(params: IEventOnDeletedMemberAppointments) {
+    const { appointments } = params;
     await Promise.all(
       appointments.map(async (appointment) => {
         await this.userModel.updateOne(
@@ -343,8 +345,8 @@ export class UserService extends BaseService {
     );
   }
 
-  @OnEvent(EventType.updateAppointmentsInUser, { async: true })
-  async updateUserAppointments(params: IEventUpdateAppointmentsInUser) {
+  @OnEvent(EventType.onUpdatedUserAppointments, { async: true })
+  async updateUserAppointments(params: IEventOnUpdatedUserAppointments) {
     const appointmentIds = params.appointments.map((appointment) => Types.ObjectId(appointment.id));
 
     try {
