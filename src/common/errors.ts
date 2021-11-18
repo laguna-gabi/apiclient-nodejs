@@ -48,6 +48,7 @@ export enum ErrorType {
   appointmentEndDate = 9305,
   appointmentEndAfterStart = 9306,
   appointmentNoShow = 9307,
+  appointmentCanNotBeUpdated = 9308,
 
   // Module org errors
   orgAlreadyExists = 9401,
@@ -132,6 +133,10 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.appointmentNoShow.valueOf(),
     'if noShow=true, a `reason` field is mandatory as well. ' +
       'if noShow=false, a `reason` field is not required',
+  ],
+  [
+    ErrorType.appointmentCanNotBeUpdated.valueOf(),
+    `can not update an appointment with status='done'`,
   ],
   [ErrorType.orgAlreadyExists.valueOf(), 'organization already exists'],
   [ErrorType.orgTrialDurationOutOfRange.valueOf(), 'trialDuration must not be less than 1'],

@@ -4,10 +4,13 @@ import {
   Appointment,
   AppointmentScheduler,
   AppointmentService,
+  AppointmentStatus,
   ScheduleAppointmentParams,
 } from '.';
 import {
   ContentKey,
+  ErrorType,
+  Errors,
   EventType,
   IEventOnUpdatedAppointment,
   InternalNotifyParams,
@@ -24,6 +27,7 @@ export class AppointmentBase {
   ) {}
 
   async scheduleAppointment(scheduleAppointmentParams: ScheduleAppointmentParams) {
+    await this.validateUpdateScheduleAppointment(scheduleAppointmentParams.id);
     const appointment = await this.appointmentService.schedule(scheduleAppointmentParams);
 
     this.updateAppointmentExternalData(appointment);
@@ -94,5 +98,14 @@ export class AppointmentBase {
       userId: appointment.userId.toString(),
       start: appointment.start,
     });
+  }
+
+  private async validateUpdateScheduleAppointment(id: string) {
+    if (id) {
+      const existingAppointment = await this.appointmentService.get(id);
+      if (existingAppointment?.status === AppointmentStatus.done) {
+        throw new Error(Errors.get(ErrorType.appointmentCanNotBeUpdated));
+      }
+    }
   }
 }
