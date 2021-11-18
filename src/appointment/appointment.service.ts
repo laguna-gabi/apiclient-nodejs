@@ -45,7 +45,7 @@ export class AppointmentService extends BaseService {
     const filter = params.id
       ? { _id: new Types.ObjectId(params.id) }
       : {
-          userId: params.userId,
+          userId: new Types.ObjectId(params.userId),
           memberId: new Types.ObjectId(params.memberId),
           status: AppointmentStatus.requested,
         };
@@ -54,7 +54,7 @@ export class AppointmentService extends BaseService {
       filter,
       {
         $set: {
-          userId: params.userId,
+          userId: new Types.ObjectId(params.userId),
           notBefore: params.notBefore,
           status: AppointmentStatus.requested,
         },
@@ -65,7 +65,7 @@ export class AppointmentService extends BaseService {
     if (result.lastErrorObject.upserted) {
       const { _id, userId } = result.value;
       return this.postNewAppointmentAction({
-        userId,
+        userId: userId.toString(),
         memberId: params.memberId,
         appointmentId: _id,
       });
@@ -81,7 +81,7 @@ export class AppointmentService extends BaseService {
 
   async getFutureAppointments(userId: string, memberId: string): Promise<Appointment[]> {
     const result = await this.appointmentModel.find({
-      userId: userId,
+      userId: new Types.ObjectId(userId),
       memberId: new Types.ObjectId(memberId),
       status: { $ne: AppointmentStatus.done },
       start: { $gte: new Date() },
@@ -95,7 +95,7 @@ export class AppointmentService extends BaseService {
     const filter = params.id
       ? { _id: new Types.ObjectId(params.id) }
       : {
-          userId: params.userId,
+          userId: new Types.ObjectId(params.userId),
           memberId: new Types.ObjectId(params.memberId),
           status: { $eq: AppointmentStatus.requested },
         };
@@ -104,7 +104,7 @@ export class AppointmentService extends BaseService {
       filter,
       {
         $set: {
-          userId: params.userId,
+          userId: new Types.ObjectId(params.userId),
           memberId: new Types.ObjectId(params.memberId),
           method: params.method,
           start: params.start,
@@ -121,7 +121,7 @@ export class AppointmentService extends BaseService {
 
     if (!object.lastErrorObject.updatedExisting) {
       return this.postNewAppointmentAction({
-        userId: object.value.userId,
+        userId: object.value.userId.toString(),
         memberId: params.memberId,
         appointmentId: object.value._id,
       });

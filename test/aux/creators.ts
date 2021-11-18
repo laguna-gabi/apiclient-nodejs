@@ -92,12 +92,12 @@ export class Creators {
     member: Member;
   }): Promise<Appointment> => {
     const requestAppointmentResult = await this.appointmentsActions.requestAppointment({
-      userId: userId || member.primaryUserId,
+      userId: userId || member.primaryUserId.toString(),
       member,
     });
 
     const appointment = await this.appointmentsActions.scheduleAppointment({
-      userId: userId || member.primaryUserId,
+      userId: userId || member.primaryUserId.toString(),
       member,
     });
     expect(appointment.status).toEqual(AppointmentStatus.scheduled);

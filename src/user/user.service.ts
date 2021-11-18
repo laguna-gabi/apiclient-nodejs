@@ -60,18 +60,14 @@ export class UserService extends BaseService {
     try {
       this.removeNotNullable(createUserParams, NotNullableUserKeys);
       const newObject = cloneDeep(createUserParams);
-      const _id = newObject.id;
-      delete newObject.id;
 
-      const object = (await this.userModel.create({ ...newObject, _id })).toObject();
+      const object = await this.userModel.create({ ...newObject });
 
       await this.userConfigModel.create({
-        userId: object._id,
+        userId: new Types.ObjectId(object._id),
       });
 
-      object.id = object._id;
-      delete object._id;
-      return object;
+      return this.replaceId(object.toObject());
     } catch (ex) {
       throw new Error(
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.userIdOrEmailAlreadyExists) : ex,
@@ -89,7 +85,7 @@ export class UserService extends BaseService {
         ? [
             {
               $match: {
-                _id: userId,
+                _id: Types.ObjectId(userId),
               },
             },
           ]
@@ -351,12 +347,12 @@ export class UserService extends BaseService {
 
     try {
       await this.userModel.updateOne(
-        { _id: params.oldUserId },
+        { _id: Types.ObjectId(params.oldUserId) },
         { $pullAll: { appointments: appointmentIds } },
       );
 
       await this.userModel.updateOne(
-        { _id: params.newUserId },
+        { _id: Types.ObjectId(params.newUserId) },
         { $addToSet: { appointments: { $each: appointmentIds } } },
         { new: true },
       );

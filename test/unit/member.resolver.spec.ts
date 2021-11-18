@@ -380,7 +380,7 @@ describe('MemberResolver', () => {
       expect(spyOnCognitoServiceDisableMember).toBeCalledWith(member.deviceId);
       expect(spyOnCommunicationFreezeGroupChannel).toBeCalledWith({
         memberId: id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
       });
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
       const eventParams: IEventMember = { memberId: id };
@@ -897,7 +897,7 @@ describe('MemberResolver', () => {
       expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: member.id });
       expect(spyOnSchedulerNewRegisteredMember).toBeCalledWith({
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
         firstLoggedInAt: expect.any(Date),
       });
     });
@@ -934,7 +934,7 @@ describe('MemberResolver', () => {
       const eventParams: IEventOnUpdatedMemberPlatform = {
         memberId: params.memberId,
         platform: params.platform,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedMemberPlatform, eventParams);
       expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: member.id });
@@ -1035,7 +1035,7 @@ describe('MemberResolver', () => {
       });
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onReplacedUserForMember, {
         newUser: user,
-        oldUserId: member.primaryUserId,
+        oldUserId: member.primaryUserId.toString(),
         member,
         platform: memberConfig.platform,
       });
@@ -1302,7 +1302,7 @@ describe('MemberResolver', () => {
 
       const notifyParams = generateNotifyParams({
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
         type: NotificationType.text,
         metadata: { content: faker.lorem.word(), when },
       });
@@ -1313,7 +1313,7 @@ describe('MemberResolver', () => {
       delete notifyParams.metadata.when;
       const eventParams: InternalNotifyParams = {
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
         type:
           notifyParams.type === NotificationType.text
             ? InternalNotificationType.textToMember
@@ -1338,7 +1338,7 @@ describe('MemberResolver', () => {
 
       const notifyParams = generateNotifyParams({
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
         type: NotificationType.text,
         metadata: { content: faker.lorem.word(), chatLink: true },
       });
@@ -1347,7 +1347,7 @@ describe('MemberResolver', () => {
 
       expect(spyOnCommunicationResolverGetCommunication).toBeCalledWith({
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
       });
     });
 
@@ -1822,7 +1822,7 @@ describe('MemberResolver', () => {
       };
       const communication: Communication = {
         memberId: new Types.ObjectId(member.id),
-        userId: user.id,
+        userId: new Types.ObjectId(user.id),
         sendBirdChannelUrl: generateUniqueUrl(),
       };
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
@@ -1868,7 +1868,7 @@ describe('MemberResolver', () => {
       const user = mockGenerateUser();
       const communication: Communication = {
         memberId: new Types.ObjectId(member.id),
-        userId: user.id,
+        userId: new Types.ObjectId(user.id),
         sendBirdChannelUrl: generateUniqueUrl(),
       };
       spyOnServiceGetMember.mockImplementation(async () => member);
@@ -1911,7 +1911,7 @@ describe('MemberResolver', () => {
       const user = mockGenerateUser();
       const communication: Communication = {
         memberId: new Types.ObjectId(member.id),
-        userId: user.id,
+        userId: new Types.ObjectId(user.id),
         sendBirdChannelUrl: generateUniqueUrl(),
       };
       spyOnServiceGetMember.mockImplementation(async () => member);

@@ -17,17 +17,14 @@ import { SeedBase } from './seedBase';
 const lagunaEmployeesList = [
   {
     name: 'Gilli',
-    id: '1fa97144-0a9e-432a-94c2-ce04f31b15c3',
     authId: '1fa97144-0a9e-432a-94c2-ce04f31b15c4',
   },
   {
     name: 'Sharon',
-    id: '1fa97143-0a9e-432a-94c2-ce04fb4j1ec4',
     authId: '1fa97143-0a9e-432a-94c2-ce04fb4j1ec5',
   },
   {
     name: 'Hadas',
-    id: '1fa47143-0a9e-432a-94c2-ce04fb4j1ec4',
     authId: '1fa47143-0a9e-432a-94c2-ce04fb4j1ec5',
   },
 ];
@@ -45,23 +42,17 @@ async function main() {
 
   // --------- Functions ---------
 
-  const createLagunaEmployeeUser = async (
-    name: string,
-    id: string,
-    authId: string,
-  ): Promise<Identifier> => {
+  const createLagunaEmployeeUser = async (name: string, authId: string): Promise<Identifier> => {
     const user = await mutations.createUser({
-      userParams: generateCreateUserParams({ id, firstName: name, authId }),
+      userParams: generateCreateUserParams({ firstName: name, authId }),
     });
     console.log(`created a user for ${name} with id: ${user.id}`);
-    return { id };
+    return { id: user.id };
   };
 
   const createLagunaEmployeeUsers = async () => {
     await Promise.all(
-      lagunaEmployeesList.map(async ({ name, id, authId }) =>
-        createLagunaEmployeeUser(name, id, authId),
-      ),
+      lagunaEmployeesList.map(async ({ name, authId }) => createLagunaEmployeeUser(name, authId)),
     );
   };
 

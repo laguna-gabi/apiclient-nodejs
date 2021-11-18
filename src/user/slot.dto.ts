@@ -45,7 +45,7 @@ export class AppointmentSlotSummary extends Identifier {
   memberId: Types.ObjectId;
 
   @Field(() => String)
-  userId: string;
+  userId: Types.ObjectId;
 }
 
 @ObjectType()
@@ -89,14 +89,14 @@ export class GetSlotsParams {
   notAfter?: Date;
 
   @IsOptional()
-  @Field(() => Boolean, { nullable:true })
+  @Field(() => Boolean, { nullable: true })
   allowEmptySlotsResponse?: boolean;
 
   @IsOptional()
-  @Field(() => Number, {defaultValue: defaultSlotsParams.defaultSlots})
+  @Field(() => Number, { defaultValue: defaultSlotsParams.defaultSlots })
   defaultSlotsCount?: number;
 
   @IsOptional()
-  @Field(() => Number, {defaultValue: defaultSlotsParams.maxSlots})
+  @Field(() => Number, { defaultValue: defaultSlotsParams.maxSlots })
   maxSlots?: number;
 }

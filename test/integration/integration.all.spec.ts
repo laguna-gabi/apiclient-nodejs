@@ -538,7 +538,7 @@ describe('Integration tests: all', () => {
     it('should set new user for a given member', async () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org });
-      const oldUserId = member.primaryUserId;
+      const oldUserId = member.primaryUserId.toString();
       const newUser = await creators.createAndValidateUser();
       delete newUser.authId;
 
@@ -613,7 +613,7 @@ describe('Integration tests: all', () => {
       const member = await creators.createAndValidateMember({ org });
       const replaceUserForMemberParams: ReplaceUserForMemberParams = {
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
       };
 
       await handler.mutations.replaceUserForMember({
@@ -770,7 +770,7 @@ describe('Integration tests: all', () => {
 
       const notifyParams: NotifyParams = {
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
         type: NotificationType.textSms,
         metadata: { content: 'text', appointmentId },
       };
@@ -808,7 +808,7 @@ describe('Integration tests: all', () => {
 
       const notifyParams: NotifyParams = {
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
         type: NotificationType.textSms,
         metadata: { content: 'text', appointmentId },
       };
@@ -992,7 +992,7 @@ describe('Integration tests: all', () => {
       const member: Member = await creators.createAndValidateMember({ org });
       const scheduledAppointment = generateScheduleAppointmentParams({
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
         method: AppointmentMethod.chat,
       });
       const { id: appointmentId } = await creators.handler.mutations.scheduleAppointment({

@@ -183,7 +183,7 @@ export class MemberService extends BaseService {
 
     return result.map((item) => {
       const { appointmentsCount, nextAppointment } = this.calculateAppointments(item);
-      const primaryUser = item.users.filter((user) => user.id === item.primaryUserId)[0];
+      const primaryUser = item.users.filter((user) => user.id === item.primaryUserId.toString())[0];
       delete item.users;
       delete item._id;
 
@@ -727,7 +727,7 @@ export class MemberService extends BaseService {
     // replace primary user and add the new user to member's list
     const member = await this.memberModel.findOneAndUpdate(
       { _id: new Types.ObjectId(memberId) },
-      { primaryUserId: userId, $addToSet: { users: userId } },
+      { primaryUserId: new Types.ObjectId(userId), $addToSet: { users: userId } },
       { new: false },
     );
     if (!member) {
@@ -735,7 +735,7 @@ export class MemberService extends BaseService {
     }
 
     // if old user == new user
-    if (member.primaryUserId === params.userId) {
+    if (member.primaryUserId.toString() === params.userId) {
       throw new Error(Errors.get(ErrorType.userIdOrEmailAlreadyExists));
     }
     // return the old member (with the old primaryUserId)

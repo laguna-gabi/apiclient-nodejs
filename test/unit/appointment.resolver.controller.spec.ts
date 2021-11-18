@@ -183,7 +183,7 @@ describe('AppointmentResolver', () => {
       expect(spyOnSchedulerRegisterAppointmentAlert).toBeCalledWith({
         id: mockResult.id,
         memberId: appointment.memberId.toString(),
-        userId: appointment.userId,
+        userId: appointment.userId.toString(),
         start: appointment.start,
       });
       expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: appointment.memberId.toString() });
@@ -201,7 +201,7 @@ describe('AppointmentResolver', () => {
       const eventParams: IEventOnUpdatedAppointment = {
         updatedAppointmentAction: UpdatedAppointmentAction.edit,
         memberId: result.memberId.toString(),
-        userId: result.userId,
+        userId: result.userId.toString(),
         key: result.id,
         value: {
           status: result.status,
@@ -236,7 +236,7 @@ describe('AppointmentResolver', () => {
 
       const notifyMemberParams: InternalNotifyParams = {
         memberId: appointment.memberId.toString(),
-        userId: appointment.userId,
+        userId: appointment.userId.toString(),
         type: InternalNotificationType.textSmsToMember,
         metadata: {
           contentType: ContentKey.appointmentScheduledMember,
@@ -299,7 +299,7 @@ describe('AppointmentResolver', () => {
       const eventParams: IEventOnUpdatedAppointment = {
         updatedAppointmentAction: UpdatedAppointmentAction.delete,
         memberId: result.memberId.toString(),
-        userId: result.userId,
+        userId: result.userId.toString(),
         key: result.id,
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedAppointment, eventParams);

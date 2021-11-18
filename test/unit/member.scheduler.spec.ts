@@ -20,7 +20,7 @@ import {
   dbDisconnect,
   defaultModules,
   generateCreateMemberParams,
-  generateCreateRawUserParams,
+  generateCreateUserParams,
   generateId,
   generateOrgParams,
 } from '../index';
@@ -108,7 +108,7 @@ describe('MemberScheduler', () => {
         //end input for registerCustomFutureNotify
 
         //input for initRegisterNewMemberNudge
-        const { _id: pId } = await modelUser.create(generateCreateRawUserParams());
+        const { _id: pId } = await modelUser.create(generateCreateUserParams());
         const { _id: orgId } = await modelOrg.create(generateOrgParams());
         const members = await Promise.all(
           [1, 2, 3].map(async () => service.insert(generateCreateMemberParams({ orgId }), pId)),

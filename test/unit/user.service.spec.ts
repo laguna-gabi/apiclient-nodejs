@@ -10,7 +10,6 @@ import {
   startOfTomorrow,
 } from 'date-fns';
 import { Model, Types, model } from 'mongoose';
-import { v4 } from 'uuid';
 import { Appointment, AppointmentModule, AppointmentResolver } from '../../src/appointment';
 import { AvailabilityModule, AvailabilityResolver } from '../../src/availability';
 import {
@@ -73,7 +72,7 @@ describe('UserService', () => {
 
   describe('get+insert', () => {
     it('should return null for non existing user', async () => {
-      const result = await service.get(v4());
+      const result = await service.get(generateId());
       expect(result).toBeNull();
     });
 
@@ -156,46 +155,50 @@ describe('UserService', () => {
       );
     });
 
+    const USER1 = generateId();
+    const USER2 = generateId();
+    const USER3 = generateId();
+
     it.each([
       {
         users: [
-          { _id: 'test1', members: 0, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
-          { _id: 'test2', members: 0, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
-          { _id: 'test3', members: 0, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
+          { _id: USER1, members: 0, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
+          { _id: USER2, members: 0, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
+          { _id: USER3, members: 0, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
         ],
-        userId: 'test1',
+        userId: USER1,
       },
       {
         users: [
-          { _id: 'test1', members: 1, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
-          { _id: 'test2', members: 0, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
-          { _id: 'test3', members: 0, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
+          { _id: USER1, members: 1, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
+          { _id: USER2, members: 0, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
+          { _id: USER3, members: 0, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
         ],
-        userId: 'test2',
+        userId: USER2,
       },
       {
         users: [
-          { _id: 'test1', members: 1, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
-          { _id: 'test2', members: 1, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
-          { _id: 'test3', members: 0, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
+          { _id: USER1, members: 1, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
+          { _id: USER2, members: 1, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
+          { _id: USER3, members: 0, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
         ],
-        userId: 'test3',
+        userId: USER3,
       },
       {
         users: [
-          { _id: 'test1', members: 1, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
-          { _id: 'test2', members: 0, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
-          { _id: 'test3', members: 1, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
+          { _id: USER1, members: 1, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
+          { _id: USER2, members: 0, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
+          { _id: USER3, members: 1, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
         ],
-        userId: 'test2',
+        userId: USER2,
       },
       {
         users: [
-          { _id: 'test1', members: 1, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
-          { _id: 'test2', members: 1, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
-          { _id: 'test3', members: 1, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
+          { _id: USER1, members: 1, lastMemberAssignedAt: new Date(0), maxCustomers: 1 },
+          { _id: USER2, members: 1, lastMemberAssignedAt: new Date(1), maxCustomers: 1 },
+          { _id: USER3, members: 1, lastMemberAssignedAt: new Date(2), maxCustomers: 1 },
         ],
-        userId: 'test1',
+        userId: USER1,
       },
     ])('should get available user', async ({ users, userId }) => {
       jest.spyOn(mockUserModel, 'aggregate').mockResolvedValue(users);

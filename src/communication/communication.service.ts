@@ -76,7 +76,7 @@ export class CommunicationService {
       channel_url: v4(),
       cover_url: user.avatar,
       inviter_id: user.id,
-      user_ids: [member.id.toString(), user.id],
+      user_ids: [member.id.toString(), user.id.toString()],
     };
 
     try {
@@ -84,7 +84,7 @@ export class CommunicationService {
       if (result) {
         await this.communicationModel.create({
           memberId: new Types.ObjectId(member.id),
-          userId: user.id,
+          userId: new Types.ObjectId(user.id),
           sendBirdChannelUrl: params.channel_url,
         });
         await this.sendBird.freezeGroupChannel(params.channel_url, platform === Platform.web);
@@ -171,7 +171,7 @@ export class CommunicationService {
       );
       await this.communicationModel.findOneAndUpdate(
         { sendBirdChannelUrl: communication.sendBirdChannelUrl },
-        { userId: newUser.id },
+        { userId: new Types.ObjectId(newUser.id) },
       );
     }
   }
@@ -180,7 +180,7 @@ export class CommunicationService {
     const result = await this.communicationModel.aggregate([
       {
         $match: {
-          userId: params.userId,
+          userId: new Types.ObjectId(params.userId),
           memberId: new Types.ObjectId(params.memberId),
         },
       },
@@ -226,7 +226,10 @@ export class CommunicationService {
     memberId: string;
     userId: string;
   }): Promise<Communication> {
-    return this.communicationModel.findOne({ memberId: new Types.ObjectId(memberId), userId });
+    return this.communicationModel.findOne({
+      memberId: new Types.ObjectId(memberId),
+      userId: new Types.ObjectId(userId),
+    });
   }
 
   async getParticipantUnreadMessagesCount(participantId: string, byMemberId = true) {
@@ -238,7 +241,7 @@ export class CommunicationService {
       });
     } else {
       [result] = await this.communicationModel.find({
-        userId: participantId,
+        userId: new Types.ObjectId(participantId),
       });
     }
 
@@ -247,7 +250,7 @@ export class CommunicationService {
     }
 
     const count = await this.sendBird.countUnreadMessages(result.sendBirdChannelUrl, participantId);
-    return { count, memberId: result.memberId.toString(), userId: result.userId };
+    return { count, memberId: result.memberId.toString(), userId: result.userId.toString() };
   }
 
   async freezeGroupChannel({ memberId, userId }: { memberId: string; userId: string }) {
@@ -258,7 +261,7 @@ export class CommunicationService {
     );
     const [communication] = await this.communicationModel.find({
       memberId: new Types.ObjectId(memberId),
-      userId,
+      userId: new Types.ObjectId(userId),
     });
     if (!communication) {
       this.logger.warn(

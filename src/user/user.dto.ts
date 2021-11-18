@@ -31,9 +31,6 @@ export const NotNullableUserKeys = ['maxCustomers', 'languages', 'roles', 'avata
 @InputType()
 export class CreateUserParams {
   @Field()
-  id: string;
-
-  @Field()
   authId: string;
 
   @Field()
@@ -86,9 +83,6 @@ export class User extends Identifier {
   @Prop()
   @Field(() => String)
   authId: string;
-
-  @Prop(() => String)
-  _id: string;
 
   @Prop()
   @Field(() => String)

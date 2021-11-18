@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Availability, AvailabilityDocument, AvailabilityInput, AvailabilitySlot } from '.';
 import { ErrorType, Errors, Identifiers } from '../common';
 
@@ -12,7 +12,7 @@ export class AvailabilityService {
 
   async create(params: AvailabilityInput[], userId: string): Promise<Identifiers> {
     const items = params.map((input) => {
-      return { ...input, userId };
+      return { ...input, userId: new Types.ObjectId(userId) };
     });
 
     const result = await this.availabilityModel.insertMany(items);

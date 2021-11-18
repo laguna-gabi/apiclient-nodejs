@@ -54,7 +54,7 @@ export class Recording {
 
   @Prop({ type: Types.ObjectId, index: true })
   @Field(() => String, { nullable: true })
-  userId?: string;
+  userId?: Types.ObjectId;
 
   @Prop()
   @Field(() => Date, { nullable: true })

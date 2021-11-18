@@ -47,7 +47,6 @@ export const urls = {
 };
 
 export const compareUsers = (user: User, userBase) => {
-  expect(user.id).toEqual(userBase.id);
   expect(user.firstName).toEqual(userBase.firstName);
   expect(user.lastName).toEqual(userBase.lastName);
   expect(user.email).toEqual(userBase.email);

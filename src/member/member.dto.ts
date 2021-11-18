@@ -365,11 +365,11 @@ export class Member extends Identifier {
   @Field(() => Org)
   org: Org;
 
-  @Prop({ index: true })
+  @Prop({ type: Types.ObjectId, index: true })
   @Field(() => String, { description: 'primary user id' })
-  primaryUserId: string;
+  primaryUserId: Types.ObjectId;
 
-  @Prop({ type: [{ type: String, ref: User.name }] })
+  @Prop({ type: [{ type: Types.ObjectId, ref: User.name }] })
   @Field(() => [User], { description: 'users reference object' })
   users: User[];
 

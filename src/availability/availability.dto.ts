@@ -1,6 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { Identifier } from '../common';
 
 /**************************************************************************************************
@@ -29,9 +29,9 @@ export class Availability extends Identifier {
   @Field(() => Date)
   end: Date;
 
-  @Prop({ index: true })
+  @Prop({ index: true, type: Types.ObjectId })
   @Field(() => String)
-  userId: string;
+  userId: Types.ObjectId;
 }
 
 @ObjectType()
