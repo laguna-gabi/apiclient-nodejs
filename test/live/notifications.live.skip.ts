@@ -17,6 +17,10 @@ describe.skip('live: notifications (one signal)', () => {
     const module = await Test.createTestingModule({ imports: defaultModules() }).compile();
     const notificationsService = module.get<NotificationsService>(NotificationsService);
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    await notificationsService.oneSignal.onModuleInit();
+
     return { module, notificationsService };
   };
 

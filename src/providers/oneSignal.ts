@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as config from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
@@ -14,16 +14,10 @@ import {
   SendOneSignalNotification,
 } from '../common';
 import { MemberConfig } from '../member';
-import {
-  CancelNotificationType,
-  InternalNotificationType,
-  NotificationType,
-  Platform,
-} from '@lagunahealth/pandora';
+import { BaseOneSignal, InternalNotificationType, Platform } from '@lagunahealth/pandora';
 
 @Injectable()
-export class OneSignal {
-  private readonly oneSignalUrl = 'https://onesignal.com/api/v1';
+export class OneSignal extends BaseOneSignal implements OnModuleInit {
   private readonly playersUrl = `${this.oneSignalUrl}/players`;
   private readonly notificationsUrl = `${this.oneSignalUrl}/notifications`;
 
@@ -32,7 +26,18 @@ export class OneSignal {
     private readonly httpService: HttpService,
     readonly eventEmitter: EventEmitter2,
     private readonly logger: Logger,
-  ) {}
+  ) {
+    super();
+  }
+
+  async onModuleInit() {
+    this.defaultApiId = await this.configsService.getConfig(ExternalConfigs.oneSignal.defaultApiId);
+    this.defaultApiKey = await this.configsService.getConfig(
+      ExternalConfigs.oneSignal.defaultApiKey,
+    );
+    this.voipApiId = await this.configsService.getConfig(ExternalConfigs.oneSignal.voipApiId);
+    this.voipApiKey = await this.configsService.getConfig(ExternalConfigs.oneSignal.voipApiKey);
+  }
 
   /**
    * Supporting ONLY ios since the android registration is made by default from the client.
@@ -184,15 +189,6 @@ export class OneSignal {
   /*************************************************************************************************
    **************************************** Private methods ****************************************
    ************************************************************************************************/
-  private isVoipProject(platform: Platform, notificationType?: AllNotificationTypes): boolean {
-    return (
-      platform === Platform.ios &&
-      notificationType !== NotificationType.text &&
-      notificationType !== CancelNotificationType.cancelText &&
-      !(notificationType in InternalNotificationType)
-    );
-  }
-
   private validateRegisterResult(externalUserId, result): string | undefined {
     const methodName = this.register.name;
     if (result.status === 200) {
@@ -202,17 +198,6 @@ export class OneSignal {
       this.logger.error({ externalUserId }, OneSignal.name, methodName, result.status);
       return undefined;
     }
-  }
-
-  private async getApiId(
-    platform: Platform,
-    notificationType?: AllNotificationTypes,
-  ): Promise<string> {
-    return this.configsService.getConfig(
-      this.isVoipProject(platform, notificationType)
-        ? ExternalConfigs.oneSignal.voipApiId
-        : ExternalConfigs.oneSignal.defaultApiId,
-    );
   }
 
   private async getConfig(platform: Platform, notificationType?: AllNotificationTypes) {
