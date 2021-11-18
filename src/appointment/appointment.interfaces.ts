@@ -1,5 +1,5 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { format } from 'date-fns';
+import { format, isAfter } from 'date-fns';
 import {
   Appointment,
   AppointmentScheduler,
@@ -9,7 +9,7 @@ import {
 import {
   ContentKey,
   EventType,
-  IEventUpdatedAppointment,
+  IEventOnUpdatedAppointment,
   InternalNotifyParams,
   UpdatedAppointmentAction,
   scheduleAppointmentDateFormat,
@@ -27,9 +27,12 @@ export class AppointmentBase {
     const appointment = await this.appointmentService.schedule(scheduleAppointmentParams);
 
     this.updateAppointmentExternalData(appointment);
-    this.notifyUserAppointment(appointment);
-    this.notifyMemberAppointment(appointment);
-    await this.registerAppointmentAlert(appointment);
+
+    if (isAfter(appointment.start, new Date())) {
+      this.notifyUserAppointment(appointment);
+      this.notifyMemberAppointment(appointment);
+      await this.registerAppointmentAlert(appointment);
+    }
 
     this.appointmentScheduler.deleteTimeout({ id: appointment.memberId.toString() });
     return appointment;
@@ -40,7 +43,7 @@ export class AppointmentBase {
    ************************************************************************************************/
 
   private updateAppointmentExternalData(appointment: Appointment) {
-    const eventParams: IEventUpdatedAppointment = {
+    const eventParams: IEventOnUpdatedAppointment = {
       updatedAppointmentAction: UpdatedAppointmentAction.edit,
       memberId: appointment.memberId.toString(),
       userId: appointment.userId,
@@ -50,7 +53,7 @@ export class AppointmentBase {
         start: appointment.start,
       },
     };
-    this.eventEmitter.emit(EventType.updatedAppointment, eventParams);
+    this.eventEmitter.emit(EventType.onUpdatedAppointment, eventParams);
   }
 
   private notifyUserAppointment(appointment: Appointment) {
@@ -68,7 +71,7 @@ export class AppointmentBase {
         },
       },
     };
-    this.eventEmitter.emit(EventType.internalNotify, params);
+    this.eventEmitter.emit(EventType.notifyInternal, params);
   }
 
   private notifyMemberAppointment(appointment: Appointment) {
@@ -81,7 +84,7 @@ export class AppointmentBase {
         appointmentTime: appointment.start,
       },
     };
-    this.eventEmitter.emit(EventType.internalNotify, params);
+    this.eventEmitter.emit(EventType.notifyInternal, params);
   }
 
   private async registerAppointmentAlert(appointment: Appointment) {

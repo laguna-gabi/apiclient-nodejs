@@ -266,7 +266,7 @@ describe('AppointmentScheduler', () => {
           checkAppointmentReminder: true,
         },
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.internalNotify, eventParams);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyInternal, eventParams);
       expect(spyOnBitlyShortenLink).toBeCalledWith(chat.memberLink);
 
       spyOnCommunicationResolverGet.mockReset();

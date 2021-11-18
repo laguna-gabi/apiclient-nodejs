@@ -37,12 +37,12 @@ import {
   Errors,
   EventType,
   GetContentsParams,
-  IEventDeleteSchedules,
-  IEventNotifyChatMessage,
-  IEventSendSmsToChat,
-  IEventUnregisterMemberFromNotifications,
-  IEventUpdateMemberPlatform,
-  IEventUpdateUserInCommunication,
+  IEventMember,
+  IEventOnMemberBecameOffline,
+  IEventOnReceivedChatMessage,
+  IEventOnReceivedTextMessage,
+  IEventOnReplacedUserForMember,
+  IEventOnUpdatedMemberPlatform,
   Identifier,
   InternalNotifyParams,
   InternationalizationService,
@@ -154,8 +154,8 @@ export class MemberResolver extends MemberBase {
     await this.notificationsService.unregister(memberConfig);
     await this.cognitoService.disableMember(member.deviceId);
 
-    const params: IEventDeleteSchedules = { memberId: id };
-    this.eventEmitter.emit(EventType.deleteSchedules, params);
+    const eventParams: IEventMember = { memberId: id };
+    this.eventEmitter.emit(EventType.onArchivedMember, eventParams);
   }
 
   @Mutation(() => Boolean, { nullable: true })
@@ -180,9 +180,8 @@ export class MemberResolver extends MemberBase {
       await this.cognitoService.deleteMember(member.deviceId);
     }
     await this.storageService.deleteMember(id);
-    this.eventEmitter.emit(EventType.deleteMember, id);
-    const params: IEventDeleteSchedules = { memberId: id };
-    this.eventEmitter.emit(EventType.deleteSchedules, params);
+    const eventParams: IEventMember = { memberId: id };
+    this.eventEmitter.emit(EventType.onDeletedMember, eventParams);
   }
 
   @Mutation(() => Boolean, { nullable: true })
@@ -196,14 +195,14 @@ export class MemberResolver extends MemberBase {
     }
     const member = await this.memberService.updatePrimaryUser(replaceUserForMemberParams);
     const { platform } = await this.memberService.getMemberConfig(member.id);
-    const updateUserInCommunicationParams: IEventUpdateUserInCommunication = {
+    const updateUserInCommunicationParams: IEventOnReplacedUserForMember = {
       newUser,
       oldUserId: member.primaryUserId,
       member,
       platform,
     };
 
-    this.eventEmitter.emit(EventType.updateUserInCommunication, updateUserInCommunicationParams);
+    this.eventEmitter.emit(EventType.onReplacedUserForMember, updateUserInCommunicationParams);
     return true;
   }
 
@@ -386,12 +385,12 @@ export class MemberResolver extends MemberBase {
     });
 
     member.users.map((user) => {
-      const eventParams: IEventUpdateMemberPlatform = {
+      const eventParams: IEventOnUpdatedMemberPlatform = {
         memberId: registerForNotificationParams.memberId,
         platform: registerForNotificationParams.platform,
         userId: user._id,
       };
-      this.eventEmitter.emit(EventType.updateMemberPlatform, eventParams);
+      this.eventEmitter.emit(EventType.onUpdatedMemberPlatform, eventParams);
     });
 
     this.memberScheduler.deleteTimeout({ id: member.id });
@@ -474,7 +473,7 @@ export class MemberResolver extends MemberBase {
    * Event is coming from appointment.scheduler or
    * member.scheduler - scheduling reminders and nudges.
    */
-  @OnEvent(EventType.internalNotify, { async: true })
+  @OnEvent(EventType.notifyInternal, { async: true })
   async internalNotify(params: InternalNotifyParams) {
     this.logger.debug(params, MemberResolver.name, this.internalNotify.name);
     const { memberId, userId, type, metadata } = params;
@@ -552,8 +551,8 @@ export class MemberResolver extends MemberBase {
    * A message can be from a user or a member.
    * Determine origin (member or user) and decide if a notification should be sent
    */
-  @OnEvent(EventType.notifyChatMessage, { async: true })
-  async notifyChatMessage(params: IEventNotifyChatMessage) {
+  @OnEvent(EventType.onReceivedChatMessage, { async: true })
+  async notifyChatMessage(params: IEventOnReceivedChatMessage) {
     const { senderUserId, sendBirdChannelUrl } = params;
 
     let origin: ChatMessageOrigin;
@@ -605,8 +604,8 @@ export class MemberResolver extends MemberBase {
    * Listening to incoming sms from twilio webhook.
    * Send message from member to chat.
    */
-  @OnEvent(EventType.sendSmsToChat, { async: true })
-  async sendSmsToChat(params: IEventSendSmsToChat) {
+  @OnEvent(EventType.onReceivedTextMessage, { async: true })
+  async sendSmsToChat(params: IEventOnReceivedTextMessage) {
     try {
       const member = await this.memberService.getByPhone(params.phone);
       const sendBirdChannelUrl = await this.getSendBirdChannelUrl({
@@ -626,23 +625,19 @@ export class MemberResolver extends MemberBase {
     }
   }
 
-  @OnEvent(EventType.deleteSchedules, { async: true })
-  async deleteSchedules(params: IEventDeleteSchedules) {
-    const { memberId } = params;
-    try {
-      const notifications = await this.memberService.getMemberNotifications(memberId);
-      notifications.forEach((notification) => {
-        this.memberScheduler.deleteTimeout({ id: notification._id });
-      });
-      this.memberScheduler.deleteTimeout({ id: memberId });
-      this.memberScheduler.deleteTimeout({ id: memberId + ReminderType.logReminder });
-    } catch (ex) {
-      this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, ex);
-    }
+  @OnEvent(EventType.onDeletedMember, { async: true })
+  async onDeletedMember(params: IEventMember) {
+    await this.deleteSchedules(params);
   }
 
-  @OnEvent(EventType.deleteLogReminder, { async: true })
-  async deleteLogReminder(memberId: string) {
+  @OnEvent(EventType.onArchivedMember, { async: true })
+  async onArchivedMember(params: IEventMember) {
+    await this.deleteSchedules(params);
+  }
+
+  @OnEvent(EventType.onSetDailyLogCategories, { async: true })
+  async deleteLogReminder(params: IEventMember) {
+    const { memberId } = params;
     try {
       this.memberScheduler.deleteTimeout({ id: memberId + ReminderType.logReminder });
     } catch (ex) {
@@ -650,8 +645,8 @@ export class MemberResolver extends MemberBase {
     }
   }
 
-  @OnEvent(EventType.notifyOfflineMember, { async: true })
-  async notifyOfflineMember(params: IEventUnregisterMemberFromNotifications) {
+  @OnEvent(EventType.onMemberBecameOffline, { async: true })
+  async notifyOfflineMember(params: IEventOnMemberBecameOffline) {
     this.logger.debug(params, MemberResolver.name, this.notifyOfflineMember.name);
     const { phone, type } = params;
     const content = (params.content += `\n${config.get('hosts.dynamicLink')}`);
@@ -668,6 +663,20 @@ export class MemberResolver extends MemberBase {
       }
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.notifyOfflineMember.name, ex);
+    }
+  }
+
+  private async deleteSchedules(params: IEventMember) {
+    const { memberId } = params;
+    try {
+      const notifications = await this.memberService.getMemberNotifications(memberId);
+      notifications.forEach((notification) => {
+        this.memberScheduler.deleteTimeout({ id: notification._id });
+      });
+      this.memberScheduler.deleteTimeout({ id: memberId });
+      this.memberScheduler.deleteTimeout({ id: memberId + ReminderType.logReminder });
+    } catch (ex) {
+      this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, ex);
     }
   }
 

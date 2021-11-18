@@ -13,6 +13,7 @@ import {
 import {
   ContentKey,
   EventType,
+  IEventMember,
   InternalNotifyParams,
   Logger,
   LoggingInterceptor,
@@ -57,7 +58,7 @@ export class DailyReportResolver {
         metadata: { contentType: ContentKey.memberNotFeelingWellMessage },
       };
 
-      this.eventEmitter.emit(EventType.internalNotify, params);
+      this.eventEmitter.emit(EventType.notifyInternal, params);
 
       this.dailyReportService.logMemberOverThresholdIndication(dailyReportCategoriesInput.memberId);
 
@@ -66,7 +67,10 @@ export class DailyReportResolver {
         dailyReportCategoriesInput.date,
       );
     }
-    this.eventEmitter.emit(EventType.deleteLogReminder, dailyReportCategoriesInput.memberId);
+    const eventParam: IEventMember = {
+      memberId: dailyReportCategoriesInput.memberId,
+    };
+    this.eventEmitter.emit(EventType.onSetDailyLogCategories, eventParam);
 
     return dailyReportObject;
   }

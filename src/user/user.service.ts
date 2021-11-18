@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import { add, getHours, startOfTomorrow } from 'date-fns';
+import { add, differenceInDays, getHours, startOfDay } from 'date-fns';
 import { cloneDeep } from 'lodash';
 import { Model, Types } from 'mongoose';
 import {
@@ -24,10 +24,11 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventNewAppointment,
-  IEventSlackMessage,
-  IEventUpdateAppointmentsInUser,
-  IEventUpdateUserConfig,
+  IEventNotifySlack,
+  IEventOnDeletedMemberAppointments,
+  IEventOnNewAppointment,
+  IEventOnUpdateUserConfig,
+  IEventOnUpdatedUserAppointments,
   Logger,
   SlackChannel,
   SlackIcon,
@@ -80,7 +81,9 @@ export class UserService extends BaseService {
 
   async getSlots(getSlotsParams: GetSlotsParams): Promise<Slots> {
     this.removeNotNullable(getSlotsParams, NotNullableSlotsKeys);
-    const { appointmentId, userId } = getSlotsParams;
+    const { appointmentId, userId, defaultSlotsCount, allowEmptySlotsResponse, maxSlots } =
+      getSlotsParams;
+
     const [slotsObject] = await this.userModel.aggregate([
       ...(userId
         ? [
@@ -154,6 +157,7 @@ export class UserService extends BaseService {
             method: { $arrayElemAt: ['$userAp.method', 0] },
             memberId: { $arrayElemAt: ['$userAp.memberId', 0] },
             userId: { $arrayElemAt: ['$userAp.userId', 0] },
+            notBefore: { $arrayElemAt: ['$userAp.notBefore', 0] },
             duration: `${defaultSlotsParams.duration}`,
           },
           ap: '$ap',
@@ -166,12 +170,15 @@ export class UserService extends BaseService {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
 
+    const notBefore = getSlotsParams.notBefore || slotsObject.ap?.[0].notBefore;
+
     slotsObject.slots = this.slotService.getSlots(
       slotsObject.av,
       slotsObject.ap,
       defaultSlotsParams.duration,
-      defaultSlotsParams.maxSlots,
-      getSlotsParams.notBefore,
+      maxSlots || defaultSlotsParams.maxSlots,
+      notBefore,
+      getSlotsParams.notAfter,
     );
     delete slotsObject.ap;
     delete slotsObject.av;
@@ -179,29 +186,35 @@ export class UserService extends BaseService {
       delete slotsObject.member;
       delete slotsObject.appointment;
     }
-
-    if (slotsObject.slots.length === 0) {
-      slotsObject.slots = this.generateDefaultSlots();
-      const params: IEventSlackMessage = {
+    if (slotsObject.slots.length === 0 && !allowEmptySlotsResponse) {
+      slotsObject.slots = this.generateDefaultSlots(defaultSlotsCount, notBefore);
+      const params: IEventNotifySlack = {
         message: `*No availability*\nUser ${
           userId ? userId : slotsObject.appointment.userId
         } doesn't have any availability left.`,
         icon: SlackIcon.warning,
         channel: SlackChannel.notifications,
       };
-      this.eventEmitter.emit(EventType.slackMessage, params);
+      this.eventEmitter.emit(EventType.notifySlack, params);
     }
 
     return slotsObject;
   }
 
-  generateDefaultSlots() {
+  generateDefaultSlots(count: number = defaultSlotsParams.defaultSlots, notBefore?: Date) {
     const slots: Date[] = [];
-    let nextSlot = add(new Date(), { hours: 2 });
-    for (let index = 0; index < 6; index++) {
+    const getStartDate = () => {
+      const now = new Date();
+      return notBefore && differenceInDays(now, notBefore) !== 0
+        ? notBefore
+        : add(now, { hours: 2 });
+    };
+
+    let nextSlot = getStartDate();
+    for (let index = 0; index < count; index++) {
       nextSlot = add(nextSlot, { hours: 1 });
       if (getHours(nextSlot) < 17 || getHours(nextSlot) > 23) {
-        nextSlot = add(startOfTomorrow(), { hours: 17 });
+        nextSlot = add(startOfDay(add(nextSlot, { days: 1 })), { hours: 17 });
       }
       slots.push(nextSlot);
     }
@@ -282,12 +295,12 @@ export class UserService extends BaseService {
         return users[index]._id;
       }
     }
-    const params: IEventSlackMessage = {
+    const params: IEventNotifySlack = {
       message: `*NO AVAILABLE USERS*\nAll users are fully booked.`,
       icon: SlackIcon.warning,
       channel: SlackChannel.notifications,
     };
-    this.eventEmitter.emit(EventType.slackMessage, params);
+    this.eventEmitter.emit(EventType.notifySlack, params);
     await this.userModel.updateOne(
       { _id: users[0]._id },
       { $set: { lastMemberAssignedAt: new Date() } },
@@ -295,8 +308,8 @@ export class UserService extends BaseService {
     return users[0]._id;
   }
 
-  @OnEvent(EventType.updateUserConfig, { async: true })
-  async handleUpdateUserConfig(params: IEventUpdateUserConfig): Promise<boolean> {
+  @OnEvent(EventType.onUpdatedUserConfig, { async: true })
+  async handleUpdateUserConfig(params: IEventOnUpdateUserConfig): Promise<boolean> {
     try {
       const { userId, accessToken } = params;
       const result = await this.userConfigModel.updateOne({ userId }, { $set: { accessToken } });
@@ -307,20 +320,21 @@ export class UserService extends BaseService {
     }
   }
 
-  @OnEvent(EventType.newAppointment, { async: true })
-  async handleOrderCreatedEvent(params: IEventNewAppointment) {
+  @OnEvent(EventType.onNewAppointment, { async: true })
+  async addAppointmentToUser(params: IEventOnNewAppointment) {
     try {
       await this.userModel.updateOne(
         { _id: params.userId },
         { $push: { appointments: new Types.ObjectId(params.appointmentId) } },
       );
     } catch (ex) {
-      this.logger.error(params, UserService.name, this.handleOrderCreatedEvent.name, ex);
+      this.logger.error(params, UserService.name, this.addAppointmentToUser.name, ex);
     }
   }
 
-  @OnEvent(EventType.removeAppointmentsFromUser, { async: true })
-  async removeAppointmentsFromUser(appointments) {
+  @OnEvent(EventType.onDeletedMemberAppointments, { async: true })
+  async deleteAppointments(params: IEventOnDeletedMemberAppointments) {
+    const { appointments } = params;
     await Promise.all(
       appointments.map(async (appointment) => {
         await this.userModel.updateOne(
@@ -331,8 +345,8 @@ export class UserService extends BaseService {
     );
   }
 
-  @OnEvent(EventType.updateAppointmentsInUser, { async: true })
-  async updateUserAppointments(params: IEventUpdateAppointmentsInUser) {
+  @OnEvent(EventType.onUpdatedUserAppointments, { async: true })
+  async updateUserAppointments(params: IEventOnUpdatedUserAppointments) {
     const appointmentIds = params.appointments.map((appointment) => Types.ObjectId(appointment.id));
 
     try {

@@ -184,7 +184,7 @@ export class AppointmentScheduler extends BaseScheduler {
           },
         };
 
-        this.eventEmitter.emit(EventType.internalNotify, params);
+        this.eventEmitter.emit(EventType.notifyInternal, params);
         this.deleteTimeout({ id });
       }, milliseconds);
       this.addTimeout(id, timeout);
@@ -221,7 +221,7 @@ export class AppointmentScheduler extends BaseScheduler {
           },
         };
 
-        this.eventEmitter.emit(EventType.internalNotify, params);
+        this.eventEmitter.emit(EventType.notifyInternal, params);
         this.deleteTimeout({ id });
       }, milliseconds);
       this.schedulerRegistry.addTimeout(id, timeout);

@@ -8,11 +8,12 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventNewMember,
-  IEventNotifyChatMessage,
-  IEventRequestAppointment,
-  IEventSlackMessage,
-  IEventUpdateMemberPlatform,
+  IEventMember,
+  IEventNotifySlack,
+  IEventOnNewMember,
+  IEventOnReceivedChatMessage,
+  IEventOnUpdatedMemberPlatform,
+  InternalNotifyParams,
   InternationalizationService,
   Language,
   RegisterForNotificationParams,
@@ -155,27 +156,19 @@ describe('MemberResolver', () => {
       expect(spyOnServiceGetAvailableUser).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
-      const eventNewMemberParams: IEventNewMember = {
+      const eventNewMemberParams: IEventOnNewMember = {
         member,
         user,
         platform: memberConfig.platform,
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.newMember, eventNewMemberParams);
-      const eventRequestAppointmentParams: IEventRequestAppointment = {
-        member,
-        user,
-      };
-      expect(spyOnEventEmitter).toBeCalledWith(
-        EventType.requestAppointment,
-        eventRequestAppointmentParams,
-      );
-      const eventSlackMessageParams: IEventSlackMessage = {
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onNewMember, eventNewMemberParams);
+      const eventSlackMessageParams: IEventNotifySlack = {
         // eslint-disable-next-line max-len
         message: `*New customer*\n${member.firstName} [${member.id}],\nassigned to ${user.firstName}.`,
         icon: SlackIcon.info,
         channel: SlackChannel.support,
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.slackMessage, eventSlackMessageParams);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifySlack, eventSlackMessageParams);
     });
   });
 
@@ -390,7 +383,8 @@ describe('MemberResolver', () => {
         userId: member.primaryUserId,
       });
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteSchedules, { memberId: id });
+      const eventParams: IEventMember = { memberId: id };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onArchivedMember, eventParams);
     });
   });
 
@@ -405,10 +399,7 @@ describe('MemberResolver', () => {
 
     beforeEach(() => {
       spyOnServiceDeleteMember = jest.spyOn(service, 'deleteMember');
-      spyOnUserServiceRemoveAppointmentsFromUser = jest.spyOn(
-        userService,
-        'removeAppointmentsFromUser',
-      );
+      spyOnUserServiceRemoveAppointmentsFromUser = jest.spyOn(userService, 'deleteAppointments');
       spyOnCommunicationGetMemberUserCommunication = jest.spyOn(
         communicationService,
         'getMemberUserCommunication',
@@ -460,8 +451,8 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
       expect(spyOnCognitoServiceDeleteMember).toBeCalledWith(member.deviceId);
       expect(spyOnStorageServiceDeleteMember).toBeCalledWith(id);
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteMember, id);
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteSchedules, { memberId: id });
+      const eventParams: IEventMember = { memberId: id };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onDeletedMember, eventParams);
     });
 
     it('to not call cognito service with undefined device id', async () => {
@@ -492,8 +483,8 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
       expect(spyOnCognitoServiceDeleteMember).not.toHaveBeenCalled();
       expect(spyOnStorageServiceDeleteMember).toBeCalledWith(id);
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteMember, id);
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.deleteSchedules, { memberId: id });
+      const eventParams: IEventMember = { memberId: id };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onDeletedMember, eventParams);
     });
   });
 
@@ -940,12 +931,12 @@ describe('MemberResolver', () => {
         platform: params.platform,
         isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       });
-      const eventParams: IEventUpdateMemberPlatform = {
+      const eventParams: IEventOnUpdatedMemberPlatform = {
         memberId: params.memberId,
         platform: params.platform,
         userId: member.primaryUserId,
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateMemberPlatform, eventParams);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedMemberPlatform, eventParams);
       expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: member.id });
     });
 
@@ -1042,7 +1033,7 @@ describe('MemberResolver', () => {
         memberId: member.id,
         userId: user.id,
       });
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateUserInCommunication, {
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onReplacedUserForMember, {
         newUser: user,
         oldUserId: member.primaryUserId,
         member,
@@ -1320,7 +1311,7 @@ describe('MemberResolver', () => {
 
       await delay(300);
       delete notifyParams.metadata.when;
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.internalNotify, {
+      const eventParams: InternalNotifyParams = {
         memberId: member.id,
         userId: member.primaryUserId,
         type:
@@ -1329,7 +1320,8 @@ describe('MemberResolver', () => {
             : InternalNotificationType.textSmsToMember,
         metadata: {},
         content: notifyParams.metadata.content,
-      });
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyInternal, eventParams);
     }, 10000);
 
     it('should call getCommunication if metadata.chatLink true', async () => {
@@ -1838,7 +1830,7 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser.mockImplementation(async () => user);
       spyOnCommunicationGetByUrl.mockImplementation(async () => communication);
 
-      const params: IEventNotifyChatMessage = {
+      const params: IEventOnReceivedChatMessage = {
         senderUserId: user.id,
         sendBirdChannelUrl: communication.sendBirdChannelUrl,
       };
@@ -1888,7 +1880,7 @@ describe('MemberResolver', () => {
       });
 
       spyOnCommunicationGetByUrl.mockImplementation(async () => communication);
-      const params: IEventNotifyChatMessage = {
+      const params: IEventOnReceivedChatMessage = {
         senderUserId: member.id,
         sendBirdChannelUrl: communication.sendBirdChannelUrl,
         sendBirdMemberInfo: [
@@ -1931,7 +1923,7 @@ describe('MemberResolver', () => {
       });
 
       spyOnCommunicationGetByUrl.mockImplementation(async () => communication);
-      const params: IEventNotifyChatMessage = {
+      const params: IEventOnReceivedChatMessage = {
         senderUserId: member.id,
         sendBirdChannelUrl: communication.sendBirdChannelUrl,
         sendBirdMemberInfo: [
@@ -1945,7 +1937,7 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceSend).not.toBeCalled();
     });
 
-    const fakeData: IEventNotifyChatMessage = {
+    const fakeData: IEventOnReceivedChatMessage = {
       senderUserId: v4(),
       sendBirdChannelUrl: generateUniqueUrl(),
     };

@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { Appointment, AppointmentStatus, Scores } from '../appointment';
+import { Appointment, AppointmentDocument, AppointmentStatus, Scores } from '../appointment';
 import { Member } from '../member';
 import { User } from '../user';
 import {
@@ -12,138 +12,144 @@ import {
 import { Platform } from '@lagunahealth/pandora';
 
 export enum EventType {
-  requestAppointment = 'requestAppointment',
-  newAppointment = 'newAppointment',
-  updatedAppointment = 'updatedAppointment',
-  appointmentScoresUpdated = 'appointmentScoresUpdated',
-  newMember = 'newMember',
-  newUser = 'newUser',
+  //member
+  onNewMember = 'onNewMember',
+  onNewMemberCommunication = 'onNewMemberCommunication',
+  onUpdatedMemberPlatform = 'onUpdatedMemberPlatform',
+  onReplacedUserForMember = 'onReplacedUserForMember',
+  onMemberBecameOffline = 'onMemberBecameOffline',
+  onDeletedMember = 'onDeletedMember',
+  onArchivedMember = 'onArchivedMember',
 
-  updateUserInCommunication = 'updateUserInCommunication',
-  updateUserInAppointments = 'updateUserInAppointments',
-  updateAppointmentsInUser = 'updateAppointmentsInUser',
+  //user
+  onNewUser = 'onNewUser',
+  onUpdatedUserCommunication = 'onUpdatedUserCommunication',
+  onUpdatedUserConfig = 'onUpdatedUserConfig',
 
-  updateMemberConfig = 'updateMemberConfig',
-  updateUserConfig = 'updateUserConfig',
-  addUserToMemberList = 'addUserToMemberList',
-  updateMemberPlatform = 'updateMemberPlatform',
-  internalNotify = 'internalNotify',
-  notifyChatMessage = 'notifyChatMessage',
-  sendSmsToChat = 'sendSmsToChat',
-  slackMessage = 'slackMessage',
-  queueMessage = 'queueMessage',
-  deleteSchedules = 'deleteSchedules',
-  deleteMember = 'deleteMember',
-  removeAppointmentsFromUser = 'removeAppointmentsFromUser',
-  notifyOfflineMember = 'notifyOfflineMember',
-  deleteLogReminder = 'deleteLogReminder',
+  //appointments
+  onNewAppointment = 'onNewAppointment',
+  onUpdatedAppointment = 'onUpdatedAppointment',
+  onUpdatedAppointmentScores = 'onUpdatedAppointmentScores',
+  onUpdatedUserAppointments = 'onUpdatedUserAppointments',
+  onUnconsentedAppointmentEnded = 'onUnconsentedAppointmentEnded',
+  onDeletedMemberAppointments = 'onDeletedMemberAppointments',
 
-  unconsentedAppointmentEnded = 'unconsentedAppointmentEnded',
+  //notifications
+  onReceivedChatMessage = 'onReceivedChatMessage',
+  onReceivedTextMessage = 'onReceivedTextMessage',
+  notifyInternal = 'notifyInternal',
+  notifySlack = 'notifySlack',
+  notifyQueue = 'notifyQueue',
+
+  //daily logs
+  onSetDailyLogCategories = 'onSetDailyLogCategories',
 }
 
-export interface IEventRequestAppointment {
-  user: User;
-  member: Member;
-}
-
-export interface IEventNewAppointment {
-  userId: string;
-  appointmentId: string;
-}
-
-export interface IEventUpdatedAppointment {
+/*************************************************************************************************
+ *************************************** Member interfaces ***************************************
+ *************************************************************************************************/
+export interface IEventMember {
   memberId: string;
-  userId: string;
-  key: string;
-  value?: { status: AppointmentStatus; start: Date };
-  updatedAppointmentAction: UpdatedAppointmentAction;
 }
 
-export interface IEventAppointmentScoresUpdated {
-  memberId: Types.ObjectId;
-  scores: Scores;
-}
-
-export interface IEventNewMember {
+export interface IEventOnNewMember {
   member: Member;
   user: User;
   platform: Platform;
 }
 
-export interface IEventNewUser {
-  user: User;
-}
-
-export interface IEventUpdateMemberConfig {
-  memberId: string;
+export interface IEventOnNewMemberCommunication extends IEventMember {
   accessToken?: string;
 }
 
-export interface IEventUpdateUserConfig {
-  userId: string;
-  accessToken: string;
-}
-
-export interface IEventAddUserToMemberList {
-  memberId: string;
-  userId: string;
-}
-
-export interface IEventUpdateMemberPlatform {
-  memberId: string;
+export interface IEventOnUpdatedMemberPlatform extends IEventMember {
   userId: string;
   platform: Platform;
 }
 
-export interface IEventNotifyChatMessage {
-  senderUserId: string;
-  sendBirdChannelUrl: string;
-  sendBirdMemberInfo?: { memberId: string; isOnline: boolean }[];
-}
-
-export interface IEventSendSmsToChat {
-  phone: string;
-  message: string;
-}
-
-export interface IEventSlackMessage {
-  message: string;
-  icon: SlackIcon;
-  channel: SlackChannel;
-}
-
-export interface IEventQueueMessage {
-  type: QueueType;
-  message: string;
-}
-
-export interface IEventDeleteSchedules {
-  memberId: string;
-}
-
-export interface IEventUnregisterMemberFromNotifications {
-  phone: string;
-  content: string;
-  type: AllNotificationTypes;
-}
-export interface IEventUnconsentedAppointmentEnded {
-  appointmentId: string;
-  memberId: string;
-}
-
-export interface IEventUpdateUserInCommunication {
+export interface IEventOnReplacedUserForMember {
   newUser: User;
   oldUserId: string;
   member: Member;
   platform: Platform;
 }
 
-export interface IEventUpdateUserInAppointments {
-  newUserId: string;
-  oldUserId: string;
-  memberId: string;
+export interface IEventOnMemberBecameOffline {
+  phone: string;
+  content: string;
+  type: AllNotificationTypes;
 }
 
-export interface IEventUpdateAppointmentsInUser extends IEventUpdateUserInAppointments {
+/*************************************************************************************************
+ **************************************** User interfaces ****************************************
+ *************************************************************************************************/
+export interface IEventOnNewUser {
+  user: User;
+}
+
+export interface IEventOnUpdatedUserCommunication extends IEventMember {
+  newUserId: string;
+  oldUserId: string;
+}
+
+export interface IEventOnUpdateUserConfig {
+  userId: string;
+  accessToken: string;
+}
+
+/*************************************************************************************************
+ ************************************* Appointment interfaces ************************************
+ *************************************************************************************************/
+export interface IEventOnNewAppointment extends IEventMember {
+  userId: string;
+  appointmentId: string;
+}
+
+export interface IEventOnUpdatedAppointment extends IEventMember {
+  userId: string;
+  key: string;
+  value?: { status: AppointmentStatus; start: Date };
+  updatedAppointmentAction: UpdatedAppointmentAction;
+}
+
+export interface IEventOnUpdatedAppointmentScores {
+  memberId: Types.ObjectId;
+  scores: Scores;
+}
+
+export interface IEventOnUpdatedUserAppointments extends IEventOnUpdatedUserCommunication {
   appointments: Appointment[];
+}
+
+export interface IEventUnconsentedAppointmentEnded extends IEventMember {
+  appointmentId: string;
+}
+
+export interface IEventOnDeletedMemberAppointments {
+  appointments: AppointmentDocument[];
+}
+
+/*************************************************************************************************
+ ************************************ Notification interfaces ************************************
+ *************************************************************************************************/
+export interface IEventOnReceivedChatMessage {
+  senderUserId: string;
+  sendBirdChannelUrl: string;
+  sendBirdMemberInfo?: { memberId: string; isOnline: boolean }[];
+}
+
+export interface IEventOnReceivedTextMessage {
+  phone: string;
+  message: string;
+}
+
+export interface IEventNotifySlack {
+  message: string;
+  icon: SlackIcon;
+  channel: SlackChannel;
+}
+
+export interface IEventNotifyQueue {
+  type: QueueType;
+  message: string;
 }

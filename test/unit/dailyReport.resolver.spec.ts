@@ -2,7 +2,7 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Types } from 'mongoose';
-import { ContentKey, EventType, Logger } from '../../src/common';
+import { ContentKey, EventType, IEventMember, Logger } from '../../src/common';
 import {
   DailyReport,
   DailyReportCategoriesInput,
@@ -116,22 +116,25 @@ describe('DailyReportResolver', () => {
           .mockResolvedValue(serviceSetDailyReportCategoryReturnedValue);
         eventEmitterSpy = jest.spyOn(eventEmitter, 'emit');
         await resolver.setDailyReportCategories(context, dailyReportCategoryInput);
+        const eventParams: IEventMember = {
+          memberId: dailyReportCategoryInput.memberId,
+        };
         if (emittedEventParams) {
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(
             1,
-            EventType.internalNotify,
+            EventType.notifyInternal,
             emittedEventParams,
           );
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(
             2,
-            EventType.deleteLogReminder,
-            dailyReportCategoryInput.memberId,
+            EventType.onSetDailyLogCategories,
+            eventParams,
           );
         } else {
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(
             1,
-            EventType.deleteLogReminder,
-            dailyReportCategoryInput.memberId,
+            EventType.onSetDailyLogCategories,
+            eventParams,
           );
         }
       },

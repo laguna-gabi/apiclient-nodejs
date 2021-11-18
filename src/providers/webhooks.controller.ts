@@ -12,8 +12,9 @@ import { SendBird, TwilioService } from '.';
 import * as crypto from 'crypto';
 import {
   EventType,
-  IEventNotifyChatMessage,
-  IEventSlackMessage,
+  IEventNotifySlack,
+  IEventOnReceivedChatMessage,
+  IEventOnReceivedTextMessage,
   Logger,
   LoggingInterceptor,
   Public,
@@ -55,7 +56,7 @@ export class WebhooksController {
 
       const { channel_url: sendBirdChannelUrl } = parsedBody.channel;
 
-      const event: IEventNotifyChatMessage = {
+      const event: IEventOnReceivedChatMessage = {
         senderUserId,
         sendBirdChannelUrl,
         sendBirdMemberInfo: parsedBody.members.map((memberInfo) => ({
@@ -63,7 +64,7 @@ export class WebhooksController {
           isOnline: memberInfo.is_online,
         })),
       };
-      this.eventEmitter.emit(EventType.notifyChatMessage, event);
+      this.eventEmitter.emit(EventType.onReceivedChatMessage, event);
     }
   }
 
@@ -71,18 +72,19 @@ export class WebhooksController {
   @Post('twilio/incoming-sms')
   async incomingSms(@Body() body) {
     if (this.twilioService.validateWebhook(body.Token)) {
-      this.eventEmitter.emit(EventType.sendSmsToChat, {
+      const eventParams: IEventOnReceivedTextMessage = {
         phone: body.From,
         message: body.Body,
-      });
+      };
+      this.eventEmitter.emit(EventType.onReceivedTextMessage, eventParams);
     } else {
-      const params: IEventSlackMessage = {
+      const params: IEventNotifySlack = {
         // eslint-disable-next-line max-len
         message: `*TWILIO WEBHOOK*\nrequest from an unknown client was made to Post ${apiPrefix}/${webhooks}/twilio/incoming-sms`,
         icon: SlackIcon.warning,
         channel: SlackChannel.notifications,
       };
-      this.eventEmitter.emit(EventType.slackMessage, params);
+      this.eventEmitter.emit(EventType.notifySlack, params);
       throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
     }
   }

@@ -3,7 +3,7 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { IncomingWebhook } from '@slack/webhook';
 import * as config from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
-import { Environments, EventType, IEventSlackMessage, Logger } from '../common';
+import { Environments, EventType, IEventNotifySlack, Logger } from '../common';
 
 @Injectable()
 export class SlackBot implements OnModuleInit {
@@ -21,8 +21,8 @@ export class SlackBot implements OnModuleInit {
     this.webhook = new IncomingWebhook(this.url);
   }
 
-  @OnEvent(EventType.slackMessage, { async: true })
-  async sendMessage(params: IEventSlackMessage) {
+  @OnEvent(EventType.notifySlack, { async: true })
+  async sendMessage(params: IEventNotifySlack) {
     if (!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test) {
       this.logger.debug(params, SlackBot.name, this.sendMessage.name);
     } else {

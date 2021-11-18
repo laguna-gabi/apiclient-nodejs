@@ -78,7 +78,7 @@ export class BaseScheduler {
           leaderType: this.leaderType,
         });
         this.amITheLeader = true;
-        this.logger.internal(
+        this.logger.debug(
           internalLogs.schedulerLeader
             .replace('@type@', this.leaderType)
             .replace('@identifier@', this.identifier),
@@ -116,7 +116,7 @@ export class BaseScheduler {
             extraData: { downloadLink },
           },
         };
-        this.eventEmitter.emit(EventType.internalNotify, params);
+        this.eventEmitter.emit(EventType.notifyInternal, params);
         this.deleteTimeout({ id: memberId });
       }, milliseconds);
       this.addTimeout(memberId, timeout);

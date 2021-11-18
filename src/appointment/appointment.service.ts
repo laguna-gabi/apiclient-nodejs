@@ -19,9 +19,11 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventAddUserToMemberList,
-  IEventAppointmentScoresUpdated,
-  IEventNewAppointment,
+  IEventMember,
+  IEventOnDeletedMemberAppointments,
+  IEventOnNewAppointment,
+  IEventOnUpdatedAppointmentScores,
+  IEventUnconsentedAppointmentEnded,
 } from '../common';
 import { isUndefined, omitBy } from 'lodash';
 
@@ -186,18 +188,19 @@ export class AppointmentService extends BaseService {
     }
 
     if (params.notes?.scores) {
-      const eventParams: IEventAppointmentScoresUpdated = {
+      const eventParams: IEventOnUpdatedAppointmentScores = {
         memberId: existing.memberId,
         scores: params.notes.scores,
       };
-      this.eventEmitter.emit(EventType.appointmentScoresUpdated, eventParams);
+      this.eventEmitter.emit(EventType.onUpdatedAppointmentScores, eventParams);
     }
 
     if (!noShow && !recordingConsent) {
-      this.eventEmitter.emit(EventType.unconsentedAppointmentEnded, {
+      const eventParams: IEventUnconsentedAppointmentEnded = {
         appointmentId: id,
-        memberId: existing.memberId,
-      });
+        memberId: existing.memberId.toString(),
+      };
+      this.eventEmitter.emit(EventType.onUnconsentedAppointmentEnded, eventParams);
     }
 
     return this.replaceId(result.toObject() as AppointmentDocument);
@@ -230,10 +233,8 @@ export class AppointmentService extends BaseService {
     memberId: string;
     appointmentId: string;
   }) {
-    const eventParams: IEventNewAppointment = { userId, appointmentId };
-    this.eventEmitter.emit(EventType.newAppointment, eventParams);
-    const eventParamsAddUser: IEventAddUserToMemberList = { memberId, userId };
-    this.eventEmitter.emit(EventType.addUserToMemberList, eventParamsAddUser);
+    const eventParams: IEventOnNewAppointment = { memberId, userId, appointmentId };
+    this.eventEmitter.emit(EventType.onNewAppointment, eventParams);
 
     const link = `${this.APP_URL}/${appointmentId.toString()}`;
 
@@ -289,15 +290,19 @@ export class AppointmentService extends BaseService {
     });
   }
 
-  @OnEvent(EventType.deleteMember, { async: true })
-  async deleteMemberAppointments(id) {
-    const appointments = await this.appointmentModel.find({ memberId: new Types.ObjectId(id) });
+  @OnEvent(EventType.onDeletedMember, { async: true })
+  async deleteMemberAppointments(params: IEventMember) {
+    const { memberId } = params;
+    const appointments = await this.appointmentModel.find({
+      memberId: new Types.ObjectId(memberId),
+    });
     for (let index = 0; index < appointments.length; index++) {
       if (appointments[index].notes) {
         await this.notesModel.deleteOne({ _id: appointments[index].notes });
       }
     }
-    await this.appointmentModel.deleteMany({ memberId: new Types.ObjectId(id) });
-    this.eventEmitter.emit(EventType.removeAppointmentsFromUser, appointments);
+    await this.appointmentModel.deleteMany({ memberId: new Types.ObjectId(memberId) });
+    const eventParams: IEventOnDeletedMemberAppointments = { appointments };
+    this.eventEmitter.emit(EventType.onDeletedMemberAppointments, eventParams);
   }
 }

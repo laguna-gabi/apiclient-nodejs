@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { EventType } from '../../src/common';
+import { EventType, IEventOnReceivedChatMessage } from '../../src/common';
 import {
   ConfigsService,
   ExternalConfigs,
@@ -52,7 +52,7 @@ describe('WebhooksController', () => {
 
     it('should generate an event with a normal new message payload', async () => {
       await controller.sendbird(JSON.stringify(sendBirdNewMessagePayload), {});
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyChatMessage, {
+      const eventParams: IEventOnReceivedChatMessage = {
         senderUserId: sendBirdNewMessagePayload.sender.user_id,
         sendBirdChannelUrl: sendBirdNewMessagePayload.channel.channel_url,
         sendBirdMemberInfo: [
@@ -65,7 +65,8 @@ describe('WebhooksController', () => {
             memberId: sendBirdNewMessagePayload.members[1].user_id,
           },
         ],
-      });
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onReceivedChatMessage, eventParams);
     });
 
     it('should NOT generate an event with an admin message payload', async () => {
@@ -99,7 +100,7 @@ describe('WebhooksController', () => {
           Token: token,
         });
 
-        expect(spyOnEventEmitter).toBeCalledWith(EventType.sendSmsToChat, {
+        expect(spyOnEventEmitter).toBeCalledWith(EventType.onReceivedTextMessage, {
           message: 'test',
           phone: '+972525945870',
         });

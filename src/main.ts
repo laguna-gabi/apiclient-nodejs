@@ -23,12 +23,12 @@ async function bootstrap() {
   await app.listen(3000);
 
   const logger = app.get<Logger>(Logger);
-  logger.internal(
+  logger.debug(
     internalLogs.hepiusVersion.replace('@version@', packageJson.version),
     'Main',
     bootstrap.name,
   );
-  logger.internal(
+  logger.debug(
     internalLogs.lastCommit.replace('@hash@', process.env.COMMIT_SHA),
     'Main',
     bootstrap.name,

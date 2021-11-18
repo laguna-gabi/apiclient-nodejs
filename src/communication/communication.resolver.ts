@@ -15,11 +15,11 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventNewMember,
-  IEventNewUser,
-  IEventUpdateMemberPlatform,
-  IEventUpdateUserInAppointments,
-  IEventUpdateUserInCommunication,
+  IEventOnNewMember,
+  IEventOnNewUser,
+  IEventOnReplacedUserForMember,
+  IEventOnUpdatedMemberPlatform,
+  IEventOnUpdatedUserCommunication,
   Logger,
   LoggingInterceptor,
   RoleTypes,
@@ -125,8 +125,8 @@ export class CommunicationResolver {
     return this.communicationService.getTwilioAccessToken();
   }
 
-  @OnEvent(EventType.newUser, { async: true })
-  async handleNewUser(params: IEventNewUser) {
+  @OnEvent(EventType.onNewUser, { async: true })
+  async handleNewUser(params: IEventOnNewUser) {
     try {
       await this.communicationService.createUser(params.user);
     } catch (ex) {
@@ -139,8 +139,8 @@ export class CommunicationResolver {
     }
   }
 
-  @OnEvent(EventType.newMember, { async: true })
-  async handleNewMember(params: IEventNewMember) {
+  @OnEvent(EventType.onNewMember, { async: true })
+  async handleNewMember(params: IEventOnNewMember) {
     try {
       await this.communicationService.createMember(params.member);
       await this.communicationService.connectMemberToUser(
@@ -158,8 +158,8 @@ export class CommunicationResolver {
     }
   }
 
-  @OnEvent(EventType.updateMemberPlatform, { async: true })
-  async handleUpdateMemberPlatform(params: IEventUpdateMemberPlatform) {
+  @OnEvent(EventType.onUpdatedMemberPlatform, { async: true })
+  async handleUpdateMemberPlatform(params: IEventOnUpdatedMemberPlatform) {
     try {
       return await this.communicationService.onUpdateMemberPlatform(params);
     } catch (ex) {
@@ -172,7 +172,7 @@ export class CommunicationResolver {
     }
   }
 
-  @OnEvent(EventType.updatedAppointment, { async: true })
+  @OnEvent(EventType.onUpdatedAppointment, { async: true })
   async handleUpdatedAppointment(params: {
     memberId: string;
     userId: string;
@@ -191,16 +191,16 @@ export class CommunicationResolver {
     return `${config.get('hosts.chat')}/?uid=${uid}&mid=${mid}&token=${token}`;
   }
 
-  @OnEvent(EventType.updateUserInCommunication, { async: true })
-  async updateUserInCommunication(params: IEventUpdateUserInCommunication) {
+  @OnEvent(EventType.onReplacedUserForMember, { async: true })
+  async updateUserInCommunication(params: IEventOnReplacedUserForMember) {
     try {
       await this.communicationService.updateUserInCommunication(params);
-      const updateUserInAppointmentsParams: IEventUpdateUserInAppointments = {
+      const eventParams: IEventOnUpdatedUserCommunication = {
         oldUserId: params.oldUserId,
         newUserId: params.newUser.id,
         memberId: params.member.id,
       };
-      this.eventEmitter.emit(EventType.updateUserInAppointments, updateUserInAppointmentsParams);
+      this.eventEmitter.emit(EventType.onUpdatedUserCommunication, eventParams);
       this.logger.debug(params, CommunicationResolver.name, this.updateUserInCommunication.name);
     } catch (ex) {
       this.logger.error(

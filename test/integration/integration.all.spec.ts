@@ -183,13 +183,6 @@ describe('Integration tests: all', () => {
     );
   });
 
-  it('should set,get,delete availability of users', async () => {
-    await createAndValidateAvailabilities(2);
-    const { ids } = await createAndValidateAvailabilities(5);
-
-    await handler.mutations.deleteAvailability({ id: ids[0] });
-  });
-
   it('should successfully create an org and then get it by id', async () => {
     const orgParams = generateOrgParams();
     const { id } = await handler.mutations.createOrg({ orgParams });
@@ -264,40 +257,6 @@ describe('Integration tests: all', () => {
     );
   });
 
-  it('should create update and delete appointment notes', async () => {
-    const org = await creators.createAndValidateOrg();
-    const member: Member = await creators.createAndValidateMember({ org });
-    const scheduledAppointment = generateScheduleAppointmentParams({
-      memberId: member.id,
-      userId: member.primaryUserId,
-      method: AppointmentMethod.chat,
-    });
-    const { id: appointmentId } = await creators.handler.mutations.scheduleAppointment({
-      appointmentParams: scheduledAppointment,
-    });
-    let appointment = await creators.handler.queries.getAppointment(appointmentId);
-
-    expect(appointment.notes).toBeNull();
-
-    let updateNotesParams = generateUpdateNotesParams({ appointmentId: appointment.id });
-    await handler.mutations.updateNotes({ updateNotesParams });
-    appointment = await creators.handler.queries.getAppointment(appointment.id);
-
-    expect(appointment.notes).toMatchObject(updateNotesParams.notes);
-
-    updateNotesParams = generateUpdateNotesParams({ appointmentId: appointment.id });
-    await handler.mutations.updateNotes({ updateNotesParams });
-    appointment = await creators.handler.queries.getAppointment(appointment.id);
-
-    expect(appointment.notes).toMatchObject(updateNotesParams.notes);
-
-    updateNotesParams = generateUpdateNotesParams({ appointmentId: appointment.id, notes: null });
-    await handler.mutations.updateNotes({ updateNotesParams });
-    appointment = await creators.handler.queries.getAppointment(appointment.id);
-
-    expect(appointment.notes).toBeNull();
-  });
-
   it('should validate that getMember attach chat app link to each appointment', async () => {
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({ org });
@@ -310,132 +269,6 @@ describe('Integration tests: all', () => {
         link: generateAppointmentLink(memberResult.users[0].appointments[0].id),
       }),
     );
-  });
-
-  it('should be able to set note for and nurseNotes for a member', async () => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
-
-    const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: member.id });
-    await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
-
-    const memberResult = await handler.queries.getMember({ id: member.id });
-    expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
-    expect(memberResult.nurseNotes).toEqual(setGeneralNotesParams.nurseNotes);
-  });
-
-  it('should be able to set null note and nurseNotes for a member', async () => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
-
-    const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: member.id });
-    await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
-
-    let memberResult = await handler.queries.getMember({ id: member.id });
-    expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
-
-    delete setGeneralNotesParams.note;
-    delete setGeneralNotesParams.nurseNotes;
-    await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
-
-    memberResult = await handler.queries.getMember({ id: member.id });
-    expect(memberResult.generalNotes).toBeNull();
-    expect(memberResult.nurseNotes).toBeNull();
-  });
-
-  it('should be able to get upload dispatch links of a member', async () => {
-    const org = await creators.createAndValidateOrg();
-    const { id } = await creators.createAndValidateMember({ org });
-
-    const result = await handler.queries.getMemberUploadDischargeDocumentsLinks({ id });
-    expect(result).toEqual({
-      dischargeNotesLink: 'https://some-url/upload',
-      dischargeInstructionsLink: 'https://some-url/upload',
-    });
-  });
-
-  it('should be able to get download dispatch links of a member', async () => {
-    const org = await creators.createAndValidateOrg();
-    const { id } = await creators.createAndValidateMember({ org });
-
-    const result = await handler.queries.getMemberDownloadDischargeDocumentsLinks({ id });
-    expect(result).toEqual({
-      dischargeNotesLink: 'https://some-url/download',
-      dischargeInstructionsLink: 'https://some-url/download',
-    });
-  });
-
-  test.each`
-    type                      | isVideo  | metadata
-    ${NotificationType.video} | ${true}  | ${{ peerId: v4() }}
-    ${NotificationType.call}  | ${false} | ${{ peerId: v4() }}
-    ${NotificationType.text}  | ${false} | ${{ content: 'text' }}
-  `(`should send push notification of type $type`, async (params) => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
-    const primaryUser = member.users[0];
-
-    const registerForNotificationParams: RegisterForNotificationParams = {
-      memberId: member.id,
-      platform: Platform.android,
-      isPushNotificationsEnabled: true,
-    };
-    await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
-
-    const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
-
-    const notifyParams: NotifyParams = {
-      memberId: member.id,
-      userId: primaryUser.id,
-      type: params.type,
-      metadata: params.metadata,
-    };
-
-    await handler.mutations.notify({ notifyParams });
-
-    expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
-      sendOneSignalNotification: {
-        externalUserId: memberConfig.externalUserId,
-        platform: memberConfig.platform,
-        data: {
-          user: {
-            id: primaryUser.id,
-            firstName: primaryUser.firstName,
-            avatar: primaryUser.avatar,
-          },
-          member: {
-            phone: member.phone,
-          },
-          type: params.type,
-          peerId: notifyParams.metadata.peerId,
-          isVideo: params.isVideo,
-          ...generatePath(params.type),
-        },
-        content: notifyParams.metadata.content,
-        orgName: org.name,
-      },
-    });
-
-    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-  });
-
-  it('should return the default path for a non existing drg on getMemberConfig', async () => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
-
-    const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
-    expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.default'));
-  });
-
-  it('should return the configured path for a configured drg on getMemberConfig', async () => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
-
-    const updateMemberParams = generateUpdateMemberParams({ id: member.id, drg: '123' });
-    await handler.mutations.updateMember({ updateMemberParams });
-
-    const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
-    expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.123'));
   });
 
   it('should update and get member configs', async () => {
@@ -468,86 +301,6 @@ describe('Integration tests: all', () => {
       isAppointmentsReminderEnabled: updateMemberConfigParams.isAppointmentsReminderEnabled,
       isRecommendationsEnabled: updateMemberConfigParams.isRecommendationsEnabled,
     });
-  });
-
-  it(`should send SMS notification of type textSms`, async () => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
-    const appointmentId = generateId();
-    const registerForNotificationParams: RegisterForNotificationParams = {
-      memberId: member.id,
-      platform: Platform.android,
-      isPushNotificationsEnabled: true,
-    };
-    await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
-    await delay(500);
-
-    const notifyParams: NotifyParams = {
-      memberId: member.id,
-      userId: member.primaryUserId,
-      type: NotificationType.textSms,
-      metadata: { content: 'text', appointmentId },
-    };
-
-    /**
-     * reset mock on NotificationsService so we dont count
-     * the notifications that are made on member creation
-     */
-    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-
-    await handler.mutations.notify({ notifyParams });
-    await delay(500);
-    expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
-      sendTwilioNotification: {
-        to: member.phone,
-        body: notifyParams.metadata.content,
-        orgName: org.name,
-      },
-    });
-
-    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-  });
-
-  it(`should send Sendbird message for type textSms`, async () => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
-    const appointmentId = generateId();
-
-    const registerForNotificationParams: RegisterForNotificationParams = {
-      memberId: member.id,
-      platform: Platform.android,
-      isPushNotificationsEnabled: true,
-    };
-    await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
-
-    const notifyParams: NotifyParams = {
-      memberId: member.id,
-      userId: member.primaryUserId,
-      type: NotificationType.textSms,
-      metadata: { content: 'text', appointmentId },
-    };
-
-    /**
-     * reset mock on NotificationsService so we dont count
-     * the notifications that are made on member creation
-     */
-    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-    await delay(500);
-
-    await handler.mutations.notify({ notifyParams });
-
-    expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
-      sendSendBirdNotification: {
-        userId: member.primaryUserId,
-        sendBirdChannelUrl: mockCommunicationParams.sendBirdChannelUrl,
-        message: notifyParams.metadata.content,
-        appointmentId,
-        notificationType: NotificationType.textSms,
-        orgName: org.name,
-      },
-    });
-
-    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
   });
 
   it(`should send a future notification`, async () => {
@@ -606,41 +359,6 @@ describe('Integration tests: all', () => {
     handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
   });
 
-  test.each([
-    CancelNotificationType.cancelVideo,
-    CancelNotificationType.cancelCall,
-    CancelNotificationType.cancelText,
-  ])(`should cancel a notification of type %p`, async (params) => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
-    const registerForNotificationParams: RegisterForNotificationParams = {
-      memberId: member.id,
-      platform: Platform.android,
-      isPushNotificationsEnabled: true,
-    };
-    await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
-
-    const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
-
-    const cancelNotifyParams: CancelNotifyParams = generateCancelNotifyParams({
-      memberId: member.id,
-      type: params,
-    });
-
-    await handler.mutations.cancel({ cancelNotifyParams });
-    expect(handler.notificationsService.spyOnNotificationsServiceCancel).toBeCalledWith({
-      externalUserId: memberConfig.externalUserId,
-      platform: memberConfig.platform,
-      data: {
-        type: cancelNotifyParams.type,
-        peerId: cancelNotifyParams.metadata.peerId,
-        notificationId: cancelNotifyParams.notificationId,
-      },
-    });
-
-    handler.notificationsService.spyOnNotificationsServiceCancel.mockReset();
-  });
-
   /* eslint-disable max-len */
   test.each`
     title | method
@@ -676,191 +394,6 @@ describe('Integration tests: all', () => {
     expect(ids[0]).toEqual(member.primaryUserId);
     expect(ids[1]).toEqual(newUser.id);
   });
-
-  describe('recordings', () => {
-    it('should be able to get upload recordings of a member', async () => {
-      const org = await creators.createAndValidateOrg();
-      const { id } = await creators.createAndValidateMember({ org });
-
-      const result = await handler.queries.getMemberUploadRecordingLink({
-        recordingLinkParams: {
-          memberId: id,
-          id: `${faker.lorem.word()}.mp4`,
-        },
-      });
-      expect(result).toEqual('https://some-url/upload');
-    });
-
-    it('should be able to get download recordings of a member', async () => {
-      const org = await creators.createAndValidateOrg();
-      const { id } = await creators.createAndValidateMember({ org });
-
-      const result = await handler.queries.getMemberDownloadRecordingLink({
-        recordingLinkParams: {
-          memberId: id,
-          id: `${faker.lorem.word()}.mp4`,
-        },
-      });
-      expect(result).toEqual('https://some-url/download');
-    });
-
-    it('should update recordings for multiple members and get those recordings', async () => {
-      const compareRecording = (rec1: RecordingOutput, rec2: UpdateRecordingParams) => {
-        expect(rec1.id).toEqual(rec2.id);
-        expect(rec1.userId).toEqual(rec2.userId);
-        expect(new Date(rec1.start)).toEqual(rec2.start);
-        expect(new Date(rec1.end)).toEqual(rec2.end);
-        expect(rec1.answered).toEqual(rec2.answered);
-        expect(rec1.phone).toEqual(rec2.phone);
-      };
-
-      const org = await creators.createAndValidateOrg();
-      const { id: memberId1 } = await creators.createAndValidateMember({ org });
-      const { id: memberId2 } = await creators.createAndValidateMember({ org });
-
-      const rec1a = generateUpdateRecordingParams({ memberId: memberId1 });
-      const rec1b = generateUpdateRecordingParams({ memberId: memberId1 });
-      const rec2 = generateUpdateRecordingParams({ memberId: memberId2 });
-      await handler.mutations.updateRecording({ updateRecordingParams: rec1a });
-      await handler.mutations.updateRecording({ updateRecordingParams: rec1b });
-      await handler.mutations.updateRecording({ updateRecordingParams: rec2 });
-
-      const result1 = await handler.queries.getRecordings({ memberId: memberId1 });
-      expect(result1.length).toEqual(2);
-      compareRecording(result1[0], rec1a);
-      compareRecording(result1[1], rec1b);
-      const result2 = await handler.queries.getRecordings({ memberId: memberId2 });
-      expect(result2.length).toEqual(1);
-      compareRecording(result2[0], rec2);
-    });
-
-    it('should delete recordings and media files on unconsented appointment end', async () => {
-      const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
-      const appointmentParams = generateScheduleAppointmentParams({
-        memberId: member.id,
-        userId: member.users[0].id,
-        start: new Date(),
-      });
-
-      const appointment = await creators.handler.mutations.scheduleAppointment({
-        appointmentParams,
-      });
-      const memberId = appointment.memberId.toString();
-      const appointmentId = appointment.id.toString();
-
-      const recording1 = generateUpdateRecordingParams({
-        memberId,
-        appointmentId,
-        end: new Date(),
-      });
-      const recording2 = generateUpdateRecordingParams({
-        memberId,
-        appointmentId,
-        end: new Date(),
-      });
-      const result1 = await handler.queries.getRecordings({ memberId: memberId });
-      expect(result1.length).toBe(0);
-      await handler.mutations.updateRecording({ updateRecordingParams: recording1 });
-      await handler.mutations.updateRecording({ updateRecordingParams: recording2 });
-
-      const result2 = await handler.queries.getRecordings({
-        memberId: memberId,
-      });
-      expect(result2.length).toBe(2);
-      await handler.mutations.endAppointment({
-        endAppointmentParams: {
-          id: appointmentId,
-          noShow: false,
-          recordingConsent: false,
-        },
-      });
-      await delay(500); // wait for event to finish
-      const result3 = await handler.queries.getRecordings({
-        memberId: memberId,
-      });
-      expect(result3.length).toBe(2);
-      expect(result3.every(({ deletedMedia }) => deletedMedia === true)).toBe(true);
-    });
-  });
-
-  test.each([true, false])(
-    'should register scheduled appointment reminder and notify it to member with isAppointmentsReminderEnabled=%p',
-    async (isAppointmentsReminderEnabled) => {
-      const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
-
-      await handler.mutations.updateMemberConfig({
-        updateMemberConfigParams: generateUpdateMemberConfigParams({
-          memberId: member.id,
-          isAppointmentsReminderEnabled,
-        }),
-      });
-
-      await delay(1000);
-
-      const milliseconds = (config.get('scheduler.alertBeforeInMin') + 1 / 60) * 60 * 1000;
-      const start = new Date();
-      start.setMilliseconds(start.getMilliseconds() + milliseconds);
-      Date.now = jest.fn(() => milliseconds - 1000);
-
-      const appointmentParams = generateScheduleAppointmentParams({
-        memberId: member.id,
-        userId: member.users[0].id,
-        start,
-      });
-
-      /**
-       * reset mock on NotificationsService so we dont count
-       * the notifications that are made on member creation
-       */
-      handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-
-      await creators.handler.mutations.scheduleAppointment({ appointmentParams });
-
-      await delay(2000);
-
-      expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveReturnedTimes(
-        isAppointmentsReminderEnabled ? 4 : 2,
-      );
-      expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenCalledWith({
-        sendTwilioNotification: {
-          to: member.users[0].phone,
-          body: expect.any(String),
-          orgName: org.name,
-        },
-      });
-      expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenCalledWith({
-        sendTwilioNotification: {
-          to: member.phone,
-          body: expect.any(String),
-          orgName: org.name,
-        },
-      });
-
-      if (isAppointmentsReminderEnabled) {
-        expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenCalledWith({
-          sendTwilioNotification: {
-            to: member.phone,
-            body: expect.stringContaining('appointment on'),
-            orgName: org.name,
-          },
-        });
-        expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenCalledWith({
-          sendTwilioNotification: {
-            to: member.phone,
-            body: expect.stringContaining(
-              `starts in ${config.get('scheduler.alertBeforeInMin')} minutes`,
-            ),
-            orgName: org.name,
-          },
-        });
-      }
-
-      handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-      handler.notificationsService.spyOnNotificationsServiceSend.mockClear();
-    },
-  );
 
   describe('new member + member registration scheduling', () => {
     it('should create timeout on member creation', async () => {
@@ -1090,7 +623,565 @@ describe('Integration tests: all', () => {
     });
   });
 
-  describe('Integration tests : Daily Reports Module', () => {
+  describe('notifications', () => {
+    test.each([true, false])(
+      'should register scheduled appointment reminder and notify it to member with isAppointmentsReminderEnabled=%p',
+      async (isAppointmentsReminderEnabled) => {
+        const org = await creators.createAndValidateOrg();
+        const member = await creators.createAndValidateMember({ org });
+
+        await handler.mutations.updateMemberConfig({
+          updateMemberConfigParams: generateUpdateMemberConfigParams({
+            memberId: member.id,
+            isAppointmentsReminderEnabled,
+          }),
+        });
+
+        await delay(1000);
+
+        const milliseconds = (config.get('scheduler.alertBeforeInMin') + 1 / 60) * 60 * 1000;
+        const start = new Date();
+        start.setMilliseconds(start.getMilliseconds() + milliseconds);
+        Date.now = jest.fn(() => milliseconds - 1000);
+
+        const appointmentParams = generateScheduleAppointmentParams({
+          memberId: member.id,
+          userId: member.users[0].id,
+          start,
+        });
+
+        /**
+         * reset mock on NotificationsService so we dont count
+         * the notifications that are made on member creation
+         */
+        handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+
+        await creators.handler.mutations.scheduleAppointment({ appointmentParams });
+
+        await delay(2000);
+
+        expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveReturnedTimes(
+          isAppointmentsReminderEnabled ? 4 : 2,
+        );
+        expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenCalledWith({
+          sendTwilioNotification: {
+            to: member.users[0].phone,
+            body: expect.any(String),
+            orgName: org.name,
+          },
+        });
+        expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenCalledWith({
+          sendTwilioNotification: {
+            to: member.phone,
+            body: expect.any(String),
+            orgName: org.name,
+          },
+        });
+
+        if (isAppointmentsReminderEnabled) {
+          expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenCalledWith({
+            sendTwilioNotification: {
+              to: member.phone,
+              body: expect.stringContaining('appointment on'),
+              orgName: org.name,
+            },
+          });
+          expect(handler.notificationsService.spyOnNotificationsServiceSend).toHaveBeenCalledWith({
+            sendTwilioNotification: {
+              to: member.phone,
+              body: expect.stringContaining(
+                `starts in ${config.get('scheduler.alertBeforeInMin')} minutes`,
+              ),
+              orgName: org.name,
+            },
+          });
+        }
+
+        handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+        handler.notificationsService.spyOnNotificationsServiceSend.mockClear();
+      },
+    );
+
+    test.each`
+      type                      | isVideo  | metadata
+      ${NotificationType.video} | ${true}  | ${{ peerId: v4() }}
+      ${NotificationType.call}  | ${false} | ${{ peerId: v4() }}
+      ${NotificationType.text}  | ${false} | ${{ content: 'text' }}
+    `(`should send push notification of type $type`, async (params) => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+      const primaryUser = member.users[0];
+
+      const registerForNotificationParams: RegisterForNotificationParams = {
+        memberId: member.id,
+        platform: Platform.android,
+        isPushNotificationsEnabled: true,
+      };
+      await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+
+      const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
+
+      const notifyParams: NotifyParams = {
+        memberId: member.id,
+        userId: primaryUser.id,
+        type: params.type,
+        metadata: params.metadata,
+      };
+
+      await handler.mutations.notify({ notifyParams });
+
+      expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
+        sendOneSignalNotification: {
+          externalUserId: memberConfig.externalUserId,
+          platform: memberConfig.platform,
+          data: {
+            user: {
+              id: primaryUser.id,
+              firstName: primaryUser.firstName,
+              avatar: primaryUser.avatar,
+            },
+            member: {
+              phone: member.phone,
+            },
+            type: params.type,
+            peerId: notifyParams.metadata.peerId,
+            isVideo: params.isVideo,
+            ...generatePath(params.type),
+          },
+          content: notifyParams.metadata.content,
+          orgName: org.name,
+        },
+      });
+
+      handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+    });
+
+    it(`should send SMS notification of type textSms`, async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+      const appointmentId = generateId();
+      const registerForNotificationParams: RegisterForNotificationParams = {
+        memberId: member.id,
+        platform: Platform.android,
+        isPushNotificationsEnabled: true,
+      };
+      await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+      await delay(500);
+
+      const notifyParams: NotifyParams = {
+        memberId: member.id,
+        userId: member.primaryUserId,
+        type: NotificationType.textSms,
+        metadata: { content: 'text', appointmentId },
+      };
+
+      /**
+       * reset mock on NotificationsService so we dont count
+       * the notifications that are made on member creation
+       */
+      handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+
+      await handler.mutations.notify({ notifyParams });
+      await delay(500);
+      expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
+        sendTwilioNotification: {
+          to: member.phone,
+          body: notifyParams.metadata.content,
+          orgName: org.name,
+        },
+      });
+
+      handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+    });
+
+    it(`should send SendBird message for type textSms`, async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+      const appointmentId = generateId();
+
+      const registerForNotificationParams: RegisterForNotificationParams = {
+        memberId: member.id,
+        platform: Platform.android,
+        isPushNotificationsEnabled: true,
+      };
+      await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+
+      const notifyParams: NotifyParams = {
+        memberId: member.id,
+        userId: member.primaryUserId,
+        type: NotificationType.textSms,
+        metadata: { content: 'text', appointmentId },
+      };
+
+      /**
+       * reset mock on NotificationsService so we dont count
+       * the notifications that are made on member creation
+       */
+      handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+      await delay(500);
+
+      await handler.mutations.notify({ notifyParams });
+
+      expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
+        sendSendBirdNotification: {
+          userId: member.primaryUserId,
+          sendBirdChannelUrl: mockCommunicationParams.sendBirdChannelUrl,
+          message: notifyParams.metadata.content,
+          appointmentId,
+          notificationType: NotificationType.textSms,
+          orgName: org.name,
+        },
+      });
+
+      handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+    });
+
+    test.each([
+      CancelNotificationType.cancelVideo,
+      CancelNotificationType.cancelCall,
+      CancelNotificationType.cancelText,
+    ])(`should cancel a notification of type %p`, async (params) => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+      const registerForNotificationParams: RegisterForNotificationParams = {
+        memberId: member.id,
+        platform: Platform.android,
+        isPushNotificationsEnabled: true,
+      };
+      await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+
+      const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
+
+      const cancelNotifyParams: CancelNotifyParams = generateCancelNotifyParams({
+        memberId: member.id,
+        type: params,
+      });
+
+      await handler.mutations.cancel({ cancelNotifyParams });
+      expect(handler.notificationsService.spyOnNotificationsServiceCancel).toBeCalledWith({
+        externalUserId: memberConfig.externalUserId,
+        platform: memberConfig.platform,
+        data: {
+          type: cancelNotifyParams.type,
+          peerId: cancelNotifyParams.metadata.peerId,
+          notificationId: cancelNotifyParams.notificationId,
+        },
+      });
+
+      handler.notificationsService.spyOnNotificationsServiceCancel.mockReset();
+    });
+  });
+
+  describe('user', () => {
+    it('should set,get,delete availability of users', async () => {
+      await createAndValidateAvailabilities(2);
+      const { ids } = await createAndValidateAvailabilities(5);
+
+      await handler.mutations.deleteAvailability({ id: ids[0] });
+    });
+
+    test.each`
+      additionalGetSlotsParams             | expectedDefaultSlots | testTitle
+      ${{}}                                | ${6}                 | ${'should get default slots count not available'}
+      ${{ allowEmptySlotsResponse: true }} | ${0}                 | ${'should get empty slots when enabling empty response'}
+      ${{ defaultSlotsCount: 20 }}         | ${20}                | ${'should get specific default slots count if defaultSlotsCount'}
+    `('$testTitle', async ({ additionalGetSlotsParams, expectedDefaultSlots }) => {
+      const user = await creators.createAndValidateUser();
+      const org = await creators.createAndValidateOrg();
+      const member: Member = await creators.createAndValidateMember({ org });
+
+      const appointmentParams = generateScheduleAppointmentParams({
+        memberId: member.id,
+        userId: user.id,
+        start: add(startOfToday(), { hours: 9 }),
+        end: add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
+      });
+      const appointment = await handler.mutations.scheduleAppointment({ appointmentParams });
+
+      const result = await handler.queries.getUserSlots({
+        appointmentId: appointment.id,
+        notBefore: add(startOfToday(), { hours: 10 }),
+        ...additionalGetSlotsParams,
+      });
+
+      expect(result.slots.length).toBe(expectedDefaultSlots);
+    });
+
+    it('should get user slots', async () => {
+      const user = await creators.createAndValidateUser();
+      const org = await creators.createAndValidateOrg();
+      const member: Member = await creators.createAndValidateMember({ org });
+
+      await handler.setContextUserId(user.id).mutations.createAvailabilities({
+        availabilities: [
+          generateAvailabilityInput({
+            start: add(startOfToday(), { hours: 10 }),
+            end: add(startOfToday(), { hours: 22 }),
+          }),
+          generateAvailabilityInput({
+            start: add(startOfTomorrow(), { hours: 10 }),
+            end: add(startOfTomorrow(), { hours: 22 }),
+          }),
+        ],
+      });
+
+      const appointmentParams = generateScheduleAppointmentParams({
+        memberId: member.id,
+        userId: user.id,
+        start: add(startOfToday(), { hours: 9 }),
+        end: add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
+      });
+      const appointment = await handler.mutations.scheduleAppointment({ appointmentParams });
+
+      const result = await handler.queries.getUserSlots({
+        appointmentId: appointment.id,
+        notBefore: add(startOfToday(), { hours: 10 }),
+      });
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          user: {
+            id: user.id,
+            firstName: user.firstName,
+            roles: user.roles,
+            avatar: user.avatar,
+            description: user.description,
+          },
+          member: {
+            id: member.id,
+            firstName: member.firstName,
+          },
+          appointment: {
+            id: appointment.id,
+            start: appointment.start,
+            method: appointment.method,
+            duration: defaultSlotsParams.duration,
+          },
+        }),
+      );
+    });
+  });
+
+  describe('dispatch links', () => {
+    it('should be able to get upload dispatch links of a member', async () => {
+      const org = await creators.createAndValidateOrg();
+      const { id } = await creators.createAndValidateMember({ org });
+
+      const result = await handler.queries.getMemberUploadDischargeDocumentsLinks({ id });
+      expect(result).toEqual({
+        dischargeNotesLink: 'https://some-url/upload',
+        dischargeInstructionsLink: 'https://some-url/upload',
+      });
+    });
+
+    it('should be able to get download dispatch links of a member', async () => {
+      const org = await creators.createAndValidateOrg();
+      const { id } = await creators.createAndValidateMember({ org });
+
+      const result = await handler.queries.getMemberDownloadDischargeDocumentsLinks({ id });
+      expect(result).toEqual({
+        dischargeNotesLink: 'https://some-url/download',
+        dischargeInstructionsLink: 'https://some-url/download',
+      });
+    });
+  });
+
+  describe('notes', () => {
+    it('should create update and delete appointment notes', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member: Member = await creators.createAndValidateMember({ org });
+      const scheduledAppointment = generateScheduleAppointmentParams({
+        memberId: member.id,
+        userId: member.primaryUserId,
+        method: AppointmentMethod.chat,
+      });
+      const { id: appointmentId } = await creators.handler.mutations.scheduleAppointment({
+        appointmentParams: scheduledAppointment,
+      });
+      let appointment = await creators.handler.queries.getAppointment(appointmentId);
+
+      expect(appointment.notes).toBeNull();
+
+      let updateNotesParams = generateUpdateNotesParams({ appointmentId: appointment.id });
+      await handler.mutations.updateNotes({ updateNotesParams });
+      appointment = await creators.handler.queries.getAppointment(appointment.id);
+
+      expect(appointment.notes).toMatchObject(updateNotesParams.notes);
+
+      updateNotesParams = generateUpdateNotesParams({ appointmentId: appointment.id });
+      await handler.mutations.updateNotes({ updateNotesParams });
+      appointment = await creators.handler.queries.getAppointment(appointment.id);
+
+      expect(appointment.notes).toMatchObject(updateNotesParams.notes);
+
+      updateNotesParams = generateUpdateNotesParams({ appointmentId: appointment.id, notes: null });
+      await handler.mutations.updateNotes({ updateNotesParams });
+      appointment = await creators.handler.queries.getAppointment(appointment.id);
+
+      expect(appointment.notes).toBeNull();
+    });
+
+    it('should be able to set note for and nurseNotes for a member', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+
+      const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: member.id });
+      await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
+
+      const memberResult = await handler.queries.getMember({ id: member.id });
+      expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
+      expect(memberResult.nurseNotes).toEqual(setGeneralNotesParams.nurseNotes);
+    });
+
+    it('should be able to set null note and nurseNotes for a member', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+
+      const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: member.id });
+      await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
+
+      let memberResult = await handler.queries.getMember({ id: member.id });
+      expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
+
+      delete setGeneralNotesParams.note;
+      delete setGeneralNotesParams.nurseNotes;
+      await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
+
+      memberResult = await handler.queries.getMember({ id: member.id });
+      expect(memberResult.generalNotes).toBeNull();
+      expect(memberResult.nurseNotes).toBeNull();
+    });
+  });
+
+  describe('drg', () => {
+    it('should return the default path for a non existing drg on getMemberConfig', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+
+      const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
+      expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.default'));
+    });
+
+    it('should return the configured path for a configured drg on getMemberConfig', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+
+      const updateMemberParams = generateUpdateMemberParams({ id: member.id, drg: '123' });
+      await handler.mutations.updateMember({ updateMemberParams });
+
+      const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
+      expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.123'));
+    });
+  });
+
+  describe('recordings', () => {
+    it('should be able to get upload recordings of a member', async () => {
+      const org = await creators.createAndValidateOrg();
+      const { id } = await creators.createAndValidateMember({ org });
+
+      const result = await handler.queries.getMemberUploadRecordingLink({
+        recordingLinkParams: {
+          memberId: id,
+          id: `${faker.lorem.word()}.mp4`,
+        },
+      });
+      expect(result).toEqual('https://some-url/upload');
+    });
+
+    it('should be able to get download recordings of a member', async () => {
+      const org = await creators.createAndValidateOrg();
+      const { id } = await creators.createAndValidateMember({ org });
+
+      const result = await handler.queries.getMemberDownloadRecordingLink({
+        recordingLinkParams: {
+          memberId: id,
+          id: `${faker.lorem.word()}.mp4`,
+        },
+      });
+      expect(result).toEqual('https://some-url/download');
+    });
+
+    it('should update recordings for multiple members and get those recordings', async () => {
+      const compareRecording = (rec1: RecordingOutput, rec2: UpdateRecordingParams) => {
+        expect(rec1.id).toEqual(rec2.id);
+        expect(rec1.userId).toEqual(rec2.userId);
+        expect(new Date(rec1.start)).toEqual(rec2.start);
+        expect(new Date(rec1.end)).toEqual(rec2.end);
+        expect(rec1.answered).toEqual(rec2.answered);
+        expect(rec1.phone).toEqual(rec2.phone);
+      };
+
+      const org = await creators.createAndValidateOrg();
+      const { id: memberId1 } = await creators.createAndValidateMember({ org });
+      const { id: memberId2 } = await creators.createAndValidateMember({ org });
+
+      const rec1a = generateUpdateRecordingParams({ memberId: memberId1 });
+      const rec1b = generateUpdateRecordingParams({ memberId: memberId1 });
+      const rec2 = generateUpdateRecordingParams({ memberId: memberId2 });
+      await handler.mutations.updateRecording({ updateRecordingParams: rec1a });
+      await handler.mutations.updateRecording({ updateRecordingParams: rec1b });
+      await handler.mutations.updateRecording({ updateRecordingParams: rec2 });
+
+      const result1 = await handler.queries.getRecordings({ memberId: memberId1 });
+      expect(result1.length).toEqual(2);
+      compareRecording(result1[0], rec1a);
+      compareRecording(result1[1], rec1b);
+      const result2 = await handler.queries.getRecordings({ memberId: memberId2 });
+      expect(result2.length).toEqual(1);
+      compareRecording(result2[0], rec2);
+    });
+
+    it('should delete recordings and media files on unconsented appointment end', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+      const appointmentParams = generateScheduleAppointmentParams({
+        memberId: member.id,
+        userId: member.users[0].id,
+        start: new Date(),
+      });
+
+      const appointment = await creators.handler.mutations.scheduleAppointment({
+        appointmentParams,
+      });
+      const memberId = appointment.memberId.toString();
+      const appointmentId = appointment.id.toString();
+
+      const recording1 = generateUpdateRecordingParams({
+        memberId,
+        appointmentId,
+        end: new Date(),
+      });
+      const recording2 = generateUpdateRecordingParams({
+        memberId,
+        appointmentId,
+        end: new Date(),
+      });
+      const result1 = await handler.queries.getRecordings({ memberId: memberId });
+      expect(result1.length).toBe(0);
+      await handler.mutations.updateRecording({ updateRecordingParams: recording1 });
+      await handler.mutations.updateRecording({ updateRecordingParams: recording2 });
+
+      const result2 = await handler.queries.getRecordings({
+        memberId: memberId,
+      });
+      expect(result2.length).toBe(2);
+      await handler.mutations.endAppointment({
+        endAppointmentParams: {
+          id: appointmentId,
+          noShow: false,
+          recordingConsent: false,
+        },
+      });
+      await delay(500); // wait for event to finish
+      const result3 = await handler.queries.getRecordings({
+        memberId: memberId,
+      });
+      expect(result3.length).toBe(2);
+      expect(result3.every(({ deletedMedia }) => deletedMedia === true)).toBe(true);
+    });
+  });
+
+  describe('Daily Reports', () => {
     it('set/get a dailyReport', async () => {
       const { updatedDailyReport } = await handler
         .setContextUser(undefined, handler.patientZero.authId)
@@ -1101,7 +1192,6 @@ describe('Integration tests: all', () => {
             memberId: handler.patientZero.id.toString(),
           } as DailyReportCategoriesInput,
         });
-      console.log(JSON.stringify(updatedDailyReport));
       expect(updatedDailyReport).toEqual({
         categories: [{ rank: 1, category: 'Pain' }],
         memberId: handler.patientZero.id.toString(),
@@ -1130,64 +1220,9 @@ describe('Integration tests: all', () => {
         ],
         metadata: { minDate: '2015/01/01' },
       });
-
-      describe('user', () => {
-        it.only('should get user slots', async () => {
-          const user = await creators.createAndValidateUser();
-          const org = await creators.createAndValidateOrg();
-          const member: Member = await creators.createAndValidateMember({ org });
-
-          await handler.setContextUserId(user.id).mutations.createAvailabilities({
-            availabilities: [
-              generateAvailabilityInput({
-                start: add(startOfToday(), { hours: 10 }),
-                end: add(startOfToday(), { hours: 22 }),
-              }),
-              generateAvailabilityInput({
-                start: add(startOfTomorrow(), { hours: 10 }),
-                end: add(startOfTomorrow(), { hours: 22 }),
-              }),
-            ],
-          });
-
-          const appointmentParams = generateScheduleAppointmentParams({
-            memberId: member.id,
-            userId: user.id,
-            start: add(startOfToday(), { hours: 9 }),
-            end: add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
-          });
-          const appointment = await handler.mutations.scheduleAppointment({ appointmentParams });
-
-          const result = await handler.queries.getUserSlots({
-            appointmentId: appointment.id,
-            notBefore: add(startOfToday(), { hours: 10 }),
-          });
-
-          expect(result).toEqual(
-            expect.objectContaining({
-              user: {
-                id: user.id,
-                firstName: user.firstName,
-                roles: user.roles,
-                avatar: user.avatar,
-                description: user.description,
-              },
-              member: {
-                id: member.id,
-                firstName: member.firstName,
-              },
-              appointment: {
-                id: appointment.id,
-                start: appointment.start,
-                method: appointment.method,
-                duration: defaultSlotsParams.duration,
-              },
-            }),
-          );
-        });
-      });
     });
   });
+
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

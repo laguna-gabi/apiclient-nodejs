@@ -1,7 +1,7 @@
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { v4 } from 'uuid';
-import { ErrorType, Errors, EventType, IEventNewUser } from '../../src/common';
+import { ErrorType, Errors, EventType, IEventOnNewUser } from '../../src/common';
 import { DbModule } from '../../src/db/db.module';
 import {
   GetSlotsParams,
@@ -77,9 +77,9 @@ describe('UserResolver', () => {
 
       /* eslint-disable */
       // @ts-ignore
-      const eventParams: IEventNewUser = { user: params };
+      const eventParams: IEventOnNewUser = { user: params };
       /* eslint-enable */
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.newUser, eventParams);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onNewUser, eventParams);
     });
   });
 

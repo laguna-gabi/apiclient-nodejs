@@ -150,7 +150,7 @@ describe('CommunicationResolver', () => {
 
       await resolver.updateUserInCommunication(params);
       expect(spyOnServiceUpdateUserInCommunication).toBeCalledWith(params);
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.updateUserInAppointments, {
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedUserCommunication, {
         oldUserId,
         newUserId: newUser.id,
         memberId: member.id,

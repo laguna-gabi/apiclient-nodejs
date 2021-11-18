@@ -16,10 +16,11 @@ import { AvailabilityModule, AvailabilityResolver } from '../../src/availability
 import {
   ErrorType,
   Errors,
-  IEventNewAppointment,
-  IEventUpdateAppointmentsInUser,
+  IEventOnNewAppointment,
+  IEventOnUpdatedUserAppointments,
 } from '../../src/common';
 import {
+  GetSlotsParams,
   NotNullableUserKeys,
   User,
   UserDto,
@@ -37,6 +38,7 @@ import {
   generateAvailabilityInput,
   generateCreateUserParams,
   generateId,
+  generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
 } from '../index';
 
@@ -217,22 +219,24 @@ describe('UserService', () => {
     it('should move appointments from old user to new user', async () => {
       const oldUser = await service.insert(generateCreateUserParams());
       const newUser = await service.insert(generateCreateUserParams());
+      const memberId = generateId();
 
       // Insert appointments to oldUser
       const mockAppointments = [];
       for (let step = 0; step < 5; step++) {
         const appointment = generateScheduleAppointmentParams({ id: generateId() });
         mockAppointments.push(appointment);
-        const params: IEventNewAppointment = {
+        const params: IEventOnNewAppointment = {
           appointmentId: appointment.id,
           userId: oldUser.id,
+          memberId,
         };
-        await service.handleOrderCreatedEvent(params);
+        await service.addAppointmentToUser(params);
       }
-      const params: IEventUpdateAppointmentsInUser = {
+      const params: IEventOnUpdatedUserAppointments = {
         newUserId: newUser.id,
         oldUserId: oldUser.id,
-        memberId: generateId(),
+        memberId,
         appointments: mockAppointments,
       };
 
@@ -310,6 +314,31 @@ describe('UserService', () => {
       expect(result.slots.length).toEqual(6);
     });
 
+    // eslint-disable-next-line max-len
+    it('should return specific default slots if there is no availability and got defaultSlotsCount', async () => {
+      const user = await service.insert(generateCreateUserParams());
+      const result = await service.getSlots({
+        userId: user.id,
+        notBefore: add(startOfToday(), { hours: 10 }),
+        defaultSlotsCount: 9,
+      });
+
+      expect(result.slots.length).toEqual(9);
+    });
+
+    // eslint-disable-next-line max-len
+    it('should return 0 slots if there is no availability and allowEmptySlotsResponse=true', async () => {
+      const user = await service.insert(generateCreateUserParams());
+      const result = await service.getSlots({
+        userId: user.id,
+        notBefore: add(startOfToday(), { hours: 10 }),
+        defaultSlotsCount: 9,
+        allowEmptySlotsResponse: true,
+      });
+
+      expect(result.slots.length).toEqual(0);
+    });
+
     it('should return 5 slots from today and the next from tomorrow', async () => {
       const result = await preformGetUserSlots();
 
@@ -322,6 +351,21 @@ describe('UserService', () => {
       for (let index = 5; index < defaultSlotsParams.maxSlots; index++) {
         expect(
           isSameDay(new Date(result.slots[index]), add(startOfTomorrow(), { hours: 12 })),
+        ).toEqual(true);
+      }
+    });
+
+    it('should return more then default(9) slots if maxSlots is given', async () => {
+      const result = await preformGetUserSlots({ maxSlots: 10 });
+      expect(result.slots.length).toBe(10);
+    });
+
+    it('should return 5 slots only from today if capped by notAfter to this midnight', async () => {
+      const result = await preformGetUserSlots({ notAfter: startOfTomorrow() });
+      expect(result.slots.length).toBe(5);
+      for (let index = 0; index < 5; index++) {
+        expect(
+          isSameDay(new Date(result.slots[index]), add(startOfToday(), { hours: 12 })),
         ).toEqual(true);
       }
     });
@@ -340,7 +384,27 @@ describe('UserService', () => {
       expect(result.slots.length).toEqual(defaultSlotsParams.maxSlots);
     });
 
-    const preformGetUserSlots = async () => {
+    // eslint-disable-next-line max-len
+    it('should return default slots from appointments "notBefore" if not specified in params', async () => {
+      const user = await service.insert(generateCreateUserParams());
+      const future = add(startOfToday(), { days: 2, hours: 17 });
+      const appointmentParams = generateRequestAppointmentParams({
+        memberId: generateId(),
+        userId: user.id,
+        notBefore: future,
+      });
+
+      const appointment = await appointmentResolver.requestAppointment(appointmentParams);
+      const result = await service.getSlots({
+        appointmentId: appointment.id,
+        userId: user.id,
+      });
+
+      expect(isAfter(result.slots[0], future)).toBeTruthy();
+      expect(isAfter(result.slots[0], add(future, { days: 1 }))).toBeFalsy();
+    });
+
+    const preformGetUserSlots = async (override: Partial<GetSlotsParams> = {}) => {
       const user = await service.insert(generateCreateUserParams());
       await createDefaultAvailabilities(user.id);
 
@@ -354,6 +418,7 @@ describe('UserService', () => {
       return service.getSlots({
         userId: user.id,
         notBefore: add(startOfToday(), { hours: 10 }),
+        ...override,
       });
     };
 
