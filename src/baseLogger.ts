@@ -129,7 +129,7 @@ export class BaseLogger {
     if (!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test) {
       return `${date}   ${lType} ${cName} ${mName} ${textFormatted}`;
     } else {
-      `${now.toLocaleString()}   [${logType}] [${className}]${generateOrgNamePrefix(
+      return `${now.toLocaleString()}   [${logType}] [${className}]${generateOrgNamePrefix(
         orgName,
       )}${methodName} ${text}`;
     }
