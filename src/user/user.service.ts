@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { add, differenceInDays, getHours, startOfDay } from 'date-fns';
 import { cloneDeep } from 'lodash';
 import { Model, Types } from 'mongoose';
+import { Appointment } from '../appointment';
 import {
   CreateUserParams,
   GetSlotsParams,
@@ -73,6 +74,10 @@ export class UserService extends BaseService {
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.userIdOrEmailAlreadyExists) : ex,
       );
     }
+  }
+
+  getNotBefore(getSlotsParams: GetSlotsParams, appointment: Appointment): Date {
+    return getSlotsParams.notBefore || appointment?.notBefore || appointment.start;
   }
 
   async getSlots(getSlotsParams: GetSlotsParams): Promise<Slots> {
@@ -166,7 +171,7 @@ export class UserService extends BaseService {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
 
-    const notBefore = getSlotsParams.notBefore || slotsObject.ap?.[0].notBefore;
+    const notBefore = this.getNotBefore(getSlotsParams, slotsObject.appointment);
 
     slotsObject.slots = this.slotService.getSlots(
       slotsObject.av,

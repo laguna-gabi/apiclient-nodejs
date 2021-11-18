@@ -391,16 +391,23 @@ describe('UserService', () => {
     it('should return default slots from appointments "notBefore" if not specified in params', async () => {
       const user = await service.insert(generateCreateUserParams());
       const future = add(startOfToday(), { days: 2, hours: 17 });
+      const memberId = generateId();
       const appointmentParams = generateRequestAppointmentParams({
-        memberId: generateId(),
+        memberId,
         userId: user.id,
         notBefore: future,
       });
 
       const appointment = await appointmentResolver.requestAppointment(appointmentParams);
-      const result = await service.getSlots({
+      //mock event listener action
+      await service.addAppointmentToUser({
         appointmentId: appointment.id,
         userId: user.id,
+        memberId,
+      });
+
+      const result = await service.getSlots({
+        appointmentId: appointment.id,
       });
 
       expect(isAfter(result.slots[0], future)).toBeTruthy();
