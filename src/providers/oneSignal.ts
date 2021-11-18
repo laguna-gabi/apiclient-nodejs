@@ -131,15 +131,14 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
           type: sendOneSignalNotification.data.type,
         };
         this.eventEmitter.emit(EventType.onMemberBecameOffline, eventParams);
-      } else {
-        this.logger.error(
-          sendOneSignalNotification,
-          OneSignal.name,
-          this.send.name,
-          status,
-          JSON.stringify(data),
-        );
       }
+      this.logger.error(
+        sendOneSignalNotification,
+        OneSignal.name,
+        this.send.name,
+        status,
+        JSON.stringify(data),
+      );
     } catch (ex) {
       this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, ex);
     }
