@@ -12,17 +12,15 @@ import { SendBird, TwilioService } from '.';
 import * as crypto from 'crypto';
 import {
   EventType,
-  IEventNotifySlack,
   IEventOnReceivedChatMessage,
   IEventOnReceivedTextMessage,
   Logger,
   LoggingInterceptor,
   Public,
-  SlackChannel,
-  SlackIcon,
   apiPrefix,
   webhooks,
 } from '../common';
+import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 
 /**
  * Go to '../../test/unit/mocks/webhookSendbirdNewMessagePayload.json' for a payload example

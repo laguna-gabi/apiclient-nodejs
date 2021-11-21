@@ -6,13 +6,11 @@ import { ConfigsService, ExternalConfigs } from '.';
 import {
   Environments,
   EventType,
-  IEventNotifySlack,
   Logger,
   SendTwilioNotification,
-  SlackChannel,
-  SlackIcon,
   generateOrgNamePrefix,
 } from '../common';
+import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 
 @Injectable()
 export class TwilioService implements OnModuleInit {

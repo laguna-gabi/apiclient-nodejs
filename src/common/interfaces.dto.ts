@@ -177,21 +177,6 @@ export class CancelNotificationParams extends BaseSendNotification {
   };
 }
 
-export enum SlackChannel {
-  support = 'slack.support',
-  testingSms = 'slack.testingSms',
-  notifications = 'slack.notifications',
-}
-
-export enum SlackIcon {
-  phone = ':telephone_receiver:',
-  info = ':information_source:',
-  warning = ':warning:',
-  critical = ':no_entry:',
-  exclamationPoint = ':exclamation:',
-  questionMark = ':question:',
-}
-
 export enum UpdatedAppointmentAction {
   edit = 'edit',
   delete = 'delete',

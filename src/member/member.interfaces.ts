@@ -1,13 +1,8 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import {
-  EventType,
-  IEventNotifySlack,
-  IEventOnNewMember,
-  SlackChannel,
-  SlackIcon,
-} from '../common';
+import { EventType, IEventOnNewMember } from '../common';
 import { UserService } from '../user';
 import { CreateMemberParams, Member, MemberService } from '.';
+import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 
 export class MemberBase {
   constructor(

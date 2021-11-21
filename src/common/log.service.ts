@@ -1,7 +1,8 @@
 import { BaseLogger } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { AuditType, EventType, IEventNotifyQueue, QueueType, SlackChannel, SlackIcon } from '.';
+import { AuditType, EventType, IEventNotifyQueue, QueueType } from '.';
+import { SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 
 export const internalLogs = {
   hepiusVersion: 'Starting Hepius application version: @version@',

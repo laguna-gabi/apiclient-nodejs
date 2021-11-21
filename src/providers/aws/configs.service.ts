@@ -3,8 +3,10 @@ import { MongooseModuleOptions, MongooseOptionsFactory } from '@nestjs/mongoose'
 import * as AWS from 'aws-sdk';
 import * as config from 'config';
 import { Environments } from '../../common';
+import { BaseExternalConfigs } from '@lagunahealth/pandora';
 
 export const ExternalConfigs = {
+  ...BaseExternalConfigs,
   aws: {
     memberBucketName: 'aws.storage.memberBucketName',
     queueNameAudit: 'aws.sqs.queueNameAudit',
@@ -22,9 +24,6 @@ export const ExternalConfigs = {
     apiId: 'sendbird.apiId',
     apiToken: 'sendbird.apiToken',
     masterApiToken: 'sendbird.masterApiToken',
-  },
-  slack: {
-    url: 'slack.url',
   },
   twilio: {
     accountSid: 'twilio.accountSid',

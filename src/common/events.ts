@@ -2,13 +2,7 @@ import { Types } from 'mongoose';
 import { Appointment, AppointmentDocument, AppointmentStatus, Scores } from '../appointment';
 import { Member } from '../member';
 import { User } from '../user';
-import {
-  AllNotificationTypes,
-  QueueType,
-  SlackChannel,
-  SlackIcon,
-  UpdatedAppointmentAction,
-} from '.';
+import { AllNotificationTypes, QueueType, UpdatedAppointmentAction } from '.';
 import { Platform } from '@lagunahealth/pandora';
 
 export enum EventType {
@@ -141,12 +135,6 @@ export interface IEventOnReceivedChatMessage {
 export interface IEventOnReceivedTextMessage {
   phone: string;
   message: string;
-}
-
-export interface IEventNotifySlack {
-  message: string;
-  icon: SlackIcon;
-  channel: SlackChannel;
 }
 
 export interface IEventNotifyQueue {

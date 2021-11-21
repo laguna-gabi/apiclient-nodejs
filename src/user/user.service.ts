@@ -25,15 +25,13 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventNotifySlack,
   IEventOnDeletedMemberAppointments,
   IEventOnNewAppointment,
   IEventOnUpdateUserConfig,
   IEventOnUpdatedUserAppointments,
   Logger,
-  SlackChannel,
-  SlackIcon,
 } from '../common';
+import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 
 @Injectable()
 export class UserService extends BaseService {

@@ -9,7 +9,6 @@ import {
   Errors,
   EventType,
   IEventMember,
-  IEventNotifySlack,
   IEventOnNewMember,
   IEventOnReceivedChatMessage,
   IEventOnUpdatedMemberPlatform,
@@ -17,8 +16,6 @@ import {
   InternationalizationService,
   Language,
   RegisterForNotificationParams,
-  SlackChannel,
-  SlackIcon,
   StorageType,
   delay,
 } from '../../src/common';
@@ -66,6 +63,7 @@ import {
   NotificationType,
   Platform,
 } from '@lagunahealth/pandora';
+import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
