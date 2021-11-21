@@ -5,6 +5,7 @@ import {
   CognitoService,
   ConfigsService,
   NotificationsService,
+  OneSignal,
   QueueService,
   SendBird,
   SlackBot,
@@ -25,6 +26,7 @@ import { CommonModule } from '../common';
     CognitoService,
     ConfigsService,
     QueueService,
+    OneSignal,
     NotificationsService,
   ],
   exports: [

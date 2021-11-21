@@ -15,18 +15,15 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class NotificationsService {
-  private readonly oneSignal: OneSignal;
-
   constructor(
     private readonly configsService: ConfigsService,
     private readonly httpService: HttpService,
     private readonly twilio: TwilioService,
     readonly eventEmitter: EventEmitter2,
     private readonly sendBird: SendBird,
+    private readonly oneSignal: OneSignal,
     private readonly logger: Logger,
-  ) {
-    this.oneSignal = new OneSignal(configsService, httpService, eventEmitter, logger);
-  }
+  ) {}
 
   async register({
     token,
