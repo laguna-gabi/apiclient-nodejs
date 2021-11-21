@@ -64,5 +64,5 @@ export enum SlackIcon {
 export interface IEventNotifySlack {
   message: string;
   icon: SlackIcon;
-  channel: string; //todo figure out a better way for this
+  channel: string;
 }
