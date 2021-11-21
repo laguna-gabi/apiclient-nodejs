@@ -42,3 +42,27 @@ export const BaseExternalConfigs = {
     voipApiKey: 'onesignal.voip.apiKey',
   },
 };
+
+/*******************************************************************************
+ ************************************ Slack ************************************
+ ******************************************************************************/
+export enum SlackChannel {
+  support = 'slack.support',
+  testingSms = 'slack.testingSms',
+  notifications = 'slack.notifications',
+}
+
+export enum SlackIcon {
+  phone = ':telephone_receiver:',
+  info = ':information_source:',
+  warning = ':warning:',
+  critical = ':no_entry:',
+  exclamationPoint = ':exclamation:',
+  questionMark = ':question:',
+}
+
+export interface IEventNotifySlack {
+  message: string;
+  icon: SlackIcon;
+  channel: string; //todo figure out a better way for this
+}

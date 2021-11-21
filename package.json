@@ -1,6 +1,6 @@
 {
   "name": "@lagunahealth/pandora",
-  "version": "0.1.10",
+  "version": "0.1.10-slack-final",
   "description": "",
   "author": "",
   "license": "UNLICENSED",
@@ -35,5 +35,9 @@
     "ts-node": "^10.0.0",
     "tsconfig-paths": "^3.10.1",
     "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "@slack/types": "^2.2.0",
+    "@slack/webhook": "^6.0.0"
   }
 }
