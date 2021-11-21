@@ -7,8 +7,8 @@
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
-  "coverageDirectory": "./",
+  "coverageDirectory": "./coverage",
   "collectCoverage": true,
   "coveragePathIgnorePatterns": ["./test"],
-  "coverageReporters": ["json-summary"]
+  "coverageReporters": ["json-summary", "lcov", "text"]
 }
