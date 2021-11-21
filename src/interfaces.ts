@@ -41,6 +41,9 @@ export const BaseExternalConfigs = {
     voipApiId: 'onesignal.voip.apiId',
     voipApiKey: 'onesignal.voip.apiKey',
   },
+  slack: {
+    url: 'slack.url',
+  },
 };
 
 /*******************************************************************************
