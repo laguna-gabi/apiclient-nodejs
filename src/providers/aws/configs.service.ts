@@ -1,3 +1,4 @@
+import { BaseExternalConfigs } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 import { MongooseModuleOptions, MongooseOptionsFactory } from '@nestjs/mongoose';
 import * as AWS from 'aws-sdk';
@@ -6,9 +7,8 @@ import { Environments } from '../../common';
 import { db } from 'config';
 
 export const ExternalConfigs = {
-  db: {
-    connection: 'db.connection.iris',
-  },
+  ...BaseExternalConfigs,
+  db: { connection: 'db.connection.iris' },
 };
 
 @Injectable()

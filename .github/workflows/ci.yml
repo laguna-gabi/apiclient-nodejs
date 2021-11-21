@@ -57,3 +57,5 @@ jobs:
           aws-region: us-east-1
       - name: Unit tests
         run: yarn test
+      - name: Live tests
+        run: yarn test:live

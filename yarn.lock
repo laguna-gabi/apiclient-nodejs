@@ -762,10 +762,17 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
-"@lagunahealth/pandora@^0.1.5":
-  version "0.1.5"
-  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.1.5/d7d66fd298cd0cb4e3eea762faeac338efb1739d04ad53e29fa87aef6b173813#349757a0092f20f8f57908944d50041cb7bbe862"
-  integrity sha512-tX3xQkxckFjdeQDV4B4M4yINuu9g8dW/vZkIxah5yI0IXq3iToPyjSsrccrPcSoxBb0POGxJzAFRsePfDfvqgA==
+"@lagunahealth/pandora@^0.1.9":
+  version "0.1.9"
+  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.1.9/cb519255ad64a192773d22e9899fa2e151baad2c675c44058c2aa1f8689eb497#51e53a90d15461671d99cc9167e8bb838f3b2f5a"
+  integrity sha512-Hm1y3wli0OLVRzDIUisQgZH9Dfo36V6JilkKUiIyrB2y3up5jQ/PPSFxLQkJEqn5yHuhKzrtsAeOM2H+gmFKYQ==
+
+"@nestjs/axios@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.npmjs.org/@nestjs/axios/-/axios-0.0.3.tgz#f53ba265e15687b9acb036642ed5f29998695bd1"
+  integrity sha512-Cc+D2S2uesthRpalmZEPdm5wF2N9ji4l9Wsb2vFaug/CVWg2BoegHm0L1jzFUL+6kS+mXWSFvwXJmofv+7bajw==
+  dependencies:
+    axios "0.23.0"
 
 "@nestjs/cli@^8.0.0":
   version "8.1.4"
