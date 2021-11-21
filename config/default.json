@@ -7,5 +7,8 @@
   },
   "oneSignal": {
     "androidChannelId": "00349af6-be67-4729-9d48-9057a5507b14"
+  },
+  "twilio": {
+    "source": "+12058511112"
   }
 }

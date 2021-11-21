@@ -9,6 +9,10 @@ import { db } from 'config';
 export const ExternalConfigs = {
   ...BaseExternalConfigs,
   db: { connection: 'db.connection.iris' },
+  twilio: {
+    accountSid: 'twilio.accountSid',
+    authToken: 'twilio.authToken',
+  },
 };
 
 @Injectable()
