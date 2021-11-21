@@ -35,6 +35,10 @@ export interface ICreateDispatch extends IDispatch {
 export type IDeleteDispatch = IDispatch;
 
 export const BaseExternalConfigs = {
+  aws: {
+    queueNameDispatches: `aws.sqs.queueNameDispatches`,
+    queueNameSettings: `aws.sqs.queueNameSettings`,
+  },
   oneSignal: {
     defaultApiId: 'onesignal.default.apiId',
     defaultApiKey: 'onesignal.default.apiKey',
