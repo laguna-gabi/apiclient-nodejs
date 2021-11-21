@@ -67,6 +67,9 @@ export class Dispatch {
   @Prop({ isNan: true })
   notificationId?: string;
 
+  @Prop({ isNan: true })
+  path?: string;
+
   /**
    * Internal Iris fields for dispatching a message
    */
