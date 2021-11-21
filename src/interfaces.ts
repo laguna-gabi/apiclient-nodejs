@@ -44,6 +44,11 @@ export const BaseExternalConfigs = {
   slack: {
     url: 'slack.url',
   },
+  sendbird: {
+    apiId: 'sendbird.apiId',
+    apiToken: 'sendbird.apiToken',
+    masterApiToken: 'sendbird.masterApiToken',
+  },
 };
 
 /*******************************************************************************
