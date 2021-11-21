@@ -30,7 +30,7 @@
     "test:all": "yarn test && yarn test:validation && yarn test:integration"
   },
   "dependencies": {
-    "@lagunahealth/pandora": "^0.1.11",
+    "@lagunahealth/pandora": "^0.1.12",
     "@nestjs/axios": "^0.0.1",
     "@nestjs/common": "^7.6.15",
     "@nestjs/core": "^7.6.15",

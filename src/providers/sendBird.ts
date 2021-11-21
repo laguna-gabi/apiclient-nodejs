@@ -1,24 +1,23 @@
-import { HttpService, Injectable, OnModuleInit } from '@nestjs/common';
+import { BaseSendBird } from '@lagunahealth/pandora';
+import { HttpService } from '@nestjs/axios';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigsService, ExternalConfigs } from '.';
 import { AppointmentStatus } from '../appointment';
 import { Logger, SendSendBirdNotification } from '../common';
 import { CreateSendbirdGroupChannelParams, RegisterSendbirdUserParams } from '../communication';
 import { User } from '../user';
 
-enum suffix {
-  users = 'users',
-  groupChannels = 'group_channels',
-}
-
 @Injectable()
-export class SendBird implements OnModuleInit {
-  private appId;
-  private appToken;
+export class SendBird extends BaseSendBird implements OnModuleInit {
   private masterApiToken;
-  public basePath;
-  public headers;
 
-  constructor(private readonly configsService: ConfigsService, private readonly logger: Logger) {}
+  constructor(
+    private readonly configsService: ConfigsService,
+    private readonly httpService: HttpService,
+    private readonly logger: Logger,
+  ) {
+    super();
+  }
 
   async onModuleInit(): Promise<void> {
     this.appId = await this.configsService.getConfig(ExternalConfigs.sendbird.apiId);
@@ -26,17 +25,14 @@ export class SendBird implements OnModuleInit {
     this.masterApiToken = await this.configsService.getConfig(
       ExternalConfigs.sendbird.masterApiToken,
     );
-    this.basePath = `https://api-${this.appId}.sendbird.com/v3/`;
-    this.headers = { 'Api-Token': this.appToken };
+    await super.onModuleInit();
   }
-
-  private readonly httpService: HttpService = new HttpService();
 
   async createUser(params: RegisterSendbirdUserParams): Promise<string | undefined> {
     const methodName = this.createUser.name;
     try {
       const result = await this.httpService
-        .post(`${this.basePath}${suffix.users}`, params, {
+        .post(`${this.basePath}${this.suffix.users}`, params, {
           headers: this.headers,
         })
         .toPromise();
@@ -56,7 +52,7 @@ export class SendBird implements OnModuleInit {
     const methodName = this.createGroupChannel.name;
     try {
       const { status, data } = await this.httpService
-        .post(`${this.basePath}${suffix.groupChannels}`, params, {
+        .post(`${this.basePath}${this.suffix.groupChannels}`, params, {
           headers: this.headers,
         })
         .toPromise();
@@ -88,7 +84,7 @@ export class SendBird implements OnModuleInit {
   async freezeGroupChannel(channelUrl: string, freeze: boolean) {
     await this.httpService
       .put(
-        `${this.basePath}${suffix.groupChannels}/${channelUrl}/freeze`,
+        `${this.basePath}${this.suffix.groupChannels}/${channelUrl}/freeze`,
         { freeze },
         {
           headers: this.headers,
@@ -99,7 +95,7 @@ export class SendBird implements OnModuleInit {
 
   async deleteGroupChannel(channelUrl: string) {
     await this.httpService
-      .delete(`${this.basePath}${suffix.groupChannels}/${channelUrl}`, {
+      .delete(`${this.basePath}${this.suffix.groupChannels}/${channelUrl}`, {
         headers: this.headers,
       })
       .toPromise();
@@ -108,7 +104,7 @@ export class SendBird implements OnModuleInit {
   // userId from sendBird not users
   async deleteUser(userId: string) {
     await this.httpService
-      .delete(`${this.basePath}${suffix.users}/${userId}`, {
+      .delete(`${this.basePath}${this.suffix.users}/${userId}`, {
         headers: this.headers,
       })
       .toPromise();
@@ -128,7 +124,7 @@ export class SendBird implements OnModuleInit {
     appointmentId: string,
     value?: { status: AppointmentStatus; start: Date },
   ) {
-    const url = `${this.basePath}${suffix.groupChannels}/${channelUrl}`;
+    const url = `${this.basePath}${this.suffix.groupChannels}/${channelUrl}`;
     const current = await this.httpService.get(url, { headers: this.headers }).toPromise();
 
     let data: any = current.data.data ? JSON.parse(current.data.data) : {};
@@ -147,7 +143,7 @@ export class SendBird implements OnModuleInit {
     try {
       const result = await this.httpService
         .put(
-          `${this.basePath}${suffix.groupChannels}/${sendBirdChannelUrl}`,
+          `${this.basePath}${this.suffix.groupChannels}/${sendBirdChannelUrl}`,
           {
             name,
             cover_url,
@@ -172,7 +168,7 @@ export class SendBird implements OnModuleInit {
     const { status, data } = await this.httpService
       .get(
         // eslint-disable-next-line max-len
-        `${this.basePath}${suffix.groupChannels}/${channelUrl}/messages/unread_count?user_ids=${userId}`,
+        `${this.basePath}${this.suffix.groupChannels}/${channelUrl}/messages/unread_count?user_ids=${userId}`,
         {
           headers: this.headers,
         },
@@ -199,7 +195,7 @@ export class SendBird implements OnModuleInit {
     try {
       const result = await this.httpService
         .post(
-          `${this.basePath}${suffix.groupChannels}/${sendBirdChannelUrl}/messages`,
+          `${this.basePath}${this.suffix.groupChannels}/${sendBirdChannelUrl}/messages`,
           {
             message_type: 'ADMM', // Only admin type can be sent to a frozen chat
             user_id: userId,
@@ -232,7 +228,7 @@ export class SendBird implements OnModuleInit {
     try {
       const result = await this.httpService
         .post(
-          `${this.basePath}${suffix.groupChannels}/${sendBirdChannelUrl}/invite`,
+          `${this.basePath}${this.suffix.groupChannels}/${sendBirdChannelUrl}/invite`,
           {
             user_ids: [userId],
           },
@@ -257,7 +253,7 @@ export class SendBird implements OnModuleInit {
     try {
       const result = await this.httpService
         .put(
-          `${this.basePath}${suffix.groupChannels}/${sendBirdChannelUrl}/leave`,
+          `${this.basePath}${this.suffix.groupChannels}/${sendBirdChannelUrl}/leave`,
           {
             user_ids: [userId],
           },

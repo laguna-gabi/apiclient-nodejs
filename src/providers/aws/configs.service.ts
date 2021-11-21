@@ -20,11 +20,6 @@ export const ExternalConfigs = {
     voipApiId: 'onesignal.voip.apiId',
     voipApiKey: 'onesignal.voip.apiKey',
   },
-  sendbird: {
-    apiId: 'sendbird.apiId',
-    apiToken: 'sendbird.apiToken',
-    masterApiToken: 'sendbird.masterApiToken',
-  },
   twilio: {
     accountSid: 'twilio.accountSid',
     appSid: 'twilio.appSid',

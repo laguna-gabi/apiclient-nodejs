@@ -9,6 +9,7 @@ import { UserRole } from '../../src/user';
 import { generateId } from '../generators';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotificationType } from '@lagunahealth/pandora';
+import { HttpService } from '@nestjs/axios';
 
 describe('live: sendbird actions', () => {
   let sendBird: SendBird;
@@ -16,7 +17,8 @@ describe('live: sendbird actions', () => {
   beforeAll(async () => {
     const configService = new ConfigsService();
     const logger = new Logger(new EventEmitter2());
-    sendBird = new SendBird(configService, logger);
+    const httpService = new HttpService();
+    sendBird = new SendBird(configService, httpService, logger);
     await sendBird.onModuleInit();
   });
 
@@ -146,7 +148,11 @@ describe('live: sendbird actions', () => {
     appointmentIds: string[],
     compareTo: any[],
   ) => {
+    //eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
     const url = `${sendBird.basePath}group_channels/${channelUrl}`;
+    //eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
     const current = await axios.get(url, { headers: sendBird.headers });
     const { appointments } = JSON.parse(current.data.data);
 
