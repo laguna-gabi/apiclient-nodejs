@@ -79,9 +79,11 @@ export class BaseScheduler {
         });
         this.amITheLeader = true;
         this.logger.debug(
-          internalLogs.schedulerLeader
-            .replace('@type@', this.leaderType)
-            .replace('@identifier@', this.identifier),
+          {
+            schedulerLeader: internalLogs.schedulerLeader
+              .replace('@type@', this.leaderType)
+              .replace('@identifier@', this.identifier),
+          },
           this.className,
           this.runEveryMinute.name,
         );
