@@ -439,7 +439,7 @@ export class MemberResolver extends MemberBase {
       metadata.content = metadata.content.trim();
       if (!metadata.content) {
         // nothing remained after trim -> was only whitespaces
-        throw new Error(Errors.get(ErrorType.invalidContent));
+        throw new Error(Errors.get(ErrorType.notificationInvalidContent));
       }
     }
 

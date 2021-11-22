@@ -1395,7 +1395,7 @@ describe('MemberResolver', () => {
       });
 
       await expect(resolver.notify(notifyParams)).rejects.toThrow(
-        Errors.get(ErrorType.invalidContent),
+        Errors.get(ErrorType.notificationInvalidContent),
       );
     });
   });

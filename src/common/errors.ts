@@ -32,13 +32,13 @@ export enum ErrorType {
   memberRecordingIdAlreadyExists = 9214,
   memberRegisterWebPlatform = 9215,
   invalidZipCode = 9216,
-  invalidContent = 9217,
 
   // Notifications
   notificationMetadataInvalid = 9270,
   notificationMemberPlatformWeb = 9271,
   notificationNotFound = 9272,
   notificationMetadataWhenPast = 9273,
+  notificationInvalidContent = 9274,
 
   // Module appointment errors
   appointmentIdNotFound = 9301,
@@ -106,7 +106,6 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberRecordingIdAlreadyExists.valueOf(), `id already exists`],
   [ErrorType.memberRegisterWebPlatform.valueOf(), `cant register member with platform web`],
   [ErrorType.invalidZipCode.valueOf(), `invalid ZIP code`],
-  [ErrorType.invalidContent.valueOf(), `invalid content`],
   [
     ErrorType.memberRegisterForNotificationToken.valueOf(),
     `token must contain only letters and numbers`,
@@ -123,6 +122,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [ErrorType.notificationNotFound.valueOf(), `notification not found`],
   [ErrorType.notificationMetadataWhenPast.valueOf(), `'when' in metadata must be in the future`],
+  [ErrorType.notificationInvalidContent.valueOf(), `invalid content`],
   [ErrorType.appointmentIdNotFound.valueOf(), 'appointment id was not found'],
   [ErrorType.appointmentNotBeforeDate.valueOf(), `notBefore ${dateInstanceFormat}`],
   [ErrorType.appointmentNotBeforeDateInThePast.valueOf(), 'notBefore must be in the future'],
