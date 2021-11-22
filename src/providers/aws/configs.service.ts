@@ -14,12 +14,6 @@ export const ExternalConfigs = {
   db: {
     connection: 'db.connection',
   },
-  oneSignal: {
-    defaultApiId: 'onesignal.default.apiId',
-    defaultApiKey: 'onesignal.default.apiKey',
-    voipApiId: 'onesignal.voip.apiId',
-    voipApiKey: 'onesignal.voip.apiKey',
-  },
   twilio: {
     accountSid: 'twilio.accountSid',
     appSid: 'twilio.appSid',
