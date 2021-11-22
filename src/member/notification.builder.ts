@@ -32,7 +32,7 @@ export class NotificationBuilder {
     metadata: NotificationMetadata;
   }) {
     const orgName = member?.org.name;
-    let path = {};
+    let path = metadata.path || {};
     if (type === NotificationType.call || type === NotificationType.video) {
       path = { path: 'call' };
     }
@@ -116,6 +116,7 @@ export class NotificationBuilder {
               member: { phone: member.phone },
               type,
               isVideo: false,
+              path: metadata.path,
             },
             content,
             orgName,

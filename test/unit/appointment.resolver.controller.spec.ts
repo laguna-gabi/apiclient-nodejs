@@ -101,6 +101,7 @@ describe('AppointmentResolver', () => {
         metadata: {
           contentType: ContentKey.appointmentRequest,
           scheduleLink: `${appointment.link}`,
+          path: `connect/${appointment.id}`,
         },
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyInternal, eventParams);

@@ -286,6 +286,9 @@ export class NotificationMetadata {
 
   @Field(() => String, { nullable: true })
   appointmentId?: string;
+
+  @Field(() => String, { nullable: true })
+  path?: string;
 }
 
 @Schema({ versionKey: false, timestamps: true })

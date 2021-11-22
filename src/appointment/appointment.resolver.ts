@@ -197,6 +197,7 @@ export class AppointmentResolver extends AppointmentBase {
       metadata: {
         contentType: ContentKey.appointmentRequest,
         scheduleLink: appointment.link,
+        path: `connect/${appointment.id}`,
       },
     };
     this.eventEmitter.emit(EventType.notifyInternal, params);
