@@ -30,6 +30,7 @@ export interface ICreateDispatch extends IDispatch {
   chatLink?: boolean;
   triggeredAt?: Date;
   notificationId?: string;
+  path?: string;
 }
 
 export type IDeleteDispatch = IDispatch;
