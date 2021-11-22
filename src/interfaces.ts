@@ -36,8 +36,7 @@ export type IDeleteDispatch = IDispatch;
 
 export const BaseExternalConfigs = {
   aws: {
-    notificationsQueue: `aws.sqs.queueNameNotifications`,
-    notificationsDLQueue: `aws.sqs.queueNameNotificationsDLQ`,
+    queueNameNotifications: `aws.sqs.queueNameNotifications`,
   },
   oneSignal: {
     defaultApiId: 'onesignal.default.apiId',
