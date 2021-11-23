@@ -98,7 +98,7 @@ jobs:
         with:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          source: 's3://${{ secrets.COVERAGE_AWS_BUCKET }}/master/coverage/coverage-summary.json'
+          source: 's3://${{ secrets.COVERAGE_AWS_BUCKET }}/master/coverage-summary.json'
           dest: './coverage/master/coverage-summary.json'
       - name: Get master coverage report
         if: github.ref != 'refs/heads/master'

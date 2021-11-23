@@ -10,15 +10,15 @@
     <img src="https://img.shields.io/github/contributors/badges/shields" />
   </a> <br/>
   <b>Total coverage:</b>
-  <a href="https://laguna-health-coverage.s3.amazonaws.com/pandora/add-badge-to-readme/coverage/lcov-report/index.html" alt="lines">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/add-badge-to-readme/coverage/badge-lines.svg" />
+  <a href="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/lcov-report/index.html" alt="lines">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/badge-lines.svg" />
   </a>
   <b>Other coverage:</b>
-  <a href="https://laguna-health-coverage.s3.amazonaws.com/pandora/add-badge-to-readme/coverage/lcov-report/index.html" alt="functions">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/add-badge-to-readme/coverage/badge-functions.svg" />
+  <a href="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/lcov-report/index.html" alt="functions">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/badge-functions.svg" />
   </a>
-  <a href="https://laguna-health-coverage.s3.amazonaws.com/pandora/add-badge-to-readme/coverage/lcov-report/index.html" alt="statements">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/add-badge-to-readme/coverage/badge-statements.svg" />
+  <a href="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/lcov-report/index.html" alt="statements">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/badge-statements.svg" />
   </a>
 </p>
 
