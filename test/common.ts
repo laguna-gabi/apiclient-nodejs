@@ -18,6 +18,7 @@ import {
 } from '../src/providers';
 import { User, UserService } from '../src/user';
 import { Mutations, Queries } from './aux';
+import { generateId } from './generators';
 
 export class BaseHandler {
   app: INestApplication;
@@ -127,7 +128,7 @@ export const mockProviders = (
   spyOnTwilioGetToken.mockReturnValue('token');
   spyOnSlackBotSendMessage.mockReturnValue(undefined);
   spyOnSendBirdUpdateChannelName.mockReturnValue(undefined);
-  spyOnSendBirdInvite.mockReturnValue(undefined);
+  spyOnSendBirdInvite.mockResolvedValue([generateId()]);
   spyOnSendBirdLeave.mockReturnValue(undefined);
   spyOnCognitoServiceDisableMember.mockReturnValue(undefined);
   spyOnCognitoServiceDeleteMember.mockReturnValue(undefined);

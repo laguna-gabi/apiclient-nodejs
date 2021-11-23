@@ -106,15 +106,23 @@ export class CommunicationService {
     value?: { status: AppointmentStatus; start: Date };
     updatedAppointmentAction: UpdatedAppointmentAction;
   }) {
-    const communication = await this.get({ memberId: params.memberId, userId: params.userId });
+    let communication = await this.get({ memberId: params.memberId, userId: params.userId });
     if (!communication) {
-      this.logger.warn(
-        params,
-        CommunicationService.name,
-        this.onUpdatedAppointment.name,
-        Errors.get(ErrorType.communicationMemberUserNotFound),
-      );
-      return;
+      const { sendBirdChannelUrl } = await this.communicationModel.findOne({
+        memberId: new Types.ObjectId(params.memberId),
+      });
+      const result = await this.sendBird.invite(sendBirdChannelUrl, params.userId);
+      //assuming member already has a sendbird link if we're updating an existing appointment
+      if (result && result.length > 0) {
+        communication = await this.communicationModel.create({
+          memberId: new Types.ObjectId(params.memberId),
+          userId: new Types.ObjectId(params.userId),
+          sendBirdChannelUrl,
+        });
+      } else {
+        this.logger.warn(params, CommunicationService.name, this.onUpdatedAppointment.name);
+        return;
+      }
     }
 
     if (params.updatedAppointmentAction === UpdatedAppointmentAction.edit) {

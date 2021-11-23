@@ -45,7 +45,7 @@ export class Communication {
   @Prop({ type: Types.ObjectId, index: true })
   userId: Types.ObjectId;
 
-  @Prop({ index: true, unique: true })
+  @Prop({ index: true })
   sendBirdChannelUrl: string;
 }
 

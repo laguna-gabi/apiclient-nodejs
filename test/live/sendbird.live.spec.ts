@@ -130,8 +130,8 @@ describe('live: sendbird actions', () => {
     expect(leaveResult.data).toEqual({});
 
     const inviteResult = await sendBird.invite(params.channel_url, newUser.user_id);
-    expect(inviteResult.data.members[0].user_id).toEqual(newUser.user_id);
-    expect(inviteResult.data.members[1].user_id).toEqual(member.user_id);
+    expect(inviteResult[0]).toEqual(newUser.user_id);
+    expect(inviteResult[1]).toEqual(member.user_id);
 
     // 13. replace channel name and image
     const replaceResult = await sendBird.updateChannelName(

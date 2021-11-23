@@ -223,23 +223,19 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     }
   }
 
-  async invite(sendBirdChannelUrl: string, userId: string) {
+  async invite(sendBirdChannelUrl: string, userId: string): Promise<string[] | void> {
     const methodName = this.invite.name;
     try {
       const result = await this.httpService
         .post(
           `${this.basePath}${this.suffix.groupChannels}/${sendBirdChannelUrl}/invite`,
-          {
-            user_ids: [userId],
-          },
-          {
-            headers: this.headers,
-          },
+          { user_ids: [userId] },
+          { headers: this.headers },
         )
         .toPromise();
       if (result.status === 200) {
         this.logger.debug({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
-        return result;
+        return result.data.members?.map((member) => member.user_id);
       } else {
         this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
       }

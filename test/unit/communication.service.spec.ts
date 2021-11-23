@@ -242,25 +242,61 @@ describe('CommunicationService', () => {
       );
     });
 
-    it('should not update since no user-member communication was found', async () => {
+    it('should update a non existing user-member communication', async () => {
+      const { params, communication } = await generateInviteScenario(true);
+
+      expect(sendBirdMock.spyOnSendBirdUpdateGroupChannelMetadata).toBeCalledWith(
+        communication.sendBirdChannelUrl,
+        params.key,
+        params.value,
+      );
+      expect(sendBirdMock.spyOnSendBirdInvite).toBeCalledWith(
+        communication.sendBirdChannelUrl,
+        params.userId,
+      );
+
+      sendBirdMock.spyOnSendBirdInvite.mockReset();
+    });
+
+    it('should not update a non existing user-member communication on failed invite', async () => {
+      const { params, communication } = await generateInviteScenario(false);
+      expect(sendBirdMock.spyOnSendBirdUpdateGroupChannelMetadata).not.toBeCalled();
+      expect(sendBirdMock.spyOnSendBirdInvite).toBeCalledWith(
+        communication.sendBirdChannelUrl,
+        params.userId,
+      );
+
+      sendBirdMock.spyOnSendBirdInvite.mockReset();
+    });
+
+    async function generateInviteScenario(invite: boolean) {
+      const member = mockGenerateMember();
+      const user = mockGenerateUser();
+      const communication = {
+        memberId: new Types.ObjectId(member.id),
+        userId: user.id,
+        sendBirdChannelUrl: generateUniqueUrl(),
+      };
+      await communicationModel.create(communication);
+
       const mockServiceGet = jest.spyOn(service, 'get');
       mockServiceGet.mockImplementationOnce(async () => undefined);
 
       const params = {
-        memberId: generateId(),
-        userId: v4(),
+        memberId: communication.memberId.toString(),
+        userId: generateId(),
         key: generateId(),
-        value: {
-          status: AppointmentStatus.scheduled,
-          start: faker.date.future(),
-        },
+        value: { status: AppointmentStatus.scheduled, start: faker.date.future() },
         updatedAppointmentAction: UpdatedAppointmentAction.edit,
       };
+      sendBirdMock.spyOnSendBirdInvite.mockReturnValue(
+        invite ? [communication.userId, params.userId] : undefined,
+      );
 
       await service.onUpdatedAppointment(params);
 
-      expect(sendBirdMock.spyOnSendBirdUpdateGroupChannelMetadata).not.toBeCalled();
-    });
+      return { params, communication };
+    }
   });
 
   describe('updateUserInCommunication', () => {
