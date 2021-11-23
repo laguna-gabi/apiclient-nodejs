@@ -4,6 +4,7 @@ import {
   Bitly,
   CognitoService,
   ConfigsService,
+  FeatureFlagService,
   NotificationsService,
   OneSignal,
   QueueService,
@@ -18,6 +19,7 @@ import { CommonModule } from '../common';
 @Module({
   imports: [HttpModule, CommonModule],
   providers: [
+    FeatureFlagService,
     Bitly,
     SendBird,
     SlackBot,
@@ -30,6 +32,7 @@ import { CommonModule } from '../common';
     NotificationsService,
   ],
   exports: [
+    FeatureFlagService,
     Bitly,
     SendBird,
     SlackBot,
