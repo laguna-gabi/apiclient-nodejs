@@ -6,5 +6,9 @@
   "maxWorkers": 1,
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
-  }
+  },
+  "coverageDirectory": "./coverage",
+  "collectCoverage": true,
+  "coveragePathIgnorePatterns": ["./test"],
+  "coverageReporters": ["json-summary", "lcov", "text"]
 }

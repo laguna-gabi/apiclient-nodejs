@@ -27,8 +27,8 @@ jobs:
       - name: Run linters
         run: yarn lint
 
-  build-and-test:
-    name: Build and Test
+  build-test-coverage:
+    name: Build, Test and Coverage
     runs-on: self-hosted
     timeout-minutes: 5
     steps:
@@ -40,6 +40,8 @@ jobs:
           node-version: 16
       - name: Install yarn
         run: npm install -g yarn
+      - name: Create npmrc and yarnrc files
+        run: echo "//npm.pkg.github.com/:_authToken=${{secrets.NPM_PRIVATE_GITHUB_AUTH_TOKEN_REGISTRY}}" > ~/.npmrc
       - name: Install project dependencies
         run: yarn install --frozen-lockfile
       - name: Build project
@@ -50,13 +52,102 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - name: Tests
-        run: yarn test
+      - name: Test
+        run: yarn test:cov
+      - name: Remove coverage from S3 if exists
+        if: github.ref != 'refs/heads/master'
+        uses: vitorsgomes/s3-rm-action@master
+        with:
+          args: --recursive
+        env:
+          AWS_S3_BUCKET: ${{ secrets.COVERAGE_AWS_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.COVERAGE_AWS_REGION }}
+          PATH_TO_DELETE: ${{ github.head_ref }}
+      - name: Upload coverage to S3
+        if: github.ref != 'refs/heads/master'
+        uses: shallwefootball/s3-upload-action@master
+        with:
+          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: '${{ secrets.COVERAGE_AWS_BUCKET }}/${{ github.head_ref }}'
+          source_dir: './coverage/lcov-report'
+          destination_dir: 'lcov-report'
+      - name: Add coverage url to PR
+        if: github.ref != 'refs/heads/master'
+        uses: mshick/add-pr-comment@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          message: |
+            ### coverage lcov report for `${{ github.head_ref }}`
+            ___
+            http://${{ secrets.COVERAGE_AWS_BUCKET }}.s3-website-${{ secrets.COVERAGE_AWS_REGION }}.amazonaws.com/${{ github.head_ref }}/lcov-report/index.html
+          allow-repeats: false
+      - name: Get local coverage report
+        if: github.ref != 'refs/heads/master'
+        id: localCoverage
+        uses: notiz-dev/github-action-json-property@release
+        with:
+          path: './coverage/coverage-summary.json'
+          prop_path: 'total.statements.pct'
+      - name: Download master coverage report from S3
+        if: github.ref != 'refs/heads/master'
+        uses: prewk/s3-cp-action@v2
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          source: 's3://${{ secrets.COVERAGE_AWS_BUCKET }}/master/coverage-summary.json'
+          dest: './coverage/master/coverage-summary.json'
+      - name: Get master coverage report
+        if: github.ref != 'refs/heads/master'
+        id: masterCoverage
+        uses: notiz-dev/github-action-json-property@release
+        with:
+          path: './coverage/master/coverage-summary.json'
+          prop_path: 'total.statements.pct'
+      - name: Set coverage diff
+        if: github.ref != 'refs/heads/master'
+        run: echo "DIFF_COV=$(echo "${{steps.localCoverage.outputs.prop}}-${{steps.masterCoverage.outputs.prop}}" | bc)" >> $GITHUB_ENV
+      - name: Add coverage diff to PR
+        if: github.ref != 'refs/heads/master'
+        uses: mshick/add-pr-comment@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          message: |
+            ### coverage diff `${{ github.head_ref }}` -> `master`
+            ___
+            ### Total: ${{steps.localCoverage.outputs.prop}}% (${{ env.DIFF_COV }}%)
+          allow-repeats: false
+      - name: Remove master coverage from S3 if exists
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        uses: vitorsgomes/s3-rm-action@master
+        with:
+          args: --recursive
+        env:
+          AWS_S3_BUCKET: ${{ secrets.COVERAGE_AWS_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.COVERAGE_AWS_REGION }}
+          PATH_TO_DELETE: 'master'
+      - name: Upload master coverage to S3
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        uses: shallwefootball/s3-upload-action@master
+        with:
+          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ secrets.COVERAGE_AWS_BUCKET }}
+          source_dir: './coverage'
+          destination_dir: 'master'
+      - name: Cleanup docker
+        run: docker system prune -a --volumes --force
 
   deploy:
     name: Deploy
     runs-on: self-hosted
-    needs: build-and-test
+    needs: build-test-coverage
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     timeout-minutes: 2
     steps:
