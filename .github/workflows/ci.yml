@@ -91,7 +91,7 @@ jobs:
         uses: notiz-dev/github-action-json-property@release
         with:
           path: './coverage/coverage-summary.json'
-          prop_path: 'total.statements.pct'
+          prop_path: 'total.lines.pct'
       - name: Download master coverage report from S3
         if: github.ref != 'refs/heads/master'
         uses: prewk/s3-cp-action@v2
@@ -106,7 +106,7 @@ jobs:
         uses: notiz-dev/github-action-json-property@release
         with:
           path: './coverage/master/coverage-summary.json'
-          prop_path: 'total.statements.pct'
+          prop_path: 'total.lines.pct'
       - name: Set coverage diff
         if: github.ref != 'refs/heads/master'
         run: echo "DIFF_COV=$(echo "${{steps.localCoverage.outputs.prop}}-${{steps.masterCoverage.outputs.prop}}" | bc)" >> $GITHUB_ENV
