@@ -12,8 +12,5 @@
     "baseUrl": "./",
     "resolveJsonModule": true,
     "incremental": true
-  },
-  "include": [
-    "src/**/*"
-  ]
+  }
 }

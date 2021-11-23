@@ -27,8 +27,8 @@ jobs:
       - name: Run linters
         run: yarn lint
 
-  build:
-    name: Build
+  build-and-test:
+    name: Build and Test
     runs-on: self-hosted
     timeout-minutes: 5
     steps:
@@ -44,11 +44,19 @@ jobs:
         run: yarn install --frozen-lockfile
       - name: Build project
         run: yarn tsc
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Tests
+        run: yarn test
 
   deploy:
     name: Deploy
     runs-on: self-hosted
-    needs: build
+    needs: build-and-test
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     timeout-minutes: 2
     steps:

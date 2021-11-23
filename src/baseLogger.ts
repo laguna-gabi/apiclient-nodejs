@@ -31,6 +31,19 @@ export class BaseLogger {
       LogType.log,
       this.COLOR.fgWhite,
     );
+    console.log(log);
+
+    return log;
+  }
+
+  info(params: any = {}, className: string, methodName: string): string | void {
+    const log = this.logFormat(
+      this.getCalledLog(params),
+      className,
+      methodName,
+      LogType.log,
+      this.COLOR.fgWhite,
+    );
     console.info(log);
 
     return log;
@@ -102,7 +115,7 @@ export class BaseLogger {
       safeLog = dupParams;
     } else {
       this.validKeys.forEach((validKey) => {
-        if (dupParams[validKey]) {
+        if (dupParams[validKey] !== null) {
           safeLog[validKey] = dupParams[validKey];
         }
       });
