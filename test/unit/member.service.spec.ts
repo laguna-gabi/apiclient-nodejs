@@ -347,12 +347,12 @@ describe('MemberService', () => {
       );
     });
 
-    /* eslint-disable max-len*/
+    /* eslint-disable-next-line max-len */
     it('should return most recent appointment (start time) when it was scheduled before', async () => {
       await testTwoAppointmentsWithGap(1);
     });
 
-    /* eslint-disable max-len*/
+    /* eslint-disable-next-line max-len */
     it('should return most recent appointment (start time) when it was scheduled after', async () => {
       await testTwoAppointmentsWithGap(-1);
     });
@@ -382,6 +382,7 @@ describe('MemberService', () => {
       );
     };
 
+    /* eslint-disable-next-line max-len */
     it('should handle primaryUser and users appointments in nextAppointment calculations', async () => {
       const userId1 = await generateUser();
       const userId2 = await generateUser();
@@ -437,9 +438,8 @@ describe('MemberService', () => {
       );
     });
 
-    /* eslint-disable max-len*/
+    /* eslint-disable-next-line max-len */
     it('should not take longer than 1 second to process 10 members with 3 appointments each', async () => {
-      /* eslint-enable max-len*/
       const userId = await generateUser();
       const orgId = await generateOrg();
 
@@ -750,7 +750,7 @@ describe('MemberService', () => {
       );
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should move member and memberConfig from members and memberconfigs collection', async () => {
       const memberId = await generateMember();
       const member = await service.get(memberId);

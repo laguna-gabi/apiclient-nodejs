@@ -19,7 +19,7 @@ describe('RolesGuard', () => {
   });
 
   describe('validateUser', () => {
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it(`to allow access for empty role list in guard annotation when endpoint is public`, async () => {
       spyOnMockReflector.mockReturnValueOnce([]).mockReturnValueOnce(true);
 
@@ -28,7 +28,7 @@ describe('RolesGuard', () => {
       expect(guard.canActivate(mockExecutionContext)).toBeTruthy();
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('to deny access for empty role list in guard annotation when endpoint is NOT public', async () => {
       spyOnMockReflector.mockReturnValueOnce([]).mockReturnValueOnce(false);
 
@@ -37,7 +37,7 @@ describe('RolesGuard', () => {
       expect(guard.canActivate(mockExecutionContext)).toBeFalsy();
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('to deny access for a non-empty role list in guard annotation when service says Not Allowed', async () => {
       spyOnMockReflector.mockReturnValueOnce(['User']);
       spyOnMockAuthService.mockReturnValue(false);
@@ -47,7 +47,7 @@ describe('RolesGuard', () => {
       expect(guard.canActivate(mockExecutionContext)).toBeFalsy();
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('to allow access for a non-empty role list in guard annotation when service says Allowed', async () => {
       spyOnMockReflector.mockReturnValueOnce(['User']);
       spyOnMockAuthService.mockReturnValue(true);

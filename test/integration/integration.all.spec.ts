@@ -375,6 +375,7 @@ describe('Integration tests: all', () => {
     }),
   })}
   `(`should add a not existed user to member users list on $title`, async (params) => {
+    /* eslint-enable max-len */
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({ org });
 
@@ -625,6 +626,7 @@ describe('Integration tests: all', () => {
 
   describe('notifications', () => {
     test.each([true, false])(
+      /* eslint-disable-next-line max-len */
       'should register scheduled appointment reminder and notify it to member with isAppointmentsReminderEnabled=%p',
       async (isAppointmentsReminderEnabled) => {
         const org = await creators.createAndValidateOrg();
@@ -880,12 +882,14 @@ describe('Integration tests: all', () => {
       await handler.mutations.deleteAvailability({ id: ids[0] });
     });
 
+    /* eslint-disable max-len */
     test.each`
       additionalGetSlotsParams             | expectedDefaultSlots | testTitle
       ${{}}                                | ${6}                 | ${'should get default slots count not available'}
       ${{ allowEmptySlotsResponse: true }} | ${0}                 | ${'should get empty slots when enabling empty response'}
       ${{ defaultSlotsCount: 20 }}         | ${20}                | ${'should get specific default slots count if defaultSlotsCount'}
     `('$testTitle', async ({ additionalGetSlotsParams, expectedDefaultSlots }) => {
+      /* eslint-enable max-len */
       const user = await creators.createAndValidateUser();
       const org = await creators.createAndValidateOrg();
       const member: Member = await creators.createAndValidateMember({ org });

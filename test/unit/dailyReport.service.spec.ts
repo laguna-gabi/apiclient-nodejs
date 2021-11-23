@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 import { Logger } from '@nestjs/common';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -177,9 +176,12 @@ describe('DailyReportCategoryService', () => {
       `%s`,
       async (
         message,
-        dailyReportCategoryEntry, // <= Input to service method - new category entry to set/update
-        existingRecordInDatabase, // <= current daily report stored in db (could be empty on first set/update)
-        getRecentDailyReportsReturnedValue, // <= daily reports of the last 2 days (for stats-over-threshold calculation)
+        // Input to service method - new category entry to set/update
+        dailyReportCategoryEntry,
+        // current daily report stored in db (could be empty on first set/update)
+        existingRecordInDatabase,
+        // daily reports of the last 2 days (for stats-over-threshold calculation)
+        getRecentDailyReportsReturnedValue,
         expectedDailyReport,
       ) => {
         jest.spyOn(dailyReportModel, 'findOne').mockResolvedValue(existingRecordInDatabase);

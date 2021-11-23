@@ -44,7 +44,7 @@ describe('AuthService', () => {
       ).toEqual({ role: RoleTypes.Anonymous });
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('to return a user when authorization header has a valid sub associated with a user', async () => {
       const token = jwt.sign({ email: 'john@doe.com', sub: 'my-sub' }, 'my-secret');
 
@@ -64,7 +64,7 @@ describe('AuthService', () => {
       expect((user as User).id).toEqual(mockUser.id);
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('to return a member when authorization header has a valid sub associated with a member', async () => {
       const token = jwt.sign({ email: 'john@doe.com', sub: 'my-sub' }, 'my-secret');
 
@@ -87,7 +87,7 @@ describe('AuthService', () => {
       expect((user as User).id).toEqual(mockMember.id);
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('to return anonymous when authorization header has a sub which is NOT associated with either a member or a user', async () => {
       const token = jwt.sign({ email: 'john@doe.com', sub: 'my-sub' }, 'my-secret');
 
@@ -135,7 +135,7 @@ describe('AuthService', () => {
         true,
       ],
       [
-        // eslint-disable-next-line max-len
+        /* eslint-disable-next-line max-len */
         'Member is not allowed if handler is not annotated with Member role (default is User access)',
         RoleTypes.Member,
         [],

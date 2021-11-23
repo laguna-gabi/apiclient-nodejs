@@ -161,7 +161,7 @@ describe('MemberResolver', () => {
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onNewMember, eventNewMemberParams);
       const eventSlackMessageParams: IEventNotifySlack = {
-        // eslint-disable-next-line max-len
+        /* eslint-disable-next-line max-len */
         message: `*New customer*\n${member.firstName} [${member.id}],\nassigned to ${user.firstName}.`,
         icon: SlackIcon.info,
         channel: SlackChannel.support,
@@ -214,9 +214,8 @@ describe('MemberResolver', () => {
       const result = await resolver.getMember({
         req: {
           headers: {
-            /* eslint-disable max-len */
+            /* eslint-disable-next-line max-len */
             authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QifQ.hNQI_r8BATy1LyXPr6Zuo9X_V0kSED8ngcqQ6G-WV5w`,
-            /* eslint-enable max-len */
           },
         },
       });
@@ -1735,7 +1734,7 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceSend).not.toBeCalled();
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should NOT send push notification for chatMessageToMember if notification is disabled', async () => {
       const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();
@@ -1903,7 +1902,7 @@ describe('MemberResolver', () => {
       });
     }, 10000);
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should not notify the coach on chat message sent from member - coach is online', async () => {
       const member = mockGenerateMember();
       const user = mockGenerateUser();
@@ -1940,7 +1939,7 @@ describe('MemberResolver', () => {
       sendBirdChannelUrl: generateUniqueUrl(),
     };
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should disregard notify chat message when sent from member and member does not exist', async () => {
       spyOnUserServiceGetUser.mockImplementation(async () => undefined);
       spyOnServiceGetMember.mockImplementation(async () => undefined);

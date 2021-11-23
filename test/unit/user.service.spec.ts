@@ -317,7 +317,7 @@ describe('UserService', () => {
       expect(result.slots.length).toEqual(6);
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should return specific default slots if there is no availability and got defaultSlotsCount', async () => {
       const user = await service.insert(generateCreateUserParams());
       const result = await service.getSlots({
@@ -329,7 +329,7 @@ describe('UserService', () => {
       expect(result.slots.length).toEqual(9);
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should return 0 slots if there is no availability and allowEmptySlotsResponse=true', async () => {
       const user = await service.insert(generateCreateUserParams());
       const result = await service.getSlots({
@@ -387,7 +387,7 @@ describe('UserService', () => {
       expect(result.slots.length).toEqual(defaultSlotsParams.maxSlots);
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should return default slots from appointments "notBefore" if not specified in params', async () => {
       const user = await service.insert(generateCreateUserParams());
       const future = add(startOfToday(), { days: 2, hours: 17 });

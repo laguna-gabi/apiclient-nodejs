@@ -167,7 +167,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
   async countUnreadMessages(channelUrl: string, userId: string): Promise<number> {
     const { status, data } = await this.httpService
       .get(
-        // eslint-disable-next-line max-len
+        /* eslint-disable-next-line max-len */
         `${this.basePath}${this.suffix.groupChannels}/${channelUrl}/messages/unread_count?user_ids=${userId}`,
         {
           headers: this.headers,

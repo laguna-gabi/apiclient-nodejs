@@ -22,7 +22,7 @@ export class MemberBase {
     this.eventEmitter.emit(EventType.onNewMember, eventNewMemberParams);
 
     const eventSlackMessageParams: IEventNotifySlack = {
-      // eslint-disable-next-line max-len
+      /* eslint-disable-next-line max-len */
       message: `*New customer*\n${member.firstName} [${member.id}],\nassigned to ${user.firstName}.`,
       icon: SlackIcon.info,
       channel: SlackChannel.support,

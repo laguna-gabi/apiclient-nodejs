@@ -105,7 +105,7 @@ describe('AppointmentScheduler', () => {
         await clear();
       });
 
-      // eslint-disable-next-line max-len
+      /* eslint-disable-next-line max-len */
       it('should register scheduleAppointmentLongAlert with all scheduled appointments', async () => {
         const maxDate = add(new Date(), { minutes: config.get('scheduler.maxAlertGapInMin') });
         const scheduledAppointments = await appointmentModel
@@ -303,7 +303,7 @@ describe('AppointmentScheduler', () => {
       expect(timeouts).toEqual(expect.arrayContaining(longTimeouts));
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should add appointment long alert for an existing appointment if starts in more than 1 day', async () => {
       const param = generateParam(add(new Date(), { days: 1, minutes: 5 }));
       await scheduler.registerAppointmentAlert(param);

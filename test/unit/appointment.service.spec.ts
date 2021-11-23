@@ -491,7 +491,7 @@ describe('AppointmentService', () => {
       spyOnEventEmitter.mockReset();
     });
 
-    /* eslint-disable */
+    /* eslint-disable max-len */
     test.each`
       recordingConsent | noShow   | expectToDispatch | title
       ${false}         | ${false} | ${true}          | ${'should dispatch event if showed up and no consent'}
@@ -499,7 +499,7 @@ describe('AppointmentService', () => {
       ${true}          | ${true}  | ${false}         | ${'should not dispatch event if didnt show up and have consent'}
       ${true}          | ${true}  | ${false}         | ${'should not dispatch event if didnt show up and no consent'}
     `(`$title`, async ({ recordingConsent, noShow, expectToDispatch }) => {
-      /* eslint-enable */
+      /* eslint-enable max-len */
       const spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
       const appointmentParams = generateScheduleAppointmentParams();
       const notes = generateNotesParams();

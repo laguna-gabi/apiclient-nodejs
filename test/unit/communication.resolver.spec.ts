@@ -267,7 +267,7 @@ describe('CommunicationResolver', () => {
       });
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should throw error for a non-member user attempting to get communication info', async () => {
       spyOnServiceGet.mockImplementationOnce(() => communication);
       spyOnUserServiceGet.mockImplementationOnce(() => user);

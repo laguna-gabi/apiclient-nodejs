@@ -45,9 +45,7 @@ describe('Validations - member', () => {
 
   beforeAll(async () => {
     await handler.beforeAll();
-    await handler.mutations.createUser({
-      userParams: generateCreateUserParams(),
-    });
+    await handler.mutations.createUser({ userParams: generateCreateUserParams() });
     server = handler.app.getHttpServer();
   });
 
@@ -65,14 +63,9 @@ describe('Validations - member', () => {
       ${'dateOfBirth'} | ${`Field "dateOfBirth" of required type "String!" was not provided.`}
     `(`should fail to create a member since mandatory field $field is missing`, async (params) => {
       /* eslint-enable max-len */
-      const memberParams: CreateMemberParams = generateCreateMemberParams({
-        orgId: generateId(),
-      });
+      const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId: generateId() });
       delete memberParams[params.field];
-      await handler.mutations.createMember({
-        memberParams,
-        missingFieldError: params.error,
-      });
+      await handler.mutations.createMember({ memberParams, missingFieldError: params.error });
     });
 
     test.each`
@@ -85,9 +78,7 @@ describe('Validations - member', () => {
     `(`should set default value if exists for optional field $field`, async (params) => {
       /* eslint-enable max-len */
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
-      const memberParams: CreateMemberParams = generateCreateMemberParams({
-        orgId,
-      });
+      const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
       delete memberParams[params.field];
 
       const { id } = await handler.mutations.createMember({ memberParams });
@@ -166,9 +157,7 @@ describe('Validations - member', () => {
       ${minLength - 1} | ${'short'}  | ${'lastName'}
       ${maxLength + 1} | ${'long'}   | ${'lastName'}
     `(`should fail to create a member since $field is too $errorString`, async (params) => {
-      const memberParams: CreateMemberParams = generateCreateMemberParams({
-        orgId: generateId(),
-      });
+      const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId: generateId() });
       memberParams[params.field] = generateRandomName(params.length);
       await handler.mutations.createMember({
         memberParams,
@@ -189,10 +178,7 @@ describe('Validations - member', () => {
           orgId: generateId(),
           ...params.input,
         });
-        await handler.mutations.createMember({
-          memberParams,
-          invalidFieldsErrors: params.errors,
-        });
+        await handler.mutations.createMember({ memberParams, invalidFieldsErrors: params.errors });
       },
     );
 
@@ -205,18 +191,12 @@ describe('Validations - member', () => {
 
     it('should throw error on non existing member from mobile', async () => {
       handler.setContextUser('not-valid');
-      await handler.queries.getMember({
-        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
-      });
+      await handler.queries.getMember({ invalidFieldsError: Errors.get(ErrorType.memberNotFound) });
     });
 
     it('rest: should fail to create member if phone already exists', async () => {
-      const memberParams: CreateMemberParams = generateCreateMemberParams({
-        orgId: generateId(),
-      });
-      await handler.mutations.createMember({
-        memberParams,
-      });
+      const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId: generateId() });
+      await handler.mutations.createMember({ memberParams });
       const newMemberParams: CreateMemberParams = generateCreateMemberParams({
         orgId: generateId(),
         phone: memberParams.phone,
@@ -258,10 +238,7 @@ describe('Validations - member', () => {
   describe('getMemberUploadRecordingLink', () => {
     it('should throw error on non existing member', async () => {
       await handler.queries.getMemberUploadRecordingLink({
-        recordingLinkParams: {
-          memberId: generateId(),
-          id: generateId(),
-        },
+        recordingLinkParams: { memberId: generateId(), id: generateId() },
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
     });
@@ -270,10 +247,7 @@ describe('Validations - member', () => {
   describe('getMemberDownloadRecordingLink', () => {
     it('should throw error on non existing member', async () => {
       await handler.queries.getMemberDownloadRecordingLink({
-        recordingLinkParams: {
-          memberId: generateId(),
-          id: generateId(),
-        },
+        recordingLinkParams: { memberId: generateId(), id: generateId() },
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
     });
@@ -293,11 +267,7 @@ describe('Validations - member', () => {
       'should not be able to register on non alphanumeric token %p',
       async (token) => {
         await handler.mutations.registerMemberForNotifications({
-          registerForNotificationParams: {
-            memberId: generateId(),
-            platform: Platform.ios,
-            token,
-          },
+          registerForNotificationParams: { memberId: generateId(), platform: Platform.ios, token },
           invalidFieldsErrors: [Errors.get(ErrorType.memberRegisterForNotificationToken)],
         });
       },
@@ -348,16 +318,13 @@ describe('Validations - member', () => {
       });
     });
 
-    /* eslint-disable max-len */
+    /* eslint-disable-next-line max-len */
     it('Should throw an error when sendBirdChannelUrl field is provided in NotificationMetadata', async () => {
       const notifyParams: NotifyParams = generateNotifyParams({
         metadata: { sendBirdChannelUrl: generateUniqueUrl() },
       });
       const error = 'Field "sendBirdChannelUrl" is not defined by type "NotificationMetadata".';
-      await handler.mutations.notify({
-        notifyParams,
-        missingFieldError: error,
-      });
+      await handler.mutations.notify({ notifyParams, missingFieldError: error });
     });
 
     test.each([NotificationType.text, NotificationType.textSms])(
@@ -455,10 +422,7 @@ describe('Validations - member', () => {
         /* eslint-enable max-len */
         const cancelNotifyParams: CancelNotifyParams = generateCancelNotifyParams();
         delete cancelNotifyParams[params.field];
-        await handler.mutations.cancel({
-          cancelNotifyParams,
-          missingFieldError: params.error,
-        });
+        await handler.mutations.cancel({ cancelNotifyParams, missingFieldError: params.error });
       },
     );
   });
@@ -587,10 +551,7 @@ describe('Validations - member', () => {
           const method = TaskType.goal
             ? handler.mutations.updateGoalStatus
             : handler.mutations.updateActionItemStatus;
-          await method({
-            updateTaskStatusParams,
-            missingFieldError: params.error,
-          });
+          await method({ updateTaskStatusParams, missingFieldError: params.error });
         },
       );
 
@@ -607,10 +568,7 @@ describe('Validations - member', () => {
         const method = TaskType.goal
           ? handler.mutations.updateGoalStatus
           : handler.mutations.updateActionItemStatus;
-        await method({
-          updateTaskStatusParams,
-          missingFieldError: params.error,
-        });
+        await method({ updateTaskStatusParams, missingFieldError: params.error });
       });
     });
   });

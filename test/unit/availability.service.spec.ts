@@ -53,9 +53,8 @@ describe('AvailabilityService', () => {
       expect(result.end).toEqual(params.end);
     });
 
-    /* eslint-disable max-len*/
+    /* eslint-disable-next-line max-len */
     it('should create multiple availability for the same user, regardless of time overlapping', async () => {
-      /* eslint-enable max-len*/
       const userId = generateId();
 
       const params = [
@@ -71,9 +70,8 @@ describe('AvailabilityService', () => {
       expect(result.length).toEqual(params.length);
     });
 
-    /* eslint-disable max-len*/
+    /* eslint-disable-next-line max-len */
     it('should create multiple availability for the multiple users, regardless of time overlapping', async () => {
-      /* eslint-enable max-len*/
       const userId1 = generateId();
       const userId2 = generateId();
 

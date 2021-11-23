@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Types } from 'mongoose';
@@ -46,6 +45,7 @@ describe('DailyReportResolver', () => {
       eventEmitterSpy.mockReset();
     });
 
+    /* eslint-disable max-len */
     it.each([
       [
         'expect to emit notification - no stats-over-threshold',
@@ -111,6 +111,7 @@ describe('DailyReportResolver', () => {
         dailyReportCategoryInput,
         emittedEventParams,
       ) => {
+        /* eslint-enable max-len */
         jest
           .spyOn(service, 'setDailyReportCategories')
           .mockResolvedValue(serviceSetDailyReportCategoryReturnedValue);

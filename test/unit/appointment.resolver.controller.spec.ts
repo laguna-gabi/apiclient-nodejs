@@ -395,7 +395,7 @@ describe('AppointmentResolver', () => {
       spyOnEventEmitter.mockReset();
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should reschedule appointments with the new user (for scheduled appointments)', async () => {
       const oldUserId = generateId();
       const newUserId = generateId();
@@ -428,7 +428,7 @@ describe('AppointmentResolver', () => {
       });
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should re-request appointments with the new user (for requested appointments)', async () => {
       const oldUserId = generateId();
       const newUserId = generateId();
@@ -453,7 +453,7 @@ describe('AppointmentResolver', () => {
 
       expect(spyOnRequestAppointment).toHaveBeenCalledTimes(1);
 
-      // eslint-disable-next-line max-len
+      /* eslint-disable-next-line max-len */
       // using objectContaining because it's not possible to test the 'notBefore' field (current time)
       expect(spyOnRequestAppointment).toHaveBeenCalledWith(
         expect.objectContaining(requestAppointmentParams),

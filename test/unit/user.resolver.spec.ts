@@ -75,7 +75,7 @@ describe('UserResolver', () => {
       spyOnServiceInsert.mockImplementationOnce(async () => params);
       await resolver.createUser(params);
 
-      /* eslint-disable */
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const eventParams: IEventOnNewUser = { user: params };
       /* eslint-enable */
