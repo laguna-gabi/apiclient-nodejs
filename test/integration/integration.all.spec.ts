@@ -1,3 +1,9 @@
+import {
+  CancelNotificationType,
+  InternalNotificationType,
+  NotificationType,
+  Platform,
+} from '@lagunahealth/pandora';
 import * as config from 'config';
 import { add, startOfToday, startOfTomorrow } from 'date-fns';
 import * as faker from 'faker';
@@ -30,6 +36,7 @@ import {
   ReplaceUserForMemberParams,
   Task,
   TaskStatus,
+  UpdateJournalParams,
   UpdateRecordingParams,
 } from '../../src/member';
 import { User, UserRole, defaultSlotsParams } from '../../src/user';
@@ -46,17 +53,12 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
+  generateUpdateJournalParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
 } from '../index';
-import {
-  CancelNotificationType,
-  InternalNotificationType,
-  NotificationType,
-  Platform,
-} from '@lagunahealth/pandora';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -1223,6 +1225,51 @@ describe('Integration tests: all', () => {
           },
         ],
         metadata: { minDate: '2015/01/01' },
+      });
+    });
+  });
+
+  describe('Journal', () => {
+    it('should create get update and delete member journal', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+      const { id: journalId } = await handler.mutations.createJournal({ memberId: member.id });
+      const journalBeforeUpdate = await handler.queries.getJournal({ id: journalId });
+
+      expect(journalBeforeUpdate).toMatchObject({
+        id: journalId,
+        memberId: member.id,
+        published: false,
+        text: null,
+      });
+
+      const updateJournalParams: UpdateJournalParams = generateUpdateJournalParams({
+        id: journalId,
+      });
+      const journalAfterUpdate = await handler.mutations.updateJournal({
+        updateJournalParams,
+      });
+
+      expect(journalAfterUpdate).toMatchObject({
+        id: journalId,
+        memberId: member.id,
+        published: false,
+        text: updateJournalParams.text,
+      });
+
+      const journals = await handler.queries.getJournals({ memberId: member.id });
+
+      expect(journals[0]).toMatchObject({
+        id: journalId,
+        memberId: member.id,
+        published: false,
+        text: updateJournalParams.text,
+      });
+
+      await handler.mutations.deleteJournal({ id: journalId });
+      await handler.queries.getJournal({
+        id: journalId,
+        invalidFieldsError: Errors.get(ErrorType.memberJournalNotFound),
       });
     });
   });

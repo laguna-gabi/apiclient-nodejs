@@ -25,6 +25,7 @@ import {
   CommunicationService,
 } from '../../src/communication';
 import {
+  Journal,
   Member,
   MemberConfig,
   MemberModule,
@@ -49,6 +50,7 @@ import {
   generateNotifyParams,
   generateSetGeneralNotesParams,
   generateUniqueUrl,
+  generateUpdateJournalParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
@@ -771,6 +773,107 @@ describe('MemberResolver', () => {
 
       expect(spyOnServiceSetGeneralNotes).toBeCalledTimes(1);
       expect(spyOnServiceSetGeneralNotes).toBeCalledWith(params);
+    });
+  });
+
+  describe('journal', () => {
+    let spyOnServiceCreateJournal;
+    let spyOnServiceUpdateJournal;
+    let spyOnServiceGetJournal;
+    let spyOnServiceGetJournals;
+    let spyOnServiceDeleteJournal;
+
+    const generateMockJournalParams = ({
+      id = generateId(),
+      memberId = new Types.ObjectId(generateId()),
+      text = faker.lorem.sentence(),
+      published = false,
+      updatedAt = new Date(),
+    }: Partial<Journal> = {}): Journal => {
+      return {
+        id,
+        memberId,
+        text,
+        published,
+        updatedAt,
+      };
+    };
+
+    beforeEach(() => {
+      spyOnServiceCreateJournal = jest.spyOn(service, 'createJournal');
+      spyOnServiceUpdateJournal = jest.spyOn(service, 'updateJournal');
+      spyOnServiceGetJournal = jest.spyOn(service, 'getJournal');
+      spyOnServiceGetJournals = jest.spyOn(service, 'getJournals');
+      spyOnServiceDeleteJournal = jest.spyOn(service, 'deleteJournal');
+    });
+
+    afterEach(() => {
+      spyOnServiceCreateJournal.mockReset();
+      spyOnServiceUpdateJournal.mockReset();
+      spyOnServiceGetJournal.mockReset();
+      spyOnServiceGetJournals.mockReset();
+      spyOnServiceDeleteJournal.mockReset();
+    });
+
+    it('should create journal', async () => {
+      const id = generateId();
+      const memberId = generateId();
+      spyOnServiceCreateJournal.mockImplementationOnce(async () => id);
+
+      const result = await resolver.createJournal(memberId);
+
+      expect(spyOnServiceCreateJournal).toBeCalledTimes(1);
+      expect(spyOnServiceCreateJournal).toBeCalledWith(memberId);
+      expect(result).toEqual(id);
+    });
+
+    it('should update journal', async () => {
+      const params = generateUpdateJournalParams();
+      const journal = generateMockJournalParams({ ...params });
+      spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
+
+      const result = await resolver.updateJournal(params);
+
+      expect(spyOnServiceUpdateJournal).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateJournal).toBeCalledWith(params);
+      expect(result).toEqual(journal);
+    });
+
+    it('should get journal', async () => {
+      const journal = generateMockJournalParams();
+      spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
+
+      const result = await resolver.getJournal(journal.id);
+
+      expect(spyOnServiceGetJournal).toBeCalledTimes(1);
+      expect(spyOnServiceGetJournal).toBeCalledWith(journal.id);
+      expect(result).toEqual(journal);
+    });
+
+    it('should get Journals', async () => {
+      const memberId = generateId();
+      const journals = [
+        generateMockJournalParams({ memberId: new Types.ObjectId(memberId) }),
+        generateMockJournalParams({ memberId: new Types.ObjectId(memberId) }),
+      ];
+      spyOnServiceGetJournals.mockImplementationOnce(async () => journals);
+
+      const result = await resolver.getJournals(memberId);
+
+      expect(spyOnServiceGetJournals).toBeCalledTimes(1);
+      expect(spyOnServiceGetJournals).toBeCalledWith(memberId);
+      expect(result).toEqual(journals);
+    });
+
+    it('should delete getJournal', async () => {
+      const id = generateId();
+      spyOnServiceDeleteJournal.mockImplementationOnce(async () => true);
+
+      const result = await resolver.deleteJournal(id);
+
+      expect(spyOnServiceDeleteJournal).toBeCalledTimes(1);
+      expect(spyOnServiceDeleteJournal).toBeCalledWith(id);
+      expect(result).toEqual(true);
     });
   });
 

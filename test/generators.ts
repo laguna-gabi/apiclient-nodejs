@@ -44,6 +44,7 @@ import {
   SetGeneralNotesParams,
   Sex,
   TaskStatus,
+  UpdateJournalParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -443,6 +444,13 @@ export const generateSetGeneralNotesParams = ({
   nurseNotes = faker.lorem.sentence(),
 }: Partial<SetGeneralNotesParams> = {}): SetGeneralNotesParams => {
   return { memberId, note, nurseNotes };
+};
+
+export const generateUpdateJournalParams = ({
+  id = generateId(),
+  text = faker.lorem.sentence(),
+}: Partial<UpdateJournalParams> = {}): UpdateJournalParams => {
+  return { id, text };
 };
 
 export const generateDateOnly = (date: Date): string => {

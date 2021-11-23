@@ -5,7 +5,6 @@ import * as config from 'config';
 import { sub } from 'date-fns';
 import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
-import { StorageService } from '../providers';
 import { v4 } from 'uuid';
 import {
   ActionItem,
@@ -19,6 +18,8 @@ import {
   CreateTaskParams,
   Goal,
   GoalDocument,
+  Journal,
+  JournalDocument,
   Member,
   MemberConfig,
   MemberConfigDocument,
@@ -53,6 +54,8 @@ import {
   Identifier,
   Logger,
 } from '../common';
+import { StorageService } from '../providers';
+import { UpdateJournalParams } from './journal.dto';
 
 @Injectable()
 export class MemberService extends BaseService {
@@ -63,6 +66,8 @@ export class MemberService extends BaseService {
     private readonly goalModel: Model<GoalDocument>,
     @InjectModel(ActionItem.name)
     private readonly actionItemModel: Model<ActionItemDocument>,
+    @InjectModel(Journal.name)
+    private readonly journalModel: Model<JournalDocument>,
     @InjectModel(MemberConfig.name)
     private readonly memberConfigModel: Model<MemberConfigDocument>,
     @InjectModel(Recording.name)
@@ -669,6 +674,59 @@ export class MemberService extends BaseService {
     if (result.nModified === 0) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
+  }
+
+  /*************************************************************************************************
+   ******************************************** Journal ********************************************
+   ************************************************************************************************/
+
+  async createJournal(memberId: string): Promise<Identifier> {
+    const { _id } = await this.journalModel.create({ memberId: new Types.ObjectId(memberId) });
+    return { id: _id };
+  }
+
+  async updateJournal(updateJournalParams: UpdateJournalParams): Promise<Journal> {
+    const { id, text } = updateJournalParams;
+    const result = await this.journalModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(id) },
+      { $set: { text } },
+      { new: true },
+    );
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.memberJournalNotFound));
+    }
+
+    return result;
+  }
+
+  async getJournal(id: string): Promise<Journal> {
+    const result = await this.journalModel.findById(id);
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.memberJournalNotFound));
+    }
+
+    return result;
+  }
+
+  async getJournals(memberId: string): Promise<Journal[]> {
+    const result = await this.journalModel.find({
+      memberId: new Types.ObjectId(memberId),
+      text: { $exists: true },
+    });
+
+    return result;
+  }
+
+  async deleteJournal(id: string): Promise<boolean> {
+    const result = await this.journalModel.deleteOne({ _id: new Types.ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      throw new Error(Errors.get(ErrorType.memberJournalNotFound));
+    }
+
+    return true;
   }
 
   /*************************************************************************************************

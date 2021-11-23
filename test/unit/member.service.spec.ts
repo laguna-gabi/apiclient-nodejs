@@ -20,6 +20,8 @@ import {
   Goal,
   GoalDto,
   Honorific,
+  Journal,
+  JournalDto,
   Member,
   MemberDto,
   MemberModule,
@@ -48,6 +50,7 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
+  generateUpdateJournalParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
@@ -63,6 +66,7 @@ describe('MemberService', () => {
   let modelOrg: Model<typeof OrgDto>;
   let modelGoal: Model<typeof GoalDto>;
   let modelActionItem: Model<typeof ActionItemDto>;
+  let modelJournal: Model<typeof JournalDto>;
   let modelAppointment: Model<typeof AppointmentDto>;
 
   beforeAll(async () => {
@@ -77,6 +81,7 @@ describe('MemberService', () => {
     modelOrg = model(Org.name, OrgDto);
     modelGoal = model(Goal.name, GoalDto);
     modelActionItem = model(ActionItem.name, ActionItemDto);
+    modelJournal = model(Journal.name, JournalDto);
     modelAppointment = model(Appointment.name, AppointmentDto);
     await dbConnect();
   });
@@ -930,6 +935,172 @@ describe('MemberService', () => {
       const generalNotes = generateSetGeneralNotesParams();
       await expect(service.setGeneralNotes(generalNotes)).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
+      );
+    });
+  });
+
+  describe('createJournal', () => {
+    it('should create journal', async () => {
+      const memberId = generateId();
+
+      const { id } = await service.createJournal(memberId);
+      const result: any = await modelJournal.findById(id);
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          _id: id,
+          memberId: new Types.ObjectId(memberId),
+          published: false,
+          updatedAt: expect.any(Date),
+          createdAt: expect.any(Date),
+        }),
+      );
+    });
+  });
+
+  describe('updateJournal', () => {
+    it('should update journal', async () => {
+      const memberId = generateId();
+
+      const { id } = await service.createJournal(memberId);
+      const updateJournalParams = generateUpdateJournalParams({ id });
+
+      await service.updateJournal(updateJournalParams);
+      const result: any = await modelJournal.findById(id);
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          _id: id,
+          memberId: new Types.ObjectId(memberId),
+          published: false,
+          text: updateJournalParams.text,
+          updatedAt: expect.any(Date),
+          createdAt: expect.any(Date),
+        }),
+      );
+    });
+
+    it(`should throw an error on update journal when id doesn't exists`, async () => {
+      await expect(service.updateJournal(generateUpdateJournalParams())).rejects.toThrow(
+        Error(Errors.get(ErrorType.memberJournalNotFound)),
+      );
+    });
+  });
+
+  describe('getJournal', () => {
+    it('should get journal', async () => {
+      const memberId = generateId();
+
+      const { id } = await service.createJournal(memberId);
+      const updateJournalParams = generateUpdateJournalParams({ id });
+
+      await service.updateJournal(updateJournalParams);
+
+      const result: any = await modelJournal.findById(id);
+      const journal = await service.getJournal(id);
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          _id: new Types.ObjectId(journal.id),
+          memberId: new Types.ObjectId(journal.memberId),
+          published: journal.published,
+          text: journal.text,
+          updatedAt: journal.updatedAt,
+          createdAt: expect.any(Date),
+        }),
+      );
+    });
+
+    it(`should throw an error on get journal when id doesn't exists`, async () => {
+      await expect(service.getJournal(generateId())).rejects.toThrow(
+        Error(Errors.get(ErrorType.memberJournalNotFound)),
+      );
+    });
+  });
+
+  describe('getJournals', () => {
+    it('should get journals by memberId', async () => {
+      const memberId = generateId();
+
+      const { id: journalId1 } = await service.createJournal(memberId);
+      const { id: journalId2 } = await service.createJournal(memberId);
+      const updateJournalParams1 = generateUpdateJournalParams({ id: journalId1 });
+      const updateJournalParams2 = generateUpdateJournalParams({ id: journalId2 });
+
+      await service.updateJournal(updateJournalParams1);
+      await service.updateJournal(updateJournalParams2);
+
+      const journals = await service.getJournals(memberId);
+
+      expect(journals).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: new Types.ObjectId(journalId1),
+            memberId: new Types.ObjectId(memberId),
+            published: false,
+            text: updateJournalParams1.text,
+            updatedAt: expect.any(Date),
+            createdAt: expect.any(Date),
+          }),
+          expect.objectContaining({
+            _id: new Types.ObjectId(journalId2),
+            memberId: new Types.ObjectId(memberId),
+            published: false,
+            text: updateJournalParams2.text,
+            updatedAt: expect.any(Date),
+            createdAt: expect.any(Date),
+          }),
+        ]),
+      );
+    });
+
+    it(`should not get journals by memberId if text doesn't exists`, async () => {
+      const memberId = generateId();
+      const { id } = await service.createJournal(memberId);
+
+      const journals = await service.getJournals(memberId);
+
+      expect(journals).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: new Types.ObjectId(id),
+            memberId: new Types.ObjectId(memberId),
+            published: false,
+            text: expect.any(String),
+            updatedAt: expect.any(Date),
+            createdAt: expect.any(Date),
+          }),
+        ]),
+      );
+    });
+
+    it(`should return empty array if member doesn't have journals`, async () => {
+      const memberId = generateId();
+
+      const journals = await service.getJournals(memberId);
+
+      expect(journals).toEqual([]);
+    });
+  });
+
+  describe('deleteJournal', () => {
+    it('should delete journal', async () => {
+      const memberId = generateId();
+      const { id } = await service.createJournal(memberId);
+
+      const resultBeforeDelete = await modelJournal.findById(id);
+      expect(resultBeforeDelete).not.toBeNull();
+
+      const journalDelete = await service.deleteJournal(id);
+      expect(journalDelete).toBeTruthy();
+
+      const resultAfterDelete = await modelJournal.findById(id);
+      expect(resultAfterDelete).toBeNull();
+    });
+
+    it(`should throw an error on delete journal when id doesn't exists`, async () => {
+      await expect(service.deleteJournal(generateId())).rejects.toThrow(
+        Error(Errors.get(ErrorType.memberJournalNotFound)),
       );
     });
   });

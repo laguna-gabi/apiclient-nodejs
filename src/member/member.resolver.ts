@@ -1,3 +1,4 @@
+import { InternalNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -13,6 +14,7 @@ import {
   CreateMemberParams,
   CreateTaskParams,
   DischargeDocumentsLinks,
+  Journal,
   Member,
   MemberBase,
   MemberConfig,
@@ -26,6 +28,7 @@ import {
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
   TaskStatus,
+  UpdateJournalParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -64,7 +67,6 @@ import {
 } from '../communication';
 import { Bitly, CognitoService, NotificationsService, StorageService } from '../providers';
 import { User, UserService } from '../user';
-import { InternalNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
@@ -345,11 +347,43 @@ export class MemberResolver extends MemberBase {
   /*************************************************************************************************
    ****************************************** General notes ****************************************
    ************************************************************************************************/
+
   @Mutation(() => Boolean, { nullable: true })
   async setGeneralNotes(
     @Args(camelCase(SetGeneralNotesParams.name)) setGeneralNotesParams: SetGeneralNotesParams,
   ) {
     return this.memberService.setGeneralNotes(setGeneralNotesParams);
+  }
+
+  /*************************************************************************************************
+   ******************************************** Journal ********************************************
+   ************************************************************************************************/
+
+  @Mutation(() => Identifier)
+  async createJournal(@Args('memberId', { type: () => String }) memberId: string) {
+    return this.memberService.createJournal(memberId);
+  }
+
+  @Mutation(() => Journal)
+  async updateJournal(
+    @Args(camelCase(UpdateJournalParams.name)) updateJournalParams: UpdateJournalParams,
+  ) {
+    return this.memberService.updateJournal(updateJournalParams);
+  }
+
+  @Query(() => Journal)
+  async getJournal(@Args('id', { type: () => String }) id: string) {
+    return this.memberService.getJournal(id);
+  }
+
+  @Query(() => [Journal])
+  async getJournals(@Args('memberId', { type: () => String }) memberId: string) {
+    return this.memberService.getJournals(memberId);
+  }
+
+  @Mutation(() => Boolean)
+  async deleteJournal(@Args('id', { type: () => String }) id: string) {
+    return this.memberService.deleteJournal(id);
   }
 
   /************************************************************************************************

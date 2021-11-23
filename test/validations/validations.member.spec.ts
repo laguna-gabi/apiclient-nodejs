@@ -1,3 +1,4 @@
+import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 import * as config from 'config';
 import * as faker from 'faker';
 import * as request from 'supertest';
@@ -25,13 +26,13 @@ import {
   generateReplaceUserForMemberParams,
   generateSetGeneralNotesParams,
   generateUniqueUrl,
+  generateUpdateJournalParams,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
   generateZipCode,
   urls,
 } from '../index';
-import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
@@ -598,6 +599,69 @@ describe('Validations - member', () => {
       const setGeneralNotesParams = generateSetGeneralNotesParams({ ...params.field });
       await handler.mutations.setGeneralNotes({
         setGeneralNotesParams,
+        missingFieldError: stringError,
+      });
+    });
+  });
+
+  describe('createJournal', () => {
+    it('should throw an error for invalid memberId', async () => {
+      await handler.mutations.createJournal({
+        memberId: 123,
+        missingFieldError: stringError,
+      });
+    });
+  });
+
+  describe('updateJournal', () => {
+    test.each`
+      field     | error
+      ${'id'}   | ${`Field "id" of required type "String!" was not provided.`}
+      ${'text'} | ${`Field "text" of required type "String!" was not provided.`}
+    `(`should fail to update journal since mandatory field $field is missing`, async (params) => {
+      const updateJournalParams = generateUpdateJournalParams();
+      delete updateJournalParams[params.field];
+      await handler.mutations.updateJournal({
+        updateJournalParams,
+        missingFieldError: params.error,
+      });
+    });
+
+    test.each`
+      field
+      ${{ id: 123 }}
+      ${{ text: 123 }}
+    `(`should fail to update journal since $input is not a valid type`, async (params) => {
+      const updateJournalParams = generateUpdateJournalParams({ ...params.field });
+      await handler.mutations.updateJournal({
+        updateJournalParams,
+        missingFieldError: stringError,
+      });
+    });
+  });
+
+  describe('getJournal', () => {
+    it('should throw an error for invalid id', async () => {
+      await handler.queries.getJournal({
+        id: 123,
+        invalidFieldsError: stringError,
+      });
+    });
+  });
+
+  describe('getJournals', () => {
+    it('should throw an error for invalid id', async () => {
+      await handler.queries.getJournals({
+        memberId: 123,
+        invalidFieldsError: stringError,
+      });
+    });
+  });
+
+  describe('deleteJournal', () => {
+    it('should throw an error for invalid id', async () => {
+      await handler.mutations.deleteJournal({
+        id: 123,
         missingFieldError: stringError,
       });
     });
