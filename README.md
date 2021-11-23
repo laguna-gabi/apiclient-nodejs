@@ -1,15 +1,25 @@
 <p align="center">
-  <a href="https://en.wikipedia.org/wiki/Asclepius" target="blank">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Asklepios_-_Epidauros.jpg" 
-       height="250" 
-       alt="Hepius" />
-  </a>
-  <br/>
   <a href="https://github.com/LagunaHealth/hepius/actions?query=branch%3Adevelop">
     <img src="https://github.com/LagunaHealth/hepius/workflows/Laguna/badge.svg" alt="Develop ci/cd status." />
   </a>
   <a href="https://github.com/LagunaHealth/hepius/contributors" alt="Contributors">
     <img src="https://img.shields.io/github/contributors/badges/shields" />
+  </a> <br/>
+  <b>Total coverage:</b>
+  <a href="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/lcov-report/index.html" alt="lines">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/badge-lines.svg" />
+  </a>
+  <b>Other coverage:</b>
+  <a href="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/lcov-report/index.html" alt="functions">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/badge-functions.svg" />
+  </a>
+  <a href="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/lcov-report/index.html" alt="statements">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/badge-statements.svg" />
+  </a><br/>
+  <a href="https://en.wikipedia.org/wiki/Asclepius" target="blank">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Asklepios_-_Epidauros.jpg" 
+       height="200" 
+       alt="Hepius" />
   </a>
 </p>
 

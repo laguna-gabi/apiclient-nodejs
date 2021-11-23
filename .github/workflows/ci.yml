@@ -79,8 +79,8 @@ jobs:
           aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: '${{ secrets.COVERAGE_AWS_BUCKET }}/${{ github.head_ref }}'
-          source_dir: './coverage/lcov-report'
-          destination_dir: 'lcov-report'
+          source_dir: './coverage'
+          destination_dir: 'coverage'
       - name: Add coverage url to PR
         if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
         uses: mshick/add-pr-comment@v1
@@ -90,7 +90,7 @@ jobs:
           message: |
             ### coverage lcov report for `${{ github.head_ref }}`
             ___
-            http://${{ secrets.COVERAGE_AWS_BUCKET }}.s3-website-${{ secrets.COVERAGE_AWS_REGION }}.amazonaws.com/${{ github.head_ref }}/lcov-report/index.html
+            https://${{ secrets.COVERAGE_AWS_FULL_BUCKET_PATH }}/${{ github.head_ref }}/coverage/lcov-report/index.html
           allow-repeats: false
       - name: Get local coverage report
         if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
@@ -98,7 +98,7 @@ jobs:
         uses: notiz-dev/github-action-json-property@release
         with:
           path: './coverage/coverage-summary.json'
-          prop_path: 'total.statements.pct'
+          prop_path: 'total.lines.pct'
       - name: Download develop coverage report from S3
         if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
         uses: prewk/s3-cp-action@v2
@@ -113,7 +113,7 @@ jobs:
         uses: notiz-dev/github-action-json-property@release
         with:
           path: './coverage/develop/coverage-summary.json'
-          prop_path: 'total.statements.pct'
+          prop_path: 'total.lines.pct'
       - name: Set coverage diff
         if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
         run: echo "DIFF_COV=$(echo "${{steps.localCoverage.outputs.prop}}-${{steps.developCoverage.outputs.prop}}" | bc)" >> $GITHUB_ENV
