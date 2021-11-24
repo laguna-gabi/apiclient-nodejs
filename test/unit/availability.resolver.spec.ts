@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { v4 } from 'uuid';
 import {
   AvailabilityModule,
   AvailabilityResolver,
@@ -39,7 +38,7 @@ describe('AvailabilityResolver', () => {
     it('should successfully create availabilities', async () => {
       const params = generateAvailabilityInput();
       spyOnServiceCreate.mockImplementationOnce(async () => undefined);
-      const userId = v4();
+      const userId = generateId();
       const token = {
         req: {
           user: {

@@ -18,6 +18,7 @@ import {
 } from '../src/providers';
 import { User, UserService } from '../src/user';
 import { Mutations, Queries } from './aux';
+import { generateId } from './generators';
 
 export class BaseHandler {
   app: INestApplication;
@@ -47,7 +48,6 @@ export const urls = {
 };
 
 export const compareUsers = (user: User, userBase) => {
-  expect(user.id).toEqual(userBase.id);
   expect(user.firstName).toEqual(userBase.firstName);
   expect(user.lastName).toEqual(userBase.lastName);
   expect(user.email).toEqual(userBase.email);
@@ -105,7 +105,7 @@ export const mockProviders = (
   const spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
   const spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
   const spyOnTwilioGetToken = jest.spyOn(twilioService, 'getAccessToken');
-  const spyOnSlackBotSendMessage = jest.spyOn(slackBot, 'sendMessage');
+  const spyOnSlackBotSendMessage = jest.spyOn(slackBot, 'send');
   const spyOnCognitoServiceDisableMember = jest.spyOn(cognitoService, 'disableMember');
   const spyOnCognitoServiceDeleteMember = jest.spyOn(cognitoService, 'deleteMember');
 
@@ -128,7 +128,7 @@ export const mockProviders = (
   spyOnTwilioGetToken.mockReturnValue('token');
   spyOnSlackBotSendMessage.mockReturnValue(undefined);
   spyOnSendBirdUpdateChannelName.mockReturnValue(undefined);
-  spyOnSendBirdInvite.mockReturnValue(undefined);
+  spyOnSendBirdInvite.mockResolvedValue([generateId()]);
   spyOnSendBirdLeave.mockReturnValue(undefined);
   spyOnCognitoServiceDisableMember.mockReturnValue(undefined);
   spyOnCognitoServiceDeleteMember.mockReturnValue(undefined);

@@ -7,10 +7,13 @@ import {
   AppointmentResolver,
   AppointmentScheduler,
   AppointmentService,
+  ScheduleAppointmentParams,
 } from '../../src/appointment';
 import {
   AppointmentStatus,
   ContentKey,
+  ErrorType,
+  Errors,
   EventType,
   IEventOnUpdatedAppointment,
   IEventOnUpdatedUserCommunication,
@@ -62,12 +65,15 @@ describe('AppointmentResolver', () => {
 
   describe('requestAppointment', () => {
     let spyOnServiceInsert;
+    let spyOnServiceGet;
     beforeEach(() => {
       spyOnServiceInsert = jest.spyOn(service, 'request');
+      spyOnServiceGet = jest.spyOn(service, 'get');
     });
 
     afterEach(() => {
       spyOnServiceInsert.mockReset();
+      spyOnServiceGet.mockReset();
       spyOnEventEmitter.mockReset();
     });
 
@@ -95,6 +101,7 @@ describe('AppointmentResolver', () => {
         metadata: {
           contentType: ContentKey.appointmentRequest,
           scheduleLink: `${appointment.link}`,
+          path: `connect/${appointment.id}`,
         },
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyInternal, eventParams);
@@ -110,6 +117,7 @@ describe('AppointmentResolver', () => {
         end: addMinutes(new Date(), 20),
       });
       spyOnServiceInsert.mockImplementationOnce(async () => appointment);
+      spyOnServiceGet.mockImplementationOnce(async () => undefined);
 
       await resolver.scheduleAppointment(appointment);
       expect(spyOnSchedulerRegisterAppointmentAlert).not.toBeCalled();
@@ -152,17 +160,20 @@ describe('AppointmentResolver', () => {
 
   describe('scheduleAppointment', () => {
     let spyOnServiceSchedule;
+    let spyOnServiceGet;
     let spyOnSchedulerRegisterAppointmentAlert;
     let spyOnSchedulerDeleteTimeout;
 
     beforeEach(() => {
       spyOnServiceSchedule = jest.spyOn(service, 'schedule');
+      spyOnServiceGet = jest.spyOn(service, 'get');
       spyOnSchedulerRegisterAppointmentAlert = jest.spyOn(scheduler, 'registerAppointmentAlert');
       spyOnSchedulerDeleteTimeout = jest.spyOn(scheduler, 'deleteTimeout');
     });
 
     afterEach(() => {
       spyOnServiceSchedule.mockReset();
+      spyOnServiceGet.mockReset();
       spyOnSchedulerRegisterAppointmentAlert.mockReset();
       spyOnEventEmitter.mockReset();
       spyOnSchedulerDeleteTimeout.mockReset();
@@ -176,6 +187,7 @@ describe('AppointmentResolver', () => {
       const appointment = generateScheduleAppointmentParams();
       const mockResult = { ...appointment, status: AppointmentStatus.scheduled, id: generateId() };
       spyOnServiceSchedule.mockImplementationOnce(async () => mockResult);
+      spyOnServiceGet.mockImplementationOnce(async () => undefined);
 
       const result = await params.method(appointment);
 
@@ -183,10 +195,45 @@ describe('AppointmentResolver', () => {
       expect(spyOnSchedulerRegisterAppointmentAlert).toBeCalledWith({
         id: mockResult.id,
         memberId: appointment.memberId.toString(),
-        userId: appointment.userId,
+        userId: appointment.userId.toString(),
         start: appointment.start,
       });
       expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: appointment.memberId.toString() });
+    });
+
+    it(`should not allow editing appointment on status=${AppointmentStatus.done}`, async () => {
+      const appointment = generateScheduleAppointmentParams();
+      const mockResult = { ...appointment, status: AppointmentStatus.scheduled, id: generateId() };
+      spyOnServiceSchedule.mockImplementationOnce(async () => mockResult);
+
+      const result = await resolver.scheduleAppointment(appointment);
+      expect(result).toEqual(mockResult);
+
+      const updatedApp: ScheduleAppointmentParams = { ...mockResult, start: new Date() };
+
+      spyOnServiceGet.mockImplementationOnce(async () => ({
+        ...result,
+        status: AppointmentStatus.done,
+      }));
+      await expect(resolver.scheduleAppointment(updatedApp)).rejects.toThrow(
+        Errors.get(ErrorType.appointmentCanNotBeUpdated),
+      );
+    });
+
+    it(`should allow editing ${AppointmentStatus.scheduled} appointment`, async () => {
+      const appointment = generateScheduleAppointmentParams();
+      const mockResult = { ...appointment, status: AppointmentStatus.scheduled, id: generateId() };
+      spyOnServiceSchedule.mockImplementationOnce(async () => mockResult);
+      spyOnServiceGet.mockImplementationOnce(async () => undefined);
+
+      const result = await resolver.scheduleAppointment(appointment);
+      expect(result).toEqual(mockResult);
+
+      const updatedApp: ScheduleAppointmentParams = { ...mockResult, start: new Date() };
+      spyOnServiceSchedule.mockImplementationOnce(async () => updatedApp);
+      spyOnServiceGet.mockImplementationOnce(async () => updatedApp);
+      const resultUpdate = await resolver.scheduleAppointment(appointment);
+      expect(resultUpdate).toEqual(updatedApp);
     });
 
     it('should validate that on schedule appointment, internal events are sent', async () => {
@@ -196,12 +243,13 @@ describe('AppointmentResolver', () => {
         ...appointment,
         status,
       }));
+      spyOnServiceGet.mockImplementationOnce(async () => undefined);
 
       const result = await resolver.scheduleAppointment(appointment);
       const eventParams: IEventOnUpdatedAppointment = {
         updatedAppointmentAction: UpdatedAppointmentAction.edit,
         memberId: result.memberId.toString(),
-        userId: result.userId,
+        userId: result.userId.toString(),
         key: result.id,
         value: {
           status: result.status,
@@ -236,7 +284,7 @@ describe('AppointmentResolver', () => {
 
       const notifyMemberParams: InternalNotifyParams = {
         memberId: appointment.memberId.toString(),
-        userId: appointment.userId,
+        userId: appointment.userId.toString(),
         type: InternalNotificationType.textSmsToMember,
         metadata: {
           contentType: ContentKey.appointmentScheduledMember,
@@ -299,7 +347,7 @@ describe('AppointmentResolver', () => {
       const eventParams: IEventOnUpdatedAppointment = {
         updatedAppointmentAction: UpdatedAppointmentAction.delete,
         memberId: result.memberId.toString(),
-        userId: result.userId,
+        userId: result.userId.toString(),
         key: result.id,
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedAppointment, eventParams);
@@ -347,7 +395,7 @@ describe('AppointmentResolver', () => {
       spyOnEventEmitter.mockReset();
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should reschedule appointments with the new user (for scheduled appointments)', async () => {
       const oldUserId = generateId();
       const newUserId = generateId();
@@ -380,7 +428,7 @@ describe('AppointmentResolver', () => {
       });
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should re-request appointments with the new user (for requested appointments)', async () => {
       const oldUserId = generateId();
       const newUserId = generateId();
@@ -405,7 +453,7 @@ describe('AppointmentResolver', () => {
 
       expect(spyOnRequestAppointment).toHaveBeenCalledTimes(1);
 
-      // eslint-disable-next-line max-len
+      /* eslint-disable-next-line max-len */
       // using objectContaining because it's not possible to test the 'notBefore' field (current time)
       expect(spyOnRequestAppointment).toHaveBeenCalledWith(
         expect.objectContaining(requestAppointmentParams),

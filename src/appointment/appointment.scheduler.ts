@@ -104,7 +104,7 @@ export class AppointmentScheduler extends BaseScheduler {
         return this.scheduleAppointmentAlert({
           id: appointment._id + ReminderType.appointmentReminder,
           memberId: appointment.memberId.toString(),
-          userId: appointment.userId,
+          userId: appointment.userId.toString(),
           start: appointment.start,
           gapDate,
         });
@@ -130,7 +130,7 @@ export class AppointmentScheduler extends BaseScheduler {
         return this.scheduleAppointmentLongAlert({
           id: appointment._id + ReminderType.appointmentLongReminder,
           memberId: appointment.memberId.toString(),
-          userId: appointment.userId,
+          userId: appointment.userId.toString(),
           start: appointment.start,
         });
       }),

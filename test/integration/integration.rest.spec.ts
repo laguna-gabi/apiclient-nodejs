@@ -84,7 +84,7 @@ describe('Integration tests: rest', () => {
       const resultMember = await creators.createAndValidateMember({ org: resultOrg });
 
       const appointmentsParams = generateScheduleAppointmentParams({
-        userId: resultMember.primaryUserId,
+        userId: resultMember.primaryUserId.toString(),
         memberId: resultMember.id,
       });
 

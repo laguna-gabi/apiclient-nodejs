@@ -12,17 +12,15 @@ import { SendBird, TwilioService } from '.';
 import * as crypto from 'crypto';
 import {
   EventType,
-  IEventNotifySlack,
   IEventOnReceivedChatMessage,
   IEventOnReceivedTextMessage,
   Logger,
   LoggingInterceptor,
   Public,
-  SlackChannel,
-  SlackIcon,
   apiPrefix,
   webhooks,
 } from '../common';
+import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 
 /**
  * Go to '../../test/unit/mocks/webhookSendbirdNewMessagePayload.json' for a payload example
@@ -79,7 +77,7 @@ export class WebhooksController {
       this.eventEmitter.emit(EventType.onReceivedTextMessage, eventParams);
     } else {
       const params: IEventNotifySlack = {
-        // eslint-disable-next-line max-len
+        /* eslint-disable-next-line max-len */
         message: `*TWILIO WEBHOOK*\nrequest from an unknown client was made to Post ${apiPrefix}/${webhooks}/twilio/incoming-sms`,
         icon: SlackIcon.warning,
         channel: SlackChannel.notifications,
@@ -89,13 +87,11 @@ export class WebhooksController {
     }
   }
 
-  /* eslint-disable max-len */
   /**
    * we're checking that the request was sent from sendbird by parsing the header.
    * ensure that the source of the request comes from Sendbird server..
    * https://sendbird.com/docs/chat/v3/platform-api/guides/webhooks?_ga=2.74933394.1888671852.1633246669-1802902378.1627825679#2-headers-3-x-sendbird-signature
    */
-  /* eslint-enable max-len */
   validateMessageSentFromSendbird(@Body() payload, @Headers() headers) {
     const signature = headers['x-sendbird-signature'];
 

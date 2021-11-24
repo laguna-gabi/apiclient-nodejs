@@ -16,10 +16,12 @@ import {
   CancelNotifyParams,
   CreateMemberParams,
   CreateTaskParams,
+  Journal,
   Member,
   NotifyParams,
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
+  UpdateJournalParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -539,6 +541,86 @@ export class Mutations {
     return (
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.setGeneralNotes
+    );
+  };
+
+  createJournal = async ({
+    memberId,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    memberId;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Journal> => {
+    const result = await this.apolloClient.mutate({
+      variables: { memberId },
+      mutation: gql`
+        mutation createJournal($memberId: String!) {
+          createJournal(memberId: $memberId) {
+            id
+          }
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.createJournal
+    );
+  };
+
+  updateJournal = async ({
+    updateJournalParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    updateJournalParams: UpdateJournalParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Journal> => {
+    const result = await this.apolloClient.mutate({
+      variables: { updateJournalParams },
+      mutation: gql`
+        mutation updateJournal($updateJournalParams: UpdateJournalParams!) {
+          updateJournal(updateJournalParams: $updateJournalParams) {
+            id
+            memberId
+            text
+            published
+            updatedAt
+          }
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.updateJournal
+    );
+  };
+
+  deleteJournal = async ({
+    id,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    id;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Journal> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id },
+      mutation: gql`
+        mutation deleteJournal($id: String!) {
+          deleteJournal(id: $id)
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.deleteJournal
     );
   };
 

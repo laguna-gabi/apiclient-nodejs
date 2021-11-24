@@ -2,7 +2,7 @@ import { v4 } from 'uuid';
 import { AvailabilityInput } from '../../src/availability';
 import { ErrorType, Errors } from '../../src/common';
 import { Handler } from '../aux/handler';
-import { generateAvailabilityInput } from '../generators';
+import { generateAvailabilityInput, generateId } from '../generators';
 
 describe('Validations - availability', () => {
   const handler: Handler = new Handler();
@@ -41,7 +41,7 @@ describe('Validations - availability', () => {
     `should fail to create an availability since $field is not valid`,
     async (params) => {
       const availability: AvailabilityInput = generateAvailabilityInput(params.input);
-      await handler.setContextUserId(v4()).mutations.createAvailabilities({
+      await handler.setContextUserId(generateId()).mutations.createAvailabilities({
         availabilities: [availability],
         missingFieldError: params.errors,
       });

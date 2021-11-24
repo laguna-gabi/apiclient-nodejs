@@ -1,3 +1,9 @@
+import {
+  CancelNotificationType,
+  InternalNotificationType,
+  NotificationType,
+  Platform,
+} from '@lagunahealth/pandora';
 import * as config from 'config';
 import { add, startOfToday, startOfTomorrow } from 'date-fns';
 import * as faker from 'faker';
@@ -30,6 +36,7 @@ import {
   ReplaceUserForMemberParams,
   Task,
   TaskStatus,
+  UpdateJournalParams,
   UpdateRecordingParams,
 } from '../../src/member';
 import { User, UserRole, defaultSlotsParams } from '../../src/user';
@@ -46,17 +53,12 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
+  generateUpdateJournalParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
 } from '../index';
-import {
-  CancelNotificationType,
-  InternalNotificationType,
-  NotificationType,
-  Platform,
-} from '@lagunahealth/pandora';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -375,6 +377,7 @@ describe('Integration tests: all', () => {
     }),
   })}
   `(`should add a not existed user to member users list on $title`, async (params) => {
+    /* eslint-enable max-len */
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({ org });
 
@@ -538,7 +541,7 @@ describe('Integration tests: all', () => {
     it('should set new user for a given member', async () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org });
-      const oldUserId = member.primaryUserId;
+      const oldUserId = member.primaryUserId.toString();
       const newUser = await creators.createAndValidateUser();
       delete newUser.authId;
 
@@ -613,7 +616,7 @@ describe('Integration tests: all', () => {
       const member = await creators.createAndValidateMember({ org });
       const replaceUserForMemberParams: ReplaceUserForMemberParams = {
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
       };
 
       await handler.mutations.replaceUserForMember({
@@ -625,6 +628,7 @@ describe('Integration tests: all', () => {
 
   describe('notifications', () => {
     test.each([true, false])(
+      /* eslint-disable-next-line max-len */
       'should register scheduled appointment reminder and notify it to member with isAppointmentsReminderEnabled=%p',
       async (isAppointmentsReminderEnabled) => {
         const org = await creators.createAndValidateOrg();
@@ -770,7 +774,7 @@ describe('Integration tests: all', () => {
 
       const notifyParams: NotifyParams = {
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
         type: NotificationType.textSms,
         metadata: { content: 'text', appointmentId },
       };
@@ -808,7 +812,7 @@ describe('Integration tests: all', () => {
 
       const notifyParams: NotifyParams = {
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
         type: NotificationType.textSms,
         metadata: { content: 'text', appointmentId },
       };
@@ -880,12 +884,14 @@ describe('Integration tests: all', () => {
       await handler.mutations.deleteAvailability({ id: ids[0] });
     });
 
+    /* eslint-disable max-len */
     test.each`
       additionalGetSlotsParams             | expectedDefaultSlots | testTitle
       ${{}}                                | ${6}                 | ${'should get default slots count not available'}
       ${{ allowEmptySlotsResponse: true }} | ${0}                 | ${'should get empty slots when enabling empty response'}
       ${{ defaultSlotsCount: 20 }}         | ${20}                | ${'should get specific default slots count if defaultSlotsCount'}
     `('$testTitle', async ({ additionalGetSlotsParams, expectedDefaultSlots }) => {
+      /* eslint-enable max-len */
       const user = await creators.createAndValidateUser();
       const org = await creators.createAndValidateOrg();
       const member: Member = await creators.createAndValidateMember({ org });
@@ -992,7 +998,7 @@ describe('Integration tests: all', () => {
       const member: Member = await creators.createAndValidateMember({ org });
       const scheduledAppointment = generateScheduleAppointmentParams({
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
         method: AppointmentMethod.chat,
       });
       const { id: appointmentId } = await creators.handler.mutations.scheduleAppointment({
@@ -1219,6 +1225,51 @@ describe('Integration tests: all', () => {
           },
         ],
         metadata: { minDate: '2015/01/01' },
+      });
+    });
+  });
+
+  describe('Journal', () => {
+    it('should create get update and delete member journal', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+      const { id: journalId } = await handler.mutations.createJournal({ memberId: member.id });
+      const journalBeforeUpdate = await handler.queries.getJournal({ id: journalId });
+
+      expect(journalBeforeUpdate).toMatchObject({
+        id: journalId,
+        memberId: member.id,
+        published: false,
+        text: null,
+      });
+
+      const updateJournalParams: UpdateJournalParams = generateUpdateJournalParams({
+        id: journalId,
+      });
+      const journalAfterUpdate = await handler.mutations.updateJournal({
+        updateJournalParams,
+      });
+
+      expect(journalAfterUpdate).toMatchObject({
+        id: journalId,
+        memberId: member.id,
+        published: false,
+        text: updateJournalParams.text,
+      });
+
+      const journals = await handler.queries.getJournals({ memberId: member.id });
+
+      expect(journals[0]).toMatchObject({
+        id: journalId,
+        memberId: member.id,
+        published: false,
+        text: updateJournalParams.text,
+      });
+
+      await handler.mutations.deleteJournal({ id: journalId });
+      await handler.queries.getJournal({
+        id: journalId,
+        invalidFieldsError: Errors.get(ErrorType.memberJournalNotFound),
       });
     });
   });

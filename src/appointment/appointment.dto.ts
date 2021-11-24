@@ -93,9 +93,9 @@ export class ScheduleAppointmentParams {
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class Appointment extends Identifier {
-  @Prop({ index: true })
+  @Prop({ index: true, type: Types.ObjectId })
   @Field(() => String)
-  userId: string;
+  userId: Types.ObjectId;
 
   @Prop({ index: true, type: Types.ObjectId })
   @Field(() => String)

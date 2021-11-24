@@ -696,10 +696,13 @@
   resolved "https://registry.npmjs.org/@josephg/resolvable/-/resolvable-1.0.1.tgz"
   integrity sha512-CtzORUwWTTOTqfVtHaKRJ0I1kNQd1bpn3sUh8I3nJDVY+5/M/Oe1DnEWzPQvqq/xPIIkzzzIP7mfCoAjFRvDhg==
 
-"@lagunahealth/pandora@^0.1.8":
-  version "0.1.8"
-  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.1.8/097e1d94dc849a067f43910be3e05dab8da68d44b3b86694f4066585ebc9d8ae#c3108479d82756fbf56dd91c3566db3ee9ecc164"
-  integrity sha512-vKrBmVCo/W/bT7AEmmTNZhOphqrkw9qf9wlcZ9AJ8xjtdjVO9sRouR4y3nf5pBNhdHTk4nxNUDcRs80PqOMdCQ==
+"@lagunahealth/pandora@^0.1.12":
+  version "0.1.12"
+  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.1.12/1115e943b3cd61a8aaf1c105f7dd893b84b399716fec346c34312384cab3dbc0#2cfd86dcb3e6e7f7b1e5241f6a3b714478962ce7"
+  integrity sha512-xM/VlNo/XqM3IhT/3svgNzuURSwozJK/NnotC5jSFfnwBuWdYZP8hc73XmU3XoDdAwxDeeRKhXhZAbWur711Ug==
+  dependencies:
+    "@slack/types" "^2.2.0"
+    "@slack/webhook" "^6.0.0"
 
 "@nestjs/axios@^0.0.1":
   version "0.0.1"
@@ -964,6 +967,11 @@
   version "1.10.0"
   resolved "https://registry.yarnpkg.com/@slack/types/-/types-1.10.0.tgz#cbf7d83e1027f4cbfd13d6b429f120c7fb09127a"
   integrity sha512-tA7GG7Tj479vojfV3AoxbckalA48aK6giGjNtgH6ihpLwTyHE3fIgRrvt8TWfLwW8X8dyu7vgmAsGLRG7hWWOg==
+
+"@slack/types@^2.2.0":
+  version "2.2.0"
+  resolved "https://registry.npmjs.org/@slack/types/-/types-2.2.0.tgz#fcc3648ee20c3fb92a076b23c35bca19158d9925"
+  integrity sha512-/yHEFvgp0UY/lfFvQqbq9BocW/pM4xnGycqGAx+plRgYp96dZp1y50Whz7yzOgasEUsy5TyQfBK07cj0RwUyIg==
 
 "@slack/webhook@^6.0.0":
   version "6.0.0"
@@ -4437,6 +4445,13 @@ jest-config@^26.6.3:
     micromatch "^4.0.2"
     pretty-format "^26.6.2"
 
+jest-coverage-badges@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.npmjs.org/jest-coverage-badges/-/jest-coverage-badges-1.1.2.tgz#a70786b139fd8fb685db732e1e2d916d8a47287e"
+  integrity sha512-44A7i2xR6os8+fWk8ZRM6W4fKiD2jwKOLU9eB3iTIIWACd9RbdvmiCNpQZTOsUBhKvz7aQ/ASFhu5JOEhWUOlg==
+  dependencies:
+    mkdirp "0.5.1"
+
 jest-diff@^26.0.0, jest-diff@^26.6.2:
   version "26.6.2"
   resolved "https://registry.npmjs.org/jest-diff/-/jest-diff-26.6.2.tgz"
@@ -5250,6 +5265,11 @@ minimatch@^3.0.4:
   dependencies:
     brace-expansion "^1.1.7"
 
+minimist@0.0.8:
+  version "0.0.8"
+  resolved "https://registry.npmjs.org/minimist/-/minimist-0.0.8.tgz#857fcabfc3397d2625b8228262e86aa7a011b05d"
+  integrity sha1-hX/Kv8M5fSYluCKCYuhqp6ARsF0=
+
 minimist@1.2.5, minimist@^1.1.1, minimist@^1.2.0, minimist@^1.2.5:
   version "1.2.5"
   resolved "https://registry.npmjs.org/minimist/-/minimist-1.2.5.tgz"
@@ -5316,6 +5336,13 @@ mixin-deep@^1.2.0:
   dependencies:
     for-in "^1.0.2"
     is-extendable "^1.0.1"
+
+mkdirp@0.5.1:
+  version "0.5.1"
+  resolved "https://registry.npmjs.org/mkdirp/-/mkdirp-0.5.1.tgz#30057438eac6cf7f8c4767f38648d6697d75c903"
+  integrity sha1-MAV0OOrGz3+MR2fzhkjWaX11yQM=
+  dependencies:
+    minimist "0.0.8"
 
 mkdirp@1.x, mkdirp@^1.0.3, mkdirp@^1.0.4:
   version "1.0.4"

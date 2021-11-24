@@ -20,7 +20,7 @@ export class AppointmentsIntegrationActions {
   }): Promise<Appointment> => {
     const appointmentParams = generateRequestAppointmentParams({
       memberId: member.id,
-      userId: userId || member.primaryUserId,
+      userId: userId || member.primaryUserId.toString(),
     });
     const appointmentResult = await this.mutations.requestAppointment({
       appointmentParams,
@@ -44,7 +44,7 @@ export class AppointmentsIntegrationActions {
   }): Promise<Appointment> => {
     const scheduleAppointment = generateScheduleAppointmentParams({
       memberId: member.id,
-      userId: userId || member.primaryUserId,
+      userId: userId || member.primaryUserId.toString(),
     });
     const appointmentResult = await this.mutations.scheduleAppointment({
       appointmentParams: scheduleAppointment,
@@ -68,7 +68,7 @@ export class AppointmentsIntegrationActions {
   ): Promise<Appointment> => {
     const appointmentParams = generateScheduleAppointmentParams({
       memberId: member.id,
-      userId: member.primaryUserId,
+      userId: member.primaryUserId.toString(),
       start,
       end,
     });
@@ -83,7 +83,7 @@ export class AppointmentsIntegrationActions {
   requestAppointmentWithDate = async (member: Member, notBefore: Date): Promise<Appointment> => {
     const appointmentParams = generateRequestAppointmentParams({
       memberId: member.id,
-      userId: member.primaryUserId,
+      userId: member.primaryUserId.toString(),
       notBefore,
     });
     return this.mutations.requestAppointment({

@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
 
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
@@ -8,9 +9,9 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class UserConfig {
-  @Prop({ type: String, unique: true, index: true })
+  @Prop({ type: Types.ObjectId, unique: true, index: true })
   @Field(() => String)
-  userId: string;
+  userId: Types.ObjectId;
 
   @Prop()
   @Field(() => String)

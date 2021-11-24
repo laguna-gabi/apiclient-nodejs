@@ -9,7 +9,6 @@ import {
   Errors,
   EventType,
   IEventMember,
-  IEventNotifySlack,
   IEventOnNewMember,
   IEventOnReceivedChatMessage,
   IEventOnUpdatedMemberPlatform,
@@ -17,8 +16,6 @@ import {
   InternationalizationService,
   Language,
   RegisterForNotificationParams,
-  SlackChannel,
-  SlackIcon,
   StorageType,
   delay,
 } from '../../src/common';
@@ -28,6 +25,7 @@ import {
   CommunicationService,
 } from '../../src/communication';
 import {
+  Journal,
   Member,
   MemberConfig,
   MemberModule,
@@ -52,6 +50,7 @@ import {
   generateNotifyParams,
   generateSetGeneralNotesParams,
   generateUniqueUrl,
+  generateUpdateJournalParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
@@ -66,6 +65,7 @@ import {
   NotificationType,
   Platform,
 } from '@lagunahealth/pandora';
+import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
@@ -163,7 +163,7 @@ describe('MemberResolver', () => {
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onNewMember, eventNewMemberParams);
       const eventSlackMessageParams: IEventNotifySlack = {
-        // eslint-disable-next-line max-len
+        /* eslint-disable-next-line max-len */
         message: `*New customer*\n${member.firstName} [${member.id}],\nassigned to ${user.firstName}.`,
         icon: SlackIcon.info,
         channel: SlackChannel.support,
@@ -216,9 +216,8 @@ describe('MemberResolver', () => {
       const result = await resolver.getMember({
         req: {
           headers: {
-            /* eslint-disable max-len */
+            /* eslint-disable-next-line max-len */
             authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QifQ.hNQI_r8BATy1LyXPr6Zuo9X_V0kSED8ngcqQ6G-WV5w`,
-            /* eslint-enable max-len */
           },
         },
       });
@@ -380,7 +379,7 @@ describe('MemberResolver', () => {
       expect(spyOnCognitoServiceDisableMember).toBeCalledWith(member.deviceId);
       expect(spyOnCommunicationFreezeGroupChannel).toBeCalledWith({
         memberId: id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
       });
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
       const eventParams: IEventMember = { memberId: id };
@@ -777,6 +776,107 @@ describe('MemberResolver', () => {
     });
   });
 
+  describe('journal', () => {
+    let spyOnServiceCreateJournal;
+    let spyOnServiceUpdateJournal;
+    let spyOnServiceGetJournal;
+    let spyOnServiceGetJournals;
+    let spyOnServiceDeleteJournal;
+
+    const generateMockJournalParams = ({
+      id = generateId(),
+      memberId = new Types.ObjectId(generateId()),
+      text = faker.lorem.sentence(),
+      published = false,
+      updatedAt = new Date(),
+    }: Partial<Journal> = {}): Journal => {
+      return {
+        id,
+        memberId,
+        text,
+        published,
+        updatedAt,
+      };
+    };
+
+    beforeEach(() => {
+      spyOnServiceCreateJournal = jest.spyOn(service, 'createJournal');
+      spyOnServiceUpdateJournal = jest.spyOn(service, 'updateJournal');
+      spyOnServiceGetJournal = jest.spyOn(service, 'getJournal');
+      spyOnServiceGetJournals = jest.spyOn(service, 'getJournals');
+      spyOnServiceDeleteJournal = jest.spyOn(service, 'deleteJournal');
+    });
+
+    afterEach(() => {
+      spyOnServiceCreateJournal.mockReset();
+      spyOnServiceUpdateJournal.mockReset();
+      spyOnServiceGetJournal.mockReset();
+      spyOnServiceGetJournals.mockReset();
+      spyOnServiceDeleteJournal.mockReset();
+    });
+
+    it('should create journal', async () => {
+      const id = generateId();
+      const memberId = generateId();
+      spyOnServiceCreateJournal.mockImplementationOnce(async () => id);
+
+      const result = await resolver.createJournal(memberId);
+
+      expect(spyOnServiceCreateJournal).toBeCalledTimes(1);
+      expect(spyOnServiceCreateJournal).toBeCalledWith(memberId);
+      expect(result).toEqual(id);
+    });
+
+    it('should update journal', async () => {
+      const params = generateUpdateJournalParams();
+      const journal = generateMockJournalParams({ ...params });
+      spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
+
+      const result = await resolver.updateJournal(params);
+
+      expect(spyOnServiceUpdateJournal).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateJournal).toBeCalledWith(params);
+      expect(result).toEqual(journal);
+    });
+
+    it('should get journal', async () => {
+      const journal = generateMockJournalParams();
+      spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
+
+      const result = await resolver.getJournal(journal.id);
+
+      expect(spyOnServiceGetJournal).toBeCalledTimes(1);
+      expect(spyOnServiceGetJournal).toBeCalledWith(journal.id);
+      expect(result).toEqual(journal);
+    });
+
+    it('should get Journals', async () => {
+      const memberId = generateId();
+      const journals = [
+        generateMockJournalParams({ memberId: new Types.ObjectId(memberId) }),
+        generateMockJournalParams({ memberId: new Types.ObjectId(memberId) }),
+      ];
+      spyOnServiceGetJournals.mockImplementationOnce(async () => journals);
+
+      const result = await resolver.getJournals(memberId);
+
+      expect(spyOnServiceGetJournals).toBeCalledTimes(1);
+      expect(spyOnServiceGetJournals).toBeCalledWith(memberId);
+      expect(result).toEqual(journals);
+    });
+
+    it('should delete getJournal', async () => {
+      const id = generateId();
+      spyOnServiceDeleteJournal.mockImplementationOnce(async () => true);
+
+      const result = await resolver.deleteJournal(id);
+
+      expect(spyOnServiceDeleteJournal).toBeCalledTimes(1);
+      expect(spyOnServiceDeleteJournal).toBeCalledWith(id);
+      expect(result).toEqual(true);
+    });
+  });
+
   describe('getMemberConfig', () => {
     let spyOnServiceGetMemberConfig;
     beforeEach(() => {
@@ -897,7 +997,7 @@ describe('MemberResolver', () => {
       expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: member.id });
       expect(spyOnSchedulerNewRegisteredMember).toBeCalledWith({
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
         firstLoggedInAt: expect.any(Date),
       });
     });
@@ -934,7 +1034,7 @@ describe('MemberResolver', () => {
       const eventParams: IEventOnUpdatedMemberPlatform = {
         memberId: params.memberId,
         platform: params.platform,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedMemberPlatform, eventParams);
       expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: member.id });
@@ -1035,7 +1135,7 @@ describe('MemberResolver', () => {
       });
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onReplacedUserForMember, {
         newUser: user,
-        oldUserId: member.primaryUserId,
+        oldUserId: member.primaryUserId.toString(),
         member,
         platform: memberConfig.platform,
       });
@@ -1302,7 +1402,7 @@ describe('MemberResolver', () => {
 
       const notifyParams = generateNotifyParams({
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
         type: NotificationType.text,
         metadata: { content: faker.lorem.word(), when },
       });
@@ -1313,7 +1413,7 @@ describe('MemberResolver', () => {
       delete notifyParams.metadata.when;
       const eventParams: InternalNotifyParams = {
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
         type:
           notifyParams.type === NotificationType.text
             ? InternalNotificationType.textToMember
@@ -1338,7 +1438,7 @@ describe('MemberResolver', () => {
 
       const notifyParams = generateNotifyParams({
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
         type: NotificationType.text,
         metadata: { content: faker.lorem.word(), chatLink: true },
       });
@@ -1347,7 +1447,7 @@ describe('MemberResolver', () => {
 
       expect(spyOnCommunicationResolverGetCommunication).toBeCalledWith({
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
       });
     });
 
@@ -1397,7 +1497,7 @@ describe('MemberResolver', () => {
       });
 
       await expect(resolver.notify(notifyParams)).rejects.toThrow(
-        Errors.get(ErrorType.invalidContent),
+        Errors.get(ErrorType.notificationInvalidContent),
       );
     });
   });
@@ -1737,7 +1837,7 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceSend).not.toBeCalled();
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should NOT send push notification for chatMessageToMember if notification is disabled', async () => {
       const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();
@@ -1822,7 +1922,7 @@ describe('MemberResolver', () => {
       };
       const communication: Communication = {
         memberId: new Types.ObjectId(member.id),
-        userId: user.id,
+        userId: new Types.ObjectId(user.id),
         sendBirdChannelUrl: generateUniqueUrl(),
       };
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
@@ -1868,7 +1968,7 @@ describe('MemberResolver', () => {
       const user = mockGenerateUser();
       const communication: Communication = {
         memberId: new Types.ObjectId(member.id),
-        userId: user.id,
+        userId: new Types.ObjectId(user.id),
         sendBirdChannelUrl: generateUniqueUrl(),
       };
       spyOnServiceGetMember.mockImplementation(async () => member);
@@ -1905,13 +2005,13 @@ describe('MemberResolver', () => {
       });
     }, 10000);
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should not notify the coach on chat message sent from member - coach is online', async () => {
       const member = mockGenerateMember();
       const user = mockGenerateUser();
       const communication: Communication = {
         memberId: new Types.ObjectId(member.id),
-        userId: user.id,
+        userId: new Types.ObjectId(user.id),
         sendBirdChannelUrl: generateUniqueUrl(),
       };
       spyOnServiceGetMember.mockImplementation(async () => member);
@@ -1942,7 +2042,7 @@ describe('MemberResolver', () => {
       sendBirdChannelUrl: generateUniqueUrl(),
     };
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should disregard notify chat message when sent from member and member does not exist', async () => {
       spyOnUserServiceGetUser.mockImplementation(async () => undefined);
       spyOnServiceGetMember.mockImplementation(async () => undefined);

@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { add, differenceInDays, getHours, startOfDay } from 'date-fns';
 import { cloneDeep } from 'lodash';
 import { Model, Types } from 'mongoose';
+import { Appointment } from '../appointment';
 import {
   CreateUserParams,
   GetSlotsParams,
@@ -24,15 +25,13 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventNotifySlack,
   IEventOnDeletedMemberAppointments,
   IEventOnNewAppointment,
   IEventOnUpdateUserConfig,
   IEventOnUpdatedUserAppointments,
   Logger,
-  SlackChannel,
-  SlackIcon,
 } from '../common';
+import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -60,23 +59,23 @@ export class UserService extends BaseService {
     try {
       this.removeNotNullable(createUserParams, NotNullableUserKeys);
       const newObject = cloneDeep(createUserParams);
-      const _id = newObject.id;
-      delete newObject.id;
 
-      const object = (await this.userModel.create({ ...newObject, _id })).toObject();
+      const object = await this.userModel.create({ ...newObject });
 
       await this.userConfigModel.create({
-        userId: object._id,
+        userId: new Types.ObjectId(object._id),
       });
 
-      object.id = object._id;
-      delete object._id;
-      return object;
+      return this.replaceId(object.toObject());
     } catch (ex) {
       throw new Error(
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.userIdOrEmailAlreadyExists) : ex,
       );
     }
+  }
+
+  getNotBefore(getSlotsParams: GetSlotsParams, appointment: Appointment): Date {
+    return getSlotsParams.notBefore || appointment?.notBefore || appointment.start;
   }
 
   async getSlots(getSlotsParams: GetSlotsParams): Promise<Slots> {
@@ -89,7 +88,7 @@ export class UserService extends BaseService {
         ? [
             {
               $match: {
-                _id: userId,
+                _id: Types.ObjectId(userId),
               },
             },
           ]
@@ -170,7 +169,7 @@ export class UserService extends BaseService {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
 
-    const notBefore = getSlotsParams.notBefore || slotsObject.ap?.[0].notBefore;
+    const notBefore = this.getNotBefore(getSlotsParams, slotsObject.appointment);
 
     slotsObject.slots = this.slotService.getSlots(
       slotsObject.av,
@@ -351,12 +350,12 @@ export class UserService extends BaseService {
 
     try {
       await this.userModel.updateOne(
-        { _id: params.oldUserId },
+        { _id: Types.ObjectId(params.oldUserId) },
         { $pullAll: { appointments: appointmentIds } },
       );
 
       await this.userModel.updateOne(
-        { _id: params.newUserId },
+        { _id: Types.ObjectId(params.newUserId) },
         { $addToSet: { appointments: { $each: appointmentIds } } },
         { new: true },
       );

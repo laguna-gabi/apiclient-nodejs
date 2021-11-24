@@ -5,7 +5,6 @@ import * as faker from 'faker';
 import { datatype, date, internet } from 'faker';
 import { Model, Types, model } from 'mongoose';
 import { performance } from 'perf_hooks';
-import { v4 } from 'uuid';
 import {
   Appointment,
   AppointmentDocument,
@@ -21,6 +20,8 @@ import {
   Goal,
   GoalDto,
   Honorific,
+  Journal,
+  JournalDto,
   Member,
   MemberDto,
   MemberModule,
@@ -39,8 +40,8 @@ import {
   dbDisconnect,
   defaultModules,
   generateCreateMemberParams,
-  generateCreateRawUserParams,
   generateCreateTaskParams,
+  generateCreateUserParams,
   generateDateOnly,
   generateId,
   generateObjectId,
@@ -49,6 +50,7 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
+  generateUpdateJournalParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
@@ -64,6 +66,7 @@ describe('MemberService', () => {
   let modelOrg: Model<typeof OrgDto>;
   let modelGoal: Model<typeof GoalDto>;
   let modelActionItem: Model<typeof ActionItemDto>;
+  let modelJournal: Model<typeof JournalDto>;
   let modelAppointment: Model<typeof AppointmentDto>;
 
   beforeAll(async () => {
@@ -78,6 +81,7 @@ describe('MemberService', () => {
     modelOrg = model(Org.name, OrgDto);
     modelGoal = model(Goal.name, GoalDto);
     modelActionItem = model(ActionItem.name, ActionItemDto);
+    modelJournal = model(Journal.name, JournalDto);
     modelAppointment = model(Appointment.name, AppointmentDto);
     await dbConnect();
   });
@@ -105,7 +109,7 @@ describe('MemberService', () => {
     `(
       `should return member and his/her users for an existing member using $field`,
       async (params) => {
-        const primaryUserParams = generateCreateRawUserParams();
+        const primaryUserParams = generateCreateUserParams();
         const primaryUser = await modelUser.create(primaryUserParams);
         const orgParams = generateOrgParams();
         const org = await modelOrg.create(orgParams);
@@ -131,14 +135,14 @@ describe('MemberService', () => {
         expect(result.firstName).toEqual(member.firstName);
         expect(result.lastName).toEqual(member.lastName);
         expect(result.org).toEqual(expect.objectContaining(orgParams));
-        expect(result.primaryUserId).toEqual(primaryUser._id);
+        expect(result.primaryUserId.toString()).toEqual(primaryUser._id.toString());
         expect(result.users.length).toEqual(1);
         compareUsers(result.users[0], primaryUser);
       },
     );
 
     it('should get member by phone', async () => {
-      const primaryUserParams = generateCreateRawUserParams();
+      const primaryUserParams = generateCreateUserParams();
       const primaryUser = await modelUser.create(primaryUserParams);
       const orgParams = generateOrgParams();
       const org = await modelOrg.create(orgParams);
@@ -164,13 +168,13 @@ describe('MemberService', () => {
       expect(result.firstName).toEqual(member.firstName);
       expect(result.lastName).toEqual(member.lastName);
       expect(result.org).toEqual(expect.objectContaining(orgParams));
-      expect(result.primaryUserId).toEqual(primaryUser._id);
+      expect(result.primaryUserId.toString()).toEqual(primaryUser._id.toString());
       expect(result.users.length).toEqual(1);
       compareUsers(result.users[0], primaryUser);
     });
 
     it('should get member by Secondary phone', async () => {
-      const primaryUserParams = generateCreateRawUserParams();
+      const primaryUserParams = generateCreateUserParams();
       const primaryUser = await modelUser.create(primaryUserParams);
       const orgParams = generateOrgParams();
       const org = await modelOrg.create(orgParams);
@@ -197,7 +201,7 @@ describe('MemberService', () => {
       expect(result.firstName).toEqual(member.firstName);
       expect(result.lastName).toEqual(member.lastName);
       expect(result.org).toEqual(expect.objectContaining(orgParams));
-      expect(result.primaryUserId).toEqual(primaryUser._id);
+      expect(result.primaryUserId.toString()).toEqual(primaryUser._id.toString());
       expect(result.users.length).toEqual(1);
       compareUsers(result.users[0], primaryUser);
     });
@@ -348,12 +352,12 @@ describe('MemberService', () => {
       );
     });
 
-    /* eslint-disable max-len*/
+    /* eslint-disable-next-line max-len */
     it('should return most recent appointment (start time) when it was scheduled before', async () => {
       await testTwoAppointmentsWithGap(1);
     });
 
-    /* eslint-disable max-len*/
+    /* eslint-disable-next-line max-len */
     it('should return most recent appointment (start time) when it was scheduled after', async () => {
       await testTwoAppointmentsWithGap(-1);
     });
@@ -383,6 +387,7 @@ describe('MemberService', () => {
       );
     };
 
+    /* eslint-disable-next-line max-len */
     it('should handle primaryUser and users appointments in nextAppointment calculations', async () => {
       const userId1 = await generateUser();
       const userId2 = await generateUser();
@@ -438,9 +443,8 @@ describe('MemberService', () => {
       );
     });
 
-    /* eslint-disable max-len*/
+    /* eslint-disable-next-line max-len */
     it('should not take longer than 1 second to process 10 members with 3 appointments each', async () => {
-      /* eslint-enable max-len*/
       const userId = await generateUser();
       const orgId = await generateOrg();
 
@@ -476,7 +480,7 @@ describe('MemberService', () => {
         lastName: faker.name.lastName(),
       };
       const { _id: primaryUserId } = await modelUser.create(
-        generateCreateRawUserParams({ ...primaryUserParams }),
+        generateCreateUserParams({ ...primaryUserParams }),
       );
       const orgId = await generateOrg();
 
@@ -523,7 +527,7 @@ describe('MemberService', () => {
         lastName: faker.name.lastName(),
       };
       const { _id: primaryUserId } = await modelUser.create(
-        generateCreateRawUserParams({ ...primaryUserParams }),
+        generateCreateUserParams({ ...primaryUserParams }),
       );
       const { _id: orgId1 } = await modelOrg.create(generateOrgParams());
       const { _id: orgId2 } = await modelOrg.create(generateOrgParams());
@@ -625,7 +629,7 @@ describe('MemberService', () => {
 
   describe('insert', () => {
     it('should insert a member without optional params + validate all fields', async () => {
-      const primaryUser = await modelUser.create(generateCreateRawUserParams());
+      const primaryUser = await modelUser.create(generateCreateUserParams());
       const org = await modelOrg.create(generateOrgParams());
 
       const createMemberParams = generateCreateMemberParams({
@@ -652,7 +656,7 @@ describe('MemberService', () => {
     });
 
     it('should insert a member with all params + validate all insert fields', async () => {
-      const primaryUser = await modelUser.create(generateCreateRawUserParams());
+      const primaryUser = await modelUser.create(generateCreateUserParams());
       const org = await modelOrg.create(generateOrgParams());
 
       const createMemberParams = generateCreateMemberParams({
@@ -703,7 +707,7 @@ describe('MemberService', () => {
     });
 
     it('should remove not nullable optional params if null is passed', async () => {
-      const primaryUser = await modelUser.create(generateCreateRawUserParams());
+      const primaryUser = await modelUser.create(generateCreateUserParams());
       const org = await modelOrg.create(generateOrgParams());
 
       const createMemberParams = generateCreateMemberParams({ orgId: org._id });
@@ -728,13 +732,13 @@ describe('MemberService', () => {
       const createMemberParams: CreateMemberParams = generateCreateMemberParams({
         orgId: generateId(),
       });
-      const result = await service.insert(createMemberParams, v4());
+      const result = await service.insert(createMemberParams, generateId());
 
       expect(result.id).not.toBeUndefined();
     });
 
     it('should fail to insert an already existing member', async () => {
-      const primaryUserId = v4();
+      const primaryUserId = generateId();
       const createMemberParams = generateCreateMemberParams({ orgId: generateId() });
       await service.insert(createMemberParams, primaryUserId);
 
@@ -751,7 +755,7 @@ describe('MemberService', () => {
       );
     });
 
-    // eslint-disable-next-line max-len
+    /* eslint-disable-next-line max-len */
     it('should move member and memberConfig from members and memberconfigs collection', async () => {
       const memberId = await generateMember();
       const member = await service.get(memberId);
@@ -931,6 +935,172 @@ describe('MemberService', () => {
       const generalNotes = generateSetGeneralNotesParams();
       await expect(service.setGeneralNotes(generalNotes)).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
+      );
+    });
+  });
+
+  describe('createJournal', () => {
+    it('should create journal', async () => {
+      const memberId = generateId();
+
+      const { id } = await service.createJournal(memberId);
+      const result: any = await modelJournal.findById(id);
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          _id: id,
+          memberId: new Types.ObjectId(memberId),
+          published: false,
+          updatedAt: expect.any(Date),
+          createdAt: expect.any(Date),
+        }),
+      );
+    });
+  });
+
+  describe('updateJournal', () => {
+    it('should update journal', async () => {
+      const memberId = generateId();
+
+      const { id } = await service.createJournal(memberId);
+      const updateJournalParams = generateUpdateJournalParams({ id });
+
+      await service.updateJournal(updateJournalParams);
+      const result: any = await modelJournal.findById(id);
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          _id: id,
+          memberId: new Types.ObjectId(memberId),
+          published: false,
+          text: updateJournalParams.text,
+          updatedAt: expect.any(Date),
+          createdAt: expect.any(Date),
+        }),
+      );
+    });
+
+    it(`should throw an error on update journal when id doesn't exists`, async () => {
+      await expect(service.updateJournal(generateUpdateJournalParams())).rejects.toThrow(
+        Error(Errors.get(ErrorType.memberJournalNotFound)),
+      );
+    });
+  });
+
+  describe('getJournal', () => {
+    it('should get journal', async () => {
+      const memberId = generateId();
+
+      const { id } = await service.createJournal(memberId);
+      const updateJournalParams = generateUpdateJournalParams({ id });
+
+      await service.updateJournal(updateJournalParams);
+
+      const result: any = await modelJournal.findById(id);
+      const journal = await service.getJournal(id);
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          _id: new Types.ObjectId(journal.id),
+          memberId: new Types.ObjectId(journal.memberId),
+          published: journal.published,
+          text: journal.text,
+          updatedAt: journal.updatedAt,
+          createdAt: expect.any(Date),
+        }),
+      );
+    });
+
+    it(`should throw an error on get journal when id doesn't exists`, async () => {
+      await expect(service.getJournal(generateId())).rejects.toThrow(
+        Error(Errors.get(ErrorType.memberJournalNotFound)),
+      );
+    });
+  });
+
+  describe('getJournals', () => {
+    it('should get journals by memberId', async () => {
+      const memberId = generateId();
+
+      const { id: journalId1 } = await service.createJournal(memberId);
+      const { id: journalId2 } = await service.createJournal(memberId);
+      const updateJournalParams1 = generateUpdateJournalParams({ id: journalId1 });
+      const updateJournalParams2 = generateUpdateJournalParams({ id: journalId2 });
+
+      await service.updateJournal(updateJournalParams1);
+      await service.updateJournal(updateJournalParams2);
+
+      const journals = await service.getJournals(memberId);
+
+      expect(journals).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: new Types.ObjectId(journalId1),
+            memberId: new Types.ObjectId(memberId),
+            published: false,
+            text: updateJournalParams1.text,
+            updatedAt: expect.any(Date),
+            createdAt: expect.any(Date),
+          }),
+          expect.objectContaining({
+            _id: new Types.ObjectId(journalId2),
+            memberId: new Types.ObjectId(memberId),
+            published: false,
+            text: updateJournalParams2.text,
+            updatedAt: expect.any(Date),
+            createdAt: expect.any(Date),
+          }),
+        ]),
+      );
+    });
+
+    it(`should not get journals by memberId if text doesn't exists`, async () => {
+      const memberId = generateId();
+      const { id } = await service.createJournal(memberId);
+
+      const journals = await service.getJournals(memberId);
+
+      expect(journals).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: new Types.ObjectId(id),
+            memberId: new Types.ObjectId(memberId),
+            published: false,
+            text: expect.any(String),
+            updatedAt: expect.any(Date),
+            createdAt: expect.any(Date),
+          }),
+        ]),
+      );
+    });
+
+    it(`should return empty array if member doesn't have journals`, async () => {
+      const memberId = generateId();
+
+      const journals = await service.getJournals(memberId);
+
+      expect(journals).toEqual([]);
+    });
+  });
+
+  describe('deleteJournal', () => {
+    it('should delete journal', async () => {
+      const memberId = generateId();
+      const { id } = await service.createJournal(memberId);
+
+      const resultBeforeDelete = await modelJournal.findById(id);
+      expect(resultBeforeDelete).not.toBeNull();
+
+      const journalDelete = await service.deleteJournal(id);
+      expect(journalDelete).toBeTruthy();
+
+      const resultAfterDelete = await modelJournal.findById(id);
+      expect(resultAfterDelete).toBeNull();
+    });
+
+    it(`should throw an error on delete journal when id doesn't exists`, async () => {
+      await expect(service.deleteJournal(generateId())).rejects.toThrow(
+        Error(Errors.get(ErrorType.memberJournalNotFound)),
       );
     });
   });
@@ -1157,13 +1327,13 @@ describe('MemberService', () => {
       const member = await service.get(memberId);
 
       await expect(
-        service.updatePrimaryUser({ userId: member.primaryUserId, memberId }),
+        service.updatePrimaryUser({ userId: member.primaryUserId.toString(), memberId }),
       ).rejects.toThrow(Errors.get(ErrorType.userIdOrEmailAlreadyExists));
     });
 
     it('should update the primary user and add new user to the users list', async () => {
       const memberId = await generateMember();
-      const newUser = await modelUser.create(generateCreateRawUserParams());
+      const newUser = await modelUser.create(generateCreateUserParams());
       const oldMember = await service.get(memberId);
 
       const result = await service.updatePrimaryUser({ userId: newUser._id, memberId });
@@ -1189,7 +1359,7 @@ describe('MemberService', () => {
   };
 
   const generateUser = async (): Promise<string> => {
-    const { _id: userId } = await modelUser.create(generateCreateRawUserParams());
+    const { _id: userId } = await modelUser.create(generateCreateUserParams());
     return userId;
   };
 

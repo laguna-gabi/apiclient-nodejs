@@ -84,7 +84,7 @@ export class AppointmentResolver extends AppointmentBase {
     const eventParams: IEventOnUpdatedAppointment = {
       updatedAppointmentAction: UpdatedAppointmentAction.delete,
       memberId: appointment.memberId.toString(),
-      userId: appointment.userId,
+      userId: appointment.userId.toString(),
       key: appointment.id,
     };
     this.eventEmitter.emit(EventType.onUpdatedAppointment, eventParams);
@@ -192,11 +192,12 @@ export class AppointmentResolver extends AppointmentBase {
   private notifyRequestAppointment(appointment: Appointment) {
     const params: InternalNotifyParams = {
       memberId: appointment.memberId.toString(),
-      userId: appointment.userId,
+      userId: appointment.userId.toString(),
       type: InternalNotificationType.textToMember,
       metadata: {
         contentType: ContentKey.appointmentRequest,
         scheduleLink: appointment.link,
+        path: `connect/${appointment.id}`,
       },
     };
     this.eventEmitter.emit(EventType.notifyInternal, params);

@@ -22,7 +22,7 @@
     "seed:laguna": "export NODE_ENV=development && ts-node graphql/seedLagunaData.ts",
     "test": "jest --config test/unit/jest.json",
     "test:watch": "jest --config test/unit/jest.json --watch",
-    "test:cov": "jest --config test/jest.json",
+    "test:cov": "jest --config test/jest.json && jest-coverage-badges",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:integration": "jest --config test/integration/jest.json",
     "test:validation": "jest --config test/validations/jest.json",
@@ -30,7 +30,7 @@
     "test:all": "yarn test && yarn test:validation && yarn test:integration"
   },
   "dependencies": {
-    "@lagunahealth/pandora": "^0.1.8",
+    "@lagunahealth/pandora": "^0.1.12",
     "@nestjs/axios": "^0.0.1",
     "@nestjs/common": "^7.6.15",
     "@nestjs/core": "^7.6.15",
@@ -84,6 +84,7 @@
     "eslint-plugin-prettier": "^3.3.1",
     "faker": "^5.5.3",
     "jest": "^26.6.3",
+    "jest-coverage-badges": "^1.1.2",
     "prettier": "^2.2.1",
     "supertest": "^6.1.3",
     "ts-jest": "^26.5.4",

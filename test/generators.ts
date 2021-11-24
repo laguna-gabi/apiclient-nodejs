@@ -44,6 +44,7 @@ import {
   SetGeneralNotesParams,
   Sex,
   TaskStatus,
+  UpdateJournalParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -54,7 +55,6 @@ import { CreateOrgParams, OrgType } from '../src/org';
 import { CreateUserParams, GetSlotsParams, User, UserRole, defaultUserParams } from '../src/user';
 
 export const generateCreateUserParams = ({
-  id = v4(),
   authId = v4(),
   roles = [UserRole.coach],
   firstName = faker.name.firstName(21),
@@ -68,7 +68,6 @@ export const generateCreateUserParams = ({
   languages = [Language.en, Language.es],
 }: Partial<CreateUserParams> = {}): CreateUserParams => {
   return {
-    id,
     authId,
     firstName,
     lastName,
@@ -106,10 +105,8 @@ export const generateMemberConfig = ({
 export const mockGenerateUser = (): User => {
   const firstName = faker.name.firstName();
   const lastName = faker.name.lastName();
-  const _id = v4();
   return {
-    id: _id,
-    _id,
+    id: generateId(),
     firstName,
     lastName,
     email: generateEmail(),
@@ -121,14 +118,6 @@ export const mockGenerateUser = (): User => {
     authId: v4(),
     lastMemberAssignedAt: new Date(0),
   };
-};
-
-export const generateCreateRawUserParams = (params = undefined) => {
-  const newUser = generateCreateUserParams(params);
-  newUser['_id'] = newUser.id;
-  delete newUser.id;
-
-  return newUser;
 };
 
 export const generateGetSlotsParams = ({
@@ -180,7 +169,7 @@ export const mockGenerateMember = (): Member => {
   return {
     id: generateId(),
     authId: v4(),
-    primaryUserId: user.id,
+    primaryUserId: generateObjectId(user.id),
     phone: generatePhone(),
     deviceId: faker.datatype.uuid(),
     firstName,
@@ -287,7 +276,7 @@ export const generateUpdateTaskStatusParams = ({
 };
 
 export const generateRequestAppointmentParams = ({
-  userId = v4(),
+  userId = generateId(),
   memberId = generateId(),
   notBefore = faker.date.soon(3),
 }: Partial<RequestAppointmentParams> = {}): RequestAppointmentParams => {
@@ -296,7 +285,7 @@ export const generateRequestAppointmentParams = ({
 
 export const generateScheduleAppointmentParams = ({
   id,
-  userId = v4(),
+  userId = generateId(),
   memberId = generateId(),
   method = AppointmentMethod.chat,
   start = faker.date.soon(4),
@@ -365,7 +354,7 @@ export const generateAppointmentComposeParams = (): AppointmentCompose => {
   return {
     memberId: generateId(),
     memberName: `${faker.name.firstName()} ${faker.name.lastName()}`,
-    userId: v4(),
+    userId: generateId(),
     userName: `${faker.name.firstName()} ${faker.name.lastName()}`,
     start,
     end,
@@ -401,7 +390,7 @@ export const generateAvailabilityInput = ({
 };
 
 export const generateGetCommunicationParams = ({
-  userId = v4(),
+  userId = generateId(),
   memberId = generateId(),
 }: Partial<GetCommunicationParams> = {}): GetCommunicationParams => {
   return { userId, memberId };
@@ -457,12 +446,19 @@ export const generateSetGeneralNotesParams = ({
   return { memberId, note, nurseNotes };
 };
 
+export const generateUpdateJournalParams = ({
+  id = generateId(),
+  text = faker.lorem.sentence(),
+}: Partial<UpdateJournalParams> = {}): UpdateJournalParams => {
+  return { id, text };
+};
+
 export const generateDateOnly = (date: Date): string => {
   return format(date, 'yyyy/MM/dd');
 };
 
 export const generateNotifyParams = ({
-  userId = v4(),
+  userId = generateId(),
   memberId = generateId(),
   type = NotificationType.call,
   metadata = { peerId: v4(), content: 'test' },
@@ -492,8 +488,8 @@ export const generateCancelNotificationParams = (): CancelNotificationParams => 
 };
 
 export const generateInternalNotifyParams = ({
-  memberId = v4(),
-  userId = v4(),
+  memberId = generateId(),
+  userId = generateId(),
   type = InternalNotificationType.textToMember,
   metadata = {
     contentType: ContentKey.logReminder,
@@ -562,7 +558,7 @@ export const generateUniqueUrl = () => {
 export const generateUpdateRecordingParams = ({
   id = generateId(),
   memberId = generateId(),
-  userId = v4(),
+  userId = generateId(),
   start = faker.date.soon(1),
   end = faker.date.soon(2),
   answered = true,

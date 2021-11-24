@@ -20,7 +20,7 @@ import {
   dbDisconnect,
   defaultModules,
   generateCreateMemberParams,
-  generateCreateRawUserParams,
+  generateCreateUserParams,
   generateId,
   generateOrgParams,
 } from '../index';
@@ -108,7 +108,7 @@ describe('MemberScheduler', () => {
         //end input for registerCustomFutureNotify
 
         //input for initRegisterNewMemberNudge
-        const { _id: pId } = await modelUser.create(generateCreateRawUserParams());
+        const { _id: pId } = await modelUser.create(generateCreateUserParams());
         const { _id: orgId } = await modelOrg.create(generateOrgParams());
         const members = await Promise.all(
           [1, 2, 3].map(async () => service.insert(generateCreateMemberParams({ orgId }), pId)),
@@ -127,7 +127,7 @@ describe('MemberScheduler', () => {
         members.map((member) => expect(timeouts).toContainEqual(member.id.toString()));
       }, 10000);
 
-      // eslint-disable-next-line max-len
+      /* eslint-disable-next-line max-len */
       it('should not register schedulerRegistry with future messages more than 1 month', async () => {
         const { _id } = await notifyParamsModel.create(generateParams(whenNotInRange));
 

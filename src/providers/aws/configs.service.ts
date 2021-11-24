@@ -3,28 +3,16 @@ import { MongooseModuleOptions, MongooseOptionsFactory } from '@nestjs/mongoose'
 import * as AWS from 'aws-sdk';
 import * as config from 'config';
 import { Environments } from '../../common';
+import { BaseExternalConfigs } from '@lagunahealth/pandora';
 
 export const ExternalConfigs = {
+  ...BaseExternalConfigs,
   aws: {
     memberBucketName: 'aws.storage.memberBucketName',
     queueNameAudit: 'aws.sqs.queueNameAudit',
   },
   db: {
     connection: 'db.connection',
-  },
-  oneSignal: {
-    defaultApiId: 'onesignal.default.apiId',
-    defaultApiKey: 'onesignal.default.apiKey',
-    voipApiId: 'onesignal.voip.apiId',
-    voipApiKey: 'onesignal.voip.apiKey',
-  },
-  sendbird: {
-    apiId: 'sendbird.apiId',
-    apiToken: 'sendbird.apiToken',
-    masterApiToken: 'sendbird.masterApiToken',
-  },
-  slack: {
-    url: 'slack.url',
   },
   twilio: {
     accountSid: 'twilio.accountSid',

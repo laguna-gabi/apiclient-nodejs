@@ -32,13 +32,14 @@ export enum ErrorType {
   memberRecordingIdAlreadyExists = 9214,
   memberRegisterWebPlatform = 9215,
   invalidZipCode = 9216,
-  invalidContent = 9217,
+  memberJournalNotFound = 9217,
 
   // Notifications
   notificationMetadataInvalid = 9270,
   notificationMemberPlatformWeb = 9271,
   notificationNotFound = 9272,
   notificationMetadataWhenPast = 9273,
+  notificationInvalidContent = 9274,
 
   // Module appointment errors
   appointmentIdNotFound = 9301,
@@ -48,6 +49,7 @@ export enum ErrorType {
   appointmentEndDate = 9305,
   appointmentEndAfterStart = 9306,
   appointmentNoShow = 9307,
+  appointmentCanNotBeUpdated = 9308,
 
   // Module org errors
   orgAlreadyExists = 9401,
@@ -105,7 +107,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberRecordingIdAlreadyExists.valueOf(), `id already exists`],
   [ErrorType.memberRegisterWebPlatform.valueOf(), `cant register member with platform web`],
   [ErrorType.invalidZipCode.valueOf(), `invalid ZIP code`],
-  [ErrorType.invalidContent.valueOf(), `invalid content`],
+  [ErrorType.memberJournalNotFound.valueOf(), `journal id was not found`],
   [
     ErrorType.memberRegisterForNotificationToken.valueOf(),
     `token must contain only letters and numbers`,
@@ -122,6 +124,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [ErrorType.notificationNotFound.valueOf(), `notification not found`],
   [ErrorType.notificationMetadataWhenPast.valueOf(), `'when' in metadata must be in the future`],
+  [ErrorType.notificationInvalidContent.valueOf(), `invalid content`],
   [ErrorType.appointmentIdNotFound.valueOf(), 'appointment id was not found'],
   [ErrorType.appointmentNotBeforeDate.valueOf(), `notBefore ${dateInstanceFormat}`],
   [ErrorType.appointmentNotBeforeDateInThePast.valueOf(), 'notBefore must be in the future'],
@@ -132,6 +135,10 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.appointmentNoShow.valueOf(),
     'if noShow=true, a `reason` field is mandatory as well. ' +
       'if noShow=false, a `reason` field is not required',
+  ],
+  [
+    ErrorType.appointmentCanNotBeUpdated.valueOf(),
+    `can not update an appointment with status='done'`,
   ],
   [ErrorType.orgAlreadyExists.valueOf(), 'organization already exists'],
   [ErrorType.orgTrialDurationOutOfRange.valueOf(), 'trialDuration must not be less than 1'],

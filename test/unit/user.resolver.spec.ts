@@ -1,6 +1,5 @@
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { v4 } from 'uuid';
 import { ErrorType, Errors, EventType, IEventOnNewUser } from '../../src/common';
 import { DbModule } from '../../src/db/db.module';
 import {
@@ -15,6 +14,7 @@ import {
   dbDisconnect,
   generateCreateUserParams,
   generateGetSlotsParams,
+  generateId,
   mockGenerateUser,
 } from '../index';
 
@@ -75,7 +75,7 @@ describe('UserResolver', () => {
       spyOnServiceInsert.mockImplementationOnce(async () => params);
       await resolver.createUser(params);
 
-      /* eslint-disable */
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const eventParams: IEventOnNewUser = { user: params };
       /* eslint-enable */
@@ -178,7 +178,7 @@ describe('UserResolver', () => {
     });
 
     it('should fetch userConfig', async () => {
-      const userId = v4();
+      const userId = generateId();
 
       spyOnServiceGetUserConfig.mockImplementationOnce(async () => userId);
 

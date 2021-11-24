@@ -4,10 +4,13 @@ import {
   Appointment,
   AppointmentScheduler,
   AppointmentService,
+  AppointmentStatus,
   ScheduleAppointmentParams,
 } from '.';
 import {
   ContentKey,
+  ErrorType,
+  Errors,
   EventType,
   IEventOnUpdatedAppointment,
   InternalNotifyParams,
@@ -24,6 +27,7 @@ export class AppointmentBase {
   ) {}
 
   async scheduleAppointment(scheduleAppointmentParams: ScheduleAppointmentParams) {
+    await this.validateUpdateScheduleAppointment(scheduleAppointmentParams.id);
     const appointment = await this.appointmentService.schedule(scheduleAppointmentParams);
 
     this.updateAppointmentExternalData(appointment);
@@ -46,7 +50,7 @@ export class AppointmentBase {
     const eventParams: IEventOnUpdatedAppointment = {
       updatedAppointmentAction: UpdatedAppointmentAction.edit,
       memberId: appointment.memberId.toString(),
-      userId: appointment.userId,
+      userId: appointment.userId.toString(),
       key: appointment.id,
       value: {
         status: appointment.status,
@@ -59,7 +63,7 @@ export class AppointmentBase {
   private notifyUserAppointment(appointment: Appointment) {
     const params: InternalNotifyParams = {
       memberId: appointment.memberId.toString(),
-      userId: appointment.userId,
+      userId: appointment.userId.toString(),
       type: InternalNotificationType.textSmsToUser,
       metadata: {
         contentType: ContentKey.appointmentScheduledUser,
@@ -77,7 +81,7 @@ export class AppointmentBase {
   private notifyMemberAppointment(appointment: Appointment) {
     const params: InternalNotifyParams = {
       memberId: appointment.memberId.toString(),
-      userId: appointment.userId,
+      userId: appointment.userId.toString(),
       type: InternalNotificationType.textSmsToMember,
       metadata: {
         contentType: ContentKey.appointmentScheduledMember,
@@ -91,8 +95,17 @@ export class AppointmentBase {
     await this.appointmentScheduler.registerAppointmentAlert({
       id: appointment.id,
       memberId: appointment.memberId.toString(),
-      userId: appointment.userId,
+      userId: appointment.userId.toString(),
       start: appointment.start,
     });
+  }
+
+  private async validateUpdateScheduleAppointment(id: string) {
+    if (id) {
+      const existingAppointment = await this.appointmentService.get(id);
+      if (existingAppointment?.status === AppointmentStatus.done) {
+        throw new Error(Errors.get(ErrorType.appointmentCanNotBeUpdated));
+      }
+    }
   }
 }

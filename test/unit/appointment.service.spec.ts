@@ -2,7 +2,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
 import { Model, model } from 'mongoose';
-import { v4 } from 'uuid';
 import {
   Appointment,
   AppointmentDto,
@@ -79,7 +78,7 @@ describe('AppointmentService', () => {
       expect(result).toEqual(
         expect.objectContaining({
           _id: generateObjectId(id),
-          userId: appointment.userId,
+          userId: generateObjectId(appointment.userId),
           memberId: generateObjectId(appointment.memberId),
           notBefore: appointment.notBefore,
           status: AppointmentStatus.requested,
@@ -120,7 +119,7 @@ describe('AppointmentService', () => {
       expect(resultGet).toEqual(
         expect.objectContaining({
           _id: generateObjectId(result.id),
-          userId: appointmentParams.userId,
+          userId: generateObjectId(appointmentParams.userId),
           memberId: generateObjectId(appointmentParams.memberId),
           notBefore: appointmentParams.notBefore,
           status: AppointmentStatus.requested,
@@ -132,7 +131,7 @@ describe('AppointmentService', () => {
 
     it('should update an appointment notBefore for an existing memberId and userId', async () => {
       const memberId = generateId();
-      const userId = v4();
+      const userId = generateId();
 
       const { id: id1, record: record1 } = await requestAppointment({
         memberId,
@@ -157,7 +156,7 @@ describe('AppointmentService', () => {
       expect(record2).toEqual(
         expect.objectContaining({
           id: record1.id,
-          userId,
+          userId: generateObjectId(userId),
           memberId: generateObjectId(memberId),
           notBefore,
           status: AppointmentStatus.requested,
@@ -186,13 +185,13 @@ describe('AppointmentService', () => {
       const { id: appId, userId } = await service.request(updatedRequestAppointmentParams);
 
       expect(id).toEqual(appId);
-      expect(userId).toEqual(newUserId);
+      expect(userId.toString()).toEqual(newUserId);
     });
 
     it('should crate a new appointment for an existing memberId and different userId', async () => {
       const memberId = generateId();
-      const userId1 = v4();
-      const userId2 = v4();
+      const userId1 = generateId();
+      const userId2 = generateId();
 
       const { id: id1, record: record1 } = await requestAppointment({
         memberId,
@@ -216,7 +215,7 @@ describe('AppointmentService', () => {
     it('should crate a new appointment for an existing userId and different memberId', async () => {
       const memberId1 = generateId();
       const memberId2 = generateId();
-      const userId = v4();
+      const userId = generateId();
 
       const { id: id1, record: record1 } = await requestAppointment({
         memberId: memberId1,
@@ -250,7 +249,7 @@ describe('AppointmentService', () => {
 
     it('should create a new request appointment on exising scheduled', async () => {
       const memberId = generateId();
-      const userId = v4();
+      const userId = generateId();
       const scheduleParams = generateScheduleAppointmentParams({ userId, memberId });
       const requestParams = generateRequestAppointmentParams({ userId, memberId });
 
@@ -317,7 +316,7 @@ describe('AppointmentService', () => {
       const appointment = await service.schedule(params2);
 
       expect(appointment.id).toEqual(params2.id);
-      expect(appointment.userId).toEqual(params2.userId);
+      expect(appointment.userId.toString()).toEqual(params2.userId);
       expect(appointment.memberId.toString()).toEqual(params2.memberId);
       expect(appointment.method).toEqual(params2.method);
       expect(appointment.start).toEqual(params2.start);
@@ -326,7 +325,7 @@ describe('AppointmentService', () => {
 
     it('should schedule multiple appointments for the same user and member', async () => {
       const memberId = generateId();
-      const userId = v4();
+      const userId = generateId();
       const schedule = async (): Promise<Appointment> => {
         const appointmentParams = generateScheduleAppointmentParams({ memberId, userId });
         const result = await service.schedule(appointmentParams);
@@ -492,7 +491,7 @@ describe('AppointmentService', () => {
       spyOnEventEmitter.mockReset();
     });
 
-    /* eslint-disable */
+    /* eslint-disable max-len */
     test.each`
       recordingConsent | noShow   | expectToDispatch | title
       ${false}         | ${false} | ${true}          | ${'should dispatch event if showed up and no consent'}
@@ -500,7 +499,7 @@ describe('AppointmentService', () => {
       ${true}          | ${true}  | ${false}         | ${'should not dispatch event if didnt show up and have consent'}
       ${true}          | ${true}  | ${false}         | ${'should not dispatch event if didnt show up and no consent'}
     `(`$title`, async ({ recordingConsent, noShow, expectToDispatch }) => {
-      /* eslint-enable */
+      /* eslint-enable max-len */
       const spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
       const appointmentParams = generateScheduleAppointmentParams();
       const notes = generateNotesParams();

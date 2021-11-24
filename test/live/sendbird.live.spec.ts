@@ -9,6 +9,7 @@ import { UserRole } from '../../src/user';
 import { generateId } from '../generators';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotificationType } from '@lagunahealth/pandora';
+import { HttpService } from '@nestjs/axios';
 
 describe('live: sendbird actions', () => {
   let sendBird: SendBird;
@@ -16,7 +17,8 @@ describe('live: sendbird actions', () => {
   beforeAll(async () => {
     const configService = new ConfigsService();
     const logger = new Logger(new EventEmitter2());
-    sendBird = new SendBird(configService, logger);
+    const httpService = new HttpService();
+    sendBird = new SendBird(configService, httpService, logger);
     await sendBird.onModuleInit();
   });
 
@@ -128,8 +130,8 @@ describe('live: sendbird actions', () => {
     expect(leaveResult.data).toEqual({});
 
     const inviteResult = await sendBird.invite(params.channel_url, newUser.user_id);
-    expect(inviteResult.data.members[0].user_id).toEqual(newUser.user_id);
-    expect(inviteResult.data.members[1].user_id).toEqual(member.user_id);
+    expect(inviteResult[0]).toEqual(newUser.user_id);
+    expect(inviteResult[1]).toEqual(member.user_id);
 
     // 13. replace channel name and image
     const replaceResult = await sendBird.updateChannelName(
@@ -146,7 +148,11 @@ describe('live: sendbird actions', () => {
     appointmentIds: string[],
     compareTo: any[],
   ) => {
+    //eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
     const url = `${sendBird.basePath}group_channels/${channelUrl}`;
+    //eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
     const current = await axios.get(url, { headers: sendBird.headers });
     const { appointments } = JSON.parse(current.data.data);
 

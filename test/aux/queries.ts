@@ -607,6 +607,58 @@ export class Queries {
     return result.data.getRecordings;
   };
 
+  getJournal = async ({ id, invalidFieldsError }: { id; invalidFieldsError?: string }) => {
+    const result = await this.apolloClient.query({
+      variables: { id },
+      query: gql`
+        query getJournal($id: String!) {
+          getJournal(id: $id) {
+            id
+            memberId
+            text
+            published
+            updatedAt
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(result.errors[0].message).toMatch(invalidFieldsError);
+    } else {
+      return result.data.getJournal;
+    }
+  };
+
+  getJournals = async ({
+    memberId,
+    invalidFieldsError,
+  }: {
+    memberId;
+    invalidFieldsError?: string;
+  }) => {
+    const result = await this.apolloClient.query({
+      variables: { memberId },
+      query: gql`
+        query getJournals($memberId: String!) {
+          getJournals(memberId: $memberId) {
+            id
+            memberId
+            text
+            published
+            updatedAt
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(result.errors[0].message).toMatch(invalidFieldsError);
+    } else {
+      return result.data.getJournals;
+    }
+  };
+
   getDailyReports = async ({
     dailyReportQueryInput,
   }: {

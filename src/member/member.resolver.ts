@@ -1,3 +1,4 @@
+import { InternalNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -13,6 +14,7 @@ import {
   CreateMemberParams,
   CreateTaskParams,
   DischargeDocumentsLinks,
+  Journal,
   Member,
   MemberBase,
   MemberConfig,
@@ -26,6 +28,7 @@ import {
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
   TaskStatus,
+  UpdateJournalParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -64,7 +67,6 @@ import {
 } from '../communication';
 import { Bitly, CognitoService, NotificationsService, StorageService } from '../providers';
 import { User, UserService } from '../user';
-import { InternalNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
@@ -149,7 +151,7 @@ export class MemberResolver extends MemberBase {
     const { member, memberConfig } = await this.memberService.moveMemberToArchive(id);
     await this.communicationService.freezeGroupChannel({
       memberId: id,
-      userId: member.primaryUserId,
+      userId: member.primaryUserId.toString(),
     });
     await this.notificationsService.unregister(memberConfig);
     await this.cognitoService.disableMember(member.deviceId);
@@ -163,7 +165,7 @@ export class MemberResolver extends MemberBase {
     const { member, memberConfig } = await this.memberService.deleteMember(id);
     const communication = await this.communicationService.getMemberUserCommunication({
       memberId: id,
-      userId: member.primaryUserId,
+      userId: member.primaryUserId.toString(),
     });
     if (!communication) {
       this.logger.warn(
@@ -197,7 +199,7 @@ export class MemberResolver extends MemberBase {
     const { platform } = await this.memberService.getMemberConfig(member.id);
     const updateUserInCommunicationParams: IEventOnReplacedUserForMember = {
       newUser,
-      oldUserId: member.primaryUserId,
+      oldUserId: member.primaryUserId.toString(),
       member,
       platform,
     };
@@ -345,11 +347,43 @@ export class MemberResolver extends MemberBase {
   /*************************************************************************************************
    ****************************************** General notes ****************************************
    ************************************************************************************************/
+
   @Mutation(() => Boolean, { nullable: true })
   async setGeneralNotes(
     @Args(camelCase(SetGeneralNotesParams.name)) setGeneralNotesParams: SetGeneralNotesParams,
   ) {
     return this.memberService.setGeneralNotes(setGeneralNotesParams);
+  }
+
+  /*************************************************************************************************
+   ******************************************** Journal ********************************************
+   ************************************************************************************************/
+
+  @Mutation(() => Identifier)
+  async createJournal(@Args('memberId', { type: () => String }) memberId: string) {
+    return this.memberService.createJournal(memberId);
+  }
+
+  @Mutation(() => Journal)
+  async updateJournal(
+    @Args(camelCase(UpdateJournalParams.name)) updateJournalParams: UpdateJournalParams,
+  ) {
+    return this.memberService.updateJournal(updateJournalParams);
+  }
+
+  @Query(() => Journal)
+  async getJournal(@Args('id', { type: () => String }) id: string) {
+    return this.memberService.getJournal(id);
+  }
+
+  @Query(() => [Journal])
+  async getJournals(@Args('memberId', { type: () => String }) memberId: string) {
+    return this.memberService.getJournals(memberId);
+  }
+
+  @Mutation(() => Boolean)
+  async deleteJournal(@Args('id', { type: () => String }) id: string) {
+    return this.memberService.deleteJournal(id);
   }
 
   /************************************************************************************************
@@ -388,7 +422,7 @@ export class MemberResolver extends MemberBase {
       const eventParams: IEventOnUpdatedMemberPlatform = {
         memberId: registerForNotificationParams.memberId,
         platform: registerForNotificationParams.platform,
-        userId: user._id,
+        userId: user.id,
       };
       this.eventEmitter.emit(EventType.onUpdatedMemberPlatform, eventParams);
     });
@@ -398,13 +432,13 @@ export class MemberResolver extends MemberBase {
 
     await this.memberScheduler.registerNewRegisteredMemberNotify({
       memberId: member.id,
-      userId: member.primaryUserId,
+      userId: member.primaryUserId.toString(),
       firstLoggedInAt: new Date(),
     });
 
     await this.memberScheduler.registerLogReminder({
       memberId: member.id,
-      userId: member.primaryUserId,
+      userId: member.primaryUserId.toString(),
       firstLoggedInAt: new Date(),
     });
   }
@@ -439,7 +473,7 @@ export class MemberResolver extends MemberBase {
       metadata.content = metadata.content.trim();
       if (!metadata.content) {
         // nothing remained after trim -> was only whitespaces
-        throw new Error(Errors.get(ErrorType.invalidContent));
+        throw new Error(Errors.get(ErrorType.notificationInvalidContent));
       }
     }
 
@@ -584,7 +618,7 @@ export class MemberResolver extends MemberBase {
         });
       } else {
         const coachInfo = params.sendBirdMemberInfo.find(
-          (member) => member.memberId === communication.userId,
+          (member) => member.memberId === communication.userId.toString(),
         );
         if (coachInfo && !coachInfo.isOnline) {
           return await this.internalNotify({
@@ -610,12 +644,12 @@ export class MemberResolver extends MemberBase {
       const member = await this.memberService.getByPhone(params.phone);
       const sendBirdChannelUrl = await this.getSendBirdChannelUrl({
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
       });
 
       return await this.internalNotify({
         memberId: member.id,
-        userId: member.primaryUserId,
+        userId: member.primaryUserId.toString(),
         type: InternalNotificationType.chatMessageToUser,
         metadata: { sendBirdChannelUrl },
         content: params.message,
@@ -655,7 +689,7 @@ export class MemberResolver extends MemberBase {
         const member = await this.memberService.getByPhone(phone);
         return await this.internalNotify({
           memberId: member.id,
-          userId: member.primaryUserId,
+          userId: member.primaryUserId.toString(),
           type: InternalNotificationType.textSmsToMember,
           metadata: {},
           content,

@@ -5,7 +5,6 @@ import * as config from 'config';
 import { sub } from 'date-fns';
 import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
-import { StorageService } from '../providers';
 import { v4 } from 'uuid';
 import {
   ActionItem,
@@ -19,6 +18,8 @@ import {
   CreateTaskParams,
   Goal,
   GoalDocument,
+  Journal,
+  JournalDocument,
   Member,
   MemberConfig,
   MemberConfigDocument,
@@ -53,6 +54,8 @@ import {
   Identifier,
   Logger,
 } from '../common';
+import { StorageService } from '../providers';
+import { UpdateJournalParams } from './journal.dto';
 
 @Injectable()
 export class MemberService extends BaseService {
@@ -63,6 +66,8 @@ export class MemberService extends BaseService {
     private readonly goalModel: Model<GoalDocument>,
     @InjectModel(ActionItem.name)
     private readonly actionItemModel: Model<ActionItemDocument>,
+    @InjectModel(Journal.name)
+    private readonly journalModel: Model<JournalDocument>,
     @InjectModel(MemberConfig.name)
     private readonly memberConfigModel: Model<MemberConfigDocument>,
     @InjectModel(Recording.name)
@@ -183,7 +188,7 @@ export class MemberService extends BaseService {
 
     return result.map((item) => {
       const { appointmentsCount, nextAppointment } = this.calculateAppointments(item);
-      const primaryUser = item.users.filter((user) => user.id === item.primaryUserId)[0];
+      const primaryUser = item.users.filter((user) => user.id === item.primaryUserId.toString())[0];
       delete item.users;
       delete item._id;
 
@@ -672,6 +677,59 @@ export class MemberService extends BaseService {
   }
 
   /*************************************************************************************************
+   ******************************************** Journal ********************************************
+   ************************************************************************************************/
+
+  async createJournal(memberId: string): Promise<Identifier> {
+    const { _id } = await this.journalModel.create({ memberId: new Types.ObjectId(memberId) });
+    return { id: _id };
+  }
+
+  async updateJournal(updateJournalParams: UpdateJournalParams): Promise<Journal> {
+    const { id, text } = updateJournalParams;
+    const result = await this.journalModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(id) },
+      { $set: { text } },
+      { new: true },
+    );
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.memberJournalNotFound));
+    }
+
+    return result;
+  }
+
+  async getJournal(id: string): Promise<Journal> {
+    const result = await this.journalModel.findById(id);
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.memberJournalNotFound));
+    }
+
+    return result;
+  }
+
+  async getJournals(memberId: string): Promise<Journal[]> {
+    const result = await this.journalModel.find({
+      memberId: new Types.ObjectId(memberId),
+      text: { $exists: true },
+    });
+
+    return result;
+  }
+
+  async deleteJournal(id: string): Promise<boolean> {
+    const result = await this.journalModel.deleteOne({ _id: new Types.ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      throw new Error(Errors.get(ErrorType.memberJournalNotFound));
+    }
+
+    return true;
+  }
+
+  /*************************************************************************************************
    ******************************************** Recording ******************************************
    ************************************************************************************************/
   async updateRecording(updateRecordingParams: UpdateRecordingParams): Promise<void> {
@@ -727,7 +785,7 @@ export class MemberService extends BaseService {
     // replace primary user and add the new user to member's list
     const member = await this.memberModel.findOneAndUpdate(
       { _id: new Types.ObjectId(memberId) },
-      { primaryUserId: userId, $addToSet: { users: userId } },
+      { primaryUserId: new Types.ObjectId(userId), $addToSet: { users: userId } },
       { new: false },
     );
     if (!member) {
@@ -735,7 +793,7 @@ export class MemberService extends BaseService {
     }
 
     // if old user == new user
-    if (member.primaryUserId === params.userId) {
+    if (member.primaryUserId.toString() === params.userId) {
       throw new Error(Errors.get(ErrorType.userIdOrEmailAlreadyExists));
     }
     // return the old member (with the old primaryUserId)
