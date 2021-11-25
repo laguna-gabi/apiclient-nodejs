@@ -1,4 +1,3 @@
-import { RoleTypes } from '../../src/common';
 import { Handler } from '../aux/handler';
 
 describe('Integration tests : RBAC', () => {
@@ -13,61 +12,19 @@ describe('Integration tests : RBAC', () => {
     await handler.afterAll();
   });
 
-  enum EndpointType {
-    USER_ALLOWED,
-    MEMBER_ALLOWED,
-  }
+  it('expecting `member` to be denied access to a secure (`coach` only) endpoint', async () => {
+    const { errors } = await handler
+      .setContextUser(undefined, handler.patientZero.authId)
+      .queries.getMembers(handler.lagunaOrg.id);
 
-  it.each([
-    [
-      'expecting member to not be allowed to access a secure (admin only) endpoint',
-      RoleTypes.Member,
-      EndpointType.USER_ALLOWED,
-      'Forbidden resource',
-    ],
-    [
-      'expecting admin user to be allowed to access a secure endpoint',
-      RoleTypes.User,
-      EndpointType.USER_ALLOWED,
-      undefined,
-    ],
-  ])('Auth Integration tests: %s', async (message, role, endpointType, expectedError) => {
-    let authId;
-    switch (role) {
-      case RoleTypes.Member: {
-        authId = handler.patientZero.authId;
-        break;
-      }
+    expect(errors?.[0]?.message).toBe('Forbidden resource');
+  });
 
-      case RoleTypes.User: {
-        authId = handler.adminUser.authId;
-        break;
-      }
+  it('expecting `member` to be granted access to an endpoint', async () => {
+    const { errors } = await handler
+      .setContextUser(undefined, handler.patientZero.authId)
+      .queries.getMember({ id: handler.patientZero.id.toString() });
 
-      case RoleTypes.Anonymous: {
-        authId = handler.adminUser.authId + 'invalid';
-        break;
-      }
-    }
-
-    switch (endpointType) {
-      case EndpointType.USER_ALLOWED: {
-        const { errors } = await handler
-          .setContextUser(undefined, authId)
-          .queries.getMembers(handler.lagunaOrg.id);
-
-        expect(errors?.[0]?.message).toBe(expectedError);
-        break;
-      }
-
-      case EndpointType.MEMBER_ALLOWED: {
-        const { errors } = await handler
-          .setContextUser(undefined, authId)
-          .queries.getMember({ id: handler.patientZero.id.toString() });
-
-        expect(errors?.[0]?.message).toBe(expectedError);
-        break;
-      }
-    }
+    expect(errors?.[0]?.message).toBeUndefined();
   });
 });

@@ -1,9 +1,10 @@
+import { Platform } from '@lagunahealth/pandora';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
-import { EventType, RoleTypes, UpdatedAppointmentAction } from '../../src/common';
+import { EventType, MemberRole, UpdatedAppointmentAction, UserRole } from '../../src/common';
 import {
   CommunicationModule,
   CommunicationResolver,
@@ -21,7 +22,6 @@ import {
   mockGenerateMember,
   mockGenerateUser,
 } from '../index';
-import { Platform } from '@lagunahealth/pandora';
 
 describe('CommunicationResolver', () => {
   let module: TestingModule;
@@ -250,7 +250,7 @@ describe('CommunicationResolver', () => {
       spyOnUserServiceGet.mockImplementationOnce(() => user);
 
       const communicationInfo = await resolver.getMemberCommunicationInfo({
-        req: { user: { _id: generateObjectId(), role: RoleTypes.Member } },
+        req: { user: { _id: generateObjectId(), roles: [MemberRole.member] } },
       });
 
       expect(communicationInfo).toEqual({
@@ -274,7 +274,7 @@ describe('CommunicationResolver', () => {
 
       await expect(
         resolver.getMemberCommunicationInfo({
-          req: { user: { _id: generateObjectId(), role: RoleTypes.User } },
+          req: { user: { _id: generateObjectId(), roles: [UserRole.coach] } },
         }),
       ).rejects.toThrow('communication info is not allowed');
     });
@@ -285,7 +285,7 @@ describe('CommunicationResolver', () => {
 
       await expect(
         resolver.getMemberCommunicationInfo({
-          req: { user: { _id: generateObjectId(), role: RoleTypes.Member } },
+          req: { user: { _id: generateObjectId(), roles: [MemberRole.member] } },
         }),
       ).rejects.toThrow('user id was not found');
     });
@@ -296,7 +296,7 @@ describe('CommunicationResolver', () => {
 
       await expect(
         resolver.getMemberCommunicationInfo({
-          req: { user: { _id: generateObjectId(), role: RoleTypes.Member } },
+          req: { user: { _id: generateObjectId(), roles: [MemberRole.member] } },
         }),
       ).rejects.toThrow('member-user communication was not found');
     });

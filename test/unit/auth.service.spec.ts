@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Request } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { AuthModule, AuthService, UserSecurityService } from '../../src/auth';
-import { RoleTypes } from '../../src/common';
 import { User } from '../../src/user';
 import { dbDisconnect, defaultModules, mockGenerateMember, mockGenerateUser } from '../index';
 
@@ -27,13 +26,13 @@ describe('AuthService', () => {
 
   describe('validateUser', () => {
     it('to return anonymous when authorization header is missing', async () => {
-      expect(await service.validateUser({} as Request)).toEqual({ role: RoleTypes.Anonymous });
+      expect(await service.validateUser({} as Request)).toEqual({});
     });
 
     it('to return anonymous when authorization header is invalid', async () => {
       expect(
         await service.validateUser({ headers: { authorization: `Bearer invalid` } } as Request),
-      ).toEqual({ role: RoleTypes.Anonymous });
+      ).toBeUndefined();
     });
 
     it('to return anonymous when authorization header is missing sub', async () => {
@@ -41,7 +40,7 @@ describe('AuthService', () => {
 
       expect(
         await service.validateUser({ headers: { authorization: `Bearer ${token}` } } as Request),
-      ).toEqual({ role: RoleTypes.Anonymous });
+      ).toBeUndefined();
     });
 
     /* eslint-disable-next-line max-len */
@@ -60,7 +59,7 @@ describe('AuthService', () => {
 
       expect(spyOnSecurityService).toBeCalledWith('my-sub');
 
-      expect(user).toEqual({ ...mockUser, role: RoleTypes.User });
+      expect(user).toEqual(mockUser);
       expect((user as User).id).toEqual(mockUser.id);
     });
 
@@ -83,7 +82,7 @@ describe('AuthService', () => {
       expect(spyOnSecurityServiceGetUser).toBeCalledWith('my-sub');
       expect(spyOnSecurityServiceGetMember).toBeCalledWith('my-sub');
 
-      expect(user).toEqual({ ...mockMember, role: RoleTypes.Member });
+      expect(user).toEqual(mockMember);
       expect((user as User).id).toEqual(mockMember.id);
     });
 
@@ -104,57 +103,7 @@ describe('AuthService', () => {
       expect(spyOnSecurityServiceGetUser).toBeCalledWith('my-sub');
       expect(spyOnSecurityServiceGetMember).toBeCalledWith('my-sub');
 
-      expect(user).toEqual({ role: RoleTypes.Anonymous });
-    });
-  });
-
-  describe('isAllowed', () => {
-    it.each([
-      [
-        'User is allowed if handler is annotated with Member role',
-        RoleTypes.User,
-        [RoleTypes.Member],
-        true,
-      ],
-      [
-        'User is allowed if handler is annotated with Member role',
-        RoleTypes.Member,
-        [RoleTypes.Member],
-        true,
-      ],
-      [
-        'Member is not allowed if handler is annotated with User role',
-        RoleTypes.Member,
-        [RoleTypes.User],
-        false,
-      ],
-      [
-        'User is allowed if handler is not annotated with Member role (default is User access)',
-        RoleTypes.User,
-        [],
-        true,
-      ],
-      [
-        /* eslint-disable-next-line max-len */
-        'Member is not allowed if handler is not annotated with Member role (default is User access)',
-        RoleTypes.Member,
-        [],
-        false,
-      ],
-      [
-        'Member is allowed if handler is annotated with Member role and other roles',
-        RoleTypes.Member,
-        [RoleTypes.User, RoleTypes.Member],
-        true,
-      ],
-      [
-        'Member is allowed if handler is annotated with Member role and Anonymous roles',
-        RoleTypes.Member,
-        [RoleTypes.User, RoleTypes.Anonymous],
-        true,
-      ],
-    ])('%p', async (message, role, annotatedRoles, expected) => {
-      expect(service.isAllowed(role, annotatedRoles)).toBe(expected);
+      expect(user).toBeNull();
     });
   });
 });

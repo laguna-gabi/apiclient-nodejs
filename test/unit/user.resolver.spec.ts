@@ -1,13 +1,12 @@
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ErrorType, Errors, EventType, IEventOnNewUser } from '../../src/common';
+import { ErrorType, Errors, EventType, IEventOnNewUser, UserRole } from '../../src/common';
 import { DbModule } from '../../src/db/db.module';
 import {
   GetSlotsParams,
   UserController,
   UserModule,
   UserResolver,
-  UserRole,
   UserService,
 } from '../../src/user';
 import {

@@ -3,14 +3,9 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsOptional, IsPhoneNumber, IsUrl, Length } from 'class-validator';
 import * as config from 'config';
 import { Document, Types } from 'mongoose';
+import { UserRole } from '../../src/common';
 import { Appointment, AppointmentData } from '../appointment';
 import { ErrorType, Errors, Identifier, Language, validPhoneExamples } from '../common';
-
-export enum UserRole {
-  admin = 'admin',
-  coach = 'coach',
-  nurse = 'nurse',
-}
 
 registerEnumType(UserRole, { name: 'UserRole' });
 

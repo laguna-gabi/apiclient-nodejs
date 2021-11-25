@@ -9,6 +9,7 @@ import {
   IEventOnNewMemberCommunication,
   IEventOnUpdateUserConfig,
   UpdatedAppointmentAction,
+  UserRole,
 } from '../../src/common';
 import {
   Communication,
@@ -17,7 +18,6 @@ import {
   CommunicationService,
 } from '../../src/communication';
 import { DbModule } from '../../src/db/db.module';
-import { UserRole } from '../../src/user';
 import {
   dbConnect,
   dbDisconnect,

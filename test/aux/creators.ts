@@ -2,7 +2,7 @@ import { camelCase, omit } from 'lodash';
 import { Appointment, AppointmentStatus, EndAppointmentParams } from '../../src/appointment';
 import { CreateTaskParams, Member, defaultMemberParams } from '../../src/member';
 import { Org } from '../../src/org';
-import { CreateUserParams, User, UserRole } from '../../src/user';
+import { CreateUserParams, User } from '../../src/user';
 import {
   generateAppointmentLink,
   generateCreateMemberParams,
@@ -12,6 +12,7 @@ import {
   generateOrgParams,
 } from '..';
 import { AppointmentsIntegrationActions, Handler } from '.';
+import { UserRole } from '../../src/common';
 
 export class Creators {
   constructor(

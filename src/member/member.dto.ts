@@ -27,12 +27,15 @@ import {
 import { Org } from '../org';
 import { User } from '../user';
 import { CancelNotificationType, NotificationType } from '@lagunahealth/pandora';
+import { MemberRole } from '../../src/common/roles';
 
 const validatorsConfig = config.get('graphql.validators');
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
+registerEnumType(MemberRole, { name: 'MemberRole' });
+
 export enum Sex {
   male = 'male',
   female = 'female',
@@ -61,6 +64,7 @@ export const defaultMemberParams = {
   sex: Sex.male,
   language: Language.en,
   honorific: Honorific.mx,
+  roles: [MemberRole.member],
 };
 
 export const NotNullableMemberKeys = [
@@ -343,6 +347,12 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   authId?: string;
+
+  @Prop({ default: defaultMemberParams.roles })
+  @Field(() => [MemberRole], {
+    description: 'role of the member: currently only `member`',
+  })
+  roles: MemberRole[];
 
   @Prop({ unique: true, index: true })
   @Field(() => String)

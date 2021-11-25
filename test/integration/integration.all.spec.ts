@@ -20,6 +20,7 @@ import {
   Identifiers,
   RegisterForNotificationParams,
   ReminderType,
+  UserRole,
   delay,
 } from '../../src/common';
 import {
@@ -39,7 +40,7 @@ import {
   UpdateJournalParams,
   UpdateRecordingParams,
 } from '../../src/member';
-import { User, UserRole, defaultSlotsParams } from '../../src/user';
+import { User, defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
 import { Creators } from '../aux/creators';
 import { Handler } from '../aux/handler';

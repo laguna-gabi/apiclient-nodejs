@@ -17,6 +17,7 @@ import {
   Language,
   RegisterForNotificationParams,
   StorageType,
+  UserRole,
   delay,
 } from '../../src/common';
 import {
@@ -1170,6 +1171,17 @@ describe('MemberResolver', () => {
 
       await expect(resolver.replaceUserForMember({ memberId, userId: user.id })).rejects.toThrow(
         Errors.get(ErrorType.userNotFound),
+      );
+    });
+
+    it('should throw an exception when the new user is an admin user', async () => {
+      const memberId = generateId();
+      const user = mockGenerateUser();
+      user.roles = [UserRole.admin];
+      spyOnUserServiceGet.mockImplementationOnce(async () => user);
+
+      await expect(resolver.replaceUserForMember({ memberId, userId: user.id })).rejects.toThrow(
+        Errors.get(ErrorType.userCanNotBeAssignedToMembers),
       );
     });
 

@@ -17,6 +17,7 @@ import {
   Errors,
   IEventOnNewAppointment,
   IEventOnUpdatedUserAppointments,
+  UserRole,
 } from '../../src/common';
 import {
   GetSlotsParams,
@@ -24,7 +25,6 @@ import {
   User,
   UserDto,
   UserModule,
-  UserRole,
   UserService,
   defaultSlotsParams,
   defaultUserParams,
@@ -82,8 +82,23 @@ describe('UserService', () => {
       const user2 = generateCreateUserParams();
       await service.insert(user2);
 
-      const result = await service.getUsers();
+      const result = await service.getUsers([UserRole.coach, UserRole.nurse]);
       expect(result.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should filter out users based on role', async () => {
+      // Coach (and admin)
+      const userCoach = generateCreateUserParams({ roles: [UserRole.coach, UserRole.admin] });
+      await service.insert(userCoach);
+
+      const userNurse = generateCreateUserParams({ roles: [UserRole.nurse] });
+      await service.insert(userNurse);
+
+      const result = await service.getUsers([UserRole.nurse]);
+
+      expect(result.find((user) => user.lastName === userNurse.lastName)).toBeTruthy();
+
+      expect(result.find((user) => user.lastName === userCoach.lastName)).toBeFalsy();
     });
 
     test.each([
@@ -96,9 +111,17 @@ describe('UserService', () => {
       const user = generateCreateUserParams({ roles });
 
       const { id } = await service.insert(user);
-      const result = await service.get(id);
+      const result = await service.get(id, true);
 
       compareUsers(result, user);
+    });
+
+    it('should not return admin user if not explicitly requested', async () => {
+      const adminUser = generateCreateUserParams({ roles: [UserRole.admin] });
+      const { id } = await service.insert(adminUser);
+
+      const result = await service.get(id);
+      expect(result).toBeNull();
     });
 
     it('should check that createdAt and updatedAt exists in the collection', async () => {
@@ -205,6 +228,62 @@ describe('UserService', () => {
       const result = await service.getAvailableUser();
       expect(result).toEqual(userId);
       jest.spyOn(mockUserModel, 'aggregate').mockRestore();
+    });
+  });
+
+  describe('getAvailableUser', () => {
+    // eslint-disable-next-line max-len
+    it('admin user should not be returned as available user on default user role filtering', async () => {
+      const adminOnlyUser = generateCreateUserParams({ roles: [UserRole.admin] });
+      const insertedUser = await service.insert(adminOnlyUser);
+      await userModel.updateOne(
+        { _id: Types.ObjectId(insertedUser.id) },
+        // update so it will pop-up first on search
+        { $set: { lastMemberAssignedAt: new Date(-10000) } },
+      );
+
+      const availableUserId = await service.getAvailableUser();
+
+      expect(availableUserId).not.toEqual(insertedUser.id);
+
+      // clean up
+      await userModel.deleteOne({ _id: new Types.ObjectId(insertedUser.id) });
+    });
+
+    // eslint-disable-next-line max-len
+    it('nurse user should not be returned as available user on default user role filtering', async () => {
+      const adminOnlyUser = generateCreateUserParams({ roles: [UserRole.nurse] });
+      const insertedUser = await service.insert(adminOnlyUser);
+      await userModel.updateOne(
+        { _id: Types.ObjectId(insertedUser.id) },
+        // update so it will pop-up first on search
+        { $set: { lastMemberAssignedAt: new Date(-10000) } },
+      );
+
+      const availableUserId = await service.getAvailableUser();
+
+      expect(availableUserId).not.toEqual(insertedUser.id);
+
+      // clean up
+      await userModel.deleteOne({ _id: new Types.ObjectId(insertedUser.id) });
+    });
+
+    // eslint-disable-next-line max-len
+    it('admin user should get returned as available user if we change default filtering', async () => {
+      const adminOnlyUser = generateCreateUserParams({ roles: [UserRole.admin, UserRole.coach] });
+      const insertedUser = await service.insert(adminOnlyUser);
+      await userModel.updateOne(
+        { _id: Types.ObjectId(insertedUser.id) },
+        // update so it will pop-up first on search
+        { $set: { lastMemberAssignedAt: new Date(-10000) } },
+      );
+
+      const availableUserId = await service.getAvailableUser([UserRole.admin]);
+
+      expect(availableUserId).toEqual(insertedUser.id);
+
+      // clean up
+      await userModel.deleteOne({ _id: new Types.ObjectId(insertedUser.id) });
     });
   });
 

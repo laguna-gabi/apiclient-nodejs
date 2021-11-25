@@ -28,7 +28,9 @@ import {
   Logger,
   LoggingInterceptor,
   ReminderType,
+  Roles,
   UpdatedAppointmentAction,
+  UserRole,
 } from '../common';
 import { Member } from '../member';
 import { OrgService } from '../org';
@@ -51,6 +53,7 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Appointment)
+  @Roles(UserRole.coach)
   async requestAppointment(
     @Args(camelCase(RequestAppointmentParams.name))
     requestAppointmentParams: RequestAppointmentParams,
@@ -63,11 +66,13 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Query(() => Appointment, { nullable: true })
+  @Roles(UserRole.coach)
   async getAppointment(@Args('id', { type: () => String }) id: string) {
     return this.appointmentService.get(id);
   }
 
   @Mutation(() => Appointment)
+  @Roles(UserRole.coach)
   async scheduleAppointment(
     @Args(camelCase(ScheduleAppointmentParams.name))
     scheduleAppointmentParams: ScheduleAppointmentParams,
@@ -76,6 +81,7 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Appointment)
+  @Roles(UserRole.coach)
   async endAppointment(
     @Args(camelCase(EndAppointmentParams.name)) endAppointmentParams: EndAppointmentParams,
   ) {
@@ -93,6 +99,7 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Notes, { nullable: true })
+  @Roles(UserRole.coach)
   async updateNotes(@Args(camelCase(UpdateNotesParams.name)) updateNotesParams: UpdateNotesParams) {
     return this.appointmentService.updateNotes(updateNotesParams);
   }

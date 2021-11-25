@@ -8,6 +8,8 @@ import {
   IEventOnNewUser,
   Identifier,
   LoggingInterceptor,
+  Roles,
+  UserRole,
   extractUserId,
 } from '../common';
 
@@ -17,6 +19,7 @@ export class UserResolver {
   constructor(private readonly userService: UserService, private eventEmitter: EventEmitter2) {}
 
   @Mutation(() => Identifier)
+  @Roles(UserRole.coach)
   async createUser(
     @Args(camelCase(CreateUserParams.name))
     createUserParams: CreateUserParams,
@@ -30,22 +33,33 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
+  @Roles(UserRole.coach)
   async getUser(@Context() context) {
     const userId = extractUserId(context);
-    return this.userService.get(userId);
+    return this.userService.get(userId, true);
   }
 
   @Query(() => [User])
-  async getUsers() {
-    return this.userService.getUsers();
+  @Roles(UserRole.coach)
+  async getUsers(
+    @Args('roles', {
+      type: () => [UserRole],
+      nullable: true,
+      defaultValue: [UserRole.coach, UserRole.nurse],
+    })
+    roles: UserRole[] = [UserRole.coach, UserRole.nurse],
+  ) {
+    return this.userService.getUsers(roles);
   }
 
   @Query(() => Slots)
+  @Roles(UserRole.coach)
   async getUserSlots(@Args(camelCase(GetSlotsParams.name)) getSlotsParams: GetSlotsParams) {
     return this.userService.getSlots(getSlotsParams);
   }
 
   @Query(() => UserConfig)
+  @Roles(UserRole.coach)
   async getUserConfig(@Args('id', { type: () => String }) id: string) {
     return this.userService.getUserConfig(id);
   }

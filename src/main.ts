@@ -3,7 +3,7 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import * as packageJson from '../package.json';
 import { AppModule } from './app.module';
 import { AppointmentScheduler } from './appointment';
-import { AuthService, GlobalAuthGuard, RolesGuard } from './auth';
+import { GlobalAuthGuard, RolesGuard } from './auth';
 import { AllExceptionsFilter, Logger, internalLogs } from './common';
 import { MemberScheduler } from './member';
 
@@ -18,7 +18,7 @@ async function bootstrap() {
   // Guard ALL routes (GQL and REST) - new routes must be explicitly annotated
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new GlobalAuthGuard());
-  app.useGlobalGuards(new RolesGuard(reflector, app.get(AuthService)));
+  app.useGlobalGuards(new RolesGuard(reflector));
 
   await app.listen(3000);
 

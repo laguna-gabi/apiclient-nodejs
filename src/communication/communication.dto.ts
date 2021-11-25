@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { UserRole } from '../user';
+import { UserRole } from '../common';
 
 /**************************************************************************************************
  **************************************** Internal params *****************************************

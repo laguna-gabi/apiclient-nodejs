@@ -52,11 +52,12 @@ import {
   Language,
   Logger,
   LoggingInterceptor,
+  MemberRole,
   RegisterForNotificationParams,
   ReminderType,
-  RoleTypes,
   Roles,
   StorageType,
+  UserRole,
   extractAuthorizationHeader,
   scheduleAppointmentDateFormat,
 } from '../common';
@@ -92,6 +93,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Identifier)
+  @Roles(UserRole.coach)
   async createMember(
     @Args(camelCase(CreateMemberParams.name))
     createMemberParams: CreateMemberParams,
@@ -105,7 +107,7 @@ export class MemberResolver extends MemberBase {
    * @param id : web - by using a query param of member id
    */
   @Query(() => Member, { nullable: true })
-  @Roles(RoleTypes.Member, RoleTypes.User)
+  @Roles(MemberRole.member, UserRole.coach)
   async getMember(
     @Context() context,
     @Args('id', { type: () => String, nullable: true }) id?: string,
@@ -123,6 +125,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Member)
+  @Roles(UserRole.coach)
   async updateMember(
     @Args(camelCase(UpdateMemberParams.name)) updateMemberParams: UpdateMemberParams,
   ) {
@@ -133,11 +136,13 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [MemberSummary])
+  @Roles(UserRole.coach)
   async getMembers(@Args('orgId', { type: () => String, nullable: true }) orgId?: string) {
     return this.memberService.getByOrg(orgId);
   }
 
   @Query(() => [AppointmentCompose])
+  @Roles(UserRole.coach)
   async getMembersAppointments(
     @Args('orgId', { type: () => String, nullable: true }) orgId?: string,
   ) {
@@ -149,6 +154,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Boolean, { nullable: true })
+  @Roles(UserRole.admin)
   async archiveMember(@Args('id', { type: () => String }) id: string) {
     const { member, memberConfig } = await this.memberService.moveMemberToArchive(id);
     await this.communicationService.freezeGroupChannel({
@@ -163,6 +169,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
+  @Roles(UserRole.admin)
   async deleteMember(@Args('id', { type: () => String }) id: string) {
     const { member, memberConfig } = await this.memberService.deleteMember(id);
     const communication = await this.communicationService.getMemberUserCommunication({
@@ -189,6 +196,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
+  @Roles(UserRole.admin)
   async replaceUserForMember(
     @Args(camelCase(ReplaceUserForMemberParams.name))
     replaceUserForMemberParams: ReplaceUserForMemberParams,
@@ -196,6 +204,10 @@ export class MemberResolver extends MemberBase {
     const newUser = await this.userService.get(replaceUserForMemberParams.userId);
     if (!newUser) {
       throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+    // prevent assignment of members to an admin user
+    if (newUser.roles.length === 1 && newUser.roles.includes(UserRole.admin)) {
+      throw new Error(Errors.get(ErrorType.userCanNotBeAssignedToMembers));
     }
     const member = await this.memberService.updatePrimaryUser(replaceUserForMemberParams);
     const { platform } = await this.memberService.getMemberConfig(member.id);
@@ -215,6 +227,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Query(() => DischargeDocumentsLinks)
+  @Roles(UserRole.coach)
   async getMemberUploadDischargeDocumentsLinks(@Args('id', { type: () => String }) id: string) {
     const member = await this.memberService.get(id);
 
@@ -238,7 +251,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => DischargeDocumentsLinks)
-  @Roles(RoleTypes.Member, RoleTypes.User)
+  @Roles(MemberRole.member, UserRole.coach)
   async getMemberDownloadDischargeDocumentsLinks(@Args('id', { type: () => String }) id: string) {
     const member = await this.memberService.get(id);
 
@@ -266,6 +279,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Query(() => String)
+  @Roles(UserRole.coach)
   async getMemberUploadRecordingLink(
     @Args(camelCase(RecordingLinkParams.name))
     recordingLinkParams: RecordingLinkParams,
@@ -279,6 +293,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => String)
+  @Roles(UserRole.coach)
   async getMemberDownloadRecordingLink(
     @Args(camelCase(RecordingLinkParams.name))
     recordingLinkParams: RecordingLinkParams,
@@ -292,6 +307,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
+  @Roles(UserRole.coach)
   async updateRecording(
     @Args(camelCase(UpdateRecordingParams.name)) updateRecordingParams: UpdateRecordingParams,
   ) {
@@ -299,6 +315,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [RecordingOutput])
+  @Roles(UserRole.coach)
   async getRecordings(@Args('memberId', { type: () => String }) memberId: string) {
     return this.memberService.getRecordings(memberId);
   }
@@ -308,6 +325,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Identifier)
+  @Roles(UserRole.coach)
   async createGoal(
     @Args(camelCase(CreateTaskParams.name))
     createTaskParams: CreateTaskParams,
@@ -316,6 +334,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
+  @Roles(UserRole.coach)
   async updateGoalStatus(
     @Args(camelCase(UpdateTaskStatusParams.name))
     updateTaskStatusParams: UpdateTaskStatusParams,
@@ -328,6 +347,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Identifier)
+  @Roles(UserRole.coach)
   async createActionItem(
     @Args(camelCase(CreateTaskParams.name))
     createTaskParams: CreateTaskParams,
@@ -339,6 +359,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
+  @Roles(UserRole.coach)
   async updateActionItemStatus(
     @Args(camelCase(UpdateTaskStatusParams.name))
     updateTaskStatusParams: UpdateTaskStatusParams,
@@ -351,6 +372,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Boolean, { nullable: true })
+  @Roles(UserRole.coach)
   async setGeneralNotes(
     @Args(camelCase(SetGeneralNotesParams.name)) setGeneralNotesParams: SetGeneralNotesParams,
   ) {
@@ -393,7 +415,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(RoleTypes.Member, RoleTypes.User)
+  @Roles(MemberRole.member, UserRole.coach)
   async registerMemberForNotifications(
     @Args(camelCase(RegisterForNotificationParams.name))
     registerForNotificationParams: RegisterForNotificationParams,
@@ -446,6 +468,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => String, { nullable: true })
+  @Roles(UserRole.coach)
   async notify(@Args(camelCase(NotifyParams.name)) notifyParams: NotifyParams) {
     const { memberId, userId, type, metadata } = notifyParams;
     const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId);
@@ -487,6 +510,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => String, { nullable: true })
+  @Roles(UserRole.coach)
   async cancelNotify(
     @Args(camelCase(CancelNotifyParams.name))
     cancelNotifyParams: CancelNotifyParams,
@@ -720,13 +744,13 @@ export class MemberResolver extends MemberBase {
    **************************************** Member Internal ***************************************
    ************************************************************************************************/
   @Query(() => MemberConfig)
-  @Roles(RoleTypes.Member, RoleTypes.User)
+  @Roles(MemberRole.member, UserRole.coach)
   async getMemberConfig(@Args('id', { type: () => String }) id: string) {
     return this.memberService.getMemberConfig(id);
   }
 
   @Mutation(() => Boolean)
-  @Roles(RoleTypes.Member, RoleTypes.User)
+  @Roles(MemberRole.member, UserRole.coach)
   async updateMemberConfig(
     @Args(camelCase(UpdateMemberConfigParams.name))
     updateMemberConfigParams: UpdateMemberConfigParams,

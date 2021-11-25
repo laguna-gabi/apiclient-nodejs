@@ -22,9 +22,10 @@ import {
   IEventOnUpdatedUserCommunication,
   Logger,
   LoggingInterceptor,
-  RoleTypes,
+  MemberRole,
   Roles,
   UpdatedAppointmentAction,
+  UserRole,
 } from '../common';
 import { UserService } from '../user';
 
@@ -40,6 +41,7 @@ export class CommunicationResolver {
   ) {}
 
   @Query(() => CommunicationInfo, { nullable: true })
+  @Roles(UserRole.coach)
   async getCommunication(
     @Args(camelCase(GetCommunicationParams.name))
     getCommunicationParams: GetCommunicationParams,
@@ -77,16 +79,17 @@ export class CommunicationResolver {
   }
 
   @Query(() => UnreadMessagesCount)
-  @Roles(RoleTypes.Member, RoleTypes.User)
+  @Roles(MemberRole.member, UserRole.coach)
   getMemberUnreadMessagesCount(@Args('memberId', { type: () => String }) memberId: string) {
     return this.communicationService.getParticipantUnreadMessagesCount(memberId);
   }
 
   @Query(() => MemberCommunicationInfo)
-  @Roles(RoleTypes.Member, RoleTypes.User)
+  @Roles(MemberRole.member)
   async getMemberCommunicationInfo(@Context() context) {
-    const userRole = context.req?.user.role;
-    if (userRole != RoleTypes.Member) {
+    const userRoles = context.req?.user.roles;
+    // we expect the logged in user to be a member and admin is also implicitly allowed here
+    if (!userRoles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.communicationInfoIsNotAllowed));
     }
 
@@ -121,6 +124,7 @@ export class CommunicationResolver {
   }
 
   @Query(() => String)
+  @Roles(UserRole.coach)
   getTwilioAccessToken() {
     return this.communicationService.getTwilioAccessToken();
   }

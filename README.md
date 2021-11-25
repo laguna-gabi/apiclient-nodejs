@@ -186,19 +186,10 @@ To send GraphQL resolvers / mutation requests you need to use the GQL Playgroud 
 
 ## 🚧 Role Based Access Control: RBAC
 
-- A route (GQL or REST) is protected if not marked as 'IsPublic' - only users with admin priviliges
+- A route (GQL or REST) is protected if not marked as 'IsPublic' - only users with admin privileges can access it
 - Routes can be annotated with the 'Roles' annotation to include 1 or more allowed roles.
-- If a route is allowed for role1 (example) amd role2 has a higher weight in hierarchy it will be allowed for users with role2 (Example: 'User' role can be allowed where 'Member' role is allowed).
-
-The role hierarchy can be found in [here](src/common/roles.ts):
-
-```
-export const SystemRoles = {
-  User: { isAdmin: true, weight: 100 },
-  Member: { isAdmin: false, weight: 10 },
-  Anonymous: { isAdmin: false, weight: 1 },
-};
-```
+- "admin" can access ALL routes (implicitly), otherwise only explicitly annotated roles determine the access (if annotated role(s) included in user roles)
+- Note: "admin" type users who are not provisioned as "coach" will not be assigned members and will not be available for members (schedule an appointment)
 
 more details can be found [here](https://app.shortcut.com/laguna-health/story/1852/define-role-base-access-to-all-secure-apis).
 
