@@ -65,6 +65,7 @@ import {
   NotificationType,
   Platform,
 } from '@lagunahealth/pandora';
+import { FeatureFlagService } from '../../src/providers';
 import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 
 describe('MemberResolver', () => {
@@ -80,6 +81,7 @@ describe('MemberResolver', () => {
   let communicationService: CommunicationService;
   let eventEmitter: EventEmitter2;
   let internationalizationService: InternationalizationService;
+  let featureFlagService: FeatureFlagService;
   let spyOnEventEmitter;
 
   beforeAll(async () => {
@@ -99,6 +101,7 @@ describe('MemberResolver', () => {
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
     memberScheduler = module.get<MemberScheduler>(MemberScheduler);
+    featureFlagService = module.get<FeatureFlagService>(FeatureFlagService);
     internationalizationService = module.get<InternationalizationService>(
       InternationalizationService,
     );
@@ -116,23 +119,29 @@ describe('MemberResolver', () => {
 
   describe('createMember', () => {
     let spyOnServiceInsert;
+    let spyOnServiceInsertControl;
     let spyOnServiceGetAvailableUser;
     let spyOnUserServiceGetUser;
     let spyOnServiceGetMemberConfig;
+    let spyOnFeatureFlagControlGroup;
 
     beforeEach(() => {
       spyOnServiceInsert = jest.spyOn(service, 'insert');
+      spyOnServiceInsertControl = jest.spyOn(service, 'insertControl');
       spyOnServiceGetAvailableUser = jest.spyOn(userService, 'getAvailableUser');
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
+      spyOnFeatureFlagControlGroup = jest.spyOn(featureFlagService, 'isControlGroup');
     });
 
     afterEach(() => {
       spyOnServiceInsert.mockReset();
+      spyOnServiceInsertControl.mockReset();
       spyOnServiceGetAvailableUser.mockReset();
       spyOnUserServiceGetUser.mockReset();
       spyOnServiceGetMemberConfig.mockReset();
       spyOnEventEmitter.mockReset();
+      spyOnFeatureFlagControlGroup.mockReset();
     });
 
     it('should create a member', async () => {
@@ -147,6 +156,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetAvailableUser.mockImplementationOnce(async () => member.primaryUserId);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnFeatureFlagControlGroup.mockImplementationOnce(() => false);
 
       const params = generateCreateMemberParams({ orgId: generateId() });
       await resolver.createMember(params);
@@ -169,6 +179,18 @@ describe('MemberResolver', () => {
         channel: SlackChannel.support,
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifySlack, eventSlackMessageParams);
+    });
+
+    it('should create a control member', async () => {
+      const member = mockGenerateMember();
+      spyOnServiceInsertControl.mockImplementationOnce(async () => member);
+      spyOnFeatureFlagControlGroup.mockImplementationOnce(() => true);
+
+      const params = generateCreateMemberParams({ orgId: generateId() });
+      await resolver.createMember(params);
+
+      expect(spyOnServiceInsertControl).toBeCalledTimes(1);
+      expect(spyOnServiceInsertControl).toBeCalledWith(params);
     });
   });
 

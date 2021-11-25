@@ -14,6 +14,8 @@ import {
   ArchiveMemberConfig,
   ArchiveMemberConfigDocument,
   ArchiveMemberDocument,
+  ControlMember,
+  ControlMemberDocument,
   CreateMemberParams,
   CreateTaskParams,
   Goal,
@@ -78,6 +80,8 @@ export class MemberService extends BaseService {
     private readonly archiveMemberConfigModel: Model<ArchiveMemberConfigDocument>,
     @InjectModel(NotifyParams.name)
     private readonly notifyParamsModel: Model<NotifyParamsDocument>,
+    @InjectModel(ControlMember.name)
+    private readonly controlMemberModel: Model<ControlMemberDocument>,
     private readonly storageService: StorageService,
     readonly logger: Logger,
   ) {
@@ -496,6 +500,28 @@ export class MemberService extends BaseService {
     await this.recordingModel.deleteMany({ memberId: new Types.ObjectId(id) });
 
     return { member, memberConfig };
+  }
+  /************************************************************************************************
+   ******************************************** Control *******************************************
+   ************************************************************************************************/
+
+  async insertControl(createMemberParams: CreateMemberParams): Promise<Member> {
+    try {
+      this.removeNotNullable(createMemberParams, NotNullableMemberKeys);
+      const primitiveValues = cloneDeep(createMemberParams);
+      delete primitiveValues.orgId;
+
+      const member = await this.controlMemberModel.create({
+        ...primitiveValues,
+        org: new Types.ObjectId(createMemberParams.orgId),
+      });
+
+      return this.replaceId(member.toObject());
+    } catch (ex) {
+      throw new Error(
+        ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.memberPhoneAlreadyExists) : ex,
+      );
+    }
   }
 
   /************************************************************************************************

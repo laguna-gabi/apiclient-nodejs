@@ -537,6 +537,13 @@ export class DischargeDocumentsLinks {
 export class ArchiveMember extends Member {}
 
 /**************************************************************************************************
+ ********************************************* Control ********************************************
+ *************************************************************************************************/
+
+@Schema({ versionKey: false, timestamps: true })
+export class ControlMember extends Member {}
+
+/**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 export type MemberDocument = Member & Document;
@@ -545,3 +552,5 @@ export type NotifyParamsDocument = NotifyParams & Document;
 export const NotifyParamsDto = SchemaFactory.createForClass(NotifyParams);
 export type ArchiveMemberDocument = ArchiveMember & Document;
 export const ArchiveMemberDto = SchemaFactory.createForClass(ArchiveMember);
+export type ControlMemberDocument = ControlMember & Document;
+export const ControlMemberDto = SchemaFactory.createForClass(ControlMember);

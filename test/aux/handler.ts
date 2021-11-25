@@ -45,6 +45,7 @@ export class Handler extends BaseHandler {
   adminUser: User;
   patientZero: Member;
   lagunaOrg: Org;
+  featureFlagService;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -73,20 +74,20 @@ export class Handler extends BaseHandler {
     this.notificationsService = providers.notificationsService;
     this.twilioService = providers.twilioService;
     this.slackBot = providers.slackBot;
-    this.cognitoService = providers.cognitoService;
+    this.featureFlagService = providers.featureFlagService;
 
+    this.cognitoService = providers.cognitoService;
     const apolloServer = createTestClient((this.module as any).apolloServer);
     this.mutations = new Mutations(apolloServer);
+
     this.queries = new Queries(apolloServer);
 
     await dbConnect();
-
     this.communicationService = moduleFixture.get<CommunicationService>(CommunicationService);
     this.userService = moduleFixture.get<UserService>(UserService);
     this.memberService = moduleFixture.get<MemberService>(MemberService);
     this.orgService = moduleFixture.get<OrgService>(OrgService);
     this.webhooksController = moduleFixture.get<WebhooksController>(WebhooksController);
-
     await this.buildFixtures();
   }
 

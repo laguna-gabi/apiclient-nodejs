@@ -67,6 +67,7 @@ import {
 } from '../communication';
 import { Bitly, CognitoService, NotificationsService, StorageService } from '../providers';
 import { User, UserService } from '../user';
+import { FeatureFlagService } from '../providers';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
@@ -85,8 +86,9 @@ export class MemberResolver extends MemberBase {
     readonly internationalizationService: InternationalizationService,
     protected readonly bitly: Bitly,
     readonly logger: Logger,
+    readonly featureFlagService: FeatureFlagService,
   ) {
-    super(memberService, eventEmitter, userService);
+    super(memberService, eventEmitter, userService, featureFlagService, logger);
   }
 
   @Mutation(() => Identifier)

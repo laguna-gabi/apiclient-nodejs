@@ -16,6 +16,8 @@ import { ErrorType, Errors, Language, RecordingType } from '../../src/common';
 import {
   ActionItem,
   ActionItemDto,
+  ControlMember,
+  ControlMemberDto,
   CreateMemberParams,
   Goal,
   GoalDto,
@@ -30,11 +32,11 @@ import {
   Sex,
   TaskStatus,
   UpdateMemberParams,
-  defaultMemberParams,
 } from '../../src/member';
 import { Org, OrgDto } from '../../src/org';
 import { User, UserDto } from '../../src/user';
 import {
+  compareMembers,
   compareUsers,
   dbConnect,
   dbDisconnect,
@@ -62,6 +64,7 @@ describe('MemberService', () => {
   let module: TestingModule;
   let service: MemberService;
   let memberModel: Model<typeof MemberDto>;
+  let controlMemberModel: Model<typeof ControlMemberDto>;
   let modelUser: Model<typeof UserDto>;
   let modelOrg: Model<typeof OrgDto>;
   let modelGoal: Model<typeof GoalDto>;
@@ -77,6 +80,7 @@ describe('MemberService', () => {
     service = module.get<MemberService>(MemberService);
 
     memberModel = model(Member.name, MemberDto);
+    controlMemberModel = model(ControlMember.name, ControlMemberDto);
     modelUser = model(User.name, UserDto);
     modelOrg = model(Org.name, OrgDto);
     modelGoal = model(Goal.name, GoalDto);
@@ -641,18 +645,7 @@ describe('MemberService', () => {
       expect(id).not.toBeUndefined();
 
       const createdMember: any = await memberModel.findById(id);
-      compareMembers({
-        createdMember,
-        createMemberParams,
-        primaryUserId: primaryUser._id,
-        orgId: org._id,
-      });
-      expect(createdMember.sex).toEqual(defaultMemberParams.sex);
-      expect(createdMember.email).toBeUndefined();
-      expect(createdMember.language).toEqual(defaultMemberParams.language);
-      expect(createdMember.zipCode).toBeUndefined();
-      expect(createdMember.dischargeDate).toBeUndefined();
-      expect(createdMember.honorific).toEqual(defaultMemberParams.honorific);
+      compareMembers(createdMember, createMemberParams);
     });
 
     it('should insert a member with all params + validate all insert fields', async () => {
@@ -673,30 +666,8 @@ describe('MemberService', () => {
       expect(id).not.toBeUndefined();
 
       const createdMember: any = await memberModel.findById(id);
-      compareMembers({
-        createdMember,
-        createMemberParams,
-        primaryUserId: primaryUser._id,
-        orgId: org._id,
-      });
-      expect(createdMember.sex).toEqual(createMemberParams.sex);
-      expect(createdMember.email).toEqual(createMemberParams.email);
-      expect(createdMember.language).toEqual(createMemberParams.language);
-      expect(createdMember.zipCode).toEqual(createMemberParams.zipCode);
-      expect(createdMember.dischargeDate).toEqual(createMemberParams.dischargeDate);
-      expect(createdMember.honorific).toEqual(createMemberParams.honorific);
+      compareMembers(createdMember, createMemberParams);
     });
-
-    const compareMembers = ({ createdMember, createMemberParams, primaryUserId, orgId }) => {
-      expect(createdMember.phone).toEqual(createMemberParams.phone);
-      expect(createdMember.deviceId).toEqual(createMemberParams.deviceId);
-      expect(createdMember.firstName).toEqual(createMemberParams.firstName);
-      expect(createdMember.lastName).toEqual(createMemberParams.lastName);
-      expect(createdMember.dateOfBirth).toEqual(createMemberParams.dateOfBirth);
-      expect(createdMember.primaryUserId).toEqual(primaryUserId);
-      expect(createdMember.org).toEqual(orgId);
-      expect(createdMember.createdAt).toEqual(expect.any(Date));
-    };
 
     it('should check that createdAt and updatedAt exists in the collection', async () => {
       const id = await generateMember();
@@ -745,6 +716,49 @@ describe('MemberService', () => {
       await expect(service.insert(createMemberParams, primaryUserId)).rejects.toThrow(
         Errors.get(ErrorType.memberPhoneAlreadyExists),
       );
+    });
+  });
+
+  describe('insertControl', () => {
+    it('should insert a control member without optional params + validate all fields', async () => {
+      const org = await modelOrg.create(generateOrgParams());
+
+      const createMemberParams = generateCreateMemberParams({
+        orgId: org._id,
+      });
+      const { id } = await service.insertControl(createMemberParams);
+      const createdMember: any = await controlMemberModel.findById(id);
+      compareMembers(createdMember, createMemberParams);
+    });
+
+    it('should fail to insert an already existing member', async () => {
+      const createMemberParams = generateCreateMemberParams({ orgId: generateId() });
+      await service.insertControl(createMemberParams);
+
+      await expect(service.insertControl(createMemberParams)).rejects.toThrow(
+        Errors.get(ErrorType.memberPhoneAlreadyExists),
+      );
+    });
+
+    it('should remove not nullable optional params if null is passed', async () => {
+      const org = await modelOrg.create(generateOrgParams());
+
+      const createMemberParams = generateCreateMemberParams({ orgId: org._id });
+
+      NotNullableMemberKeys.forEach((key) => {
+        createMemberParams[key] = null;
+      });
+
+      createMemberParams.firstName = faker.name.firstName();
+      createMemberParams.lastName = faker.name.lastName();
+      createMemberParams.dateOfBirth = generateDateOnly(faker.date.past());
+
+      const { id } = await service.insertControl(createMemberParams);
+      const createdObject = await controlMemberModel.findById(id);
+
+      NotNullableMemberKeys.forEach((key) => {
+        expect(createdObject).not.toHaveProperty(key, null);
+      });
     });
   });
 
