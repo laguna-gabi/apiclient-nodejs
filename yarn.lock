@@ -762,10 +762,10 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
-"@lagunahealth/pandora@^0.1.12":
-  version "0.1.12"
-  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.1.12/1115e943b3cd61a8aaf1c105f7dd893b84b399716fec346c34312384cab3dbc0#2cfd86dcb3e6e7f7b1e5241f6a3b714478962ce7"
-  integrity sha512-xM/VlNo/XqM3IhT/3svgNzuURSwozJK/NnotC5jSFfnwBuWdYZP8hc73XmU3XoDdAwxDeeRKhXhZAbWur711Ug==
+"@lagunahealth/pandora@^0.2.6":
+  version "0.2.6"
+  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.2.6/2f4a8498b771429a73840b654312995bb42904fb90dec5590e5f417848bdc6bc#271fbd5eeeef6770d1a5c903cb7de73ce700b18e"
+  integrity sha512-NFaFq1dWD3F5JzCty6mFGx9idhZXXci5gvSe6sI2spbAKa7Ea994bz/X+QlsW70I09hyDjQbY1HNGLH6qewjQg==
   dependencies:
     "@slack/types" "^2.2.0"
     "@slack/webhook" "^6.0.0"
@@ -4993,6 +4993,13 @@ sprintf-js@~1.0.2:
   version "1.0.3"
   resolved "https://registry.npmjs.org/sprintf-js/-/sprintf-js-1.0.3.tgz"
   integrity sha1-BOaSb2YolTVPPdAVIDYzuFcpfiw=
+
+sqs-consumer@^5.6.0:
+  version "5.6.0"
+  resolved "https://registry.npmjs.org/sqs-consumer/-/sqs-consumer-5.6.0.tgz#a77c75fecb9ca3d108556d87a07f799ea58b594c"
+  integrity sha512-p+K3UV8GwF1//Nfq7swbm/Un137IwxewzxapfTyyEVpdmzPKEDYrAzuGJvP87YWVSWzbkvxQ0By0vhamouGdxg==
+  dependencies:
+    debug "^4.1.1"
 
 stack-utils@^2.0.3:
   version "2.0.5"

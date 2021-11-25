@@ -8,6 +8,10 @@ import { db } from 'config';
 
 export const ExternalConfigs = {
   ...BaseExternalConfigs,
+  aws: {
+    ...BaseExternalConfigs.aws,
+    queueNameNotificationsDLQ: `aws.sqs.queueNameNotificationsDLQ`,
+  },
   db: { connection: 'db.connection.iris' },
   twilio: {
     accountSid: 'twilio.accountSid',
