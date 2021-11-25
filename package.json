@@ -20,6 +20,8 @@
     "seed": "ts-node graphql/seed.ts",
     "seed:dev": "export NODE_ENV=development && ts-node graphql/seed.ts",
     "seed:laguna": "export NODE_ENV=development && ts-node graphql/seedLagunaData.ts",
+    "seed:create:users:dev": "export NODE_ENV=development && ts-node graphql/seedNewUser.ts",
+    "seed:create:users:production": "export NODE_ENV=production && ts-node graphql/seedNewUser.ts",
     "test": "jest --config test/unit/jest.json",
     "test:watch": "jest --config test/unit/jest.json --watch",
     "test:cov": "jest --config test/jest.json && jest-coverage-badges",
