@@ -1,6 +1,16 @@
 import { AllNotificationTypes, Platform, SourceApi, TriggeredApi } from '.';
 
-export interface IUpdateClientSettings {
+export enum InnerQueueTypes {
+  updateClientSettings = 'updateClientSettings',
+  createDispatch = 'createDispatch',
+  deleteDispatch = 'deleteDispatch',
+}
+
+export interface IInnerQueueTypes {
+  type: InnerQueueTypes;
+}
+
+export interface IUpdateClientSettings extends IInnerQueueTypes {
   id: string;
   orgName?: string;
   phone?: string;
@@ -12,7 +22,7 @@ export interface IUpdateClientSettings {
   avatar?: string;
 }
 
-interface IDispatch {
+interface IDispatch extends IInnerQueueTypes {
   dispatchId: string;
 }
 
