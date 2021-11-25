@@ -105,6 +105,7 @@ export const mockProviders = (
   twilioService;
   slackBot;
   cognitoService;
+  storage;
   featureFlagService;
 } => {
   const sendBird = module.get<SendBird>(SendBird);
@@ -136,6 +137,7 @@ export const mockProviders = (
   const spyOnStorageDownload = jest.spyOn(storage, 'getDownloadUrl');
   const spyOnStorageUpload = jest.spyOn(storage, 'getUploadUrl');
   const spyOnStorageDeleteRecordings = jest.spyOn(storage, 'deleteRecordings');
+  const spyOnStorageDeleteJournalImages = jest.spyOn(storage, 'deleteJournalImages');
   const spyOnStorageHandleNewMember = jest.spyOn(storage, 'handleNewMember');
   const spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
   const spyOnNotificationsServiceUnregister = jest.spyOn(notificationsService, 'unregister');
@@ -157,6 +159,7 @@ export const mockProviders = (
   spyOnStorageDownload.mockResolvedValue('https://some-url/download');
   spyOnStorageUpload.mockResolvedValue('https://some-url/upload');
   spyOnStorageDeleteRecordings.mockResolvedValue(undefined);
+  spyOnStorageDeleteJournalImages.mockResolvedValue(true);
   spyOnStorageHandleNewMember.mockResolvedValue(undefined);
   spyOnNotificationsServiceRegister.mockResolvedValue(v4());
   spyOnNotificationsServiceUnregister.mockResolvedValue(undefined);
@@ -186,12 +189,20 @@ export const mockProviders = (
     },
     notificationsService: {
       spyOnNotificationsServiceRegister,
+      spyOnNotificationsServiceUnregister,
       spyOnNotificationsServiceSend,
       spyOnNotificationsServiceCancel,
     },
     twilioService: { spyOnTwilioGetToken },
     slackBot: { spyOnSlackBotSendMessage },
     cognitoService: { spyOnCognitoServiceDisableMember, spyOnCognitoServiceDeleteMember },
+    storage: {
+      spyOnStorageDownload,
+      spyOnStorageUpload,
+      spyOnStorageDeleteRecordings,
+      spyOnStorageDeleteJournalImages,
+      spyOnStorageHandleNewMember,
+    },
     featureFlagService: { spyOnFeatureFlagControlGroup },
   };
 };

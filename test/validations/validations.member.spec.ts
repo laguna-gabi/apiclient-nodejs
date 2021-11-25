@@ -19,6 +19,7 @@ import {
   generateCreateTaskParams,
   generateCreateUserParams,
   generateDateOnly,
+  generateGetMemberUploadJournalLinksParams,
   generateId,
   generateNotifyParams,
   generateOrgParams,
@@ -661,6 +662,50 @@ describe('Validations - member', () => {
   describe('deleteJournal', () => {
     it('should throw an error for invalid id', async () => {
       await handler.mutations.deleteJournal({
+        id: 123,
+        missingFieldError: stringError,
+      });
+    });
+  });
+
+  describe('getMemberUploadJournalLinks', () => {
+    test.each`
+      field            | error
+      ${'id'}          | ${`Field "id" of required type "String!" was not provided.`}
+      ${'imageFormat'} | ${`Field "imageFormat" of required type "ImageFormat!" was not provided.`}
+    `(
+      `should fail to get journal upload links since mandatory field $field is missing`,
+      async (params) => {
+        const getMemberUploadJournalLinksParams = generateGetMemberUploadJournalLinksParams();
+        delete getMemberUploadJournalLinksParams[params.field];
+        await handler.queries.getMemberUploadJournalLinks({
+          getMemberUploadJournalLinksParams,
+          invalidFieldsError: params.error,
+        });
+      },
+    );
+
+    test.each`
+      field                   | error
+      ${{ id: 123 }}          | ${stringError}
+      ${{ imageFormat: 123 }} | ${`Enum "ImageFormat" cannot represent non-string value`}
+    `(
+      `should fail to get journal upload links since $input is not a valid type`,
+      async (params) => {
+        const getMemberUploadJournalLinksParams = generateGetMemberUploadJournalLinksParams({
+          ...params.field,
+        });
+        await handler.queries.getMemberUploadJournalLinks({
+          getMemberUploadJournalLinksParams,
+          invalidFieldsError: params.error,
+        });
+      },
+    );
+  });
+
+  describe('deleteJournalImage', () => {
+    it('should throw an error for invalid id', async () => {
+      await handler.mutations.deleteJournalImage({
         id: 123,
         missingFieldError: stringError,
       });

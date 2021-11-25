@@ -1,3 +1,12 @@
+import {
+  CancelNotificationType,
+  IEventNotifySlack,
+  InternalNotificationType,
+  NotificationType,
+  Platform,
+  SlackChannel,
+  SlackIcon,
+} from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
@@ -26,6 +35,7 @@ import {
   CommunicationService,
 } from '../../src/communication';
 import {
+  ImageFormat,
   Journal,
   Member,
   MemberConfig,
@@ -35,7 +45,12 @@ import {
   MemberService,
   TaskStatus,
 } from '../../src/member';
-import { CognitoService, NotificationsService, StorageService } from '../../src/providers';
+import {
+  CognitoService,
+  FeatureFlagService,
+  NotificationsService,
+  StorageService,
+} from '../../src/providers';
 import { UserService } from '../../src/user';
 import {
   dbDisconnect,
@@ -46,6 +61,7 @@ import {
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateGetCommunication,
+  generateGetMemberUploadJournalLinksParams,
   generateId,
   generateInternalNotifyParams,
   generateNotifyParams,
@@ -60,14 +76,6 @@ import {
   mockGenerateMemberConfig,
   mockGenerateUser,
 } from '../index';
-import {
-  CancelNotificationType,
-  InternalNotificationType,
-  NotificationType,
-  Platform,
-} from '@lagunahealth/pandora';
-import { FeatureFlagService } from '../../src/providers';
-import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
@@ -802,9 +810,13 @@ describe('MemberResolver', () => {
   describe('journal', () => {
     let spyOnServiceCreateJournal;
     let spyOnServiceUpdateJournal;
+    let spyOnServiceUpdateJournalImageFormat;
     let spyOnServiceGetJournal;
     let spyOnServiceGetJournals;
     let spyOnServiceDeleteJournal;
+    let spyOnStorageGetDownloadUrl;
+    let spyOnStorageGetUploadUrl;
+    let spyOnStorageDeleteJournalImages;
 
     const generateMockJournalParams = ({
       id = generateId(),
@@ -812,6 +824,7 @@ describe('MemberResolver', () => {
       text = faker.lorem.sentence(),
       published = false,
       updatedAt = new Date(),
+      imageFormat = ImageFormat.jpeg,
     }: Partial<Journal> = {}): Journal => {
       return {
         id,
@@ -819,23 +832,32 @@ describe('MemberResolver', () => {
         text,
         published,
         updatedAt,
+        imageFormat,
       };
     };
 
     beforeEach(() => {
       spyOnServiceCreateJournal = jest.spyOn(service, 'createJournal');
       spyOnServiceUpdateJournal = jest.spyOn(service, 'updateJournal');
+      spyOnServiceUpdateJournalImageFormat = jest.spyOn(service, 'updateJournalImageFormat');
       spyOnServiceGetJournal = jest.spyOn(service, 'getJournal');
       spyOnServiceGetJournals = jest.spyOn(service, 'getJournals');
       spyOnServiceDeleteJournal = jest.spyOn(service, 'deleteJournal');
+      spyOnStorageGetDownloadUrl = jest.spyOn(storage, 'getDownloadUrl');
+      spyOnStorageGetUploadUrl = jest.spyOn(storage, 'getUploadUrl');
+      spyOnStorageDeleteJournalImages = jest.spyOn(storage, 'deleteJournalImages');
     });
 
     afterEach(() => {
       spyOnServiceCreateJournal.mockReset();
       spyOnServiceUpdateJournal.mockReset();
+      spyOnServiceUpdateJournalImageFormat.mockReset();
       spyOnServiceGetJournal.mockReset();
       spyOnServiceGetJournals.mockReset();
       spyOnServiceDeleteJournal.mockReset();
+      spyOnStorageGetDownloadUrl.mockReset();
+      spyOnStorageGetUploadUrl.mockReset();
+      spyOnStorageDeleteJournalImages.mockReset();
     });
 
     it('should create journal', async () => {
@@ -853,23 +875,64 @@ describe('MemberResolver', () => {
     it('should update journal', async () => {
       const params = generateUpdateJournalParams();
       const journal = generateMockJournalParams({ ...params });
+      const url = generateUniqueUrl();
       spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
+      spyOnStorageGetDownloadUrl.mockImplementation(async () => url);
 
       const result = await resolver.updateJournal(params);
 
       expect(spyOnServiceUpdateJournal).toBeCalledTimes(1);
       expect(spyOnServiceUpdateJournal).toBeCalledWith(params);
+      expect(spyOnStorageGetDownloadUrl).toBeCalledTimes(2);
+      expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(1, {
+        storageType: StorageType.journals,
+        memberId: journal.memberId.toString(),
+        id: `${journal.id}_NormalImage.${journal.imageFormat}`,
+      });
+      expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(2, {
+        storageType: StorageType.journals,
+        memberId: journal.memberId.toString(),
+        id: `${journal.id}_SmallImage.${journal.imageFormat}`,
+      });
       expect(result).toEqual(journal);
     });
 
     it('should get journal', async () => {
       const journal = generateMockJournalParams();
+      const url = generateUniqueUrl();
       spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
+      spyOnStorageGetDownloadUrl.mockImplementation(async () => url);
 
       const result = await resolver.getJournal(journal.id);
 
       expect(spyOnServiceGetJournal).toBeCalledTimes(1);
       expect(spyOnServiceGetJournal).toBeCalledWith(journal.id);
+      expect(spyOnStorageGetDownloadUrl).toBeCalledTimes(2);
+      expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(1, {
+        storageType: StorageType.journals,
+        memberId: journal.memberId.toString(),
+        id: `${journal.id}_NormalImage.${journal.imageFormat}`,
+      });
+      expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(2, {
+        storageType: StorageType.journals,
+        memberId: journal.memberId.toString(),
+        id: `${journal.id}_SmallImage.${journal.imageFormat}`,
+      });
+      expect(result).toEqual(journal);
+    });
+
+    it(`should get journal without image download link if imageFormat doesn't exists`, async () => {
+      const journal = generateMockJournalParams();
+      delete journal.imageFormat;
+      const url = generateUniqueUrl();
+      spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
+      spyOnStorageGetDownloadUrl.mockImplementation(async () => url);
+
+      const result = await resolver.getJournal(journal.id);
+
+      expect(spyOnServiceGetJournal).toBeCalledTimes(1);
+      expect(spyOnServiceGetJournal).toBeCalledWith(journal.id);
+      expect(spyOnStorageGetDownloadUrl).toBeCalledTimes(0);
       expect(result).toEqual(journal);
     });
 
@@ -879,23 +942,97 @@ describe('MemberResolver', () => {
         generateMockJournalParams({ memberId: new Types.ObjectId(memberId) }),
         generateMockJournalParams({ memberId: new Types.ObjectId(memberId) }),
       ];
+      const url = generateUniqueUrl();
       spyOnServiceGetJournals.mockImplementationOnce(async () => journals);
+      spyOnStorageGetDownloadUrl.mockImplementation(async () => url);
 
       const result = await resolver.getJournals(memberId);
 
       expect(spyOnServiceGetJournals).toBeCalledTimes(1);
       expect(spyOnServiceGetJournals).toBeCalledWith(memberId);
+      expect(spyOnStorageGetDownloadUrl).toBeCalledTimes(4);
+      expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(1, {
+        storageType: StorageType.journals,
+        memberId: memberId.toString(),
+        id: `${journals[0].id}_NormalImage.${journals[0].imageFormat}`,
+      });
+      expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(2, {
+        storageType: StorageType.journals,
+        memberId: memberId.toString(),
+        id: `${journals[0].id}_SmallImage.${journals[0].imageFormat}`,
+      });
+      expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(3, {
+        storageType: StorageType.journals,
+        memberId: memberId.toString(),
+        id: `${journals[1].id}_NormalImage.${journals[1].imageFormat}`,
+      });
+      expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(4, {
+        storageType: StorageType.journals,
+        memberId: memberId.toString(),
+        id: `${journals[1].id}_SmallImage.${journals[1].imageFormat}`,
+      });
       expect(result).toEqual(journals);
     });
 
-    it('should delete getJournal', async () => {
-      const id = generateId();
-      spyOnServiceDeleteJournal.mockImplementationOnce(async () => true);
+    it('should delete Journal', async () => {
+      const journal = generateMockJournalParams();
+      spyOnServiceDeleteJournal.mockImplementationOnce(async () => journal);
+      spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
 
-      const result = await resolver.deleteJournal(id);
+      const result = await resolver.deleteJournal(journal.id);
 
       expect(spyOnServiceDeleteJournal).toBeCalledTimes(1);
-      expect(spyOnServiceDeleteJournal).toBeCalledWith(id);
+      expect(spyOnServiceDeleteJournal).toBeCalledWith(journal.id);
+      expect(spyOnStorageDeleteJournalImages).toBeCalledWith(
+        journal.id,
+        journal.memberId.toString(),
+      );
+      expect(result).toEqual(true);
+    });
+
+    it('should get member upload journal links', async () => {
+      const journal = generateMockJournalParams();
+      const url = generateUniqueUrl();
+      spyOnServiceUpdateJournalImageFormat.mockImplementationOnce(async () => journal);
+      spyOnStorageGetUploadUrl.mockImplementation(async () => url);
+
+      const params = generateGetMemberUploadJournalLinksParams({ id: journal.id });
+      const result = await resolver.getMemberUploadJournalLinks(params);
+
+      expect(spyOnServiceUpdateJournalImageFormat).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateJournalImageFormat).toBeCalledWith(params);
+
+      expect(spyOnStorageGetUploadUrl).toBeCalledTimes(2);
+      expect(spyOnStorageGetUploadUrl).toHaveBeenNthCalledWith(1, {
+        storageType: StorageType.journals,
+        memberId: journal.memberId.toString(),
+        id: `${journal.id}_NormalImage.${params.imageFormat}`,
+      });
+      expect(spyOnStorageGetUploadUrl).toHaveBeenNthCalledWith(2, {
+        storageType: StorageType.journals,
+        memberId: journal.memberId.toString(),
+        id: `${journal.id}_SmallImage.${params.imageFormat}`,
+      });
+
+      expect(result).toEqual({ normalImageLink: url, smallImageLink: url });
+    });
+
+    it('should delete Journal images', async () => {
+      const journal = generateMockJournalParams();
+      spyOnServiceUpdateJournalImageFormat.mockImplementationOnce(async () => journal);
+      spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
+
+      const result = await resolver.deleteJournalImage(journal.id);
+
+      expect(spyOnServiceUpdateJournalImageFormat).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateJournalImageFormat).toBeCalledWith({
+        id: journal.id,
+        imageFormat: null,
+      });
+      expect(spyOnStorageDeleteJournalImages).toBeCalledWith(
+        journal.id,
+        journal.memberId.toString(),
+      );
       expect(result).toEqual(true);
     });
   });

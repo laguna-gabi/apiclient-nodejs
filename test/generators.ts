@@ -38,7 +38,9 @@ import {
   CancelNotifyParams,
   CreateMemberParams,
   CreateTaskParams,
+  GetMemberUploadJournalLinksParams,
   Honorific,
+  ImageFormat,
   Member,
   MemberConfig,
   NotifyParams,
@@ -454,6 +456,13 @@ export const generateUpdateJournalParams = ({
   text = faker.lorem.sentence(),
 }: Partial<UpdateJournalParams> = {}): UpdateJournalParams => {
   return { id, text };
+};
+
+export const generateGetMemberUploadJournalLinksParams = ({
+  id = generateId(),
+  imageFormat = ImageFormat.png,
+}: Partial<GetMemberUploadJournalLinksParams> = {}): GetMemberUploadJournalLinksParams => {
+  return { id, imageFormat };
 };
 
 export const generateDateOnly = (date: Date): string => {

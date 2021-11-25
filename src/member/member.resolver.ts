@@ -14,7 +14,9 @@ import {
   CreateMemberParams,
   CreateTaskParams,
   DischargeDocumentsLinks,
+  GetMemberUploadJournalLinksParams,
   Journal,
+  JournalImagesLinks,
   Member,
   MemberBase,
   MemberConfig,
@@ -392,22 +394,94 @@ export class MemberResolver extends MemberBase {
   async updateJournal(
     @Args(camelCase(UpdateJournalParams.name)) updateJournalParams: UpdateJournalParams,
   ) {
-    return this.memberService.updateJournal(updateJournalParams);
+    const journal = await this.memberService.updateJournal(updateJournalParams);
+
+    return this.addMemberDownloadJournalLinks(journal);
   }
 
   @Query(() => Journal)
   async getJournal(@Args('id', { type: () => String }) id: string) {
-    return this.memberService.getJournal(id);
+    const journal = await this.memberService.getJournal(id);
+
+    return this.addMemberDownloadJournalLinks(journal);
   }
 
   @Query(() => [Journal])
   async getJournals(@Args('memberId', { type: () => String }) memberId: string) {
-    return this.memberService.getJournals(memberId);
+    const journals = await this.memberService.getJournals(memberId);
+
+    return Promise.all(
+      journals.map(async (journal) => {
+        return this.addMemberDownloadJournalLinks(journal);
+      }),
+    );
   }
 
   @Mutation(() => Boolean)
   async deleteJournal(@Args('id', { type: () => String }) id: string) {
-    return this.memberService.deleteJournal(id);
+    const { memberId } = await this.memberService.deleteJournal(id);
+
+    return this.storageService.deleteJournalImages(id, memberId.toString());
+  }
+
+  @Query(() => JournalImagesLinks)
+  async getMemberUploadJournalLinks(
+    @Args(camelCase(GetMemberUploadJournalLinksParams.name))
+    getMemberUploadJournalLinksParams: GetMemberUploadJournalLinksParams,
+  ) {
+    const { id, imageFormat } = getMemberUploadJournalLinksParams;
+    const { memberId } = await this.memberService.updateJournalImageFormat(
+      getMemberUploadJournalLinksParams,
+    );
+
+    const [normalImageLink, smallImageLink] = await Promise.all([
+      this.storageService.getUploadUrl({
+        storageType: StorageType.journals,
+        memberId: memberId.toString(),
+        id: `${id}_NormalImage.${imageFormat}`,
+      }),
+      this.storageService.getUploadUrl({
+        storageType: StorageType.journals,
+        memberId: memberId.toString(),
+        id: `${id}_SmallImage.${imageFormat}`,
+      }),
+    ]);
+
+    return { normalImageLink, smallImageLink };
+  }
+
+  @Mutation(() => Boolean)
+  async deleteJournalImage(@Args('id', { type: () => String }) id: string) {
+    const { memberId } = await this.memberService.updateJournalImageFormat({
+      id,
+      imageFormat: null,
+    });
+
+    await this.storageService.deleteJournalImages(id, memberId.toString());
+
+    return true;
+  }
+
+  private async addMemberDownloadJournalLinks(journal: Journal) {
+    const { id, memberId, imageFormat } = journal;
+
+    if (imageFormat) {
+      const [normalImageLink, smallImageLink] = await Promise.all([
+        this.storageService.getDownloadUrl({
+          storageType: StorageType.journals,
+          memberId: memberId.toString(),
+          id: `${id}_NormalImage.${imageFormat}`,
+        }),
+        this.storageService.getDownloadUrl({
+          storageType: StorageType.journals,
+          memberId: memberId.toString(),
+          id: `${id}_SmallImage.${imageFormat}`,
+        }),
+      ]);
+      journal.images = { normalImageLink, smallImageLink };
+    }
+
+    return journal;
   }
 
   /************************************************************************************************

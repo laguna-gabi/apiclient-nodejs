@@ -35,6 +35,7 @@ export class Handler extends BaseHandler {
   twilioService;
   slackBot;
   cognitoService;
+  storage;
   eventEmitter: EventEmitter2;
   communicationService: CommunicationService;
   memberService: MemberService;
@@ -74,8 +75,9 @@ export class Handler extends BaseHandler {
     this.notificationsService = providers.notificationsService;
     this.twilioService = providers.twilioService;
     this.slackBot = providers.slackBot;
+    this.cognitoService = providers.cognitoService;
+    this.storage = providers.storage;
     this.featureFlagService = providers.featureFlagService;
-
     this.cognitoService = providers.cognitoService;
     const apolloServer = createTestClient((this.module as any).apolloServer);
     this.mutations = new Mutations(apolloServer);
@@ -104,8 +106,14 @@ export class Handler extends BaseHandler {
     this.sendBird.spyOnSendBirdUpdateGroupChannelMetadata.mockReset();
     this.sendBird.spyOnSendBirdDeleteGroupChannelMetadata.mockReset();
     this.notificationsService.spyOnNotificationsServiceRegister.mockReset();
+    this.notificationsService.spyOnNotificationsServiceUnregister.mockReset();
     this.notificationsService.spyOnNotificationsServiceSend.mockReset();
     this.notificationsService.spyOnNotificationsServiceCancel.mockReset();
+    this.storage.spyOnStorageDownload.mockReset();
+    this.storage.spyOnStorageUpload.mockReset();
+    this.storage.spyOnStorageDeleteRecordings.mockReset();
+    this.storage.spyOnStorageDeleteJournalImages.mockReset();
+    this.storage.spyOnStorageHandleNewMember.mockReset();
     this.twilioService.spyOnTwilioGetToken.mockReset();
     this.slackBot.spyOnSlackBotSendMessage.mockReset();
     this.cognitoService.spyOnCognitoServiceDisableMember.mockReset();

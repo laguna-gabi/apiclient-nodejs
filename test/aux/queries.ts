@@ -1,8 +1,12 @@
 import { ApolloServerTestClient } from 'apollo-server-testing';
 import gql from 'graphql-tag';
-import { DailyReportQueryInput } from '../../src/dailyReport';
 import { GetCommunicationParams } from '../../src/communication';
-import { DischargeDocumentsLinks, RecordingLinkParams } from '../../src/member';
+import { DailyReportQueryInput } from '../../src/dailyReport';
+import {
+  DischargeDocumentsLinks,
+  GetMemberUploadJournalLinksParams,
+  RecordingLinkParams,
+} from '../../src/member';
 import { GetSlotsParams } from '../../src/user';
 
 export class Queries {
@@ -656,6 +660,36 @@ export class Queries {
       expect(result.errors[0].message).toMatch(invalidFieldsError);
     } else {
       return result.data.getJournals;
+    }
+  };
+
+  getMemberUploadJournalLinks = async ({
+    getMemberUploadJournalLinksParams,
+    invalidFieldsError,
+  }: {
+    getMemberUploadJournalLinksParams: GetMemberUploadJournalLinksParams;
+    invalidFieldsError?: string;
+  }) => {
+    const result = await this.apolloClient.query({
+      variables: { getMemberUploadJournalLinksParams },
+      query: gql`
+        query getMemberUploadJournalLinks(
+          $getMemberUploadJournalLinksParams: GetMemberUploadJournalLinksParams!
+        ) {
+          getMemberUploadJournalLinks(
+            getMemberUploadJournalLinksParams: $getMemberUploadJournalLinksParams
+          ) {
+            smallImageLink
+            normalImageLink
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(result.errors[0].message).toMatch(invalidFieldsError);
+    } else {
+      return result.data.getMemberUploadJournalLinks;
     }
   };
 

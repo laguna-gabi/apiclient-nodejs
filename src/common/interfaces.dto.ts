@@ -186,6 +186,7 @@ export enum UpdatedAppointmentAction {
 export enum StorageType {
   documents = 'documents',
   recordings = 'recordings',
+  journals = 'journals',
 }
 
 export enum ReminderType {
