@@ -421,6 +421,30 @@ describe('UserService', () => {
       expect(result.slots.length).toEqual(0);
     });
 
+    test.each([true, false])(
+      'should not return past slots when allowEmptySlotsResponse=true (%p}',
+      async (allowEmptySlotsResponse) => {
+        const user = await service.insert(generateCreateUserParams());
+        await availabilityResolver.createAvailabilities({ req: { user: { _id: user.id } } }, [
+          generateAvailabilityInput({
+            start: add(startOfToday(), { days: -3 }),
+            end: add(startOfToday(), { days: -1 }),
+          }),
+        ]);
+        const result = await service.getSlots({
+          userId: user.id,
+          notBefore: add(startOfToday(), { hours: 10 }),
+          defaultSlotsCount: 9,
+          allowEmptySlotsResponse,
+        });
+        if (allowEmptySlotsResponse) {
+          expect(result.slots.length).toEqual(0);
+        } else {
+          expect(result.slots.length).toBeGreaterThan(0);
+        }
+      },
+    );
+
     it('should return 5 slots from today and the next from tomorrow', async () => {
       const result = await preformGetUserSlots();
 

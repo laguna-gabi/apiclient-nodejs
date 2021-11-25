@@ -167,7 +167,15 @@ export class UserService extends BaseService {
             duration: `${defaultSlotsParams.duration}`,
           },
           ap: '$ap',
-          av: '$av',
+          availabilities: allowEmptySlotsResponse
+            ? {
+                $filter: {
+                  input: '$av',
+                  as: 'availability',
+                  cond: { $gte: ['$$availability.start', new Date()] },
+                },
+              }
+            : '$av',
         },
       },
     ]);
@@ -179,7 +187,7 @@ export class UserService extends BaseService {
     const notBefore = this.getNotBefore(getSlotsParams, slotsObject.appointment);
 
     slotsObject.slots = this.slotService.getSlots(
-      slotsObject.av,
+      slotsObject.availabilities,
       slotsObject.ap,
       defaultSlotsParams.duration,
       maxSlots || defaultSlotsParams.maxSlots,
@@ -187,7 +195,7 @@ export class UserService extends BaseService {
       getSlotsParams.notAfter,
     );
     delete slotsObject.ap;
-    delete slotsObject.av;
+    delete slotsObject.availabilities;
     if (userId) {
       delete slotsObject.member;
       delete slotsObject.appointment;
