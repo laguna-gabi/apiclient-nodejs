@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { generateClientSettings, generateId } from '../';
-import { DbModule } from '../../src/db/db.module';
+import { DbModule } from '../../src/db';
 import { ClientSettings, SettingsModule, SettingsService } from '../../src/settings';
 
 describe(SettingsService.name, () => {

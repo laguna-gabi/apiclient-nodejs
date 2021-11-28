@@ -1,21 +1,10 @@
-import {
-  ICreateDispatch,
-  IDeleteDispatch,
-  IUpdateClientSettings,
-  InnerQueueTypes,
-  NotificationType,
-  Platform,
-  SourceApi,
-  TriggeredApi,
-} from '@lagunahealth/pandora';
+import { NotificationType, Platform, SourceApi, TriggeredApi } from '@lagunahealth/pandora';
 import { add } from 'date-fns';
-import * as faker from 'faker';
 import { image, internet, lorem, name, phone } from 'faker';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
-import { Dispatch, defaultDispatchParams } from '../src/dispatches';
 import { ClientSettings } from '../src/settings';
-import { Trigger } from '../src/triggers';
+import { Dispatch, Trigger, defaultDispatchParams } from '../src/conductor';
 
 export const generateObjectId = (id?): Types.ObjectId => {
   return new Types.ObjectId(id);
@@ -116,7 +105,6 @@ export const generatePhone = () => {
 };
 
 export const generateUpdateClientSettingsParams = ({
-  type = InnerQueueTypes.updateClientSettings,
   id = generateId(),
   orgName = lorem.word(),
   phone = generatePhone(),
@@ -126,9 +114,8 @@ export const generateUpdateClientSettingsParams = ({
   isAppointmentsReminderEnabled = false,
   firstName = name.firstName(),
   avatar = image.avatar(),
-}: Partial<IUpdateClientSettings> = {}): IUpdateClientSettings => {
+}: Partial<ClientSettings> = {}): ClientSettings => {
   return {
-    type,
     id,
     orgName,
     phone,
@@ -138,53 +125,5 @@ export const generateUpdateClientSettingsParams = ({
     isAppointmentsReminderEnabled,
     firstName,
     avatar,
-  };
-};
-
-export const generateCreateDispatchParams = ({
-  type = InnerQueueTypes.createDispatch,
-  dispatchId = generateId(),
-  correlationId = v4(),
-  triggeredApi = TriggeredApi.graphql,
-  sourceApi = SourceApi.hepius,
-  notificationType = NotificationType.call,
-  recipientClientId = v4(),
-  senderClientId = v4(),
-  sendBirdChannelUrl = faker.internet.url(),
-  appointmentId = generateId(),
-  peerId = v4(),
-  content = faker.lorem.sentence(),
-  chatLink = false,
-  triggeredAt = new Date(),
-  notificationId = v4(),
-  path = 'call',
-}: Partial<ICreateDispatch> = {}): ICreateDispatch => {
-  return {
-    type,
-    dispatchId,
-    correlationId,
-    triggeredApi,
-    sourceApi,
-    notificationType,
-    recipientClientId,
-    senderClientId,
-    sendBirdChannelUrl,
-    appointmentId,
-    peerId,
-    content,
-    chatLink,
-    triggeredAt,
-    notificationId,
-    path,
-  };
-};
-
-export const generateDeleteDispatchParams = ({
-  type = InnerQueueTypes.deleteDispatch,
-  dispatchId = generateId(),
-}: Partial<IDeleteDispatch> = {}): IDeleteDispatch => {
-  return {
-    type,
-    dispatchId,
   };
 };

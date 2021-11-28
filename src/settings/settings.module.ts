@@ -5,5 +5,6 @@ import { ClientSettings, ClientSettingsDto, SettingsService } from '.';
 @Module({
   imports: [MongooseModule.forFeature([{ name: ClientSettings.name, schema: ClientSettingsDto }])],
   providers: [SettingsService],
+  exports: [SettingsService],
 })
 export class SettingsModule {}

@@ -1,4 +1,4 @@
-import { NotificationType, SourceApi, TriggeredApi } from '@lagunahealth/pandora';
+import { AllNotificationTypes, SourceApi, TriggeredApi } from '@lagunahealth/pandora';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 /**************************************************************************************************
@@ -38,7 +38,7 @@ export class Dispatch {
   sourceApi: SourceApi;
 
   @Prop()
-  notificationType: NotificationType;
+  notificationType: AllNotificationTypes;
 
   @Prop()
   recipientClientId: string;
@@ -85,6 +85,8 @@ export class Dispatch {
   @Prop({ isNan: true })
   failureReason?: string;
 }
+
+export type DispatchInternalUpdate = Partial<Dispatch>;
 
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************

@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { DbModule } from './db/db.module';
+import { DbModule } from './db';
 import { ProvidersModule } from './providers';
-import { TriggersModule } from './triggers';
 import { SettingsModule } from './settings';
-import { DispatchesModule } from './dispatches';
+import { ConductorModule } from './conductor';
 
 @Module({
-  imports: [ProvidersModule, DbModule, TriggersModule, SettingsModule, DispatchesModule],
+  imports: [DbModule, ProvidersModule, SettingsModule, ConductorModule],
 })
 export class AppModule {}

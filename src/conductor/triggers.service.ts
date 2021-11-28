@@ -18,7 +18,7 @@ export class TriggersService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    await this.watchObject.close();
+    await this.watchObject?.close();
   }
 
   async update(trigger: Trigger): Promise<Trigger> {
@@ -31,5 +31,9 @@ export class TriggersService implements OnModuleInit, OnModuleDestroy {
 
   async get(dispatchId: string): Promise<Trigger | null> {
     return this.triggerModel.findOne({ dispatchId });
+  }
+
+  async delete(dispatchId: string) {
+    await this.triggerModel.deleteOne({ dispatchId });
   }
 }

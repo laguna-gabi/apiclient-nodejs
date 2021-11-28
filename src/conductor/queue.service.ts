@@ -9,8 +9,9 @@ import { Injectable, NotImplementedException, OnModuleInit } from '@nestjs/commo
 import * as AWS from 'aws-sdk';
 import * as config from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
-import { ConfigsService, ExternalConfigs } from '.';
-import { Logger } from '../../common';
+import { ConfigsService, ExternalConfigs } from '../providers';
+import { Logger } from '../common';
+import { ConductorService } from '.';
 
 @Injectable()
 export class QueueService implements OnModuleInit {
@@ -21,7 +22,11 @@ export class QueueService implements OnModuleInit {
   private notificationsQ;
   private notificationsDLQ;
 
-  constructor(private readonly configsService: ConfigsService, private readonly logger: Logger) {}
+  constructor(
+    private readonly conductorService: ConductorService,
+    private readonly configsService: ConfigsService,
+    private readonly logger: Logger,
+  ) {}
 
   async onModuleInit(): Promise<void> {
     const { queueNameNotifications, queueNameNotificationsDLQ } = ExternalConfigs.aws;
@@ -65,25 +70,13 @@ export class QueueService implements OnModuleInit {
     const object: IInnerQueueTypes = JSON.parse(body);
     switch (object.type) {
       case InnerQueueTypes.updateClientSettings:
-        return this.handleUpdateClientSettings(object as IUpdateClientSettings);
+        return this.conductorService.handleUpdateClientSettings(object as IUpdateClientSettings);
       case InnerQueueTypes.createDispatch:
-        return this.handleCreateDispatch(object as ICreateDispatch);
+        return this.conductorService.handleCreateDispatch(object as ICreateDispatch);
       case InnerQueueTypes.deleteDispatch:
-        return this.handleDeleteDispatch(object as IDeleteDispatch);
+        return this.conductorService.handleDeleteDispatch(object as IDeleteDispatch);
       default:
         throw new NotImplementedException();
     }
-  }
-
-  private async handleUpdateClientSettings(settings: IUpdateClientSettings): Promise<void> {
-    console.log(this.handleUpdateClientSettings.name, settings);
-  }
-
-  private async handleCreateDispatch(dispatch: ICreateDispatch): Promise<void> {
-    console.log(this.handleCreateDispatch.name, dispatch);
-  }
-
-  private async handleDeleteDispatch(dispatch: IDeleteDispatch): Promise<void> {
-    console.log(this.handleDeleteDispatch.name, dispatch);
   }
 }

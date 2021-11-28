@@ -1,23 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { v4 } from 'uuid';
 import { generateTriggers } from '../';
-import { DbModule } from '../../src/db/db.module';
-import { Trigger, TriggersModule, TriggersService } from '../../src/triggers';
+import { DbModule } from '../../src/db';
+import { ConductorModule, Trigger, TriggersService } from '../../src/conductor';
 
 describe(TriggersService.name, () => {
   let module: TestingModule;
   let service: TriggersService;
 
   beforeAll(async () => {
-    module = await Test.createTestingModule({ imports: [DbModule, TriggersModule] }).compile();
+    module = await Test.createTestingModule({ imports: [DbModule, ConductorModule] }).compile();
 
     service = module.get<TriggersService>(TriggersService);
-    await service.onModuleInit();
   });
 
   afterAll(async () => {
     await module.close();
-    await service.onModuleDestroy();
   });
 
   it('should update a new trigger and get it', async () => {
