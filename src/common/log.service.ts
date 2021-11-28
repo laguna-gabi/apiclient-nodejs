@@ -16,7 +16,7 @@ export class Logger extends BaseLogger {
     'sourceApi',
     'notificationType',
     'recipientClientId',
-    'senderClientId',
+    'senderClient',
     'sendBirdChannelUrl',
     'appointmentId',
     'peerId',

@@ -10,6 +10,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ErrorType, Errors } from '../common';
 import { ConfigsService, ExternalConfigs } from './aws';
 import { oneSignal } from 'config';
+import { CancelNotificationParams, SendOneSignalNotification } from '.';
 
 @Injectable()
 export class OneSignal extends BaseOneSignal implements OnModuleInit {
@@ -32,9 +33,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     this.voipApiKey = await this.configsService.getConfig(ExternalConfigs.oneSignal.voipApiKey);
   }
 
-  //TODO replace any with class object SendOneSignalNotification
-  // async send(sendOneSignalNotification: SendOneSignalNotification) {
-  async send(sendOneSignalNotification: any) {
+  async send(sendOneSignalNotification: SendOneSignalNotification) {
     this.logger.debug(sendOneSignalNotification, OneSignal.name, this.send.name);
     const { platform, externalUserId, data, content } = sendOneSignalNotification;
     this.logger.debug(data, OneSignal.name, this.send.name);
@@ -94,9 +93,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     }
   }
 
-  //TODO replace any with class object CancelNotificationParams
-  // async cancel(cancelNotificationParams: CancelNotificationParams) {
-  async cancel(cancelNotificationParams: any) {
+  async cancel(cancelNotificationParams: CancelNotificationParams) {
     this.logger.debug(cancelNotificationParams, OneSignal.name, this.cancel.name);
     const { platform, externalUserId, data } = cancelNotificationParams;
 

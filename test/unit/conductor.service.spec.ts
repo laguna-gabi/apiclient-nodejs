@@ -1,5 +1,6 @@
 import { InnerQueueTypes } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
+import { gapTriggeredAt } from 'config';
 import { addSeconds, subSeconds } from 'date-fns';
 import { CommonModule, Logger } from '../../src/common';
 import {
@@ -7,14 +8,12 @@ import {
   ConductorService,
   DispatchStatus,
   DispatchesService,
-  Hub,
   TriggersService,
 } from '../../src/conductor';
 import { DbModule } from '../../src/db';
-import { ProvidersModule } from '../../src/providers';
+import { NotificationsService, ProvidersModule } from '../../src/providers';
 import { SettingsService } from '../../src/settings';
 import { generateClientSettings, generateDispatch, generateId } from '../generators';
-import { gapTriggeredAt } from 'config';
 import SpyInstance = jest.SpyInstance;
 
 describe(ConductorService.name, () => {
@@ -23,10 +22,8 @@ describe(ConductorService.name, () => {
   let settingsService: SettingsService;
   let dispatchesService: DispatchesService;
   let triggersService: TriggersService;
-  let hub: Hub;
+  let notificationsService: NotificationsService;
   let logger: Logger;
-
-  let spyOnSettingsServiceUpdate: SpyInstance;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -37,49 +34,54 @@ describe(ConductorService.name, () => {
     settingsService = module.get<SettingsService>(SettingsService);
     dispatchesService = module.get<DispatchesService>(DispatchesService);
     triggersService = module.get<TriggersService>(TriggersService);
-    hub = module.get<Hub>(Hub);
+    notificationsService = module.get<NotificationsService>(NotificationsService);
     logger = module.get<Logger>(Logger);
-
-    spyOnSettingsServiceUpdate = jest.spyOn(settingsService, 'update');
-  });
-
-  afterEach(async () => {
-    spyOnSettingsServiceUpdate.mockReset();
   });
 
   afterAll(async () => {
     await module.close();
   });
 
-  it('should call handleUpdateClientSettings', async () => {
-    const settings = generateClientSettings();
-    spyOnSettingsServiceUpdate.mockResolvedValueOnce(settings);
+  describe('handleUpdateClientSettings', () => {
+    let spyOnSettingsServiceUpdate: SpyInstance;
 
-    await service.handleUpdateClientSettings({
-      ...settings,
-      type: InnerQueueTypes.updateClientSettings,
+    beforeAll(() => {
+      spyOnSettingsServiceUpdate = jest.spyOn(settingsService, 'update');
     });
-    expect(spyOnSettingsServiceUpdate).toBeCalledWith(settings);
+    afterEach(async () => {
+      spyOnSettingsServiceUpdate.mockRestore();
+    });
+
+    it('should call handleUpdateClientSettings', async () => {
+      const settings = generateClientSettings();
+      spyOnSettingsServiceUpdate.mockResolvedValueOnce(settings);
+
+      await service.handleUpdateClientSettings({
+        ...settings,
+        type: InnerQueueTypes.updateClientSettings,
+      });
+      expect(spyOnSettingsServiceUpdate).toBeCalledWith(settings);
+    });
   });
 
   describe('handleCreateDispatch', () => {
     let spyOnDispatchesServiceUpdate: SpyInstance;
     let spyOnTriggersServiceUpdate: SpyInstance;
     let spyOnError: SpyInstance;
-    let spyOnHub: SpyInstance;
+    let spyOnNotificationsService: SpyInstance;
 
     beforeAll(() => {
       spyOnDispatchesServiceUpdate = jest.spyOn(dispatchesService, 'update');
       spyOnTriggersServiceUpdate = jest.spyOn(triggersService, 'update');
       spyOnError = jest.spyOn(logger, 'error');
-      spyOnHub = jest.spyOn(hub, 'notify');
+      spyOnNotificationsService = jest.spyOn(notificationsService, 'send');
     });
 
     afterEach(() => {
       spyOnDispatchesServiceUpdate.mockReset();
       spyOnTriggersServiceUpdate.mockReset();
       spyOnError.mockReset();
-      spyOnHub.mockReset();
+      spyOnNotificationsService.mockReset();
     });
 
     it(`should handle triggeredAt from more ${gapTriggeredAt} seconds in the past`, async () => {
@@ -96,7 +98,7 @@ describe(ConductorService.name, () => {
       expect(new Date().getTime()).toBeGreaterThan(createDispatch.triggeredAt.getTime());
       expect(spyOnDispatchesServiceUpdate).toBeCalledWith(createDispatch);
       expect(spyOnTriggersServiceUpdate).not.toBeCalled();
-      expect(spyOnHub).not.toBeCalled();
+      expect(spyOnNotificationsService).not.toBeCalled();
       expect(spyOnError).toBeCalledWith(
         createDispatch,
         ConductorService.name,
@@ -105,20 +107,25 @@ describe(ConductorService.name, () => {
     });
 
     it(`should handle triggeredAt within the past/future ${gapTriggeredAt} seconds`, async () => {
-      const createDispatch = generateDispatch({
+      const settings = generateClientSettings();
+      await service.handleUpdateClientSettings({
+        ...settings,
+        type: InnerQueueTypes.updateClientSettings,
+      });
+
+      const dispatch = generateDispatch({
+        recipientClientId: settings.id,
         triggeredAt: subSeconds(new Date(), gapTriggeredAt),
       });
-      spyOnDispatchesServiceUpdate.mockResolvedValueOnce(createDispatch);
 
-      await service.handleCreateDispatch({
-        ...createDispatch,
-        type: InnerQueueTypes.createDispatch,
-      });
+      spyOnDispatchesServiceUpdate.mockResolvedValueOnce(dispatch);
+      spyOnNotificationsService.mockResolvedValueOnce(null);
+      await service.handleCreateDispatch({ ...dispatch, type: InnerQueueTypes.createDispatch });
 
-      expect(new Date().getTime()).toBeGreaterThan(createDispatch.triggeredAt.getTime());
-      expect(spyOnDispatchesServiceUpdate).toBeCalledWith(createDispatch);
+      expect(new Date().getTime()).toBeGreaterThan(dispatch.triggeredAt.getTime());
+      expect(spyOnDispatchesServiceUpdate).toBeCalledWith(dispatch);
       expect(spyOnTriggersServiceUpdate).not.toBeCalled();
-      expect(spyOnHub).toBeCalledWith(createDispatch);
+      expect(spyOnNotificationsService).toBeCalledWith(dispatch, expect.objectContaining(settings));
       expect(spyOnError).not.toBeCalled();
     });
 
@@ -139,7 +146,7 @@ describe(ConductorService.name, () => {
         dispatchId: createDispatch.dispatchId,
         expiresAt: createDispatch.triggeredAt,
       });
-      expect(spyOnHub).not.toBeCalled();
+      expect(spyOnNotificationsService).not.toBeCalled();
       expect(spyOnError).not.toBeCalled();
     });
   });

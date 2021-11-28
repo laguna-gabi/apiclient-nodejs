@@ -1,5 +1,6 @@
-import { HttpService, Injectable, OnModuleInit } from '@nestjs/common';
-import { ConfigsService, ExternalConfigs } from '.';
+import { HttpService } from '@nestjs/axios';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { ConfigsService, ExternalConfigs, SendSendBirdNotification } from '.';
 import { BaseLogger, BaseSendBird } from '@lagunahealth/pandora';
 
 @Injectable()
@@ -18,9 +19,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     await super.onModuleInit();
   }
 
-  //TODO replace any with class object SendSendBirdNotification
-  // async send(sendSendBirdNotification: SendSendBirdNotification) {
-  async send(sendSendBirdNotification: any) {
+  async send(sendSendBirdNotification: SendSendBirdNotification) {
     this.logger.debug(sendSendBirdNotification, SendBird.name, this.send.name);
     const { userId, sendBirdChannelUrl, message, notificationType, appointmentId } =
       sendSendBirdNotification;

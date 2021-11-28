@@ -1,4 +1,3 @@
-export * from './hub';
 export * from './dispatches.dto';
 export * from './dispatches.service';
 export * from './triggers.dto';

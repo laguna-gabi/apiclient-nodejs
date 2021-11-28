@@ -9,7 +9,6 @@ export class ClientSettings {
   @Prop({ index: true })
   id: string;
 
-  //member keys
   @Prop({ isNaN: true })
   orgName?: string;
 
@@ -27,13 +26,6 @@ export class ClientSettings {
 
   @Prop({ isNaN: true })
   isAppointmentsReminderEnabled?: boolean;
-
-  //user keys
-  @Prop({ isNaN: true })
-  firstName?: string;
-
-  @Prop({ isNaN: true })
-  avatar?: string;
 }
 
 /**************************************************************************************************

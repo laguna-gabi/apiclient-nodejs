@@ -1,6 +1,6 @@
 import { NotificationType, Platform, SourceApi, TriggeredApi } from '@lagunahealth/pandora';
 import { add } from 'date-fns';
-import { image, internet, lorem, name, phone } from 'faker';
+import { internet, lorem, name } from 'faker';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import { ClientSettings } from '../src/settings';
@@ -16,22 +16,21 @@ export const generateId = (id?): string => {
 
 export const generateClientSettings = ({
   id = generateId(),
+  orgName = lorem.word(),
+  phone = generatePhone(),
   platform = Platform.web,
+  externalUserId = v4(),
   isPushNotificationsEnabled = false,
   isAppointmentsReminderEnabled = false,
-  firstName = name.firstName(),
-  avatar = image.avatar(),
 }: Partial<ClientSettings> = {}): ClientSettings => {
   return {
     id,
-    orgName: name.title(),
-    phone: phone.phoneNumber(),
+    orgName,
+    phone,
     platform,
-    externalUserId: v4(),
+    externalUserId,
     isPushNotificationsEnabled,
     isAppointmentsReminderEnabled,
-    firstName,
-    avatar,
   };
 };
 
@@ -42,7 +41,7 @@ export const generateDispatch = ({
   sourceApi = SourceApi.hepius,
   notificationType = NotificationType.text,
   recipientClientId = v4(),
-  senderClientId = v4(),
+  senderClient = { id: v4(), firstName: name.firstName(), avatar: internet.avatar() },
   sendBirdChannelUrl = internet.url(),
   appointmentId = v4(),
   peerId = v4(),
@@ -63,7 +62,7 @@ export const generateDispatch = ({
     sourceApi,
     notificationType,
     recipientClientId,
-    senderClientId,
+    senderClient,
     sendBirdChannelUrl,
     appointmentId,
     peerId,
@@ -102,28 +101,4 @@ export const generatePhone = () => {
   }
 
   return phone;
-};
-
-export const generateUpdateClientSettingsParams = ({
-  id = generateId(),
-  orgName = lorem.word(),
-  phone = generatePhone(),
-  platform = Platform.web,
-  externalUserId = v4(),
-  isPushNotificationsEnabled = false,
-  isAppointmentsReminderEnabled = false,
-  firstName = name.firstName(),
-  avatar = image.avatar(),
-}: Partial<ClientSettings> = {}): ClientSettings => {
-  return {
-    id,
-    orgName,
-    phone,
-    platform,
-    externalUserId,
-    isPushNotificationsEnabled,
-    isAppointmentsReminderEnabled,
-    firstName,
-    avatar,
-  };
 };

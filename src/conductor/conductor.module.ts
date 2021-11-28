@@ -7,7 +7,6 @@ import {
   Dispatch,
   DispatchDto,
   DispatchesService,
-  Hub,
   QueueService,
   Trigger,
   TriggerDto,
@@ -23,6 +22,6 @@ import { SettingsModule } from '../settings';
     MongooseModule.forFeature([{ name: Trigger.name, schema: TriggerDto }]),
     MongooseModule.forFeature([{ name: Dispatch.name, schema: DispatchDto }]),
   ],
-  providers: [ConductorService, QueueService, Hub, DispatchesService, TriggersService],
+  providers: [ConductorService, QueueService, DispatchesService, TriggersService],
 })
 export class ConductorModule {}

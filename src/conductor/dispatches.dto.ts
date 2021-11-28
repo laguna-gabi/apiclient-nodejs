@@ -17,6 +17,12 @@ export const defaultDispatchParams = {
   retryCount: 0,
 };
 
+export class SenderClient {
+  id: string;
+  firstName: string;
+  avatar?: string;
+}
+
 /**************************************************************************************************
  ***************************************** Mongodb schemas ****************************************
  *************************************************************************************************/
@@ -44,7 +50,7 @@ export class Dispatch {
   recipientClientId: string;
 
   @Prop({ isNan: true })
-  senderClientId?: string;
+  senderClient?: SenderClient;
 
   @Prop({ isNan: true })
   sendBirdChannelUrl?: string;

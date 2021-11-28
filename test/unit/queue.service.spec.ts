@@ -8,7 +8,7 @@ import { CommonModule } from '../../src/common';
 import { ConductorModule, ConductorService, QueueService } from '../../src/conductor';
 import { DbModule } from '../../src/db';
 import { ConfigsService, ProvidersModule } from '../../src/providers';
-import { generateDispatch, generateId, generateUpdateClientSettingsParams } from '../generators';
+import { generateClientSettings, generateDispatch, generateId } from '../generators';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const AWS = require('aws-sdk');
 
@@ -67,7 +67,7 @@ describe(QueueService.name, () => {
 
     it(`should handle message of type ${InnerQueueTypes.updateClientSettings}`, async () => {
       const params = {
-        ...generateUpdateClientSettingsParams(),
+        ...generateClientSettings(),
         type: InnerQueueTypes.updateClientSettings,
       };
       const message: SQSMessage = { MessageId: v4(), Body: JSON.stringify(params) };

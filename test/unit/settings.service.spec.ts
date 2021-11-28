@@ -40,8 +40,6 @@ describe(SettingsService.name, () => {
     { externalUserId: null },
     { isPushNotificationsEnabled: null },
     { isAppointmentsReminderEnabled: null },
-    { firstName: null },
-    { avatar: null },
   ])('should not override %p since it is not define in input', async (field) => {
     const settings: ClientSettings = generateClientSettings();
     const result = await service.update(settings);

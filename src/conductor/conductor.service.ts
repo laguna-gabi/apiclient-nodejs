@@ -2,8 +2,9 @@ import { ICreateDispatch, IDeleteDispatch, IUpdateClientSettings } from '@laguna
 import { Injectable } from '@nestjs/common';
 import { gapTriggeredAt } from 'config';
 import { differenceInSeconds } from 'date-fns';
+import { Dispatch, DispatchStatus, DispatchesService, TriggersService } from '.';
 import { Logger } from '../common';
-import { DispatchStatus, DispatchesService, Hub, TriggersService } from '.';
+import { NotificationsService } from '../providers';
 import { SettingsService } from '../settings';
 
 @Injectable()
@@ -13,7 +14,7 @@ export class ConductorService {
     private readonly settingsService: SettingsService,
     private readonly dispatchesService: DispatchesService,
     private readonly triggersService: TriggersService,
-    private readonly hub: Hub,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async handleUpdateClientSettings(input: IUpdateClientSettings): Promise<void> {
@@ -24,7 +25,7 @@ export class ConductorService {
 
   async handleCreateDispatch(input: ICreateDispatch): Promise<void> {
     this.logger.debug(input, ConductorService.name, this.handleCreateDispatch.name);
-    const dispatch = this.cleanObject(input);
+    const dispatch: Dispatch = this.cleanObject(input);
 
     await this.dispatchesService.update({ ...dispatch, status: DispatchStatus.received });
 
@@ -35,7 +36,8 @@ export class ConductorService {
         dispatchId: dispatch.dispatchId,
         status: DispatchStatus.acquired,
       });
-      await this.hub.notify(dispatch);
+      const settings = await this.settingsService.get(dispatch.recipientClientId);
+      await this.notificationsService.send(dispatch, settings);
     } else if (currentMinusInput > gapTriggeredAt) {
       //past event
       this.logger.error(dispatch, ConductorService.name, this.handleCreateDispatch.name);
