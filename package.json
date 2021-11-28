@@ -29,7 +29,12 @@
     "test:integration": "jest --config test/integration/jest.json",
     "test:validation": "jest --config test/validations/jest.json",
     "test:live": "jest --config test/live/jest.json",
-    "test:all": "yarn test && yarn test:validation && yarn test:integration"
+    "test:all": "yarn test && yarn test:validation && yarn test:integration",
+    "migrate:init": "ts-node ./migrations/generateConfig.ts",
+    "migrate:create": "cd migrations && migrate-mongo create",
+    "migrate:status": "cd migrations && migrate-mongo status",
+    "migrate:up": "cd migrations && migrate-mongo up",
+    "migrate:down": "cd migrations && migrate-mongo down"
   },
   "dependencies": {
     "@lagunahealth/pandora": "^0.2.6",
@@ -87,6 +92,7 @@
     "faker": "^5.5.3",
     "jest": "^26.6.3",
     "jest-coverage-badges": "^1.1.2",
+    "migrate-mongo": "^8.2.3",
     "prettier": "^2.2.1",
     "supertest": "^6.1.3",
     "ts-jest": "^26.5.4",

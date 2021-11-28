@@ -41,12 +41,15 @@ Laguna health backend infrastructure.
   - [👨‍💻 Using the API](#-using-the-api)
     - [REST](#rest)
     - [GraphQL](#graphql)
-  - [🚧 Role Based Access Control: RBAC](#-role-based-access-control-rbac)
+  - [🚫 Role Based Access Control: RBAC](#-role-based-access-control-rbac)
   - [🪀 Token snippet](#-token-snippet)
+  - [🏗️ Migration](#️-migration)
+  - [### Overview](#-overview)
+  - [### Migration Support: guide](#-migration-support-guide)
   - [🎻 Troubleshooting](#-troubleshooting)
     - [How to view the db locally?](#how-to-view-the-db-locally)
     - [Error at connection to mongo locally](#error-at-connection-to-mongo-locally)
-- [✂️ Appendix](#%EF%B8%8F-appendix)
+- [✂️ Appendix](#️-appendix)
   - [jwt.io token generation](#jwtio-token-generation)
   - [GraphQL Playground](#graphql-playground)
   - [Github generate developer token](#github-generate-developer-token)
@@ -184,7 +187,7 @@ curl --location --request GET 'localhost:3000/api/users/slots/61682dab90669d1f12
 To send GraphQL resolvers / mutation requests you need to use the GQL Playgroud - you should make sure to update the headers to include a valid token - see [appendix](#graphql-playground).
 <br/><br/>
 
-## 🚧 Role Based Access Control: RBAC
+## 🚫 Role Based Access Control: RBAC
 
 - A route (GQL or REST) is protected if not marked as 'IsPublic' - only users with admin privileges can access it
 - Routes can be annotated with the 'Roles' annotation to include 1 or more allowed roles.
@@ -208,6 +211,70 @@ Start by going to the database and change one of the user's `authId` to `"admin"
 }
 ```
 
+## 🏗️ Migration 
+
+### Overview
+----------------------------------------------------------------
+In some cases, changes to the application requires db changes (adding new mandatory fields, adding per-calculated fields, updating field values, etc...). 
+It is important to include those required changes in our code reviews and be able to roll back changes if needed.
+
+The current support is based on the [migrate-mongo] JS library. 
+
+The migration status is persisted to our mongo db - `changelog` collection. **Manipulating of that collection may affect the migration status** and as a result the applied migration scripts when running the migration `up` and `down` commands.
+
+The migration is applied automatically in our ci-cd when merging our code to `develop` or `stage` branches - migration will run after the test/coverage job. 
+
+### Migration Support: guide
+----------------------------------------------------------------
+
+- **Step 0**: 
+  initialize environment - create a config file based on NODE_ENV environment parameter - when running locally it will generate a [config](./migrations/migrate-mongo-config.js) file to run against `(mongodb://localhost:27017)` / `laguna` mongo db
+
+- **Step 1**: create a new migration script (template):
+  ```
+  yarn migrate:create <script-description>
+  ```
+  A new migration script is created in the [migrations](./migrations/scripts) directory with the following format:
+  ```
+  <now-timestamp>-<script-description>
+  ```
+  **! DO NOT RENAME THE FILE !**
+
+- **Step 2**: add your changes to the newly created migration script - `up` and `down` code is required - example:
+  ```
+  module.exports = {
+    async up(db) {
+      {$set: {blacklisted: true}});
+      await db.collection('members').
+      updateMany({},{$set : {"roles":["member"]}}, {upsert:false,multi:true});
+    },
+
+    async down(db) {
+      await db.collection('members').
+      updateMany({},{$unset: {roles:1}},{upsert:false,multi:true});
+    }
+  };
+  ```
+- **Step 3.1**: test the code on your local mongo db - first you check the status in your local db - the results is a list of migrations applied on your local db and pending migrations which should get applied - migration is not applied in `status` command - DRY-RUN mode:
+  ```
+  yarn migrate:status
+  ```
+
+  Filename | Applied At |
+  --- | --- | 
+  20211125153552-set-member-roles.js | 2021-11-27T09:27:54.171Z |
+  20211127092801-update-member-config.js | PENDING | 
+- **Step 3.1**: test the code on your local mongo db - apply your new migration script:
+  ```
+  yarn migrate:up
+  ```
+- **Step 3.2**: undo changes - test your `down` code on your local mongo db:
+  ```
+  yarn migrate:down
+  ```
+
+- **Step 4**: commit your changes - you only need to commit your newly created migration script.
+  
 ## 🎻 Troubleshooting
 
 ### How to view the db locally?
