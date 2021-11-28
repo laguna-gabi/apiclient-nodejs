@@ -619,19 +619,6 @@ export class MemberResolver extends MemberBase {
     const { memberId, userId, type, metadata } = params;
     let content = params.content;
 
-    if (metadata.contentType === ContentKey.newControlMember) {
-      const member = await this.memberService.getControl(memberId);
-      return this.notificationBuilder.internalNotifyControlMember({
-        phone: member.phone,
-        orgName: member.org.name,
-        content: this.internationalizationService.getContents({
-          contentType: metadata.contentType,
-          member,
-          language: member.language,
-        }),
-      });
-    }
-
     try {
       const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(
         memberId,
