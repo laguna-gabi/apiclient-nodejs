@@ -18,7 +18,7 @@ import {
   generateUniqueUrl,
 } from '..';
 import { AppModule } from '../../src/app.module';
-import { AuthService, GlobalAuthGuard, RolesGuard } from '../../src/auth';
+import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
 import { bearerToken } from '../../src/common';
 import { CommunicationService } from '../../src/communication';
 import { Member, MemberService } from '../../src/member';
@@ -35,6 +35,7 @@ export class Handler extends BaseHandler {
   twilioService;
   slackBot;
   cognitoService;
+  storage;
   eventEmitter: EventEmitter2;
   communicationService: CommunicationService;
   memberService: MemberService;
@@ -45,6 +46,7 @@ export class Handler extends BaseHandler {
   adminUser: User;
   patientZero: Member;
   lagunaOrg: Org;
+  featureFlagService;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -60,7 +62,7 @@ export class Handler extends BaseHandler {
     if (withGuards) {
       const reflector = this.app.get(Reflector);
       this.app.useGlobalGuards(new GlobalAuthGuard());
-      this.app.useGlobalGuards(new RolesGuard(reflector, this.app.get(AuthService)));
+      this.app.useGlobalGuards(new RolesGuard(reflector));
     }
 
     await this.app.init();
@@ -74,19 +76,20 @@ export class Handler extends BaseHandler {
     this.twilioService = providers.twilioService;
     this.slackBot = providers.slackBot;
     this.cognitoService = providers.cognitoService;
-
+    this.storage = providers.storage;
+    this.featureFlagService = providers.featureFlagService;
+    this.cognitoService = providers.cognitoService;
     const apolloServer = createTestClient((this.module as any).apolloServer);
     this.mutations = new Mutations(apolloServer);
+
     this.queries = new Queries(apolloServer);
 
     await dbConnect();
-
     this.communicationService = moduleFixture.get<CommunicationService>(CommunicationService);
     this.userService = moduleFixture.get<UserService>(UserService);
     this.memberService = moduleFixture.get<MemberService>(MemberService);
     this.orgService = moduleFixture.get<OrgService>(OrgService);
     this.webhooksController = moduleFixture.get<WebhooksController>(WebhooksController);
-
     await this.buildFixtures();
   }
 
@@ -103,8 +106,14 @@ export class Handler extends BaseHandler {
     this.sendBird.spyOnSendBirdUpdateGroupChannelMetadata.mockReset();
     this.sendBird.spyOnSendBirdDeleteGroupChannelMetadata.mockReset();
     this.notificationsService.spyOnNotificationsServiceRegister.mockReset();
+    this.notificationsService.spyOnNotificationsServiceUnregister.mockReset();
     this.notificationsService.spyOnNotificationsServiceSend.mockReset();
     this.notificationsService.spyOnNotificationsServiceCancel.mockReset();
+    this.storage.spyOnStorageDownload.mockReset();
+    this.storage.spyOnStorageUpload.mockReset();
+    this.storage.spyOnStorageDeleteRecordings.mockReset();
+    this.storage.spyOnStorageDeleteJournalImages.mockReset();
+    this.storage.spyOnStorageHandleNewMember.mockReset();
     this.twilioService.spyOnTwilioGetToken.mockReset();
     this.slackBot.spyOnSlackBotSendMessage.mockReset();
     this.cognitoService.spyOnCognitoServiceDisableMember.mockReset();

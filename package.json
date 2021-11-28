@@ -20,6 +20,8 @@
     "seed": "ts-node graphql/seed.ts",
     "seed:dev": "export NODE_ENV=development && ts-node graphql/seed.ts",
     "seed:laguna": "export NODE_ENV=development && ts-node graphql/seedLagunaData.ts",
+    "seed:create:users:dev": "export NODE_ENV=development && ts-node graphql/seedNewUser.ts",
+    "seed:create:users:production": "export NODE_ENV=production && ts-node graphql/seedNewUser.ts",
     "test": "jest --config test/unit/jest.json",
     "test:watch": "jest --config test/unit/jest.json --watch",
     "test:cov": "jest --config test/jest.json && jest-coverage-badges",
@@ -30,7 +32,7 @@
     "test:all": "yarn test && yarn test:validation && yarn test:integration"
   },
   "dependencies": {
-    "@lagunahealth/pandora": "^0.1.12",
+    "@lagunahealth/pandora": "^0.2.6",
     "@nestjs/axios": "^0.0.1",
     "@nestjs/common": "^7.6.15",
     "@nestjs/core": "^7.6.15",

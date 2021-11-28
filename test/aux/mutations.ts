@@ -624,6 +624,30 @@ export class Mutations {
     );
   };
 
+  deleteJournalImage = async ({
+    id,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    id;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Journal> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id },
+      mutation: gql`
+        mutation deleteJournalImage($id: String!) {
+          deleteJournalImage(id: $id)
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.deleteJournalImage
+    );
+  };
+
   updateMemberConfig = async ({
     updateMemberConfigParams,
     missingFieldError,

@@ -186,6 +186,7 @@ export enum UpdatedAppointmentAction {
 export enum StorageType {
   documents = 'documents',
   recordings = 'recordings',
+  journals = 'journals',
 }
 
 export enum ReminderType {
@@ -208,6 +209,7 @@ export enum Environments {
 
 export enum QueueType {
   audit = 'audit',
+  notifications = 'notifications',
 }
 
 export enum AuditType {

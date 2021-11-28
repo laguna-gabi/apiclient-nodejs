@@ -1,18 +1,8 @@
-export type SystemRoles = {
-  [K in RoleTypes]: {
-    isAdmin: boolean;
-    weight: number;
-  };
-};
-
-export enum RoleTypes {
-  User = 'User',
-  Member = 'Member',
-  Anonymous = 'Anonymous',
+export enum MemberRole {
+  member = 'member',
 }
-
-export const SystemRoles = {
-  User: { isAdmin: true, weight: 100 },
-  Member: { isAdmin: false, weight: 10 },
-  Anonymous: { isAdmin: false, weight: 1 },
-};
+export enum UserRole {
+  admin = 'admin',
+  coach = 'coach',
+  nurse = 'nurse',
+}

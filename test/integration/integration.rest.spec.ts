@@ -5,7 +5,7 @@ import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions } from '../aux/appointments';
 import { Creators } from '../aux/creators';
 import { Handler } from '../aux/handler';
-import { urls } from '../common';
+import { compareMembers, urls } from '../common';
 import {
   generateAvailabilityInput,
   generateCreateMemberParams,
@@ -118,8 +118,40 @@ describe('Integration tests: rest', () => {
         orgId: org.id,
       });
 
-      const { body } = await request(server).post(urls.members).send(memberParams).expect(201);
-      expect(body).toEqual({ id: expect.any(String) });
+      const {
+        body: { id: memberId },
+      } = await request(server).post(urls.members).send(memberParams).expect(201);
+      // test member created
+      const member = await handler.queries.getMember({ id: memberId });
+      compareMembers(member, memberParams);
+      // test member config created
+      const memberConfig = await handler.queries.getMemberConfig({ id: memberId });
+      expect(memberConfig.memberId).toEqual(memberId);
+
+      const user = await handler.setContextUserId(member.primaryUserId).queries.getUser();
+      expect(user.id).toEqual(member.primaryUserId);
+
+      // TODO: Check that the communication was created (currently can't because it's mocked)
+      // const communication = await handler.queries.getCommunication({
+      //   getCommunicationParams: { memberId, userId: member.primaryUserId },
+      // });
+      // expect(communication.memberId).toEqual(memberId);
+      // expect(communication.userId).toEqual(member.primaryUserId);
+    });
+  });
+
+  describe('createControlMember', () => {
+    it('should create a member', async () => {
+      handler.featureFlagService.spyOnFeatureFlagControlGroup.mockReturnValueOnce(true);
+      const org = await creators.createAndValidateOrg();
+      const memberParams = generateCreateMemberParams({
+        orgId: org.id,
+      });
+
+      const {
+        body: { id: memberId },
+      } = await request(server).post(urls.members).send(memberParams).expect(201);
+      expect(memberId).toEqual(expect.any(String));
     });
   });
 });

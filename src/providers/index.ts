@@ -5,5 +5,6 @@ export * from './slackBot';
 export * from './twilio.service';
 export * from './oneSignal';
 export * from './notifications.service';
+export * from './featureFlag.service';
 export * from './webhooks.controller';
 export * from './providers.module';

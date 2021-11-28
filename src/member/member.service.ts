@@ -14,10 +14,13 @@ import {
   ArchiveMemberConfig,
   ArchiveMemberConfigDocument,
   ArchiveMemberDocument,
+  ControlMember,
+  ControlMemberDocument,
   CreateMemberParams,
   CreateTaskParams,
   Goal,
   GoalDocument,
+  ImageFormat,
   Journal,
   JournalDocument,
   Member,
@@ -34,6 +37,7 @@ import {
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
   TaskStatus,
+  UpdateJournalParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -55,7 +59,6 @@ import {
   Logger,
 } from '../common';
 import { StorageService } from '../providers';
-import { UpdateJournalParams } from './journal.dto';
 
 @Injectable()
 export class MemberService extends BaseService {
@@ -78,6 +81,8 @@ export class MemberService extends BaseService {
     private readonly archiveMemberConfigModel: Model<ArchiveMemberConfigDocument>,
     @InjectModel(NotifyParams.name)
     private readonly notifyParamsModel: Model<NotifyParamsDocument>,
+    @InjectModel(ControlMember.name)
+    private readonly controlMemberModel: Model<ControlMemberDocument>,
     private readonly storageService: StorageService,
     readonly logger: Logger,
   ) {
@@ -497,6 +502,28 @@ export class MemberService extends BaseService {
 
     return { member, memberConfig };
   }
+  /************************************************************************************************
+   ******************************************** Control *******************************************
+   ************************************************************************************************/
+
+  async insertControl(createMemberParams: CreateMemberParams): Promise<Member> {
+    try {
+      this.removeNotNullable(createMemberParams, NotNullableMemberKeys);
+      const primitiveValues = cloneDeep(createMemberParams);
+      delete primitiveValues.orgId;
+
+      const member = await this.controlMemberModel.create({
+        ...primitiveValues,
+        org: new Types.ObjectId(createMemberParams.orgId),
+      });
+
+      return this.replaceId(member.toObject());
+    } catch (ex) {
+      throw new Error(
+        ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.memberPhoneAlreadyExists) : ex,
+      );
+    }
+  }
 
   /************************************************************************************************
    ***************************************** Notifications ****************************************
@@ -700,6 +727,26 @@ export class MemberService extends BaseService {
     return result;
   }
 
+  async updateJournalImageFormat({
+    id,
+    imageFormat,
+  }: {
+    id: string;
+    imageFormat: ImageFormat | null;
+  }): Promise<Journal> {
+    const result = await this.journalModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(id) },
+      { $set: { imageFormat } },
+      { new: true },
+    );
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.memberJournalNotFound));
+    }
+
+    return result;
+  }
+
   async getJournal(id: string): Promise<Journal> {
     const result = await this.journalModel.findById(id);
 
@@ -719,14 +766,14 @@ export class MemberService extends BaseService {
     return result;
   }
 
-  async deleteJournal(id: string): Promise<boolean> {
-    const result = await this.journalModel.deleteOne({ _id: new Types.ObjectId(id) });
+  async deleteJournal(id: string): Promise<Journal> {
+    const result = await this.journalModel.findOneAndDelete({ _id: new Types.ObjectId(id) });
 
-    if (result.deletedCount === 0) {
+    if (!result) {
       throw new Error(Errors.get(ErrorType.memberJournalNotFound));
     }
 
-    return true;
+    return result;
   }
 
   /*************************************************************************************************

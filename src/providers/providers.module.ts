@@ -4,6 +4,7 @@ import {
   Bitly,
   CognitoService,
   ConfigsService,
+  FeatureFlagService,
   NotificationsService,
   OneSignal,
   QueueService,
@@ -28,6 +29,7 @@ import { CommonModule } from '../common';
     QueueService,
     OneSignal,
     NotificationsService,
+    FeatureFlagService,
   ],
   exports: [
     Bitly,
@@ -38,6 +40,7 @@ import { CommonModule } from '../common';
     CognitoService,
     ConfigsService,
     NotificationsService,
+    FeatureFlagService,
   ],
   controllers: [WebhooksController],
 })

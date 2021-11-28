@@ -19,10 +19,11 @@ import {
   IEventOnUpdateUserConfig,
   Logger,
   UpdatedAppointmentAction,
+  UserRole,
 } from '../common';
 import { Member } from '../member';
 import { SendBird, TwilioService } from '../providers';
-import { User, UserRole } from '../user';
+import { User } from '../user';
 import { Platform } from '@lagunahealth/pandora';
 
 @Injectable()

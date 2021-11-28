@@ -3,7 +3,7 @@ import { EventEmitter2 } from 'eventemitter2';
 import * as faker from 'faker';
 import { Environments, Logger, StorageType } from '../../src/common';
 import { ConfigsService, StorageService } from '../../src/providers';
-import { mockGenerateMember, mockGenerateUser } from '../generators';
+import { generateId, mockGenerateMember, mockGenerateUser } from '../generators';
 import { Platform } from '@lagunahealth/pandora';
 
 describe('live: aws', () => {
@@ -74,6 +74,43 @@ describe('live: aws', () => {
         `${bucketName}.s3.amazonaws.com/public/${StorageType.recordings}/${member.id}/${files[1]}`,
       );
       await storageService.deleteRecordings(member.id, files);
+      const nonExistingUrls = await Promise.all(
+        files.map((file) => storageService.getDownloadUrl(getParams(file))),
+      );
+      expect(nonExistingUrls[0]).toBeUndefined();
+      expect(nonExistingUrls[1]).toBeUndefined();
+    });
+
+    it('should delete given journal images for a specific member', async () => {
+      if (process.env.NODE_ENV === Environments.production) {
+        return;
+      }
+      const getParams = (id: string) => ({
+        memberId: member.id,
+        storageType: StorageType.journals,
+        id,
+      });
+      const uploadFile = async (fileName: string) => {
+        const uploadUrl = await storageService.getUploadUrl(getParams(fileName));
+        expect(uploadUrl).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
+        expect(uploadUrl).toMatch(`Amz-Expires=1800`); //expiration: 30 minutes
+
+        const { status: uploadStatus } = await axios.put(uploadUrl, faker.lorem.sentence());
+        expect(uploadStatus).toEqual(200);
+      };
+      const id = generateId();
+      const files = [`${id}_NormalImage.pdf`, `${id}_SmallImage.pdf`];
+      await Promise.all(files.map(uploadFile));
+      const existingUrls = await Promise.all(
+        files.map((file) => storageService.getDownloadUrl(getParams(file))),
+      );
+      expect(existingUrls[0]).toMatch(
+        `${bucketName}.s3.amazonaws.com/public/${StorageType.journals}/${member.id}/${files[0]}`,
+      );
+      expect(existingUrls[1]).toMatch(
+        `${bucketName}.s3.amazonaws.com/public/${StorageType.journals}/${member.id}/${files[1]}`,
+      );
+      await storageService.deleteJournalImages(id, member.id);
       const nonExistingUrls = await Promise.all(
         files.map((file) => storageService.getDownloadUrl(getParams(file))),
       );

@@ -1,3 +1,4 @@
+import { InternalNotificationType } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -17,10 +18,10 @@ import {
   InternalNotifyParams,
   Logger,
   LoggingInterceptor,
-  RoleTypes,
+  MemberRole,
   Roles,
+  UserRole,
 } from '../common';
-import { InternalNotificationType } from '@lagunahealth/pandora';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()
@@ -31,8 +32,8 @@ export class DailyReportResolver {
     private readonly logger: Logger,
   ) {}
 
-  @Roles(RoleTypes.Member, RoleTypes.User)
   @Mutation(() => DailyReport)
+  @Roles(UserRole.coach, MemberRole.member)
   async setDailyReportCategories(
     @Context() context,
     @Args(
@@ -75,8 +76,8 @@ export class DailyReportResolver {
     return dailyReportObject;
   }
 
-  @Roles(RoleTypes.Member, RoleTypes.User)
   @Query(() => DailyReportResults)
+  @Roles(UserRole.coach, MemberRole.member)
   async getDailyReports(
     @Args(
       camelCase(DailyReportQueryInput.name),

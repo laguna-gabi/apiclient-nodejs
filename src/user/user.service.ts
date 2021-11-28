@@ -30,6 +30,7 @@ import {
   IEventOnUpdateUserConfig,
   IEventOnUpdatedUserAppointments,
   Logger,
+  UserRole,
 } from '../common';
 import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 
@@ -47,12 +48,18 @@ export class UserService extends BaseService {
     super();
   }
 
-  async get(id: string): Promise<User> {
-    return this.userModel.findById(id).populate('appointments');
+  async get(id: string, includeAdmin = false): Promise<User> {
+    const user = await this.userModel.findById(id).populate('appointments');
+
+    if (!user || (user.roles.length === 1 && user.roles[0] === UserRole.admin && !includeAdmin)) {
+      return null;
+    }
+
+    return user;
   }
 
-  async getUsers(): Promise<User[]> {
-    return this.userModel.find().populate('appointments');
+  async getUsers(roles: UserRole[]): Promise<User[]> {
+    return this.userModel.find({ roles: { $in: roles } }).populate('appointments');
   }
 
   async insert(createUserParams: CreateUserParams): Promise<User> {
@@ -160,7 +167,15 @@ export class UserService extends BaseService {
             duration: `${defaultSlotsParams.duration}`,
           },
           ap: '$ap',
-          av: '$av',
+          availabilities: allowEmptySlotsResponse
+            ? {
+                $filter: {
+                  input: '$av',
+                  as: 'availability',
+                  cond: { $gte: ['$$availability.start', new Date()] },
+                },
+              }
+            : '$av',
         },
       },
     ]);
@@ -172,7 +187,7 @@ export class UserService extends BaseService {
     const notBefore = this.getNotBefore(getSlotsParams, slotsObject.appointment);
 
     slotsObject.slots = this.slotService.getSlots(
-      slotsObject.av,
+      slotsObject.availabilities,
       slotsObject.ap,
       defaultSlotsParams.duration,
       maxSlots || defaultSlotsParams.maxSlots,
@@ -180,7 +195,7 @@ export class UserService extends BaseService {
       getSlotsParams.notAfter,
     );
     delete slotsObject.ap;
-    delete slotsObject.av;
+    delete slotsObject.availabilities;
     if (userId) {
       delete slotsObject.member;
       delete slotsObject.appointment;
@@ -232,7 +247,7 @@ export class UserService extends BaseService {
    * Internal method for all receiving users who where fully registered -
    * users who have sendbird accessToken in userConfig
    */
-  async getRegisteredUsers(): Promise<User[]> {
+  async getRegisteredUsers(roles: UserRole[] = [UserRole.coach, UserRole.nurse]): Promise<User[]> {
     return this.userModel.aggregate([
       {
         $lookup: {
@@ -242,7 +257,7 @@ export class UserService extends BaseService {
           as: 'configs',
         },
       },
-      { $match: { configs: { $ne: [] } } },
+      { $match: { configs: { $ne: [] }, roles: { $in: roles } } },
       { $addFields: { configs: { $arrayElemAt: ['$configs', 0] } } },
       { $match: { 'configs.accessToken': { $ne: null } } },
       { $addFields: { id: '$_id' } },
@@ -257,13 +272,14 @@ export class UserService extends BaseService {
    * we'll limit the number of lookup results to 10.
    * In production and dev we're NOT limiting the number of results.
    */
-  async getAvailableUser(): Promise<string> {
+  async getAvailableUser(roles: UserRole[] = [UserRole.coach]): Promise<string> {
     const users = await this.userModel.aggregate([
       {
         $match: {
-          maxCustomers: { $ne: 0 }, // users with maxCustomers = 0 should not get members
+          roles: { $in: roles },
         },
       },
+      { $sort: { lastMemberAssignedAt: 1 } },
       ...(process.env.NODE_ENV === Environments.production ||
       process.env.NODE_ENV === Environments.development
         ? []
@@ -283,7 +299,6 @@ export class UserService extends BaseService {
           maxCustomers: '$maxCustomers',
         },
       },
-      { $sort: { lastMemberAssignedAt: 1 } },
     ]);
     for (let index = 0; index < users.length; index++) {
       if (users[index].maxCustomers > users[index].members) {

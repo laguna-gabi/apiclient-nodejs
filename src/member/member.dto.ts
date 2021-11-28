@@ -27,12 +27,15 @@ import {
 import { Org } from '../org';
 import { User } from '../user';
 import { CancelNotificationType, NotificationType } from '@lagunahealth/pandora';
+import { MemberRole } from '../../src/common/roles';
 
 const validatorsConfig = config.get('graphql.validators');
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
+registerEnumType(MemberRole, { name: 'MemberRole' });
+
 export enum Sex {
   male = 'male',
   female = 'female',
@@ -61,6 +64,7 @@ export const defaultMemberParams = {
   sex: Sex.male,
   language: Language.en,
   honorific: Honorific.mx,
+  roles: [MemberRole.member],
 };
 
 export const NotNullableMemberKeys = [
@@ -344,6 +348,12 @@ export class Member extends Identifier {
   @Field(() => String, { nullable: true })
   authId?: string;
 
+  @Prop({ default: defaultMemberParams.roles })
+  @Field(() => [MemberRole], {
+    description: 'role of the member: currently only `member`',
+  })
+  roles: MemberRole[];
+
   @Prop({ unique: true, index: true })
   @Field(() => String)
   phone: string;
@@ -537,6 +547,13 @@ export class DischargeDocumentsLinks {
 export class ArchiveMember extends Member {}
 
 /**************************************************************************************************
+ ********************************************* Control ********************************************
+ *************************************************************************************************/
+
+@Schema({ versionKey: false, timestamps: true })
+export class ControlMember extends Member {}
+
+/**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 export type MemberDocument = Member & Document;
@@ -545,3 +562,5 @@ export type NotifyParamsDocument = NotifyParams & Document;
 export const NotifyParamsDto = SchemaFactory.createForClass(NotifyParams);
 export type ArchiveMemberDocument = ArchiveMember & Document;
 export const ArchiveMemberDto = SchemaFactory.createForClass(ArchiveMember);
+export type ControlMemberDocument = ControlMember & Document;
+export const ControlMemberDto = SchemaFactory.createForClass(ControlMember);

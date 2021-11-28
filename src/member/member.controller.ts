@@ -1,8 +1,9 @@
 import { Body, Controller, HttpException, HttpStatus, Post, UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { LoggingInterceptor, Public, apiPrefix } from '../common';
+import { Logger, LoggingInterceptor, Public, apiPrefix } from '../common';
 import { CreateMemberParams, Member, MemberBase, MemberService } from '.';
 import { UserService } from '../user';
+import { FeatureFlagService } from '../providers';
 
 @UseInterceptors(LoggingInterceptor)
 @Controller(`${apiPrefix}/members`)
@@ -11,8 +12,10 @@ export class MemberController extends MemberBase {
     readonly memberService: MemberService,
     readonly eventEmitter: EventEmitter2,
     readonly userService: UserService,
+    readonly featureFlagService: FeatureFlagService,
+    readonly logger: Logger,
   ) {
-    super(memberService, eventEmitter, userService);
+    super(memberService, eventEmitter, userService, featureFlagService, logger);
   }
 
   @Public()

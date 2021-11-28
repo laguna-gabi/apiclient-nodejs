@@ -14,6 +14,7 @@ export enum ErrorType {
   userPhone = 9105,
   userNotFound = 9106,
   slotsParams = 9107,
+  userCanNotBeAssignedToMembers = 9108,
 
   // Module member errors
   memberMinMaxLength = 9201,
@@ -90,6 +91,7 @@ export const Errors: Map<ErrorType, string> = new Map([
     'avatar must be an URL address, for example: www.google.com',
   ],
   [ErrorType.userNotFound.valueOf(), 'user id was not found'],
+  [ErrorType.userCanNotBeAssignedToMembers.valueOf(), 'user can not be assigned to member'],
   [ErrorType.slotsParams.valueOf(), 'userId or appointmentId must be provided'],
   [ErrorType.userPhone.valueOf(), phoneFormat],
   [ErrorType.memberMinMaxLength.valueOf(), `member ${nameFormat}`],

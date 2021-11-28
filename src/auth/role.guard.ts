@@ -1,12 +1,11 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
-import { AuthService } from '.';
-import { RoleTypes, SystemRoles } from '../common';
+import { UserRole } from '../../src/common';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector, private authService: AuthService) {}
+  constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
     let request;
@@ -17,14 +16,15 @@ export class RolesGuard implements CanActivate {
     } else {
       request = context.switchToHttp().getRequest();
     }
-    const user = request?.user as { role: string };
-    if (SystemRoles[user?.role as RoleTypes]?.isAdmin) {
+
+    const user = request?.user as { roles: string[] };
+    if (user?.roles?.find((role) => role == UserRole.admin)) {
       return true;
     }
 
-    const roles = this.reflector.get<string[]>('roles', context.getHandler());
+    const allowedRoles = this.reflector.get<string[]>('roles', context.getHandler());
 
-    if (!roles?.length) {
+    if (!allowedRoles?.length) {
       // if no roles associated to route we can accept an isPublic annotation
       const isPublic = this.reflector.get<boolean>('isPublic', context.getHandler());
       if (isPublic) {
@@ -33,9 +33,10 @@ export class RolesGuard implements CanActivate {
       return false;
     }
 
-    if (this.authService.isAllowed(user.role as RoleTypes, roles as RoleTypes[])) {
+    if (user.roles.find((role) => allowedRoles.includes(role))) {
       return true;
     }
+
     return false;
   }
 }

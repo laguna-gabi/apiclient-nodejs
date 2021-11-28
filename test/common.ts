@@ -10,6 +10,7 @@ import { apiPrefix, webhooks } from '../src/common';
 import { DbModule } from '../src/db/db.module';
 import {
   CognitoService,
+  FeatureFlagService,
   NotificationsService,
   SendBird,
   SlackBot,
@@ -18,6 +19,7 @@ import {
 } from '../src/providers';
 import { User, UserService } from '../src/user';
 import { Mutations, Queries } from './aux';
+import { Member, defaultMemberParams } from '../src/member';
 import { generateId } from './generators';
 
 export class BaseHandler {
@@ -57,6 +59,32 @@ export const compareUsers = (user: User, userBase) => {
   expect(user.maxCustomers).toEqual(userBase.maxCustomers);
 };
 
+export const compareMembers = (member: Member, memberBase, primaryUserId?) => {
+  expect(member.firstName).toEqual(memberBase.firstName);
+  expect(member.lastName).toEqual(memberBase.lastName);
+  expect(member.sex).toEqual(memberBase.sex ? memberBase.sex : defaultMemberParams.sex);
+  expect(member.dateOfBirth).toEqual(member.dateOfBirth);
+  expect(member.language).toEqual(
+    memberBase.language ? memberBase.language : defaultMemberParams.language,
+  );
+  expect(member.zipCode).toEqual(member.zipCode);
+  expect(member.honorific).toEqual(
+    member.honorific ? member.honorific : defaultMemberParams.honorific,
+  );
+  expect(member.phone).toEqual(memberBase.phone);
+  console.log(member.org.id.toString(), memberBase.orgId);
+  // could be one of the two
+  try {
+    expect(member.org.id.toString()).toEqual(memberBase.orgId.toString());
+  } catch {
+    expect(member.org.toString()).toEqual(memberBase.orgId.toString());
+  }
+
+  if (primaryUserId) {
+    expect(member.primaryUserId).toEqual(primaryUserId);
+  }
+};
+
 export const dbConnect = async () => {
   await connect(config.get('db.connection'), { useNewUrlParser: true });
 };
@@ -71,14 +99,24 @@ export const defaultModules = () => {
 
 export const mockProviders = (
   module: TestingModule,
-): { sendBird; notificationsService; twilioService; slackBot; cognitoService } => {
+): {
+  sendBird;
+  notificationsService;
+  twilioService;
+  slackBot;
+  cognitoService;
+  storage;
+  featureFlagService;
+} => {
   const sendBird = module.get<SendBird>(SendBird);
   const storage = module.get<StorageService>(StorageService);
   const notificationsService = module.get<NotificationsService>(NotificationsService);
   const twilioService = module.get<TwilioService>(TwilioService);
   const slackBot = module.get<SlackBot>(SlackBot);
   const cognitoService = module.get<CognitoService>(CognitoService);
+  const featureFlagService = module.get<FeatureFlagService>(FeatureFlagService);
 
+  const spyOnFeatureFlagControlGroup = jest.spyOn(featureFlagService, 'isControlGroup');
   const spyOnSendBirdCreateUser = jest.spyOn(sendBird, 'createUser');
   const spyOnSendBirdCreateGroupChannel = jest.spyOn(sendBird, 'createGroupChannel');
   const spyOnSendBirdFreeze = jest.spyOn(sendBird, 'freezeGroupChannel');
@@ -99,6 +137,7 @@ export const mockProviders = (
   const spyOnStorageDownload = jest.spyOn(storage, 'getDownloadUrl');
   const spyOnStorageUpload = jest.spyOn(storage, 'getUploadUrl');
   const spyOnStorageDeleteRecordings = jest.spyOn(storage, 'deleteRecordings');
+  const spyOnStorageDeleteJournalImages = jest.spyOn(storage, 'deleteJournalImages');
   const spyOnStorageHandleNewMember = jest.spyOn(storage, 'handleNewMember');
   const spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
   const spyOnNotificationsServiceUnregister = jest.spyOn(notificationsService, 'unregister');
@@ -108,8 +147,8 @@ export const mockProviders = (
   const spyOnSlackBotSendMessage = jest.spyOn(slackBot, 'send');
   const spyOnCognitoServiceDisableMember = jest.spyOn(cognitoService, 'disableMember');
   const spyOnCognitoServiceDeleteMember = jest.spyOn(cognitoService, 'deleteMember');
-
   spyOnSendBirdCreateUser.mockResolvedValue(v4());
+  spyOnFeatureFlagControlGroup.mockReturnValue(false);
   spyOnSendBirdCreateGroupChannel.mockResolvedValue(true);
   spyOnSendBirdFreeze.mockResolvedValue(undefined);
   spyOnSendBirdDeleteGroupChannel.mockResolvedValue(undefined);
@@ -120,6 +159,7 @@ export const mockProviders = (
   spyOnStorageDownload.mockResolvedValue('https://some-url/download');
   spyOnStorageUpload.mockResolvedValue('https://some-url/upload');
   spyOnStorageDeleteRecordings.mockResolvedValue(undefined);
+  spyOnStorageDeleteJournalImages.mockResolvedValue(true);
   spyOnStorageHandleNewMember.mockResolvedValue(undefined);
   spyOnNotificationsServiceRegister.mockResolvedValue(v4());
   spyOnNotificationsServiceUnregister.mockResolvedValue(undefined);
@@ -149,11 +189,20 @@ export const mockProviders = (
     },
     notificationsService: {
       spyOnNotificationsServiceRegister,
+      spyOnNotificationsServiceUnregister,
       spyOnNotificationsServiceSend,
       spyOnNotificationsServiceCancel,
     },
     twilioService: { spyOnTwilioGetToken },
     slackBot: { spyOnSlackBotSendMessage },
     cognitoService: { spyOnCognitoServiceDisableMember, spyOnCognitoServiceDeleteMember },
+    storage: {
+      spyOnStorageDownload,
+      spyOnStorageUpload,
+      spyOnStorageDeleteRecordings,
+      spyOnStorageDeleteJournalImages,
+      spyOnStorageHandleNewMember,
+    },
+    featureFlagService: { spyOnFeatureFlagControlGroup },
   };
 };

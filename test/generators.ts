@@ -20,9 +20,11 @@ import {
   ContentKey,
   InternalNotifyParams,
   Language,
+  MemberRole,
   SendOneSignalNotification,
   SendSendBirdNotification,
   SendTwilioNotification,
+  UserRole,
 } from '../src/common';
 import {
   CancelNotificationType,
@@ -36,7 +38,9 @@ import {
   CancelNotifyParams,
   CreateMemberParams,
   CreateTaskParams,
+  GetMemberUploadJournalLinksParams,
   Honorific,
+  ImageFormat,
   Member,
   MemberConfig,
   NotifyParams,
@@ -52,7 +56,7 @@ import {
   defaultMemberParams,
 } from '../src/member';
 import { CreateOrgParams, OrgType } from '../src/org';
-import { CreateUserParams, GetSlotsParams, User, UserRole, defaultUserParams } from '../src/user';
+import { CreateUserParams, GetSlotsParams, User, defaultUserParams } from '../src/user';
 
 export const generateCreateUserParams = ({
   authId = v4(),
@@ -181,6 +185,7 @@ export const mockGenerateMember = (): Member => {
     language: defaultMemberParams.language,
     createdAt: faker.date.past(1),
     honorific: defaultMemberParams.honorific,
+    roles: [MemberRole.member],
   };
 };
 
@@ -451,6 +456,13 @@ export const generateUpdateJournalParams = ({
   text = faker.lorem.sentence(),
 }: Partial<UpdateJournalParams> = {}): UpdateJournalParams => {
   return { id, text };
+};
+
+export const generateGetMemberUploadJournalLinksParams = ({
+  id = generateId(),
+  imageFormat = ImageFormat.png,
+}: Partial<GetMemberUploadJournalLinksParams> = {}): GetMemberUploadJournalLinksParams => {
+  return { id, imageFormat };
 };
 
 export const generateDateOnly = (date: Date): string => {
