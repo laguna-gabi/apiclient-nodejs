@@ -21,6 +21,7 @@ import {
   IEventOnNewMember,
   IEventOnReceivedChatMessage,
   IEventOnUpdatedMemberPlatform,
+  InternalNotifyControlMemberParams,
   InternalNotifyParams,
   InternationalizationService,
   Language,
@@ -196,10 +197,16 @@ describe('MemberResolver', () => {
       spyOnFeatureFlagControlGroup.mockImplementationOnce(() => true);
 
       const params = generateCreateMemberParams({ orgId: generateId() });
-      await resolver.createMember(params);
+      const result = await resolver.createMember(params);
 
       expect(spyOnServiceInsertControl).toBeCalledTimes(1);
       expect(spyOnServiceInsertControl).toBeCalledWith(params);
+      const eventParams: InternalNotifyControlMemberParams = {
+        memberId: result.id,
+        type: InternalNotificationType.textSmsToMember,
+        metadata: { contentType: ContentKey.newControlMember },
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyInternalControlMember, eventParams);
     });
   });
 

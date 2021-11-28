@@ -9,6 +9,7 @@ import { User } from '../user';
 
 export enum ContentKey {
   newMember = 'newMember',
+  newControlMember = 'newControlMember',
   newMemberNudge = 'newMemberNudge',
   newRegisteredMember = 'newRegisteredMember',
   newRegisteredMemberNudge = 'newRegisteredMemberNudge',

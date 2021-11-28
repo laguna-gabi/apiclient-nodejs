@@ -1,8 +1,19 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EventType, IEventOnNewMember, Logger } from '../common';
+import {
+  ContentKey,
+  EventType,
+  IEventOnNewMember,
+  InternalNotifyControlMemberParams,
+  Logger,
+} from '../common';
 import { UserService } from '../user';
 import { CreateMemberParams, Member, MemberService } from '.';
-import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
+import {
+  IEventNotifySlack,
+  InternalNotificationType,
+  SlackChannel,
+  SlackIcon,
+} from '@lagunahealth/pandora';
 import { FeatureFlagService } from '../providers';
 
 export class MemberBase {
@@ -47,6 +58,15 @@ export class MemberBase {
 
   async createControlMember(createMemberParams: CreateMemberParams): Promise<Member> {
     this.logger.debug(createMemberParams, MemberBase.name, this.createControlMember.name);
-    return await this.memberService.insertControl(createMemberParams);
+    const controlMember = await this.memberService.insertControl(createMemberParams);
+
+    const params: InternalNotifyControlMemberParams = {
+      memberId: controlMember.id,
+      type: InternalNotificationType.textSmsToMember,
+      metadata: { contentType: ContentKey.newControlMember },
+    };
+    this.eventEmitter.emit(EventType.notifyInternalControlMember, params);
+
+    return controlMember;
   }
 }

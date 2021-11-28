@@ -720,8 +720,8 @@ describe('MemberService', () => {
     });
   });
 
-  describe('insertControl', () => {
-    it('should insert a control member without optional params + validate all fields', async () => {
+  describe('control member', () => {
+    it('should insert+get control member with mandatory params+validate all fields', async () => {
       const org = await modelOrg.create(generateOrgParams());
 
       const createMemberParams = generateCreateMemberParams({
@@ -730,6 +730,15 @@ describe('MemberService', () => {
       const { id } = await service.insertControl(createMemberParams);
       const createdMember: any = await controlMemberModel.findById(id);
       compareMembers(createdMember, createMemberParams);
+
+      const controlMember = await service.getControl(id);
+      expect(controlMember.id).toEqual(createdMember.id);
+      expect(controlMember.org.name).toEqual(expect.any(String));
+    });
+
+    it('should return null when calling getControl on non existing control member', async () => {
+      const controlMember = await service.getControl(generateId());
+      expect(controlMember).toBeNull();
     });
 
     it('should fail to insert an already existing member', async () => {

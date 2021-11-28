@@ -128,6 +128,8 @@ export class InternalNotifyParams {
   content?: string;
 }
 
+export type InternalNotifyControlMemberParams = Omit<InternalNotifyParams, 'userId'>;
+
 export type AllNotificationTypes =
   | NotificationType
   | CancelNotificationType
