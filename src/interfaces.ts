@@ -2,6 +2,7 @@ import { AllNotificationTypes, Platform, SourceApi, TriggeredApi } from '.';
 
 export enum InnerQueueTypes {
   updateClientSettings = 'updateClientSettings',
+  deleteClientSettings = 'deleteClientSettings',
   createDispatch = 'createDispatch',
   deleteDispatch = 'deleteDispatch',
 }
@@ -20,6 +21,10 @@ export interface IUpdateClientSettings extends IInnerQueueTypes {
   isAppointmentsReminderEnabled?: boolean;
   firstName?: string;
   avatar?: string;
+}
+
+export interface IDeleteClientSettings extends IInnerQueueTypes {
+  id: string;
 }
 
 interface IDispatch extends IInnerQueueTypes {
