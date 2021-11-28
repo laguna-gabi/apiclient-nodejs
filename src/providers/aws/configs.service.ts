@@ -8,6 +8,7 @@ import { BaseExternalConfigs } from '@lagunahealth/pandora';
 export const ExternalConfigs = {
   ...BaseExternalConfigs,
   aws: {
+    ...BaseExternalConfigs.aws,
     memberBucketName: 'aws.storage.memberBucketName',
     queueNameAudit: 'aws.sqs.queueNameAudit',
   },

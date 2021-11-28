@@ -209,6 +209,7 @@ export enum Environments {
 
 export enum QueueType {
   audit = 'audit',
+  notifications = 'notifications',
 }
 
 export enum AuditType {
