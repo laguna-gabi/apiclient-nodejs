@@ -229,7 +229,9 @@ The migration is applied automatically in our ci-cd when merging our code to `de
 
 - **Step 0**: 
   initialize environment - create a config file based on NODE_ENV environment parameter - when running locally it will generate a [config](./migrations/migrate-mongo-config.js) file to run against `(mongodb://localhost:27017)` / `laguna` mongo db
-
+  ```
+  yarn migrate:init
+  ```
 - **Step 1**: create a new migration script (template):
   ```
   yarn migrate:create <script-description>
