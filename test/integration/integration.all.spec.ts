@@ -48,6 +48,7 @@ import {
   generateAppointmentLink,
   generateAvailabilityInput,
   generateCancelNotifyParams,
+  generateCreateMemberParams,
   generateId,
   generateOrgParams,
   generatePath,
@@ -60,6 +61,7 @@ import {
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
 } from '../index';
+import { translation } from '../../languages/en.json';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -355,6 +357,26 @@ describe('Integration tests: all', () => {
           isVideo: false,
         },
         content: notifyParams.metadata.content,
+        orgName: org.name,
+      },
+    });
+
+    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
+  });
+
+  it(`should send a text on newly created control member`, async () => {
+    const org = await creators.createAndValidateOrg();
+    handler.featureFlagService.spyOnFeatureFlagControlGroup.mockReturnValueOnce(true);
+
+    const memberParams = generateCreateMemberParams({ orgId: org.id });
+    await handler.mutations.createMember({ memberParams });
+
+    await delay(500);
+
+    expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
+      sendTwilioNotification: {
+        body: translation.contents.newControlMember,
+        to: memberParams.phone,
         orgName: org.name,
       },
     });

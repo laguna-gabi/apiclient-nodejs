@@ -9,6 +9,7 @@ import {
   NotificationType,
   Platform,
 } from '@lagunahealth/pandora';
+import { UpdateMemberParams } from '../member';
 
 /**************************************************************************************************
  *************************** Enum registration for external gql methods ***************************
@@ -127,6 +128,8 @@ export class InternalNotifyParams {
   metadata: InternalNotificationMetadata;
   content?: string;
 }
+
+export type InternalNotifyControlMemberParams = Omit<InternalNotifyParams, 'userId'>;
 
 export type AllNotificationTypes =
   | NotificationType

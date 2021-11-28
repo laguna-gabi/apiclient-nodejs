@@ -49,6 +49,7 @@ import {
   IEventOnReplacedUserForMember,
   IEventOnUpdatedMemberPlatform,
   Identifier,
+  InternalNotifyControlMemberParams,
   InternalNotifyParams,
   InternationalizationService,
   Language,
@@ -68,9 +69,14 @@ import {
   CommunicationService,
   GetCommunicationParams,
 } from '../communication';
-import { Bitly, CognitoService, NotificationsService, StorageService } from '../providers';
+import {
+  Bitly,
+  CognitoService,
+  FeatureFlagService,
+  NotificationsService,
+  StorageService,
+} from '../providers';
 import { User, UserService } from '../user';
-import { FeatureFlagService } from '../providers';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
@@ -613,6 +619,19 @@ export class MemberResolver extends MemberBase {
     const { memberId, userId, type, metadata } = params;
     let content = params.content;
 
+    if (metadata.contentType === ContentKey.newControlMember) {
+      const member = await this.memberService.getControl(memberId);
+      return this.notificationBuilder.internalNotifyControlMember({
+        phone: member.phone,
+        orgName: member.org.name,
+        content: this.internationalizationService.getContents({
+          contentType: metadata.contentType,
+          member,
+          language: member.language,
+        }),
+      });
+    }
+
     try {
       const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(
         memberId,
@@ -677,6 +696,25 @@ export class MemberResolver extends MemberBase {
       });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.internalNotify.name, ex);
+    }
+  }
+
+  @OnEvent(EventType.notifyInternalControlMember, { async: true })
+  async internalNotifyControlMember(params: InternalNotifyControlMemberParams) {
+    this.logger.debug(params, MemberResolver.name, this.internalNotifyControlMember.name);
+    const { memberId, metadata } = params;
+
+    if (metadata.contentType === ContentKey.newControlMember) {
+      const member = await this.memberService.getControl(memberId);
+      return this.notificationBuilder.internalNotifyControlMember({
+        phone: member.phone,
+        orgName: member.org.name,
+        content: this.internationalizationService.getContents({
+          contentType: metadata.contentType,
+          member,
+          language: member.language,
+        }),
+      });
     }
   }
 
