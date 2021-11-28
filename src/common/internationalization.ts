@@ -26,6 +26,13 @@ export enum ContentKey {
   memberNotFeelingWellMessage = 'memberNotFeelingWellMessage',
 }
 
+export const EnabledNotifications: ContentKey[] = [
+  ContentKey.newMember,
+  ContentKey.newControlMember,
+  ContentKey.appointmentReminder,
+  ContentKey.appointmentRequest,
+];
+
 export class GetContentsParams {
   contentType: ContentKey;
   member?: Member;

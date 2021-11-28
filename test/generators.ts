@@ -179,7 +179,9 @@ export const mockGenerateMember = (): Member => {
     firstName,
     lastName,
     dateOfBirth: generateDateOnly(faker.date.past()),
-    org: { id: generateId(), ...generateOrgParams() },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    org: { _id: generateId(), ...generateOrgParams() },
     users: [user],
     sex: defaultMemberParams.sex,
     language: defaultMemberParams.language,
