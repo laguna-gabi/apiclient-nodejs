@@ -4,7 +4,6 @@ import {
   EventType,
   IEventOnNewMember,
   InternalNotifyControlMemberParams,
-  InternalNotifyParams,
   Logger,
 } from '../common';
 import { UserService } from '../user';
