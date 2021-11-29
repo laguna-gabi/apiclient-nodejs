@@ -36,3 +36,6 @@ coverage/
 # Graphql
 schema.gql
 test/unit/coverage/*
+
+# Migration
+migrations/migrate-mongo-config.js

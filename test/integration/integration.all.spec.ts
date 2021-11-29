@@ -697,7 +697,7 @@ describe('Integration tests: all', () => {
             sendTwilioNotification: {
               to: member.phone,
               body: expect.stringContaining(
-                `starts in ${config.get('scheduler.alertBeforeInMin')} minutes`,
+                `Our meeting will start in ${config.get('scheduler.alertBeforeInMin')} minutes`,
               ),
               orgName: org.name,
             },

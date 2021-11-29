@@ -1,16 +1,16 @@
 {
   "translation": {
     "contents": {
-      "newMember": "Hello {{member.honorific}} {{member.lastName}}, I'm {{user.firstName}} from Laguna Health. We partnered with {{org.name}} to provide you free post-hospital recovery support. Click below to download the app and schedule the first check-in:\n{{downloadLink}}.",
+      "newMember": "Hello {{member.honorific}} {{member.lastName}}! I’m {{user.firstName}} from Laguna! We work with {{org.name}} Clinic, who sponsors our program. Thank you for signing up to participate! I'm here for you on the good days and the not-so-good days during your recovery. I’m looking forward to meeting you! To schedule a visit with me, click here:\n{{downloadLink}}",
       "newControlMember": "Thank you for joining the Laguna study!",
       "newMemberNudge": "Hello {{member.honorific}} {{member.lastName}}, I'm {{user.firstName}} from Laguna Health. Friendly reminder to download the app and schedule your first check-in:\n{{downloadLink}}.",
       "newRegisteredMember": "Welcome to Laguna Health. To get started on your recovery journey schedule a check-in with your Laguna coach here.",
       "newRegisteredMemberNudge": "Friendly reminder from {{user.firstName}} at Laguna Health. I'm looking forward to supporting you on your recovery journey. To get started schedule your first check-in here.",
       "appointmentScheduledMember": "Hello {{member.honorific}} {{member.lastName}}, your appointment with {{user.firstName}}, your Laguna Health coach is scheduled for {{appointmentTime}}.",
       "appointmentLongReminder": "Reminder for {{member.honorific}} {{member.lastName}}'s appointment on {{appointmentTime}} with {{user.firstName}}, your Laguna Health coach.",
-      "appointmentReminder": "Hello {{member.honorific}} {{member.lastName}}, your appointment with {{user.firstName}} from Laguna Health starts in {{gapMinutes}} minutes",
+      "appointmentReminder": "Hello{{member.honorific}} {{member.lastName}}, this is {{user.firstName}}. Our meeting will start in {{gapMinutes}} minutes",
       "appointmentReminderLink": "; to join, click:\n{{chatLink}}.",
-      "appointmentRequest": "Hello {{member.honorific}} {{member.lastName}}, it's {{user.firstName}}, your Laguna Health coach. Tap here to schedule your next meeting",
+      "appointmentRequest": "Hello{{member.honorific}} {{member.lastName}}, It's {{user.firstName}} from Laguna. You can click below to schedule our next meeting.",
       "appointmentRequestLink": ":\n{{scheduleLink}}.",
       "newChatMessageFromUser": "Your coach, {{user.firstName}}, sent you a new message.",
       "logReminder": "Track your recovery progress, and share it with your your coach.",

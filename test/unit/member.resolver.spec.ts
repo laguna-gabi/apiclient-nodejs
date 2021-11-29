@@ -9,6 +9,7 @@ import {
 } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import * as config from 'config';
 import * as faker from 'faker';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
@@ -2061,6 +2062,75 @@ describe('MemberResolver', () => {
         },
       });
     });
+
+    test.each([
+      ContentKey.appointmentLongReminder,
+      ContentKey.newMemberNudge,
+      ContentKey.newRegisteredMember,
+      ContentKey.newRegisteredMemberNudge,
+      ContentKey.appointmentScheduledMember,
+      ContentKey.appointmentLongReminder,
+      ContentKey.appointmentReminderLink,
+      ContentKey.appointmentRequestLink,
+      ContentKey.newChatMessageFromUser,
+      ContentKey.logReminder,
+      ContentKey.newChatMessageFromMember,
+      ContentKey.appointmentScheduledUser,
+      ContentKey.memberNotFeelingWellMessage,
+    ])(
+      // eslint-disable-next-line max-len
+      'should not notify for type %p if org = mayo',
+      async (params) => {
+        const member = mockGenerateMember();
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        member.org._id = config.get('org.mayo');
+        const memberConfig = mockGenerateMemberConfig();
+        const user = mockGenerateUser();
+        spyOnServiceGetMember.mockImplementationOnce(async () => member);
+        spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+        spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+        spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+        const internalNotifyParams = generateInternalNotifyParams({
+          metadata: { contentType: params },
+        });
+
+        await resolver.internalNotify(internalNotifyParams);
+
+        expect(spyOnNotificationsServiceSend).not.toBeCalled();
+      },
+    );
+
+    test.each([
+      ContentKey.newMember,
+      ContentKey.newControlMember,
+      ContentKey.appointmentReminder,
+      ContentKey.appointmentRequest,
+    ])(
+      // eslint-disable-next-line max-len
+      'should notify for type %p if org = mayo',
+      async (params) => {
+        const member = mockGenerateMember();
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        member.org._id = config.get('org.mayo');
+        const memberConfig = mockGenerateMemberConfig();
+        const user = mockGenerateUser();
+        spyOnServiceGetMember.mockImplementationOnce(async () => member);
+        spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+        spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+        spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+        const internalNotifyParams = generateInternalNotifyParams({
+          metadata: { contentType: params },
+        });
+
+        await resolver.internalNotify(internalNotifyParams);
+
+        expect(spyOnNotificationsServiceSend).toBeCalled();
+      },
+    );
   });
 
   describe('notifyChatMessage', () => {
