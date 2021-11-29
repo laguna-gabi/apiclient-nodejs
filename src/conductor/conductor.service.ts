@@ -1,4 +1,9 @@
-import { ICreateDispatch, IDeleteDispatch, IUpdateClientSettings } from '@lagunahealth/pandora';
+import {
+  ICreateDispatch,
+  IDeleteClientSettings,
+  IDeleteDispatch,
+  IUpdateClientSettings,
+} from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 import { gapTriggeredAt } from 'config';
 import { differenceInSeconds } from 'date-fns';
@@ -21,6 +26,12 @@ export class ConductorService {
     this.logger.debug(input, ConductorService.name, this.handleUpdateClientSettings.name);
     const settings = this.cleanObject(input);
     await this.settingsService.update(settings);
+  }
+
+  async handleDeleteClientSettings(input: IDeleteClientSettings): Promise<void> {
+    this.logger.debug(input, ConductorService.name, this.handleDeleteClientSettings.name);
+    const settings = this.cleanObject(input);
+    await this.settingsService.delete(settings.id);
   }
 
   async handleCreateDispatch(input: ICreateDispatch): Promise<void> {

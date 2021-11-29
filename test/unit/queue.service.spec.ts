@@ -71,42 +71,51 @@ describe(QueueService.name, () => {
         type: InnerQueueTypes.updateClientSettings,
       };
       const message: SQSMessage = { MessageId: v4(), Body: JSON.stringify(params) };
-      const spyOnHandleUpdateClientSettings = jest.spyOn(
-        conductorService,
-        'handleUpdateClientSettings',
-      );
-      spyOnHandleUpdateClientSettings.mockResolvedValue(null);
+      const spyOnUpdateClientSettings = jest.spyOn(conductorService, 'handleUpdateClientSettings');
+      spyOnUpdateClientSettings.mockResolvedValue(null);
 
       await service.handleMessage(message);
 
-      expect(spyOnHandleUpdateClientSettings).toBeCalledWith(params);
-      spyOnHandleUpdateClientSettings.mockReset();
+      expect(spyOnUpdateClientSettings).toBeCalledWith(params);
+      spyOnUpdateClientSettings.mockReset();
+    });
+
+    it(`should handle message of type ${InnerQueueTypes.deleteClientSettings}`, async () => {
+      const params = { id: generateId(), type: InnerQueueTypes.deleteClientSettings };
+      const message: SQSMessage = { MessageId: v4(), Body: JSON.stringify(params) };
+      const spyOnDeleteClientSettings = jest.spyOn(conductorService, 'handleDeleteClientSettings');
+      spyOnDeleteClientSettings.mockResolvedValue(null);
+
+      await service.handleMessage(message);
+
+      expect(spyOnDeleteClientSettings).toBeCalledWith(params);
+      spyOnDeleteClientSettings.mockReset();
     });
 
     it(`should handle message of type ${InnerQueueTypes.createDispatch}`, async () => {
       const params = { ...generateDispatch(), type: InnerQueueTypes.createDispatch };
       const message: SQSMessage = { MessageId: v4(), Body: JSON.stringify(params) };
-      const spyOnHandleCrateDispatch = jest.spyOn(conductorService, 'handleCreateDispatch');
-      spyOnHandleCrateDispatch.mockResolvedValue(null);
+      const spyOnCrateDispatch = jest.spyOn(conductorService, 'handleCreateDispatch');
+      spyOnCrateDispatch.mockResolvedValue(null);
 
       await service.handleMessage(message);
 
       delete params.deliveredAt;
       delete params.triggeredAt;
-      expect(spyOnHandleCrateDispatch).toBeCalledWith(expect.objectContaining(params));
-      spyOnHandleCrateDispatch.mockReset();
+      expect(spyOnCrateDispatch).toBeCalledWith(expect.objectContaining(params));
+      spyOnCrateDispatch.mockReset();
     });
 
     it(`should handle message of type ${InnerQueueTypes.deleteDispatch}`, async () => {
       const params = { dispatchId: generateId(), type: InnerQueueTypes.deleteDispatch };
       const message: SQSMessage = { MessageId: v4(), Body: JSON.stringify(params) };
-      const spyOnHandleDeleteDispatch = jest.spyOn(conductorService, 'handleDeleteDispatch');
-      spyOnHandleDeleteDispatch.mockResolvedValue(null);
+      const spyOnDeleteDispatch = jest.spyOn(conductorService, 'handleDeleteDispatch');
+      spyOnDeleteDispatch.mockResolvedValue(null);
 
       await service.handleMessage(message);
 
-      expect(spyOnHandleDeleteDispatch).toBeCalledWith(params);
-      spyOnHandleDeleteDispatch.mockReset();
+      expect(spyOnDeleteDispatch).toBeCalledWith(params);
+      spyOnDeleteDispatch.mockReset();
     });
   });
 });

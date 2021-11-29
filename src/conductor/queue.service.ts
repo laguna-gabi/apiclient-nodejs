@@ -1,5 +1,6 @@
 import {
   ICreateDispatch,
+  IDeleteClientSettings,
   IDeleteDispatch,
   IInnerQueueTypes,
   IUpdateClientSettings,
@@ -71,6 +72,8 @@ export class QueueService implements OnModuleInit {
     switch (object.type) {
       case InnerQueueTypes.updateClientSettings:
         return this.conductorService.handleUpdateClientSettings(object as IUpdateClientSettings);
+      case InnerQueueTypes.deleteClientSettings:
+        return this.conductorService.handleDeleteClientSettings(object as IDeleteClientSettings);
       case InnerQueueTypes.createDispatch:
         return this.conductorService.handleCreateDispatch(object as ICreateDispatch);
       case InnerQueueTypes.deleteDispatch:

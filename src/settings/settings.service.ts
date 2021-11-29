@@ -23,4 +23,8 @@ export class SettingsService {
   async get(id: string): Promise<ClientSettings | null> {
     return this.clientSettingsModel.findOne({ id });
   }
+
+  async delete(id: string): Promise<void> {
+    await this.clientSettingsModel.deleteOne({ id });
+  }
 }

@@ -26,6 +26,12 @@ export class ClientSettings {
 
   @Prop({ isNaN: true })
   isAppointmentsReminderEnabled?: boolean;
+
+  @Prop({ isNaN: true })
+  isRecommendationsEnabled?: boolean;
+
+  @Prop({ isNan: true })
+  registeredAt?: Date;
 }
 
 /**************************************************************************************************

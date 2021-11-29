@@ -61,11 +61,21 @@ describe(SettingsService.name, () => {
     expect(clientSettings).toBeNull();
   });
 
-  it('should return a client settings object', async () => {
+  it('should update, get and delete a client settings object', async () => {
     const settings: ClientSettings = generateClientSettings();
     await service.update(settings);
 
-    const clientSettings = await service.get(settings.id);
+    let clientSettings = await service.get(settings.id);
     expect(clientSettings).toEqual(expect.objectContaining(settings));
+
+    await service.delete(settings.id);
+
+    clientSettings = await service.get(settings.id);
+    expect(clientSettings).toBeNull();
+  });
+
+  it('should be able to delete without error, if id does not exist', async () => {
+    const result = await service.delete(generateId());
+    expect(result).toBeUndefined();
   });
 });
