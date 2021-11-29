@@ -51,6 +51,7 @@ export enum InternalNotificationType {
   textSmsToUser = 'textSmsToUser',
   chatMessageToMember = 'chatMessageToMember',
   chatMessageToUser = 'chatMessageToUser',
+  chatMessageJournal = 'chatMessageJournal',
 }
 
 export type AllNotificationTypes =
