@@ -214,10 +214,7 @@ export class MemberResolver extends MemberBase {
     if (!newUser) {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
-    // prevent assignment of members to an admin user
-    if (newUser.roles.length === 1 && newUser.roles.includes(UserRole.admin)) {
-      throw new Error(Errors.get(ErrorType.userCanNotBeAssignedToMembers));
-    }
+
     const member = await this.memberService.updatePrimaryUser(replaceUserForMemberParams);
     const { platform } = await this.memberService.getMemberConfig(member.id);
     const updateUserInCommunicationParams: IEventOnReplacedUserForMember = {

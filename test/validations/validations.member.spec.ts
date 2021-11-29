@@ -139,6 +139,7 @@ describe('Validations - member', () => {
       ${{ dischargeDate: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
       ${{ dischargeDate: '2021/13/1' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
       ${{ honorific: 'not-valid' }}     | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
+      ${{ userId: 'not-valid' }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.invalidUserId)] }}
     `(
       /* eslint-enable max-len */
       `should fail to create a member since setting $input is not a valid`,

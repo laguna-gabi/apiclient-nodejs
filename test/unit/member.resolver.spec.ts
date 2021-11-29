@@ -28,7 +28,6 @@ import {
   Language,
   RegisterForNotificationParams,
   StorageType,
-  UserRole,
   delay,
 } from '../../src/common';
 import {
@@ -175,6 +174,42 @@ describe('MemberResolver', () => {
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith(params, member.primaryUserId);
       expect(spyOnServiceGetAvailableUser).toBeCalledTimes(1);
+      expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
+      expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
+      const eventNewMemberParams: IEventOnNewMember = {
+        member,
+        user,
+        platform: memberConfig.platform,
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onNewMember, eventNewMemberParams);
+      const eventSlackMessageParams: IEventNotifySlack = {
+        /* eslint-disable-next-line max-len */
+        message: `*New customer*\n${member.firstName} [${member.id}],\nassigned to ${user.firstName}.`,
+        icon: SlackIcon.info,
+        channel: SlackChannel.support,
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifySlack, eventSlackMessageParams);
+    });
+
+    it('should create a member with a requested user id', async () => {
+      const member = mockGenerateMember();
+      const user = mockGenerateUser();
+      const memberConfig = {
+        memberId: member.id,
+        userId: member.primaryUserId,
+        platform: Platform.android,
+      };
+      spyOnServiceInsert.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnServiceGetAvailableUser.mockImplementationOnce(async () => member.primaryUserId);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnFeatureFlagControlGroup.mockImplementationOnce(() => false);
+
+      const params = generateCreateMemberParams({ orgId: generateId(), userId: user.id });
+      await resolver.createMember(params);
+
+      expect(spyOnServiceInsert).toBeCalledTimes(1);
+      expect(spyOnServiceInsert).toBeCalledWith(params, user.id);
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
       const eventNewMemberParams: IEventOnNewMember = {
@@ -1316,17 +1351,6 @@ describe('MemberResolver', () => {
 
       await expect(resolver.replaceUserForMember({ memberId, userId: user.id })).rejects.toThrow(
         Errors.get(ErrorType.userNotFound),
-      );
-    });
-
-    it('should throw an exception when the new user is an admin user', async () => {
-      const memberId = generateId();
-      const user = mockGenerateUser();
-      user.roles = [UserRole.admin];
-      spyOnUserServiceGet.mockImplementationOnce(async () => user);
-
-      await expect(resolver.replaceUserForMember({ memberId, userId: user.id })).rejects.toThrow(
-        Errors.get(ErrorType.userCanNotBeAssignedToMembers),
       );
     });
 

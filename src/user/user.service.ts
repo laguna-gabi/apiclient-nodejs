@@ -48,12 +48,8 @@ export class UserService extends BaseService {
     super();
   }
 
-  async get(id: string, includeAdmin = false): Promise<User> {
+  async get(id: string): Promise<User> {
     const user = await this.userModel.findById(id).populate('appointments');
-
-    if (!user || (user.roles.length === 1 && user.roles[0] === UserRole.admin && !includeAdmin)) {
-      return null;
-    }
 
     return user;
   }

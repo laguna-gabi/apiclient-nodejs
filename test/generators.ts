@@ -149,6 +149,7 @@ export const generateCreateMemberParams = ({
   zipCode = generateZipCode(),
   dischargeDate,
   honorific,
+  userId,
 }: Partial<CreateMemberParams> & { orgId: string }): CreateMemberParams => {
   return {
     authId,
@@ -163,6 +164,7 @@ export const generateCreateMemberParams = ({
     zipCode,
     dischargeDate,
     honorific,
+    userId,
   };
 };
 

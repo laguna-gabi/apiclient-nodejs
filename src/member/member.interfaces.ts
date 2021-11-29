@@ -1,6 +1,8 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   ContentKey,
+  ErrorType,
+  Errors,
   EventType,
   IEventOnNewMember,
   InternalNotifyControlMemberParams,
@@ -36,12 +38,20 @@ export class MemberBase {
 
   async createRealMember(createMemberParams: CreateMemberParams): Promise<Member> {
     this.logger.debug(createMemberParams, MemberBase.name, this.createRealMember.name);
-    const primaryUserId = await this.userService.getAvailableUser();
+
+    const primaryUserId = createMemberParams.userId
+      ? createMemberParams.userId
+      : await this.userService.getAvailableUser();
+
+    const user = await this.userService.get(primaryUserId);
+
+    if (!user) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
 
     const member = await this.memberService.insert(createMemberParams, primaryUserId);
     const { platform } = await this.memberService.getMemberConfig(member.id);
 
-    const user = await this.userService.get(primaryUserId);
     const eventNewMemberParams: IEventOnNewMember = { member, user, platform };
     this.eventEmitter.emit(EventType.onNewMember, eventNewMemberParams);
 

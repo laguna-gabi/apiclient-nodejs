@@ -1,6 +1,7 @@
 import { ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
 import { lookup } from 'zipcode-to-timezone';
 import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
+import { Types as MongooseTypes } from 'mongoose';
 
 /**
  * When there are 2 params of dates, and we want to make sure that one param is
@@ -151,6 +152,22 @@ export function IsNotPlatformWeb(options: ValidationOptions) {
       validator: {
         validate(platform: Platform) {
           return platform !== Platform.web;
+        },
+      },
+    });
+  };
+}
+
+export function IsObjectId(options?: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      name: 'isObjectId',
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(value: any) {
+          return MongooseTypes.ObjectId.isValid(value);
         },
       },
     });

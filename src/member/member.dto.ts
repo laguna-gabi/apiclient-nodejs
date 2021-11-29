@@ -18,6 +18,7 @@ import {
   ErrorType,
   Errors,
   Identifier,
+  IsObjectId,
   IsStringDate,
   IsTypeMetadataProvided,
   IsValidZipCode,
@@ -144,6 +145,11 @@ export class CreateMemberParams extends ExtraMemberParams {
   @IsOptional()
   @IsString() /* for rest api */
   authId?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsObjectId({ message: Errors.get(ErrorType.invalidUserId) })
+  userId?: string;
 
   @Field(() => String)
   @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {

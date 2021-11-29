@@ -34,6 +34,7 @@ export enum ErrorType {
   memberRegisterWebPlatform = 9215,
   invalidZipCode = 9216,
   memberJournalNotFound = 9217,
+  invalidUserId = 9218,
 
   // Notifications
   notificationMetadataInvalid = 9270,
@@ -151,6 +152,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.dailyReportQueryDateInvalid.valueOf(), 'daily report query - invalid date format'],
   [ErrorType.dailyReportMutationDateInvalid.valueOf(), 'daily report query - invalid date format'],
   [ErrorType.invalidSenderId.valueOf(), 'invalid sender id'],
+  [ErrorType.invalidUserId.valueOf(), 'invalid user id'],
 ]);
 
 export const DbErrors = {

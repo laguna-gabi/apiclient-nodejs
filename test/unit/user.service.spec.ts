@@ -86,42 +86,18 @@ describe('UserService', () => {
       expect(result.length).toBeGreaterThanOrEqual(2);
     });
 
-    it('should filter out users based on role', async () => {
-      // Coach (and admin)
-      const userCoach = generateCreateUserParams({ roles: [UserRole.coach, UserRole.admin] });
-      await service.insert(userCoach);
-
-      const userNurse = generateCreateUserParams({ roles: [UserRole.nurse] });
-      await service.insert(userNurse);
-
-      const result = await service.getUsers([UserRole.nurse]);
-
-      expect(result.find((user) => user.lastName === userNurse.lastName)).toBeTruthy();
-
-      expect(result.find((user) => user.lastName === userCoach.lastName)).toBeFalsy();
-    });
-
     test.each([
       [Object.values(UserRole)],
       [[UserRole.coach, UserRole.nurse]],
       [[UserRole.coach]],
       [[UserRole.nurse]],
-      [[UserRole.admin]],
     ])('should successfully insert a user having roles : %p', async (roles) => {
       const user = generateCreateUserParams({ roles });
 
       const { id } = await service.insert(user);
-      const result = await service.get(id, true);
+      const result = await service.get(id);
 
       compareUsers(result, user);
-    });
-
-    it('should not return admin user if not explicitly requested', async () => {
-      const adminUser = generateCreateUserParams({ roles: [UserRole.admin] });
-      const { id } = await service.insert(adminUser);
-
-      const result = await service.get(id);
-      expect(result).toBeNull();
     });
 
     it('should check that createdAt and updatedAt exists in the collection', async () => {

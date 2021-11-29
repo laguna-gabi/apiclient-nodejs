@@ -36,7 +36,7 @@ export class UserResolver {
   @Roles(UserRole.coach)
   async getUser(@Context() context) {
     const userId = extractUserId(context);
-    return this.userService.get(userId, true);
+    return this.userService.get(userId);
   }
 
   @Query(() => [User])
