@@ -393,11 +393,13 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Identifier)
+  @Roles(MemberRole.member)
   async createJournal(@Args('memberId', { type: () => String }) memberId: string) {
     return this.memberService.createJournal(memberId);
   }
 
   @Mutation(() => Journal)
+  @Roles(MemberRole.member)
   async updateJournal(
     @Args(camelCase(UpdateJournalParams.name)) updateJournalParams: UpdateJournalParams,
   ) {
@@ -407,6 +409,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => Journal)
+  @Roles(MemberRole.member)
   async getJournal(@Args('id', { type: () => String }) id: string) {
     const journal = await this.memberService.getJournal(id);
 
@@ -414,6 +417,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [Journal])
+  @Roles(MemberRole.member)
   async getJournals(@Args('memberId', { type: () => String }) memberId: string) {
     const journals = await this.memberService.getJournals(memberId);
 
@@ -425,6 +429,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean)
+  @Roles(MemberRole.member)
   async deleteJournal(@Args('id', { type: () => String }) id: string) {
     const { memberId } = await this.memberService.deleteJournal(id);
 
@@ -432,6 +437,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => JournalImagesLinks)
+  @Roles(MemberRole.member)
   async getMemberUploadJournalLinks(
     @Args(camelCase(GetMemberUploadJournalLinksParams.name))
     getMemberUploadJournalLinksParams: GetMemberUploadJournalLinksParams,
@@ -458,6 +464,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean)
+  @Roles(MemberRole.member)
   async deleteJournalImage(@Args('id', { type: () => String }) id: string) {
     const { memberId } = await this.memberService.updateJournalImageFormat({
       id,
