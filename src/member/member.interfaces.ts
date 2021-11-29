@@ -4,19 +4,24 @@ import {
   ErrorType,
   Errors,
   EventType,
+  IEventNotifyQueue,
   IEventOnNewMember,
   InternalNotifyControlMemberParams,
   Logger,
+  QueueType,
 } from '../common';
 import { UserService } from '../user';
-import { CreateMemberParams, Member, MemberService } from '.';
+import { CreateMemberParams, Member, MemberConfig, MemberService } from '.';
 import {
   IEventNotifySlack,
+  IUpdateClientSettings,
+  InnerQueueTypes,
   InternalNotificationType,
   SlackChannel,
   SlackIcon,
 } from '@lagunahealth/pandora';
 import { FeatureFlagService } from '../providers';
+import { isUndefined, omitBy } from 'lodash';
 
 export class MemberBase {
   constructor(
@@ -49,8 +54,12 @@ export class MemberBase {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
 
-    const member = await this.memberService.insert(createMemberParams, primaryUserId);
+    const { member, memberConfig } = await this.memberService.insert(
+      createMemberParams,
+      primaryUserId,
+    );
     const { platform } = await this.memberService.getMemberConfig(member.id);
+    this.notifyUpdatedMemberConfig({ member, memberConfig });
 
     const eventNewMemberParams: IEventOnNewMember = { member, user, platform };
     this.eventEmitter.emit(EventType.onNewMember, eventNewMemberParams);
@@ -78,5 +87,36 @@ export class MemberBase {
     this.eventEmitter.emit(EventType.notifyInternalControlMember, params);
 
     return controlMember;
+  }
+
+  protected notifyUpdatedMemberConfig({
+    member,
+    memberConfig,
+  }: {
+    member?: Member;
+    memberConfig: MemberConfig;
+  }) {
+    const settings: Partial<IUpdateClientSettings> = omitBy(
+      {
+        type: InnerQueueTypes.updateClientSettings,
+        id: memberConfig.memberId.toString(),
+        orgName: member?.org?.name,
+        phone: member?.phone,
+        platform: memberConfig.platform,
+        externalUserId: memberConfig.externalUserId,
+        isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
+        isAppointmentsReminderEnabled: memberConfig.isAppointmentsReminderEnabled,
+        isRecommendationsEnabled: memberConfig.isRecommendationsEnabled,
+        firstLoggedInAt: memberConfig.firstLoggedInAt,
+        firstName: member?.firstName,
+      },
+      isUndefined,
+    );
+
+    const eventParams: IEventNotifyQueue = {
+      type: QueueType.notifications,
+      message: JSON.stringify(settings),
+    };
+    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
   }
 }

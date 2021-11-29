@@ -89,7 +89,10 @@ export class MemberService extends BaseService {
     super();
   }
 
-  async insert(createMemberParams: CreateMemberParams, primaryUserId: string): Promise<Member> {
+  async insert(
+    createMemberParams: CreateMemberParams,
+    primaryUserId: string,
+  ): Promise<{ member: Member; memberConfig: MemberConfig }> {
     try {
       this.removeNotNullable(createMemberParams, NotNullableMemberKeys);
       const primitiveValues = cloneDeep(createMemberParams);
@@ -102,14 +105,17 @@ export class MemberService extends BaseService {
         users: [primaryUserId],
       });
 
-      await this.memberConfigModel.create({
+      const memberConfig = await this.memberConfigModel.create({
         memberId: new Types.ObjectId(object._id),
         externalUserId: v4(),
       });
 
       const member = await this.getById(object._id);
 
-      return this.replaceId(member.toObject());
+      return {
+        member: this.replaceId(member.toObject()),
+        memberConfig: this.replaceId(memberConfig.toObject()),
+      };
     } catch (ex) {
       throw new Error(
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.memberPhoneAlreadyExists) : ex,
@@ -627,7 +633,9 @@ export class MemberService extends BaseService {
    ***************************************** Member Config ****************************************
    ************************************************************************************************/
 
-  async updateMemberConfig(updateMemberConfigParams: UpdateMemberConfigParams): Promise<boolean> {
+  async updateMemberConfig(
+    updateMemberConfigParams: UpdateMemberConfigParams,
+  ): Promise<MemberConfig> {
     const {
       memberId,
       platform,
@@ -647,11 +655,11 @@ export class MemberService extends BaseService {
     setParams =
       isRecommendationsEnabled == null ? setParams : { ...setParams, isRecommendationsEnabled };
 
-    const result = await this.memberConfigModel.updateOne(
+    return this.memberConfigModel.findOneAndUpdate(
       { memberId: new Types.ObjectId(memberId) },
       { $set: setParams },
+      { new: true },
     );
-    return result.ok === 1;
   }
 
   async updateMemberConfigRegisteredAt(memberId: Types.ObjectId) {

@@ -1,6 +1,7 @@
 import {
   CancelNotificationType,
   IEventNotifySlack,
+  InnerQueueTypes,
   InternalNotificationType,
   NotificationType,
   Platform,
@@ -19,6 +20,7 @@ import {
   Errors,
   EventType,
   IEventMember,
+  IEventNotifyQueue,
   IEventOnNewMember,
   IEventOnReceivedChatMessage,
   IEventOnUpdatedMemberPlatform,
@@ -26,6 +28,7 @@ import {
   InternalNotifyParams,
   InternationalizationService,
   Language,
+  QueueType,
   RegisterForNotificationParams,
   StorageType,
   delay,
@@ -65,9 +68,12 @@ import {
   generateGetMemberUploadJournalLinksParams,
   generateId,
   generateInternalNotifyParams,
+  generateMemberConfig,
   generateNotifyParams,
+  generateObjectId,
   generateSetGeneralNotesParams,
   generateUniqueUrl,
+  generateUpdateClientSettings,
   generateUpdateJournalParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
@@ -157,12 +163,11 @@ describe('MemberResolver', () => {
     it('should create a member', async () => {
       const member = mockGenerateMember();
       const user = mockGenerateUser();
-      const memberConfig = {
-        memberId: member.id,
-        userId: member.primaryUserId,
+      const memberConfig = generateMemberConfig({
+        memberId: generateObjectId(member.id),
         platform: Platform.android,
-      };
-      spyOnServiceInsert.mockImplementationOnce(async () => member);
+      });
+      spyOnServiceInsert.mockImplementationOnce(async () => ({ member, memberConfig }));
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetAvailableUser.mockImplementationOnce(async () => member.primaryUserId);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
@@ -181,14 +186,29 @@ describe('MemberResolver', () => {
         user,
         platform: memberConfig.platform,
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.onNewMember, eventNewMemberParams);
+
+      expect(spyOnEventEmitter).toBeCalledTimes(3);
+      const eventNotifyQueue: IEventNotifyQueue = {
+        type: QueueType.notifications,
+        message: JSON.stringify(generateUpdateClientSettings({ member, memberConfig })),
+      };
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, eventNotifyQueue);
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+        2,
+        EventType.onNewMember,
+        eventNewMemberParams,
+      );
       const eventSlackMessageParams: IEventNotifySlack = {
         /* eslint-disable-next-line max-len */
         message: `*New customer*\n${member.firstName} [${member.id}],\nassigned to ${user.firstName}.`,
         icon: SlackIcon.info,
         channel: SlackChannel.support,
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifySlack, eventSlackMessageParams);
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+        3,
+        EventType.notifySlack,
+        eventSlackMessageParams,
+      );
     });
 
     it('should create a member with a requested user id', async () => {
@@ -436,9 +456,8 @@ describe('MemberResolver', () => {
     });
 
     it('should archive a member given an id', async () => {
-      const id = generateId();
       const member = mockGenerateMember();
-      const memberConfig = mockGenerateMemberConfig();
+      const memberConfig = generateMemberConfig({ memberId: generateObjectId(member.id) });
       spyOnServiceMoveMemberToArchive.mockImplementationOnce(async () => ({
         member,
         memberConfig,
@@ -447,17 +466,25 @@ describe('MemberResolver', () => {
       spyOnCommunicationFreezeGroupChannel.mockImplementationOnce(() => undefined);
       spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
 
-      await resolver.archiveMember(id);
+      await resolver.archiveMember(member.id);
 
-      expect(spyOnServiceMoveMemberToArchive).toBeCalledWith(id);
+      expect(spyOnServiceMoveMemberToArchive).toBeCalledWith(member.id);
       expect(spyOnCognitoServiceDisableMember).toBeCalledWith(member.deviceId);
       expect(spyOnCommunicationFreezeGroupChannel).toBeCalledWith({
-        memberId: id,
+        memberId: member.id,
         userId: member.primaryUserId.toString(),
       });
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
-      const eventParams: IEventMember = { memberId: id };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.onArchivedMember, eventParams);
+
+      expect(spyOnEventEmitter).toBeCalledTimes(2);
+      const queueEventParams: IEventNotifyQueue = {
+        type: QueueType.notifications,
+        message: JSON.stringify({ type: InnerQueueTypes.deleteClientSettings, id: member.id }),
+      };
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, queueEventParams);
+
+      const eventParams: IEventMember = { memberId: member.id };
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.onArchivedMember, eventParams);
     });
   });
 
@@ -497,45 +524,22 @@ describe('MemberResolver', () => {
       spyOnEventEmitter.mockReset();
     });
 
-    it('', async () => {
-      const id = generateId();
+    it('should be able to delete a member and his/her cognito identification', async () => {
       const member = mockGenerateMember();
-      const memberConfig = mockGenerateMemberConfig();
-      const appointments = [generateAppointmentComposeParams(), generateAppointmentComposeParams()];
-      const communication = generateCommunication({
-        memberId: new Types.ObjectId(id),
-        userId: member.primaryUserId,
-      });
-      spyOnServiceDeleteMember.mockImplementationOnce(async () => ({
-        member,
-        memberConfig,
-        appointments,
-      }));
-      spyOnUserServiceRemoveAppointmentsFromUser.mockImplementationOnce(() => undefined);
-      spyOnCommunicationGetMemberUserCommunication.mockImplementationOnce(() => communication);
-      spyOnCommunicationDeleteCommunication.mockImplementationOnce(() => undefined);
-      spyOnCognitoServiceDeleteMember.mockImplementationOnce(() => undefined);
-      spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
-      spyOnStorageServiceDeleteMember.mockImplementationOnce(() => undefined);
-
-      await resolver.deleteMember(id);
-
-      expect(spyOnCommunicationDeleteCommunication).toBeCalledWith(communication);
-      expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
-      expect(spyOnCognitoServiceDeleteMember).toBeCalledWith(member.deviceId);
-      expect(spyOnStorageServiceDeleteMember).toBeCalledWith(id);
-      const eventParams: IEventMember = { memberId: id };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.onDeletedMember, eventParams);
+      await deleteMemberAux(member);
     });
 
-    it('to not call cognito service with undefined device id', async () => {
-      const id = generateId();
+    it('should be able to delete a member without cognito identification(device id)', async () => {
       const member = mockGenerateMember();
       delete member.deviceId;
-      const memberConfig = mockGenerateMemberConfig();
+      await deleteMemberAux(member);
+    });
+
+    const deleteMemberAux = async (member: Member) => {
+      const memberConfig = generateMemberConfig({ memberId: generateObjectId(member.id) });
       const appointments = [generateAppointmentComposeParams(), generateAppointmentComposeParams()];
       const communication = generateCommunication({
-        memberId: new Types.ObjectId(id),
+        memberId: generateObjectId(member.id),
         userId: member.primaryUserId,
       });
       spyOnServiceDeleteMember.mockImplementationOnce(async () => ({
@@ -550,15 +554,27 @@ describe('MemberResolver', () => {
       spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
       spyOnStorageServiceDeleteMember.mockImplementationOnce(() => undefined);
 
-      await resolver.deleteMember(id);
+      await resolver.deleteMember(member.id);
 
       expect(spyOnCommunicationDeleteCommunication).toBeCalledWith(communication);
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
-      expect(spyOnCognitoServiceDeleteMember).not.toHaveBeenCalled();
-      expect(spyOnStorageServiceDeleteMember).toBeCalledWith(id);
-      const eventParams: IEventMember = { memberId: id };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.onDeletedMember, eventParams);
-    });
+      if (member.deviceId) {
+        expect(spyOnCognitoServiceDeleteMember).toBeCalledWith(member.deviceId);
+      } else {
+        expect(spyOnCognitoServiceDeleteMember).not.toHaveBeenCalled();
+      }
+      expect(spyOnStorageServiceDeleteMember).toBeCalledWith(member.id);
+
+      expect(spyOnEventEmitter).toBeCalledTimes(2);
+      const queueEventParams: IEventNotifyQueue = {
+        type: QueueType.notifications,
+        message: JSON.stringify({ type: InnerQueueTypes.deleteClientSettings, id: member.id }),
+      };
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, queueEventParams);
+
+      const eventParams: IEventMember = { memberId: member.id };
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.onDeletedMember, eventParams);
+    };
   });
 
   describe('getMemberUploadDischargeDocumentsLinks', () => {
@@ -1114,17 +1130,28 @@ describe('MemberResolver', () => {
       spyOnServiceUpdateConfig.mockReset();
       spyOnServiceGetMember.mockReset();
       spyOnServiceGetMember.mockRestore();
+      spyOnEventEmitter.mockReset();
+      spyOnEventEmitter.mockClear();
     });
 
     it('should update a member config', async () => {
-      const updateMemberConfigParams = generateUpdateMemberConfigParams();
-      spyOnServiceUpdateConfig.mockImplementationOnce(async () => true);
+      const memberConfig = mockGenerateMemberConfig();
+      const updateMemberConfigParams = generateUpdateMemberConfigParams({
+        memberId: generateId(memberConfig.memberId),
+      });
+      spyOnServiceUpdateConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetMember.mockImplementationOnce(async () => mockGenerateMember());
 
       await resolver.updateMemberConfig(updateMemberConfigParams);
 
       expect(spyOnServiceUpdateConfig).toBeCalledTimes(1);
       expect(spyOnServiceUpdateConfig).toBeCalledWith(updateMemberConfigParams);
+
+      const eventParams: IEventNotifyQueue = {
+        type: QueueType.notifications,
+        message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyQueue, eventParams);
     });
 
     it('should not update member config on non existing member', async () => {
@@ -1167,24 +1194,30 @@ describe('MemberResolver', () => {
       spyOnServiceUpdateMemberConfigRegisteredAt.mockReset();
       spyOnSchedulerDeleteTimeout.mockReset();
       spyOnSchedulerNewRegisteredMember.mockReset();
+      spyOnEventEmitter.mockReset();
+      spyOnEventEmitter.mockClear();
     });
 
     it('should not call notificationsService on platform=android', async () => {
       spyOnNotificationsServiceRegister.mockImplementationOnce(async () => undefined);
-      const memberConfig = mockGenerateMemberConfig();
-      delete memberConfig.firstLoggedInAt;
+      const currentMemberConfig = mockGenerateMemberConfig();
+      delete currentMemberConfig.firstLoggedInAt;
       const member = mockGenerateMember();
-      member.id = memberConfig.memberId.toString();
+      member.id = currentMemberConfig.memberId.toString();
 
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
-      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-      spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => true);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => currentMemberConfig);
 
-      const params: RegisterForNotificationParams = {
-        memberId: member.id,
+      const updateFields = {
         platform: Platform.android,
         isPushNotificationsEnabled: true,
       };
+      const params: RegisterForNotificationParams = { memberId: member.id, ...updateFields };
+      const memberConfig = generateMemberConfig({
+        memberId: currentMemberConfig.memberId,
+        ...updateFields,
+      });
+      spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
       await resolver.registerMemberForNotifications(params);
 
       expect(spyOnNotificationsServiceRegister).not.toBeCalled();
@@ -1203,30 +1236,39 @@ describe('MemberResolver', () => {
         userId: member.primaryUserId.toString(),
         firstLoggedInAt: expect.any(Date),
       });
+      const eventParams: IEventNotifyQueue = {
+        type: QueueType.notifications,
+        message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyQueue, eventParams);
     });
 
     it('should call notificationsService on platform=ios', async () => {
-      spyOnNotificationsServiceRegister.mockImplementationOnce(async () => undefined);
-      const memberConfig = mockGenerateMemberConfig();
-      delete memberConfig.firstLoggedInAt;
+      const currentMemberConfig = mockGenerateMemberConfig();
+      delete currentMemberConfig.firstLoggedInAt;
       const member = mockGenerateMember();
-      member.id = memberConfig.memberId.toString();
+      member.id = currentMemberConfig.memberId.toString();
 
-      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => currentMemberConfig);
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
 
-      const params: RegisterForNotificationParams = {
-        memberId: member.id,
+      const updateFields = {
         platform: Platform.ios,
-        isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
+        isPushNotificationsEnabled: currentMemberConfig.isPushNotificationsEnabled,
         token: faker.lorem.word(),
       };
+      const params: RegisterForNotificationParams = { memberId: member.id, ...updateFields };
+      const memberConfig = generateMemberConfig({
+        memberId: currentMemberConfig.memberId,
+        ...updateFields,
+      });
+      spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
       await resolver.registerMemberForNotifications(params);
 
       expect(spyOnNotificationsServiceRegister).toBeCalledTimes(1);
       expect(spyOnNotificationsServiceRegister).toBeCalledWith({
         token: params.token,
-        externalUserId: memberConfig.externalUserId,
+        externalUserId: currentMemberConfig.externalUserId,
       });
       expect(spyOnServiceUpdateMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceUpdateMemberConfig).toBeCalledWith({
@@ -1234,31 +1276,53 @@ describe('MemberResolver', () => {
         platform: params.platform,
         isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       });
+
       const eventParams: IEventOnUpdatedMemberPlatform = {
         memberId: params.memberId,
         platform: params.platform,
         userId: member.primaryUserId.toString(),
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedMemberPlatform, eventParams);
+      const notify: IEventNotifyQueue = {
+        type: QueueType.notifications,
+        message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
+      };
+      expect(spyOnEventEmitter).toBeCalledTimes(2);
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+        1,
+        EventType.onUpdatedMemberPlatform,
+        eventParams,
+      );
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notifyQueue, notify);
       expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: member.id });
     });
 
     it('should not call updateMemberConfigRegisteredAt if firstLoggedInAt exists', async () => {
-      const memberConfig = mockGenerateMemberConfig();
+      const currentMemberConfig = mockGenerateMemberConfig();
       const member = mockGenerateMember();
-      member.id = memberConfig.memberId.toString();
+      member.id = currentMemberConfig.memberId.toString();
 
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
-      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => currentMemberConfig);
 
-      const params: RegisterForNotificationParams = {
-        memberId: member.id,
+      const updateFields = {
         platform: Platform.android,
-        isPushNotificationsEnabled: true,
+        isPushNotificationsEnabled: false,
       };
+      const params: RegisterForNotificationParams = { memberId: member.id, ...updateFields };
+      const memberConfig = generateMemberConfig({
+        memberId: currentMemberConfig.memberId,
+        ...updateFields,
+      });
+      spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
       await resolver.registerMemberForNotifications(params);
 
       expect(spyOnServiceUpdateMemberConfigRegisteredAt).not.toBeCalled();
+
+      const eventParams: IEventNotifyQueue = {
+        type: QueueType.notifications,
+        message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyQueue, eventParams);
     });
   });
 

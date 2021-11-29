@@ -1,4 +1,10 @@
-import { InternalNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
+import {
+  IDeleteClientSettings,
+  InnerQueueTypes,
+  InternalNotificationType,
+  NotificationType,
+  Platform,
+} from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -44,6 +50,7 @@ import {
   EventType,
   GetContentsParams,
   IEventMember,
+  IEventNotifyQueue,
   IEventOnMemberBecameOffline,
   IEventOnReceivedChatMessage,
   IEventOnReceivedTextMessage,
@@ -57,6 +64,7 @@ import {
   Logger,
   LoggingInterceptor,
   MemberRole,
+  QueueType,
   RegisterForNotificationParams,
   ReminderType,
   Roles,
@@ -173,6 +181,7 @@ export class MemberResolver extends MemberBase {
     await this.notificationsService.unregister(memberConfig);
     await this.cognitoService.disableMember(member.deviceId);
 
+    this.notifyDeletedMemberConfig(member.id);
     const eventParams: IEventMember = { memberId: id };
     this.eventEmitter.emit(EventType.onArchivedMember, eventParams);
   }
@@ -200,6 +209,8 @@ export class MemberResolver extends MemberBase {
       await this.cognitoService.deleteMember(member.deviceId);
     }
     await this.storageService.deleteMember(id);
+
+    this.notifyDeletedMemberConfig(member.id);
     const eventParams: IEventMember = { memberId: id };
     this.eventEmitter.emit(EventType.onDeletedMember, eventParams);
   }
@@ -506,7 +517,7 @@ export class MemberResolver extends MemberBase {
     registerForNotificationParams: RegisterForNotificationParams,
   ) {
     const member = await this.memberService.get(registerForNotificationParams.memberId);
-    const memberConfig = await this.memberService.getMemberConfig(
+    const currentMemberConfig = await this.memberService.getMemberConfig(
       registerForNotificationParams.memberId,
     );
 
@@ -514,15 +525,15 @@ export class MemberResolver extends MemberBase {
       const { token } = registerForNotificationParams;
       await this.notificationsService.register({
         token,
-        externalUserId: memberConfig.externalUserId,
+        externalUserId: currentMemberConfig.externalUserId,
       });
     }
 
-    if (!memberConfig.firstLoggedInAt) {
-      await this.memberService.updateMemberConfigRegisteredAt(memberConfig.memberId);
+    if (!currentMemberConfig.firstLoggedInAt) {
+      await this.memberService.updateMemberConfigRegisteredAt(currentMemberConfig.memberId);
     }
-    await this.memberService.updateMemberConfig({
-      memberId: memberConfig.memberId.toString(),
+    const memberConfig = await this.memberService.updateMemberConfig({
+      memberId: currentMemberConfig.memberId.toString(),
       platform: registerForNotificationParams.platform,
       isPushNotificationsEnabled: registerForNotificationParams.isPushNotificationsEnabled,
     });
@@ -535,6 +546,8 @@ export class MemberResolver extends MemberBase {
       };
       this.eventEmitter.emit(EventType.onUpdatedMemberPlatform, eventParams);
     });
+
+    this.notifyUpdatedMemberConfig({ memberConfig });
 
     this.memberScheduler.deleteTimeout({ id: member.id });
     this.memberScheduler.deleteTimeout({ id: member.id + ReminderType.logReminder });
@@ -875,7 +888,9 @@ export class MemberResolver extends MemberBase {
     updateMemberConfigParams: UpdateMemberConfigParams,
   ) {
     await this.memberService.get(updateMemberConfigParams.memberId);
-    return this.memberService.updateMemberConfig(updateMemberConfigParams);
+    const memberConfig = await this.memberService.updateMemberConfig(updateMemberConfigParams);
+    this.notifyUpdatedMemberConfig({ memberConfig });
+    return memberConfig !== null;
   }
 
   /*************************************************************************************************
@@ -924,5 +939,15 @@ export class MemberResolver extends MemberBase {
     } else {
       return communication.sendBirdChannelUrl;
     }
+  }
+
+  private notifyDeletedMemberConfig(id: string) {
+    const settings: IDeleteClientSettings = { type: InnerQueueTypes.deleteClientSettings, id };
+
+    const eventNotifyQueueParams: IEventNotifyQueue = {
+      type: QueueType.notifications,
+      message: JSON.stringify(settings),
+    };
+    this.eventEmitter.emit(EventType.notifyQueue, eventNotifyQueueParams);
   }
 }

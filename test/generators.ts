@@ -28,6 +28,8 @@ import {
 } from '../src/common';
 import {
   CancelNotificationType,
+  IUpdateClientSettings,
+  InnerQueueTypes,
   InternalNotificationType,
   NotificationType,
   Platform,
@@ -247,6 +249,8 @@ export const mockGenerateMemberConfig = (): MemberConfig => {
     externalUserId: v4(),
     platform: Platform.ios,
     isPushNotificationsEnabled: true,
+    isRecommendationsEnabled: true,
+    isAppointmentsReminderEnabled: true,
     accessToken: generateId(),
     firstLoggedInAt: faker.date.past(2),
     articlesPath: faker.system.directoryPath(),
@@ -583,4 +587,26 @@ export const generateUpdateRecordingParams = ({
   recordingType,
 }: Partial<UpdateRecordingParams> = {}): UpdateRecordingParams => {
   return { id, memberId, userId, start, end, answered, phone, appointmentId, recordingType };
+};
+
+export const generateUpdateClientSettings = ({
+  member,
+  memberConfig,
+}: {
+  member?: Member;
+  memberConfig: MemberConfig;
+}): IUpdateClientSettings => {
+  return {
+    type: InnerQueueTypes.updateClientSettings,
+    id: memberConfig.memberId.toString(),
+    orgName: member?.org.name,
+    phone: member?.phone,
+    platform: memberConfig.platform,
+    externalUserId: memberConfig.externalUserId,
+    isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
+    isAppointmentsReminderEnabled: memberConfig.isAppointmentsReminderEnabled,
+    isRecommendationsEnabled: memberConfig.isRecommendationsEnabled,
+    firstLoggedInAt: memberConfig.firstLoggedInAt,
+    firstName: member?.firstName,
+  };
 };

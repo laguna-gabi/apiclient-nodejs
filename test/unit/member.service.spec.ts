@@ -297,10 +297,11 @@ describe('MemberService', () => {
       const orgId = await generateOrg();
 
       const dischargeDate = generateDateOnly(date.future(1));
-      const { id: memberId } = await service.insert(
+      const { member: createdMember } = await service.insert(
         generateCreateMemberParams({ orgId, dischargeDate }),
         primaryUserId,
       );
+      const memberId = createdMember.id;
 
       await service.insertGoal({
         createTaskParams: generateCreateTaskParams({ memberId }),
@@ -617,18 +618,18 @@ describe('MemberService', () => {
 
     const generateMemberAndAppointment = async ({ primaryUserId, orgId, numberOfAppointments }) => {
       const params = { firstName: faker.name.firstName(), lastName: faker.name.lastName() };
-      const { id } = await service.insert(
+      const { member } = await service.insert(
         generateCreateMemberParams({ orgId, ...params }),
         primaryUserId,
       );
 
       await Promise.all(
         Array.from(Array(numberOfAppointments)).map(async () =>
-          generateAppointment({ memberId: id, userId: primaryUserId }),
+          generateAppointment({ memberId: member.id, userId: primaryUserId }),
         ),
       );
 
-      return { id, ...params };
+      return { id: member.id, ...params };
     };
   });
 
@@ -641,11 +642,11 @@ describe('MemberService', () => {
         orgId: org._id,
       });
       createMemberParams.zipCode = undefined;
-      const { id } = await service.insert(createMemberParams, primaryUser._id);
+      const { member } = await service.insert(createMemberParams, primaryUser._id);
 
-      expect(id).not.toBeUndefined();
+      expect(member?.id).not.toBeUndefined();
 
-      const createdMember: any = await memberModel.findById(id);
+      const createdMember: any = await memberModel.findById(member.id);
       compareMembers(createdMember, createMemberParams);
     });
 
@@ -662,11 +663,11 @@ describe('MemberService', () => {
         dischargeDate: generateDateOnly(date.future(1)),
         honorific: Honorific.dr,
       });
-      const { id } = await service.insert(createMemberParams, primaryUser._id);
+      const { member } = await service.insert(createMemberParams, primaryUser._id);
 
-      expect(id).not.toBeUndefined();
+      expect(member?.id).not.toBeUndefined();
 
-      const createdMember: any = await memberModel.findById(id);
+      const createdMember: any = await memberModel.findById(member.id);
       compareMembers(createdMember, createMemberParams);
     });
 
@@ -692,8 +693,8 @@ describe('MemberService', () => {
       createMemberParams.lastName = faker.name.lastName();
       createMemberParams.dateOfBirth = generateDateOnly(faker.date.past());
 
-      const { id } = await service.insert(createMemberParams, primaryUser._id);
-      const createdObject = await memberModel.findById(id);
+      const { member } = await service.insert(createMemberParams, primaryUser._id);
+      const createdObject = await memberModel.findById(member.id);
 
       NotNullableMemberKeys.forEach((key) => {
         expect(createdObject).not.toHaveProperty(key, null);
@@ -704,9 +705,9 @@ describe('MemberService', () => {
       const createMemberParams: CreateMemberParams = generateCreateMemberParams({
         orgId: generateId(),
       });
-      const result = await service.insert(createMemberParams, generateId());
+      const { member } = await service.insert(createMemberParams, generateId());
 
-      expect(result.id).not.toBeUndefined();
+      expect(member?.id).not.toBeUndefined();
     });
 
     it('should fail to insert an already existing member', async () => {
@@ -1387,8 +1388,8 @@ describe('MemberService', () => {
     orgId = orgId ? orgId : await generateOrg();
     userId = userId ? userId : await generateUser();
     const createMemberParams = generateCreateMemberParams({ orgId });
-    const { id } = await service.insert(createMemberParams, userId);
-    return id;
+    const { member } = await service.insert(createMemberParams, userId);
+    return member.id;
   };
 
   const generateOrg = async (): Promise<string> => {

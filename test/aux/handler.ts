@@ -156,9 +156,11 @@ export class Handler extends BaseHandler {
         await this.orgService.insert(generateOrgParams())
       ).id,
     );
-    this.patientZero = await this.memberService.insert(
-      generateCreateMemberParams({ authId: v4(), orgId: this.lagunaOrg.id }),
-      this.adminUser.id,
-    );
+    this.patientZero = (
+      await this.memberService.insert(
+        generateCreateMemberParams({ authId: v4(), orgId: this.lagunaOrg.id }),
+        this.adminUser.id,
+      )
+    ).member;
   }
 }

@@ -111,7 +111,9 @@ describe('MemberScheduler', () => {
         const { _id: pId } = await modelUser.create(generateCreateUserParams());
         const { _id: orgId } = await modelOrg.create(generateOrgParams());
         const members = await Promise.all(
-          [1, 2, 3].map(async () => service.insert(generateCreateMemberParams({ orgId }), pId)),
+          [1, 2, 3].map(
+            async () => (await service.insert(generateCreateMemberParams({ orgId }), pId)).member,
+          ),
         );
         //end input for initRegisterNewMemberNudge
 
