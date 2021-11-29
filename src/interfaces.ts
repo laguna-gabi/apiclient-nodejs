@@ -20,7 +20,7 @@ export interface IUpdateClientSettings extends IInnerQueueTypes {
   isPushNotificationsEnabled?: boolean;
   isAppointmentsReminderEnabled?: boolean;
   isRecommendationsEnabled?: boolean;
-  registeredAt?: Date;
+  firstLoggedInAt?: Date;
   firstName?: string;
   avatar?: string;
 }
