@@ -223,7 +223,8 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetAvailableUser.mockImplementationOnce(async () => member.primaryUserId);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-      spyOnFeatureFlagControlGroup.mockImplementationOnce(() => false);
+      //forcing true to be sure it won't be control member, even if control rolled true.
+      spyOnFeatureFlagControlGroup.mockImplementationOnce(() => true);
 
       const params = generateCreateMemberParams({ orgId: generateId(), userId: user.id });
       await resolver.createMember(params);
