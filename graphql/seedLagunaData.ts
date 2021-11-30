@@ -16,22 +16,18 @@ import { SeedBase } from './seedBase';
 
 const lagunaEmployeesList = [
   {
-    name: 'Gilli',
-    authId: '1fa97144-0a9e-432a-94c2-ce04f31b15c4',
-  },
-  {
     name: 'Sharon',
     authId: '1fa97143-0a9e-432a-94c2-ce04fb4j1ec5',
   },
   {
-    name: 'Hadas',
-    authId: '1fa47143-0a9e-432a-94c2-ce04fb4j1ec5',
+    name: 'Dror',
+    authId: 'c45f528e-64a5-476d-a24a-3c9d2325d112',
   },
 ];
 
 const lagunaClientsOrganizations = [
-  { name: 'Mayo', id: '6113d0fa7cb99c0858c470b5' },
-  { name: 'Northshore', id: '6113d0fb7cb99c0858c470e1' },
+  { name: 'Mayo', id: '6113d0fa7cb99c0858c470b5', zipCode: '11030', trialDuration: 90 },
+  { name: 'Northshore', id: '6113d0fb7cb99c0858c470e1', zipCode: '55902', trialDuration: 30 },
 ];
 
 async function main() {
@@ -56,17 +52,24 @@ async function main() {
     );
   };
 
-  const createOrganization = async (name: string, id: string) => {
+  const createOrganization = async (
+    name: string,
+    id: string,
+    zipCode: string,
+    trialDuration: number,
+  ) => {
     const orgModel = model(Org.name, OrgDto);
     const newId = new mongo.ObjectId(id).toString();
-    const params = { ...generateOrgParams({ name }), _id: newId };
+    const params = { ...generateOrgParams({ name, trialDuration, zipCode }), _id: newId };
     await orgModel.create(params);
     console.log(`created ${name} with id: ${id}`);
   };
 
   const createOrganizations = async () => {
     await Promise.all(
-      lagunaClientsOrganizations.map(async ({ name, id }) => createOrganization(name, id)),
+      lagunaClientsOrganizations.map(async ({ name, id, zipCode, trialDuration }) =>
+        createOrganization(name, id, zipCode, trialDuration),
+      ),
     );
   };
 
