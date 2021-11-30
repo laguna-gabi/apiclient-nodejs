@@ -91,7 +91,7 @@ export class MemberService extends BaseService {
 
   async insert(
     createMemberParams: CreateMemberParams,
-    primaryUserId: string,
+    primaryUserId: Types.ObjectId,
   ): Promise<{ member: Member; memberConfig: MemberConfig }> {
     try {
       this.removeNotNullable(createMemberParams, NotNullableMemberKeys);

@@ -8,6 +8,7 @@ import { createTestClient } from 'apollo-server-testing';
 import * as config from 'config';
 import * as faker from 'faker';
 import * as jwt from 'jsonwebtoken';
+import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import { Mutations, Queries } from '.';
 import {
@@ -160,7 +161,7 @@ export class Handler extends BaseHandler {
     this.patientZero = (
       await this.memberService.insert(
         generateCreateMemberParams({ authId: v4(), orgId: this.lagunaOrg.id }),
-        this.adminUser.id,
+        Types.ObjectId(this.adminUser.id),
       )
     ).member;
   }

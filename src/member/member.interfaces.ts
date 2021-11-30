@@ -22,6 +22,7 @@ import {
 } from '@lagunahealth/pandora';
 import { FeatureFlagService } from '../providers';
 import { isUndefined, omitBy } from 'lodash';
+import { Types } from 'mongoose';
 
 export class MemberBase {
   constructor(
@@ -45,10 +46,10 @@ export class MemberBase {
     this.logger.debug(createMemberParams, MemberBase.name, this.createRealMember.name);
 
     const primaryUserId = createMemberParams.userId
-      ? createMemberParams.userId
+      ? Types.ObjectId(createMemberParams.userId)
       : await this.userService.getAvailableUser();
 
-    const user = await this.userService.get(primaryUserId);
+    const user = await this.userService.get(primaryUserId.toString());
 
     if (!user) {
       throw new Error(Errors.get(ErrorType.userNotFound));
