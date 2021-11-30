@@ -11,6 +11,8 @@ import {
   generateOrgNamePrefix,
 } from '../common';
 import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
+import { hoursToMilliseconds } from 'date-fns';
+import { twilio } from 'config';
 
 @Injectable()
 export class TwilioService implements OnModuleInit {
@@ -80,5 +82,11 @@ export class TwilioService implements OnModuleInit {
 
   validateWebhook(token: string) {
     return token === this.webhookToken;
+  }
+
+  async createPeerServiceToken() {
+    return this.client.tokens.create({
+      ttl: hoursToMilliseconds(twilio.traversalServiceTokenTtl),
+    });
   }
 }

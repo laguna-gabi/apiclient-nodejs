@@ -62,6 +62,7 @@ import {
   generateUpdateRecordingParams,
 } from '../index';
 import { translation } from '../../languages/en.json';
+import { twilioPeerServiceToken } from '../unit/mocks/twilioPeerServiceToken';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -747,9 +748,7 @@ describe('Integration tests: all', () => {
               firstName: primaryUser.firstName,
               avatar: primaryUser.avatar,
             },
-            member: {
-              phone: member.phone,
-            },
+            member: { phone: JSON.stringify(twilioPeerServiceToken) },
             type: params.type,
             peerId: notifyParams.metadata.peerId,
             isVideo: params.isVideo,

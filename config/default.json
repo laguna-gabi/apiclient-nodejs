@@ -24,7 +24,8 @@
   },
   "twilio": {
     "source": "+12058511112",
-    "identity": "the_user_id"
+    "identity": "the_user_id",
+    "traversalServiceTokenTtl": 3
   },
   "slack": {
     "support": "#support-dev",

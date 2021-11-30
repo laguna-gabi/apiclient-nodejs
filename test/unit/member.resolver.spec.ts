@@ -83,6 +83,7 @@ import {
   mockGenerateMemberConfig,
   mockGenerateUser,
 } from '../index';
+import { twilioPeerServiceToken } from './mocks/twilioPeerServiceToken';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
@@ -1442,6 +1443,7 @@ describe('MemberResolver', () => {
     let spyOnServiceGetMemberConfig;
     let spyOnUserServiceGetUser;
     let spyOnNotificationsServiceSend;
+    let spyOnNotificationsServiceCreatePeerServiceToken;
     let spyOnNotificationsServiceCancel;
     let spyOnCommunicationResolverGetCommunication;
     let spyOnCommunicationServiceGet;
@@ -1451,6 +1453,10 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
       spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
+      spyOnNotificationsServiceCreatePeerServiceToken = jest.spyOn(
+        notificationsService,
+        'createPeerServiceToken',
+      );
       spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
       spyOnCommunicationResolverGetCommunication = jest.spyOn(
         communicationResolver,
@@ -1464,6 +1470,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig.mockReset();
       spyOnUserServiceGetUser.mockReset();
       spyOnNotificationsServiceSend.mockReset();
+      spyOnNotificationsServiceCreatePeerServiceToken.mockReset();
       spyOnNotificationsServiceCancel.mockReset();
       spyOnCommunicationResolverGetCommunication.mockReset();
       spyOnCommunicationServiceGet.mockReset();
@@ -1488,6 +1495,9 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+      spyOnNotificationsServiceCreatePeerServiceToken.mockResolvedValueOnce(
+        JSON.stringify(twilioPeerServiceToken),
+      );
 
       await expect(resolver.notify(generateNotifyParams())).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
@@ -1649,10 +1659,9 @@ describe('MemberResolver', () => {
         spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
         spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
         spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+        spyOnNotificationsServiceCreatePeerServiceToken.mockReturnValueOnce(twilioPeerServiceToken);
 
-        const notifyParams = generateNotifyParams({
-          type,
-        });
+        const notifyParams = generateNotifyParams({ type });
 
         await resolver.notify(notifyParams);
 
@@ -1662,7 +1671,7 @@ describe('MemberResolver', () => {
             externalUserId: memberConfig.externalUserId,
             data: {
               user: { id: user.id, firstName: user.firstName, avatar: user.avatar },
-              member: { phone: member.phone },
+              member: { phone: JSON.stringify(twilioPeerServiceToken) },
               type,
               path: 'call',
               isVideo: type === NotificationType.video,

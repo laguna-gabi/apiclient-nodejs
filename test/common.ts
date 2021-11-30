@@ -21,6 +21,7 @@ import { User, UserService } from '../src/user';
 import { Mutations, Queries } from './aux';
 import { Member, defaultMemberParams } from '../src/member';
 import { generateId } from './generators';
+import { twilioPeerServiceToken } from './unit/mocks/twilioPeerServiceToken';
 
 export class BaseHandler {
   app: INestApplication;
@@ -143,6 +144,7 @@ export const mockProviders = (
   const spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
   const spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
   const spyOnTwilioGetToken = jest.spyOn(twilioService, 'getAccessToken');
+  const spyOnTwilioCreatePeerServiceToken = jest.spyOn(twilioService, 'createPeerServiceToken');
   const spyOnSlackBotSendMessage = jest.spyOn(slackBot, 'send');
   const spyOnCognitoServiceDisableMember = jest.spyOn(cognitoService, 'disableMember');
   const spyOnCognitoServiceDeleteMember = jest.spyOn(cognitoService, 'deleteMember');
@@ -165,6 +167,7 @@ export const mockProviders = (
   spyOnNotificationsServiceSend.mockResolvedValue(v4());
   spyOnNotificationsServiceCancel.mockResolvedValue(v4());
   spyOnTwilioGetToken.mockReturnValue('token');
+  spyOnTwilioCreatePeerServiceToken.mockResolvedValue(twilioPeerServiceToken);
   spyOnSlackBotSendMessage.mockReturnValue(undefined);
   spyOnSendBirdUpdateChannelName.mockReturnValue(undefined);
   spyOnSendBirdInvite.mockResolvedValue([generateId()]);
@@ -192,7 +195,7 @@ export const mockProviders = (
       spyOnNotificationsServiceSend,
       spyOnNotificationsServiceCancel,
     },
-    twilioService: { spyOnTwilioGetToken },
+    twilioService: { spyOnTwilioGetToken, spyOnTwilioCreatePeerServiceToken },
     slackBot: { spyOnSlackBotSendMessage },
     cognitoService: { spyOnCognitoServiceDisableMember, spyOnCognitoServiceDeleteMember },
     storage: {

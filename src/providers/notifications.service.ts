@@ -1,6 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import { ConfigsService, OneSignal } from '.';
+import { ConfigsService, OneSignal, SendBird, TwilioService } from '.';
 import {
   AuditType,
   CancelNotificationParams,
@@ -10,7 +10,6 @@ import {
   SendTwilioNotification,
 } from '../common';
 import { MemberConfig } from '../member';
-import { SendBird, TwilioService } from '.';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
@@ -65,5 +64,9 @@ export class NotificationsService {
   async cancel(cancelNotificationParams: CancelNotificationParams) {
     this.logger.audit(AuditType.message, cancelNotificationParams, this.cancel.name);
     return this.oneSignal.cancel(cancelNotificationParams);
+  }
+
+  async createPeerServiceToken() {
+    return this.twilio.createPeerServiceToken();
   }
 }
