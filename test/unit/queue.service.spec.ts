@@ -55,6 +55,31 @@ describe(QueueService.name, () => {
     });
   });
 
+  describe('isHealthy', () => {
+    it('should report up on connected queues', () => {
+      const result = service.isHealthy();
+      expect(result).toEqual({
+        notificationsQ: { status: 'up' },
+        notificationsDLQ: { status: 'up' },
+      });
+    });
+
+    it('should report down on not connected queues', () => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      service.notificationsQ = undefined;
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      service.notificationsDLQ = undefined;
+      const result = service.isHealthy();
+      expect(result).toEqual({
+        notificationsQ: { status: 'down' },
+        notificationsDLQ: { status: 'down' },
+      });
+    });
+  });
+
   describe('handleMessage', () => {
     it('should throw error on invalid message type', async () => {
       const message: SQSMessage = {

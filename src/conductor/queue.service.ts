@@ -7,6 +7,7 @@ import {
   InnerQueueTypes,
 } from '@lagunahealth/pandora';
 import { Injectable, NotImplementedException, OnModuleInit } from '@nestjs/common';
+import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
 import * as AWS from 'aws-sdk';
 import * as config from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
@@ -15,7 +16,7 @@ import { Logger } from '../common';
 import { ConductorService } from '.';
 
 @Injectable()
-export class QueueService implements OnModuleInit {
+export class QueueService extends HealthIndicator implements OnModuleInit {
   private readonly sqs = new AWS.SQS({
     region: config.get('aws.region'),
     apiVersion: '2012-11-05',
@@ -27,7 +28,16 @@ export class QueueService implements OnModuleInit {
     private readonly conductorService: ConductorService,
     private readonly configsService: ConfigsService,
     private readonly logger: Logger,
-  ) {}
+  ) {
+    super();
+  }
+
+  isHealthy(): HealthIndicatorResult {
+    return {
+      notificationsQ: { status: this.notificationsQ ? 'up' : 'down' },
+      notificationsDLQ: { status: this.notificationsDLQ ? 'up' : 'down' },
+    };
+  }
 
   async onModuleInit(): Promise<void> {
     const { queueNameNotifications, queueNameNotificationsDLQ } = ExternalConfigs.aws;
