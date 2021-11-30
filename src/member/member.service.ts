@@ -97,6 +97,7 @@ export class MemberService extends BaseService {
       this.removeNotNullable(createMemberParams, NotNullableMemberKeys);
       const primitiveValues = cloneDeep(createMemberParams);
       delete primitiveValues.orgId;
+      delete primitiveValues.userId;
 
       const object = await this.memberModel.create({
         ...primitiveValues,
