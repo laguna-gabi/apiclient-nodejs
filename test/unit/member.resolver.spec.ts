@@ -219,7 +219,7 @@ describe('MemberResolver', () => {
         userId: member.primaryUserId,
         platform: Platform.android,
       };
-      spyOnServiceInsert.mockImplementationOnce(async () => member);
+      spyOnServiceInsert.mockImplementationOnce(async () => ({ member, memberConfig }));
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetAvailableUser.mockImplementationOnce(async () => member.primaryUserId);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
