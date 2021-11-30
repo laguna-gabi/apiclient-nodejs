@@ -272,6 +272,7 @@ export class UserService extends BaseService {
     const users = await this.userModel.aggregate([
       {
         $match: {
+          maxCustomers: { $ne: 0 },
           roles: { $in: roles },
         },
       },
