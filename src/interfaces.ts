@@ -1,4 +1,4 @@
-import { AllNotificationTypes, Platform, SourceApi, TriggeredApi } from '.';
+import { AllNotificationTypes, Platform, SourceApi } from '.';
 
 export enum InnerQueueTypes {
   updateClientSettings = 'updateClientSettings',
@@ -35,7 +35,6 @@ interface IDispatch extends IInnerQueueTypes {
 
 export interface ICreateDispatch extends IDispatch {
   correlationId: string;
-  triggeredApi: TriggeredApi;
   sourceApi: SourceApi;
   notificationType: AllNotificationTypes;
   recipientClientId: string;

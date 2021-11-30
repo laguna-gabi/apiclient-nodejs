@@ -19,12 +19,6 @@ export enum Platform {
 /*******************************************************************************
  ********************************** Dispatch ***********************************
  ******************************************************************************/
-export enum TriggeredApi {
-  graphql = 'graphql',
-  rest = 'rest',
-  internal = 'internal',
-}
-
 export enum SourceApi {
   hepius = 'hepius',
 }
