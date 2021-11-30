@@ -488,7 +488,8 @@ describe('Integration tests: all', () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org });
 
-      await handler.mutations.archiveMember({ id: member.id });
+      const result = await handler.mutations.archiveMember({ id: member.id });
+      expect(result).toBeTruthy();
 
       const memberResult = await handler.queries.getMember({ id: member.id });
       await expect(memberResult).toEqual({
@@ -502,7 +503,9 @@ describe('Integration tests: all', () => {
       await delay(500);
       expect(handler.schedulerRegistry.getTimeouts()).toEqual(expect.arrayContaining([member.id]));
 
-      await handler.mutations.archiveMember({ id: member.id });
+      const result = await handler.mutations.archiveMember({ id: member.id });
+      expect(result).toBeTruthy();
+
       await delay(500);
       expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(
         expect.arrayContaining([member.id]),
@@ -516,7 +519,8 @@ describe('Integration tests: all', () => {
       const member = await creators.createAndValidateMember({ org });
       const appointment = await creators.createAndValidateAppointment({ member });
 
-      await handler.mutations.deleteMember({ id: member.id });
+      const result = await handler.mutations.deleteMember({ id: member.id });
+      expect(result).toBeTruthy();
       await delay(500);
 
       const memberResult = await handler.queries.getMember({ id: member.id });
@@ -533,7 +537,8 @@ describe('Integration tests: all', () => {
       await delay(500);
       expect(handler.schedulerRegistry.getTimeouts()).toEqual(expect.arrayContaining([member.id]));
 
-      await handler.mutations.deleteMember({ id: member.id });
+      const result = await handler.mutations.deleteMember({ id: member.id });
+      expect(result).toBeTruthy();
       await delay(500);
       expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(
         expect.arrayContaining([member.id]),
@@ -903,7 +908,8 @@ describe('Integration tests: all', () => {
       await createAndValidateAvailabilities(2);
       const { ids } = await createAndValidateAvailabilities(5);
 
-      await handler.mutations.deleteAvailability({ id: ids[0] });
+      const result = await handler.mutations.deleteAvailability({ id: ids[0] });
+      expect(result).toBeTruthy();
     });
 
     /* eslint-disable max-len */

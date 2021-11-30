@@ -476,7 +476,7 @@ export class MemberService extends BaseService {
     });
   }
 
-  async moveMemberToArchive(id: string) {
+  async moveMemberToArchive(id: string): Promise<{ member: Member; memberConfig: MemberConfig }> {
     this.logger.debug({ memberId: id }, MemberService.name, this.moveMemberToArchive.name);
     const member = await this.get(id);
     const memberConfig = await this.getMemberConfig(id);
@@ -489,7 +489,7 @@ export class MemberService extends BaseService {
     return { member, memberConfig };
   }
 
-  async deleteMember(id: string) {
+  async deleteMember(id: string): Promise<{ member: Member; memberConfig: MemberConfig }> {
     this.logger.debug({ memberId: id }, MemberService.name, this.deleteMember.name);
     const member = await this.get(id);
     const memberConfig = await this.getMemberConfig(id);

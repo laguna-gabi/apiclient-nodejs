@@ -14,20 +14,20 @@ export class AvailabilityResolver {
     @Context() context,
     @Args('availabilities', { type: () => [AvailabilityInput] })
     availabilities: AvailabilityInput[],
-  ) {
+  ): Promise<Identifiers> {
     const userId = extractUserId(context);
     return this.availabilityService.create(availabilities, userId);
   }
 
   @Query(() => [AvailabilitySlot])
   @Roles(UserRole.coach)
-  async getAvailabilities() {
+  async getAvailabilities(): Promise<AvailabilitySlot[]> {
     return this.availabilityService.get();
   }
 
-  @Mutation(() => Boolean, { nullable: true })
+  @Mutation(() => Boolean)
   @Roles(UserRole.coach)
   async deleteAvailability(@Args('id', { type: () => String }) id: string) {
-    await this.availabilityService.delete(id);
+    return this.availabilityService.delete(id);
   }
 }

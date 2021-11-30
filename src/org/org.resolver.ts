@@ -14,13 +14,13 @@ export class OrgResolver {
   async createOrg(
     @Args(camelCase(CreateOrgParams.name))
     createOrgParams: CreateOrgParams,
-  ) {
+  ): Promise<Identifier> {
     return this.orgService.insert(createOrgParams);
   }
 
   @Query(() => Org, { nullable: true })
   @Roles(UserRole.coach)
-  async getOrg(@Args('id', { type: () => String }) id: string) {
+  async getOrg(@Args('id', { type: () => String }) id: string): Promise<Org | null> {
     return this.orgService.get(id);
   }
 }

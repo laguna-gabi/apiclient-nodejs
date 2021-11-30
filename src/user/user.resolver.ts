@@ -34,7 +34,7 @@ export class UserResolver {
 
   @Query(() => User, { nullable: true })
   @Roles(UserRole.coach)
-  async getUser(@Context() context) {
+  async getUser(@Context() context): Promise<User> {
     const userId = extractUserId(context);
     return this.userService.get(userId);
   }
@@ -48,19 +48,21 @@ export class UserResolver {
       defaultValue: [UserRole.coach, UserRole.nurse],
     })
     roles: UserRole[] = [UserRole.coach, UserRole.nurse],
-  ) {
+  ): Promise<User[]> {
     return this.userService.getUsers(roles);
   }
 
   @Query(() => Slots)
   @Roles(UserRole.coach)
-  async getUserSlots(@Args(camelCase(GetSlotsParams.name)) getSlotsParams: GetSlotsParams) {
+  async getUserSlots(
+    @Args(camelCase(GetSlotsParams.name)) getSlotsParams: GetSlotsParams,
+  ): Promise<Slots> {
     return this.userService.getSlots(getSlotsParams);
   }
 
   @Query(() => UserConfig)
   @Roles(UserRole.coach)
-  async getUserConfig(@Args('id', { type: () => String }) id: string) {
+  async getUserConfig(@Args('id', { type: () => String }) id: string): Promise<UserConfig> {
     return this.userService.getUserConfig(id);
   }
 }

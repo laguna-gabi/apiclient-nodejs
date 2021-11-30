@@ -85,10 +85,11 @@ describe('AvailabilityResolver', () => {
     });
 
     it('should successfully delete an availability', async () => {
-      spyOnServiceDelete.mockImplementationOnce(async () => undefined);
+      spyOnServiceDelete.mockImplementationOnce(async () => true);
 
       const id = generateId();
-      await resolver.deleteAvailability(id);
+      const result = await resolver.deleteAvailability(id);
+      expect(result).toBeTruthy();
 
       expect(spyOnServiceDelete).toBeCalledTimes(1);
       expect(spyOnServiceDelete).toBeCalledWith(id);

@@ -45,7 +45,7 @@ export class Handler extends BaseHandler {
   spyOnGetCommunicationService;
   adminUser: User;
   patientZero: Member;
-  lagunaOrg: Org;
+  lagunaOrg: Org | null;
   featureFlagService;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;

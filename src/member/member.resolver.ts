@@ -113,7 +113,7 @@ export class MemberResolver extends MemberBase {
   async createMember(
     @Args(camelCase(CreateMemberParams.name))
     createMemberParams: CreateMemberParams,
-  ) {
+  ): Promise<Member> {
     return super.createMember(createMemberParams);
   }
 
@@ -127,7 +127,7 @@ export class MemberResolver extends MemberBase {
   async getMember(
     @Context() context,
     @Args('id', { type: () => String, nullable: true }) id?: string,
-  ) {
+  ): Promise<Member> {
     let member;
     if (id) {
       member = await this.memberService.get(id);
@@ -144,7 +144,7 @@ export class MemberResolver extends MemberBase {
   @Roles(UserRole.coach)
   async updateMember(
     @Args(camelCase(UpdateMemberParams.name)) updateMemberParams: UpdateMemberParams,
-  ) {
+  ): Promise<Member> {
     const member = await this.memberService.update(updateMemberParams);
     member.zipCode = member.zipCode || member.org.zipCode;
     member.utcDelta = this.getTimezoneDeltaFromZipcode(member.zipCode);
@@ -153,7 +153,9 @@ export class MemberResolver extends MemberBase {
 
   @Query(() => [MemberSummary])
   @Roles(UserRole.coach)
-  async getMembers(@Args('orgId', { type: () => String, nullable: true }) orgId?: string) {
+  async getMembers(
+    @Args('orgId', { type: () => String, nullable: true }) orgId?: string,
+  ): Promise<MemberSummary[]> {
     return this.memberService.getByOrg(orgId);
   }
 
@@ -161,7 +163,7 @@ export class MemberResolver extends MemberBase {
   @Roles(UserRole.coach)
   async getMembersAppointments(
     @Args('orgId', { type: () => String, nullable: true }) orgId?: string,
-  ) {
+  ): Promise<AppointmentCompose[]> {
     return this.memberService.getMembersAppointments(orgId);
   }
 
@@ -169,7 +171,7 @@ export class MemberResolver extends MemberBase {
    ************************************ internal admin mutations ***********************************
    ************************************************************************************************/
 
-  @Mutation(() => Boolean, { nullable: true })
+  @Mutation(() => Boolean)
   @Roles(UserRole.admin)
   async archiveMember(@Args('id', { type: () => String }) id: string) {
     const { member, memberConfig } = await this.memberService.moveMemberToArchive(id);
@@ -183,9 +185,10 @@ export class MemberResolver extends MemberBase {
     this.notifyDeletedMemberConfig(member.id);
     const eventParams: IEventMember = { memberId: id };
     this.eventEmitter.emit(EventType.onArchivedMember, eventParams);
+    return true;
   }
 
-  @Mutation(() => Boolean, { nullable: true })
+  @Mutation(() => Boolean)
   @Roles(UserRole.admin)
   async deleteMember(@Args('id', { type: () => String }) id: string) {
     const { member, memberConfig } = await this.memberService.deleteMember(id);
@@ -212,6 +215,7 @@ export class MemberResolver extends MemberBase {
     this.notifyDeletedMemberConfig(member.id);
     const eventParams: IEventMember = { memberId: id };
     this.eventEmitter.emit(EventType.onDeletedMember, eventParams);
+    return true;
   }
 
   @Mutation(() => Boolean, { nullable: true })

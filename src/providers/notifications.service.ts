@@ -46,7 +46,7 @@ export class NotificationsService {
     sendOneSignalNotification?: SendOneSignalNotification;
     sendTwilioNotification?: SendTwilioNotification;
     sendSendBirdNotification?: SendSendBirdNotification;
-  }): Promise<string> {
+  }): Promise<string | void> {
     if (sendOneSignalNotification) {
       this.logger.audit(AuditType.message, sendOneSignalNotification, this.send.name);
       return this.oneSignal.send(sendOneSignalNotification);

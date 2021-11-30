@@ -71,7 +71,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     }
   }
 
-  async unregister(memberConfig: MemberConfig) {
+  async unregister(memberConfig: MemberConfig): Promise<void> {
     this.logger.debug(memberConfig, OneSignal.name, this.unregister.name);
     try {
       if (memberConfig.platform === Platform.ios) {
@@ -87,7 +87,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     }
   }
 
-  async send(sendOneSignalNotification: SendOneSignalNotification) {
+  async send(sendOneSignalNotification: SendOneSignalNotification): Promise<string | void> {
     this.logger.debug(sendOneSignalNotification, OneSignal.name, this.send.name);
     const { platform, externalUserId, data, content } = sendOneSignalNotification;
     this.logger.debug(data, OneSignal.name, this.send.name);
@@ -144,7 +144,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     }
   }
 
-  async cancel(cancelNotificationParams: CancelNotificationParams) {
+  async cancel(cancelNotificationParams: CancelNotificationParams): Promise<string | void> {
     this.logger.debug(cancelNotificationParams, OneSignal.name, this.cancel.name);
     const { platform, externalUserId, data } = cancelNotificationParams;
 

@@ -12,7 +12,7 @@ export class CognitoService {
 
   constructor(private readonly logger: Logger) {}
 
-  async disableMember(deviceId) {
+  async disableMember(deviceId): Promise<void> {
     this.logger.debug({ deviceId }, CognitoService.name, this.disableMember.name);
     try {
       await this.cognito
@@ -25,7 +25,7 @@ export class CognitoService {
     }
   }
 
-  async deleteMember(deviceId) {
+  async deleteMember(deviceId): Promise<void> {
     this.logger.debug({ deviceId }, CognitoService.name, this.deleteMember.name);
     try {
       await this.cognito

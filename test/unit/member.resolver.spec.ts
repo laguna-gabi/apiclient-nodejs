@@ -468,8 +468,9 @@ describe('MemberResolver', () => {
       spyOnCommunicationFreezeGroupChannel.mockImplementationOnce(() => undefined);
       spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
 
-      await resolver.archiveMember(member.id);
+      const result = await resolver.archiveMember(member.id);
 
+      expect(result).toBeTruthy();
       expect(spyOnServiceMoveMemberToArchive).toBeCalledWith(member.id);
       expect(spyOnCognitoServiceDisableMember).toBeCalledWith(member.deviceId);
       expect(spyOnCommunicationFreezeGroupChannel).toBeCalledWith({
@@ -556,8 +557,9 @@ describe('MemberResolver', () => {
       spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
       spyOnStorageServiceDeleteMember.mockImplementationOnce(() => undefined);
 
-      await resolver.deleteMember(member.id);
+      const result = await resolver.deleteMember(member.id);
 
+      expect(result).toBeTruthy();
       expect(spyOnCommunicationDeleteCommunication).toBeCalledWith(communication);
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
       if (member.deviceId) {

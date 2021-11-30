@@ -4,7 +4,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { add, differenceInDays, getHours, startOfDay } from 'date-fns';
 import { cloneDeep } from 'lodash';
 import { Model, Types } from 'mongoose';
-import { Appointment } from '../appointment';
 import {
   CreateUserParams,
   GetSlotsParams,
@@ -49,9 +48,7 @@ export class UserService extends BaseService {
   }
 
   async get(id: string): Promise<User> {
-    const user = await this.userModel.findById(id).populate('appointments');
-
-    return user;
+    return this.userModel.findById(id).populate('appointments');
   }
 
   async getUsers(roles: UserRole[]): Promise<User[]> {
@@ -77,10 +74,6 @@ export class UserService extends BaseService {
     }
   }
 
-  getNotBefore(getSlotsParams: GetSlotsParams, appointment: Appointment): Date {
-    return getSlotsParams.notBefore || appointment?.notBefore || appointment.start;
-  }
-
   async getSlots(getSlotsParams: GetSlotsParams): Promise<Slots> {
     this.removeNotNullable(getSlotsParams, NotNullableSlotsKeys);
     const { appointmentId, userId, defaultSlotsCount, allowEmptySlotsResponse, maxSlots } =
@@ -88,24 +81,10 @@ export class UserService extends BaseService {
 
     const [slotsObject] = await this.userModel.aggregate([
       ...(userId
-        ? [
-            {
-              $match: {
-                _id: Types.ObjectId(userId),
-              },
-            },
-          ]
+        ? [{ $match: { _id: Types.ObjectId(userId) } }]
         : [
-            {
-              $unwind: {
-                path: '$appointments',
-              },
-            },
-            {
-              $match: {
-                appointments: new Types.ObjectId(appointmentId),
-              },
-            },
+            { $unwind: { path: '$appointments' } },
+            { $match: { appointments: new Types.ObjectId(appointmentId) } },
             {
               $lookup: {
                 from: 'appointments',
@@ -180,7 +159,10 @@ export class UserService extends BaseService {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
 
-    const notBefore = this.getNotBefore(getSlotsParams, slotsObject.appointment);
+    const notBefore =
+      getSlotsParams.notBefore ||
+      slotsObject.appointment?.notBefore ||
+      slotsObject.appointment?.start;
 
     slotsObject.slots = this.slotService.getSlots(
       slotsObject.availabilities,
@@ -211,7 +193,7 @@ export class UserService extends BaseService {
     return slotsObject;
   }
 
-  generateDefaultSlots(count: number = defaultSlotsParams.defaultSlots, notBefore?: Date) {
+  generateDefaultSlots(count: number = defaultSlotsParams.defaultSlots, notBefore?: Date): Date[] {
     const slots: Date[] = [];
     const getStartDate = () => {
       const now = new Date();
@@ -332,7 +314,7 @@ export class UserService extends BaseService {
   }
 
   @OnEvent(EventType.onNewAppointment, { async: true })
-  async addAppointmentToUser(params: IEventOnNewAppointment) {
+  async addAppointmentToUser(params: IEventOnNewAppointment): Promise<void> {
     try {
       await this.userModel.updateOne(
         { _id: params.userId },
@@ -344,7 +326,7 @@ export class UserService extends BaseService {
   }
 
   @OnEvent(EventType.onDeletedMemberAppointments, { async: true })
-  async deleteAppointments(params: IEventOnDeletedMemberAppointments) {
+  async deleteAppointments(params: IEventOnDeletedMemberAppointments): Promise<void> {
     const { appointments } = params;
     await Promise.all(
       appointments.map(async (appointment) => {
@@ -357,7 +339,7 @@ export class UserService extends BaseService {
   }
 
   @OnEvent(EventType.onUpdatedUserAppointments, { async: true })
-  async updateUserAppointments(params: IEventOnUpdatedUserAppointments) {
+  async updateUserAppointments(params: IEventOnUpdatedUserAppointments): Promise<void> {
     const appointmentIds = params.appointments.map((appointment) => Types.ObjectId(appointment.id));
 
     try {
