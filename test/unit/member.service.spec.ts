@@ -299,7 +299,7 @@ describe('MemberService', () => {
       const dischargeDate = generateDateOnly(date.future(1));
       const { member: createdMember } = await service.insert(
         generateCreateMemberParams({ orgId, dischargeDate }),
-        primaryUserId,
+        new Types.ObjectId(primaryUserId),
       );
       const memberId = createdMember.id;
 
@@ -705,7 +705,7 @@ describe('MemberService', () => {
       const createMemberParams: CreateMemberParams = generateCreateMemberParams({
         orgId: generateId(),
       });
-      const { member } = await service.insert(createMemberParams, generateId());
+      const { member } = await service.insert(createMemberParams, new Types.ObjectId(generateId()));
 
       expect(member?.id).not.toBeUndefined();
     });
@@ -713,11 +713,11 @@ describe('MemberService', () => {
     it('should fail to insert an already existing member', async () => {
       const primaryUserId = generateId();
       const createMemberParams = generateCreateMemberParams({ orgId: generateId() });
-      await service.insert(createMemberParams, primaryUserId);
+      await service.insert(createMemberParams, new Types.ObjectId(primaryUserId));
 
-      await expect(service.insert(createMemberParams, primaryUserId)).rejects.toThrow(
-        Errors.get(ErrorType.memberPhoneAlreadyExists),
-      );
+      await expect(
+        service.insert(createMemberParams, new Types.ObjectId(primaryUserId)),
+      ).rejects.toThrow(Errors.get(ErrorType.memberPhoneAlreadyExists));
     });
   });
 
@@ -1388,7 +1388,7 @@ describe('MemberService', () => {
     orgId = orgId ? orgId : await generateOrg();
     userId = userId ? userId : await generateUser();
     const createMemberParams = generateCreateMemberParams({ orgId });
-    const { member } = await service.insert(createMemberParams, userId);
+    const { member } = await service.insert(createMemberParams, new Types.ObjectId(userId));
     return member.id;
   };
 
