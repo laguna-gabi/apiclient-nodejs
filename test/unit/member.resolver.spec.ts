@@ -1513,6 +1513,27 @@ describe('MemberResolver', () => {
       },
     );
 
+    test.each([NotificationType.call, NotificationType.video])(
+      // eslint-disable-next-line max-len
+      'should throw an error when member with isPushNotificationsEnabled=false receives video or call notification',
+      async (params) => {
+        const member = mockGenerateMember();
+        const memberConfig = mockGenerateMemberConfig();
+        memberConfig.isPushNotificationsEnabled = false;
+        const user = mockGenerateUser();
+        spyOnServiceGetMember.mockImplementationOnce(async () => member);
+        spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+        spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+        spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+        const notifyParams = generateNotifyParams({ type: params });
+
+        await expect(resolver.notify(notifyParams)).rejects.toThrow(
+          Errors.get(ErrorType.notificationNotAllowed),
+        );
+      },
+    );
+
     it('should send to Sendbird on type textSms', async () => {
       const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();

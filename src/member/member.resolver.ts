@@ -592,6 +592,13 @@ export class MemberResolver extends MemberBase {
       throw new Error(Errors.get(ErrorType.notificationMemberPlatformWeb));
     }
 
+    if (
+      !memberConfig.isPushNotificationsEnabled &&
+      (type === NotificationType.call || type === NotificationType.video)
+    ) {
+      throw new Error(Errors.get(ErrorType.notificationNotAllowed));
+    }
+
     if (metadata.content) {
       metadata.content = metadata.content.trim();
       if (!metadata.content) {
