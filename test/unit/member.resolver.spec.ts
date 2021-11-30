@@ -1892,7 +1892,8 @@ describe('MemberResolver', () => {
       });
     });
 
-    it('should send SMS notification for textToMember if platform web', async () => {
+    // eslint-disable-next-line max-len
+    it('should send SMS notification for textToMember if platform web and not add dynamic link to the content', async () => {
       const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();
       memberConfig.platform = Platform.web;
@@ -1917,7 +1918,8 @@ describe('MemberResolver', () => {
       });
     });
 
-    it('should send SMS notification for textToMember if notification is disabled', async () => {
+    // eslint-disable-next-line max-len
+    it('should send SMS notification for textToMember if notification is disabled and add dynamic link to the content', async () => {
       const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();
       memberConfig.isPushNotificationsEnabled = false;
@@ -1936,7 +1938,7 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
         sendTwilioNotification: {
           orgName: member.org.name,
-          body: internalNotifyParams.content,
+          body: (internalNotifyParams.content += `\n${config.get('hosts.dynamicLink')}`),
           to: member.phone,
         },
       });
@@ -2172,75 +2174,6 @@ describe('MemberResolver', () => {
         },
       });
     });
-
-    test.each([
-      ContentKey.appointmentLongReminder,
-      ContentKey.newMemberNudge,
-      ContentKey.newRegisteredMember,
-      ContentKey.newRegisteredMemberNudge,
-      ContentKey.appointmentScheduledMember,
-      ContentKey.appointmentLongReminder,
-      ContentKey.appointmentReminderLink,
-      ContentKey.appointmentRequestLink,
-      ContentKey.newChatMessageFromUser,
-      ContentKey.logReminder,
-      ContentKey.newChatMessageFromMember,
-      ContentKey.appointmentScheduledUser,
-      ContentKey.memberNotFeelingWellMessage,
-    ])(
-      // eslint-disable-next-line max-len
-      'should not notify for type %p if org = mayo',
-      async (params) => {
-        const member = mockGenerateMember();
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        member.org._id = config.get('org.mayo');
-        const memberConfig = mockGenerateMemberConfig();
-        const user = mockGenerateUser();
-        spyOnServiceGetMember.mockImplementationOnce(async () => member);
-        spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-        spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-        spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
-
-        const internalNotifyParams = generateInternalNotifyParams({
-          metadata: { contentType: params },
-        });
-
-        await resolver.internalNotify(internalNotifyParams);
-
-        expect(spyOnNotificationsServiceSend).not.toBeCalled();
-      },
-    );
-
-    test.each([
-      ContentKey.newMember,
-      ContentKey.newControlMember,
-      ContentKey.appointmentReminder,
-      ContentKey.appointmentRequest,
-    ])(
-      // eslint-disable-next-line max-len
-      'should notify for type %p if org = mayo',
-      async (params) => {
-        const member = mockGenerateMember();
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        member.org._id = config.get('org.mayo');
-        const memberConfig = mockGenerateMemberConfig();
-        const user = mockGenerateUser();
-        spyOnServiceGetMember.mockImplementationOnce(async () => member);
-        spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-        spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-        spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
-
-        const internalNotifyParams = generateInternalNotifyParams({
-          metadata: { contentType: params },
-        });
-
-        await resolver.internalNotify(internalNotifyParams);
-
-        expect(spyOnNotificationsServiceSend).toBeCalled();
-      },
-    );
   });
 
   describe('notifyChatMessage', () => {

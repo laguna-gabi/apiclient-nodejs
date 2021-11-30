@@ -1,4 +1,6 @@
+import { InternalNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
+import * as config from 'config';
 import { Member, MemberConfig, NotificationMetadata } from '.';
 import {
   InternalNotificationMetadata,
@@ -9,7 +11,6 @@ import {
 } from '../common';
 import { NotificationsService } from '../providers';
 import { User } from '../user';
-import { InternalNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 
 @Injectable()
 export class NotificationBuilder {
@@ -101,6 +102,9 @@ export class NotificationBuilder {
     switch (type) {
       case InternalNotificationType.textToMember: {
         if (memberConfig.platform === Platform.web || !memberConfig.isPushNotificationsEnabled) {
+          if (memberConfig.platform !== Platform.web) {
+            content += `\n${config.get('hosts.dynamicLink')}`;
+          }
           const sendTwilioNotification: SendTwilioNotification = {
             orgName,
             body: content,

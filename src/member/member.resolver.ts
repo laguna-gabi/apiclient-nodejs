@@ -44,7 +44,6 @@ import {
 } from '.';
 import {
   ContentKey,
-  EnabledNotifications,
   ErrorType,
   Errors,
   EventType,
@@ -650,21 +649,6 @@ export class MemberResolver extends MemberBase {
         userId,
       );
 
-      /**
-       * Some of the notifications were not yet approved by the IRB
-       * for Mayo clinic trial.
-       * so we want to send only the approved notifications from the
-       * EnabledNotifications list.
-       */
-      if (
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        member.org._id.toString() === config.get('org.mayo') &&
-        !EnabledNotifications.includes(metadata.contentType)
-      ) {
-        return;
-      }
-
       if (
         metadata.checkAppointmentReminder &&
         memberConfig &&
@@ -695,10 +679,7 @@ export class MemberResolver extends MemberBase {
         content = this.internationalizationService.getContents(getContentsParams);
       }
 
-      if (
-        (metadata.scheduleLink || metadata?.chatLink) &&
-        (memberConfig.platform === Platform.web || !memberConfig.isPushNotificationsEnabled)
-      ) {
+      if ((metadata.scheduleLink || metadata.chatLink) && memberConfig.platform === Platform.web) {
         const getContentsParams: GetContentsParams = {
           contentType: metadata.chatLink
             ? ContentKey.appointmentReminderLink
