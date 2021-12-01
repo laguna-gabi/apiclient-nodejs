@@ -68,6 +68,7 @@ export class NotificationBuilder {
             ...path,
             isVideo: type === NotificationType.video,
             peerId: metadata.peerId,
+            extraData: JSON.stringify(peerServiceToken),
           },
           content: metadata.content,
           orgName,

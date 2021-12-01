@@ -136,6 +136,7 @@ export class SendOneSignalNotification extends BaseSendNotification {
     type: AllNotificationTypes;
     path?: string;
     isVideo: boolean;
+    extraData?: string; //flush data to then client
   };
   content?: string;
 }

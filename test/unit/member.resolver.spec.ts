@@ -1671,17 +1671,19 @@ describe('MemberResolver', () => {
 
         await resolver.notify(notifyParams);
 
+        const extraData = JSON.stringify(twilioPeerServiceToken);
         expect(spyOnNotificationsServiceSend).toBeCalledWith({
           sendOneSignalNotification: {
             platform: memberConfig.platform,
             externalUserId: memberConfig.externalUserId,
             data: {
               user: { id: user.id, firstName: user.firstName, avatar: user.avatar },
-              member: { phone: JSON.stringify(twilioPeerServiceToken) },
+              member: { phone: extraData },
               type,
               path: 'call',
               isVideo: type === NotificationType.video,
               peerId: notifyParams.metadata.peerId,
+              extraData,
             },
             content: notifyParams.metadata.content,
             orgName: member.org.name,
