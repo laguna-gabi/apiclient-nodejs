@@ -17,7 +17,6 @@ import {
 import { AvailabilityInput } from '../src/availability';
 import {
   CancelNotificationParams,
-  ContentKey,
   InternalNotifyParams,
   MemberRole,
   SendOneSignalNotification,
@@ -27,6 +26,7 @@ import {
 } from '../src/common';
 import {
   CancelNotificationType,
+  ContentKey,
   Honorific,
   IUpdateClientSettings,
   InnerQueueTypes,

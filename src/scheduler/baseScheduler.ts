@@ -4,12 +4,12 @@ import * as config from 'config';
 import { add, secondsToMilliseconds } from 'date-fns';
 import { v4 } from 'uuid';
 import { InternalSchedulerService } from '.';
-import { ContentKey, EventType, InternalNotifyParams, Logger, internalLogs } from '../common';
+import { EventType, InternalNotifyParams, Logger, internalLogs } from '../common';
 import { Member } from '../member';
 import { Bitly } from '../providers';
 import { User } from '../user';
 import Timeout = NodeJS.Timeout;
-import { InternalNotificationType } from '@lagunahealth/pandora';
+import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
 
 export enum LeaderType {
   appointment = 'appointment',

@@ -8,7 +8,6 @@ import {
   ScheduleAppointmentParams,
 } from '.';
 import {
-  ContentKey,
   ErrorType,
   Errors,
   EventType,
@@ -17,7 +16,7 @@ import {
   UpdatedAppointmentAction,
   scheduleAppointmentDateFormat,
 } from '../common';
-import { InternalNotificationType } from '@lagunahealth/pandora';
+import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
 
 export class AppointmentBase {
   constructor(

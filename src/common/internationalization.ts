@@ -5,26 +5,7 @@ import * as en from '../../languages/en.json';
 import * as es from '../../languages/es.json';
 import { Member } from '../member';
 import { User } from '../user';
-import { ExtraData, Language } from '@lagunahealth/pandora';
-
-export enum ContentKey {
-  newMember = 'newMember',
-  newControlMember = 'newControlMember',
-  newMemberNudge = 'newMemberNudge',
-  newRegisteredMember = 'newRegisteredMember',
-  newRegisteredMemberNudge = 'newRegisteredMemberNudge',
-  appointmentScheduledMember = 'appointmentScheduledMember',
-  appointmentLongReminder = 'appointmentLongReminder',
-  appointmentReminder = 'appointmentReminder',
-  appointmentReminderLink = 'appointmentReminderLink',
-  appointmentRequest = 'appointmentRequest',
-  appointmentRequestLink = 'appointmentRequestLink',
-  newChatMessageFromUser = 'newChatMessageFromUser',
-  logReminder = 'logReminder',
-  newChatMessageFromMember = 'newChatMessageFromMember',
-  appointmentScheduledUser = 'appointmentScheduledUser',
-  memberNotFeelingWellMessage = 'memberNotFeelingWellMessage',
-}
+import { ContentKey, ExtraData, Language } from '@lagunahealth/pandora';
 
 export class GetContentsParams {
   contentType: ContentKey;

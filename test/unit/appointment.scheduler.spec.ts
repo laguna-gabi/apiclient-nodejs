@@ -1,4 +1,4 @@
-import { InternalNotificationType } from '@lagunahealth/pandora';
+import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -15,14 +15,7 @@ import {
   AppointmentScheduler,
   AppointmentStatus,
 } from '../../src/appointment';
-import {
-  ContentKey,
-  EventType,
-  InternalNotifyParams,
-  Logger,
-  ReminderType,
-  delay,
-} from '../../src/common';
+import { EventType, InternalNotifyParams, Logger, ReminderType, delay } from '../../src/common';
 import { CommunicationResolver } from '../../src/communication';
 import { Bitly } from '../../src/providers';
 import { InternalSchedulerService, LeaderType } from '../../src/scheduler';

@@ -7,7 +7,6 @@ import { add, sub } from 'date-fns';
 import { Model } from 'mongoose';
 import { Appointment, AppointmentDocument, AppointmentStatus } from '.';
 import {
-  ContentKey,
   ErrorType,
   Errors,
   EventType,
@@ -18,7 +17,7 @@ import {
 import { CommunicationResolver } from '../communication';
 import { Bitly } from '../providers';
 import { BaseScheduler, InternalSchedulerService, LeaderType } from '../scheduler';
-import { InternalNotificationType } from '@lagunahealth/pandora';
+import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
 
 @Injectable()
 export class AppointmentScheduler extends BaseScheduler {

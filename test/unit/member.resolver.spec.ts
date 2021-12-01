@@ -1,5 +1,6 @@
 import {
   CancelNotificationType,
+  ContentKey,
   IEventNotifySlack,
   InnerQueueTypes,
   InternalNotificationType,
@@ -16,7 +17,6 @@ import * as faker from 'faker';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import {
-  ContentKey,
   ErrorType,
   Errors,
   EventType,

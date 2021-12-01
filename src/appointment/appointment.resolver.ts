@@ -17,7 +17,6 @@ import {
   UpdateNotesParams,
 } from '.';
 import {
-  ContentKey,
   EventType,
   IEventMember,
   IEventOnNewMember,
@@ -36,7 +35,7 @@ import { Member } from '../member';
 import { OrgService } from '../org';
 import { Bitly } from '../providers';
 import { User } from '../user';
-import { InternalNotificationType } from '@lagunahealth/pandora';
+import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Appointment)

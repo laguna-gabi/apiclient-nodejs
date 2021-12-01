@@ -1,4 +1,4 @@
-import { InternalNotificationType } from '@lagunahealth/pandora';
+import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { addMinutes } from 'date-fns';
@@ -14,7 +14,6 @@ import {
 } from '../../src/appointment';
 import {
   AppointmentStatus,
-  ContentKey,
   ErrorType,
   Errors,
   EventType,

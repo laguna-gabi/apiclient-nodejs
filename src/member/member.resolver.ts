@@ -1,4 +1,5 @@
 import {
+  ContentKey,
   IDeleteClientSettings,
   InnerQueueTypes,
   InternalNotificationType,
@@ -44,7 +45,6 @@ import {
   UpdateTaskStatusParams,
 } from '.';
 import {
-  ContentKey,
   ErrorType,
   Errors,
   EventType,

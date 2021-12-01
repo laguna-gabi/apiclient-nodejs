@@ -2,9 +2,10 @@ import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Schema } from '@nestjs/mongoose';
 import { IsAlphanumeric, IsOptional } from 'class-validator';
 import { Types } from 'mongoose';
-import { ContentKey, ErrorType, Errors, IsNotPlatformWeb } from '.';
+import { ErrorType, Errors, IsNotPlatformWeb } from '.';
 import {
   CancelNotificationType,
+  ContentKey,
   ExtraData,
   InternalNotificationType,
   Language,

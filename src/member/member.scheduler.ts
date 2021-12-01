@@ -12,7 +12,6 @@ import {
   NotifyParamsDocument,
 } from '.';
 import {
-  ContentKey,
   ErrorType,
   Errors,
   EventType,
@@ -23,7 +22,7 @@ import {
 } from '../common';
 import { Bitly } from '../providers';
 import { BaseScheduler, InternalSchedulerService, LeaderType } from '../scheduler';
-import { InternalNotificationType, NotificationType } from '@lagunahealth/pandora';
+import { ContentKey, InternalNotificationType, NotificationType } from '@lagunahealth/pandora';
 
 @Injectable()
 export class MemberScheduler extends BaseScheduler {

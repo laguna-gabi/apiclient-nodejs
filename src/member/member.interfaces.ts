@@ -1,6 +1,5 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
-  ContentKey,
   ErrorType,
   Errors,
   EventType,
@@ -13,6 +12,7 @@ import {
 import { UserService } from '../user';
 import { CreateMemberParams, Member, MemberConfig, MemberService } from '.';
 import {
+  ContentKey,
   IEventNotifySlack,
   IUpdateClientSettings,
   InnerQueueTypes,
