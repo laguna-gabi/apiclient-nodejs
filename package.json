@@ -24,7 +24,7 @@
     "seed:create:users:production": "export NODE_ENV=production && ts-node graphql/seedNewUser.ts",
     "test": "jest --config test/unit/jest.json",
     "test:watch": "jest --config test/unit/jest.json --watch",
-    "test:cov": "jest --config test/jest.json && jest-coverage-badges",
+    "test:cov": "jest --config test/jest.json --logHeapUsage && jest-coverage-badges",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:integration": "jest --config test/integration/jest.json",
     "test:validation": "jest --config test/validations/jest.json",
