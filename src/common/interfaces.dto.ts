@@ -5,7 +5,9 @@ import { Types } from 'mongoose';
 import { ContentKey, ErrorType, Errors, IsNotPlatformWeb } from '.';
 import {
   CancelNotificationType,
+  ExtraData,
   InternalNotificationType,
+  Language,
   NotificationType,
   Platform,
 } from '@lagunahealth/pandora';
@@ -17,15 +19,6 @@ registerEnumType(CancelNotificationType, { name: 'CancelNotificationType' });
 registerEnumType(InternalNotificationType, { name: 'InternalNotificationType' });
 registerEnumType(NotificationType, { name: 'NotificationType' });
 registerEnumType(Platform, { name: 'Platform' });
-
-/**************************************************************************************************
- ******************************* Enum registration for gql methods ********************************
- *************************************************************************************************/
-export enum Language {
-  en = 'en',
-  es = 'es',
-}
-
 registerEnumType(Language, { name: 'Language' });
 
 export enum AppointmentStatus {
@@ -97,16 +90,6 @@ export abstract class BaseService {
       }
     });
   }
-}
-
-export class ExtraData {
-  org?: { name: string };
-  downloadLink?: string;
-  appointmentStart?: string;
-  gapMinutes?: string;
-  appointmentTime?: string;
-  chatLink?: string;
-  scheduleLink?: string;
 }
 
 export class InternalNotificationMetadata {

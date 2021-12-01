@@ -22,12 +22,16 @@ import {
   IsStringDate,
   IsTypeMetadataProvided,
   IsValidZipCode,
-  Language,
   validPhoneExamples,
 } from '../common';
 import { Org } from '../org';
 import { User } from '../user';
-import { CancelNotificationType, NotificationType } from '@lagunahealth/pandora';
+import {
+  CancelNotificationType,
+  Honorific,
+  Language,
+  NotificationType,
+} from '@lagunahealth/pandora';
 import { MemberRole } from '../../src/common/roles';
 
 const validatorsConfig = config.get('graphql.validators');
@@ -44,20 +48,6 @@ export enum Sex {
 }
 
 registerEnumType(Sex, { name: 'Sex' });
-
-export enum Honorific {
-  mr = 'mr',
-  mrs = 'mrs',
-  ms = 'ms',
-  miss = 'miss',
-  mx = 'mx',
-  dr = 'dr',
-  reverend = 'reverend',
-  professor = 'professor',
-  captain = 'captain',
-  coach = 'coach',
-  father = 'father',
-}
 
 registerEnumType(Honorific, { name: 'Honorific' });
 

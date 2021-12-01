@@ -5,7 +5,8 @@ import * as config from 'config';
 import { Document, Types } from 'mongoose';
 import { UserRole } from '../../src/common';
 import { Appointment, AppointmentData } from '../appointment';
-import { ErrorType, Errors, Identifier, Language, validPhoneExamples } from '../common';
+import { ErrorType, Errors, Identifier, validPhoneExamples } from '../common';
+import { Language } from '@lagunahealth/pandora';
 
 registerEnumType(UserRole, { name: 'UserRole' });
 

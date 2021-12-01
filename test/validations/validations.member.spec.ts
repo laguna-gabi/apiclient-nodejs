@@ -1,12 +1,17 @@
-import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
+import {
+  CancelNotificationType,
+  Honorific,
+  Language,
+  NotificationType,
+  Platform,
+} from '@lagunahealth/pandora';
 import * as config from 'config';
 import * as faker from 'faker';
 import * as request from 'supertest';
-import { ErrorType, Errors, Language } from '../../src/common';
+import { ErrorType, Errors } from '../../src/common';
 import {
   CancelNotifyParams,
   CreateMemberParams,
-  Honorific,
   NotifyParams,
   Sex,
   UpdateMemberParams,

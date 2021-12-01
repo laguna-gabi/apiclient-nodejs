@@ -2,6 +2,7 @@ import {
   IDeleteClientSettings,
   InnerQueueTypes,
   InternalNotificationType,
+  Language,
   NotificationType,
   Platform,
 } from '@lagunahealth/pandora';
@@ -59,7 +60,6 @@ import {
   InternalNotifyControlMemberParams,
   InternalNotifyParams,
   InternationalizationService,
-  Language,
   Logger,
   LoggingInterceptor,
   MemberRole,

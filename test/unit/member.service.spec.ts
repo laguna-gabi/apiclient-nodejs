@@ -1,4 +1,4 @@
-import { Platform } from '@lagunahealth/pandora';
+import { Honorific, Language, Platform } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import * as faker from 'faker';
@@ -12,7 +12,7 @@ import {
   AppointmentModule,
   AppointmentStatus,
 } from '../../src/appointment';
-import { ErrorType, Errors, Language, Logger, RecordingType } from '../../src/common';
+import { ErrorType, Errors, Logger, RecordingType } from '../../src/common';
 import {
   ActionItem,
   ActionItemDto,
@@ -21,7 +21,6 @@ import {
   CreateMemberParams,
   Goal,
   GoalDto,
-  Honorific,
   ImageFormat,
   Journal,
   JournalDto,

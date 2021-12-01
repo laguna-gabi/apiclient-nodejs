@@ -1,11 +1,11 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as i18next from 'i18next';
 import { cloneDeep } from 'lodash';
-import { ExtraData, Language } from '.';
 import * as en from '../../languages/en.json';
 import * as es from '../../languages/es.json';
 import { Member } from '../member';
 import { User } from '../user';
+import { ExtraData, Language } from '@lagunahealth/pandora';
 
 export enum ContentKey {
   newMember = 'newMember',

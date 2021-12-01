@@ -19,7 +19,6 @@ import {
   CancelNotificationParams,
   ContentKey,
   InternalNotifyParams,
-  Language,
   MemberRole,
   SendOneSignalNotification,
   SendSendBirdNotification,
@@ -28,9 +27,11 @@ import {
 } from '../src/common';
 import {
   CancelNotificationType,
+  Honorific,
   IUpdateClientSettings,
   InnerQueueTypes,
   InternalNotificationType,
+  Language,
   NotificationType,
   Platform,
 } from '@lagunahealth/pandora';
@@ -41,7 +42,6 @@ import {
   CreateMemberParams,
   CreateTaskParams,
   GetMemberUploadJournalLinksParams,
-  Honorific,
   ImageFormat,
   Member,
   MemberConfig,
@@ -600,13 +600,15 @@ export const generateUpdateClientSettings = ({
     type: InnerQueueTypes.updateClientSettings,
     id: memberConfig.memberId.toString(),
     orgName: member?.org.name,
+    firstName: member?.firstName,
+    lastName: member?.lastName,
     phone: member?.phone,
+    honorific: member?.honorific,
     platform: memberConfig.platform,
     externalUserId: memberConfig.externalUserId,
     isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
     isAppointmentsReminderEnabled: memberConfig.isAppointmentsReminderEnabled,
     isRecommendationsEnabled: memberConfig.isRecommendationsEnabled,
     firstLoggedInAt: memberConfig.firstLoggedInAt,
-    firstName: member?.firstName,
   };
 };
