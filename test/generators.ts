@@ -1,4 +1,4 @@
-import { NotificationType, Platform, SourceApi, TriggeredApi } from '@lagunahealth/pandora';
+import { NotificationType, Platform, SourceApi } from '@lagunahealth/pandora';
 import { add } from 'date-fns';
 import { internet, lorem, name } from 'faker';
 import { Types } from 'mongoose';
@@ -37,7 +37,6 @@ export const generateClientSettings = ({
 export const generateDispatch = ({
   dispatchId = v4(),
   correlationId = v4(),
-  triggeredApi = TriggeredApi.graphql,
   sourceApi = SourceApi.hepius,
   notificationType = NotificationType.text,
   recipientClientId = v4(),
@@ -58,7 +57,6 @@ export const generateDispatch = ({
   return {
     dispatchId,
     correlationId,
-    triggeredApi,
     sourceApi,
     notificationType,
     recipientClientId,

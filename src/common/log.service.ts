@@ -12,7 +12,6 @@ export class Logger extends BaseLogger {
     //dispatch data
     'dispatchId',
     'correlationId',
-    'triggeredApi',
     'sourceApi',
     'notificationType',
     'recipientClientId',

@@ -1,4 +1,4 @@
-import { AllNotificationTypes, SourceApi, TriggeredApi } from '@lagunahealth/pandora';
+import { AllNotificationTypes, SourceApi } from '@lagunahealth/pandora';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 /**************************************************************************************************
@@ -36,9 +36,6 @@ export class Dispatch {
 
   @Prop()
   correlationId: string;
-
-  @Prop()
-  triggeredApi: TriggeredApi;
 
   @Prop()
   sourceApi: SourceApi;
