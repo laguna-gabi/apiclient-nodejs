@@ -53,8 +53,25 @@ export class Creators {
     return { id, ...orgParams };
   };
 
-  createAndValidateMember = async ({ org }: { org: Org }): Promise<Member> => {
-    const memberParams = generateCreateMemberParams({ orgId: org.id });
+  /**
+   * @param useNewUser : true if you call scheduleAppointment, in order to avoid error of collision
+   * in appointment: ErrorType.appointmentOverlaps : Appointment overlaps another appointment
+   */
+  createAndValidateMember = async ({
+    org,
+    useNewUser = false,
+  }: {
+    org: Org;
+    useNewUser?: boolean;
+  }): Promise<Member> => {
+    const userParams = generateCreateUserParams();
+    let userId;
+    if (useNewUser) {
+      const { id } = await this.handler.mutations.createUser({ userParams });
+      userId = id;
+    }
+
+    const memberParams = generateCreateMemberParams({ orgId: org.id, userId });
     const { id } = await this.handler.mutations.createMember({ memberParams });
 
     const member = await this.handler.queries.getMember({ id });

@@ -102,8 +102,8 @@ describe('Integration tests: all', () => {
     const resultNurse1 = await creators.createAndValidateUser([UserRole.nurse, UserRole.coach]);
     const resultNurse2 = await creators.createAndValidateUser([UserRole.nurse]);
 
-    const resultOrg = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org: resultOrg });
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({ org, useNewUser: true });
 
     const appointmentPrimaryUser = await creators.createAndValidateAppointment({ member });
 
@@ -172,8 +172,8 @@ describe('Integration tests: all', () => {
    */
   it('get should return just the member appointment of a user', async () => {
     const org = await creators.createAndValidateOrg();
-    const member1 = await creators.createAndValidateMember({ org });
-    const member2 = await creators.createAndValidateMember({ org });
+    const member1 = await creators.createAndValidateMember({ org, useNewUser: true });
+    const member2 = await creators.createAndValidateMember({ org, useNewUser: true });
 
     const appointmentMember1 = await creators.createAndValidateAppointment({ member: member1 });
     const appointmentMember2 = await creators.createAndValidateAppointment({ member: member2 });
@@ -199,9 +199,9 @@ describe('Integration tests: all', () => {
 
   it('should return members appointment filtered by orgId', async () => {
     const org = await creators.createAndValidateOrg();
-    const member1 = await creators.createAndValidateMember({ org });
+    const member1 = await creators.createAndValidateMember({ org, useNewUser: true });
     const primaryUser1 = member1.users[0];
-    const member2 = await creators.createAndValidateMember({ org });
+    const member2 = await creators.createAndValidateMember({ org, useNewUser: true });
     const primaryUser2 = member1.users[0];
 
     const params1a = generateScheduleAppointmentParams({
@@ -265,7 +265,7 @@ describe('Integration tests: all', () => {
 
   it('should validate that getMember attach chat app link to each appointment', async () => {
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
+    const member = await creators.createAndValidateMember({ org, useNewUser: true });
 
     const appointmentMember = await creators.createAndValidateAppointment({ member });
 
@@ -429,7 +429,7 @@ describe('Integration tests: all', () => {
     it('should delete timeout for member if an appointment is scheduled', async () => {
       const primaryUser = await creators.createAndValidateUser();
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
       const appointmentParams: RequestAppointmentParams = generateRequestAppointmentParams({
         memberId: member.id,
         userId: primaryUser.id,
@@ -516,7 +516,7 @@ describe('Integration tests: all', () => {
   describe('delete member', () => {
     it('should delete member', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
       const appointment = await creators.createAndValidateAppointment({ member });
 
       const result = await handler.mutations.deleteMember({ id: member.id });
@@ -549,7 +549,7 @@ describe('Integration tests: all', () => {
   describe('replaceUserForMember', () => {
     it('should set new user for a given member', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
       const oldUserId = member.primaryUserId.toString();
       const newUser = await creators.createAndValidateUser();
       delete newUser.authId;
@@ -641,7 +641,7 @@ describe('Integration tests: all', () => {
       'should register scheduled appointment reminder and notify it to member with isAppointmentsReminderEnabled=%p',
       async (isAppointmentsReminderEnabled) => {
         const org = await creators.createAndValidateOrg();
-        const member = await creators.createAndValidateMember({ org });
+        const member = await creators.createAndValidateMember({ org, useNewUser: true });
 
         await handler.mutations.updateMemberConfig({
           updateMemberConfigParams: generateUpdateMemberConfigParams({
@@ -922,7 +922,7 @@ describe('Integration tests: all', () => {
       /* eslint-enable max-len */
       const user = await creators.createAndValidateUser();
       const org = await creators.createAndValidateOrg();
-      const member: Member = await creators.createAndValidateMember({ org });
+      const member: Member = await creators.createAndValidateMember({ org, useNewUser: true });
 
       const appointmentParams = generateScheduleAppointmentParams({
         memberId: member.id,
@@ -944,7 +944,7 @@ describe('Integration tests: all', () => {
     it('should get user slots', async () => {
       const user = await creators.createAndValidateUser();
       const org = await creators.createAndValidateOrg();
-      const member: Member = await creators.createAndValidateMember({ org });
+      const member: Member = await creators.createAndValidateMember({ org, useNewUser: true });
 
       await handler.setContextUserId(user.id).mutations.createAvailabilities({
         availabilities: [
@@ -1023,7 +1023,7 @@ describe('Integration tests: all', () => {
   describe('notes', () => {
     it('should create update and delete appointment notes', async () => {
       const org = await creators.createAndValidateOrg();
-      const member: Member = await creators.createAndValidateMember({ org });
+      const member: Member = await creators.createAndValidateMember({ org, useNewUser: true });
       const scheduledAppointment = generateScheduleAppointmentParams({
         memberId: member.id,
         userId: member.primaryUserId.toString(),
@@ -1167,7 +1167,7 @@ describe('Integration tests: all', () => {
 
     it('should delete recordings and media files on unconsented appointment end', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
       const appointmentParams = generateScheduleAppointmentParams({
         memberId: member.id,
         userId: member.users[0].id,

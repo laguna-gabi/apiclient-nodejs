@@ -33,8 +33,8 @@ describe('Integration tests: rest', () => {
 
   describe('getSlots', () => {
     it('should get slots', async () => {
-      const resultOrg = await creators.createAndValidateOrg();
-      const resultMember = await creators.createAndValidateMember({ org: resultOrg });
+      const org = await creators.createAndValidateOrg();
+      const resultMember = await creators.createAndValidateMember({ org, useNewUser: true });
       const user = await handler.setContextUserId(resultMember.primaryUserId).queries.getUser();
 
       const appointment = await creators.createAndValidateAppointment({ member: resultMember });
@@ -80,8 +80,8 @@ describe('Integration tests: rest', () => {
 
   describe('scheduleAppointment', () => {
     it('should schedule an appointment via rest', async () => {
-      const resultOrg = await creators.createAndValidateOrg();
-      const resultMember = await creators.createAndValidateMember({ org: resultOrg });
+      const org = await creators.createAndValidateOrg();
+      const resultMember = await creators.createAndValidateMember({ org, useNewUser: true });
 
       const appointmentsParams = generateScheduleAppointmentParams({
         userId: resultMember.primaryUserId.toString(),

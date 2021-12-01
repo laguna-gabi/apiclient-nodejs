@@ -61,7 +61,7 @@ describe('Integration tests : getMembers', () => {
 
   it('should call with a all member parameters', async () => {
     const org = await creators.createAndValidateOrg();
-    const member: Member = await creators.createAndValidateMember({ org });
+    const member: Member = await creators.createAndValidateMember({ org, useNewUser: true });
     const primaryUser = member.users[0];
 
     await creators.createAndValidateAppointment({ member });
