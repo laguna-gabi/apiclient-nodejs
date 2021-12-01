@@ -383,7 +383,7 @@ describe('Integration tests: all', () => {
   `(`should add a not existed user to member users list on $title`, async (params) => {
     /* eslint-enable max-len */
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
+    const member = await creators.createAndValidateMember({ org, useNewUser: true });
 
     const initialMember = await handler.queries.getMember({ id: member.id });
     expect(initialMember.users.length).toEqual(1);
