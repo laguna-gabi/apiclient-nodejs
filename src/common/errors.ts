@@ -53,6 +53,7 @@ export enum ErrorType {
   appointmentEndAfterStart = 9306,
   appointmentNoShow = 9307,
   appointmentCanNotBeUpdated = 9308,
+  appointmentOverlaps = 9309,
 
   // Module org errors
   orgAlreadyExists = 9401,
@@ -139,6 +140,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.appointmentStartDate.valueOf(), `start ${dateInstanceFormat}`],
   [ErrorType.appointmentEndDate.valueOf(), `end ${dateInstanceFormat}`],
   [ErrorType.appointmentEndAfterStart.valueOf(), 'end date must be after start date'],
+  [ErrorType.appointmentOverlaps.valueOf(), 'Appointment overlaps another appointment'],
   [
     ErrorType.appointmentNoShow.valueOf(),
     'if noShow=true, a `reason` field is mandatory as well. ' +

@@ -1,5 +1,6 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import { addMinutes } from 'date-fns';
 import * as faker from 'faker';
 import { Model, model } from 'mongoose';
 import {
@@ -329,8 +330,13 @@ describe('AppointmentService', () => {
     it('should schedule multiple appointments for the same user and member', async () => {
       const memberId = generateId();
       const userId = generateId();
-      const schedule = async (): Promise<Appointment> => {
-        const appointmentParams = generateScheduleAppointmentParams({ memberId, userId });
+      const schedule = async (start: Date): Promise<Appointment> => {
+        const appointmentParams = generateScheduleAppointmentParams({
+          memberId,
+          userId,
+          start,
+          end: addMinutes(start, 30),
+        });
         const result = await service.schedule(appointmentParams);
         validateNewAppointmentEvent(
           appointmentParams.memberId,
@@ -339,10 +345,10 @@ describe('AppointmentService', () => {
         );
         return result;
       };
-
-      const appointment1 = await schedule();
-      const appointment2 = await schedule();
-      const appointment3 = await schedule();
+      const startDate = new Date();
+      const appointment1 = await schedule(addMinutes(startDate, 30));
+      const appointment2 = await schedule(addMinutes(startDate, 60));
+      const appointment3 = await schedule(addMinutes(startDate, 90));
 
       expect(appointment1.userId).toEqual(appointment2.userId);
       expect(appointment2.userId).toEqual(appointment3.userId);
@@ -352,6 +358,34 @@ describe('AppointmentService', () => {
       expect(appointment1.id).not.toEqual(appointment3.id);
       expect(appointment2.id).not.toEqual(appointment3.id);
     });
+
+    test.each`
+      startDelta | endDelta | explanation
+      ${0}       | ${0}     | ${'similar appointment'}
+      ${-15}     | ${-15}   | ${'end overlapping'}
+      ${15}      | ${15}    | ${'start overlapping'}
+    `(
+      'should throw an error on scheduleAppointment overlaps ($explanation)',
+      async ({ startDelta, endDelta }) => {
+        const start = new Date();
+        const end = addMinutes(start, 30);
+        const memberId = generateId();
+        const appointmentParams = generateScheduleAppointmentParams({
+          memberId,
+          start,
+          end,
+        });
+
+        await service.schedule(appointmentParams);
+        expect(
+          service.schedule({
+            ...appointmentParams,
+            start: addMinutes(start, startDelta),
+            end: addMinutes(end, endDelta),
+          }),
+        ).rejects.toThrow(new Error(Errors.get(ErrorType.appointmentOverlaps)));
+      },
+    );
 
     it('should override requested appointment on scheduled appointment', async () => {
       const requestAppointmentParams = generateRequestAppointmentParams();
@@ -611,7 +645,7 @@ describe('AppointmentService', () => {
       const pastAppointments = [];
       for (let step = 0; step < 3; step++) {
         const pastAppointment = generateScheduleAppointmentParams({
-          start: faker.date.recent(4),
+          start: faker.date.recent(4 + step),
           userId,
           memberId,
         });

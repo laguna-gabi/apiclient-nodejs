@@ -100,6 +100,8 @@ export class AppointmentService extends BaseService {
           status: { $eq: AppointmentStatus.requested },
         };
 
+    await this.validateOverlap(params);
+
     const object = await this.appointmentModel.findOneAndUpdate(
       filter,
       {
@@ -128,6 +130,33 @@ export class AppointmentService extends BaseService {
     }
 
     return this.replaceId(object.value.toObject() as AppointmentDocument);
+  }
+  async validateOverlap(params: ScheduleAppointmentParams) {
+    const sharedQuery = {
+      userId: new Types.ObjectId(params.userId),
+      status: { $ne: AppointmentStatus.done },
+      ...(params.id ? { _id: { $ne: new Types.ObjectId(params.id) } } : {}),
+    };
+    const isOverlappingAppointments = await this.appointmentModel.exists({
+      $or: [
+        // start of appointment in range
+        {
+          ...sharedQuery,
+          start: { $lte: params.start },
+          end: { $gt: params.start },
+        },
+        // start of appointment in range
+        {
+          ...sharedQuery,
+          start: { $lt: params.end },
+          end: { $gte: params.end },
+        },
+      ],
+    });
+
+    if (isOverlappingAppointments) {
+      throw new Error(Errors.get(ErrorType.appointmentOverlaps));
+    }
   }
 
   async show(params): Promise<Appointment> {
