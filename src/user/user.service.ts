@@ -147,7 +147,7 @@ export class UserService extends BaseService {
                 $filter: {
                   input: '$av',
                   as: 'availability',
-                  cond: { $gte: ['$$availability.start', new Date()] },
+                  cond: { $gte: ['$$availability.end', new Date()] },
                 },
               }
             : '$av',

@@ -400,6 +400,27 @@ describe('UserService', () => {
       expect(result.slots.length).toEqual(0);
     });
 
+    /* eslint-disable-next-line max-len */
+    it('should return slots if availabilities exists and allowEmptySlotsResponse=true', async () => {
+      const user = await service.insert(generateCreateUserParams());
+      await availabilityResolver.createAvailabilities({ req: { user: { _id: user.id } } }, [
+        generateAvailabilityInput({
+          start: startOfToday(),
+          end: add(startOfToday(), { days: 1 }),
+        }),
+      ]);
+
+      // this is the query as harmony does
+      const result = await service.getSlots({
+        userId: user.id,
+        notBefore: add(startOfToday(), { hours: 10 }),
+        notAfter: add(startOfToday(), { hours: 22 }),
+        allowEmptySlotsResponse: true,
+      });
+
+      expect(result.slots.length).toEqual(5);
+    });
+
     test.each([true, false])(
       'should not return past slots when allowEmptySlotsResponse=true (%p}',
       async (allowEmptySlotsResponse) => {
