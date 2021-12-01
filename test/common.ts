@@ -8,10 +8,12 @@ import { connect, disconnect } from 'mongoose';
 import { v4 } from 'uuid';
 import { apiPrefix, webhooks } from '../src/common';
 import { DbModule } from '../src/db/db.module';
+import { Member, defaultMemberParams } from '../src/member';
 import {
   CognitoService,
   FeatureFlagService,
   NotificationsService,
+  QueueService,
   SendBird,
   SlackBot,
   StorageService,
@@ -19,7 +21,6 @@ import {
 } from '../src/providers';
 import { User, UserService } from '../src/user';
 import { Mutations, Queries } from './aux';
-import { Member, defaultMemberParams } from '../src/member';
 import { generateId } from './generators';
 import { twilioPeerServiceToken } from './unit/mocks/twilioPeerServiceToken';
 
@@ -86,7 +87,12 @@ export const compareMembers = (member: Member, memberBase, primaryUserId?) => {
 };
 
 export const dbConnect = async () => {
-  await connect(config.get('db.connection'), { useNewUrlParser: true });
+  await connect(config.get('db.connection'), {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true,
+  });
 };
 
 export const dbDisconnect = async () => {
@@ -95,6 +101,14 @@ export const dbDisconnect = async () => {
 
 export const defaultModules = () => {
   return [DbModule, EventEmitterModule.forRoot(), ScheduleModule.forRoot()];
+};
+
+export const mockLogger = (logger) => {
+  jest.spyOn(logger, 'log').mockImplementation(() => undefined);
+  jest.spyOn(logger, 'debug').mockImplementation(() => undefined);
+  jest.spyOn(logger, 'error').mockImplementation(() => undefined);
+  jest.spyOn(logger, 'info').mockImplementation(() => undefined);
+  jest.spyOn(logger, 'warn').mockImplementation(() => undefined);
 };
 
 export const mockProviders = (
@@ -107,6 +121,7 @@ export const mockProviders = (
   cognitoService;
   storage;
   featureFlagService;
+  queueService;
 } => {
   const sendBird = module.get<SendBird>(SendBird);
   const storage = module.get<StorageService>(StorageService);
@@ -115,6 +130,7 @@ export const mockProviders = (
   const slackBot = module.get<SlackBot>(SlackBot);
   const cognitoService = module.get<CognitoService>(CognitoService);
   const featureFlagService = module.get<FeatureFlagService>(FeatureFlagService);
+  const queueService = module.get<QueueService>(QueueService);
 
   const spyOnFeatureFlagControlGroup = jest.spyOn(featureFlagService, 'isControlGroup');
   const spyOnSendBirdCreateUser = jest.spyOn(sendBird, 'createUser');
@@ -148,6 +164,8 @@ export const mockProviders = (
   const spyOnSlackBotSendMessage = jest.spyOn(slackBot, 'send');
   const spyOnCognitoServiceDisableMember = jest.spyOn(cognitoService, 'disableMember');
   const spyOnCognitoServiceDeleteMember = jest.spyOn(cognitoService, 'deleteMember');
+  const spyOnQueueServiceSendMessage = jest.spyOn(queueService, 'sendMessage');
+
   spyOnSendBirdCreateUser.mockResolvedValue(v4());
   spyOnFeatureFlagControlGroup.mockReturnValue(false);
   spyOnSendBirdCreateGroupChannel.mockResolvedValue(true);
@@ -174,6 +192,7 @@ export const mockProviders = (
   spyOnSendBirdLeave.mockReturnValue(undefined);
   spyOnCognitoServiceDisableMember.mockReturnValue(undefined);
   spyOnCognitoServiceDeleteMember.mockReturnValue(undefined);
+  spyOnQueueServiceSendMessage.mockReturnValue(undefined);
 
   return {
     sendBird: {
@@ -206,5 +225,6 @@ export const mockProviders = (
       spyOnStorageHandleNewMember,
     },
     featureFlagService: { spyOnFeatureFlagControlGroup },
+    queueService: { spyOnQueueServiceSendMessage },
   };
 };

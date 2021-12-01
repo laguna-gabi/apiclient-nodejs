@@ -1,11 +1,11 @@
+import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
-import { ErrorType, Errors, delay } from '../../src/common';
+import { ErrorType, Errors, Logger, delay } from '../../src/common';
 import { NotificationsService } from '../../src/providers';
-import { dbDisconnect, defaultModules } from '../common';
+import { dbDisconnect, defaultModules, mockLogger } from '../common';
 import { generatePath, generatePhone } from '../generators';
-import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 
 /**
  * THIS TEST IS DISABLED
@@ -15,6 +15,8 @@ describe.skip('live: notifications (one signal)', () => {
 
   const beforeEachCustom = async () => {
     const module = await Test.createTestingModule({ imports: defaultModules() }).compile();
+    mockLogger(module.get<Logger>(Logger));
+
     const notificationsService = module.get<NotificationsService>(NotificationsService);
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment

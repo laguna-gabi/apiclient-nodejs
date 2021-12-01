@@ -1,3 +1,6 @@
+import { NotificationType } from '@lagunahealth/pandora';
+import { HttpService } from '@nestjs/axios';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import axios from 'axios';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
@@ -5,10 +8,8 @@ import { AppointmentStatus } from '../../src/appointment';
 import { Logger, SendSendBirdNotification, UserRole } from '../../src/common';
 import { CreateSendbirdGroupChannelParams } from '../../src/communication';
 import { ConfigsService, SendBird } from '../../src/providers';
+import { mockLogger } from '../common';
 import { generateId } from '../generators';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { NotificationType } from '@lagunahealth/pandora';
-import { HttpService } from '@nestjs/axios';
 
 describe('live: sendbird actions', () => {
   let sendBird: SendBird;
@@ -16,6 +17,7 @@ describe('live: sendbird actions', () => {
   beforeAll(async () => {
     const configService = new ConfigsService();
     const logger = new Logger(new EventEmitter2());
+    mockLogger(logger);
     const httpService = new HttpService();
     sendBird = new SendBird(configService, httpService, logger);
     await sendBird.onModuleInit();

@@ -1,10 +1,11 @@
+import { NotificationType } from '@lagunahealth/pandora';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import * as faker from 'faker';
 import { Model, model } from 'mongoose';
 import { v4 } from 'uuid';
-import { ReminderType, delay } from '../../src/common';
+import { Logger, ReminderType, delay } from '../../src/common';
 import {
   MemberModule,
   MemberScheduler,
@@ -23,8 +24,8 @@ import {
   generateCreateUserParams,
   generateId,
   generateOrgParams,
+  mockLogger,
 } from '../index';
-import { NotificationType } from '@lagunahealth/pandora';
 
 describe('MemberScheduler', () => {
   let module: TestingModule;
@@ -79,6 +80,7 @@ describe('MemberScheduler', () => {
     notifyParamsModel = model(NotifyParams.name, NotifyParamsDto);
     schedulerRegistry = module.get<SchedulerRegistry>(SchedulerRegistry);
     internalSchedulerService = module.get<InternalSchedulerService>(InternalSchedulerService);
+    mockLogger(module.get<Logger>(Logger));
 
     await dbConnect();
     await internalSchedulerService.resetLeader(LeaderType.member);

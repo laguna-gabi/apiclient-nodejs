@@ -4,11 +4,17 @@ import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
-import { EventType, MemberRole, UpdatedAppointmentAction, UserRole } from '../../src/common';
+import {
+  EventType,
+  Logger,
+  MemberRole,
+  UpdatedAppointmentAction,
+  UserRole
+} from '../../src/common';
 import {
   CommunicationModule,
   CommunicationResolver,
-  CommunicationService,
+  CommunicationService
 } from '../../src/communication';
 import { DbModule } from '../../src/db/db.module';
 import { UserService } from '../../src/user';
@@ -21,6 +27,7 @@ import {
   generateUniqueUrl,
   mockGenerateMember,
   mockGenerateUser,
+  mockLogger
 } from '../index';
 
 describe('CommunicationResolver', () => {
@@ -41,6 +48,7 @@ describe('CommunicationResolver', () => {
     userService = module.get<UserService>(UserService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
+    mockLogger(module.get<Logger>(Logger));
   });
 
   afterAll(async () => {

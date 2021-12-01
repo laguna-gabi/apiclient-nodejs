@@ -12,7 +12,7 @@ import {
   AppointmentModule,
   AppointmentStatus,
 } from '../../src/appointment';
-import { ErrorType, Errors, Language, RecordingType } from '../../src/common';
+import { ErrorType, Errors, Language, Logger, RecordingType } from '../../src/common';
 import {
   ActionItem,
   ActionItemDto,
@@ -59,6 +59,7 @@ import {
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
   generateZipCode,
+  mockLogger,
 } from '../index';
 
 describe('MemberService', () => {
@@ -79,6 +80,7 @@ describe('MemberService', () => {
     }).compile();
 
     service = module.get<MemberService>(MemberService);
+    mockLogger(module.get<Logger>(Logger));
 
     memberModel = model(Member.name, MemberDto);
     controlMemberModel = model(ControlMember.name, ControlMemberDto);

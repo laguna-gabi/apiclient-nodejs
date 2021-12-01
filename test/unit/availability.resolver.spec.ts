@@ -4,7 +4,14 @@ import {
   AvailabilityResolver,
   AvailabilityService,
 } from '../../src/availability';
-import { dbDisconnect, defaultModules, generateAvailabilityInput, generateId } from '../index';
+import { Logger } from '../../src/common';
+import {
+  dbDisconnect,
+  defaultModules,
+  generateAvailabilityInput,
+  generateId,
+  mockLogger,
+} from '../index';
 
 describe('AvailabilityResolver', () => {
   let module: TestingModule;
@@ -18,6 +25,7 @@ describe('AvailabilityResolver', () => {
 
     resolver = module.get<AvailabilityResolver>(AvailabilityResolver);
     service = module.get<AvailabilityService>(AvailabilityService);
+    mockLogger(module.get<Logger>(Logger));
   });
 
   afterAll(async () => {

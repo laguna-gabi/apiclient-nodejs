@@ -1,3 +1,4 @@
+import { InternalNotificationType } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -14,12 +15,18 @@ import {
   AppointmentScheduler,
   AppointmentStatus,
 } from '../../src/appointment';
-import { ContentKey, EventType, InternalNotifyParams, ReminderType, delay } from '../../src/common';
+import {
+  ContentKey,
+  EventType,
+  InternalNotifyParams,
+  Logger,
+  ReminderType,
+  delay,
+} from '../../src/common';
 import { CommunicationResolver } from '../../src/communication';
 import { Bitly } from '../../src/providers';
 import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
-import { dbConnect, dbDisconnect, defaultModules, generateId } from '../index';
-import { InternalNotificationType } from '@lagunahealth/pandora';
+import { dbConnect, dbDisconnect, defaultModules, generateId, mockLogger } from '../index';
 
 describe('AppointmentScheduler', () => {
   let module: TestingModule;
@@ -54,6 +61,7 @@ describe('AppointmentScheduler', () => {
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     bitly = module.get<Bitly>(Bitly);
     internalSchedulerService = module.get<InternalSchedulerService>(InternalSchedulerService);
+    mockLogger(module.get<Logger>(Logger));
 
     await dbConnect();
     await internalSchedulerService.resetLeader(LeaderType.appointment);

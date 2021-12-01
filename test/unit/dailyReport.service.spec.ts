@@ -9,7 +9,7 @@ import {
   DailyReportDocument,
   DailyReportService,
 } from '../../src/dailyReport';
-import { dbDisconnect, generateId, generateObjectId } from '../../test';
+import { dbDisconnect, generateId, generateObjectId } from '../index';
 
 describe('DailyReportCategoryService', () => {
   let service: DailyReportService;

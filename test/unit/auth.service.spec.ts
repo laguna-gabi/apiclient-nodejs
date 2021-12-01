@@ -2,8 +2,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Request } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { AuthModule, AuthService, UserSecurityService } from '../../src/auth';
+import { Logger } from '../../src/common';
 import { User } from '../../src/user';
-import { dbDisconnect, defaultModules, mockGenerateMember, mockGenerateUser } from '../index';
+import {
+  dbDisconnect,
+  defaultModules,
+  mockGenerateMember,
+  mockGenerateUser,
+  mockLogger,
+} from '../index';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -17,6 +24,7 @@ describe('AuthService', () => {
 
     service = module.get<AuthService>(AuthService);
     securityService = module.get<UserSecurityService>(UserSecurityService);
+    mockLogger(module.get<Logger>(Logger));
   });
 
   afterAll(async () => {

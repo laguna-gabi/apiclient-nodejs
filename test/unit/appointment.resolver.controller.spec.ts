@@ -1,5 +1,8 @@
+import { InternalNotificationType } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import { addMinutes } from 'date-fns';
+import { format } from 'date-fns-tz';
 import {
   AppointmentController,
   AppointmentMethod,
@@ -18,6 +21,7 @@ import {
   IEventOnUpdatedAppointment,
   IEventOnUpdatedUserCommunication,
   InternalNotifyParams,
+  Logger,
   ReminderType,
   UpdatedAppointmentAction,
   scheduleAppointmentDateFormat,
@@ -31,10 +35,8 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateUpdateNotesParams,
+  mockLogger,
 } from '../index';
-import { format } from 'date-fns-tz';
-import { InternalNotificationType } from '@lagunahealth/pandora';
-import { addMinutes } from 'date-fns';
 
 describe('AppointmentResolver', () => {
   let module: TestingModule;
@@ -56,6 +58,7 @@ describe('AppointmentResolver', () => {
     scheduler = module.get<AppointmentScheduler>(AppointmentScheduler);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
+    mockLogger(module.get<Logger>(Logger));
   });
 
   afterAll(async () => {

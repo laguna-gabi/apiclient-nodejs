@@ -20,13 +20,13 @@ import {
 } from '..';
 import { AppModule } from '../../src/app.module';
 import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
-import { bearerToken } from '../../src/common';
+import { Logger, bearerToken } from '../../src/common';
 import { CommunicationService } from '../../src/communication';
 import { Member, MemberService } from '../../src/member';
 import { Org, OrgService } from '../../src/org';
 import { WebhooksController } from '../../src/providers';
 import { User, UserService } from '../../src/user';
-import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
+import { BaseHandler, dbConnect, dbDisconnect, mockLogger, mockProviders } from '../common';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -37,6 +37,8 @@ export class Handler extends BaseHandler {
   slackBot;
   cognitoService;
   storage;
+  featureFlagService;
+  queueService;
   eventEmitter: EventEmitter2;
   communicationService: CommunicationService;
   memberService: MemberService;
@@ -47,7 +49,6 @@ export class Handler extends BaseHandler {
   adminUser: User;
   patientZero: Member;
   lagunaOrg: Org | null;
-  featureFlagService;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -66,6 +67,9 @@ export class Handler extends BaseHandler {
       this.app.useGlobalGuards(new RolesGuard(reflector));
     }
 
+    this.app.useLogger(false);
+    mockLogger(moduleFixture.get<Logger>(Logger));
+
     await this.app.init();
 
     this.module = moduleFixture.get<GraphQLModule>(GraphQLModule);
@@ -79,6 +83,7 @@ export class Handler extends BaseHandler {
     this.cognitoService = providers.cognitoService;
     this.storage = providers.storage;
     this.featureFlagService = providers.featureFlagService;
+    this.queueService = providers.queueService;
     this.cognitoService = providers.cognitoService;
     const apolloServer = createTestClient((this.module as any).apolloServer);
     this.mutations = new Mutations(apolloServer);
@@ -121,6 +126,7 @@ export class Handler extends BaseHandler {
     this.cognitoService.spyOnCognitoServiceDisableMember.mockReset();
     this.cognitoService.spyOnCognitoServiceDeleteMember.mockReset();
     this.spyOnGetCommunicationService?.mockReset();
+    this.queueService.spyOnQueueServiceSendMessage.mockReset();
 
     await dbDisconnect();
   }

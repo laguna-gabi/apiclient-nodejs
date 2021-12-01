@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { EventType, IEventOnReceivedChatMessage } from '../../src/common';
+import { EventType, IEventOnReceivedChatMessage, Logger } from '../../src/common';
 import {
   ConfigsService,
   ExternalConfigs,
@@ -9,7 +9,7 @@ import {
   TwilioService,
   WebhooksController,
 } from '../../src/providers';
-import { dbDisconnect, defaultModules } from '../index';
+import { dbDisconnect, defaultModules, mockLogger } from '../index';
 import * as sendBirdAdminMessagePayload from './mocks/webhookSendbirdAdminMessagePayload.json';
 import * as sendBirdNewMessagePayload from './mocks/webhookSendbirdNewMessagePayload.json';
 
@@ -26,6 +26,7 @@ describe('WebhooksController', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({ imports: defaultModules() }).compile();
+
     controller = module.get<WebhooksController>(WebhooksController);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     twilioService = module.get<TwilioService>(TwilioService);
@@ -34,6 +35,7 @@ describe('WebhooksController', () => {
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
     spyOnTokenValidation = jest.spyOn(controller, 'validateMessageSentFromSendbird');
     spyOnSendbirdServiceGetMasterAppToken = jest.spyOn(sendbirdService, 'getMasterAppToken');
+    mockLogger(module.get<Logger>(Logger));
   });
 
   afterAll(async () => {

@@ -1,3 +1,4 @@
+import { Platform } from '@lagunahealth/pandora';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
@@ -8,6 +9,7 @@ import {
   EventType,
   IEventOnNewMemberCommunication,
   IEventOnUpdateUserConfig,
+  Logger,
   UpdatedAppointmentAction,
   UserRole,
 } from '../../src/common';
@@ -25,9 +27,9 @@ import {
   generateUniqueUrl,
   mockGenerateMember,
   mockGenerateUser,
+  mockLogger,
   mockProviders,
 } from '../index';
-import { Platform } from '@lagunahealth/pandora';
 
 describe('CommunicationService', () => {
   let module: TestingModule;
@@ -45,6 +47,7 @@ describe('CommunicationService', () => {
     service = module.get<CommunicationService>(CommunicationService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
+    mockLogger(module.get<Logger>(Logger));
 
     communicationModel = model(Communication.name, CommunicationDto);
 

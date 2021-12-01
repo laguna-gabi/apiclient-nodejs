@@ -2,8 +2,9 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
 import { v4 } from 'uuid';
 import { AppointmentModule, AppointmentScheduler } from '../../src/appointment';
+import { Logger } from '../../src/common';
 import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
-import { dbConnect, dbDisconnect, defaultModules, generateId } from '../index';
+import { dbConnect, dbDisconnect, defaultModules, generateId, mockLogger } from '../index';
 
 describe('BaseScheduler + InternalSchedulerService', () => {
   let module: TestingModule;
@@ -29,6 +30,7 @@ describe('BaseScheduler + InternalSchedulerService', () => {
     scheduler = module.get<AppointmentScheduler>(AppointmentScheduler);
     schedulerRegistry = module.get<SchedulerRegistry>(SchedulerRegistry);
     internalSchedulerService = module.get<InternalSchedulerService>(InternalSchedulerService);
+    mockLogger(module.get<Logger>(Logger));
 
     await dbConnect();
   });

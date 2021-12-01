@@ -1,6 +1,6 @@
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ErrorType, Errors, EventType, IEventOnNewUser, UserRole } from '../../src/common';
+import { ErrorType, Errors, EventType, IEventOnNewUser, Logger, UserRole } from '../../src/common';
 import { DbModule } from '../../src/db/db.module';
 import {
   GetSlotsParams,
@@ -15,6 +15,7 @@ import {
   generateGetSlotsParams,
   generateId,
   mockGenerateUser,
+  mockLogger,
 } from '../index';
 
 describe('UserResolver', () => {
@@ -35,6 +36,7 @@ describe('UserResolver', () => {
     service = module.get<UserService>(UserService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
+    mockLogger(module.get<Logger>(Logger));
   });
 
   afterAll(async () => {

@@ -1,10 +1,11 @@
+import { Platform } from '@lagunahealth/pandora';
 import axios from 'axios';
 import { EventEmitter2 } from 'eventemitter2';
 import * as faker from 'faker';
 import { Environments, Logger, StorageType } from '../../src/common';
 import { ConfigsService, StorageService } from '../../src/providers';
+import { mockLogger } from '../common';
 import { generateId, mockGenerateMember, mockGenerateUser } from '../generators';
-import { Platform } from '@lagunahealth/pandora';
 
 describe('live: aws', () => {
   describe('storage', () => {
@@ -21,6 +22,7 @@ describe('live: aws', () => {
       const configService = new ConfigsService();
       const eventEmitter = new EventEmitter2();
       const logger = new Logger(eventEmitter);
+      mockLogger(logger);
       storageService = new StorageService(logger, configService);
       await storageService.onModuleInit();
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment

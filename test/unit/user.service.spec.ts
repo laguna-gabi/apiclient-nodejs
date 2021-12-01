@@ -17,6 +17,7 @@ import {
   Errors,
   IEventOnNewAppointment,
   IEventOnUpdatedUserAppointments,
+  Logger,
   UserRole,
 } from '../../src/common';
 import {
@@ -39,6 +40,7 @@ import {
   generateId,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
+  mockLogger,
 } from '../index';
 
 describe('UserService', () => {
@@ -58,6 +60,7 @@ describe('UserService', () => {
     service = module.get<UserService>(UserService);
     availabilityResolver = module.get<AvailabilityResolver>(AvailabilityResolver);
     appointmentResolver = module.get<AppointmentResolver>(AppointmentResolver);
+    mockLogger(module.get<Logger>(Logger));
 
     userModel = model(User.name, UserDto);
     mockUserModel = module.get<Model<User>>(getModelToken(User.name));

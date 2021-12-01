@@ -28,6 +28,7 @@ import {
   InternalNotifyParams,
   InternationalizationService,
   Language,
+  Logger,
   QueueType,
   RegisterForNotificationParams,
   StorageType,
@@ -82,6 +83,7 @@ import {
   mockGenerateMember,
   mockGenerateMemberConfig,
   mockGenerateUser,
+  mockLogger,
 } from '../index';
 import { twilioPeerServiceToken } from './mocks/twilioPeerServiceToken';
 
@@ -122,6 +124,8 @@ describe('MemberResolver', () => {
     internationalizationService = module.get<InternationalizationService>(
       InternationalizationService,
     );
+    mockLogger(module.get<Logger>(Logger));
+
     await internationalizationService.onModuleInit();
   });
 

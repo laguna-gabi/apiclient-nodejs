@@ -1,10 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { internet, lorem } from 'faker';
-import { ConfigsService, ProvidersModule, QueueService } from '../../src/providers';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Environments } from '@lagunahealth/pandora';
-import { QueueType } from '../../src/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
+import { internet, lorem } from 'faker';
+import { Logger, QueueType } from '../../src/common';
+import { ConfigsService, ProvidersModule, QueueService } from '../../src/providers';
+import { mockLogger } from '../index';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const AWS = require('aws-sdk');
 
@@ -27,10 +28,11 @@ describe(QueueService.name, () => {
     module = await Test.createTestingModule({
       imports: [ProvidersModule, EventEmitterModule.forRoot()],
     }).compile();
-    service = module.get<QueueService>(QueueService);
 
+    service = module.get<QueueService>(QueueService);
     const configsService = module.get<ConfigsService>(ConfigsService);
     jest.spyOn(configsService, 'getConfig').mockResolvedValue(lorem.word());
+    mockLogger(module.get<Logger>(Logger));
   });
 
   afterAll(async () => {
