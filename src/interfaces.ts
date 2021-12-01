@@ -13,15 +13,19 @@ export interface IInnerQueueTypes {
 
 export interface IUpdateClientSettings extends IInnerQueueTypes {
   id: string;
-  orgName?: string;
   phone?: string;
+  firstName?: string;
+  lastName?: string;
+  //only member
+  orgName?: string;
   platform?: Platform;
-  externalUserId?: string;
   isPushNotificationsEnabled?: boolean;
   isAppointmentsReminderEnabled?: boolean;
   isRecommendationsEnabled?: boolean;
+  externalUserId?: string;
   firstLoggedInAt?: Date;
-  firstName?: string;
+  honorific?: Honorific;
+  //only user
   avatar?: string;
 }
 
@@ -93,4 +97,52 @@ export interface IEventNotifySlack {
   message: string;
   icon: SlackIcon;
   channel: string;
+}
+
+export enum ContentKey {
+  newMember = 'newMember',
+  newControlMember = 'newControlMember',
+  newMemberNudge = 'newMemberNudge',
+  newRegisteredMember = 'newRegisteredMember',
+  newRegisteredMemberNudge = 'newRegisteredMemberNudge',
+  appointmentScheduledMember = 'appointmentScheduledMember',
+  appointmentLongReminder = 'appointmentLongReminder',
+  appointmentReminder = 'appointmentReminder',
+  appointmentReminderLink = 'appointmentReminderLink',
+  appointmentRequest = 'appointmentRequest',
+  appointmentRequestLink = 'appointmentRequestLink',
+  newChatMessageFromUser = 'newChatMessageFromUser',
+  logReminder = 'logReminder',
+  newChatMessageFromMember = 'newChatMessageFromMember',
+  appointmentScheduledUser = 'appointmentScheduledUser',
+  memberNotFeelingWellMessage = 'memberNotFeelingWellMessage',
+}
+
+export enum Language {
+  en = 'en',
+  es = 'es',
+}
+
+export enum Honorific {
+  mr = 'mr',
+  mrs = 'mrs',
+  ms = 'ms',
+  miss = 'miss',
+  mx = 'mx',
+  dr = 'dr',
+  reverend = 'reverend',
+  professor = 'professor',
+  captain = 'captain',
+  coach = 'coach',
+  father = 'father',
+}
+
+export class ExtraData {
+  org?: { name: string };
+  downloadLink?: string;
+  appointmentStart?: string;
+  gapMinutes?: string;
+  appointmentTime?: string;
+  chatLink?: string;
+  scheduleLink?: string;
 }
