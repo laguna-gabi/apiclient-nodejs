@@ -1,6 +1,15 @@
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ErrorType, Errors, EventType, IEventOnNewUser, Logger, UserRole } from '../../src/common';
+import {
+  ErrorType,
+  Errors,
+  EventType,
+  IEventNotifyQueue,
+  IEventOnNewUser,
+  Logger,
+  QueueType,
+  UserRole,
+} from '../../src/common';
 import { DbModule } from '../../src/db/db.module';
 import {
   GetSlotsParams,
@@ -17,6 +26,7 @@ import {
   mockGenerateUser,
   mockLogger,
 } from '../index';
+import { IUpdateClientSettings, InnerQueueTypes } from '@lagunahealth/pandora';
 
 describe('UserResolver', () => {
   let module: TestingModule;
@@ -71,16 +81,36 @@ describe('UserResolver', () => {
       expect(spyOnServiceInsert).toBeCalledWith(params);
     });
 
-    it('should call event newUser', async () => {
+    it(`should call events ${EventType.onNewUser} and ${EventType.notifyQueue}`, async () => {
       const params = generateCreateUserParams();
-      spyOnServiceInsert.mockImplementationOnce(async () => params);
+      const id = generateId();
+      spyOnServiceInsert.mockImplementationOnce(async () => ({ ...params, id }));
       await resolver.createUser(params);
 
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      const eventParams: IEventOnNewUser = { user: params };
+      const eventParams: IEventOnNewUser = { user: { ...params, id } };
       /* eslint-enable */
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.onNewUser, eventParams);
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.onNewUser, eventParams);
+
+      const updateClientSettings: IUpdateClientSettings = {
+        type: InnerQueueTypes.updateClientSettings,
+        id,
+        firstName: params.firstName,
+        lastName: params.lastName,
+        phone: params.phone,
+        avatar: params.avatar,
+      };
+      const eventSettingsParams: IEventNotifyQueue = {
+        type: QueueType.notifications,
+        message: JSON.stringify(updateClientSettings),
+      };
+
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+        2,
+        EventType.notifyQueue,
+        eventSettingsParams,
+      );
     });
   });
 

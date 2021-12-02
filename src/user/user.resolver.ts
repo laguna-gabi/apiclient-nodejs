@@ -1,17 +1,20 @@
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { camelCase } from 'lodash';
+import { camelCase, isUndefined, omitBy } from 'lodash';
 import { CreateUserParams, GetSlotsParams, Slots, User, UserConfig, UserService } from '.';
 import {
   EventType,
+  IEventNotifyQueue,
   IEventOnNewUser,
   Identifier,
   LoggingInterceptor,
+  QueueType,
   Roles,
   UserRole,
   extractUserId,
 } from '../common';
+import { IUpdateClientSettings, InnerQueueTypes } from '@lagunahealth/pandora';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => User)
@@ -28,6 +31,7 @@ export class UserResolver {
 
     const eventParams: IEventOnNewUser = { user };
     this.eventEmitter.emit(EventType.onNewUser, eventParams);
+    this.notifyUpdatedUserConfig(user);
 
     return { id: user.id };
   }
@@ -64,5 +68,24 @@ export class UserResolver {
   @Roles(UserRole.coach)
   async getUserConfig(@Args('id', { type: () => String }) id: string): Promise<UserConfig> {
     return this.userService.getUserConfig(id);
+  }
+
+  protected notifyUpdatedUserConfig(user: User) {
+    const settings: Partial<IUpdateClientSettings> = omitBy(
+      {
+        type: InnerQueueTypes.updateClientSettings,
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+        avatar: user.avatar,
+      },
+      isUndefined,
+    );
+    const eventSettingsParams: IEventNotifyQueue = {
+      type: QueueType.notifications,
+      message: JSON.stringify(settings),
+    };
+    this.eventEmitter.emit(EventType.notifyQueue, eventSettingsParams);
   }
 }
