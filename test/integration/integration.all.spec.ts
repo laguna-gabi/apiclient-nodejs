@@ -774,7 +774,6 @@ describe('Integration tests: all', () => {
 
       await handler.mutations.notify({ notifyParams });
 
-      const extraData = JSON.stringify(twilioPeerServiceToken);
       expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
         sendOneSignalNotification: {
           externalUserId: memberConfig.externalUserId,
@@ -785,12 +784,12 @@ describe('Integration tests: all', () => {
               firstName: primaryUser.firstName,
               avatar: primaryUser.avatar,
             },
-            member: { phone: extraData },
+            member: { phone: JSON.stringify(twilioPeerServiceToken) },
             type: params.type,
             peerId: notifyParams.metadata.peerId,
             isVideo: params.isVideo,
             ...generatePath(params.type),
-            extraData,
+            extraData: JSON.stringify({}),
           },
           content: notifyParams.metadata.content,
           orgName: org.name,
