@@ -1,6 +1,6 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { addMinutes } from 'date-fns';
+import { addDays, addMinutes } from 'date-fns';
 import * as faker from 'faker';
 import { Model, model } from 'mongoose';
 import {
@@ -377,7 +377,7 @@ describe('AppointmentService', () => {
         });
 
         await service.schedule(appointmentParams);
-        expect(
+        await expect(
           service.schedule({
             ...appointmentParams,
             start: addMinutes(start, startDelta),
@@ -435,6 +435,7 @@ describe('AppointmentService', () => {
         memberId: scheduledAppointment1.memberId,
         userId: scheduledAppointment1.userId,
         method: AppointmentMethod.videoCall,
+        start: addDays(scheduledAppointment1.start, 1),
       });
       const { id: scheduledId } = await service.schedule(scheduledAppointment2);
 
