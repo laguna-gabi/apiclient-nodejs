@@ -24,6 +24,7 @@
 </p>
 
 # 🏥 Hepius
+
 Laguna health backend infrastructure.
 <br/>Written in typescript by using [Nest](https://github.com/nestjs/nest) framework.
 
@@ -42,7 +43,7 @@ Laguna health backend infrastructure.
     - [REST](#rest)
     - [GraphQL](#graphql)
   - [🚫 Role Based Access Control: RBAC](#-role-based-access-control-rbac)
-  - [🪀 Token snippet](#-token-snippet)
+  - [🔑 Token Generating](#-token-generating)
   - [🏗️ Migration](#️-migration)
   - [### Overview](#-overview)
   - [### Migration Support: guide](#-migration-support-guide)
@@ -107,7 +108,8 @@ In order to work locally with aws cli and `package.json` dependencies, install
 
 We have a Laguna shared library called [Pandora](https://github.com/LagunaHealth/pandora), which is an interface for sending messages.
 <br/>This package is installed when running `yarn install`, and since it is private, each developer needs to create his/her own
-[github access token](https://github.com/settings/tokens/new), so pulling this library will be possible. 
+[github access token](https://github.com/settings/tokens/new), so pulling this library will be possible.
+
 > **_Don't skip library setup:_** This step is critical to develop locally on this project.
 
 1. Create a personal access token
@@ -122,13 +124,15 @@ We have a Laguna shared library called [Pandora](https://github.com/LagunaHealth
     Password: your-github-access-token-from-previous-step
     Email: (this IS public) your-email@example.com
     Logged in as XXXX on https://npm.pkg.github.com/.
-   ``` 
+   ```
    > You have to see the `Logged in as XXXX on https://npm.pkg.github.com/`, or otherwise `yarn install` won't work.
-   
+
 In the end of this process, you need to have a `~/.npmrc` file (located in the root of your computer), having 1 field:
+
 ```bash
 //npm.pkg.github.com/:_authToken=your-github-access-token-from-previous-step
 ```
+
 That's it, you can run `yarn` now, and it'll install the pandora private library as well.
 
 ### Shared code settings
@@ -199,50 +203,63 @@ more details can be found [here](https://app.shortcut.com/laguna-health/story/18
 When adding a new route or
 Current implementation
 
-## 🪀 Token snippet
+## 🔑 Token Generating
 
-Because of the RBAC we are forced to provide an access token for most of the api requests. To work locally fast we could use the same token by updating user's `authId` instead of updating the token everywhere.
+Because of the RBAC and the use of the token sub instead of member/user id, we are forced to provide an access token for most of the api requests. To work locally fast we can generate access tokens for all our users and members and then just add them to the headers.
 
-Start by going to the database and change one of the user's `authId` to `"admin"` after that all we need to do is add the following line to the HTTP HEADERS in the Graphql playground.
+use the following command to generate tokens:
 
-```json
-{
-  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsIm5hbWUiOiJKb2huIERvZSIsImlhdCI6MTUxNjIzOTAyMn0.a4ZLo2TxNUb8mj4ff9z9v1IE3PlSPpFuLCT45ljOVUI"
-}
+```bash
+# local environment
+yarn generate:tokens
+
+# develop environment
+yarn generate:tokens:dev
+
+# production environment
+yarn generate:tokens:production
 ```
 
-## 🏗️ Migration 
+## 🏗️ Migration
 
 ### Overview
-----------------------------------------------------------------
-In some cases, changes to the application requires db changes (adding new mandatory fields, adding per-calculated fields, updating field values, etc...). 
+
+---
+
+In some cases, changes to the application requires db changes (adding new mandatory fields, adding per-calculated fields, updating field values, etc...).
 It is important to include those required changes in our code reviews and be able to roll back changes if needed.
 
-The current support is based on the [migrate-mongo] JS library. 
+The current support is based on the [migrate-mongo] JS library.
 
 The migration status is persisted to our mongo db - `changelog` collection. **Manipulating of that collection may affect the migration status** and as a result the applied migration scripts when running the migration `up` and `down` commands.
 
-The migration is applied automatically in our ci-cd when merging our code to `develop` or `stage` branches - migration will run after the test/coverage job. 
+The migration is applied automatically in our ci-cd when merging our code to `develop` or `stage` branches - migration will run after the test/coverage job.
 
 ### Migration Support: guide
-----------------------------------------------------------------
 
-- **Step 0**: 
+---
+
+- **Step 0**:
   initialize environment - create a config file based on NODE_ENV environment parameter - when running locally it will generate a [config](./migrations/migrate-mongo-config.js) file to run against `(mongodb://localhost:27017)` / `laguna` mongo db
   ```
   yarn migrate:init
   ```
 - **Step 1**: create a new migration script (template):
+
   ```
   yarn migrate:create <script-description>
   ```
+
   A new migration script is created in the [migrations](./migrations/scripts) directory with the following format:
+
   ```
   <now-timestamp>-<script-description>
   ```
+
   **! DO NOT RENAME THE FILE !**
 
 - **Step 2**: add your changes to the newly created migration script - `up` and `down` code is required - example:
+
   ```
   module.exports = {
     async up(db) {
@@ -257,26 +274,30 @@ The migration is applied automatically in our ci-cd when merging our code to `de
     }
   };
   ```
+
 - **Step 3.1**: test the code on your local mongo db - first you check the status in your local db - the results is a list of migrations applied on your local db and pending migrations which should get applied - migration is not applied in `status` command - DRY-RUN mode:
+
   ```
   yarn migrate:status
   ```
 
-  Filename | Applied At |
-  --- | --- | 
-  20211125153552-set-member-roles.js | 2021-11-27T09:27:54.171Z |
-  20211127092801-update-member-config.js | PENDING | 
+  | Filename                               | Applied At               |
+  | -------------------------------------- | ------------------------ |
+  | 20211125153552-set-member-roles.js     | 2021-11-27T09:27:54.171Z |
+  | 20211127092801-update-member-config.js | PENDING                  |
+
 - **Step 3.1**: test the code on your local mongo db - apply your new migration script:
   ```
   yarn migrate:up
   ```
 - **Step 3.2**: undo changes - test your `down` code on your local mongo db:
+
   ```
   yarn migrate:down
   ```
 
 - **Step 4**: commit your changes - you only need to commit your newly created migration script.
-  
+
 ## 🎻 Troubleshooting
 
 ### How to view the db locally?
@@ -307,4 +328,5 @@ An instance of mongo is not running locally, go over [docker section](#docker) a
 ![alt text](./assets/graphql.png)
 
 ## Github generate developer token
+
 ![alt text](./assets/githubAccessToken.png)

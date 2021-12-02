@@ -1,5 +1,6 @@
 import * as faker from 'faker';
 import * as jwt from 'jsonwebtoken';
+import { v4 } from 'uuid';
 import { Identifier, UserRole, delay } from '../src/common';
 import { UserService } from '../src/user';
 import {
@@ -156,13 +157,14 @@ async function main() {
  *************************************************************************************************/
 
 const createUser = async (roles: UserRole[], userText: string): Promise<Identifier> => {
+  const authId = v4();
   const { id } = await mutations.createUser({
     userParams: generateCreateUserParams({
-      authId: 'admin',
+      authId,
       roles,
     }),
   });
-  const token = jwt.sign({ username: id, sub: 'admin' }, 'key-123');
+  const token = jwt.sign({ username: id, sub: authId }, 'key-123');
   console.log(`${id} : ${userText} of type ${roles} - valid token: ${token}`);
 
   return { id };
