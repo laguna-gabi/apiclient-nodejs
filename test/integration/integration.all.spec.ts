@@ -5,7 +5,7 @@ import {
   Platform,
 } from '@lagunahealth/pandora';
 import * as config from 'config';
-import { add, startOfToday, startOfTomorrow } from 'date-fns';
+import { add, addDays, startOfToday, startOfTomorrow } from 'date-fns';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
 import {
@@ -217,10 +217,12 @@ describe('Integration tests: all', () => {
     const params1b = generateScheduleAppointmentParams({
       memberId: member1.id,
       userId: primaryUser1.id,
+      start: addDays(params1a.start, 1),
     });
     const params2a = generateScheduleAppointmentParams({
       memberId: member2.id,
       userId: primaryUser2.id,
+      start: addDays(params1a.start, 2),
     });
     // Request appointment should not be on results, only showing status scheduled
     const params2b = generateRequestAppointmentParams({
@@ -412,8 +414,12 @@ describe('Integration tests: all', () => {
 
     const newUser = await creators.createAndValidateUser();
     //calling twice, to check that the user wasn't added twice to users list
-    await params.method({ userId: newUser.id, memberId: member.id });
-    await params.method({ userId: newUser.id, memberId: member.id });
+    const appointment1 = await params.method({ userId: newUser.id, memberId: member.id });
+    await params.method({
+      userId: newUser.id,
+      memberId: member.id,
+      start: addDays(appointment1.start, 1),
+    });
 
     const { users } = await handler
       .setContextUserId(member.id)

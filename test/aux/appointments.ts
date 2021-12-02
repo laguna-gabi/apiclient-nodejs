@@ -61,36 +61,6 @@ export class AppointmentsIntegrationActions {
     return appointmentResult;
   };
 
-  scheduleAppointmentWithDate = async (
-    member: Member,
-    start: Date,
-    end: Date,
-  ): Promise<Appointment> => {
-    const appointmentParams = generateScheduleAppointmentParams({
-      memberId: member.id,
-      userId: member.primaryUserId.toString(),
-      start,
-      end,
-    });
-
-    const appointmentResult = await this.mutations.scheduleAppointment({ appointmentParams });
-
-    expect(appointmentResult.status).toEqual(AppointmentStatus.scheduled);
-
-    return appointmentResult;
-  };
-
-  requestAppointmentWithDate = async (member: Member, notBefore: Date): Promise<Appointment> => {
-    const appointmentParams = generateRequestAppointmentParams({
-      memberId: member.id,
-      userId: member.primaryUserId.toString(),
-      notBefore,
-    });
-    return this.mutations.requestAppointment({
-      appointmentParams,
-    });
-  };
-
   endAppointment = async (id: string): Promise<Appointment> => {
     const endAppointmentParams = generateEndAppointmentParams({ id });
     return this.mutations.endAppointment({ endAppointmentParams });

@@ -1,6 +1,6 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { addDays, addMinutes } from 'date-fns';
+import { addDays, addMinutes, subDays } from 'date-fns';
 import * as faker from 'faker';
 import { Model, model } from 'mongoose';
 import {
@@ -644,21 +644,22 @@ describe('AppointmentService', () => {
 
       // schedule past appointments
       const pastAppointments = [];
-      for (let step = 0; step < 3; step++) {
+      for (let step = 1; step < 4; step++) {
         const pastAppointment = generateScheduleAppointmentParams({
-          start: faker.date.recent(4 + step),
           userId,
           memberId,
+          start: subDays(new Date(), step),
         });
         pastAppointments.push(await service.schedule(pastAppointment));
       }
 
       // schedule future appointments
       const futureAppointments = [];
-      for (let step = 0; step < 3; step++) {
+      for (let step = 1; step < 4; step++) {
         const futureAppointment = generateScheduleAppointmentParams({
           userId,
           memberId,
+          start: addDays(new Date(), step),
         });
         futureAppointments.push(await service.schedule(futureAppointment));
       }
