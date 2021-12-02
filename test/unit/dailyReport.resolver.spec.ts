@@ -2,7 +2,13 @@ import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Types } from 'mongoose';
-import { EventType, IEventMember, Logger } from '../../src/common';
+import {
+  EventType,
+  IEventMember,
+  Logger,
+  MemberRole,
+  extractUserId,
+} from '../../src/common';
 import {
   DailyReport,
   DailyReportCategoriesInput,
@@ -13,7 +19,13 @@ import {
   DailyReportResolver,
   DailyReportService,
 } from '../../src/dailyReport';
-import { dbDisconnect, defaultModules, generateId, mockLogger } from '../index';
+import {
+  dbDisconnect,
+  defaultModules,
+  generateContextUserId,
+  generateId,
+  mockLogger,
+} from '../index';
 
 describe('DailyReportResolver', () => {
   let resolver: DailyReportResolver;
@@ -47,6 +59,7 @@ describe('DailyReportResolver', () => {
     afterEach(() => {
       eventEmitterSpy.mockReset();
     });
+    memberId = generateId();
 
     /* eslint-disable max-len */
     it.each([
@@ -58,9 +71,18 @@ describe('DailyReportResolver', () => {
           categories: [],
           date: '2015/01/01',
         } as DailyReport, // <= daily report returned from service (updated record),
-        { req: { user: { honorific: 'Mr.', lastName: 'Levy', primaryUserId: 'U0001' } } }, // <= context
         {
-          memberId: memberId,
+          req: {
+            user: {
+              honorific: 'Mr.',
+              lastName: 'Levy',
+              primaryUserId: 'U0001',
+              _id: memberId,
+              roles: [MemberRole.member],
+            },
+          },
+        }, // <= context
+        {
           date: '',
           categories: [{ category: DailyReportCategoryTypes.Pain, rank: 0 }],
         } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
@@ -81,9 +103,18 @@ describe('DailyReportResolver', () => {
           categories: [],
           date: '2015/01/01',
         } as DailyReport, // <= daily report returned from service (updated record),
-        { req: { user: { honorific: 'Mr.', lastName: 'Levy', primaryUserId: 'U0001' } } }, // <= context
         {
-          memberId: memberId,
+          req: {
+            user: {
+              honorific: 'Mr.',
+              lastName: 'Levy',
+              primaryUserId: 'U0001',
+              _id: memberId,
+              roles: [MemberRole.member],
+            },
+          },
+        }, // <= context
+        {
           date: '',
           categories: [{ category: DailyReportCategoryTypes.Pain, rank: 0 }],
         } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
@@ -97,9 +128,12 @@ describe('DailyReportResolver', () => {
           categories: [],
           date: '2015/01/01',
         } as DailyReport, // <= daily report returned from service (updated record),
-        { req: { user: { honorific: 'Mr.', lastName: 'Levy' } } }, // <= context (missing primary user id)
         {
-          memberId: memberId,
+          req: {
+            user: { honorific: 'Mr.', lastName: 'Levy', _id: memberId, roles: [MemberRole.member] },
+          },
+        }, // <= context (missing primary user id)
+        {
           date: '',
           categories: [{ category: DailyReportCategoryTypes.Pain, rank: 0 }],
         } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
@@ -121,7 +155,7 @@ describe('DailyReportResolver', () => {
         eventEmitterSpy = jest.spyOn(eventEmitter, 'emit');
         await resolver.setDailyReportCategories(context, dailyReportCategoryInput);
         const eventParams: IEventMember = {
-          memberId: dailyReportCategoryInput.memberId,
+          memberId: extractUserId(context),
         };
         if (emittedEventParams) {
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(
@@ -212,8 +246,10 @@ describe('DailyReportResolver', () => {
     ])('%s', async (message, oldestDailyReportRecord, serviceGetDailyReports, expectedResult) => {
       jest.spyOn(service, 'getOldestDailyReportRecord').mockResolvedValue(oldestDailyReportRecord);
       jest.spyOn(service, 'getDailyReports').mockResolvedValue(serviceGetDailyReports);
-
-      expect(await resolver.getDailyReports({} as DailyReportQueryInput)).toEqual(expectedResult);
+      const context = generateContextUserId();
+      expect(await resolver.getDailyReports(context, {} as DailyReportQueryInput)).toEqual(
+        expectedResult,
+      );
     });
   });
 });

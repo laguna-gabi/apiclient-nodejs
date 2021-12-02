@@ -26,6 +26,9 @@ import {
   Roles,
   UpdatedAppointmentAction,
   UserRole,
+  extractPrimaryUserId,
+  extractRoles,
+  extractUserId,
 } from '../common';
 import { UserService } from '../user';
 
@@ -79,22 +82,29 @@ export class CommunicationResolver {
   }
 
   @Query(() => UnreadMessagesCount)
-  @Roles(MemberRole.member, UserRole.coach)
-  getMemberUnreadMessagesCount(@Args('memberId', { type: () => String }) memberId: string) {
-    return this.communicationService.getParticipantUnreadMessagesCount(memberId);
+  @Roles(MemberRole.member)
+  getMemberUnreadMessagesCount(
+    @Context() context,
+    // eslint-disable-next-line max-len,@typescript-eslint/no-unused-vars
+    @Args('memberId', { type: () => String, nullable: true }) memberId?: string,
+  ) {
+    if (!extractRoles(context).includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.allowedToMembersOnly));
+    }
+    // ignoring the id from the params - replacing it with the id from the context
+    return this.communicationService.getParticipantUnreadMessagesCount(extractUserId(context));
   }
 
   @Query(() => MemberCommunicationInfo)
   @Roles(MemberRole.member)
   async getMemberCommunicationInfo(@Context() context) {
-    const userRoles = context.req?.user.roles;
     // we expect the logged in user to be a member and admin is also implicitly allowed here
-    if (!userRoles.includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.communicationInfoIsNotAllowed));
+    if (!extractRoles(context).includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.allowedToMembersOnly));
     }
 
-    const memberId = context.req?.user._id.toString();
-    const userId = context.req?.user.primaryUserId;
+    const memberId = extractUserId(context);
+    const userId = extractPrimaryUserId(context);
     const communication = await this.communicationService.get({ memberId, userId });
 
     const user = await this.userService.get(userId);

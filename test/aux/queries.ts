@@ -270,7 +270,7 @@ export class Queries {
     const result = await this.apolloClient.query({
       variables: { id },
       query: gql`
-        query getMemberDownloadDischargeDocumentsLinks($id: String!) {
+        query getMemberDownloadDischargeDocumentsLinks($id: String) {
           getMemberDownloadDischargeDocumentsLinks(id: $id) {
             dischargeNotesLink
             dischargeInstructionsLink
@@ -476,14 +476,14 @@ export class Queries {
     missingFieldError,
     invalidFieldsError,
   }: {
-    memberId;
+    memberId?;
     invalidFieldsError?: string;
     missingFieldError?: string;
   }) => {
     const result = await this.apolloClient.query({
       variables: { memberId },
       query: gql`
-        query getMemberUnreadMessagesCount($memberId: String!) {
+        query getMemberUnreadMessagesCount($memberId: String) {
           getMemberUnreadMessagesCount(memberId: $memberId) {
             memberId
             userId
@@ -518,13 +518,13 @@ export class Queries {
     id,
     invalidFieldsError,
   }: {
-    id: string;
+    id?: string;
     invalidFieldsError?: string;
   }) => {
     const result = await this.apolloClient.query({
       variables: { id },
       query: gql`
-        query getMemberConfig($id: String!) {
+        query getMemberConfig($id: String) {
           getMemberConfig(id: $id) {
             memberId
             externalUserId
@@ -634,18 +634,11 @@ export class Queries {
     }
   };
 
-  getJournals = async ({
-    memberId,
-    invalidFieldsError,
-  }: {
-    memberId;
-    invalidFieldsError?: string;
-  }) => {
+  getJournals = async () => {
     const result = await this.apolloClient.query({
-      variables: { memberId },
       query: gql`
-        query getJournals($memberId: String!) {
-          getJournals(memberId: $memberId) {
+        query getJournals {
+          getJournals {
             id
             memberId
             text
@@ -656,11 +649,7 @@ export class Queries {
       `,
     });
 
-    if (invalidFieldsError) {
-      expect(result.errors[0].message).toMatch(invalidFieldsError);
-    } else {
-      return result.data.getJournals;
-    }
+    return result.data.getJournals;
   };
 
   getMemberUploadJournalLinks = async ({

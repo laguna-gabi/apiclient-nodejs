@@ -544,30 +544,18 @@ export class Mutations {
     );
   };
 
-  createJournal = async ({
-    memberId,
-    missingFieldError,
-    invalidFieldsErrors,
-  }: {
-    memberId;
-    missingFieldError?: string;
-    invalidFieldsErrors?: string[];
-  }): Promise<Journal> => {
+  createJournal = async (): Promise<Journal> => {
     const result = await this.apolloClient.mutate({
-      variables: { memberId },
       mutation: gql`
-        mutation createJournal($memberId: String!) {
-          createJournal(memberId: $memberId) {
+        mutation createJournal {
+          createJournal {
             id
           }
         }
       `,
     });
 
-    return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.createJournal
-    );
+    return result.data.createJournal;
   };
 
   updateJournal = async ({

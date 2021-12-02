@@ -91,7 +91,7 @@ describe('Validations - member', () => {
       const { id } = await handler.mutations.createMember({ memberParams });
       expect(id).not.toBeUndefined();
 
-      const member = await handler.queries.getMember({ id });
+      const member = await handler.setContextUserId(id).queries.getMember({ id });
       expect(member[params.field]).toEqual(params.defaultValue);
     });
 
@@ -110,7 +110,7 @@ describe('Validations - member', () => {
       const { id } = await handler.mutations.createMember({ memberParams });
       expect(id).not.toBeUndefined();
 
-      const member = await handler.queries.getMember({ id });
+      const member = await handler.setContextUserId(id).queries.getMember({ id });
       expect(member[params.field]).toEqual(params.value);
     });
 
@@ -123,7 +123,7 @@ describe('Validations - member', () => {
       const { id } = await handler.mutations.createMember({ memberParams });
       expect(id).not.toBeUndefined();
 
-      const member = await handler.queries.getMember({ id });
+      const member = await handler.setContextUserId(id).queries.getMember({ id });
       expect(generateDateOnly(new Date(member.dischargeDate))).toEqual(memberParams.dischargeDate);
     });
 
@@ -191,15 +191,16 @@ describe('Validations - member', () => {
     );
 
     it('should throw error on non existing member from web', async () => {
-      await handler.queries.getMember({
+      await handler.setContextUserId(generateId()).queries.getMember({
         id: generateId(),
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
     });
 
     it('should throw error on non existing member from mobile', async () => {
-      handler.setContextUser('not-valid');
-      await handler.queries.getMember({ invalidFieldsError: Errors.get(ErrorType.memberNotFound) });
+      await handler
+        .setContextUserId(generateId())
+        .queries.getMember({ invalidFieldsError: Errors.get(ErrorType.memberNotFound) });
     });
 
     it('rest: should fail to create member if phone already exists', async () => {
@@ -229,17 +230,13 @@ describe('Validations - member', () => {
   });
 
   describe('getMemberDownloadDischargeDocumentsLinks', () => {
-    it('should fail to get download links since mandatory field id is missing', async () => {
-      await handler.queries.getMemberDownloadDischargeDocumentsLinks({
-        missingFieldError: 'Expected non-nullable type "String!" not to be null.',
-      });
-    });
-
     it('should throw error on non existing member', async () => {
-      await handler.queries.getMemberDownloadDischargeDocumentsLinks({
-        id: generateId(),
-        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
-      });
+      await handler
+        .setContextUserId(generateId())
+        .queries.getMemberDownloadDischargeDocumentsLinks({
+          id: generateId(),
+          invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+        });
     });
   });
 
@@ -263,8 +260,7 @@ describe('Validations - member', () => {
 
   describe('getMemberConfig', () => {
     it('should throw error on non existing member', async () => {
-      await handler.queries.getMemberConfig({
-        id: generateId(),
+      await handler.setContextUserId(generateId()).queries.getMemberConfig({
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
     });
@@ -274,8 +270,8 @@ describe('Validations - member', () => {
     test.each(['a-b', 'a_b'])(
       'should not be able to register on non alphanumeric token %p',
       async (token) => {
-        await handler.mutations.registerMemberForNotifications({
-          registerForNotificationParams: { memberId: generateId(), platform: Platform.ios, token },
+        await handler.setContextUserId(generateId()).mutations.registerMemberForNotifications({
+          registerForNotificationParams: { platform: Platform.ios, token },
           invalidFieldsErrors: [Errors.get(ErrorType.memberRegisterForNotificationToken)],
         });
       },
@@ -341,7 +337,7 @@ describe('Validations - member', () => {
         const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
         const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
         const { id } = await handler.mutations.createMember({ memberParams });
-        const member = await handler.queries.getMember({ id });
+        const member = await handler.setContextUserId(id).queries.getMember({ id });
 
         const notifyParams: NotifyParams = generateNotifyParams({
           memberId: member.id,
@@ -611,15 +607,6 @@ describe('Validations - member', () => {
     });
   });
 
-  describe('createJournal', () => {
-    it('should throw an error for invalid memberId', async () => {
-      await handler.mutations.createJournal({
-        memberId: 123,
-        missingFieldError: stringError,
-      });
-    });
-  });
-
   describe('updateJournal', () => {
     test.each`
       field     | error
@@ -651,15 +638,6 @@ describe('Validations - member', () => {
     it('should throw an error for invalid id', async () => {
       await handler.queries.getJournal({
         id: 123,
-        invalidFieldsError: stringError,
-      });
-    });
-  });
-
-  describe('getJournals', () => {
-    it('should throw an error for invalid id', async () => {
-      await handler.queries.getJournals({
-        memberId: 123,
         invalidFieldsError: stringError,
       });
     });

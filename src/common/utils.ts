@@ -57,6 +57,14 @@ export const extractUserId = (context) => {
   return userId;
 };
 
+export const extractPrimaryUserId = (context) => {
+  return context.req?.user?.primaryUserId;
+};
+
+export const extractRoles = (context) => {
+  return context.req?.user?.roles;
+};
+
 export const generateOrgNamePrefix = (orgName?: string): string => {
   return `${orgName ? ` [${orgName}] ` : ''}`;
 };

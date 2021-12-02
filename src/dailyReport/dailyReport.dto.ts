@@ -2,6 +2,7 @@ import { Field, InputType, Int, ObjectType, registerEnumType } from '@nestjs/gra
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, IsStringDate } from '../common';
+import { IsOptional } from 'class-validator';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -19,8 +20,9 @@ registerEnumType(DailyReportCategoryTypes, { name: 'DailyReportCategoryTypes' })
 
 @InputType()
 export class DailyReportCategoriesInput {
-  @Field()
-  memberId: string;
+  @IsOptional()
+  @Field({ nullable: true })
+  memberId?: string;
 
   @Field()
   @IsStringDate({ message: Errors.get(ErrorType.dailyReportMutationDateInvalid) })
@@ -32,8 +34,9 @@ export class DailyReportCategoriesInput {
 
 @InputType()
 export class DailyReportQueryInput {
-  @Field()
-  memberId: string;
+  @IsOptional()
+  @Field({ nullable: true })
+  memberId?: string;
 
   @Field()
   @IsStringDate({ message: Errors.get(ErrorType.dailyReportQueryDateInvalid) })

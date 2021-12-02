@@ -139,7 +139,9 @@ describe('Integration tests: all', () => {
     await updateTaskStatus(idAi1, handler.mutations.updateActionItemStatus);
     await updateTaskStatus(idAi2, handler.mutations.updateActionItemStatus);
 
-    const resultMember = await handler.queries.getMember({ id: member.id });
+    const resultMember = await handler
+      .setContextUserId(member.id)
+      .queries.getMember({ id: member.id });
 
     const compareAppointmentsOfUsers = (receivedAppointment: Appointment, users: User[]) => {
       const all = users.reduce((prev, next) => prev.concat(next.appointments), []);
@@ -178,12 +180,16 @@ describe('Integration tests: all', () => {
     const appointmentMember1 = await creators.createAndValidateAppointment({ member: member1 });
     const appointmentMember2 = await creators.createAndValidateAppointment({ member: member2 });
 
-    const memberResult1 = await handler.queries.getMember({ id: member1.id });
+    const memberResult1 = await handler
+      .setContextUserId(member1.id)
+      .queries.getMember({ id: member1.id });
     expect(appointmentMember1).toEqual(
       expect.objectContaining(memberResult1.users[0].appointments[0]),
     );
 
-    const memberResult2 = await handler.queries.getMember({ id: member2.id });
+    const memberResult2 = await handler
+      .setContextUserId(member2.id)
+      .queries.getMember({ id: member2.id });
     expect(appointmentMember2).toEqual(
       expect.objectContaining(memberResult2.users[0].appointments[0]),
     );
@@ -228,8 +234,12 @@ describe('Integration tests: all', () => {
     await creators.handler.mutations.requestAppointment({ appointmentParams: params2b });
 
     const result = await creators.handler.queries.getMembersAppointments(org.id);
-    const resultMember1 = await creators.handler.queries.getMember({ id: member1.id });
-    const resultMember2 = await creators.handler.queries.getMember({ id: member2.id });
+    const resultMember1 = await creators.handler
+      .setContextUserId(member1.id)
+      .queries.getMember({ id: member1.id });
+    const resultMember2 = await creators.handler
+      .setContextUserId(member2.id)
+      .queries.getMember({ id: member2.id });
 
     expect(result.length).toEqual(3);
 
@@ -269,7 +279,9 @@ describe('Integration tests: all', () => {
 
     const appointmentMember = await creators.createAndValidateAppointment({ member });
 
-    const memberResult = await handler.queries.getMember({ id: member.id });
+    const memberResult = await handler
+      .setContextUserId(member.id)
+      .queries.getMember({ id: member.id });
     expect(appointmentMember).toEqual(
       expect.objectContaining({
         link: generateAppointmentLink(memberResult.users[0].appointments[0].id),
@@ -281,7 +293,9 @@ describe('Integration tests: all', () => {
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({ org });
 
-    const memberConfigBefore = await handler.queries.getMemberConfig({ id: member.id });
+    const memberConfigBefore = await handler
+      .setContextUserId(member.id)
+      .queries.getMemberConfig({ id: member.id });
     expect(memberConfigBefore).toEqual({
       memberId: member.id,
       articlesPath: config.get('articlesByDrg.default'),
@@ -296,7 +310,9 @@ describe('Integration tests: all', () => {
       memberId: generateId(member.id),
     });
     await handler.mutations.updateMemberConfig({ updateMemberConfigParams });
-    const memberConfigAfter = await handler.queries.getMemberConfig({ id: member.id });
+    const memberConfigAfter = await handler
+      .setContextUserId(member.id)
+      .queries.getMemberConfig({ id: member.id });
 
     expect(memberConfigAfter).toEqual({
       memberId: member.id,
@@ -322,12 +338,15 @@ describe('Integration tests: all', () => {
     handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
 
     const registerForNotificationParams: RegisterForNotificationParams = {
-      memberId: member.id,
       platform: Platform.android,
       isPushNotificationsEnabled: true,
     };
-    await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
-    const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
+    await handler
+      .setContextUserId(member.id)
+      .mutations.registerMemberForNotifications({ registerForNotificationParams });
+    const memberConfig = await handler
+      .setContextUserId(member.id)
+      .queries.getMemberConfig({ id: member.id });
 
     const when = new Date();
     when.setSeconds(when.getSeconds() + 1);
@@ -385,7 +404,9 @@ describe('Integration tests: all', () => {
     const org = await creators.createAndValidateOrg();
     const member = await creators.createAndValidateMember({ org, useNewUser: true });
 
-    const initialMember = await handler.queries.getMember({ id: member.id });
+    const initialMember = await handler
+      .setContextUserId(member.id)
+      .queries.getMember({ id: member.id });
     expect(initialMember.users.length).toEqual(1);
     expect(initialMember.users[0].id).toEqual(member.primaryUserId);
 
@@ -394,7 +415,9 @@ describe('Integration tests: all', () => {
     await params.method({ userId: newUser.id, memberId: member.id });
     await params.method({ userId: newUser.id, memberId: member.id });
 
-    const { users } = await handler.queries.getMember({ id: member.id });
+    const { users } = await handler
+      .setContextUserId(member.id)
+      .queries.getMember({ id: member.id });
 
     const ids = users.map((user) => user.id);
     expect(ids.length).toEqual(2);
@@ -416,10 +439,11 @@ describe('Integration tests: all', () => {
       const registerForNotificationParams: RegisterForNotificationParams = {
         isPushNotificationsEnabled: true,
         platform: Platform.ios,
-        memberId: member.id,
         token: 'sampleiospushkittokentest',
       };
-      await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+      await handler
+        .setContextUserId(member.id)
+        .mutations.registerMemberForNotifications({ registerForNotificationParams });
       expect(handler.schedulerRegistry.getTimeouts()).toEqual(expect.arrayContaining([member.id]));
       expect(handler.schedulerRegistry.getTimeouts()).toEqual(
         expect.arrayContaining([member.id + ReminderType.logReminder]),
@@ -456,24 +480,22 @@ describe('Integration tests: all', () => {
       const registerForNotificationParams: RegisterForNotificationParams = {
         isPushNotificationsEnabled: true,
         platform: Platform.ios,
-        memberId: member.id,
         token: 'sampleiospushkittokentest',
       };
-      await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+      await handler
+        .setContextUserId(member.id)
+        .mutations.registerMemberForNotifications({ registerForNotificationParams });
 
       expect(handler.schedulerRegistry.getTimeouts()).toEqual(
         expect.arrayContaining([member.id + ReminderType.logReminder]),
       );
 
-      await handler
-        .setContextUser(undefined, handler.patientZero.authId)
-        .mutations.setDailyReportCategories({
-          dailyReportCategoriesInput: {
-            date: '2015/01/01',
-            categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
-            memberId: member.id,
-          } as DailyReportCategoriesInput,
-        });
+      await handler.setContextUserId(member.id).mutations.setDailyReportCategories({
+        dailyReportCategoriesInput: {
+          date: '2015/01/01',
+          categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
+        } as DailyReportCategoriesInput,
+      });
 
       await delay(500);
 
@@ -491,7 +513,9 @@ describe('Integration tests: all', () => {
       const result = await handler.mutations.archiveMember({ id: member.id });
       expect(result).toBeTruthy();
 
-      const memberResult = await handler.queries.getMember({ id: member.id });
+      const memberResult = await handler
+        .setContextUserId(member.id)
+        .queries.getMember({ id: member.id });
       await expect(memberResult).toEqual({
         errors: [{ code: ErrorType.memberNotFound, message: Errors.get(ErrorType.memberNotFound) }],
       });
@@ -523,7 +547,9 @@ describe('Integration tests: all', () => {
       expect(result).toBeTruthy();
       await delay(500);
 
-      const memberResult = await handler.queries.getMember({ id: member.id });
+      const memberResult = await handler
+        .setContextUserId(member.id)
+        .queries.getMember({ id: member.id });
       await expect(memberResult).toEqual({
         errors: [{ code: ErrorType.memberNotFound, message: Errors.get(ErrorType.memberNotFound) }],
       });
@@ -570,7 +596,9 @@ describe('Integration tests: all', () => {
       await delay(2000); // wait for event to finish
 
       // Check that the member's primary user changed
-      const updatedMember = await handler.queries.getMember({ id: member.id });
+      const updatedMember = await handler
+        .setContextUserId(member.id)
+        .queries.getMember({ id: member.id });
       expect(updatedMember.primaryUserId).toEqual(newUser.id);
       expect(updatedMember.users[updatedMember.users.length - 1].id).toEqual(newUser.id);
 
@@ -726,13 +754,16 @@ describe('Integration tests: all', () => {
       const primaryUser = member.users[0];
 
       const registerForNotificationParams: RegisterForNotificationParams = {
-        memberId: member.id,
         platform: Platform.android,
         isPushNotificationsEnabled: true,
       };
-      await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+      await handler
+        .setContextUserId(member.id)
+        .mutations.registerMemberForNotifications({ registerForNotificationParams });
 
-      const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
+      const memberConfig = await handler
+        .setContextUserId(member.id)
+        .queries.getMemberConfig({ id: member.id });
 
       const notifyParams: NotifyParams = {
         memberId: member.id,
@@ -774,11 +805,12 @@ describe('Integration tests: all', () => {
       const member = await creators.createAndValidateMember({ org });
       const appointmentId = generateId();
       const registerForNotificationParams: RegisterForNotificationParams = {
-        memberId: member.id,
         platform: Platform.android,
         isPushNotificationsEnabled: true,
       };
-      await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+      await handler
+        .setContextUserId(member.id)
+        .mutations.registerMemberForNotifications({ registerForNotificationParams });
       await delay(500);
 
       const notifyParams: NotifyParams = {
@@ -813,11 +845,12 @@ describe('Integration tests: all', () => {
       const appointmentId = generateId();
 
       const registerForNotificationParams: RegisterForNotificationParams = {
-        memberId: member.id,
         platform: Platform.android,
         isPushNotificationsEnabled: true,
       };
-      await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+      await handler
+        .setContextUserId(member.id)
+        .mutations.registerMemberForNotifications({ registerForNotificationParams });
 
       const notifyParams: NotifyParams = {
         memberId: member.id,
@@ -857,13 +890,16 @@ describe('Integration tests: all', () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org });
       const registerForNotificationParams: RegisterForNotificationParams = {
-        memberId: member.id,
         platform: Platform.android,
         isPushNotificationsEnabled: true,
       };
-      await handler.mutations.registerMemberForNotifications({ registerForNotificationParams });
+      await handler
+        .setContextUserId(member.id)
+        .mutations.registerMemberForNotifications({ registerForNotificationParams });
 
-      const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
+      const memberConfig = await handler
+        .setContextUserId(member.id)
+        .queries.getMemberConfig({ id: member.id });
 
       const cancelNotifyParams: CancelNotifyParams = generateCancelNotifyParams({
         memberId: member.id,
@@ -1014,7 +1050,9 @@ describe('Integration tests: all', () => {
       const org = await creators.createAndValidateOrg();
       const { id } = await creators.createAndValidateMember({ org });
 
-      const result = await handler.queries.getMemberDownloadDischargeDocumentsLinks({ id });
+      const result = await handler
+        .setContextUserId(id)
+        .queries.getMemberDownloadDischargeDocumentsLinks({ id });
       expect(result).toEqual({
         dischargeNotesLink: 'https://some-url/download',
         dischargeInstructionsLink: 'https://some-url/download',
@@ -1064,7 +1102,9 @@ describe('Integration tests: all', () => {
       const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: member.id });
       await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
 
-      const memberResult = await handler.queries.getMember({ id: member.id });
+      const memberResult = await handler
+        .setContextUserId(member.id)
+        .queries.getMember({ id: member.id });
       expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
       expect(memberResult.nurseNotes).toEqual(setGeneralNotesParams.nurseNotes);
     });
@@ -1076,14 +1116,16 @@ describe('Integration tests: all', () => {
       const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: member.id });
       await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
 
-      let memberResult = await handler.queries.getMember({ id: member.id });
+      let memberResult = await handler
+        .setContextUserId(member.id)
+        .queries.getMember({ id: member.id });
       expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
 
       delete setGeneralNotesParams.note;
       delete setGeneralNotesParams.nurseNotes;
       await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
 
-      memberResult = await handler.queries.getMember({ id: member.id });
+      memberResult = await handler.setContextUserId(member.id).queries.getMember({ id: member.id });
       expect(memberResult.generalNotes).toBeNull();
       expect(memberResult.nurseNotes).toBeNull();
     });
@@ -1094,7 +1136,9 @@ describe('Integration tests: all', () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org });
 
-      const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
+      const memberConfig = await handler
+        .setContextUserId(member.id)
+        .queries.getMemberConfig({ id: member.id });
       expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.default'));
     });
 
@@ -1105,7 +1149,9 @@ describe('Integration tests: all', () => {
       const updateMemberParams = generateUpdateMemberParams({ id: member.id, drg: '123' });
       await handler.mutations.updateMember({ updateMemberParams });
 
-      const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
+      const memberConfig = await handler
+        .setContextUserId(member.id)
+        .queries.getMemberConfig({ id: member.id });
       expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.123'));
     });
   });
@@ -1220,12 +1266,11 @@ describe('Integration tests: all', () => {
   describe('Daily Reports', () => {
     it('set/get a dailyReport', async () => {
       const { updatedDailyReport } = await handler
-        .setContextUser(undefined, handler.patientZero.authId)
+        .setContextUserId(handler.patientZero.id.toString())
         .mutations.setDailyReportCategories({
           dailyReportCategoriesInput: {
             date: '2015/01/01',
             categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
-            memberId: handler.patientZero.id.toString(),
           } as DailyReportCategoriesInput,
         });
       expect(updatedDailyReport).toEqual({
@@ -1236,7 +1281,7 @@ describe('Integration tests: all', () => {
       });
 
       const { dailyReports } = await handler
-        .setContextUser(undefined, handler.patientZero.authId)
+        .setContextUserId(handler.patientZero.id.toString())
         .queries.getDailyReports({
           dailyReportQueryInput: {
             startDate: '2015/01/01',
@@ -1263,7 +1308,7 @@ describe('Integration tests: all', () => {
     it('should create get update and delete member journal', async () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org });
-      const { id: journalId } = await handler.mutations.createJournal({ memberId: member.id });
+      const { id: journalId } = await handler.setContextUserId(member.id).mutations.createJournal();
       const journalBeforeUpdate = await handler.queries.getJournal({ id: journalId });
 
       expect(journalBeforeUpdate).toMatchObject({
@@ -1287,7 +1332,7 @@ describe('Integration tests: all', () => {
         text: updateJournalParams.text,
       });
 
-      const journals = await handler.queries.getJournals({ memberId: member.id });
+      const journals = await handler.setContextUserId(member.id).queries.getJournals();
 
       expect(journals[0]).toMatchObject({
         id: journalId,

@@ -6,3 +6,5 @@ export enum UserRole {
   coach = 'coach',
   nurse = 'nurse',
 }
+
+export type RoleTypes = MemberRole | UserRole;

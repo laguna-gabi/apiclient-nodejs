@@ -33,11 +33,7 @@ export class LoggingInterceptor implements NestInterceptor {
       type = this.getGqlType(context);
     }
 
-    this.logger.debug(
-      Object.values(args)[0] || { deviceId: headers?.username },
-      className,
-      methodName,
-    );
+    this.logger.debug(Object.values(args)[0] || { sub: headers?.sub }, className, methodName);
     this.logger.audit(type, Object.values(args)[0], methodName, headers?.sub);
 
     const now = Date.now();

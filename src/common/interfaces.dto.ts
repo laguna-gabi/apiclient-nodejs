@@ -49,8 +49,9 @@ export class Identifiers {
 
 @InputType()
 export class RegisterForNotificationParams {
-  @Field(() => String)
-  memberId: string;
+  @IsOptional()
+  @Field(() => String, { nullable: true })
+  memberId?: string;
 
   @IsNotPlatformWeb({ message: Errors.get(ErrorType.memberRegisterWebPlatform) })
   @Field(() => Platform)

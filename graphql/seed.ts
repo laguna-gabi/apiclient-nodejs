@@ -113,7 +113,7 @@ async function main() {
     generateAvailabilityInput(),
   ];
   await base
-    .setContextUserId(member.primaryUserId)
+    .setContextUserId(member.primaryUserId.toString())
     .mutations.createAvailabilities({ availabilities });
 
   console.debug(

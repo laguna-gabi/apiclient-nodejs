@@ -19,6 +19,7 @@ import {
   CancelNotificationParams,
   InternalNotifyParams,
   MemberRole,
+  RoleTypes,
   SendOneSignalNotification,
   SendSendBirdNotification,
   SendTwilioNotification,
@@ -611,4 +612,11 @@ export const generateUpdateClientSettings = ({
     isRecommendationsEnabled: memberConfig.isRecommendationsEnabled,
     firstLoggedInAt: memberConfig.firstLoggedInAt,
   };
+};
+
+export const generateContextUserId = (
+  userId: string = generateId(),
+  roles: RoleTypes[] = [MemberRole.member],
+) => {
+  return { req: { user: { _id: userId, roles } } };
 };

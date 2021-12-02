@@ -28,6 +28,7 @@ export class Logger extends BaseLogger {
     'sendBirdChannelUrl',
     'senderUserId',
     'deviceId',
+    'sub',
     //baseSchedulers
     'schedulerIdentifier',
     'lengthResults',

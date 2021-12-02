@@ -12,6 +12,8 @@ import {
   ParseDailyReportInputTransform,
 } from '.';
 import {
+  ErrorType,
+  Errors,
   EventType,
   IEventMember,
   InternalNotifyParams,
@@ -20,6 +22,8 @@ import {
   MemberRole,
   Roles,
   UserRole,
+  extractRoles,
+  extractUserId,
 } from '../common';
 
 @UseInterceptors(LoggingInterceptor)
@@ -32,7 +36,7 @@ export class DailyReportResolver {
   ) {}
 
   @Mutation(() => DailyReport)
-  @Roles(UserRole.coach, MemberRole.member)
+  @Roles(MemberRole.member)
   async setDailyReportCategories(
     @Context() context,
     @Args(
@@ -42,6 +46,11 @@ export class DailyReportResolver {
     )
     dailyReportCategoriesInput: DailyReportCategoriesInput,
   ): Promise<DailyReport> {
+    if (!extractRoles(context).includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.allowedToMembersOnly));
+    }
+    // ignoring the id from the params - replacing it with the id from the context
+    dailyReportCategoriesInput.memberId = extractUserId(context);
     const dailyReportObject = await this.dailyReportService.setDailyReportCategories(
       dailyReportCategoriesInput,
     );
@@ -78,6 +87,7 @@ export class DailyReportResolver {
   @Query(() => DailyReportResults)
   @Roles(UserRole.coach, MemberRole.member)
   async getDailyReports(
+    @Context() context,
     @Args(
       camelCase(DailyReportQueryInput.name),
       { type: () => DailyReportQueryInput },
@@ -85,6 +95,9 @@ export class DailyReportResolver {
     )
     dailyReportQueryInput: DailyReportQueryInput,
   ): Promise<DailyReportResults> {
+    if (extractRoles(context).includes(MemberRole.member)) {
+      dailyReportQueryInput.memberId = extractUserId(context);
+    }
     return {
       data: await this.dailyReportService.getDailyReports(dailyReportQueryInput),
       metadata: {

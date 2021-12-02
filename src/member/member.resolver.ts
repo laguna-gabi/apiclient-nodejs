@@ -69,7 +69,8 @@ import {
   Roles,
   StorageType,
   UserRole,
-  extractAuthorizationHeader,
+  extractRoles,
+  extractUserId,
   scheduleAppointmentDateFormat,
 } from '../common';
 import {
@@ -128,13 +129,10 @@ export class MemberResolver extends MemberBase {
     @Context() context,
     @Args('id', { type: () => String, nullable: true }) id?: string,
   ): Promise<Member> {
-    let member;
-    if (id) {
-      member = await this.memberService.get(id);
-    } else {
-      const deviceId = this.extractDeviceId(context);
-      member = await this.memberService.getByDeviceId(deviceId);
-    }
+    const memberId = extractRoles(context).includes(MemberRole.member)
+      ? extractUserId(context)
+      : id;
+    const member = await this.memberService.get(memberId);
     member.zipCode = member.zipCode || member.org.zipCode;
     member.utcDelta = this.getTimezoneDeltaFromZipcode(member.zipCode);
     return member;
@@ -272,8 +270,14 @@ export class MemberResolver extends MemberBase {
 
   @Query(() => DischargeDocumentsLinks)
   @Roles(MemberRole.member, UserRole.coach)
-  async getMemberDownloadDischargeDocumentsLinks(@Args('id', { type: () => String }) id: string) {
-    const member = await this.memberService.get(id);
+  async getMemberDownloadDischargeDocumentsLinks(
+    @Context() context,
+    @Args('id', { type: () => String, nullable: true }) id?: string,
+  ) {
+    const memberId = extractRoles(context).includes(MemberRole.member)
+      ? extractUserId(context)
+      : id;
+    const member = await this.memberService.get(memberId);
 
     const { firstName, lastName } = member;
 
@@ -281,12 +285,12 @@ export class MemberResolver extends MemberBase {
     const [dischargeNotesLink, dischargeInstructionsLink] = await Promise.all([
       await this.storageService.getDownloadUrl({
         storageType,
-        memberId: id,
+        memberId,
         id: `${firstName}_${lastName}_Summary.pdf`,
       }),
       await this.storageService.getDownloadUrl({
         storageType,
-        memberId: id,
+        memberId,
         id: `${firstName}_${lastName}_Instructions.pdf`,
       }),
     ]);
@@ -405,8 +409,11 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Identifier)
   @Roles(MemberRole.member)
-  async createJournal(@Args('memberId', { type: () => String }) memberId: string) {
-    return this.memberService.createJournal(memberId);
+  async createJournal(@Context() context) {
+    if (!extractRoles(context).includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.allowedToMembersOnly));
+    }
+    return this.memberService.createJournal(extractUserId(context));
   }
 
   @Mutation(() => Journal)
@@ -429,8 +436,11 @@ export class MemberResolver extends MemberBase {
 
   @Query(() => [Journal])
   @Roles(MemberRole.member)
-  async getJournals(@Args('memberId', { type: () => String }) memberId: string) {
-    const journals = await this.memberService.getJournals(memberId);
+  async getJournals(@Context() context) {
+    if (!extractRoles(context).includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.allowedToMembersOnly));
+    }
+    const journals = await this.memberService.getJournals(extractUserId(context));
 
     return Promise.all(
       journals.map(async (journal) => {
@@ -514,15 +524,19 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(MemberRole.member, UserRole.coach)
+  @Roles(MemberRole.member)
   async registerMemberForNotifications(
+    @Context() context,
     @Args(camelCase(RegisterForNotificationParams.name))
     registerForNotificationParams: RegisterForNotificationParams,
   ) {
-    const member = await this.memberService.get(registerForNotificationParams.memberId);
-    const currentMemberConfig = await this.memberService.getMemberConfig(
-      registerForNotificationParams.memberId,
-    );
+    if (!extractRoles(context).includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.allowedToMembersOnly));
+    }
+    // ignoring the id from the params - replacing it with the id from the context
+    const memberId = extractUserId(context); //member is considered a general user in the request
+    const member = await this.memberService.get(memberId);
+    const currentMemberConfig = await this.memberService.getMemberConfig(memberId);
 
     if (registerForNotificationParams.platform === Platform.ios) {
       const { token } = registerForNotificationParams;
@@ -543,7 +557,7 @@ export class MemberResolver extends MemberBase {
 
     member.users.map((user) => {
       const eventParams: IEventOnUpdatedMemberPlatform = {
-        memberId: registerForNotificationParams.memberId,
+        memberId: member.id,
         platform: registerForNotificationParams.platform,
         userId: user.id,
       };
@@ -869,8 +883,14 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
   @Query(() => MemberConfig)
   @Roles(MemberRole.member, UserRole.coach)
-  async getMemberConfig(@Args('id', { type: () => String }) id: string) {
-    return this.memberService.getMemberConfig(id);
+  async getMemberConfig(
+    @Context() context,
+    @Args('id', { type: () => String, nullable: true }) id?: string,
+  ) {
+    const memberId = extractRoles(context).includes(MemberRole.member)
+      ? extractUserId(context)
+      : id;
+    return this.memberService.getMemberConfig(memberId);
   }
 
   @Mutation(() => Boolean)
@@ -888,16 +908,6 @@ export class MemberResolver extends MemberBase {
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
-
-  private extractDeviceId(@Context() context) {
-    const authorization = extractAuthorizationHeader(context);
-
-    if (!authorization?.username) {
-      throw new Error(Errors.get(ErrorType.memberNotFound));
-    }
-
-    return authorization.username;
-  }
 
   private getTimezoneDeltaFromZipcode(zipCode?: string): number | undefined {
     if (zipCode) {

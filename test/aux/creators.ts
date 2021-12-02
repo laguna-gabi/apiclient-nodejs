@@ -74,7 +74,7 @@ export class Creators {
     const memberParams = generateCreateMemberParams({ orgId: org.id, userId });
     const { id } = await this.handler.mutations.createMember({ memberParams });
 
-    const member = await this.handler.queries.getMember({ id });
+    const member = await this.handler.setContextUserId(id).queries.getMember({ id });
 
     expect(member.phone).toEqual(memberParams.phone);
     expect(member.firstName).toEqual(memberParams.firstName);

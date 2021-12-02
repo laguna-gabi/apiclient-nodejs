@@ -5,16 +5,18 @@ import * as config from 'config';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
 import {
+  ErrorType,
+  Errors,
   EventType,
   Logger,
   MemberRole,
   UpdatedAppointmentAction,
-  UserRole
+  UserRole,
 } from '../../src/common';
 import {
   CommunicationModule,
   CommunicationResolver,
-  CommunicationService
+  CommunicationService,
 } from '../../src/communication';
 import { DbModule } from '../../src/db/db.module';
 import { UserService } from '../../src/user';
@@ -27,7 +29,7 @@ import {
   generateUniqueUrl,
   mockGenerateMember,
   mockGenerateUser,
-  mockLogger
+  mockLogger,
 } from '../index';
 
 describe('CommunicationResolver', () => {
@@ -284,7 +286,7 @@ describe('CommunicationResolver', () => {
         resolver.getMemberCommunicationInfo({
           req: { user: { _id: generateObjectId(), roles: [UserRole.coach] } },
         }),
-      ).rejects.toThrow('communication info is not allowed');
+      ).rejects.toThrow(Errors.get(ErrorType.allowedToMembersOnly));
     });
 
     it('should throw error if primary user is missing', async () => {
@@ -295,7 +297,7 @@ describe('CommunicationResolver', () => {
         resolver.getMemberCommunicationInfo({
           req: { user: { _id: generateObjectId(), roles: [MemberRole.member] } },
         }),
-      ).rejects.toThrow('user id was not found');
+      ).rejects.toThrow(Errors.get(ErrorType.userNotFound));
     });
 
     it('should throw error if no communication between user and member', async () => {
@@ -306,7 +308,7 @@ describe('CommunicationResolver', () => {
         resolver.getMemberCommunicationInfo({
           req: { user: { _id: generateObjectId(), roles: [MemberRole.member] } },
         }),
-      ).rejects.toThrow('member-user communication was not found');
+      ).rejects.toThrow(Errors.get(ErrorType.communicationMemberUserNotFound));
     });
   });
 });

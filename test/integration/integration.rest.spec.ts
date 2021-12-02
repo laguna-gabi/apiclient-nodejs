@@ -35,7 +35,9 @@ describe('Integration tests: rest', () => {
     it('should get slots', async () => {
       const org = await creators.createAndValidateOrg();
       const resultMember = await creators.createAndValidateMember({ org, useNewUser: true });
-      const user = await handler.setContextUserId(resultMember.primaryUserId).queries.getUser();
+      const user = await handler
+        .setContextUserId(resultMember.primaryUserId.toString())
+        .queries.getUser();
 
       const appointment = await creators.createAndValidateAppointment({ member: resultMember });
 
@@ -122,10 +124,12 @@ describe('Integration tests: rest', () => {
         body: { id: memberId },
       } = await request(server).post(urls.members).send(memberParams).expect(201);
       // test member created
-      const member = await handler.queries.getMember({ id: memberId });
+      const member = await handler.setContextUserId(memberId).queries.getMember({ id: memberId });
       compareMembers(member, memberParams);
       // test member config created
-      const memberConfig = await handler.queries.getMemberConfig({ id: memberId });
+      const memberConfig = await handler
+        .setContextUserId(memberId)
+        .queries.getMemberConfig({ id: memberId });
       expect(memberConfig.memberId).toEqual(memberId);
 
       const user = await handler.setContextUserId(member.primaryUserId).queries.getUser();

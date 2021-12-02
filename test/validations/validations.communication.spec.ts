@@ -48,8 +48,7 @@ describe('Validations - communication', () => {
   });
 
   it('should fail to to get member unread messages since member does not exists', async () => {
-    await handler.queries.getMemberUnreadMessagesCount({
-      memberId: generateId(),
+    await handler.setContextUserId(generateId()).queries.getMemberUnreadMessagesCount({
       invalidFieldsError: Errors.get(ErrorType.communicationMemberUserNotFound),
     });
   });

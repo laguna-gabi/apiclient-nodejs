@@ -6,7 +6,7 @@ import { TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import { connect, disconnect } from 'mongoose';
 import { v4 } from 'uuid';
-import { apiPrefix, webhooks } from '../src/common';
+import { MemberRole, RoleTypes, apiPrefix, webhooks } from '../src/common';
 import { DbModule } from '../src/db/db.module';
 import { Member, defaultMemberParams } from '../src/member';
 import {
@@ -31,11 +31,12 @@ export class BaseHandler {
   module: GraphQLModule;
   userService: UserService;
 
-  setContextUserId = (userId) => {
+  setContextUserId = (userId: string, roles: RoleTypes[] = [MemberRole.member]) => {
     (this.module as any).apolloServer.context = () => ({
       req: {
         user: {
           _id: userId,
+          roles,
         },
       },
     });
