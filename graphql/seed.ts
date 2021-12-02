@@ -46,7 +46,7 @@ async function main() {
   const users = await userService.getRegisteredUsers();
   if (users.length === 0) {
     //No users existing in the db, creating one
-    await createUser([UserRole.admin], 'user');
+    await createUser([UserRole.coach], 'user');
     //Since Sendbird is doing async calls in event emitter,
     //we need to wait a while for the actions to be finished since in createMember we're creating
     //a groupChannel that should wait for the user to be registered on sendbird.
@@ -66,11 +66,13 @@ async function main() {
       '---------------------- Creating a member -----------------------\n' +
       '----------------------------------------------------------------',
   );
+  const userId = await userService.getAvailableUser();
   const memberParams = generateCreateMemberParams({
     orgId: org.id,
     email: faker.internet.email(),
     zipCode: generateZipCode(),
     dischargeDate: generateDateOnly(faker.date.future(1)),
+    userId: userId.toString(),
   });
 
   const { id: memberId } = await mutations.createMember({
