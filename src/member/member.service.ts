@@ -854,7 +854,7 @@ export class MemberService extends BaseService {
 
     // if old user == new user
     if (member.primaryUserId.toString() === params.userId) {
-      throw new Error(Errors.get(ErrorType.userIdOrEmailAlreadyExists));
+      throw new Error(Errors.get(ErrorType.memberReplaceUserAlreadyExists));
     }
     // return the old member (with the old primaryUserId)
     return this.replaceId(member);

@@ -556,14 +556,12 @@ export class MemberResolver extends MemberBase {
       isPushNotificationsEnabled: registerForNotificationParams.isPushNotificationsEnabled,
     });
 
-    member.users.map((user) => {
-      const eventParams: IEventOnUpdatedMemberPlatform = {
-        memberId: member.id,
-        platform: registerForNotificationParams.platform,
-        userId: user.id,
-      };
-      this.eventEmitter.emit(EventType.onUpdatedMemberPlatform, eventParams);
-    });
+    const eventParams: IEventOnUpdatedMemberPlatform = {
+      memberId: member.id,
+      platform: registerForNotificationParams.platform,
+      userId: member.primaryUserId.toString(),
+    };
+    this.eventEmitter.emit(EventType.onUpdatedMemberPlatform, eventParams);
 
     this.notifyUpdatedMemberConfig({ memberConfig });
 

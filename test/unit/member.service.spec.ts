@@ -1368,7 +1368,7 @@ describe('MemberService', () => {
 
       await expect(
         service.updatePrimaryUser({ userId: member.primaryUserId.toString(), memberId }),
-      ).rejects.toThrow(Errors.get(ErrorType.userIdOrEmailAlreadyExists));
+      ).rejects.toThrow(Errors.get(ErrorType.memberReplaceUserAlreadyExists));
     });
 
     it('should update the primary user and add new user to the users list', async () => {

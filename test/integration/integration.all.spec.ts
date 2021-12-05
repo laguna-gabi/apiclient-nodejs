@@ -607,6 +607,7 @@ describe('Integration tests: all', () => {
         .queries.getMember({ id: member.id });
       expect(updatedMember.primaryUserId).toEqual(newUser.id);
       expect(updatedMember.users[updatedMember.users.length - 1].id).toEqual(newUser.id);
+      expect(updatedMember.users.length).toEqual(2);
 
       // TODO: Check that the communication changed (currently can't because it's mocked)
       // const communication = await handler.queries.getCommunication({
@@ -664,7 +665,7 @@ describe('Integration tests: all', () => {
 
       await handler.mutations.replaceUserForMember({
         replaceUserForMemberParams,
-        invalidFieldsErrors: [Errors.get(ErrorType.userIdOrEmailAlreadyExists)],
+        invalidFieldsErrors: [Errors.get(ErrorType.memberReplaceUserAlreadyExists)],
       });
     });
   });

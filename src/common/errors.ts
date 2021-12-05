@@ -36,6 +36,7 @@ export enum ErrorType {
   memberInvalidZipCode = 9216,
   memberJournalNotFound = 9217,
   memberAllowedOnly = 9218,
+  memberReplaceUserAlreadyExists = 9219,
 
   // Notifications
   notificationMetadataInvalid = 9270,
@@ -119,6 +120,7 @@ export const Errors: Map<ErrorType, string> = new Map([
     `token must contain only letters and numbers`,
   ],
   [ErrorType.memberAllowedOnly.valueOf(), `this resource is only allowed to members`],
+  [ErrorType.memberReplaceUserAlreadyExists.valueOf(), `user is already assigned to member`],
   [
     ErrorType.notificationMetadataInvalid.valueOf(),
     `when calling type 'text' or 'textSms', 'content' in metadata is required ` +
