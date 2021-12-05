@@ -27,6 +27,9 @@ export const ExternalConfigs = {
     apiToken: 'bitly.apiToken',
     groupGuid: 'bitly.groupGuid',
   },
+  split: {
+    apiKey: 'split.apiKey',
+  },
 };
 
 @Injectable()

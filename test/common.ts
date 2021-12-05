@@ -168,7 +168,7 @@ export const mockProviders = (
   const spyOnQueueServiceSendMessage = jest.spyOn(queueService, 'sendMessage');
 
   spyOnSendBirdCreateUser.mockResolvedValue(v4());
-  spyOnFeatureFlagControlGroup.mockReturnValue(false);
+  spyOnFeatureFlagControlGroup.mockResolvedValue(false);
   spyOnSendBirdCreateGroupChannel.mockResolvedValue(true);
   spyOnSendBirdFreeze.mockResolvedValue(undefined);
   spyOnSendBirdDeleteGroupChannel.mockResolvedValue(undefined);

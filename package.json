@@ -52,6 +52,7 @@
     "@nestjs/schedule": "^1.0.1",
     "@nestjs/terminus": "^7.2.0",
     "@slack/webhook": "^6.0.0",
+    "@splitsoftware/splitio": "^10.16.1",
     "@types/aws-sdk": "^2.7.0",
     "@types/lodash": "^4.14.172",
     "@types/mongoose": "^5.11.97",

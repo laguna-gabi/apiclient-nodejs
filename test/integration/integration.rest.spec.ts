@@ -146,7 +146,7 @@ describe('Integration tests: rest', () => {
 
   describe('createControlMember', () => {
     it('should create a member', async () => {
-      handler.featureFlagService.spyOnFeatureFlagControlGroup.mockReturnValueOnce(true);
+      handler.featureFlagService.spyOnFeatureFlagControlGroup.mockResolvedValueOnce(true);
       const org = await creators.createAndValidateOrg();
       const memberParams = generateCreateMemberParams({
         orgId: org.id,

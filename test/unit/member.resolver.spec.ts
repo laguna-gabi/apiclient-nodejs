@@ -178,7 +178,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetAvailableUser.mockImplementationOnce(async () => member.primaryUserId);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-      spyOnFeatureFlagControlGroup.mockImplementationOnce(() => false);
+      spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => false);
 
       const params = generateCreateMemberParams({ orgId: generateId() });
       await resolver.createMember(params);
@@ -231,7 +231,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetAvailableUser.mockImplementationOnce(async () => member.primaryUserId);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       //forcing true to be sure it won't be control member, even if control rolled true.
-      spyOnFeatureFlagControlGroup.mockImplementationOnce(() => true);
+      spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => true);
 
       const params = generateCreateMemberParams({ orgId: generateId(), userId: user.id });
       await resolver.createMember(params);
@@ -258,7 +258,7 @@ describe('MemberResolver', () => {
     it('should create a control member', async () => {
       const member = mockGenerateMember();
       spyOnServiceInsertControl.mockImplementationOnce(async () => member);
-      spyOnFeatureFlagControlGroup.mockImplementationOnce(() => true);
+      spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => true);
 
       const params = generateCreateMemberParams({ orgId: generateId() });
       const result = await resolver.createMember(params);

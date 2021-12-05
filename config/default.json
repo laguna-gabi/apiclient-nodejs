@@ -57,5 +57,8 @@
   "org": {
     "mayo": "6113d0fa7cb99c0858c470b5",
     "northshore": "6113d0fb7cb99c0858c470e1"
+  },
+  "split": {
+    "apiKey": "localhost"
   }
 }

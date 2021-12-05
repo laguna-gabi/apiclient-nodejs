@@ -928,7 +928,7 @@ describe('Integration tests: all', () => {
 
     it(`should send a text on newly created control member`, async () => {
       const org = await creators.createAndValidateOrg();
-      handler.featureFlagService.spyOnFeatureFlagControlGroup.mockReturnValueOnce(true);
+      handler.featureFlagService.spyOnFeatureFlagControlGroup.mockResolvedValueOnce(true);
 
       const memberParams = generateCreateMemberParams({ orgId: org.id });
       await handler.mutations.createMember({ memberParams });

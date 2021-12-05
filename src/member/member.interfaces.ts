@@ -34,7 +34,7 @@ export class MemberBase {
   ) {}
 
   async createMember(createMemberParams: CreateMemberParams): Promise<Member> {
-    const control = !createMemberParams.userId && this.featureFlagService.isControlGroup();
+    const control = !createMemberParams.userId && (await this.featureFlagService.isControlGroup());
     if (control) {
       return this.createControlMember(createMemberParams);
     } else {
