@@ -1,5 +1,3 @@
-import { Types } from 'mongoose';
-
 export const generatePhone = () => {
   const random = () => Math.floor(Math.random() * 9) + 1;
 
@@ -9,12 +7,4 @@ export const generatePhone = () => {
   }
 
   return phone;
-};
-
-export const generateObjectId = (id?): Types.ObjectId => {
-  return new Types.ObjectId(id);
-};
-
-export const generateId = (id?): string => {
-  return generateObjectId(id).toString();
 };
