@@ -101,4 +101,11 @@ describe(BaseLogger.name, () => {
     logger.info(params, BaseLogger.name, methodName);
     expect(console.info).toHaveBeenCalledWith(expect.stringContaining(JSON.stringify({})));
   });
+
+  it('should set empty array on validValues, if it is not provided', () => {
+    const logger = new BaseLogger();
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    expect(logger.validKeys).toEqual([]);
+  });
 });

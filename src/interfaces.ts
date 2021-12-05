@@ -25,6 +25,8 @@ export interface IUpdateClientSettings extends IInnerQueueTypes {
   externalUserId?: string;
   firstLoggedInAt?: Date;
   honorific?: Honorific;
+  zipCode?: string;
+  language?: Language;
   //only user
   avatar?: string;
 }
@@ -45,8 +47,9 @@ export interface ICreateDispatch extends IDispatch {
   senderClientId?: string;
   sendBirdChannelUrl?: string;
   appointmentId?: string;
+  appointmentTime?: Date;
   peerId?: string;
-  content?: string;
+  contentKey?: ContentKey;
   chatLink?: boolean;
   triggeredAt?: Date;
   notificationId?: string;
@@ -72,6 +75,10 @@ export const BaseExternalConfigs = {
     apiId: 'sendbird.apiId',
     apiToken: 'sendbird.apiToken',
     masterApiToken: 'sendbird.masterApiToken',
+  },
+  bitly: {
+    apiToken: 'bitly.apiToken',
+    groupGuid: 'bitly.groupGuid',
   },
 };
 

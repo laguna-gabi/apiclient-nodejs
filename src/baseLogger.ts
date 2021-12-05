@@ -8,7 +8,7 @@ enum LogType {
 }
 
 export class BaseLogger {
-  constructor(private validKeys: string[]) {}
+  constructor(private validKeys: string[] = []) {}
 
   protected COLOR = {
     reset: '\x1b[0m',

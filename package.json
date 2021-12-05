@@ -28,6 +28,7 @@
   "devDependencies": {
     "@types/faker": "^5.5.9",
     "@types/jest": "^27.0.3",
+    "@types/mongoose": "^5.11.97",
     "@types/node": "^16.0.0",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
@@ -47,7 +48,9 @@
   },
   "dependencies": {
     "@slack/types": "^2.2.0",
-    "@slack/webhook": "^6.0.0"
+    "@slack/webhook": "^6.0.0",
+    "mongoose": "^6.0.14",
+    "uuid": "^8.3.2"
   },
   "jest": {
     "moduleFileExtensions": [
