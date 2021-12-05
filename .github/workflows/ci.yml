@@ -59,3 +59,82 @@ jobs:
         run: yarn test
       - name: Live tests
         run: yarn test:live
+
+  deploy:
+    name: Deploy
+    runs-on: self-hosted
+    needs: build-and-test
+    timeout-minutes: 30
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging'
+
+    steps:
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v5
+
+      - name: Accumulate NODE_ENV
+        id: branch_check
+        run: |
+          echo "Running on branch ${{ github.ref }}"
+          if [ "${{ steps.branch-name.outputs.current_branch }}" = "staging" ]; then
+            echo "::set-output name=env_name::production"
+          elif [ "${{ steps.branch-name.outputs.current_branch }}" = "develop" ]; then
+            echo "::set-output name=env_name::development"
+          fi
+      - name: Log environment vars
+        run: |
+          echo "current branch=${{ steps.branch-name.outputs.current_branch }}"
+          echo "current env_name=${{ steps.branch_check.outputs.env_name }}"
+      - name: Checkout Git repository
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: iris-${{ steps.branch-name.outputs.current_branch }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build a docker container and
+          # push it to ECR so that it can
+          # be deployed to ECS.
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG . --build-arg NPM_TOKEN=${{ secrets.NPM_PRIVATE_GITHUB_AUTH_TOKEN_REGISTRY }} --build-arg GIT_COMMIT=${{ github.sha }} --build-arg NODE_ENV=${{ steps.branch_check.outputs.env_name }}
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      - name: Download task definition
+        run: |
+          aws ecs describe-task-definition --task-definition fargate-task-iris-${{ steps.branch-name.outputs.current_branch }} \
+          --query taskDefinition > task-definition.json
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: iris-${{ steps.branch-name.outputs.current_branch }}-container
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: iris-${{ steps.branch-name.outputs.current_branch }}-service
+          cluster: cluster-hepius-${{ steps.branch-name.outputs.current_branch }}
+          wait-for-service-stability: true
+
+      - name: Notify deploy to Slack
+        uses: fjogeleit/http-request-action@master
+        with:
+          url: ${{ secrets.SLACK_URL_MESSAGES }}
+          method: 'POST'
+          data: '{"username":"LagunaBot","icon_emoji":":Gear:","channel":"#ci-cd","attachments":[{"color":"#9733EE","blocks":[{"type":"section","text":{"type":"mrkdwn","text":"*iris was deployed successfully to `${{ steps.branch-name.outputs.current_branch }}`.*\n*Last commit hash `${{ github.sha }}`*\nhttps://github.com/LagunaHealth/hepius/actions/runs/${{ github.run_id }}"}}]}]}'
