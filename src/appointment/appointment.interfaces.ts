@@ -1,5 +1,5 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { format, isAfter } from 'date-fns';
+import { isAfter } from 'date-fns';
 import {
   Appointment,
   AppointmentScheduler,
@@ -14,7 +14,6 @@ import {
   IEventOnUpdatedAppointment,
   InternalNotifyParams,
   UpdatedAppointmentAction,
-  scheduleAppointmentDateFormat,
 } from '../common';
 import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
 
@@ -66,12 +65,7 @@ export class AppointmentBase {
       type: InternalNotificationType.textSmsToUser,
       metadata: {
         contentType: ContentKey.appointmentScheduledUser,
-        extraData: {
-          appointmentTime: `${format(
-            new Date(appointment.start.toUTCString()),
-            scheduleAppointmentDateFormat,
-          )} (UTC)`,
-        },
+        appointmentTime: appointment.start,
       },
     };
     this.eventEmitter.emit(EventType.notifyInternal, params);

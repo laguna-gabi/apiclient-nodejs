@@ -71,7 +71,6 @@ import {
   UserRole,
   extractRoles,
   extractUserId,
-  scheduleAppointmentDateFormat,
 } from '../common';
 import {
   CommunicationResolver,
@@ -90,6 +89,8 @@ import { User, UserService } from '../user';
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
 export class MemberResolver extends MemberBase {
+  private readonly scheduleAppointmentDateFormat = `EEEE LLLL do 'at' p`;
+
   constructor(
     readonly memberService: MemberService,
     private readonly memberScheduler: MemberScheduler,
@@ -676,14 +677,24 @@ export class MemberResolver extends MemberBase {
       }
 
       if (metadata.appointmentTime) {
-        metadata.extraData = {
-          ...metadata.extraData,
-          appointmentTime: format(
-            utcToZonedTime(metadata.appointmentTime, lookup(member.zipCode)),
-            `${scheduleAppointmentDateFormat} (z)`,
-            { timeZone: lookup(member.zipCode) },
-          ),
-        };
+        if (InternalNotificationType.textSmsToMember || InternalNotificationType.textToMember) {
+          metadata.extraData = {
+            ...metadata.extraData,
+            appointmentTime: format(
+              utcToZonedTime(metadata.appointmentTime, lookup(member.zipCode)),
+              `${this.scheduleAppointmentDateFormat} (z)`,
+              { timeZone: lookup(member.zipCode) },
+            ),
+          };
+        } else if (InternalNotificationType.textSmsToUser) {
+          metadata.extraData = {
+            ...metadata.extraData,
+            appointmentTime: `${format(
+              new Date(metadata.appointmentTime.toUTCString()),
+              this.scheduleAppointmentDateFormat,
+            )} (UTC)`,
+          };
+        }
       }
 
       if (metadata.contentType) {

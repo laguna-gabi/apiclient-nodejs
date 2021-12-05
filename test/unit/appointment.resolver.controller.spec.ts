@@ -2,7 +2,6 @@ import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { addMinutes } from 'date-fns';
-import { format } from 'date-fns-tz';
 import {
   AppointmentController,
   AppointmentMethod,
@@ -23,7 +22,6 @@ import {
   Logger,
   ReminderType,
   UpdatedAppointmentAction,
-  scheduleAppointmentDateFormat,
 } from '../../src/common';
 import {
   dbDisconnect,
@@ -270,12 +268,7 @@ describe('AppointmentResolver', () => {
         type: InternalNotificationType.textSmsToUser,
         metadata: {
           contentType: ContentKey.appointmentScheduledUser,
-          extraData: {
-            appointmentTime: `${format(
-              new Date(appointment.start.toUTCString()),
-              scheduleAppointmentDateFormat,
-            )} (UTC)`,
-          },
+          appointmentTime: appointment.start,
         },
       };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
