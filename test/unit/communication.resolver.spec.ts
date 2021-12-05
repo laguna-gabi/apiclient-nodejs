@@ -286,7 +286,7 @@ describe('CommunicationResolver', () => {
         resolver.getMemberCommunicationInfo({
           req: { user: { _id: generateObjectId(), roles: [UserRole.coach] } },
         }),
-      ).rejects.toThrow(Errors.get(ErrorType.allowedToMembersOnly));
+      ).rejects.toThrow(Errors.get(ErrorType.memberAllowedOnly));
     });
 
     it('should throw error if primary user is missing', async () => {

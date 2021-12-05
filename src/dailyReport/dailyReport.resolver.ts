@@ -47,7 +47,7 @@ export class DailyReportResolver {
     dailyReportCategoriesInput: DailyReportCategoriesInput,
   ): Promise<DailyReport> {
     if (!extractRoles(context).includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.allowedToMembersOnly));
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
     // ignoring the id from the params - replacing it with the id from the context
     dailyReportCategoriesInput.memberId = extractUserId(context);

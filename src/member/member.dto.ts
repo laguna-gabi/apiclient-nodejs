@@ -105,7 +105,7 @@ export class ExtraMemberParams {
   language?: Language;
 
   @Field(() => String, { nullable: true })
-  @IsValidZipCode({ message: Errors.get(ErrorType.invalidZipCode) })
+  @IsValidZipCode({ message: Errors.get(ErrorType.memberInvalidZipCode) })
   @IsString() /* for rest api */
   @IsOptional()
   zipCode?: string;
@@ -138,7 +138,7 @@ export class CreateMemberParams extends ExtraMemberParams {
 
   @Field(() => String, { nullable: true })
   @IsOptional()
-  @IsObjectId({ message: Errors.get(ErrorType.invalidUserId) })
+  @IsObjectId({ message: Errors.get(ErrorType.userIdInvalid) })
   userId?: string;
 
   @Field(() => String)

@@ -89,7 +89,7 @@ export class CommunicationResolver {
     @Args('memberId', { type: () => String, nullable: true }) memberId?: string,
   ) {
     if (!extractRoles(context).includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.allowedToMembersOnly));
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
     // ignoring the id from the params - replacing it with the id from the context
     return this.communicationService.getParticipantUnreadMessagesCount(extractUserId(context));
@@ -100,7 +100,7 @@ export class CommunicationResolver {
   async getMemberCommunicationInfo(@Context() context) {
     // we expect the logged in user to be a member and admin is also implicitly allowed here
     if (!extractRoles(context).includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.allowedToMembersOnly));
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
 
     const memberId = extractUserId(context);

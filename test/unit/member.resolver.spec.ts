@@ -1340,7 +1340,7 @@ describe('MemberResolver', () => {
         isPushNotificationsEnabled: true,
       };
       await expect(resolver.registerMemberForNotifications(context, params)).rejects.toThrow(
-        Errors.get(ErrorType.allowedToMembersOnly),
+        Errors.get(ErrorType.memberAllowedOnly),
       );
     });
   });

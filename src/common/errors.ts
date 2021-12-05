@@ -15,6 +15,7 @@ export enum ErrorType {
   userNotFound = 9106,
   slotsParams = 9107,
   userCanNotBeAssignedToMembers = 9108,
+  userIdInvalid = 9209,
 
   // Module member errors
   memberMinMaxLength = 9201,
@@ -32,10 +33,9 @@ export enum ErrorType {
   memberRegisterForNotificationToken = 9213,
   memberRecordingIdAlreadyExists = 9214,
   memberRegisterWebPlatform = 9215,
-  invalidZipCode = 9216,
+  memberInvalidZipCode = 9216,
   memberJournalNotFound = 9217,
-  invalidUserId = 9218,
-  allowedToMembersOnly = 9218,
+  memberAllowedOnly = 9218,
 
   // Notifications
   notificationMetadataInvalid = 9270,
@@ -94,9 +94,10 @@ export const Errors: Map<ErrorType, string> = new Map([
     'avatar must be an URL address, for example: www.google.com',
   ],
   [ErrorType.userNotFound.valueOf(), 'user id was not found'],
-  [ErrorType.userCanNotBeAssignedToMembers.valueOf(), 'user can not be assigned to member'],
   [ErrorType.slotsParams.valueOf(), 'userId or appointmentId must be provided'],
   [ErrorType.userPhone.valueOf(), phoneFormat],
+  [ErrorType.userCanNotBeAssignedToMembers.valueOf(), 'user can not be assigned to member'],
+  [ErrorType.userIdInvalid.valueOf(), 'invalid user id'],
   [ErrorType.memberMinMaxLength.valueOf(), `member ${nameFormat}`],
   [ErrorType.memberPhoneAlreadyExists.valueOf(), 'An error has occurred'],
   [ErrorType.memberPhone.valueOf(), phoneFormat],
@@ -111,13 +112,13 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberAdmitDate.valueOf(), `admitDate ${dateInstanceFormat}`],
   [ErrorType.memberRecordingIdAlreadyExists.valueOf(), `id already exists`],
   [ErrorType.memberRegisterWebPlatform.valueOf(), `cant register member with platform web`],
-  [ErrorType.invalidZipCode.valueOf(), `invalid ZIP code`],
-  [ErrorType.allowedToMembersOnly.valueOf(), `this resource is only allowed to members`],
+  [ErrorType.memberInvalidZipCode.valueOf(), `invalid ZIP code`],
   [ErrorType.memberJournalNotFound.valueOf(), `journal id was not found`],
   [
     ErrorType.memberRegisterForNotificationToken.valueOf(),
     `token must contain only letters and numbers`,
   ],
+  [ErrorType.memberAllowedOnly.valueOf(), `this resource is only allowed to members`],
   [
     ErrorType.notificationMetadataInvalid.valueOf(),
     `when calling type 'text' or 'textSms', 'content' in metadata is required ` +
@@ -159,7 +160,6 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.dailyReportQueryDateInvalid.valueOf(), 'daily report query - invalid date format'],
   [ErrorType.dailyReportMutationDateInvalid.valueOf(), 'daily report query - invalid date format'],
   [ErrorType.invalidSenderId.valueOf(), 'invalid sender id'],
-  [ErrorType.invalidUserId.valueOf(), 'invalid user id'],
 ]);
 
 export const DbErrors = {

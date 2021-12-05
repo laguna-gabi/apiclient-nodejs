@@ -411,7 +411,7 @@ export class MemberResolver extends MemberBase {
   @Roles(MemberRole.member)
   async createJournal(@Context() context) {
     if (!extractRoles(context).includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.allowedToMembersOnly));
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
     return this.memberService.createJournal(extractUserId(context));
   }
@@ -438,7 +438,7 @@ export class MemberResolver extends MemberBase {
   @Roles(MemberRole.member)
   async getJournals(@Context() context) {
     if (!extractRoles(context).includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.allowedToMembersOnly));
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
     const journals = await this.memberService.getJournals(extractUserId(context));
 
@@ -531,7 +531,7 @@ export class MemberResolver extends MemberBase {
     registerForNotificationParams: RegisterForNotificationParams,
   ) {
     if (!extractRoles(context).includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.allowedToMembersOnly));
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
     // ignoring the id from the params - replacing it with the id from the context
     const memberId = extractUserId(context); //member is considered a general user in the request
