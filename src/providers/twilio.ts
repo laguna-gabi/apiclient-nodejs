@@ -1,5 +1,4 @@
 import {
-  BaseLogger,
   IEventNotifySlack,
   SlackChannel,
   SlackIcon,
@@ -9,7 +8,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as config from 'config';
 import { Twilio as TwilioClient } from 'twilio';
 import { ConfigsService, ExternalConfigs, SendTwilioNotification, Slack } from '.';
-import { Environments } from '../common';
+import { Environments, Logger } from '../common';
 
 @Injectable()
 export class Twilio implements OnModuleInit {
@@ -19,7 +18,7 @@ export class Twilio implements OnModuleInit {
   constructor(
     private readonly configsService: ConfigsService,
     private readonly slack: Slack,
-    private readonly logger: BaseLogger,
+    private readonly logger: Logger,
   ) {
     this.source = config.get('twilio.source');
   }

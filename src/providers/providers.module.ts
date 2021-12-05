@@ -1,12 +1,31 @@
 import { BaseLogger } from '@lagunahealth/pandora';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
-import { ConfigsService, NotificationsService, OneSignal, SendBird, Slack, Twilio } from '.';
+import {
+  Bitly,
+  ConfigsService,
+  InternationalizationService,
+  NotificationsService,
+  OneSignal,
+  SendBird,
+  Slack,
+  Twilio,
+} from '.';
 import { CommonModule } from '../common';
 
 @Module({
   imports: [CommonModule, HttpModule],
-  providers: [ConfigsService, SendBird, Slack, BaseLogger, OneSignal, Twilio, NotificationsService],
-  exports: [ConfigsService, NotificationsService],
+  providers: [
+    ConfigsService,
+    SendBird,
+    Slack,
+    BaseLogger,
+    OneSignal,
+    Twilio,
+    InternationalizationService,
+    NotificationsService,
+    Bitly,
+  ],
+  exports: [ConfigsService, InternationalizationService, NotificationsService],
 })
 export class ProvidersModule {}

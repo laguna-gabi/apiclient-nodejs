@@ -1,4 +1,4 @@
-import { AllNotificationTypes, SourceApi } from '@lagunahealth/pandora';
+import { AllNotificationTypes, ContentKey, SourceApi } from '@lagunahealth/pandora';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 /**************************************************************************************************
@@ -47,7 +47,7 @@ export class Dispatch {
   recipientClientId: string;
 
   @Prop({ isNan: true })
-  senderClient?: SenderClient;
+  senderClientId?: string;
 
   @Prop({ isNan: true })
   sendBirdChannelUrl?: string;
@@ -56,7 +56,13 @@ export class Dispatch {
   appointmentId?: string;
 
   @Prop({ isNan: true })
+  appointmentTime?: Date;
+
+  @Prop({ isNan: true })
   peerId?: string;
+
+  @Prop({ isNan: true })
+  contentKey?: ContentKey;
 
   @Prop({ isNan: true })
   content?: string;

@@ -42,7 +42,6 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     const { queueNameNotifications, queueNameNotificationsDLQ } = ExternalConfigs.aws;
 
-    // fetch 2 queues
     const queueName = await this.configsService.getConfig(queueNameNotifications);
     const { QueueUrl: queueUrl } = await this.sqs.getQueueUrl({ QueueName: queueName }).promise();
     this.notificationsQ = queueUrl;
@@ -56,7 +55,18 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
     // register and start consumer for NotificationQ
     const consumer = Consumer.create({
       queueUrl,
-      handleMessage: async (message) => await this.handleMessage(message),
+      handleMessage: async (message) => {
+        /**
+         * we need to always catch exceptions coming from message, since if we don't, it'll
+         * be stuck handling the message, and won't handle other messages.
+         */
+        try {
+          await this.handleMessage(message);
+        } catch (ex) {
+          //TODO log this on slack and logger.error
+          console.error(ex);
+        }
+      },
     });
 
     consumer.on('error', (err) => {

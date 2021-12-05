@@ -1,16 +1,15 @@
 import {
   AllNotificationTypes,
-  BaseLogger,
   BaseOneSignal,
   InternalNotificationType,
   Platform,
 } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ErrorType, Errors } from '../common';
-import { ConfigsService, ExternalConfigs } from './aws';
 import { oneSignal } from 'config';
 import { CancelNotificationParams, SendOneSignalNotification } from '.';
+import { ErrorType, Errors, Logger } from '../common';
+import { ConfigsService, ExternalConfigs } from './aws';
 
 @Injectable()
 export class OneSignal extends BaseOneSignal implements OnModuleInit {
@@ -19,7 +18,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
   constructor(
     private readonly configsService: ConfigsService,
     private readonly httpService: HttpService,
-    private readonly logger: BaseLogger,
+    private readonly logger: Logger,
   ) {
     super();
   }

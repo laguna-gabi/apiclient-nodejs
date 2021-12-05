@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { generateClientSettings, generateId } from '../';
+import { generateId, generateUpdateMemberSettingsMock } from '../';
 import { DbModule } from '../../src/db';
 import { ClientSettings, SettingsModule, SettingsService } from '../../src/settings';
 
@@ -18,17 +18,17 @@ describe(SettingsService.name, () => {
   });
 
   it('should update for a new client', async () => {
-    const settings: ClientSettings = generateClientSettings();
+    const settings: ClientSettings = generateUpdateMemberSettingsMock();
     const result = await service.update(settings);
     expect(result).toEqual(expect.objectContaining(settings));
   });
 
   it('should update for an existing client', async () => {
-    const settings: ClientSettings = generateClientSettings();
+    const settings: ClientSettings = generateUpdateMemberSettingsMock();
     const result = await service.update(settings);
     expect(result).toEqual(expect.objectContaining(settings));
 
-    const newSettings: ClientSettings = generateClientSettings({ id: settings.id });
+    const newSettings: ClientSettings = generateUpdateMemberSettingsMock({ id: settings.id });
     const resultNew = await service.update(newSettings);
     expect(resultNew).toEqual(expect.objectContaining(newSettings));
   });
@@ -41,11 +41,11 @@ describe(SettingsService.name, () => {
     { isPushNotificationsEnabled: null },
     { isAppointmentsReminderEnabled: null },
   ])('should not override %p since it is not define in input', async (field) => {
-    const settings: ClientSettings = generateClientSettings();
+    const settings: ClientSettings = generateUpdateMemberSettingsMock();
     const result = await service.update(settings);
     expect(result).toEqual(expect.objectContaining(settings));
 
-    let newSettings = generateClientSettings({ id: settings.id });
+    let newSettings = generateUpdateMemberSettingsMock({ id: settings.id });
     newSettings = { ...newSettings, ...field };
 
     const resultNew = await service.update(newSettings);
@@ -62,7 +62,7 @@ describe(SettingsService.name, () => {
   });
 
   it('should update, get and delete a client settings object', async () => {
-    const settings: ClientSettings = generateClientSettings();
+    const settings: ClientSettings = generateUpdateMemberSettingsMock();
     await service.update(settings);
 
     let clientSettings = await service.get(settings.id);

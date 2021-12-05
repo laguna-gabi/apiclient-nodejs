@@ -13,7 +13,12 @@ import {
 import { DbModule } from '../../src/db';
 import { NotificationsService, ProvidersModule } from '../../src/providers';
 import { SettingsService } from '../../src/settings';
-import { generateClientSettings, generateDispatch, generateId } from '../generators';
+import {
+  generateDispatch,
+  generateId,
+  generateUpdateMemberSettingsMock,
+  generateUpdateUserSettingsMock,
+} from '../generators';
 import SpyInstance = jest.SpyInstance;
 
 describe(ConductorService.name, () => {
@@ -53,7 +58,7 @@ describe(ConductorService.name, () => {
     });
 
     it('should call handleUpdateClientSettings', async () => {
-      const settings = generateClientSettings();
+      const settings = generateUpdateMemberSettingsMock();
       spyOnSettingsServiceUpdate.mockResolvedValueOnce(settings);
 
       await service.handleUpdateClientSettings({
@@ -106,28 +111,48 @@ describe(ConductorService.name, () => {
       );
     });
 
+    it(`should handle triggeredAt of undefined as real time`, async () => {
+      await handleRealEvents(false);
+    }, 10000);
+
     it(`should handle triggeredAt within the past/future ${gapTriggeredAt} seconds`, async () => {
-      const settings = generateClientSettings();
+      await handleRealEvents(true);
+    }, 10000);
+
+    const handleRealEvents = async (triggeredAt: boolean) => {
+      const memberSettings = generateUpdateMemberSettingsMock();
+      const userSettings = generateUpdateUserSettingsMock();
       await service.handleUpdateClientSettings({
-        ...settings,
+        ...memberSettings,
+        type: InnerQueueTypes.updateClientSettings,
+      });
+      await service.handleUpdateClientSettings({
+        ...userSettings,
         type: InnerQueueTypes.updateClientSettings,
       });
 
       const dispatch = generateDispatch({
-        recipientClientId: settings.id,
-        triggeredAt: subSeconds(new Date(), gapTriggeredAt),
+        recipientClientId: memberSettings.id,
+        senderClientId: userSettings.id,
       });
+      dispatch.triggeredAt = triggeredAt ? subSeconds(new Date(), gapTriggeredAt) : undefined;
 
       spyOnDispatchesServiceUpdate.mockResolvedValueOnce(dispatch);
       spyOnNotificationsService.mockResolvedValueOnce(null);
       await service.handleCreateDispatch({ ...dispatch, type: InnerQueueTypes.createDispatch });
 
-      expect(new Date().getTime()).toBeGreaterThan(dispatch.triggeredAt.getTime());
+      if (triggeredAt) {
+        expect(new Date().getTime()).toBeGreaterThan(dispatch.triggeredAt.getTime());
+      }
       expect(spyOnDispatchesServiceUpdate).toBeCalledWith(dispatch);
       expect(spyOnTriggersServiceUpdate).not.toBeCalled();
-      expect(spyOnNotificationsService).toBeCalledWith(dispatch, expect.objectContaining(settings));
+      expect(spyOnNotificationsService).toBeCalledWith(
+        dispatch,
+        expect.objectContaining(memberSettings),
+        expect.objectContaining(userSettings),
+      );
       expect(spyOnError).not.toBeCalled();
-    });
+    };
 
     it(`should handle triggeredAt more than ${gapTriggeredAt} seconds in the future`, async () => {
       const createDispatch = generateDispatch({

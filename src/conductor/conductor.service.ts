@@ -37,18 +37,20 @@ export class ConductorService {
   async handleCreateDispatch(input: ICreateDispatch): Promise<void> {
     this.logger.debug(input, ConductorService.name, this.handleCreateDispatch.name);
     const dispatch: Dispatch = this.cleanObject(input);
-
     await this.dispatchesService.update({ ...dispatch, status: DispatchStatus.received });
-
     const currentMinusInput = differenceInSeconds(new Date(), dispatch.triggeredAt);
-    if (currentMinusInput >= -1 * gapTriggeredAt && currentMinusInput <= gapTriggeredAt) {
+    if (
+      !dispatch.triggeredAt ||
+      (currentMinusInput >= -1 * gapTriggeredAt && currentMinusInput <= gapTriggeredAt)
+    ) {
       //real time event
       await this.dispatchesService.internalUpdate({
         dispatchId: dispatch.dispatchId,
         status: DispatchStatus.acquired,
       });
-      const settings = await this.settingsService.get(dispatch.recipientClientId);
-      await this.notificationsService.send(dispatch, settings);
+      const recipientClient = await this.settingsService.get(dispatch.recipientClientId);
+      const senderClient = await this.settingsService.get(dispatch.senderClientId);
+      await this.notificationsService.send(dispatch, recipientClient, senderClient);
     } else if (currentMinusInput > gapTriggeredAt) {
       //past event
       this.logger.error(dispatch, ConductorService.name, this.handleCreateDispatch.name);

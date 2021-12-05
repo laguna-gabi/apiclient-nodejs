@@ -15,6 +15,7 @@ export class SendOneSignalNotification extends BaseSendNotification {
     type: AllNotificationTypes;
     path?: string;
     isVideo: boolean;
+    extraData?: string;
   };
   content?: string;
 }
