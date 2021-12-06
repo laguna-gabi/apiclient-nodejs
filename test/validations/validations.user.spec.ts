@@ -4,7 +4,7 @@ import * as request from 'supertest';
 import { v4 } from 'uuid';
 import { ErrorType, Errors } from '../../src/common';
 import { CreateUserParams, GetSlotsParams, defaultUserParams } from '../../src/user';
-import { Handler } from '../aux/handler';
+import { Handler } from '../aux';
 import { generateGetSlotsParams, generateId } from '../generators';
 import { generateCreateUserParams, generateRandomName, urls } from '../index';
 

@@ -32,7 +32,7 @@ import {
   Language,
   NotificationType,
 } from '@lagunahealth/pandora';
-import { MemberRole } from '../../src/common/roles';
+import { MemberRole } from '../common';
 
 const validatorsConfig = config.get('graphql.validators');
 

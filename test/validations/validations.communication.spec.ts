@@ -1,5 +1,5 @@
 import { ErrorType, Errors } from '../../src/common';
-import { Handler } from '../aux/handler';
+import { Handler } from '../aux';
 import { generateGetCommunicationParams, generateId } from '../generators';
 
 const stringError = `String cannot represent a non string value`;

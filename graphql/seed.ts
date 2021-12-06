@@ -17,8 +17,7 @@ import {
   generateUpdateMemberParams,
   generateZipCode,
 } from '../test';
-import { Mutations } from '../test/aux/mutations';
-import { Queries } from '../test/aux/queries';
+import { Mutations, Queries } from '../test/aux';
 import { SeedBase } from './seedBase';
 /**
  * This is a seed file for initial local db creation.

@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { SplitFactory } from '@splitsoftware/splitio';
+import SplitIO from '@splitsoftware/splitio/types/splitio';
 import { ConfigsService, ExternalConfigs } from '.';
 import { v4 } from 'uuid';
 import { Environments } from '../common';

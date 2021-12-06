@@ -135,7 +135,7 @@ export class MemberResolver extends MemberBase {
       : id;
     const member = await this.memberService.get(memberId);
     member.zipCode = member.zipCode || member.org.zipCode;
-    member.utcDelta = this.getTimezoneDeltaFromZipcode(member.zipCode);
+    member.utcDelta = MemberResolver.getTimezoneDeltaFromZipcode(member.zipCode);
     return member;
   }
 
@@ -146,7 +146,7 @@ export class MemberResolver extends MemberBase {
   ): Promise<Member> {
     const member = await this.memberService.update(updateMemberParams);
     member.zipCode = member.zipCode || member.org.zipCode;
-    member.utcDelta = this.getTimezoneDeltaFromZipcode(member.zipCode);
+    member.utcDelta = MemberResolver.getTimezoneDeltaFromZipcode(member.zipCode);
     return member;
   }
 
@@ -918,7 +918,7 @@ export class MemberResolver extends MemberBase {
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
 
-  private getTimezoneDeltaFromZipcode(zipCode?: string): number | undefined {
+  private static getTimezoneDeltaFromZipcode(zipCode?: string): number | undefined {
     if (zipCode) {
       const timeZone = lookup(zipCode);
       return getTimezoneOffset(timeZone) / millisecondsInHour;

@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
-import { UserRole } from '../../src/common';
+import { UserRole } from '../common';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -26,11 +26,7 @@ export class RolesGuard implements CanActivate {
 
     if (!allowedRoles?.length) {
       // if no roles associated to route we can accept an isPublic annotation
-      const isPublic = this.reflector.get<boolean>('isPublic', context.getHandler());
-      if (isPublic) {
-        return true;
-      }
-      return false;
+      return this.reflector.get<boolean>('isPublic', context.getHandler());
     }
 
     if (user.roles.find((role) => allowedRoles.includes(role))) {

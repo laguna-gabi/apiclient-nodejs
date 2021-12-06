@@ -94,7 +94,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
 
     const config = await this.getConfig(platform, data.type);
     const app_id = await this.getApiId(platform, data.type);
-    const extraData = this.getExtraDataByPlatform(platform);
+    const extraData = OneSignal.getExtraDataByPlatform(platform);
     const onlyChatData =
       data.type === InternalNotificationType.chatMessageToMember
         ? { collapse_id: data.user.id }
@@ -209,7 +209,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     return { headers: { Authorization: `Basic ${config}` } };
   }
 
-  private getExtraDataByPlatform(platform: Platform) {
+  private static getExtraDataByPlatform(platform: Platform) {
     if (platform === Platform.android) {
       return {
         android_channel_id: config.get('oneSignal.androidChannelId'),

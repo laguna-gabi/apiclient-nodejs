@@ -41,9 +41,7 @@ import {
   UpdateRecordingParams,
 } from '../../src/member';
 import { User, defaultSlotsParams } from '../../src/user';
-import { AppointmentsIntegrationActions } from '../aux/appointments';
-import { Creators } from '../aux/creators';
-import { Handler } from '../aux/handler';
+import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   generateAppointmentLink,
   generateAvailabilityInput,

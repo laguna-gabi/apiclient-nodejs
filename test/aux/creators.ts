@@ -54,6 +54,7 @@ export class Creators {
   };
 
   /**
+   * @param org
    * @param useNewUser : true if you call scheduleAppointment, in order to avoid error of collision
    * in appointment: ErrorType.appointmentOverlaps : Appointment overlaps another appointment
    */

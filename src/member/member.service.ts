@@ -771,12 +771,10 @@ export class MemberService extends BaseService {
   }
 
   async getJournals(memberId: string): Promise<Journal[]> {
-    const result = await this.journalModel.find({
+    return this.journalModel.find({
       memberId: new Types.ObjectId(memberId),
       text: { $exists: true },
     });
-
-    return result;
   }
 
   async deleteJournal(id: string): Promise<Journal> {

@@ -1,4 +1,4 @@
-import { Handler } from '../aux/handler';
+import { Handler } from '../aux';
 
 describe('Integration tests : RBAC', () => {
   const handler: Handler = new Handler();

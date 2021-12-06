@@ -3,7 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsOptional, IsPhoneNumber, IsUrl, Length } from 'class-validator';
 import * as config from 'config';
 import { Document, Types } from 'mongoose';
-import { UserRole } from '../../src/common';
+import { UserRole } from '../common';
 import { Appointment, AppointmentData } from '../appointment';
 import { ErrorType, Errors, Identifier, validPhoneExamples } from '../common';
 import { Language } from '@lagunahealth/pandora';

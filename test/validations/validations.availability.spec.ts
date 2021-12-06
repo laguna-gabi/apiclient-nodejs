@@ -1,7 +1,7 @@
 import { v4 } from 'uuid';
 import { AvailabilityInput } from '../../src/availability';
 import { ErrorType, Errors } from '../../src/common';
-import { Handler } from '../aux/handler';
+import { Handler } from '../aux';
 import { generateAvailabilityInput, generateId } from '../generators';
 
 describe('Validations - availability', () => {

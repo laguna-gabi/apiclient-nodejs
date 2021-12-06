@@ -17,11 +17,11 @@ import {
   EventType,
   IEventMember,
   InternalNotifyParams,
-  Logger,
   LoggingInterceptor,
   MemberRole,
   Roles,
   UserRole,
+  extractPrimaryUserId,
   extractRoles,
   extractUserId,
 } from '../common';
@@ -32,7 +32,6 @@ export class DailyReportResolver {
   constructor(
     private readonly dailyReportService: DailyReportService,
     readonly eventEmitter: EventEmitter2,
-    private readonly logger: Logger,
   ) {}
 
   @Mutation(() => DailyReport)
@@ -56,13 +55,13 @@ export class DailyReportResolver {
     );
 
     if (
-      context.req?.user?.primaryUserId &&
+      extractPrimaryUserId(context) &&
       dailyReportObject.statsOverThreshold?.length > 0 &&
       !dailyReportObject.notificationSent
     ) {
       const params: InternalNotifyParams = {
         memberId: dailyReportCategoriesInput.memberId,
-        userId: context.req?.user?.primaryUserId,
+        userId: extractPrimaryUserId(context),
         type: InternalNotificationType.textSmsToUser,
         metadata: { contentType: ContentKey.memberNotFeelingWellMessage },
       };

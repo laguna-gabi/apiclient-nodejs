@@ -1,6 +1,6 @@
 import { ErrorType, Errors } from '../../src/common';
 import { CreateOrgParams } from '../../src/org';
-import { Handler } from '../aux/handler';
+import { Handler } from '../aux';
 import { generateId, generateOrgParams } from '../index';
 
 const stringError = `String cannot represent a non string value`;

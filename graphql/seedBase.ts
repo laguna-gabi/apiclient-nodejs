@@ -5,8 +5,7 @@ import { createTestClient } from 'apollo-server-testing';
 import { BaseHandler } from '../test';
 import { AppModule } from '../src/app.module';
 import { UserService } from '../src/user';
-import { Mutations } from '../test/aux/mutations';
-import { Queries } from '../test/aux/queries';
+import { Mutations, Queries } from '../test/aux';
 
 @Injectable()
 export class SeedBase extends BaseHandler {
