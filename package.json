@@ -48,7 +48,8 @@
   "dependencies": {
     "@slack/types": "^2.2.0",
     "@slack/webhook": "^6.0.0",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "zipcode-to-timezone": "^0.0.9"
   },
   "jest": {
     "moduleFileExtensions": [
