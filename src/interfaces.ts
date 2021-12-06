@@ -18,15 +18,15 @@ export interface IUpdateClientSettings extends IInnerQueueTypes {
   lastName?: string;
   //only member
   orgName?: string;
+  honorific?: Honorific;
+  zipCode?: string;
+  language?: Language;
   platform?: Platform;
   isPushNotificationsEnabled?: boolean;
   isAppointmentsReminderEnabled?: boolean;
   isRecommendationsEnabled?: boolean;
   externalUserId?: string;
   firstLoggedInAt?: Date;
-  honorific?: Honorific;
-  zipCode?: string;
-  language?: Language;
   //only user
   avatar?: string;
 }
