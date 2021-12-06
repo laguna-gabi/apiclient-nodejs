@@ -25,15 +25,15 @@ export const generateUpdateMemberSettingsMock = ({
     firstName: name.firstName(),
     lastName: name.lastName(),
     orgName: name.firstName(),
+    honorific: Honorific.reverend,
+    zipCode: '91210',
+    language: Language.en,
     platform: Platform.web,
     isPushNotificationsEnabled: false,
     isAppointmentsReminderEnabled: true,
     isRecommendationsEnabled: true,
     externalUserId: v4(),
     firstLoggedInAt: new Date(),
-    honorific: Honorific.reverend,
-    zipCode: '91210',
-    language: Language.en,
   };
 };
 

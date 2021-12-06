@@ -28,6 +28,15 @@ export class ClientSettings {
   @Prop({ isNaN: true })
   orgName?: string;
 
+  @Prop()
+  honorific?: Honorific;
+
+  @Prop()
+  zipCode?: string;
+
+  @Prop()
+  language?: Language;
+
   @Prop({ isNaN: true })
   platform?: Platform;
 
@@ -45,15 +54,6 @@ export class ClientSettings {
 
   @Prop()
   firstLoggedInAt?: Date;
-
-  @Prop()
-  honorific?: Honorific;
-
-  @Prop()
-  zipCode?: string;
-
-  @Prop()
-  language?: Language;
 
   /**
    * User only fields
