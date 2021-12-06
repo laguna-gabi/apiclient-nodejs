@@ -703,13 +703,14 @@
   resolved "https://registry.npmjs.org/@josephg/resolvable/-/resolvable-1.0.1.tgz"
   integrity sha512-CtzORUwWTTOTqfVtHaKRJ0I1kNQd1bpn3sUh8I3nJDVY+5/M/Oe1DnEWzPQvqq/xPIIkzzzIP7mfCoAjFRvDhg==
 
-"@lagunahealth/pandora@0.3.5":
-  version "0.3.5"
-  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.3.5/16e673f238df34f654f15419db38d5055d6804fc3a0721ef98a3cc3b9001f65e#3b10c21be26773287447cf220fedade47d18716a"
-  integrity sha512-gMJQsT3hL0QAOoCrX+MMRi/qGqY7Qd71r/J1+MKaT6DKYUv46l9Q0ChG6D+LpHrVxckzvtTPjxA+QNSjDafrHA==
+"@lagunahealth/pandora@0.4.3":
+  version "0.4.3"
+  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.4.3/1ab4a4245abd652995279fae53258aeabf98834df64e316674fde229a45189eb#4ecbc10fa1c8555bfb14ce33e6249c865067aa5b"
+  integrity sha512-xuVPZ3IFzcJDTR8eeTCiIRT9mWWJmAU243FSYN2a4vWr7uJbqi1P2OE2NEilmimvl8dwW4v0MYTZ9Gp/Ket6tQ==
   dependencies:
     "@slack/types" "^2.2.0"
     "@slack/webhook" "^6.0.0"
+    uuid "^8.3.2"
 
 "@nestjs/axios@^0.0.1":
   version "0.0.1"
@@ -7629,9 +7630,9 @@ uuid@3.3.2:
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.3.2.tgz#1b4af4955eb3077c501c23872fc6513811587131"
   integrity sha512-yXJmeNaw3DnnKAOKJE51sL/ZaYfWJRl1pK9dr19YFCu0ObS231AB1/LbqTKRAQ5kw8A90rA6fr4riOUpTZvQZA==
 
-uuid@8.3.2, uuid@^8.0.0, uuid@^8.3.0:
+uuid@8.3.2, uuid@^8.0.0, uuid@^8.3.0, uuid@^8.3.2:
   version "8.3.2"
-  resolved "https://registry.npmjs.org/uuid/-/uuid-8.3.2.tgz"
+  resolved "https://registry.npmjs.org/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
   integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
 
 uuid@^3.1.0:

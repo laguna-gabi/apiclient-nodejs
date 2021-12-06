@@ -23,10 +23,6 @@ export const ExternalConfigs = {
     apiSecret: 'twilio.apiSecret',
     webhookToken: 'twilio.webhookToken',
   },
-  bitly: {
-    apiToken: 'bitly.apiToken',
-    groupGuid: 'bitly.groupGuid',
-  },
   split: {
     apiKey: 'split.apiKey',
   },

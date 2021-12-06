@@ -75,9 +75,9 @@ export class UserResolver {
       {
         type: InnerQueueTypes.updateClientSettings,
         id: user.id,
+        phone: user.phone,
         firstName: user.firstName,
         lastName: user.lastName,
-        phone: user.phone,
         avatar: user.avatar,
       },
       isUndefined,

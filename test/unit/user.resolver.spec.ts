@@ -96,9 +96,9 @@ describe('UserResolver', () => {
       const updateClientSettings: IUpdateClientSettings = {
         type: InnerQueueTypes.updateClientSettings,
         id,
+        phone: params.phone,
         firstName: params.firstName,
         lastName: params.lastName,
-        phone: params.phone,
         avatar: params.avatar,
       };
       const eventSettingsParams: IEventNotifyQueue = {
