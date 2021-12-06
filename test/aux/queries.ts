@@ -533,6 +533,7 @@ export class Queries {
             isAppointmentsReminderEnabled
             isRecommendationsEnabled
             articlesPath
+            firstLoggedInAt
           }
         }
       `,

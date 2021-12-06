@@ -3,7 +3,6 @@ import { format } from 'date-fns';
 import * as faker from 'faker';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
-import { lookup } from 'zipcode-to-timezone';
 import * as en from '../languages/en.json';
 import {
   AppointmentMethod,
@@ -35,6 +34,8 @@ import {
   Language,
   NotificationType,
   Platform,
+  generatePhone,
+  generateZipCode,
 } from '@lagunahealth/pandora';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import {
@@ -151,7 +152,7 @@ export const generateCreateMemberParams = ({
   language,
   zipCode = generateZipCode(),
   dischargeDate,
-  honorific,
+  honorific = defaultMemberParams.honorific,
   userId,
 }: Partial<CreateMemberParams> & { orgId: string }): CreateMemberParams => {
   return {
@@ -379,21 +380,6 @@ export const generateRandomName = (length: number): string => {
   return faker.lorem.words(length).substr(0, length);
 };
 
-export const generateZipCode = (): string => {
-  while (true) {
-    const zipCode = faker.address.zipCode('#####');
-    /**
-     * On occasions, faker generates invalid zipcodes. we'll try to generate
-     * timezone, if it worked, we'll return the zipCode and exit the loop
-     * Usually this works in the 1st time, so rarely we'll do it twice.
-     */
-    const timeZone = lookup(zipCode);
-    if (timeZone) {
-      return zipCode;
-    }
-  }
-};
-
 export const generateAvailabilityInput = ({
   start = faker.date.soon(),
   end,
@@ -559,17 +545,6 @@ export const generateSendSendBirdNotificationParams = (
 
 const generateEmail = () => {
   return `${new Date().getMilliseconds()}.${faker.internet.email()}`;
-};
-
-export const generatePhone = () => {
-  const random = () => Math.floor(Math.random() * 9) + 1;
-
-  let phone = '+414';
-  for (let i = 0; i < 8; i++) {
-    phone += random().toString();
-  }
-
-  return phone;
 };
 
 export const generateUniqueUrl = () => {

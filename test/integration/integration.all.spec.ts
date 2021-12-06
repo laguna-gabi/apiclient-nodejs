@@ -300,6 +300,7 @@ describe('Integration tests: all', () => {
       memberId: member.id,
       articlesPath: config.get('articlesByDrg.default'),
       externalUserId: expect.any(String),
+      firstLoggedInAt: null,
       platform: Platform.web,
       isPushNotificationsEnabled: true,
       isAppointmentsReminderEnabled: true,
@@ -317,6 +318,7 @@ describe('Integration tests: all', () => {
     expect(memberConfigAfter).toEqual({
       memberId: member.id,
       externalUserId: memberConfigBefore.externalUserId,
+      firstLoggedInAt: null,
       articlesPath: memberConfigBefore.articlesPath,
       platform: Platform.web,
       isPushNotificationsEnabled: updateMemberConfigParams.isPushNotificationsEnabled,

@@ -48,7 +48,6 @@ import {
   generateId,
   generateObjectId,
   generateOrgParams,
-  generatePhone,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
@@ -57,9 +56,9 @@ import {
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
-  generateZipCode,
   mockLogger,
 } from '../index';
+import { generatePhone, generateZipCode } from '@lagunahealth/pandora';
 
 describe('MemberService', () => {
   let module: TestingModule;

@@ -4,6 +4,7 @@ import {
   Language,
   NotificationType,
   Platform,
+  generateZipCode,
 } from '@lagunahealth/pandora';
 import * as config from 'config';
 import * as faker from 'faker';
@@ -36,7 +37,6 @@ import {
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
-  generateZipCode,
   urls,
 } from '../index';
 

@@ -15,10 +15,10 @@ import {
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
   generateUpdateMemberParams,
-  generateZipCode,
 } from '../test';
 import { Mutations, Queries } from '../test/aux';
 import { SeedBase } from './seedBase';
+import { generateZipCode } from '@lagunahealth/pandora';
 /**
  * This is a seed file for initial local db creation.
  * The objects we're creating are:
