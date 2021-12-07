@@ -4,7 +4,6 @@ import * as config from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
 import { Environments, EventType, IEventNotifyQueue, Logger, QueueType } from '../../common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { v4 } from 'uuid';
 
 @Injectable()
 export class QueueService implements OnModuleInit {
@@ -45,12 +44,7 @@ export class QueueService implements OnModuleInit {
 
     try {
       await this.sqs
-        .sendMessage({
-          MessageBody: params.message,
-          MessageGroupId: 'Hepius',
-          MessageDeduplicationId: v4(),
-          QueueUrl: this.getQueueUrl(params.type),
-        })
+        .sendMessage({ MessageBody: params.message, QueueUrl: this.getQueueUrl(params.type) })
         .promise();
     } catch (ex) {
       this.logger.error(params, QueueService.name, this.sendMessage.name, ex);
