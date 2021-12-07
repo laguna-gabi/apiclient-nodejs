@@ -100,7 +100,12 @@ describe(QueueService.name, () => {
       await service.sendMessage(param);
 
       expect(sendMessage).toBeCalledTimes(1);
-      expect(sendMessage).toBeCalledWith({ MessageBody: param.message, QueueUrl: queueUrl });
+      expect(sendMessage).toBeCalledWith({
+        MessageBody: param.message,
+        MessageDeduplicationId: expect.any(String),
+        MessageGroupId: 'Hepius',
+        QueueUrl: queueUrl,
+      });
       process.env.NODE_ENV = Environments.test;
 
       sendMessage.mockClear();
