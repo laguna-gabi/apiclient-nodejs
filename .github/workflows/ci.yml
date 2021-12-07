@@ -3,6 +3,7 @@ name: Laguna
 on:
   push:
     branches:
+      - poeditor
       - develop
       - staging
   pull_request:
@@ -273,7 +274,7 @@ jobs:
         env:
           NODE_ENV: ${{ steps.branch_check.outputs.env_name }}
         run: yarn migrate:init; yarn migrate:up
-  
+
   bump-version:
     name: Bump Version
     runs-on: ubuntu-latest
@@ -299,3 +300,43 @@ jobs:
         env:
           NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
         run: echo "new tag $NEW_TAG"
+
+  sync-languages:
+    name: Sync Languages With PoEditor
+    runs-on: self-hosted
+    needs: build-test-coverage
+    if: github.ref == 'refs/heads/poeditor'
+    steps:
+      - name: Checkout Git repository
+        uses: actions/checkout@v2
+      - name: create pull-request
+        uses: repo-sync/pull-request@v2
+        with:
+          destination_branch: 'develop'
+          pr_title: 'Sync Languages With PoEditor'
+          pr_body: '# DO NOT DELETE THIS BRANCH AFTER MERGE'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  export-terms-and-translations-to-poeditor:
+    name: Export Terms And Translations To POEditor
+    runs-on: self-hosted
+    needs: build-test-coverage
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - name: Merge develop -> poeditor
+        uses: devmasx/merge-branch@master
+        with:
+          type: now
+          from_branch: develop
+          target_branch: poeditor
+          github_token: ${{ github.token }}
+      - name: Export English
+        uses: fjogeleit/http-request-action@master
+        with:
+          url: ${{ secrets.POEDITOR_URL_IMPORT_ENGLISH }}
+          method: 'POST'
+      - name: Export Spanish
+        uses: fjogeleit/http-request-action@master
+        with:
+          url: ${{ secrets.POEDITOR_URL_IMPORT_SPANISH }}
+          method: 'POST'
