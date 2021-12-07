@@ -60,8 +60,25 @@ jobs:
           aws-region: us-east-1
       - name: Test
         run: yarn test:cov
+      - name: Zip lcov-report
+        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
+        uses: papeloto/action-zip@v1
+        with:
+          files: coverage/lcov-report
+          dest: coverage.zip
+      - name: Upload coverage zip
+        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage
+          path: coverage.zip
+      - name: Remove lcov-report before uploading to S3
+        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
+        run: |
+          rm coverage.zip
+          rm -rf coverage/lcov-report
       - name: Remove coverage from S3 if exists
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
+        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
         uses: vitorsgomes/s3-rm-action@master
         with:
           args: --recursive
@@ -72,7 +89,7 @@ jobs:
           AWS_REGION: ${{ secrets.COVERAGE_AWS_REGION }}
           PATH_TO_DELETE: ${{ github.head_ref }}
       - name: Upload coverage to S3
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
+        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
         uses: shallwefootball/s3-upload-action@master
         with:
           aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -80,26 +97,15 @@ jobs:
           aws_bucket: '${{ secrets.COVERAGE_AWS_BUCKET }}/${{ github.head_ref }}'
           source_dir: './coverage'
           destination_dir: 'coverage'
-      - name: Add coverage url to PR
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
-        uses: mshick/add-pr-comment@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          message: |
-            ### coverage lcov report for `${{ github.head_ref }}`
-            ___
-            https://${{ secrets.COVERAGE_AWS_FULL_BUCKET_PATH }}/${{ github.head_ref }}/coverage/lcov-report/index.html
-          allow-repeats: false
       - name: Get local coverage report
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
+        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
         id: localCoverage
         uses: notiz-dev/github-action-json-property@release
         with:
           path: './coverage/coverage-summary.json'
           prop_path: 'total.lines.pct'
       - name: Download develop coverage report from S3
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
+        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
         uses: prewk/s3-cp-action@v2
         with:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -107,25 +113,26 @@ jobs:
           source: 's3://${{ secrets.COVERAGE_AWS_BUCKET }}/develop/coverage-summary.json'
           dest: './coverage/develop/coverage-summary.json'
       - name: Get develop coverage report
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
+        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
         id: developCoverage
         uses: notiz-dev/github-action-json-property@release
         with:
           path: './coverage/develop/coverage-summary.json'
           prop_path: 'total.lines.pct'
       - name: Set coverage diff
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
+        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
         run: echo "DIFF_COV=$(echo "${{steps.localCoverage.outputs.prop}}-${{steps.developCoverage.outputs.prop}}" | bc)" >> $GITHUB_ENV
-      - name: Add coverage diff to PR
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
+      - name: Add coverage report url and diff to PR
+        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
         uses: mshick/add-pr-comment@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           message: |
-            ### coverage diff `${{ github.head_ref }}` -> `develop`
+            ### coverage report for `${{ github.head_ref }}` -> `develop`
             ___
-            ### Total: ${{steps.localCoverage.outputs.prop}}% (${{ env.DIFF_COV }}%)
+            | **Total** | **${{steps.localCoverage.outputs.prop}}% (${{ env.DIFF_COV }}%)** | **[lcov report](https://github.com/LagunaHealth/hepius/actions/runs/${{ github.run_id }})** |
+            |-----------|-------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
           allow-repeats: false
       - name: Remove develop coverage from S3 if exists
         if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
