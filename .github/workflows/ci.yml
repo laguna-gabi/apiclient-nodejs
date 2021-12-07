@@ -146,12 +146,10 @@ jobs:
     needs: build-test-coverage
     timeout-minutes: 30
     if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging'
-
     steps:
       - name: Get branch name
         id: branch-name
         uses: tj-actions/branch-names@v5
-
       - name: Accumulate NODE_ENV
         id: branch_check
         run: |
@@ -174,11 +172,9 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
@@ -203,7 +199,6 @@ jobs:
           task-definition: task-definition.json
           container-name: hepius-${{ steps.branch-name.outputs.current_branch }}-container
           image: ${{ steps.build-image.outputs.image }}
-
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
@@ -211,7 +206,14 @@ jobs:
           service: hepius-${{ steps.branch-name.outputs.current_branch }}-service
           cluster: cluster-hepius-${{ steps.branch-name.outputs.current_branch }}
           wait-for-service-stability: true
-
+      - name: Merge develop to poeditor
+        if: github.ref == 'refs/heads/develop'
+        uses: devmasx/merge-branch@master
+        with:
+          type: now
+          from_branch: develop
+          target_branch: poeditor
+          github_token: ${{ github.token }}
       - name: Notify deploy to Slack
         uses: fjogeleit/http-request-action@master
         with:
@@ -225,7 +227,6 @@ jobs:
     needs: deploy
     timeout-minutes: 30
     if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging'
-
     steps:
       - name: Checkout Git repository
         uses: actions/checkout@v2
@@ -301,29 +302,5 @@ jobs:
         with:
           destination_branch: 'develop'
           pr_title: 'Sync Languages With PoEditor'
-          pr_body: '# DO NOT DELETE THIS BRANCH AFTER MERGE'
+          pr_body: '# This is an automatic PR from [POEditor](https://poeditor.com/projects/)'
           github_token: ${{ secrets.GITHUB_TOKEN }}
-
-  export-terms-and-translations-to-poeditor:
-    name: Export Terms And Translations To POEditor
-    runs-on: self-hosted
-    needs: build-test-coverage
-    if: github.ref == 'refs/heads/develop'
-    steps:
-      - name: Merge develop -> poeditor
-        uses: devmasx/merge-branch@master
-        with:
-          type: now
-          from_branch: develop
-          target_branch: poeditor
-          github_token: ${{ github.token }}
-      - name: Export English
-        uses: fjogeleit/http-request-action@master
-        with:
-          url: ${{ secrets.POEDITOR_URL_IMPORT_ENGLISH }}
-          method: 'POST'
-      - name: Export Spanish
-        uses: fjogeleit/http-request-action@master
-        with:
-          url: ${{ secrets.POEDITOR_URL_IMPORT_SPANISH }}
-          method: 'POST'
