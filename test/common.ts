@@ -22,7 +22,7 @@ import {
 import { User, UserService } from '../src/user';
 import { Mutations, Queries } from './aux';
 import { generateId } from './generators';
-import { twilioPeerServiceToken } from './unit/mocks/twilioPeerServiceToken';
+import { iceServers } from './unit/mocks/twilioPeerIceServers';
 
 export class BaseHandler {
   app: INestApplication;
@@ -161,7 +161,7 @@ export const mockProviders = (
   const spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
   const spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
   const spyOnTwilioGetToken = jest.spyOn(twilioService, 'getAccessToken');
-  const spyOnTwilioCreatePeerServiceToken = jest.spyOn(twilioService, 'createPeerServiceToken');
+  const spyOnTwilioCreatePeerIceServers = jest.spyOn(twilioService, 'createPeerIceServers');
   const spyOnSlackBotSendMessage = jest.spyOn(slackBot, 'send');
   const spyOnCognitoServiceDisableMember = jest.spyOn(cognitoService, 'disableMember');
   const spyOnCognitoServiceDeleteMember = jest.spyOn(cognitoService, 'deleteMember');
@@ -186,7 +186,7 @@ export const mockProviders = (
   spyOnNotificationsServiceSend.mockResolvedValue(v4());
   spyOnNotificationsServiceCancel.mockResolvedValue(v4());
   spyOnTwilioGetToken.mockReturnValue('token');
-  spyOnTwilioCreatePeerServiceToken.mockResolvedValue(twilioPeerServiceToken);
+  spyOnTwilioCreatePeerIceServers.mockResolvedValue({ iceServers });
   spyOnSlackBotSendMessage.mockReturnValue(undefined);
   spyOnSendBirdUpdateChannelName.mockReturnValue(undefined);
   spyOnSendBirdInvite.mockResolvedValue([generateId()]);
@@ -215,7 +215,7 @@ export const mockProviders = (
       spyOnNotificationsServiceSend,
       spyOnNotificationsServiceCancel,
     },
-    twilioService: { spyOnTwilioGetToken, spyOnTwilioCreatePeerServiceToken },
+    twilioService: { spyOnTwilioGetToken, spyOnTwilioCreatePeerIceServers },
     slackBot: { spyOnSlackBotSendMessage },
     cognitoService: { spyOnCognitoServiceDisableMember, spyOnCognitoServiceDeleteMember },
     storage: {

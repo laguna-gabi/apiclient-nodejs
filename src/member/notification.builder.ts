@@ -57,18 +57,18 @@ export class NotificationBuilder {
       return this.notificationsService.send({ sendTwilioNotification });
     } else {
       if (memberConfig.platform !== Platform.web && memberConfig.isPushNotificationsEnabled) {
-        const peerServiceToken = await this.notificationsService.createPeerServiceToken();
+        const peerServiceToken = await this.notificationsService.createPeerIceServers();
         const sendOneSignalNotification: SendOneSignalNotification = {
           platform: memberConfig.platform,
           externalUserId: memberConfig.externalUserId,
           data: {
             user: { id: user.id, firstName: user.firstName, avatar: user.avatar },
-            member: { phone: JSON.stringify(peerServiceToken) },
+            member: { phone: member.phone },
             type,
             ...path,
             isVideo: type === NotificationType.video,
             peerId: metadata.peerId,
-            extraData: JSON.stringify({}),
+            extraData: JSON.stringify(peerServiceToken),
           },
           content: metadata.content,
           orgName,
