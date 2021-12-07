@@ -29,6 +29,7 @@ import {
   InternalNotifyParams,
   InternationalizationService,
   Logger,
+  MemberRole,
   QueueType,
   RegisterForNotificationParams,
   StorageType,
@@ -64,7 +65,6 @@ import {
   generateAppointmentComposeParams,
   generateCancelNotifyParams,
   generateCommunication,
-  generateContextUserId,
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateGetCommunication,
@@ -311,8 +311,7 @@ describe('MemberResolver', () => {
     it('should get a member for a given context', async () => {
       const member = mockGenerateMember();
       spyOnServiceGet.mockImplementationOnce(async () => member);
-      const context = generateContextUserId(member.id);
-      const result = await resolver.getMember(context);
+      const result = await resolver.getMember([MemberRole.member], member.id);
 
       expect(result).toEqual(member);
     });
@@ -320,8 +319,7 @@ describe('MemberResolver', () => {
     it('should get a member for a given id', async () => {
       const member = mockGenerateMember();
       spyOnServiceGet.mockImplementationOnce(async () => member);
-      const context = generateContextUserId(member.id);
-      const result = await resolver.getMember(context, member.id);
+      const result = await resolver.getMember([MemberRole.member], member.id);
       expect(result).toEqual(member);
     });
 
@@ -329,8 +327,7 @@ describe('MemberResolver', () => {
       spyOnServiceGet.mockImplementationOnce(async () => {
         throw Error(Errors.get(ErrorType.memberNotFound));
       });
-      const context = generateContextUserId();
-      await expect(resolver.getMember(context, generateId())).rejects.toThrow(
+      await expect(resolver.getMember([MemberRole.member], generateId())).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
     });
@@ -339,8 +336,7 @@ describe('MemberResolver', () => {
       spyOnServiceGet.mockImplementationOnce(async () => {
         throw Error(Errors.get(ErrorType.memberNotFound));
       });
-      const context = generateContextUserId('not-valid');
-      await expect(resolver.getMember(context)).rejects.toThrow(
+      await expect(resolver.getMember([MemberRole.member], 'not-valid')).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
     });
@@ -349,16 +345,14 @@ describe('MemberResolver', () => {
       const member: any = mockGenerateMember();
       delete member.zipCode;
       spyOnServiceGet.mockResolvedValue(member);
-      const context = generateContextUserId();
-      const result = await resolver.getMember(context, member.id);
+      const result = await resolver.getMember([MemberRole.member], member.id);
       expect(result.zipCode).toEqual(member.org.zipCode);
     });
 
     it('should calculate utcDelta if zipCode exists', async () => {
       const member: any = mockGenerateMember();
       spyOnServiceGet.mockResolvedValue(member);
-      const context = generateContextUserId();
-      const result = await resolver.getMember(context, member.id);
+      const result = await resolver.getMember([MemberRole.member], member.id);
       expect(result.utcDelta).toBeLessThan(0);
     });
   });
@@ -647,8 +641,11 @@ describe('MemberResolver', () => {
       const member = mockGenerateMember();
       spyOnServiceGet.mockImplementationOnce(async () => member);
       spyOnStorage.mockImplementation(async () => 'https://aws-bucket-path/extras');
-      const context = generateContextUserId(member.id);
-      await resolver.getMemberDownloadDischargeDocumentsLinks(context, member.id);
+      await resolver.getMemberDownloadDischargeDocumentsLinks(
+        [MemberRole.member],
+        member.id,
+        member.id,
+      );
 
       checkDocumentsCall(member, spyOnServiceGet, spyOnStorage);
     });
@@ -658,9 +655,12 @@ describe('MemberResolver', () => {
         throw Error(Errors.get(ErrorType.memberNotFound));
       });
 
-      const context = generateContextUserId();
       await expect(
-        resolver.getMemberDownloadDischargeDocumentsLinks(context, generateId()),
+        resolver.getMemberDownloadDischargeDocumentsLinks(
+          [MemberRole.member],
+          generateId(),
+          generateId(),
+        ),
       ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
     });
   });
@@ -924,8 +924,7 @@ describe('MemberResolver', () => {
       const id = generateId();
       const memberId = generateId();
       spyOnServiceCreateJournal.mockImplementationOnce(async () => id);
-      const context = generateContextUserId(memberId);
-      const result = await resolver.createJournal(context);
+      const result = await resolver.createJournal([MemberRole.member], memberId);
 
       expect(spyOnServiceCreateJournal).toBeCalledTimes(1);
       expect(spyOnServiceCreateJournal).toBeCalledWith(memberId);
@@ -1005,8 +1004,7 @@ describe('MemberResolver', () => {
       const url = generateUniqueUrl();
       spyOnServiceGetJournals.mockImplementationOnce(async () => journals);
       spyOnStorageGetDownloadUrl.mockImplementation(async () => url);
-      const context = generateContextUserId(memberId);
-      const result = await resolver.getJournals(context);
+      const result = await resolver.getJournals([MemberRole.member], memberId);
 
       expect(spyOnServiceGetJournals).toBeCalledTimes(1);
       expect(spyOnServiceGetJournals).toBeCalledWith(memberId);
@@ -1110,8 +1108,11 @@ describe('MemberResolver', () => {
     it('should call MemberConfig', async () => {
       const memberConfig = mockGenerateMemberConfig();
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-      const context = generateContextUserId(memberConfig.memberId.toString());
-      await resolver.getMemberConfig(context, memberConfig.memberId.toString());
+      await resolver.getMemberConfig(
+        [MemberRole.member],
+        memberConfig.memberId.toString(),
+        memberConfig.memberId.toString(),
+      );
 
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(memberConfig.memberId.toString());
@@ -1205,7 +1206,6 @@ describe('MemberResolver', () => {
       delete currentMemberConfig.firstLoggedInAt;
       const member = mockGenerateMember();
       member.id = currentMemberConfig.memberId.toString();
-      const context = generateContextUserId(member.id);
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => currentMemberConfig);
 
@@ -1219,7 +1219,7 @@ describe('MemberResolver', () => {
         ...updateFields,
       });
       spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
-      await resolver.registerMemberForNotifications(context, params);
+      await resolver.registerMemberForNotifications([MemberRole.member], member.id, params);
 
       expect(spyOnNotificationsServiceRegister).not.toBeCalled();
       expect(spyOnServiceGetMember).toBeCalledTimes(1);
@@ -1249,7 +1249,6 @@ describe('MemberResolver', () => {
       delete currentMemberConfig.firstLoggedInAt;
       const member = mockGenerateMember();
       member.id = currentMemberConfig.memberId.toString();
-      const context = generateContextUserId(member.id);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => currentMemberConfig);
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
 
@@ -1264,7 +1263,7 @@ describe('MemberResolver', () => {
         ...updateFields,
       });
       spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
-      await resolver.registerMemberForNotifications(context, params);
+      await resolver.registerMemberForNotifications([MemberRole.member], member.id, params);
 
       expect(spyOnNotificationsServiceRegister).toBeCalledTimes(1);
       expect(spyOnNotificationsServiceRegister).toBeCalledWith({
@@ -1301,7 +1300,6 @@ describe('MemberResolver', () => {
       const currentMemberConfig = mockGenerateMemberConfig();
       const member = mockGenerateMember();
       member.id = currentMemberConfig.memberId.toString();
-      const context = generateContextUserId(member.id);
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => currentMemberConfig);
 
@@ -1315,7 +1313,7 @@ describe('MemberResolver', () => {
         ...updateFields,
       });
       spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
-      await resolver.registerMemberForNotifications(context, params);
+      await resolver.registerMemberForNotifications([MemberRole.member], member.id, params);
 
       expect(spyOnServiceUpdateMemberConfigRegisteredAt).not.toBeCalled();
 
@@ -1333,15 +1331,14 @@ describe('MemberResolver', () => {
       member.id = memberConfig.memberId.toString();
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-      const context = generateContextUserId(member.id, [UserRole.coach]);
 
       const params: RegisterForNotificationParams = {
         platform: Platform.android,
         isPushNotificationsEnabled: true,
       };
-      await expect(resolver.registerMemberForNotifications(context, params)).rejects.toThrow(
-        Errors.get(ErrorType.memberAllowedOnly),
-      );
+      await expect(
+        resolver.registerMemberForNotifications([UserRole.coach], member.id, params),
+      ).rejects.toThrow(Errors.get(ErrorType.memberAllowedOnly));
     });
   });
 

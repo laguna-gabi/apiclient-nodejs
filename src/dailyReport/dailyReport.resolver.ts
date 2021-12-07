@@ -1,7 +1,7 @@
 import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
 import {
   DailyReport,
@@ -12,6 +12,7 @@ import {
   ParseDailyReportInputTransform,
 } from '.';
 import {
+  Client,
   ErrorType,
   Errors,
   EventType,
@@ -21,9 +22,6 @@ import {
   MemberRole,
   Roles,
   UserRole,
-  extractPrimaryUserId,
-  extractRoles,
-  extractUserId,
 } from '../common';
 
 @UseInterceptors(LoggingInterceptor)
@@ -37,7 +35,10 @@ export class DailyReportResolver {
   @Mutation(() => DailyReport)
   @Roles(MemberRole.member)
   async setDailyReportCategories(
-    @Context() context,
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Client('primaryUserId') primaryUserId,
+
     @Args(
       camelCase(DailyReportCategoriesInput.name),
       { type: () => DailyReportCategoriesInput },
@@ -45,23 +46,23 @@ export class DailyReportResolver {
     )
     dailyReportCategoriesInput: DailyReportCategoriesInput,
   ): Promise<DailyReport> {
-    if (!extractRoles(context).includes(MemberRole.member)) {
+    if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
     // ignoring the id from the params - replacing it with the id from the context
-    dailyReportCategoriesInput.memberId = extractUserId(context);
+    dailyReportCategoriesInput.memberId = memberId;
     const dailyReportObject = await this.dailyReportService.setDailyReportCategories(
       dailyReportCategoriesInput,
     );
 
     if (
-      extractPrimaryUserId(context) &&
+      primaryUserId &&
       dailyReportObject.statsOverThreshold?.length > 0 &&
       !dailyReportObject.notificationSent
     ) {
       const params: InternalNotifyParams = {
         memberId: dailyReportCategoriesInput.memberId,
-        userId: extractPrimaryUserId(context),
+        userId: primaryUserId,
         type: InternalNotificationType.textSmsToUser,
         metadata: { contentType: ContentKey.memberNotFeelingWellMessage },
       };
@@ -86,7 +87,8 @@ export class DailyReportResolver {
   @Query(() => DailyReportResults)
   @Roles(UserRole.coach, MemberRole.member)
   async getDailyReports(
-    @Context() context,
+    @Client('roles') roles,
+    @Client('_id') memberId,
     @Args(
       camelCase(DailyReportQueryInput.name),
       { type: () => DailyReportQueryInput },
@@ -94,8 +96,8 @@ export class DailyReportResolver {
     )
     dailyReportQueryInput: DailyReportQueryInput,
   ): Promise<DailyReportResults> {
-    if (extractRoles(context).includes(MemberRole.member)) {
-      dailyReportQueryInput.memberId = extractUserId(context);
+    if (roles.includes(MemberRole.member)) {
+      dailyReportQueryInput.memberId = memberId;
     }
     return {
       data: await this.dailyReportService.getDailyReports(dailyReportQueryInput),

@@ -1,9 +1,12 @@
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase, isUndefined, omitBy } from 'lodash';
 import { CreateUserParams, GetSlotsParams, Slots, User, UserConfig, UserService } from '.';
 import {
+  Client,
+  ErrorType,
+  Errors,
   EventType,
   IEventNotifyQueue,
   IEventOnNewUser,
@@ -12,7 +15,6 @@ import {
   QueueType,
   Roles,
   UserRole,
-  extractUserId,
 } from '../common';
 import { IUpdateClientSettings, InnerQueueTypes } from '@lagunahealth/pandora';
 
@@ -38,9 +40,12 @@ export class UserResolver {
 
   @Query(() => User, { nullable: true })
   @Roles(UserRole.coach)
-  async getUser(@Context() context): Promise<User> {
-    const userId = extractUserId(context);
-    return this.userService.get(userId);
+  async getUser(@Client('_id') userId): Promise<User> {
+    const user = await this.userService.get(userId);
+    if (!user) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+    return user;
   }
 
   @Query(() => [User])

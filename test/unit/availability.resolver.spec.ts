@@ -47,15 +47,7 @@ describe('AvailabilityResolver', () => {
       const params = generateAvailabilityInput();
       spyOnServiceCreate.mockImplementationOnce(async () => undefined);
       const userId = generateId();
-      const token = {
-        req: {
-          user: {
-            _id: userId,
-          },
-        },
-      };
-
-      await resolver.createAvailabilities(token, [params]);
+      await resolver.createAvailabilities(userId, [params]);
 
       expect(spyOnServiceCreate).toBeCalledTimes(1);
       expect(spyOnServiceCreate).toBeCalledWith([params], userId);

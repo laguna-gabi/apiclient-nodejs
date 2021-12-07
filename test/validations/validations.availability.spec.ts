@@ -1,6 +1,5 @@
 import { v4 } from 'uuid';
 import { AvailabilityInput } from '../../src/availability';
-import { ErrorType, Errors } from '../../src/common';
 import { Handler } from '../aux';
 import { generateAvailabilityInput, generateId } from '../generators';
 
@@ -47,12 +46,4 @@ describe('Validations - availability', () => {
       });
     },
   );
-
-  it('should throw an error for not userId in context', async () => {
-    const availability: AvailabilityInput = generateAvailabilityInput();
-    await handler.setContextUserId(undefined).mutations.createAvailabilities({
-      availabilities: [availability],
-      invalidFieldsErrors: [Errors.get(ErrorType.userNotFound)],
-    });
-  });
 });

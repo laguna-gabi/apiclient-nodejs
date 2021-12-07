@@ -127,18 +127,14 @@ describe('UserResolver', () => {
     it('should get a user for a given id', async () => {
       const user = mockGenerateUser();
       spyOnServiceGet.mockImplementationOnce(async () => user);
-      const token = { req: { user: { _id: user.id } } };
-
-      const result = await resolver.getUser(token);
+      const result = await resolver.getUser(user.id);
 
       expect(result).toEqual(user);
     });
 
     it('should fail to fetch user without userId in token', async () => {
       spyOnServiceGet.mockImplementationOnce(async () => null);
-      const token = { req: { user: { _id: undefined } } };
-
-      await expect(resolver.getUser(token)).rejects.toThrow(Errors.get(ErrorType.userNotFound));
+      await expect(resolver.getUser(undefined)).rejects.toThrow(Errors.get(ErrorType.userNotFound));
     });
   });
 

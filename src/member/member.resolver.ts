@@ -9,7 +9,7 @@ import {
 } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import * as config from 'config';
 import { millisecondsInHour } from 'date-fns';
 import { format, getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
@@ -45,6 +45,7 @@ import {
   UpdateTaskStatusParams,
 } from '.';
 import {
+  Client,
   ErrorType,
   Errors,
   EventType,
@@ -69,8 +70,6 @@ import {
   Roles,
   StorageType,
   UserRole,
-  extractRoles,
-  extractUserId,
 } from '../common';
 import {
   CommunicationResolver,
@@ -119,20 +118,14 @@ export class MemberResolver extends MemberBase {
     return super.createMember(createMemberParams);
   }
 
-  /**
-   * Can be called from 2 sources:
-   * @param context : mobile - by using authorization header in context
-   * @param id : web - by using a query param of member id
-   */
   @Query(() => Member, { nullable: true })
   @Roles(MemberRole.member, UserRole.coach)
   async getMember(
-    @Context() context,
+    @Client('roles') roles,
+    @Client('_id') memberId,
     @Args('id', { type: () => String, nullable: true }) id?: string,
   ): Promise<Member> {
-    const memberId = extractRoles(context).includes(MemberRole.member)
-      ? extractUserId(context)
-      : id;
+    memberId = roles.includes(MemberRole.member) ? memberId : id;
     const member = await this.memberService.get(memberId);
     member.zipCode = member.zipCode || member.org.zipCode;
     member.utcDelta = MemberResolver.getTimezoneDeltaFromZipcode(member.zipCode);
@@ -272,12 +265,11 @@ export class MemberResolver extends MemberBase {
   @Query(() => DischargeDocumentsLinks)
   @Roles(MemberRole.member, UserRole.coach)
   async getMemberDownloadDischargeDocumentsLinks(
-    @Context() context,
+    @Client('roles') roles,
+    @Client('_id') memberId,
     @Args('id', { type: () => String, nullable: true }) id?: string,
   ) {
-    const memberId = extractRoles(context).includes(MemberRole.member)
-      ? extractUserId(context)
-      : id;
+    memberId = roles.includes(MemberRole.member) ? memberId : id;
     const member = await this.memberService.get(memberId);
 
     const { firstName, lastName } = member;
@@ -410,11 +402,11 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Identifier)
   @Roles(MemberRole.member)
-  async createJournal(@Context() context) {
-    if (!extractRoles(context).includes(MemberRole.member)) {
+  async createJournal(@Client('roles') roles, @Client('_id') memberId) {
+    if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    return this.memberService.createJournal(extractUserId(context));
+    return this.memberService.createJournal(memberId);
   }
 
   @Mutation(() => Journal)
@@ -437,11 +429,11 @@ export class MemberResolver extends MemberBase {
 
   @Query(() => [Journal])
   @Roles(MemberRole.member)
-  async getJournals(@Context() context) {
-    if (!extractRoles(context).includes(MemberRole.member)) {
+  async getJournals(@Client('roles') roles, @Client('_id') memberId) {
+    if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    const journals = await this.memberService.getJournals(extractUserId(context));
+    const journals = await this.memberService.getJournals(memberId);
 
     return Promise.all(
       journals.map(async (journal) => {
@@ -527,15 +519,15 @@ export class MemberResolver extends MemberBase {
   @Mutation(() => Boolean, { nullable: true })
   @Roles(MemberRole.member)
   async registerMemberForNotifications(
-    @Context() context,
+    @Client('roles') roles,
+    @Client('_id') memberId,
     @Args(camelCase(RegisterForNotificationParams.name))
     registerForNotificationParams: RegisterForNotificationParams,
   ) {
-    if (!extractRoles(context).includes(MemberRole.member)) {
+    if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
     // ignoring the id from the params - replacing it with the id from the context
-    const memberId = extractUserId(context); //member is considered a general user in the request
     const member = await this.memberService.get(memberId);
     const currentMemberConfig = await this.memberService.getMemberConfig(memberId);
 
@@ -893,12 +885,11 @@ export class MemberResolver extends MemberBase {
   @Query(() => MemberConfig)
   @Roles(MemberRole.member, UserRole.coach)
   async getMemberConfig(
-    @Context() context,
+    @Client('roles') roles,
+    @Client('_id') memberId,
     @Args('id', { type: () => String, nullable: true }) id?: string,
   ) {
-    const memberId = extractRoles(context).includes(MemberRole.member)
-      ? extractUserId(context)
-      : id;
+    memberId = roles.includes(MemberRole.member) ? memberId : id;
     return this.memberService.getMemberConfig(memberId);
   }
 

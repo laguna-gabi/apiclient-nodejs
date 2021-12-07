@@ -350,7 +350,7 @@ describe('UserService', () => {
 
     it('should return 6 default slots if availability in the past', async () => {
       const user = await service.insert(generateCreateUserParams());
-      await availabilityResolver.createAvailabilities({ req: { user: { _id: user.id } } }, [
+      await availabilityResolver.createAvailabilities(user.id, [
         generateAvailabilityInput({
           start: add(startOfToday(), { hours: 8 }),
           end: add(startOfToday(), { hours: 10 }),
@@ -403,7 +403,7 @@ describe('UserService', () => {
     /* eslint-disable-next-line max-len */
     it('should return slots if availabilities exists and allowEmptySlotsResponse=true', async () => {
       const user = await service.insert(generateCreateUserParams());
-      await availabilityResolver.createAvailabilities({ req: { user: { _id: user.id } } }, [
+      await availabilityResolver.createAvailabilities(user.id, [
         generateAvailabilityInput({
           start: startOfToday(),
           end: add(startOfToday(), { days: 1 }),
@@ -425,7 +425,7 @@ describe('UserService', () => {
       'should not return past slots when allowEmptySlotsResponse=true (%p}',
       async (allowEmptySlotsResponse) => {
         const user = await service.insert(generateCreateUserParams());
-        await availabilityResolver.createAvailabilities({ req: { user: { _id: user.id } } }, [
+        await availabilityResolver.createAvailabilities(user.id, [
           generateAvailabilityInput({
             start: add(startOfToday(), { days: -3 }),
             end: add(startOfToday(), { days: -1 }),
@@ -557,7 +557,7 @@ describe('UserService', () => {
     };
 
     const createDefaultAvailabilities = async (userId: string) => {
-      return availabilityResolver.createAvailabilities({ req: { user: { _id: userId } } }, [
+      return availabilityResolver.createAvailabilities(userId, [
         generateAvailabilityInput({
           start: add(startOfToday(), { hours: 10 }),
           end: add(startOfToday(), { hours: 22 }),

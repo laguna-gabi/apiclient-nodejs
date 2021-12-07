@@ -2,13 +2,7 @@ import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Types } from 'mongoose';
-import {
-  EventType,
-  IEventMember,
-  Logger,
-  MemberRole,
-  extractUserId,
-} from '../../src/common';
+import { EventType, IEventMember, Logger, MemberRole } from '../../src/common';
 import {
   DailyReport,
   DailyReportCategoriesInput,
@@ -19,13 +13,7 @@ import {
   DailyReportResolver,
   DailyReportService,
 } from '../../src/dailyReport';
-import {
-  dbDisconnect,
-  defaultModules,
-  generateContextUserId,
-  generateId,
-  mockLogger,
-} from '../index';
+import { dbDisconnect, defaultModules, generateId, mockLogger } from '../index';
 
 describe('DailyReportResolver', () => {
   let resolver: DailyReportResolver;
@@ -72,15 +60,11 @@ describe('DailyReportResolver', () => {
           date: '2015/01/01',
         } as DailyReport, // <= daily report returned from service (updated record),
         {
-          req: {
-            user: {
-              honorific: 'Mr.',
-              lastName: 'Levy',
-              primaryUserId: 'U0001',
-              _id: memberId,
-              roles: [MemberRole.member],
-            },
-          },
+          honorific: 'Mr.',
+          lastName: 'Levy',
+          primaryUserId: 'U0001',
+          _id: memberId,
+          roles: [MemberRole.member],
         }, // <= context
         {
           date: '',
@@ -104,15 +88,11 @@ describe('DailyReportResolver', () => {
           date: '2015/01/01',
         } as DailyReport, // <= daily report returned from service (updated record),
         {
-          req: {
-            user: {
-              honorific: 'Mr.',
-              lastName: 'Levy',
-              primaryUserId: 'U0001',
-              _id: memberId,
-              roles: [MemberRole.member],
-            },
-          },
+          honorific: 'Mr.',
+          lastName: 'Levy',
+          primaryUserId: 'U0001',
+          _id: memberId,
+          roles: [MemberRole.member],
         }, // <= context
         {
           date: '',
@@ -129,9 +109,11 @@ describe('DailyReportResolver', () => {
           date: '2015/01/01',
         } as DailyReport, // <= daily report returned from service (updated record),
         {
-          req: {
-            user: { honorific: 'Mr.', lastName: 'Levy', _id: memberId, roles: [MemberRole.member] },
-          },
+          honorific: 'Mr.',
+          lastName: 'Levy',
+          _id: memberId,
+          roles: [MemberRole.member],
+          primaryUserId: undefined,
         }, // <= context (missing primary user id)
         {
           date: '',
@@ -153,9 +135,14 @@ describe('DailyReportResolver', () => {
           .spyOn(service, 'setDailyReportCategories')
           .mockResolvedValue(serviceSetDailyReportCategoryReturnedValue);
         eventEmitterSpy = jest.spyOn(eventEmitter, 'emit');
-        await resolver.setDailyReportCategories(context, dailyReportCategoryInput);
+        await resolver.setDailyReportCategories(
+          context.roles,
+          context._id,
+          context.primaryUserId,
+          dailyReportCategoryInput,
+        );
         const eventParams: IEventMember = {
-          memberId: extractUserId(context),
+          memberId: context._id,
         };
         if (emittedEventParams) {
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(
@@ -246,10 +233,13 @@ describe('DailyReportResolver', () => {
     ])('%s', async (message, oldestDailyReportRecord, serviceGetDailyReports, expectedResult) => {
       jest.spyOn(service, 'getOldestDailyReportRecord').mockResolvedValue(oldestDailyReportRecord);
       jest.spyOn(service, 'getDailyReports').mockResolvedValue(serviceGetDailyReports);
-      const context = generateContextUserId();
-      expect(await resolver.getDailyReports(context, {} as DailyReportQueryInput)).toEqual(
-        expectedResult,
-      );
+      expect(
+        await resolver.getDailyReports(
+          [MemberRole.member],
+          generateId(),
+          {} as DailyReportQueryInput,
+        ),
+      ).toEqual(expectedResult);
     });
   });
 });

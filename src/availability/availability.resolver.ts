@@ -1,7 +1,7 @@
 import { UseInterceptors } from '@nestjs/common';
-import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Availability, AvailabilityInput, AvailabilityService, AvailabilitySlot } from '.';
-import { Identifiers, LoggingInterceptor, Roles, UserRole, extractUserId } from '../common';
+import { Client, Identifiers, LoggingInterceptor, Roles, UserRole } from '../common';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Availability)
@@ -11,11 +11,10 @@ export class AvailabilityResolver {
   @Mutation(() => Identifiers)
   @Roles(UserRole.coach)
   async createAvailabilities(
-    @Context() context,
+    @Client('_id') userId,
     @Args('availabilities', { type: () => [AvailabilityInput] })
     availabilities: AvailabilityInput[],
   ): Promise<Identifiers> {
-    const userId = extractUserId(context);
     return this.availabilityService.create(availabilities, userId);
   }
 

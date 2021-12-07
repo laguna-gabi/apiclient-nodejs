@@ -25,7 +25,6 @@ import {
   generateCommunication,
   generateGetCommunicationParams,
   generateId,
-  generateObjectId,
   generateUniqueUrl,
   mockGenerateMember,
   mockGenerateUser,
@@ -259,9 +258,11 @@ describe('CommunicationResolver', () => {
       spyOnServiceGet.mockImplementationOnce(() => communication);
       spyOnUserServiceGet.mockImplementationOnce(() => user);
 
-      const communicationInfo = await resolver.getMemberCommunicationInfo({
-        req: { user: { _id: generateObjectId(), roles: [MemberRole.member] } },
-      });
+      const communicationInfo = await resolver.getMemberCommunicationInfo(
+        [MemberRole.member],
+        generateId(),
+        generateId(),
+      );
 
       expect(communicationInfo).toEqual({
         memberLink:
@@ -283,9 +284,7 @@ describe('CommunicationResolver', () => {
       spyOnUserServiceGet.mockImplementationOnce(() => user);
 
       await expect(
-        resolver.getMemberCommunicationInfo({
-          req: { user: { _id: generateObjectId(), roles: [UserRole.coach] } },
-        }),
+        resolver.getMemberCommunicationInfo([UserRole.coach], generateId(), generateId()),
       ).rejects.toThrow(Errors.get(ErrorType.memberAllowedOnly));
     });
 
@@ -294,9 +293,7 @@ describe('CommunicationResolver', () => {
       spyOnUserServiceGet.mockImplementationOnce(() => undefined);
 
       await expect(
-        resolver.getMemberCommunicationInfo({
-          req: { user: { _id: generateObjectId(), roles: [MemberRole.member] } },
-        }),
+        resolver.getMemberCommunicationInfo([MemberRole.member], generateId(), generateId()),
       ).rejects.toThrow(Errors.get(ErrorType.userNotFound));
     });
 
@@ -305,9 +302,7 @@ describe('CommunicationResolver', () => {
       spyOnUserServiceGet.mockImplementationOnce(() => user);
 
       await expect(
-        resolver.getMemberCommunicationInfo({
-          req: { user: { _id: generateObjectId(), roles: [MemberRole.member] } },
-        }),
+        resolver.getMemberCommunicationInfo([MemberRole.member], generateId(), generateId()),
       ).rejects.toThrow(Errors.get(ErrorType.communicationMemberUserNotFound));
     });
   });

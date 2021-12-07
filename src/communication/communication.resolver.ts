@@ -1,6 +1,6 @@
 import { Inject, UseInterceptors, forwardRef } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { Args, Context, Query, Resolver } from '@nestjs/graphql';
+import { Args, Query, Resolver } from '@nestjs/graphql';
 import * as config from 'config';
 import { camelCase } from 'lodash';
 import {
@@ -12,6 +12,7 @@ import {
 } from '.';
 import { AppointmentStatus } from '../appointment';
 import {
+  Client,
   ErrorType,
   Errors,
   EventType,
@@ -26,9 +27,6 @@ import {
   Roles,
   UpdatedAppointmentAction,
   UserRole,
-  extractPrimaryUserId,
-  extractRoles,
-  extractUserId,
 } from '../common';
 import { UserService } from '../user';
 
@@ -84,30 +82,35 @@ export class CommunicationResolver {
   @Query(() => UnreadMessagesCount)
   @Roles(MemberRole.member)
   getMemberUnreadMessagesCount(
-    @Context() context,
+    @Client('roles') roles,
+    @Client('_id') contextMemberId,
     // eslint-disable-next-line max-len,@typescript-eslint/no-unused-vars
     @Args('memberId', { type: () => String, nullable: true }) memberId?: string,
   ) {
-    if (!extractRoles(context).includes(MemberRole.member)) {
+    if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
     // ignoring the id from the params - replacing it with the id from the context
-    return this.communicationService.getParticipantUnreadMessagesCount(extractUserId(context));
+    return this.communicationService.getParticipantUnreadMessagesCount(contextMemberId);
   }
 
   @Query(() => MemberCommunicationInfo)
   @Roles(MemberRole.member)
-  async getMemberCommunicationInfo(@Context() context) {
+  async getMemberCommunicationInfo(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Client('primaryUserId') primaryUserId,
+  ) {
     // we expect the logged in user to be a member and admin is also implicitly allowed here
-    if (!extractRoles(context).includes(MemberRole.member)) {
+    if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
+    const communication = await this.communicationService.get({
+      memberId,
+      userId: primaryUserId,
+    });
 
-    const memberId = extractUserId(context);
-    const userId = extractPrimaryUserId(context);
-    const communication = await this.communicationService.get({ memberId, userId });
-
-    const user = await this.userService.get(userId);
+    const user = await this.userService.get(primaryUserId);
 
     if (!user) {
       throw new Error(Errors.get(ErrorType.userNotFound));
