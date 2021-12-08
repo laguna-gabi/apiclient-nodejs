@@ -25,6 +25,7 @@ export class InternationalizationService implements OnModuleInit {
       fallbackLng: Language.en,
       resources: { en, es },
       interpolation: { escapeValue: false },
+      returnEmptyString: false,
     });
   }
 
