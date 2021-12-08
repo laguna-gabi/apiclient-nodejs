@@ -137,4 +137,4 @@ jobs:
         with:
           url: ${{ secrets.SLACK_URL_MESSAGES }}
           method: 'POST'
-          data: '{"username":"LagunaBot","icon_emoji":":Gear:","channel":"#ci-cd","attachments":[{"color":"#9733EE","blocks":[{"type":"section","text":{"type":"mrkdwn","text":"*iris was deployed successfully to `${{ steps.branch-name.outputs.current_branch }}`.*\n*Last commit hash `${{ github.sha }}`*\nhttps://github.com/LagunaHealth/hepius/actions/runs/${{ github.run_id }}"}}]}]}'
+          data: '{"username":"LagunaBot","icon_emoji":":Gear:","channel":"#ci-cd","attachments":[{"color":"#9733EE","blocks":[{"type":"section","text":{"type":"mrkdwn","text":"*iris was deployed successfully to `${{ steps.branch-name.outputs.current_branch }}`.*\n*Last commit hash `${{ github.sha }}`*\nhttps://github.com/LagunaHealth/iris/actions/runs/${{ github.run_id }}"}}]}]}'
