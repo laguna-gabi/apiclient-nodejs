@@ -35,6 +35,7 @@ export enum EventType {
   notifyInternalControlMember = 'notifyInternalControlMember',
   notifySlack = 'notifySlack',
   notifyQueue = 'notifyQueue',
+  notifyDispatch = 'notifyDispatch',
 
   //daily logs
   onSetDailyLogCategories = 'onSetDailyLogCategories',

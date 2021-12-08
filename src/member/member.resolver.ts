@@ -1,11 +1,13 @@
 import {
   ContentKey,
+  ICreateDispatch,
   IDeleteClientSettings,
   InnerQueueTypes,
   InternalNotificationType,
   Language,
   NotificationType,
   Platform,
+  SourceApi,
 } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
@@ -84,6 +86,7 @@ import {
   StorageService,
 } from '../providers';
 import { User, UserService } from '../user';
+import { v4 } from 'uuid';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
@@ -797,6 +800,33 @@ export class MemberResolver extends MemberBase {
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.notifyChatMessage.name, ex);
     }
+  }
+
+  @OnEvent(EventType.notifyDispatch, { async: true })
+  async notifyDispatch(params: InternalNotifyParams) {
+    this.logger.debug(params, MemberResolver.name, this.notifyDispatch.name);
+    const { memberId, userId, type, metadata } = params;
+
+    const creteDispatch: ICreateDispatch = {
+      type: InnerQueueTypes.createDispatch,
+      dispatchId: v4(),
+      correlationId: v4(),
+      sourceApi: SourceApi.hepius,
+      notificationType: type,
+      recipientClientId: memberId,
+      senderClientId: userId,
+      sendBirdChannelUrl: metadata.sendBirdChannelUrl,
+      appointmentTime: metadata.appointmentTime,
+      appointmentId: metadata.appointmentId,
+      contentKey: metadata.contentType,
+      path: metadata.path,
+    };
+
+    const eventParams: IEventNotifyQueue = {
+      type: QueueType.notifications,
+      message: JSON.stringify(creteDispatch),
+    };
+    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
   }
 
   /**

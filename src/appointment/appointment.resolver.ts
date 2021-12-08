@@ -1,7 +1,6 @@
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import * as config from 'config';
 import { add } from 'date-fns';
 import { camelCase } from 'lodash';
 import {
@@ -31,10 +30,8 @@ import {
   UpdatedAppointmentAction,
   UserRole,
 } from '../common';
-import { Member } from '../member';
 import { OrgService } from '../org';
 import { Bitly } from '../providers';
-import { User } from '../user';
 import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
 
 @UseInterceptors(LoggingInterceptor)
@@ -113,7 +110,7 @@ export class AppointmentResolver extends AppointmentBase {
         notBefore: add(new Date(), { hours: 2 }),
       };
       const { id: appointmentId } = await this.appointmentService.request(requestAppointmentParams);
-      await this.notifyRegistration({ member, user, appointmentId });
+      await this.notifyRegistration({ memberId: member.id, userId: user.id, appointmentId });
       await this.appointmentScheduler.registerNewMemberNudge({ member, user, appointmentId });
     } catch (ex) {
       this.logger.error(
@@ -209,30 +206,24 @@ export class AppointmentResolver extends AppointmentBase {
     this.eventEmitter.emit(EventType.notifyInternal, params);
   }
 
-  private async notifyRegistration({
-    member,
-    user,
+  private notifyRegistration({
+    memberId,
+    userId,
     appointmentId,
   }: {
-    member: Member;
-    user: User;
+    memberId: string;
+    userId: string;
     appointmentId: string;
   }) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const org = await this.orgService.get(member.org._id.toString());
-    const downloadLink = await this.bitly.shortenLink(
-      `${config.get('hosts.app')}/download/${appointmentId}`,
-    );
     const params: InternalNotifyParams = {
-      memberId: member.id,
-      userId: user.id,
+      memberId,
+      userId,
       type: InternalNotificationType.textSmsToMember,
       metadata: {
         contentType: ContentKey.newMember,
-        extraData: { org, downloadLink },
+        appointmentId,
       },
     };
-    this.eventEmitter.emit(EventType.notifyInternal, params);
+    this.eventEmitter.emit(EventType.notifyDispatch, params);
   }
 }

@@ -101,6 +101,7 @@ export class InternalNotificationMetadata {
   scheduleLink?: string;
   sendBirdChannelUrl?: string;
   appointmentTime?: Date;
+  appointmentId?: string;
   checkAppointmentReminder?: boolean;
   path?: string;
 }

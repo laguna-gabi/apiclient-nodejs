@@ -1,9 +1,12 @@
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import { generateCreateMemberParams } from '../generators';
 import {
+  ContentKey,
   InnerQueueTypes,
+  ObjectNewMemberClass,
   ObjectUpdateMemberSettingsClass,
   Platform,
+  generateNewMemberMock,
   generateUpdateMemberSettingsMock,
   generateUpdateUserSettingsMock,
 } from '@lagunahealth/pandora';
@@ -43,7 +46,7 @@ describe('Integration tests: notifications', () => {
       const memberParams = generateCreateMemberParams({ userId: user.id, orgId: org.id });
       const { id } = await handler.mutations.createMember({ memberParams });
 
-      await delay(500);
+      await delay(200);
 
       //send event to queue on update member config (create)
       const mockUser = generateUpdateUserSettingsMock({ id, ...user });
@@ -72,7 +75,7 @@ describe('Integration tests: notifications', () => {
       const memberParams = generateCreateMemberParams({ userId: user.id, orgId: org.id });
       const { id } = await handler.mutations.createMember({ memberParams });
 
-      await delay(500);
+      await delay(200);
 
       const params: RegisterForNotificationParams = {
         memberId: id,
@@ -83,15 +86,15 @@ describe('Integration tests: notifications', () => {
         registerForNotificationParams: params,
       });
 
-      await delay(500);
+      await delay(200);
 
       const { firstLoggedInAt } = await handler
         .setContextUserId(id)
         .queries.getMemberConfig({ id });
 
-      expectStringContaining(3, 'platform', params.platform);
-      expectStringContaining(3, 'isPushNotificationsEnabled', params.isPushNotificationsEnabled);
-      expectStringContaining(3, 'firstLoggedInAt', firstLoggedInAt);
+      expectStringContaining(4, 'platform', params.platform);
+      expectStringContaining(4, 'isPushNotificationsEnabled', params.isPushNotificationsEnabled);
+      expectStringContaining(4, 'firstLoggedInAt', firstLoggedInAt);
     });
   });
 
@@ -109,12 +112,12 @@ describe('Integration tests: notifications', () => {
       const user = await creators.createAndValidateUser();
       const memberParams = generateCreateMemberParams({ userId: user.id, orgId: org.id });
       const { id } = await handler.mutations.createMember({ memberParams });
-      await delay(500);
+      await delay(200);
 
       await params.method({ id });
-      await delay(500);
+      await delay(200);
 
-      expectStringContaining(3, 'id', id);
+      expectStringContaining(4, 'id', id);
     });
 
     it(`should notify delete settings on deleteMember`, async () => {
@@ -122,12 +125,41 @@ describe('Integration tests: notifications', () => {
       const user = await creators.createAndValidateUser();
       const memberParams = generateCreateMemberParams({ userId: user.id, orgId: org.id });
       const { id } = await handler.mutations.createMember({ memberParams });
-      await delay(500);
+      await delay(200);
 
       await handler.mutations.archiveMember({ id });
-      await delay(500);
+      await delay(200);
 
-      expectStringContaining(3, 'id', id);
+      expectStringContaining(4, 'id', id);
+    });
+  });
+
+  describe(`${InnerQueueTypes.createDispatch}`, () => {
+    it(`should send an event of type ${ContentKey.newMember}`, async () => {
+      const org = await creators.createAndValidateOrg();
+      const user = await creators.createAndValidateUser();
+
+      const memberParams = generateCreateMemberParams({ userId: user.id, orgId: org.id });
+      const { id } = await handler.mutations.createMember({ memberParams });
+
+      await delay(200);
+
+      const mock = generateNewMemberMock({ recipientClientId: id, senderClientId: user.id });
+      const object = new ObjectNewMemberClass(mock);
+
+      Object.keys(object.objectNewMemberMock).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(
+          3,
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'dispatchId' || key === 'correlationId' || key === 'appointmentId'
+                ? key
+                : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
     });
   });
 
