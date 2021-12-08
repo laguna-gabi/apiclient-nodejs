@@ -61,19 +61,19 @@ jobs:
       - name: Test
         run: yarn test:cov
       - name: Zip lcov-report
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
+        if: github.ref != 'refs/heads/poeditor'
         uses: papeloto/action-zip@v1
         with:
           files: coverage/lcov-report
           dest: coverage.zip
       - name: Upload coverage zip
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
+        if: github.ref != 'refs/heads/poeditor'
         uses: actions/upload-artifact@v2
         with:
           name: coverage
           path: coverage.zip
       - name: Remove lcov-report before uploading to S3
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
+        if: github.ref != 'refs/heads/poeditor'
         run: |
           rm coverage.zip
           rm -rf coverage/lcov-report
