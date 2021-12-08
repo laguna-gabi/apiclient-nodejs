@@ -931,17 +931,30 @@ describe('MemberResolver', () => {
       expect(result).toEqual(id);
     });
 
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on create journal if role = %p',
+      async (role) => {
+        await expect(resolver.createJournal([role], generateId())).rejects.toThrow(
+          Error(Errors.get(ErrorType.memberAllowedOnly)),
+        );
+      },
+    );
+
     it('should update journal', async () => {
       const params = generateUpdateJournalParams();
-      const journal = generateMockJournalParams({ ...params });
+      const memberId = generateId();
+      const journal = generateMockJournalParams({
+        ...params,
+        memberId: new Types.ObjectId(memberId),
+      });
       const url = generateUniqueUrl();
       spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
       spyOnStorageGetDownloadUrl.mockImplementation(async () => url);
 
-      const result = await resolver.updateJournal(params);
+      const result = await resolver.updateJournal([MemberRole.member], memberId, params);
 
       expect(spyOnServiceUpdateJournal).toBeCalledTimes(1);
-      expect(spyOnServiceUpdateJournal).toBeCalledWith(params);
+      expect(spyOnServiceUpdateJournal).toBeCalledWith({ ...params, memberId });
       expect(spyOnStorageGetDownloadUrl).toBeCalledTimes(2);
       expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(1, {
         storageType: StorageType.journals,
@@ -956,16 +969,26 @@ describe('MemberResolver', () => {
       expect(result).toEqual(journal);
     });
 
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on update journal if role = %p',
+      async (role) => {
+        await expect(
+          resolver.updateJournal([role], generateId(), generateUpdateJournalParams()),
+        ).rejects.toThrow(Error(Errors.get(ErrorType.memberAllowedOnly)));
+      },
+    );
+
     it('should get journal', async () => {
-      const journal = generateMockJournalParams();
+      const memberId = generateId();
+      const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
       const url = generateUniqueUrl();
       spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
       spyOnStorageGetDownloadUrl.mockImplementation(async () => url);
 
-      const result = await resolver.getJournal(journal.id);
+      const result = await resolver.getJournal([MemberRole.member], memberId, journal.id);
 
       expect(spyOnServiceGetJournal).toBeCalledTimes(1);
-      expect(spyOnServiceGetJournal).toBeCalledWith(journal.id);
+      expect(spyOnServiceGetJournal).toBeCalledWith(journal.id, memberId);
       expect(spyOnStorageGetDownloadUrl).toBeCalledTimes(2);
       expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(1, {
         storageType: StorageType.journals,
@@ -981,19 +1004,29 @@ describe('MemberResolver', () => {
     });
 
     it(`should get journal without image download link if imageFormat doesn't exists`, async () => {
-      const journal = generateMockJournalParams();
+      const memberId = generateId();
+      const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
       delete journal.imageFormat;
       const url = generateUniqueUrl();
       spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
       spyOnStorageGetDownloadUrl.mockImplementation(async () => url);
 
-      const result = await resolver.getJournal(journal.id);
+      const result = await resolver.getJournal([MemberRole.member], memberId, journal.id);
 
       expect(spyOnServiceGetJournal).toBeCalledTimes(1);
-      expect(spyOnServiceGetJournal).toBeCalledWith(journal.id);
+      expect(spyOnServiceGetJournal).toBeCalledWith(journal.id, memberId);
       expect(spyOnStorageGetDownloadUrl).toBeCalledTimes(0);
       expect(result).toEqual(journal);
     });
+
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on get journal if role = %p',
+      async (role) => {
+        await expect(resolver.getJournal([role], generateId(), generateId())).rejects.toThrow(
+          Error(Errors.get(ErrorType.memberAllowedOnly)),
+        );
+      },
+    );
 
     it('should get Journals', async () => {
       const memberId = generateId();
@@ -1032,33 +1065,57 @@ describe('MemberResolver', () => {
       expect(result).toEqual(journals);
     });
 
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on get Journals if role = %p',
+      async (role) => {
+        await expect(resolver.getJournals([role], generateId())).rejects.toThrow(
+          Error(Errors.get(ErrorType.memberAllowedOnly)),
+        );
+      },
+    );
+
     it('should delete Journal', async () => {
-      const journal = generateMockJournalParams();
-      spyOnServiceDeleteJournal.mockImplementationOnce(async () => journal);
+      const memberId = generateId();
+      const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
+      spyOnServiceDeleteJournal.mockImplementationOnce(async () => true);
       spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
 
-      const result = await resolver.deleteJournal(journal.id);
+      const result = await resolver.deleteJournal([MemberRole.member], memberId, journal.id);
 
       expect(spyOnServiceDeleteJournal).toBeCalledTimes(1);
-      expect(spyOnServiceDeleteJournal).toBeCalledWith(journal.id);
+      expect(spyOnServiceDeleteJournal).toBeCalledWith(journal.id, memberId);
       expect(spyOnStorageDeleteJournalImages).toBeCalledWith(
         journal.id,
         journal.memberId.toString(),
       );
-      expect(result).toEqual(true);
+      expect(result).toBeTruthy();
     });
 
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on delete journal if role = %p',
+      async (role) => {
+        await expect(resolver.deleteJournal([role], generateId(), generateId())).rejects.toThrow(
+          Error(Errors.get(ErrorType.memberAllowedOnly)),
+        );
+      },
+    );
+
     it('should get member upload journal links', async () => {
-      const journal = generateMockJournalParams();
+      const memberId = generateId();
+      const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
       const url = generateUniqueUrl();
       spyOnServiceUpdateJournalImageFormat.mockImplementationOnce(async () => journal);
       spyOnStorageGetUploadUrl.mockImplementation(async () => url);
 
       const params = generateGetMemberUploadJournalLinksParams({ id: journal.id });
-      const result = await resolver.getMemberUploadJournalLinks(params);
+      const result = await resolver.getMemberUploadJournalLinks(
+        [MemberRole.member],
+        memberId,
+        params,
+      );
 
       expect(spyOnServiceUpdateJournalImageFormat).toBeCalledTimes(1);
-      expect(spyOnServiceUpdateJournalImageFormat).toBeCalledWith(params);
+      expect(spyOnServiceUpdateJournalImageFormat).toBeCalledWith({ ...params, memberId });
 
       expect(spyOnStorageGetUploadUrl).toBeCalledTimes(2);
       expect(spyOnStorageGetUploadUrl).toHaveBeenNthCalledWith(1, {
@@ -1075,17 +1132,32 @@ describe('MemberResolver', () => {
       expect(result).toEqual({ normalImageLink: url, smallImageLink: url });
     });
 
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on get member upload journal links if role = %p',
+      async (role) => {
+        await expect(
+          resolver.getMemberUploadJournalLinks(
+            [role],
+            generateId(),
+            generateGetMemberUploadJournalLinksParams(),
+          ),
+        ).rejects.toThrow(Error(Errors.get(ErrorType.memberAllowedOnly)));
+      },
+    );
+
     it('should delete Journal images', async () => {
-      const journal = generateMockJournalParams();
+      const memberId = generateId();
+      const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
       spyOnServiceUpdateJournalImageFormat.mockImplementationOnce(async () => journal);
       spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
 
-      const result = await resolver.deleteJournalImage(journal.id);
+      const result = await resolver.deleteJournalImage([MemberRole.member], memberId, journal.id);
 
       expect(spyOnServiceUpdateJournalImageFormat).toBeCalledTimes(1);
       expect(spyOnServiceUpdateJournalImageFormat).toBeCalledWith({
         id: journal.id,
         imageFormat: null,
+        memberId,
       });
       expect(spyOnStorageDeleteJournalImages).toBeCalledWith(
         journal.id,
@@ -1093,6 +1165,15 @@ describe('MemberResolver', () => {
       );
       expect(result).toEqual(true);
     });
+
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on create journal if role = %p',
+      async (role) => {
+        await expect(
+          resolver.deleteJournalImage([role], generateId(), generateId()),
+        ).rejects.toThrow(Error(Errors.get(ErrorType.memberAllowedOnly)));
+      },
+    );
   });
 
   describe('getMemberConfig', () => {

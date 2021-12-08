@@ -1315,7 +1315,9 @@ describe('Integration tests: all', () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org });
       const { id: journalId } = await handler.setContextUserId(member.id).mutations.createJournal();
-      const journalBeforeUpdate = await handler.queries.getJournal({ id: journalId });
+      const journalBeforeUpdate = await handler
+        .setContextUserId(member.id)
+        .queries.getJournal({ id: journalId });
 
       expect(journalBeforeUpdate).toMatchObject({
         id: journalId,
@@ -1327,7 +1329,7 @@ describe('Integration tests: all', () => {
       const updateJournalParams: UpdateJournalParams = generateUpdateJournalParams({
         id: journalId,
       });
-      const journalAfterUpdate = await handler.mutations.updateJournal({
+      const journalAfterUpdate = await handler.setContextUserId(member.id).mutations.updateJournal({
         updateJournalParams,
       });
 
@@ -1347,8 +1349,8 @@ describe('Integration tests: all', () => {
         text: updateJournalParams.text,
       });
 
-      await handler.mutations.deleteJournal({ id: journalId });
-      await handler.queries.getJournal({
+      await handler.setContextUserId(member.id).mutations.deleteJournal({ id: journalId });
+      await handler.setContextUserId(member.id).queries.getJournal({
         id: journalId,
         invalidFieldsError: Errors.get(ErrorType.memberJournalNotFound),
       });

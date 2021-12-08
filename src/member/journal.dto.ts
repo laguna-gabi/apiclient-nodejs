@@ -27,6 +27,8 @@ export class UpdateJournalParams {
 
   @Field(() => String)
   text: string;
+
+  memberId?: string;
 }
 
 @InputType()
@@ -35,7 +37,9 @@ export class GetMemberUploadJournalLinksParams {
   id: string;
 
   @Field(() => ImageFormat)
-  imageFormat: ImageFormat;
+  imageFormat?: ImageFormat;
+
+  memberId?: string;
 }
 
 /********∏******************************************************************************************

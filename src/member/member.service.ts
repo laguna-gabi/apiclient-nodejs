@@ -18,9 +18,9 @@ import {
   ControlMemberDocument,
   CreateMemberParams,
   CreateTaskParams,
+  GetMemberUploadJournalLinksParams,
   Goal,
   GoalDocument,
-  ImageFormat,
   Journal,
   JournalDocument,
   Member,
@@ -726,9 +726,9 @@ export class MemberService extends BaseService {
   }
 
   async updateJournal(updateJournalParams: UpdateJournalParams): Promise<Journal> {
-    const { id, text } = updateJournalParams;
+    const { id, text, memberId } = updateJournalParams;
     const result = await this.journalModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(id) },
+      { _id: new Types.ObjectId(id), memberId: new Types.ObjectId(memberId) },
       { $set: { text } },
       { new: true },
     );
@@ -740,15 +740,12 @@ export class MemberService extends BaseService {
     return result;
   }
 
-  async updateJournalImageFormat({
-    id,
-    imageFormat,
-  }: {
-    id: string;
-    imageFormat: ImageFormat | null;
-  }): Promise<Journal> {
+  async updateJournalImageFormat(
+    getMemberUploadJournalLinksParams: GetMemberUploadJournalLinksParams,
+  ): Promise<Journal> {
+    const { id, imageFormat, memberId } = getMemberUploadJournalLinksParams;
     const result = await this.journalModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(id) },
+      { _id: new Types.ObjectId(id), memberId: new Types.ObjectId(memberId) },
       { $set: { imageFormat } },
       { new: true },
     );
@@ -760,8 +757,11 @@ export class MemberService extends BaseService {
     return result;
   }
 
-  async getJournal(id: string): Promise<Journal> {
-    const result = await this.journalModel.findById(id);
+  async getJournal(id: string, memberId: string): Promise<Journal> {
+    const result = await this.journalModel.findOne({
+      _id: new Types.ObjectId(id),
+      memberId: new Types.ObjectId(memberId),
+    });
 
     if (!result) {
       throw new Error(Errors.get(ErrorType.memberJournalNotFound));
@@ -777,14 +777,17 @@ export class MemberService extends BaseService {
     });
   }
 
-  async deleteJournal(id: string): Promise<Journal> {
-    const result = await this.journalModel.findOneAndDelete({ _id: new Types.ObjectId(id) });
+  async deleteJournal(id: string, memberId: string): Promise<boolean> {
+    const result = await this.journalModel.findOneAndDelete({
+      _id: new Types.ObjectId(id),
+      memberId: new Types.ObjectId(memberId),
+    });
 
     if (!result) {
       throw new Error(Errors.get(ErrorType.memberJournalNotFound));
     }
 
-    return result;
+    return true;
   }
 
   /*************************************************************************************************

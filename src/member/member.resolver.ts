@@ -415,8 +415,14 @@ export class MemberResolver extends MemberBase {
   @Mutation(() => Journal)
   @Roles(MemberRole.member)
   async updateJournal(
+    @Client('roles') roles,
+    @Client('_id') memberId,
     @Args(camelCase(UpdateJournalParams.name)) updateJournalParams: UpdateJournalParams,
   ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    updateJournalParams.memberId = memberId;
     const journal = await this.memberService.updateJournal(updateJournalParams);
 
     return this.addMemberDownloadJournalLinks(journal);
@@ -424,8 +430,15 @@ export class MemberResolver extends MemberBase {
 
   @Query(() => Journal)
   @Roles(MemberRole.member)
-  async getJournal(@Args('id', { type: () => String }) id: string) {
-    const journal = await this.memberService.getJournal(id);
+  async getJournal(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args('id', { type: () => String }) id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const journal = await this.memberService.getJournal(id, memberId);
 
     return this.addMemberDownloadJournalLinks(journal);
   }
@@ -447,8 +460,15 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member)
-  async deleteJournal(@Args('id', { type: () => String }) id: string) {
-    const { memberId } = await this.memberService.deleteJournal(id);
+  async deleteJournal(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args('id', { type: () => String }) id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    await this.memberService.deleteJournal(id, memberId);
 
     return this.storageService.deleteJournalImages(id, memberId.toString());
   }
@@ -456,14 +476,18 @@ export class MemberResolver extends MemberBase {
   @Query(() => JournalImagesLinks)
   @Roles(MemberRole.member)
   async getMemberUploadJournalLinks(
+    @Client('roles') roles,
+    @Client('_id') memberId,
     @Args(camelCase(GetMemberUploadJournalLinksParams.name))
     getMemberUploadJournalLinksParams: GetMemberUploadJournalLinksParams,
   ) {
-    const { id, imageFormat } = getMemberUploadJournalLinksParams;
-    const { memberId } = await this.memberService.updateJournalImageFormat(
-      getMemberUploadJournalLinksParams,
-    );
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    getMemberUploadJournalLinksParams.memberId = memberId;
+    await this.memberService.updateJournalImageFormat(getMemberUploadJournalLinksParams);
 
+    const { id, imageFormat } = getMemberUploadJournalLinksParams;
     const [normalImageLink, smallImageLink] = await Promise.all([
       this.storageService.getUploadUrl({
         storageType: StorageType.journals,
@@ -482,15 +506,17 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member)
-  async deleteJournalImage(@Args('id', { type: () => String }) id: string) {
-    const { memberId } = await this.memberService.updateJournalImageFormat({
-      id,
-      imageFormat: null,
-    });
+  async deleteJournalImage(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args('id', { type: () => String }) id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    await this.memberService.updateJournalImageFormat({ id, imageFormat: null, memberId });
 
-    await this.storageService.deleteJournalImages(id, memberId.toString());
-
-    return true;
+    return this.storageService.deleteJournalImages(id, memberId);
   }
 
   private async addMemberDownloadJournalLinks(journal: Journal) {
