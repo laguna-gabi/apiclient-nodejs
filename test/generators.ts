@@ -6,6 +6,10 @@ import { v4 } from 'uuid';
 import { Dispatch, Trigger, defaultDispatchParams } from '../src/conductor';
 import { ClientSettings } from '../src/settings';
 
+export const delay = async (milliseconds: number) => {
+  await new Promise((resolve) => setTimeout(resolve, milliseconds));
+};
+
 export const generateObjectId = (id?): Types.ObjectId => {
   return new Types.ObjectId(id);
 };
@@ -68,7 +72,7 @@ export const generateDispatch = ({
   status = defaultDispatchParams.status,
   deliveredAt = add(new Date(), { seconds: 2 }),
   retryCount = defaultDispatchParams.retryCount,
-  failureReason = lorem.sentence(),
+  failureReasons = [lorem.sentence()],
 }: Partial<Dispatch> = {}): Dispatch => {
   return {
     dispatchId,
@@ -88,7 +92,7 @@ export const generateDispatch = ({
     status,
     deliveredAt,
     retryCount,
-    failureReason,
+    failureReasons,
   };
 };
 

@@ -92,7 +92,7 @@ export class Dispatch {
   retryCount?: number;
 
   @Prop({ isNan: true })
-  failureReason?: string;
+  failureReasons?: any[];
 }
 
 export type DispatchInternalUpdate = Partial<Dispatch>;

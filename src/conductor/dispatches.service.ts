@@ -6,6 +6,11 @@ import { filterNonNullFields } from '../common';
 
 @Injectable()
 export class DispatchesService {
+  private readonly returnResults = {
+    projection: { _id: 0, updatedAt: 0, createdAt: 0 },
+    lean: true,
+  };
+
   constructor(
     @InjectModel(Dispatch.name) private readonly dispatchesModel: Model<DispatchDocument>,
   ) {}
@@ -16,7 +21,7 @@ export class DispatchesService {
     return this.dispatchesModel.findOneAndUpdate(
       { dispatchId: params.dispatchId },
       { $set: params },
-      { upsert: true, new: true },
+      { upsert: true, new: true, ...this.returnResults },
     );
   }
 
@@ -29,11 +34,13 @@ export class DispatchesService {
     return this.dispatchesModel.findOneAndUpdate(
       { dispatchId: dispatch.dispatchId },
       { $set: params },
-      { upsert: false, new: true },
+      { upsert: false, new: true, ...this.returnResults },
     );
   }
 
   async get(dispatchId: string): Promise<Dispatch | null> {
-    return this.dispatchesModel.findOne({ dispatchId });
+    return this.dispatchesModel.findOne({ dispatchId }, this.returnResults.projection, {
+      lean: true,
+    });
   }
 }

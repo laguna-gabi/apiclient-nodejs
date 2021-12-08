@@ -5,7 +5,7 @@ import {
   IUpdateClientSettings,
 } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
-import { gapTriggeredAt } from 'config';
+import { gapTriggeredAt, retryMax } from 'config';
 import { differenceInSeconds } from 'date-fns';
 import { Dispatch, DispatchStatus, DispatchesService, TriggersService } from '.';
 import { Logger } from '../common';
@@ -36,21 +36,17 @@ export class ConductorService {
 
   async handleCreateDispatch(input: ICreateDispatch): Promise<void> {
     this.logger.debug(input, ConductorService.name, this.handleCreateDispatch.name);
-    const dispatch: Dispatch = this.cleanObject(input);
-    await this.dispatchesService.update({ ...dispatch, status: DispatchStatus.received });
+    const cleanObject: Dispatch = this.cleanObject(input);
+    const dispatch = await this.dispatchesService.update({
+      ...cleanObject,
+      status: DispatchStatus.received,
+    });
     const currentMinusInput = differenceInSeconds(new Date(), dispatch.triggeredAt);
     if (
       !dispatch.triggeredAt ||
       (currentMinusInput >= -1 * gapTriggeredAt && currentMinusInput <= gapTriggeredAt)
     ) {
-      //real time event
-      await this.dispatchesService.internalUpdate({
-        dispatchId: dispatch.dispatchId,
-        status: DispatchStatus.acquired,
-      });
-      const recipientClient = await this.settingsService.get(dispatch.recipientClientId);
-      const senderClient = await this.settingsService.get(dispatch.senderClientId);
-      await this.notificationsService.send(dispatch, recipientClient, senderClient);
+      await this.createRealTimeDispatch(dispatch);
     } else if (currentMinusInput > gapTriggeredAt) {
       //past event
       this.logger.error(dispatch, ConductorService.name, this.handleCreateDispatch.name);
@@ -81,7 +77,43 @@ export class ConductorService {
   private cleanObject(object) {
     const newObject = { ...object };
     delete newObject.type;
-
     return newObject;
+  }
+
+  private async createRealTimeDispatch(dispatch: Dispatch) {
+    try {
+      const { dispatchId } = dispatch;
+      this.logger.debug(dispatch, ConductorService.name, this.createRealTimeDispatch.name);
+      dispatch = await this.dispatchesService.internalUpdate({
+        dispatchId,
+        status: DispatchStatus.acquired,
+      });
+      const recipientClient = await this.settingsService.get(dispatch.recipientClientId);
+      const senderClient = await this.settingsService.get(dispatch.senderClientId);
+      await this.notificationsService.send(dispatch, recipientClient, senderClient);
+      await this.dispatchesService.internalUpdate({ dispatchId, status: DispatchStatus.done });
+    } catch (ex) {
+      if (dispatch.retryCount <= retryMax) {
+        //TODO NOT all dispatches should retry: call? cancelNotification? sendbird? etc..)
+        dispatch.failureReasons.push({ message: ex.message, stack: ex.stack });
+        dispatch = await this.dispatchesService.internalUpdate({
+          dispatchId: dispatch.dispatchId,
+          failureReasons: dispatch.failureReasons,
+          status: DispatchStatus.error,
+          retryCount: dispatch.retryCount + 1,
+        });
+        this.logger.warn(dispatch, ConductorService.name, this.createRealTimeDispatch.name);
+        //TODO use more sophisticated retry mechanism - maybe try 2,5,7 seconds or a better logic
+        setTimeout(
+          async (dispatchInput) => {
+            await this.createRealTimeDispatch(dispatchInput);
+          },
+          2000,
+          dispatch,
+        );
+      } else {
+        this.logger.error(dispatch, ConductorService.name, this.createRealTimeDispatch.name, ex);
+      }
+    }
   }
 }
