@@ -1,4 +1,7 @@
 {
+  "db": {
+    "name": "iris"
+  },
   "oneSignal": {
     "voipRegistrationPayload": {
       "test_type": null

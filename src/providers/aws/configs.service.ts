@@ -25,7 +25,6 @@ export class ConfigsService implements MongooseOptionsFactory {
 
   async createMongooseOptions(): Promise<MongooseModuleOptions> {
     const uri = `${await this.getConfig(ExternalConfigs.db.connection)}/${db.name}`;
-    console.log('running on db', db.name);
     return { uri, useUnifiedTopology: true };
   }
 
