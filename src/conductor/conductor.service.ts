@@ -83,7 +83,11 @@ export class ConductorService {
   private async createRealTimeDispatch(dispatch: Dispatch) {
     try {
       const { dispatchId } = dispatch;
-      this.logger.debug(dispatch, ConductorService.name, this.createRealTimeDispatch.name);
+      this.logger.debug(
+        { ...dispatch, failureReasons: undefined },
+        ConductorService.name,
+        this.createRealTimeDispatch.name,
+      );
       dispatch = await this.dispatchesService.internalUpdate({
         dispatchId,
         status: DispatchStatus.acquired,
