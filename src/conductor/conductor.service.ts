@@ -4,7 +4,7 @@ import {
   IDeleteDispatch,
   IUpdateClientSettings,
 } from '@lagunahealth/pandora';
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { gapTriggeredAt, retryMax } from 'config';
 import { differenceInSeconds } from 'date-fns';
 import { Dispatch, DispatchStatus, DispatchesService, TriggersService } from '.';
@@ -13,7 +13,7 @@ import { NotificationsService } from '../providers';
 import { SettingsService } from '../settings';
 
 @Injectable()
-export class ConductorService {
+export class ConductorService implements OnModuleInit {
   constructor(
     private readonly logger: Logger,
     private readonly settingsService: SettingsService,
@@ -21,6 +21,10 @@ export class ConductorService {
     private readonly triggersService: TriggersService,
     private readonly notificationsService: NotificationsService,
   ) {}
+
+  async onModuleInit() {
+    this.triggersService.onTriggeredCallback = this.handleFutureDispatchWasTriggered;
+  }
 
   async handleUpdateClientSettings(input: IUpdateClientSettings): Promise<void> {
     this.logger.debug(input, ConductorService.name, this.handleUpdateClientSettings.name);
@@ -51,11 +55,7 @@ export class ConductorService {
       //past event
       this.logger.error(dispatch, ConductorService.name, this.handleCreateDispatch.name);
     } else {
-      //future event
-      await this.triggersService.update({
-        dispatchId: dispatch.dispatchId,
-        expiresAt: dispatch.triggeredAt,
-      });
+      await this.registerFutureDispatch(dispatch);
     }
   }
 
@@ -73,6 +73,10 @@ export class ConductorService {
 
     await this.triggersService.delete(dispatch.dispatchId);
   }
+
+  /*************************************************************************************************
+   ******************************************** Helpers ********************************************
+   ************************************************************************************************/
 
   private cleanObject(object) {
     const newObject = { ...object };
@@ -95,7 +99,11 @@ export class ConductorService {
       const recipientClient = await this.settingsService.get(dispatch.recipientClientId);
       const senderClient = await this.settingsService.get(dispatch.senderClientId);
       await this.notificationsService.send(dispatch, recipientClient, senderClient);
-      await this.dispatchesService.internalUpdate({ dispatchId, status: DispatchStatus.done });
+      await this.dispatchesService.internalUpdate({
+        dispatchId,
+        sentAt: new Date(),
+        status: DispatchStatus.done,
+      });
     } catch (ex) {
       if (dispatch.retryCount <= retryMax) {
         //TODO NOT all dispatches should retry: call? cancelNotification? sendbird? etc..)
@@ -118,6 +126,29 @@ export class ConductorService {
       } else {
         this.logger.error(dispatch, ConductorService.name, this.createRealTimeDispatch.name, ex);
       }
+    }
+  }
+
+  private async registerFutureDispatch(dispatch: Dispatch) {
+    this.logger.debug(dispatch, ConductorService.name, this.registerFutureDispatch.name);
+    const { _id } = await this.triggersService.update({
+      dispatchId: dispatch.dispatchId,
+      expireAt: dispatch.triggeredAt,
+    });
+    await this.dispatchesService.internalUpdate({
+      dispatchId: dispatch.dispatchId,
+      triggeredId: _id.toString(),
+    });
+  }
+
+  private async handleFutureDispatchWasTriggered(triggeredId: string): Promise<void> {
+    const dispatch = await this.dispatchesService.find({ triggeredId });
+    const methodName = this.handleUpdateClientSettings.name;
+    if (!dispatch) {
+      this.logger.error({ triggeredId }, ConductorService.name, methodName, 'not found');
+    } else {
+      this.logger.debug({ triggeredId }, ConductorService.name, methodName);
+      await this.createRealTimeDispatch(dispatch);
     }
   }
 }

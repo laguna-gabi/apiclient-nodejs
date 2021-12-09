@@ -43,6 +43,8 @@ describe(ConductorService.name, () => {
     triggersService = module.get<TriggersService>(TriggersService);
     notificationsService = module.get<NotificationsService>(NotificationsService);
     logger = module.get<Logger>(Logger);
+
+    await service.onModuleInit();
   });
 
   afterAll(async () => {
@@ -216,6 +218,7 @@ describe(ConductorService.name, () => {
         triggeredAt: addSeconds(new Date(), gapTriggeredAt + 2),
       });
       spyOnDispatchesServiceUpdate.mockResolvedValueOnce(createDispatch);
+      spyOnTriggersServiceUpdate.mockResolvedValueOnce({ _id: createDispatch.triggeredId });
 
       await service.handleCreateDispatch({
         ...createDispatch,
@@ -226,7 +229,7 @@ describe(ConductorService.name, () => {
       expect(spyOnDispatchesServiceUpdate).toBeCalledWith(createDispatch);
       expect(spyOnTriggersServiceUpdate).toBeCalledWith({
         dispatchId: createDispatch.dispatchId,
-        expiresAt: createDispatch.triggeredAt,
+        expireAt: createDispatch.triggeredAt,
       });
       expect(spyOnNotificationsService).not.toBeCalled();
       expect(spyOnError).not.toBeCalled();

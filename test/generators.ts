@@ -100,11 +100,11 @@ export const generateDispatch = ({
 
 export const generateTriggers = ({
   dispatchId = v4(),
-  expiresAt = add(new Date(), { seconds: 2 }),
+  expireAt = add(new Date(), { seconds: 2 }),
 } = {}): Trigger => {
   return {
     dispatchId,
-    expiresAt,
+    expireAt,
   };
 };
 
