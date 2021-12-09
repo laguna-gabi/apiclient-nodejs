@@ -8,6 +8,7 @@ import * as config from 'config';
 import { add, addDays, startOfToday, startOfTomorrow } from 'date-fns';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
+import { translation } from '../../languages/en.json';
 import {
   Appointment,
   AppointmentMethod,
@@ -37,7 +38,7 @@ import {
   ReplaceUserForMemberParams,
   Task,
   TaskStatus,
-  UpdateJournalParams,
+  UpdateJournalTextParams,
   UpdateRecordingParams,
 } from '../../src/member';
 import { User, defaultSlotsParams } from '../../src/user';
@@ -53,13 +54,12 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
-  generateUpdateJournalParams,
+  generateUpdateJournalTextParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
 } from '../index';
-import { translation } from '../../languages/en.json';
 import { iceServers } from '../unit/mocks/twilioPeerIceServers';
 
 describe('Integration tests: all', () => {
@@ -1326,18 +1326,20 @@ describe('Integration tests: all', () => {
         text: null,
       });
 
-      const updateJournalParams: UpdateJournalParams = generateUpdateJournalParams({
+      const updateJournalTextParams: UpdateJournalTextParams = generateUpdateJournalTextParams({
         id: journalId,
       });
-      const journalAfterUpdate = await handler.setContextUserId(member.id).mutations.updateJournal({
-        updateJournalParams,
-      });
+      const journalAfterUpdate = await handler
+        .setContextUserId(member.id)
+        .mutations.updateJournalText({
+          updateJournalTextParams,
+        });
 
       expect(journalAfterUpdate).toMatchObject({
         id: journalId,
         memberId: member.id,
         published: false,
-        text: updateJournalParams.text,
+        text: updateJournalTextParams.text,
       });
 
       const journals = await handler.setContextUserId(member.id).queries.getJournals();
@@ -1346,7 +1348,7 @@ describe('Integration tests: all', () => {
         id: journalId,
         memberId: member.id,
         published: false,
-        text: updateJournalParams.text,
+        text: updateJournalTextParams.text,
       });
 
       await handler.setContextUserId(member.id).mutations.deleteJournal({ id: journalId });

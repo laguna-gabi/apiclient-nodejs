@@ -21,14 +21,12 @@ registerEnumType(ImageFormat, { name: 'ImageFormat' });
  *************************************************************************************************/
 
 @InputType()
-export class UpdateJournalParams {
+export class UpdateJournalTextParams {
   @Field(() => String)
   id: string;
 
   @Field(() => String)
   text: string;
-
-  memberId?: string;
 }
 
 @InputType()
@@ -38,8 +36,18 @@ export class GetMemberUploadJournalLinksParams {
 
   @Field(() => ImageFormat)
   imageFormat?: ImageFormat;
+}
 
-  memberId?: string;
+export class UpdateJournalParams {
+  id: string;
+
+  memberId: string;
+
+  text?: string;
+
+  imageFormat?: ImageFormat;
+
+  published?: boolean;
 }
 
 /********∏******************************************************************************************

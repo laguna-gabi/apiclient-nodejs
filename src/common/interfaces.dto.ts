@@ -1,8 +1,3 @@
-import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
-import { Schema } from '@nestjs/mongoose';
-import { IsAlphanumeric, IsOptional } from 'class-validator';
-import { Types } from 'mongoose';
-import { ErrorType, Errors, IsNotPlatformWeb } from '.';
 import {
   CancelNotificationType,
   ContentKey,
@@ -12,6 +7,11 @@ import {
   NotificationType,
   Platform,
 } from '@lagunahealth/pandora';
+import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { Schema } from '@nestjs/mongoose';
+import { IsAlphanumeric, IsOptional } from 'class-validator';
+import { Types } from 'mongoose';
+import { ErrorType, Errors, IsNotPlatformWeb } from '.';
 
 /**************************************************************************************************
  *************************** Enum registration for external gql methods ***************************
@@ -104,6 +104,7 @@ export class InternalNotificationMetadata {
   appointmentId?: string;
   checkAppointmentReminder?: boolean;
   path?: string;
+  journalImageDownloadLink?: string;
 }
 
 export class InternalNotifyParams {
@@ -155,6 +156,7 @@ export class SendSendBirdNotification extends BaseSendNotification {
   message: string;
   notificationType: AllNotificationTypes;
   appointmentId?: string;
+  journalImageDownloadLink?: string;
 }
 
 export class CancelNotificationParams extends BaseSendNotification {

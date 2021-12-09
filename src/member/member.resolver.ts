@@ -16,6 +16,7 @@ import * as config from 'config';
 import { millisecondsInHour } from 'date-fns';
 import { format, getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
 import { camelCase } from 'lodash';
+import { v4 } from 'uuid';
 import { lookup } from 'zipcode-to-timezone';
 import {
   AppointmentCompose,
@@ -40,7 +41,7 @@ import {
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
   TaskStatus,
-  UpdateJournalParams,
+  UpdateJournalTextParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -86,7 +87,6 @@ import {
   StorageService,
 } from '../providers';
 import { User, UserService } from '../user';
-import { v4 } from 'uuid';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
@@ -414,16 +414,19 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Journal)
   @Roles(MemberRole.member)
-  async updateJournal(
+  async updateJournalText(
     @Client('roles') roles,
     @Client('_id') memberId,
-    @Args(camelCase(UpdateJournalParams.name)) updateJournalParams: UpdateJournalParams,
+    @Args(camelCase(UpdateJournalTextParams.name)) updateJournalTextParams: UpdateJournalTextParams,
   ) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    updateJournalParams.memberId = memberId;
-    const journal = await this.memberService.updateJournal(updateJournalParams);
+    const journal = await this.memberService.updateJournal({
+      ...updateJournalTextParams,
+      memberId,
+      published: false,
+    });
 
     return this.addMemberDownloadJournalLinks(journal);
   }
@@ -484,10 +487,9 @@ export class MemberResolver extends MemberBase {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    getMemberUploadJournalLinksParams.memberId = memberId;
-    await this.memberService.updateJournalImageFormat(getMemberUploadJournalLinksParams);
-
     const { id, imageFormat } = getMemberUploadJournalLinksParams;
+
+    await this.memberService.updateJournal({ id, memberId, imageFormat, published: false });
     const [normalImageLink, smallImageLink] = await Promise.all([
       this.storageService.getUploadUrl({
         storageType: StorageType.journals,
@@ -514,9 +516,51 @@ export class MemberResolver extends MemberBase {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    await this.memberService.updateJournalImageFormat({ id, imageFormat: null, memberId });
+    await this.memberService.updateJournal({ id, memberId, imageFormat: null, published: false });
 
     return this.storageService.deleteJournalImages(id, memberId);
+  }
+
+  @Mutation(() => String)
+  @Roles(MemberRole.member)
+  async publishJournal(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args('id', { type: () => String }) id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const { imageFormat, text } = await this.memberService.updateJournal({
+      id,
+      memberId,
+      published: true,
+    });
+    const member = await this.memberService.get(memberId);
+    const sendBirdChannelUrl = await this.getSendBirdChannelUrl({
+      memberId,
+      userId: member.primaryUserId.toString(),
+    });
+
+    let url;
+    if (imageFormat) {
+      url = await this.storageService.getDownloadUrl({
+        storageType: StorageType.journals,
+        memberId,
+        id: `${id}_NormalImage.${imageFormat}`,
+      });
+    }
+
+    return this.internalNotify({
+      memberId,
+      userId: member.primaryUserId.toString(),
+      type: InternalNotificationType.chatMessageJournal,
+      content: text,
+      metadata: {
+        sendBirdChannelUrl,
+        journalImageDownloadLink: url,
+      },
+    });
   }
 
   private async addMemberDownloadJournalLinks(journal: Journal) {

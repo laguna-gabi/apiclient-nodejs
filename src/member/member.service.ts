@@ -18,7 +18,6 @@ import {
   ControlMemberDocument,
   CreateMemberParams,
   CreateTaskParams,
-  GetMemberUploadJournalLinksParams,
   Goal,
   GoalDocument,
   Journal,
@@ -726,27 +725,13 @@ export class MemberService extends BaseService {
   }
 
   async updateJournal(updateJournalParams: UpdateJournalParams): Promise<Journal> {
-    const { id, text, memberId } = updateJournalParams;
+    const { id, memberId } = updateJournalParams;
+    delete updateJournalParams.id;
+    delete updateJournalParams.memberId;
+
     const result = await this.journalModel.findOneAndUpdate(
       { _id: new Types.ObjectId(id), memberId: new Types.ObjectId(memberId) },
-      { $set: { text } },
-      { new: true },
-    );
-
-    if (!result) {
-      throw new Error(Errors.get(ErrorType.memberJournalNotFound));
-    }
-
-    return result;
-  }
-
-  async updateJournalImageFormat(
-    getMemberUploadJournalLinksParams: GetMemberUploadJournalLinksParams,
-  ): Promise<Journal> {
-    const { id, imageFormat, memberId } = getMemberUploadJournalLinksParams;
-    const result = await this.journalModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(id), memberId: new Types.ObjectId(memberId) },
-      { $set: { imageFormat } },
+      { $set: updateJournalParams },
       { new: true },
     );
 

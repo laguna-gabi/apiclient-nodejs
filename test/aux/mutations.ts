@@ -1,7 +1,6 @@
 import { ApolloServerTestClient } from 'apollo-server-testing';
 import gql from 'graphql-tag';
 import { camelCase } from 'lodash';
-import { DailyReportCategoriesInput } from '../../src/dailyReport';
 import {
   Appointment,
   EndAppointmentParams,
@@ -12,6 +11,7 @@ import {
 } from '../../src/appointment';
 import { AvailabilityInput } from '../../src/availability';
 import { Identifier, Identifiers, RegisterForNotificationParams } from '../../src/common';
+import { DailyReportCategoriesInput } from '../../src/dailyReport';
 import {
   CancelNotifyParams,
   CreateMemberParams,
@@ -21,7 +21,7 @@ import {
   NotifyParams,
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
-  UpdateJournalParams,
+  UpdateJournalTextParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -558,20 +558,20 @@ export class Mutations {
     return result.data.createJournal;
   };
 
-  updateJournal = async ({
-    updateJournalParams,
+  updateJournalText = async ({
+    updateJournalTextParams,
     missingFieldError,
     invalidFieldsErrors,
   }: {
-    updateJournalParams: UpdateJournalParams;
+    updateJournalTextParams: UpdateJournalTextParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   }): Promise<Journal> => {
     const result = await this.apolloClient.mutate({
-      variables: { updateJournalParams },
+      variables: { updateJournalTextParams },
       mutation: gql`
-        mutation updateJournal($updateJournalParams: UpdateJournalParams!) {
-          updateJournal(updateJournalParams: $updateJournalParams) {
+        mutation updateJournalText($updateJournalTextParams: UpdateJournalTextParams!) {
+          updateJournalText(updateJournalTextParams: $updateJournalTextParams) {
             id
             memberId
             text
@@ -584,7 +584,7 @@ export class Mutations {
 
     return (
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.updateJournal
+      result.data.updateJournalText
     );
   };
 
@@ -633,6 +633,30 @@ export class Mutations {
     return (
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.deleteJournalImage
+    );
+  };
+
+  publishJournal = async ({
+    id,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    id;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Journal> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id },
+      mutation: gql`
+        mutation publishJournal($id: String!) {
+          publishJournal(id: $id)
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.publishJournal
     );
   };
 
