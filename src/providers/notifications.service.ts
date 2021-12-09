@@ -66,7 +66,7 @@ export class NotificationsService {
     return this.oneSignal.cancel(cancelNotificationParams);
   }
 
-  async createPeerServiceToken() {
-    return this.twilio.createPeerServiceToken();
+  async createPeerIceServers() {
+    return this.twilio.createPeerIceServers();
   }
 }

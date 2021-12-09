@@ -77,26 +77,6 @@ jobs:
         run: |
           rm coverage.zip
           rm -rf coverage/lcov-report
-      - name: Remove coverage from S3 if exists
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
-        uses: vitorsgomes/s3-rm-action@master
-        with:
-          args: --recursive
-        env:
-          AWS_S3_BUCKET: ${{ secrets.COVERAGE_AWS_BUCKET }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.COVERAGE_AWS_REGION }}
-          PATH_TO_DELETE: ${{ github.head_ref }}
-      - name: Upload coverage to S3
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
-        uses: shallwefootball/s3-upload-action@master
-        with:
-          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          aws_bucket: '${{ secrets.COVERAGE_AWS_BUCKET }}/${{ github.head_ref }}'
-          source_dir: './coverage'
-          destination_dir: 'coverage'
       - name: Get local coverage report
         if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
         id: localCoverage

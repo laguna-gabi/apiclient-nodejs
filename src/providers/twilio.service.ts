@@ -84,9 +84,11 @@ export class TwilioService implements OnModuleInit {
     return token === this.webhookToken;
   }
 
-  async createPeerServiceToken() {
-    return this.client.tokens.create({
+  async createPeerIceServers(): Promise<{ iceServers: any[] }> {
+    const { iceServers } = await this.client.tokens.create({
       ttl: hoursToMilliseconds(twilio.traversalServiceTokenTtl),
     });
+
+    return { iceServers };
   }
 }

@@ -16,7 +16,7 @@ import {
   generateSetGeneralNotesParams,
   generateUpdateMemberParams,
 } from '../test';
-import { Mutations, Queries } from '../test/aux';
+import { Mutations } from '../test/aux';
 import { SeedBase } from './seedBase';
 import { generateZipCode } from '@lagunahealth/pandora';
 /**
@@ -32,7 +32,6 @@ import { generateZipCode } from '@lagunahealth/pandora';
  */
 
 let mutations: Mutations;
-let queries: Queries;
 let userService: UserService; //used for internal method, isn't exposed on queries
 type TaskType = 'goal' | 'actionItem';
 
@@ -40,7 +39,6 @@ async function main() {
   const base = new SeedBase();
   await base.init();
   mutations = base.mutations;
-  queries = base.queries;
   userService = base.userService;
 
   const users = await userService.getRegisteredUsers();
@@ -78,7 +76,9 @@ async function main() {
   const { id: memberId } = await mutations.createMember({
     memberParams,
   });
-  const { primaryUserId } = await queries.getMember({ id: memberId });
+  const { primaryUserId } = await base
+    .setContextUserId(memberId)
+    .queries.getMember({ id: memberId });
   const updateMemberParams = generateUpdateMemberParams({ ...memberParams, id: memberId });
   const member = await mutations.updateMember({ updateMemberParams });
 

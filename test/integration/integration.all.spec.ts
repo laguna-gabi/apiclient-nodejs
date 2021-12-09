@@ -60,7 +60,7 @@ import {
   generateUpdateRecordingParams,
 } from '../index';
 import { translation } from '../../languages/en.json';
-import { twilioPeerServiceToken } from '../unit/mocks/twilioPeerServiceToken';
+import { iceServers } from '../unit/mocks/twilioPeerIceServers';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -791,12 +791,12 @@ describe('Integration tests: all', () => {
               firstName: primaryUser.firstName,
               avatar: primaryUser.avatar,
             },
-            member: { phone: JSON.stringify(twilioPeerServiceToken) },
+            member: { phone: member.phone },
             type: params.type,
             peerId: notifyParams.metadata.peerId,
             isVideo: params.isVideo,
             ...generatePath(params.type),
-            extraData: JSON.stringify({}),
+            extraData: JSON.stringify({ iceServers }),
           },
           content: notifyParams.metadata.content,
           orgName: org.name,
