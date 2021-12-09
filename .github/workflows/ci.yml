@@ -54,37 +54,20 @@ jobs:
           aws-region: us-east-1
       - name: Test
         run: yarn test:cov
-      - name: Remove coverage from S3 if exists
-        if: github.ref != 'refs/heads/master'
-        uses: vitorsgomes/s3-rm-action@master
+      - name: Zip lcov-report
+        uses: papeloto/action-zip@v1
         with:
-          args: --recursive
-        env:
-          AWS_S3_BUCKET: ${{ secrets.COVERAGE_AWS_BUCKET }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.COVERAGE_AWS_REGION }}
-          PATH_TO_DELETE: ${{ github.head_ref }}
-      - name: Upload coverage to S3
-        if: github.ref != 'refs/heads/master'
-        uses: shallwefootball/s3-upload-action@master
+          files: coverage/lcov-report
+          dest: coverage.zip
+      - name: Upload coverage zip
+        uses: actions/upload-artifact@v2
         with:
-          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          aws_bucket: '${{ secrets.COVERAGE_AWS_BUCKET }}/${{ github.head_ref }}'
-          source_dir: './coverage'
-          destination_dir: 'coverage'
-      - name: Add coverage url to PR
-        if: github.ref != 'refs/heads/master'
-        uses: mshick/add-pr-comment@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          message: |
-            ### coverage lcov report for `${{ github.head_ref }}`
-            ___
-            https://${{ secrets.COVERAGE_AWS_FULL_BUCKET_PATH }}/${{ github.head_ref }}/coverage/lcov-report/index.html
-          allow-repeats: false
+          name: coverage
+          path: coverage.zip
+      - name: Remove lcov-report before uploading to S3
+        run: |
+          rm coverage.zip
+          rm -rf coverage/lcov-report
       - name: Get local coverage report
         if: github.ref != 'refs/heads/master'
         id: localCoverage
@@ -119,7 +102,8 @@ jobs:
           message: |
             ### coverage diff `${{ github.head_ref }}` -> `master`
             ___
-            ### Total: ${{steps.localCoverage.outputs.prop}}% (${{ env.DIFF_COV }}%)
+            | **Total** | **${{steps.localCoverage.outputs.prop}}% (${{ env.DIFF_COV }}%)** | **[lcov report](https://github.com/LagunaHealth/pandora/actions/runs/${{ github.run_id }})** |
+            |-----------|-------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
           allow-repeats: false
       - name: Remove master coverage from S3 if exists (only on master branch)
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
@@ -170,7 +154,7 @@ jobs:
 
   bump-version:
     name: Bump Version
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: deploy
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     steps:
