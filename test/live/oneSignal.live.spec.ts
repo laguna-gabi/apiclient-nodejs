@@ -3,6 +3,7 @@ import {
   CancelNotificationType,
   NotificationType,
   Platform,
+  SourceApi,
 } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import * as faker from 'faker';
@@ -18,7 +19,7 @@ describe(`live: ${OneSignal.name}`, () => {
     const configService = new ConfigsService();
     const httpService = new HttpService();
 
-    oneSignal = new OneSignal(configService, httpService, new BaseLogger([]));
+    oneSignal = new OneSignal(configService, httpService, new BaseLogger(SourceApi.iris, []));
     await oneSignal.onModuleInit();
   });
 

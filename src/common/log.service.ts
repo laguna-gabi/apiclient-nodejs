@@ -1,4 +1,4 @@
-import { BaseLogger } from '@lagunahealth/pandora';
+import { BaseLogger, SourceApi } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -36,6 +36,6 @@ export class Logger extends BaseLogger {
   ];
 
   constructor() {
-    super(Logger.VALID_KEYS);
+    super(SourceApi.iris, Logger.VALID_KEYS);
   }
 }
