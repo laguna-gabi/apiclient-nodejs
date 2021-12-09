@@ -1,4 +1,4 @@
-import { BaseLogger } from '../src';
+import { BaseLogger, SourceApi } from '../src';
 import { datatype, lorem } from 'faker';
 
 const VALID_KEYS = [
@@ -11,7 +11,7 @@ const VALID_KEYS = [
 ];
 
 describe(BaseLogger.name, () => {
-  const logger = new BaseLogger(VALID_KEYS);
+  const logger = new BaseLogger(SourceApi.iris, VALID_KEYS);
   const methodName = 'testLogger';
 
   describe('should log params', () => {
@@ -103,7 +103,7 @@ describe(BaseLogger.name, () => {
   });
 
   it('should set empty array on validValues, if it is not provided', () => {
-    const logger = new BaseLogger();
+    const logger = new BaseLogger(SourceApi.hepius);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     expect(logger.validKeys).toEqual([]);

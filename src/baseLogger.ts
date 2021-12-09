@@ -1,4 +1,4 @@
-import { Environments, generateOrgNamePrefix } from '.';
+import { Environments, SourceApi, generateOrgNamePrefix } from '.';
 
 enum LogType {
   log = 'log',
@@ -8,7 +8,7 @@ enum LogType {
 }
 
 export class BaseLogger {
-  constructor(private validKeys: string[] = []) {}
+  constructor(private source: SourceApi, private validKeys: string[] = []) {}
 
   protected COLOR = {
     reset: '\x1b[0m',
@@ -135,12 +135,13 @@ export class BaseLogger {
     const now = new Date();
     const date = this.generateText(now.toLocaleString(), this.COLOR.fgWhite);
     const mName = this.generateText(methodName, this.COLOR.fgMagenta);
+    const sName = this.generateText(`[${this.source}]`, this.COLOR.fgCyan);
     const cName = this.generateText(`[${className}]`, this.COLOR.fgYellow);
     const lType = this.generateText(`[${logType}]`.padEnd(11), this.COLOR.fgWhite);
     const textFormatted = this.generateText(text, color);
 
     if (!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test) {
-      return `${date}   ${lType} ${cName} ${mName} ${textFormatted}`;
+      return `${date}   ${lType} ${sName} ${cName} ${mName} ${textFormatted}`;
     } else {
       return `${now.toLocaleString()}   [${logType}] [${className}]${generateOrgNamePrefix(
         orgName,
