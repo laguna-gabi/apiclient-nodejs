@@ -43,4 +43,10 @@ export class DispatchesService {
       lean: true,
     });
   }
+
+  async find(filters: { triggeredId: string }): Promise<Dispatch | null> {
+    return this.dispatchesModel.findOne(filters, this.returnResults.projection, {
+      lean: true,
+    });
+  }
 }

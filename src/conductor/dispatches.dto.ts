@@ -71,7 +71,13 @@ export class Dispatch {
   chatLink?: boolean;
 
   @Prop({ isNan: true })
+  sentAt?: Date;
+
+  @Prop({ isNan: true })
   triggeredAt?: Date;
+
+  @Prop({ isNan: true })
+  triggeredId?: string;
 
   @Prop({ isNan: true })
   notificationId?: string;

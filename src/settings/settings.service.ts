@@ -12,10 +12,9 @@ export class SettingsService {
   ) {}
 
   async update(settings: ClientSettings): Promise<ClientSettings> {
-    const setParams = filterNonNullFields(settings);
     return this.clientSettingsModel.findOneAndUpdate(
       { id: settings.id },
-      { $set: setParams },
+      { $set: filterNonNullFields(settings) },
       { upsert: true, new: true },
     );
   }

@@ -161,4 +161,11 @@ describe(DispatchesService.name, () => {
     const result = await service.internalUpdate({ dispatchId: generateId() });
     expect(result).toBeNull();
   });
+
+  it('should be able to find based on filter: dispatchId', async () => {
+    const data = generateDispatch();
+    const dispatch = await service.update(data);
+    const result = await service.find({ triggeredId: dispatch.triggeredId });
+    expect(result).toEqual(dispatch);
+  });
 });

@@ -72,6 +72,7 @@ export class NotificationsService {
       if (recipientClient.platform !== Platform.web && recipientClient.isPushNotificationsEnabled) {
         const sendOneSignalNotification = this.generateOneSignalParams(
           dispatch,
+          content,
           recipientClient,
           senderClient,
         );
@@ -118,6 +119,7 @@ export class NotificationsService {
 
   private generateOneSignalParams(
     dispatch: Dispatch,
+    content: string,
     recipientClient: ClientSettings,
     senderClient: ClientSettings,
   ): SendOneSignalNotification {
@@ -142,7 +144,7 @@ export class NotificationsService {
         isVideo: notificationType === NotificationType.video,
         peerId: dispatch.peerId,
       },
-      content: dispatch.content,
+      content,
       orgName: recipientClient.orgName,
     };
   }

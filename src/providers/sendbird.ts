@@ -38,10 +38,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
               appointmentId,
             }), // For use of Laguna Chat
           },
-
-          {
-            headers: this.headers,
-          },
+          { headers: this.headers },
         )
         .toPromise();
       if (result.status === 200) {
