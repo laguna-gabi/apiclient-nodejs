@@ -1,4 +1,4 @@
-import { BaseLogger } from '@lagunahealth/pandora';
+import { BaseLogger, ServiceName } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AuditType, EventType, IEventNotifyQueue, QueueType } from '.';
@@ -51,7 +51,7 @@ export class Logger extends BaseLogger {
   ];
 
   constructor(private readonly eventEmitter: EventEmitter2) {
-    super(Logger.VALID_KEYS);
+    super(ServiceName.hepius, Logger.VALID_KEYS);
   }
 
   warn(params: any = {}, className: string, methodName: string, ...reasons: any[]): void {

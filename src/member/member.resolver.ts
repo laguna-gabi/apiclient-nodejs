@@ -7,7 +7,7 @@ import {
   Language,
   NotificationType,
   Platform,
-  SourceApi,
+  ServiceName,
 } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
@@ -881,7 +881,7 @@ export class MemberResolver extends MemberBase {
       type: InnerQueueTypes.createDispatch,
       dispatchId: v4(),
       correlationId: v4(),
-      sourceApi: SourceApi.hepius,
+      serviceName: ServiceName.hepius,
       notificationType: type,
       recipientClientId: memberId,
       senderClientId: userId,
