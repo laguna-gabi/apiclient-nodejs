@@ -52,7 +52,6 @@ export class MemberScheduler extends BaseScheduler {
   async init() {
     await super.init(async () => {
       await this.initRegisterCustomFutureNotify();
-      await this.initRegisterNewMemberNudge();
       await this.initRegisterNewRegisteredMemberNotify();
       await this.initRegisterNewRegisteredMemberNudgeNotify();
       await this.initRegisterLogReminder();
@@ -205,22 +204,6 @@ export class MemberScheduler extends BaseScheduler {
       notifications.length,
       'member future notifications',
       this.initRegisterCustomFutureNotify.name,
-    );
-  }
-
-  private async initRegisterNewMemberNudge() {
-    const newUnregisteredMembers = await this.memberService.getNewUnregisteredMembers();
-    newUnregisteredMembers.map(async ({ member, user, appointmentId }) => {
-      await this.registerNewMemberNudge({
-        member,
-        user,
-        appointmentId,
-      });
-    });
-    this.logEndInit(
-      newUnregisteredMembers.length,
-      'new member nudge',
-      this.initRegisterNewMemberNudge.name,
     );
   }
 

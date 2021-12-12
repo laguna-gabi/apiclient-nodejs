@@ -312,67 +312,6 @@ export class MemberService extends BaseService {
     },
   };
 
-  async getNewUnregisteredMembers() {
-    const result = await this.memberModel.aggregate([
-      { $match: { createdAt: { $gte: sub(new Date(), { days: 2 }) } } },
-      { $project: { member: '$$ROOT' } },
-      {
-        $lookup: {
-          from: 'memberconfigs',
-          localField: 'member._id',
-          foreignField: 'memberId',
-          as: 'memberconfig',
-        },
-      },
-      {
-        $unwind: {
-          path: '$memberconfig',
-        },
-      },
-      {
-        $match: {
-          'memberconfig.platform': 'web',
-        },
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'primaryUserId',
-          foreignField: 'member._id',
-          as: 'user',
-        },
-      },
-      {
-        $lookup: {
-          from: 'appointments',
-          localField: 'member._id',
-          foreignField: 'memberId',
-          as: 'appointments',
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          member: 1,
-          user: { $arrayElemAt: ['$user', 0] },
-          appointmentId: {
-            $toString: {
-              $arrayElemAt: ['$appointments._id', 0],
-            },
-          },
-          ...this.ScheduledOrDoneAppointmentsCount,
-        },
-      },
-    ]);
-    return result.filter((newMember) => {
-      newMember.user.id = newMember.user._id;
-      newMember.member.id = newMember.member._id;
-      delete newMember.user._id;
-      delete newMember.member._id;
-      return newMember.ScheduledOrDoneAppointmentsCount === 0;
-    });
-  }
-
   async getNewRegisteredMembers({ nudge }: { nudge: boolean }) {
     const result = await this.memberConfigModel.aggregate([
       {

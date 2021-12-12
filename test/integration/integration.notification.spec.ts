@@ -1,12 +1,15 @@
-import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
-import { generateCreateMemberParams } from '../generators';
+import {AppointmentsIntegrationActions, Creators, Handler} from '../aux';
+import {generateCreateMemberParams} from '../generators';
 import {
   ContentKey,
   InnerQueueTypes,
   ObjectNewMemberClass,
+  ObjectNewMemberNudgeClass,
   ObjectUpdateMemberSettingsClass,
   Platform,
+  generateDispatchId,
   generateNewMemberMock,
+  generateNewMemberNudgeMock,
   generateUpdateMemberSettingsMock,
   generateUpdateUserSettingsMock,
 } from '@lagunahealth/pandora';
@@ -76,6 +79,7 @@ describe('Integration tests: notifications', () => {
       const { id } = await handler.mutations.createMember({ memberParams });
 
       await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
       const params: RegisterForNotificationParams = {
         memberId: id,
@@ -92,9 +96,9 @@ describe('Integration tests: notifications', () => {
         .setContextUserId(id)
         .queries.getMemberConfig({ id });
 
-      expectStringContaining(4, 'platform', params.platform);
-      expectStringContaining(4, 'isPushNotificationsEnabled', params.isPushNotificationsEnabled);
-      expectStringContaining(4, 'firstLoggedInAt', firstLoggedInAt);
+      expectStringContaining(1, 'platform', params.platform);
+      expectStringContaining(1, 'isPushNotificationsEnabled', params.isPushNotificationsEnabled);
+      expectStringContaining(1, 'firstLoggedInAt', firstLoggedInAt);
     });
   });
 
@@ -113,11 +117,12 @@ describe('Integration tests: notifications', () => {
       const memberParams = generateCreateMemberParams({ userId: user.id, orgId: org.id });
       const { id } = await handler.mutations.createMember({ memberParams });
       await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
       await params.method({ id });
       await delay(200);
 
-      expectStringContaining(4, 'id', id);
+      expectStringContaining(1, 'id', id);
     });
 
     it(`should notify delete settings on deleteMember`, async () => {
@@ -126,40 +131,73 @@ describe('Integration tests: notifications', () => {
       const memberParams = generateCreateMemberParams({ userId: user.id, orgId: org.id });
       const { id } = await handler.mutations.createMember({ memberParams });
       await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
       await handler.mutations.archiveMember({ id });
       await delay(200);
 
-      expectStringContaining(4, 'id', id);
+      expectStringContaining(1, 'id', id);
     });
   });
 
   describe(`${InnerQueueTypes.createDispatch}`, () => {
-    it(`should send an event of type ${ContentKey.newMember}`, async () => {
+    // eslint-disable-next-line max-len
+    it(`createMember: should send dispatch of type ${ContentKey.newMember} and ${ContentKey.newMemberNudge}`, async () => {
       const org = await creators.createAndValidateOrg();
       const user = await creators.createAndValidateUser();
 
       const memberParams = generateCreateMemberParams({ userId: user.id, orgId: org.id });
-      const { id } = await handler.mutations.createMember({ memberParams });
+      const { id: recipientClientId } = await handler.mutations.createMember({ memberParams });
 
       await delay(200);
 
-      const mock = generateNewMemberMock({ recipientClientId: id, senderClientId: user.id });
-      const object = new ObjectNewMemberClass(mock);
-
-      Object.keys(object.objectNewMemberMock).forEach((key) => {
+      const mock1 = generateNewMemberMock({ recipientClientId, senderClientId: user.id });
+      const object1 = new ObjectNewMemberClass(mock1);
+      Object.keys(object1.objectNewMemberMock).forEach((key) => {
         expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(
           3,
           expect.objectContaining({
             type: QueueType.notifications,
             message: expect.stringContaining(
-              key === 'dispatchId' || key === 'correlationId' || key === 'appointmentId'
-                ? key
-                : `"${key}":"${mock[key]}"`,
+              key === 'correlationId' || key === 'appointmentId' ? key : `"${key}":"${mock1[key]}"`,
             ),
           }),
         );
       });
+
+      const mock2 = generateNewMemberNudgeMock({ recipientClientId, senderClientId: user.id });
+      const object2 = new ObjectNewMemberNudgeClass(mock2);
+      Object.keys(object2.objectNewMemberNudgeMock).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(
+          4,
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'appointmentId' || key === 'triggeredAt'
+                ? key
+                : `"${key}":"${mock2[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+  });
+
+  describe(`${InnerQueueTypes.deleteDispatch}`, () => {
+    test.each`
+      title              | method
+      ${'archiveMember'} | ${async ({ id }) => await handler.mutations.archiveMember({ id })}
+      ${'deleteMember'}  | ${async ({ id }) => await handler.mutations.deleteMember({ id })}
+    `(`$title: should should delete ${ContentKey.newMemberNudge} dispatch`, async (params) => {
+      const org = await creators.createAndValidateOrg();
+      const { id } = await creators.createAndValidateMember({ org });
+      await delay(500);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      await params.method({ id });
+      await delay(200);
+
+      expectStringContaining(2, 'dispatchId', generateDispatchId(ContentKey.newMemberNudge, id));
     });
   });
 

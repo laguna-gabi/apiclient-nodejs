@@ -102,6 +102,7 @@ export class InternalNotificationMetadata {
   sendBirdChannelUrl?: string;
   appointmentTime?: Date;
   appointmentId?: string;
+  triggeredAt?: Date;
   checkAppointmentReminder?: boolean;
   path?: string;
   journalImageDownloadLink?: string;
@@ -113,6 +114,11 @@ export class InternalNotifyParams {
   type: InternalNotificationType;
   metadata: InternalNotificationMetadata;
   content?: string;
+}
+
+export class IDispatchParams extends InternalNotifyParams {
+  dispatchId: string;
+  correlationId?: string;
 }
 
 export type InternalNotifyControlMemberParams = Omit<InternalNotifyParams, 'userId'>;

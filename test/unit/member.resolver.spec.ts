@@ -9,6 +9,8 @@ import {
   Platform,
   SlackChannel,
   SlackIcon,
+  generateDeleteDispatchMock,
+  generateDispatchId,
 } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -472,12 +474,19 @@ describe('MemberResolver', () => {
       });
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
 
-      expect(spyOnEventEmitter).toBeCalledTimes(1);
+      expect(spyOnEventEmitter).toBeCalledTimes(2);
       const deleteClient: IEventNotifyQueue = {
         type: QueueType.notifications,
         message: JSON.stringify({ type: InnerQueueTypes.deleteClientSettings, id: member.id }),
       };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, deleteClient);
+      const deleteDispatch: IEventNotifyQueue = {
+        type: QueueType.notifications,
+        message: JSON.stringify(generateDeleteDispatchMock({
+          dispatchId: generateDispatchId(ContentKey.newMemberNudge, member.id),
+        }))
+      };
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notifyQueue, deleteDispatch);
       expect(spyOnDeleteSchedules).toBeCalledWith({ memberId: member.id });
     });
   });
@@ -564,15 +573,21 @@ describe('MemberResolver', () => {
       }
       expect(spyOnStorageServiceDeleteMember).toBeCalledWith(member.id);
 
-      expect(spyOnEventEmitter).toBeCalledTimes(2);
+      expect(spyOnEventEmitter).toBeCalledTimes(3);
       const queueEventParams: IEventNotifyQueue = {
         type: QueueType.notifications,
         message: JSON.stringify({ type: InnerQueueTypes.deleteClientSettings, id: member.id }),
       };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, queueEventParams);
-
+      const deleteDispatch: IEventNotifyQueue = {
+        type: QueueType.notifications,
+        message: JSON.stringify(generateDeleteDispatchMock({
+          dispatchId: generateDispatchId(ContentKey.newMemberNudge, member.id),
+        })),
+      };
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notifyQueue, deleteDispatch);
       const eventParams: IEventMember = { memberId: member.id };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.onDeletedMember, eventParams);
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(3, EventType.onDeletedMember, eventParams);
       expect(spyOnDeleteSchedules).toBeCalledWith({ memberId: member.id });
     };
   });

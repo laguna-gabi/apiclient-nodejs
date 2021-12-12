@@ -2,12 +2,14 @@ import {
   ContentKey,
   ICreateDispatch,
   IDeleteClientSettings,
+  IDeleteDispatch,
   InnerQueueTypes,
   InternalNotificationType,
   Language,
   NotificationType,
   Platform,
   ServiceName,
+  generateDispatchId,
 } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
@@ -53,6 +55,7 @@ import {
   Errors,
   EventType,
   GetContentsParams,
+  IDispatchParams,
   IEventMember,
   IEventNotifyQueue,
   IEventOnMemberBecameOffline,
@@ -873,14 +876,14 @@ export class MemberResolver extends MemberBase {
   }
 
   @OnEvent(EventType.notifyDispatch, { async: true })
-  async notifyDispatch(params: InternalNotifyParams) {
-    this.logger.debug(params, MemberResolver.name, this.notifyDispatch.name);
+  async notifyCreateDispatch(params: IDispatchParams) {
+    this.logger.debug(params, MemberResolver.name, this.notifyCreateDispatch.name);
     const { memberId, userId, type, metadata } = params;
 
     const creteDispatch: ICreateDispatch = {
       type: InnerQueueTypes.createDispatch,
-      dispatchId: v4(),
-      correlationId: v4(),
+      dispatchId: params.dispatchId,
+      correlationId: params.correlationId ? params.correlationId : v4(),
       serviceName: ServiceName.hepius,
       notificationType: type,
       recipientClientId: memberId,
@@ -889,12 +892,26 @@ export class MemberResolver extends MemberBase {
       appointmentTime: metadata.appointmentTime,
       appointmentId: metadata.appointmentId,
       contentKey: metadata.contentType,
+      triggeredAt: metadata.triggeredAt,
       path: metadata.path,
     };
 
     const eventParams: IEventNotifyQueue = {
       type: QueueType.notifications,
       message: JSON.stringify(creteDispatch),
+    };
+    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
+  }
+
+  async notifyDeleteDispatch(params: { dispatchId: string }) {
+    this.logger.debug(params, MemberResolver.name, this.notifyDeleteDispatch.name);
+    const deleteDispatch: IDeleteDispatch = {
+      type: InnerQueueTypes.deleteDispatch,
+      dispatchId: params.dispatchId,
+    };
+    const eventParams: IEventNotifyQueue = {
+      type: QueueType.notifications,
+      message: JSON.stringify(deleteDispatch),
     };
     this.eventEmitter.emit(EventType.notifyQueue, eventParams);
   }
@@ -958,11 +975,13 @@ export class MemberResolver extends MemberBase {
   private async deleteSchedules(params: IEventMember) {
     const { memberId } = params;
     try {
+      await this.notifyDeleteDispatch({
+        dispatchId: generateDispatchId(ContentKey.newMemberNudge, params.memberId),
+      });
       const notifications = await this.memberService.getMemberNotifications(memberId);
       notifications.forEach((notification) => {
         this.memberScheduler.deleteTimeout({ id: notification._id });
       });
-      this.memberScheduler.deleteTimeout({ id: memberId });
       this.memberScheduler.deleteTimeout({ id: memberId + ReminderType.logReminder });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, ex);

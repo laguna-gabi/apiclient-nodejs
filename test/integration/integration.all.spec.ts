@@ -432,13 +432,6 @@ describe('Integration tests: all', () => {
   });
 
   describe('new member + member registration scheduling', () => {
-    it('should create timeout on member creation', async () => {
-      const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
-      await delay(500); // wait for event to finish
-      expect(handler.schedulerRegistry.getTimeouts()).toEqual(expect.arrayContaining([member.id]));
-    });
-
     it('should create timeout for registered member', async () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org });
@@ -526,21 +519,6 @@ describe('Integration tests: all', () => {
         errors: [{ code: ErrorType.memberNotFound, message: Errors.get(ErrorType.memberNotFound) }],
       });
     });
-
-    it('should remove member scheduled notifications', async () => {
-      const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
-      await delay(500);
-      expect(handler.schedulerRegistry.getTimeouts()).toEqual(expect.arrayContaining([member.id]));
-
-      const result = await handler.mutations.archiveMember({ id: member.id });
-      expect(result).toBeTruthy();
-
-      await delay(500);
-      expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(
-        expect.arrayContaining([member.id]),
-      );
-    });
   });
 
   describe('delete member', () => {
@@ -561,20 +539,6 @@ describe('Integration tests: all', () => {
       });
       const appointmentReult = await handler.queries.getAppointment(appointment.id);
       expect(appointmentReult).toBeNull();
-    });
-
-    it('should remove member scheduled notifications', async () => {
-      const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
-      await delay(500);
-      expect(handler.schedulerRegistry.getTimeouts()).toEqual(expect.arrayContaining([member.id]));
-
-      const result = await handler.mutations.deleteMember({ id: member.id });
-      expect(result).toBeTruthy();
-      await delay(500);
-      expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(
-        expect.arrayContaining([member.id]),
-      );
     });
   });
 
