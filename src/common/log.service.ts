@@ -47,6 +47,8 @@ export class Logger extends BaseLogger {
     'oldUserId',
     //sendbird webhook
     'sender',
+    //queue
+    'MessageId',
     ...Object.keys(internalLogs),
   ];
 
