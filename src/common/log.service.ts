@@ -1,4 +1,4 @@
-import { BaseLogger, SourceApi } from '@lagunahealth/pandora';
+import { BaseLogger, ServiceName } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -12,7 +12,7 @@ export class Logger extends BaseLogger {
     //dispatch data
     'dispatchId',
     'correlationId',
-    'sourceApi',
+    'serviceName',
     'notificationType',
     'recipientClientId',
     'senderClientId',
@@ -36,6 +36,6 @@ export class Logger extends BaseLogger {
   ];
 
   constructor() {
-    super(SourceApi.iris, Logger.VALID_KEYS);
+    super(ServiceName.iris, Logger.VALID_KEYS);
   }
 }

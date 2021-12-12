@@ -1,4 +1,10 @@
-import { Honorific, Language, NotificationType, Platform, SourceApi } from '@lagunahealth/pandora';
+import {
+  Honorific,
+  Language,
+  NotificationType,
+  Platform,
+  ServiceName,
+} from '@lagunahealth/pandora';
 import { add } from 'date-fns';
 import { internet, lorem, name } from 'faker';
 import { Types } from 'mongoose';
@@ -57,7 +63,7 @@ export const generateUpdateUserSettingsMock = (): Pick<
 export const generateDispatch = ({
   dispatchId = v4(),
   correlationId = v4(),
-  sourceApi = SourceApi.hepius,
+  serviceName = ServiceName.hepius,
   notificationType = NotificationType.text,
   recipientClientId = v4(),
   senderClientId = v4(),
@@ -78,7 +84,7 @@ export const generateDispatch = ({
   return {
     dispatchId,
     correlationId,
-    sourceApi,
+    serviceName,
     notificationType,
     recipientClientId,
     senderClientId,

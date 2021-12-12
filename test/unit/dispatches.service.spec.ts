@@ -77,7 +77,7 @@ describe(DispatchesService.name, () => {
 
   test.each([
     { correlationId: null },
-    { sourceApi: null },
+    { serviceName: null },
     { notificationType: null },
     { status: null },
     { retryCount: null },
