@@ -1,4 +1,4 @@
-import { Environments, SourceApi, generateOrgNamePrefix } from '.';
+import { Environments, ServiceName, generateOrgNamePrefix } from '.';
 
 enum LogType {
   log = 'log',
@@ -8,7 +8,7 @@ enum LogType {
 }
 
 export class BaseLogger {
-  constructor(private source: SourceApi, private validKeys: string[] = []) {}
+  constructor(private source: ServiceName, private validKeys: string[] = []) {}
 
   protected COLOR = {
     reset: '\x1b[0m',

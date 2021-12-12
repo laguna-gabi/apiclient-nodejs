@@ -3,7 +3,7 @@ import {
   ICreateDispatch,
   InnerQueueTypes,
   InternalNotificationType,
-  SourceApi,
+  ServiceName,
 } from '../index';
 import { v4 } from 'uuid';
 
@@ -12,7 +12,7 @@ export type ObjectNewMemberType = Pick<
   | 'type'
   | 'dispatchId'
   | 'correlationId'
-  | 'sourceApi'
+  | 'serviceName'
   | 'notificationType'
   | 'recipientClientId'
   | 'senderClientId'
@@ -35,7 +35,7 @@ export const generateNewMemberMock = ({
     type: InnerQueueTypes.createDispatch,
     dispatchId: v4(),
     correlationId: v4(),
-    sourceApi: SourceApi.hepius,
+    serviceName: ServiceName.hepius,
     notificationType: InternalNotificationType.textSmsToMember,
     recipientClientId,
     senderClientId,
