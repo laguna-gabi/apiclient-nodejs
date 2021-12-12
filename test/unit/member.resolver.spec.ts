@@ -1330,45 +1330,34 @@ describe('MemberResolver', () => {
 
   describe('updateMemberConfig', () => {
     let spyOnServiceUpdateConfig;
-    let spyOnServiceGetMember;
 
     beforeEach(() => {
       spyOnServiceUpdateConfig = jest.spyOn(service, 'updateMemberConfig');
-      spyOnServiceGetMember = jest.spyOn(service, 'get');
     });
 
     afterEach(() => {
       spyOnServiceUpdateConfig.mockReset();
-      spyOnServiceGetMember.mockReset();
-      spyOnServiceGetMember.mockRestore();
       spyOnEventEmitter.mockReset();
       spyOnEventEmitter.mockClear();
     });
 
     it('should update a member config', async () => {
       const memberConfig = mockGenerateMemberConfig();
-      const updateMemberConfigParams = generateUpdateMemberConfigParams({
-        memberId: generateId(memberConfig.memberId),
-      });
+      const memberId = generateId(memberConfig.memberId);
+      const updateMemberConfigParams = generateUpdateMemberConfigParams({ memberId });
       spyOnServiceUpdateConfig.mockImplementationOnce(async () => memberConfig);
-      spyOnServiceGetMember.mockImplementationOnce(async () => mockGenerateMember());
+      delete updateMemberConfigParams.memberId;
 
-      await resolver.updateMemberConfig(updateMemberConfigParams);
+      await resolver.updateMemberConfig([MemberRole.member], memberId, updateMemberConfigParams);
 
       expect(spyOnServiceUpdateConfig).toBeCalledTimes(1);
-      expect(spyOnServiceUpdateConfig).toBeCalledWith(updateMemberConfigParams);
+      expect(spyOnServiceUpdateConfig).toBeCalledWith({ ...updateMemberConfigParams, memberId });
 
       const eventParams: IEventNotifyQueue = {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyQueue, eventParams);
-    });
-
-    it('should not update member config on non existing member', async () => {
-      await expect(resolver.updateMemberConfig(generateUpdateMemberConfigParams())).rejects.toThrow(
-        Errors.get(ErrorType.memberNotFound),
-      );
     });
   });
 

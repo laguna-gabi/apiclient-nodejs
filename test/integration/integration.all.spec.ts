@@ -307,10 +307,11 @@ describe('Integration tests: all', () => {
       isRecommendationsEnabled: true,
     });
 
-    const updateMemberConfigParams = generateUpdateMemberConfigParams({
-      memberId: generateId(member.id),
-    });
-    await handler.mutations.updateMemberConfig({ updateMemberConfigParams });
+    const updateMemberConfigParams = generateUpdateMemberConfigParams();
+    delete updateMemberConfigParams.memberId;
+    await handler
+      .setContextUserId(member.id)
+      .mutations.updateMemberConfig({ updateMemberConfigParams });
     const memberConfigAfter = await handler
       .setContextUserId(member.id)
       .queries.getMemberConfig({ id: member.id });
@@ -642,12 +643,13 @@ describe('Integration tests: all', () => {
         const org = await creators.createAndValidateOrg();
         const member = await creators.createAndValidateMember({ org, useNewUser: true });
 
-        await handler.mutations.updateMemberConfig({
-          updateMemberConfigParams: generateUpdateMemberConfigParams({
-            memberId: member.id,
-            isAppointmentsReminderEnabled,
-          }),
+        const updateMemberConfigParams = generateUpdateMemberConfigParams({
+          isAppointmentsReminderEnabled,
         });
+        delete updateMemberConfigParams.memberId;
+        await handler
+          .setContextUserId(member.id)
+          .mutations.updateMemberConfig({ updateMemberConfigParams });
 
         await delay(1000);
 

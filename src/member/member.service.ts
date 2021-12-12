@@ -594,11 +594,15 @@ export class MemberService extends BaseService {
     setParams =
       isRecommendationsEnabled == null ? setParams : { ...setParams, isRecommendationsEnabled };
 
-    return this.memberConfigModel.findOneAndUpdate(
+    const memberConfig = await this.memberConfigModel.findOneAndUpdate(
       { memberId: new Types.ObjectId(memberId) },
       { $set: setParams },
       { new: true },
     );
+    if (!memberConfig) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
+    return memberConfig;
   }
 
   async updateMemberConfigRegisteredAt(memberId: Types.ObjectId) {

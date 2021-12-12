@@ -1003,12 +1003,17 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean)
-  @Roles(MemberRole.member, UserRole.coach)
+  @Roles(MemberRole.member)
   async updateMemberConfig(
+    @Client('roles') roles,
+    @Client('_id') memberId,
     @Args(camelCase(UpdateMemberConfigParams.name))
     updateMemberConfigParams: UpdateMemberConfigParams,
   ) {
-    await this.memberService.get(updateMemberConfigParams.memberId);
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    updateMemberConfigParams.memberId = memberId;
     const memberConfig = await this.memberService.updateMemberConfig(updateMemberConfigParams);
     this.notifyUpdatedMemberConfig({ memberConfig });
     return memberConfig !== null;

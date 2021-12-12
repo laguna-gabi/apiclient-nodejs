@@ -1257,6 +1257,12 @@ describe('MemberService', () => {
       const configs = await service.getMemberConfig(id);
       expect(configs[Object.keys(field)[0]]).toEqual(true);
     });
+
+    it('should not update member config on non existing member', async () => {
+      await expect(service.updateMemberConfig(generateUpdateMemberConfigParams())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
+    });
   });
 
   describe('getMemberConfig', () => {
