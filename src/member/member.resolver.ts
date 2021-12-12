@@ -178,8 +178,7 @@ export class MemberResolver extends MemberBase {
     await this.cognitoService.disableMember(member.deviceId);
 
     this.notifyDeletedMemberConfig(member.id);
-    const eventParams: IEventMember = { memberId: id };
-    this.eventEmitter.emit(EventType.onArchivedMember, eventParams);
+    await this.deleteSchedules({ memberId: id });
     return true;
   }
 
@@ -209,6 +208,7 @@ export class MemberResolver extends MemberBase {
 
     this.notifyDeletedMemberConfig(member.id);
     const eventParams: IEventMember = { memberId: id };
+    await this.deleteSchedules(eventParams);
     this.eventEmitter.emit(EventType.onDeletedMember, eventParams);
     return true;
   }
@@ -922,16 +922,6 @@ export class MemberResolver extends MemberBase {
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.sendSmsToChat.name, ex);
     }
-  }
-
-  @OnEvent(EventType.onDeletedMember, { async: true })
-  async onDeletedMember(params: IEventMember) {
-    await this.deleteSchedules(params);
-  }
-
-  @OnEvent(EventType.onArchivedMember, { async: true })
-  async onArchivedMember(params: IEventMember) {
-    await this.deleteSchedules(params);
   }
 
   @OnEvent(EventType.onSetDailyLogCategories, { async: true })

@@ -30,8 +30,6 @@ import {
   UpdatedAppointmentAction,
   UserRole,
 } from '../common';
-import { OrgService } from '../org';
-import { Bitly } from '../providers';
 import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
 
 @UseInterceptors(LoggingInterceptor)
@@ -41,8 +39,6 @@ export class AppointmentResolver extends AppointmentBase {
     readonly appointmentService: AppointmentService,
     readonly appointmentScheduler: AppointmentScheduler,
     readonly eventEmitter: EventEmitter2,
-    readonly bitly: Bitly,
-    readonly orgService: OrgService,
     readonly logger: Logger,
   ) {
     super(appointmentService, appointmentScheduler, eventEmitter);

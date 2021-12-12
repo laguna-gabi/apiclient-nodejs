@@ -457,6 +457,9 @@ describe('MemberResolver', () => {
       spyOnCognitoServiceDisableMember.mockImplementationOnce(() => undefined);
       spyOnCommunicationFreezeGroupChannel.mockImplementationOnce(() => undefined);
       spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const spyOnDeleteSchedules = jest.spyOn(resolver, 'deleteSchedules');
 
       const result = await resolver.archiveMember(member.id);
 
@@ -469,15 +472,13 @@ describe('MemberResolver', () => {
       });
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
 
-      expect(spyOnEventEmitter).toBeCalledTimes(2);
-      const queueEventParams: IEventNotifyQueue = {
+      expect(spyOnEventEmitter).toBeCalledTimes(1);
+      const deleteClient: IEventNotifyQueue = {
         type: QueueType.notifications,
         message: JSON.stringify({ type: InnerQueueTypes.deleteClientSettings, id: member.id }),
       };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, queueEventParams);
-
-      const eventParams: IEventMember = { memberId: member.id };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.onArchivedMember, eventParams);
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, deleteClient);
+      expect(spyOnDeleteSchedules).toBeCalledWith({ memberId: member.id });
     });
   });
 
@@ -546,8 +547,12 @@ describe('MemberResolver', () => {
       spyOnCognitoServiceDeleteMember.mockImplementationOnce(() => undefined);
       spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
       spyOnStorageServiceDeleteMember.mockImplementationOnce(() => undefined);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const spyOnDeleteSchedules = jest.spyOn(resolver, 'deleteSchedules');
 
       const result = await resolver.deleteMember(member.id);
+      await delay(500);
 
       expect(result).toBeTruthy();
       expect(spyOnCommunicationDeleteCommunication).toBeCalledWith(communication);
@@ -568,6 +573,7 @@ describe('MemberResolver', () => {
 
       const eventParams: IEventMember = { memberId: member.id };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.onDeletedMember, eventParams);
+      expect(spyOnDeleteSchedules).toBeCalledWith({ memberId: member.id });
     };
   });
 

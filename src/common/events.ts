@@ -13,7 +13,6 @@ export enum EventType {
   onReplacedUserForMember = 'onReplacedUserForMember',
   onMemberBecameOffline = 'onMemberBecameOffline',
   onDeletedMember = 'onDeletedMember',
-  onArchivedMember = 'onArchivedMember',
 
   //user
   onNewUser = 'onNewUser',
