@@ -4,10 +4,11 @@ import {
   InnerQueueTypes,
   InternalNotificationType,
   ServiceName,
-} from '../index';
+  generateDispatchId,
+} from '../';
 import { v4 } from 'uuid';
 
-export type ObjectNewMemberType = Pick<
+export type ObjectNewMemberNudgeType = Pick<
   ICreateDispatch,
   | 'type'
   | 'dispatchId'
@@ -17,29 +18,35 @@ export type ObjectNewMemberType = Pick<
   | 'recipientClientId'
   | 'senderClientId'
   | 'appointmentId'
+  | 'triggeredAt'
   | 'contentKey'
 >;
 
-export class ObjectNewMemberClass {
-  constructor(readonly objectNewMemberMock: ObjectNewMemberType) {}
+export class ObjectNewMemberNudgeClass {
+  constructor(readonly objectNewMemberNudgeMock: ObjectNewMemberNudgeType) {}
 }
 
-export const generateNewMemberMock = ({
+export const generateNewMemberNudgeMock = ({
   recipientClientId,
   senderClientId,
 }: {
   recipientClientId: string;
   senderClientId: string;
-}): ObjectNewMemberType => {
+}): ObjectNewMemberNudgeType => {
+  const contentKey = ContentKey.newMemberNudge;
+  const triggeredAt = new Date();
+  triggeredAt.setHours(triggeredAt.getHours() + 48);
+
   return {
     type: InnerQueueTypes.createDispatch,
-    dispatchId: v4(),
+    dispatchId: generateDispatchId(contentKey, recipientClientId),
     correlationId: v4(),
     serviceName: ServiceName.hepius,
     notificationType: InternalNotificationType.textSmsToMember,
     recipientClientId,
     senderClientId,
     appointmentId: v4(),
-    contentKey: ContentKey.newMember,
+    triggeredAt,
+    contentKey,
   };
 };
