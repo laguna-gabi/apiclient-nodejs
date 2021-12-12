@@ -291,7 +291,7 @@ jobs:
 
   sync-languages:
     name: Sync Languages With PoEditor
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: build-test-coverage
     if: github.ref == 'refs/heads/poeditor'
     steps:
