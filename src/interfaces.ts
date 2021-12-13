@@ -51,7 +51,7 @@ export interface ICreateDispatch extends IDispatch {
   peerId?: string;
   contentKey?: ContentKey;
   chatLink?: boolean;
-  triggeredAt?: Date;
+  triggersAt?: Date;
   notificationId?: string;
   path?: string;
 }

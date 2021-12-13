@@ -18,7 +18,7 @@ export type ObjectNewMemberNudgeType = Pick<
   | 'recipientClientId'
   | 'senderClientId'
   | 'appointmentId'
-  | 'triggeredAt'
+  | 'triggersAt'
   | 'contentKey'
 >;
 
@@ -34,8 +34,8 @@ export const generateNewMemberNudgeMock = ({
   senderClientId: string;
 }): ObjectNewMemberNudgeType => {
   const contentKey = ContentKey.newMemberNudge;
-  const triggeredAt = new Date();
-  triggeredAt.setHours(triggeredAt.getHours() + 48);
+  const triggersAt = new Date();
+  triggersAt.setHours(triggersAt.getHours() + 48);
 
   return {
     type: InnerQueueTypes.createDispatch,
@@ -46,7 +46,7 @@ export const generateNewMemberNudgeMock = ({
     recipientClientId,
     senderClientId,
     appointmentId: v4(),
-    triggeredAt,
+    triggersAt,
     contentKey,
   };
 };

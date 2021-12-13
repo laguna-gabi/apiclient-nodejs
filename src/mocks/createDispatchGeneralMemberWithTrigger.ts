@@ -17,7 +17,7 @@ export type ObjectGeneralMemberTriggeredType = Pick<
   | 'notificationType'
   | 'recipientClientId'
   | 'senderClientId'
-  | 'triggeredAt'
+  | 'triggersAt'
   | 'contentKey'
 >;
 
@@ -29,12 +29,12 @@ export const generateGeneralMemberTriggeredMock = ({
   recipientClientId,
   senderClientId,
   contentKey,
-  triggeredAt,
+  triggersAt,
 }: {
   recipientClientId: string;
   senderClientId: string;
   contentKey: ContentKey;
-  triggeredAt: Date;
+  triggersAt: Date;
 }): ObjectGeneralMemberTriggeredType => {
   return {
     type: InnerQueueTypes.createDispatch,
@@ -44,7 +44,7 @@ export const generateGeneralMemberTriggeredMock = ({
     notificationType: InternalNotificationType.textToMember,
     recipientClientId,
     senderClientId,
-    triggeredAt,
+    triggersAt,
     contentKey,
   };
 };
