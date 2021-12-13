@@ -145,7 +145,7 @@ export class ConductorService implements OnModuleInit {
     const dispatch = await this.dispatchesService.find({ triggeredId });
     const methodName = this.handleFutureDispatchWasTriggered.name;
     if (!dispatch) {
-      this.logger.error({ triggeredId }, ConductorService.name, methodName, 'not found');
+      this.logger.warn({ triggeredId }, ConductorService.name, methodName, 'not found');
     } else {
       this.logger.debug({ triggeredId }, ConductorService.name, methodName);
       await this.createRealTimeDispatch(dispatch);
