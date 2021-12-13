@@ -110,7 +110,9 @@ jobs:
           # push it to ECR so that it can
           # be deployed to ECS.
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG . --build-arg NPM_TOKEN=${{ secrets.NPM_PRIVATE_GITHUB_AUTH_TOKEN_REGISTRY }} --build-arg GIT_COMMIT=${{ github.sha }} --build-arg NODE_ENV=${{ steps.branch_check.outputs.env_name }}
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
       - name: Download task definition
         run: |
