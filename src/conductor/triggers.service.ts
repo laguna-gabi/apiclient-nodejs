@@ -8,6 +8,12 @@ import { Trigger, TriggerDocument } from '.';
 export class TriggersService implements OnModuleInit, OnModuleDestroy {
   private watchObject: ChangeStream;
   private triggeredCallback: (triggeredId: string) => Promise<void>;
+  /**
+   * When DeleteDispatch is called, we don't want to be using the watch on deleted events,
+   * as they are not supposed to occur. We'll cache those on run time as we're assuming the
+   * trigger for deleting events happens in 1 minute max.
+   */
+  private ignoreDeletes = new Set();
 
   constructor(@InjectModel(Trigger.name) private readonly triggerModel: Model<TriggerDocument>) {}
 
@@ -20,7 +26,11 @@ export class TriggersService implements OnModuleInit, OnModuleDestroy {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const objectId = event.documentKey._id.toString();
-        await this.triggeredCallback(objectId);
+        if (this.ignoreDeletes.has(objectId)) {
+          this.ignoreDeletes.delete(objectId);
+        } else {
+          await this.triggeredCallback(objectId);
+        }
       }
     });
   }
@@ -46,6 +56,10 @@ export class TriggersService implements OnModuleInit, OnModuleDestroy {
   }
 
   async delete(dispatchId: string) {
-    await this.triggerModel.deleteOne({ dispatchId });
+    const result = await this.triggerModel.findOne({ dispatchId });
+    if (result) {
+      this.ignoreDeletes.add(result._id.toString());
+      await this.triggerModel.deleteOne({ dispatchId });
+    }
   }
 }

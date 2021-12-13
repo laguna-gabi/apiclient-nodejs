@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { v4 } from 'uuid';
-import { generateTriggers } from '../';
+import { generateId, generateTriggers } from '../';
 import { DbModule } from '../../src/db';
 import { ConductorModule, Trigger, TriggersService } from '../../src/conductor';
 
@@ -40,5 +40,27 @@ describe(TriggersService.name, () => {
   it('should return null for a non existing trigger', async () => {
     const triggerData = await service.get(v4());
     expect(triggerData).toBeNull();
+  });
+
+  it('should add to ignoreDeletes a delete from the api', async () => {
+    const trigger: Trigger = generateTriggers();
+    const { _id } = await service.update(trigger);
+    await service.delete(trigger.dispatchId);
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    expect(service.ignoreDeletes.has(_id.toString())).toBeTruthy();
+  });
+
+  it('should not add to ignoreDeletes a trigger which does not exist', async () => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const ignoreDeletesBefore = service.ignoreDeletes;
+    const dispatchId = generateId();
+    await service.delete(dispatchId);
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    expect(service.ignoreDeletes).toEqual(ignoreDeletesBefore);
   });
 });

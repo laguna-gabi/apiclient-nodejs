@@ -30,7 +30,6 @@ export class DispatchesService {
       return;
     }
     const params = filterNonNullFields<Dispatch>(dispatch);
-
     return this.dispatchesModel.findOneAndUpdate(
       { dispatchId: dispatch.dispatchId },
       { $set: params },

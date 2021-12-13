@@ -23,7 +23,7 @@ export class ConductorService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    this.triggersService.onTriggeredCallback = this.handleFutureDispatchWasTriggered;
+    this.triggersService.onTriggeredCallback = this.handleFutureDispatchWasTriggered.bind(this);
   }
 
   async handleUpdateClientSettings(input: IUpdateClientSettings): Promise<void> {
