@@ -141,7 +141,7 @@ export class BaseLogger {
     const textFormatted = this.generateText(text, color);
 
     if (!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test) {
-      return `${date}   ${lType} ${sName} ${cName} ${mName} ${textFormatted}`;
+      return `${date}   ${sName} ${lType} ${sName} ${cName} ${mName} ${textFormatted}`;
     } else {
       return `${now.toLocaleString()}   [${logType}] [${className}]${generateOrgNamePrefix(
         orgName,
