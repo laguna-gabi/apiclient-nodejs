@@ -1,3 +1,4 @@
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { v4 } from 'uuid';
 import { CommonModule } from '../../src/common';
@@ -18,7 +19,7 @@ describe(DispatchesService.name, () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, ConductorModule, CommonModule],
+      imports: [DbModule, ConductorModule, CommonModule, EventEmitterModule.forRoot()],
     }).compile();
 
     service = module.get<DispatchesService>(DispatchesService);

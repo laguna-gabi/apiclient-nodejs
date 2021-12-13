@@ -1,5 +1,7 @@
-import { BaseLogger, ServiceName } from '@lagunahealth/pandora';
+import { BaseLogger, ServiceName, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventType } from './events';
 
 @Injectable()
 export class Logger extends BaseLogger {
@@ -35,7 +37,27 @@ export class Logger extends BaseLogger {
     'externalUserId',
   ];
 
-  constructor() {
+  constructor(private readonly eventEmitter: EventEmitter2) {
     super(ServiceName.iris, Logger.VALID_KEYS);
+  }
+
+  warn(params: any = {}, className: string, methodName: string, ...reasons: any[]): void {
+    const log = super.warn(params, className, methodName, ...reasons);
+
+    this.eventEmitter.emit(EventType.notifySlack, {
+      message: log,
+      icon: SlackIcon.warning,
+      channel: SlackChannel.notifications,
+    });
+  }
+
+  error(params: any = {}, className: string, methodName: string, ...reasons: any[]): void {
+    const log = super.error(params, className, methodName, ...reasons);
+
+    this.eventEmitter.emit(EventType.notifySlack, {
+      message: log,
+      icon: SlackIcon.critical,
+      channel: SlackChannel.notifications,
+    });
   }
 }

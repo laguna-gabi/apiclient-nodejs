@@ -1,14 +1,9 @@
-import {
-  BaseLogger,
-  CancelNotificationType,
-  NotificationType,
-  Platform,
-  ServiceName,
-} from '@lagunahealth/pandora';
+import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
-import { ErrorType, Errors } from '../../src/common';
+import { ErrorType, Errors, Logger } from '../../src/common';
 import { ConfigsService, OneSignal } from '../../src/providers';
 import { generatePath, generatePhone } from '../generators';
 
@@ -19,7 +14,7 @@ describe(`live: ${OneSignal.name}`, () => {
     const configService = new ConfigsService();
     const httpService = new HttpService();
 
-    oneSignal = new OneSignal(configService, httpService, new BaseLogger(ServiceName.iris, []));
+    oneSignal = new OneSignal(configService, httpService, new Logger(new EventEmitter2()));
     await oneSignal.onModuleInit();
   });
 

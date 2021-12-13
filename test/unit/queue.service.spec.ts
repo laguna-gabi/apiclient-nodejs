@@ -1,5 +1,6 @@
 import { InnerQueueTypes } from '@lagunahealth/pandora';
 import { NotImplementedException } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { internet, lorem } from 'faker';
 import { Consumer, SQSMessage } from 'sqs-consumer';
@@ -19,7 +20,13 @@ describe(QueueService.name, () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, ProvidersModule, ConductorModule, CommonModule],
+      imports: [
+        DbModule,
+        ProvidersModule,
+        ConductorModule,
+        CommonModule,
+        EventEmitterModule.forRoot(),
+      ],
     }).compile();
     service = module.get<QueueService>(QueueService);
 

@@ -143,7 +143,7 @@ export class ConductorService implements OnModuleInit {
 
   private async handleFutureDispatchWasTriggered(triggeredId: string): Promise<void> {
     const dispatch = await this.dispatchesService.find({ triggeredId });
-    const methodName = this.handleUpdateClientSettings.name;
+    const methodName = this.handleFutureDispatchWasTriggered.name;
     if (!dispatch) {
       this.logger.error({ triggeredId }, ConductorService.name, methodName, 'not found');
     } else {

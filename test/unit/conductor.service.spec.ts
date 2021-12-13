@@ -1,4 +1,5 @@
 import { InnerQueueTypes } from '@lagunahealth/pandora';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapTriggeredAt } from 'config';
 import { addSeconds, subSeconds } from 'date-fns';
@@ -34,7 +35,13 @@ describe(ConductorService.name, () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DbModule, ProvidersModule, ConductorModule, CommonModule],
+      imports: [
+        DbModule,
+        ProvidersModule,
+        ConductorModule,
+        CommonModule,
+        EventEmitterModule.forRoot(),
+      ],
     }).compile();
 
     service = module.get<ConductorService>(ConductorService);

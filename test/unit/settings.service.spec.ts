@@ -1,3 +1,4 @@
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { generateId, generateUpdateMemberSettingsMock } from '../';
 import { DbModule } from '../../src/db';
@@ -8,7 +9,9 @@ describe(SettingsService.name, () => {
   let service: SettingsService;
 
   beforeAll(async () => {
-    module = await Test.createTestingModule({ imports: [DbModule, SettingsModule] }).compile();
+    module = await Test.createTestingModule({
+      imports: [DbModule, SettingsModule, EventEmitterModule.forRoot()],
+    }).compile();
 
     service = module.get<SettingsService>(SettingsService);
   });

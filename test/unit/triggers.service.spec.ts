@@ -1,3 +1,4 @@
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { v4 } from 'uuid';
 import { generateId, generateTriggers } from '../';
@@ -9,7 +10,9 @@ describe(TriggersService.name, () => {
   let service: TriggersService;
 
   beforeAll(async () => {
-    module = await Test.createTestingModule({ imports: [DbModule, ConductorModule] }).compile();
+    module = await Test.createTestingModule({
+      imports: [DbModule, ConductorModule, EventEmitterModule.forRoot()],
+    }).compile();
 
     service = module.get<TriggersService>(TriggersService);
   });
