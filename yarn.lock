@@ -705,8 +705,8 @@
 
 "@lagunahealth/pandora@0.4.7":
   version "0.4.7"
-  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.4.7/38eb574a568f0247504435125c0afad3cb3371cda03e19a4d72682f403894ff1#fe3e2d9cff74dc0daa9d4c9d51cf808bf08e931f"
-  integrity sha512-cxEyFbSCXIDh9OoD0g0Hffb/dCqKG4Qy28anwbJlqc7H6BUJDJalf8TMXLsLJPULSncA/csT7PGlIE/JsfkDwA==
+  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.4.7/f6d5dc43203a969217d3ccf2c54acb5ecf138db212424b1e34efa8e424959152#ae2b278d2dfee9ea10bd05ea1ee0cd467b8091d5"
+  integrity sha512-yy6WX6z+SAerZrYgVgnqWnaPZXgQcoMZjdE3TdfsiTjoKDtPjIp+nnJPtxLgnartbKTExFfirqlma54DKAavJA==
   dependencies:
     "@slack/types" "^2.2.0"
     "@slack/webhook" "^6.0.0"
