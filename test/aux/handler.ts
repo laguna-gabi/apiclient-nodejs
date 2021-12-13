@@ -6,18 +6,11 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
 import { createTestClient } from 'apollo-server-testing';
 import * as config from 'config';
-import * as faker from 'faker';
 import * as jwt from 'jsonwebtoken';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import { Mutations, Queries } from '.';
-import {
-  generateCreateMemberParams,
-  generateCreateUserParams,
-  generateId,
-  generateOrgParams,
-  generateUniqueUrl,
-} from '..';
+import { generateCreateMemberParams, generateCreateUserParams, generateOrgParams } from '..';
 import { AppModule } from '../../src/app.module';
 import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
 import { Logger, bearerToken } from '../../src/common';
@@ -142,18 +135,6 @@ export class Handler extends BaseHandler {
 
     return this;
   };
-
-  mockCommunication() {
-    const mockCommunicationParams = {
-      memberId: generateId(),
-      userId: v4(),
-      sendBirdChannelUrl: generateUniqueUrl(),
-      chat: { memberLink: faker.internet.url(), userLink: faker.internet.url() },
-    };
-    this.spyOnGetCommunicationService = jest.spyOn(this.communicationService, 'get');
-    this.spyOnGetCommunicationService.mockImplementation(async () => mockCommunicationParams);
-    return mockCommunicationParams;
-  }
 
   // Description: Generate a set of pre-defined fixtures
   async buildFixtures() {

@@ -66,14 +66,12 @@ describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
   let creators: Creators;
   let appointmentsActions: AppointmentsIntegrationActions;
-  let mockCommunicationParams;
 
   beforeAll(async () => {
     await handler.beforeAll();
     appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
     creators = new Creators(handler, appointmentsActions);
     await creators.createFirstUserInDbfNecessary();
-    mockCommunicationParams = handler.mockCommunication();
   });
 
   afterAll(async () => {
@@ -574,12 +572,12 @@ describe('Integration tests: all', () => {
       expect(updatedMember.users[updatedMember.users.length - 1].id).toEqual(newUser.id);
       expect(updatedMember.users.length).toEqual(2);
 
-      // TODO: Check that the communication changed (currently can't because it's mocked)
-      // const communication = await handler.queries.getCommunication({
-      //   getCommunicationParams: { userId: newUser.id, memberId: member.id },
-      // });
-      // expect(communication.memberId).toEqual(member.id);
-      // expect(communication.userId).toEqual(newUser.id);
+      await delay(1000);
+      const communication = await handler.queries.getCommunication({
+        getCommunicationParams: { userId: newUser.id, memberId: member.id },
+      });
+      expect(communication.memberId).toEqual(member.id);
+      expect(communication.userId).toEqual(newUser.id);
 
       // Check that the appointment moved from the old user to the new
       const { appointments: newUserAppointments } = await handler
@@ -840,10 +838,15 @@ describe('Integration tests: all', () => {
 
       await handler.mutations.notify({ notifyParams });
 
+      const result = await handler.communicationService.get({
+        userId: member.primaryUserId.toString(),
+        memberId: member.id,
+      });
+
       expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
         sendSendBirdNotification: {
           userId: member.primaryUserId,
-          sendBirdChannelUrl: mockCommunicationParams.sendBirdChannelUrl,
+          sendBirdChannelUrl: result.sendBirdChannelUrl,
           message: notifyParams.metadata.content,
           appointmentId,
           notificationType: NotificationType.textSms,

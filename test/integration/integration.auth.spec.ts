@@ -5,7 +5,6 @@ describe('Integration tests : RBAC', () => {
 
   beforeAll(async () => {
     await handler.beforeAll(true);
-    handler.mockCommunication();
   });
 
   afterAll(async () => {
