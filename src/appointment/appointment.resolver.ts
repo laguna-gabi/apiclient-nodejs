@@ -48,7 +48,7 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Appointment)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async requestAppointment(
     @Args(camelCase(RequestAppointmentParams.name))
     requestAppointmentParams: RequestAppointmentParams,
@@ -61,13 +61,13 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Query(() => Appointment, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getAppointment(@Args('id', { type: () => String }) id: string) {
     return this.appointmentService.get(id);
   }
 
   @Mutation(() => Appointment)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async scheduleAppointment(
     @Args(camelCase(ScheduleAppointmentParams.name))
     scheduleAppointmentParams: ScheduleAppointmentParams,
@@ -76,7 +76,7 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Appointment)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async endAppointment(
     @Args(camelCase(EndAppointmentParams.name)) endAppointmentParams: EndAppointmentParams,
   ) {
@@ -94,7 +94,7 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Notes, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async updateNotes(@Args(camelCase(UpdateNotesParams.name)) updateNotesParams: UpdateNotesParams) {
     return this.appointmentService.updateNotes(updateNotesParams);
   }

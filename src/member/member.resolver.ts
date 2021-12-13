@@ -116,7 +116,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Identifier)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async createMember(
     @Args(camelCase(CreateMemberParams.name))
     createMemberParams: CreateMemberParams,
@@ -139,7 +139,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Member)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async updateMember(
     @Args(camelCase(UpdateMemberParams.name)) updateMemberParams: UpdateMemberParams,
   ): Promise<Member> {
@@ -150,7 +150,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [MemberSummary])
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getMembers(
     @Args('orgId', { type: () => String, nullable: true }) orgId?: string,
   ): Promise<MemberSummary[]> {
@@ -158,7 +158,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [AppointmentCompose])
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getMembersAppointments(
     @Args('orgId', { type: () => String, nullable: true }) orgId?: string,
   ): Promise<AppointmentCompose[]> {
@@ -245,7 +245,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Query(() => DischargeDocumentsLinks)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getMemberUploadDischargeDocumentsLinks(@Args('id', { type: () => String }) id: string) {
     const member = await this.memberService.get(id);
 
@@ -302,7 +302,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Query(() => String)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getMemberUploadRecordingLink(
     @Args(camelCase(RecordingLinkParams.name))
     recordingLinkParams: RecordingLinkParams,
@@ -316,7 +316,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => String)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getMemberDownloadRecordingLink(
     @Args(camelCase(RecordingLinkParams.name))
     recordingLinkParams: RecordingLinkParams,
@@ -330,7 +330,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async updateRecording(
     @Args(camelCase(UpdateRecordingParams.name)) updateRecordingParams: UpdateRecordingParams,
   ) {
@@ -338,7 +338,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [RecordingOutput])
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getRecordings(@Args('memberId', { type: () => String }) memberId: string) {
     return this.memberService.getRecordings(memberId);
   }
@@ -348,7 +348,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Identifier)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async createGoal(
     @Args(camelCase(CreateTaskParams.name))
     createTaskParams: CreateTaskParams,
@@ -357,7 +357,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async updateGoalStatus(
     @Args(camelCase(UpdateTaskStatusParams.name))
     updateTaskStatusParams: UpdateTaskStatusParams,
@@ -370,7 +370,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Identifier)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async createActionItem(
     @Args(camelCase(CreateTaskParams.name))
     createTaskParams: CreateTaskParams,
@@ -382,7 +382,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async updateActionItemStatus(
     @Args(camelCase(UpdateTaskStatusParams.name))
     updateTaskStatusParams: UpdateTaskStatusParams,
@@ -395,7 +395,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async setGeneralNotes(
     @Args(camelCase(SetGeneralNotesParams.name)) setGeneralNotesParams: SetGeneralNotesParams,
   ) {
@@ -650,7 +650,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => String, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async notify(@Args(camelCase(NotifyParams.name)) notifyParams: NotifyParams) {
     const { memberId, userId, type, metadata } = notifyParams;
     const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId);
@@ -699,7 +699,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => String, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async cancelNotify(
     @Args(camelCase(CancelNotifyParams.name))
     cancelNotifyParams: CancelNotifyParams,
