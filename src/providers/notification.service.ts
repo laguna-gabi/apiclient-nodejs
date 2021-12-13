@@ -12,6 +12,7 @@ import {
   CancelNotificationParams,
   InternationalizationService,
   OneSignal,
+  ProviderResult,
   SendBird,
   SendOneSignalNotification,
   SendSendBirdNotification,
@@ -35,7 +36,11 @@ export class NotificationsService {
   ) {}
 
   // TODO handle audit https://app.shortcut.com/laguna-health/story/2208/hepius-iris-pandora-cleanup
-  async send(dispatch: Dispatch, recipientClient: ClientSettings, senderClient: ClientSettings) {
+  async send(
+    dispatch: Dispatch,
+    recipientClient: ClientSettings,
+    senderClient: ClientSettings,
+  ): Promise<ProviderResult> {
     const downloadLink = dispatch.appointmentId
       ? await this.bitly.shortenLink(`${hosts.get('app')}/download/${dispatch.appointmentId}`)
       : undefined;

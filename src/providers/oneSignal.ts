@@ -7,7 +7,7 @@ import {
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { oneSignal } from 'config';
-import { CancelNotificationParams, SendOneSignalNotification } from '.';
+import { CancelNotificationParams, Provider, ProviderResult, SendOneSignalNotification } from '.';
 import { ErrorType, Errors, Logger } from '../common';
 import { ConfigsService, ExternalConfigs } from './aws';
 
@@ -32,7 +32,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     this.voipApiKey = await this.configsService.getConfig(ExternalConfigs.oneSignal.voipApiKey);
   }
 
-  async send(sendOneSignalNotification: SendOneSignalNotification) {
+  async send(sendOneSignalNotification: SendOneSignalNotification): Promise<ProviderResult> {
     this.logger.debug(sendOneSignalNotification, OneSignal.name, this.send.name);
     const { platform, externalUserId, data, content } = sendOneSignalNotification;
     this.logger.debug(data, OneSignal.name, this.send.name);
@@ -65,7 +65,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
         .post(this.notificationsUrl, body, config)
         .toPromise();
       if (status === 200 && data.recipients >= 1) {
-        return data.id;
+        return { provider: Provider.oneSignal, content: data.contents.en, id: data.id };
       } else if (
         data.errors[0] === 'All included players are not subscribed' ||
         data.errors?.invalid_external_user_ids[0] === externalUserId

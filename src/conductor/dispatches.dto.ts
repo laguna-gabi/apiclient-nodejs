@@ -1,5 +1,6 @@
 import { AllNotificationTypes, ContentKey, ServiceName } from '@lagunahealth/pandora';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { ProviderResult } from '../providers';
 
 /**************************************************************************************************
  **************************************** Enums and const *****************************************
@@ -99,6 +100,9 @@ export class Dispatch {
 
   @Prop({ isNan: true })
   failureReasons?: any[];
+
+  @Prop({ isNan: true })
+  providerResult?: ProviderResult;
 }
 
 export type DispatchInternalUpdate = Partial<Dispatch>;

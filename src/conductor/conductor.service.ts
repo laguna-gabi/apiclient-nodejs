@@ -97,12 +97,20 @@ export class ConductorService implements OnModuleInit {
         status: DispatchStatus.acquired,
       });
       const recipientClient = await this.settingsService.get(dispatch.recipientClientId);
+      if (!recipientClient) {
+        throw new Error(`recipientClient ${recipientClient.id} does not exist`);
+      }
       const senderClient = await this.settingsService.get(dispatch.senderClientId);
-      await this.notificationsService.send(dispatch, recipientClient, senderClient);
+      const providerResult = await this.notificationsService.send(
+        dispatch,
+        recipientClient,
+        senderClient,
+      );
       await this.dispatchesService.internalUpdate({
         dispatchId,
         sentAt: new Date(),
         status: DispatchStatus.done,
+        providerResult,
       });
     } catch (ex) {
       if (dispatch.retryCount <= retryMax) {

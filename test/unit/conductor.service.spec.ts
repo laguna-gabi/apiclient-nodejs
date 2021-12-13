@@ -3,7 +3,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapTriggeredAt } from 'config';
 import { addSeconds, subSeconds } from 'date-fns';
-import { animal } from 'faker';
+import { animal, lorem } from 'faker';
 import { CommonModule, Logger } from '../../src/common';
 import {
   ConductorModule,
@@ -13,7 +13,12 @@ import {
   TriggersService,
 } from '../../src/conductor';
 import { DbModule } from '../../src/db';
-import { NotificationsService, ProvidersModule } from '../../src/providers';
+import {
+  NotificationsService,
+  Provider,
+  ProviderResult,
+  ProvidersModule,
+} from '../../src/providers';
 import { SettingsService } from '../../src/settings';
 import {
   delay,
@@ -129,7 +134,7 @@ describe(ConductorService.name, () => {
       await handleRealEvents(false);
     }, 10000);
 
-    it(`should handle triggeredAt within the past/future ${gapTriggeredAt} seconds`, async () => {
+    it(`should handle triggeredAt within the recent time: ${gapTriggeredAt} seconds`, async () => {
       await handleRealEvents(true);
     }, 10000);
 
@@ -148,7 +153,12 @@ describe(ConductorService.name, () => {
 
       spyOnDispatchesServiceInternalUpdate.mockResolvedValue(dispatch);
       spyOnDispatchesServiceUpdate.mockResolvedValue(dispatch);
-      spyOnNotificationsService.mockResolvedValueOnce(null);
+      const providerResult: ProviderResult = {
+        provider: Provider.twilio,
+        content: lorem.sentence(),
+        id: generateId(),
+      };
+      spyOnNotificationsService.mockResolvedValueOnce(providerResult);
       await service.handleCreateDispatch({ ...dispatch, type: InnerQueueTypes.createDispatch });
 
       if (triggeredAt) {

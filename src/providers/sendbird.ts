@@ -1,6 +1,12 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ConfigsService, ExternalConfigs, SendSendBirdNotification } from '.';
+import {
+  ConfigsService,
+  ExternalConfigs,
+  Provider,
+  ProviderResult,
+  SendSendBirdNotification,
+} from '.';
 import { BaseLogger, BaseSendBird } from '@lagunahealth/pandora';
 
 @Injectable()
@@ -19,7 +25,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     await super.onModuleInit();
   }
 
-  async send(sendSendBirdNotification: SendSendBirdNotification) {
+  async send(sendSendBirdNotification: SendSendBirdNotification): Promise<ProviderResult> {
     this.logger.debug(sendSendBirdNotification, SendBird.name, this.send.name);
     const { userId, sendBirdChannelUrl, message, notificationType, appointmentId } =
       sendSendBirdNotification;
@@ -43,7 +49,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         .toPromise();
       if (result.status === 200) {
         this.logger.debug(sendSendBirdNotification, SendBird.name, methodName);
-        return result.data.message_id;
+        return { provider: Provider.sendbird, content: message, id: result.data.message_id };
       } else {
         this.logger.error(sendSendBirdNotification, SendBird.name, methodName);
       }

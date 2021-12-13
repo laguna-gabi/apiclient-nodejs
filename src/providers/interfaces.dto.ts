@@ -1,4 +1,5 @@
 import { AllNotificationTypes, CancelNotificationType, Platform } from '@lagunahealth/pandora';
+import { Prop, Schema } from '@nestjs/mongoose';
 import { SenderClient } from '../conductor';
 
 export class BaseSendNotification {
@@ -41,4 +42,22 @@ export class CancelNotificationParams extends BaseSendNotification {
     type: CancelNotificationType;
     notificationId: string;
   };
+}
+
+export enum Provider {
+  oneSignal = 'oneSignal',
+  sendbird = 'sendbird',
+  twilio = 'twilio',
+}
+
+@Schema({ versionKey: false, _id: false })
+export class ProviderResult {
+  @Prop()
+  provider: Provider;
+
+  @Prop()
+  content: string;
+
+  @Prop()
+  id: string; //message id returned as a result from the provider
 }

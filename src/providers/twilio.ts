@@ -7,7 +7,14 @@ import {
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as config from 'config';
 import { Twilio as TwilioClient } from 'twilio';
-import { ConfigsService, ExternalConfigs, SendTwilioNotification, Slack } from '.';
+import {
+  ConfigsService,
+  ExternalConfigs,
+  Provider,
+  ProviderResult,
+  SendTwilioNotification,
+  Slack,
+} from '.';
 import { Environments, Logger } from '../common';
 
 @Injectable()
@@ -29,13 +36,14 @@ export class Twilio implements OnModuleInit {
     this.client = new TwilioClient(accountSid, authToken);
   }
 
-  async send(sendTwilioNotification: SendTwilioNotification) {
+  async send(sendTwilioNotification: SendTwilioNotification): Promise<ProviderResult> {
     this.logger.debug(sendTwilioNotification, Twilio.name, this.send.name);
     const { body, to, orgName } = sendTwilioNotification;
     if (process.env.NODE_ENV === Environments.production && !to.startsWith('+972')) {
       try {
         //KEEP return await when its inside try catch
-        return await this.client.messages.create({ body, to, from: this.source });
+        const result = await this.client.messages.create({ body, to, from: this.source });
+        return { provider: Provider.twilio, content: result.body, id: result.sid };
       } catch (ex) {
         this.logger.error(sendTwilioNotification, Twilio.name, this.send.name, ex);
       }
