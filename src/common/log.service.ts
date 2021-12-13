@@ -41,16 +41,6 @@ export class Logger extends BaseLogger {
     super(ServiceName.iris, Logger.VALID_KEYS);
   }
 
-  warn(params: any = {}, className: string, methodName: string, ...reasons: any[]): void {
-    const log = super.warn(params, className, methodName, ...reasons);
-
-    this.eventEmitter.emit(EventType.notifySlack, {
-      message: log,
-      icon: SlackIcon.warning,
-      channel: SlackChannel.notifications,
-    });
-  }
-
   error(params: any = {}, className: string, methodName: string, ...reasons: any[]): void {
     const log = super.error(params, className, methodName, ...reasons);
 
