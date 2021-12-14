@@ -4,7 +4,7 @@ import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
 import {
   DischargeDocumentsLinks,
-  GetMemberUploadJournalLinksParams,
+  GetMemberUploadJournalLinkParams,
   RecordingLinkParams,
 } from '../../src/member';
 import { GetSlotsParams } from '../../src/user';
@@ -653,23 +653,22 @@ export class Queries {
     return result.data.getJournals;
   };
 
-  getMemberUploadJournalLinks = async ({
-    getMemberUploadJournalLinksParams,
+  getMemberUploadJournalLink = async ({
+    getMemberUploadJournalLinkParams,
     invalidFieldsError,
   }: {
-    getMemberUploadJournalLinksParams: GetMemberUploadJournalLinksParams;
+    getMemberUploadJournalLinkParams: GetMemberUploadJournalLinkParams;
     invalidFieldsError?: string;
   }) => {
     const result = await this.apolloClient.query({
-      variables: { getMemberUploadJournalLinksParams },
+      variables: { getMemberUploadJournalLinkParams },
       query: gql`
-        query getMemberUploadJournalLinks(
-          $getMemberUploadJournalLinksParams: GetMemberUploadJournalLinksParams!
+        query getMemberUploadJournalLink(
+          $getMemberUploadJournalLinkParams: GetMemberUploadJournalLinkParams!
         ) {
-          getMemberUploadJournalLinks(
-            getMemberUploadJournalLinksParams: $getMemberUploadJournalLinksParams
+          getMemberUploadJournalLink(
+            getMemberUploadJournalLinkParams: $getMemberUploadJournalLinkParams
           ) {
-            smallImageLink
             normalImageLink
           }
         }

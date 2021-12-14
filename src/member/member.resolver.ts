@@ -27,9 +27,10 @@ import {
   CreateMemberParams,
   CreateTaskParams,
   DischargeDocumentsLinks,
-  GetMemberUploadJournalLinksParams,
+  GetMemberUploadJournalLinkParams,
+  ImageType,
   Journal,
-  JournalImagesLinks,
+  JournalImagesUploadLink,
   Member,
   MemberBase,
   MemberConfig,
@@ -474,39 +475,36 @@ export class MemberResolver extends MemberBase {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    await this.memberService.deleteJournal(id, memberId);
+    const { imageFormat } = await this.memberService.deleteJournal(id, memberId);
 
-    return this.storageService.deleteJournalImages(id, memberId.toString());
+    if (imageFormat) {
+      return this.storageService.deleteJournalImages(id, memberId, imageFormat);
+    }
+
+    return true;
   }
 
-  @Query(() => JournalImagesLinks)
+  @Query(() => JournalImagesUploadLink)
   @Roles(MemberRole.member)
-  async getMemberUploadJournalLinks(
+  async getMemberUploadJournalLink(
     @Client('roles') roles,
     @Client('_id') memberId,
-    @Args(camelCase(GetMemberUploadJournalLinksParams.name))
-    getMemberUploadJournalLinksParams: GetMemberUploadJournalLinksParams,
+    @Args(camelCase(GetMemberUploadJournalLinkParams.name))
+    getMemberUploadJournalLinkParams: GetMemberUploadJournalLinkParams,
   ) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    const { id, imageFormat } = getMemberUploadJournalLinksParams;
+    const { id, imageFormat } = getMemberUploadJournalLinkParams;
 
     await this.memberService.updateJournal({ id, memberId, imageFormat, published: false });
-    const [normalImageLink, smallImageLink] = await Promise.all([
-      this.storageService.getUploadUrl({
-        storageType: StorageType.journals,
-        memberId: memberId.toString(),
-        id: `${id}_NormalImage.${imageFormat}`,
-      }),
-      this.storageService.getUploadUrl({
-        storageType: StorageType.journals,
-        memberId: memberId.toString(),
-        id: `${id}_SmallImage.${imageFormat}`,
-      }),
-    ]);
+    const normalImageLink = await this.storageService.getUploadUrl({
+      storageType: StorageType.journals,
+      memberId,
+      id: `${id}${ImageType.NormalImage}.${imageFormat}`,
+    });
 
-    return { normalImageLink, smallImageLink };
+    return { normalImageLink };
   }
 
   @Mutation(() => Boolean)
@@ -519,9 +517,14 @@ export class MemberResolver extends MemberBase {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    await this.memberService.updateJournal({ id, memberId, imageFormat: null, published: false });
+    const { imageFormat } = await this.memberService.getJournal(id, memberId);
 
-    return this.storageService.deleteJournalImages(id, memberId);
+    if (!imageFormat) {
+      throw new Error(Errors.get(ErrorType.memberJournalImageNotFound));
+    }
+
+    await this.memberService.updateJournal({ id, memberId, imageFormat: null, published: false });
+    return this.storageService.deleteJournalImages(id, memberId, imageFormat);
   }
 
   @Mutation(() => String)
@@ -550,7 +553,7 @@ export class MemberResolver extends MemberBase {
       url = await this.storageService.getDownloadUrl({
         storageType: StorageType.journals,
         memberId,
-        id: `${id}_NormalImage.${imageFormat}`,
+        id: `${id}${ImageType.NormalImage}.${imageFormat}`,
       });
     }
 
@@ -574,12 +577,12 @@ export class MemberResolver extends MemberBase {
         this.storageService.getDownloadUrl({
           storageType: StorageType.journals,
           memberId: memberId.toString(),
-          id: `${id}_NormalImage.${imageFormat}`,
+          id: `${id}${ImageType.NormalImage}.${imageFormat}`,
         }),
         this.storageService.getDownloadUrl({
           storageType: StorageType.journals,
           memberId: memberId.toString(),
-          id: `${id}_SmallImage.${imageFormat}`,
+          id: `${id}${ImageType.SmallImage}.${imageFormat}`,
         }),
       ]);
       journal.images = { normalImageLink, smallImageLink };

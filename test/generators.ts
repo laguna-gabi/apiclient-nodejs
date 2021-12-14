@@ -43,7 +43,7 @@ import {
   CancelNotifyParams,
   CreateMemberParams,
   CreateTaskParams,
-  GetMemberUploadJournalLinksParams,
+  GetMemberUploadJournalLinkParams,
   ImageFormat,
   Member,
   MemberConfig,
@@ -453,10 +453,10 @@ export const generateUpdateJournalTextParams = ({
   return { id, text };
 };
 
-export const generateGetMemberUploadJournalLinksParams = ({
+export const generateGetMemberUploadJournalLinkParams = ({
   id = generateId(),
   imageFormat = ImageFormat.png,
-}: Partial<GetMemberUploadJournalLinksParams> = {}): GetMemberUploadJournalLinksParams => {
+}: Partial<GetMemberUploadJournalLinkParams> = {}): GetMemberUploadJournalLinkParams => {
   return { id, imageFormat };
 };
 

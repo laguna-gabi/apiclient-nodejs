@@ -37,6 +37,7 @@ export enum ErrorType {
   memberJournalNotFound = 9217,
   memberAllowedOnly = 9218,
   memberReplaceUserAlreadyExists = 9219,
+  memberJournalImageNotFound = 9220,
 
   // Notifications
   notificationMetadataInvalid = 9270,
@@ -121,6 +122,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [ErrorType.memberAllowedOnly.valueOf(), `this resource is only allowed to members`],
   [ErrorType.memberReplaceUserAlreadyExists.valueOf(), `user is already assigned to member`],
+  [ErrorType.memberJournalImageNotFound.valueOf(), `journal image was not found`],
   [
     ErrorType.notificationMetadataInvalid.valueOf(),
     `when calling type 'text' or 'textSms', 'content' in metadata is required ` +

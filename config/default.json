@@ -20,6 +20,9 @@
     "region": "us-east-1",
     "cognito": {
       "userPoolId": "us-east-1_EZc3XRt6s"
+    },
+    "storage": {
+      "thumbnailSize": 200
     }
   },
   "twilio": {
