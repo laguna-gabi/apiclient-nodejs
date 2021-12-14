@@ -1,10 +1,12 @@
 import {
   AllNotificationTypes,
+  ContentKey,
   InternalNotificationType,
   NotificationType,
   Platform,
 } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
+import { hosts } from 'config';
 import { format, utcToZonedTime } from 'date-fns-tz';
 import { lookup } from 'zipcode-to-timezone';
 import {
@@ -21,7 +23,6 @@ import {
 } from '.';
 import { Dispatch } from '../conductor';
 import { ClientSettings } from '../settings';
-import { hosts } from 'config';
 
 @Injectable()
 export class NotificationsService {
@@ -41,27 +42,15 @@ export class NotificationsService {
     recipientClient: ClientSettings,
     senderClient: ClientSettings,
   ): Promise<ProviderResult> {
-    const downloadLink = dispatch.appointmentId
-      ? await this.bitly.shortenLink(`${hosts.get('app')}/download/${dispatch.appointmentId}`)
-      : undefined;
+    if (
+      !recipientClient.isAppointmentsReminderEnabled &&
+      (dispatch.contentKey === ContentKey.appointmentReminder ||
+        dispatch.contentKey === ContentKey.appointmentLongReminder)
+    ) {
+      return;
+    }
 
-    const content = this.internationalization.getContents({
-      contentKey: dispatch.contentKey,
-      senderClient,
-      recipientClient,
-      notificationType: dispatch.notificationType,
-      extraData: {
-        org: {
-          name: recipientClient.orgName,
-        },
-        appointmentTime: this.formatAppointmentTime(
-          dispatch.notificationType,
-          recipientClient.zipCode,
-          dispatch.appointmentTime,
-        ),
-        downloadLink,
-      },
-    });
+    const content = await this.generateContent(dispatch, recipientClient, senderClient);
 
     if (dispatch.notificationType === NotificationType.textSms) {
       const sendSendBirdNotification = this.generateSendbirdParams(
@@ -100,6 +89,32 @@ export class NotificationsService {
   /*************************************************************************************************
    **************************************** Private methods ****************************************
    ************************************************************************************************/
+  async generateContent(
+    dispatch: Dispatch,
+    recipientClient: ClientSettings,
+    senderClient: ClientSettings,
+  ) {
+    const downloadLink = dispatch.appointmentId
+      ? await this.bitly.shortenLink(`${hosts.get('app')}/download/${dispatch.appointmentId}`)
+      : undefined;
+
+    return this.internationalization.getContents({
+      contentKey: dispatch.contentKey,
+      senderClient,
+      recipientClient,
+      notificationType: dispatch.notificationType,
+      extraData: {
+        org: { name: recipientClient.orgName },
+        appointmentTime: this.formatAppointmentTime(
+          dispatch.notificationType,
+          recipientClient.zipCode,
+          dispatch.appointmentTime,
+        ),
+        downloadLink,
+      },
+    });
+  }
+
   private generateSendbirdParams(dispatch: Dispatch, orgName: string): SendSendBirdNotification {
     return {
       userId: dispatch.senderClientId,

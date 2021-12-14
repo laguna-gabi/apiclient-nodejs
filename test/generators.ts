@@ -1,4 +1,5 @@
 import {
+  ContentKey,
   Honorific,
   Language,
   NotificationType,
@@ -26,8 +27,10 @@ export const generateId = (id?): string => {
 
 export const generateUpdateMemberSettingsMock = ({
   id = generateId(),
+  isAppointmentsReminderEnabled = true,
 }: {
   id?: string;
+  isAppointmentsReminderEnabled?: boolean;
 } = {}): Omit<ClientSettings, 'avatar'> => {
   return {
     id,
@@ -40,7 +43,7 @@ export const generateUpdateMemberSettingsMock = ({
     language: Language.en,
     platform: Platform.web,
     isPushNotificationsEnabled: false,
-    isAppointmentsReminderEnabled: true,
+    isAppointmentsReminderEnabled,
     isRecommendationsEnabled: true,
     externalUserId: v4(),
     firstLoggedInAt: new Date(),
@@ -70,6 +73,7 @@ export const generateDispatch = ({
   sendBirdChannelUrl = internet.url(),
   appointmentId = v4(),
   peerId = v4(),
+  contentKey = ContentKey.newMember,
   content = lorem.sentence(),
   chatLink = true,
   path = `connect/${generateId()}`,
@@ -91,6 +95,7 @@ export const generateDispatch = ({
     sendBirdChannelUrl,
     appointmentId,
     peerId,
+    contentKey,
     content,
     chatLink,
     path,
