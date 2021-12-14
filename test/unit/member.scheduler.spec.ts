@@ -113,38 +113,6 @@ describe('MemberScheduler', () => {
         expect(timeouts).not.toContainEqual(_id);
       }, 10000);
 
-      describe('registerNewRegisteredMemberNotify', () => {
-        afterEach(async () => {
-          await clear();
-        });
-
-        it('should register new registered member notifications', async () => {
-          await scheduler.init();
-
-          const newRegisteredMembers = await service.getNewRegisteredMembers({ nudge: false });
-
-          expect(schedulerRegistry.getTimeouts()).toEqual(
-            expect.arrayContaining(newRegisteredMembers.map(({ member }) => member.id)),
-          );
-        }, 10000);
-      });
-
-      describe('registerNewRegisteredMemberNudgeNotify', () => {
-        afterEach(async () => {
-          await clear();
-        });
-
-        it('should register new registered member nudge notifications', async () => {
-          await scheduler.init();
-
-          const newRegisteredMembers = await service.getNewRegisteredMembers({ nudge: true });
-
-          expect(schedulerRegistry.getTimeouts()).toEqual(
-            expect.arrayContaining(newRegisteredMembers.map(({ member }) => member.id)),
-          );
-        }, 10000);
-      });
-
       describe('registerLogReminder', () => {
         afterEach(async () => {
           await clear();

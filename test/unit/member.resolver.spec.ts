@@ -482,9 +482,11 @@ describe('MemberResolver', () => {
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, deleteClient);
       const deleteDispatch: IEventNotifyQueue = {
         type: QueueType.notifications,
-        message: JSON.stringify(generateDeleteDispatchMock({
-          dispatchId: generateDispatchId(ContentKey.newMemberNudge, member.id),
-        }))
+        message: JSON.stringify(
+          generateDeleteDispatchMock({
+            dispatchId: generateDispatchId(ContentKey.newMemberNudge, member.id),
+          }),
+        ),
       };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notifyQueue, deleteDispatch);
       expect(spyOnDeleteSchedules).toBeCalledWith({ memberId: member.id });
@@ -581,9 +583,11 @@ describe('MemberResolver', () => {
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, queueEventParams);
       const deleteDispatch: IEventNotifyQueue = {
         type: QueueType.notifications,
-        message: JSON.stringify(generateDeleteDispatchMock({
-          dispatchId: generateDispatchId(ContentKey.newMemberNudge, member.id),
-        })),
+        message: JSON.stringify(
+          generateDeleteDispatchMock({
+            dispatchId: generateDispatchId(ContentKey.newMemberNudge, member.id),
+          }),
+        ),
       };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notifyQueue, deleteDispatch);
       const eventParams: IEventMember = { memberId: member.id };
@@ -1368,7 +1372,6 @@ describe('MemberResolver', () => {
     let spyOnServiceUpdateMemberConfig;
     let spyOnServiceUpdateMemberConfigRegisteredAt;
     let spyOnSchedulerDeleteTimeout;
-    let spyOnSchedulerNewRegisteredMember;
 
     beforeEach(() => {
       spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
@@ -1380,10 +1383,6 @@ describe('MemberResolver', () => {
         'updateMemberConfigRegisteredAt',
       );
       spyOnSchedulerDeleteTimeout = jest.spyOn(memberScheduler, 'deleteTimeout');
-      spyOnSchedulerNewRegisteredMember = jest.spyOn(
-        memberScheduler,
-        'registerNewRegisteredMemberNotify',
-      );
     });
 
     afterEach(() => {
@@ -1393,7 +1392,6 @@ describe('MemberResolver', () => {
       spyOnServiceUpdateMemberConfig.mockReset();
       spyOnServiceUpdateMemberConfigRegisteredAt.mockReset();
       spyOnSchedulerDeleteTimeout.mockReset();
-      spyOnSchedulerNewRegisteredMember.mockReset();
       spyOnEventEmitter.mockReset();
       spyOnEventEmitter.mockClear();
     });
@@ -1429,12 +1427,6 @@ describe('MemberResolver', () => {
         isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       });
       expect(spyOnServiceUpdateMemberConfigRegisteredAt).toBeCalledWith(memberConfig.memberId);
-      expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: member.id });
-      expect(spyOnSchedulerNewRegisteredMember).toBeCalledWith({
-        memberId: member.id,
-        userId: member.primaryUserId.toString(),
-        firstLoggedInAt: expect.any(Date),
-      });
       const eventParams: IEventNotifyQueue = {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
@@ -1484,14 +1476,12 @@ describe('MemberResolver', () => {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
       };
-      expect(spyOnEventEmitter).toBeCalledTimes(2);
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
         1,
         EventType.onUpdatedMemberPlatform,
         eventParams,
       );
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notifyQueue, notify);
-      expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: member.id });
     });
 
     it('should not call updateMemberConfigRegisteredAt if firstLoggedInAt exists', async () => {

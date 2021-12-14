@@ -49,6 +49,18 @@ export class Logger extends BaseLogger {
     'sender',
     //queue
     'MessageId',
+    //dispatches
+    'dispatchId',
+    'correlationId',
+    'serviceName',
+    'notificationType',
+    'recipientClientId',
+    'senderClientId',
+    'appointmentTime',
+    'appointmentId',
+    'contentKey',
+    'triggeredAt',
+    'path',
     ...Object.keys(internalLogs),
   ];
 

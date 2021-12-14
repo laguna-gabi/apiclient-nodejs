@@ -52,8 +52,6 @@ export class MemberScheduler extends BaseScheduler {
   async init() {
     await super.init(async () => {
       await this.initRegisterCustomFutureNotify();
-      await this.initRegisterNewRegisteredMemberNotify();
-      await this.initRegisterNewRegisteredMemberNudgeNotify();
       await this.initRegisterLogReminder();
     });
   }
@@ -92,67 +90,6 @@ export class MemberScheduler extends BaseScheduler {
       this.addTimeout(id, timeout);
 
       return { id };
-    }
-  }
-
-  public async registerNewRegisteredMemberNotify({
-    memberId,
-    userId,
-    firstLoggedInAt,
-  }: {
-    memberId: string;
-    userId: string;
-    firstLoggedInAt: Date;
-  }) {
-    const milliseconds = add(firstLoggedInAt, { days: 1 }).getTime() - Date.now();
-    if (milliseconds > 0) {
-      const timeout = setTimeout(async () => {
-        this.logger.debug(
-          { memberId, userId, firstLoggedInAt },
-          MemberScheduler.name,
-          this.registerNewRegisteredMemberNotify.name,
-        );
-        const params: InternalNotifyParams = {
-          memberId,
-          userId,
-          type: InternalNotificationType.textToMember,
-          metadata: { contentType: ContentKey.newRegisteredMember },
-        };
-        this.eventEmitter.emit(EventType.notifyInternal, params);
-        this.deleteTimeout({ id: memberId });
-        await this.registerNewRegisteredMemberNudgeNotify({ memberId, userId, firstLoggedInAt });
-      }, milliseconds);
-      this.schedulerRegistry.addTimeout(memberId, timeout);
-    }
-  }
-
-  public async registerNewRegisteredMemberNudgeNotify({
-    memberId,
-    userId,
-    firstLoggedInAt,
-  }: {
-    memberId: string;
-    userId: string;
-    firstLoggedInAt: Date;
-  }) {
-    const milliseconds = add(firstLoggedInAt, { days: 2 }).getTime() - Date.now();
-    if (milliseconds > 0) {
-      const timeout = setTimeout(async () => {
-        this.logger.debug(
-          { memberId, userId, firstLoggedInAt },
-          MemberScheduler.name,
-          this.registerNewRegisteredMemberNudgeNotify.name,
-        );
-        const params: InternalNotifyParams = {
-          memberId,
-          userId,
-          type: InternalNotificationType.textToMember,
-          metadata: { contentType: ContentKey.newRegisteredMemberNudge },
-        };
-        this.eventEmitter.emit(EventType.notifyInternal, params);
-        this.deleteTimeout({ id: memberId });
-      }, milliseconds);
-      this.schedulerRegistry.addTimeout(memberId, timeout);
     }
   }
 
@@ -204,42 +141,6 @@ export class MemberScheduler extends BaseScheduler {
       notifications.length,
       'member future notifications',
       this.initRegisterCustomFutureNotify.name,
-    );
-  }
-
-  private async initRegisterNewRegisteredMemberNotify() {
-    const newRegisteredMembers = await this.memberService.getNewRegisteredMembers({ nudge: false });
-    await Promise.all(
-      newRegisteredMembers.map(async ({ memberConfig, member }) => {
-        return this.registerNewRegisteredMemberNotify({
-          memberId: member.id,
-          userId: member.primaryUserId,
-          firstLoggedInAt: memberConfig.firstLoggedInAt,
-        });
-      }),
-    );
-    this.logEndInit(
-      newRegisteredMembers.length,
-      'new registered members',
-      this.initRegisterNewRegisteredMemberNotify.name,
-    );
-  }
-
-  private async initRegisterNewRegisteredMemberNudgeNotify() {
-    const newRegisteredMembers = await this.memberService.getNewRegisteredMembers({ nudge: true });
-    await Promise.all(
-      newRegisteredMembers.map(async ({ memberConfig, member }) => {
-        return this.registerNewRegisteredMemberNudgeNotify({
-          memberId: member.id,
-          userId: member.primaryUserId,
-          firstLoggedInAt: memberConfig.firstLoggedInAt,
-        });
-      }),
-    );
-    this.logEndInit(
-      newRegisteredMembers.length,
-      'new registered members nudge',
-      this.initRegisterNewRegisteredMemberNudgeNotify.name,
     );
   }
 

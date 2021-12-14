@@ -15,7 +15,7 @@ import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import * as config from 'config';
-import { millisecondsInHour } from 'date-fns';
+import { addDays, millisecondsInHour } from 'date-fns';
 import { format, getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
 import { camelCase } from 'lodash';
 import { v4 } from 'uuid';
@@ -633,19 +633,39 @@ export class MemberResolver extends MemberBase {
 
     this.notifyUpdatedMemberConfig({ memberConfig });
 
-    this.memberScheduler.deleteTimeout({ id: member.id });
-    this.memberScheduler.deleteTimeout({ id: member.id + ReminderType.logReminder });
+    if (!currentMemberConfig.firstLoggedInAt) {
+      const correlationId = v4();
+      await this.notifyCreateDispatch(
+        this.generateMobileRegistrationDispatch(
+          member,
+          memberConfig.firstLoggedInAt,
+          correlationId,
+          ContentKey.newRegisteredMember,
+          1,
+        ),
+      );
+      await this.notifyCreateDispatch(
+        this.generateMobileRegistrationDispatch(
+          member,
+          memberConfig.firstLoggedInAt,
+          correlationId,
+          ContentKey.newRegisteredMemberNudge,
+          2,
+        ),
+      );
+      await this.notifyCreateDispatch(
+        this.generateMobileRegistrationDispatch(
+          member,
+          memberConfig.firstLoggedInAt,
+          correlationId,
+          ContentKey.logReminder,
+          3,
+        ),
+      );
+    }
 
-    await this.memberScheduler.registerNewRegisteredMemberNotify({
-      memberId: member.id,
-      userId: member.primaryUserId.toString(),
-      firstLoggedInAt: new Date(),
-    });
-
-    await this.memberScheduler.registerLogReminder({
-      memberId: member.id,
-      userId: member.primaryUserId.toString(),
-      firstLoggedInAt: new Date(),
+    await this.notifyDeleteDispatch({
+      dispatchId: generateDispatchId(ContentKey.newMemberNudge, member.id),
     });
   }
 
@@ -895,6 +915,7 @@ export class MemberResolver extends MemberBase {
       triggeredAt: metadata.triggeredAt,
       path: metadata.path,
     };
+    this.logger.debug(creteDispatch, MemberResolver.name, EventType.notifyQueue);
 
     const eventParams: IEventNotifyQueue = {
       type: QueueType.notifications,
@@ -1065,5 +1086,25 @@ export class MemberResolver extends MemberBase {
       message: JSON.stringify(settings),
     };
     this.eventEmitter.emit(EventType.notifyQueue, eventNotifyQueueParams);
+  }
+
+  private generateMobileRegistrationDispatch(
+    member: Member,
+    firstLoggedInAt: Date,
+    correlationId: string,
+    contentKey: ContentKey,
+    amount: number,
+  ): IDispatchParams {
+    return {
+      memberId: member.id,
+      userId: member.primaryUserId.toString(),
+      type: InternalNotificationType.textToMember,
+      correlationId,
+      dispatchId: generateDispatchId(contentKey, member.id),
+      metadata: {
+        contentType: contentKey,
+        triggeredAt: addDays(firstLoggedInAt, amount),
+      },
+    };
   }
 }

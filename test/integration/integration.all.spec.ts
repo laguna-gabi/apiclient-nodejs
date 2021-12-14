@@ -20,7 +20,6 @@ import {
   Errors,
   Identifiers,
   RegisterForNotificationParams,
-  ReminderType,
   UserRole,
   delay,
 } from '../../src/common';
@@ -431,23 +430,6 @@ describe('Integration tests: all', () => {
   });
 
   describe('new member + member registration scheduling', () => {
-    it('should create timeout for registered member', async () => {
-      const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
-      const registerForNotificationParams: RegisterForNotificationParams = {
-        isPushNotificationsEnabled: true,
-        platform: Platform.ios,
-        token: 'sampleiospushkittokentest',
-      };
-      await handler
-        .setContextUserId(member.id)
-        .mutations.registerMemberForNotifications({ registerForNotificationParams });
-      expect(handler.schedulerRegistry.getTimeouts()).toEqual(expect.arrayContaining([member.id]));
-      expect(handler.schedulerRegistry.getTimeouts()).toEqual(
-        expect.arrayContaining([member.id + ReminderType.logReminder]),
-      );
-    });
-
     it('should delete timeout for member if an appointment is scheduled', async () => {
       const primaryUser = await creators.createAndValidateUser();
       const org = await creators.createAndValidateOrg();
@@ -469,36 +451,6 @@ describe('Integration tests: all', () => {
 
       expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(
         expect.arrayContaining([member.id]),
-      );
-    });
-
-    it('should delete timeout for member if daily report has been set', async () => {
-      const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
-      const registerForNotificationParams: RegisterForNotificationParams = {
-        isPushNotificationsEnabled: true,
-        platform: Platform.ios,
-        token: 'sampleiospushkittokentest',
-      };
-      await handler
-        .setContextUserId(member.id)
-        .mutations.registerMemberForNotifications({ registerForNotificationParams });
-
-      expect(handler.schedulerRegistry.getTimeouts()).toEqual(
-        expect.arrayContaining([member.id + ReminderType.logReminder]),
-      );
-
-      await handler.setContextUserId(member.id).mutations.setDailyReportCategories({
-        dailyReportCategoriesInput: {
-          date: '2015/01/01',
-          categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
-        } as DailyReportCategoriesInput,
-      });
-
-      await delay(500);
-
-      expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(
-        expect.arrayContaining([member.id + ReminderType.logReminder]),
       );
     });
   });
