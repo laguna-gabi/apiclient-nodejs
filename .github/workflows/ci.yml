@@ -131,8 +131,6 @@ jobs:
   deploy:
     name: Deploy
     runs-on: self-hosted
-    needs: build-test-coverage
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     timeout-minutes: 2
     steps:
       - name: Checkout Git repository

@@ -31,11 +31,13 @@ export const generateRequestAppointmentMock = ({
   recipientClientId,
   senderClientId,
   appointmentId,
+  scheduleLink,
   correlationId = v4(),
 }: {
   recipientClientId: string;
   senderClientId: string;
   appointmentId: string;
+  scheduleLink: string;
   correlationId?: string;
 }): ObjectAppointmentRequestType => {
   const contentKey = ContentKey.appointmentRequest;
@@ -47,7 +49,8 @@ export const generateRequestAppointmentMock = ({
     notificationType: InternalNotificationType.textToMember,
     recipientClientId,
     senderClientId,
-    scheduleLink: contentKey,
+    scheduleLink,
+    contentKey,
     path: `connect/${appointmentId}`,
   };
 };
