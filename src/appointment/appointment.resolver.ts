@@ -235,7 +235,7 @@ export class AppointmentResolver extends AppointmentBase {
       metadata: {
         contentType: ContentKey.newMemberNudge,
         appointmentId,
-        triggeredAt: addDays(member.createdAt, 2),
+        triggersAt: addDays(member.createdAt, 2),
       },
     };
     this.eventEmitter.emit(EventType.notifyDispatch, newMemberNudgeEvent);

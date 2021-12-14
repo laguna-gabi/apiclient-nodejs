@@ -912,7 +912,7 @@ export class MemberResolver extends MemberBase {
       appointmentTime: metadata.appointmentTime,
       appointmentId: metadata.appointmentId,
       contentKey: metadata.contentType,
-      triggeredAt: metadata.triggeredAt,
+      triggersAt: metadata.triggersAt,
       path: metadata.path,
     };
     this.logger.debug(creteDispatch, MemberResolver.name, EventType.notifyQueue);
@@ -1103,7 +1103,7 @@ export class MemberResolver extends MemberBase {
       dispatchId: generateDispatchId(contentKey, member.id),
       metadata: {
         contentType: contentKey,
-        triggeredAt: addDays(firstLoggedInAt, amount),
+        triggersAt: addDays(firstLoggedInAt, amount),
       },
     };
   }

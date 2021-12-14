@@ -59,7 +59,7 @@ export class Logger extends BaseLogger {
     'appointmentTime',
     'appointmentId',
     'contentKey',
-    'triggeredAt',
+    'triggersAt',
     'path',
     ...Object.keys(internalLogs),
   ];

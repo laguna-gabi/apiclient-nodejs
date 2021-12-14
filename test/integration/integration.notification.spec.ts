@@ -1,3 +1,5 @@
+import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
+import { generateCreateMemberParams } from '../generators';
 import {
   ContentKey,
   InnerQueueTypes,
@@ -15,8 +17,6 @@ import {
 } from '@lagunahealth/pandora';
 import { addDays } from 'date-fns';
 import { QueueType, RegisterForNotificationParams, delay } from '../../src/common';
-import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
-import { generateCreateMemberParams } from '../generators';
 
 /**
  * Following all scenarios as defined here https://miro.com/app/board/o9J_lnJqa3w=/
@@ -101,7 +101,7 @@ describe('Integration tests: notifications', () => {
         expect.objectContaining({
           type: QueueType.notifications,
           message: expect.stringContaining(
-            key === 'correlationId' || key === 'appointmentId' || key === 'triggeredAt'
+            key === 'correlationId' || key === 'appointmentId' || key === 'triggersAt'
               ? key
               : `"${key}":"${mock2[key]}"`,
           ),
@@ -179,7 +179,7 @@ describe('Integration tests: notifications', () => {
         recipientClientId: member.id,
         senderClientId: member.primaryUserId.toString(),
         contentKey,
-        triggeredAt: addDays(new Date(), amount),
+        triggersAt: addDays(new Date(), amount),
       });
       const object1 = new ObjectGeneralMemberTriggeredClass(mock1);
       Object.keys(object1.objectGeneralMemberTriggeredMock).forEach((key) => {
@@ -187,7 +187,7 @@ describe('Integration tests: notifications', () => {
           expect.objectContaining({
             type: QueueType.notifications,
             message: expect.stringContaining(
-              key === 'correlationId' || key === 'triggeredAt' ? key : `"${key}":"${mock1[key]}"`,
+              key === 'correlationId' || key === 'triggersAt' ? key : `"${key}":"${mock1[key]}"`,
             ),
           }),
         );

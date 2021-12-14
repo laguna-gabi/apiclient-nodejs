@@ -102,7 +102,7 @@ export class InternalNotificationMetadata {
   sendBirdChannelUrl?: string;
   appointmentTime?: Date;
   appointmentId?: string;
-  triggeredAt?: Date;
+  triggersAt?: Date;
   checkAppointmentReminder?: boolean;
   path?: string;
   journalImageDownloadLink?: string;
