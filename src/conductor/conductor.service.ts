@@ -5,7 +5,7 @@ import {
   IUpdateClientSettings,
 } from '@lagunahealth/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { gapTriggeredAt, retryMax } from 'config';
+import { gapTriggersAt, retryMax } from 'config';
 import { differenceInSeconds } from 'date-fns';
 import { Dispatch, DispatchStatus, DispatchesService, TriggersService } from '.';
 import { Logger } from '../common';
@@ -45,13 +45,13 @@ export class ConductorService implements OnModuleInit {
       ...cleanObject,
       status: DispatchStatus.received,
     });
-    const currentMinusInput = differenceInSeconds(new Date(), dispatch.triggeredAt);
+    const currentMinusInput = differenceInSeconds(new Date(), dispatch.triggersAt);
     if (
-      !dispatch.triggeredAt ||
-      (currentMinusInput >= -1 * gapTriggeredAt && currentMinusInput <= gapTriggeredAt)
+      !dispatch.triggersAt ||
+      (currentMinusInput >= -1 * gapTriggersAt && currentMinusInput <= gapTriggersAt)
     ) {
       await this.createRealTimeDispatch(dispatch);
-    } else if (currentMinusInput > gapTriggeredAt) {
+    } else if (currentMinusInput > gapTriggersAt) {
       //past event
       this.logger.error(dispatch, ConductorService.name, this.handleCreateDispatch.name);
     } else {
@@ -141,7 +141,7 @@ export class ConductorService implements OnModuleInit {
     this.logger.debug(dispatch, ConductorService.name, this.registerFutureDispatch.name);
     const { _id } = await this.triggersService.update({
       dispatchId: dispatch.dispatchId,
-      expireAt: dispatch.triggeredAt,
+      expireAt: dispatch.triggersAt,
     });
     await this.dispatchesService.internalUpdate({
       dispatchId: dispatch.dispatchId,

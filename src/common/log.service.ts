@@ -24,7 +24,7 @@ export class Logger extends BaseLogger {
     'peerId',
     'contentKey',
     'chatLink',
-    'triggeredAt',
+    'triggersAt',
     'triggeredId',
     'notificationId',
     'path',

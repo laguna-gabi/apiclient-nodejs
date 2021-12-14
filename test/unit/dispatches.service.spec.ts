@@ -134,7 +134,7 @@ describe(DispatchesService.name, () => {
     const result = await service.internalUpdate({
       dispatchId: dispatch.dispatchId,
       status: null,
-      triggeredAt: null,
+      triggersAt: null,
     });
     expect(result).toEqual(expect.objectContaining(data));
 

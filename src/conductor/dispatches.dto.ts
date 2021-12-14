@@ -75,7 +75,7 @@ export class Dispatch {
   sentAt?: Date;
 
   @Prop({ isNan: true })
-  triggeredAt?: Date;
+  triggersAt?: Date;
 
   @Prop({ isNan: true })
   triggeredId?: string;

@@ -1,7 +1,7 @@
 import { InnerQueueTypes } from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { gapTriggeredAt } from 'config';
+import { gapTriggersAt } from 'config';
 import { addSeconds, subSeconds } from 'date-fns';
 import { animal, lorem } from 'faker';
 import { CommonModule, Logger } from '../../src/common';
@@ -108,9 +108,9 @@ describe(ConductorService.name, () => {
       spyOnNotificationsService.mockReset();
     });
 
-    it(`should handle triggeredAt from more ${gapTriggeredAt} seconds in the past`, async () => {
+    it(`should handle triggersAt from more ${gapTriggersAt} seconds in the past`, async () => {
       const createDispatch = generateDispatch({
-        triggeredAt: subSeconds(new Date(), gapTriggeredAt + 1),
+        triggersAt: subSeconds(new Date(), gapTriggersAt + 1),
       });
       spyOnDispatchesServiceUpdate.mockResolvedValueOnce(createDispatch);
 
@@ -119,7 +119,7 @@ describe(ConductorService.name, () => {
         type: InnerQueueTypes.createDispatch,
       });
 
-      expect(new Date().getTime()).toBeGreaterThan(createDispatch.triggeredAt.getTime());
+      expect(new Date().getTime()).toBeGreaterThan(createDispatch.triggersAt.getTime());
       expect(spyOnDispatchesServiceUpdate).toBeCalledWith(createDispatch);
       expect(spyOnTriggersServiceUpdate).not.toBeCalled();
       expect(spyOnNotificationsService).not.toBeCalled();
@@ -130,15 +130,15 @@ describe(ConductorService.name, () => {
       );
     });
 
-    it(`should handle triggeredAt of undefined as real time`, async () => {
+    it(`should handle triggersAt of undefined as real time`, async () => {
       await handleRealEvents(false);
     }, 10000);
 
-    it(`should handle triggeredAt within the recent time: ${gapTriggeredAt} seconds`, async () => {
+    it(`should handle triggersAt within the past/future ${gapTriggersAt} seconds`, async () => {
       await handleRealEvents(true);
     }, 10000);
 
-    const handleRealEvents = async (triggeredAt: boolean) => {
+    const handleRealEvents = async (triggersAt: boolean) => {
       const memberSettings = generateUpdateMemberSettingsMock();
       const userSettings = generateUpdateUserSettingsMock();
       const type: InnerQueueTypes = InnerQueueTypes.updateClientSettings;
@@ -149,7 +149,7 @@ describe(ConductorService.name, () => {
         recipientClientId: memberSettings.id,
         senderClientId: userSettings.id,
       });
-      dispatch.triggeredAt = triggeredAt ? subSeconds(new Date(), gapTriggeredAt) : undefined;
+      dispatch.triggersAt = triggersAt ? subSeconds(new Date(), gapTriggersAt) : undefined;
 
       spyOnDispatchesServiceInternalUpdate.mockResolvedValue(dispatch);
       spyOnDispatchesServiceUpdate.mockResolvedValue(dispatch);
@@ -161,8 +161,8 @@ describe(ConductorService.name, () => {
       spyOnNotificationsService.mockResolvedValueOnce(providerResult);
       await service.handleCreateDispatch({ ...dispatch, type: InnerQueueTypes.createDispatch });
 
-      if (triggeredAt) {
-        expect(new Date().getTime()).toBeGreaterThan(dispatch.triggeredAt.getTime());
+      if (triggersAt) {
+        expect(new Date().getTime()).toBeGreaterThan(dispatch.triggersAt.getTime());
       }
       expect(spyOnDispatchesServiceUpdate).toBeCalledWith(dispatch);
       expect(spyOnTriggersServiceUpdate).not.toBeCalled();
@@ -185,7 +185,7 @@ describe(ConductorService.name, () => {
         recipientClientId: memberSettings.id,
         senderClientId: userSettings.id,
       });
-      dispatch.triggeredAt = undefined;
+      dispatch.triggersAt = undefined;
       spyOnDispatchesServiceUpdate.mockResolvedValueOnce(dispatch);
 
       const failureReasons = [
@@ -230,9 +230,9 @@ describe(ConductorService.name, () => {
       expect(spyOnError).not.toBeCalled();
     }, 12000);
 
-    it(`should handle triggeredAt more than ${gapTriggeredAt} seconds in the future`, async () => {
+    it(`should handle triggersAt more than ${gapTriggersAt} seconds in the future`, async () => {
       const createDispatch = generateDispatch({
-        triggeredAt: addSeconds(new Date(), gapTriggeredAt + 2),
+        triggersAt: addSeconds(new Date(), gapTriggersAt + 2),
       });
       spyOnDispatchesServiceUpdate.mockResolvedValueOnce(createDispatch);
       spyOnTriggersServiceUpdate.mockResolvedValueOnce({ _id: createDispatch.triggeredId });
@@ -242,11 +242,11 @@ describe(ConductorService.name, () => {
         type: InnerQueueTypes.createDispatch,
       });
 
-      expect(new Date().getTime()).toBeLessThan(createDispatch.triggeredAt.getTime());
+      expect(new Date().getTime()).toBeLessThan(createDispatch.triggersAt.getTime());
       expect(spyOnDispatchesServiceUpdate).toBeCalledWith(createDispatch);
       expect(spyOnTriggersServiceUpdate).toBeCalledWith({
         dispatchId: createDispatch.dispatchId,
-        expireAt: createDispatch.triggeredAt,
+        expireAt: createDispatch.triggersAt,
       });
       expect(spyOnNotificationsService).not.toBeCalled();
       expect(spyOnError).not.toBeCalled();

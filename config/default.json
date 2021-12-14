@@ -21,6 +21,6 @@
   "twilio": {
     "source": "+12058511112"
   },
-  "gapTriggeredAt": 5,
+  "gapTriggersAt": 5,
   "retryMax": 2
 }

@@ -133,7 +133,7 @@ describe(QueueService.name, () => {
       await service.handleMessage(message);
 
       delete params.deliveredAt;
-      delete params.triggeredAt;
+      delete params.triggersAt;
       expect(spyOnCrateDispatch).toBeCalledWith(expect.objectContaining(params));
       spyOnCrateDispatch.mockReset();
     });
