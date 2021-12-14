@@ -54,6 +54,7 @@ export interface ICreateDispatch extends IDispatch {
   triggersAt?: Date;
   notificationId?: string;
   path?: string;
+  scheduleLink?: string;
 }
 
 export type IDeleteDispatch = IDispatch;
