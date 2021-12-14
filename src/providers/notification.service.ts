@@ -58,7 +58,7 @@ export class NotificationsService {
         recipientClient.orgName,
       );
       // this.logger.audit(AuditType.message, sendSendBirdNotification, this.send.name);
-      return this.sendBird.send(sendSendBirdNotification);
+      await this.sendBird.send(sendSendBirdNotification);
       const sendTwilioNotification = this.generateTwilioParams(content, recipientClient);
       // this.logger.audit(AuditType.message, sendTwilioNotification, this.send.name);
       return this.twilio.send(sendTwilioNotification);
@@ -179,8 +179,7 @@ export class NotificationsService {
         notificationType === InternalNotificationType.textSmsToMember ||
         notificationType === InternalNotificationType.textToMember
       ) {
-        return;
-        format(
+        return format(
           utcToZonedTime(appointmentTime, lookup(zipCode)),
           `${this.scheduleAppointmentDateFormat} (z)`,
           { timeZone: lookup(zipCode) },
