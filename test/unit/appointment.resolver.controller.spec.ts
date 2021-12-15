@@ -239,10 +239,7 @@ describe('AppointmentResolver', () => {
     it('should validate that on schedule appointment, internal events are sent', async () => {
       const status = AppointmentStatus.scheduled;
       const appointment = generateScheduleAppointmentParams();
-      spyOnServiceSchedule.mockImplementationOnce(async () => ({
-        ...appointment,
-        status,
-      }));
+      spyOnServiceSchedule.mockImplementationOnce(async () => ({ ...appointment, status }));
       spyOnServiceGet.mockImplementationOnce(async () => undefined);
 
       const result = await resolver.scheduleAppointment(appointment);
@@ -251,47 +248,9 @@ describe('AppointmentResolver', () => {
         memberId: result.memberId.toString(),
         userId: result.userId.toString(),
         key: result.id,
-        value: {
-          status: result.status,
-          start: result.start,
-        },
+        value: { status: result.status, start: result.start },
       };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
-        1,
-        EventType.onUpdatedAppointment,
-        eventParams,
-      );
-
-      const notifyUserParams: InternalNotifyParams = {
-        memberId: appointment.memberId,
-        userId: appointment.userId,
-        type: InternalNotificationType.textSmsToUser,
-        metadata: {
-          contentType: ContentKey.appointmentScheduledUser,
-          appointmentTime: appointment.start,
-        },
-      };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
-        2,
-        EventType.notifyInternal,
-        notifyUserParams,
-      );
-
-      const notifyMemberParams: InternalNotifyParams = {
-        memberId: appointment.memberId.toString(),
-        userId: appointment.userId.toString(),
-        type: InternalNotificationType.textSmsToMember,
-        metadata: {
-          contentType: ContentKey.appointmentScheduledMember,
-          appointmentTime: appointment.start,
-        },
-      };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
-        3,
-        EventType.notifyInternal,
-        notifyMemberParams,
-      );
-      expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: appointment.memberId.toString() });
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedAppointment, eventParams);
     });
   });
 

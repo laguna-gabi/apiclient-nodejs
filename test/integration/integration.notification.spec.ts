@@ -1,13 +1,16 @@
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
-import { generateCreateMemberParams } from '../generators';
+import { generateCreateMemberParams, generateScheduleAppointmentParams } from '../generators';
 import {
   ContentKey,
   InnerQueueTypes,
+  ObjectAppointmentScheduledClass,
   ObjectGeneralMemberTriggeredClass,
   ObjectNewMemberClass,
   ObjectNewMemberNudgeClass,
   ObjectUpdateMemberSettingsClass,
   Platform,
+  generateAppointmentScheduledMemberMock,
+  generateAppointmentScheduledUserMock,
   generateDispatchId,
   generateGeneralMemberTriggeredMock,
   generateNewMemberMock,
@@ -249,6 +252,61 @@ describe('Integration tests: notifications', () => {
       'dispatchId',
       generateDispatchId(ContentKey.newMemberNudge, member.id),
     );
+  });
+
+  /**
+   * Trigger : AppointmentBase.scheduleAppointment
+   * Dispatches:
+   *      1. send a text sms message to user that appointment has been scheduled for him/her
+   *      2. send a text sms message to member that appointment has been scheduled for him/her
+   *      3. set up a reminder for the member 15 minutes before the appointment
+   *      4. set up a reminder for the member 1 day before the appointment
+   */
+  // eslint-disable-next-line max-len
+  it(`scheduleAppointment: should send dispatches of type ${ContentKey.appointmentScheduledUser}`, async () => {
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+    await delay(200);
+    handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+    const appointmentParams = generateScheduleAppointmentParams({
+      userId: member.primaryUserId.toString(),
+      memberId: member.id,
+    });
+    const { id } = await handler.mutations.scheduleAppointment({ appointmentParams });
+    await delay(200);
+
+    const checkValues = (mock, amount: number) => {
+      const object = new ObjectAppointmentScheduledClass(mock);
+      Object.keys(object.objectAppointmentScheduledType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(
+          amount,
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'appointmentTime'
+                ? key
+                : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    };
+
+    const baseParams = { appointmentId: id, appointmentTime: appointmentParams.start };
+    const mockForUser = generateAppointmentScheduledUserMock({
+      recipientClientId: member.primaryUserId.toString(),
+      senderClientId: member.id,
+      ...baseParams,
+    });
+    const mockForMember = generateAppointmentScheduledMemberMock({
+      recipientClientId: member.id,
+      senderClientId: member.primaryUserId.toString(),
+      ...baseParams,
+    });
+    checkValues(mockForUser, 1);
+    checkValues(mockForMember, 2);
   });
 
   const expectStringContaining = (nthCall: number, key: string, value: string | boolean) => {
