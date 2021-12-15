@@ -9,6 +9,17 @@
   <a href="https://github.com/LagunaHealth/iris/contributors" alt="Contributors">
     <img src="https://img.shields.io/github/contributors/badges/shields" />
   </a>
+  <b>Total coverage:</b>
+  <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="lines">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-lines.svg" />
+  </a>
+  <b>Other coverage:</b>
+  <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="functions">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-functions.svg" />
+  </a>
+  <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="statements">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-statements.svg" />
+  </a><br/>
 </p>
 
 # 📨 Iris
