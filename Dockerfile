@@ -6,6 +6,8 @@ COPY . /hepius
 # install packages
 ARG NPM_TOKEN
 RUN echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN" > ~/.npmrc
+RUN echo "arch=x64" >> ~/.npmrc
+RUN echo "platform=linux" >> ~/.npmrc
 RUN yarn
 
 # lean output image
