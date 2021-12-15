@@ -34,19 +34,21 @@ export class InternationalizationService implements OnModuleInit {
 
   getContents(params: GetContentsParams) {
     const { contentKey, recipientClient, senderClient, extraData, notificationType } = params;
+    // eslint-disable-next-line max-len
+    // if getContents is applied more than once the honorific value in recipientClient may be corrupted
+    let translatedHonorific;
     const lng =
       notificationType === InternalNotificationType.textSmsToUser
         ? Language.en
         : recipientClient.language;
 
     if (recipientClient) {
-      recipientClient.honorific = this.i18n.t(`honorific.${recipientClient.honorific}`, {
-        member: recipientClient,
+      translatedHonorific = this.i18n.t(`honorific.${recipientClient.honorific}`, {
         lng,
       });
     }
     return this.i18n.t(`contents.${contentKey}`, {
-      member: recipientClient,
+      member: { ...recipientClient, honorific: translatedHonorific },
       user: senderClient,
       ...extraData,
       lng,

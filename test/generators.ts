@@ -28,9 +28,13 @@ export const generateId = (id?): string => {
 export const generateUpdateMemberSettingsMock = ({
   id = generateId(),
   isAppointmentsReminderEnabled = true,
+  platform = Platform.web,
+  isPushNotificationsEnabled = false,
 }: {
   id?: string;
   isAppointmentsReminderEnabled?: boolean;
+  platform?: Platform;
+  isPushNotificationsEnabled?: boolean;
 } = {}): Omit<ClientSettings, 'avatar'> => {
   return {
     id,
@@ -41,8 +45,8 @@ export const generateUpdateMemberSettingsMock = ({
     honorific: Honorific.reverend,
     zipCode: '91210',
     language: Language.en,
-    platform: Platform.web,
-    isPushNotificationsEnabled: false,
+    platform,
+    isPushNotificationsEnabled,
     isAppointmentsReminderEnabled,
     isRecommendationsEnabled: true,
     externalUserId: v4(),
@@ -84,6 +88,7 @@ export const generateDispatch = ({
   deliveredAt = add(new Date(), { seconds: 2 }),
   retryCount = defaultDispatchParams.retryCount,
   failureReasons = [lorem.sentence()],
+  scheduleLink = internet.url(),
 }: Partial<Dispatch> = {}): Dispatch => {
   return {
     dispatchId,
@@ -106,6 +111,7 @@ export const generateDispatch = ({
     deliveredAt,
     retryCount,
     failureReasons,
+    scheduleLink,
   };
 };
 
