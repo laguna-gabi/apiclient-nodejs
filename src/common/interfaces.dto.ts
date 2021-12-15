@@ -1,8 +1,3 @@
-import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
-import { Schema } from '@nestjs/mongoose';
-import { IsAlphanumeric, IsOptional } from 'class-validator';
-import { Types } from 'mongoose';
-import { ErrorType, Errors, IsNotPlatformWeb } from '.';
 import {
   CancelNotificationType,
   ContentKey,
@@ -12,6 +7,11 @@ import {
   NotificationType,
   Platform,
 } from '@lagunahealth/pandora';
+import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { Schema } from '@nestjs/mongoose';
+import { IsAlphanumeric, IsOptional } from 'class-validator';
+import { Types } from 'mongoose';
+import { ErrorType, Errors, IsNotPlatformWeb } from '.';
 
 /**************************************************************************************************
  *************************** Enum registration for external gql methods ***************************
@@ -101,8 +101,11 @@ export class InternalNotificationMetadata {
   scheduleLink?: string;
   sendBirdChannelUrl?: string;
   appointmentTime?: Date;
+  appointmentId?: string;
+  triggersAt?: Date;
   checkAppointmentReminder?: boolean;
   path?: string;
+  journalImageDownloadLink?: string;
 }
 
 export class InternalNotifyParams {
@@ -111,6 +114,11 @@ export class InternalNotifyParams {
   type: InternalNotificationType;
   metadata: InternalNotificationMetadata;
   content?: string;
+}
+
+export class IDispatchParams extends InternalNotifyParams {
+  dispatchId: string;
+  correlationId?: string;
 }
 
 export type InternalNotifyControlMemberParams = Omit<InternalNotifyParams, 'userId'>;
@@ -154,6 +162,7 @@ export class SendSendBirdNotification extends BaseSendNotification {
   message: string;
   notificationType: AllNotificationTypes;
   appointmentId?: string;
+  journalImageDownloadLink?: string;
 }
 
 export class CancelNotificationParams extends BaseSendNotification {

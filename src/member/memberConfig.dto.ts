@@ -9,8 +9,7 @@ import { Platform } from '@lagunahealth/pandora';
  *************************************************************************************************/
 @InputType()
 export class UpdateMemberConfigParams {
-  @Field(() => String)
-  memberId: string;
+  memberId?: string;
 
   @Field(() => Platform, { nullable: true })
   @IsOptional()

@@ -33,7 +33,7 @@ import {
   generateReplaceUserForMemberParams,
   generateSetGeneralNotesParams,
   generateUniqueUrl,
-  generateUpdateJournalParams,
+  generateUpdateJournalTextParams,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
@@ -607,16 +607,16 @@ describe('Validations - member', () => {
     });
   });
 
-  describe('updateJournal', () => {
+  describe('updateJournalText', () => {
     test.each`
       field     | error
       ${'id'}   | ${`Field "id" of required type "String!" was not provided.`}
       ${'text'} | ${`Field "text" of required type "String!" was not provided.`}
     `(`should fail to update journal since mandatory field $field is missing`, async (params) => {
-      const updateJournalParams = generateUpdateJournalParams();
-      delete updateJournalParams[params.field];
-      await handler.mutations.updateJournal({
-        updateJournalParams,
+      const updateJournalTextParams = generateUpdateJournalTextParams();
+      delete updateJournalTextParams[params.field];
+      await handler.mutations.updateJournalText({
+        updateJournalTextParams,
         missingFieldError: params.error,
       });
     });
@@ -626,9 +626,9 @@ describe('Validations - member', () => {
       ${{ id: 123 }}
       ${{ text: 123 }}
     `(`should fail to update journal since $input is not a valid type`, async (params) => {
-      const updateJournalParams = generateUpdateJournalParams({ ...params.field });
-      await handler.mutations.updateJournal({
-        updateJournalParams,
+      const updateJournalTextParams = generateUpdateJournalTextParams({ ...params.field });
+      await handler.mutations.updateJournalText({
+        updateJournalTextParams,
         missingFieldError: stringError,
       });
     });
@@ -690,6 +690,15 @@ describe('Validations - member', () => {
   describe('deleteJournalImage', () => {
     it('should throw an error for invalid id', async () => {
       await handler.mutations.deleteJournalImage({
+        id: 123,
+        missingFieldError: stringError,
+      });
+    });
+  });
+
+  describe('publishJournal', () => {
+    it('should throw an error for invalid id', async () => {
+      await handler.mutations.publishJournal({
         id: 123,
         missingFieldError: stringError,
       });

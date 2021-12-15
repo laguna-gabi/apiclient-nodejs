@@ -10,7 +10,7 @@ export class OrgResolver {
   constructor(private readonly orgService: OrgService) {}
 
   @Mutation(() => Identifier)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async createOrg(
     @Args(camelCase(CreateOrgParams.name))
     createOrgParams: CreateOrgParams,
@@ -19,7 +19,7 @@ export class OrgResolver {
   }
 
   @Query(() => Org, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getOrg(@Args('id', { type: () => String }) id: string): Promise<Org | null> {
     return this.orgService.get(id);
   }

@@ -20,7 +20,6 @@ import {
   CreateTaskParams,
   Goal,
   GoalDocument,
-  ImageFormat,
   Journal,
   JournalDocument,
   Member,
@@ -313,67 +312,6 @@ export class MemberService extends BaseService {
     },
   };
 
-  async getNewUnregisteredMembers() {
-    const result = await this.memberModel.aggregate([
-      { $match: { createdAt: { $gte: sub(new Date(), { days: 2 }) } } },
-      { $project: { member: '$$ROOT' } },
-      {
-        $lookup: {
-          from: 'memberconfigs',
-          localField: 'member._id',
-          foreignField: 'memberId',
-          as: 'memberconfig',
-        },
-      },
-      {
-        $unwind: {
-          path: '$memberconfig',
-        },
-      },
-      {
-        $match: {
-          'memberconfig.platform': 'web',
-        },
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'primaryUserId',
-          foreignField: 'member._id',
-          as: 'user',
-        },
-      },
-      {
-        $lookup: {
-          from: 'appointments',
-          localField: 'member._id',
-          foreignField: 'memberId',
-          as: 'appointments',
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          member: 1,
-          user: { $arrayElemAt: ['$user', 0] },
-          appointmentId: {
-            $toString: {
-              $arrayElemAt: ['$appointments._id', 0],
-            },
-          },
-          ...this.ScheduledOrDoneAppointmentsCount,
-        },
-      },
-    ]);
-    return result.filter((newMember) => {
-      newMember.user.id = newMember.user._id;
-      newMember.member.id = newMember.member._id;
-      delete newMember.user._id;
-      delete newMember.member._id;
-      return newMember.ScheduledOrDoneAppointmentsCount === 0;
-    });
-  }
-
   async getNewRegisteredMembers({ nudge }: { nudge: boolean }) {
     const result = await this.memberConfigModel.aggregate([
       {
@@ -656,11 +594,15 @@ export class MemberService extends BaseService {
     setParams =
       isRecommendationsEnabled == null ? setParams : { ...setParams, isRecommendationsEnabled };
 
-    return this.memberConfigModel.findOneAndUpdate(
+    const memberConfig = await this.memberConfigModel.findOneAndUpdate(
       { memberId: new Types.ObjectId(memberId) },
       { $set: setParams },
       { new: true },
     );
+    if (!memberConfig) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
+    return memberConfig;
   }
 
   async updateMemberConfigRegisteredAt(memberId: Types.ObjectId) {
@@ -726,10 +668,13 @@ export class MemberService extends BaseService {
   }
 
   async updateJournal(updateJournalParams: UpdateJournalParams): Promise<Journal> {
-    const { id, text } = updateJournalParams;
+    const { id, memberId } = updateJournalParams;
+    delete updateJournalParams.id;
+    delete updateJournalParams.memberId;
+
     const result = await this.journalModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(id) },
-      { $set: { text } },
+      { _id: new Types.ObjectId(id), memberId: new Types.ObjectId(memberId) },
+      { $set: updateJournalParams },
       { new: true },
     );
 
@@ -740,28 +685,11 @@ export class MemberService extends BaseService {
     return result;
   }
 
-  async updateJournalImageFormat({
-    id,
-    imageFormat,
-  }: {
-    id: string;
-    imageFormat: ImageFormat | null;
-  }): Promise<Journal> {
-    const result = await this.journalModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(id) },
-      { $set: { imageFormat } },
-      { new: true },
-    );
-
-    if (!result) {
-      throw new Error(Errors.get(ErrorType.memberJournalNotFound));
-    }
-
-    return result;
-  }
-
-  async getJournal(id: string): Promise<Journal> {
-    const result = await this.journalModel.findById(id);
+  async getJournal(id: string, memberId: string): Promise<Journal> {
+    const result = await this.journalModel.findOne({
+      _id: new Types.ObjectId(id),
+      memberId: new Types.ObjectId(memberId),
+    });
 
     if (!result) {
       throw new Error(Errors.get(ErrorType.memberJournalNotFound));
@@ -777,14 +705,17 @@ export class MemberService extends BaseService {
     });
   }
 
-  async deleteJournal(id: string): Promise<Journal> {
-    const result = await this.journalModel.findOneAndDelete({ _id: new Types.ObjectId(id) });
+  async deleteJournal(id: string, memberId: string): Promise<boolean> {
+    const result = await this.journalModel.findOneAndDelete({
+      _id: new Types.ObjectId(id),
+      memberId: new Types.ObjectId(memberId),
+    });
 
     if (!result) {
       throw new Error(Errors.get(ErrorType.memberJournalNotFound));
     }
 
-    return result;
+    return true;
   }
 
   /*************************************************************************************************

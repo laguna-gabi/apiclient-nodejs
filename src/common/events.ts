@@ -13,7 +13,6 @@ export enum EventType {
   onReplacedUserForMember = 'onReplacedUserForMember',
   onMemberBecameOffline = 'onMemberBecameOffline',
   onDeletedMember = 'onDeletedMember',
-  onArchivedMember = 'onArchivedMember',
 
   //user
   onNewUser = 'onNewUser',
@@ -35,6 +34,7 @@ export enum EventType {
   notifyInternalControlMember = 'notifyInternalControlMember',
   notifySlack = 'notifySlack',
   notifyQueue = 'notifyQueue',
+  notifyDispatch = 'notifyDispatch',
 
   //daily logs
   onSetDailyLogCategories = 'onSetDailyLogCategories',

@@ -1,15 +1,12 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron, SchedulerRegistry } from '@nestjs/schedule';
 import * as config from 'config';
-import { add, secondsToMilliseconds } from 'date-fns';
+import { secondsToMilliseconds } from 'date-fns';
 import { v4 } from 'uuid';
 import { InternalSchedulerService } from '.';
-import { EventType, InternalNotifyParams, Logger, internalLogs } from '../common';
-import { Member } from '../member';
+import { Logger, internalLogs } from '../common';
 import { Bitly } from '../providers';
-import { User } from '../user';
 import Timeout = NodeJS.Timeout;
-import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
 
 export enum LeaderType {
   appointment = 'appointment',
@@ -89,39 +86,6 @@ export class BaseScheduler {
         );
         await this.initCallbacks();
       }
-    }
-  }
-
-  public async registerNewMemberNudge({
-    member,
-    user,
-    appointmentId,
-  }: {
-    member: Member;
-    user: User;
-    appointmentId: string;
-  }) {
-    const memberId = member.id.toString();
-    const milliseconds = add(member.createdAt, { days: 2 }).getTime() - new Date().getTime();
-    if (milliseconds > 0) {
-      const timeout = setTimeout(async () => {
-        const downloadLink = await this.bitly.shortenLink(
-          `${config.get('hosts.app')}/download/${appointmentId}`,
-        );
-
-        const params: InternalNotifyParams = {
-          memberId,
-          userId: user.id,
-          type: InternalNotificationType.textSmsToMember,
-          metadata: {
-            contentType: ContentKey.newMemberNudge,
-            extraData: { downloadLink },
-          },
-        };
-        this.eventEmitter.emit(EventType.notifyInternal, params);
-        this.deleteTimeout({ id: memberId });
-      }, milliseconds);
-      this.addTimeout(memberId, timeout);
     }
   }
 

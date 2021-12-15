@@ -44,12 +44,13 @@ export class QueueService implements OnModuleInit {
     }
 
     try {
-      await this.sqs
+      const { MessageId } = await this.sqs
         .sendMessage({
           MessageBody: params.message,
           ...this.getQueueConfigs(params.type),
         })
         .promise();
+      this.logger.debug({ ...params, MessageId }, QueueService.name, this.sendMessage.name);
     } catch (ex) {
       this.logger.error(params, QueueService.name, this.sendMessage.name, ex);
     }

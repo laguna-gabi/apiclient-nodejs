@@ -1,19 +1,24 @@
 import {
   ContentKey,
+  ICreateDispatch,
   IDeleteClientSettings,
+  IDeleteDispatch,
   InnerQueueTypes,
   InternalNotificationType,
   Language,
   NotificationType,
   Platform,
+  ServiceName,
+  generateDispatchId,
 } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import * as config from 'config';
-import { millisecondsInHour } from 'date-fns';
+import { addDays, millisecondsInHour } from 'date-fns';
 import { format, getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
 import { camelCase } from 'lodash';
+import { v4 } from 'uuid';
 import { lookup } from 'zipcode-to-timezone';
 import {
   AppointmentCompose,
@@ -38,7 +43,7 @@ import {
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
   TaskStatus,
-  UpdateJournalParams,
+  UpdateJournalTextParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -50,6 +55,7 @@ import {
   Errors,
   EventType,
   GetContentsParams,
+  IDispatchParams,
   IEventMember,
   IEventNotifyQueue,
   IEventOnMemberBecameOffline,
@@ -110,7 +116,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Identifier)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async createMember(
     @Args(camelCase(CreateMemberParams.name))
     createMemberParams: CreateMemberParams,
@@ -133,7 +139,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Member)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async updateMember(
     @Args(camelCase(UpdateMemberParams.name)) updateMemberParams: UpdateMemberParams,
   ): Promise<Member> {
@@ -144,7 +150,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [MemberSummary])
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getMembers(
     @Args('orgId', { type: () => String, nullable: true }) orgId?: string,
   ): Promise<MemberSummary[]> {
@@ -152,7 +158,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [AppointmentCompose])
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getMembersAppointments(
     @Args('orgId', { type: () => String, nullable: true }) orgId?: string,
   ): Promise<AppointmentCompose[]> {
@@ -175,8 +181,7 @@ export class MemberResolver extends MemberBase {
     await this.cognitoService.disableMember(member.deviceId);
 
     this.notifyDeletedMemberConfig(member.id);
-    const eventParams: IEventMember = { memberId: id };
-    this.eventEmitter.emit(EventType.onArchivedMember, eventParams);
+    await this.deleteSchedules({ memberId: id });
     return true;
   }
 
@@ -206,6 +211,7 @@ export class MemberResolver extends MemberBase {
 
     this.notifyDeletedMemberConfig(member.id);
     const eventParams: IEventMember = { memberId: id };
+    await this.deleteSchedules(eventParams);
     this.eventEmitter.emit(EventType.onDeletedMember, eventParams);
     return true;
   }
@@ -239,7 +245,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Query(() => DischargeDocumentsLinks)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getMemberUploadDischargeDocumentsLinks(@Args('id', { type: () => String }) id: string) {
     const member = await this.memberService.get(id);
 
@@ -296,7 +302,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Query(() => String)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getMemberUploadRecordingLink(
     @Args(camelCase(RecordingLinkParams.name))
     recordingLinkParams: RecordingLinkParams,
@@ -310,7 +316,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => String)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getMemberDownloadRecordingLink(
     @Args(camelCase(RecordingLinkParams.name))
     recordingLinkParams: RecordingLinkParams,
@@ -324,7 +330,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async updateRecording(
     @Args(camelCase(UpdateRecordingParams.name)) updateRecordingParams: UpdateRecordingParams,
   ) {
@@ -332,7 +338,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [RecordingOutput])
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getRecordings(@Args('memberId', { type: () => String }) memberId: string) {
     return this.memberService.getRecordings(memberId);
   }
@@ -342,7 +348,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Identifier)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async createGoal(
     @Args(camelCase(CreateTaskParams.name))
     createTaskParams: CreateTaskParams,
@@ -351,7 +357,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async updateGoalStatus(
     @Args(camelCase(UpdateTaskStatusParams.name))
     updateTaskStatusParams: UpdateTaskStatusParams,
@@ -364,7 +370,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Identifier)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async createActionItem(
     @Args(camelCase(CreateTaskParams.name))
     createTaskParams: CreateTaskParams,
@@ -376,7 +382,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async updateActionItemStatus(
     @Args(camelCase(UpdateTaskStatusParams.name))
     updateTaskStatusParams: UpdateTaskStatusParams,
@@ -389,7 +395,7 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async setGeneralNotes(
     @Args(camelCase(SetGeneralNotesParams.name)) setGeneralNotesParams: SetGeneralNotesParams,
   ) {
@@ -411,18 +417,34 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Journal)
   @Roles(MemberRole.member)
-  async updateJournal(
-    @Args(camelCase(UpdateJournalParams.name)) updateJournalParams: UpdateJournalParams,
+  async updateJournalText(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args(camelCase(UpdateJournalTextParams.name)) updateJournalTextParams: UpdateJournalTextParams,
   ) {
-    const journal = await this.memberService.updateJournal(updateJournalParams);
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const journal = await this.memberService.updateJournal({
+      ...updateJournalTextParams,
+      memberId,
+      published: false,
+    });
 
     return this.addMemberDownloadJournalLinks(journal);
   }
 
   @Query(() => Journal)
   @Roles(MemberRole.member)
-  async getJournal(@Args('id', { type: () => String }) id: string) {
-    const journal = await this.memberService.getJournal(id);
+  async getJournal(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args('id', { type: () => String }) id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const journal = await this.memberService.getJournal(id, memberId);
 
     return this.addMemberDownloadJournalLinks(journal);
   }
@@ -444,8 +466,15 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member)
-  async deleteJournal(@Args('id', { type: () => String }) id: string) {
-    const { memberId } = await this.memberService.deleteJournal(id);
+  async deleteJournal(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args('id', { type: () => String }) id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    await this.memberService.deleteJournal(id, memberId);
 
     return this.storageService.deleteJournalImages(id, memberId.toString());
   }
@@ -453,14 +482,17 @@ export class MemberResolver extends MemberBase {
   @Query(() => JournalImagesLinks)
   @Roles(MemberRole.member)
   async getMemberUploadJournalLinks(
+    @Client('roles') roles,
+    @Client('_id') memberId,
     @Args(camelCase(GetMemberUploadJournalLinksParams.name))
     getMemberUploadJournalLinksParams: GetMemberUploadJournalLinksParams,
   ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
     const { id, imageFormat } = getMemberUploadJournalLinksParams;
-    const { memberId } = await this.memberService.updateJournalImageFormat(
-      getMemberUploadJournalLinksParams,
-    );
 
+    await this.memberService.updateJournal({ id, memberId, imageFormat, published: false });
     const [normalImageLink, smallImageLink] = await Promise.all([
       this.storageService.getUploadUrl({
         storageType: StorageType.journals,
@@ -479,15 +511,59 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member)
-  async deleteJournalImage(@Args('id', { type: () => String }) id: string) {
-    const { memberId } = await this.memberService.updateJournalImageFormat({
+  async deleteJournalImage(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args('id', { type: () => String }) id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    await this.memberService.updateJournal({ id, memberId, imageFormat: null, published: false });
+
+    return this.storageService.deleteJournalImages(id, memberId);
+  }
+
+  @Mutation(() => String)
+  @Roles(MemberRole.member)
+  async publishJournal(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args('id', { type: () => String }) id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const { imageFormat, text } = await this.memberService.updateJournal({
       id,
-      imageFormat: null,
+      memberId,
+      published: true,
+    });
+    const member = await this.memberService.get(memberId);
+    const sendBirdChannelUrl = await this.getSendBirdChannelUrl({
+      memberId,
+      userId: member.primaryUserId.toString(),
     });
 
-    await this.storageService.deleteJournalImages(id, memberId.toString());
+    let url;
+    if (imageFormat) {
+      url = await this.storageService.getDownloadUrl({
+        storageType: StorageType.journals,
+        memberId,
+        id: `${id}_NormalImage.${imageFormat}`,
+      });
+    }
 
-    return true;
+    return this.internalNotify({
+      memberId,
+      userId: member.primaryUserId.toString(),
+      type: InternalNotificationType.chatMessageJournal,
+      content: text,
+      metadata: {
+        sendBirdChannelUrl,
+        journalImageDownloadLink: url,
+      },
+    });
   }
 
   private async addMemberDownloadJournalLinks(journal: Journal) {
@@ -557,24 +633,44 @@ export class MemberResolver extends MemberBase {
 
     this.notifyUpdatedMemberConfig({ memberConfig });
 
-    this.memberScheduler.deleteTimeout({ id: member.id });
-    this.memberScheduler.deleteTimeout({ id: member.id + ReminderType.logReminder });
+    if (!currentMemberConfig.firstLoggedInAt) {
+      const correlationId = v4();
+      await this.notifyCreateDispatch(
+        this.generateMobileRegistrationDispatch(
+          member,
+          memberConfig.firstLoggedInAt,
+          correlationId,
+          ContentKey.newRegisteredMember,
+          1,
+        ),
+      );
+      await this.notifyCreateDispatch(
+        this.generateMobileRegistrationDispatch(
+          member,
+          memberConfig.firstLoggedInAt,
+          correlationId,
+          ContentKey.newRegisteredMemberNudge,
+          2,
+        ),
+      );
+      await this.notifyCreateDispatch(
+        this.generateMobileRegistrationDispatch(
+          member,
+          memberConfig.firstLoggedInAt,
+          correlationId,
+          ContentKey.logReminder,
+          3,
+        ),
+      );
+    }
 
-    await this.memberScheduler.registerNewRegisteredMemberNotify({
-      memberId: member.id,
-      userId: member.primaryUserId.toString(),
-      firstLoggedInAt: new Date(),
-    });
-
-    await this.memberScheduler.registerLogReminder({
-      memberId: member.id,
-      userId: member.primaryUserId.toString(),
-      firstLoggedInAt: new Date(),
+    await this.notifyDeleteDispatch({
+      dispatchId: generateDispatchId(ContentKey.newMemberNudge, member.id),
     });
   }
 
   @Mutation(() => String, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async notify(@Args(camelCase(NotifyParams.name)) notifyParams: NotifyParams) {
     const { memberId, userId, type, metadata } = notifyParams;
     const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId);
@@ -623,7 +719,7 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => String, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async cancelNotify(
     @Args(camelCase(CancelNotifyParams.name))
     cancelNotifyParams: CancelNotifyParams,
@@ -799,6 +895,48 @@ export class MemberResolver extends MemberBase {
     }
   }
 
+  @OnEvent(EventType.notifyDispatch, { async: true })
+  async notifyCreateDispatch(params: IDispatchParams) {
+    this.logger.debug(params, MemberResolver.name, this.notifyCreateDispatch.name);
+    const { memberId, userId, type, metadata } = params;
+
+    const creteDispatch: ICreateDispatch = {
+      type: InnerQueueTypes.createDispatch,
+      dispatchId: params.dispatchId,
+      correlationId: params.correlationId ? params.correlationId : v4(),
+      serviceName: ServiceName.hepius,
+      notificationType: type,
+      recipientClientId: type !== InternalNotificationType.textSmsToUser ? memberId : userId,
+      senderClientId: type !== InternalNotificationType.textSmsToUser ? userId : memberId,
+      sendBirdChannelUrl: metadata.sendBirdChannelUrl,
+      appointmentTime: metadata.appointmentTime,
+      appointmentId: metadata.appointmentId,
+      contentKey: metadata.contentType,
+      triggersAt: metadata.triggersAt,
+      path: metadata.path,
+    };
+    this.logger.debug(creteDispatch, MemberResolver.name, EventType.notifyQueue);
+
+    const eventParams: IEventNotifyQueue = {
+      type: QueueType.notifications,
+      message: JSON.stringify(creteDispatch),
+    };
+    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
+  }
+
+  async notifyDeleteDispatch(params: { dispatchId: string }) {
+    this.logger.debug(params, MemberResolver.name, this.notifyDeleteDispatch.name);
+    const deleteDispatch: IDeleteDispatch = {
+      type: InnerQueueTypes.deleteDispatch,
+      dispatchId: params.dispatchId,
+    };
+    const eventParams: IEventNotifyQueue = {
+      type: QueueType.notifications,
+      message: JSON.stringify(deleteDispatch),
+    };
+    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
+  }
+
   /**
    * Listening to incoming sms from twilio webhook.
    * Send message from member to chat.
@@ -822,16 +960,6 @@ export class MemberResolver extends MemberBase {
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.sendSmsToChat.name, ex);
     }
-  }
-
-  @OnEvent(EventType.onDeletedMember, { async: true })
-  async onDeletedMember(params: IEventMember) {
-    await this.deleteSchedules(params);
-  }
-
-  @OnEvent(EventType.onArchivedMember, { async: true })
-  async onArchivedMember(params: IEventMember) {
-    await this.deleteSchedules(params);
   }
 
   @OnEvent(EventType.onSetDailyLogCategories, { async: true })
@@ -868,11 +996,13 @@ export class MemberResolver extends MemberBase {
   private async deleteSchedules(params: IEventMember) {
     const { memberId } = params;
     try {
+      await this.notifyDeleteDispatch({
+        dispatchId: generateDispatchId(ContentKey.newMemberNudge, params.memberId),
+      });
       const notifications = await this.memberService.getMemberNotifications(memberId);
       notifications.forEach((notification) => {
         this.memberScheduler.deleteTimeout({ id: notification._id });
       });
-      this.memberScheduler.deleteTimeout({ id: memberId });
       this.memberScheduler.deleteTimeout({ id: memberId + ReminderType.logReminder });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, ex);
@@ -894,12 +1024,17 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Boolean)
-  @Roles(MemberRole.member, UserRole.coach)
+  @Roles(MemberRole.member)
   async updateMemberConfig(
+    @Client('roles') roles,
+    @Client('_id') memberId,
     @Args(camelCase(UpdateMemberConfigParams.name))
     updateMemberConfigParams: UpdateMemberConfigParams,
   ) {
-    await this.memberService.get(updateMemberConfigParams.memberId);
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    updateMemberConfigParams.memberId = memberId;
     const memberConfig = await this.memberService.updateMemberConfig(updateMemberConfigParams);
     this.notifyUpdatedMemberConfig({ memberConfig });
     return memberConfig !== null;
@@ -951,5 +1086,25 @@ export class MemberResolver extends MemberBase {
       message: JSON.stringify(settings),
     };
     this.eventEmitter.emit(EventType.notifyQueue, eventNotifyQueueParams);
+  }
+
+  private generateMobileRegistrationDispatch(
+    member: Member,
+    firstLoggedInAt: Date,
+    correlationId: string,
+    contentKey: ContentKey,
+    amount: number,
+  ): IDispatchParams {
+    return {
+      memberId: member.id,
+      userId: member.primaryUserId.toString(),
+      type: InternalNotificationType.textToMember,
+      correlationId,
+      dispatchId: generateDispatchId(contentKey, member.id),
+      metadata: {
+        contentType: contentKey,
+        triggersAt: addDays(firstLoggedInAt, amount),
+      },
+    };
   }
 }
