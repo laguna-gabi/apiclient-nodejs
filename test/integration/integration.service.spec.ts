@@ -5,9 +5,11 @@ import {
   generateNewMemberMock,
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
+import { hosts } from 'config';
 import { lorem } from 'faker';
 import { SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
+import { translation } from '../../languages/en.json';
 import { AppModule } from '../../src/app.module';
 import { DispatchStatus, DispatchesService, QueueService } from '../../src/conductor';
 import {
@@ -17,12 +19,12 @@ import {
   ProviderResult,
   Twilio,
 } from '../../src/providers';
+import { ClientSettings } from '../../src/settings';
 import {
   generateId,
   generateUpdateMemberSettingsMock,
   generateUpdateUserSettingsMock,
 } from '../generators';
-import { hosts } from 'config';
 
 describe('Notifications full flow', () => {
   let module: TestingModule;
@@ -93,19 +95,14 @@ describe('Notifications full flow', () => {
     };
     await service.handleMessage(message);
 
-    const honorific =
-      recipientClient.honorific.charAt(0).toUpperCase() + recipientClient.honorific.slice(1);
-    expect(spyOnTwilioSend).toBeCalledWith({
-      body:
-        `Hello ${honorific}. ${recipientClient.lastName}, I'm ` +
-        `${senderClient.firstName} from Laguna Health. We partnered with ` +
-        `${recipientClient.orgName} to provide you free post-hospital recovery support. ` +
-        `Tap below to download the app and schedule the first check-in.\n` +
-        `${hosts.app}/download/${object.objectNewMemberMock.appointmentId}`,
-      // `https://dev.app.lagunahealth.com/download/65c1e8d2-b741-4796-af4c-b1e844958390`,
-      orgName: recipientClient.orgName,
-      to: recipientClient.phone,
-    });
+    const { orgName } = recipientClient;
+    const body = replaceConfigs(
+      translation.contents.newMember,
+      recipientClient,
+      senderClient,
+      object.objectNewMemberMock.appointmentId,
+    );
+    expect(spyOnTwilioSend).toBeCalledWith({ body, orgName, to: recipientClient.phone });
 
     const result = await dispatchesService.get(object.objectNewMemberMock.dispatchId);
 
@@ -120,4 +117,18 @@ describe('Notifications full flow', () => {
       sentAt: expect.any(Date),
     });
   }, 7000);
+
+  const replaceConfigs = (
+    content: string,
+    recipientClient: ClientSettings,
+    senderClient: ClientSettings,
+    appointmentId: string,
+  ): string => {
+    return content
+      .replace('{{member.honorific}}', translation.honorific[recipientClient.honorific])
+      .replace('{{member.lastName}}', recipientClient.lastName)
+      .replace('{{user.firstName}}', senderClient.firstName)
+      .replace('{{org.name}}', recipientClient.orgName)
+      .replace('{{downloadLink}}', `${hosts.app}/download/${appointmentId}`);
+  };
 });
