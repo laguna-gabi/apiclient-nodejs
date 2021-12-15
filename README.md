@@ -9,7 +9,7 @@
   <a href="https://github.com/LagunaHealth/iris/contributors" alt="Contributors">
     <img src="https://img.shields.io/github/contributors/badges/shields" />
   </a>
-  <b>Total coverage:</b>
+  <br/><b>Total coverage:</b>
   <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="lines">
     <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-lines.svg" />
   </a>
