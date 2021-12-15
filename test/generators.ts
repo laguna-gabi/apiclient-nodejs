@@ -28,9 +28,11 @@ export const generateId = (id?): string => {
 export const generateUpdateMemberSettingsMock = ({
   id = generateId(),
   isAppointmentsReminderEnabled = true,
+  platform = Platform.web,
 }: {
   id?: string;
   isAppointmentsReminderEnabled?: boolean;
+  platform?: Platform;
 } = {}): Omit<ClientSettings, 'avatar'> => {
   return {
     id,
@@ -41,7 +43,7 @@ export const generateUpdateMemberSettingsMock = ({
     honorific: Honorific.reverend,
     zipCode: '91210',
     language: Language.en,
-    platform: Platform.web,
+    platform,
     isPushNotificationsEnabled: false,
     isAppointmentsReminderEnabled,
     isRecommendationsEnabled: true,
