@@ -49,6 +49,7 @@ export const generateRequestAppointmentMock = ({
     notificationType: InternalNotificationType.textToMember,
     recipientClientId,
     senderClientId,
+    appointmentId,
     scheduleLink,
     contentKey,
     path: `connect/${appointmentId}`,
