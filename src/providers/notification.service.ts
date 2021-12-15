@@ -98,7 +98,7 @@ export class NotificationsService {
       ? await this.bitly.shortenLink(`${hosts.get('app')}/download/${dispatch.appointmentId}`)
       : undefined;
 
-    return this.internationalization.getContents({
+    let content = this.internationalization.getContents({
       contentKey: dispatch.contentKey,
       senderClient,
       recipientClient,
@@ -113,6 +113,26 @@ export class NotificationsService {
         downloadLink,
       },
     });
+
+    switch (dispatch.contentKey) {
+      case ContentKey.appointmentRequest:
+        // decorate the content for appointment reminder based on client setting
+        if (recipientClient.platform === Platform.web) {
+          content += this.internationalization.getContents({
+            contentKey: ContentKey.appointmentRequestLink,
+            notificationType: dispatch.notificationType,
+            recipientClient,
+            extraData: { scheduleLink: dispatch.scheduleLink },
+          }); // TODO: do we need ContentKey.appointmentReminderLink in POEditor?
+        } else {
+          if (!recipientClient.isPushNotificationsEnabled) {
+            content += `\n${hosts.get('dynamicLink')}`;
+          }
+        }
+        break;
+    }
+
+    return content;
   }
 
   private generateSendbirdParams(dispatch: Dispatch, orgName: string): SendSendBirdNotification {

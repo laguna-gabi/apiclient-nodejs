@@ -3,9 +3,10 @@ import {
   InnerQueueTypes,
   ObjectNewMemberClass,
   generateNewMemberMock,
+  generateRequestAppointmentMock,
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import { lorem } from 'faker';
+import { internet, lorem } from 'faker';
 import { SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { AppModule } from '../../src/app.module';
@@ -23,6 +24,7 @@ import {
   generateUpdateUserSettingsMock,
 } from '../generators';
 import { hosts } from 'config';
+import { Types } from 'mongoose';
 
 describe('Notifications full flow', () => {
   let module: TestingModule;
@@ -30,6 +32,8 @@ describe('Notifications full flow', () => {
   let dispatchesService: DispatchesService;
   let spyOnTwilioSend;
   let internationalizationService: InternationalizationService;
+  let recipientClient;
+  let senderClient;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({ imports: [AppModule] }).compile();
@@ -47,7 +51,22 @@ describe('Notifications full flow', () => {
       InternationalizationService,
     );
     await internationalizationService.onModuleInit();
-  });
+
+    // Generate 2 clients - sender (member) and recipient (user) for the test suite
+    recipientClient = generateUpdateMemberSettingsMock();
+    const recipientClientM: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({ type: InnerQueueTypes.updateClientSettings, ...recipientClient }),
+    };
+    await service.handleMessage(recipientClientM);
+
+    senderClient = generateUpdateUserSettingsMock();
+    const senderClientM: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({ type: InnerQueueTypes.updateClientSettings, ...senderClient }),
+    };
+    await service.handleMessage(senderClientM);
+  }, 10000);
 
   afterEach(() => {
     spyOnTwilioSend.mockReset();
@@ -59,21 +78,6 @@ describe('Notifications full flow', () => {
   });
 
   it(`should handle event of type ${ContentKey.newMember}`, async () => {
-    //generate 2 clients : one is member one is user
-    const recipientClient = generateUpdateMemberSettingsMock();
-    const recipientClientM: SQSMessage = {
-      MessageId: v4(),
-      Body: JSON.stringify({ type: InnerQueueTypes.updateClientSettings, ...recipientClient }),
-    };
-    await service.handleMessage(recipientClientM);
-
-    const senderClient = generateUpdateUserSettingsMock();
-    const senderClientM: SQSMessage = {
-      MessageId: v4(),
-      Body: JSON.stringify({ type: InnerQueueTypes.updateClientSettings, ...senderClient }),
-    };
-    await service.handleMessage(senderClientM);
-
     //create dispatch - newMember
     const mock = generateNewMemberMock({
       recipientClientId: recipientClient.id,
@@ -110,6 +114,57 @@ describe('Notifications full flow', () => {
     const result = await dispatchesService.get(object.objectNewMemberMock.dispatchId);
 
     const response = { ...object.objectNewMemberMock };
+    delete response.type;
+    expect(result).toEqual({
+      ...response,
+      providerResult,
+      failureReasons: [],
+      retryCount: 0,
+      status: DispatchStatus.done,
+      sentAt: expect.any(Date),
+    });
+  }, 7000);
+
+  it(`should handle event of type ${ContentKey.appointmentRequest}`, async () => {
+    //create dispatch - appointmentRequest
+    const mock = generateRequestAppointmentMock({
+      recipientClientId: recipientClient.id,
+      senderClientId: senderClient.id,
+      appointmentId: new Types.ObjectId().toString(),
+      scheduleLink: internet.url(),
+    });
+
+    const providerResult: ProviderResult = {
+      provider: Provider.twilio,
+      content: lorem.sentence(),
+      id: generateId(),
+    };
+    spyOnTwilioSend.mockReturnValueOnce(providerResult);
+
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify(
+        { type: InnerQueueTypes.createDispatch, ...mock },
+        Object.keys(mock).sort(),
+      ),
+    };
+    await service.handleMessage(message);
+
+    const honorific =
+      recipientClient.honorific.charAt(0).toUpperCase() + recipientClient.honorific.slice(1);
+    expect(spyOnTwilioSend).toBeCalledWith({
+      body:
+        `Hello ${honorific}. ${recipientClient.lastName}, it's ` +
+        `${senderClient.firstName}, your Laguna Health coach. Tap here to schedule our next` +
+        ` meeting` +
+        `:\n${mock.scheduleLink}.`,
+      orgName: recipientClient.orgName,
+      to: recipientClient.phone,
+    });
+
+    const result = await dispatchesService.get(mock.dispatchId);
+
+    const response = { ...mock };
     delete response.type;
     expect(result).toEqual({
       ...response,
