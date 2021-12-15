@@ -55,6 +55,7 @@ describe(NotificationsService.name, () => {
     let scheduleLink: string;
     let dispatch;
     let spyOnTwilioServiceSend: SpyInstance;
+
     beforeAll(async () => {
       scheduleLink = internet.url();
       dispatch = generateDispatch({
@@ -62,7 +63,7 @@ describe(NotificationsService.name, () => {
         scheduleLink,
       });
 
-      iService.onModuleInit();
+      await iService.onModuleInit();
       spyOnTwilioServiceSend = jest.spyOn(twilioService, 'send');
     });
 
@@ -78,12 +79,12 @@ describe(NotificationsService.name, () => {
 
       await service.send(dispatch, recipientClient, senderClient);
 
-      const honorific =
-        recipientClient.honorific.charAt(0).toUpperCase() + recipientClient.honorific.slice(1);
-
       expect(spyOnTwilioServiceSend).toBeCalledWith({
         body:
-          `Hello ${honorific}. ${recipientClient.lastName}, it's ${senderClient.firstName},` +
+          // eslint-disable-next-line max-len
+          `Hello ${getHonorific(recipientClient)}. ${recipientClient.lastName}, it's ${
+            senderClient.firstName
+          },` +
           ` your Laguna Health coach. Tap here to schedule our next meeting:\n${scheduleLink}.`,
         orgName: recipientClient.orgName,
         to: recipientClient.phone,
@@ -96,16 +97,14 @@ describe(NotificationsService.name, () => {
         platform: Platform.ios,
       });
 
-      const spyOnTwilioServiceSend = jest.spyOn(twilioService, 'send');
-
       await service.send(dispatch, recipientClient, senderClient);
-
-      const honorific =
-        recipientClient.honorific.charAt(0).toUpperCase() + recipientClient.honorific.slice(1);
 
       expect(spyOnTwilioServiceSend).toBeCalledWith({
         body:
-          `Hello ${honorific}. ${recipientClient.lastName}, it's ${senderClient.firstName},` +
+          // eslint-disable-next-line max-len
+          `Hello ${getHonorific(recipientClient)}. ${recipientClient.lastName}, it's ${
+            senderClient.firstName
+          },` +
           ` your Laguna Health coach. Tap here to schedule our next meeting\n${hosts.get(
             'dynamicLink',
           )}`,
@@ -114,4 +113,12 @@ describe(NotificationsService.name, () => {
       });
     });
   });
+
+  /*************************************************************************************************
+   ******************************************** Helpers ********************************************
+   ************************************************************************************************/
+
+  const getHonorific = (recipientClient): string => {
+    return recipientClient.honorific.charAt(0).toUpperCase() + recipientClient.honorific.slice(1);
+  };
 });
