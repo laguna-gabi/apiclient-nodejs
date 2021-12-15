@@ -42,7 +42,7 @@ export class CommunicationResolver {
   ) {}
 
   @Query(() => CommunicationInfo, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getCommunication(
     @Args(camelCase(GetCommunicationParams.name))
     getCommunicationParams: GetCommunicationParams,
@@ -137,7 +137,7 @@ export class CommunicationResolver {
   }
 
   @Query(() => String)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   getTwilioAccessToken() {
     return this.communicationService.getTwilioAccessToken();
   }

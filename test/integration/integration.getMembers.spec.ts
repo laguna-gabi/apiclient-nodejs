@@ -13,7 +13,6 @@ describe('Integration tests : getMembers', () => {
     await handler.beforeAll();
     appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
     creators = new Creators(handler, appointmentsActions);
-    handler.mockCommunication();
     await creators.createFirstUserInDbfNecessary();
   });
 

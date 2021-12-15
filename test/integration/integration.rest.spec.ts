@@ -4,6 +4,7 @@ import { AppointmentStatus } from '../../src/appointment';
 import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import { compareMembers, urls } from '../common';
+import { delay } from '../../src/common';
 import {
   generateAvailabilityInput,
   generateCreateMemberParams,
@@ -21,7 +22,6 @@ describe('Integration tests: rest', () => {
     appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
     creators = new Creators(handler, appointmentsActions);
     server = handler.app.getHttpServer();
-    handler.mockCommunication();
     await creators.createFirstUserInDbfNecessary();
   });
 
@@ -133,12 +133,13 @@ describe('Integration tests: rest', () => {
       const user = await handler.setContextUserId(member.primaryUserId).queries.getUser();
       expect(user.id).toEqual(member.primaryUserId);
 
-      // TODO: Check that the communication was created (currently can't because it's mocked)
-      // const communication = await handler.queries.getCommunication({
-      //   getCommunicationParams: { memberId, userId: member.primaryUserId },
-      // });
-      // expect(communication.memberId).toEqual(memberId);
-      // expect(communication.userId).toEqual(member.primaryUserId);
+      await delay(1000);
+
+      const communication = await handler.queries.getCommunication({
+        getCommunicationParams: { memberId, userId: member.primaryUserId },
+      });
+      expect(communication.memberId).toEqual(memberId);
+      expect(communication.userId).toEqual(member.primaryUserId);
     });
   });
 

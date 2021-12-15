@@ -13,19 +13,8 @@ import {
   NotifyParams,
   NotifyParamsDto,
 } from '../../src/member';
-import { Org, OrgDto } from '../../src/org';
 import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
-import { User, UserDto } from '../../src/user';
-import {
-  dbConnect,
-  dbDisconnect,
-  defaultModules,
-  generateCreateMemberParams,
-  generateCreateUserParams,
-  generateId,
-  generateOrgParams,
-  mockLogger,
-} from '../index';
+import { dbConnect, dbDisconnect, defaultModules, generateId, mockLogger } from '../index';
 
 describe('MemberScheduler', () => {
   let module: TestingModule;
@@ -33,8 +22,6 @@ describe('MemberScheduler', () => {
   let scheduler: MemberScheduler;
   let notifyParamsModel: Model<typeof NotifyParamsDto>;
   let schedulerRegistry: SchedulerRegistry;
-  let modelUser: Model<typeof UserDto>;
-  let modelOrg: Model<typeof OrgDto>;
   let internalSchedulerService: InternalSchedulerService;
 
   const days = (config.get('scheduler.maxAlertGapInMin') + 1) * 60 * 1000;
@@ -73,8 +60,6 @@ describe('MemberScheduler', () => {
     }).compile();
 
     service = module.get<MemberService>(MemberService);
-    modelUser = model(User.name, UserDto);
-    modelOrg = model(Org.name, OrgDto);
 
     scheduler = module.get<MemberScheduler>(MemberScheduler);
     notifyParamsModel = model(NotifyParams.name, NotifyParamsDto);
@@ -109,16 +94,6 @@ describe('MemberScheduler', () => {
         );
         //end input for registerCustomFutureNotify
 
-        //input for initRegisterNewMemberNudge
-        const { _id: pId } = await modelUser.create(generateCreateUserParams());
-        const { _id: orgId } = await modelOrg.create(generateOrgParams());
-        const members = await Promise.all(
-          [1, 2, 3].map(
-            async () => (await service.insert(generateCreateMemberParams({ orgId }), pId)).member,
-          ),
-        );
-        //end input for initRegisterNewMemberNudge
-
         await scheduler.init();
 
         const timeouts = schedulerRegistry.getTimeouts();
@@ -127,9 +102,7 @@ describe('MemberScheduler', () => {
         expect(timeouts).toContainEqual(ids[0]._id);
         expect(timeouts).toContainEqual(ids[1]._id);
         expect(timeouts).not.toContainEqual(ids[2]._id);
-        //timeouts of initRegisterNewMemberNudge
-        members.map((member) => expect(timeouts).toContainEqual(member.id.toString()));
-      }, 10000);
+      });
 
       /* eslint-disable-next-line max-len */
       it('should not register schedulerRegistry with future messages more than 1 month', async () => {
@@ -139,38 +112,6 @@ describe('MemberScheduler', () => {
         const timeouts = schedulerRegistry.getTimeouts();
         expect(timeouts).not.toContainEqual(_id);
       }, 10000);
-
-      describe('registerNewRegisteredMemberNotify', () => {
-        afterEach(async () => {
-          await clear();
-        });
-
-        it('should register new registered member notifications', async () => {
-          await scheduler.init();
-
-          const newRegisteredMembers = await service.getNewRegisteredMembers({ nudge: false });
-
-          expect(schedulerRegistry.getTimeouts()).toEqual(
-            expect.arrayContaining(newRegisteredMembers.map(({ member }) => member.id)),
-          );
-        }, 10000);
-      });
-
-      describe('registerNewRegisteredMemberNudgeNotify', () => {
-        afterEach(async () => {
-          await clear();
-        });
-
-        it('should register new registered member nudge notifications', async () => {
-          await scheduler.init();
-
-          const newRegisteredMembers = await service.getNewRegisteredMembers({ nudge: true });
-
-          expect(schedulerRegistry.getTimeouts()).toEqual(
-            expect.arrayContaining(newRegisteredMembers.map(({ member }) => member.id)),
-          );
-        }, 10000);
-      });
 
       describe('registerLogReminder', () => {
         afterEach(async () => {

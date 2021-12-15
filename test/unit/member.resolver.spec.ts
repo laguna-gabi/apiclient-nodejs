@@ -9,6 +9,8 @@ import {
   Platform,
   SlackChannel,
   SlackIcon,
+  generateDeleteDispatchMock,
+  generateDispatchId,
 } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -77,7 +79,7 @@ import {
   generateSetGeneralNotesParams,
   generateUniqueUrl,
   generateUpdateClientSettings,
-  generateUpdateJournalParams,
+  generateUpdateJournalTextParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
@@ -457,6 +459,9 @@ describe('MemberResolver', () => {
       spyOnCognitoServiceDisableMember.mockImplementationOnce(() => undefined);
       spyOnCommunicationFreezeGroupChannel.mockImplementationOnce(() => undefined);
       spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const spyOnDeleteSchedules = jest.spyOn(resolver, 'deleteSchedules');
 
       const result = await resolver.archiveMember(member.id);
 
@@ -470,14 +475,21 @@ describe('MemberResolver', () => {
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
 
       expect(spyOnEventEmitter).toBeCalledTimes(2);
-      const queueEventParams: IEventNotifyQueue = {
+      const deleteClient: IEventNotifyQueue = {
         type: QueueType.notifications,
         message: JSON.stringify({ type: InnerQueueTypes.deleteClientSettings, id: member.id }),
       };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, queueEventParams);
-
-      const eventParams: IEventMember = { memberId: member.id };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.onArchivedMember, eventParams);
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, deleteClient);
+      const deleteDispatch: IEventNotifyQueue = {
+        type: QueueType.notifications,
+        message: JSON.stringify(
+          generateDeleteDispatchMock({
+            dispatchId: generateDispatchId(ContentKey.newMemberNudge, member.id),
+          }),
+        ),
+      };
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notifyQueue, deleteDispatch);
+      expect(spyOnDeleteSchedules).toBeCalledWith({ memberId: member.id });
     });
   });
 
@@ -546,8 +558,12 @@ describe('MemberResolver', () => {
       spyOnCognitoServiceDeleteMember.mockImplementationOnce(() => undefined);
       spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
       spyOnStorageServiceDeleteMember.mockImplementationOnce(() => undefined);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const spyOnDeleteSchedules = jest.spyOn(resolver, 'deleteSchedules');
 
       const result = await resolver.deleteMember(member.id);
+      await delay(500);
 
       expect(result).toBeTruthy();
       expect(spyOnCommunicationDeleteCommunication).toBeCalledWith(communication);
@@ -559,15 +575,24 @@ describe('MemberResolver', () => {
       }
       expect(spyOnStorageServiceDeleteMember).toBeCalledWith(member.id);
 
-      expect(spyOnEventEmitter).toBeCalledTimes(2);
+      expect(spyOnEventEmitter).toBeCalledTimes(3);
       const queueEventParams: IEventNotifyQueue = {
         type: QueueType.notifications,
         message: JSON.stringify({ type: InnerQueueTypes.deleteClientSettings, id: member.id }),
       };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, queueEventParams);
-
+      const deleteDispatch: IEventNotifyQueue = {
+        type: QueueType.notifications,
+        message: JSON.stringify(
+          generateDeleteDispatchMock({
+            dispatchId: generateDispatchId(ContentKey.newMemberNudge, member.id),
+          }),
+        ),
+      };
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notifyQueue, deleteDispatch);
       const eventParams: IEventMember = { memberId: member.id };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.onDeletedMember, eventParams);
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(3, EventType.onDeletedMember, eventParams);
+      expect(spyOnDeleteSchedules).toBeCalledWith({ memberId: member.id });
     };
   });
 
@@ -870,13 +895,17 @@ describe('MemberResolver', () => {
   describe('journal', () => {
     let spyOnServiceCreateJournal;
     let spyOnServiceUpdateJournal;
-    let spyOnServiceUpdateJournalImageFormat;
     let spyOnServiceGetJournal;
     let spyOnServiceGetJournals;
     let spyOnServiceDeleteJournal;
     let spyOnStorageGetDownloadUrl;
     let spyOnStorageGetUploadUrl;
     let spyOnStorageDeleteJournalImages;
+    let spyOnCommunicationServiceGet;
+    let spyOnNotificationsServiceSend;
+    let spyOnServiceGetMember;
+    let spyOnServiceGetMemberConfig;
+    let spyOnUserServiceGetUser;
 
     const generateMockJournalParams = ({
       id = generateId(),
@@ -899,25 +928,33 @@ describe('MemberResolver', () => {
     beforeEach(() => {
       spyOnServiceCreateJournal = jest.spyOn(service, 'createJournal');
       spyOnServiceUpdateJournal = jest.spyOn(service, 'updateJournal');
-      spyOnServiceUpdateJournalImageFormat = jest.spyOn(service, 'updateJournalImageFormat');
       spyOnServiceGetJournal = jest.spyOn(service, 'getJournal');
       spyOnServiceGetJournals = jest.spyOn(service, 'getJournals');
       spyOnServiceDeleteJournal = jest.spyOn(service, 'deleteJournal');
       spyOnStorageGetDownloadUrl = jest.spyOn(storage, 'getDownloadUrl');
       spyOnStorageGetUploadUrl = jest.spyOn(storage, 'getUploadUrl');
       spyOnStorageDeleteJournalImages = jest.spyOn(storage, 'deleteJournalImages');
+      spyOnCommunicationServiceGet = jest.spyOn(communicationService, 'get');
+      spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
+      spyOnServiceGetMember = jest.spyOn(service, 'get');
+      spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
+      spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
     });
 
     afterEach(() => {
       spyOnServiceCreateJournal.mockReset();
       spyOnServiceUpdateJournal.mockReset();
-      spyOnServiceUpdateJournalImageFormat.mockReset();
       spyOnServiceGetJournal.mockReset();
       spyOnServiceGetJournals.mockReset();
       spyOnServiceDeleteJournal.mockReset();
       spyOnStorageGetDownloadUrl.mockReset();
       spyOnStorageGetUploadUrl.mockReset();
       spyOnStorageDeleteJournalImages.mockReset();
+      spyOnCommunicationServiceGet.mockReset();
+      spyOnNotificationsServiceSend.mockReset();
+      spyOnServiceGetMember.mockReset();
+      spyOnServiceGetMemberConfig.mockReset();
+      spyOnUserServiceGetUser.mockReset();
     });
 
     it('should create journal', async () => {
@@ -931,17 +968,31 @@ describe('MemberResolver', () => {
       expect(result).toEqual(id);
     });
 
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on create journal if role = %p',
+      async (role) => {
+        await expect(resolver.createJournal([role], generateId())).rejects.toThrow(
+          Error(Errors.get(ErrorType.memberAllowedOnly)),
+        );
+      },
+    );
+
     it('should update journal', async () => {
-      const params = generateUpdateJournalParams();
-      const journal = generateMockJournalParams({ ...params });
+      const params = generateUpdateJournalTextParams();
+      const memberId = generateId();
+      const journal = generateMockJournalParams({
+        ...params,
+        memberId: new Types.ObjectId(memberId),
+      });
       const url = generateUniqueUrl();
       spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
       spyOnStorageGetDownloadUrl.mockImplementation(async () => url);
 
-      const result = await resolver.updateJournal(params);
+      const result = await resolver.updateJournalText([MemberRole.member], memberId, params);
 
       expect(spyOnServiceUpdateJournal).toBeCalledTimes(1);
-      expect(spyOnServiceUpdateJournal).toBeCalledWith(params);
+
+      expect(spyOnServiceUpdateJournal).toBeCalledWith({ ...params, memberId, published: false });
       expect(spyOnStorageGetDownloadUrl).toBeCalledTimes(2);
       expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(1, {
         storageType: StorageType.journals,
@@ -956,16 +1007,26 @@ describe('MemberResolver', () => {
       expect(result).toEqual(journal);
     });
 
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on update journal if role = %p',
+      async (role) => {
+        await expect(
+          resolver.updateJournalText([role], generateId(), generateUpdateJournalTextParams()),
+        ).rejects.toThrow(Error(Errors.get(ErrorType.memberAllowedOnly)));
+      },
+    );
+
     it('should get journal', async () => {
-      const journal = generateMockJournalParams();
+      const memberId = generateId();
+      const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
       const url = generateUniqueUrl();
       spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
       spyOnStorageGetDownloadUrl.mockImplementation(async () => url);
 
-      const result = await resolver.getJournal(journal.id);
+      const result = await resolver.getJournal([MemberRole.member], memberId, journal.id);
 
       expect(spyOnServiceGetJournal).toBeCalledTimes(1);
-      expect(spyOnServiceGetJournal).toBeCalledWith(journal.id);
+      expect(spyOnServiceGetJournal).toBeCalledWith(journal.id, memberId);
       expect(spyOnStorageGetDownloadUrl).toBeCalledTimes(2);
       expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(1, {
         storageType: StorageType.journals,
@@ -981,19 +1042,29 @@ describe('MemberResolver', () => {
     });
 
     it(`should get journal without image download link if imageFormat doesn't exists`, async () => {
-      const journal = generateMockJournalParams();
+      const memberId = generateId();
+      const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
       delete journal.imageFormat;
       const url = generateUniqueUrl();
       spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
       spyOnStorageGetDownloadUrl.mockImplementation(async () => url);
 
-      const result = await resolver.getJournal(journal.id);
+      const result = await resolver.getJournal([MemberRole.member], memberId, journal.id);
 
       expect(spyOnServiceGetJournal).toBeCalledTimes(1);
-      expect(spyOnServiceGetJournal).toBeCalledWith(journal.id);
+      expect(spyOnServiceGetJournal).toBeCalledWith(journal.id, memberId);
       expect(spyOnStorageGetDownloadUrl).toBeCalledTimes(0);
       expect(result).toEqual(journal);
     });
+
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on get journal if role = %p',
+      async (role) => {
+        await expect(resolver.getJournal([role], generateId(), generateId())).rejects.toThrow(
+          Error(Errors.get(ErrorType.memberAllowedOnly)),
+        );
+      },
+    );
 
     it('should get Journals', async () => {
       const memberId = generateId();
@@ -1032,33 +1103,57 @@ describe('MemberResolver', () => {
       expect(result).toEqual(journals);
     });
 
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on get Journals if role = %p',
+      async (role) => {
+        await expect(resolver.getJournals([role], generateId())).rejects.toThrow(
+          Error(Errors.get(ErrorType.memberAllowedOnly)),
+        );
+      },
+    );
+
     it('should delete Journal', async () => {
-      const journal = generateMockJournalParams();
-      spyOnServiceDeleteJournal.mockImplementationOnce(async () => journal);
+      const memberId = generateId();
+      const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
+      spyOnServiceDeleteJournal.mockImplementationOnce(async () => true);
       spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
 
-      const result = await resolver.deleteJournal(journal.id);
+      const result = await resolver.deleteJournal([MemberRole.member], memberId, journal.id);
 
       expect(spyOnServiceDeleteJournal).toBeCalledTimes(1);
-      expect(spyOnServiceDeleteJournal).toBeCalledWith(journal.id);
+      expect(spyOnServiceDeleteJournal).toBeCalledWith(journal.id, memberId);
       expect(spyOnStorageDeleteJournalImages).toBeCalledWith(
         journal.id,
         journal.memberId.toString(),
       );
-      expect(result).toEqual(true);
+      expect(result).toBeTruthy();
     });
 
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on delete journal if role = %p',
+      async (role) => {
+        await expect(resolver.deleteJournal([role], generateId(), generateId())).rejects.toThrow(
+          Error(Errors.get(ErrorType.memberAllowedOnly)),
+        );
+      },
+    );
+
     it('should get member upload journal links', async () => {
-      const journal = generateMockJournalParams();
+      const memberId = generateId();
+      const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
       const url = generateUniqueUrl();
-      spyOnServiceUpdateJournalImageFormat.mockImplementationOnce(async () => journal);
+      spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
       spyOnStorageGetUploadUrl.mockImplementation(async () => url);
 
       const params = generateGetMemberUploadJournalLinksParams({ id: journal.id });
-      const result = await resolver.getMemberUploadJournalLinks(params);
+      const result = await resolver.getMemberUploadJournalLinks(
+        [MemberRole.member],
+        memberId,
+        params,
+      );
 
-      expect(spyOnServiceUpdateJournalImageFormat).toBeCalledTimes(1);
-      expect(spyOnServiceUpdateJournalImageFormat).toBeCalledWith(params);
+      expect(spyOnServiceUpdateJournal).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateJournal).toBeCalledWith({ ...params, memberId, published: false });
 
       expect(spyOnStorageGetUploadUrl).toBeCalledTimes(2);
       expect(spyOnStorageGetUploadUrl).toHaveBeenNthCalledWith(1, {
@@ -1075,17 +1170,33 @@ describe('MemberResolver', () => {
       expect(result).toEqual({ normalImageLink: url, smallImageLink: url });
     });
 
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on get member upload journal links if role = %p',
+      async (role) => {
+        await expect(
+          resolver.getMemberUploadJournalLinks(
+            [role],
+            generateId(),
+            generateGetMemberUploadJournalLinksParams(),
+          ),
+        ).rejects.toThrow(Error(Errors.get(ErrorType.memberAllowedOnly)));
+      },
+    );
+
     it('should delete Journal images', async () => {
-      const journal = generateMockJournalParams();
-      spyOnServiceUpdateJournalImageFormat.mockImplementationOnce(async () => journal);
+      const memberId = generateId();
+      const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
+      spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
       spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
 
-      const result = await resolver.deleteJournalImage(journal.id);
+      const result = await resolver.deleteJournalImage([MemberRole.member], memberId, journal.id);
 
-      expect(spyOnServiceUpdateJournalImageFormat).toBeCalledTimes(1);
-      expect(spyOnServiceUpdateJournalImageFormat).toBeCalledWith({
+      expect(spyOnServiceUpdateJournal).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateJournal).toBeCalledWith({
         id: journal.id,
         imageFormat: null,
+        memberId,
+        published: false,
       });
       expect(spyOnStorageDeleteJournalImages).toBeCalledWith(
         journal.id,
@@ -1093,6 +1204,108 @@ describe('MemberResolver', () => {
       );
       expect(result).toEqual(true);
     });
+
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on create journal if role = %p',
+      async (role) => {
+        await expect(
+          resolver.deleteJournalImage([role], generateId(), generateId()),
+        ).rejects.toThrow(Error(Errors.get(ErrorType.memberAllowedOnly)));
+      },
+    );
+
+    it('should publish Journal', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      const memberId = generateId();
+      const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
+      const communication = generateCommunication();
+      const url = generateUniqueUrl();
+      spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
+      spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
+      spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
+      spyOnStorageGetDownloadUrl.mockImplementation(async () => url);
+      spyOnServiceGetMember.mockImplementation(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      await resolver.publishJournal([MemberRole.member], memberId, journal.id);
+
+      expect(spyOnServiceUpdateJournal).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateJournal).toBeCalledWith({
+        id: journal.id,
+        memberId,
+        published: true,
+      });
+
+      expect(spyOnServiceGetMember).toBeCalledTimes(2);
+      expect(spyOnServiceGetMember).toBeCalledWith(memberId);
+      expect(spyOnCommunicationServiceGet).toBeCalledWith({
+        memberId,
+        userId: member.primaryUserId.toString(),
+      });
+      expect(spyOnStorageGetDownloadUrl).toBeCalledWith({
+        storageType: StorageType.journals,
+        memberId,
+        id: `${journal.id}_NormalImage.${journal.imageFormat}`,
+      });
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendSendBirdNotification: {
+          message: journal.text,
+          notificationType: InternalNotificationType.chatMessageJournal,
+          orgName: member.org.name,
+          userId: member.id,
+          sendBirdChannelUrl: communication.sendBirdChannelUrl,
+          journalImageDownloadLink: url,
+        },
+      });
+    });
+
+    it('should publish Journal with no image', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      const memberId = generateId();
+      const journal = generateMockJournalParams({
+        memberId: new Types.ObjectId(memberId),
+        imageFormat: null,
+      });
+      const communication = generateCommunication();
+      const url = generateUniqueUrl();
+      spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
+      spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
+      spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
+      spyOnStorageGetDownloadUrl.mockImplementation(async () => url);
+      spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
+      spyOnServiceGetMember.mockImplementation(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      await resolver.publishJournal([MemberRole.member], memberId, journal.id);
+
+      expect(spyOnStorageGetDownloadUrl).toReturnTimes(0);
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendSendBirdNotification: {
+          message: journal.text,
+          notificationType: InternalNotificationType.chatMessageJournal,
+          orgName: member.org.name,
+          userId: member.id,
+          sendBirdChannelUrl: communication.sendBirdChannelUrl,
+        },
+      });
+    });
+
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on publish journal if role = %p',
+      async (role) => {
+        await expect(resolver.publishJournal([role], generateId(), generateId())).rejects.toThrow(
+          Error(Errors.get(ErrorType.memberAllowedOnly)),
+        );
+      },
+    );
   });
 
   describe('getMemberConfig', () => {
@@ -1121,45 +1334,34 @@ describe('MemberResolver', () => {
 
   describe('updateMemberConfig', () => {
     let spyOnServiceUpdateConfig;
-    let spyOnServiceGetMember;
 
     beforeEach(() => {
       spyOnServiceUpdateConfig = jest.spyOn(service, 'updateMemberConfig');
-      spyOnServiceGetMember = jest.spyOn(service, 'get');
     });
 
     afterEach(() => {
       spyOnServiceUpdateConfig.mockReset();
-      spyOnServiceGetMember.mockReset();
-      spyOnServiceGetMember.mockRestore();
       spyOnEventEmitter.mockReset();
       spyOnEventEmitter.mockClear();
     });
 
     it('should update a member config', async () => {
       const memberConfig = mockGenerateMemberConfig();
-      const updateMemberConfigParams = generateUpdateMemberConfigParams({
-        memberId: generateId(memberConfig.memberId),
-      });
+      const memberId = generateId(memberConfig.memberId);
+      const updateMemberConfigParams = generateUpdateMemberConfigParams({ memberId });
       spyOnServiceUpdateConfig.mockImplementationOnce(async () => memberConfig);
-      spyOnServiceGetMember.mockImplementationOnce(async () => mockGenerateMember());
+      delete updateMemberConfigParams.memberId;
 
-      await resolver.updateMemberConfig(updateMemberConfigParams);
+      await resolver.updateMemberConfig([MemberRole.member], memberId, updateMemberConfigParams);
 
       expect(spyOnServiceUpdateConfig).toBeCalledTimes(1);
-      expect(spyOnServiceUpdateConfig).toBeCalledWith(updateMemberConfigParams);
+      expect(spyOnServiceUpdateConfig).toBeCalledWith({ ...updateMemberConfigParams, memberId });
 
       const eventParams: IEventNotifyQueue = {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyQueue, eventParams);
-    });
-
-    it('should not update member config on non existing member', async () => {
-      await expect(resolver.updateMemberConfig(generateUpdateMemberConfigParams())).rejects.toThrow(
-        Errors.get(ErrorType.memberNotFound),
-      );
     });
   });
 
@@ -1170,7 +1372,6 @@ describe('MemberResolver', () => {
     let spyOnServiceUpdateMemberConfig;
     let spyOnServiceUpdateMemberConfigRegisteredAt;
     let spyOnSchedulerDeleteTimeout;
-    let spyOnSchedulerNewRegisteredMember;
 
     beforeEach(() => {
       spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
@@ -1182,10 +1383,6 @@ describe('MemberResolver', () => {
         'updateMemberConfigRegisteredAt',
       );
       spyOnSchedulerDeleteTimeout = jest.spyOn(memberScheduler, 'deleteTimeout');
-      spyOnSchedulerNewRegisteredMember = jest.spyOn(
-        memberScheduler,
-        'registerNewRegisteredMemberNotify',
-      );
     });
 
     afterEach(() => {
@@ -1195,7 +1392,6 @@ describe('MemberResolver', () => {
       spyOnServiceUpdateMemberConfig.mockReset();
       spyOnServiceUpdateMemberConfigRegisteredAt.mockReset();
       spyOnSchedulerDeleteTimeout.mockReset();
-      spyOnSchedulerNewRegisteredMember.mockReset();
       spyOnEventEmitter.mockReset();
       spyOnEventEmitter.mockClear();
     });
@@ -1231,12 +1427,6 @@ describe('MemberResolver', () => {
         isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       });
       expect(spyOnServiceUpdateMemberConfigRegisteredAt).toBeCalledWith(memberConfig.memberId);
-      expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: member.id });
-      expect(spyOnSchedulerNewRegisteredMember).toBeCalledWith({
-        memberId: member.id,
-        userId: member.primaryUserId.toString(),
-        firstLoggedInAt: expect.any(Date),
-      });
       const eventParams: IEventNotifyQueue = {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
@@ -1286,14 +1476,12 @@ describe('MemberResolver', () => {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
       };
-      expect(spyOnEventEmitter).toBeCalledTimes(2);
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
         1,
         EventType.onUpdatedMemberPlatform,
         eventParams,
       );
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notifyQueue, notify);
-      expect(spyOnSchedulerDeleteTimeout).toBeCalledWith({ id: member.id });
     });
 
     it('should not call updateMemberConfigRegisteredAt if firstLoggedInAt exists', async () => {

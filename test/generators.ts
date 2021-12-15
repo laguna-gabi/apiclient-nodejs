@@ -1,3 +1,16 @@
+import {
+  CancelNotificationType,
+  ContentKey,
+  Honorific,
+  IUpdateClientSettings,
+  InnerQueueTypes,
+  InternalNotificationType,
+  Language,
+  NotificationType,
+  Platform,
+  generatePhone,
+  generateZipCode,
+} from '@lagunahealth/pandora';
 import * as config from 'config';
 import { format } from 'date-fns';
 import * as faker from 'faker';
@@ -24,19 +37,6 @@ import {
   SendTwilioNotification,
   UserRole,
 } from '../src/common';
-import {
-  CancelNotificationType,
-  ContentKey,
-  Honorific,
-  IUpdateClientSettings,
-  InnerQueueTypes,
-  InternalNotificationType,
-  Language,
-  NotificationType,
-  Platform,
-  generatePhone,
-  generateZipCode,
-} from '@lagunahealth/pandora';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import {
   AppointmentCompose,
@@ -52,7 +52,7 @@ import {
   SetGeneralNotesParams,
   Sex,
   TaskStatus,
-  UpdateJournalParams,
+  UpdateJournalTextParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
@@ -446,10 +446,10 @@ export const generateSetGeneralNotesParams = ({
   return { memberId, note, nurseNotes };
 };
 
-export const generateUpdateJournalParams = ({
+export const generateUpdateJournalTextParams = ({
   id = generateId(),
   text = faker.lorem.sentence(),
-}: Partial<UpdateJournalParams> = {}): UpdateJournalParams => {
+}: Partial<UpdateJournalTextParams> = {}): UpdateJournalTextParams => {
   return { id, text };
 };
 

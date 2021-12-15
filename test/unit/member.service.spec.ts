@@ -1,4 +1,10 @@
-import { Honorific, Language, Platform } from '@lagunahealth/pandora';
+import {
+  Honorific,
+  Language,
+  Platform,
+  generatePhone,
+  generateZipCode,
+} from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import * as faker from 'faker';
@@ -21,7 +27,6 @@ import {
   CreateMemberParams,
   Goal,
   GoalDto,
-  ImageFormat,
   Journal,
   JournalDto,
   Member,
@@ -51,14 +56,13 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
-  generateUpdateJournalParams,
+  generateUpdateJournalTextParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
   mockLogger,
 } from '../index';
-import { generatePhone, generateZipCode } from '@lagunahealth/pandora';
 
 describe('MemberService', () => {
   let module: TestingModule;
@@ -979,67 +983,82 @@ describe('MemberService', () => {
     });
   });
 
-  describe('updateJournal', () => {
-    it('should update journal', async () => {
-      const memberId = generateId();
+  // describe('updateJournal', () => {
+  //   it('should update journal', async () => {
+  //     const memberId = generateId();
 
-      const { id } = await service.createJournal(memberId);
-      const updateJournalParams = generateUpdateJournalParams({ id });
+  //     const { id } = await service.createJournal(memberId);
+  //     const updateJournalTextParams = generateUpdateJournalTextParams({ id });
 
-      await service.updateJournal(updateJournalParams);
-      const result: any = await modelJournal.findById(id);
+  //     const journal = await service.updateJournal({ ...updateJournalTextParams, memberId });
+  //     const result: any = await modelJournal.findById(id);
 
-      expect(result).toMatchObject({
-        _id: id,
-        memberId: new Types.ObjectId(memberId),
-        published: false,
-        text: updateJournalParams.text,
-      });
-    });
+  //     expect(result).toMatchObject(journal);
+  //   });
 
-    it(`should throw an error on update journal when id doesn't exists`, async () => {
-      await expect(service.updateJournal(generateUpdateJournalParams())).rejects.toThrow(
-        Error(Errors.get(ErrorType.memberJournalNotFound)),
-      );
-    });
-  });
+  //   it(`should throw an error on update journal if another member`, async () => {
+  //     const { id } = await service.createJournal(generateId());
+  //     await expect(
+  //       service.updateJournal({
+  //         ...generateUpdateJournalTextParams({ id }),
+  //         memberId: generateId(),
+  //       }),
+  //     ).rejects.toThrow(Error(Errors.get(ErrorType.memberJournalNotFound)));
+  //   });
 
-  describe('updateJournalImageFormat', () => {
-    it('should update journal imageFormat', async () => {
-      const memberId = generateId();
+  //   it(`should throw an error on update journal when id doesn't exists`, async () => {
+  //     await expect(
+  //       service.updateJournal({ ...generateUpdateJournalTextParams(), memberId: generateId() }),
+  //     ).rejects.toThrow(Error(Errors.get(ErrorType.memberJournalNotFound)));
+  //   });
+  // });
 
-      const { id } = await service.createJournal(memberId);
-      const updateJournalImageFormatParams = { id, imageFormat: ImageFormat.png };
+  // describe('updateJournalImageFormat', () => {
+  //   it('should update journal imageFormat', async () => {
+  //     const memberId = generateId();
 
-      await service.updateJournalImageFormat(updateJournalImageFormatParams);
-      const result: any = await modelJournal.findById(id);
+  //     const { id } = await service.createJournal(memberId);
+  //     const updateJournalImageFormatParams = generateGetMemberUploadJournalLinksParams({ id });
 
-      expect(result).toMatchObject({
-        _id: id,
-        memberId: new Types.ObjectId(memberId),
-        published: false,
-        imageFormat: updateJournalImageFormatParams.imageFormat,
-      });
-    });
+  //     const journal = await service.updateJournal({ ...updateJournalImageFormatParams, memberId });
+  //     const result: any = await modelJournal.findById(id);
 
-    it(`should throw an error on update journal when id doesn't exists`, async () => {
-      await expect(
-        service.updateJournalImageFormat({ id: generateId(), imageFormat: ImageFormat.png }),
-      ).rejects.toThrow(Error(Errors.get(ErrorType.memberJournalNotFound)));
-    });
-  });
+  //     expect(result).toMatchObject(journal);
+  //   });
+
+  //   it(`should throw an error on update journal image format if another member`, async () => {
+  //     const { id } = await service.createJournal(generateId());
+  //     await expect(
+  //       service.updateJournal({
+  //         id,
+  //         imageFormat: ImageFormat.png,
+  //         memberId: generateId(),
+  //       }),
+  //     ).rejects.toThrow(Error(Errors.get(ErrorType.memberJournalNotFound)));
+  //   });
+
+  //   it(`should throw an error on update journal image format when id doesn't exists`, async () => {
+  //     await expect(
+  //       service.updateJournal({
+  //         id: generateId(),
+  //         imageFormat: ImageFormat.png,
+  //         memberId: generateId(),
+  //       }),
+  //     ).rejects.toThrow(Error(Errors.get(ErrorType.memberJournalNotFound)));
+  //   });
+  // });
 
   describe('getJournal', () => {
     it('should get journal', async () => {
       const memberId = generateId();
 
       const { id } = await service.createJournal(memberId);
-      const updateJournalParams = generateUpdateJournalParams({ id });
+      const updateJournalTextParams = generateUpdateJournalTextParams({ id });
 
-      await service.updateJournal(updateJournalParams);
+      await service.updateJournal({ ...updateJournalTextParams, memberId });
 
       const result: any = await modelJournal.findById(id);
-      const journal = await service.getJournal(id);
+      const journal = await service.getJournal(id, memberId);
 
       expect(result).toMatchObject({
         _id: new Types.ObjectId(journal.id),
@@ -1050,8 +1069,15 @@ describe('MemberService', () => {
       });
     });
 
+    it(`should throw an error on get journal if another member`, async () => {
+      const { id } = await service.createJournal(generateId());
+      await expect(service.getJournal(id, generateId())).rejects.toThrow(
+        Error(Errors.get(ErrorType.memberJournalNotFound)),
+      );
+    });
+
     it(`should throw an error on get journal when id doesn't exists`, async () => {
-      await expect(service.getJournal(generateId())).rejects.toThrow(
+      await expect(service.getJournal(generateId(), generateId())).rejects.toThrow(
         Error(Errors.get(ErrorType.memberJournalNotFound)),
       );
     });
@@ -1063,11 +1089,11 @@ describe('MemberService', () => {
 
       const { id: journalId1 } = await service.createJournal(memberId);
       const { id: journalId2 } = await service.createJournal(memberId);
-      const updateJournalParams1 = generateUpdateJournalParams({ id: journalId1 });
-      const updateJournalParams2 = generateUpdateJournalParams({ id: journalId2 });
+      const updateJournalTextParams1 = generateUpdateJournalTextParams({ id: journalId1 });
+      const updateJournalTextParams2 = generateUpdateJournalTextParams({ id: journalId2 });
 
-      await service.updateJournal(updateJournalParams1);
-      await service.updateJournal(updateJournalParams2);
+      await service.updateJournal({ ...updateJournalTextParams1, memberId });
+      await service.updateJournal({ ...updateJournalTextParams2, memberId });
 
       const journals = await service.getJournals(memberId);
 
@@ -1077,7 +1103,7 @@ describe('MemberService', () => {
             _id: new Types.ObjectId(journalId1),
             memberId: new Types.ObjectId(memberId),
             published: false,
-            text: updateJournalParams1.text,
+            text: updateJournalTextParams1.text,
             updatedAt: expect.any(Date),
             createdAt: expect.any(Date),
           }),
@@ -1085,7 +1111,7 @@ describe('MemberService', () => {
             _id: new Types.ObjectId(journalId2),
             memberId: new Types.ObjectId(memberId),
             published: false,
-            text: updateJournalParams2.text,
+            text: updateJournalTextParams2.text,
             updatedAt: expect.any(Date),
             createdAt: expect.any(Date),
           }),
@@ -1115,7 +1141,6 @@ describe('MemberService', () => {
 
     it(`should return empty array if member doesn't have journals`, async () => {
       const memberId = generateId();
-
       const journals = await service.getJournals(memberId);
 
       expect(journals).toEqual([]);
@@ -1127,18 +1152,25 @@ describe('MemberService', () => {
       const memberId = generateId();
       const { id } = await service.createJournal(memberId);
 
-      const journal = await service.getJournal(id);
-      const journalDelete = await service.deleteJournal(id);
+      await service.getJournal(id, memberId);
+      const journalDelete = await service.deleteJournal(id, memberId);
 
-      expect(journalDelete).toMatchObject(journal);
+      expect(journalDelete).toBeTruthy();
 
-      await expect(service.getJournal(id)).rejects.toThrow(
+      await expect(service.getJournal(id, memberId)).rejects.toThrow(
+        Error(Errors.get(ErrorType.memberJournalNotFound)),
+      );
+    });
+
+    it(`should throw an error on delete journal if another member`, async () => {
+      const { id } = await service.createJournal(generateId());
+      await expect(service.deleteJournal(id, generateId())).rejects.toThrow(
         Error(Errors.get(ErrorType.memberJournalNotFound)),
       );
     });
 
     it(`should throw an error on delete journal when id doesn't exists`, async () => {
-      await expect(service.deleteJournal(generateId())).rejects.toThrow(
+      await expect(service.deleteJournal(generateId(), generateId())).rejects.toThrow(
         Error(Errors.get(ErrorType.memberJournalNotFound)),
       );
     });
@@ -1224,6 +1256,12 @@ describe('MemberService', () => {
 
       const configs = await service.getMemberConfig(id);
       expect(configs[Object.keys(field)[0]]).toEqual(true);
+    });
+
+    it('should not update member config on non existing member', async () => {
+      await expect(service.updateMemberConfig(generateUpdateMemberConfigParams())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
     });
   });
 

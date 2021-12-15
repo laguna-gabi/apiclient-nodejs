@@ -24,7 +24,7 @@ export class UserResolver {
   constructor(private readonly userService: UserService, private eventEmitter: EventEmitter2) {}
 
   @Mutation(() => Identifier)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async createUser(
     @Args(camelCase(CreateUserParams.name))
     createUserParams: CreateUserParams,
@@ -39,7 +39,7 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getUser(@Client('_id') userId): Promise<User> {
     const user = await this.userService.get(userId);
     if (!user) {
@@ -49,7 +49,7 @@ export class UserResolver {
   }
 
   @Query(() => [User])
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getUsers(
     @Args('roles', {
       type: () => [UserRole],
@@ -62,7 +62,7 @@ export class UserResolver {
   }
 
   @Query(() => Slots)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getUserSlots(
     @Args(camelCase(GetSlotsParams.name)) getSlotsParams: GetSlotsParams,
   ): Promise<Slots> {
@@ -70,7 +70,7 @@ export class UserResolver {
   }
 
   @Query(() => UserConfig)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getUserConfig(@Args('id', { type: () => String }) id: string): Promise<UserConfig> {
     return this.userService.getUserConfig(id);
   }

@@ -175,6 +175,17 @@ export class NotificationBuilder {
         };
         return this.notificationsService.send({ sendSendBirdNotification });
       }
+      case InternalNotificationType.chatMessageJournal: {
+        const sendSendBirdNotification: SendSendBirdNotification = {
+          userId: member.id,
+          sendBirdChannelUrl: metadata.sendBirdChannelUrl,
+          message: content,
+          notificationType: type,
+          orgName,
+          journalImageDownloadLink: metadata.journalImageDownloadLink,
+        };
+        return this.notificationsService.send({ sendSendBirdNotification });
+      }
     }
   }
 

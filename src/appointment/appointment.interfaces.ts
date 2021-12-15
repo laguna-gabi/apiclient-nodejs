@@ -11,11 +11,12 @@ import {
   ErrorType,
   Errors,
   EventType,
+  IDispatchParams,
   IEventOnUpdatedAppointment,
-  InternalNotifyParams,
   UpdatedAppointmentAction,
 } from '../common';
-import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
+import { ContentKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
+import { v4 } from 'uuid';
 
 export class AppointmentBase {
   constructor(
@@ -31,8 +32,7 @@ export class AppointmentBase {
     this.updateAppointmentExternalData(appointment);
 
     if (isAfter(appointment.start, new Date())) {
-      this.notifyUserAppointment(appointment);
-      this.notifyMemberAppointment(appointment);
+      this.notifyScheduleAppointmentDispatches(appointment);
       await this.registerAppointmentAlert(appointment);
     }
 
@@ -58,30 +58,28 @@ export class AppointmentBase {
     this.eventEmitter.emit(EventType.onUpdatedAppointment, eventParams);
   }
 
-  private notifyUserAppointment(appointment: Appointment) {
-    const params: InternalNotifyParams = {
-      memberId: appointment.memberId.toString(),
-      userId: appointment.userId.toString(),
-      type: InternalNotificationType.textSmsToUser,
-      metadata: {
-        contentType: ContentKey.appointmentScheduledUser,
-        appointmentTime: appointment.start,
-      },
-    };
-    this.eventEmitter.emit(EventType.notifyInternal, params);
-  }
+  private notifyScheduleAppointmentDispatches(appointment: Appointment) {
+    const memberId = appointment.memberId.toString();
+    const userId = appointment.userId.toString();
+    const baseEvent = { memberId, userId, correlationId: v4() };
 
-  private notifyMemberAppointment(appointment: Appointment) {
-    const params: InternalNotifyParams = {
-      memberId: appointment.memberId.toString(),
-      userId: appointment.userId.toString(),
-      type: InternalNotificationType.textSmsToMember,
-      metadata: {
-        contentType: ContentKey.appointmentScheduledMember,
-        appointmentTime: appointment.start,
-      },
+    let contentKey = ContentKey.appointmentScheduledUser;
+    const appointmentScheduledUserEvent: IDispatchParams = {
+      ...baseEvent,
+      dispatchId: generateDispatchId(contentKey, userId, appointment.id),
+      type: InternalNotificationType.textSmsToUser,
+      metadata: { contentType: contentKey, appointmentTime: appointment.start },
     };
-    this.eventEmitter.emit(EventType.notifyInternal, params);
+    this.eventEmitter.emit(EventType.notifyDispatch, appointmentScheduledUserEvent);
+
+    contentKey = ContentKey.appointmentScheduledMember;
+    const appointmentScheduledMemberEvent: IDispatchParams = {
+      ...baseEvent,
+      dispatchId: generateDispatchId(contentKey, memberId, appointment.id),
+      type: InternalNotificationType.textSmsToMember,
+      metadata: { contentType: contentKey, appointmentTime: appointment.start },
+    };
+    this.eventEmitter.emit(EventType.notifyDispatch, appointmentScheduledMemberEvent);
   }
 
   private async registerAppointmentAlert(appointment: Appointment) {

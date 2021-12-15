@@ -1,8 +1,7 @@
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import * as config from 'config';
-import { add } from 'date-fns';
+import { add, addDays } from 'date-fns';
 import { camelCase } from 'lodash';
 import {
   Appointment,
@@ -18,6 +17,7 @@ import {
 } from '.';
 import {
   EventType,
+  IDispatchParams,
   IEventMember,
   IEventOnNewMember,
   IEventOnUpdatedAppointment,
@@ -31,11 +31,9 @@ import {
   UpdatedAppointmentAction,
   UserRole,
 } from '../common';
+import { ContentKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
 import { Member } from '../member';
-import { OrgService } from '../org';
-import { Bitly } from '../providers';
-import { User } from '../user';
-import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
+import { v4 } from 'uuid';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Appointment)
@@ -44,15 +42,13 @@ export class AppointmentResolver extends AppointmentBase {
     readonly appointmentService: AppointmentService,
     readonly appointmentScheduler: AppointmentScheduler,
     readonly eventEmitter: EventEmitter2,
-    readonly bitly: Bitly,
-    readonly orgService: OrgService,
     readonly logger: Logger,
   ) {
     super(appointmentService, appointmentScheduler, eventEmitter);
   }
 
   @Mutation(() => Appointment)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async requestAppointment(
     @Args(camelCase(RequestAppointmentParams.name))
     requestAppointmentParams: RequestAppointmentParams,
@@ -65,13 +61,13 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Query(() => Appointment, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async getAppointment(@Args('id', { type: () => String }) id: string) {
     return this.appointmentService.get(id);
   }
 
   @Mutation(() => Appointment)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async scheduleAppointment(
     @Args(camelCase(ScheduleAppointmentParams.name))
     scheduleAppointmentParams: ScheduleAppointmentParams,
@@ -80,7 +76,7 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Appointment)
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async endAppointment(
     @Args(camelCase(EndAppointmentParams.name)) endAppointmentParams: EndAppointmentParams,
   ) {
@@ -98,7 +94,7 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Notes, { nullable: true })
-  @Roles(UserRole.coach)
+  @Roles(UserRole.coach, UserRole.nurse)
   async updateNotes(@Args(camelCase(UpdateNotesParams.name)) updateNotesParams: UpdateNotesParams) {
     return this.appointmentService.updateNotes(updateNotesParams);
   }
@@ -113,8 +109,7 @@ export class AppointmentResolver extends AppointmentBase {
         notBefore: add(new Date(), { hours: 2 }),
       };
       const { id: appointmentId } = await this.appointmentService.request(requestAppointmentParams);
-      await this.notifyRegistration({ member, user, appointmentId });
-      await this.appointmentScheduler.registerNewMemberNudge({ member, user, appointmentId });
+      await this.notifyRegistration({ member, userId: user.id, appointmentId });
     } catch (ex) {
       this.logger.error(
         { memberId: member.id, userId: user.id },
@@ -209,30 +204,40 @@ export class AppointmentResolver extends AppointmentBase {
     this.eventEmitter.emit(EventType.notifyInternal, params);
   }
 
-  private async notifyRegistration({
+  private notifyRegistration({
     member,
-    user,
+    userId,
     appointmentId,
   }: {
     member: Member;
-    user: User;
+    userId: string;
     appointmentId: string;
   }) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const org = await this.orgService.get(member.org._id.toString());
-    const downloadLink = await this.bitly.shortenLink(
-      `${config.get('hosts.app')}/download/${appointmentId}`,
-    );
-    const params: InternalNotifyParams = {
+    const baseEvent = {
       memberId: member.id,
-      userId: user.id,
+      userId,
       type: InternalNotificationType.textSmsToMember,
+      correlationId: v4(),
+    };
+    const newMemberEvent: IDispatchParams = {
+      ...baseEvent,
+      dispatchId: generateDispatchId(ContentKey.newMember, member.id),
       metadata: {
         contentType: ContentKey.newMember,
-        extraData: { org, downloadLink },
+        appointmentId,
       },
     };
-    this.eventEmitter.emit(EventType.notifyInternal, params);
+    this.eventEmitter.emit(EventType.notifyDispatch, newMemberEvent);
+
+    const newMemberNudgeEvent: IDispatchParams = {
+      ...baseEvent,
+      dispatchId: generateDispatchId(ContentKey.newMemberNudge, member.id),
+      metadata: {
+        contentType: ContentKey.newMemberNudge,
+        appointmentId,
+        triggersAt: addDays(member.createdAt, 2),
+      },
+    };
+    this.eventEmitter.emit(EventType.notifyDispatch, newMemberNudgeEvent);
   }
 }

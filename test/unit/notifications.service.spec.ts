@@ -73,16 +73,28 @@ describe('NotificationsService (offline)', () => {
     oneSignalSendMock.mockReset();
   });
 
-  it('should send sendBird notification', async () => {
-    const sendBirdSendMock = jest.spyOn(sendBird, 'send');
+  it('should send admin sendBird notification', async () => {
+    const sendBirdSendMockSendAdminMessage = jest.spyOn(sendBird, 'sendAdminMessage');
     const params = {
       sendSendBirdNotification: generateSendSendBirdNotificationParams(
         InternalNotificationType.chatMessageToUser,
       ),
     };
     await notificationsService.send(params);
-    expect(sendBirdSendMock).toBeCalledWith(params.sendSendBirdNotification);
-    sendBirdSendMock.mockReset();
+    expect(sendBirdSendMockSendAdminMessage).toBeCalledWith(params.sendSendBirdNotification);
+    sendBirdSendMockSendAdminMessage.mockReset();
+  });
+
+  it('should send journal sendBird notification', async () => {
+    const sendBirdSendMockSendJournalMessage = jest.spyOn(sendBird, 'sendJournalMessage');
+    const params = {
+      sendSendBirdNotification: generateSendSendBirdNotificationParams(
+        InternalNotificationType.chatMessageJournal,
+      ),
+    };
+    await notificationsService.send(params);
+    expect(sendBirdSendMockSendJournalMessage).toBeCalledWith(params.sendSendBirdNotification);
+    sendBirdSendMockSendJournalMessage.mockReset();
   });
 
   it('should send oneSignal cancel notification', async () => {
