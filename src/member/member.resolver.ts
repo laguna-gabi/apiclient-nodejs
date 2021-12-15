@@ -27,10 +27,9 @@ import {
   CreateMemberParams,
   CreateTaskParams,
   DischargeDocumentsLinks,
-  GetMemberUploadJournalLinkParams,
-  ImageType,
+  GetMemberUploadJournalLinksParams,
   Journal,
-  JournalImagesUploadLink,
+  JournalImagesLinks,
   Member,
   MemberBase,
   MemberConfig,
@@ -475,36 +474,39 @@ export class MemberResolver extends MemberBase {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    const { imageFormat } = await this.memberService.deleteJournal(id, memberId);
+    await this.memberService.deleteJournal(id, memberId);
 
-    if (imageFormat) {
-      return this.storageService.deleteJournalImages(id, memberId, imageFormat);
-    }
-
-    return true;
+    return this.storageService.deleteJournalImages(id, memberId.toString());
   }
 
-  @Query(() => JournalImagesUploadLink)
+  @Query(() => JournalImagesLinks)
   @Roles(MemberRole.member)
-  async getMemberUploadJournalLink(
+  async getMemberUploadJournalLinks(
     @Client('roles') roles,
     @Client('_id') memberId,
-    @Args(camelCase(GetMemberUploadJournalLinkParams.name))
-    getMemberUploadJournalLinkParams: GetMemberUploadJournalLinkParams,
+    @Args(camelCase(GetMemberUploadJournalLinksParams.name))
+    getMemberUploadJournalLinksParams: GetMemberUploadJournalLinksParams,
   ) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    const { id, imageFormat } = getMemberUploadJournalLinkParams;
+    const { id, imageFormat } = getMemberUploadJournalLinksParams;
 
     await this.memberService.updateJournal({ id, memberId, imageFormat, published: false });
-    const normalImageLink = await this.storageService.getUploadUrl({
-      storageType: StorageType.journals,
-      memberId,
-      id: `${id}${ImageType.NormalImage}.${imageFormat}`,
-    });
+    const [normalImageLink, smallImageLink] = await Promise.all([
+      this.storageService.getUploadUrl({
+        storageType: StorageType.journals,
+        memberId: memberId.toString(),
+        id: `${id}_NormalImage.${imageFormat}`,
+      }),
+      this.storageService.getUploadUrl({
+        storageType: StorageType.journals,
+        memberId: memberId.toString(),
+        id: `${id}_SmallImage.${imageFormat}`,
+      }),
+    ]);
 
-    return { normalImageLink };
+    return { normalImageLink, smallImageLink };
   }
 
   @Mutation(() => Boolean)
@@ -517,14 +519,9 @@ export class MemberResolver extends MemberBase {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    const { imageFormat } = await this.memberService.getJournal(id, memberId);
-
-    if (!imageFormat) {
-      throw new Error(Errors.get(ErrorType.memberJournalImageNotFound));
-    }
-
     await this.memberService.updateJournal({ id, memberId, imageFormat: null, published: false });
-    return this.storageService.deleteJournalImages(id, memberId, imageFormat);
+
+    return this.storageService.deleteJournalImages(id, memberId);
   }
 
   @Mutation(() => String)
@@ -553,7 +550,7 @@ export class MemberResolver extends MemberBase {
       url = await this.storageService.getDownloadUrl({
         storageType: StorageType.journals,
         memberId,
-        id: `${id}${ImageType.NormalImage}.${imageFormat}`,
+        id: `${id}_NormalImage.${imageFormat}`,
       });
     }
 
@@ -577,12 +574,12 @@ export class MemberResolver extends MemberBase {
         this.storageService.getDownloadUrl({
           storageType: StorageType.journals,
           memberId: memberId.toString(),
-          id: `${id}${ImageType.NormalImage}.${imageFormat}`,
+          id: `${id}_NormalImage.${imageFormat}`,
         }),
         this.storageService.getDownloadUrl({
           storageType: StorageType.journals,
           memberId: memberId.toString(),
-          id: `${id}${ImageType.SmallImage}.${imageFormat}`,
+          id: `${id}_SmallImage.${imageFormat}`,
         }),
       ]);
       journal.images = { normalImageLink, smallImageLink };

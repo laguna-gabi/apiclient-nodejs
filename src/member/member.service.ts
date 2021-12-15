@@ -705,7 +705,7 @@ export class MemberService extends BaseService {
     });
   }
 
-  async deleteJournal(id: string, memberId: string): Promise<Journal> {
+  async deleteJournal(id: string, memberId: string): Promise<boolean> {
     const result = await this.journalModel.findOneAndDelete({
       _id: new Types.ObjectId(id),
       memberId: new Types.ObjectId(memberId),
@@ -715,7 +715,7 @@ export class MemberService extends BaseService {
       throw new Error(Errors.get(ErrorType.memberJournalNotFound));
     }
 
-    return result;
+    return true;
   }
 
   /*************************************************************************************************

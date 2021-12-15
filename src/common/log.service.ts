@@ -47,9 +47,6 @@ export class Logger extends BaseLogger {
     'oldUserId',
     //sendbird webhook
     'sender',
-    //memeber journal
-    'normalImageKey',
-    'smallImageKey',
     //queue
     'MessageId',
     //dispatches

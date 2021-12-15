@@ -25,7 +25,7 @@ import {
   generateCreateTaskParams,
   generateCreateUserParams,
   generateDateOnly,
-  generateGetMemberUploadJournalLinkParams,
+  generateGetMemberUploadJournalLinksParams,
   generateId,
   generateNotifyParams,
   generateOrgParams,
@@ -660,10 +660,10 @@ describe('Validations - member', () => {
     `(
       `should fail to get journal upload links since mandatory field $field is missing`,
       async (params) => {
-        const getMemberUploadJournalLinkParams = generateGetMemberUploadJournalLinkParams();
-        delete getMemberUploadJournalLinkParams[params.field];
-        await handler.queries.getMemberUploadJournalLink({
-          getMemberUploadJournalLinkParams,
+        const getMemberUploadJournalLinksParams = generateGetMemberUploadJournalLinksParams();
+        delete getMemberUploadJournalLinksParams[params.field];
+        await handler.queries.getMemberUploadJournalLinks({
+          getMemberUploadJournalLinksParams,
           invalidFieldsError: params.error,
         });
       },
@@ -676,11 +676,11 @@ describe('Validations - member', () => {
     `(
       `should fail to get journal upload links since $input is not a valid type`,
       async (params) => {
-        const getMemberUploadJournalLinkParams = generateGetMemberUploadJournalLinkParams({
+        const getMemberUploadJournalLinksParams = generateGetMemberUploadJournalLinksParams({
           ...params.field,
         });
-        await handler.queries.getMemberUploadJournalLink({
-          getMemberUploadJournalLinkParams,
+        await handler.queries.getMemberUploadJournalLinks({
+          getMemberUploadJournalLinksParams,
           invalidFieldsError: params.error,
         });
       },

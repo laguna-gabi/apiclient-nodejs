@@ -45,7 +45,6 @@ import {
 } from '../../src/communication';
 import {
   ImageFormat,
-  ImageType,
   Journal,
   Member,
   MemberConfig,
@@ -71,7 +70,7 @@ import {
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateGetCommunication,
-  generateGetMemberUploadJournalLinkParams,
+  generateGetMemberUploadJournalLinksParams,
   generateId,
   generateInternalNotifyParams,
   generateMemberConfig,
@@ -914,7 +913,7 @@ describe('MemberResolver', () => {
       text = faker.lorem.sentence(),
       published = false,
       updatedAt = new Date(),
-      imageFormat = ImageFormat.png,
+      imageFormat = ImageFormat.jpeg,
     }: Partial<Journal> = {}): Journal => {
       return {
         id,
@@ -998,12 +997,12 @@ describe('MemberResolver', () => {
       expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(1, {
         storageType: StorageType.journals,
         memberId: journal.memberId.toString(),
-        id: `${journal.id}${ImageType.NormalImage}.${journal.imageFormat}`,
+        id: `${journal.id}_NormalImage.${journal.imageFormat}`,
       });
       expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(2, {
         storageType: StorageType.journals,
         memberId: journal.memberId.toString(),
-        id: `${journal.id}${ImageType.SmallImage}.${journal.imageFormat}`,
+        id: `${journal.id}_SmallImage.${journal.imageFormat}`,
       });
       expect(result).toEqual(journal);
     });
@@ -1032,12 +1031,12 @@ describe('MemberResolver', () => {
       expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(1, {
         storageType: StorageType.journals,
         memberId: journal.memberId.toString(),
-        id: `${journal.id}${ImageType.NormalImage}.${journal.imageFormat}`,
+        id: `${journal.id}_NormalImage.${journal.imageFormat}`,
       });
       expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(2, {
         storageType: StorageType.journals,
         memberId: journal.memberId.toString(),
-        id: `${journal.id}${ImageType.SmallImage}.${journal.imageFormat}`,
+        id: `${journal.id}_SmallImage.${journal.imageFormat}`,
       });
       expect(result).toEqual(journal);
     });
@@ -1083,23 +1082,23 @@ describe('MemberResolver', () => {
       expect(spyOnStorageGetDownloadUrl).toBeCalledTimes(4);
       expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(1, {
         storageType: StorageType.journals,
-        memberId,
-        id: `${journals[0].id}${ImageType.NormalImage}.${journals[0].imageFormat}`,
+        memberId: memberId.toString(),
+        id: `${journals[0].id}_NormalImage.${journals[0].imageFormat}`,
       });
       expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(2, {
         storageType: StorageType.journals,
-        memberId,
-        id: `${journals[0].id}${ImageType.SmallImage}.${journals[0].imageFormat}`,
+        memberId: memberId.toString(),
+        id: `${journals[0].id}_SmallImage.${journals[0].imageFormat}`,
       });
       expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(3, {
         storageType: StorageType.journals,
-        memberId,
-        id: `${journals[1].id}${ImageType.NormalImage}.${journals[1].imageFormat}`,
+        memberId: memberId.toString(),
+        id: `${journals[1].id}_NormalImage.${journals[1].imageFormat}`,
       });
       expect(spyOnStorageGetDownloadUrl).toHaveBeenNthCalledWith(4, {
         storageType: StorageType.journals,
-        memberId,
-        id: `${journals[1].id}${ImageType.SmallImage}.${journals[1].imageFormat}`,
+        memberId: memberId.toString(),
+        id: `${journals[1].id}_SmallImage.${journals[1].imageFormat}`,
       });
       expect(result).toEqual(journals);
     });
@@ -1113,10 +1112,10 @@ describe('MemberResolver', () => {
       },
     );
 
-    it('should delete Journal with image', async () => {
+    it('should delete Journal', async () => {
       const memberId = generateId();
       const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
-      spyOnServiceDeleteJournal.mockImplementationOnce(async () => journal);
+      spyOnServiceDeleteJournal.mockImplementationOnce(async () => true);
       spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
 
       const result = await resolver.deleteJournal([MemberRole.member], memberId, journal.id);
@@ -1126,23 +1125,7 @@ describe('MemberResolver', () => {
       expect(spyOnStorageDeleteJournalImages).toBeCalledWith(
         journal.id,
         journal.memberId.toString(),
-        journal.imageFormat,
       );
-      expect(result).toBeTruthy();
-    });
-
-    it('should delete Journal with no image', async () => {
-      const memberId = generateId();
-      const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
-      delete journal.imageFormat;
-      spyOnServiceDeleteJournal.mockImplementationOnce(async () => journal);
-      spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
-
-      const result = await resolver.deleteJournal([MemberRole.member], memberId, journal.id);
-
-      expect(spyOnServiceDeleteJournal).toBeCalledTimes(1);
-      expect(spyOnServiceDeleteJournal).toBeCalledWith(journal.id, memberId);
-      expect(spyOnStorageDeleteJournalImages).toBeCalledTimes(0);
       expect(result).toBeTruthy();
     });
 
@@ -1162,8 +1145,8 @@ describe('MemberResolver', () => {
       spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
       spyOnStorageGetUploadUrl.mockImplementation(async () => url);
 
-      const params = generateGetMemberUploadJournalLinkParams({ id: journal.id });
-      const result = await resolver.getMemberUploadJournalLink(
+      const params = generateGetMemberUploadJournalLinksParams({ id: journal.id });
+      const result = await resolver.getMemberUploadJournalLinks(
         [MemberRole.member],
         memberId,
         params,
@@ -1172,24 +1155,29 @@ describe('MemberResolver', () => {
       expect(spyOnServiceUpdateJournal).toBeCalledTimes(1);
       expect(spyOnServiceUpdateJournal).toBeCalledWith({ ...params, memberId, published: false });
 
-      expect(spyOnStorageGetUploadUrl).toBeCalledTimes(1);
+      expect(spyOnStorageGetUploadUrl).toBeCalledTimes(2);
       expect(spyOnStorageGetUploadUrl).toHaveBeenNthCalledWith(1, {
         storageType: StorageType.journals,
         memberId: journal.memberId.toString(),
-        id: `${journal.id}${ImageType.NormalImage}.${params.imageFormat}`,
+        id: `${journal.id}_NormalImage.${params.imageFormat}`,
+      });
+      expect(spyOnStorageGetUploadUrl).toHaveBeenNthCalledWith(2, {
+        storageType: StorageType.journals,
+        memberId: journal.memberId.toString(),
+        id: `${journal.id}_SmallImage.${params.imageFormat}`,
       });
 
-      expect(result).toEqual({ normalImageLink: url });
+      expect(result).toEqual({ normalImageLink: url, smallImageLink: url });
     });
 
     test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
       'should throw an error on get member upload journal links if role = %p',
       async (role) => {
         await expect(
-          resolver.getMemberUploadJournalLink(
+          resolver.getMemberUploadJournalLinks(
             [role],
             generateId(),
-            generateGetMemberUploadJournalLinkParams(),
+            generateGetMemberUploadJournalLinksParams(),
           ),
         ).rejects.toThrow(Error(Errors.get(ErrorType.memberAllowedOnly)));
       },
@@ -1198,7 +1186,6 @@ describe('MemberResolver', () => {
     it('should delete Journal images', async () => {
       const memberId = generateId();
       const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
-      spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
       spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
       spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
 
@@ -1214,26 +1201,12 @@ describe('MemberResolver', () => {
       expect(spyOnStorageDeleteJournalImages).toBeCalledWith(
         journal.id,
         journal.memberId.toString(),
-        journal.imageFormat,
       );
       expect(result).toEqual(true);
     });
 
-    it('should throw an error on delete Journal images if no image', async () => {
-      const memberId = generateId();
-      const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
-      delete journal.imageFormat;
-      spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
-      spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
-      spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
-
-      await expect(
-        resolver.deleteJournalImage([MemberRole.member], generateId(), generateId()),
-      ).rejects.toThrow(Error(Errors.get(ErrorType.memberJournalImageNotFound)));
-    });
-
     test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
-      'should throw an error on delete journal image if role = %p',
+      'should throw an error on create journal if role = %p',
       async (role) => {
         await expect(
           resolver.deleteJournalImage([role], generateId(), generateId()),
@@ -1276,7 +1249,7 @@ describe('MemberResolver', () => {
       expect(spyOnStorageGetDownloadUrl).toBeCalledWith({
         storageType: StorageType.journals,
         memberId,
-        id: `${journal.id}${ImageType.NormalImage}.${journal.imageFormat}`,
+        id: `${journal.id}_NormalImage.${journal.imageFormat}`,
       });
       expect(spyOnNotificationsServiceSend).toBeCalledWith({
         sendSendBirdNotification: {

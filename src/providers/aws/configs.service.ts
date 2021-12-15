@@ -11,7 +11,6 @@ export const ExternalConfigs = {
     ...BaseExternalConfigs.aws,
     memberBucketName: 'aws.storage.memberBucketName',
     queueNameAudit: 'aws.sqs.queueNameAudit',
-    queueNameImage: 'aws.sqs.queueNameImage',
   },
   db: {
     connection: 'db.connection',

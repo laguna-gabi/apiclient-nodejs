@@ -1,11 +1,8 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import * as AWS from 'aws-sdk';
-import * as config from 'config';
-import * as sharp from 'sharp';
 import { ConfigsService, ExternalConfigs } from '.';
 import { EventType, IEventOnNewMember, Logger, StorageType, StorageUrlParams } from '../../common';
-import { ImageFormat, ImageType } from '../../member/journal.dto';
 
 @Injectable()
 export class StorageService implements OnModuleInit {
@@ -96,21 +93,15 @@ export class StorageService implements OnModuleInit {
     }
   }
 
-  async deleteJournalImages(id: string, memberId: string, imageFormat: ImageFormat) {
+  async deleteJournalImages(id: string, memberId: string) {
     this.logger.debug({ id, memberId }, StorageService.name, this.deleteJournalImages.name);
     try {
       const deleteParams = {
         Bucket: this.bucket,
         Delete: {
           Objects: [
-            {
-              // eslint-disable-next-line max-len
-              Key: `public/${StorageType.journals}/${memberId}/${id}${ImageType.NormalImage}.${imageFormat}`,
-            },
-            {
-              // eslint-disable-next-line max-len
-              Key: `public/${StorageType.journals}/${memberId}/${id}${ImageType.SmallImage}.${imageFormat}`,
-            },
+            { Key: `public/${StorageType.journals}/${memberId}/${id}_NormalImage.pdf` },
+            { Key: `public/${StorageType.journals}/${memberId}/${id}_SmallImage.pdf` },
           ],
         },
       };
@@ -118,41 +109,6 @@ export class StorageService implements OnModuleInit {
       return true;
     } catch (ex) {
       this.logger.error({ id, memberId }, StorageService.name, this.deleteJournalImages.name, ex);
-    }
-  }
-
-  async createJournalImageThumbnail(normalImageKey: string, smallImageKey: string) {
-    this.logger.debug(
-      { normalImageKey, smallImageKey },
-      StorageService.name,
-      this.createJournalImageThumbnail.name,
-    );
-    try {
-      const downloadParams = {
-        Bucket: this.bucket,
-        Key: normalImageKey,
-      };
-      const originalImage = await this.s3.getObject(downloadParams).promise();
-
-      // Use the sharp module to resize the image and save in a buffer.
-      const buffer = await sharp(originalImage.Body)
-        .resize(config.get('aws.storage.thumbnailSize'))
-        .toBuffer();
-
-      const uploadParams = {
-        Bucket: this.bucket,
-        Key: smallImageKey,
-        Body: buffer,
-        ContentType: 'image',
-      };
-      await this.s3.putObject(uploadParams).promise();
-    } catch (ex) {
-      this.logger.error(
-        { normalImageKey, smallImageKey },
-        StorageService.name,
-        this.createJournalImageThumbnail.name,
-        ex,
-      );
     }
   }
 

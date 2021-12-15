@@ -1,18 +1,10 @@
 import { Injectable, NotImplementedException, OnModuleInit } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
 import * as AWS from 'aws-sdk';
 import * as config from 'config';
-import { Consumer, SQSMessage } from 'sqs-consumer';
+import { ConfigsService, ExternalConfigs } from '.';
+import { Environments, EventType, IEventNotifyQueue, Logger, QueueType } from '../../common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { v4 } from 'uuid';
-import { ConfigsService, ExternalConfigs, StorageService } from '.';
-import {
-  Environments,
-  EventType,
-  IEventNotifyQueue,
-  Logger,
-  QueueType,
-  StorageType,
-} from '../../common';
 
 @Injectable()
 export class QueueService implements OnModuleInit {
@@ -22,16 +14,15 @@ export class QueueService implements OnModuleInit {
   });
   private auditQueueUrl;
   private notificationsQueueUrl;
-  private imageQueueUrl;
 
   constructor(
     private readonly configsService: ConfigsService,
+    private readonly eventEmitter: EventEmitter2,
     private readonly logger: Logger,
-    private readonly storageService: StorageService,
   ) {}
 
   async onModuleInit(): Promise<void> {
-    const { queueNameAudit, queueNameNotifications, queueNameImage } = ExternalConfigs.aws;
+    const { queueNameAudit, queueNameNotifications } = ExternalConfigs.aws;
 
     if (process.env.NODE_ENV === Environments.production) {
       const auditName = await this.configsService.getConfig(queueNameAudit);
@@ -42,39 +33,6 @@ export class QueueService implements OnModuleInit {
     const notificationsName = await this.configsService.getConfig(queueNameNotifications);
     const { QueueUrl } = await this.sqs.getQueueUrl({ QueueName: notificationsName }).promise();
     this.notificationsQueueUrl = QueueUrl;
-
-    if (
-      process.env.NODE_ENV === Environments.production ||
-      process.env.NODE_ENV === Environments.development
-    ) {
-      const imageName = await this.configsService.getConfig(queueNameImage);
-      const { QueueUrl } = await this.sqs.getQueueUrl({ QueueName: imageName }).promise();
-      this.imageQueueUrl = QueueUrl;
-
-      // register and start consumer for ImageQ
-      const consumer = Consumer.create({
-        queueUrl: this.imageQueueUrl,
-        handleMessage: async (message) => {
-          /**
-           * we need to always catch exceptions coming from message, since if we don't, it'll
-           * be stuck handling the message, and won't handle other messages.
-           */
-          try {
-            await this.handleMessage(message);
-          } catch (ex) {
-            this.logger.error({}, QueueService.name, this.handleMessage.name, ex);
-          }
-        },
-      });
-
-      consumer.on('error', (ex) => {
-        this.logger.error({}, QueueService.name, this.handleMessage.name, ex);
-      });
-      consumer.on('processing_error', (ex) => {
-        this.logger.error({}, QueueService.name, this.handleMessage.name, ex);
-      });
-      consumer.start();
-    }
   }
 
   @OnEvent(EventType.notifyQueue, { async: true })
@@ -111,16 +69,5 @@ export class QueueService implements OnModuleInit {
       default:
         throw new NotImplementedException();
     }
-  }
-
-  private async handleMessage(message: SQSMessage): Promise<void> {
-    const normalImageKey = JSON.parse(message.Body).Records[0].s3.object.key;
-    const memberId = normalImageKey.split('/')[2];
-    const journalId = normalImageKey.split('/')[3].split('_')[0];
-    const imageFormat = normalImageKey.split('/')[3].split('.')[1];
-    // eslint-disable-next-line max-len
-    const smallImageKey = `public/${StorageType.journals}/${memberId}/${journalId}_SmallImage.${imageFormat}`;
-
-    await this.storageService.createJournalImageThumbnail(normalImageKey, smallImageKey);
   }
 }
