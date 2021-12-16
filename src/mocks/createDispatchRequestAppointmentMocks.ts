@@ -43,7 +43,7 @@ export const generateRequestAppointmentMock = ({
   const contentKey = ContentKey.appointmentRequest;
   return {
     type: InnerQueueTypes.createDispatch,
-    dispatchId: generateDispatchId(contentKey, appointmentId),
+    dispatchId: generateDispatchId(contentKey, appointmentId, recipientClientId),
     correlationId,
     serviceName: ServiceName.hepius,
     notificationType: InternalNotificationType.textToMember,
