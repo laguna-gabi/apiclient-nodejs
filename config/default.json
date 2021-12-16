@@ -40,7 +40,7 @@
   },
   "scheduler": {
     "alertBeforeInMin": 15,
-    "maxAlertGapInMin": 43800,
+    "maxAlertGapInMin": 35791,
     "cronJobIntervalInMin": 1
   },
   "general": {
