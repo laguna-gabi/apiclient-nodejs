@@ -11,11 +11,11 @@ import {
   generateGeneralMemberTriggeredMock,
   generateNewMemberMock,
   generateNewMemberNudgeMock,
+  generateRequestAppointmentMock,
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import { hosts } from 'config';
+import { internet, lorem } from 'faker';
 import { addDays } from 'date-fns';
-import { lorem } from 'faker';
 import { SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { translation } from '../../languages/en.json';
@@ -40,6 +40,8 @@ import {
   generateUpdateMemberSettingsMock,
   generateUpdateUserSettingsMock,
 } from '../generators';
+import { Types } from 'mongoose';
+import { replaceConfigs } from '../';
 
 describe('Notifications full flow', () => {
   let module: TestingModule;
@@ -273,6 +275,45 @@ describe('Notifications full flow', () => {
     });
   });
 
+  it(`should handle event of type ${ContentKey.appointmentRequest}`, async () => {
+    const mock = generateRequestAppointmentMock({
+      recipientClientId: webMemberClient.id,
+      senderClientId: userClient.id,
+      appointmentId: new Types.ObjectId().toString(),
+      scheduleLink: internet.url(),
+    });
+    spyOnTwilioSend.mockReturnValueOnce(providerResult);
+
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify(
+        { type: InnerQueueTypes.createDispatch, ...mock },
+        Object.keys(mock).sort(),
+      ),
+    };
+    await service.handleMessage(message);
+
+    let body = replaceConfigs({
+      content: translation.contents[ContentKey.appointmentRequest],
+      recipientClient: webMemberClient,
+      senderClient: userClient,
+    });
+
+    body += `:\n${mock.scheduleLink}.`;
+
+    expect(spyOnTwilioSend).toBeCalledWith({
+      body,
+      orgName: webMemberClient.orgName,
+      to: webMemberClient.phone,
+    });
+
+    await compareResults({
+      dispatchId: mock.dispatchId,
+      status: DispatchStatus.done,
+      response: { ...mock },
+    });
+  }, 7000);
+
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
@@ -319,27 +360,5 @@ describe('Notifications full flow', () => {
       retryCount: 0,
       status,
     });
-  };
-
-  const replaceConfigs = ({
-    content,
-    recipientClient,
-    senderClient,
-    appointmentId,
-    appointmentTime,
-  }: {
-    content: string;
-    recipientClient: ClientSettings;
-    senderClient: ClientSettings;
-    appointmentId?: string;
-    appointmentTime?: string;
-  }): string => {
-    return content
-      .replace('{{member.honorific}}', translation.honorific[recipientClient.honorific])
-      .replace('{{member.lastName}}', recipientClient.lastName)
-      .replace('{{user.firstName}}', senderClient.firstName)
-      .replace('{{org.name}}', recipientClient.orgName)
-      .replace('{{appointmentTime}}', appointmentTime)
-      .replace('{{downloadLink}}', `${hosts.app}/download/${appointmentId}`);
   };
 });
