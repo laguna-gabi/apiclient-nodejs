@@ -10,6 +10,7 @@ import {
   Language,
 } from '@lagunahealth/pandora';
 import { ClientSettings } from '../settings';
+import { cloneDeep } from 'lodash';
 
 export class GetContentsParams {
   contentKey: ContentKey;
@@ -34,19 +35,22 @@ export class InternationalizationService implements OnModuleInit {
 
   getContents(params: GetContentsParams) {
     const { contentKey, recipientClient, senderClient, extraData, notificationType } = params;
+    // eslint-disable-next-line max-len
+    // if getContents is applied more than once the honorific value in recipientClient may be corrupted
+    const updateRecipientClient = cloneDeep(recipientClient);
     const lng =
       notificationType === InternalNotificationType.textSmsToUser
         ? Language.en
         : recipientClient.language;
 
     if (recipientClient) {
-      recipientClient.honorific = this.i18n.t(`honorific.${recipientClient.honorific}`, {
-        member: recipientClient,
+      updateRecipientClient.honorific = this.i18n.t(`honorific.${recipientClient.honorific}`, {
         lng,
       });
     }
+
     return this.i18n.t(`contents.${contentKey}`, {
-      member: recipientClient,
+      member: updateRecipientClient,
       user: senderClient,
       ...extraData,
       lng,

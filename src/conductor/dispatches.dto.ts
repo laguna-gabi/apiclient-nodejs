@@ -72,6 +72,9 @@ export class Dispatch {
   chatLink?: boolean;
 
   @Prop({ isNan: true })
+  scheduleLink?: string;
+
+  @Prop({ isNan: true })
   sentAt?: Date;
 
   @Prop({ isNan: true })
