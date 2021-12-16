@@ -276,7 +276,6 @@ describe('Notifications full flow', () => {
   });
 
   it(`should handle event of type ${ContentKey.appointmentRequest}`, async () => {
-    //create dispatch - appointmentRequest
     const mock = generateRequestAppointmentMock({
       recipientClientId: webMemberClient.id,
       senderClientId: userClient.id,
@@ -294,29 +293,24 @@ describe('Notifications full flow', () => {
     };
     await service.handleMessage(message);
 
-    const honorific =
-      webMemberClient.honorific.charAt(0).toUpperCase() + webMemberClient.honorific.slice(1);
+    let body = replaceConfigs({
+      content: translation.contents[ContentKey.appointmentRequest],
+      recipientClient: webMemberClient,
+      senderClient: userClient,
+    });
+
+    body += `:\n${mock.scheduleLink}.`;
+
     expect(spyOnTwilioSend).toBeCalledWith({
-      body:
-        `Hello ${honorific}. ${webMemberClient.lastName}, it's ` +
-        `${userClient.firstName}, your Laguna Health coach. Tap here to schedule our next` +
-        ` meeting` +
-        `:\n${mock.scheduleLink}.`,
+      body,
       orgName: webMemberClient.orgName,
       to: webMemberClient.phone,
     });
 
-    const result = await dispatchesService.get(mock.dispatchId);
-
-    const response = { ...mock };
-    delete response.type;
-    expect(result).toEqual({
-      ...response,
-      providerResult,
-      failureReasons: [],
-      retryCount: 0,
+    await compareResults({
+      dispatchId: mock.dispatchId,
       status: DispatchStatus.done,
-      sentAt: expect.any(Date),
+      response: { ...mock },
     });
   }, 7000);
 
