@@ -2,7 +2,7 @@ import { InnerQueueTypes } from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapTriggersAt } from 'config';
-import { addSeconds, subSeconds } from 'date-fns';
+import { addDays, addHours, addSeconds, subSeconds } from 'date-fns';
 import { animal, lorem } from 'faker';
 import { CommonModule, Logger } from '../../src/common';
 import {
@@ -151,8 +151,8 @@ describe(ConductorService.name, () => {
       });
       dispatch.triggersAt = triggersAt ? subSeconds(new Date(), gapTriggersAt) : undefined;
 
-      spyOnDispatchesServiceInternalUpdate.mockResolvedValue(dispatch);
-      spyOnDispatchesServiceUpdate.mockResolvedValue(dispatch);
+      spyOnDispatchesServiceInternalUpdate.mockResolvedValueOnce(dispatch);
+      spyOnDispatchesServiceUpdate.mockResolvedValueOnce(dispatch);
       const providerResult: ProviderResult = {
         provider: Provider.twilio,
         content: lorem.sentence(),
@@ -235,7 +235,7 @@ describe(ConductorService.name, () => {
         triggersAt: addSeconds(new Date(), gapTriggersAt + 2),
       });
       spyOnDispatchesServiceUpdate.mockResolvedValueOnce(createDispatch);
-      spyOnTriggersServiceUpdate.mockResolvedValueOnce({ _id: createDispatch.triggeredId });
+      spyOnTriggersServiceUpdate.mockResolvedValueOnce({ _id: generateId() });
 
       await service.handleCreateDispatch({
         ...createDispatch,
@@ -250,6 +250,40 @@ describe(ConductorService.name, () => {
       });
       expect(spyOnNotificationsService).not.toBeCalled();
       expect(spyOnError).not.toBeCalled();
+    });
+
+    it('should update a dispatch with the same id on dispatches and triggers', async () => {
+      const dispatch1 = generateDispatch({ triggersAt: addDays(new Date(), 1) });
+      const dispatch2 = generateDispatch({
+        dispatchId: dispatch1.dispatchId,
+        triggersAt: addHours(new Date(), 2),
+      });
+      const triggeredId = generateId();
+
+      spyOnDispatchesServiceUpdate.mockResolvedValueOnce(dispatch1);
+      spyOnDispatchesServiceUpdate.mockResolvedValueOnce(dispatch2);
+      spyOnDispatchesServiceInternalUpdate.mockResolvedValueOnce(dispatch1);
+      spyOnDispatchesServiceInternalUpdate.mockResolvedValueOnce(dispatch2);
+      spyOnTriggersServiceUpdate.mockResolvedValue({ _id: triggeredId });
+
+      const type = InnerQueueTypes.createDispatch;
+      await service.handleCreateDispatch({ ...dispatch1, type });
+      await service.handleCreateDispatch({ ...dispatch2, type });
+
+      expect(spyOnDispatchesServiceUpdate).toHaveBeenNthCalledWith(1, dispatch1);
+      expect(spyOnDispatchesServiceUpdate).toHaveBeenNthCalledWith(2, dispatch2);
+      expect(spyOnDispatchesServiceInternalUpdate).toHaveBeenNthCalledWith(1, {
+        dispatchId: dispatch1.dispatchId,
+        triggeredId,
+      });
+      expect(spyOnDispatchesServiceInternalUpdate).toHaveBeenNthCalledWith(2, {
+        dispatchId: dispatch1.dispatchId,
+        triggeredId,
+      });
+      expect(spyOnTriggersServiceUpdate).toBeCalledWith({
+        dispatchId: dispatch1.dispatchId,
+        expireAt: dispatch2.triggersAt,
+      });
     });
   });
 
