@@ -1,8 +1,7 @@
-import { BaseLogger, ServiceName } from '@lagunahealth/pandora';
+import { BaseLogger, ServiceName, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AuditType, EventType, IEventNotifyQueue, QueueType } from '.';
-import { SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 
 export const internalLogs = {
   hepiusVersion: 'Starting Hepius application version: @version@',
@@ -47,6 +46,9 @@ export class Logger extends BaseLogger {
     'oldUserId',
     //sendbird webhook
     'sender',
+    //memeber journal
+    'normalImageKey',
+    'smallImageKey',
     //queue
     'MessageId',
     //dispatches

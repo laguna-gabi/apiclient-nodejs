@@ -3,6 +3,7 @@ import axios from 'axios';
 import { EventEmitter2 } from 'eventemitter2';
 import * as faker from 'faker';
 import { Environments, Logger, StorageType } from '../../src/common';
+import { ImageFormat, ImageType } from '../../src/member';
 import { ConfigsService, StorageService } from '../../src/providers';
 import { mockLogger } from '../common';
 import { generateId, mockGenerateMember, mockGenerateUser } from '../generators';
@@ -101,7 +102,7 @@ describe('live: aws', () => {
         expect(uploadStatus).toEqual(200);
       };
       const id = generateId();
-      const files = [`${id}_NormalImage.pdf`, `${id}_SmallImage.pdf`];
+      const files = [`${id}${ImageType.NormalImage}.png`, `${id}${ImageType.SmallImage}.png`];
       await Promise.all(files.map(uploadFile));
       const existingUrls = await Promise.all(
         files.map((file) => storageService.getDownloadUrl(getParams(file))),
@@ -112,7 +113,7 @@ describe('live: aws', () => {
       expect(existingUrls[1]).toMatch(
         `${bucketName}.s3.amazonaws.com/public/${StorageType.journals}/${member.id}/${files[1]}`,
       );
-      await storageService.deleteJournalImages(id, member.id);
+      await storageService.deleteJournalImages(id, member.id, ImageFormat.png);
       const nonExistingUrls = await Promise.all(
         files.map((file) => storageService.getDownloadUrl(getParams(file))),
       );

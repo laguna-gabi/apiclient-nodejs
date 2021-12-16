@@ -19,7 +19,7 @@ readonly repo=${name}-${git_branch}
 aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${ecr_url}
 
 # build the image
-docker build -t ${repo} --build-arg GIT_COMMIT=${git_commit} --build-arg GIT_BRANCH=${git_branch} .
+docker build -t ${repo} --build-arg GIT_COMMIT=${git_commit} --build-arg GIT_BRANCH=${git_branch} --build-arg NPM_TOKEN=<npm token to install pandora> --build-arg NODE_ENV=<development/producation> .
 
 # tag & push to ECR (https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html)
 docker tag ${repo}:latest ${ecr_url}/${repo}:latest

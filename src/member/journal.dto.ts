@@ -3,6 +3,11 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { Identifier } from '../common';
 
+export enum ImageType {
+  NormalImage = '_NormalImage',
+  SmallImage = '_SmallImage',
+}
+
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
@@ -10,7 +15,6 @@ export enum ImageFormat {
   jpeg = 'jpeg',
   jpg = 'jpg',
   gif = 'gif',
-  bmp = 'bmp',
   png = 'png',
 }
 
@@ -30,7 +34,7 @@ export class UpdateJournalTextParams {
 }
 
 @InputType()
-export class GetMemberUploadJournalLinksParams {
+export class GetMemberUploadJournalLinkParams {
   @Field(() => String)
   id: string;
 
@@ -55,10 +59,13 @@ export class UpdateJournalParams {
  *************************************************************************************************/
 
 @ObjectType()
-export class JournalImagesLinks {
+export class JournalImagesUploadLink {
   @Field(() => String, { nullable: true })
   normalImageLink?: string;
+}
 
+@ObjectType()
+export class JournalImagesDownloadLinks extends JournalImagesUploadLink {
   @Field(() => String, { nullable: true })
   smallImageLink?: string;
 }
@@ -82,8 +89,8 @@ export class Journal extends Identifier {
   @Field(() => ImageFormat, { nullable: true })
   imageFormat?: ImageFormat;
 
-  @Field(() => JournalImagesLinks, { nullable: true })
-  images?: JournalImagesLinks;
+  @Field(() => JournalImagesDownloadLinks, { nullable: true })
+  images?: JournalImagesDownloadLinks;
 
   @Field(() => Date)
   updatedAt: Date;

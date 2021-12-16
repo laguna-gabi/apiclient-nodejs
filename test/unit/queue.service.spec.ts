@@ -3,9 +3,11 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
 import { internet, lorem } from 'faker';
+import { Consumer } from 'sqs-consumer';
 import { Logger, QueueType } from '../../src/common';
-import { ConfigsService, ProvidersModule, QueueService } from '../../src/providers';
+import { ConfigsService, ProvidersModule, QueueService, StorageService } from '../../src/providers';
 import { mockLogger } from '../index';
+import { newImageEvent } from './mocks/sqsS3EventNewImage';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const AWS = require('aws-sdk');
 
@@ -19,10 +21,12 @@ AWS.SQS = jest.fn().mockImplementation(() => ({
     promise: jest.fn().mockResolvedValue({ QueueUrl: queueUrl }),
   }),
 }));
+Consumer.create = jest.fn().mockImplementation(() => ({ on: jest.fn(), start: jest.fn() }));
 
 describe(QueueService.name, () => {
   let module: TestingModule;
   let service: QueueService;
+  let storageService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -31,6 +35,7 @@ describe(QueueService.name, () => {
 
     service = module.get<QueueService>(QueueService);
     const configsService = module.get<ConfigsService>(ConfigsService);
+    storageService = module.get<StorageService>(StorageService);
     jest.spyOn(configsService, 'getConfig').mockResolvedValue(lorem.word());
     mockLogger(module.get<Logger>(Logger));
   });
@@ -48,6 +53,9 @@ describe(QueueService.name, () => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       service.auditQueueUrl = undefined;
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      service.imageQueueUrl = undefined;
     });
 
     it('should init notification queue on non production environment', async () => {
@@ -59,6 +67,9 @@ describe(QueueService.name, () => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       expect(service.auditQueueUrl).toEqual(undefined);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      expect(service.imageQueueUrl).toEqual(undefined);
     });
 
     it('should init audit queue on production environment', async () => {
@@ -71,6 +82,9 @@ describe(QueueService.name, () => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       expect(service.auditQueueUrl).toEqual(queueUrl);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      expect(service.imageQueueUrl).toEqual(queueUrl);
     });
   });
 
@@ -117,6 +131,33 @@ describe(QueueService.name, () => {
 
       expect(sendMessage).not.toBeCalled();
       sendMessage.mockClear();
+    });
+  });
+
+  describe('handleMessage', () => {
+    let spyOnStorageServicecreateJournalImageThumbnail;
+
+    beforeEach(() => {
+      spyOnStorageServicecreateJournalImageThumbnail = jest.spyOn(
+        storageService,
+        'createJournalImageThumbnail',
+      );
+    });
+
+    afterEach(() => {
+      spyOnStorageServicecreateJournalImageThumbnail.mockReset();
+    });
+
+    it('should create smallImageKey and call createJournalImageThumbnail', async () => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      await service.handleMessage(newImageEvent);
+
+      expect(spyOnStorageServicecreateJournalImageThumbnail).toBeCalledTimes(1);
+      expect(spyOnStorageServicecreateJournalImageThumbnail).toBeCalledWith(
+        'public/journals/61b844fedac80a096e6e7f7b/61b845cd04f05609bd4d5ed9_NormalImage.jpeg',
+        'public/journals/61b844fedac80a096e6e7f7b/61b845cd04f05609bd4d5ed9_SmallImage.jpeg',
+      );
     });
   });
 });
