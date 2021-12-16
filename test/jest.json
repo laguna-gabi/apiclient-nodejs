@@ -10,5 +10,6 @@
   "coverageDirectory": "./coverage",
   "collectCoverage": true,
   "coveragePathIgnorePatterns": ["./test"],
-  "coverageReporters": ["json-summary", "lcov", "text"]
+  "coverageReporters": ["json-summary", "lcov", "text"],
+  "globalSetup": "./test/global-setup.ts"
 }

@@ -194,6 +194,15 @@ export const mockGenerateMember = (): Member => {
     createdAt: faker.date.past(1),
     honorific: defaultMemberParams.honorific,
     roles: [MemberRole.member],
+    race: defaultMemberParams.race,
+    ethnicity: defaultMemberParams.ethnicity,
+    zipCode: generateZipCode(),
+    fellowName: `${faker.name.firstName()} ${faker.name.lastName()}`,
+    address: {
+      street: faker.address.streetName(),
+      city: faker.address.city(),
+      state: faker.address.state(),
+    },
   };
 };
 

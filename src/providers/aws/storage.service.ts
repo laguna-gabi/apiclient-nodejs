@@ -34,6 +34,18 @@ export class StorageService implements OnModuleInit {
       this.logger.error(params, StorageService.name, this.handleNewMember.name, ex);
     }
   }
+  // Description: get object head from S3
+  async getDocumentLastModified(key: string): Promise<Date> {
+    const params = { Bucket: this.bucket, Key: key };
+
+    try {
+      return await (
+        await this.s3.headObject(params).promise()
+      ).LastModified;
+    } catch (ex) {
+      return; // file doesn't exist
+    }
+  }
 
   async getDownloadUrl(urlParams: StorageUrlParams): Promise<string | undefined> {
     const { storageType, memberId, id } = urlParams;

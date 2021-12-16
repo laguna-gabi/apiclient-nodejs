@@ -2,7 +2,8 @@
   "hosts": {
     "chat": "https://dev.chat.lagunahealth.com",
     "app": "https://dev.app.lagunahealth.com",
-    "dynamicLink": "https://links.lagunahealth.com/app"
+    "dynamicLink": "https://links.lagunahealth.com/app",
+    "harmony": "https://dev.harmony.lagunahealth.com"
   },
   "db": {
     "connection": "mongodb://localhost:27017/laguna"
