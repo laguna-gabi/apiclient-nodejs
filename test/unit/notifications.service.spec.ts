@@ -12,6 +12,8 @@ import {
 import { generateDispatch, generateUpdateMemberSettingsMock } from '../generators';
 import SpyInstance = jest.SpyInstance;
 import { hosts } from 'config';
+import { replaceConfigs } from '../';
+import { translation } from '../../languages/en.json';
 
 describe(NotificationsService.name, () => {
   let module: TestingModule;
@@ -80,13 +82,14 @@ describe(NotificationsService.name, () => {
 
         await service.send(dispatch, recipientClient, senderClient);
 
+        const body = replaceConfigs({
+          content: translation.contents[ContentKey.appointmentRequest],
+          recipientClient,
+          senderClient,
+        });
+
         expect(spyOnTwilioServiceSend).toBeCalledWith({
-          body:
-            // eslint-disable-next-line max-len
-            `Hello ${getHonorific(recipientClient)}. ${recipientClient.lastName}, it's ${
-              senderClient.firstName
-            },` +
-            ` your Laguna Health coach. Tap here to schedule our next meeting:\n${scheduleLink}.`,
+          body: body + `:\n${scheduleLink}.`,
           orgName: recipientClient.orgName,
           to: recipientClient.phone,
         });
@@ -99,27 +102,18 @@ describe(NotificationsService.name, () => {
 
         recipientClient.platform = await service.send(dispatch, recipientClient, senderClient);
 
+        const body = replaceConfigs({
+          content: translation.contents[ContentKey.appointmentRequest],
+          recipientClient,
+          senderClient,
+        });
+
         expect(spyOnTwilioServiceSend).toBeCalledWith({
-          body:
-            // eslint-disable-next-line max-len
-            `Hello ${getHonorific(recipientClient)}. ${recipientClient.lastName}, it's ${
-              senderClient.firstName
-            },` +
-            ` your Laguna Health coach. Tap here to schedule our next meeting\n${hosts.get(
-              'dynamicLink',
-            )}`,
+          body: body + `\n${hosts.get('dynamicLink')}`,
           orgName: recipientClient.orgName,
           to: recipientClient.phone,
         });
       });
     });
   });
-
-  /*************************************************************************************************
-   ******************************************** Helpers ********************************************
-   ************************************************************************************************/
-
-  const getHonorific = (recipientClient): string => {
-    return recipientClient.honorific.charAt(0).toUpperCase() + recipientClient.honorific.slice(1);
-  };
 });

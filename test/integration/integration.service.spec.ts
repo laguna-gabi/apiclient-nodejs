@@ -15,7 +15,6 @@ import {
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { internet, lorem } from 'faker';
-import { hosts } from 'config';
 import { addDays } from 'date-fns';
 import { SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
@@ -42,6 +41,7 @@ import {
   generateUpdateUserSettingsMock,
 } from '../generators';
 import { Types } from 'mongoose';
+import { replaceConfigs } from '../';
 
 describe('Notifications full flow', () => {
   let module: TestingModule;
@@ -360,27 +360,5 @@ describe('Notifications full flow', () => {
       retryCount: 0,
       status,
     });
-  };
-
-  const replaceConfigs = ({
-    content,
-    recipientClient,
-    senderClient,
-    appointmentId,
-    appointmentTime,
-  }: {
-    content: string;
-    recipientClient: ClientSettings;
-    senderClient: ClientSettings;
-    appointmentId?: string;
-    appointmentTime?: string;
-  }): string => {
-    return content
-      .replace('{{member.honorific}}', translation.honorific[recipientClient.honorific])
-      .replace('{{member.lastName}}', recipientClient.lastName)
-      .replace('{{user.firstName}}', senderClient.firstName)
-      .replace('{{org.name}}', recipientClient.orgName)
-      .replace('{{appointmentTime}}', appointmentTime)
-      .replace('{{downloadLink}}', `${hosts.app}/download/${appointmentId}`);
   };
 });
