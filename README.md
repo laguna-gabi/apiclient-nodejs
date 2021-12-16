@@ -2,6 +2,27 @@
   <a href="https://en.wikipedia.org/wiki/Iris_(mythology)" target="blank"><img src="https://upload.wikimedia.org/wikipedia/commons/a/aa/Winged_goddess_Cdm_Paris_392.jpg" height="250" alt="Iris" /></a>
 </p>
 
+
+<p align="center">
+  <a href="https://github.com/LagunaHealth/iris/actions?query=branch%3Adevelop">
+    <img src="https://github.com/LagunaHealth/iris/workflows/Iris/badge.svg" alt="Develop ci/cd status." />
+  </a>
+  <a href="https://github.com/LagunaHealth/iris/contributors" alt="Contributors">
+    <img src="https://img.shields.io/github/contributors/badges/shields" />
+  </a>
+  <br/><b>Total coverage:</b>
+  <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="lines">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-lines.svg" />
+  </a>
+  <b>Other coverage:</b>
+  <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="functions">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-functions.svg" />
+  </a>
+  <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="statements">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-statements.svg" />
+  </a><br/>
+</p>
+
 # 📨 Iris
 
 Laguna health messages component.
