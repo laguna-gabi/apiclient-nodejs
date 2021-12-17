@@ -53,7 +53,8 @@ export class Twilio implements OnModuleInit {
         icon: SlackIcon.phone,
         channel: SlackChannel.testingSms,
       };
-      await this.slack.send(params);
+      const result = await this.slack.send(params);
+      return { provider: Provider.slack, content: params.message, id: result.text };
     }
   }
 }
