@@ -15,7 +15,7 @@ export abstract class BaseSlack {
       this.logger.debug(params, BaseSlack.name, this.send.name);
     } else {
       try {
-        await this.webhook.send({
+        return this.webhook.send({
           username: 'LagunaBot',
           icon_emoji: params.icon,
           channel: params.channel,
