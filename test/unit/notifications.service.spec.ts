@@ -83,7 +83,6 @@ describe(NotificationsService.name, () => {
       recipientClient.platform = Platform.web;
 
       await service.send(dispatch, recipientClient, senderClient);
-      console.log({ recipientClient, senderClient });
 
       const body = replaceConfigs({
         content: translation.contents[ContentKey.appointmentRequest],
