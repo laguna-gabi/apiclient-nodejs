@@ -2,7 +2,6 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import * as packageJson from '../package.json';
 import { AppModule } from './app.module';
-import { AppointmentScheduler } from './appointment';
 import { GlobalAuthGuard, RolesGuard } from './auth';
 import { AllExceptionsFilter, Logger, internalLogs } from './common';
 import { MemberScheduler } from './member';
@@ -38,9 +37,7 @@ async function bootstrap() {
    * Registering reminders for all scheduled notifications
    * DON'T DELETE THIS!
    */
-  const appointmentScheduler = app.get<AppointmentScheduler>(AppointmentScheduler);
   const memberScheduler = app.get<MemberScheduler>(MemberScheduler);
-  await appointmentScheduler.init();
   await memberScheduler.init();
 }
 

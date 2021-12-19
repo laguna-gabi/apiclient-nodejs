@@ -460,11 +460,10 @@ describe('MemberResolver', () => {
       spyOnCognitoServiceDisableMember.mockImplementationOnce(() => undefined);
       spyOnCommunicationFreezeGroupChannel.mockImplementationOnce(() => undefined);
       spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const spyOnDeleteSchedules = jest.spyOn(resolver, 'deleteSchedules');
 
       const result = await resolver.archiveMember(member.id);
+
+      await delay(300);
 
       expect(result).toBeTruthy();
       expect(spyOnServiceMoveMemberToArchive).toBeCalledWith(member.id);
@@ -475,22 +474,8 @@ describe('MemberResolver', () => {
       });
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
 
-      expect(spyOnEventEmitter).toBeCalledTimes(2);
-      const deleteClient: IEventNotifyQueue = {
-        type: QueueType.notifications,
-        message: JSON.stringify({ type: InnerQueueTypes.deleteClientSettings, id: member.id }),
-      };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, deleteClient);
-      const deleteDispatch: IEventNotifyQueue = {
-        type: QueueType.notifications,
-        message: JSON.stringify(
-          generateDeleteDispatchMock({
-            dispatchId: generateDispatchId(ContentKey.newMemberNudge, member.id),
-          }),
-        ),
-      };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notifyQueue, deleteDispatch);
-      expect(spyOnDeleteSchedules).toBeCalledWith({ memberId: member.id });
+      expect(spyOnEventEmitter).toBeCalledTimes(4);
+      expectDeleteArchiveMember(member.id);
     });
   });
 
@@ -559,9 +544,6 @@ describe('MemberResolver', () => {
       spyOnCognitoServiceDeleteMember.mockImplementationOnce(() => undefined);
       spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
       spyOnStorageServiceDeleteMember.mockImplementationOnce(() => undefined);
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const spyOnDeleteSchedules = jest.spyOn(resolver, 'deleteSchedules');
 
       const result = await resolver.deleteMember(member.id);
       await delay(500);
@@ -576,26 +558,45 @@ describe('MemberResolver', () => {
       }
       expect(spyOnStorageServiceDeleteMember).toBeCalledWith(member.id);
 
-      expect(spyOnEventEmitter).toBeCalledTimes(3);
-      const queueEventParams: IEventNotifyQueue = {
-        type: QueueType.notifications,
-        message: JSON.stringify({ type: InnerQueueTypes.deleteClientSettings, id: member.id }),
-      };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, queueEventParams);
-      const deleteDispatch: IEventNotifyQueue = {
+      expect(spyOnEventEmitter).toBeCalledTimes(5);
+      expectDeleteArchiveMember(member.id);
+      const eventParams: IEventMember = { memberId: member.id };
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(5, EventType.onDeletedMember, eventParams);
+    };
+  });
+
+  const expectDeleteArchiveMember = (memberId: string) => {
+    const queueEventParams: IEventNotifyQueue = {
+      type: QueueType.notifications,
+      message: JSON.stringify({ type: InnerQueueTypes.deleteClientSettings, id: memberId }),
+    };
+    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, queueEventParams);
+    const generateQueueParams = (contentKey: ContentKey): IEventNotifyQueue => {
+      return {
         type: QueueType.notifications,
         message: JSON.stringify(
           generateDeleteDispatchMock({
-            dispatchId: generateDispatchId(ContentKey.newMemberNudge, member.id),
+            dispatchId: generateDispatchId(contentKey, memberId),
           }),
         ),
       };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notifyQueue, deleteDispatch);
-      const eventParams: IEventMember = { memberId: member.id };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(3, EventType.onDeletedMember, eventParams);
-      expect(spyOnDeleteSchedules).toBeCalledWith({ memberId: member.id });
     };
-  });
+    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+      2,
+      EventType.notifyQueue,
+      generateQueueParams(ContentKey.newMemberNudge),
+    );
+    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+      3,
+      EventType.notifyQueue,
+      generateQueueParams(ContentKey.newRegisteredMember),
+    );
+    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+      4,
+      EventType.notifyQueue,
+      generateQueueParams(ContentKey.newRegisteredMemberNudge),
+    );
+  };
 
   describe('getMemberUploadDischargeDocumentsLinks', () => {
     let spyOnServiceGet;
