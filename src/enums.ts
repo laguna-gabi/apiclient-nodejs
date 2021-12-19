@@ -1,3 +1,5 @@
+import {v4} from 'uuid';
+
 /*******************************************************************************
  *********************************** General ***********************************
  ******************************************************************************/
@@ -53,3 +55,32 @@ export type AllNotificationTypes =
   | NotificationType
   | CancelNotificationType
   | InternalNotificationType;
+
+
+/*******************************************************************************
+ *********************************** Logger ***********************************
+ ******************************************************************************/
+
+export enum LogType {
+  log = 'log',
+  info = 'info',
+  warn = 'warn',
+  error = 'error',
+  debug = 'debug',
+}
+
+export const PinoHttpConfig = {
+  genReqId: () => v4(), // correlation id
+  autoLogging: false,
+  quietReqLogger: true,
+  level: LogType.debug,
+  prettyPrint:
+    !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
+      ? {
+        colorize: true,
+        translateTime: 'UTC:dd/mm/yyyy, hh:MM:ss TT Z',
+        singleLine: true,
+        messageFormat: '[{className}] [{methodName}]',
+      }
+      : false
+};
