@@ -4,7 +4,6 @@ import { AppointmentStatus } from '../../src/appointment';
 import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import { compareMembers, urls } from '../common';
-import { delay } from '../../src/common';
 import {
   generateAvailabilityInput,
   generateCreateMemberParams,
