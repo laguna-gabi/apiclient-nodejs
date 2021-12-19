@@ -927,6 +927,7 @@ export class MemberResolver extends MemberBase {
     this.eventEmitter.emit(EventType.notifyQueue, eventParams);
   }
 
+  @OnEvent(EventType.notifyDeleteDispatch, { async: true })
   async notifyDeleteDispatch(params: { dispatchId: string }) {
     this.logger.debug(params, MemberResolver.name, this.notifyDeleteDispatch.name);
     const deleteDispatch: IDeleteDispatch = {
@@ -1001,6 +1002,12 @@ export class MemberResolver extends MemberBase {
     try {
       await this.notifyDeleteDispatch({
         dispatchId: generateDispatchId(ContentKey.newMemberNudge, params.memberId),
+      });
+      await this.notifyDeleteDispatch({
+        dispatchId: generateDispatchId(ContentKey.newRegisteredMember, params.memberId),
+      });
+      await this.notifyDeleteDispatch({
+        dispatchId: generateDispatchId(ContentKey.newRegisteredMemberNudge, params.memberId),
       });
       const notifications = await this.memberService.getMemberNotifications(memberId);
       notifications.forEach((notification) => {
