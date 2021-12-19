@@ -524,12 +524,7 @@ describe('Integration tests: all', () => {
       expect(updatedMember.users[updatedMember.users.length - 1].id).toEqual(newUser.id);
       expect(updatedMember.users.length).toEqual(2);
 
-      await delay(1000);
-      const communication = await handler.queries.getCommunication({
-        getCommunicationParams: { userId: newUser.id, memberId: member.id },
-      });
-      expect(communication.memberId).toEqual(member.id);
-      expect(communication.userId).toEqual(newUser.id);
+      await delay(500);
 
       // Check that the appointment moved from the old user to the new
       const { appointments: newUserAppointments } = await handler
