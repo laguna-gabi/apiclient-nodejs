@@ -12,7 +12,6 @@ Laguna health messages component.
       + [entities](#entities)
    * [📋 Prerequisites](#-prerequisites)
       + [Installation](#installation)
-      + [Docker](#docker)
       + [Aws](#aws)
       + [Shared code settings](#shared-code-settings)
    * [🚀 Running the app](#-running-the-app)
@@ -43,14 +42,6 @@ install all dependencies in [package.json](./package.json) file by running the f
 $ yarn
 ```
 
-### Docker
-
-We're loading a local mongodb by using [docker](https://hub.docker.com/).
-
-1. install [docker](https://docs.docker.com/get-docker/).
-2. run `docker-compose up -d` for [starting docker](./docker-compose.yml) with mongodb replica set(localhost).
-   > **_Stop:_** After running the sample, you can stop the Docker container with `docker-compose down` <br/>
-
 ### Aws
 
 In order to work locally with aws cli and `package.json` dependencies, install
@@ -73,7 +64,7 @@ In order to work with _iris_:
 
 1. init and load local mongodb as described on [docker section](#docker)
 2. start the server by using one of the following methods:
-   <br/>2a. run `yarn start` or `yarn start:watch` if you just want to use _iris_ locally
+   run `yarn start:watch` if you just want to use _iris_ locally
 
 ## 🧪 Testing the app
 

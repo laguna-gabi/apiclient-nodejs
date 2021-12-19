@@ -69,7 +69,7 @@ export class Dispatch {
   content?: string;
 
   @Prop({ isNan: true })
-  chatLink?: boolean;
+  chatLink?: string;
 
   @Prop({ isNan: true })
   scheduleLink?: string;

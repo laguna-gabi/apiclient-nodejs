@@ -19,6 +19,6 @@ export class Slack extends BaseSlack implements OnModuleInit {
 
   @OnEvent(EventType.notifySlack, { async: true })
   async send(params: IEventNotifySlack) {
-    await super.send({ ...params, channel: config.get(params.channel) });
+    return super.send({ ...params, channel: config.get(params.channel) });
   }
 }

@@ -55,64 +55,65 @@ describe(NotificationsService.name, () => {
     },
   );
 
-  describe('send', () => {
-    describe(`${ContentKey.appointmentRequest}`, () => {
-      let scheduleLink: string;
-      let dispatch;
-      let spyOnTwilioServiceSend: SpyInstance;
+  describe(`${ContentKey.appointmentRequest}`, () => {
+    let scheduleLink: string;
+    let dispatch;
+    let spyOnTwilioServiceSend: SpyInstance;
 
-      beforeAll(async () => {
-        scheduleLink = internet.url();
-        dispatch = generateDispatch({
-          contentKey: ContentKey.appointmentRequest,
-          scheduleLink,
-        });
-
-        await iService.onModuleInit();
-        spyOnTwilioServiceSend = jest.spyOn(twilioService, 'send');
+    beforeAll(async () => {
+      scheduleLink = internet.url();
+      dispatch = generateDispatch({
+        contentKey: ContentKey.appointmentRequest,
+        scheduleLink,
       });
 
-      afterEach(() => {
-        spyOnTwilioServiceSend.mockReset();
+      await iService.onModuleInit();
+      spyOnTwilioServiceSend = jest.spyOn(twilioService, 'send');
+    });
+
+    beforeEach(() => {
+      spyOnTwilioServiceSend.mockReturnValueOnce(undefined);
+    });
+
+    afterEach(() => {
+      spyOnTwilioServiceSend.mockReset();
+    });
+
+    it(`should create content with request link for members using web platform`, async () => {
+      recipientClient.platform = Platform.web;
+
+      await service.send(dispatch, recipientClient, senderClient);
+
+      const body = replaceConfigs({
+        content: translation.contents[ContentKey.appointmentRequest],
+        recipientClient,
+        senderClient,
       });
 
-      // eslint-disable-next-line max-len
-      it(`to create content with request link for members using web platform`, async () => {
-        recipientClient.platform = Platform.web;
+      expect(spyOnTwilioServiceSend).toBeCalledWith({
+        body: body + `:\n${scheduleLink}.`,
+        orgName: recipientClient.orgName,
+        to: recipientClient.phone,
+      });
+    });
 
-        await service.send(dispatch, recipientClient, senderClient);
+    // eslint-disable-next-line max-len
+    it(`should create content with request link for members using mobile platform without push notification`, async () => {
+      recipientClient.platform = Platform.ios;
+      recipientClient.isPushNotificationsEnabled = false;
 
-        const body = replaceConfigs({
-          content: translation.contents[ContentKey.appointmentRequest],
-          recipientClient,
-          senderClient,
-        });
+      recipientClient.platform = await service.send(dispatch, recipientClient, senderClient);
 
-        expect(spyOnTwilioServiceSend).toBeCalledWith({
-          body: body + `:\n${scheduleLink}.`,
-          orgName: recipientClient.orgName,
-          to: recipientClient.phone,
-        });
+      const body = replaceConfigs({
+        content: translation.contents[ContentKey.appointmentRequest],
+        recipientClient,
+        senderClient,
       });
 
-      // eslint-disable-next-line max-len
-      it(`to create content with request link for members using mobile platform without push notification`, async () => {
-        recipientClient.platform = Platform.ios;
-        recipientClient.isPushNotificationsEnabled = false;
-
-        recipientClient.platform = await service.send(dispatch, recipientClient, senderClient);
-
-        const body = replaceConfigs({
-          content: translation.contents[ContentKey.appointmentRequest],
-          recipientClient,
-          senderClient,
-        });
-
-        expect(spyOnTwilioServiceSend).toBeCalledWith({
-          body: body + `\n${hosts.get('dynamicLink')}`,
-          orgName: recipientClient.orgName,
-          to: recipientClient.phone,
-        });
+      expect(spyOnTwilioServiceSend).toBeCalledWith({
+        body: body + `\n${hosts.get('dynamicLink')}`,
+        orgName: recipientClient.orgName,
+        to: recipientClient.phone,
       });
     });
   });
