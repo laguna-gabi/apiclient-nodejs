@@ -24,7 +24,6 @@ import {
   IEventOnUpdatedAppointment,
   IEventOnUpdatedUserAppointments,
   IEventOnUpdatedUserCommunication,
-  InternalNotifyParams,
   Logger,
   LoggingInterceptor,
   Roles,
@@ -187,17 +186,27 @@ export class AppointmentResolver extends AppointmentBase {
    ************************************************************************************************/
 
   private notifyRequestAppointment(appointment: Appointment) {
-    const params: InternalNotifyParams = {
+    const baseEvent = {
       memberId: appointment.memberId.toString(),
       userId: appointment.userId.toString(),
       type: InternalNotificationType.textToMember,
+      correlationId: v4(),
+    };
+    const appointmentRequest: IDispatchParams = {
+      ...baseEvent,
+      dispatchId: generateDispatchId(
+        ContentKey.appointmentRequest,
+        ...[baseEvent.memberId, appointment.id],
+      ),
       metadata: {
         contentType: ContentKey.appointmentRequest,
         scheduleLink: appointment.link,
+        appointmentId: appointment.id,
         path: `connect/${appointment.id}`,
       },
     };
-    this.eventEmitter.emit(EventType.notifyInternal, params);
+
+    this.eventEmitter.emit(EventType.notifyDispatch, appointmentRequest);
   }
 
   private notifyRegistration({

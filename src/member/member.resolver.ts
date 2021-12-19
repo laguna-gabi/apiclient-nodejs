@@ -903,7 +903,7 @@ export class MemberResolver extends MemberBase {
     this.logger.debug(params, MemberResolver.name, this.notifyCreateDispatch.name);
     const { memberId, userId, type, metadata } = params;
 
-    const creteDispatch: ICreateDispatch = {
+    const createDispatch: ICreateDispatch = {
       type: InnerQueueTypes.createDispatch,
       dispatchId: params.dispatchId,
       correlationId: params.correlationId ? params.correlationId : v4(),
@@ -914,15 +914,16 @@ export class MemberResolver extends MemberBase {
       sendBirdChannelUrl: metadata.sendBirdChannelUrl,
       appointmentTime: metadata.appointmentTime,
       appointmentId: metadata.appointmentId,
+      scheduleLink: metadata.scheduleLink,
       contentKey: metadata.contentType,
       triggersAt: metadata.triggersAt,
       path: metadata.path,
     };
-    this.logger.debug(creteDispatch, MemberResolver.name, EventType.notifyQueue);
+    this.logger.debug(createDispatch, MemberResolver.name, EventType.notifyQueue);
 
     const eventParams: IEventNotifyQueue = {
       type: QueueType.notifications,
-      message: JSON.stringify(creteDispatch),
+      message: JSON.stringify(createDispatch, Object.keys(createDispatch).sort()),
     };
     this.eventEmitter.emit(EventType.notifyQueue, eventParams);
   }

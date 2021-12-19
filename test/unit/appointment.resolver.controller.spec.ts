@@ -2,6 +2,7 @@ import { ContentKey, InternalNotificationType, generateDispatchId } from '@lagun
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { addMinutes } from 'date-fns';
+import * as faker from 'faker';
 import {
   AppointmentController,
   AppointmentMethod,
@@ -15,9 +16,9 @@ import {
   ErrorType,
   Errors,
   EventType,
+  IDispatchParams,
   IEventOnUpdatedAppointment,
   IEventOnUpdatedUserCommunication,
-  InternalNotifyParams,
   Logger,
   UpdatedAppointmentAction,
 } from '../../src/common';
@@ -32,6 +33,14 @@ import {
   generateUpdateNotesParams,
   mockLogger,
 } from '../index';
+import { v4 } from 'uuid';
+
+// mock uuid.v4
+jest.mock('uuid', () => {
+  const actualUUID = jest.requireActual('uuid');
+  const mockV4 = jest.fn(actualUUID.v4);
+  return { v4: mockV4 };
+});
 
 describe('AppointmentResolver', () => {
   let module: TestingModule;
@@ -40,6 +49,7 @@ describe('AppointmentResolver', () => {
   let service: AppointmentService;
   let eventEmitter: EventEmitter2;
   let spyOnEventEmitter;
+  const fakeUUID = faker.datatype.uuid();
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -52,11 +62,13 @@ describe('AppointmentResolver', () => {
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
     mockLogger(module.get<Logger>(Logger));
+    (v4 as jest.Mock).mockImplementation(() => fakeUUID);
   });
 
   afterAll(async () => {
     await module.close();
     await dbDisconnect();
+    (v4 as jest.Mock).mockRestore();
   });
 
   describe('requestAppointment', () => {
@@ -76,6 +88,7 @@ describe('AppointmentResolver', () => {
     it('should create an appointment', async () => {
       const params = generateRequestAppointmentParams();
       const id = generateId();
+
       const appointment = {
         ...params,
         id,
@@ -90,17 +103,24 @@ describe('AppointmentResolver', () => {
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith(appointment);
 
-      const eventParams: InternalNotifyParams = {
+      const eventParams: IDispatchParams = {
         memberId: params.memberId,
+        dispatchId: generateDispatchId(
+          ContentKey.appointmentRequest,
+          appointment.id,
+          params.memberId,
+        ),
+        correlationId: fakeUUID,
         userId: params.userId,
         type: InternalNotificationType.textToMember,
         metadata: {
           contentType: ContentKey.appointmentRequest,
+          appointmentId: appointment.id,
           scheduleLink: `${appointment.link}`,
           path: `connect/${appointment.id}`,
         },
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyInternal, eventParams);
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDispatch, eventParams);
     });
   });
 

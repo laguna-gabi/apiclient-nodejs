@@ -14,6 +14,7 @@ import {
   generateGeneralMemberTriggeredMock,
   generateNewMemberMock,
   generateNewMemberNudgeMock,
+  generateRequestAppointmentMock,
   generateUpdateMemberSettingsMock,
   generateUpdateUserSettingsMock,
 } from '@lagunahealth/pandora';
@@ -21,8 +22,21 @@ import { addDays, subDays, subMinutes } from 'date-fns';
 import { Appointment } from '../../src/appointment';
 import { QueueType, RegisterForNotificationParams, delay } from '../../src/common';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
-import { generateCreateMemberParams, generateScheduleAppointmentParams } from '../generators';
-import { scheduler } from 'config';
+import {
+  generateCreateMemberParams,
+  generateRequestAppointmentParams,
+  generateScheduleAppointmentParams,
+} from '../generators';
+import { hosts, scheduler } from 'config';
+import * as faker from 'faker';
+
+import { v4 } from 'uuid';
+// mock uuid.v4:
+jest.mock('uuid', () => {
+  const actualUUID = jest.requireActual('uuid');
+  const mockV4 = jest.fn(actualUUID.v4);
+  return { v4: mockV4 };
+});
 
 /**
  * Following all scenarios as defined here https://miro.com/app/board/o9J_lnJqa3w=/
@@ -31,7 +45,6 @@ describe('Integration tests: notifications', () => {
   const handler: Handler = new Handler();
   let creators: Creators;
   let appointmentsActions: AppointmentsIntegrationActions;
-
   beforeAll(async () => {
     await handler.beforeAll();
     appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
@@ -384,6 +397,42 @@ describe('Integration tests: notifications', () => {
         });
       },
     );
+
+    /**
+     * Trigger : AppointmentResolver.requestAppointment
+     * Dispatches:
+     *      1. send appointmentRequest dispatch
+     */
+    // eslint-disable-next-line max-len
+    it(`requestAppointment: should send dispatch of type ${ContentKey.appointmentRequest}`, async () => {
+      const org = await creators.createAndValidateOrg();
+      const user = await creators.createAndValidateUser();
+      const member = await creators.createAndValidateMember({ org });
+      const fakeUUID = faker.datatype.uuid();
+      const appointmentParams = generateRequestAppointmentParams({
+        userId: user.id,
+        memberId: member.id,
+      });
+      (v4 as jest.Mock).mockImplementationOnce(() => fakeUUID);
+      const { id: appointmentId } = await handler.mutations.requestAppointment({
+        appointmentParams,
+      });
+
+      await delay(200);
+
+      const mock = generateRequestAppointmentMock({
+        recipientClientId: member.id,
+        senderClientId: user.id,
+        appointmentId,
+        correlationId: fakeUUID,
+        scheduleLink: `${hosts.get('app')}/${appointmentId}`,
+      });
+
+      expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(5, {
+        message: JSON.stringify(mock, Object.keys(mock).sort()),
+        type: QueueType.notifications,
+      });
+    });
   });
 
   /*************************************************************************************************
