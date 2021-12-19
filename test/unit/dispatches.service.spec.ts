@@ -2,7 +2,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { v4 } from 'uuid';
 import { CommonModule } from '../../src/common';
-import { DbModule } from '../../src/db';
 import {
   ConductorModule,
   Dispatch,
@@ -11,6 +10,7 @@ import {
   DispatchesService,
   defaultDispatchParams,
 } from '../../src/conductor';
+import { DbModule } from '../../src/db';
 import { generateDispatch, generateId } from '../generators';
 
 describe(DispatchesService.name, () => {
@@ -162,6 +162,39 @@ describe(DispatchesService.name, () => {
     const result = await service.internalUpdate({ dispatchId: generateId() });
     expect(result).toBeNull();
   });
+
+  it(
+    `should not update dispatch status to ${DispatchStatus.canceled} ` +
+      `if current status != ${DispatchStatus.received}`,
+    async () => {
+      const data = generateDispatch({ status: DispatchStatus.done });
+      const dispatch = await service.update(data);
+
+      const updateResult = await service.internalUpdate({
+        dispatchId: dispatch.dispatchId,
+        status: DispatchStatus.canceled,
+      });
+      expect(updateResult).toBeNull();
+
+      const result = await service.get(dispatch.dispatchId);
+      expect(result).toEqual(expect.objectContaining(data));
+    },
+  );
+
+  it(
+    `should update dispatch status to ${DispatchStatus.canceled} ` +
+      `if current status != ${DispatchStatus.received}`,
+    async () => {
+      const data = generateDispatch({ status: DispatchStatus.received });
+      const dispatch = await service.update(data);
+
+      const result = await service.internalUpdate({
+        dispatchId: dispatch.dispatchId,
+        status: DispatchStatus.canceled,
+      });
+      expect(result).toEqual(expect.objectContaining({ ...data, status: DispatchStatus.canceled }));
+    },
+  );
 
   it('should be able to find based on filter: dispatchId', async () => {
     const data = generateDispatch();
