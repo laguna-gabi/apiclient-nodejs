@@ -7,14 +7,14 @@
   </a> <br/>
   <b>Total coverage:</b>
   <a href="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/lcov-report/index.html" alt="lines">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/badge-lines.svg" />
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/badge-lines.svg?branch=develop" />
   </a>
   <b>Other coverage:</b>
   <a href="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/lcov-report/index.html" alt="functions">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/badge-functions.svg" />
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/badge-functions.svg?branch=develop" />
   </a>
   <a href="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/lcov-report/index.html" alt="statements">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/badge-statements.svg" />
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/badge-statements.svg?branch=develop" />
   </a><br/>
   <a href="https://en.wikipedia.org/wiki/Asclepius" target="blank">
       <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Asklepios_-_Epidauros.jpg" 
