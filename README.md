@@ -11,14 +11,14 @@
   </a> <br/>
   <b>Total coverage:</b>
   <a href="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/lcov-report/index.html" alt="lines">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/badge-lines.svg" />
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/badge-lines.svg?branch=master" />
   </a>
   <b>Other coverage:</b>
   <a href="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/lcov-report/index.html" alt="functions">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/badge-functions.svg" />
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/badge-functions.svg?branch=master" />
   </a>
   <a href="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/lcov-report/index.html" alt="statements">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/badge-statements.svg" />
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/badge-statements.svg?branch=master" />
   </a>
 </p>
 
