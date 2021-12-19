@@ -42,8 +42,7 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     const { queueNameNotifications, queueNameNotificationsDLQ } = ExternalConfigs.aws;
 
-    // const queueName = await this.configsService.getConfig(queueNameNotifications);
-    const queueName = 'test-123';
+    const queueName = await this.configsService.getConfig(queueNameNotifications);
     const { QueueUrl: queueUrl } = await this.sqs.getQueueUrl({ QueueName: queueName }).promise();
     this.notificationsQ = queueUrl;
 
