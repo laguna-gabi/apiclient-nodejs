@@ -21,6 +21,8 @@
   "twilio": {
     "source": "+12058511112"
   },
+  "retryMax": 2,
   "gapTriggersAt": 5,
-  "retryMax": 2
+  "gapMinutes": 15,
+  "maxAlertGapInMin": 35791
 }

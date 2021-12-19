@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Dispatch, DispatchDocument, DispatchInternalUpdate } from '.';
+import { Dispatch, DispatchDocument, DispatchInternalUpdate, DispatchStatus } from '.';
 import { filterNonNullFields } from '../common';
 
 @Injectable()
@@ -29,9 +29,13 @@ export class DispatchesService {
     if (!dispatch.dispatchId) {
       return;
     }
+    let filter: any = { dispatchId: dispatch.dispatchId };
+    if (dispatch.status === DispatchStatus.canceled) {
+      filter = { ...filter, status: DispatchStatus.received };
+    }
     const params = filterNonNullFields<Dispatch>(dispatch);
     return this.dispatchesModel.findOneAndUpdate(
-      { dispatchId: dispatch.dispatchId },
+      filter,
       { $set: params },
       { upsert: false, new: true, ...this.returnResults },
     );

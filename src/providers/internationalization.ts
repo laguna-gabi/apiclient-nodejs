@@ -49,9 +49,10 @@ export class InternationalizationService implements OnModuleInit {
       });
     }
 
+    const userNotification = notificationType === InternalNotificationType.textSmsToUser;
     return this.i18n.t(`contents.${contentKey}`, {
-      member: updateRecipientClient,
-      user: senderClient,
+      member: userNotification ? senderClient : updateRecipientClient,
+      user: userNotification ? updateRecipientClient : senderClient,
       ...extraData,
       lng,
     });
