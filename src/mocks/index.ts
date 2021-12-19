@@ -5,4 +5,5 @@ export * from './createDispatchNewMemberNudgeMocks';
 export * from './createDispatchGeneralMemberWithTrigger';
 export * from './createDispatchRequestAppointmentMocks';
 export * from './createDispatchAppointmentScheduled';
+export * from './createDispatchScheduleAppointmentReminders';
 export * from './deleteDispatch';
