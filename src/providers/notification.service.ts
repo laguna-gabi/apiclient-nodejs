@@ -143,6 +143,14 @@ export class NotificationsService {
         break;
     }
 
+    if (
+      (recipientClient.platform === Platform.web || !recipientClient.isPushNotificationsEnabled) &&
+      (dispatch.contentKey === ContentKey.newRegisteredMember ||
+        dispatch.contentKey === ContentKey.newRegisteredMemberNudge)
+    ) {
+      content += `\n${hosts.get('dynamicLink')}`;
+    }
+
     return content;
   }
 
