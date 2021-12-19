@@ -286,8 +286,8 @@ describe('Integration tests: notifications', () => {
         `delete types ${ContentKey.newMemberNudge}, ${ContentKey.newRegisteredMember}, ` +
         `${ContentKey.newRegisteredMemberNudge}`,
       async () => {
-        const appointment = await generateScheduleAppointment();
-        await delay(1000);
+        const appointment = await generateScheduleAppointment(addDays(new Date(), 5));
+        await delay(500);
 
         checkDeleteDispatches(appointment.memberId.toString());
         const baseParams = { appointmentId: appointment.id, appointmentTime: appointment.start };
