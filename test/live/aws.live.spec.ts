@@ -109,7 +109,7 @@ describe('live: aws', () => {
       });
 
       // wait for the service to resize image
-      await delay(1000);
+      await delay(2000);
 
       const normalImageDownloadUrl = await storageService.getDownloadUrl(
         getParams(`${id}${ImageType.NormalImage}.${ImageFormat.png}`),
