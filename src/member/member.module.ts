@@ -59,5 +59,6 @@ import { UserModule } from '../user';
   ],
   providers: [MemberResolver, MemberService, NotificationBuilder, MemberScheduler, ConfigsService],
   controllers: [MemberController],
+  exports: [MemberService, MongooseModule],
 })
 export class MemberModule {}

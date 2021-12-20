@@ -1,7 +1,8 @@
 {
   "hosts": {
     "chat": "https://staging.chat.lagunahealth.com",
-    "app": "https://staging.app.lagunahealth.com"
+    "app": "https://staging.app.lagunahealth.com",
+    "harmony": "https://staging.harmony.lagunahealth.com"
   },
   "slack": {
     "support": "#support",

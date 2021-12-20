@@ -55,7 +55,7 @@ import {
   IEventOnUpdatedAppointmentScores,
   IEventUnconsentedAppointmentEnded,
   Identifier,
-  Logger,
+  LoggerService,
 } from '../common';
 import { StorageService } from '../providers';
 
@@ -83,7 +83,7 @@ export class MemberService extends BaseService {
     @InjectModel(ControlMember.name)
     private readonly controlMemberModel: Model<ControlMemberDocument>,
     private readonly storageService: StorageService,
-    readonly logger: Logger,
+    readonly logger: LoggerService,
   ) {
     super();
   }
@@ -474,6 +474,10 @@ export class MemberService extends BaseService {
     return this.controlMemberModel.findById(id).populate({ path: 'org' });
   }
 
+  async getAllControl(): Promise<MemberDocument[]> {
+    return this.controlMemberModel.find();
+  }
+
   /************************************************************************************************
    ***************************************** Notifications ****************************************
    ************************************************************************************************/
@@ -705,7 +709,7 @@ export class MemberService extends BaseService {
     });
   }
 
-  async deleteJournal(id: string, memberId: string): Promise<boolean> {
+  async deleteJournal(id: string, memberId: string): Promise<Journal> {
     const result = await this.journalModel.findOneAndDelete({
       _id: new Types.ObjectId(id),
       memberId: new Types.ObjectId(memberId),
@@ -715,7 +719,7 @@ export class MemberService extends BaseService {
       throw new Error(Errors.get(ErrorType.memberJournalNotFound));
     }
 
-    return true;
+    return result;
   }
 
   /*************************************************************************************************

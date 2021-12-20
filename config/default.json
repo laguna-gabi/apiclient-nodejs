@@ -2,7 +2,8 @@
   "hosts": {
     "chat": "https://dev.chat.lagunahealth.com",
     "app": "https://dev.app.lagunahealth.com",
-    "dynamicLink": "https://links.lagunahealth.com/app"
+    "dynamicLink": "https://links.lagunahealth.com/app",
+    "harmony": "https://dev.harmony.lagunahealth.com"
   },
   "db": {
     "connection": "mongodb://localhost:27017/laguna"
@@ -20,6 +21,9 @@
     "region": "us-east-1",
     "cognito": {
       "userPoolId": "us-east-1_EZc3XRt6s"
+    },
+    "storage": {
+      "thumbnailSize": 200
     }
   },
   "twilio": {
@@ -40,7 +44,7 @@
   },
   "scheduler": {
     "alertBeforeInMin": 15,
-    "maxAlertGapInMin": 43800,
+    "maxAlertGapInMin": 35791,
     "cronJobIntervalInMin": 1
   },
   "general": {

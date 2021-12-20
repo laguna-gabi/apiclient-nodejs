@@ -1,12 +1,13 @@
+import { ContentKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { add, addDays } from 'date-fns';
 import { camelCase } from 'lodash';
+import { v4 } from 'uuid';
 import {
   Appointment,
   AppointmentBase,
-  AppointmentScheduler,
   AppointmentService,
   AppointmentStatus,
   EndAppointmentParams,
@@ -23,28 +24,27 @@ import {
   IEventOnUpdatedAppointment,
   IEventOnUpdatedUserAppointments,
   IEventOnUpdatedUserCommunication,
-  InternalNotifyParams,
-  Logger,
+  LoggerService,
   LoggingInterceptor,
-  ReminderType,
   Roles,
   UpdatedAppointmentAction,
   UserRole,
 } from '../common';
-import { ContentKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
+import { CommunicationResolver } from '../communication';
 import { Member } from '../member';
-import { v4 } from 'uuid';
+import { Bitly } from '../providers';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Appointment)
 export class AppointmentResolver extends AppointmentBase {
   constructor(
     readonly appointmentService: AppointmentService,
-    readonly appointmentScheduler: AppointmentScheduler,
+    readonly communicationResolver: CommunicationResolver,
+    readonly bitly: Bitly,
     readonly eventEmitter: EventEmitter2,
-    readonly logger: Logger,
+    readonly logger: LoggerService,
   ) {
-    super(appointmentService, appointmentScheduler, eventEmitter);
+    super(appointmentService, communicationResolver, bitly, eventEmitter, logger);
   }
 
   @Mutation(() => Appointment)
@@ -89,7 +89,7 @@ export class AppointmentResolver extends AppointmentBase {
       key: appointment.id,
     };
     this.eventEmitter.emit(EventType.onUpdatedAppointment, eventParams);
-    await this.appointmentScheduler.unRegisterAppointmentAlert(appointment.id);
+    await this.deleteAppointmentReminders(appointment);
     return appointment;
   }
 
@@ -126,12 +126,7 @@ export class AppointmentResolver extends AppointmentBase {
     try {
       const appointments = await this.appointmentService.getMemberScheduledAppointments(memberId);
       appointments.forEach((appointment) => {
-        this.appointmentScheduler.deleteTimeout({
-          id: appointment.id + ReminderType.appointmentReminder,
-        });
-        this.appointmentScheduler.deleteTimeout({
-          id: appointment.id + ReminderType.appointmentLongReminder,
-        });
+        this.deleteAppointmentReminders(appointment);
       });
     } catch (ex) {
       this.logger.error(params, AppointmentResolver.name, this.deleteSchedules.name, ex);
@@ -191,17 +186,27 @@ export class AppointmentResolver extends AppointmentBase {
    ************************************************************************************************/
 
   private notifyRequestAppointment(appointment: Appointment) {
-    const params: InternalNotifyParams = {
+    const baseEvent = {
       memberId: appointment.memberId.toString(),
       userId: appointment.userId.toString(),
       type: InternalNotificationType.textToMember,
+      correlationId: v4(),
+    };
+    const appointmentRequest: IDispatchParams = {
+      ...baseEvent,
+      dispatchId: generateDispatchId(
+        ContentKey.appointmentRequest,
+        ...[baseEvent.memberId, appointment.id],
+      ),
       metadata: {
         contentType: ContentKey.appointmentRequest,
         scheduleLink: appointment.link,
+        appointmentId: appointment.id,
         path: `connect/${appointment.id}`,
       },
     };
-    this.eventEmitter.emit(EventType.notifyInternal, params);
+
+    this.eventEmitter.emit(EventType.notifyDispatch, appointmentRequest);
   }
 
   private notifyRegistration({
@@ -239,5 +244,22 @@ export class AppointmentResolver extends AppointmentBase {
       },
     };
     this.eventEmitter.emit(EventType.notifyDispatch, newMemberNudgeEvent);
+  }
+
+  private deleteAppointmentReminders(appointment: Appointment) {
+    this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
+      dispatchId: generateDispatchId(
+        ContentKey.appointmentReminder,
+        appointment.memberId.toString(),
+        appointment.id,
+      ),
+    });
+    this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
+      dispatchId: generateDispatchId(
+        ContentKey.appointmentLongReminder,
+        appointment.memberId.toString(),
+        appointment.id,
+      ),
+    });
   }
 }

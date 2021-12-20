@@ -4,7 +4,7 @@ import { ConfigsService, OneSignal, SendBird, TwilioService } from '.';
 import {
   AuditType,
   CancelNotificationParams,
-  Logger,
+  LoggerService,
   SendOneSignalNotification,
   SendSendBirdNotification,
   SendTwilioNotification,
@@ -21,7 +21,7 @@ export class NotificationsService {
     readonly eventEmitter: EventEmitter2,
     private readonly sendBird: SendBird,
     private readonly oneSignal: OneSignal,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
   ) {}
 
   async register({

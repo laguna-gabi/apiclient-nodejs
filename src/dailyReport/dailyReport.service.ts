@@ -12,13 +12,13 @@ import {
   DailyReportQueryInput,
   DailyReportsMetadata,
 } from '.';
-import { BaseService, EventType, IEventMember, Logger } from '../common';
+import { BaseService, EventType, IEventMember, LoggerService } from '../common';
 @Injectable()
 export class DailyReportService extends BaseService {
   constructor(
     @InjectModel(DailyReport.name)
     private readonly dailyReport: Model<DailyReportDocument>,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
   ) {
     super();
   }

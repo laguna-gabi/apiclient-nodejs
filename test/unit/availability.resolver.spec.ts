@@ -4,7 +4,7 @@ import {
   AvailabilityResolver,
   AvailabilityService,
 } from '../../src/availability';
-import { Logger } from '../../src/common';
+import { LoggerService } from '../../src/common';
 import {
   dbDisconnect,
   defaultModules,
@@ -25,7 +25,7 @@ describe('AvailabilityResolver', () => {
 
     resolver = module.get<AvailabilityResolver>(AvailabilityResolver);
     service = module.get<AvailabilityService>(AvailabilityService);
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
   });
 
   afterAll(async () => {

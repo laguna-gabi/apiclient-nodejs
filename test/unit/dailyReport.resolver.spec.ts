@@ -1,8 +1,8 @@
-import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
+import { ContentKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Types } from 'mongoose';
-import { EventType, IEventMember, Logger, MemberRole } from '../../src/common';
+import { EventType, LoggerService, MemberRole } from '../../src/common';
 import {
   DailyReport,
   DailyReportCategoriesInput,
@@ -24,14 +24,14 @@ describe('DailyReportResolver', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      providers: [DailyReportResolver, Logger],
+      providers: [DailyReportResolver, LoggerService],
       imports: defaultModules().concat(DailyReportModule),
     }).compile();
 
     resolver = module.get<DailyReportResolver>(DailyReportResolver);
     service = module.get<DailyReportService>(DailyReportService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
 
     memberId = generateId();
   });
@@ -141,9 +141,7 @@ describe('DailyReportResolver', () => {
           context.primaryUserId,
           dailyReportCategoryInput,
         );
-        const eventParams: IEventMember = {
-          memberId: context._id,
-        };
+        const params = { dispatchId: generateDispatchId(ContentKey.logReminder, context._id) };
         if (emittedEventParams) {
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(
             1,
@@ -152,14 +150,14 @@ describe('DailyReportResolver', () => {
           );
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(
             2,
-            EventType.onSetDailyLogCategories,
-            eventParams,
+            EventType.notifyDeleteDispatch,
+            params,
           );
         } else {
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(
             1,
-            EventType.onSetDailyLogCategories,
-            eventParams,
+            EventType.notifyDeleteDispatch,
+            params,
           );
         }
       },

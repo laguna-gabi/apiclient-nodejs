@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
-import { Logger } from '../../src/common';
+import { LoggerService } from '../../src/common';
 import { HealthController } from '../../src/health/health.controller';
 import { mockLogger } from '../index';
 
@@ -15,7 +15,7 @@ describe('HealthController', () => {
     app = module.createNestApplication();
 
     controller = module.get<HealthController>(HealthController);
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
   });
 
   afterAll(async () => {

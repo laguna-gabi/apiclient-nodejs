@@ -5,18 +5,19 @@ import axios from 'axios';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
 import { AppointmentStatus } from '../../src/appointment';
-import { Logger, SendSendBirdNotification, UserRole } from '../../src/common';
+import { LoggerService, SendSendBirdNotification, UserRole } from '../../src/common';
 import { CreateSendbirdGroupChannelParams } from '../../src/communication';
 import { ConfigsService, SendBird } from '../../src/providers';
 import { mockLogger } from '../common';
 import { generateId } from '../generators';
+import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 
 describe('live: sendbird actions', () => {
   let sendBird: SendBird;
 
   beforeAll(async () => {
     const configService = new ConfigsService();
-    const logger = new Logger(new EventEmitter2());
+    const logger = new LoggerService(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
     mockLogger(logger);
     const httpService = new HttpService();
     sendBird = new SendBird(configService, httpService, logger);

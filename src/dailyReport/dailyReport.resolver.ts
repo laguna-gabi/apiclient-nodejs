@@ -1,4 +1,4 @@
-import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
+import { ContentKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -16,7 +16,6 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventMember,
   InternalNotifyParams,
   LoggingInterceptor,
   MemberRole,
@@ -76,10 +75,9 @@ export class DailyReportResolver {
         dailyReportCategoriesInput.date,
       );
     }
-    const eventParam: IEventMember = {
-      memberId: dailyReportCategoriesInput.memberId,
-    };
-    this.eventEmitter.emit(EventType.onSetDailyLogCategories, eventParam);
+    this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
+      dispatchId: generateDispatchId(ContentKey.logReminder, memberId),
+    });
 
     return dailyReportObject;
   }

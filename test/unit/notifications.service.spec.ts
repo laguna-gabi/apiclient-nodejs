@@ -1,7 +1,7 @@
 import { InternalNotificationType } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { v4 } from 'uuid';
-import { Logger } from '../../src/common';
+import { LoggerService } from '../../src/common';
 import { NotificationsService, SendBird, TwilioService } from '../../src/providers';
 import { dbDisconnect, defaultModules } from '../common';
 import {
@@ -24,7 +24,7 @@ describe('NotificationsService (offline)', () => {
     notificationsService = module.get<NotificationsService>(NotificationsService);
     twilio = module.get<TwilioService>(TwilioService);
     sendBird = module.get<SendBird>(SendBird);
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
   });
 
   afterAll(async () => {

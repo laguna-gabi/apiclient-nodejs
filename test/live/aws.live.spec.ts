@@ -2,10 +2,13 @@ import { Platform } from '@lagunahealth/pandora';
 import axios from 'axios';
 import { EventEmitter2 } from 'eventemitter2';
 import * as faker from 'faker';
-import { Environments, Logger, StorageType } from '../../src/common';
+import { readFileSync } from 'fs';
+import { Environments, LoggerService, StorageType, delay } from '../../src/common';
+import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../src/member';
 import { ConfigsService, StorageService } from '../../src/providers';
 import { mockLogger } from '../common';
 import { generateId, mockGenerateMember, mockGenerateUser } from '../generators';
+import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 
 describe('live: aws', () => {
   describe('storage', () => {
@@ -21,7 +24,7 @@ describe('live: aws', () => {
       }
       const configService = new ConfigsService();
       const eventEmitter = new EventEmitter2();
-      const logger = new Logger(eventEmitter);
+      const logger = new LoggerService(PARAMS_PROVIDER_TOKEN as Params, eventEmitter);
       mockLogger(logger);
       storageService = new StorageService(logger, configService);
       await storageService.onModuleInit();
@@ -87,37 +90,96 @@ describe('live: aws', () => {
       if (process.env.NODE_ENV === Environments.production) {
         return;
       }
+      const id = generateId();
+      const fileContent = readFileSync('./test/live/mocks/lagunaIcon.png');
+      const uploadParams = {
+        Bucket: bucketName,
+        // eslint-disable-next-line max-len
+        Key: `public/${StorageType.journals}/${member.id}/${id}${ImageType.NormalImage}.${ImageFormat.png}`,
+        Body: fileContent,
+        ContentType: 'image',
+      };
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      await storageService.s3.putObject(uploadParams).promise();
+
       const getParams = (id: string) => ({
         memberId: member.id,
         storageType: StorageType.journals,
         id,
       });
-      const uploadFile = async (fileName: string) => {
-        const uploadUrl = await storageService.getUploadUrl(getParams(fileName));
-        expect(uploadUrl).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
-        expect(uploadUrl).toMatch(`Amz-Expires=1800`); //expiration: 30 minutes
 
-        const { status: uploadStatus } = await axios.put(uploadUrl, faker.lorem.sentence());
-        expect(uploadStatus).toEqual(200);
+      // wait for the service to resize image
+      await delay(2000);
+
+      const normalImageDownloadUrl = await storageService.getDownloadUrl(
+        getParams(`${id}${ImageType.NormalImage}.${ImageFormat.png}`),
+      );
+      const smallImageDownloadUrl = await storageService.getDownloadUrl(
+        getParams(`${id}${ImageType.SmallImage}.${ImageFormat.png}`),
+      );
+
+      expect(normalImageDownloadUrl).toMatch(
+        // eslint-disable-next-line max-len
+        `${bucketName}.s3.amazonaws.com/public/${StorageType.journals}/${member.id}/${id}${ImageType.NormalImage}.${ImageFormat.png}`,
+      );
+      expect(smallImageDownloadUrl).toMatch(
+        // eslint-disable-next-line max-len
+        `${bucketName}.s3.amazonaws.com/public/${StorageType.journals}/${member.id}/${id}${ImageType.SmallImage}.${ImageFormat.png}`,
+      );
+      await storageService.deleteJournalImages(id, member.id, ImageFormat.png);
+      const nonExistingNormalImageDownloadUrl = await storageService.getDownloadUrl(
+        getParams(`${id}${ImageType.NormalImage}.${ImageFormat.png}`),
+      );
+      const nonExistingSmallImageDownloadUrl = await storageService.getDownloadUrl(
+        getParams(`${id}${ImageType.SmallImage}.${ImageFormat.png}`),
+      );
+      expect(nonExistingNormalImageDownloadUrl).toBeUndefined();
+      expect(nonExistingSmallImageDownloadUrl).toBeUndefined();
+    }, 10000);
+
+    it('should delete given journal audio for a specific member', async () => {
+      if (process.env.NODE_ENV === Environments.production) {
+        return;
+      }
+
+      const journalId = generateId();
+      const params = {
+        memberId: member.id,
+        storageType: StorageType.journals,
+        id: `${journalId}${AudioType}.${AudioFormat.mp3}`,
       };
-      const id = generateId();
-      const files = [`${id}_NormalImage.pdf`, `${id}_SmallImage.pdf`];
-      await Promise.all(files.map(uploadFile));
-      const existingUrls = await Promise.all(
-        files.map((file) => storageService.getDownloadUrl(getParams(file))),
+      const uploadUrl = await storageService.getUploadUrl(params);
+
+      expect(uploadUrl).toMatch(
+        // eslint-disable-next-line max-len
+        `${bucketName}.s3.amazonaws.com/public/${StorageType.journals}/${params.memberId}/${params.id}`,
       );
-      expect(existingUrls[0]).toMatch(
-        `${bucketName}.s3.amazonaws.com/public/${StorageType.journals}/${member.id}/${files[0]}`,
+      expect(uploadUrl).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
+      expect(uploadUrl).toMatch(`Amz-Expires=1800`); //expiration: 30 minutes
+
+      const { status: uploadStatus } = await axios.put(uploadUrl, faker.lorem.sentence());
+      expect(uploadStatus).toEqual(200);
+
+      const url = await storageService.getDownloadUrl({
+        storageType: StorageType.journals,
+        memberId: member.id,
+        id: params.id,
+      });
+
+      expect(url).toMatch(
+        // eslint-disable-next-line max-len
+        `${bucketName}.s3.amazonaws.com/public/${StorageType.journals}/${member.id}/${journalId}${AudioType}.${AudioFormat.mp3}`,
       );
-      expect(existingUrls[1]).toMatch(
-        `${bucketName}.s3.amazonaws.com/public/${StorageType.journals}/${member.id}/${files[1]}`,
-      );
-      await storageService.deleteJournalImages(id, member.id);
-      const nonExistingUrls = await Promise.all(
-        files.map((file) => storageService.getDownloadUrl(getParams(file))),
-      );
-      expect(nonExistingUrls[0]).toBeUndefined();
-      expect(nonExistingUrls[1]).toBeUndefined();
+      await storageService.deleteJournalAudio(journalId, member.id, AudioFormat.mp3);
+
+      const nonExistingAudioDownloadUrl = await storageService.getDownloadUrl({
+        storageType: StorageType.journals,
+        memberId: member.id,
+        id: params.id,
+      });
+
+      expect(nonExistingAudioDownloadUrl).toBeUndefined();
     });
 
     test.each(Object.values(StorageType))(

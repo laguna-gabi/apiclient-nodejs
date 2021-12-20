@@ -7,7 +7,7 @@ import {
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
-import { ErrorType, Errors, Logger, delay } from '../../src/common';
+import { ErrorType, Errors, LoggerService, delay } from '../../src/common';
 import { NotificationsService } from '../../src/providers';
 import { dbDisconnect, defaultModules, mockLogger } from '../common';
 import { generatePath } from '../generators';
@@ -20,7 +20,7 @@ describe.skip('live: notifications (one signal)', () => {
 
   const beforeEachCustom = async () => {
     const module = await Test.createTestingModule({ imports: defaultModules() }).compile();
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
 
     const notificationsService = module.get<NotificationsService>(NotificationsService);
 

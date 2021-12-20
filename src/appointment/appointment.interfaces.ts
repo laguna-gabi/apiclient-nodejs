@@ -1,28 +1,28 @@
+import { ContentKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { isAfter } from 'date-fns';
-import {
-  Appointment,
-  AppointmentScheduler,
-  AppointmentService,
-  AppointmentStatus,
-  ScheduleAppointmentParams,
-} from '.';
+import { scheduler } from 'config';
+import { addDays, addMinutes, isBefore, subDays, subMinutes } from 'date-fns';
+import { v4 } from 'uuid';
+import { Appointment, AppointmentService, AppointmentStatus, ScheduleAppointmentParams } from '.';
 import {
   ErrorType,
   Errors,
   EventType,
   IDispatchParams,
   IEventOnUpdatedAppointment,
+  LoggerService,
   UpdatedAppointmentAction,
 } from '../common';
-import { ContentKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
-import { v4 } from 'uuid';
+import { CommunicationResolver } from '../communication';
+import { Bitly } from '../providers';
 
 export class AppointmentBase {
   constructor(
     protected readonly appointmentService: AppointmentService,
-    protected readonly appointmentScheduler: AppointmentScheduler,
+    protected readonly communicationResolver: CommunicationResolver,
+    protected readonly bitly: Bitly,
     protected readonly eventEmitter: EventEmitter2,
+    protected readonly logger: LoggerService,
   ) {}
 
   async scheduleAppointment(scheduleAppointmentParams: ScheduleAppointmentParams) {
@@ -30,13 +30,9 @@ export class AppointmentBase {
     const appointment = await this.appointmentService.schedule(scheduleAppointmentParams);
 
     this.updateAppointmentExternalData(appointment);
+    await this.deleteDispatchesOnScheduleAppointment(appointment.memberId.toString());
+    await this.notifyScheduleAppointmentDispatches(appointment);
 
-    if (isAfter(appointment.start, new Date())) {
-      this.notifyScheduleAppointmentDispatches(appointment);
-      await this.registerAppointmentAlert(appointment);
-    }
-
-    this.appointmentScheduler.deleteTimeout({ id: appointment.memberId.toString() });
     return appointment;
   }
 
@@ -58,37 +54,79 @@ export class AppointmentBase {
     this.eventEmitter.emit(EventType.onUpdatedAppointment, eventParams);
   }
 
-  private notifyScheduleAppointmentDispatches(appointment: Appointment) {
+  private async deleteDispatchesOnScheduleAppointment(memberId: string) {
+    this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
+      dispatchId: generateDispatchId(ContentKey.newMemberNudge, memberId),
+    });
+    this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
+      dispatchId: generateDispatchId(ContentKey.newRegisteredMember, memberId),
+    });
+    this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
+      dispatchId: generateDispatchId(ContentKey.newRegisteredMemberNudge, memberId),
+    });
+  }
+
+  private async notifyScheduleAppointmentDispatches(appointment: Appointment) {
+    this.logger.debug(
+      appointment,
+      AppointmentBase.name,
+      this.notifyScheduleAppointmentDispatches.name,
+    );
     const memberId = appointment.memberId.toString();
     const userId = appointment.userId.toString();
     const baseEvent = { memberId, userId, correlationId: v4() };
 
-    let contentKey = ContentKey.appointmentScheduledUser;
+    if (isBefore(appointment.start, new Date())) {
+      return;
+    }
+
+    const contentKey1 = ContentKey.appointmentScheduledUser;
     const appointmentScheduledUserEvent: IDispatchParams = {
       ...baseEvent,
-      dispatchId: generateDispatchId(contentKey, userId, appointment.id),
+      dispatchId: generateDispatchId(contentKey1, userId, appointment.id),
       type: InternalNotificationType.textSmsToUser,
-      metadata: { contentType: contentKey, appointmentTime: appointment.start },
+      metadata: { contentType: contentKey1, appointmentTime: appointment.start },
     };
     this.eventEmitter.emit(EventType.notifyDispatch, appointmentScheduledUserEvent);
 
-    contentKey = ContentKey.appointmentScheduledMember;
+    const contentKey2 = ContentKey.appointmentScheduledMember;
     const appointmentScheduledMemberEvent: IDispatchParams = {
       ...baseEvent,
-      dispatchId: generateDispatchId(contentKey, memberId, appointment.id),
+      dispatchId: generateDispatchId(contentKey2, memberId, appointment.id),
       type: InternalNotificationType.textSmsToMember,
-      metadata: { contentType: contentKey, appointmentTime: appointment.start },
+      metadata: { contentType: contentKey2, appointmentTime: appointment.start },
     };
     this.eventEmitter.emit(EventType.notifyDispatch, appointmentScheduledMemberEvent);
-  }
 
-  private async registerAppointmentAlert(appointment: Appointment) {
-    await this.appointmentScheduler.registerAppointmentAlert({
-      id: appointment.id,
-      memberId: appointment.memberId.toString(),
-      userId: appointment.userId.toString(),
-      start: appointment.start,
-    });
+    if (appointment.start >= addMinutes(new Date(), scheduler.alertBeforeInMin)) {
+      const contentKey3 = ContentKey.appointmentReminder;
+      const appointmentReminderShortEvent: IDispatchParams = {
+        ...baseEvent,
+        dispatchId: generateDispatchId(contentKey3, memberId, appointment.id),
+        type: InternalNotificationType.textToMember,
+        metadata: {
+          contentType: contentKey3,
+          appointmentTime: appointment.start,
+          triggersAt: subMinutes(appointment.start, scheduler.alertBeforeInMin),
+          chatLink: await this.getChatLink(memberId, userId),
+        },
+      };
+      this.eventEmitter.emit(EventType.notifyDispatch, appointmentReminderShortEvent);
+    }
+    if (appointment.start >= addDays(new Date(), 1)) {
+      const contentKey4 = ContentKey.appointmentLongReminder;
+      const appointmentReminderLongEvent: IDispatchParams = {
+        ...baseEvent,
+        dispatchId: generateDispatchId(contentKey4, memberId, appointment.id),
+        type: InternalNotificationType.textToMember,
+        metadata: {
+          contentType: contentKey4,
+          appointmentTime: appointment.start,
+          triggersAt: subDays(appointment.start, 1),
+        },
+      };
+      this.eventEmitter.emit(EventType.notifyDispatch, appointmentReminderLongEvent);
+    }
   }
 
   private async validateUpdateScheduleAppointment(id: string) {
@@ -97,6 +135,20 @@ export class AppointmentBase {
       if (existingAppointment?.status === AppointmentStatus.done) {
         throw new Error(Errors.get(ErrorType.appointmentCanNotBeUpdated));
       }
+    }
+  }
+
+  private async getChatLink(memberId: string, userId: string) {
+    const communication = await this.communicationResolver.getCommunication({ memberId, userId });
+    if (!communication) {
+      this.logger.warn(
+        { memberId, userId },
+        AppointmentBase.name,
+        this.getChatLink.name,
+        Errors.get(ErrorType.communicationMemberUserNotFound),
+      );
+    } else {
+      return this.bitly.shortenLink(communication.chat.memberLink);
     }
   }
 }

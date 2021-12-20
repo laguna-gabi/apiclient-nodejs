@@ -8,7 +8,7 @@ import {
   ErrorType,
   Errors,
   EventType,
-  Logger,
+  LoggerService,
   MemberRole,
   UpdatedAppointmentAction,
   UserRole,
@@ -49,7 +49,7 @@ describe('CommunicationResolver', () => {
     userService = module.get<UserService>(UserService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
   });
 
   afterAll(async () => {

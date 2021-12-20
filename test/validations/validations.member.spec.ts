@@ -25,7 +25,8 @@ import {
   generateCreateTaskParams,
   generateCreateUserParams,
   generateDateOnly,
-  generateGetMemberUploadJournalLinksParams,
+  generateGetMemberUploadJournalAudioLinkParams,
+  generateGetMemberUploadJournalImageLinkParams,
   generateId,
   generateNotifyParams,
   generateOrgParams,
@@ -652,18 +653,19 @@ describe('Validations - member', () => {
     });
   });
 
-  describe('getMemberUploadJournalLinks', () => {
+  describe('getMemberUploadJournalImageLinks', () => {
     test.each`
       field            | error
       ${'id'}          | ${`Field "id" of required type "String!" was not provided.`}
       ${'imageFormat'} | ${`Field "imageFormat" of required type "ImageFormat!" was not provided.`}
     `(
-      `should fail to get journal upload links since mandatory field $field is missing`,
+      `should fail to get journal upload image link since mandatory field $field is missing`,
       async (params) => {
-        const getMemberUploadJournalLinksParams = generateGetMemberUploadJournalLinksParams();
-        delete getMemberUploadJournalLinksParams[params.field];
-        await handler.queries.getMemberUploadJournalLinks({
-          getMemberUploadJournalLinksParams,
+        const getMemberUploadJournalImageLinkParams =
+          generateGetMemberUploadJournalImageLinkParams();
+        delete getMemberUploadJournalImageLinkParams[params.field];
+        await handler.queries.getMemberUploadJournalImageLink({
+          getMemberUploadJournalImageLinkParams,
           invalidFieldsError: params.error,
         });
       },
@@ -674,13 +676,53 @@ describe('Validations - member', () => {
       ${{ id: 123 }}          | ${stringError}
       ${{ imageFormat: 123 }} | ${`Enum "ImageFormat" cannot represent non-string value`}
     `(
-      `should fail to get journal upload links since $input is not a valid type`,
+      `should fail to get journal upload image link since $input is not a valid type`,
       async (params) => {
-        const getMemberUploadJournalLinksParams = generateGetMemberUploadJournalLinksParams({
-          ...params.field,
+        const getMemberUploadJournalImageLinkParams = generateGetMemberUploadJournalImageLinkParams(
+          {
+            ...params.field,
+          },
+        );
+        await handler.queries.getMemberUploadJournalImageLink({
+          getMemberUploadJournalImageLinkParams,
+          invalidFieldsError: params.error,
         });
-        await handler.queries.getMemberUploadJournalLinks({
-          getMemberUploadJournalLinksParams,
+      },
+    );
+  });
+
+  describe('getMemberUploadJournalAudioLink', () => {
+    test.each`
+      field            | error
+      ${'id'}          | ${`Field "id" of required type "String!" was not provided.`}
+      ${'audioFormat'} | ${`Field "audioFormat" of required type "AudioFormat!" was not provided.`}
+    `(
+      `should fail to get journal upload audio link since mandatory field $field is missing`,
+      async (params) => {
+        const getMemberUploadJournalAudioLinkParams =
+          generateGetMemberUploadJournalAudioLinkParams();
+        delete getMemberUploadJournalAudioLinkParams[params.field];
+        await handler.queries.getMemberUploadJournalAudioLink({
+          getMemberUploadJournalAudioLinkParams,
+          invalidFieldsError: params.error,
+        });
+      },
+    );
+
+    test.each`
+      field                   | error
+      ${{ id: 123 }}          | ${stringError}
+      ${{ audioFormat: 123 }} | ${`Enum "AudioFormat" cannot represent non-string value`}
+    `(
+      `should fail to get journal upload audio link since $input is not a valid type`,
+      async (params) => {
+        const getMemberUploadJournalAudioLinkParams = generateGetMemberUploadJournalAudioLinkParams(
+          {
+            ...params.field,
+          },
+        );
+        await handler.queries.getMemberUploadJournalAudioLink({
+          getMemberUploadJournalAudioLinkParams,
           invalidFieldsError: params.error,
         });
       },
@@ -690,6 +732,15 @@ describe('Validations - member', () => {
   describe('deleteJournalImage', () => {
     it('should throw an error for invalid id', async () => {
       await handler.mutations.deleteJournalImage({
+        id: 123,
+        missingFieldError: stringError,
+      });
+    });
+  });
+
+  describe('deleteJournalAudio', () => {
+    it('should throw an error for invalid id', async () => {
+      await handler.mutations.deleteJournalAudio({
         id: 123,
         missingFieldError: stringError,
       });
