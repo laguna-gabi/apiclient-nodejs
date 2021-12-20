@@ -3,24 +3,14 @@ import {
   ICreateDispatch,
   InnerQueueTypes,
   InternalNotificationType,
+  ObjectBaseType,
   ServiceName,
   generateDispatchId,
 } from '../';
 import { v4 } from 'uuid';
 
-export type ObjectNewMemberNudgeType = Pick<
-  ICreateDispatch,
-  | 'type'
-  | 'dispatchId'
-  | 'correlationId'
-  | 'serviceName'
-  | 'notificationType'
-  | 'recipientClientId'
-  | 'senderClientId'
-  | 'appointmentId'
-  | 'triggersAt'
-  | 'contentKey'
->;
+export type ObjectNewMemberNudgeType = ObjectBaseType &
+  Pick<ICreateDispatch, 'appointmentId' | 'triggersAt'>;
 
 export class ObjectNewMemberNudgeClass {
   constructor(readonly objectNewMemberNudgeMock: ObjectNewMemberNudgeType) {}

@@ -3,25 +3,14 @@ import {
   ICreateDispatch,
   InnerQueueTypes,
   InternalNotificationType,
+  ObjectBaseType,
   ServiceName,
   generateDispatchId,
 } from '../index';
 import { v4 } from 'uuid';
 
-export type ObjectAppointmentRequestType = Pick<
-  ICreateDispatch,
-  | 'type'
-  | 'dispatchId'
-  | 'correlationId'
-  | 'serviceName'
-  | 'notificationType'
-  | 'recipientClientId'
-  | 'senderClientId'
-  | 'appointmentId'
-  | 'scheduleLink'
-  | 'path'
-  | 'contentKey'
->;
+export type ObjectAppointmentRequestType = ObjectBaseType &
+  Pick<ICreateDispatch, 'appointmentId' | 'scheduleLink' | 'path'>;
 
 export class ObjectAppointmentRequestClass {
   constructor(readonly objectAppointmentRequestMock: ObjectAppointmentRequestType) {}

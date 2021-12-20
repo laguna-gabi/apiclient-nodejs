@@ -3,23 +3,14 @@ import {
   ICreateDispatch,
   InnerQueueTypes,
   InternalNotificationType,
+  ObjectBaseType,
   ServiceName,
   generateDispatchId,
 } from '../index';
 import { v4 } from 'uuid';
 
-export type ObjectAppointmentScheduledType = Pick<
-  ICreateDispatch,
-  | 'type'
-  | 'dispatchId'
-  | 'correlationId'
-  | 'serviceName'
-  | 'notificationType'
-  | 'recipientClientId'
-  | 'senderClientId'
-  | 'appointmentTime'
-  | 'contentKey'
->;
+export type ObjectAppointmentScheduledType = ObjectBaseType &
+  Pick<ICreateDispatch, 'appointmentTime'>;
 
 export class ObjectAppointmentScheduledClass {
   constructor(readonly objectAppointmentScheduledType: ObjectAppointmentScheduledType) {}

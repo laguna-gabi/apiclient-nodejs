@@ -3,23 +3,13 @@ import {
   ICreateDispatch,
   InnerQueueTypes,
   InternalNotificationType,
+  ObjectBaseType,
   ServiceName,
   generateDispatchId,
 } from '../index';
 import { v4 } from 'uuid';
 
-export type ObjectNewMemberType = Pick<
-  ICreateDispatch,
-  | 'type'
-  | 'dispatchId'
-  | 'correlationId'
-  | 'serviceName'
-  | 'notificationType'
-  | 'recipientClientId'
-  | 'senderClientId'
-  | 'appointmentId'
-  | 'contentKey'
->;
+export type ObjectNewMemberType = ObjectBaseType & Pick<ICreateDispatch, 'appointmentId'>;
 
 export class ObjectNewMemberClass {
   constructor(readonly objectNewMemberMock: ObjectNewMemberType) {}

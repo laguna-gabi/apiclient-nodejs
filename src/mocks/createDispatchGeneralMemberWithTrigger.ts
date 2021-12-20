@@ -3,23 +3,13 @@ import {
   ICreateDispatch,
   InnerQueueTypes,
   InternalNotificationType,
+  ObjectBaseType,
   ServiceName,
   generateDispatchId,
 } from '../';
 import { v4 } from 'uuid';
 
-export type ObjectGeneralMemberTriggeredType = Pick<
-  ICreateDispatch,
-  | 'type'
-  | 'dispatchId'
-  | 'correlationId'
-  | 'serviceName'
-  | 'notificationType'
-  | 'recipientClientId'
-  | 'senderClientId'
-  | 'triggersAt'
-  | 'contentKey'
->;
+export type ObjectGeneralMemberTriggeredType = ObjectBaseType & Pick<ICreateDispatch, 'triggersAt'>;
 
 export class ObjectGeneralMemberTriggeredClass {
   constructor(readonly objectGeneralMemberTriggeredMock: ObjectGeneralMemberTriggeredType) {}
