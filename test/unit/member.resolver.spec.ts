@@ -30,7 +30,7 @@ import {
   InternalNotifyControlMemberParams,
   InternalNotifyParams,
   InternationalizationService,
-  Logger,
+  LoggerService,
   MemberRole,
   QueueType,
   RegisterForNotificationParams,
@@ -132,7 +132,7 @@ describe('MemberResolver', () => {
     internationalizationService = module.get<InternationalizationService>(
       InternationalizationService,
     );
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
 
     await internationalizationService.onModuleInit();
   });

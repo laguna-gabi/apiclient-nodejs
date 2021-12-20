@@ -17,7 +17,7 @@ import {
   EventType,
   Identifier,
   InternalNotifyParams,
-  Logger,
+  LoggerService,
   ReminderType,
 } from '../common';
 import { Bitly } from '../providers';
@@ -36,7 +36,7 @@ export class MemberScheduler extends BaseScheduler {
     protected readonly eventEmitter: EventEmitter2,
     protected readonly bitly: Bitly,
     private readonly memberService: MemberService,
-    protected readonly logger: Logger,
+    protected readonly logger: LoggerService,
   ) {
     super(
       internalSchedulerService,

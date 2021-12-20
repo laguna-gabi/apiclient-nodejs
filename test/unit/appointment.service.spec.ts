@@ -19,7 +19,7 @@ import {
   IEventOnNewAppointment,
   IEventOnUpdatedAppointmentScores,
   IEventUnconsentedAppointmentEnded,
-  Logger,
+  LoggerService,
 } from '../../src/common';
 import {
   dbConnect,
@@ -49,7 +49,7 @@ describe('AppointmentService', () => {
 
     service = module.get<AppointmentService>(AppointmentService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
 
     appointmentModel = model(Appointment.name, AppointmentDto);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');

@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
 import { internet, lorem } from 'faker';
 import { Consumer } from 'sqs-consumer';
-import { Logger, QueueType } from '../../src/common';
+import { LoggerService, QueueType } from '../../src/common';
 import { ConfigsService, ProvidersModule, QueueService, StorageService } from '../../src/providers';
 import { mockLogger } from '../index';
 import { newImageEvent } from './mocks/sqsS3EventNewImage';
@@ -37,7 +37,7 @@ describe(QueueService.name, () => {
     const configsService = module.get<ConfigsService>(ConfigsService);
     storageService = module.get<StorageService>(StorageService);
     jest.spyOn(configsService, 'getConfig').mockResolvedValue(lorem.word());
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
   });
 
   afterAll(async () => {

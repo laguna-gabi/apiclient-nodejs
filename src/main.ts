@@ -3,7 +3,7 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import * as packageJson from '../package.json';
 import { AppModule } from './app.module';
 import { GlobalAuthGuard, RolesGuard } from './auth';
-import { AllExceptionsFilter, Logger, internalLogs } from './common';
+import { AllExceptionsFilter, LoggerService, internalLogs } from './common'; //
 import { MemberScheduler } from './member';
 
 async function bootstrap() {
@@ -11,7 +11,8 @@ async function bootstrap() {
 
   app.enableCors();
 
-  app.useGlobalFilters(new AllExceptionsFilter());
+  const logger = app.get(LoggerService);
+  app.useGlobalFilters(new AllExceptionsFilter(logger));
   app.useGlobalPipes(new ValidationPipe({ transform: true })); //Transform is for rest api
 
   // Guard ALL routes (GQL and REST) - new routes must be explicitly annotated
@@ -21,7 +22,6 @@ async function bootstrap() {
 
   await app.listen(3000);
 
-  const logger = app.get<Logger>(Logger);
   logger.debug(
     { hepiusVersion: internalLogs.hepiusVersion.replace('@version@', packageJson.version) },
     'Main',

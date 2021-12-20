@@ -5,7 +5,7 @@ import * as config from 'config';
 import * as faker from 'faker';
 import { Model, model } from 'mongoose';
 import { v4 } from 'uuid';
-import { Logger, ReminderType, delay } from '../../src/common';
+import { LoggerService, ReminderType, delay } from '../../src/common';
 import {
   MemberModule,
   MemberScheduler,
@@ -65,7 +65,7 @@ describe('MemberScheduler', () => {
     notifyParamsModel = model(NotifyParams.name, NotifyParamsDto);
     schedulerRegistry = module.get<SchedulerRegistry>(SchedulerRegistry);
     internalSchedulerService = module.get<InternalSchedulerService>(InternalSchedulerService);
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
 
     await dbConnect();
     await internalSchedulerService.resetLeader(LeaderType.member);

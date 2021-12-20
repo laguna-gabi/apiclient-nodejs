@@ -1,11 +1,11 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Logger } from '.';
+import { LoggerService } from '.';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private eventEmitter = new EventEmitter2();
-  private logger = new Logger(this.eventEmitter);
+  constructor(private readonly logger: LoggerService) {}
 
   catch(exception, host: ArgumentsHost) {
     let args;
@@ -32,7 +32,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       Object.values(args)[0],
       ClassName,
       MethodName,
-      exception.response?.message || exception,
+      exception.response?.message || exception.message || exception,
     );
     console.error(exception.stack.substring(exception.stack.indexOf('\n') + 1));
   }

@@ -6,7 +6,7 @@ import {
   AvailabilityModule,
   AvailabilityService,
 } from '../../src/availability';
-import { ErrorType, Errors, Logger } from '../../src/common';
+import { ErrorType, Errors, LoggerService } from '../../src/common';
 import { User, UserDto } from '../../src/user';
 import {
   dbConnect,
@@ -30,7 +30,7 @@ describe('AvailabilityService', () => {
     }).compile();
 
     service = module.get<AvailabilityService>(AvailabilityService);
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
 
     availabilityModel = model(Availability.name, AvailabilityDto);
     modelUser = model(User.name, UserDto);

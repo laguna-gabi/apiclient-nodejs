@@ -1,7 +1,7 @@
 import { Body, Controller, NotFoundException, Post, UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Appointment, AppointmentBase, AppointmentService, ScheduleAppointmentParams } from '.';
-import { Logger, LoggingInterceptor, Public, apiPrefix } from '../common';
+import { LoggerService, LoggingInterceptor, Public, apiPrefix } from '../common';
 import { CommunicationResolver } from '../communication';
 import { Bitly } from '../providers';
 
@@ -13,7 +13,7 @@ export class AppointmentController extends AppointmentBase {
     readonly communicationResolver: CommunicationResolver,
     readonly bitly: Bitly,
     readonly eventEmitter: EventEmitter2,
-    readonly logger: Logger,
+    readonly logger: LoggerService,
   ) {
     super(appointmentService, communicationResolver, bitly, eventEmitter, logger);
   }

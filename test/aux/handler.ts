@@ -13,7 +13,7 @@ import { Mutations, Queries } from '.';
 import { generateCreateMemberParams, generateCreateUserParams, generateOrgParams } from '..';
 import { AppModule } from '../../src/app.module';
 import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
-import { Logger, bearerToken } from '../../src/common';
+import { LoggerService, bearerToken } from '../../src/common';
 import { CommunicationService } from '../../src/communication';
 import { Member, MemberService } from '../../src/member';
 import { Org, OrgService } from '../../src/org';
@@ -61,7 +61,7 @@ export class Handler extends BaseHandler {
     }
 
     this.app.useLogger(false);
-    mockLogger(moduleFixture.get<Logger>(Logger));
+    mockLogger(moduleFixture.get<LoggerService>(LoggerService));
 
     await this.app.init();
 

@@ -24,7 +24,7 @@ import {
   IEventOnUpdatedAppointment,
   IEventOnUpdatedUserAppointments,
   IEventOnUpdatedUserCommunication,
-  Logger,
+  LoggerService,
   LoggingInterceptor,
   Roles,
   UpdatedAppointmentAction,
@@ -42,7 +42,7 @@ export class AppointmentResolver extends AppointmentBase {
     readonly communicationResolver: CommunicationResolver,
     readonly bitly: Bitly,
     readonly eventEmitter: EventEmitter2,
-    readonly logger: Logger,
+    readonly logger: LoggerService,
   ) {
     super(appointmentService, communicationResolver, bitly, eventEmitter, logger);
   }

@@ -10,7 +10,7 @@ import {
   Errors,
   EventType,
   IEventOnMemberBecameOffline,
-  Logger,
+  LoggerService,
   SendOneSignalNotification,
 } from '../common';
 import { MemberConfig } from '../member';
@@ -25,7 +25,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     private readonly configsService: ConfigsService,
     private readonly httpService: HttpService,
     readonly eventEmitter: EventEmitter2,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
   ) {
     super();
   }

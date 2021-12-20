@@ -3,11 +3,12 @@ import axios from 'axios';
 import { EventEmitter2 } from 'eventemitter2';
 import * as faker from 'faker';
 import { readFileSync } from 'fs';
-import { Environments, Logger, StorageType, delay } from '../../src/common';
+import { Environments, LoggerService, StorageType, delay } from '../../src/common';
 import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../src/member';
 import { ConfigsService, StorageService } from '../../src/providers';
 import { mockLogger } from '../common';
 import { generateId, mockGenerateMember, mockGenerateUser } from '../generators';
+import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 
 describe('live: aws', () => {
   describe('storage', () => {
@@ -23,7 +24,7 @@ describe('live: aws', () => {
       }
       const configService = new ConfigsService();
       const eventEmitter = new EventEmitter2();
-      const logger = new Logger(eventEmitter);
+      const logger = new LoggerService(PARAMS_PROVIDER_TOKEN as Params, eventEmitter);
       mockLogger(logger);
       storageService = new StorageService(logger, configService);
       await storageService.onModuleInit();

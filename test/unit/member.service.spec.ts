@@ -18,7 +18,7 @@ import {
   AppointmentModule,
   AppointmentStatus,
 } from '../../src/appointment';
-import { ErrorType, Errors, Logger, RecordingType } from '../../src/common';
+import { ErrorType, Errors, LoggerService, RecordingType } from '../../src/common';
 import {
   ActionItem,
   ActionItemDto,
@@ -84,7 +84,7 @@ describe('MemberService', () => {
     }).compile();
 
     service = module.get<MemberService>(MemberService);
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
 
     memberModel = model(Member.name, MemberDto);
     controlMemberModel = model(ControlMember.name, ControlMemberDto);

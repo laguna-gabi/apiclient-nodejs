@@ -4,7 +4,13 @@ import * as AWS from 'aws-sdk';
 import * as config from 'config';
 import * as sharp from 'sharp';
 import { ConfigsService, ExternalConfigs } from '.';
-import { EventType, IEventOnNewMember, Logger, StorageType, StorageUrlParams } from '../../common';
+import {
+  EventType,
+  IEventOnNewMember,
+  LoggerService,
+  StorageType,
+  StorageUrlParams,
+} from '../../common';
 import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../member/journal.dto';
 
 @Injectable()
@@ -12,7 +18,7 @@ export class StorageService implements OnModuleInit {
   private readonly s3 = new AWS.S3({ signatureVersion: 'v4', apiVersion: '2006-03-01' });
   private bucket: string;
 
-  constructor(readonly logger: Logger, private readonly configsService: ConfigsService) {}
+  constructor(readonly logger: LoggerService, private readonly configsService: ConfigsService) {}
 
   async onModuleInit(): Promise<void> {
     this.bucket = await this.configsService.getConfig(ExternalConfigs.aws.memberBucketName);

@@ -6,7 +6,7 @@ import {
   EventType,
   IEventNotifyQueue,
   IEventOnNewUser,
-  Logger,
+  LoggerService,
   QueueType,
   UserRole,
 } from '../../src/common';
@@ -46,7 +46,7 @@ describe('UserResolver', () => {
     service = module.get<UserService>(UserService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
   });
 
   afterAll(async () => {

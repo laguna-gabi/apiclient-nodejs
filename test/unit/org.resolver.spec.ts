@@ -1,6 +1,6 @@
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Logger } from '../../src/common';
+import { LoggerService } from '../../src/common';
 import { DbModule } from '../../src/db/db.module';
 import { OrgModule, OrgResolver, OrgService } from '../../src/org';
 import { dbDisconnect, generateId, generateOrgParams, mockLogger } from '../index';
@@ -17,7 +17,7 @@ describe('OrgResolver', () => {
 
     resolver = module.get<OrgResolver>(OrgResolver);
     service = module.get<OrgService>(OrgService);
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
   });
 
   afterAll(async () => {

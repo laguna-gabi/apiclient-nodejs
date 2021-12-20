@@ -14,7 +14,7 @@ import {
   EventType,
   IEventOnReceivedChatMessage,
   IEventOnReceivedTextMessage,
-  Logger,
+  LoggerService,
   LoggingInterceptor,
   Public,
   apiPrefix,
@@ -32,7 +32,7 @@ export class WebhooksController {
     protected sendbirdService: SendBird,
     protected readonly twilioService: TwilioService,
     protected readonly eventEmitter: EventEmitter2,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
   ) {}
 
   @Public()

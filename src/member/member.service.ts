@@ -55,7 +55,7 @@ import {
   IEventOnUpdatedAppointmentScores,
   IEventUnconsentedAppointmentEnded,
   Identifier,
-  Logger,
+  LoggerService,
 } from '../common';
 import { StorageService } from '../providers';
 
@@ -83,7 +83,7 @@ export class MemberService extends BaseService {
     @InjectModel(ControlMember.name)
     private readonly controlMemberModel: Model<ControlMemberDocument>,
     private readonly storageService: StorageService,
-    readonly logger: Logger,
+    readonly logger: LoggerService,
   ) {
     super();
   }

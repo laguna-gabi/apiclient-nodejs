@@ -71,7 +71,7 @@ import {
   InternalNotifyControlMemberParams,
   InternalNotifyParams,
   InternationalizationService,
-  Logger,
+  LoggerService,
   LoggingInterceptor,
   MemberRole,
   QueueType,
@@ -113,7 +113,7 @@ export class MemberResolver extends MemberBase {
     private readonly communicationResolver: CommunicationResolver,
     readonly internationalizationService: InternationalizationService,
     protected readonly bitly: Bitly,
-    readonly logger: Logger,
+    readonly logger: LoggerService,
     readonly featureFlagService: FeatureFlagService,
   ) {
     super(memberService, eventEmitter, userService, featureFlagService, logger);

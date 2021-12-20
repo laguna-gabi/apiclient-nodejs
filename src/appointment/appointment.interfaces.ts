@@ -10,7 +10,7 @@ import {
   EventType,
   IDispatchParams,
   IEventOnUpdatedAppointment,
-  Logger,
+  LoggerService,
   UpdatedAppointmentAction,
 } from '../common';
 import { CommunicationResolver } from '../communication';
@@ -22,7 +22,7 @@ export class AppointmentBase {
     protected readonly communicationResolver: CommunicationResolver,
     protected readonly bitly: Bitly,
     protected readonly eventEmitter: EventEmitter2,
-    protected readonly logger: Logger,
+    protected readonly logger: LoggerService,
   ) {}
 
   async scheduleAppointment(scheduleAppointmentParams: ScheduleAppointmentParams) {

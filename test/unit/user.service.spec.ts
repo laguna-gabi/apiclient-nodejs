@@ -17,7 +17,7 @@ import {
   Errors,
   IEventOnNewAppointment,
   IEventOnUpdatedUserAppointments,
-  Logger,
+  LoggerService,
   UserRole,
 } from '../../src/common';
 import {
@@ -60,7 +60,7 @@ describe('UserService', () => {
     service = module.get<UserService>(UserService);
     availabilityResolver = module.get<AvailabilityResolver>(AvailabilityResolver);
     appointmentResolver = module.get<AppointmentResolver>(AppointmentResolver);
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
 
     userModel = model(User.name, UserDto);
     mockUserModel = module.get<Model<User>>(getModelToken(User.name));

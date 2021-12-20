@@ -19,7 +19,7 @@ import {
   IDispatchParams,
   IEventOnUpdatedAppointment,
   IEventOnUpdatedUserCommunication,
-  Logger,
+  LoggerService,
   UpdatedAppointmentAction,
 } from '../../src/common';
 import {
@@ -61,7 +61,7 @@ describe('AppointmentResolver', () => {
     service = module.get<AppointmentService>(AppointmentService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
     (v4 as jest.Mock).mockImplementation(() => fakeUUID);
   });
 

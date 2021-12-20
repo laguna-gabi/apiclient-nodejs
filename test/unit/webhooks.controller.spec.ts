@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { EventType, IEventOnReceivedChatMessage, Logger } from '../../src/common';
+import { EventType, IEventOnReceivedChatMessage, LoggerService } from '../../src/common';
 import {
   ConfigsService,
   ExternalConfigs,
@@ -35,7 +35,7 @@ describe('WebhooksController', () => {
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
     spyOnTokenValidation = jest.spyOn(controller, 'validateMessageSentFromSendbird');
     spyOnSendbirdServiceGetMasterAppToken = jest.spyOn(sendbirdService, 'getMasterAppToken');
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
   });
 
   afterAll(async () => {

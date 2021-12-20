@@ -1,7 +1,8 @@
-import { BaseLogger, ServiceName, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AuditType, EventType, IEventNotifyQueue, QueueType } from '.';
+import { BaseLogger, ServiceName, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 
 export const internalLogs = {
   hepiusVersion: 'Starting Hepius application version: @version@',
@@ -11,8 +12,8 @@ export const internalLogs = {
 };
 
 @Injectable()
-export class Logger extends BaseLogger {
-  private static VALID_KEYS = [
+export class LoggerService extends BaseLogger {
+  private static VALID_KEYS = new Set([
     'id',
     'memberId',
     'userId',
@@ -64,10 +65,13 @@ export class Logger extends BaseLogger {
     'triggersAt',
     'path',
     ...Object.keys(internalLogs),
-  ];
+  ]);
 
-  constructor(private readonly eventEmitter: EventEmitter2) {
-    super(ServiceName.hepius, Logger.VALID_KEYS);
+  constructor(
+    @Inject(PARAMS_PROVIDER_TOKEN) params: Params,
+    private readonly eventEmitter: EventEmitter2,
+  ) {
+    super(params, ServiceName.hepius, LoggerService.VALID_KEYS);
   }
 
   warn(params: any = {}, className: string, methodName: string, ...reasons: any[]): void {

@@ -17,7 +17,7 @@ import {
   EventType,
   IEventOnNewMemberCommunication,
   IEventOnUpdateUserConfig,
-  Logger,
+  LoggerService,
   UpdatedAppointmentAction,
   UserRole,
 } from '../common';
@@ -34,7 +34,7 @@ export class CommunicationService {
     private readonly sendBird: SendBird,
     private eventEmitter: EventEmitter2,
     private readonly twilio: TwilioService,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
   ) {}
 
   /**

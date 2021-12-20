@@ -9,7 +9,7 @@ import {
   Environments,
   EventType,
   IEventNotifyQueue,
-  Logger,
+  LoggerService,
   QueueType,
   StorageType,
 } from '../../common';
@@ -26,7 +26,7 @@ export class QueueService implements OnModuleInit {
 
   constructor(
     private readonly configsService: ConfigsService,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
     private readonly storageService: StorageService,
   ) {}
 
