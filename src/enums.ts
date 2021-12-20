@@ -7,6 +7,7 @@ export enum Environments {
   production = 'production',
   development = 'development',
   test = 'test',
+  localhost = 'localhost'
 }
 
 /*******************************************************************************
@@ -75,8 +76,8 @@ export const PinoHttpConfig = {
   quietReqLogger: true,
   level: LogType.debug,
   prettyPrint:
-    !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-      ? {
+    !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test ||
+    process.env.NODE_ENV === Environments.localhost ? {
         colorize: true,
         translateTime: 'SYS:dd/mm/yyyy, H:M:ss',
         singleLine: true,
