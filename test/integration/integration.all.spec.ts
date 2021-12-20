@@ -393,10 +393,11 @@ describe('Integration tests: all', () => {
       userId,
     }),
   })}
-    ${'scheduleAppointment'} | ${async ({ memberId, userId }) => await handler.mutations.scheduleAppointment({
+    ${'scheduleAppointment'} | ${async ({ memberId, userId, start }) => await handler.mutations.scheduleAppointment({
     appointmentParams: generateScheduleAppointmentParams({
       memberId,
       userId,
+      start,
     }),
   })}
   `(`should add a not existed user to member users list on $title`, async (params) => {
@@ -413,10 +414,12 @@ describe('Integration tests: all', () => {
     const newUser = await creators.createAndValidateUser();
     //calling twice, to check that the user wasn't added twice to users list
     const appointment1 = await params.method({ userId: newUser.id, memberId: member.id });
+    const start = new Date(appointment1.end);
+    start.setHours(start.getHours() + 1);
     await params.method({
       userId: newUser.id,
       memberId: member.id,
-      start: addDays(appointment1.start, 1),
+      start,
     });
 
     const { users } = await handler
