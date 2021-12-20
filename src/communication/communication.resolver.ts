@@ -81,17 +81,12 @@ export class CommunicationResolver {
 
   @Query(() => UnreadMessagesCount)
   @Roles(MemberRole.member)
-  getMemberUnreadMessagesCount(
-    @Client('roles') roles,
-    @Client('_id') contextMemberId,
-    // eslint-disable-next-line max-len,@typescript-eslint/no-unused-vars
-    @Args('memberId', { type: () => String, nullable: true }) memberId?: string,
-  ) {
+  getMemberUnreadMessagesCount(@Client('roles') roles, @Client('_id') memberId) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
     // ignoring the id from the params - replacing it with the id from the context
-    return this.communicationService.getParticipantUnreadMessagesCount(contextMemberId);
+    return this.communicationService.getParticipantUnreadMessagesCount(memberId);
   }
 
   @Query(() => MemberCommunicationInfo)

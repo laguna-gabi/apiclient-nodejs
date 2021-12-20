@@ -1,6 +1,5 @@
-import { ErrorType, Errors } from '../../src/common';
 import { Handler } from '../aux';
-import { generateGetCommunicationParams, generateId } from '../generators';
+import { generateGetCommunicationParams } from '../generators';
 
 const stringError = `String cannot represent a non string value`;
 
@@ -37,19 +36,6 @@ describe('Validations - communication', () => {
     await handler.queries.getCommunication({
       getCommunicationParams,
       missingFieldError: params.errors,
-    });
-  });
-
-  it('should fail to to get member unread messages since id not valid', async () => {
-    await handler.queries.getMemberUnreadMessagesCount({
-      memberId: 123,
-      missingFieldError: stringError,
-    });
-  });
-
-  it('should fail to to get member unread messages since member does not exists', async () => {
-    await handler.setContextUserId(generateId()).queries.getMemberUnreadMessagesCount({
-      invalidFieldsError: Errors.get(ErrorType.communicationMemberUserNotFound),
     });
   });
 });
