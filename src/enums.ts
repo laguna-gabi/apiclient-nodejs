@@ -78,9 +78,10 @@ export const PinoHttpConfig = {
     !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
       ? {
         colorize: true,
-        translateTime: 'UTC:dd/mm/yyyy, hh:MM:ss TT Z',
+        translateTime: 'SYS:dd/mm/yyyy, H:M:ss',
         singleLine: true,
-        messageFormat: '[{className}] [{methodName}]',
+        messageFormat: '[{className}] [{methodName}] {reasons}',
+        ignore: 'pid,hostname,className,methodName,reasons',
       }
       : false
 };
