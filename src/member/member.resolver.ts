@@ -22,15 +22,18 @@ import { v4 } from 'uuid';
 import { lookup } from 'zipcode-to-timezone';
 import {
   AppointmentCompose,
+  AudioType,
   CancelNotifyParams,
   ChatMessageOrigin,
   CreateMemberParams,
   CreateTaskParams,
   DischargeDocumentsLinks,
-  GetMemberUploadJournalLinkParams,
+  GetMemberUploadJournalAudioLinkParams,
+  GetMemberUploadJournalImageLinkParams,
   ImageType,
   Journal,
-  JournalImagesUploadLink,
+  JournalUploadAudioLink,
+  JournalUploadImageLink,
   Member,
   MemberBase,
   MemberConfig,
@@ -484,18 +487,18 @@ export class MemberResolver extends MemberBase {
     return true;
   }
 
-  @Query(() => JournalImagesUploadLink)
+  @Query(() => JournalUploadImageLink)
   @Roles(MemberRole.member)
-  async getMemberUploadJournalLink(
+  async getMemberUploadJournalImageLink(
     @Client('roles') roles,
     @Client('_id') memberId,
-    @Args(camelCase(GetMemberUploadJournalLinkParams.name))
-    getMemberUploadJournalLinkParams: GetMemberUploadJournalLinkParams,
+    @Args(camelCase(GetMemberUploadJournalImageLinkParams.name))
+    getMemberUploadJournalImageLinkParams: GetMemberUploadJournalImageLinkParams,
   ) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    const { id, imageFormat } = getMemberUploadJournalLinkParams;
+    const { id, imageFormat } = getMemberUploadJournalImageLinkParams;
 
     await this.memberService.updateJournal({ id, memberId, imageFormat, published: false });
     const normalImageLink = await this.storageService.getUploadUrl({
@@ -505,6 +508,29 @@ export class MemberResolver extends MemberBase {
     });
 
     return { normalImageLink };
+  }
+
+  @Query(() => JournalUploadAudioLink)
+  @Roles(MemberRole.member)
+  async getMemberUploadJournalAudioLink(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args(camelCase(GetMemberUploadJournalAudioLinkParams.name))
+    getMemberUploadJournalAudioLinkParams: GetMemberUploadJournalAudioLinkParams,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const { id, audioFormat } = getMemberUploadJournalAudioLinkParams;
+
+    await this.memberService.updateJournal({ id, memberId, audioFormat, published: false });
+    const audioLink = await this.storageService.getUploadUrl({
+      storageType: StorageType.journals,
+      memberId,
+      id: `${id}${AudioType}.${audioFormat}`,
+    });
+
+    return { audioLink };
   }
 
   @Mutation(() => Boolean)
@@ -525,6 +551,26 @@ export class MemberResolver extends MemberBase {
 
     await this.memberService.updateJournal({ id, memberId, imageFormat: null, published: false });
     return this.storageService.deleteJournalImages(id, memberId, imageFormat);
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(MemberRole.member)
+  async deleteJournalAudio(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args('id', { type: () => String }) id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const { audioFormat } = await this.memberService.getJournal(id, memberId);
+
+    if (!audioFormat) {
+      throw new Error(Errors.get(ErrorType.memberJournalAudioNotFound));
+    }
+
+    await this.memberService.updateJournal({ id, memberId, audioFormat: null, published: false });
+    return this.storageService.deleteJournalAudio(id, memberId, audioFormat);
   }
 
   @Mutation(() => String)
@@ -570,10 +616,13 @@ export class MemberResolver extends MemberBase {
   }
 
   private async addMemberDownloadJournalLinks(journal: Journal) {
-    const { id, memberId, imageFormat } = journal;
+    const { id, memberId, imageFormat, audioFormat } = journal;
+    let normalImageLink: string;
+    let smallImageLink: string;
+    let audioLink: string;
 
     if (imageFormat) {
-      const [normalImageLink, smallImageLink] = await Promise.all([
+      [normalImageLink, smallImageLink] = await Promise.all([
         this.storageService.getDownloadUrl({
           storageType: StorageType.journals,
           memberId: memberId.toString(),
@@ -585,8 +634,15 @@ export class MemberResolver extends MemberBase {
           id: `${id}${ImageType.SmallImage}.${imageFormat}`,
         }),
       ]);
-      journal.images = { normalImageLink, smallImageLink };
     }
+    if (audioFormat) {
+      audioLink = await this.storageService.getDownloadUrl({
+        storageType: StorageType.journals,
+        memberId: memberId.toString(),
+        id: `${id}${AudioType}.${audioFormat}`,
+      });
+    }
+    journal.journalDownloadLinks = { normalImageLink, smallImageLink, audioLink };
 
     return journal;
   }

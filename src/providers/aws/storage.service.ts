@@ -5,7 +5,7 @@ import * as config from 'config';
 import * as sharp from 'sharp';
 import { ConfigsService, ExternalConfigs } from '.';
 import { EventType, IEventOnNewMember, Logger, StorageType, StorageUrlParams } from '../../common';
-import { ImageFormat, ImageType } from '../../member/journal.dto';
+import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../member/journal.dto';
 
 @Injectable()
 export class StorageService implements OnModuleInit {
@@ -109,7 +109,11 @@ export class StorageService implements OnModuleInit {
   }
 
   async deleteJournalImages(id: string, memberId: string, imageFormat: ImageFormat) {
-    this.logger.debug({ id, memberId }, StorageService.name, this.deleteJournalImages.name);
+    this.logger.debug(
+      { id, memberId, imageFormat },
+      StorageService.name,
+      this.deleteJournalImages.name,
+    );
     try {
       const deleteParams = {
         Bucket: this.bucket,
@@ -129,7 +133,42 @@ export class StorageService implements OnModuleInit {
       await this.s3.deleteObjects(deleteParams).promise();
       return true;
     } catch (ex) {
-      this.logger.error({ id, memberId }, StorageService.name, this.deleteJournalImages.name, ex);
+      this.logger.error(
+        { id, memberId, imageFormat },
+        StorageService.name,
+        this.deleteJournalImages.name,
+        ex,
+      );
+    }
+  }
+
+  async deleteJournalAudio(id: string, memberId: string, audioFormat: AudioFormat) {
+    this.logger.debug(
+      { id, memberId, audioFormat },
+      StorageService.name,
+      this.deleteJournalAudio.name,
+    );
+    try {
+      const deleteParams = {
+        Bucket: this.bucket,
+        Delete: {
+          Objects: [
+            {
+              // eslint-disable-next-line max-len
+              Key: `public/${StorageType.journals}/${memberId}/${id}${AudioType}.${audioFormat}`,
+            },
+          ],
+        },
+      };
+      await this.s3.deleteObjects(deleteParams).promise();
+      return true;
+    } catch (ex) {
+      this.logger.error(
+        { id, memberId, audioFormat },
+        StorageService.name,
+        this.deleteJournalAudio.name,
+        ex,
+      );
     }
   }
 

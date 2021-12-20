@@ -4,7 +4,8 @@ import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
 import {
   DischargeDocumentsLinks,
-  GetMemberUploadJournalLinkParams,
+  GetMemberUploadJournalAudioLinkParams,
+  GetMemberUploadJournalImageLinkParams,
   RecordingLinkParams,
 } from '../../src/member';
 import { GetSlotsParams } from '../../src/user';
@@ -653,21 +654,21 @@ export class Queries {
     return result.data.getJournals;
   };
 
-  getMemberUploadJournalLink = async ({
-    getMemberUploadJournalLinkParams,
+  getMemberUploadJournalImageLink = async ({
+    getMemberUploadJournalImageLinkParams,
     invalidFieldsError,
   }: {
-    getMemberUploadJournalLinkParams: GetMemberUploadJournalLinkParams;
+    getMemberUploadJournalImageLinkParams: GetMemberUploadJournalImageLinkParams;
     invalidFieldsError?: string;
   }) => {
     const result = await this.apolloClient.query({
-      variables: { getMemberUploadJournalLinkParams },
+      variables: { getMemberUploadJournalImageLinkParams },
       query: gql`
-        query getMemberUploadJournalLink(
-          $getMemberUploadJournalLinkParams: GetMemberUploadJournalLinkParams!
+        query getMemberUploadJournalImageLink(
+          $getMemberUploadJournalImageLinkParams: GetMemberUploadJournalImageLinkParams!
         ) {
-          getMemberUploadJournalLink(
-            getMemberUploadJournalLinkParams: $getMemberUploadJournalLinkParams
+          getMemberUploadJournalImageLink(
+            getMemberUploadJournalImageLinkParams: $getMemberUploadJournalImageLinkParams
           ) {
             normalImageLink
           }
@@ -678,7 +679,36 @@ export class Queries {
     if (invalidFieldsError) {
       expect(result.errors[0].message).toMatch(invalidFieldsError);
     } else {
-      return result.data.getMemberUploadJournalLinks;
+      return result.data.getMemberUploadJournalImageLinks;
+    }
+  };
+
+  getMemberUploadJournalAudioLink = async ({
+    getMemberUploadJournalAudioLinkParams,
+    invalidFieldsError,
+  }: {
+    getMemberUploadJournalAudioLinkParams: GetMemberUploadJournalAudioLinkParams;
+    invalidFieldsError?: string;
+  }) => {
+    const result = await this.apolloClient.query({
+      variables: { getMemberUploadJournalAudioLinkParams },
+      query: gql`
+        query getMemberUploadJournalAudioLink(
+          $getMemberUploadJournalAudioLinkParams: GetMemberUploadJournalAudioLinkParams!
+        ) {
+          getMemberUploadJournalAudioLink(
+            getMemberUploadJournalAudioLinkParams: $getMemberUploadJournalAudioLinkParams
+          ) {
+            audioLink
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(result.errors[0].message).toMatch(invalidFieldsError);
+    } else {
+      return result.data.getMemberUploadJournalAudioLink;
     }
   };
 

@@ -40,10 +40,12 @@ import {
 import { Communication, GetCommunicationParams } from '../src/communication';
 import {
   AppointmentCompose,
+  AudioFormat,
   CancelNotifyParams,
   CreateMemberParams,
   CreateTaskParams,
-  GetMemberUploadJournalLinkParams,
+  GetMemberUploadJournalAudioLinkParams,
+  GetMemberUploadJournalImageLinkParams,
   ImageFormat,
   Member,
   MemberConfig,
@@ -462,11 +464,18 @@ export const generateUpdateJournalTextParams = ({
   return { id, text };
 };
 
-export const generateGetMemberUploadJournalLinkParams = ({
+export const generateGetMemberUploadJournalImageLinkParams = ({
   id = generateId(),
   imageFormat = ImageFormat.png,
-}: Partial<GetMemberUploadJournalLinkParams> = {}): GetMemberUploadJournalLinkParams => {
+}: Partial<GetMemberUploadJournalImageLinkParams> = {}): GetMemberUploadJournalImageLinkParams => {
   return { id, imageFormat };
+};
+
+export const generateGetMemberUploadJournalAudioLinkParams = ({
+  id = generateId(),
+  audioFormat = AudioFormat.mp3,
+}: Partial<GetMemberUploadJournalAudioLinkParams> = {}): GetMemberUploadJournalAudioLinkParams => {
+  return { id, audioFormat };
 };
 
 export const generateDateOnly = (date: Date): string => {

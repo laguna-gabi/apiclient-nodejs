@@ -4,7 +4,7 @@ import { EventEmitter2 } from 'eventemitter2';
 import * as faker from 'faker';
 import { readFileSync } from 'fs';
 import { Environments, Logger, StorageType, delay } from '../../src/common';
-import { ImageFormat, ImageType } from '../../src/member';
+import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../src/member';
 import { ConfigsService, StorageService } from '../../src/providers';
 import { mockLogger } from '../common';
 import { generateId, mockGenerateMember, mockGenerateUser } from '../generators';
@@ -136,6 +136,50 @@ describe('live: aws', () => {
       expect(nonExistingNormalImageDownloadUrl).toBeUndefined();
       expect(nonExistingSmallImageDownloadUrl).toBeUndefined();
     }, 10000);
+
+    it('should delete given journal audio for a specific member', async () => {
+      if (process.env.NODE_ENV === Environments.production) {
+        return;
+      }
+
+      const journalId = generateId();
+      const params = {
+        memberId: member.id,
+        storageType: StorageType.journals,
+        id: `${journalId}${AudioType}.${AudioFormat.mp3}`,
+      };
+      const uploadUrl = await storageService.getUploadUrl(params);
+
+      expect(uploadUrl).toMatch(
+        // eslint-disable-next-line max-len
+        `${bucketName}.s3.amazonaws.com/public/${StorageType.journals}/${params.memberId}/${params.id}`,
+      );
+      expect(uploadUrl).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
+      expect(uploadUrl).toMatch(`Amz-Expires=1800`); //expiration: 30 minutes
+
+      const { status: uploadStatus } = await axios.put(uploadUrl, faker.lorem.sentence());
+      expect(uploadStatus).toEqual(200);
+
+      const url = await storageService.getDownloadUrl({
+        storageType: StorageType.journals,
+        memberId: member.id,
+        id: params.id,
+      });
+
+      expect(url).toMatch(
+        // eslint-disable-next-line max-len
+        `${bucketName}.s3.amazonaws.com/public/${StorageType.journals}/${member.id}/${journalId}${AudioType}.${AudioFormat.mp3}`,
+      );
+      await storageService.deleteJournalAudio(journalId, member.id, AudioFormat.mp3);
+
+      const nonExistingAudioDownloadUrl = await storageService.getDownloadUrl({
+        storageType: StorageType.journals,
+        memberId: member.id,
+        id: params.id,
+      });
+
+      expect(nonExistingAudioDownloadUrl).toBeUndefined();
+    });
 
     test.each(Object.values(StorageType))(
       `should upload+download a %p file from aws storage`,

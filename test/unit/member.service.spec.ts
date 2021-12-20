@@ -51,7 +51,7 @@ import {
   generateCreateTaskParams,
   generateCreateUserParams,
   generateDateOnly,
-  generateGetMemberUploadJournalLinkParams,
+  generateGetMemberUploadJournalImageLinkParams,
   generateId,
   generateObjectId,
   generateOrgParams,
@@ -1020,7 +1020,7 @@ describe('MemberService', () => {
       const memberId = generateId();
 
       const { id } = await service.createJournal(memberId);
-      const updateJournalImageFormatParams = generateGetMemberUploadJournalLinkParams({ id });
+      const updateJournalImageFormatParams = generateGetMemberUploadJournalImageLinkParams({ id });
 
       const journal = await service.updateJournal({ ...updateJournalImageFormatParams, memberId });
       const result: any = await modelJournal.findById(id);

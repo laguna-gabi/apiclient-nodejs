@@ -8,6 +8,8 @@ export enum ImageType {
   SmallImage = '_SmallImage',
 }
 
+export const AudioType = '_Audio';
+
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
@@ -19,6 +21,13 @@ export enum ImageFormat {
 }
 
 registerEnumType(ImageFormat, { name: 'ImageFormat' });
+
+export enum AudioFormat {
+  m4a = 'm4a',
+  mp3 = 'mp3',
+}
+
+registerEnumType(AudioFormat, { name: 'AudioFormat' });
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -34,12 +43,21 @@ export class UpdateJournalTextParams {
 }
 
 @InputType()
-export class GetMemberUploadJournalLinkParams {
+export class GetMemberUploadJournalImageLinkParams {
   @Field(() => String)
   id: string;
 
   @Field(() => ImageFormat)
   imageFormat?: ImageFormat;
+}
+
+@InputType()
+export class GetMemberUploadJournalAudioLinkParams {
+  @Field(() => String)
+  id: string;
+
+  @Field(() => AudioFormat)
+  audioFormat?: AudioFormat;
 }
 
 export class UpdateJournalParams {
@@ -51,6 +69,8 @@ export class UpdateJournalParams {
 
   imageFormat?: ImageFormat;
 
+  audioFormat?: AudioFormat;
+
   published?: boolean;
 }
 
@@ -59,15 +79,27 @@ export class UpdateJournalParams {
  *************************************************************************************************/
 
 @ObjectType()
-export class JournalImagesUploadLink {
+export class JournalUploadImageLink {
   @Field(() => String, { nullable: true })
   normalImageLink?: string;
 }
 
 @ObjectType()
-export class JournalImagesDownloadLinks extends JournalImagesUploadLink {
+export class JournalUploadAudioLink {
+  @Field(() => String, { nullable: true })
+  audioLink?: string;
+}
+
+@ObjectType()
+export class JournalDownloadLinks {
+  @Field(() => String, { nullable: true })
+  normalImageLink?: string;
+
   @Field(() => String, { nullable: true })
   smallImageLink?: string;
+
+  @Field(() => String, { nullable: true })
+  audioLink?: string;
 }
 
 @ObjectType()
@@ -89,8 +121,12 @@ export class Journal extends Identifier {
   @Field(() => ImageFormat, { nullable: true })
   imageFormat?: ImageFormat;
 
-  @Field(() => JournalImagesDownloadLinks, { nullable: true })
-  images?: JournalImagesDownloadLinks;
+  @Prop()
+  @Field(() => AudioFormat, { nullable: true })
+  audioFormat?: AudioFormat;
+
+  @Field(() => JournalDownloadLinks, { nullable: true })
+  journalDownloadLinks?: JournalDownloadLinks;
 
   @Field(() => Date)
   updatedAt: Date;
