@@ -2579,6 +2579,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnUserServiceGetUser.mockImplementation(async () => user);
       spyOnCommunicationGetByUrl.mockImplementation(async () => communication);
+      const spyOnCreateDispatch = jest.spyOn(resolver, 'notifyCreateDispatch');
 
       const params: IEventOnReceivedChatMessage = {
         senderUserId: user.id,
@@ -2587,29 +2588,13 @@ describe('MemberResolver', () => {
 
       await resolver.notifyChatMessage(params);
 
-      expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendOneSignalNotification: {
-          externalUserId: memberConfig.externalUserId,
-          platform: memberConfig.platform,
-          data: {
-            user: {
-              id: user.id,
-              firstName: user.firstName,
-              avatar: user.avatar,
-            },
-            member: { phone: member.phone },
-            type: InternalNotificationType.chatMessageToMember,
-            isVideo: false,
-            path: `connect/${member.id}/${user.id}`,
-          },
-          content: internationalizationService.getContents({
-            member,
-            user,
-            contentType: ContentKey.newChatMessageFromUser,
-            language: Language.en,
-          }),
-          orgName: member.org.name,
-        },
+      expect(spyOnCreateDispatch).toBeCalledWith({
+        dispatchId: expect.stringContaining(generateDispatchId(ContentKey.newChatMessageFromUser)),
+        memberId: communication.memberId.toString(),
+        userId: user.id,
+        type: InternalNotificationType.chatMessageToMember,
+        correlationId: expect.any(String),
+        metadata: { contentType: ContentKey.newChatMessageFromUser },
       });
     });
 
@@ -2630,6 +2615,7 @@ describe('MemberResolver', () => {
       });
 
       spyOnCommunicationGetByUrl.mockImplementation(async () => communication);
+      const spyOnCreateDispatch = jest.spyOn(resolver, 'notifyCreateDispatch');
       const params: IEventOnReceivedChatMessage = {
         senderUserId: member.id,
         sendBirdChannelUrl: communication.sendBirdChannelUrl,
@@ -2641,17 +2627,15 @@ describe('MemberResolver', () => {
 
       await resolver.notifyChatMessage(params);
 
-      expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendTwilioNotification: {
-          body: internationalizationService.getContents({
-            member,
-            user,
-            contentType: ContentKey.newChatMessageFromMember,
-            language: Language.en,
-          }),
-          to: user.phone,
-          orgName: member.org.name,
-        },
+      expect(spyOnCreateDispatch).toBeCalledWith({
+        dispatchId: expect.stringContaining(
+          generateDispatchId(ContentKey.newChatMessageFromMember),
+        ),
+        memberId: member.id,
+        userId: communication.userId.toString(),
+        type: InternalNotificationType.textSmsToUser,
+        correlationId: expect.any(String),
+        metadata: { contentType: ContentKey.newChatMessageFromMember },
       });
     }, 10000);
 

@@ -929,10 +929,12 @@ export class MemberResolver extends MemberBase {
       }
 
       if (origin === ChatMessageOrigin.fromUser) {
-        return await this.internalNotify({
+        await this.notifyCreateDispatch({
+          dispatchId: generateDispatchId(ContentKey.newChatMessageFromUser, Date.now().toString()),
           memberId: communication.memberId.toString(),
           userId: senderUserId,
           type: InternalNotificationType.chatMessageToMember,
+          correlationId: v4(),
           metadata: { contentType: ContentKey.newChatMessageFromUser },
         });
       } else {
@@ -940,10 +942,15 @@ export class MemberResolver extends MemberBase {
           (member) => member.memberId === communication.userId.toString(),
         );
         if (coachInfo && !coachInfo.isOnline) {
-          return await this.internalNotify({
+          await this.notifyCreateDispatch({
+            dispatchId: generateDispatchId(
+              ContentKey.newChatMessageFromMember,
+              Date.now().toString(),
+            ),
             memberId: senderUserId,
             userId: communication.userId.toString(),
             type: InternalNotificationType.textSmsToUser,
+            correlationId: v4(),
             metadata: { contentType: ContentKey.newChatMessageFromMember },
           });
         }

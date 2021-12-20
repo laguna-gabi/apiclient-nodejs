@@ -2,6 +2,7 @@ import {
   ContentKey,
   InnerQueueTypes,
   ObjectAppointmentScheduledClass,
+  ObjectBaseClass,
   ObjectGeneralMemberTriggeredClass,
   ObjectNewMemberClass,
   ObjectNewMemberNudgeClass,
@@ -10,6 +11,7 @@ import {
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
+  generateChatMessageMock,
   generateDispatchId,
   generateGeneralMemberTriggeredMock,
   generateNewMemberMock,
@@ -18,19 +20,21 @@ import {
   generateUpdateMemberSettingsMock,
   generateUpdateUserSettingsMock,
 } from '@lagunahealth/pandora';
+import { hosts, scheduler } from 'config';
 import { addDays, subDays, subMinutes } from 'date-fns';
+import * as faker from 'faker';
+
+import { v4 } from 'uuid';
 import { Appointment } from '../../src/appointment';
 import { QueueType, RegisterForNotificationParams, delay } from '../../src/common';
+import { Member } from '../../src/member';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   generateCreateMemberParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
 } from '../generators';
-import { hosts, scheduler } from 'config';
-import * as faker from 'faker';
-
-import { v4 } from 'uuid';
+import * as sendbirdPayload from '../unit/mocks/webhookSendbirdNewMessagePayload.json';
 // mock uuid.v4:
 jest.mock('uuid', () => {
   const actualUUID = jest.requireActual('uuid');
@@ -45,6 +49,7 @@ describe('Integration tests: notifications', () => {
   const handler: Handler = new Handler();
   let creators: Creators;
   let appointmentsActions: AppointmentsIntegrationActions;
+
   beforeAll(async () => {
     await handler.beforeAll();
     appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
@@ -435,6 +440,67 @@ describe('Integration tests: notifications', () => {
         type: QueueType.notifications,
       });
     });
+  });
+
+  describe('Webhooks', () => {
+    /**
+     * Trigger : WebhooksController.sendbird
+     * Dispatches:
+     *      1. ContentKey.newChatMessageFromUser or ContentKey.newChatMessageFromMember
+     */
+
+    /* eslint-disable max-len */
+    test.each`
+      contentKey                             | extractSender                                          | extractReceiver
+      ${ContentKey.newChatMessageFromMember} | ${(member: Member) => member.id}                       | ${(member: Member) => member.primaryUserId.toString()}
+      ${ContentKey.newChatMessageFromUser}   | ${(member: Member) => member.primaryUserId.toString()} | ${(member: Member) => member.id}
+    `(
+      `sendbird: should send dispatches of type ` +
+        `$contentKey when received from sendbird webhook`,
+      /* eslint-enable max-len */
+      async (params) => {
+        const org = await creators.createAndValidateOrg();
+        const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+        const communication = await handler.communicationService.get({
+          memberId: member.id,
+          userId: member.primaryUserId.toString(),
+        });
+
+        const payload = { ...sendbirdPayload };
+        payload.sender.user_id = params.extractSender(member);
+        payload.channel.channel_url = communication.sendBirdChannelUrl;
+        payload.members = [{ user_id: member.primaryUserId.toString(), is_online: false }];
+
+        const spyOnValidate = jest.spyOn(
+          handler.webhooksController,
+          'validateMessageSentFromSendbird',
+        );
+        spyOnValidate.mockReturnValueOnce(undefined);
+        handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+        await handler.webhooksController.sendbird(JSON.stringify(payload), {});
+        await delay(200);
+
+        const mock = generateChatMessageMock({
+          recipientClientId: params.extractReceiver(member),
+          senderClientId: params.extractSender(member),
+          contentKey: params.contentKey,
+        });
+
+        const object = new ObjectBaseClass(mock);
+        Object.keys(object.objectBaseType).forEach((key) => {
+          expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+            expect.objectContaining({
+              type: QueueType.notifications,
+              message: expect.stringContaining(
+                key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+              ),
+            }),
+          );
+        });
+      },
+    );
   });
 
   /*************************************************************************************************
