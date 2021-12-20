@@ -1,11 +1,12 @@
 import { BaseLogger, ServiceName, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { EventType } from './events';
 
 @Injectable()
 export class Logger extends BaseLogger {
-  private static VALID_KEYS = [
+  private static VALID_KEYS = new Set([
     //queue
     'queueConsumerRunning',
     'MessageId',
@@ -35,10 +36,11 @@ export class Logger extends BaseLogger {
     //settings data
     'id',
     'externalUserId',
-  ];
+  ]);
 
-  constructor(private readonly eventEmitter: EventEmitter2) {
-    super(ServiceName.iris, Logger.VALID_KEYS);
+  constructor(@Inject(PARAMS_PROVIDER_TOKEN) params: Params,
+              private readonly eventEmitter: EventEmitter2) {
+    super(params, ServiceName.iris, Logger.VALID_KEYS);
   }
 
   error(params: any = {}, className: string, methodName: string, ...reasons: any[]): void {
