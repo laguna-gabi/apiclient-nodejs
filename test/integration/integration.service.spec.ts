@@ -1,11 +1,13 @@
 import {
   ContentKey,
   InnerQueueTypes,
+  ObjectAppointmentScheduleReminderClass,
   ObjectAppointmentScheduledClass,
   ObjectGeneralMemberTriggeredClass,
   ObjectNewMemberClass,
   ObjectNewMemberNudgeClass,
   Platform,
+  generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
   generateGeneralMemberTriggeredMock,
@@ -15,7 +17,7 @@ import {
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { internet, lorem } from 'faker';
-import { addDays } from 'date-fns';
+import { addDays, subMinutes } from 'date-fns';
 import { SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { translation } from '../../languages/en.json';
@@ -42,6 +44,7 @@ import {
 } from '../generators';
 import { Types } from 'mongoose';
 import { replaceConfigs } from '../';
+import { gapMinutes } from 'config';
 
 describe('Notifications full flow', () => {
   let module: TestingModule;
@@ -91,7 +94,7 @@ describe('Notifications full flow', () => {
     spyOnTwilioSend.mockRestore();
   });
 
-  it(`should handle event of type ${ContentKey.newMember}`, async () => {
+  it(`should handle 'immediate' event of type ${ContentKey.newMember}`, async () => {
     const object = new ObjectNewMemberClass(
       generateNewMemberMock({
         recipientClientId: webMemberClient.id,
@@ -125,7 +128,7 @@ describe('Notifications full flow', () => {
     });
   });
 
-  it(`should handle event of type ${ContentKey.newMemberNudge}`, async () => {
+  it(`should handle 'future' event of type ${ContentKey.newMemberNudge}`, async () => {
     const object = new ObjectNewMemberNudgeClass(
       generateNewMemberNudgeMock({
         recipientClientId: webMemberClient.id,
@@ -158,7 +161,7 @@ describe('Notifications full flow', () => {
     { contentKey: ContentKey.newRegisteredMember, amount: 1 },
     { contentKey: ContentKey.newRegisteredMemberNudge, amount: 2 },
     { contentKey: ContentKey.logReminder, amount: 3 },
-  ])(`should handle event of type $contentKey`, async (params) => {
+  ])(`should handle 'future' event of type $contentKey`, async (params) => {
     const object = new ObjectGeneralMemberTriggeredClass(
       generateGeneralMemberTriggeredMock({
         recipientClientId: webMemberClient.id,
@@ -189,7 +192,46 @@ describe('Notifications full flow', () => {
     });
   });
 
-  it(`should handle event of type ${ContentKey.appointmentScheduledUser}`, async () => {
+  test.each([
+    { contentKey: ContentKey.appointmentReminder, amountMinutes: gapMinutes },
+    { contentKey: ContentKey.appointmentLongReminder, amountMinutes: 24 * 60 },
+  ])(`should handle 'future' event of type $contentKey`, async (params) => {
+    const appointmentTime = addDays(new Date(), 3);
+    const object = new ObjectAppointmentScheduleReminderClass(
+      generateAppointmentScheduleReminderMock({
+        recipientClientId: webMemberClient.id,
+        senderClientId: userClient.id,
+        contentKey: params.contentKey,
+        appointmentId: generateId(),
+        appointmentTime,
+        triggersAt: subMinutes(appointmentTime, params.amountMinutes),
+      }),
+    );
+
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({
+        type: InnerQueueTypes.createDispatch,
+        ...object.objectAppointmentScheduleReminderMock,
+      }),
+    };
+    await service.handleMessage(message);
+
+    const trigger = await triggersService.get(
+      object.objectAppointmentScheduleReminderMock.dispatchId,
+    );
+    expect(trigger.expireAt).toEqual(object.objectAppointmentScheduleReminderMock.triggersAt);
+    await compareResults({
+      dispatchId: object.objectAppointmentScheduleReminderMock.dispatchId,
+      status: DispatchStatus.received,
+      response: { ...object.objectAppointmentScheduleReminderMock },
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      triggeredId: trigger._id.toString(),
+    });
+  });
+
+  it(`should handle 'immediate' event of type ${ContentKey.appointmentScheduledUser}`, async () => {
     const mock = generateAppointmentScheduledUserMock({
       recipientClientId: userClient.id,
       senderClientId: webMemberClient.id,
@@ -217,8 +259,8 @@ describe('Notifications full flow', () => {
     );
     const body = replaceConfigs({
       content: translation.contents[ContentKey.appointmentScheduledUser],
-      recipientClient: userClient,
-      senderClient: webMemberClient,
+      recipientClient: webMemberClient,
+      senderClient: userClient,
       appointmentTime: realAppointmentTime,
     });
     expect(spyOnTwilioSend).toBeCalledWith({ body, orgName: undefined, to: userClient.phone });
@@ -230,7 +272,8 @@ describe('Notifications full flow', () => {
     });
   });
 
-  it(`should handle event of type ${ContentKey.appointmentScheduledMember}`, async () => {
+  // eslint-disable-next-line max-len
+  it(`should handle 'immediate' event of type ${ContentKey.appointmentScheduledMember}`, async () => {
     const mock = generateAppointmentScheduledMemberMock({
       recipientClientId: webMemberClient.id,
       senderClientId: userClient.id,
@@ -275,7 +318,7 @@ describe('Notifications full flow', () => {
     });
   });
 
-  it(`should handle event of type ${ContentKey.appointmentRequest}`, async () => {
+  it(`should handle 'immediate' event of type ${ContentKey.appointmentRequest}`, async () => {
     const mock = generateRequestAppointmentMock({
       recipientClientId: webMemberClient.id,
       senderClientId: userClient.id,

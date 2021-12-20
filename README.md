@@ -1,9 +1,7 @@
 <p align="center">
-  <a href="https://en.wikipedia.org/wiki/Iris_(mythology)" target="blank"><img src="https://upload.wikimedia.org/wikipedia/commons/a/aa/Winged_goddess_Cdm_Paris_392.jpg" height="250" alt="Iris" /></a>
-</p>
-
-
-<p align="center">
+  <a href="https://en.wikipedia.org/wiki/Iris_(mythology)" target="blank">
+     <img src="https://upload.wikimedia.org/wikipedia/commons/a/aa/Winged_goddess_Cdm_Paris_392.jpg" height="250" alt="Iris" />
+  </a><br/>
   <a href="https://github.com/LagunaHealth/iris/actions?query=branch%3Adevelop">
     <img src="https://github.com/LagunaHealth/iris/workflows/Iris/badge.svg" alt="Develop ci/cd status." />
   </a>
@@ -12,14 +10,14 @@
   </a>
   <br/><b>Total coverage:</b>
   <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="lines">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-lines.svg" />
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-lines.svg?branch=develop" />
   </a>
   <b>Other coverage:</b>
   <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="functions">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-functions.svg" />
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-functions.svg?branch=develop" />
   </a>
   <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="statements">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-statements.svg" />
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-statements.svg?branch=develop" />
   </a><br/>
 </p>
 
@@ -33,7 +31,6 @@ Laguna health messages component.
       + [entities](#entities)
    * [📋 Prerequisites](#-prerequisites)
       + [Installation](#installation)
-      + [Docker](#docker)
       + [Aws](#aws)
       + [Shared code settings](#shared-code-settings)
    * [🚀 Running the app](#-running-the-app)
@@ -64,14 +61,6 @@ install all dependencies in [package.json](./package.json) file by running the f
 $ yarn
 ```
 
-### Docker
-
-We're loading a local mongodb by using [docker](https://hub.docker.com/).
-
-1. install [docker](https://docs.docker.com/get-docker/).
-2. run `docker-compose up -d` for [starting docker](./docker-compose.yml) with mongodb replica set(localhost).
-   > **_Stop:_** After running the sample, you can stop the Docker container with `docker-compose down` <br/>
-
 ### Aws
 
 In order to work locally with aws cli and `package.json` dependencies, install
@@ -94,7 +83,7 @@ In order to work with _iris_:
 
 1. init and load local mongodb as described on [docker section](#docker)
 2. start the server by using one of the following methods:
-   <br/>2a. run `yarn start` or `yarn start:watch` if you just want to use _iris_ locally
+   run `yarn start:watch` if you just want to use _iris_ locally
 
 ## 🧪 Testing the app
 

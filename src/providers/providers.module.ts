@@ -1,4 +1,3 @@
-import { BaseLogger } from '@lagunahealth/pandora';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import {
@@ -19,7 +18,6 @@ import { CommonModule } from '../common';
     ConfigsService,
     SendBird,
     Slack,
-    BaseLogger,
     OneSignal,
     Twilio,
     InternationalizationService,

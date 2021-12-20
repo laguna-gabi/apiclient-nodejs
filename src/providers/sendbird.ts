@@ -7,14 +7,15 @@ import {
   ProviderResult,
   SendSendBirdNotification,
 } from '.';
-import { BaseLogger, BaseSendBird } from '@lagunahealth/pandora';
+import { BaseSendBird } from '@lagunahealth/pandora';
+import { Logger } from '../common';
 
 @Injectable()
 export class SendBird extends BaseSendBird implements OnModuleInit {
   constructor(
     private readonly configsService: ConfigsService,
     private readonly httpService: HttpService,
-    private readonly logger: BaseLogger,
+    private readonly logger: Logger,
   ) {
     super();
   }

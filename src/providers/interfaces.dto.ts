@@ -48,6 +48,7 @@ export enum Provider {
   oneSignal = 'oneSignal',
   sendbird = 'sendbird',
   twilio = 'twilio',
+  slack = 'slack',
 }
 
 @Schema({ versionKey: false, _id: false })

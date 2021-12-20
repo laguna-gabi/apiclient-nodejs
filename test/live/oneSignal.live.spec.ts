@@ -6,6 +6,7 @@ import { v4 } from 'uuid';
 import { ErrorType, Errors, Logger } from '../../src/common';
 import { ConfigsService, OneSignal } from '../../src/providers';
 import { generatePath, generatePhone } from '../generators';
+import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 
 describe(`live: ${OneSignal.name}`, () => {
   let oneSignal: OneSignal;
@@ -14,7 +15,8 @@ describe(`live: ${OneSignal.name}`, () => {
     const configService = new ConfigsService();
     const httpService = new HttpService();
 
-    oneSignal = new OneSignal(configService, httpService, new Logger(new EventEmitter2()));
+    oneSignal = new OneSignal(configService, httpService,
+      new Logger(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2()));
     await oneSignal.onModuleInit();
   });
 

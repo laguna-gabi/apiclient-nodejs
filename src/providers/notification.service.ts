@@ -6,7 +6,7 @@ import {
   Platform,
 } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
-import { hosts } from 'config';
+import { gapMinutes, hosts } from 'config';
 import { format, utcToZonedTime } from 'date-fns-tz';
 import { lookup } from 'zipcode-to-timezone';
 import {
@@ -111,6 +111,7 @@ export class NotificationsService {
           dispatch.appointmentTime,
         ),
         downloadLink,
+        gapMinutes,
       },
     });
 
@@ -130,6 +131,24 @@ export class NotificationsService {
           }
         }
         break;
+      case ContentKey.appointmentReminder:
+        if (recipientClient.platform === Platform.web) {
+          content += this.internationalization.getContents({
+            contentKey: ContentKey.appointmentReminderLink,
+            notificationType: dispatch.notificationType,
+            recipientClient,
+            extraData: { chatLink: dispatch.chatLink },
+          });
+        }
+        break;
+    }
+
+    if (
+      (recipientClient.platform === Platform.web || !recipientClient.isPushNotificationsEnabled) &&
+      (dispatch.contentKey === ContentKey.newRegisteredMember ||
+        dispatch.contentKey === ContentKey.newRegisteredMemberNudge)
+    ) {
+      content += `\n${hosts.get('dynamicLink')}`;
     }
 
     return content;
