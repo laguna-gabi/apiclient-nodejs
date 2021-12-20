@@ -1,8 +1,8 @@
-import { ContentKey, InternalNotificationType } from '@lagunahealth/pandora';
+import { ContentKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Types } from 'mongoose';
-import { EventType, IEventMember, LoggerService, MemberRole } from '../../src/common';
+import { EventType, LoggerService, MemberRole } from '../../src/common';
 import {
   DailyReport,
   DailyReportCategoriesInput,
@@ -141,9 +141,7 @@ describe('DailyReportResolver', () => {
           context.primaryUserId,
           dailyReportCategoryInput,
         );
-        const eventParams: IEventMember = {
-          memberId: context._id,
-        };
+        const params = { dispatchId: generateDispatchId(ContentKey.logReminder, context._id) };
         if (emittedEventParams) {
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(
             1,
@@ -152,14 +150,14 @@ describe('DailyReportResolver', () => {
           );
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(
             2,
-            EventType.onSetDailyLogCategories,
-            eventParams,
+            EventType.notifyDeleteDispatch,
+            params,
           );
         } else {
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(
             1,
-            EventType.onSetDailyLogCategories,
-            eventParams,
+            EventType.notifyDeleteDispatch,
+            params,
           );
         }
       },

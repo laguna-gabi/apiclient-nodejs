@@ -76,7 +76,6 @@ import {
   MemberRole,
   QueueType,
   RegisterForNotificationParams,
-  ReminderType,
   Roles,
   StorageType,
   UserRole,
@@ -1023,16 +1022,6 @@ export class MemberResolver extends MemberBase {
     }
   }
 
-  @OnEvent(EventType.onSetDailyLogCategories, { async: true })
-  async deleteLogReminder(params: IEventMember) {
-    const { memberId } = params;
-    try {
-      this.memberScheduler.deleteTimeout({ id: memberId + ReminderType.logReminder });
-    } catch (ex) {
-      this.logger.error({ memberId }, MemberResolver.name, this.deleteLogReminder.name, ex);
-    }
-  }
-
   @OnEvent(EventType.onMemberBecameOffline, { async: true })
   async notifyOfflineMember(params: IEventOnMemberBecameOffline) {
     this.logger.debug(params, MemberResolver.name, this.notifyOfflineMember.name);
@@ -1066,11 +1055,13 @@ export class MemberResolver extends MemberBase {
       await this.notifyDeleteDispatch({
         dispatchId: generateDispatchId(ContentKey.newRegisteredMemberNudge, params.memberId),
       });
+      await this.notifyDeleteDispatch({
+        dispatchId: generateDispatchId(ContentKey.logReminder, params.memberId),
+      });
       const notifications = await this.memberService.getMemberNotifications(memberId);
       notifications.forEach((notification) => {
         this.memberScheduler.deleteTimeout({ id: notification._id });
       });
-      this.memberScheduler.deleteTimeout({ id: memberId + ReminderType.logReminder });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, ex);
     }

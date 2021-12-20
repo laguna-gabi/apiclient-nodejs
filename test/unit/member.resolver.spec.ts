@@ -22,7 +22,6 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventMember,
   IEventNotifyQueue,
   IEventOnNewMember,
   IEventOnReceivedChatMessage,
@@ -477,7 +476,7 @@ describe('MemberResolver', () => {
       });
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
 
-      expect(spyOnEventEmitter).toBeCalledTimes(4);
+      expect(spyOnEventEmitter).toBeCalledTimes(5);
       expectDeleteArchiveMember(member.id);
     });
   });
@@ -561,10 +560,8 @@ describe('MemberResolver', () => {
       }
       expect(spyOnStorageServiceDeleteMember).toBeCalledWith(member.id);
 
-      expect(spyOnEventEmitter).toBeCalledTimes(5);
+      expect(spyOnEventEmitter).toBeCalledTimes(6);
       expectDeleteArchiveMember(member.id);
-      const eventParams: IEventMember = { memberId: member.id };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(5, EventType.onDeletedMember, eventParams);
     };
   });
 

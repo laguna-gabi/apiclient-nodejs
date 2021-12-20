@@ -2,15 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import { add } from 'date-fns';
 import { Model } from 'mongoose';
-import {
-  MemberConfig,
-  MemberConfigDocument,
-  MemberService,
-  NotifyParams,
-  NotifyParamsDocument,
-} from '.';
+import { MemberConfig, MemberConfigDocument, NotifyParams, NotifyParamsDocument } from '.';
 import {
   ErrorType,
   Errors,
@@ -18,11 +11,10 @@ import {
   Identifier,
   InternalNotifyParams,
   LoggerService,
-  ReminderType,
 } from '../common';
 import { Bitly } from '../providers';
 import { BaseScheduler, InternalSchedulerService, LeaderType } from '../scheduler';
-import { ContentKey, InternalNotificationType, NotificationType } from '@lagunahealth/pandora';
+import { InternalNotificationType, NotificationType } from '@lagunahealth/pandora';
 
 @Injectable()
 export class MemberScheduler extends BaseScheduler {
@@ -35,7 +27,6 @@ export class MemberScheduler extends BaseScheduler {
     protected readonly schedulerRegistry: SchedulerRegistry,
     protected readonly eventEmitter: EventEmitter2,
     protected readonly bitly: Bitly,
-    private readonly memberService: MemberService,
     protected readonly logger: LoggerService,
   ) {
     super(
@@ -52,7 +43,6 @@ export class MemberScheduler extends BaseScheduler {
   async init() {
     await super.init(async () => {
       await this.initRegisterCustomFutureNotify();
-      await this.initRegisterLogReminder();
     });
   }
 
@@ -93,36 +83,6 @@ export class MemberScheduler extends BaseScheduler {
     }
   }
 
-  public async registerLogReminder({
-    memberId,
-    userId,
-    firstLoggedInAt,
-  }: {
-    memberId: string;
-    userId: string;
-    firstLoggedInAt: Date;
-  }) {
-    const milliseconds = add(firstLoggedInAt, { days: 3 }).getTime() - Date.now();
-    if (milliseconds > 0) {
-      const timeout = setTimeout(async () => {
-        this.logger.debug(
-          { memberId, userId, firstLoggedInAt },
-          MemberScheduler.name,
-          this.registerLogReminder.name,
-        );
-        const params: InternalNotifyParams = {
-          memberId,
-          userId,
-          type: InternalNotificationType.textToMember,
-          metadata: { contentType: ContentKey.logReminder },
-        };
-        this.eventEmitter.emit(EventType.notifyInternal, params);
-        this.deleteTimeout({ id: memberId + ReminderType.logReminder });
-      }, milliseconds);
-      this.schedulerRegistry.addTimeout(memberId + ReminderType.logReminder, timeout);
-    }
-  }
-
   /************************************************************************************************
    ******************************************* Initializers ***************************************
    ************************************************************************************************/
@@ -141,25 +101,6 @@ export class MemberScheduler extends BaseScheduler {
       notifications.length,
       'member future notifications',
       this.initRegisterCustomFutureNotify.name,
-    );
-  }
-
-  private async initRegisterLogReminder() {
-    const newRegisteredMembers =
-      await this.memberService.getNewRegisteredMembersWithNoDailyReports();
-    await Promise.all(
-      newRegisteredMembers.map(async ({ memberConfig, member }) => {
-        return this.registerLogReminder({
-          memberId: member.id,
-          userId: member.primaryUserId,
-          firstLoggedInAt: memberConfig.firstLoggedInAt,
-        });
-      }),
-    );
-    this.logEndInit(
-      newRegisteredMembers.length,
-      'new registered members log reminder',
-      this.initRegisterLogReminder.name,
     );
   }
 }

@@ -142,6 +142,7 @@ describe('Integration tests: notifications', () => {
      *      2. delete dispatch ContentKey.newMemberNudge
      *      3. delete dispatch ContentKey.newRegisteredMember
      *      4. delete dispatch ContentKey.newRegisteredMemberNudge
+     *      5. delete dispatch ContentKey.logReminder
      */
     test.each`
       title              | method
@@ -160,9 +161,9 @@ describe('Integration tests: notifications', () => {
         await params.method({ id });
         await delay(200);
 
-        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(4);
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(5);
         checkValues(1, { type: InnerQueueTypes.deleteClientSettings, id });
-        checkDeleteDispatches(id, 2);
+        checkDeleteDispatches(id, true, 2);
       },
     );
 
@@ -173,6 +174,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches :
      *      2. send newRegisteredMember dispatch (triggered in 1 day)
      *      3. send newRegisteredMemberNudge dispatch (triggered in 2 days)
+     *      4. send logReminder dispatch (triggered in 3 days)
      */
     // eslint-disable-next-line max-len
     it(`registerMemberForNotifications: should update member settings and send dispatch of type ${ContentKey.newRegisteredMember}, ${ContentKey.newRegisteredMemberNudge}, ${ContentKey.logReminder} and delete ${ContentKey.newMemberNudge}`, async () => {
@@ -470,7 +472,7 @@ describe('Integration tests: notifications', () => {
     });
   };
 
-  const checkDeleteDispatches = (memberId: string, startFromIndex = 1) => {
+  const checkDeleteDispatches = (memberId: string, withLogReminder = false, startFromIndex = 1) => {
     checkValues(startFromIndex, {
       type: InnerQueueTypes.deleteDispatch,
       dispatchId: generateDispatchId(ContentKey.newMemberNudge, memberId),
@@ -483,6 +485,12 @@ describe('Integration tests: notifications', () => {
       type: InnerQueueTypes.deleteDispatch,
       dispatchId: generateDispatchId(ContentKey.newRegisteredMemberNudge, memberId),
     });
+    if (withLogReminder) {
+      checkValues(startFromIndex + 3, {
+        type: InnerQueueTypes.deleteDispatch,
+        dispatchId: generateDispatchId(ContentKey.logReminder, memberId),
+      });
+    }
   };
 
   const expectStringContaining = (nthCall: number, key: string, value: string | boolean) => {
