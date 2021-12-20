@@ -50,6 +50,7 @@ export interface ICreateDispatch extends IDispatch {
   appointmentTime?: Date;
   peerId?: string;
   contentKey?: ContentKey;
+  content?: string;
   chatLink?: string;
   triggersAt?: Date;
   notificationId?: string;
@@ -124,6 +125,7 @@ export enum ContentKey {
   newChatMessageFromMember = 'newChatMessageFromMember',
   appointmentScheduledUser = 'appointmentScheduledUser',
   memberNotFeelingWellMessage = 'memberNotFeelingWellMessage',
+  customContent = 'customContent',
 }
 
 export enum Language {
