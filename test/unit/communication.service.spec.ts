@@ -9,7 +9,7 @@ import {
   EventType,
   IEventOnNewMemberCommunication,
   IEventOnUpdateUserConfig,
-  Logger,
+  LoggerService,
   UpdatedAppointmentAction,
   UserRole,
 } from '../../src/common';
@@ -47,7 +47,7 @@ describe('CommunicationService', () => {
     service = module.get<CommunicationService>(CommunicationService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
 
     communicationModel = model(Communication.name, CommunicationDto);
 

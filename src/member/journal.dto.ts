@@ -3,6 +3,13 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { Identifier } from '../common';
 
+export enum ImageType {
+  NormalImage = '_NormalImage',
+  SmallImage = '_SmallImage',
+}
+
+export const AudioType = '_Audio';
+
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
@@ -10,11 +17,17 @@ export enum ImageFormat {
   jpeg = 'jpeg',
   jpg = 'jpg',
   gif = 'gif',
-  bmp = 'bmp',
   png = 'png',
 }
 
 registerEnumType(ImageFormat, { name: 'ImageFormat' });
+
+export enum AudioFormat {
+  m4a = 'm4a',
+  mp3 = 'mp3',
+}
+
+registerEnumType(AudioFormat, { name: 'AudioFormat' });
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -30,12 +43,21 @@ export class UpdateJournalTextParams {
 }
 
 @InputType()
-export class GetMemberUploadJournalLinksParams {
+export class GetMemberUploadJournalImageLinkParams {
   @Field(() => String)
   id: string;
 
   @Field(() => ImageFormat)
   imageFormat?: ImageFormat;
+}
+
+@InputType()
+export class GetMemberUploadJournalAudioLinkParams {
+  @Field(() => String)
+  id: string;
+
+  @Field(() => AudioFormat)
+  audioFormat?: AudioFormat;
 }
 
 export class UpdateJournalParams {
@@ -47,6 +69,8 @@ export class UpdateJournalParams {
 
   imageFormat?: ImageFormat;
 
+  audioFormat?: AudioFormat;
+
   published?: boolean;
 }
 
@@ -55,12 +79,27 @@ export class UpdateJournalParams {
  *************************************************************************************************/
 
 @ObjectType()
-export class JournalImagesLinks {
+export class JournalUploadImageLink {
+  @Field(() => String, { nullable: true })
+  normalImageLink?: string;
+}
+
+@ObjectType()
+export class JournalUploadAudioLink {
+  @Field(() => String, { nullable: true })
+  audioLink?: string;
+}
+
+@ObjectType()
+export class JournalDownloadLinks {
   @Field(() => String, { nullable: true })
   normalImageLink?: string;
 
   @Field(() => String, { nullable: true })
   smallImageLink?: string;
+
+  @Field(() => String, { nullable: true })
+  audioLink?: string;
 }
 
 @ObjectType()
@@ -82,8 +121,12 @@ export class Journal extends Identifier {
   @Field(() => ImageFormat, { nullable: true })
   imageFormat?: ImageFormat;
 
-  @Field(() => JournalImagesLinks, { nullable: true })
-  images?: JournalImagesLinks;
+  @Prop()
+  @Field(() => AudioFormat, { nullable: true })
+  audioFormat?: AudioFormat;
+
+  @Field(() => JournalDownloadLinks, { nullable: true })
+  journalDownloadLinks?: JournalDownloadLinks;
 
   @Field(() => Date)
   updatedAt: Date;

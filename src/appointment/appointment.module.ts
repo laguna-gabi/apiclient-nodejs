@@ -5,7 +5,6 @@ import {
   AppointmentController,
   AppointmentDto,
   AppointmentResolver,
-  AppointmentScheduler,
   AppointmentService,
   Notes,
   NotesDto,
@@ -28,7 +27,7 @@ import { InternalSchedulerModule } from '../scheduler';
     ]),
     OrgModule,
   ],
-  providers: [AppointmentResolver, AppointmentService, AppointmentScheduler],
+  providers: [AppointmentResolver, AppointmentService],
   controllers: [AppointmentController],
 })
 export class AppointmentModule {}

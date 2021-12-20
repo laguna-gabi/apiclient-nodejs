@@ -40,10 +40,12 @@ import {
 import { Communication, GetCommunicationParams } from '../src/communication';
 import {
   AppointmentCompose,
+  AudioFormat,
   CancelNotifyParams,
   CreateMemberParams,
   CreateTaskParams,
-  GetMemberUploadJournalLinksParams,
+  GetMemberUploadJournalAudioLinkParams,
+  GetMemberUploadJournalImageLinkParams,
   ImageFormat,
   Member,
   MemberConfig,
@@ -194,6 +196,15 @@ export const mockGenerateMember = (): Member => {
     createdAt: faker.date.past(1),
     honorific: defaultMemberParams.honorific,
     roles: [MemberRole.member],
+    race: defaultMemberParams.race,
+    ethnicity: defaultMemberParams.ethnicity,
+    zipCode: generateZipCode(),
+    fellowName: `${faker.name.firstName()} ${faker.name.lastName()}`,
+    address: {
+      street: faker.address.streetName(),
+      city: faker.address.city(),
+      state: faker.address.state(),
+    },
   };
 };
 
@@ -453,11 +464,18 @@ export const generateUpdateJournalTextParams = ({
   return { id, text };
 };
 
-export const generateGetMemberUploadJournalLinksParams = ({
+export const generateGetMemberUploadJournalImageLinkParams = ({
   id = generateId(),
   imageFormat = ImageFormat.png,
-}: Partial<GetMemberUploadJournalLinksParams> = {}): GetMemberUploadJournalLinksParams => {
+}: Partial<GetMemberUploadJournalImageLinkParams> = {}): GetMemberUploadJournalImageLinkParams => {
   return { id, imageFormat };
+};
+
+export const generateGetMemberUploadJournalAudioLinkParams = ({
+  id = generateId(),
+  audioFormat = AudioFormat.mp3,
+}: Partial<GetMemberUploadJournalAudioLinkParams> = {}): GetMemberUploadJournalAudioLinkParams => {
+  return { id, audioFormat };
 };
 
 export const generateDateOnly = (date: Date): string => {

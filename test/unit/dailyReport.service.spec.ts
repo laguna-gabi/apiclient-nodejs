@@ -1,4 +1,3 @@
-import { Logger } from '@nestjs/common';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, Types } from 'mongoose';
@@ -10,6 +9,7 @@ import {
   DailyReportService,
 } from '../../src/dailyReport';
 import { dbDisconnect, generateId, generateObjectId } from '../index';
+import { LoggerService } from '../../src/common';
 
 describe('DailyReportCategoryService', () => {
   let service: DailyReportService;
@@ -23,13 +23,15 @@ describe('DailyReportCategoryService', () => {
           provide: getModelToken(DailyReport.name),
           useValue: Model,
         },
-        Logger,
+        {
+          provide: LoggerService,
+          useValue: LoggerService,
+        },
         DailyReportService,
       ],
     }).compile();
 
     service = module.get<DailyReportService>(DailyReportService);
-
     dailyReportModel = module.get<Model<DailyReport>>(getModelToken(DailyReport.name));
   });
 

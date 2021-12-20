@@ -636,6 +636,30 @@ export class Mutations {
     );
   };
 
+  deleteJournalAudio = async ({
+    id,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    id;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Journal> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id },
+      mutation: gql`
+        mutation deleteJournalAudio($id: String!) {
+          deleteJournalAudio(id: $id)
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.deleteJournalAudio
+    );
+  };
+
   publishJournal = async ({
     id,
     missingFieldError,

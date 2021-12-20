@@ -22,14 +22,18 @@ import { v4 } from 'uuid';
 import { lookup } from 'zipcode-to-timezone';
 import {
   AppointmentCompose,
+  AudioType,
   CancelNotifyParams,
   ChatMessageOrigin,
   CreateMemberParams,
   CreateTaskParams,
   DischargeDocumentsLinks,
-  GetMemberUploadJournalLinksParams,
+  GetMemberUploadJournalAudioLinkParams,
+  GetMemberUploadJournalImageLinkParams,
+  ImageType,
   Journal,
-  JournalImagesLinks,
+  JournalUploadAudioLink,
+  JournalUploadImageLink,
   Member,
   MemberBase,
   MemberConfig,
@@ -67,12 +71,11 @@ import {
   InternalNotifyControlMemberParams,
   InternalNotifyParams,
   InternationalizationService,
-  Logger,
+  LoggerService,
   LoggingInterceptor,
   MemberRole,
   QueueType,
   RegisterForNotificationParams,
-  ReminderType,
   Roles,
   StorageType,
   UserRole,
@@ -109,7 +112,7 @@ export class MemberResolver extends MemberBase {
     private readonly communicationResolver: CommunicationResolver,
     readonly internationalizationService: InternationalizationService,
     protected readonly bitly: Bitly,
-    readonly logger: Logger,
+    readonly logger: LoggerService,
     readonly featureFlagService: FeatureFlagService,
   ) {
     super(memberService, eventEmitter, userService, featureFlagService, logger);
@@ -474,39 +477,59 @@ export class MemberResolver extends MemberBase {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    await this.memberService.deleteJournal(id, memberId);
+    const { imageFormat } = await this.memberService.deleteJournal(id, memberId);
 
-    return this.storageService.deleteJournalImages(id, memberId.toString());
+    if (imageFormat) {
+      return this.storageService.deleteJournalImages(id, memberId, imageFormat);
+    }
+
+    return true;
   }
 
-  @Query(() => JournalImagesLinks)
+  @Query(() => JournalUploadImageLink)
   @Roles(MemberRole.member)
-  async getMemberUploadJournalLinks(
+  async getMemberUploadJournalImageLink(
     @Client('roles') roles,
     @Client('_id') memberId,
-    @Args(camelCase(GetMemberUploadJournalLinksParams.name))
-    getMemberUploadJournalLinksParams: GetMemberUploadJournalLinksParams,
+    @Args(camelCase(GetMemberUploadJournalImageLinkParams.name))
+    getMemberUploadJournalImageLinkParams: GetMemberUploadJournalImageLinkParams,
   ) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    const { id, imageFormat } = getMemberUploadJournalLinksParams;
+    const { id, imageFormat } = getMemberUploadJournalImageLinkParams;
 
     await this.memberService.updateJournal({ id, memberId, imageFormat, published: false });
-    const [normalImageLink, smallImageLink] = await Promise.all([
-      this.storageService.getUploadUrl({
-        storageType: StorageType.journals,
-        memberId: memberId.toString(),
-        id: `${id}_NormalImage.${imageFormat}`,
-      }),
-      this.storageService.getUploadUrl({
-        storageType: StorageType.journals,
-        memberId: memberId.toString(),
-        id: `${id}_SmallImage.${imageFormat}`,
-      }),
-    ]);
+    const normalImageLink = await this.storageService.getUploadUrl({
+      storageType: StorageType.journals,
+      memberId,
+      id: `${id}${ImageType.NormalImage}.${imageFormat}`,
+    });
 
-    return { normalImageLink, smallImageLink };
+    return { normalImageLink };
+  }
+
+  @Query(() => JournalUploadAudioLink)
+  @Roles(MemberRole.member)
+  async getMemberUploadJournalAudioLink(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args(camelCase(GetMemberUploadJournalAudioLinkParams.name))
+    getMemberUploadJournalAudioLinkParams: GetMemberUploadJournalAudioLinkParams,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const { id, audioFormat } = getMemberUploadJournalAudioLinkParams;
+
+    await this.memberService.updateJournal({ id, memberId, audioFormat, published: false });
+    const audioLink = await this.storageService.getUploadUrl({
+      storageType: StorageType.journals,
+      memberId,
+      id: `${id}${AudioType}.${audioFormat}`,
+    });
+
+    return { audioLink };
   }
 
   @Mutation(() => Boolean)
@@ -519,9 +542,34 @@ export class MemberResolver extends MemberBase {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    await this.memberService.updateJournal({ id, memberId, imageFormat: null, published: false });
+    const { imageFormat } = await this.memberService.getJournal(id, memberId);
 
-    return this.storageService.deleteJournalImages(id, memberId);
+    if (!imageFormat) {
+      throw new Error(Errors.get(ErrorType.memberJournalImageNotFound));
+    }
+
+    await this.memberService.updateJournal({ id, memberId, imageFormat: null, published: false });
+    return this.storageService.deleteJournalImages(id, memberId, imageFormat);
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(MemberRole.member)
+  async deleteJournalAudio(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args('id', { type: () => String }) id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const { audioFormat } = await this.memberService.getJournal(id, memberId);
+
+    if (!audioFormat) {
+      throw new Error(Errors.get(ErrorType.memberJournalAudioNotFound));
+    }
+
+    await this.memberService.updateJournal({ id, memberId, audioFormat: null, published: false });
+    return this.storageService.deleteJournalAudio(id, memberId, audioFormat);
   }
 
   @Mutation(() => String)
@@ -550,7 +598,7 @@ export class MemberResolver extends MemberBase {
       url = await this.storageService.getDownloadUrl({
         storageType: StorageType.journals,
         memberId,
-        id: `${id}_NormalImage.${imageFormat}`,
+        id: `${id}${ImageType.NormalImage}.${imageFormat}`,
       });
     }
 
@@ -567,23 +615,33 @@ export class MemberResolver extends MemberBase {
   }
 
   private async addMemberDownloadJournalLinks(journal: Journal) {
-    const { id, memberId, imageFormat } = journal;
+    const { id, memberId, imageFormat, audioFormat } = journal;
+    let normalImageLink: string;
+    let smallImageLink: string;
+    let audioLink: string;
 
     if (imageFormat) {
-      const [normalImageLink, smallImageLink] = await Promise.all([
+      [normalImageLink, smallImageLink] = await Promise.all([
         this.storageService.getDownloadUrl({
           storageType: StorageType.journals,
           memberId: memberId.toString(),
-          id: `${id}_NormalImage.${imageFormat}`,
+          id: `${id}${ImageType.NormalImage}.${imageFormat}`,
         }),
         this.storageService.getDownloadUrl({
           storageType: StorageType.journals,
           memberId: memberId.toString(),
-          id: `${id}_SmallImage.${imageFormat}`,
+          id: `${id}${ImageType.SmallImage}.${imageFormat}`,
         }),
       ]);
-      journal.images = { normalImageLink, smallImageLink };
     }
+    if (audioFormat) {
+      audioLink = await this.storageService.getDownloadUrl({
+        storageType: StorageType.journals,
+        memberId: memberId.toString(),
+        id: `${id}${AudioType}.${audioFormat}`,
+      });
+    }
+    journal.journalDownloadLinks = { normalImageLink, smallImageLink, audioLink };
 
     return journal;
   }
@@ -871,10 +929,12 @@ export class MemberResolver extends MemberBase {
       }
 
       if (origin === ChatMessageOrigin.fromUser) {
-        return await this.internalNotify({
+        await this.notifyCreateDispatch({
+          dispatchId: generateDispatchId(ContentKey.newChatMessageFromUser, Date.now().toString()),
           memberId: communication.memberId.toString(),
           userId: senderUserId,
           type: InternalNotificationType.chatMessageToMember,
+          correlationId: v4(),
           metadata: { contentType: ContentKey.newChatMessageFromUser },
         });
       } else {
@@ -882,10 +942,15 @@ export class MemberResolver extends MemberBase {
           (member) => member.memberId === communication.userId.toString(),
         );
         if (coachInfo && !coachInfo.isOnline) {
-          return await this.internalNotify({
+          await this.notifyCreateDispatch({
+            dispatchId: generateDispatchId(
+              ContentKey.newChatMessageFromMember,
+              Date.now().toString(),
+            ),
             memberId: senderUserId,
             userId: communication.userId.toString(),
             type: InternalNotificationType.textSmsToUser,
+            correlationId: v4(),
             metadata: { contentType: ContentKey.newChatMessageFromMember },
           });
         }
@@ -900,7 +965,7 @@ export class MemberResolver extends MemberBase {
     this.logger.debug(params, MemberResolver.name, this.notifyCreateDispatch.name);
     const { memberId, userId, type, metadata } = params;
 
-    const creteDispatch: ICreateDispatch = {
+    const createDispatch: ICreateDispatch = {
       type: InnerQueueTypes.createDispatch,
       dispatchId: params.dispatchId,
       correlationId: params.correlationId ? params.correlationId : v4(),
@@ -911,19 +976,21 @@ export class MemberResolver extends MemberBase {
       sendBirdChannelUrl: metadata.sendBirdChannelUrl,
       appointmentTime: metadata.appointmentTime,
       appointmentId: metadata.appointmentId,
+      scheduleLink: metadata.scheduleLink,
       contentKey: metadata.contentType,
       triggersAt: metadata.triggersAt,
       path: metadata.path,
     };
-    this.logger.debug(creteDispatch, MemberResolver.name, EventType.notifyQueue);
+    this.logger.debug(createDispatch, MemberResolver.name, EventType.notifyQueue);
 
     const eventParams: IEventNotifyQueue = {
       type: QueueType.notifications,
-      message: JSON.stringify(creteDispatch),
+      message: JSON.stringify(createDispatch, Object.keys(createDispatch).sort()),
     };
     this.eventEmitter.emit(EventType.notifyQueue, eventParams);
   }
 
+  @OnEvent(EventType.notifyDeleteDispatch, { async: true })
   async notifyDeleteDispatch(params: { dispatchId: string }) {
     this.logger.debug(params, MemberResolver.name, this.notifyDeleteDispatch.name);
     const deleteDispatch: IDeleteDispatch = {
@@ -962,16 +1029,6 @@ export class MemberResolver extends MemberBase {
     }
   }
 
-  @OnEvent(EventType.onSetDailyLogCategories, { async: true })
-  async deleteLogReminder(params: IEventMember) {
-    const { memberId } = params;
-    try {
-      this.memberScheduler.deleteTimeout({ id: memberId + ReminderType.logReminder });
-    } catch (ex) {
-      this.logger.error({ memberId }, MemberResolver.name, this.deleteLogReminder.name, ex);
-    }
-  }
-
   @OnEvent(EventType.onMemberBecameOffline, { async: true })
   async notifyOfflineMember(params: IEventOnMemberBecameOffline) {
     this.logger.debug(params, MemberResolver.name, this.notifyOfflineMember.name);
@@ -999,11 +1056,19 @@ export class MemberResolver extends MemberBase {
       await this.notifyDeleteDispatch({
         dispatchId: generateDispatchId(ContentKey.newMemberNudge, params.memberId),
       });
+      await this.notifyDeleteDispatch({
+        dispatchId: generateDispatchId(ContentKey.newRegisteredMember, params.memberId),
+      });
+      await this.notifyDeleteDispatch({
+        dispatchId: generateDispatchId(ContentKey.newRegisteredMemberNudge, params.memberId),
+      });
+      await this.notifyDeleteDispatch({
+        dispatchId: generateDispatchId(ContentKey.logReminder, params.memberId),
+      });
       const notifications = await this.memberService.getMemberNotifications(memberId);
       notifications.forEach((notification) => {
         this.memberScheduler.deleteTimeout({ id: notification._id });
       });
-      this.memberScheduler.deleteTimeout({ id: memberId + ReminderType.logReminder });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, ex);
     }

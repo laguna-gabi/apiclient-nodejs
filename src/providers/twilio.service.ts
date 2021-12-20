@@ -6,7 +6,7 @@ import { ConfigsService, ExternalConfigs } from '.';
 import {
   Environments,
   EventType,
-  Logger,
+  LoggerService,
   SendTwilioNotification,
   generateOrgNamePrefix,
 } from '../common';
@@ -29,7 +29,7 @@ export class TwilioService implements OnModuleInit {
   constructor(
     private readonly configsService: ConfigsService,
     private eventEmitter: EventEmitter2,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
   ) {
     this.source = config.get('twilio.source');
     this.identity = config.get('twilio.identity');

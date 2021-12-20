@@ -6,7 +6,7 @@ import {
   IEventNotifyQueue,
   IEventOnNewMember,
   InternalNotifyControlMemberParams,
-  Logger,
+  LoggerService,
   QueueType,
 } from '../common';
 import { UserService } from '../user';
@@ -30,7 +30,7 @@ export class MemberBase {
     readonly eventEmitter: EventEmitter2,
     readonly userService: UserService,
     readonly featureFlagService: FeatureFlagService,
-    readonly logger: Logger,
+    readonly logger: LoggerService,
   ) {}
 
   async createMember(createMemberParams: CreateMemberParams): Promise<Member> {

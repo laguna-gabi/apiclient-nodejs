@@ -6,7 +6,7 @@ import { createReadStream, createWriteStream } from 'fs';
 import { unlink } from 'fs/promises';
 import { ConfigsService, ExternalConfigs } from '.';
 import { AppointmentStatus } from '../appointment';
-import { Logger, SendSendBirdNotification } from '../common';
+import { LoggerService, SendSendBirdNotification } from '../common';
 import { CreateSendbirdGroupChannelParams, RegisterSendbirdUserParams } from '../communication';
 import { User } from '../user';
 
@@ -17,7 +17,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
   constructor(
     private readonly configsService: ConfigsService,
     private readonly httpService: HttpService,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
   ) {
     super();
   }

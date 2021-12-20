@@ -39,3 +39,6 @@ test/unit/coverage/*
 
 # Migration
 migrations/migrate-mongo-config.js
+
+# Console Commands
+outputs/*

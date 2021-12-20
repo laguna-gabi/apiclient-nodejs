@@ -28,7 +28,7 @@ import {
   IEventOnNewAppointment,
   IEventOnUpdateUserConfig,
   IEventOnUpdatedUserAppointments,
-  Logger,
+  LoggerService,
   UserRole,
 } from '../common';
 import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
@@ -39,7 +39,7 @@ export class UserService extends BaseService {
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
     private eventEmitter: EventEmitter2,
-    readonly logger: Logger,
+    readonly logger: LoggerService,
     private slotService: SlotService,
     @InjectModel(UserConfig.name)
     private readonly userConfigModel: Model<UserConfigDocument>,

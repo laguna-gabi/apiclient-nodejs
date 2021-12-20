@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ErrorType, Errors, Logger } from '../../src/common';
+import { ErrorType, Errors, LoggerService } from '../../src/common';
 import { OrgModule, OrgService, OrgType } from '../../src/org';
 import { generateId } from '../generators';
 import { dbConnect, dbDisconnect, defaultModules, generateOrgParams, mockLogger } from '../index';
@@ -14,7 +14,7 @@ describe('OrgService', () => {
     }).compile();
 
     service = module.get<OrgService>(OrgService);
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
 
     await dbConnect();
   });

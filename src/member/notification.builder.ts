@@ -4,7 +4,7 @@ import * as config from 'config';
 import { Member, MemberConfig, NotificationMetadata } from '.';
 import {
   InternalNotificationMetadata,
-  Logger,
+  LoggerService,
   SendOneSignalNotification,
   SendSendBirdNotification,
   SendTwilioNotification,
@@ -16,7 +16,7 @@ import { User } from '../user';
 export class NotificationBuilder {
   constructor(
     private readonly notificationsService: NotificationsService,
-    readonly logger: Logger,
+    readonly logger: LoggerService,
   ) {}
 
   async notify({

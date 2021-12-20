@@ -5,20 +5,13 @@ import * as config from 'config';
 import * as faker from 'faker';
 import { Model, model } from 'mongoose';
 import { v4 } from 'uuid';
-import { Logger, ReminderType, delay } from '../../src/common';
-import {
-  MemberModule,
-  MemberScheduler,
-  MemberService,
-  NotifyParams,
-  NotifyParamsDto,
-} from '../../src/member';
+import { MemberModule, MemberScheduler, NotifyParams, NotifyParamsDto } from '../../src/member';
+import { LoggerService, delay } from '../../src/common';
 import { InternalSchedulerService, LeaderType } from '../../src/scheduler';
 import { dbConnect, dbDisconnect, defaultModules, generateId, mockLogger } from '../index';
 
 describe('MemberScheduler', () => {
   let module: TestingModule;
-  let service: MemberService;
   let scheduler: MemberScheduler;
   let notifyParamsModel: Model<typeof NotifyParamsDto>;
   let schedulerRegistry: SchedulerRegistry;
@@ -59,13 +52,11 @@ describe('MemberScheduler', () => {
       imports: defaultModules().concat(MemberModule),
     }).compile();
 
-    service = module.get<MemberService>(MemberService);
-
     scheduler = module.get<MemberScheduler>(MemberScheduler);
     notifyParamsModel = model(NotifyParams.name, NotifyParamsDto);
     schedulerRegistry = module.get<SchedulerRegistry>(SchedulerRegistry);
     internalSchedulerService = module.get<InternalSchedulerService>(InternalSchedulerService);
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
 
     await dbConnect();
     await internalSchedulerService.resetLeader(LeaderType.member);
@@ -99,7 +90,6 @@ describe('MemberScheduler', () => {
         const timeouts = schedulerRegistry.getTimeouts();
 
         //timeouts of registerCustomFutureNotify
-        expect(timeouts).toContainEqual(ids[0]._id);
         expect(timeouts).toContainEqual(ids[1]._id);
         expect(timeouts).not.toContainEqual(ids[2]._id);
       });
@@ -112,24 +102,6 @@ describe('MemberScheduler', () => {
         const timeouts = schedulerRegistry.getTimeouts();
         expect(timeouts).not.toContainEqual(_id);
       }, 10000);
-
-      describe('registerLogReminder', () => {
-        afterEach(async () => {
-          await clear();
-        });
-
-        it('should register log reminder', async () => {
-          await scheduler.init();
-
-          const newRegisteredMembers = await service.getNewRegisteredMembersWithNoDailyReports();
-
-          expect(schedulerRegistry.getTimeouts()).toEqual(
-            expect.arrayContaining(
-              newRegisteredMembers.map(({ member }) => member.id + ReminderType.logReminder),
-            ),
-          );
-        }, 10000);
-      });
     });
 
     describe('registerCustomFutureNotify', () => {

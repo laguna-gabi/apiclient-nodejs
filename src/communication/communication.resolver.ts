@@ -21,7 +21,7 @@ import {
   IEventOnReplacedUserForMember,
   IEventOnUpdatedMemberPlatform,
   IEventOnUpdatedUserCommunication,
-  Logger,
+  LoggerService,
   LoggingInterceptor,
   MemberRole,
   Roles,
@@ -35,7 +35,7 @@ import { UserService } from '../user';
 export class CommunicationResolver {
   constructor(
     private readonly communicationService: CommunicationService,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly eventEmitter: EventEmitter2,

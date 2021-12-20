@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
 import * as config from 'config';
-import { Logger } from '../../common';
+import { LoggerService } from '../../common';
 
 @Injectable()
 export class CognitoService {
@@ -10,7 +10,7 @@ export class CognitoService {
     apiVersion: '2016-04-18',
   });
 
-  constructor(private readonly logger: Logger) {}
+  constructor(private readonly logger: LoggerService) {}
 
   async disableMember(deviceId): Promise<void> {
     this.logger.debug({ deviceId }, CognitoService.name, this.disableMember.name);

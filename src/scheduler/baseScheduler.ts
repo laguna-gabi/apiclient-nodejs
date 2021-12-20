@@ -4,7 +4,7 @@ import * as config from 'config';
 import { secondsToMilliseconds } from 'date-fns';
 import { v4 } from 'uuid';
 import { InternalSchedulerService } from '.';
-import { Logger, internalLogs } from '../common';
+import { LoggerService, internalLogs } from '../common';
 import { Bitly } from '../providers';
 import Timeout = NodeJS.Timeout;
 
@@ -25,7 +25,7 @@ export class BaseScheduler {
     protected readonly bitly: Bitly,
     protected readonly leaderType: LeaderType,
     protected readonly className: string,
-    protected readonly logger: Logger,
+    protected readonly logger: LoggerService,
   ) {}
 
   protected async init(callbacks) {

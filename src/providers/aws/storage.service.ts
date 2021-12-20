@@ -1,15 +1,24 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import * as AWS from 'aws-sdk';
+import * as config from 'config';
+import * as sharp from 'sharp';
 import { ConfigsService, ExternalConfigs } from '.';
-import { EventType, IEventOnNewMember, Logger, StorageType, StorageUrlParams } from '../../common';
+import {
+  EventType,
+  IEventOnNewMember,
+  LoggerService,
+  StorageType,
+  StorageUrlParams,
+} from '../../common';
+import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../member/journal.dto';
 
 @Injectable()
 export class StorageService implements OnModuleInit {
   private readonly s3 = new AWS.S3({ signatureVersion: 'v4', apiVersion: '2006-03-01' });
   private bucket: string;
 
-  constructor(readonly logger: Logger, private readonly configsService: ConfigsService) {}
+  constructor(readonly logger: LoggerService, private readonly configsService: ConfigsService) {}
 
   async onModuleInit(): Promise<void> {
     this.bucket = await this.configsService.getConfig(ExternalConfigs.aws.memberBucketName);
@@ -32,6 +41,18 @@ export class StorageService implements OnModuleInit {
       );
     } catch (ex) {
       this.logger.error(params, StorageService.name, this.handleNewMember.name, ex);
+    }
+  }
+  // Description: get object head from S3
+  async getDocumentLastModified(key: string): Promise<Date> {
+    const params = { Bucket: this.bucket, Key: key };
+
+    try {
+      return await (
+        await this.s3.headObject(params).promise()
+      ).LastModified;
+    } catch (ex) {
+      return; // file doesn't exist
     }
   }
 
@@ -93,22 +114,102 @@ export class StorageService implements OnModuleInit {
     }
   }
 
-  async deleteJournalImages(id: string, memberId: string) {
-    this.logger.debug({ id, memberId }, StorageService.name, this.deleteJournalImages.name);
+  async deleteJournalImages(id: string, memberId: string, imageFormat: ImageFormat) {
+    this.logger.debug(
+      { id, memberId, imageFormat },
+      StorageService.name,
+      this.deleteJournalImages.name,
+    );
     try {
       const deleteParams = {
         Bucket: this.bucket,
         Delete: {
           Objects: [
-            { Key: `public/${StorageType.journals}/${memberId}/${id}_NormalImage.pdf` },
-            { Key: `public/${StorageType.journals}/${memberId}/${id}_SmallImage.pdf` },
+            {
+              // eslint-disable-next-line max-len
+              Key: `public/${StorageType.journals}/${memberId}/${id}${ImageType.NormalImage}.${imageFormat}`,
+            },
+            {
+              // eslint-disable-next-line max-len
+              Key: `public/${StorageType.journals}/${memberId}/${id}${ImageType.SmallImage}.${imageFormat}`,
+            },
           ],
         },
       };
       await this.s3.deleteObjects(deleteParams).promise();
       return true;
     } catch (ex) {
-      this.logger.error({ id, memberId }, StorageService.name, this.deleteJournalImages.name, ex);
+      this.logger.error(
+        { id, memberId, imageFormat },
+        StorageService.name,
+        this.deleteJournalImages.name,
+        ex,
+      );
+    }
+  }
+
+  async deleteJournalAudio(id: string, memberId: string, audioFormat: AudioFormat) {
+    this.logger.debug(
+      { id, memberId, audioFormat },
+      StorageService.name,
+      this.deleteJournalAudio.name,
+    );
+    try {
+      const deleteParams = {
+        Bucket: this.bucket,
+        Delete: {
+          Objects: [
+            {
+              // eslint-disable-next-line max-len
+              Key: `public/${StorageType.journals}/${memberId}/${id}${AudioType}.${audioFormat}`,
+            },
+          ],
+        },
+      };
+      await this.s3.deleteObjects(deleteParams).promise();
+      return true;
+    } catch (ex) {
+      this.logger.error(
+        { id, memberId, audioFormat },
+        StorageService.name,
+        this.deleteJournalAudio.name,
+        ex,
+      );
+    }
+  }
+
+  async createJournalImageThumbnail(normalImageKey: string, smallImageKey: string) {
+    this.logger.debug(
+      { normalImageKey, smallImageKey },
+      StorageService.name,
+      this.createJournalImageThumbnail.name,
+    );
+    try {
+      const downloadParams = {
+        Bucket: this.bucket,
+        Key: normalImageKey,
+      };
+      const originalImage: any = await this.s3.getObject(downloadParams).promise();
+
+      // Use the sharp module to resize the image and save in a buffer.
+      const buffer = await sharp(originalImage.Body)
+        .resize(config.get('aws.storage.thumbnailSize'))
+        .toBuffer();
+
+      const uploadParams = {
+        Bucket: this.bucket,
+        Key: smallImageKey,
+        Body: buffer,
+        ContentType: 'image',
+      };
+      await this.s3.putObject(uploadParams).promise();
+    } catch (ex) {
+      this.logger.error(
+        { normalImageKey, smallImageKey },
+        StorageService.name,
+        this.createJournalImageThumbnail.name,
+        ex,
+      );
     }
   }
 
