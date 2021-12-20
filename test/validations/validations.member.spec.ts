@@ -435,26 +435,26 @@ describe('Validations - member', () => {
   describe('updateMember', () => {
     /* eslint-disable max-len */
     test.each`
-      input                             | error
-      ${{ id: 123 }}                    | ${{ missingFieldError: stringError }}
-      ${{ firstName: 123 }}             | ${{ missingFieldError: stringError }}
-      ${{ lastName: 123 }}              | ${{ missingFieldError: stringError }}
-      ${{ fellowName: 123 }}            | ${{ missingFieldError: stringError }}
-      ${{ drgDesc: 123 }}               | ${{ missingFieldError: stringError }}
-      ${{ drg: 123 }}                   | ${{ missingFieldError: stringError }}
-      ${{ readmissionRisk: 123 }}       | ${{ missingFieldError: stringError }}
-      ${{ phoneSecondary: 123 }}        | ${{ missingFieldError: stringError }}
-      ${{ email: 'not-valid' }}         | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberEmailFormat)] }}
-      ${{ sex: 'not-valid' }}           | ${{ missingFieldError: 'does not exist in "Sex" enum' }}
-      ${{ language: 'not-valid' }}      | ${{ missingFieldError: 'does not exist in "Language" enum' }}
-      ${{ zipCode: 123 }}               | ${{ missingFieldError: stringError }}
-      ${{ dischargeDate: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
-      ${{ address: 123 }}               | ${{ missingFieldError: 'Expected type "AddressInput" to be an object.' }}
-      ${{ address: { street: 123 } }}   | ${{ missingFieldError: stringError }}
-      ${{ address: { city: 123 } }}     | ${{ missingFieldError: stringError }}
-      ${{ address: { state: 123 } }}    | ${{ missingFieldError: stringError }}
-      ${{ honorific: 'not-valid' }}     | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
-      ${{ deviceId: 123 }}              | ${{ missingFieldError: stringError }}
+      input                               | error
+      ${{ id: 123 }}                      | ${{ missingFieldError: stringError }}
+      ${{ firstName: 123 }}               | ${{ missingFieldError: stringError }}
+      ${{ lastName: 123 }}                | ${{ missingFieldError: stringError }}
+      ${{ fellowName: 123 }}              | ${{ missingFieldError: stringError }}
+      ${{ drgDesc: 123 }}                 | ${{ missingFieldError: stringError }}
+      ${{ drg: 123 }}                     | ${{ missingFieldError: stringError }}
+      ${{ readmissionRisk: 'not-valid' }} | ${{ missingFieldError: 'does not exist in "ReadmissionRisk" enum' }}
+      ${{ phoneSecondary: 123 }}          | ${{ missingFieldError: stringError }}
+      ${{ email: 'not-valid' }}           | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberEmailFormat)] }}
+      ${{ sex: 'not-valid' }}             | ${{ missingFieldError: 'does not exist in "Sex" enum' }}
+      ${{ language: 'not-valid' }}        | ${{ missingFieldError: 'does not exist in "Language" enum' }}
+      ${{ zipCode: 123 }}                 | ${{ missingFieldError: stringError }}
+      ${{ dischargeDate: 'not-valid' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
+      ${{ address: 123 }}                 | ${{ missingFieldError: 'Expected type "AddressInput" to be an object.' }}
+      ${{ address: { street: 123 } }}     | ${{ missingFieldError: stringError }}
+      ${{ address: { city: 123 } }}       | ${{ missingFieldError: stringError }}
+      ${{ address: { state: 123 } }}      | ${{ missingFieldError: stringError }}
+      ${{ honorific: 'not-valid' }}       | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
+      ${{ deviceId: 123 }}                | ${{ missingFieldError: stringError }}
     `(`should fail to update a member since setting $input is not a valid`, async (params) => {
       /* eslint-enable max-len */
       const updateMemberParams = generateUpdateMemberParams({ ...params.input });

@@ -211,13 +211,18 @@ export class Queries {
             }
             fellowName
             drgDesc
-            readmissionRisk
+
             phoneSecondary
             generalNotes
             nurseNotes
             admitDate
             createdAt
             honorific
+            readmissionRisk
+            readmissionRiskHistory {
+              readmissionRisk
+              date
+            }
           }
         }
       `,
