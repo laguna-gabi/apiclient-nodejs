@@ -1,7 +1,3 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import * as en from '../../languages/en.json';
-import * as es from '../../languages/es.json';
-import * as i18next from 'i18next';
 import {
   AllNotificationTypes,
   ContentKey,
@@ -9,8 +5,12 @@ import {
   InternalNotificationType,
   Language,
 } from '@lagunahealth/pandora';
-import { ClientSettings } from '../settings';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import * as i18next from 'i18next';
 import { cloneDeep } from 'lodash';
+import * as en from '../../languages/en.json';
+import * as es from '../../languages/es.json';
+import { ClientSettings } from '../settings';
 
 export class GetContentsParams {
   contentKey: ContentKey;
@@ -49,10 +49,10 @@ export class InternationalizationService implements OnModuleInit {
       });
     }
 
-    const userNotification = notificationType === InternalNotificationType.textSmsToUser;
+    const replace = params.contentKey === ContentKey.appointmentScheduledUser;
     return this.i18n.t(`contents.${contentKey}`, {
-      member: userNotification ? senderClient : updateRecipientClient,
-      user: userNotification ? updateRecipientClient : senderClient,
+      member: replace ? senderClient : updateRecipientClient,
+      user: replace ? updateRecipientClient : senderClient,
       ...extraData,
       lng,
     });
