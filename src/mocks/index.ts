@@ -7,5 +7,4 @@ export * from './createDispatchGeneralMemberWithTrigger';
 export * from './createDispatchRequestAppointment';
 export * from './createDispatchAppointmentScheduled';
 export * from './createDispatchScheduleAppointmentReminders';
-export * from './createDispatchChatMessage';
 export * from './deleteDispatch';
