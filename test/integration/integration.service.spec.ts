@@ -13,9 +13,8 @@ import {
   generateAppointmentScheduledUserMock,
   generateBaseMock,
   generateGeneralMemberTriggeredMock,
-  generateNewMemberMock,
-  generateNewMemberNudgeMock,
-  generateRequestAppointmentMock,
+  generateNewControlMemberMock,
+  generateNewMemberMock, generateNewMemberNudgeMock, generateRequestAppointmentMock,
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapMinutes } from 'config';
@@ -127,6 +126,33 @@ describe('Notifications full flow', () => {
       dispatchId: object.objectNewMemberMock.dispatchId,
       status: DispatchStatus.done,
       response: { ...object.objectNewMemberMock },
+    });
+  });
+
+  it(`should handle 'immediate' event of type ${ContentKey.newControlMember}`, async () => {
+    const object = new ObjectBaseClass(
+      generateNewControlMemberMock({
+        recipientClientId: webMemberClient.id,
+      }),
+    );
+    spyOnTwilioSend.mockReturnValueOnce(providerResult);
+
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({ type: InnerQueueTypes.createDispatch, ...object.objectBaseType }),
+    };
+    await service.handleMessage(message);
+
+    expect(spyOnTwilioSend).toBeCalledWith({
+      body: translation.contents[ContentKey.newControlMember],
+      orgName: webMemberClient.orgName,
+      to: webMemberClient.phone,
+    });
+
+    await compareResults({
+      dispatchId: object.objectBaseType.dispatchId,
+      status: DispatchStatus.done,
+      response: { ...object.objectBaseType },
     });
   });
 
