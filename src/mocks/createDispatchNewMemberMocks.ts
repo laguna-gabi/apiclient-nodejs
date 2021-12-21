@@ -35,3 +35,20 @@ export const generateNewMemberMock = ({
     contentKey,
   };
 };
+
+export const generateNewControlMemberMock = ({
+  recipientClientId,
+}: {
+  recipientClientId: string;
+}): ObjectBaseType => {
+  const contentKey = ContentKey.newControlMember;
+  return {
+    type: InnerQueueTypes.createDispatch,
+    dispatchId: generateDispatchId(contentKey, recipientClientId),
+    correlationId: v4(),
+    serviceName: ServiceName.hepius,
+    notificationType: InternalNotificationType.textSmsToMember,
+    recipientClientId,
+    contentKey,
+  };
+};
