@@ -188,21 +188,4 @@ export class NotificationBuilder {
       }
     }
   }
-
-  async internalNotifyControlMember({
-    content,
-    phone,
-    orgName,
-  }: {
-    content: string;
-    phone: string;
-    orgName: string;
-  }) {
-    const sendTwilioNotification: SendTwilioNotification = {
-      body: content,
-      to: phone,
-      orgName,
-    };
-    return this.notificationsService.send({ sendTwilioNotification });
-  }
 }

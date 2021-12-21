@@ -478,10 +478,6 @@ export class MemberService extends BaseService {
     }
   }
 
-  async getControl(id: string) {
-    return this.controlMemberModel.findById(id).populate({ path: 'org' });
-  }
-
   async getAllControl(): Promise<MemberDocument[]> {
     return this.controlMemberModel.find();
   }

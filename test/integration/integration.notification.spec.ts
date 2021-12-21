@@ -11,9 +11,10 @@ import {
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
-  generateChatMessageMock,
+  generateBaseMock,
   generateDispatchId,
   generateGeneralMemberTriggeredMock,
+  generateNewControlMemberMock,
   generateNewMemberMock,
   generateNewMemberNudgeMock,
   generateRequestAppointmentMock,
@@ -73,8 +74,8 @@ describe('Integration tests: notifications', () => {
     /**
      * Trigger : MemberResolver.createMember
      * Settings :
-     *      1. update member settings : send event to queue on update member config (create)
-     *      2. update user settings : send event to queue on update user config (create)
+     *      1. update member settings : send event to queue on update member config (on create member)
+     *      2. update user settings : send event to queue on update user config (on create user)
      * Dispatches:
      *      3. send newMember dispatch
      *      4. send newMemberNudge dispatch
@@ -88,14 +89,14 @@ describe('Integration tests: notifications', () => {
 
       await delay(200);
 
-      //send event to queue on update member config (create)
+      //send event to queue on update user config (create)
       const mockUser = generateUpdateUserSettingsMock({ id, ...user });
       const objectUser = new ObjectUpdateMemberSettingsClass(mockUser);
       Object.keys(objectUser.objectUpdateMemberSettings).forEach((key) => {
         expectStringContaining(1, key, mockUser[key]);
       });
 
-      //send event to queue on update user config (create)
+      //send event to queue on update member config (create)
       const mockMember = generateUpdateMemberSettingsMock({
         id,
         ...memberParams,
@@ -284,6 +285,52 @@ describe('Integration tests: notifications', () => {
         'dispatchId',
         generateDispatchId(ContentKey.newMemberNudge, member.id),
       );
+    });
+
+    /**
+     * Trigger : MemberResolver.createControlMember
+     * Settings :
+     *      1. update member settings : send event to queue on update member config (on create control)
+     * Dispatches:
+     *      2. send newControlMember dispatch
+     */
+    // eslint-disable-next-line max-len
+    it(`createControlMember: should updateClientSettings for member and send dispatch of type ${ContentKey.newControlMember}`, async () => {
+      handler.featureFlagService.spyOnFeatureFlagControlGroup.mockResolvedValueOnce(true);
+      const org = await creators.createAndValidateOrg();
+      const memberParams = generateCreateMemberParams({ orgId: org.id });
+      const { id } = await handler.mutations.createMember({ memberParams });
+
+      await delay(200);
+
+      // send event to queue on update member config (on create control)
+      const updateControlMemberSettingsMock = {
+        type: InnerQueueTypes.updateClientSettings,
+        id,
+        firstName: memberParams.firstName,
+        lastName: memberParams.lastName,
+        honorific: memberParams.honorific,
+        zipCode: memberParams.zipCode,
+      };
+      const objectMember = new ObjectUpdateMemberSettingsClass(updateControlMemberSettingsMock);
+      Object.keys(objectMember.objectUpdateMemberSettings).forEach((key) => {
+        expectStringContaining(1, key, updateControlMemberSettingsMock[key]);
+      });
+
+      // send newControlMember dispatch
+      const mockDispatch = generateNewControlMemberMock({ recipientClientId: id });
+      const dispatchObject = new ObjectBaseClass(mockDispatch);
+      Object.keys(dispatchObject.objectBaseType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(
+          2,
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' ? key : `"${key}":"${mockDispatch[key]}"`,
+            ),
+          }),
+        );
+      });
     });
   });
 
@@ -482,7 +529,7 @@ describe('Integration tests: notifications', () => {
         await handler.webhooksController.sendbird(JSON.stringify(payload), {});
         await delay(200);
 
-        const mock = generateChatMessageMock({
+        const mock = generateBaseMock({
           recipientClientId: params.extractReceiver(member),
           senderClientId: params.extractSender(member),
           contentKey: params.contentKey,

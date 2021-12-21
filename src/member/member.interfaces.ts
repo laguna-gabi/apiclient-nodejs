@@ -3,9 +3,9 @@ import {
   ErrorType,
   Errors,
   EventType,
+  IDispatchParams,
   IEventNotifyQueue,
   IEventOnNewMember,
-  InternalNotifyControlMemberParams,
   LoggerService,
   QueueType,
 } from '../common';
@@ -19,10 +19,12 @@ import {
   InternalNotificationType,
   SlackChannel,
   SlackIcon,
+  generateDispatchId,
 } from '@lagunahealth/pandora';
 import { FeatureFlagService } from '../providers';
 import { isUndefined, omitBy } from 'lodash';
 import { Types } from 'mongoose';
+import { v4 } from 'uuid';
 
 export class MemberBase {
   constructor(
@@ -79,14 +81,18 @@ export class MemberBase {
   async createControlMember(createMemberParams: CreateMemberParams): Promise<Member> {
     this.logger.debug(createMemberParams, MemberBase.name, this.createControlMember.name);
     const controlMember = await this.memberService.insertControl(createMemberParams);
+    this.notifyUpdatedMemberConfig({ member: controlMember });
 
-    const params: InternalNotifyControlMemberParams = {
+    const newControlMemberEvent: IDispatchParams = {
       memberId: controlMember.id,
       type: InternalNotificationType.textSmsToMember,
-      metadata: { contentType: ContentKey.newControlMember },
+      correlationId: v4(),
+      dispatchId: generateDispatchId(ContentKey.newControlMember, controlMember.id),
+      metadata: {
+        contentType: ContentKey.newControlMember,
+      },
     };
-    this.eventEmitter.emit(EventType.notifyInternalControlMember, params);
-
+    this.eventEmitter.emit(EventType.notifyDispatch, newControlMemberEvent);
     return controlMember;
   }
 
@@ -95,12 +101,12 @@ export class MemberBase {
     memberConfig,
   }: {
     member?: Member;
-    memberConfig: MemberConfig;
+    memberConfig?: MemberConfig;
   }) {
     const settings: Partial<IUpdateClientSettings> = omitBy(
       {
         type: InnerQueueTypes.updateClientSettings,
-        id: memberConfig.memberId.toString(),
+        id: memberConfig?.memberId?.toString() || member.id.toString(),
         phone: member?.phone,
         firstName: member?.firstName,
         lastName: member?.lastName,
@@ -108,16 +114,16 @@ export class MemberBase {
         honorific: member?.honorific,
         zipCode: member?.zipCode || member?.org?.zipCode,
         language: member?.language,
-        platform: memberConfig.platform,
-        isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
-        isAppointmentsReminderEnabled: memberConfig.isAppointmentsReminderEnabled,
-        isRecommendationsEnabled: memberConfig.isRecommendationsEnabled,
-        externalUserId: memberConfig.externalUserId,
-        firstLoggedInAt: memberConfig.firstLoggedInAt,
+        platform: memberConfig?.platform,
+        isPushNotificationsEnabled: memberConfig?.isPushNotificationsEnabled,
+        isAppointmentsReminderEnabled: memberConfig?.isAppointmentsReminderEnabled,
+        isRecommendationsEnabled: memberConfig?.isRecommendationsEnabled,
+        externalUserId: memberConfig?.externalUserId,
+        firstLoggedInAt: memberConfig?.firstLoggedInAt,
       },
       isUndefined,
     );
-
+    this.logger.debug(settings, MemberBase.name, this.notifyUpdatedMemberConfig.name);
     const eventParams: IEventNotifyQueue = {
       type: QueueType.notifications,
       message: JSON.stringify(settings),

@@ -8,7 +8,6 @@ import * as config from 'config';
 import { add, addDays, startOfToday, startOfTomorrow } from 'date-fns';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
-import { translation } from '../../languages/en.json';
 import {
   Appointment,
   AppointmentMethod,
@@ -46,7 +45,6 @@ import {
   generateAppointmentLink,
   generateAvailabilityInput,
   generateCancelNotifyParams,
-  generateCreateMemberParams,
   generateId,
   generateOrgParams,
   generatePath,
@@ -763,26 +761,6 @@ describe('Integration tests: all', () => {
       });
 
       handler.notificationsService.spyOnNotificationsServiceCancel.mockReset();
-    });
-
-    it(`should send a text on newly created control member`, async () => {
-      const org = await creators.createAndValidateOrg();
-      handler.featureFlagService.spyOnFeatureFlagControlGroup.mockResolvedValueOnce(true);
-
-      const memberParams = generateCreateMemberParams({ orgId: org.id });
-      await handler.mutations.createMember({ memberParams });
-
-      await delay(500);
-
-      expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
-        sendTwilioNotification: {
-          body: translation.contents.newControlMember,
-          to: memberParams.phone,
-          orgName: org.name,
-        },
-      });
-
-      handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
     });
   });
 

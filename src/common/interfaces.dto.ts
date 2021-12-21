@@ -108,7 +108,7 @@ export class InternalNotificationMetadata {
 
 export class InternalNotifyParams {
   memberId: string;
-  userId: string;
+  userId?: string;
   type: InternalNotificationType;
   metadata: InternalNotificationMetadata;
   content?: string;
@@ -118,8 +118,6 @@ export class IDispatchParams extends InternalNotifyParams {
   dispatchId: string;
   correlationId?: string;
 }
-
-export type InternalNotifyControlMemberParams = Omit<InternalNotifyParams, 'userId'>;
 
 export type AllNotificationTypes =
   | NotificationType
