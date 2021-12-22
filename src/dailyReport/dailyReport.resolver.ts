@@ -16,12 +16,13 @@ import {
   ErrorType,
   Errors,
   EventType,
-  InternalNotifyParams,
+  IDispatchParams,
   LoggingInterceptor,
   MemberRole,
   Roles,
   UserRole,
 } from '../common';
+import { v4 } from 'uuid';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()
@@ -59,14 +60,20 @@ export class DailyReportResolver {
       dailyReportObject.statsOverThreshold?.length > 0 &&
       !dailyReportObject.notificationSent
     ) {
-      const params: InternalNotifyParams = {
+      const memberNotFeelingWellEvent: IDispatchParams = {
         memberId: dailyReportCategoriesInput.memberId,
         userId: primaryUserId,
         type: InternalNotificationType.textSmsToUser,
+        correlationId: v4(),
+        dispatchId: generateDispatchId(
+          ContentKey.memberNotFeelingWellMessage,
+          primaryUserId,
+          dailyReportCategoriesInput.memberId,
+          Date.now().toString(),
+        ),
         metadata: { contentType: ContentKey.memberNotFeelingWellMessage },
       };
-
-      this.eventEmitter.emit(EventType.notifyInternal, params);
+      this.eventEmitter.emit(EventType.notifyDispatch, memberNotFeelingWellEvent);
 
       this.dailyReportService.logMemberOverThresholdIndication(dailyReportCategoriesInput.memberId);
 

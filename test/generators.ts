@@ -15,6 +15,7 @@ import * as config from 'config';
 import { format } from 'date-fns';
 import * as faker from 'faker';
 import { Types } from 'mongoose';
+import { DailyReport } from '../src/dailyReport';
 import { v4 } from 'uuid';
 import * as en from '../languages/en.json';
 import {
@@ -36,6 +37,7 @@ import {
   SendSendBirdNotification,
   SendTwilioNotification,
   UserRole,
+  reformatDate,
 } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import {
@@ -582,6 +584,16 @@ export const generateUpdateRecordingParams = ({
   recordingType,
 }: Partial<UpdateRecordingParams> = {}): UpdateRecordingParams => {
   return { id, memberId, userId, start, end, answered, phone, appointmentId, recordingType };
+};
+
+export const generateDailyReport = ({
+  memberId = generateObjectId(),
+  date = reformatDate(faker.date.recent().toString(), config.get('general.dateFormatString')),
+  categories = [],
+  statsOverThreshold = [],
+  notificationSent = false,
+}: Partial<DailyReport> = {}): DailyReport => {
+  return { memberId, date, categories, statsOverThreshold, notificationSent };
 };
 
 export const generateUpdateClientSettings = ({

@@ -986,9 +986,9 @@
   integrity sha512-tA7GG7Tj479vojfV3AoxbckalA48aK6giGjNtgH6ihpLwTyHE3fIgRrvt8TWfLwW8X8dyu7vgmAsGLRG7hWWOg==
 
 "@slack/types@^2.2.0":
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/@slack/types/-/types-2.4.0.tgz#b6f6d50e9181f723080b841302e089739cef512d"
-  integrity sha512-0k8UlVEH9gUVwTbwcanS1JT2vCROkr1WESgdXW7d2maWYTuwbVEx87YvXPjsemAJfdu+RYqxGhO2oGTigprepA==
+  version "2.2.0"
+  resolved "https://registry.npmjs.org/@slack/types/-/types-2.2.0.tgz#fcc3648ee20c3fb92a076b23c35bca19158d9925"
+  integrity sha512-/yHEFvgp0UY/lfFvQqbq9BocW/pM4xnGycqGAx+plRgYp96dZp1y50Whz7yzOgasEUsy5TyQfBK07cj0RwUyIg==
 
 "@slack/webhook@^6.0.0":
   version "6.0.0"
@@ -8253,7 +8253,7 @@ uuid@3.3.2:
 
 uuid@8.3.2, uuid@^8.0.0, uuid@^8.3.0, uuid@^8.3.2:
   version "8.3.2"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
+  resolved "https://registry.npmjs.org/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
   integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
 
 uuid@^3.1.0:

@@ -21,17 +21,19 @@ import {
   generateUpdateMemberSettingsMock,
   generateUpdateUserSettingsMock,
 } from '@lagunahealth/pandora';
-import { hosts, scheduler } from 'config';
+import { general, hosts, scheduler } from 'config';
 import { addDays, subDays, subMinutes } from 'date-fns';
 import * as faker from 'faker';
 
 import { v4 } from 'uuid';
 import { Appointment } from '../../src/appointment';
-import { QueueType, RegisterForNotificationParams, delay } from '../../src/common';
+import { QueueType, RegisterForNotificationParams, delay, reformatDate } from '../../src/common';
+import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
 import { Member } from '../../src/member';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   generateCreateMemberParams,
+  generateDailyReport,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
 } from '../generators';
@@ -548,6 +550,55 @@ describe('Integration tests: notifications', () => {
         });
       },
     );
+
+    /**
+     * Trigger : DailyReportResolver.setDailyReportCategories
+     * Dispatches:
+     *      1. send memberNotFeelingWellMessage dispatch
+     */
+    /* eslint-disable max-len */
+    it(`setDailyReportCategories: should send dispatch ${ContentKey.memberNotFeelingWellMessage}`, async () => {
+      /* eslint-enable max-len */
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      jest
+        .spyOn(handler.dailyReportService, 'setDailyReportCategories')
+        .mockImplementation(async () =>
+          generateDailyReport({ statsOverThreshold: [DailyReportCategoryTypes.Pain] }),
+        );
+
+      await handler
+        .setContextUserId(member.id, member.primaryUserId.toString())
+        .mutations.setDailyReportCategories({
+          dailyReportCategoriesInput: {
+            date: reformatDate(faker.date.recent().toString(), general.get('dateFormatString')),
+            categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
+          } as DailyReportCategoriesInput,
+        });
+      await delay(200);
+
+      const mock = generateBaseMock({
+        senderClientId: member.id,
+        recipientClientId: member.primaryUserId.toString(),
+        contentKey: ContentKey.memberNotFeelingWellMessage,
+      });
+
+      const object = new ObjectBaseClass(mock);
+      Object.keys(object.objectBaseType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
   });
 
   /*************************************************************************************************

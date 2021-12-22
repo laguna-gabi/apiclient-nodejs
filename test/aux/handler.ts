@@ -15,6 +15,7 @@ import { AppModule } from '../../src/app.module';
 import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
 import { LoggerService, bearerToken } from '../../src/common';
 import { CommunicationService } from '../../src/communication';
+import { DailyReportService } from '../../src/dailyReport';
 import { Member, MemberService } from '../../src/member';
 import { Org, OrgService } from '../../src/org';
 import { WebhooksController } from '../../src/providers';
@@ -42,6 +43,7 @@ export class Handler extends BaseHandler {
   adminUser: User;
   patientZero: Member;
   lagunaOrg: Org | null;
+  dailyReportService: DailyReportService;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -68,6 +70,7 @@ export class Handler extends BaseHandler {
     this.module = moduleFixture.get<GraphQLModule>(GraphQLModule);
     this.schedulerRegistry = moduleFixture.get<SchedulerRegistry>(SchedulerRegistry);
     this.eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
+    this.dailyReportService = moduleFixture.get<DailyReportService>(DailyReportService);
     const providers = mockProviders(moduleFixture);
     this.sendBird = providers.sendBird;
     this.notificationsService = providers.notificationsService;

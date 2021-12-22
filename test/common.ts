@@ -31,12 +31,17 @@ export class BaseHandler {
   module: GraphQLModule;
   userService: UserService;
 
-  setContextUserId = (userId: string, roles: RoleTypes[] = [MemberRole.member]) => {
+  setContextUserId = (
+    userId: string,
+    primaryUserId = '',
+    roles: RoleTypes[] = [MemberRole.member],
+  ) => {
     (this.module as any).apolloServer.context = () => ({
       req: {
         user: {
           _id: userId,
           roles,
+          primaryUserId,
         },
       },
     });
