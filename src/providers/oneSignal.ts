@@ -65,7 +65,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
         .post(this.notificationsUrl, body, config)
         .toPromise();
       if (status === 200 && data.recipients >= 1) {
-        return { provider: Provider.oneSignal, content: data.contents.en, id: data.id };
+        return { provider: Provider.oneSignal, content: body.contents.en, id: data.id };
       } else if (
         data.errors[0] === 'All included players are not subscribed' ||
         data.errors?.invalid_external_user_ids[0] === externalUserId

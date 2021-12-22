@@ -3,6 +3,7 @@ import {
   InnerQueueTypes,
   ObjectAppointmentScheduleReminderClass,
   ObjectAppointmentScheduledClass,
+  ObjectBaseClass,
   ObjectGeneralMemberTriggeredClass,
   ObjectNewMemberClass,
   ObjectNewMemberNudgeClass,
@@ -10,16 +11,19 @@ import {
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
+  generateBaseMock,
   generateGeneralMemberTriggeredMock,
-  generateNewMemberMock,
-  generateNewMemberNudgeMock,
-  generateRequestAppointmentMock,
+  generateNewControlMemberMock,
+  generateNewMemberMock, generateNewMemberNudgeMock, generateRequestAppointmentMock,
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import { internet, lorem } from 'faker';
+import { gapMinutes } from 'config';
 import { addDays, subMinutes } from 'date-fns';
+import { internet, lorem } from 'faker';
+import { Types } from 'mongoose';
 import { SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
+import { replaceConfigs } from '../';
 import { translation } from '../../languages/en.json';
 import { AppModule } from '../../src/app.module';
 import {
@@ -42,9 +46,6 @@ import {
   generateUpdateMemberSettingsMock,
   generateUpdateUserSettingsMock,
 } from '../generators';
-import { Types } from 'mongoose';
-import { replaceConfigs } from '../';
-import { gapMinutes } from 'config';
 
 describe('Notifications full flow', () => {
   let module: TestingModule;
@@ -125,6 +126,33 @@ describe('Notifications full flow', () => {
       dispatchId: object.objectNewMemberMock.dispatchId,
       status: DispatchStatus.done,
       response: { ...object.objectNewMemberMock },
+    });
+  });
+
+  it(`should handle 'immediate' event of type ${ContentKey.newControlMember}`, async () => {
+    const object = new ObjectBaseClass(
+      generateNewControlMemberMock({
+        recipientClientId: webMemberClient.id,
+      }),
+    );
+    spyOnTwilioSend.mockReturnValueOnce(providerResult);
+
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({ type: InnerQueueTypes.createDispatch, ...object.objectBaseType }),
+    };
+    await service.handleMessage(message);
+
+    expect(spyOnTwilioSend).toBeCalledWith({
+      body: translation.contents[ContentKey.newControlMember],
+      orgName: webMemberClient.orgName,
+      to: webMemberClient.phone,
+    });
+
+    await compareResults({
+      dispatchId: object.objectBaseType.dispatchId,
+      status: DispatchStatus.done,
+      response: { ...object.objectBaseType },
     });
   });
 
@@ -355,7 +383,44 @@ describe('Notifications full flow', () => {
       status: DispatchStatus.done,
       response: { ...mock },
     });
-  }, 7000);
+  });
+
+  test.each([
+    ContentKey.newChatMessageFromMember,
+    ContentKey.newChatMessageFromUser,
+    ContentKey.memberNotFeelingWellMessage,
+  ])(`should handle 'immediate' event of type %p`, async (contentKey) => {
+    const mock = generateBaseMock({
+      recipientClientId: webMemberClient.id,
+      senderClientId: userClient.id,
+      contentKey,
+    });
+    const object = new ObjectBaseClass(mock);
+    spyOnTwilioSend.mockReturnValueOnce(providerResult);
+
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({ type: InnerQueueTypes.createDispatch, ...object.objectBaseType }),
+    };
+    await service.handleMessage(message);
+
+    const body = replaceConfigs({
+      content: translation.contents[contentKey],
+      recipientClient: webMemberClient,
+      senderClient: userClient,
+    });
+    expect(spyOnTwilioSend).toBeCalledWith({
+      body,
+      orgName: webMemberClient.orgName,
+      to: webMemberClient.phone,
+    });
+
+    await compareResults({
+      dispatchId: mock.dispatchId,
+      status: DispatchStatus.done,
+      response: { ...object.objectBaseType },
+    });
+  });
 
   /*************************************************************************************************
    ******************************************** Helpers ********************************************

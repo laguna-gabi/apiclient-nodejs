@@ -98,7 +98,7 @@ export class ConductorService implements OnModuleInit {
       });
       const recipientClient = await this.settingsService.get(dispatch.recipientClientId);
       if (!recipientClient) {
-        throw new Error(`recipientClient ${recipientClient.id} does not exist`);
+        throw new Error(`recipientClient ${dispatch.recipientClientId} does not exist`);
       }
       const senderClient = await this.settingsService.get(dispatch.senderClientId);
       const providerResult = await this.notificationsService.send(
