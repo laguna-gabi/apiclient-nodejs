@@ -1,6 +1,7 @@
 import {
   ContentKey,
   InnerQueueTypes,
+  NotificationType,
   ObjectAppointmentScheduledClass,
   ObjectBaseClass,
   ObjectGeneralMemberTriggeredClass,
@@ -22,14 +23,14 @@ import {
   generateUpdateUserSettingsMock,
 } from '@lagunahealth/pandora';
 import { general, hosts, scheduler } from 'config';
-import { addDays, subDays, subMinutes } from 'date-fns';
+import { addDays, addSeconds, subDays, subMinutes } from 'date-fns';
 import * as faker from 'faker';
 
 import { v4 } from 'uuid';
 import { Appointment } from '../../src/appointment';
 import { QueueType, RegisterForNotificationParams, delay, reformatDate } from '../../src/common';
 import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
-import { Member } from '../../src/member';
+import { Member, NotifyParams } from '../../src/member';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   generateCreateMemberParams,
@@ -151,6 +152,7 @@ describe('Integration tests: notifications', () => {
      *      3. delete dispatch ContentKey.newRegisteredMember
      *      4. delete dispatch ContentKey.newRegisteredMemberNudge
      *      5. delete dispatch ContentKey.logReminder
+     *      6. delete dispatch ContentKey.customContent
      */
     test.each`
       title              | method
@@ -169,7 +171,7 @@ describe('Integration tests: notifications', () => {
         await params.method({ id });
         await delay(200);
 
-        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(5);
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(6);
         checkValues(1, { type: InnerQueueTypes.deleteClientSettings, id });
         checkDeleteDispatches(id, true, 2);
       },
@@ -329,6 +331,50 @@ describe('Integration tests: notifications', () => {
             type: QueueType.notifications,
             message: expect.stringContaining(
               key === 'correlationId' ? key : `"${key}":"${mockDispatch[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+
+    /**
+     * Trigger : MemberResolver.notify
+     * Dispatch :
+     *      1. user sends member a custom dispatch to be triggered on specific time
+     */
+    it('notify: should register for future notify', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      const when = addSeconds(new Date(), 1);
+      const notifyParams: NotifyParams = {
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+        type: NotificationType.text,
+        metadata: { content: faker.lorem.word(), when },
+      };
+      await handler.mutations.notify({ notifyParams });
+
+      await delay(200);
+
+      const mock = generateGeneralMemberTriggeredMock({
+        recipientClientId: member.id,
+        senderClientId: member.primaryUserId.toString(),
+        contentKey: ContentKey.customContent,
+        triggersAt: when,
+      });
+      const object = new ObjectGeneralMemberTriggeredClass(mock);
+      Object.keys(object.objectGeneralMemberTriggeredMock).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'triggersAt' || key === 'dispatchId'
+                ? key
+                : `"${key}":"${mock[key]}"`,
             ),
           }),
         );
@@ -653,6 +699,10 @@ describe('Integration tests: notifications', () => {
       checkValues(startFromIndex + 3, {
         type: InnerQueueTypes.deleteDispatch,
         dispatchId: generateDispatchId(ContentKey.logReminder, memberId),
+      });
+      checkValues(startFromIndex + 4, {
+        type: InnerQueueTypes.deleteDispatch,
+        dispatchId: generateDispatchId(ContentKey.customContent, memberId),
       });
     }
   };

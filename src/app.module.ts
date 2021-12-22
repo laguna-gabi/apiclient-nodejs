@@ -2,7 +2,6 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { RouteInfo } from '@nestjs/common/interfaces';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
-import { ScheduleModule } from '@nestjs/schedule';
 import { TerminusModule } from '@nestjs/terminus';
 import * as config from 'config';
 import { GraphQLError } from 'graphql';
@@ -35,7 +34,6 @@ const badRequestException = 'Bad Request Exception';
     DbModule,
     TerminusModule,
     EventEmitterModule.forRoot(),
-    ScheduleModule.forRoot(),
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql',
       cors: true,

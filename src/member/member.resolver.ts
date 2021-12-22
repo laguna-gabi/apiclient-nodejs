@@ -15,7 +15,7 @@ import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import * as config from 'config';
-import { addDays, millisecondsInHour } from 'date-fns';
+import { addDays, isAfter, millisecondsInHour } from 'date-fns';
 import { format, getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
 import { camelCase } from 'lodash';
 import { v4 } from 'uuid';
@@ -37,7 +37,6 @@ import {
   Member,
   MemberBase,
   MemberConfig,
-  MemberScheduler,
   MemberService,
   MemberSummary,
   NotificationBuilder,
@@ -100,7 +99,6 @@ export class MemberResolver extends MemberBase {
 
   constructor(
     readonly memberService: MemberService,
-    private readonly memberScheduler: MemberScheduler,
     private readonly notificationBuilder: NotificationBuilder,
     readonly eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
@@ -733,7 +731,23 @@ export class MemberResolver extends MemberBase {
     const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId);
 
     if (metadata.when) {
-      await this.memberScheduler.registerCustomFutureNotify(notifyParams);
+      if (isAfter(new Date(), metadata.when)) {
+        throw new Error(Errors.get(ErrorType.notificationMetadataWhenPast));
+      }
+      const dispatchParams: IDispatchParams = {
+        memberId,
+        userId,
+        correlationId: v4(),
+        dispatchId: generateDispatchId(ContentKey.customContent, memberId, Date.now().toString()),
+        type:
+          type === NotificationType.text
+            ? InternalNotificationType.textToMember
+            : InternalNotificationType.textSmsToMember,
+        content: metadata.content,
+        metadata: { contentType: ContentKey.customContent, triggersAt: metadata.when },
+      };
+
+      await this.notifyCreateDispatch(dispatchParams);
       return;
     }
 
@@ -796,8 +810,7 @@ export class MemberResolver extends MemberBase {
   }
 
   /**
-   * Event is coming from appointment.scheduler or
-   * member.scheduler - scheduling reminders and nudges.
+   * Event is coming from appointment.scheduler
    */
   @OnEvent(EventType.notifyInternal, { async: true })
   async internalNotify(params: InternalNotifyParams) {
@@ -1031,7 +1044,6 @@ export class MemberResolver extends MemberBase {
   }
 
   private async deleteSchedules(params: IEventMember) {
-    const { memberId } = params;
     try {
       await this.notifyDeleteDispatch({
         dispatchId: generateDispatchId(ContentKey.newMemberNudge, params.memberId),
@@ -1045,9 +1057,8 @@ export class MemberResolver extends MemberBase {
       await this.notifyDeleteDispatch({
         dispatchId: generateDispatchId(ContentKey.logReminder, params.memberId),
       });
-      const notifications = await this.memberService.getMemberNotifications(memberId);
-      notifications.forEach((notification) => {
-        this.memberScheduler.deleteTimeout({ id: notification._id });
+      await this.notifyDeleteDispatch({
+        dispatchId: generateDispatchId(ContentKey.customContent, params.memberId),
       });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, ex);

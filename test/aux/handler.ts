@@ -2,7 +2,6 @@ import { ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
-import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
 import { createTestClient } from 'apollo-server-testing';
 import * as config from 'config';
@@ -38,7 +37,6 @@ export class Handler extends BaseHandler {
   memberService: MemberService;
   orgService: OrgService;
   webhooksController: WebhooksController;
-  schedulerRegistry: SchedulerRegistry;
   spyOnGetCommunicationService;
   adminUser: User;
   patientZero: Member;
@@ -68,7 +66,6 @@ export class Handler extends BaseHandler {
     await this.app.init();
 
     this.module = moduleFixture.get<GraphQLModule>(GraphQLModule);
-    this.schedulerRegistry = moduleFixture.get<SchedulerRegistry>(SchedulerRegistry);
     this.eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
     this.dailyReportService = moduleFixture.get<DailyReportService>(DailyReportService);
     const providers = mockProviders(moduleFixture);

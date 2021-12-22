@@ -13,11 +13,9 @@ import { CommonModule } from '../common';
 import { CommunicationModule } from '../communication';
 import { OrgModule } from '../org';
 import { ProvidersModule } from '../providers';
-import { InternalSchedulerModule } from '../scheduler';
 
 @Module({
   imports: [
-    InternalSchedulerModule,
     ProvidersModule,
     CommunicationModule,
     CommonModule,

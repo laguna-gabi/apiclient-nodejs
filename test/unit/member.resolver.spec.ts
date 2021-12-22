@@ -26,7 +26,6 @@ import {
   IEventOnNewMember,
   IEventOnReceivedChatMessage,
   IEventOnUpdatedMemberPlatform,
-  InternalNotifyParams,
   InternationalizationService,
   LoggerService,
   MemberRole,
@@ -51,7 +50,6 @@ import {
   MemberConfig,
   MemberModule,
   MemberResolver,
-  MemberScheduler,
   MemberService,
   TaskStatus,
 } from '../../src/member';
@@ -97,7 +95,6 @@ describe('MemberResolver', () => {
   let module: TestingModule;
   let resolver: MemberResolver;
   let service: MemberService;
-  let memberScheduler: MemberScheduler;
   let userService: UserService;
   let storage: StorageService;
   let cognitoService: CognitoService;
@@ -125,7 +122,6 @@ describe('MemberResolver', () => {
     communicationService = module.get<CommunicationService>(CommunicationService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
-    memberScheduler = module.get<MemberScheduler>(MemberScheduler);
     featureFlagService = module.get<FeatureFlagService>(FeatureFlagService);
     internationalizationService = module.get<InternationalizationService>(
       InternationalizationService,
@@ -474,7 +470,7 @@ describe('MemberResolver', () => {
       });
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
 
-      expect(spyOnEventEmitter).toBeCalledTimes(5);
+      expect(spyOnEventEmitter).toBeCalledTimes(6);
       expectDeleteArchiveMember(member.id);
     });
   });
@@ -558,7 +554,7 @@ describe('MemberResolver', () => {
       }
       expect(spyOnStorageServiceDeleteMember).toBeCalledWith(member.id);
 
-      expect(spyOnEventEmitter).toBeCalledTimes(6);
+      expect(spyOnEventEmitter).toBeCalledTimes(7);
       expectDeleteArchiveMember(member.id);
     };
   });
@@ -573,9 +569,7 @@ describe('MemberResolver', () => {
       return {
         type: QueueType.notifications,
         message: JSON.stringify(
-          generateDeleteDispatchMock({
-            dispatchId: generateDispatchId(contentKey, memberId),
-          }),
+          generateDeleteDispatchMock({ dispatchId: generateDispatchId(contentKey, memberId) }),
         ),
       };
     };
@@ -593,6 +587,16 @@ describe('MemberResolver', () => {
       4,
       EventType.notifyQueue,
       generateQueueParams(ContentKey.newRegisteredMemberNudge),
+    );
+    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+      5,
+      EventType.notifyQueue,
+      generateQueueParams(ContentKey.logReminder),
+    );
+    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+      6,
+      EventType.notifyQueue,
+      generateQueueParams(ContentKey.customContent),
     );
   };
 
@@ -1518,7 +1522,6 @@ describe('MemberResolver', () => {
     let spyOnServiceGetMemberConfig;
     let spyOnServiceUpdateMemberConfig;
     let spyOnServiceUpdateMemberConfigRegisteredAt;
-    let spyOnSchedulerDeleteTimeout;
 
     beforeEach(() => {
       spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
@@ -1529,7 +1532,6 @@ describe('MemberResolver', () => {
         service,
         'updateMemberConfigRegisteredAt',
       );
-      spyOnSchedulerDeleteTimeout = jest.spyOn(memberScheduler, 'deleteTimeout');
     });
 
     afterEach(() => {
@@ -1538,7 +1540,6 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig.mockReset();
       spyOnServiceUpdateMemberConfig.mockReset();
       spyOnServiceUpdateMemberConfigRegisteredAt.mockReset();
-      spyOnSchedulerDeleteTimeout.mockReset();
       spyOnEventEmitter.mockReset();
       spyOnEventEmitter.mockClear();
     });
@@ -2031,44 +2032,6 @@ describe('MemberResolver', () => {
         });
       },
     );
-
-    it('should register for future notify', async () => {
-      const member = mockGenerateMember();
-      const memberConfig = mockGenerateMemberConfig();
-      const user = mockGenerateUser();
-      spyOnServiceGetMember.mockImplementation(async () => member);
-      spyOnServiceGetMemberConfig.mockImplementation(async () => memberConfig);
-      spyOnUserServiceGetUser.mockImplementation(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
-
-      await memberScheduler.init();
-
-      const when = new Date();
-      when.setMilliseconds(when.getMilliseconds() + 100);
-
-      const notifyParams = generateNotifyParams({
-        memberId: member.id,
-        userId: member.primaryUserId.toString(),
-        type: NotificationType.text,
-        metadata: { content: faker.lorem.word(), when },
-      });
-
-      await resolver.notify(notifyParams);
-
-      await delay(300);
-      delete notifyParams.metadata.when;
-      const eventParams: InternalNotifyParams = {
-        memberId: member.id,
-        userId: member.primaryUserId.toString(),
-        type:
-          notifyParams.type === NotificationType.text
-            ? InternalNotificationType.textToMember
-            : InternalNotificationType.textSmsToMember,
-        metadata: {},
-        content: notifyParams.metadata.content,
-      };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyInternal, eventParams);
-    }, 10000);
 
     it('should call getCommunication if metadata.chatLink true', async () => {
       const member = mockGenerateMember();

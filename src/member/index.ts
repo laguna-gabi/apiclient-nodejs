@@ -8,7 +8,6 @@ export * from './memberConfig.dto';
 export * from './member.recording.dto';
 export * from './member.service';
 export * from './notification.builder';
-export * from './member.scheduler';
 export * from './member.resolver';
 export * from './member.controller';
 export * from './member.module';

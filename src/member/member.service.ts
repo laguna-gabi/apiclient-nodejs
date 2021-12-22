@@ -28,8 +28,6 @@ import {
   MemberDocument,
   MemberSummary,
   NotNullableMemberKeys,
-  NotifyParams,
-  NotifyParamsDocument,
   Recording,
   RecordingDocument,
   RecordingOutput,
@@ -78,8 +76,6 @@ export class MemberService extends BaseService {
     private readonly archiveMemberModel: Model<ArchiveMemberDocument>,
     @InjectModel(ArchiveMemberConfig.name)
     private readonly archiveMemberConfigModel: Model<ArchiveMemberConfigDocument>,
-    @InjectModel(NotifyParams.name)
-    private readonly notifyParamsModel: Model<NotifyParamsDocument>,
     @InjectModel(ControlMember.name)
     private readonly controlMemberModel: Model<ControlMemberDocument>,
     private readonly storageService: StorageService,
@@ -480,14 +476,6 @@ export class MemberService extends BaseService {
 
   async getAllControl(): Promise<MemberDocument[]> {
     return this.controlMemberModel.find();
-  }
-
-  /************************************************************************************************
-   ***************************************** Notifications ****************************************
-   ************************************************************************************************/
-
-  async getMemberNotifications(memberId: string) {
-    return this.notifyParamsModel.find({ memberId });
   }
 
   /*************************************************************************************************

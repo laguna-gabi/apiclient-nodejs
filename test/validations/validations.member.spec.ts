@@ -7,6 +7,7 @@ import {
   generateZipCode,
 } from '@lagunahealth/pandora';
 import * as config from 'config';
+import { subSeconds } from 'date-fns';
 import * as faker from 'faker';
 import * as request from 'supertest';
 import { ErrorType, Errors } from '../../src/common';
@@ -40,6 +41,7 @@ import {
   generateUpdateTaskStatusParams,
   urls,
 } from '../index';
+import { v4 } from 'uuid';
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
@@ -344,10 +346,8 @@ describe('Validations - member', () => {
           memberId: member.id,
           userId: member.primaryUserId,
           type,
+          metadata: { peerId: v4(), content: 'test', when: subSeconds(new Date(), 1) },
         });
-
-        notifyParams.metadata.when = new Date();
-        notifyParams.metadata.when.setSeconds(notifyParams.metadata.when.getSeconds() - 1);
 
         await handler.mutations.notify({
           notifyParams,

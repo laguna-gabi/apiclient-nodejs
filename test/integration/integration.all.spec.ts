@@ -1,9 +1,4 @@
-import {
-  CancelNotificationType,
-  InternalNotificationType,
-  NotificationType,
-  Platform,
-} from '@lagunahealth/pandora';
+import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 import * as config from 'config';
 import { add, addDays, startOfToday, startOfTomorrow } from 'date-fns';
 import * as faker from 'faker';
@@ -323,65 +318,6 @@ describe('Integration tests: all', () => {
     });
   });
 
-  it(`should send a future notification`, async () => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
-    const primaryUser = member.users[0];
-
-    await delay(1000);
-    /**
-     * reset mock on NotificationsService so we dont count
-     * the notifications that are made on member creation
-     */
-    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-
-    const registerForNotificationParams: RegisterForNotificationParams = {
-      platform: Platform.android,
-      isPushNotificationsEnabled: true,
-    };
-    await handler
-      .setContextUserId(member.id)
-      .mutations.registerMemberForNotifications({ registerForNotificationParams });
-    const memberConfig = await handler
-      .setContextUserId(member.id)
-      .queries.getMemberConfig({ id: member.id });
-
-    const when = new Date();
-    when.setSeconds(when.getSeconds() + 1);
-    const notifyParams: NotifyParams = {
-      memberId: member.id,
-      userId: primaryUser.id,
-      type: NotificationType.text,
-      metadata: { content: faker.lorem.word(), when },
-    };
-
-    await handler.mutations.notify({ notifyParams });
-    expect(handler.notificationsService.spyOnNotificationsServiceSend).not.toBeCalled();
-
-    await delay(1500);
-    delete notifyParams.metadata.when;
-    expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
-      sendOneSignalNotification: {
-        externalUserId: memberConfig.externalUserId,
-        platform: memberConfig.platform,
-        data: {
-          user: {
-            id: primaryUser.id,
-            firstName: primaryUser.firstName,
-            avatar: primaryUser.avatar,
-          },
-          member: { phone: member.phone },
-          type: InternalNotificationType.textToMember,
-          isVideo: false,
-        },
-        content: notifyParams.metadata.content,
-        orgName: org.name,
-      },
-    });
-
-    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-  });
-
   /* eslint-disable max-len */
   test.each`
     title | method
@@ -449,10 +385,6 @@ describe('Integration tests: all', () => {
           id: requestedAppointment.id,
         });
       await handler.mutations.scheduleAppointment({ appointmentParams: scheduleAppointmentParams });
-
-      expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(
-        expect.arrayContaining([member.id]),
-      );
     });
   });
 

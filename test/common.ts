@@ -1,7 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
-import { ScheduleModule } from '@nestjs/schedule';
 import { TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import { connect, disconnect } from 'mongoose';
@@ -106,7 +105,7 @@ export const dbDisconnect = async () => {
 };
 
 export const defaultModules = () => {
-  return [DbModule, EventEmitterModule.forRoot(), ScheduleModule.forRoot()];
+  return [DbModule, EventEmitterModule.forRoot()];
 };
 
 export const mockLogger = (logger) => {
