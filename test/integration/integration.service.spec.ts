@@ -5,17 +5,22 @@ import {
   ObjectAppointmentScheduledClass,
   ObjectBaseClass,
   ObjectGeneralMemberTriggeredClass,
+  ObjectNewChatMessageToMemberClass,
   ObjectNewMemberClass,
   ObjectNewMemberNudgeClass,
   Platform,
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
-  generateBaseMock,
   generateGeneralMemberTriggeredMock,
+  generateNewChatMessageToMemberMock,
   generateNewControlMemberMock,
-  generateNewMemberMock, generateNewMemberNudgeMock, generateRequestAppointmentMock,
+  generateNewMemberMock,
+  generateNewMemberNudgeMock,
+  generateRequestAppointmentMock,
+  generateTextMessageUserMock,
 } from '@lagunahealth/pandora';
+import { ObjectNewChatMessageToMemberType } from '@lagunahealth/pandora/dist/src/mocks/createDispatchNewChatMessageToMember';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapMinutes } from 'config';
 import { addDays, subMinutes } from 'date-fns';
@@ -385,27 +390,61 @@ describe('Notifications full flow', () => {
     });
   });
 
-  test.each([
-    ContentKey.newChatMessageFromMember,
-    ContentKey.newChatMessageFromUser,
-    ContentKey.memberNotFeelingWellMessage,
-  ])(`should handle 'immediate' event of type %p`, async (contentKey) => {
-    const mock = generateBaseMock({
+  test.each([ContentKey.newChatMessageFromMember, ContentKey.memberNotFeelingWellMessage])(
+    `should handle 'immediate' event of type %p`,
+    async (contentKey) => {
+      const mock = generateTextMessageUserMock({
+        recipientClientId: webMemberClient.id,
+        senderClientId: userClient.id,
+        contentKey,
+      });
+      const object = new ObjectBaseClass(mock);
+      spyOnTwilioSend.mockReturnValueOnce(providerResult);
+
+      const message: SQSMessage = {
+        MessageId: v4(),
+        Body: JSON.stringify({ type: InnerQueueTypes.createDispatch, ...object.objectBaseType }),
+      };
+      await service.handleMessage(message);
+
+      const body = replaceConfigs({
+        content: translation.contents[contentKey],
+        recipientClient: webMemberClient,
+        senderClient: userClient,
+      });
+      expect(spyOnTwilioSend).toBeCalledWith({
+        body,
+        orgName: webMemberClient.orgName,
+        to: webMemberClient.phone,
+      });
+
+      await compareResults({
+        dispatchId: mock.dispatchId,
+        status: DispatchStatus.done,
+        response: { ...object.objectBaseType },
+      });
+    },
+  );
+
+  it(`should handle 'immediate' event of type ${ContentKey.newChatMessageFromUser}`, async () => {
+    const mock = generateNewChatMessageToMemberMock({
       recipientClientId: webMemberClient.id,
       senderClientId: userClient.id,
-      contentKey,
     });
-    const object = new ObjectBaseClass(mock);
+    const object = new ObjectNewChatMessageToMemberClass(mock);
     spyOnTwilioSend.mockReturnValueOnce(providerResult);
 
     const message: SQSMessage = {
       MessageId: v4(),
-      Body: JSON.stringify({ type: InnerQueueTypes.createDispatch, ...object.objectBaseType }),
+      Body: JSON.stringify({
+        type: InnerQueueTypes.createDispatch,
+        ...object.objectNewChatMessageFromUserType,
+      }),
     };
     await service.handleMessage(message);
 
     const body = replaceConfigs({
-      content: translation.contents[contentKey],
+      content: translation.contents[ContentKey.newChatMessageFromUser],
       recipientClient: webMemberClient,
       senderClient: userClient,
     });
@@ -418,7 +457,7 @@ describe('Notifications full flow', () => {
     await compareResults({
       dispatchId: mock.dispatchId,
       status: DispatchStatus.done,
-      response: { ...object.objectBaseType },
+      response: { ...object.objectNewChatMessageFromUserType },
     });
   });
 
