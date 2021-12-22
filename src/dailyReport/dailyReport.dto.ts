@@ -20,8 +20,6 @@ registerEnumType(DailyReportCategoryTypes, { name: 'DailyReportCategoryTypes' })
 
 @InputType()
 export class DailyReportCategoriesInput {
-  @IsOptional()
-  @Field({ nullable: true })
   memberId?: string;
 
   @Field()

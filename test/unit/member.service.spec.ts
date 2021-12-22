@@ -35,6 +35,7 @@ import {
   MemberModule,
   MemberService,
   NotNullableMemberKeys,
+  ReadmissionRisk,
   Sex,
   TaskStatus,
   UpdateMemberParams,
@@ -728,7 +729,7 @@ describe('MemberService', () => {
   });
 
   describe('control member', () => {
-    it('should insert+get control member with mandatory params+validate all fields', async () => {
+    it('should insert control member with mandatory params+validate all fields', async () => {
       const org = await modelOrg.create(generateOrgParams());
 
       const createMemberParams = generateCreateMemberParams({
@@ -737,14 +738,10 @@ describe('MemberService', () => {
       const { id } = await service.insertControl(createMemberParams);
       const createdMember: any = await controlMemberModel.findById(id);
       compareMembers(createdMember, createMemberParams);
-
-      const controlMember = await service.getControl(id);
-      expect(controlMember.id).toEqual(createdMember.id);
-      expect(controlMember.org.name).toEqual(expect.any(String));
     });
 
     it('should return null when calling getControl on non existing control member', async () => {
-      const controlMember = await service.getControl(generateId());
+      const controlMember = await controlMemberModel.findById(generateId());
       expect(controlMember).toBeNull();
     });
 
@@ -848,7 +845,7 @@ describe('MemberService', () => {
       await updateMember({
         language: Language.es,
         fellowName: faker.name.firstName(),
-        readmissionRisk: faker.lorem.words(3),
+        readmissionRisk: ReadmissionRisk.high,
       });
     });
 
@@ -880,6 +877,41 @@ describe('MemberService', () => {
       });
     });
 
+    it('should not add to readmissionRiskHistory if the readmissionRisk is the same', async () => {
+      const id = await generateMember();
+
+      const updateMemberParams = generateUpdateMemberParams();
+      updateMemberParams.readmissionRisk = ReadmissionRisk.low;
+
+      await service.update({ ...updateMemberParams, id });
+      const beforeObject = await memberModel.findById(id);
+
+      expect(beforeObject['readmissionRiskHistory'].length).toEqual(1);
+
+      await service.update({ ...updateMemberParams, id });
+      const afterObject = await memberModel.findById(id);
+
+      expect(afterObject['readmissionRiskHistory'].length).toEqual(1);
+    });
+
+    it('should add to readmissionRiskHistory if the readmissionRisk is not the same', async () => {
+      const id = await generateMember();
+
+      const updateMemberParams = generateUpdateMemberParams();
+      updateMemberParams.readmissionRisk = ReadmissionRisk.low;
+
+      await service.update({ ...updateMemberParams, id });
+      const beforeObject = await memberModel.findById(id);
+
+      expect(beforeObject['readmissionRiskHistory'].length).toEqual(1);
+
+      updateMemberParams.readmissionRisk = ReadmissionRisk.high;
+      await service.update({ ...updateMemberParams, id });
+      const afterObject = await memberModel.findById(id);
+
+      expect(afterObject['readmissionRiskHistory'].length).toEqual(2);
+    });
+
     const updateMember = async (updateMemberParams?: Omit<UpdateMemberParams, 'id' | 'authId'>) => {
       const id = await generateMember();
 
@@ -891,6 +923,7 @@ describe('MemberService', () => {
       expect(afterObject.toJSON()).toEqual({
         ...beforeObject.toJSON(),
         ...updateMemberParams,
+        readmissionRiskHistory: expect.any(Array),
         updatedAt: afterObject['updatedAt'],
       });
     };

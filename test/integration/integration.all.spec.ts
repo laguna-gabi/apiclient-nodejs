@@ -8,7 +8,6 @@ import * as config from 'config';
 import { add, addDays, startOfToday, startOfTomorrow } from 'date-fns';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
-import { translation } from '../../languages/en.json';
 import {
   Appointment,
   AppointmentMethod,
@@ -46,7 +45,6 @@ import {
   generateAppointmentLink,
   generateAvailabilityInput,
   generateCancelNotifyParams,
-  generateCreateMemberParams,
   generateId,
   generateOrgParams,
   generatePath,
@@ -393,10 +391,11 @@ describe('Integration tests: all', () => {
       userId,
     }),
   })}
-    ${'scheduleAppointment'} | ${async ({ memberId, userId }) => await handler.mutations.scheduleAppointment({
+    ${'scheduleAppointment'} | ${async ({ memberId, userId, start }) => await handler.mutations.scheduleAppointment({
     appointmentParams: generateScheduleAppointmentParams({
       memberId,
       userId,
+      start,
     }),
   })}
   `(`should add a not existed user to member users list on $title`, async (params) => {
@@ -413,10 +412,12 @@ describe('Integration tests: all', () => {
     const newUser = await creators.createAndValidateUser();
     //calling twice, to check that the user wasn't added twice to users list
     const appointment1 = await params.method({ userId: newUser.id, memberId: member.id });
+    const start = new Date(appointment1.end);
+    start.setHours(start.getHours() + 1);
     await params.method({
       userId: newUser.id,
       memberId: member.id,
-      start: addDays(appointment1.start, 1),
+      start,
     });
 
     const { users } = await handler
@@ -760,26 +761,6 @@ describe('Integration tests: all', () => {
       });
 
       handler.notificationsService.spyOnNotificationsServiceCancel.mockReset();
-    });
-
-    it(`should send a text on newly created control member`, async () => {
-      const org = await creators.createAndValidateOrg();
-      handler.featureFlagService.spyOnFeatureFlagControlGroup.mockResolvedValueOnce(true);
-
-      const memberParams = generateCreateMemberParams({ orgId: org.id });
-      await handler.mutations.createMember({ memberParams });
-
-      await delay(500);
-
-      expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
-        sendTwilioNotification: {
-          body: translation.contents.newControlMember,
-          to: memberParams.phone,
-          orgName: org.name,
-        },
-      });
-
-      handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
     });
   });
 

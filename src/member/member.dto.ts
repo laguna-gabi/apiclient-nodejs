@@ -68,6 +68,15 @@ export enum Ethnicity { // TBD: get requirements from product
 }
 
 registerEnumType(Ethnicity, { name: 'Ethnicity' });
+
+export enum ReadmissionRisk {
+  high = 'high',
+  medium = 'medium',
+  low = 'low',
+}
+
+registerEnumType(ReadmissionRisk, { name: 'ReadmissionRisk' });
+
 export const defaultMemberParams = {
   sex: Sex.male,
   language: Language.en,
@@ -233,9 +242,9 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @IsOptional()
   drgDesc?: string;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => ReadmissionRisk, { nullable: true })
   @IsOptional()
-  readmissionRisk?: string;
+  readmissionRisk?: ReadmissionRisk;
 
   @Field(() => String, { description: validPhoneExamples, nullable: true })
   @IsOptional()
@@ -366,6 +375,7 @@ export class CancelNotifyParams {
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
+
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class Member extends Identifier {
@@ -459,11 +469,6 @@ export class Member extends Identifier {
   drgDesc?: string;
 
   @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  @IsOptional()
-  readmissionRisk?: string;
-
-  @Prop({ isNaN: true })
   @Field({ description: validPhoneExamples, nullable: true })
   @IsPhoneNumber(undefined, {
     message: Errors.get(ErrorType.memberPhone),
@@ -504,6 +509,14 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => Ethnicity, { nullable: true })
   ethnicity?: Ethnicity;
+
+  @Prop({ isNaN: true })
+  @Field(() => ReadmissionRisk, { nullable: true })
+  readmissionRisk?: ReadmissionRisk;
+
+  @Prop({ isNaN: true })
+  @Field(() => [ReadmissionRiskHistory], { nullable: true })
+  readmissionRiskHistory?: ReadmissionRiskHistory[];
 }
 
 @ObjectType()
@@ -570,6 +583,15 @@ export class DischargeDocumentsLinks {
 
   @Field(() => String, { nullable: true })
   dischargeInstructionsLink?: string;
+}
+
+@ObjectType()
+export class ReadmissionRiskHistory {
+  @Field(() => ReadmissionRisk, { nullable: true })
+  readmissionRisk?: ReadmissionRisk;
+
+  @Field(() => Date)
+  date: Date;
 }
 
 /**************************************************************************************************

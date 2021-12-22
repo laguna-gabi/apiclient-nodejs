@@ -125,14 +125,22 @@ export class MemberService extends BaseService {
 
   async update(updateMemberParams: UpdateMemberParams): Promise<Member> {
     this.removeNotNullable(updateMemberParams, NotNullableMemberKeys);
-    const { id } = updateMemberParams;
+    const { id, readmissionRisk } = updateMemberParams;
     delete updateMemberParams.id;
 
     const result = await this.memberModel.findOneAndUpdate(
       { _id: new Types.ObjectId(id) },
       { $set: updateMemberParams },
-      { new: true, rawResult: true },
+      { rawResult: true },
     );
+
+    if (readmissionRisk !== result.value?.readmissionRisk) {
+      await this.memberModel.findOneAndUpdate(
+        { _id: new Types.ObjectId(id) },
+        { $push: { readmissionRiskHistory: { readmissionRisk, date: new Date() } } },
+        { rawResult: true },
+      );
+    }
 
     const member = await this.getById(result.value?.id);
     if (!member) {
@@ -468,10 +476,6 @@ export class MemberService extends BaseService {
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.memberPhoneAlreadyExists) : ex,
       );
     }
-  }
-
-  async getControl(id: string) {
-    return this.controlMemberModel.findById(id).populate({ path: 'org' });
   }
 
   async getAllControl(): Promise<MemberDocument[]> {

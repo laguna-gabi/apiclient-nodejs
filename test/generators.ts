@@ -50,6 +50,7 @@ import {
   Member,
   MemberConfig,
   NotifyParams,
+  ReadmissionRisk,
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
   Sex,
@@ -221,7 +222,6 @@ export const generateUpdateMemberParams = ({
   fellowName = faker.name.firstName(),
   drgDesc = faker.name.firstName(),
   drg = faker.datatype.number({ min: 1, max: 1000 }).toString(),
-  readmissionRisk = faker.name.firstName(),
   phoneSecondary = generatePhone(),
   admitDate = generateDateOnly(faker.date.soon(1)),
   dateOfBirth = generateDateOnly(faker.date.past()),
@@ -232,6 +232,7 @@ export const generateUpdateMemberParams = ({
   },
   honorific = Honorific.mr,
   deviceId = faker.datatype.uuid(),
+  readmissionRisk = ReadmissionRisk.medium,
 }: Partial<UpdateMemberParams> = {}): UpdateMemberParams => {
   return {
     id,
@@ -246,13 +247,13 @@ export const generateUpdateMemberParams = ({
     dischargeDate,
     drgDesc,
     drg,
-    readmissionRisk,
     phoneSecondary,
     admitDate,
     dateOfBirth,
     address,
     honorific,
     deviceId,
+    readmissionRisk,
   };
 };
 
@@ -588,24 +589,24 @@ export const generateUpdateClientSettings = ({
   memberConfig,
 }: {
   member?: Member;
-  memberConfig: MemberConfig;
+  memberConfig?: MemberConfig;
 }): IUpdateClientSettings => {
   return {
     type: InnerQueueTypes.updateClientSettings,
-    id: memberConfig.memberId.toString(),
+    id: memberConfig?.memberId?.toString() || member.id.toString(),
     phone: member?.phone,
     firstName: member?.firstName,
     lastName: member?.lastName,
-    orgName: member?.org.name,
+    orgName: member?.org?.name,
     honorific: member?.honorific,
-    zipCode: member?.zipCode || member?.org.zipCode,
+    zipCode: member?.zipCode || member?.org?.zipCode,
     language: member?.language,
-    platform: memberConfig.platform,
-    isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
-    isAppointmentsReminderEnabled: memberConfig.isAppointmentsReminderEnabled,
-    isRecommendationsEnabled: memberConfig.isRecommendationsEnabled,
-    externalUserId: memberConfig.externalUserId,
-    firstLoggedInAt: memberConfig.firstLoggedInAt,
+    platform: memberConfig?.platform,
+    isPushNotificationsEnabled: memberConfig?.isPushNotificationsEnabled,
+    isAppointmentsReminderEnabled: memberConfig?.isAppointmentsReminderEnabled,
+    isRecommendationsEnabled: memberConfig?.isRecommendationsEnabled,
+    externalUserId: memberConfig?.externalUserId,
+    firstLoggedInAt: memberConfig?.firstLoggedInAt,
   };
 };
 

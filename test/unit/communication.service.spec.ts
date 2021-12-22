@@ -6,6 +6,8 @@ import { Model, Types, model } from 'mongoose';
 import { v4 } from 'uuid';
 import { AppointmentStatus } from '../../src/appointment';
 import {
+  ErrorType,
+  Errors,
   EventType,
   IEventOnNewMemberCommunication,
   IEventOnUpdateUserConfig,
@@ -390,6 +392,14 @@ describe('CommunicationService', () => {
         communication.sendBirdChannelUrl,
       );
       expect(sendBirdMock.spyOnSendBirdDeleteUser).toBeCalledWith(member.id);
+    });
+  });
+
+  describe('getParticipantUnreadMessagesCount', () => {
+    it('should fail to to get member unread messages since member does not exists', async () => {
+      await expect(service.getParticipantUnreadMessagesCount(generateId())).rejects.toThrow(
+        Errors.get(ErrorType.communicationMemberUserNotFound),
+      );
     });
   });
 });

@@ -242,12 +242,16 @@ export class Mutations {
             }
             fellowName
             drgDesc
-            readmissionRisk
             phoneSecondary
             generalNotes
             admitDate
             createdAt
             honorific
+            readmissionRisk
+            readmissionRiskHistory {
+              readmissionRisk
+              date
+            }
           }
         }
       `,

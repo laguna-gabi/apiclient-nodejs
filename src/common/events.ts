@@ -31,7 +31,6 @@ export enum EventType {
   onReceivedChatMessage = 'onReceivedChatMessage',
   onReceivedTextMessage = 'onReceivedTextMessage',
   notifyInternal = 'notifyInternal',
-  notifyInternalControlMember = 'notifyInternalControlMember',
   notifySlack = 'notifySlack',
   notifyQueue = 'notifyQueue',
   notifyDispatch = 'notifyDispatch',
