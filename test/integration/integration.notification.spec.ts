@@ -5,6 +5,7 @@ import {
   ObjectAppointmentScheduledClass,
   ObjectBaseClass,
   ObjectGeneralMemberTriggeredClass,
+  ObjectNewChatMessageToMemberClass,
   ObjectNewMemberClass,
   ObjectNewMemberNudgeClass,
   ObjectUpdateMemberSettingsClass,
@@ -12,13 +13,14 @@ import {
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
-  generateBaseMock,
   generateDispatchId,
   generateGeneralMemberTriggeredMock,
+  generateNewChatMessageToMemberMock,
   generateNewControlMemberMock,
   generateNewMemberMock,
   generateNewMemberNudgeMock,
   generateRequestAppointmentMock,
+  generateTextMessageUserMock,
   generateUpdateMemberSettingsMock,
   generateUpdateUserSettingsMock,
 } from '@lagunahealth/pandora';
@@ -30,7 +32,7 @@ import { v4 } from 'uuid';
 import { Appointment } from '../../src/appointment';
 import { QueueType, RegisterForNotificationParams, delay, reformatDate } from '../../src/common';
 import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
-import { Member, NotifyParams } from '../../src/member';
+import { NotifyParams } from '../../src/member';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   generateCreateMemberParams,
@@ -541,61 +543,101 @@ describe('Integration tests: notifications', () => {
     /**
      * Trigger : WebhooksController.sendbird
      * Dispatches:
-     *      1. ContentKey.newChatMessageFromUser or ContentKey.newChatMessageFromMember
+     *      1. ContentKey.newChatMessageFromMember
      */
-
     /* eslint-disable max-len */
-    test.each`
-      contentKey                             | extractSender                                          | extractReceiver
-      ${ContentKey.newChatMessageFromMember} | ${(member: Member) => member.id}                       | ${(member: Member) => member.primaryUserId.toString()}
-      ${ContentKey.newChatMessageFromUser}   | ${(member: Member) => member.primaryUserId.toString()} | ${(member: Member) => member.id}
-    `(
-      `sendbird: should send dispatches of type ` +
-        `$contentKey when received from sendbird webhook`,
+    it(`sendbird: should send dispatches of type ${ContentKey.newChatMessageFromMember} when received from sendbird webhook`, async () => {
       /* eslint-enable max-len */
-      async (params) => {
-        const org = await creators.createAndValidateOrg();
-        const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
 
-        const communication = await handler.communicationService.get({
-          memberId: member.id,
-          userId: member.primaryUserId.toString(),
-        });
+      const communication = await handler.communicationService.get({
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+      });
 
-        const payload = { ...sendbirdPayload };
-        payload.sender.user_id = params.extractSender(member);
-        payload.channel.channel_url = communication.sendBirdChannelUrl;
-        payload.members = [{ user_id: member.primaryUserId.toString(), is_online: false }];
+      const payload = { ...sendbirdPayload };
+      payload.sender.user_id = member.id;
+      payload.channel.channel_url = communication.sendBirdChannelUrl;
+      payload.members = [{ user_id: member.primaryUserId.toString(), is_online: false }];
 
-        const spyOnValidate = jest.spyOn(
-          handler.webhooksController,
-          'validateMessageSentFromSendbird',
+      const spyOnValidate = jest.spyOn(
+        handler.webhooksController,
+        'validateMessageSentFromSendbird',
+      );
+      spyOnValidate.mockReturnValueOnce(undefined);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      await handler.webhooksController.sendbird(JSON.stringify(payload), {});
+      await delay(200);
+
+      const mock = generateTextMessageUserMock({
+        recipientClientId: member.primaryUserId.toString(),
+        senderClientId: member.id,
+        contentKey: ContentKey.newChatMessageFromMember,
+      });
+
+      const object = new ObjectBaseClass(mock);
+      Object.keys(object.objectBaseType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
         );
-        spyOnValidate.mockReturnValueOnce(undefined);
-        handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+      });
+    });
 
-        await handler.webhooksController.sendbird(JSON.stringify(payload), {});
-        await delay(200);
+    /**
+     * Trigger : WebhooksController.sendbird
+     * Dispatches:
+     *      1. ContentKey.newChatMessageFromUser
+     */
+    /* eslint-disable max-len */
+    it(`sendbird: should send dispatches of type ${ContentKey.newChatMessageFromUser} when received from sendbird webhook`, async () => {
+      /* eslint-enable max-len */
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
 
-        const mock = generateBaseMock({
-          recipientClientId: params.extractReceiver(member),
-          senderClientId: params.extractSender(member),
-          contentKey: params.contentKey,
-        });
+      const communication = await handler.communicationService.get({
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+      });
 
-        const object = new ObjectBaseClass(mock);
-        Object.keys(object.objectBaseType).forEach((key) => {
-          expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
-            expect.objectContaining({
-              type: QueueType.notifications,
-              message: expect.stringContaining(
-                key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
-              ),
-            }),
-          );
-        });
-      },
-    );
+      const payload = { ...sendbirdPayload };
+      payload.sender.user_id = member.primaryUserId.toString();
+      payload.channel.channel_url = communication.sendBirdChannelUrl;
+      payload.members = [{ user_id: member.primaryUserId.toString(), is_online: false }];
+
+      const spyOnValidate = jest.spyOn(
+        handler.webhooksController,
+        'validateMessageSentFromSendbird',
+      );
+      spyOnValidate.mockReturnValueOnce(undefined);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      await handler.webhooksController.sendbird(JSON.stringify(payload), {});
+      await delay(200);
+
+      const mock = generateNewChatMessageToMemberMock({
+        recipientClientId: member.id,
+        senderClientId: member.primaryUserId.toString(),
+      });
+
+      const object = new ObjectNewChatMessageToMemberClass(mock);
+      Object.keys(object.objectNewChatMessageFromUserType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
 
     /**
      * Trigger : DailyReportResolver.setDailyReportCategories
@@ -627,7 +669,7 @@ describe('Integration tests: notifications', () => {
         });
       await delay(200);
 
-      const mock = generateBaseMock({
+      const mock = generateTextMessageUserMock({
         senderClientId: member.id,
         recipientClientId: member.primaryUserId.toString(),
         contentKey: ContentKey.memberNotFeelingWellMessage,

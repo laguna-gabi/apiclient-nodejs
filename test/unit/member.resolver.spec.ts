@@ -2555,7 +2555,10 @@ describe('MemberResolver', () => {
         userId: user.id,
         type: InternalNotificationType.chatMessageToMember,
         correlationId: expect.any(String),
-        metadata: { contentType: ContentKey.newChatMessageFromUser },
+        metadata: {
+          contentType: ContentKey.newChatMessageFromUser,
+          path: `connect/${communication.memberId.toString()}/${user.id}`,
+        },
       });
     });
 

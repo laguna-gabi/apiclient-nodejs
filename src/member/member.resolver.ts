@@ -928,7 +928,10 @@ export class MemberResolver extends MemberBase {
           userId: senderUserId,
           type: InternalNotificationType.chatMessageToMember,
           correlationId: v4(),
-          metadata: { contentType: ContentKey.newChatMessageFromUser },
+          metadata: {
+            contentType: ContentKey.newChatMessageFromUser,
+            path: `connect/${communication.memberId.toString()}/${senderUserId}`,
+          },
         });
       } else {
         const coachInfo = params.sendBirdMemberInfo.find(
