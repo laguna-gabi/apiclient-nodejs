@@ -12,6 +12,7 @@ import * as faker from 'faker';
 import * as request from 'supertest';
 import { ErrorType, Errors } from '../../src/common';
 import {
+  AddCaregiverParams,
   CancelNotifyParams,
   CreateMemberParams,
   NotifyParams,
@@ -21,6 +22,7 @@ import {
 } from '../../src/member';
 import { Handler } from '../aux/handler';
 import {
+  generateAddCaregiverParams,
   generateCancelNotifyParams,
   generateCreateMemberParams,
   generateCreateTaskParams,
@@ -810,6 +812,46 @@ describe('Validations - member', () => {
         replaceUserForMemberParams,
         missingFieldError: params.error,
       });
+    });
+  });
+
+  describe('caregiver', () => {
+    describe('addCaregiver - invalid and missing fields', () => {
+      /* eslint-disable max-len */
+      test.each`
+        field             | error
+        ${'firstName'}    | ${`Field "firstName" of required type "String!" was not provided.`}
+        ${'lastName'}     | ${`Field "lastName" of required type "String!" was not provided.`}
+        ${'email'}        | ${`Field "email" of required type "String!" was not provided.`}
+        ${'relationship'} | ${`Field "relationship" of required type "Relationship!" was not provided.`}
+        ${'phone'}        | ${`Field "phone" of required type "String!" was not provided.`}
+      `(`should fail to add a caregiver if $field is missing`, async (params) => {
+        const addCaregiverParams = generateAddCaregiverParams();
+        delete addCaregiverParams[params.field];
+        await handler.mutations.addCaregiver({
+          addCaregiverParams,
+          missingFieldError: params.error,
+        });
+      });
+
+      test.each`
+        input                   | error
+        ${{ email: 'invalid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverEmailInvalid)] }}
+        ${{ phone: 'invalid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverPhoneInvalid)] }}
+      `(
+        /* eslint-enable max-len */
+        `should fail to add a caregiver due to invalid $input field`,
+        async (params) => {
+          const addCaregiverParams: AddCaregiverParams = generateAddCaregiverParams({
+            ...params.input,
+          });
+
+          await handler.setContextUserId(handler.patientZero.id).mutations.addCaregiver({
+            addCaregiverParams,
+            ...params.error,
+          });
+        },
+      );
     });
   });
 

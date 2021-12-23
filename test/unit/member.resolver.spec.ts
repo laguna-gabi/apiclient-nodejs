@@ -63,6 +63,7 @@ import { UserService } from '../../src/user';
 import {
   dbDisconnect,
   defaultModules,
+  generateAddCaregiverParams,
   generateAppointmentComposeParams,
   generateCancelNotifyParams,
   generateCommunication,
@@ -78,6 +79,7 @@ import {
   generateObjectId,
   generateSetGeneralNotesParams,
   generateUniqueUrl,
+  generateUpdateCaregiverParams,
   generateUpdateClientSettings,
   generateUpdateJournalTextParams,
   generateUpdateMemberConfigParams,
@@ -893,6 +895,127 @@ describe('MemberResolver', () => {
 
       expect(spyOnServiceSetGeneralNotes).toBeCalledTimes(1);
       expect(spyOnServiceSetGeneralNotes).toBeCalledWith(params);
+    });
+  });
+
+  describe('caregiver', () => {
+    let spyOnAddCaregiverServiceMethod;
+    let spyOnUpdateCaregiverServiceMethod;
+    let spyOnGetCaregiversByMemberIdServiceMethod;
+    let spyOnDeleteCaregiverServiceMethod;
+    let spyOnGetCaregiverServiceMethod;
+
+    beforeEach(() => {
+      spyOnAddCaregiverServiceMethod = jest.spyOn(service, 'addCaregiver');
+      spyOnUpdateCaregiverServiceMethod = jest.spyOn(service, 'updateCaregiver');
+      spyOnGetCaregiversByMemberIdServiceMethod = jest.spyOn(service, 'getCaregiversByMemberId');
+      spyOnDeleteCaregiverServiceMethod = jest.spyOn(service, 'deleteCaregiver');
+      spyOnGetCaregiverServiceMethod = jest.spyOn(service, 'getCaregiver');
+    });
+    afterEach(() => {
+      spyOnAddCaregiverServiceMethod.mockReset();
+      spyOnUpdateCaregiverServiceMethod.mockReset();
+      spyOnGetCaregiversByMemberIdServiceMethod.mockReset();
+      spyOnDeleteCaregiverServiceMethod.mockReset();
+      spyOnGetCaregiverServiceMethod.mockReset();
+    });
+
+    it('should add a caregiver', async () => {
+      const addCaregiverParams = generateAddCaregiverParams();
+      const memberId = generateId();
+      await resolver.addCaregiver(memberId, [MemberRole.member], addCaregiverParams);
+      expect(spyOnAddCaregiverServiceMethod).toBeCalledTimes(1);
+      expect(spyOnAddCaregiverServiceMethod).toBeCalledWith(memberId, addCaregiverParams);
+    });
+
+    it('should fail to add a caregiver for a coach - role is not allowed', async () => {
+      const addCaregiverParams = generateAddCaregiverParams();
+
+      await expect(
+        resolver.addCaregiver(generateId(), [UserRole.coach], addCaregiverParams),
+      ).rejects.toThrow(Errors.get(ErrorType.memberAllowedOnly));
+
+      expect(spyOnAddCaregiverServiceMethod).not.toHaveBeenCalled();
+    });
+
+    it('should update a caregiver', async () => {
+      const updateCaregiverParams = generateUpdateCaregiverParams();
+      const memberId = generateId();
+      await resolver.updateCaregiver(memberId, [MemberRole.member], updateCaregiverParams);
+      expect(spyOnUpdateCaregiverServiceMethod).toBeCalledTimes(1);
+      expect(spyOnUpdateCaregiverServiceMethod).toBeCalledWith(memberId, updateCaregiverParams);
+    });
+
+    it('should fail to update a caregiver for a coach - role is not allowed', async () => {
+      const updateCaregiverParams = generateUpdateCaregiverParams();
+
+      await expect(
+        resolver.updateCaregiver(generateId(), [UserRole.coach], updateCaregiverParams),
+      ).rejects.toThrow(Errors.get(ErrorType.memberAllowedOnly));
+
+      expect(spyOnUpdateCaregiverServiceMethod).not.toHaveBeenCalled();
+    });
+
+    it('should get all caregiver for a member', async () => {
+      const memberId = generateId();
+
+      await resolver.getCaregivers(memberId, [MemberRole.member]);
+      expect(spyOnGetCaregiversByMemberIdServiceMethod).toBeCalledTimes(1);
+      expect(spyOnGetCaregiversByMemberIdServiceMethod).toBeCalledWith(memberId);
+    });
+
+    it('should fail to get caregivers for a member due to inconsistent member id', async () => {
+      const memberId1 = generateId();
+      const memberId2 = generateId();
+
+      await expect(
+        resolver.getCaregivers(memberId1, [MemberRole.member], memberId2),
+      ).rejects.toThrow(Errors.get(ErrorType.memberIdInconsistent));
+
+      expect(spyOnGetCaregiversByMemberIdServiceMethod).not.toHaveBeenCalled();
+    });
+
+    it('should delete a caregiver', async () => {
+      const caregiverId = generateId();
+      const memberId = generateId();
+
+      spyOnGetCaregiverServiceMethod.mockImplementationOnce(async () => {
+        return { memberId };
+      });
+      await resolver.deleteCaregiver(memberId, [MemberRole.member], caregiverId);
+
+      expect(spyOnDeleteCaregiverServiceMethod).toBeCalledTimes(1);
+      expect(spyOnDeleteCaregiverServiceMethod).toBeCalledWith(caregiverId);
+    });
+
+    it('should fail to delete a caregiver for a different member', async () => {
+      const caregiverId = generateId();
+
+      // caregiver record is associated to a different member (random generateId())
+      spyOnGetCaregiverServiceMethod.mockImplementationOnce(async () => {
+        return { memberId: generateId() };
+      });
+
+      await expect(
+        resolver.deleteCaregiver(generateId(), [MemberRole.member], caregiverId),
+      ).rejects.toThrow(Errors.get(ErrorType.caregiverDeleteNotAllowed));
+
+      expect(spyOnDeleteCaregiverServiceMethod).not.toHaveBeenCalled();
+    });
+
+    it('should fail to delete a caregiver for a non-member (coach)', async () => {
+      const caregiverId = generateId();
+
+      // caregiver record is associated to a different member (random generateId())
+      spyOnGetCaregiverServiceMethod.mockImplementationOnce(async () => {
+        return { memberId: generateId() };
+      });
+
+      await expect(
+        resolver.deleteCaregiver(generateId(), [UserRole.coach], caregiverId),
+      ).rejects.toThrow(Errors.get(ErrorType.memberAllowedOnly));
+
+      expect(spyOnDeleteCaregiverServiceMethod).not.toHaveBeenCalled();
     });
   });
 

@@ -3,6 +3,7 @@ import gql from 'graphql-tag';
 import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
 import {
+  Caregiver,
   DischargeDocumentsLinks,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
@@ -731,5 +732,36 @@ export class Queries {
 
     const { errors, data } = result || {};
     return { errors, dailyReports: data?.getDailyReports };
+  };
+
+  getCaregivers = async ({
+    memberId,
+    invalidFieldsError,
+  }: {
+    memberId: string;
+    invalidFieldsError?: string;
+  }): Promise<Caregiver[]> => {
+    const result = await this.apolloClient.mutate({
+      variables: { memberId },
+      mutation: gql`
+        query getCaregivers($memberId: String) {
+          getCaregivers(memberId: $memberId) {
+            id
+            email
+            firstName
+            lastName
+            relationship
+            phone
+            memberId
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(result.errors[0][0].message).toMatch(invalidFieldsError);
+    } else {
+      return result.data.getCaregivers;
+    }
   };
 }

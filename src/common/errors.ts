@@ -16,6 +16,7 @@ export enum ErrorType {
   slotsParams = 9107,
   userCanNotBeAssignedToMembers = 9108,
   userIdInvalid = 9209,
+  memberIdInconsistent = 9210,
 
   // Module member errors
   memberMinMaxLength = 9201,
@@ -76,6 +77,12 @@ export enum ErrorType {
   // Providers
   invalidSenderId = 9801,
   invalidPhoneNumberForMessaging = 9802,
+
+  // Module Caregivers
+  caregiverPhoneInvalid = 9901,
+  caregiverEmailInvalid = 9902,
+  caregiverIdInvalid = 9903,
+  caregiverDeleteNotAllowed = 9904,
 }
 
 const nameFormat = `name must be between ${graphqlConfig.get('minLength')} and ${graphqlConfig.get(
@@ -167,6 +174,16 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.dailyReportQueryDateInvalid.valueOf(), 'daily report query - invalid date format'],
   [ErrorType.dailyReportMutationDateInvalid.valueOf(), 'daily report query - invalid date format'],
   [ErrorType.invalidSenderId.valueOf(), 'invalid sender id'],
+
+  // Module Caregivers
+  [ErrorType.caregiverPhoneInvalid.valueOf(), phoneFormat],
+  [ErrorType.caregiverEmailInvalid.valueOf(), emailFormat],
+  [
+    ErrorType.memberIdInconsistent.valueOf(),
+    'member id in request is inconsistent with logged in member id',
+  ],
+  [ErrorType.caregiverIdInvalid.valueOf(), 'caregiver id is invalid'],
+  [ErrorType.caregiverDeleteNotAllowed.valueOf(), 'caregiver delete is not allowed'],
   [
     ErrorType.invalidPhoneNumberForMessaging.valueOf(),
     'invalid phone or landline - can not send SMS',

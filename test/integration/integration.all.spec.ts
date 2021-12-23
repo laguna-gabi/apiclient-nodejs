@@ -34,6 +34,7 @@ import {
 import { User, defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
+  generateAddCaregiverParams,
   generateAppointmentLink,
   generateAvailabilityInput,
   generateCancelNotifyParams,
@@ -43,6 +44,7 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
+  generateUpdateCaregiverParams,
   generateUpdateJournalTextParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
@@ -1140,6 +1142,55 @@ describe('Integration tests: all', () => {
     });
   });
 
+  describe('Caregiver', () => {
+    it('should add, get, update and delete a member caregiver', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+      // Add:
+      const addCaregiverParams = generateAddCaregiverParams();
+      const caregiver = await handler
+        .setContextUserId(member.id)
+        .mutations.addCaregiver({ addCaregiverParams });
+
+      expect(caregiver).toMatchObject(addCaregiverParams);
+
+      // Get:
+      let persistedCaregivers = await handler.setContextUserId(member.id).queries.getCaregivers({
+        memberId: member.id,
+      });
+
+      expect(persistedCaregivers).toMatchObject([addCaregiverParams]);
+
+      // Update:
+      const updateCaregiverParams = generateUpdateCaregiverParams({
+        id: persistedCaregivers[0].id,
+      });
+
+      const updatedCaregiver = await handler.setContextUserId(member.id).mutations.updateCaregiver({
+        updateCaregiverParams: updateCaregiverParams,
+      });
+
+      expect(updatedCaregiver).toMatchObject(updateCaregiverParams);
+
+      // Delete:
+      const status = await handler.setContextUserId(member.id).mutations.deleteCaregiver({
+        id: updatedCaregiver.id,
+      });
+
+      expect(status).toBeTruthy();
+
+      // Get (confirm record was deleted):
+      persistedCaregivers = await handler.setContextUserId(member.id).queries.getCaregivers({
+        memberId: member.id,
+      });
+
+      expect(
+        persistedCaregivers.find((caregiver) => caregiver.id === updatedCaregiver.id),
+      ).toBeFalsy();
+
+      expect(status).toBeTruthy();
+    }, 10000);
+  });
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

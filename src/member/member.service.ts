@@ -9,11 +9,14 @@ import { v4 } from 'uuid';
 import {
   ActionItem,
   ActionItemDocument,
+  AddCaregiverParams,
   AppointmentCompose,
   ArchiveMember,
   ArchiveMemberConfig,
   ArchiveMemberConfigDocument,
   ArchiveMemberDocument,
+  Caregiver,
+  CaregiverDocument,
   ControlMember,
   ControlMemberDocument,
   CreateMemberParams,
@@ -34,6 +37,7 @@ import {
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
   TaskStatus,
+  UpdateCaregiverParams,
   UpdateJournalParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
@@ -78,6 +82,8 @@ export class MemberService extends BaseService {
     private readonly archiveMemberConfigModel: Model<ArchiveMemberConfigDocument>,
     @InjectModel(ControlMember.name)
     private readonly controlMemberModel: Model<ControlMemberDocument>,
+    @InjectModel(Caregiver.name)
+    private readonly caregiverModel: Model<CaregiverDocument>,
     private readonly storageService: StorageService,
     readonly logger: LoggerService,
   ) {
@@ -785,6 +791,41 @@ export class MemberService extends BaseService {
     return this.replaceId(member);
   }
 
+  /*************************************************************************************************
+   ******************************************* Caregivers ******************************************
+   ************************************************************************************************/
+
+  async addCaregiver(memberId: string, addCaregiverParams: AddCaregiverParams): Promise<Caregiver> {
+    return this.replaceId(
+      await this.caregiverModel.create({
+        ...addCaregiverParams,
+        memberId: new Types.ObjectId(memberId),
+      }),
+    );
+  }
+
+  async deleteCaregiver(id: string) {
+    return this.caregiverModel.remove({ _id: new Types.ObjectId(id) });
+  }
+
+  async getCaregiver(id: string): Promise<Caregiver> {
+    return this.caregiverModel.findOne({ _id: new Types.ObjectId(id) });
+  }
+
+  async updateCaregiver(
+    memberId: string,
+    updateCaregiverParams: UpdateCaregiverParams,
+  ): Promise<Caregiver> {
+    return this.caregiverModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(updateCaregiverParams.id) },
+      { $set: { ...updateCaregiverParams, memberId: new Types.ObjectId(memberId) } },
+      { upsert: true, new: true },
+    );
+  }
+
+  async getCaregiversByMemberId(memberId: string): Promise<Caregiver[]> {
+    return await this.caregiverModel.find({ memberId: new Types.ObjectId(memberId) });
+  }
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/

@@ -48,6 +48,7 @@ import {
   dbConnect,
   dbDisconnect,
   defaultModules,
+  generateAddCaregiverParams,
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateCreateUserParams,
@@ -59,6 +60,7 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
+  generateUpdateCaregiverParams,
   generateUpdateJournalTextParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
@@ -1208,6 +1210,50 @@ describe('MemberService', () => {
       await expect(service.deleteJournal(generateId(), generateId())).rejects.toThrow(
         Error(Errors.get(ErrorType.memberJournalNotFound)),
       );
+    });
+  });
+
+  describe('caregivers', () => {
+    let caregiverId;
+
+    describe('addCaregiver and getCaregiver', () => {
+      it('should add a caregiver', async () => {
+        const caregiverParams = generateAddCaregiverParams();
+        const memberId = generateId();
+        const { id } = await service.addCaregiver(memberId, caregiverParams);
+        caregiverId = id;
+        const caregiver: any = await service.getCaregiver(id);
+
+        expect(service.replaceId(caregiver.toObject())).toMatchObject({
+          ...caregiverParams,
+          memberId: new Types.ObjectId(memberId),
+          id: new Types.ObjectId(id),
+        });
+      });
+
+      it('should update a caregiver', async () => {
+        const updateCaregiverParams = generateUpdateCaregiverParams({ id: caregiverId });
+        const memberId = generateId();
+
+        const { id } = await service.updateCaregiver(memberId, updateCaregiverParams);
+
+        const caregiver: any = await service.getCaregiver(id);
+
+        expect(service.replaceId(caregiver.toObject())).toMatchObject({
+          ...updateCaregiverParams,
+          memberId: new Types.ObjectId(memberId),
+          id: new Types.ObjectId(id),
+        });
+      });
+
+      it('should delete a caregiver', async () => {
+        const status = await service.deleteCaregiver(caregiverId);
+
+        expect(status).toBeTruthy();
+
+        const caregiver: any = await service.getCaregiver(caregiverId);
+        expect(caregiver).toBeFalsy();
+      });
     });
   });
 

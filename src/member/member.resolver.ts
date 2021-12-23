@@ -21,9 +21,11 @@ import { camelCase } from 'lodash';
 import { v4 } from 'uuid';
 import { lookup } from 'zipcode-to-timezone';
 import {
+  AddCaregiverParams,
   AppointmentCompose,
   AudioType,
   CancelNotifyParams,
+  Caregiver,
   ChatMessageOrigin,
   CreateMemberParams,
   CreateTaskParams,
@@ -46,6 +48,7 @@ import {
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
   TaskStatus,
+  UpdateCaregiverParams,
   UpdateJournalTextParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
@@ -643,6 +646,79 @@ export class MemberResolver extends MemberBase {
     return journal;
   }
 
+  /*************************************************************************************************
+   ******************************************* Caregivers ******************************************
+   ************************************************************************************************/
+
+  @Mutation(() => Caregiver)
+  @Roles(MemberRole.member)
+  async addCaregiver(
+    @Client('_id') memberId,
+    @Client('roles') roles,
+    @Args(camelCase(AddCaregiverParams.name), { type: () => AddCaregiverParams })
+    addCaregiverParams: AddCaregiverParams,
+  ): Promise<Caregiver> {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+
+    return this.memberService.addCaregiver(memberId, addCaregiverParams);
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(MemberRole.member)
+  async deleteCaregiver(
+    @Client('_id') memberId,
+    @Client('roles') roles,
+    @Args('id', { type: () => String }) id: string,
+  ): Promise<boolean | never> {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+
+    // only allow a member to delete his own caregiver records
+    const caregiver = await this.memberService.getCaregiver(id);
+    if (caregiver && caregiver.memberId.toString() != memberId) {
+      throw new Error(Errors.get(ErrorType.caregiverDeleteNotAllowed));
+    }
+
+    if (caregiver) {
+      await this.memberService.deleteCaregiver(id);
+    }
+
+    return true;
+  }
+
+  @Mutation(() => Caregiver)
+  @Roles(MemberRole.member)
+  async updateCaregiver(
+    @Client('_id') memberId,
+    @Client('roles') roles,
+    @Args(camelCase(UpdateCaregiverParams.name), { type: () => UpdateCaregiverParams })
+    updateCaregiverParams: UpdateCaregiverParams,
+  ): Promise<Caregiver> {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+
+    return await this.memberService.updateCaregiver(memberId, updateCaregiverParams);
+  }
+
+  @Query(() => [Caregiver])
+  @Roles(MemberRole.member, UserRole.coach)
+  async getCaregivers(
+    @Client('_id') clientId,
+    @Client('roles') roles,
+    @Args('memberId', { type: () => String, nullable: true }) memberId?: string,
+  ): Promise<Caregiver[]> {
+    if (roles.includes(MemberRole.member)) {
+      if (memberId && clientId != memberId) {
+        throw new Error(Errors.get(ErrorType.memberIdInconsistent));
+      }
+      memberId = clientId;
+    }
+    return this.memberService.getCaregiversByMemberId(memberId);
+  }
   /************************************************************************************************
    ***************************************** Notifications ****************************************
    ************************************************************************************************/

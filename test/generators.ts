@@ -41,6 +41,7 @@ import {
 } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import {
+  AddCaregiverParams,
   AppointmentCompose,
   AudioFormat,
   CancelNotifyParams,
@@ -53,10 +54,12 @@ import {
   MemberConfig,
   NotifyParams,
   ReadmissionRisk,
+  Relationship,
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
   Sex,
   TaskStatus,
+  UpdateCaregiverParams,
   UpdateJournalTextParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
@@ -627,4 +630,25 @@ export const generateContextUserId = (
   roles: RoleTypes[] = [MemberRole.member],
 ) => {
   return { req: { user: { _id: userId, roles } } };
+};
+
+export const generateAddCaregiverParams = ({
+  firstName = faker.name.firstName(),
+  lastName = faker.name.lastName(),
+  email = faker.internet.email(),
+  relationship = Relationship.neighbour,
+  phone = '+12133734253',
+}: Partial<AddCaregiverParams> = {}): AddCaregiverParams => {
+  return { firstName, lastName, email, relationship, phone };
+};
+
+export const generateUpdateCaregiverParams = ({
+  id = generateId(),
+  firstName = faker.name.firstName(),
+  lastName = faker.name.lastName(),
+  email = faker.internet.email(),
+  relationship = Relationship.neighbour,
+  phone = '+12133734253',
+}: Partial<UpdateCaregiverParams> = {}): UpdateCaregiverParams => {
+  return { id, firstName, lastName, email, relationship, phone };
 };
