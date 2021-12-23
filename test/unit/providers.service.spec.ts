@@ -1,6 +1,6 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Environments, ErrorType, Errors, Logger } from '../../src/common';
+import { Environments, ErrorType, Errors, LoggerService } from '../../src/common';
 import { defaultModules } from '../common';
 import { TwilioService } from '../../src/providers';
 import * as config from 'config';
@@ -10,7 +10,7 @@ describe('Twilio', () => {
   let module: TestingModule;
   let twilioService: TwilioService;
   let eventEmitter: EventEmitter2;
-  let logger: Logger;
+  let logger: LoggerService;
 
   let spyOnEventEmitter;
   let spyOnInternalSend;
@@ -20,7 +20,7 @@ describe('Twilio', () => {
     module = await Test.createTestingModule({ imports: defaultModules() }).compile();
     twilioService = module.get<TwilioService>(TwilioService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
-    logger = module.get<Logger>(Logger);
+    logger = module.get<LoggerService>(LoggerService);
 
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
     spyOnInternalSend = jest.spyOn(twilioService as any, 'createMessage');
