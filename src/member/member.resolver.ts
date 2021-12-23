@@ -80,6 +80,7 @@ import {
   Roles,
   StorageType,
   UserRole,
+  getCorrelationId,
 } from '../common';
 import {
   CommunicationResolver,
@@ -765,7 +766,7 @@ export class MemberResolver extends MemberBase {
     this.notifyUpdatedMemberConfig({ memberConfig });
 
     if (!currentMemberConfig.firstLoggedInAt) {
-      const correlationId = v4();
+      const correlationId = getCorrelationId(this.logger);
       await this.notifyCreateDispatch(
         this.generateMobileRegistrationDispatch(
           member,
@@ -813,7 +814,7 @@ export class MemberResolver extends MemberBase {
       const dispatchParams: IDispatchParams = {
         memberId,
         userId,
-        correlationId: v4(),
+        correlationId: getCorrelationId(this.logger),
         dispatchId: generateDispatchId(ContentKey.customContent, memberId, Date.now().toString()),
         type:
           type === NotificationType.text
@@ -1003,7 +1004,7 @@ export class MemberResolver extends MemberBase {
           memberId: communication.memberId.toString(),
           userId: senderUserId,
           type: InternalNotificationType.chatMessageToMember,
-          correlationId: v4(),
+          correlationId: getCorrelationId(this.logger),
           metadata: {
             contentType: ContentKey.newChatMessageFromUser,
             path: `connect/${communication.memberId.toString()}/${senderUserId}`,
@@ -1022,7 +1023,7 @@ export class MemberResolver extends MemberBase {
             memberId: senderUserId,
             userId: communication.userId.toString(),
             type: InternalNotificationType.textSmsToUser,
-            correlationId: v4(),
+            correlationId: getCorrelationId(this.logger),
             metadata: { contentType: ContentKey.newChatMessageFromMember },
           });
         }

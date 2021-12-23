@@ -8,6 +8,7 @@ import {
   IEventOnNewMember,
   LoggerService,
   QueueType,
+  getCorrelationId,
 } from '../common';
 import { UserService } from '../user';
 import { CreateMemberParams, Member, MemberConfig, MemberService } from '.';
@@ -24,7 +25,6 @@ import {
 import { FeatureFlagService } from '../providers';
 import { isUndefined, omitBy } from 'lodash';
 import { Types } from 'mongoose';
-import { v4 } from 'uuid';
 
 export class MemberBase {
   constructor(
@@ -86,7 +86,7 @@ export class MemberBase {
     const newControlMemberEvent: IDispatchParams = {
       memberId: controlMember.id,
       type: InternalNotificationType.textSmsToMember,
-      correlationId: v4(),
+      correlationId: getCorrelationId(this.logger),
       dispatchId: generateDispatchId(ContentKey.newControlMember, controlMember.id),
       metadata: {
         contentType: ContentKey.newControlMember,

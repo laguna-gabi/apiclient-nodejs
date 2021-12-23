@@ -4,7 +4,6 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { add, addDays } from 'date-fns';
 import { camelCase } from 'lodash';
-import { v4 } from 'uuid';
 import {
   Appointment,
   AppointmentBase,
@@ -29,6 +28,7 @@ import {
   Roles,
   UpdatedAppointmentAction,
   UserRole,
+  getCorrelationId,
 } from '../common';
 import { CommunicationResolver } from '../communication';
 import { Member } from '../member';
@@ -190,7 +190,7 @@ export class AppointmentResolver extends AppointmentBase {
       memberId: appointment.memberId.toString(),
       userId: appointment.userId.toString(),
       type: InternalNotificationType.textToMember,
-      correlationId: v4(),
+      correlationId: getCorrelationId(this.logger),
     };
     const appointmentRequest: IDispatchParams = {
       ...baseEvent,
@@ -222,7 +222,7 @@ export class AppointmentResolver extends AppointmentBase {
       memberId: member.id,
       userId,
       type: InternalNotificationType.textSmsToMember,
-      correlationId: v4(),
+      correlationId: getCorrelationId(this.logger),
     };
     const newMemberEvent: IDispatchParams = {
       ...baseEvent,

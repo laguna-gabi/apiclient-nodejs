@@ -1,8 +1,8 @@
 import * as config from 'config';
 import { add, differenceInDays, format } from 'date-fns';
 import * as jwt from 'jsonwebtoken';
-import { ErrorType, Errors } from '.';
-
+import { ErrorType, Errors, LoggerService } from '.';
+import { v4 } from 'uuid';
 // Description: given a date (string format) return a range of dates (string format)
 //              from start to start+numberOfDays
 export function getListOfDates(
@@ -56,3 +56,6 @@ export const generateOrgNamePrefix = (orgName?: string): string => {
 export const delay = async (milliseconds: number) => {
   await new Promise((resolve) => setTimeout(resolve, milliseconds));
 };
+
+export const getCorrelationId = (logger: LoggerService) =>
+  logger?.logger?.bindings?.().reqId || v4();

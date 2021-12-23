@@ -17,12 +17,13 @@ import {
   Errors,
   EventType,
   IDispatchParams,
+  LoggerService,
   LoggingInterceptor,
   MemberRole,
   Roles,
   UserRole,
+  getCorrelationId,
 } from '../common';
-import { v4 } from 'uuid';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()
@@ -30,6 +31,7 @@ export class DailyReportResolver {
   constructor(
     private readonly dailyReportService: DailyReportService,
     readonly eventEmitter: EventEmitter2,
+    readonly logger: LoggerService,
   ) {}
 
   @Mutation(() => DailyReport)
@@ -64,7 +66,7 @@ export class DailyReportResolver {
         memberId: dailyReportCategoriesInput.memberId,
         userId: primaryUserId,
         type: InternalNotificationType.textSmsToUser,
-        correlationId: v4(),
+        correlationId: getCorrelationId(this.logger),
         dispatchId: generateDispatchId(
           ContentKey.memberNotFeelingWellMessage,
           primaryUserId,

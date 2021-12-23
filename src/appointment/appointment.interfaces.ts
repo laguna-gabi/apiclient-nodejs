@@ -2,7 +2,6 @@ import { ContentKey, InternalNotificationType, generateDispatchId } from '@lagun
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { scheduler } from 'config';
 import { addDays, addMinutes, isBefore, subDays, subMinutes } from 'date-fns';
-import { v4 } from 'uuid';
 import { Appointment, AppointmentService, AppointmentStatus, ScheduleAppointmentParams } from '.';
 import {
   ErrorType,
@@ -12,6 +11,7 @@ import {
   IEventOnUpdatedAppointment,
   LoggerService,
   UpdatedAppointmentAction,
+  getCorrelationId,
 } from '../common';
 import { CommunicationResolver } from '../communication';
 import { Bitly } from '../providers';
@@ -74,7 +74,7 @@ export class AppointmentBase {
     );
     const memberId = appointment.memberId.toString();
     const userId = appointment.userId.toString();
-    const baseEvent = { memberId, userId, correlationId: v4() };
+    const baseEvent = { memberId, userId, correlationId: getCorrelationId(this.logger) };
 
     if (isBefore(appointment.start, new Date())) {
       return;
