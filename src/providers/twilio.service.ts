@@ -5,6 +5,8 @@ import { Twilio, jwt } from 'twilio';
 import { ConfigsService, ExternalConfigs } from '.';
 import {
   Environments,
+  ErrorType,
+  Errors,
   EventType,
   LoggerService,
   SendTwilioNotification,
@@ -13,6 +15,7 @@ import {
 import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 import { hoursToMilliseconds } from 'date-fns';
 import { twilio } from 'config';
+import { parsePhoneNumber } from 'libphonenumber-js';
 
 @Injectable()
 export class TwilioService implements OnModuleInit {
@@ -48,10 +51,21 @@ export class TwilioService implements OnModuleInit {
   async send(sendTwilioNotification: SendTwilioNotification) {
     this.logger.debug(sendTwilioNotification, TwilioService.name, this.send.name);
     const { body, to, orgName } = sendTwilioNotification;
-    if (process.env.NODE_ENV === Environments.production && !to.startsWith('+972')) {
+    if (
+      process.env.NODE_ENV === Environments.production &&
+      !to.startsWith('+972') &&
+      to !== config.get('iosExcludeRegistrationNumber')
+    ) {
       try {
-        //KEEP return await when its inside try catch
-        return await this.client.messages.create({ body, to, from: this.source });
+        if (
+          parsePhoneNumber(to).isValid() &&
+          config.get('twilio.validPhoneTypes').includes(parsePhoneNumber(to).getType())
+        ) {
+          //KEEP return await when its inside try catch
+          return await this.createMessage(body, to, this.source);
+        } else {
+          throw new Error(Errors.get(ErrorType.invalidPhoneNumberForMessaging));
+        }
       } catch (ex) {
         this.logger.error(sendTwilioNotification, TwilioService.name, this.send.name, ex);
       }
@@ -90,5 +104,10 @@ export class TwilioService implements OnModuleInit {
     });
 
     return { iceServers };
+  }
+
+  // Description: internal service create message method
+  private async createMessage(body: string, to: string, from: string) {
+    return this.client.messages.create({ body, to, from });
   }
 }

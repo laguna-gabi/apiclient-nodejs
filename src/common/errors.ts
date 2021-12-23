@@ -75,6 +75,7 @@ export enum ErrorType {
 
   // Providers
   invalidSenderId = 9801,
+  invalidPhoneNumberForMessaging = 9802,
 }
 
 const nameFormat = `name must be between ${graphqlConfig.get('minLength')} and ${graphqlConfig.get(
@@ -166,6 +167,10 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.dailyReportQueryDateInvalid.valueOf(), 'daily report query - invalid date format'],
   [ErrorType.dailyReportMutationDateInvalid.valueOf(), 'daily report query - invalid date format'],
   [ErrorType.invalidSenderId.valueOf(), 'invalid sender id'],
+  [
+    ErrorType.invalidPhoneNumberForMessaging.valueOf(),
+    'invalid phone or landline - can not send SMS',
+  ],
 ]);
 
 export const DbErrors = {
