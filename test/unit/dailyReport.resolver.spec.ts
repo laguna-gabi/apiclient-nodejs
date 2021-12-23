@@ -71,12 +71,10 @@ describe('DailyReportResolver', () => {
           categories: [{ category: DailyReportCategoryTypes.Pain, rank: 0 }],
         } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
         {
-          memberId: memberId,
-          metadata: {
-            contentType: ContentKey.memberNotFeelingWellMessage,
-          },
-          type: InternalNotificationType.textSmsToUser,
+          memberId,
           userId: 'U0001',
+          type: InternalNotificationType.textSmsToUser,
+          metadata: { contentType: ContentKey.memberNotFeelingWellMessage },
         },
       ],
       [
@@ -145,8 +143,8 @@ describe('DailyReportResolver', () => {
         if (emittedEventParams) {
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(
             1,
-            EventType.notifyInternal,
-            emittedEventParams,
+            EventType.notifyDispatch,
+            expect.objectContaining(emittedEventParams),
           );
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(
             2,

@@ -7,8 +7,6 @@ import { BaseLogger, ServiceName, SlackChannel, SlackIcon } from '@lagunahealth/
 export const internalLogs = {
   hepiusVersion: 'Starting Hepius application version: @version@',
   lastCommit: 'Last commit hash on this branch is: @hash@',
-  schedulerLeader:
-    'Current instance is now leader of @type@ scheduler with identifier: @identifier@',
 };
 
 @Injectable()
@@ -29,9 +27,6 @@ export class LoggerService extends BaseLogger {
     'senderUserId',
     'deviceId',
     'sub',
-    //baseSchedulers
-    'schedulerIdentifier',
-    'lengthResults',
     //sendbird create user params
     'channel_url',
     'cover_url',

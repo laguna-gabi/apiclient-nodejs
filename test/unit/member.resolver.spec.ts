@@ -26,7 +26,6 @@ import {
   IEventOnNewMember,
   IEventOnReceivedChatMessage,
   IEventOnUpdatedMemberPlatform,
-  InternalNotifyParams,
   InternationalizationService,
   LoggerService,
   MemberRole,
@@ -51,7 +50,6 @@ import {
   MemberConfig,
   MemberModule,
   MemberResolver,
-  MemberScheduler,
   MemberService,
   TaskStatus,
 } from '../../src/member';
@@ -65,6 +63,7 @@ import { UserService } from '../../src/user';
 import {
   dbDisconnect,
   defaultModules,
+  generateAddCaregiverParams,
   generateAppointmentComposeParams,
   generateCancelNotifyParams,
   generateCommunication,
@@ -80,6 +79,7 @@ import {
   generateObjectId,
   generateSetGeneralNotesParams,
   generateUniqueUrl,
+  generateUpdateCaregiverParams,
   generateUpdateClientSettings,
   generateUpdateJournalTextParams,
   generateUpdateMemberConfigParams,
@@ -97,7 +97,6 @@ describe('MemberResolver', () => {
   let module: TestingModule;
   let resolver: MemberResolver;
   let service: MemberService;
-  let memberScheduler: MemberScheduler;
   let userService: UserService;
   let storage: StorageService;
   let cognitoService: CognitoService;
@@ -125,7 +124,6 @@ describe('MemberResolver', () => {
     communicationService = module.get<CommunicationService>(CommunicationService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
-    memberScheduler = module.get<MemberScheduler>(MemberScheduler);
     featureFlagService = module.get<FeatureFlagService>(FeatureFlagService);
     internationalizationService = module.get<InternationalizationService>(
       InternationalizationService,
@@ -474,7 +472,7 @@ describe('MemberResolver', () => {
       });
       expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
 
-      expect(spyOnEventEmitter).toBeCalledTimes(5);
+      expect(spyOnEventEmitter).toBeCalledTimes(6);
       expectDeleteArchiveMember(member.id);
     });
   });
@@ -558,7 +556,7 @@ describe('MemberResolver', () => {
       }
       expect(spyOnStorageServiceDeleteMember).toBeCalledWith(member.id);
 
-      expect(spyOnEventEmitter).toBeCalledTimes(6);
+      expect(spyOnEventEmitter).toBeCalledTimes(7);
       expectDeleteArchiveMember(member.id);
     };
   });
@@ -573,9 +571,7 @@ describe('MemberResolver', () => {
       return {
         type: QueueType.notifications,
         message: JSON.stringify(
-          generateDeleteDispatchMock({
-            dispatchId: generateDispatchId(contentKey, memberId),
-          }),
+          generateDeleteDispatchMock({ dispatchId: generateDispatchId(contentKey, memberId) }),
         ),
       };
     };
@@ -593,6 +589,16 @@ describe('MemberResolver', () => {
       4,
       EventType.notifyQueue,
       generateQueueParams(ContentKey.newRegisteredMemberNudge),
+    );
+    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+      5,
+      EventType.notifyQueue,
+      generateQueueParams(ContentKey.logReminder),
+    );
+    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+      6,
+      EventType.notifyQueue,
+      generateQueueParams(ContentKey.customContent),
     );
   };
 
@@ -889,6 +895,127 @@ describe('MemberResolver', () => {
 
       expect(spyOnServiceSetGeneralNotes).toBeCalledTimes(1);
       expect(spyOnServiceSetGeneralNotes).toBeCalledWith(params);
+    });
+  });
+
+  describe('caregiver', () => {
+    let spyOnAddCaregiverServiceMethod;
+    let spyOnUpdateCaregiverServiceMethod;
+    let spyOnGetCaregiversByMemberIdServiceMethod;
+    let spyOnDeleteCaregiverServiceMethod;
+    let spyOnGetCaregiverServiceMethod;
+
+    beforeEach(() => {
+      spyOnAddCaregiverServiceMethod = jest.spyOn(service, 'addCaregiver');
+      spyOnUpdateCaregiverServiceMethod = jest.spyOn(service, 'updateCaregiver');
+      spyOnGetCaregiversByMemberIdServiceMethod = jest.spyOn(service, 'getCaregiversByMemberId');
+      spyOnDeleteCaregiverServiceMethod = jest.spyOn(service, 'deleteCaregiver');
+      spyOnGetCaregiverServiceMethod = jest.spyOn(service, 'getCaregiver');
+    });
+    afterEach(() => {
+      spyOnAddCaregiverServiceMethod.mockReset();
+      spyOnUpdateCaregiverServiceMethod.mockReset();
+      spyOnGetCaregiversByMemberIdServiceMethod.mockReset();
+      spyOnDeleteCaregiverServiceMethod.mockReset();
+      spyOnGetCaregiverServiceMethod.mockReset();
+    });
+
+    it('should add a caregiver', async () => {
+      const addCaregiverParams = generateAddCaregiverParams();
+      const memberId = generateId();
+      await resolver.addCaregiver(memberId, [MemberRole.member], addCaregiverParams);
+      expect(spyOnAddCaregiverServiceMethod).toBeCalledTimes(1);
+      expect(spyOnAddCaregiverServiceMethod).toBeCalledWith(memberId, addCaregiverParams);
+    });
+
+    it('should fail to add a caregiver for a coach - role is not allowed', async () => {
+      const addCaregiverParams = generateAddCaregiverParams();
+
+      await expect(
+        resolver.addCaregiver(generateId(), [UserRole.coach], addCaregiverParams),
+      ).rejects.toThrow(Errors.get(ErrorType.memberAllowedOnly));
+
+      expect(spyOnAddCaregiverServiceMethod).not.toHaveBeenCalled();
+    });
+
+    it('should update a caregiver', async () => {
+      const updateCaregiverParams = generateUpdateCaregiverParams();
+      const memberId = generateId();
+      await resolver.updateCaregiver(memberId, [MemberRole.member], updateCaregiverParams);
+      expect(spyOnUpdateCaregiverServiceMethod).toBeCalledTimes(1);
+      expect(spyOnUpdateCaregiverServiceMethod).toBeCalledWith(memberId, updateCaregiverParams);
+    });
+
+    it('should fail to update a caregiver for a coach - role is not allowed', async () => {
+      const updateCaregiverParams = generateUpdateCaregiverParams();
+
+      await expect(
+        resolver.updateCaregiver(generateId(), [UserRole.coach], updateCaregiverParams),
+      ).rejects.toThrow(Errors.get(ErrorType.memberAllowedOnly));
+
+      expect(spyOnUpdateCaregiverServiceMethod).not.toHaveBeenCalled();
+    });
+
+    it('should get all caregiver for a member', async () => {
+      const memberId = generateId();
+
+      await resolver.getCaregivers(memberId, [MemberRole.member]);
+      expect(spyOnGetCaregiversByMemberIdServiceMethod).toBeCalledTimes(1);
+      expect(spyOnGetCaregiversByMemberIdServiceMethod).toBeCalledWith(memberId);
+    });
+
+    it('should fail to get caregivers for a member due to inconsistent member id', async () => {
+      const memberId1 = generateId();
+      const memberId2 = generateId();
+
+      await expect(
+        resolver.getCaregivers(memberId1, [MemberRole.member], memberId2),
+      ).rejects.toThrow(Errors.get(ErrorType.memberIdInconsistent));
+
+      expect(spyOnGetCaregiversByMemberIdServiceMethod).not.toHaveBeenCalled();
+    });
+
+    it('should delete a caregiver', async () => {
+      const caregiverId = generateId();
+      const memberId = generateId();
+
+      spyOnGetCaregiverServiceMethod.mockImplementationOnce(async () => {
+        return { memberId };
+      });
+      await resolver.deleteCaregiver(memberId, [MemberRole.member], caregiverId);
+
+      expect(spyOnDeleteCaregiverServiceMethod).toBeCalledTimes(1);
+      expect(spyOnDeleteCaregiverServiceMethod).toBeCalledWith(caregiverId);
+    });
+
+    it('should fail to delete a caregiver for a different member', async () => {
+      const caregiverId = generateId();
+
+      // caregiver record is associated to a different member (random generateId())
+      spyOnGetCaregiverServiceMethod.mockImplementationOnce(async () => {
+        return { memberId: generateId() };
+      });
+
+      await expect(
+        resolver.deleteCaregiver(generateId(), [MemberRole.member], caregiverId),
+      ).rejects.toThrow(Errors.get(ErrorType.caregiverDeleteNotAllowed));
+
+      expect(spyOnDeleteCaregiverServiceMethod).not.toHaveBeenCalled();
+    });
+
+    it('should fail to delete a caregiver for a non-member (coach)', async () => {
+      const caregiverId = generateId();
+
+      // caregiver record is associated to a different member (random generateId())
+      spyOnGetCaregiverServiceMethod.mockImplementationOnce(async () => {
+        return { memberId: generateId() };
+      });
+
+      await expect(
+        resolver.deleteCaregiver(generateId(), [UserRole.coach], caregiverId),
+      ).rejects.toThrow(Errors.get(ErrorType.memberAllowedOnly));
+
+      expect(spyOnDeleteCaregiverServiceMethod).not.toHaveBeenCalled();
     });
   });
 
@@ -1518,7 +1645,6 @@ describe('MemberResolver', () => {
     let spyOnServiceGetMemberConfig;
     let spyOnServiceUpdateMemberConfig;
     let spyOnServiceUpdateMemberConfigRegisteredAt;
-    let spyOnSchedulerDeleteTimeout;
 
     beforeEach(() => {
       spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
@@ -1529,7 +1655,6 @@ describe('MemberResolver', () => {
         service,
         'updateMemberConfigRegisteredAt',
       );
-      spyOnSchedulerDeleteTimeout = jest.spyOn(memberScheduler, 'deleteTimeout');
     });
 
     afterEach(() => {
@@ -1538,7 +1663,6 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig.mockReset();
       spyOnServiceUpdateMemberConfig.mockReset();
       spyOnServiceUpdateMemberConfigRegisteredAt.mockReset();
-      spyOnSchedulerDeleteTimeout.mockReset();
       spyOnEventEmitter.mockReset();
       spyOnEventEmitter.mockClear();
     });
@@ -2031,44 +2155,6 @@ describe('MemberResolver', () => {
         });
       },
     );
-
-    it('should register for future notify', async () => {
-      const member = mockGenerateMember();
-      const memberConfig = mockGenerateMemberConfig();
-      const user = mockGenerateUser();
-      spyOnServiceGetMember.mockImplementation(async () => member);
-      spyOnServiceGetMemberConfig.mockImplementation(async () => memberConfig);
-      spyOnUserServiceGetUser.mockImplementation(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
-
-      await memberScheduler.init();
-
-      const when = new Date();
-      when.setMilliseconds(when.getMilliseconds() + 100);
-
-      const notifyParams = generateNotifyParams({
-        memberId: member.id,
-        userId: member.primaryUserId.toString(),
-        type: NotificationType.text,
-        metadata: { content: faker.lorem.word(), when },
-      });
-
-      await resolver.notify(notifyParams);
-
-      await delay(300);
-      delete notifyParams.metadata.when;
-      const eventParams: InternalNotifyParams = {
-        memberId: member.id,
-        userId: member.primaryUserId.toString(),
-        type:
-          notifyParams.type === NotificationType.text
-            ? InternalNotificationType.textToMember
-            : InternalNotificationType.textSmsToMember,
-        metadata: {},
-        content: notifyParams.metadata.content,
-      };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyInternal, eventParams);
-    }, 10000);
 
     it('should call getCommunication if metadata.chatLink true', async () => {
       const member = mockGenerateMember();
@@ -2592,7 +2678,10 @@ describe('MemberResolver', () => {
         userId: user.id,
         type: InternalNotificationType.chatMessageToMember,
         correlationId: expect.any(String),
-        metadata: { contentType: ContentKey.newChatMessageFromUser },
+        metadata: {
+          contentType: ContentKey.newChatMessageFromUser,
+          path: `connect/${communication.memberId.toString()}/${user.id}`,
+        },
       });
     });
 

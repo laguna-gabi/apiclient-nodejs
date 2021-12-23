@@ -13,7 +13,9 @@ import { AvailabilityInput } from '../../src/availability';
 import { Identifier, Identifiers, RegisterForNotificationParams } from '../../src/common';
 import { DailyReportCategoriesInput } from '../../src/dailyReport';
 import {
+  AddCaregiverParams,
   CancelNotifyParams,
+  Caregiver,
   CreateMemberParams,
   CreateTaskParams,
   Journal,
@@ -21,6 +23,7 @@ import {
   NotifyParams,
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
+  UpdateCaregiverParams,
   UpdateJournalTextParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
@@ -910,6 +913,94 @@ export class Mutations {
     return (
       this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.replaceUserForMemberParams
+    );
+  };
+
+  addCaregiver = async ({
+    addCaregiverParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    addCaregiverParams: AddCaregiverParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Caregiver> => {
+    const result = await this.apolloClient.mutate({
+      variables: { addCaregiverParams: addCaregiverParams },
+      mutation: gql`
+        mutation addCaregiver($addCaregiverParams: AddCaregiverParams!) {
+          addCaregiver(addCaregiverParams: $addCaregiverParams) {
+            id
+            email
+            firstName
+            lastName
+            relationship
+            phone
+            memberId
+          }
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
+      result.data.addCaregiver
+    );
+  };
+
+  updateCaregiver = async ({
+    updateCaregiverParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    updateCaregiverParams: UpdateCaregiverParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Caregiver> => {
+    const result = await this.apolloClient.mutate({
+      variables: { updateCaregiverParams: updateCaregiverParams },
+      mutation: gql`
+        mutation updateCaregiver($updateCaregiverParams: UpdateCaregiverParams!) {
+          updateCaregiver(updateCaregiverParams: $updateCaregiverParams) {
+            id
+            email
+            firstName
+            lastName
+            relationship
+            phone
+            memberId
+          }
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
+      result.data.updateCaregiver
+    );
+  };
+
+  deleteCaregiver = async ({
+    id,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    id: string;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<boolean> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id: id },
+      mutation: gql`
+        mutation deleteCaregiver($id: String!) {
+          deleteCaregiver(id: $id)
+        }
+      `,
+    });
+
+    return (
+      this.isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
+      result.data.deleteCaregiver
     );
   };
 }

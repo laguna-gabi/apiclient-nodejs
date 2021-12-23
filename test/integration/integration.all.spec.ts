@@ -1,9 +1,4 @@
-import {
-  CancelNotificationType,
-  InternalNotificationType,
-  NotificationType,
-  Platform,
-} from '@lagunahealth/pandora';
+import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 import * as config from 'config';
 import { add, addDays, startOfToday, startOfTomorrow } from 'date-fns';
 import * as faker from 'faker';
@@ -21,12 +16,9 @@ import {
   RegisterForNotificationParams,
   UserRole,
   delay,
+  reformatDate,
 } from '../../src/common';
-import {
-  DailyReportCategoriesInput,
-  DailyReportCategoryTypes,
-  DailyReportQueryInput,
-} from '../../src/dailyReport';
+import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
 import {
   CancelNotifyParams,
   CreateTaskParams,
@@ -42,6 +34,7 @@ import {
 import { User, defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
+  generateAddCaregiverParams,
   generateAppointmentLink,
   generateAvailabilityInput,
   generateCancelNotifyParams,
@@ -51,6 +44,7 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
+  generateUpdateCaregiverParams,
   generateUpdateJournalTextParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
@@ -58,6 +52,7 @@ import {
   generateUpdateRecordingParams,
 } from '../index';
 import { iceServers } from '../unit/mocks/twilioPeerIceServers';
+import { general } from 'config';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -323,65 +318,6 @@ describe('Integration tests: all', () => {
     });
   });
 
-  it(`should send a future notification`, async () => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
-    const primaryUser = member.users[0];
-
-    await delay(1000);
-    /**
-     * reset mock on NotificationsService so we dont count
-     * the notifications that are made on member creation
-     */
-    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-
-    const registerForNotificationParams: RegisterForNotificationParams = {
-      platform: Platform.android,
-      isPushNotificationsEnabled: true,
-    };
-    await handler
-      .setContextUserId(member.id)
-      .mutations.registerMemberForNotifications({ registerForNotificationParams });
-    const memberConfig = await handler
-      .setContextUserId(member.id)
-      .queries.getMemberConfig({ id: member.id });
-
-    const when = new Date();
-    when.setSeconds(when.getSeconds() + 1);
-    const notifyParams: NotifyParams = {
-      memberId: member.id,
-      userId: primaryUser.id,
-      type: NotificationType.text,
-      metadata: { content: faker.lorem.word(), when },
-    };
-
-    await handler.mutations.notify({ notifyParams });
-    expect(handler.notificationsService.spyOnNotificationsServiceSend).not.toBeCalled();
-
-    await delay(1500);
-    delete notifyParams.metadata.when;
-    expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
-      sendOneSignalNotification: {
-        externalUserId: memberConfig.externalUserId,
-        platform: memberConfig.platform,
-        data: {
-          user: {
-            id: primaryUser.id,
-            firstName: primaryUser.firstName,
-            avatar: primaryUser.avatar,
-          },
-          member: { phone: member.phone },
-          type: InternalNotificationType.textToMember,
-          isVideo: false,
-        },
-        content: notifyParams.metadata.content,
-        orgName: org.name,
-      },
-    });
-
-    handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-  });
-
   /* eslint-disable max-len */
   test.each`
     title | method
@@ -449,10 +385,6 @@ describe('Integration tests: all', () => {
           id: requestedAppointment.id,
         });
       await handler.mutations.scheduleAppointment({ appointmentParams: scheduleAppointmentParams });
-
-      expect(handler.schedulerRegistry.getTimeouts()).not.toEqual(
-        expect.arrayContaining([member.id]),
-      );
     });
   });
 
@@ -1087,42 +1019,76 @@ describe('Integration tests: all', () => {
   });
 
   describe('Daily Reports', () => {
-    it('set/get a dailyReport', async () => {
-      const { updatedDailyReport } = await handler
-        .setContextUserId(handler.patientZero.id.toString())
-        .mutations.setDailyReportCategories({
-          dailyReportCategoriesInput: {
-            date: '2015/01/01',
+    it('set/get a dailyReport sorted by date', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+      // start randomly and collect 3 dates:
+      const startDate = faker.date.past();
+      const day1 = reformatDate(startDate.toString(), general.get('dateFormatString'));
+      const day2 = reformatDate(
+        add(startDate, { days: 2 }).toString(),
+        general.get('dateFormatString'),
+      );
+      const day3 = reformatDate(
+        add(startDate, { days: 4 }).toString(),
+        general.get('dateFormatString'),
+      );
+
+      // upload 3 daily reports
+      await Promise.all(
+        [
+          {
+            date: day1,
             categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
-          } as DailyReportCategoriesInput,
-        });
-      expect(updatedDailyReport).toEqual({
-        categories: [{ rank: 1, category: 'Pain' }],
-        memberId: handler.patientZero.id.toString(),
-        date: '2015/01/01',
-        statsOverThreshold: null,
+          },
+          {
+            date: day3,
+            categories: [{ category: DailyReportCategoryTypes.Mobility, rank: 1 }],
+          },
+          {
+            date: day2,
+            categories: [{ category: DailyReportCategoryTypes.Appetite, rank: 2 }],
+          },
+        ].map(async (report) =>
+          handler.setContextUserId(member.id).mutations.setDailyReportCategories({
+            dailyReportCategoriesInput: report,
+          }),
+        ),
+      );
+
+      // fetch daily reports for the member
+      const { dailyReports } = await handler.setContextUserId(member.id).queries.getDailyReports({
+        dailyReportQueryInput: {
+          startDate: day1,
+          endDate: day3,
+          memberId: member.id,
+        } as DailyReportQueryInput,
       });
 
-      const { dailyReports } = await handler
-        .setContextUserId(handler.patientZero.id.toString())
-        .queries.getDailyReports({
-          dailyReportQueryInput: {
-            startDate: '2015/01/01',
-            endDate: '2015/01/01',
-            memberId: handler.patientZero.id.toString(),
-          } as DailyReportQueryInput,
-        });
-
-      expect(dailyReports).toEqual({
+      // expect to get reports in chronological order
+      expect(dailyReports).toMatchObject({
         data: [
           {
-            categories: [{ category: 'Pain', rank: 1 }],
-            date: '2015/01/01',
+            categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
+            date: day1,
             statsOverThreshold: null,
-            memberId: handler.patientZero.id.toString(),
+            memberId: member.id,
+          },
+          {
+            categories: [{ category: DailyReportCategoryTypes.Appetite, rank: 2 }],
+            date: day2,
+            statsOverThreshold: null,
+            memberId: member.id,
+          },
+          {
+            categories: [{ category: DailyReportCategoryTypes.Mobility, rank: 1 }],
+            date: day3,
+            statsOverThreshold: null,
+            memberId: member.id,
           },
         ],
-        metadata: { minDate: '2015/01/01' },
+        metadata: { minDate: reformatDate(day1.toString(), general.get('dateFormatString')) },
       });
     });
   });
@@ -1176,6 +1142,55 @@ describe('Integration tests: all', () => {
     });
   });
 
+  describe('Caregiver', () => {
+    it('should add, get, update and delete a member caregiver', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+      // Add:
+      const addCaregiverParams = generateAddCaregiverParams();
+      const caregiver = await handler
+        .setContextUserId(member.id)
+        .mutations.addCaregiver({ addCaregiverParams });
+
+      expect(caregiver).toMatchObject(addCaregiverParams);
+
+      // Get:
+      let persistedCaregivers = await handler.setContextUserId(member.id).queries.getCaregivers({
+        memberId: member.id,
+      });
+
+      expect(persistedCaregivers).toMatchObject([addCaregiverParams]);
+
+      // Update:
+      const updateCaregiverParams = generateUpdateCaregiverParams({
+        id: persistedCaregivers[0].id,
+      });
+
+      const updatedCaregiver = await handler.setContextUserId(member.id).mutations.updateCaregiver({
+        updateCaregiverParams: updateCaregiverParams,
+      });
+
+      expect(updatedCaregiver).toMatchObject(updateCaregiverParams);
+
+      // Delete:
+      const status = await handler.setContextUserId(member.id).mutations.deleteCaregiver({
+        id: updatedCaregiver.id,
+      });
+
+      expect(status).toBeTruthy();
+
+      // Get (confirm record was deleted):
+      persistedCaregivers = await handler.setContextUserId(member.id).queries.getCaregivers({
+        memberId: member.id,
+      });
+
+      expect(
+        persistedCaregivers.find((caregiver) => caregiver.id === updatedCaregiver.id),
+      ).toBeFalsy();
+
+      expect(status).toBeTruthy();
+    }, 10000);
+  });
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

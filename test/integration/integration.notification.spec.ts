@@ -1,9 +1,11 @@
 import {
   ContentKey,
   InnerQueueTypes,
+  NotificationType,
   ObjectAppointmentScheduledClass,
   ObjectBaseClass,
   ObjectGeneralMemberTriggeredClass,
+  ObjectNewChatMessageToMemberClass,
   ObjectNewMemberClass,
   ObjectNewMemberNudgeClass,
   ObjectUpdateMemberSettingsClass,
@@ -11,27 +13,30 @@ import {
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
-  generateBaseMock,
   generateDispatchId,
   generateGeneralMemberTriggeredMock,
+  generateNewChatMessageToMemberMock,
   generateNewControlMemberMock,
   generateNewMemberMock,
   generateNewMemberNudgeMock,
   generateRequestAppointmentMock,
+  generateTextMessageUserMock,
   generateUpdateMemberSettingsMock,
   generateUpdateUserSettingsMock,
 } from '@lagunahealth/pandora';
-import { hosts, scheduler } from 'config';
-import { addDays, subDays, subMinutes } from 'date-fns';
+import { general, hosts, scheduler } from 'config';
+import { addDays, addSeconds, subDays, subMinutes } from 'date-fns';
 import * as faker from 'faker';
 
 import { v4 } from 'uuid';
 import { Appointment } from '../../src/appointment';
-import { QueueType, RegisterForNotificationParams, delay } from '../../src/common';
-import { Member } from '../../src/member';
+import { QueueType, RegisterForNotificationParams, delay, reformatDate } from '../../src/common';
+import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
+import { NotifyParams } from '../../src/member';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   generateCreateMemberParams,
+  generateDailyReport,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
 } from '../generators';
@@ -149,6 +154,7 @@ describe('Integration tests: notifications', () => {
      *      3. delete dispatch ContentKey.newRegisteredMember
      *      4. delete dispatch ContentKey.newRegisteredMemberNudge
      *      5. delete dispatch ContentKey.logReminder
+     *      6. delete dispatch ContentKey.customContent
      */
     test.each`
       title              | method
@@ -167,7 +173,7 @@ describe('Integration tests: notifications', () => {
         await params.method({ id });
         await delay(200);
 
-        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(5);
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(6);
         checkValues(1, { type: InnerQueueTypes.deleteClientSettings, id });
         checkDeleteDispatches(id, true, 2);
       },
@@ -327,6 +333,50 @@ describe('Integration tests: notifications', () => {
             type: QueueType.notifications,
             message: expect.stringContaining(
               key === 'correlationId' ? key : `"${key}":"${mockDispatch[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+
+    /**
+     * Trigger : MemberResolver.notify
+     * Dispatch :
+     *      1. user sends member a custom dispatch to be triggered on specific time
+     */
+    it('notify: should register for future notify', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      const when = addSeconds(new Date(), 1);
+      const notifyParams: NotifyParams = {
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+        type: NotificationType.text,
+        metadata: { content: faker.lorem.word(), when },
+      };
+      await handler.mutations.notify({ notifyParams });
+
+      await delay(200);
+
+      const mock = generateGeneralMemberTriggeredMock({
+        recipientClientId: member.id,
+        senderClientId: member.primaryUserId.toString(),
+        contentKey: ContentKey.customContent,
+        triggersAt: when,
+      });
+      const object = new ObjectGeneralMemberTriggeredClass(mock);
+      Object.keys(object.objectGeneralMemberTriggeredMock).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'triggersAt' || key === 'dispatchId'
+                ? key
+                : `"${key}":"${mock[key]}"`,
             ),
           }),
         );
@@ -493,61 +543,150 @@ describe('Integration tests: notifications', () => {
     /**
      * Trigger : WebhooksController.sendbird
      * Dispatches:
-     *      1. ContentKey.newChatMessageFromUser or ContentKey.newChatMessageFromMember
+     *      1. ContentKey.newChatMessageFromMember
      */
-
     /* eslint-disable max-len */
-    test.each`
-      contentKey                             | extractSender                                          | extractReceiver
-      ${ContentKey.newChatMessageFromMember} | ${(member: Member) => member.id}                       | ${(member: Member) => member.primaryUserId.toString()}
-      ${ContentKey.newChatMessageFromUser}   | ${(member: Member) => member.primaryUserId.toString()} | ${(member: Member) => member.id}
-    `(
-      `sendbird: should send dispatches of type ` +
-        `$contentKey when received from sendbird webhook`,
+    it(`sendbird: should send dispatches of type ${ContentKey.newChatMessageFromMember} when received from sendbird webhook`, async () => {
       /* eslint-enable max-len */
-      async (params) => {
-        const org = await creators.createAndValidateOrg();
-        const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
 
-        const communication = await handler.communicationService.get({
-          memberId: member.id,
-          userId: member.primaryUserId.toString(),
-        });
+      const communication = await handler.communicationService.get({
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+      });
 
-        const payload = { ...sendbirdPayload };
-        payload.sender.user_id = params.extractSender(member);
-        payload.channel.channel_url = communication.sendBirdChannelUrl;
-        payload.members = [{ user_id: member.primaryUserId.toString(), is_online: false }];
+      const payload = { ...sendbirdPayload };
+      payload.sender.user_id = member.id;
+      payload.channel.channel_url = communication.sendBirdChannelUrl;
+      payload.members = [{ user_id: member.primaryUserId.toString(), is_online: false }];
 
-        const spyOnValidate = jest.spyOn(
-          handler.webhooksController,
-          'validateMessageSentFromSendbird',
+      const spyOnValidate = jest.spyOn(
+        handler.webhooksController,
+        'validateMessageSentFromSendbird',
+      );
+      spyOnValidate.mockReturnValueOnce(undefined);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      await handler.webhooksController.sendbird(JSON.stringify(payload), {});
+      await delay(200);
+
+      const mock = generateTextMessageUserMock({
+        recipientClientId: member.primaryUserId.toString(),
+        senderClientId: member.id,
+        contentKey: ContentKey.newChatMessageFromMember,
+      });
+
+      const object = new ObjectBaseClass(mock);
+      Object.keys(object.objectBaseType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
         );
-        spyOnValidate.mockReturnValueOnce(undefined);
-        handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+      });
+    });
 
-        await handler.webhooksController.sendbird(JSON.stringify(payload), {});
-        await delay(200);
+    /**
+     * Trigger : WebhooksController.sendbird
+     * Dispatches:
+     *      1. ContentKey.newChatMessageFromUser
+     */
+    /* eslint-disable max-len */
+    it(`sendbird: should send dispatches of type ${ContentKey.newChatMessageFromUser} when received from sendbird webhook`, async () => {
+      /* eslint-enable max-len */
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
 
-        const mock = generateBaseMock({
-          recipientClientId: params.extractReceiver(member),
-          senderClientId: params.extractSender(member),
-          contentKey: params.contentKey,
+      const communication = await handler.communicationService.get({
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+      });
+
+      const payload = { ...sendbirdPayload };
+      payload.sender.user_id = member.primaryUserId.toString();
+      payload.channel.channel_url = communication.sendBirdChannelUrl;
+      payload.members = [{ user_id: member.primaryUserId.toString(), is_online: false }];
+
+      const spyOnValidate = jest.spyOn(
+        handler.webhooksController,
+        'validateMessageSentFromSendbird',
+      );
+      spyOnValidate.mockReturnValueOnce(undefined);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      await handler.webhooksController.sendbird(JSON.stringify(payload), {});
+      await delay(200);
+
+      const mock = generateNewChatMessageToMemberMock({
+        recipientClientId: member.id,
+        senderClientId: member.primaryUserId.toString(),
+      });
+
+      const object = new ObjectNewChatMessageToMemberClass(mock);
+      Object.keys(object.objectNewChatMessageFromUserType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+
+    /**
+     * Trigger : DailyReportResolver.setDailyReportCategories
+     * Dispatches:
+     *      1. send memberNotFeelingWellMessage dispatch
+     */
+    /* eslint-disable max-len */
+    it(`setDailyReportCategories: should send dispatch ${ContentKey.memberNotFeelingWellMessage}`, async () => {
+      /* eslint-enable max-len */
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      jest
+        .spyOn(handler.dailyReportService, 'setDailyReportCategories')
+        .mockImplementation(async () =>
+          generateDailyReport({ statsOverThreshold: [DailyReportCategoryTypes.Pain] }),
+        );
+
+      await handler
+        .setContextUserId(member.id, member.primaryUserId.toString())
+        .mutations.setDailyReportCategories({
+          dailyReportCategoriesInput: {
+            date: reformatDate(faker.date.recent().toString(), general.get('dateFormatString')),
+            categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
+          } as DailyReportCategoriesInput,
         });
+      await delay(200);
 
-        const object = new ObjectBaseClass(mock);
-        Object.keys(object.objectBaseType).forEach((key) => {
-          expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
-            expect.objectContaining({
-              type: QueueType.notifications,
-              message: expect.stringContaining(
-                key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
-              ),
-            }),
-          );
-        });
-      },
-    );
+      const mock = generateTextMessageUserMock({
+        senderClientId: member.id,
+        recipientClientId: member.primaryUserId.toString(),
+        contentKey: ContentKey.memberNotFeelingWellMessage,
+      });
+
+      const object = new ObjectBaseClass(mock);
+      Object.keys(object.objectBaseType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
   });
 
   /*************************************************************************************************
@@ -602,6 +741,10 @@ describe('Integration tests: notifications', () => {
       checkValues(startFromIndex + 3, {
         type: InnerQueueTypes.deleteDispatch,
         dispatchId: generateDispatchId(ContentKey.logReminder, memberId),
+      });
+      checkValues(startFromIndex + 4, {
+        type: InnerQueueTypes.deleteDispatch,
+        dispatchId: generateDispatchId(ContentKey.customContent, memberId),
       });
     }
   };

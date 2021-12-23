@@ -613,8 +613,6 @@ export class ControlMember extends Member {}
  *************************************************************************************************/
 export type MemberDocument = Member & Document;
 export const MemberDto = SchemaFactory.createForClass(Member);
-export type NotifyParamsDocument = NotifyParams & Document;
-export const NotifyParamsDto = SchemaFactory.createForClass(NotifyParams);
 export type ArchiveMemberDocument = ArchiveMember & Document;
 export const ArchiveMemberDto = SchemaFactory.createForClass(ArchiveMember);
 export type ControlMemberDocument = ControlMember & Document;

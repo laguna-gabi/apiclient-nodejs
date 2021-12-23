@@ -1,7 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
-import { ScheduleModule } from '@nestjs/schedule';
 import { TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import { connect, disconnect } from 'mongoose';
@@ -31,12 +30,17 @@ export class BaseHandler {
   module: GraphQLModule;
   userService: UserService;
 
-  setContextUserId = (userId: string, roles: RoleTypes[] = [MemberRole.member]) => {
+  setContextUserId = (
+    userId: string,
+    primaryUserId = '',
+    roles: RoleTypes[] = [MemberRole.member],
+  ) => {
     (this.module as any).apolloServer.context = () => ({
       req: {
         user: {
           _id: userId,
           roles,
+          primaryUserId,
         },
       },
     });
@@ -101,7 +105,7 @@ export const dbDisconnect = async () => {
 };
 
 export const defaultModules = () => {
-  return [DbModule, EventEmitterModule.forRoot(), ScheduleModule.forRoot()];
+  return [DbModule, EventEmitterModule.forRoot()];
 };
 
 export const mockLogger = (logger) => {

@@ -15,6 +15,7 @@ import * as config from 'config';
 import { format } from 'date-fns';
 import * as faker from 'faker';
 import { Types } from 'mongoose';
+import { DailyReport } from '../src/dailyReport';
 import { v4 } from 'uuid';
 import * as en from '../languages/en.json';
 import {
@@ -36,9 +37,11 @@ import {
   SendSendBirdNotification,
   SendTwilioNotification,
   UserRole,
+  reformatDate,
 } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import {
+  AddCaregiverParams,
   AppointmentCompose,
   AudioFormat,
   CancelNotifyParams,
@@ -51,10 +54,12 @@ import {
   MemberConfig,
   NotifyParams,
   ReadmissionRisk,
+  Relationship,
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
   Sex,
   TaskStatus,
+  UpdateCaregiverParams,
   UpdateJournalTextParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
@@ -584,6 +589,16 @@ export const generateUpdateRecordingParams = ({
   return { id, memberId, userId, start, end, answered, phone, appointmentId, recordingType };
 };
 
+export const generateDailyReport = ({
+  memberId = generateObjectId(),
+  date = reformatDate(faker.date.recent().toString(), config.get('general.dateFormatString')),
+  categories = [],
+  statsOverThreshold = [],
+  notificationSent = false,
+}: Partial<DailyReport> = {}): DailyReport => {
+  return { memberId, date, categories, statsOverThreshold, notificationSent };
+};
+
 export const generateUpdateClientSettings = ({
   member,
   memberConfig,
@@ -615,4 +630,25 @@ export const generateContextUserId = (
   roles: RoleTypes[] = [MemberRole.member],
 ) => {
   return { req: { user: { _id: userId, roles } } };
+};
+
+export const generateAddCaregiverParams = ({
+  firstName = faker.name.firstName(),
+  lastName = faker.name.lastName(),
+  email = faker.internet.email(),
+  relationship = Relationship.neighbour,
+  phone = '+12133734253',
+}: Partial<AddCaregiverParams> = {}): AddCaregiverParams => {
+  return { firstName, lastName, email, relationship, phone };
+};
+
+export const generateUpdateCaregiverParams = ({
+  id = generateId(),
+  firstName = faker.name.firstName(),
+  lastName = faker.name.lastName(),
+  email = faker.internet.email(),
+  relationship = Relationship.neighbour,
+  phone = '+12133734253',
+}: Partial<UpdateCaregiverParams> = {}): UpdateCaregiverParams => {
+  return { id, firstName, lastName, email, relationship, phone };
 };

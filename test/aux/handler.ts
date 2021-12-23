@@ -2,7 +2,6 @@ import { ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
-import { SchedulerRegistry } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
 import { createTestClient } from 'apollo-server-testing';
 import * as config from 'config';
@@ -15,6 +14,7 @@ import { AppModule } from '../../src/app.module';
 import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
 import { LoggerService, bearerToken } from '../../src/common';
 import { CommunicationService } from '../../src/communication';
+import { DailyReportService } from '../../src/dailyReport';
 import { Member, MemberService } from '../../src/member';
 import { Org, OrgService } from '../../src/org';
 import { WebhooksController } from '../../src/providers';
@@ -37,11 +37,11 @@ export class Handler extends BaseHandler {
   memberService: MemberService;
   orgService: OrgService;
   webhooksController: WebhooksController;
-  schedulerRegistry: SchedulerRegistry;
   spyOnGetCommunicationService;
   adminUser: User;
   patientZero: Member;
   lagunaOrg: Org | null;
+  dailyReportService: DailyReportService;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -66,8 +66,8 @@ export class Handler extends BaseHandler {
     await this.app.init();
 
     this.module = moduleFixture.get<GraphQLModule>(GraphQLModule);
-    this.schedulerRegistry = moduleFixture.get<SchedulerRegistry>(SchedulerRegistry);
     this.eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
+    this.dailyReportService = moduleFixture.get<DailyReportService>(DailyReportService);
     const providers = mockProviders(moduleFixture);
     this.sendBird = providers.sendBird;
     this.notificationsService = providers.notificationsService;

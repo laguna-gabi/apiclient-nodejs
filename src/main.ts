@@ -4,7 +4,6 @@ import * as packageJson from '../package.json';
 import { AppModule } from './app.module';
 import { GlobalAuthGuard, RolesGuard } from './auth';
 import { AllExceptionsFilter, LoggerService, internalLogs } from './common'; //
-import { MemberScheduler } from './member';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: true, bodyParser: false });
@@ -32,13 +31,6 @@ async function bootstrap() {
     'Main',
     bootstrap.name,
   );
-
-  /**
-   * Registering reminders for all scheduled notifications
-   * DON'T DELETE THIS!
-   */
-  const memberScheduler = app.get<MemberScheduler>(MemberScheduler);
-  await memberScheduler.init();
 }
 
 bootstrap();

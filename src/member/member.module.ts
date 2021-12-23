@@ -8,6 +8,8 @@ import {
   ArchiveMemberConfig,
   ArchiveMemberConfigDto,
   ArchiveMemberDto,
+  Caregiver,
+  CaregiverDto,
   ControlMember,
   ControlMemberDto,
   Goal,
@@ -21,25 +23,20 @@ import {
   MemberDto,
   MemberRecordingDto,
   MemberResolver,
-  MemberScheduler,
   MemberService,
   NotificationBuilder,
-  NotifyParams,
-  NotifyParamsDto,
   Recording,
 } from '.';
 import { Appointment, AppointmentDto } from '../appointment';
 import { CommonModule } from '../common';
 import { CommunicationModule } from '../communication';
 import { ConfigsService, ProvidersModule } from '../providers';
-import { InternalSchedulerModule } from '../scheduler';
 import { UserModule } from '../user';
 
 @Module({
   imports: [
     CommunicationModule,
     UserModule,
-    InternalSchedulerModule,
     ProvidersModule,
     HttpModule,
     CommonModule,
@@ -50,14 +47,14 @@ import { UserModule } from '../user';
       { name: Journal.name, schema: JournalDto },
       { name: MemberConfig.name, schema: MemberConfigDto },
       { name: Appointment.name, schema: AppointmentDto },
-      { name: NotifyParams.name, schema: NotifyParamsDto },
       { name: Recording.name, schema: MemberRecordingDto },
       { name: ArchiveMember.name, schema: ArchiveMemberDto },
       { name: ArchiveMemberConfig.name, schema: ArchiveMemberConfigDto },
       { name: ControlMember.name, schema: ControlMemberDto },
+      { name: Caregiver.name, schema: CaregiverDto },
     ]),
   ],
-  providers: [MemberResolver, MemberService, NotificationBuilder, MemberScheduler, ConfigsService],
+  providers: [MemberResolver, MemberService, NotificationBuilder, ConfigsService],
   controllers: [MemberController],
   exports: [MemberService, MongooseModule],
 })

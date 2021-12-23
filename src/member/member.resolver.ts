@@ -15,15 +15,17 @@ import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import * as config from 'config';
-import { addDays, millisecondsInHour } from 'date-fns';
+import { addDays, isAfter, millisecondsInHour } from 'date-fns';
 import { format, getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
 import { camelCase } from 'lodash';
 import { v4 } from 'uuid';
 import { lookup } from 'zipcode-to-timezone';
 import {
+  AddCaregiverParams,
   AppointmentCompose,
   AudioType,
   CancelNotifyParams,
+  Caregiver,
   ChatMessageOrigin,
   CreateMemberParams,
   CreateTaskParams,
@@ -37,7 +39,6 @@ import {
   Member,
   MemberBase,
   MemberConfig,
-  MemberScheduler,
   MemberService,
   MemberSummary,
   NotificationBuilder,
@@ -47,6 +48,7 @@ import {
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
   TaskStatus,
+  UpdateCaregiverParams,
   UpdateJournalTextParams,
   UpdateMemberConfigParams,
   UpdateMemberParams,
@@ -100,7 +102,6 @@ export class MemberResolver extends MemberBase {
 
   constructor(
     readonly memberService: MemberService,
-    private readonly memberScheduler: MemberScheduler,
     private readonly notificationBuilder: NotificationBuilder,
     readonly eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
@@ -645,6 +646,79 @@ export class MemberResolver extends MemberBase {
     return journal;
   }
 
+  /*************************************************************************************************
+   ******************************************* Caregivers ******************************************
+   ************************************************************************************************/
+
+  @Mutation(() => Caregiver)
+  @Roles(MemberRole.member)
+  async addCaregiver(
+    @Client('_id') memberId,
+    @Client('roles') roles,
+    @Args(camelCase(AddCaregiverParams.name), { type: () => AddCaregiverParams })
+    addCaregiverParams: AddCaregiverParams,
+  ): Promise<Caregiver> {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+
+    return this.memberService.addCaregiver(memberId, addCaregiverParams);
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(MemberRole.member)
+  async deleteCaregiver(
+    @Client('_id') memberId,
+    @Client('roles') roles,
+    @Args('id', { type: () => String }) id: string,
+  ): Promise<boolean | never> {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+
+    // only allow a member to delete his own caregiver records
+    const caregiver = await this.memberService.getCaregiver(id);
+    if (caregiver && caregiver.memberId.toString() != memberId) {
+      throw new Error(Errors.get(ErrorType.caregiverDeleteNotAllowed));
+    }
+
+    if (caregiver) {
+      await this.memberService.deleteCaregiver(id);
+    }
+
+    return true;
+  }
+
+  @Mutation(() => Caregiver)
+  @Roles(MemberRole.member)
+  async updateCaregiver(
+    @Client('_id') memberId,
+    @Client('roles') roles,
+    @Args(camelCase(UpdateCaregiverParams.name), { type: () => UpdateCaregiverParams })
+    updateCaregiverParams: UpdateCaregiverParams,
+  ): Promise<Caregiver> {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+
+    return await this.memberService.updateCaregiver(memberId, updateCaregiverParams);
+  }
+
+  @Query(() => [Caregiver])
+  @Roles(MemberRole.member, UserRole.coach)
+  async getCaregivers(
+    @Client('_id') clientId,
+    @Client('roles') roles,
+    @Args('memberId', { type: () => String, nullable: true }) memberId?: string,
+  ): Promise<Caregiver[]> {
+    if (roles.includes(MemberRole.member)) {
+      if (memberId && clientId != memberId) {
+        throw new Error(Errors.get(ErrorType.memberIdInconsistent));
+      }
+      memberId = clientId;
+    }
+    return this.memberService.getCaregiversByMemberId(memberId);
+  }
   /************************************************************************************************
    ***************************************** Notifications ****************************************
    ************************************************************************************************/
@@ -733,7 +807,23 @@ export class MemberResolver extends MemberBase {
     const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId);
 
     if (metadata.when) {
-      await this.memberScheduler.registerCustomFutureNotify(notifyParams);
+      if (isAfter(new Date(), metadata.when)) {
+        throw new Error(Errors.get(ErrorType.notificationMetadataWhenPast));
+      }
+      const dispatchParams: IDispatchParams = {
+        memberId,
+        userId,
+        correlationId: v4(),
+        dispatchId: generateDispatchId(ContentKey.customContent, memberId, Date.now().toString()),
+        type:
+          type === NotificationType.text
+            ? InternalNotificationType.textToMember
+            : InternalNotificationType.textSmsToMember,
+        content: metadata.content,
+        metadata: { contentType: ContentKey.customContent, triggersAt: metadata.when },
+      };
+
+      await this.notifyCreateDispatch(dispatchParams);
       return;
     }
 
@@ -796,8 +886,7 @@ export class MemberResolver extends MemberBase {
   }
 
   /**
-   * Event is coming from appointment.scheduler or
-   * member.scheduler - scheduling reminders and nudges.
+   * Event is coming from appointment.scheduler
    */
   @OnEvent(EventType.notifyInternal, { async: true })
   async internalNotify(params: InternalNotifyParams) {
@@ -915,7 +1004,10 @@ export class MemberResolver extends MemberBase {
           userId: senderUserId,
           type: InternalNotificationType.chatMessageToMember,
           correlationId: v4(),
-          metadata: { contentType: ContentKey.newChatMessageFromUser },
+          metadata: {
+            contentType: ContentKey.newChatMessageFromUser,
+            path: `connect/${communication.memberId.toString()}/${senderUserId}`,
+          },
         });
       } else {
         const coachInfo = params.sendBirdMemberInfo.find(
@@ -1031,7 +1123,6 @@ export class MemberResolver extends MemberBase {
   }
 
   private async deleteSchedules(params: IEventMember) {
-    const { memberId } = params;
     try {
       await this.notifyDeleteDispatch({
         dispatchId: generateDispatchId(ContentKey.newMemberNudge, params.memberId),
@@ -1045,9 +1136,8 @@ export class MemberResolver extends MemberBase {
       await this.notifyDeleteDispatch({
         dispatchId: generateDispatchId(ContentKey.logReminder, params.memberId),
       });
-      const notifications = await this.memberService.getMemberNotifications(memberId);
-      notifications.forEach((notification) => {
-        this.memberScheduler.deleteTimeout({ id: notification._id });
+      await this.notifyDeleteDispatch({
+        dispatchId: generateDispatchId(ContentKey.customContent, params.memberId),
       });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, ex);
