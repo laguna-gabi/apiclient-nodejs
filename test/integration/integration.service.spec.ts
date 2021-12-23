@@ -20,7 +20,6 @@ import {
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
 } from '@lagunahealth/pandora';
-import { ObjectNewChatMessageToMemberType } from '@lagunahealth/pandora/dist/src/mocks/createDispatchNewChatMessageToMember';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapMinutes } from 'config';
 import { addDays, subMinutes } from 'date-fns';
