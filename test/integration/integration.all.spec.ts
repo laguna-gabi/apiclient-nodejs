@@ -16,12 +16,9 @@ import {
   RegisterForNotificationParams,
   UserRole,
   delay,
+  reformatDate,
 } from '../../src/common';
-import {
-  DailyReportCategoriesInput,
-  DailyReportCategoryTypes,
-  DailyReportQueryInput,
-} from '../../src/dailyReport';
+import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
 import {
   CancelNotifyParams,
   CreateTaskParams,
@@ -53,6 +50,7 @@ import {
   generateUpdateRecordingParams,
 } from '../index';
 import { iceServers } from '../unit/mocks/twilioPeerIceServers';
+import { general } from 'config';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -1019,42 +1017,76 @@ describe('Integration tests: all', () => {
   });
 
   describe('Daily Reports', () => {
-    it('set/get a dailyReport', async () => {
-      const { updatedDailyReport } = await handler
-        .setContextUserId(handler.patientZero.id.toString())
-        .mutations.setDailyReportCategories({
-          dailyReportCategoriesInput: {
-            date: '2015/01/01',
+    it('set/get a dailyReport sorted by date', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+      // start randomly and collect 3 dates:
+      const startDate = faker.date.past();
+      const day1 = reformatDate(startDate.toString(), general.get('dateFormatString'));
+      const day2 = reformatDate(
+        add(startDate, { days: 2 }).toString(),
+        general.get('dateFormatString'),
+      );
+      const day3 = reformatDate(
+        add(startDate, { days: 4 }).toString(),
+        general.get('dateFormatString'),
+      );
+
+      // upload 3 daily reports
+      await Promise.all(
+        [
+          {
+            date: day1,
             categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
-          } as DailyReportCategoriesInput,
-        });
-      expect(updatedDailyReport).toEqual({
-        categories: [{ rank: 1, category: 'Pain' }],
-        memberId: handler.patientZero.id.toString(),
-        date: '2015/01/01',
-        statsOverThreshold: null,
+          },
+          {
+            date: day3,
+            categories: [{ category: DailyReportCategoryTypes.Mobility, rank: 1 }],
+          },
+          {
+            date: day2,
+            categories: [{ category: DailyReportCategoryTypes.Appetite, rank: 2 }],
+          },
+        ].map(async (report) =>
+          handler.setContextUserId(member.id).mutations.setDailyReportCategories({
+            dailyReportCategoriesInput: report,
+          }),
+        ),
+      );
+
+      // fetch daily reports for the member
+      const { dailyReports } = await handler.setContextUserId(member.id).queries.getDailyReports({
+        dailyReportQueryInput: {
+          startDate: day1,
+          endDate: day3,
+          memberId: member.id,
+        } as DailyReportQueryInput,
       });
 
-      const { dailyReports } = await handler
-        .setContextUserId(handler.patientZero.id.toString())
-        .queries.getDailyReports({
-          dailyReportQueryInput: {
-            startDate: '2015/01/01',
-            endDate: '2015/01/01',
-            memberId: handler.patientZero.id.toString(),
-          } as DailyReportQueryInput,
-        });
-
-      expect(dailyReports).toEqual({
+      // expect to get reports in chronological order
+      expect(dailyReports).toMatchObject({
         data: [
           {
-            categories: [{ category: 'Pain', rank: 1 }],
-            date: '2015/01/01',
+            categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
+            date: day1,
             statsOverThreshold: null,
-            memberId: handler.patientZero.id.toString(),
+            memberId: member.id,
+          },
+          {
+            categories: [{ category: DailyReportCategoryTypes.Appetite, rank: 2 }],
+            date: day2,
+            statsOverThreshold: null,
+            memberId: member.id,
+          },
+          {
+            categories: [{ category: DailyReportCategoryTypes.Mobility, rank: 1 }],
+            date: day3,
+            statsOverThreshold: null,
+            memberId: member.id,
           },
         ],
-        metadata: { minDate: '2015/01/01' },
+        metadata: { minDate: reformatDate(day1.toString(), general.get('dateFormatString')) },
       });
     });
   });

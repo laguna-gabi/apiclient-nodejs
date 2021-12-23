@@ -24,13 +24,15 @@ export class DailyReportService extends BaseService {
   }
 
   async get(dailyReportCategoryQueryInput: DailyReportQueryInput): Promise<DailyReport[]> {
-    return this.dailyReport.find({
-      memberId: new Types.ObjectId(dailyReportCategoryQueryInput.memberId),
-      date: {
-        $gte: dailyReportCategoryQueryInput.startDate,
-        $lte: dailyReportCategoryQueryInput.endDate,
-      },
-    });
+    return this.dailyReport
+      .find({
+        memberId: new Types.ObjectId(dailyReportCategoryQueryInput.memberId),
+        date: {
+          $gte: dailyReportCategoryQueryInput.startDate,
+          $lte: dailyReportCategoryQueryInput.endDate,
+        },
+      })
+      ?.sort({ date: 1 });
   }
 
   async setDailyReportCategories(
