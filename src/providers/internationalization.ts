@@ -43,13 +43,21 @@ export class InternationalizationService implements OnModuleInit {
         ? Language.en
         : recipientClient.language;
 
-    if (recipientClient) {
+    if (recipientClient && recipientClient.honorific) {
       updateRecipientClient.honorific = this.i18n.t(`honorific.${recipientClient.honorific}`, {
         lng,
       });
     }
+    if (senderClient && senderClient.honorific) {
+      senderClient.honorific = this.i18n.t(`honorific.${senderClient.honorific}`, {
+        lng,
+      });
+    }
 
-    const replace = params.contentKey === ContentKey.appointmentScheduledUser;
+    const replace =
+      params.contentKey === ContentKey.appointmentScheduledUser ||
+      params.contentKey === ContentKey.newChatMessageFromMember ||
+      params.contentKey === ContentKey.memberNotFeelingWellMessage;
     return this.i18n.t(`contents.${contentKey}`, {
       member: replace ? senderClient : updateRecipientClient,
       user: replace ? updateRecipientClient : senderClient,
