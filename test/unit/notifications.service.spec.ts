@@ -86,8 +86,8 @@ describe(NotificationsService.name, () => {
 
       const body = replaceConfigs({
         content: translation.contents[ContentKey.appointmentRequest],
-        recipientClient,
-        senderClient,
+        memberClient: recipientClient,
+        userClient: senderClient,
       });
 
       expect(spyOnTwilioServiceSend).toBeCalledWith({
@@ -106,8 +106,8 @@ describe(NotificationsService.name, () => {
 
       const body = replaceConfigs({
         content: translation.contents[ContentKey.appointmentRequest],
-        recipientClient,
-        senderClient,
+        memberClient: recipientClient,
+        userClient: senderClient,
       });
 
       expect(spyOnTwilioServiceSend).toBeCalledWith({
