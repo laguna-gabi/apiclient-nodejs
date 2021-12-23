@@ -75,14 +75,19 @@ export const PinoHttpConfig = {
   autoLogging: false,
   quietReqLogger: true,
   level: LogType.debug,
-  prettyPrint:
-    !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test ||
-    process.env.NODE_ENV === Environments.localhost ? {
-        colorize: true,
-        translateTime: 'SYS:dd/mm/yyyy, H:M:ss',
-        singleLine: true,
-        messageFormat: '[{className}] [{methodName}] {reasons}',
-        ignore: 'pid,hostname,className,methodName,reasons',
+  transport:
+    !process.env.NODE_ENV ||
+    process.env.NODE_ENV === Environments.test ||
+    process.env.NODE_ENV === Environments.localhost
+      ? {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'SYS:dd/mm/yyyy, H:M:ss',
+          singleLine: true,
+          messageFormat: '[{className}] [{methodName}] {reasons}',
+          ignore: 'pid,hostname,className,methodName,reasons',
+        },
       }
-      : false
+      : undefined,
 };
