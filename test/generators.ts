@@ -38,10 +38,10 @@ export const generateUpdateMemberSettingsMock = ({
 } = {}): Omit<ClientSettings, 'avatar'> => {
   return {
     id,
-    phone: 'member-phone123',
-    firstName: 'member-fistname',
-    lastName: 'member-lastname',
-    orgName: 'member-org123',
+    phone: generatePhone(),
+    firstName: name.firstName(),
+    lastName: name.lastName(),
+    orgName: name.firstName(),
     honorific: Honorific.reverend,
     zipCode: '91210',
     language: Language.en,
@@ -60,8 +60,8 @@ export const generateUpdateUserSettingsMock = (): Pick<
 > => {
   return {
     id: v4(),
-    phone: 'coach-phone456',
-    firstName: 'coach123',
+    phone: generatePhone(),
+    firstName: name.firstName(),
     lastName: name.lastName(),
     avatar: internet.avatar(),
   };

@@ -88,7 +88,7 @@ describe('Notifications full flow', () => {
     await internationalizationService.onModuleInit();
 
     await initClients();
-  }, 20000);
+  });
 
   afterEach(() => {
     spyOnTwilioSend.mockReset();
