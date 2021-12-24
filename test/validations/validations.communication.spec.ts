@@ -1,3 +1,4 @@
+import { ErrorType, Errors } from '../../src/common';
 import { Handler } from '../aux';
 import { generateGetCommunicationParams } from '../generators';
 
@@ -27,15 +28,28 @@ describe('Validations - communication', () => {
     });
   });
 
+  /* eslint-disable max-len */
   test.each`
     field         | input              | errors
     ${'userId'}   | ${{ userId: 1 }}   | ${stringError}
     ${'memberId'} | ${{ memberId: 1 }} | ${stringError}
-  `(`should fail to get communication since $field is not valid`, async (params) => {
+  `(`should fail to get communication since $field is invalid (missing)`, async (params) => {
     const getCommunicationParams = generateGetCommunicationParams(params.input);
     await handler.queries.getCommunication({
       getCommunicationParams,
       missingFieldError: params.errors,
+    });
+  });
+
+  test.each`
+    field         | input                | invalid
+    ${'memberId'} | ${{ memberId: '1' }} | ${[Errors.get(ErrorType.memberIdInvalid)]}
+    ${'userId'}   | ${{ userId: '1' }}   | ${[Errors.get(ErrorType.userIdInvalid)]}
+  `(`should fail to get communication since $field is not valid`, async (params) => {
+    const getCommunicationParams = generateGetCommunicationParams(params.input);
+    await handler.queries.getCommunication({
+      getCommunicationParams,
+      invalidFieldsErrors: params.invalid,
     });
   });
 });

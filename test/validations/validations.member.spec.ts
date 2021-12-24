@@ -139,6 +139,7 @@ describe('Validations - member', () => {
       ${{ firstName: 123 }}             | ${{ missingFieldError: stringError }}
       ${{ lastName: 123 }}              | ${{ missingFieldError: stringError }}
       ${{ orgId: 123 }}                 | ${{ missingFieldError: stringError }}
+      ${{ orgId: '123' }}               | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberOrgIdInvalid)] }}
       ${{ email: 'not-valid' }}         | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberEmailFormat)] }}
       ${{ sex: 'not-valid' }}           | ${{ missingFieldError: 'does not exist in "Sex" enum' }}
       ${{ language: 'not-valid' }}      | ${{ missingFieldError: 'does not exist in "Language" enum' }}
@@ -249,7 +250,14 @@ describe('Validations - member', () => {
     it('should throw error on non existing member', async () => {
       await handler.queries.getMemberUploadRecordingLink({
         recordingLinkParams: { memberId: generateId(), id: generateId() },
-        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+        invalidFieldsErrors: [Errors.get(ErrorType.memberNotFound)],
+      });
+    });
+
+    it('should throw error on invalid member id', async () => {
+      await handler.queries.getMemberUploadRecordingLink({
+        recordingLinkParams: { memberId: '123', id: generateId() },
+        invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)],
       });
     });
   });
@@ -258,7 +266,14 @@ describe('Validations - member', () => {
     it('should throw error on non existing member', async () => {
       await handler.queries.getMemberDownloadRecordingLink({
         recordingLinkParams: { memberId: generateId(), id: generateId() },
-        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+        invalidFieldsErrors: [Errors.get(ErrorType.memberNotFound)],
+      });
+    });
+
+    it('should throw error on invalid member id', async () => {
+      await handler.queries.getMemberDownloadRecordingLink({
+        recordingLinkParams: { memberId: '123', id: generateId() },
+        invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)],
       });
     });
   });
@@ -272,28 +287,64 @@ describe('Validations - member', () => {
   });
 
   describe('registerForNotificationParams', () => {
-    test.each(['a-b', 'a_b'])(
-      'should not be able to register on non alphanumeric token %p',
-      async (token) => {
-        await handler.setContextUserId(generateId()).mutations.registerMemberForNotifications({
-          registerForNotificationParams: { platform: Platform.ios, token },
-          invalidFieldsErrors: [Errors.get(ErrorType.memberRegisterForNotificationToken)],
-        });
+    test.each([
+      {
+        token: 'a-b',
+        memberId: generateId(),
+        error: Errors.get(ErrorType.memberRegisterForNotificationToken),
       },
-    );
+      {
+        token: 'a_b',
+        memberId: generateId(),
+        error: Errors.get(ErrorType.memberRegisterForNotificationToken),
+      },
+      {
+        token: 'ab',
+        memberId: '123',
+        error: Errors.get(ErrorType.memberIdInvalid),
+      },
+    ])('should not be able to register due to invalid fields %p', async (params) => {
+      await handler.setContextUserId(generateId()).mutations.registerMemberForNotifications({
+        registerForNotificationParams: {
+          platform: Platform.ios,
+          token: params.token,
+          memberId: params.memberId,
+        },
+        invalidFieldsErrors: [params.error],
+      });
+    });
   });
 
   describe('notify', () => {
+    /* eslint-disable max-len */
     test.each`
-      input                             | error
+      input                             | missing
       ${{ userId: 123 }}                | ${stringError}
       ${{ memberId: 123 }}              | ${stringError}
       ${{ metadata: { content: 123 } }} | ${stringError}
       ${{ metadata: { peerId: 123 } }}  | ${stringError}
       ${{ type: 123 }}                  | ${'cannot represent non-string value'}
+    `(
+      `should fail to notify since setting $input is not a valid (missing indication)`,
+      async (params) => {
+        const notifyParams: NotifyParams = generateNotifyParams({ ...params.input });
+        await handler.mutations.notify({
+          notifyParams,
+          missingFieldError: params.missing,
+        });
+      },
+    );
+
+    test.each`
+      input                  | invalid
+      ${{ userId: '123' }}   | ${[Errors.get(ErrorType.userIdInvalid)]}
+      ${{ memberId: '123' }} | ${[Errors.get(ErrorType.memberIdInvalid)]}
     `(`should fail to notify since setting $input is not a valid`, async (params) => {
       const notifyParams: NotifyParams = generateNotifyParams({ ...params.input });
-      await handler.mutations.notify({ notifyParams, missingFieldError: params.error });
+      await handler.mutations.notify({
+        notifyParams,
+        invalidFieldsErrors: params.invalid,
+      });
     });
 
     /* eslint-disable max-len */
@@ -387,6 +438,7 @@ describe('Validations - member', () => {
     );
   });
 
+  /* eslint-disable max-len */
   describe('cancel', () => {
     test.each`
       input                            | error
@@ -398,7 +450,23 @@ describe('Validations - member', () => {
       const cancelNotifyParams: CancelNotifyParams = generateCancelNotifyParams({
         ...params.input,
       });
-      await handler.mutations.cancel({ cancelNotifyParams, missingFieldError: params.error });
+      await handler.mutations.cancel({
+        cancelNotifyParams,
+        missingFieldError: params.error,
+      });
+    });
+
+    test.each`
+      input                  | invalid
+      ${{ memberId: '123' }} | ${[Errors.get(ErrorType.memberIdInvalid)]}
+    `(`should fail to cancel notification since setting $input is not valid`, async (params) => {
+      const cancelNotifyParams: CancelNotifyParams = generateCancelNotifyParams({
+        ...params.input,
+      });
+      await handler.mutations.cancel({
+        cancelNotifyParams,
+        invalidFieldsErrors: params.invalid,
+      });
     });
 
     test.each`
@@ -608,6 +676,17 @@ describe('Validations - member', () => {
         missingFieldError: stringError,
       });
     });
+
+    test.each`
+      field                  | invalid
+      ${{ memberId: '123' }} | ${[Errors.get(ErrorType.memberIdInvalid)]}
+    `(`should fail to set notes since $input is not a valid type`, async (params) => {
+      const setGeneralNotesParams = generateSetGeneralNotesParams({ ...params.field });
+      await handler.mutations.setGeneralNotes({
+        setGeneralNotesParams,
+        invalidFieldsErrors: params.invalid,
+      });
+    });
   });
 
   describe('updateJournalText', () => {
@@ -624,15 +703,30 @@ describe('Validations - member', () => {
       });
     });
 
+    /* eslint-disable max-len */
     test.each`
-      field
-      ${{ id: 123 }}
-      ${{ text: 123 }}
+      field            | error
+      ${{ id: 123 }}   | ${stringError}
+      ${{ text: 123 }} | ${stringError}
+    `(
+      `should fail to update journal since $input is not a valid type (indicated as missing )`,
+      async (params) => {
+        const updateJournalTextParams = generateUpdateJournalTextParams({ ...params.field });
+        await handler.mutations.updateJournalText({
+          updateJournalTextParams,
+          missingFieldError: params.error,
+        });
+      },
+    );
+
+    test.each`
+      field            | invalid
+      ${{ id: '123' }} | ${[Errors.get(ErrorType.memberJournalIdInvalid)]}
     `(`should fail to update journal since $input is not a valid type`, async (params) => {
       const updateJournalTextParams = generateUpdateJournalTextParams({ ...params.field });
       await handler.mutations.updateJournalText({
         updateJournalTextParams,
-        missingFieldError: stringError,
+        invalidFieldsErrors: params.invalid,
       });
     });
   });
@@ -668,15 +762,34 @@ describe('Validations - member', () => {
         delete getMemberUploadJournalImageLinkParams[params.field];
         await handler.queries.getMemberUploadJournalImageLink({
           getMemberUploadJournalImageLinkParams,
-          invalidFieldsError: params.error,
+          missingFieldError: params.error,
+        });
+      },
+    );
+
+    /* eslint-disable max-len */
+    test.each`
+      field                   | error
+      ${{ id: 123 }}          | ${stringError}
+      ${{ imageFormat: 123 }} | ${`Enum "ImageFormat" cannot represent non-string value`}
+    `(
+      `should fail to get journal upload image link since $input is not a valid type (indicated as missing)`,
+      async (params) => {
+        const getMemberUploadJournalImageLinkParams = generateGetMemberUploadJournalImageLinkParams(
+          {
+            ...params.field,
+          },
+        );
+        await handler.queries.getMemberUploadJournalImageLink({
+          getMemberUploadJournalImageLinkParams,
+          missingFieldError: params.error,
         });
       },
     );
 
     test.each`
-      field                   | error
-      ${{ id: 123 }}          | ${stringError}
-      ${{ imageFormat: 123 }} | ${`Enum "ImageFormat" cannot represent non-string value`}
+      field            | invalid
+      ${{ id: '123' }} | ${[Errors.get(ErrorType.memberJournalIdInvalid)]}
     `(
       `should fail to get journal upload image link since $input is not a valid type`,
       async (params) => {
@@ -687,7 +800,7 @@ describe('Validations - member', () => {
         );
         await handler.queries.getMemberUploadJournalImageLink({
           getMemberUploadJournalImageLinkParams,
-          invalidFieldsError: params.error,
+          invalidFieldsErrors: params.invalid,
         });
       },
     );
@@ -811,6 +924,18 @@ describe('Validations - member', () => {
       await handler.mutations.replaceUserForMember({
         replaceUserForMemberParams,
         missingFieldError: params.error,
+      });
+    });
+
+    test.each`
+      input                  | invalid
+      ${{ memberId: '123' }} | ${[Errors.get(ErrorType.memberIdInvalid)]}
+      ${{ userId: '123' }}   | ${[Errors.get(ErrorType.userIdInvalid)]}
+    `(`should fail to set new user to member since $input is not a valid type`, async (params) => {
+      const replaceUserForMemberParams = generateReplaceUserForMemberParams({ ...params.input });
+      await handler.mutations.replaceUserForMember({
+        replaceUserForMemberParams,
+        invalidFieldsErrors: params.invalid,
       });
     });
   });

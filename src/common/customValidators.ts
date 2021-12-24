@@ -167,7 +167,7 @@ export function IsObjectId(options?: ValidationOptions) {
       options,
       validator: {
         validate(value: any) {
-          return MongooseTypes.ObjectId.isValid(value) || value === undefined;
+          return MongooseTypes.ObjectId.isValid(value) || value == undefined;
         },
       },
     });

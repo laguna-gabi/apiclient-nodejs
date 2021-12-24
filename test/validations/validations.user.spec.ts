@@ -108,7 +108,9 @@ describe('Validations - user', () => {
   test.each`
     field              | input                                                    | errors
     ${'appointmentId'} | ${{ appointmentId: 123 }}                                | ${stringError}
+    ${'appointmentId'} | ${{ appointmentId: '123' }}                              | ${Errors.get(ErrorType.appointmentIdInvalid)}
     ${'userId'}        | ${{ userId: 123 }}                                       | ${stringError}
+    ${'userId'}        | ${{ userId: '123' }}                                     | ${Errors.get(ErrorType.userIdInvalid)}
     ${'notBefore'}     | ${{ notBefore: 'asd', userId: generateId() }}            | ${'must be a Date instance'}
     ${'both ID'}       | ${{ appointmentId: generateId(), userId: generateId() }} | ${Errors.get(ErrorType.slotsParams)}
     ${'no ID'}         | ${{}}                                                    | ${Errors.get(ErrorType.slotsParams)}

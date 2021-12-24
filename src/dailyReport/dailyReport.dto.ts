@@ -1,7 +1,7 @@
 import { Field, InputType, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { ErrorType, Errors, IsStringDate } from '../common';
+import { ErrorType, Errors, IsObjectId, IsStringDate } from '../common';
 import { IsOptional } from 'class-validator';
 
 /**************************************************************************************************
@@ -20,6 +20,7 @@ registerEnumType(DailyReportCategoryTypes, { name: 'DailyReportCategoryTypes' })
 
 @InputType()
 export class DailyReportCategoriesInput {
+  // hidden field for GQL - populated from member auth token
   memberId?: string;
 
   @Field()
@@ -34,6 +35,7 @@ export class DailyReportCategoriesInput {
 export class DailyReportQueryInput {
   @IsOptional()
   @Field({ nullable: true })
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId?: string;
 
   @Field()

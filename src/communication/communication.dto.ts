@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { UserRole } from '../common';
+import { ErrorType, Errors, IsObjectId, UserRole } from '../common';
 
 /**************************************************************************************************
  **************************************** Internal params *****************************************
@@ -28,9 +28,11 @@ export interface CreateSendbirdGroupChannelParams {
 @InputType()
 export class GetCommunicationParams {
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
 
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.userIdInvalid) })
   userId: string;
 }
 

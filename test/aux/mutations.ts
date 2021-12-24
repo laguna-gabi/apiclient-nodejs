@@ -10,7 +10,12 @@ import {
   UpdateNotesParams,
 } from '../../src/appointment';
 import { AvailabilityInput } from '../../src/availability';
-import { Identifier, Identifiers, RegisterForNotificationParams } from '../../src/common';
+import {
+  Identifier,
+  Identifiers,
+  RegisterForNotificationParams,
+  isGQLResultValid as isResultValid,
+} from '../../src/common';
 import { DailyReportCategoriesInput } from '../../src/dailyReport';
 import {
   AddCaregiverParams,
@@ -92,8 +97,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.createUser
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createUser
     );
   };
 
@@ -118,8 +122,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.createOrg
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createOrg
     );
   };
 
@@ -144,8 +147,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.createMember
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createMember
     );
   };
 
@@ -261,8 +263,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.updateMember
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.updateMember
     );
   };
 
@@ -288,7 +289,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.requestAppointment
     );
   };
@@ -315,7 +316,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.scheduleAppointment
     );
   };
@@ -342,7 +343,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.endAppointment
     );
   };
@@ -377,8 +378,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.updateNotes
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.updateNotes
     );
   };
 
@@ -403,8 +403,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.createGoal
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createGoal
     );
   };
 
@@ -427,7 +426,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.updateGoalStatus
     );
   };
@@ -453,7 +452,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.createActionItem
     );
   };
@@ -477,7 +476,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.updateGoalStatus
     );
   };
@@ -503,7 +502,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.createAvailabilities
     );
   };
@@ -524,7 +523,7 @@ export class Mutations {
       `,
     });
 
-    return this.isResultValid({ result, invalidFieldsErrors }) && result.data.deleteAvailability;
+    return isResultValid({ result, invalidFieldsErrors }) && result.data.deleteAvailability;
   };
 
   setGeneralNotes = async ({
@@ -546,7 +545,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.setGeneralNotes
     );
   };
@@ -590,7 +589,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.updateJournalText
     );
   };
@@ -614,8 +613,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.deleteJournal
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.deleteJournal
     );
   };
 
@@ -638,7 +636,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.deleteJournalImage
     );
   };
@@ -662,7 +660,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.deleteJournalAudio
     );
   };
@@ -686,7 +684,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.publishJournal
     );
   };
@@ -710,7 +708,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.updateMemberConfig
     );
   };
@@ -738,7 +736,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.registerMemberForNotifications
     );
   };
@@ -756,7 +754,7 @@ export class Mutations {
       `,
     });
 
-    return this.isResultValid({ result, invalidFieldsErrors }) && result.data.archiveMember;
+    return isResultValid({ result, invalidFieldsErrors }) && result.data.archiveMember;
   };
 
   deleteMember = async ({
@@ -772,7 +770,7 @@ export class Mutations {
       `,
     });
 
-    return this.isResultValid({ result, invalidFieldsErrors }) && result.data.deleteMember;
+    return isResultValid({ result, invalidFieldsErrors }) && result.data.deleteMember;
   };
 
   notify = async ({
@@ -793,9 +791,7 @@ export class Mutations {
       `,
     });
 
-    return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.notify
-    );
+    return isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.notify;
   };
 
   cancel = async ({
@@ -817,8 +813,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.cancelNotify
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.cancelNotify
     );
   };
 
@@ -841,7 +836,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.updateRecording
     );
   };
@@ -874,24 +869,6 @@ export class Mutations {
     return { errors, updatedDailyReport: data?.setDailyReportCategories };
   };
 
-  isResultValid = ({ result, invalidFieldsErrors, missingFieldError = undefined }): boolean => {
-    if (invalidFieldsErrors) {
-      for (let i = 0; i < invalidFieldsErrors.length; i++) {
-        expect(invalidFieldsErrors[i]).toEqual(
-          result.errors[0][i]?.message || result.errors[0]?.message,
-        );
-        expect(result.errors[0][i]?.code || result.errors[0]?.code).not.toEqual(-1);
-      }
-    } else if (missingFieldError) {
-      expect(result.errors[0].message).toMatch(missingFieldError);
-      expect(result.errors[0].code).toEqual(-1);
-    } else {
-      return true;
-    }
-
-    return false;
-  };
-
   replaceUserForMember = async ({
     replaceUserForMemberParams,
     missingFieldError,
@@ -911,7 +888,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.replaceUserForMemberParams
     );
   };
@@ -943,8 +920,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
-      result.data.addCaregiver
+      isResultValid({ result, invalidFieldsErrors, missingFieldError }) && result.data.addCaregiver
     );
   };
 
@@ -975,7 +951,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
+      isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
       result.data.updateCaregiver
     );
   };
@@ -999,7 +975,7 @@ export class Mutations {
     });
 
     return (
-      this.isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
+      isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
       result.data.deleteCaregiver
     );
   };

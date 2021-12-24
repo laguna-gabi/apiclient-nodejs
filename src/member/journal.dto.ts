@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { Identifier } from '../common';
+import { ErrorType, Errors, Identifier, IsObjectId } from '../common';
 
 export enum ImageType {
   NormalImage = '_NormalImage',
@@ -36,6 +36,7 @@ registerEnumType(AudioFormat, { name: 'AudioFormat' });
 @InputType()
 export class UpdateJournalTextParams {
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberJournalIdInvalid) })
   id: string;
 
   @Field(() => String)
@@ -45,6 +46,7 @@ export class UpdateJournalTextParams {
 @InputType()
 export class GetMemberUploadJournalImageLinkParams {
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberJournalIdInvalid) })
   id: string;
 
   @Field(() => ImageFormat)

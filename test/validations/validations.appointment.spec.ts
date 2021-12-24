@@ -50,7 +50,9 @@ describe('Validations - appointment', () => {
     test.each`
       field          | input                                | error
       ${'memberId'}  | ${{ memberId: 123 }}                 | ${{ missingFieldError: stringError }}
+      ${'memberId'}  | ${{ memberId: '123' }}               | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)] }}
       ${'userId'}    | ${{ userId: 123 }}                   | ${{ missingFieldError: stringError }}
+      ${'userId'}    | ${{ userId: '123' }}                 | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userIdInvalid)] }}
       ${'notBefore'} | ${{ notBefore: faker.lorem.word() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentNotBeforeDate)] }}
     `(
       /* eslint-enable max-len */
@@ -115,15 +117,16 @@ describe('Validations - appointment', () => {
       ${'memberId'} | ${{ memberId: 123 }}       | ${{ missingFieldError: stringError }}
       ${'userId'}   | ${{ userId: 123 }}         | ${{ missingFieldError: stringError }}
       ${'id'}       | ${{ id: 123 }}             | ${{ missingFieldError: stringError }}
-      ${'method'}   | ${{ method: 'not-valid' }} | ${{ missingFieldError: 'Enum "AppointmentMethod" cannot represent non-string value' }}
+      ${'memberId'} | ${{ memberId: '123' }}     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)] }}
+      ${'userId'}   | ${{ userId: '123' }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userIdInvalid)] }}
+      ${'method'}   | ${{ method: 'not-valid' }} | ${{ missingFieldError: 'Variable "$scheduleAppointmentParams" got invalid value "not-valid" at "scheduleAppointmentParams.method"; Value "not-valid" does not exist in "AppointmentMethod" enum.' }}
       ${'start'}    | ${{ start: 'not-valid' }}  | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentStartDate)] }}
       ${'end'}      | ${{ end: 'not-valid' }}    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentEndDate)] }}
     `(
       /* eslint-enable max-len */
       `graphql: should fail to schedule an appointment since $field is not a valid type`,
       async (params) => {
-        const appointmentParams = generateScheduleAppointmentParams();
-        appointmentParams[params.field] = params.input;
+        const appointmentParams = generateScheduleAppointmentParams(params.input);
 
         await handler.mutations.scheduleAppointment({
           appointmentParams,
@@ -137,6 +140,7 @@ describe('Validations - appointment', () => {
       ${'memberId'} | ${{ memberId: 123 }}
       ${'userId'}   | ${{ userId: 123 }}
       ${'id'}       | ${{ id: 123 }}
+      ${'id'}       | ${{ id: '123' }}
       ${'start'}    | ${{ start: 'not-valid' }}
       ${'end'}      | ${{ end: 'not-valid' }}
     `(
@@ -187,14 +191,14 @@ describe('Validations - appointment', () => {
     test.each`
       field             | input                      | error
       ${'id'}           | ${{ id: 123 }}             | ${{ missingFieldError: stringError }}
+      ${'id'}           | ${{ id: '123' }}           | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentIdInvalid)] }}
       ${'noShow'}       | ${{ noShow: 'not-valid' }} | ${{ missingFieldError: 'Boolean cannot represent a non boolean value' }}
       ${'noShowReason'} | ${{ noShowReason: 123 }}   | ${{ missingFieldError: stringError }}
     `(
       /* eslint-enable max-len */
       `should fail to update an appointment no show since $field is not a valid type`,
       async (params) => {
-        const endAppointmentParams = generateEndAppointmentParams();
-        endAppointmentParams[params.field] = params.input;
+        const endAppointmentParams = generateEndAppointmentParams(params.input);
 
         await handler.mutations.endAppointment({
           endAppointmentParams,

@@ -204,6 +204,7 @@ export class CreateMemberParams extends ExtraMemberParams {
   @Field(() => String)
   @IsNotEmpty() /* for rest api */
   @IsString() /* for rest api */
+  @IsObjectId({ message: Errors.get(ErrorType.memberOrgIdInvalid) })
   orgId: string;
 }
 
@@ -275,15 +276,18 @@ export class UpdateMemberParams extends ExtraMemberParams {
 @InputType()
 export class ReplaceUserForMemberParams {
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
 
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.userIdInvalid) })
   userId: string;
 }
 
 @InputType()
 export class SetGeneralNotesParams {
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
 
   @Field(() => String, { nullable: true })
@@ -299,6 +303,7 @@ export class RecordingLinkParams {
   id: string;
 
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
 }
 
@@ -323,6 +328,7 @@ export class NotificationMetadata {
   sendBirdChannelUrl?: string;
 
   @Field(() => String, { nullable: true })
+  @IsObjectId({ message: Errors.get(ErrorType.appointmentIdInvalid) })
   appointmentId?: string;
 
   @Field(() => String, { nullable: true })
@@ -334,10 +340,12 @@ export class NotificationMetadata {
 export class NotifyParams {
   @Prop()
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
 
   @Prop()
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.userIdInvalid) })
   userId: string;
 
   @Prop()
@@ -359,6 +367,7 @@ export class CancelNotificationMetadata {
 @InputType()
 export class CancelNotifyParams {
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
 
   @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataInvalid) })
