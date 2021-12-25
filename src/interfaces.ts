@@ -126,6 +126,7 @@ export enum ContentKey {
   appointmentScheduledUser = 'appointmentScheduledUser',
   memberNotFeelingWellMessage = 'memberNotFeelingWellMessage',
   customContent = 'customContent',
+  callOrVideo = 'callOrVideo',
 }
 
 export enum Language {

@@ -7,39 +7,37 @@ import {
   ServiceName,
   generateDispatchId,
   validateNotificationTypeText,
-} from '../';
+} from '../index';
 import { v4 } from 'uuid';
 
-export type ObjectGeneralMemberTriggeredType = ObjectBaseType &
-  Pick<ICreateDispatch, 'notificationType' | 'triggersAt'>;
+export type ObjectCustomContentType = ObjectBaseType & Pick<ICreateDispatch, 'content'>;
 
-export class ObjectGeneralMemberTriggeredClass {
-  constructor(readonly objectGeneralMemberTriggeredMock: ObjectGeneralMemberTriggeredType) {}
+export class ObjectCustomContentClass {
+  constructor(readonly objectCustomContentType: ObjectCustomContentType) {}
 }
 
-export const generateGeneralMemberTriggeredMock = ({
+export const generateObjectCustomContentMock = ({
   recipientClientId,
   senderClientId,
-  contentKey,
+  content,
   notificationType,
-  triggersAt,
 }: {
   recipientClientId: string;
   senderClientId: string;
-  contentKey: ContentKey;
+  content: string;
   notificationType: NotificationType;
-  triggersAt: Date;
-}): ObjectGeneralMemberTriggeredType => {
+}): ObjectCustomContentType => {
   validateNotificationTypeText(notificationType);
+  const contentKey = ContentKey.customContent;
   return {
     type: InnerQueueTypes.createDispatch,
-    dispatchId: generateDispatchId(contentKey, recipientClientId),
+    dispatchId: generateDispatchId(contentKey, recipientClientId, Date.now().toString()),
     correlationId: v4(),
     serviceName: ServiceName.hepius,
-    notificationType,
+    notificationType: NotificationType.textSms,
     recipientClientId,
     senderClientId,
-    triggersAt,
     contentKey,
+    content,
   };
 };

@@ -1,5 +1,6 @@
 import { address } from 'faker';
 import { lookup } from 'zipcode-to-timezone';
+import { NotificationType } from '../enums';
 
 export const generatePhone = () => {
   const random = () => Math.floor(Math.random() * 9) + 1;
@@ -24,5 +25,15 @@ export const generateZipCode = (): string => {
     if (timeZone) {
       return zipCode;
     }
+  }
+};
+
+export const validateNotificationTypeText = (notificationType: NotificationType) => {
+  if (notificationType !== NotificationType.textSms && notificationType !== NotificationType.text) {
+    throw Error(
+      `invalid notificationType - ${notificationType} - should be ${
+        (NotificationType.text, NotificationType.textSms)
+      }`,
+    );
   }
 };
