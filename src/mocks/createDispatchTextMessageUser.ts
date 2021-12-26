@@ -1,7 +1,6 @@
 import {
   ContentKey,
   InnerQueueTypes,
-  InternalKey,
   InternalNotificationType,
   ObjectBaseType,
   ServiceName,
@@ -19,8 +18,8 @@ export const generateTextMessageUserMock = ({
   contentKey: ContentKey;
 }): ObjectBaseType => {
   const allowedContentKeys = new Set();
-  allowedContentKeys.add(InternalKey.newChatMessageFromMember);
-  allowedContentKeys.add(InternalKey.memberNotFeelingWellMessage);
+  allowedContentKeys.add(ContentKey.newChatMessageFromMember);
+  allowedContentKeys.add(ContentKey.memberNotFeelingWellMessage);
 
   if (!allowedContentKeys.has(contentKey)) {
     throw Error(`invalid ${contentKey} - should be ${Array.from(allowedContentKeys.values())}`);

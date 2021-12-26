@@ -1,7 +1,7 @@
 import {
+  ContentKey,
   ICreateDispatch,
   InnerQueueTypes,
-  InternalKey,
   InternalNotificationType,
   ObjectBaseType,
   ServiceName,
@@ -27,7 +27,7 @@ export const generateAppointmentScheduledUserMock = ({
   appointmentId: string;
   appointmentTime: Date;
 }): ObjectAppointmentScheduledType => {
-  const contentKey = InternalKey.appointmentScheduledUser;
+  const contentKey = ContentKey.appointmentScheduledUser;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, appointmentId),
@@ -52,7 +52,7 @@ export const generateAppointmentScheduledMemberMock = ({
   appointmentId: string;
   appointmentTime: Date;
 }): ObjectAppointmentScheduledType => {
-  const contentKey = InternalKey.appointmentScheduledMember;
+  const contentKey = ContentKey.appointmentScheduledMember;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, appointmentId),

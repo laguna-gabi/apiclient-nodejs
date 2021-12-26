@@ -2,7 +2,6 @@ import {
   ContentKey,
   ICreateDispatch,
   InnerQueueTypes,
-  InternalKey,
   InternalNotificationType,
   ObjectBaseType,
   ServiceName,
@@ -37,12 +36,12 @@ export const generateAppointmentScheduleReminderMock = ({
   contentKey: ContentKey;
 }): ObjectAppointmentScheduleReminderType => {
   if (
-    contentKey !== InternalKey.appointmentReminder &&
-    contentKey !== InternalKey.appointmentLongReminder
+    contentKey !== ContentKey.appointmentReminder &&
+    contentKey !== ContentKey.appointmentLongReminder
   ) {
     throw Error(
-      `invalid ${contentKey} - should be ${InternalKey.appointmentReminder} ` +
-        `or ${InternalKey.appointmentLongReminder}`,
+      `invalid ${contentKey} - should be ${ContentKey.appointmentReminder} ` +
+        `or ${ContentKey.appointmentLongReminder}`,
     );
   }
   return {
