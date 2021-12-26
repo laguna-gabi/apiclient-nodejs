@@ -1,7 +1,7 @@
 import {
-  ContentKey,
   ICreateDispatch,
   InnerQueueTypes,
+  InternalKey,
   InternalNotificationType,
   ObjectBaseType,
   ServiceName,
@@ -22,7 +22,7 @@ export const generateNewMemberMock = ({
   recipientClientId: string;
   senderClientId: string;
 }): ObjectNewMemberType => {
-  const contentKey = ContentKey.newMember;
+  const contentKey = InternalKey.newMember;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId),
@@ -41,7 +41,7 @@ export const generateNewControlMemberMock = ({
 }: {
   recipientClientId: string;
 }): ObjectBaseType => {
-  const contentKey = ContentKey.newControlMember;
+  const contentKey = InternalKey.newControlMember;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId),

@@ -1,7 +1,7 @@
 import {
-  ContentKey,
   ICreateDispatch,
   InnerQueueTypes,
+  InternalKey,
   InternalNotificationType,
   ObjectBaseType,
   ServiceName,
@@ -24,13 +24,13 @@ export const generateNewChatMessageToMemberMock = ({
 }): ObjectNewChatMessageToMemberType => {
   return {
     type: InnerQueueTypes.createDispatch,
-    dispatchId: generateDispatchId(ContentKey.newChatMessageFromUser, Date.now().toString()),
+    dispatchId: generateDispatchId(InternalKey.newChatMessageFromUser, Date.now().toString()),
     correlationId: v4(),
     serviceName: ServiceName.hepius,
     notificationType: InternalNotificationType.chatMessageToMember,
     recipientClientId,
     senderClientId,
-    contentKey: ContentKey.newChatMessageFromUser,
+    contentKey: InternalKey.newChatMessageFromUser,
     path: `connect/${recipientClientId}/${senderClientId}`,
   };
 };
