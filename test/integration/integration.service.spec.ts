@@ -1,9 +1,9 @@
 import {
   AllNotificationTypes,
   ContentKey,
+  generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
-  generateAppointmentScheduleReminderMock,
   generateGeneralMemberTriggeredMock,
   generateNewChatMessageToMemberMock,
   generateNewControlMemberMock,
@@ -539,6 +539,9 @@ describe('Notifications full flow', () => {
       content: lorem.word(),
       notificationType: InternalNotificationType.chatMessageToUser,
     });
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    mock.sendBirdChannelUrl = lorem.word();
     const object = new ObjectNewChatMessageToMemberClass(mock);
     spyOnSendBirdSend.mockReturnValueOnce(providerResult);
 
@@ -552,9 +555,15 @@ describe('Notifications full flow', () => {
     await service.handleMessage(message);
 
     expect(spyOnSendBirdSend).toBeCalledWith({
-      body: 'test',
-      orgName: webMemberClient.orgName,
-      to: webMemberClient.phone,
+      body: message.Body,
+      appointmentId: undefined,
+      message: message.Body,
+      notificationType: InternalNotificationType.chatMessageToUser,
+      orgName: undefined,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      sendBirdChannelUrl: mock.sendBirdChannelUrl,
+      userId: webMemberClient.id,
     });
 
     await compareResults({
