@@ -69,6 +69,7 @@ import {
   generateCommunication,
   generateCreateMemberParams,
   generateCreateTaskParams,
+  generateGetCommunication,
   generateGetMemberUploadJournalAudioLinkParams,
   generateGetMemberUploadJournalImageLinkParams,
   generateId,
@@ -2015,6 +2016,173 @@ describe('MemberResolver', () => {
       },
     );
 
+    it('should send to Sendbird on type textSms', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      const communication = generateCommunication();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+      spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
+
+      const notifyParams = generateNotifyParams({
+        type: NotificationType.textSms,
+      });
+
+      await resolver.notify(notifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendSendBirdNotification: {
+          userId: user.id,
+          sendBirdChannelUrl: communication.sendBirdChannelUrl,
+          message: notifyParams.metadata.content,
+          notificationType: NotificationType.textSms,
+          orgName: member.org.name,
+        },
+      });
+    });
+
+    it('should send SMS on type textSms', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      const communication = generateCommunication();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+      spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
+
+      const notifyParams = generateNotifyParams({
+        type: NotificationType.textSms,
+      });
+
+      await resolver.notify(notifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendTwilioNotification: {
+          body: notifyParams.metadata.content,
+          to: member.phone,
+          orgName: member.org.name,
+        },
+      });
+    });
+
+    it('should send SMS on type text if platform', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      memberConfig.platform = Platform.web;
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const notifyParams = generateNotifyParams({
+        type: NotificationType.text,
+      });
+
+      await resolver.notify(notifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendTwilioNotification: {
+          body: notifyParams.metadata.content,
+          to: member.phone,
+          orgName: member.org.name,
+        },
+      });
+    });
+
+    it('should send SMS on type text if notification disabled', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      memberConfig.isPushNotificationsEnabled = false;
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      const notifyParams = generateNotifyParams({
+        type: NotificationType.text,
+      });
+
+      await resolver.notify(notifyParams);
+
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendTwilioNotification: {
+          body: notifyParams.metadata.content,
+          to: member.phone,
+          orgName: member.org.name,
+        },
+      });
+    });
+
+    test.each([NotificationType.call, NotificationType.video])(
+      'should send push notification if type video or call',
+      async (type) => {
+        const member = mockGenerateMember();
+        const memberConfig = mockGenerateMemberConfig();
+        const user = mockGenerateUser();
+        spyOnServiceGetMember.mockImplementationOnce(async () => member);
+        spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+        spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+        spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+        spyOnNotificationsServiceCreatePeerIceServers.mockReturnValueOnce({ iceServers });
+
+        const notifyParams = generateNotifyParams({ type });
+
+        await resolver.notify(notifyParams);
+
+        expect(spyOnNotificationsServiceSend).toBeCalledWith({
+          sendOneSignalNotification: {
+            platform: memberConfig.platform,
+            externalUserId: memberConfig.externalUserId,
+            data: {
+              user: { id: user.id, firstName: user.firstName, avatar: user.avatar },
+              member: { phone: member.phone },
+              type,
+              path: 'call',
+              isVideo: type === NotificationType.video,
+              peerId: notifyParams.metadata.peerId,
+              extraData: JSON.stringify({ iceServers }),
+            },
+            content: notifyParams.metadata.content,
+            orgName: member.org.name,
+          },
+        });
+      },
+    );
+
+    it('should call getCommunication if metadata.chatLink true', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementation(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementation(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementation(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+      spyOnCommunicationResolverGetCommunication.mockImplementationOnce(async () =>
+        generateGetCommunication(),
+      );
+
+      const notifyParams = generateNotifyParams({
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+        type: NotificationType.text,
+        metadata: { content: faker.lorem.word(), chatLink: true },
+      });
+
+      await resolver.notify(notifyParams);
+
+      expect(spyOnCommunicationResolverGetCommunication).toBeCalledWith({
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+      });
+    });
+
     it('should trim leading and trailing whitespaces from message', async () => {
       const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();
@@ -2028,12 +2196,20 @@ describe('MemberResolver', () => {
 
       const notifyParams = generateNotifyParams({
         type: NotificationType.textSms,
-        metadata: { peerId: v4(), content: `    ${faker.lorem.sentence()}     ` },
+        metadata: { peerId: v4(), content: '    test message     ' },
       });
 
       await resolver.notify(notifyParams);
 
-      expect(spyOnEventEmitter).toBeCalled();
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendSendBirdNotification: {
+          userId: user.id,
+          sendBirdChannelUrl: communication.sendBirdChannelUrl,
+          message: 'test message',
+          notificationType: NotificationType.textSms,
+          orgName: member.org.name,
+        },
+      });
     });
 
     it('should fail sending a message with only whitespaces', async () => {

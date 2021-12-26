@@ -106,14 +106,13 @@ export class InternalNotificationMetadata {
   triggersAt?: Date;
   checkAppointmentReminder?: boolean;
   path?: string;
-  peerId?: string;
   journalImageDownloadLink?: string;
 }
 
 export class InternalNotifyParams {
   memberId: string;
   userId?: string;
-  type: AllNotificationTypes;
+  type: InternalNotificationType;
   metadata: InternalNotificationMetadata;
   content?: string;
 }
