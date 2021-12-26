@@ -101,7 +101,7 @@ describe('Notifications full flow', () => {
     await internationalizationService.onModuleInit();
 
     await initClients();
-  }, 20000);
+  });
 
   afterEach(() => {
     spyOnTwilioSend.mockReset();
@@ -112,7 +112,7 @@ describe('Notifications full flow', () => {
     await module.close();
     spyOnTwilioSend.mockRestore();
     spyOnOneSignalSend.mockRestore();
-  }, 20000);
+  });
 
   it(`should handle 'immediate' event of type ${ContentKey.newMember}`, async () => {
     const object = new ObjectNewMemberClass(
@@ -131,8 +131,8 @@ describe('Notifications full flow', () => {
 
     const body = replaceConfigs({
       content: translation.contents[ContentKey.newMember],
-      recipientClient: webMemberClient,
-      senderClient: userClient,
+      memberClient: webMemberClient,
+      userClient,
       appointmentId: object.objectNewMemberMock.appointmentId,
     });
     expect(spyOnTwilioSend).toBeCalledWith({
@@ -307,8 +307,8 @@ describe('Notifications full flow', () => {
     );
     const body = replaceConfigs({
       content: translation.contents[ContentKey.appointmentScheduledUser],
-      recipientClient: webMemberClient,
-      senderClient: userClient,
+      memberClient: webMemberClient,
+      userClient,
       appointmentTime: realAppointmentTime,
     });
     expect(spyOnTwilioSend).toBeCalledWith({ body, orgName: undefined, to: userClient.phone });
@@ -349,8 +349,8 @@ describe('Notifications full flow', () => {
     );
     const body = replaceConfigs({
       content: translation.contents[ContentKey.appointmentScheduledMember],
-      recipientClient: webMemberClient,
-      senderClient: userClient,
+      memberClient: webMemberClient,
+      userClient,
       appointmentTime: realAppointmentTime,
     });
     expect(spyOnTwilioSend).toBeCalledWith({
@@ -386,8 +386,8 @@ describe('Notifications full flow', () => {
 
     let body = replaceConfigs({
       content: translation.contents[ContentKey.appointmentRequest],
-      recipientClient: webMemberClient,
-      senderClient: userClient,
+      memberClient: webMemberClient,
+      userClient,
     });
 
     body += `:\n${mock.scheduleLink}.`;
@@ -409,8 +409,8 @@ describe('Notifications full flow', () => {
     `should handle 'immediate' event of type %p`,
     async (contentKey) => {
       const mock = generateTextMessageUserMock({
-        recipientClientId: webMemberClient.id,
-        senderClientId: userClient.id,
+        recipientClientId: userClient.id,
+        senderClientId: webMemberClient.id,
         contentKey,
       });
       const object = new ObjectBaseClass(mock);
@@ -424,13 +424,13 @@ describe('Notifications full flow', () => {
 
       const body = replaceConfigs({
         content: translation.contents[contentKey],
-        recipientClient: webMemberClient,
-        senderClient: userClient,
+        memberClient: webMemberClient,
+        userClient,
       });
       expect(spyOnTwilioSend).toBeCalledWith({
         body,
-        orgName: webMemberClient.orgName,
-        to: webMemberClient.phone,
+        orgName: undefined,
+        to: userClient.phone,
       });
 
       await compareResults({
@@ -460,8 +460,8 @@ describe('Notifications full flow', () => {
 
     const body = replaceConfigs({
       content: translation.contents[ContentKey.newChatMessageFromUser],
-      recipientClient: webMemberClient,
-      senderClient: userClient,
+      memberClient: webMemberClient,
+      userClient,
     });
     expect(spyOnTwilioSend).toBeCalledWith({
       body,
