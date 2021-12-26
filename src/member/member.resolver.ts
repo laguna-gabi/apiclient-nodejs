@@ -14,6 +14,7 @@ import {
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { isEmpty } from 'class-validator';
 import * as config from 'config';
 import { addDays, isAfter, millisecondsInHour } from 'date-fns';
 import { format, getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
@@ -720,6 +721,7 @@ export class MemberResolver extends MemberBase {
     }
     return this.memberService.getCaregiversByMemberId(memberId);
   }
+
   /************************************************************************************************
    ***************************************** Notifications ****************************************
    ************************************************************************************************/
@@ -805,36 +807,10 @@ export class MemberResolver extends MemberBase {
   @Roles(UserRole.coach, UserRole.nurse)
   async notify(@Args(camelCase(NotifyParams.name)) notifyParams: NotifyParams) {
     const { memberId, userId, type, metadata } = notifyParams;
-    const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId);
+    const { member, memberConfig } = await this.extractDataOfMemberAndUser(memberId, userId);
 
-    if (metadata.when) {
-      if (isAfter(new Date(), metadata.when)) {
-        throw new Error(Errors.get(ErrorType.notificationMetadataWhenPast));
-      }
-      const dispatchParams: IDispatchParams = {
-        memberId,
-        userId,
-        correlationId: getCorrelationId(this.logger),
-        dispatchId: generateDispatchId(ContentKey.customContent, memberId, Date.now().toString()),
-        type:
-          type === NotificationType.text
-            ? InternalNotificationType.textToMember
-            : InternalNotificationType.textSmsToMember,
-        content: metadata.content,
-        metadata: { contentType: ContentKey.customContent, triggersAt: metadata.when },
-      };
-
-      await this.notifyCreateDispatch(dispatchParams);
-      return;
-    }
-
-    if (metadata.chatLink) {
-      const communication = await this.communicationResolver.getCommunication({ memberId, userId });
-      if (!communication) {
-        throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
-      }
-      const chatLink = await this.bitly.shortenLink(communication.chat.memberLink);
-      metadata.content = metadata.content.concat(` ${chatLink}`);
+    if (metadata.when && isAfter(new Date(), metadata.when)) {
+      throw new Error(Errors.get(ErrorType.notificationMetadataWhenPast));
     }
 
     if (
@@ -851,19 +827,28 @@ export class MemberResolver extends MemberBase {
       throw new Error(Errors.get(ErrorType.notificationNotAllowed));
     }
 
-    if (metadata.content) {
-      metadata.content = metadata.content.trim();
-      if (!metadata.content) {
-        // nothing remained after trim -> was only whitespaces
-        throw new Error(Errors.get(ErrorType.notificationInvalidContent));
-      }
+    if (metadata.content && isEmpty(metadata.content?.trim())) {
+      throw new Error(Errors.get(ErrorType.notificationInvalidContent));
     }
 
-    if (type === NotificationType.textSms) {
-      metadata.sendBirdChannelUrl = await this.getSendBirdChannelUrl({ memberId, userId });
-    }
-
-    return this.notificationBuilder.notify({ member, memberConfig, user, type, metadata });
+    await this.notifyCreateDispatch({
+      dispatchId: generateDispatchId(ContentKey.customContent, member.id, Date.now().toString()),
+      memberId: member.id,
+      userId: member.primaryUserId.toString(),
+      correlationId: v4(),
+      type,
+      content: metadata.content,
+      metadata: {
+        contentType:
+          type === NotificationType.video || type === NotificationType.call
+            ? ContentKey.callOrVideo
+            : ContentKey.customContent,
+        path: metadata.path,
+        peerId: metadata.peerId,
+        appointmentId: metadata.appointmentId,
+        triggersAt: metadata.when,
+      },
+    });
   }
 
   @Mutation(() => String, { nullable: true })
@@ -1053,6 +1038,8 @@ export class MemberResolver extends MemberBase {
       contentKey: metadata.contentType,
       triggersAt: metadata.triggersAt,
       path: metadata.path,
+      peerId: metadata.peerId,
+      content: params.content,
     };
     this.logger.debug(createDispatch, MemberResolver.name, EventType.notifyQueue);
 
@@ -1234,7 +1221,7 @@ export class MemberResolver extends MemberBase {
     return {
       memberId: member.id,
       userId: member.primaryUserId.toString(),
-      type: InternalNotificationType.textToMember,
+      type: NotificationType.text,
       correlationId,
       dispatchId: generateDispatchId(contentKey, member.id),
       metadata: {

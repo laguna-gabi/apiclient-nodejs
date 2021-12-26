@@ -4,6 +4,8 @@ import {
   NotificationType,
   ObjectAppointmentScheduledClass,
   ObjectBaseClass,
+  ObjectCallOrVideoClass,
+  ObjectCustomContentClass,
   ObjectGeneralMemberTriggeredClass,
   ObjectNewChatMessageToMemberClass,
   ObjectNewMemberClass,
@@ -19,6 +21,8 @@ import {
   generateNewControlMemberMock,
   generateNewMemberMock,
   generateNewMemberNudgeMock,
+  generateObjectCallOrVideoMock,
+  generateObjectCustomContentMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
   generateUpdateMemberSettingsMock,
@@ -222,6 +226,7 @@ describe('Integration tests: notifications', () => {
           senderClientId: member.primaryUserId.toString(),
           contentKey,
           triggersAt: addDays(new Date(), amount),
+          notificationType: NotificationType.text,
         });
         const object1 = new ObjectGeneralMemberTriggeredClass(mock1);
         Object.keys(object1.objectGeneralMemberTriggeredMock).forEach((key) => {
@@ -366,6 +371,7 @@ describe('Integration tests: notifications', () => {
         recipientClientId: member.id,
         senderClientId: member.primaryUserId.toString(),
         contentKey: ContentKey.customContent,
+        notificationType: notifyParams.type,
         triggersAt: when,
       });
       const object = new ObjectGeneralMemberTriggeredClass(mock);
@@ -382,6 +388,99 @@ describe('Integration tests: notifications', () => {
         );
       });
     });
+
+    /**
+     * Trigger : MemberResolver.notify
+     * Dispatch :
+     *      1. send customContent dispatch
+     */
+    it(`notify: dispatch message of type ${NotificationType.textSms}`, async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      const notifyParams: NotifyParams = {
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+        type: NotificationType.textSms,
+        metadata: { content: faker.lorem.word() },
+      };
+      await handler.mutations.notify({ notifyParams });
+
+      await delay(200);
+
+      const mock = generateObjectCustomContentMock({
+        recipientClientId: notifyParams.memberId,
+        senderClientId: notifyParams.userId,
+        notificationType: notifyParams.type,
+        content: notifyParams.metadata.content,
+      });
+      const object = new ObjectCustomContentClass(mock);
+      Object.keys(object.objectCustomContentType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+
+    /**
+     * Trigger : MemberResolver.notify
+     * Dispatch :
+     *      1. send callOrVideo dispatch
+     */
+    test.each([NotificationType.video, NotificationType.call])(
+      `notify: dispatch message of type %p`,
+      async (type) => {
+        const org = await creators.createAndValidateOrg();
+        const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+        const params: RegisterForNotificationParams = {
+          platform: Platform.android,
+          isPushNotificationsEnabled: true,
+        };
+        await handler
+          .setContextUserId(member.id)
+          .mutations.registerMemberForNotifications({ registerForNotificationParams: params });
+
+        await delay(500);
+        handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+        const notifyParams: NotifyParams = {
+          memberId: member.id,
+          userId: member.primaryUserId.toString(),
+          type,
+          metadata: { peerId: faker.datatype.uuid() },
+        };
+        await handler.mutations.notify({ notifyParams });
+
+        await delay(200);
+
+        const mock = generateObjectCallOrVideoMock({
+          recipientClientId: notifyParams.memberId,
+          senderClientId: notifyParams.userId,
+          notificationType: notifyParams.type,
+          peerId: notifyParams.metadata.peerId,
+        });
+        const object = new ObjectCallOrVideoClass(mock);
+        Object.keys(object.objectCallOrVideoType).forEach((key) => {
+          expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+            expect.objectContaining({
+              type: QueueType.notifications,
+              message: expect.stringContaining(
+                key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+              ),
+            }),
+          );
+        });
+      },
+    );
   });
 
   describe('Appointment', () => {
