@@ -15,8 +15,7 @@ export enum ErrorType {
   userNotFound = 9106,
   slotsParams = 9107,
   userCanNotBeAssignedToMembers = 9108,
-  userIdInvalid = 9209,
-  memberIdInconsistent = 9210,
+  userIdInvalid = 9109,
 
   // Module member errors
   memberMinMaxLength = 9201,
@@ -43,6 +42,7 @@ export enum ErrorType {
   memberJournalIdInvalid = 9222,
   memberOrgIdInvalid = 9223,
   memberIdInvalid = 9224,
+  memberIdInconsistent = 9225,
 
   // Notifications
   notificationMetadataInvalid = 9270,
