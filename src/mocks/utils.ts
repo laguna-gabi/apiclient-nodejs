@@ -1,6 +1,6 @@
 import { address } from 'faker';
 import { lookup } from 'zipcode-to-timezone';
-import { NotificationType } from '../enums';
+import { AllNotificationTypes, InternalNotificationType, NotificationType } from '../enums';
 
 export const generatePhone = () => {
   const random = () => Math.floor(Math.random() * 9) + 1;
@@ -33,6 +33,22 @@ export const validateNotificationTypeText = (notificationType: NotificationType)
     throw Error(
       `invalid notificationType - ${notificationType} - should be ${
         (NotificationType.text, NotificationType.textSms)
+      }`,
+    );
+  }
+};
+
+export const validateCustomContentNotificationType = (notificationType: AllNotificationTypes) => {
+  if (
+    notificationType !== NotificationType.textSms &&
+    notificationType !== NotificationType.text &&
+    notificationType !== InternalNotificationType.chatMessageToUser
+  ) {
+    throw Error(
+      `invalid notificationType - ${notificationType} - should be ${
+        (NotificationType.text,
+        NotificationType.textSms,
+        InternalNotificationType.chatMessageToUser)
       }`,
     );
   }
