@@ -57,7 +57,7 @@ export class ProviderResult {
   provider: Provider;
 
   @Prop()
-  content: string;
+  content?: string;
 
   @Prop()
   id: string; //message id returned as a result from the provider

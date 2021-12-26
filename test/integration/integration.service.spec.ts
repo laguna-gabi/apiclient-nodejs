@@ -1,6 +1,8 @@
 import {
+  AllNotificationTypes,
   ContentKey,
   InnerQueueTypes,
+  NotificationType,
   ObjectAppointmentScheduleReminderClass,
   ObjectAppointmentScheduledClass,
   ObjectBaseClass,
@@ -17,6 +19,7 @@ import {
   generateNewControlMemberMock,
   generateNewMemberMock,
   generateNewMemberNudgeMock,
+  generateObjectCallOrVideoMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
 } from '@lagunahealth/pandora';
@@ -40,6 +43,7 @@ import {
   ConfigsService,
   InternationalizationService,
   NotificationsService,
+  OneSignal,
   Provider,
   ProviderResult,
   Twilio,
@@ -50,6 +54,7 @@ import {
   generateUpdateMemberSettingsMock,
   generateUpdateUserSettingsMock,
 } from '../generators';
+import { iceServers } from './twilioPeerIceServers';
 
 describe('Notifications full flow', () => {
   let module: TestingModule;
@@ -57,9 +62,11 @@ describe('Notifications full flow', () => {
   let dispatchesService: DispatchesService;
   let triggersService: TriggersService;
   let spyOnTwilioSend;
+  let spyOnOneSignalSend;
   let internationalizationService: InternationalizationService;
   let notificationsService: NotificationsService;
   let webMemberClient: ClientSettings;
+  let mobileMemberClient: ClientSettings;
   let userClient: ClientSettings;
 
   const providerResult: ProviderResult = {
@@ -77,6 +84,12 @@ describe('Notifications full flow', () => {
     const twilio = module.get<Twilio>(Twilio);
     spyOnTwilioSend = jest.spyOn(twilio, 'send');
     spyOnTwilioSend.mockReturnValue(undefined);
+    const spyOnTwilioCreatePeerIceServers = jest.spyOn(twilio, 'createPeerIceServers');
+    spyOnTwilioCreatePeerIceServers.mockResolvedValue({ iceServers });
+
+    const oneSignal = module.get<OneSignal>(OneSignal);
+    spyOnOneSignalSend = jest.spyOn(oneSignal, 'send');
+    spyOnOneSignalSend.mockReturnValue(undefined);
 
     const configsService = module.get<ConfigsService>(ConfigsService);
     jest.spyOn(configsService, 'getConfig').mockResolvedValue(lorem.word());
@@ -92,11 +105,13 @@ describe('Notifications full flow', () => {
 
   afterEach(() => {
     spyOnTwilioSend.mockReset();
+    spyOnOneSignalSend.mockReset();
   });
 
   afterAll(async () => {
     await module.close();
     spyOnTwilioSend.mockRestore();
+    spyOnOneSignalSend.mockRestore();
   });
 
   it(`should handle 'immediate' event of type ${ContentKey.newMember}`, async () => {
@@ -199,6 +214,7 @@ describe('Notifications full flow', () => {
         recipientClientId: webMemberClient.id,
         senderClientId: userClient.id,
         contentKey: params.contentKey,
+        notificationType: NotificationType.text,
         triggersAt: addDays(new Date(), params.amount),
       }),
     );
@@ -460,6 +476,52 @@ describe('Notifications full flow', () => {
     });
   });
 
+  test.each([NotificationType.video, NotificationType.call])(
+    `should handle 'immediate' event of type ${ContentKey.callOrVideo} (%p)`,
+    async (notificationType) => {
+      const mock = generateObjectCallOrVideoMock({
+        recipientClientId: mobileMemberClient.id,
+        senderClientId: userClient.id,
+        notificationType,
+        peerId: v4(),
+      });
+      const providerResultOS: ProviderResult = { provider: Provider.oneSignal, id: generateId() };
+      spyOnOneSignalSend.mockReturnValueOnce(providerResultOS);
+
+      const message: SQSMessage = {
+        MessageId: v4(),
+        Body: JSON.stringify(
+          { type: InnerQueueTypes.createDispatch, ...mock },
+          Object.keys(mock).sort(),
+        ),
+      };
+      await service.handleMessage(message);
+
+      expect(spyOnOneSignalSend).toBeCalledWith({
+        externalUserId: mobileMemberClient.externalUserId,
+        platform: mobileMemberClient.platform,
+        data: {
+          user: { id: userClient.id, firstName: userClient.firstName, avatar: userClient.avatar },
+          member: { phone: mobileMemberClient.phone },
+          type: mock.notificationType,
+          peerId: mock.peerId,
+          isVideo: mock.notificationType === NotificationType.video,
+          ...generatePath(mock.notificationType),
+          extraData: JSON.stringify({ iceServers }),
+          content: undefined,
+        },
+        orgName: mobileMemberClient.orgName,
+      });
+
+      await compareResults({
+        dispatchId: mock.dispatchId,
+        status: DispatchStatus.done,
+        response: { ...mock },
+        pResult: providerResultOS,
+      });
+    },
+  );
+
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
@@ -470,6 +532,17 @@ describe('Notifications full flow', () => {
       Body: JSON.stringify({ type: InnerQueueTypes.updateClientSettings, ...webMemberClient }),
     };
     await service.handleMessage(webMemberClientMessage);
+
+    mobileMemberClient = generateUpdateMemberSettingsMock({
+      platform: Platform.android,
+      isPushNotificationsEnabled: true,
+      isAppointmentsReminderEnabled: true,
+    });
+    const mobileMemberClientMessage: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({ type: InnerQueueTypes.updateClientSettings, ...mobileMemberClient }),
+    };
+    await service.handleMessage(mobileMemberClientMessage);
 
     userClient = generateUpdateUserSettingsMock();
     const userClientM: SQSMessage = {
@@ -484,16 +557,18 @@ describe('Notifications full flow', () => {
     status,
     response,
     triggeredId,
+    pResult = providerResult,
   }: {
     dispatchId: string;
     status: DispatchStatus;
     response;
     triggeredId?;
+    pResult?: ProviderResult;
   }) => {
     const result = await dispatchesService.get(dispatchId);
     delete response.type;
 
-    const providerResultObject = status === DispatchStatus.done ? { providerResult } : {};
+    const providerResultObject = status === DispatchStatus.done ? { providerResult: pResult } : {};
     const sentAtObject = status === DispatchStatus.done ? { sentAt: expect.any(Date) } : {};
     const triggeredIdObject = status === DispatchStatus.received ? { triggeredId } : {};
 
@@ -506,5 +581,11 @@ describe('Notifications full flow', () => {
       retryCount: 0,
       status,
     });
+  };
+
+  const generatePath = (type: AllNotificationTypes) => {
+    return type === NotificationType.call || type === NotificationType.video
+      ? { path: 'call' }
+      : {};
   };
 });

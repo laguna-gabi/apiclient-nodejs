@@ -66,6 +66,7 @@ describe(NotificationsService.name, () => {
         contentKey: ContentKey.appointmentRequest,
         scheduleLink,
       });
+      dispatch.content = undefined;
 
       await iService.onModuleInit();
       spyOnTwilioServiceSend = jest.spyOn(twilioService, 'send');
