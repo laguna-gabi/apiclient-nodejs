@@ -64,7 +64,7 @@ export class NotificationsService {
       return this.twilio.send(sendTwilioNotification);
     } else {
       if (recipientClient.platform !== Platform.web && recipientClient.isPushNotificationsEnabled) {
-        const sendOneSignalNotification = this.generateOneSignalParams(
+        const sendOneSignalNotification = await this.generateOneSignalParams(
           dispatch,
           content,
           recipientClient,
@@ -94,6 +94,17 @@ export class NotificationsService {
     recipientClient: ClientSettings,
     senderClient: ClientSettings,
   ) {
+    if (dispatch.content) {
+      return dispatch.content;
+    }
+
+    if (
+      dispatch.notificationType === NotificationType.call ||
+      dispatch.notificationType === NotificationType.video
+    ) {
+      return undefined;
+    }
+
     const downloadLink = dispatch.appointmentId
       ? await this.bitly.shortenLink(`${hosts.get('app')}/download/${dispatch.appointmentId}`)
       : undefined;
@@ -176,17 +187,22 @@ export class NotificationsService {
     };
   }
 
-  private generateOneSignalParams(
+  private async generateOneSignalParams(
     dispatch: Dispatch,
     content: string,
     recipientClient: ClientSettings,
     senderClient: ClientSettings,
-  ): SendOneSignalNotification {
+  ): Promise<SendOneSignalNotification> {
     const { notificationType } = dispatch;
     let path = dispatch.path || {};
     if (notificationType === NotificationType.call || notificationType === NotificationType.video) {
       path = { path: 'call' };
     }
+    const peerServiceToken =
+      dispatch.notificationType === NotificationType.video ||
+      dispatch.notificationType === NotificationType.call
+        ? await this.twilio.createPeerIceServers()
+        : {};
 
     return {
       platform: recipientClient.platform,
@@ -201,6 +217,7 @@ export class NotificationsService {
         type: notificationType,
         ...path,
         isVideo: notificationType === NotificationType.video,
+        extraData: JSON.stringify(peerServiceToken),
         peerId: dispatch.peerId,
       },
       content,
@@ -216,7 +233,9 @@ export class NotificationsService {
     if (appointmentTime) {
       if (
         notificationType === InternalNotificationType.textSmsToMember ||
-        notificationType === InternalNotificationType.textToMember
+        notificationType === InternalNotificationType.textToMember ||
+        notificationType === NotificationType.text ||
+        notificationType === NotificationType.textSms
       ) {
         return format(
           utcToZonedTime(appointmentTime, lookup(zipCode)),

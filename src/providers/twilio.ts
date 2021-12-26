@@ -6,6 +6,7 @@ import {
 } from '@lagunahealth/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as config from 'config';
+import { hoursToMilliseconds } from 'date-fns';
 import { Twilio as TwilioClient } from 'twilio';
 import {
   ConfigsService,
@@ -16,6 +17,7 @@ import {
   Slack,
 } from '.';
 import { Environments, Logger } from '../common';
+import { twilio } from 'config';
 
 @Injectable()
 export class Twilio implements OnModuleInit {
@@ -56,5 +58,13 @@ export class Twilio implements OnModuleInit {
       const result = await this.slack.send(params);
       return { provider: Provider.slack, content: params.message, id: result.text };
     }
+  }
+
+  async createPeerIceServers(): Promise<{ iceServers: any[] }> {
+    const { iceServers } = await this.client.tokens.create({
+      ttl: hoursToMilliseconds(twilio.traversalServiceTokenTtl),
+    });
+
+    return { iceServers };
   }
 }
