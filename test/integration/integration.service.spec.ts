@@ -1,27 +1,29 @@
 import {
   AllNotificationTypes,
   ContentKey,
-  InnerQueueTypes,
-  NotificationType,
-  ObjectAppointmentScheduleReminderClass,
-  ObjectAppointmentScheduledClass,
-  ObjectBaseClass,
-  ObjectGeneralMemberTriggeredClass,
-  ObjectNewChatMessageToMemberClass,
-  ObjectNewMemberClass,
-  ObjectNewMemberNudgeClass,
-  Platform,
-  generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
+  generateAppointmentScheduleReminderMock,
   generateGeneralMemberTriggeredMock,
   generateNewChatMessageToMemberMock,
   generateNewControlMemberMock,
   generateNewMemberMock,
   generateNewMemberNudgeMock,
   generateObjectCallOrVideoMock,
+  generateObjectCustomContentMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
+  InnerQueueTypes,
+  InternalNotificationType,
+  NotificationType,
+  ObjectAppointmentScheduledClass,
+  ObjectAppointmentScheduleReminderClass,
+  ObjectBaseClass,
+  ObjectGeneralMemberTriggeredClass,
+  ObjectNewChatMessageToMemberClass,
+  ObjectNewMemberClass,
+  ObjectNewMemberNudgeClass,
+  Platform,
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapMinutes } from 'config';
@@ -34,8 +36,8 @@ import { replaceConfigs } from '../';
 import { translation } from '../../languages/en.json';
 import { AppModule } from '../../src/app.module';
 import {
-  DispatchStatus,
   DispatchesService,
+  DispatchStatus,
   QueueService,
   TriggersService,
 } from '../../src/conductor';
@@ -46,6 +48,7 @@ import {
   OneSignal,
   Provider,
   ProviderResult,
+  SendBird,
   Twilio,
 } from '../../src/providers';
 import { ClientSettings } from '../../src/settings';
@@ -63,6 +66,7 @@ describe('Notifications full flow', () => {
   let triggersService: TriggersService;
   let spyOnTwilioSend;
   let spyOnOneSignalSend;
+  let spyOnSendBirdSend;
   let internationalizationService: InternationalizationService;
   let notificationsService: NotificationsService;
   let webMemberClient: ClientSettings;
@@ -91,6 +95,10 @@ describe('Notifications full flow', () => {
     spyOnOneSignalSend = jest.spyOn(oneSignal, 'send');
     spyOnOneSignalSend.mockReturnValue(undefined);
 
+    const sendBird = module.get<SendBird>(SendBird);
+    spyOnSendBirdSend = jest.spyOn(sendBird, 'send');
+    spyOnSendBirdSend.mockReturnValue(undefined);
+
     const configsService = module.get<ConfigsService>(ConfigsService);
     jest.spyOn(configsService, 'getConfig').mockResolvedValue(lorem.word());
 
@@ -106,12 +114,14 @@ describe('Notifications full flow', () => {
   afterEach(() => {
     spyOnTwilioSend.mockReset();
     spyOnOneSignalSend.mockReset();
+    spyOnSendBirdSend.mockReset();
   });
 
   afterAll(async () => {
     await module.close();
     spyOnTwilioSend.mockRestore();
     spyOnOneSignalSend.mockRestore();
+    spyOnSendBirdSend.mockRestore();
   });
 
   it(`should handle 'immediate' event of type ${ContentKey.newMember}`, async () => {
@@ -521,6 +531,38 @@ describe('Notifications full flow', () => {
       });
     },
   );
+
+  it(`should handle 'immediate' event of type ${ContentKey.customContent}`, async () => {
+    const mock = generateObjectCustomContentMock({
+      recipientClientId: userClient.id,
+      senderClientId: webMemberClient.id,
+      content: lorem.word(),
+      notificationType: InternalNotificationType.chatMessageToUser,
+    });
+    const object = new ObjectNewChatMessageToMemberClass(mock);
+    spyOnSendBirdSend.mockReturnValueOnce(providerResult);
+
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({
+        type: InnerQueueTypes.createDispatch,
+        ...object.objectNewChatMessageFromUserType,
+      }),
+    };
+    await service.handleMessage(message);
+
+    expect(spyOnSendBirdSend).toBeCalledWith({
+      body: 'test',
+      orgName: webMemberClient.orgName,
+      to: webMemberClient.phone,
+    });
+
+    await compareResults({
+      dispatchId: mock.dispatchId,
+      status: DispatchStatus.done,
+      response: { ...object.objectNewChatMessageFromUserType },
+    });
+  });
 
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
