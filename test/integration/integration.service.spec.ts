@@ -555,9 +555,8 @@ describe('Notifications full flow', () => {
     await service.handleMessage(message);
 
     expect(spyOnSendBirdSend).toBeCalledWith({
-      body: message.Body,
       appointmentId: undefined,
-      message: message.Body,
+      message: mock.content,
       notificationType: InternalNotificationType.chatMessageToUser,
       orgName: undefined,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
