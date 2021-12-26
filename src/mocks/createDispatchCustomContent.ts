@@ -1,13 +1,13 @@
 import { v4 } from 'uuid';
 import {
-  AllNotificationTypes,
   ContentKey,
   ICreateDispatch,
   InnerQueueTypes,
+  NotificationType,
   ObjectBaseType,
   ServiceName,
   generateDispatchId,
-  validateCustomContentNotificationType,
+  validateNotificationTypeText,
 } from '../index';
 
 export type ObjectCustomContentType = ObjectBaseType & Pick<ICreateDispatch, 'content'>;
@@ -25,16 +25,16 @@ export const generateObjectCustomContentMock = ({
   recipientClientId: string;
   senderClientId: string;
   content: string;
-  notificationType: AllNotificationTypes;
+  notificationType: NotificationType;
 }): ObjectCustomContentType => {
-  validateCustomContentNotificationType(notificationType);
+  validateNotificationTypeText(notificationType);
   const contentKey = ContentKey.customContent;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, Date.now().toString()),
     correlationId: v4(),
     serviceName: ServiceName.hepius,
-    notificationType,
+    notificationType: NotificationType.textSms,
     recipientClientId,
     senderClientId,
     contentKey,

@@ -3,6 +3,7 @@ export * from './clientSettings';
 export * from './baseObject';
 export * from './createDispatchCustomContent';
 export * from './createDispatchCallOrVideo';
+export * from './createDispatchChatMessageUser';
 export * from './createDispatchNewMemberMocks';
 export * from './createDispatchNewMemberNudge';
 export * from './createDispatchGeneralMemberWithTrigger';
