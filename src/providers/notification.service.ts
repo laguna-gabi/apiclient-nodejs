@@ -52,7 +52,14 @@ export class NotificationsService {
 
     const content = await this.generateContent(dispatch, recipientClient, senderClient);
 
-    if (dispatch.notificationType === NotificationType.textSms) {
+    if (dispatch.notificationType === InternalNotificationType.chatMessageToUser) {
+      const sendSendBirdNotification = this.generateSendbirdParams(
+        dispatch,
+        recipientClient.orgName,
+      );
+      // this.logger.audit(AuditType.message, sendSendBirdNotification, this.send.name);
+      return this.sendBird.send(sendSendBirdNotification);
+    } else if (dispatch.notificationType === NotificationType.textSms) {
       const sendSendBirdNotification = this.generateSendbirdParams(
         dispatch,
         recipientClient.orgName,
