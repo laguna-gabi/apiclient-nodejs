@@ -201,15 +201,13 @@ export class NotificationsService {
     senderClient: ClientSettings,
   ): Promise<SendOneSignalNotification> {
     const { notificationType } = dispatch;
-    let path = dispatch.path || {};
-    if (notificationType === NotificationType.call || notificationType === NotificationType.video) {
-      path = { path: 'call' };
-    }
-    const peerServiceToken =
+    const pathObject = dispatch.path ? { path: dispatch.path } : {};
+    const extraDataObject =
       dispatch.notificationType === NotificationType.video ||
       dispatch.notificationType === NotificationType.call
-        ? await this.twilio.createPeerIceServers()
+        ? { extraData: JSON.stringify(await this.twilio.createPeerIceServers()) }
         : {};
+    const peerIdObject = { peerId: dispatch.peerId } || {};
 
     return {
       platform: recipientClient.platform,
@@ -222,10 +220,10 @@ export class NotificationsService {
         },
         member: { phone: recipientClient.phone },
         type: notificationType,
-        ...path,
         isVideo: notificationType === NotificationType.video,
-        extraData: JSON.stringify(peerServiceToken),
-        peerId: dispatch.peerId,
+        ...pathObject,
+        ...extraDataObject,
+        ...peerIdObject,
       },
       content,
       orgName: recipientClient.orgName,

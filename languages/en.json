@@ -16,7 +16,9 @@
       "logReminder": "Track your recovery progress, and share it with your your coach.",
       "newChatMessageFromMember": "You have one new message from your member, {{member.honorific}} {{member.lastName}}.",
       "appointmentScheduledUser": "Hello {{user.firstName}}, an appointment has been added to your schedule on {{appointmentTime}}.",
-      "memberNotFeelingWellMessage": "Your member, {{member.honorific}} {{member.lastName}}, logged a score that requires your attention."
+      "memberNotFeelingWellMessage": "Your member, {{member.honorific}} {{member.lastName}}, logged a score that requires your attention.",
+      "addCaregiverDetails": "Tap to add caregiver details",
+      "setCallPermissions": "Tap to set your call permissions"
     },
     "honorific": {
       "mr": "Mr.",

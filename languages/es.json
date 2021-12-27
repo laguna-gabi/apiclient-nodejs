@@ -1,6 +1,25 @@
 {
   "translation": {
-    "contents": {},
+    "contents": {
+      "newMember": "",
+      "newControlMember": "",
+      "newMemberNudge": "",
+      "newRegisteredMember": "",
+      "newRegisteredMemberNudge": "",
+      "appointmentScheduledMember": "",
+      "appointmentLongReminder": "",
+      "appointmentReminder": "",
+      "appointmentReminderLink": "",
+      "appointmentRequest": "",
+      "appointmentRequestLink": "",
+      "newChatMessageFromUser": "",
+      "logReminder": "",
+      "newChatMessageFromMember": "",
+      "appointmentScheduledUser": "",
+      "memberNotFeelingWellMessage": "",
+      "addCaregiverDetails": "",
+      "setCallPermissions": ""
+    },
     "honorific": {
       "mr": "Señor.",
       "mrs": "Señora.",

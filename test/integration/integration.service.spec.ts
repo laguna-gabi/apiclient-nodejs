@@ -1,6 +1,6 @@
 import {
-  AllNotificationTypes,
   CustomKey,
+  ExternalKey,
   InnerQueueTypes,
   InternalKey,
   InternalNotificationType,
@@ -9,6 +9,7 @@ import {
   ObjectAppointmentScheduledClass,
   ObjectBaseClass,
   ObjectChatMessageUserClass,
+  ObjectExternalContentClass,
   ObjectGeneralMemberTriggeredClass,
   ObjectNewChatMessageToMemberClass,
   ObjectNewMemberClass,
@@ -18,6 +19,7 @@ import {
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
   generateChatMessageUserMock,
+  generateExternalContentMock,
   generateGeneralMemberTriggeredMock,
   generateNewChatMessageToMemberMock,
   generateNewControlMemberMock,
@@ -111,7 +113,7 @@ describe('Notifications full flow', () => {
     await internationalizationService.onModuleInit();
 
     await initClients();
-  });
+  }, 10000);
 
   afterEach(() => {
     spyOnTwilioSend.mockReset();
@@ -497,6 +499,7 @@ describe('Notifications full flow', () => {
         senderClientId: userClient.id,
         notificationType,
         peerId: v4(),
+        path: lorem.word(),
       });
       const providerResultOS: ProviderResult = { provider: Provider.oneSignal, id: generateId() };
       spyOnOneSignalSend.mockReturnValueOnce(providerResultOS);
@@ -519,7 +522,7 @@ describe('Notifications full flow', () => {
           type: mock.notificationType,
           peerId: mock.peerId,
           isVideo: mock.notificationType === NotificationType.video,
-          ...generatePath(mock.notificationType),
+          path: mock.path,
           extraData: JSON.stringify({ iceServers }),
           content: undefined,
         },
@@ -568,6 +571,58 @@ describe('Notifications full flow', () => {
       response: { ...object.objectChatMessageUserType },
     });
   });
+
+  test.each(Object.values(ExternalKey))(
+    `should handle 'immediate' event of type %p`,
+    async (contentKey) => {
+      const mock = generateExternalContentMock({
+        recipientClientId: mobileMemberClient.id,
+        senderClientId: userClient.id,
+        contentKey,
+        path: lorem.word(),
+      });
+      const object = new ObjectExternalContentClass(mock);
+
+      const providerResultOS: ProviderResult = { provider: Provider.oneSignal, id: generateId() };
+      spyOnOneSignalSend.mockReturnValueOnce(providerResultOS);
+
+      const message: SQSMessage = {
+        MessageId: v4(),
+        Body: JSON.stringify({
+          type: InnerQueueTypes.createDispatch,
+          ...object.objectExternalContentType,
+        }),
+      };
+      await service.handleMessage(message);
+
+      const content = replaceConfigs({
+        content: translation.contents[contentKey],
+        memberClient: mobileMemberClient,
+        userClient,
+      });
+
+      expect(spyOnOneSignalSend).toBeCalledWith({
+        externalUserId: mobileMemberClient.externalUserId,
+        platform: mobileMemberClient.platform,
+        data: {
+          user: { id: userClient.id, firstName: userClient.firstName, avatar: userClient.avatar },
+          member: { phone: mobileMemberClient.phone },
+          type: mock.notificationType,
+          isVideo: false,
+          path: mock.path,
+        },
+        content,
+        orgName: mobileMemberClient.orgName,
+      });
+
+      await compareResults({
+        dispatchId: mock.dispatchId,
+        status: DispatchStatus.done,
+        response: { ...mock },
+        pResult: providerResultOS,
+      });
+    },
+  );
 
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
@@ -628,11 +683,5 @@ describe('Notifications full flow', () => {
       retryCount: 0,
       status,
     });
-  };
-
-  const generatePath = (type: AllNotificationTypes) => {
-    return type === NotificationType.call || type === NotificationType.video
-      ? { path: 'call' }
-      : {};
   };
 });
