@@ -37,7 +37,13 @@ import { addDays, addSeconds, subDays, subMinutes } from 'date-fns';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
 import { Appointment } from '../../src/appointment';
-import { QueueType, RegisterForNotificationParams, delay, reformatDate } from '../../src/common';
+import {
+  QueueType,
+  RegisterForNotificationParams,
+  delay,
+  generatePath,
+  reformatDate,
+} from '../../src/common';
 import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
 import { NotifyParams } from '../../src/member';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
@@ -471,6 +477,7 @@ describe('Integration tests: notifications', () => {
           senderClientId: notifyParams.userId,
           notificationType: notifyParams.type,
           peerId: notifyParams.metadata.peerId,
+          path: generatePath(notifyParams.type),
         });
         const object = new ObjectCallOrVideoClass(mock);
         Object.keys(object.objectCallOrVideoType).forEach((key) => {

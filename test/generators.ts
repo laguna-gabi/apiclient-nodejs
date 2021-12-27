@@ -451,10 +451,6 @@ export const generateId = (id?): string => {
   return generateObjectId(id).toString();
 };
 
-export const generatePath = (type: NotificationType) => {
-  return type === NotificationType.call || type === NotificationType.video ? { path: 'call' } : {};
-};
-
 export const generateSetGeneralNotesParams = ({
   memberId = generateId(),
   note = faker.lorem.sentence(),

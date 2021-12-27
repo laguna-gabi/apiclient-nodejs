@@ -83,6 +83,7 @@ import {
   Roles,
   StorageType,
   UserRole,
+  generatePath,
   getCorrelationId,
 } from '../common';
 import {
@@ -833,19 +834,20 @@ export class MemberResolver extends MemberBase {
       throw new Error(Errors.get(ErrorType.notificationInvalidContent));
     }
 
+    const contentKey =
+      type === NotificationType.video || type === NotificationType.call
+        ? CustomKey.callOrVideo
+        : CustomKey.customContent;
     await this.notifyCreateDispatch({
-      dispatchId: generateDispatchId(CustomKey.customContent, member.id, Date.now().toString()),
+      dispatchId: generateDispatchId(contentKey, member.id, Date.now().toString()),
       memberId: member.id,
       userId: member.primaryUserId.toString(),
       correlationId: v4(),
       type,
       content: metadata.content,
       metadata: {
-        contentType:
-          type === NotificationType.video || type === NotificationType.call
-            ? CustomKey.callOrVideo
-            : CustomKey.customContent,
-        path: metadata.path,
+        contentType: contentKey,
+        path: generatePath(type, contentKey),
         peerId: metadata.peerId,
         appointmentId: metadata.appointmentId,
         triggersAt: metadata.when,
@@ -986,15 +988,21 @@ export class MemberResolver extends MemberBase {
       }
 
       if (origin === ChatMessageOrigin.fromUser) {
+        const contentKey = InternalKey.newChatMessageFromUser;
         await this.notifyCreateDispatch({
-          dispatchId: generateDispatchId(InternalKey.newChatMessageFromUser, Date.now().toString()),
+          dispatchId: generateDispatchId(contentKey, Date.now().toString()),
           memberId: communication.memberId.toString(),
           userId: senderUserId,
           type: InternalNotificationType.chatMessageToMember,
           correlationId: getCorrelationId(this.logger),
           metadata: {
-            contentType: InternalKey.newChatMessageFromUser,
-            path: `connect/${communication.memberId.toString()}/${senderUserId}`,
+            contentType: contentKey,
+            path: generatePath(
+              InternalNotificationType.chatMessageToMember,
+              contentKey,
+              communication.memberId.toString(),
+              senderUserId,
+            ),
           },
         });
       } else {

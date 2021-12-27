@@ -28,6 +28,7 @@ import {
   Roles,
   UpdatedAppointmentAction,
   UserRole,
+  generatePath,
   getCorrelationId,
 } from '../common';
 import { CommunicationResolver } from '../communication';
@@ -192,17 +193,16 @@ export class AppointmentResolver extends AppointmentBase {
       type: InternalNotificationType.textToMember,
       correlationId: getCorrelationId(this.logger),
     };
+    const contentKey = InternalKey.appointmentRequest;
+
     const appointmentRequest: IDispatchParams = {
       ...baseEvent,
-      dispatchId: generateDispatchId(
-        InternalKey.appointmentRequest,
-        ...[baseEvent.memberId, appointment.id],
-      ),
+      dispatchId: generateDispatchId(contentKey, ...[baseEvent.memberId, appointment.id]),
       metadata: {
-        contentType: InternalKey.appointmentRequest,
+        contentType: contentKey,
         scheduleLink: appointment.link,
         appointmentId: appointment.id,
-        path: `connect/${appointment.id}`,
+        path: generatePath(baseEvent.type, contentKey, appointment.id),
       },
     };
 

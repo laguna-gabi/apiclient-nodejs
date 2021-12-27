@@ -1,3 +1,5 @@
+import { ContentKey, ExternalKey, InternalKey, NotificationType } from '@lagunahealth/pandora';
+import { AllNotificationTypes } from '@lagunahealth/pandora/dist/src/enums';
 import * as config from 'config';
 import { add, differenceInDays, format } from 'date-fns';
 import * as jwt from 'jsonwebtoken';
@@ -78,5 +80,26 @@ export const isGQLResultValid = ({
 
   return false;
 };
+
 export const getCorrelationId = (logger: LoggerService) =>
   logger?.logger?.bindings?.().reqId || v4();
+
+export const generatePath = (
+  type: AllNotificationTypes,
+  contentKey?: ContentKey,
+  ...params: string[]
+) => {
+  if (type === NotificationType.call || type === NotificationType.video) {
+    return 'call';
+  }
+
+  switch (contentKey) {
+    case InternalKey.appointmentRequest:
+    case InternalKey.newChatMessageFromUser:
+      return `connect/${params.join('/')}`;
+    case ExternalKey.addCaregiverDetails:
+      return 'settings/carecircle';
+    case ExternalKey.setCallPermissions:
+      return 'settings/callpermissions';
+  }
+};
