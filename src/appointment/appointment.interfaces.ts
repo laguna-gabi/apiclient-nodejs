@@ -1,4 +1,4 @@
-import { ContentKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
+import { InternalKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { scheduler } from 'config';
 import { addDays, addMinutes, isBefore, subDays, subMinutes } from 'date-fns';
@@ -56,13 +56,13 @@ export class AppointmentBase {
 
   private async deleteDispatchesOnScheduleAppointment(memberId: string) {
     this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
-      dispatchId: generateDispatchId(ContentKey.newMemberNudge, memberId),
+      dispatchId: generateDispatchId(InternalKey.newMemberNudge, memberId),
     });
     this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
-      dispatchId: generateDispatchId(ContentKey.newRegisteredMember, memberId),
+      dispatchId: generateDispatchId(InternalKey.newRegisteredMember, memberId),
     });
     this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
-      dispatchId: generateDispatchId(ContentKey.newRegisteredMemberNudge, memberId),
+      dispatchId: generateDispatchId(InternalKey.newRegisteredMemberNudge, memberId),
     });
   }
 
@@ -80,7 +80,7 @@ export class AppointmentBase {
       return;
     }
 
-    const contentKey1 = ContentKey.appointmentScheduledUser;
+    const contentKey1 = InternalKey.appointmentScheduledUser;
     const appointmentScheduledUserEvent: IDispatchParams = {
       ...baseEvent,
       dispatchId: generateDispatchId(contentKey1, userId, appointment.id),
@@ -89,7 +89,7 @@ export class AppointmentBase {
     };
     this.eventEmitter.emit(EventType.notifyDispatch, appointmentScheduledUserEvent);
 
-    const contentKey2 = ContentKey.appointmentScheduledMember;
+    const contentKey2 = InternalKey.appointmentScheduledMember;
     const appointmentScheduledMemberEvent: IDispatchParams = {
       ...baseEvent,
       dispatchId: generateDispatchId(contentKey2, memberId, appointment.id),
@@ -99,7 +99,7 @@ export class AppointmentBase {
     this.eventEmitter.emit(EventType.notifyDispatch, appointmentScheduledMemberEvent);
 
     if (appointment.start >= addMinutes(new Date(), scheduler.alertBeforeInMin)) {
-      const contentKey3 = ContentKey.appointmentReminder;
+      const contentKey3 = InternalKey.appointmentReminder;
       const appointmentReminderShortEvent: IDispatchParams = {
         ...baseEvent,
         dispatchId: generateDispatchId(contentKey3, memberId, appointment.id),
@@ -114,7 +114,7 @@ export class AppointmentBase {
       this.eventEmitter.emit(EventType.notifyDispatch, appointmentReminderShortEvent);
     }
     if (appointment.start >= addDays(new Date(), 1)) {
-      const contentKey4 = ContentKey.appointmentLongReminder;
+      const contentKey4 = InternalKey.appointmentLongReminder;
       const appointmentReminderLongEvent: IDispatchParams = {
         ...baseEvent,
         dispatchId: generateDispatchId(contentKey4, memberId, appointment.id),

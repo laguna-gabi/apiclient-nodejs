@@ -13,10 +13,10 @@ import {
 import { UserService } from '../user';
 import { CreateMemberParams, Member, MemberConfig, MemberService } from '.';
 import {
-  ContentKey,
   IEventNotifySlack,
   IUpdateClientSettings,
   InnerQueueTypes,
+  InternalKey,
   InternalNotificationType,
   SlackChannel,
   SlackIcon,
@@ -87,9 +87,9 @@ export class MemberBase {
       memberId: controlMember.id,
       type: InternalNotificationType.textSmsToMember,
       correlationId: getCorrelationId(this.logger),
-      dispatchId: generateDispatchId(ContentKey.newControlMember, controlMember.id),
+      dispatchId: generateDispatchId(InternalKey.newControlMember, controlMember.id),
       metadata: {
-        contentType: ContentKey.newControlMember,
+        contentType: InternalKey.newControlMember,
       },
     };
     this.eventEmitter.emit(EventType.notifyDispatch, newControlMemberEvent);

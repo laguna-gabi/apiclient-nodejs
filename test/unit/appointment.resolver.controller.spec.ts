@@ -1,4 +1,4 @@
-import { ContentKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
+import { InternalKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { addMinutes } from 'date-fns';
@@ -106,7 +106,7 @@ describe('AppointmentResolver', () => {
       const eventParams: IDispatchParams = {
         memberId: params.memberId,
         dispatchId: generateDispatchId(
-          ContentKey.appointmentRequest,
+          InternalKey.appointmentRequest,
           appointment.id,
           params.memberId,
         ),
@@ -114,7 +114,7 @@ describe('AppointmentResolver', () => {
         userId: params.userId,
         type: InternalNotificationType.textToMember,
         metadata: {
-          contentType: ContentKey.appointmentRequest,
+          contentType: InternalKey.appointmentRequest,
           appointmentId: appointment.id,
           scheduleLink: `${appointment.link}`,
           path: `connect/${appointment.id}`,
@@ -189,13 +189,13 @@ describe('AppointmentResolver', () => {
         expect.anything(),
       );
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(3, EventType.notifyDeleteDispatch, {
-        dispatchId: generateDispatchId(ContentKey.newMemberNudge, appointment.memberId),
+        dispatchId: generateDispatchId(InternalKey.newMemberNudge, appointment.memberId),
       });
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(4, EventType.notifyDeleteDispatch, {
-        dispatchId: generateDispatchId(ContentKey.newRegisteredMember, appointment.memberId),
+        dispatchId: generateDispatchId(InternalKey.newRegisteredMember, appointment.memberId),
       });
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(5, EventType.notifyDeleteDispatch, {
-        dispatchId: generateDispatchId(ContentKey.newRegisteredMemberNudge, appointment.memberId),
+        dispatchId: generateDispatchId(InternalKey.newRegisteredMemberNudge, appointment.memberId),
       });
     });
 
@@ -300,14 +300,14 @@ describe('AppointmentResolver', () => {
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedAppointment, expect.anything());
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDeleteDispatch, {
         dispatchId: generateDispatchId(
-          ContentKey.appointmentReminder,
+          InternalKey.appointmentReminder,
           appointment.id,
           appointment.memberId,
         ),
       });
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDeleteDispatch, {
         dispatchId: generateDispatchId(
-          ContentKey.appointmentLongReminder,
+          InternalKey.appointmentLongReminder,
           appointment.id,
           appointment.memberId,
         ),

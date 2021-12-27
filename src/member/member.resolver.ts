@@ -1,9 +1,11 @@
 import {
   ContentKey,
+  CustomKey,
   ICreateDispatch,
   IDeleteClientSettings,
   IDeleteDispatch,
   InnerQueueTypes,
+  InternalKey,
   InternalNotificationType,
   Language,
   NotificationType,
@@ -774,7 +776,7 @@ export class MemberResolver extends MemberBase {
           member,
           memberConfig.firstLoggedInAt,
           correlationId,
-          ContentKey.newRegisteredMember,
+          InternalKey.newRegisteredMember,
           1,
         ),
       );
@@ -783,7 +785,7 @@ export class MemberResolver extends MemberBase {
           member,
           memberConfig.firstLoggedInAt,
           correlationId,
-          ContentKey.newRegisteredMemberNudge,
+          InternalKey.newRegisteredMemberNudge,
           2,
         ),
       );
@@ -792,14 +794,14 @@ export class MemberResolver extends MemberBase {
           member,
           memberConfig.firstLoggedInAt,
           correlationId,
-          ContentKey.logReminder,
+          InternalKey.logReminder,
           3,
         ),
       );
     }
 
     await this.notifyDeleteDispatch({
-      dispatchId: generateDispatchId(ContentKey.newMemberNudge, member.id),
+      dispatchId: generateDispatchId(InternalKey.newMemberNudge, member.id),
     });
   }
 
@@ -832,7 +834,7 @@ export class MemberResolver extends MemberBase {
     }
 
     await this.notifyCreateDispatch({
-      dispatchId: generateDispatchId(ContentKey.customContent, member.id, Date.now().toString()),
+      dispatchId: generateDispatchId(CustomKey.customContent, member.id, Date.now().toString()),
       memberId: member.id,
       userId: member.primaryUserId.toString(),
       correlationId: v4(),
@@ -841,8 +843,8 @@ export class MemberResolver extends MemberBase {
       metadata: {
         contentType:
           type === NotificationType.video || type === NotificationType.call
-            ? ContentKey.callOrVideo
-            : ContentKey.customContent,
+            ? CustomKey.callOrVideo
+            : CustomKey.customContent,
         path: metadata.path,
         peerId: metadata.peerId,
         appointmentId: metadata.appointmentId,
@@ -929,8 +931,8 @@ export class MemberResolver extends MemberBase {
       if ((metadata.scheduleLink || metadata.chatLink) && memberConfig.platform === Platform.web) {
         const getContentsParams: GetContentsParams = {
           contentType: metadata.chatLink
-            ? ContentKey.appointmentReminderLink
-            : ContentKey.appointmentRequestLink,
+            ? InternalKey.appointmentReminderLink
+            : InternalKey.appointmentRequestLink,
           member,
           user,
           extraData: metadata.chatLink
@@ -985,13 +987,13 @@ export class MemberResolver extends MemberBase {
 
       if (origin === ChatMessageOrigin.fromUser) {
         await this.notifyCreateDispatch({
-          dispatchId: generateDispatchId(ContentKey.newChatMessageFromUser, Date.now().toString()),
+          dispatchId: generateDispatchId(InternalKey.newChatMessageFromUser, Date.now().toString()),
           memberId: communication.memberId.toString(),
           userId: senderUserId,
           type: InternalNotificationType.chatMessageToMember,
           correlationId: getCorrelationId(this.logger),
           metadata: {
-            contentType: ContentKey.newChatMessageFromUser,
+            contentType: InternalKey.newChatMessageFromUser,
             path: `connect/${communication.memberId.toString()}/${senderUserId}`,
           },
         });
@@ -1002,14 +1004,14 @@ export class MemberResolver extends MemberBase {
         if (coachInfo && !coachInfo.isOnline) {
           await this.notifyCreateDispatch({
             dispatchId: generateDispatchId(
-              ContentKey.newChatMessageFromMember,
+              InternalKey.newChatMessageFromMember,
               Date.now().toString(),
             ),
             memberId: senderUserId,
             userId: communication.userId.toString(),
             type: InternalNotificationType.textSmsToUser,
             correlationId: getCorrelationId(this.logger),
-            metadata: { contentType: ContentKey.newChatMessageFromMember },
+            metadata: { contentType: InternalKey.newChatMessageFromMember },
           });
         }
       }
@@ -1083,12 +1085,12 @@ export class MemberResolver extends MemberBase {
 
       return this.notifyCreateDispatch({
         dispatchId: generateDispatchId(
-          ContentKey.customContent,
+          CustomKey.customContent,
           member.primaryUserId.toString(),
           Date.now().toString(),
         ),
         content: params.message,
-        metadata: { contentType: ContentKey.customContent, sendBirdChannelUrl },
+        metadata: { contentType: CustomKey.customContent, sendBirdChannelUrl },
         type: InternalNotificationType.chatMessageToUser,
         memberId: member.id,
         userId: member.primaryUserId.toString(),
@@ -1122,19 +1124,19 @@ export class MemberResolver extends MemberBase {
   private async deleteSchedules(params: IEventMember) {
     try {
       await this.notifyDeleteDispatch({
-        dispatchId: generateDispatchId(ContentKey.newMemberNudge, params.memberId),
+        dispatchId: generateDispatchId(InternalKey.newMemberNudge, params.memberId),
       });
       await this.notifyDeleteDispatch({
-        dispatchId: generateDispatchId(ContentKey.newRegisteredMember, params.memberId),
+        dispatchId: generateDispatchId(InternalKey.newRegisteredMember, params.memberId),
       });
       await this.notifyDeleteDispatch({
-        dispatchId: generateDispatchId(ContentKey.newRegisteredMemberNudge, params.memberId),
+        dispatchId: generateDispatchId(InternalKey.newRegisteredMemberNudge, params.memberId),
       });
       await this.notifyDeleteDispatch({
-        dispatchId: generateDispatchId(ContentKey.logReminder, params.memberId),
+        dispatchId: generateDispatchId(InternalKey.logReminder, params.memberId),
       });
       await this.notifyDeleteDispatch({
-        dispatchId: generateDispatchId(ContentKey.customContent, params.memberId),
+        dispatchId: generateDispatchId(CustomKey.customContent, params.memberId),
       });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, ex);

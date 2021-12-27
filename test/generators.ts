@@ -1,9 +1,9 @@
 import {
   CancelNotificationType,
-  ContentKey,
   Honorific,
   IUpdateClientSettings,
   InnerQueueTypes,
+  InternalKey,
   InternalNotificationType,
   Language,
   NotificationType,
@@ -523,7 +523,7 @@ export const generateInternalNotifyParams = ({
   userId = generateId(),
   type = InternalNotificationType.textToMember,
   metadata = {
-    contentType: ContentKey.logReminder,
+    contentType: InternalKey.logReminder,
     sendBirdChannelUrl: generateUniqueUrl(),
   },
   content = en.translation.contents.logReminder,

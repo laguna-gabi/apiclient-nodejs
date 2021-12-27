@@ -1,8 +1,10 @@
 import {
   CancelNotificationType,
   ContentKey,
+  CustomKey,
   IEventNotifySlack,
   InnerQueueTypes,
+  InternalKey,
   InternalNotificationType,
   Language,
   NotificationType,
@@ -577,27 +579,27 @@ describe('MemberResolver', () => {
     expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
       2,
       EventType.notifyQueue,
-      generateQueueParams(ContentKey.newMemberNudge),
+      generateQueueParams(InternalKey.newMemberNudge),
     );
     expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
       3,
       EventType.notifyQueue,
-      generateQueueParams(ContentKey.newRegisteredMember),
+      generateQueueParams(InternalKey.newRegisteredMember),
     );
     expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
       4,
       EventType.notifyQueue,
-      generateQueueParams(ContentKey.newRegisteredMemberNudge),
+      generateQueueParams(InternalKey.newRegisteredMemberNudge),
     );
     expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
       5,
       EventType.notifyQueue,
-      generateQueueParams(ContentKey.logReminder),
+      generateQueueParams(InternalKey.logReminder),
     );
     expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
       6,
       EventType.notifyQueue,
-      generateQueueParams(ContentKey.customContent),
+      generateQueueParams(CustomKey.customContent),
     );
   };
 
@@ -2268,7 +2270,7 @@ describe('MemberResolver', () => {
               member,
               user,
               extraData: { chatLink: 'chatLink' },
-              contentType: ContentKey.appointmentReminderLink,
+              contentType: InternalKey.appointmentReminderLink,
               language: Language.en,
             }),
           to: member.phone,
@@ -2303,7 +2305,7 @@ describe('MemberResolver', () => {
               member,
               user,
               extraData: { scheduleLink: 'scheduleLink' },
-              contentType: ContentKey.appointmentRequestLink,
+              contentType: InternalKey.appointmentRequestLink,
               language: Language.en,
             }),
           to: member.phone,
@@ -2325,7 +2327,7 @@ describe('MemberResolver', () => {
 
       const internalNotifyParams = generateInternalNotifyParams({
         type: InternalNotificationType.textToMember,
-        metadata: { contentType: ContentKey.newMember },
+        metadata: { contentType: InternalKey.newMember },
       });
 
       await resolver.internalNotify(internalNotifyParams);
@@ -2335,7 +2337,7 @@ describe('MemberResolver', () => {
           body: internationalizationService.getContents({
             member,
             user,
-            contentType: ContentKey.newMember,
+            contentType: InternalKey.newMember,
             language: Language.es,
           }),
           to: member.phone,
@@ -2497,13 +2499,13 @@ describe('MemberResolver', () => {
       await resolver.notifyChatMessage(params);
 
       expect(spyOnCreateDispatch).toBeCalledWith({
-        dispatchId: expect.stringContaining(generateDispatchId(ContentKey.newChatMessageFromUser)),
+        dispatchId: expect.stringContaining(generateDispatchId(InternalKey.newChatMessageFromUser)),
         memberId: communication.memberId.toString(),
         userId: user.id,
         type: InternalNotificationType.chatMessageToMember,
         correlationId: expect.any(String),
         metadata: {
-          contentType: ContentKey.newChatMessageFromUser,
+          contentType: InternalKey.newChatMessageFromUser,
           path: `connect/${communication.memberId.toString()}/${user.id}`,
         },
       });
@@ -2540,13 +2542,13 @@ describe('MemberResolver', () => {
 
       expect(spyOnCreateDispatch).toBeCalledWith({
         dispatchId: expect.stringContaining(
-          generateDispatchId(ContentKey.newChatMessageFromMember),
+          generateDispatchId(InternalKey.newChatMessageFromMember),
         ),
         memberId: member.id,
         userId: communication.userId.toString(),
         type: InternalNotificationType.textSmsToUser,
         correlationId: expect.any(String),
-        metadata: { contentType: ContentKey.newChatMessageFromMember },
+        metadata: { contentType: InternalKey.newChatMessageFromMember },
       });
     }, 10000);
 

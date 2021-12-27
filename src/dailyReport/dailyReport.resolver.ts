@@ -1,4 +1,4 @@
-import { ContentKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
+import { InternalKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -68,12 +68,12 @@ export class DailyReportResolver {
         type: InternalNotificationType.textSmsToUser,
         correlationId: getCorrelationId(this.logger),
         dispatchId: generateDispatchId(
-          ContentKey.memberNotFeelingWellMessage,
+          InternalKey.memberNotFeelingWellMessage,
           primaryUserId,
           dailyReportCategoriesInput.memberId,
           Date.now().toString(),
         ),
-        metadata: { contentType: ContentKey.memberNotFeelingWellMessage },
+        metadata: { contentType: InternalKey.memberNotFeelingWellMessage },
       };
       this.eventEmitter.emit(EventType.notifyDispatch, memberNotFeelingWellEvent);
 
@@ -85,7 +85,7 @@ export class DailyReportResolver {
       );
     }
     this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
-      dispatchId: generateDispatchId(ContentKey.logReminder, memberId),
+      dispatchId: generateDispatchId(InternalKey.logReminder, memberId),
     });
 
     return dailyReportObject;
