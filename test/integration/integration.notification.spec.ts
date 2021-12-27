@@ -5,6 +5,7 @@ import {
   ObjectAppointmentScheduledClass,
   ObjectBaseClass,
   ObjectCallOrVideoClass,
+  ObjectChatMessageUserClass,
   ObjectCustomContentClass,
   ObjectGeneralMemberTriggeredClass,
   ObjectNewChatMessageToMemberClass,
@@ -15,6 +16,7 @@ import {
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
+  generateChatMessageUserMock,
   generateDispatchId,
   generateGeneralMemberTriggeredMock,
   generateNewChatMessageToMemberMock,
@@ -31,7 +33,6 @@ import {
 import { general, hosts, scheduler } from 'config';
 import { addDays, addSeconds, subDays, subMinutes } from 'date-fns';
 import * as faker from 'faker';
-
 import { v4 } from 'uuid';
 import { Appointment } from '../../src/appointment';
 import { QueueType, RegisterForNotificationParams, delay, reformatDate } from '../../src/common';
@@ -45,6 +46,7 @@ import {
   generateScheduleAppointmentParams,
 } from '../generators';
 import * as sendbirdPayload from '../unit/mocks/webhookSendbirdNewMessagePayload.json';
+
 // mock uuid.v4:
 jest.mock('uuid', () => {
   const actualUUID = jest.requireActual('uuid');
@@ -727,6 +729,43 @@ describe('Integration tests: notifications', () => {
 
       const object = new ObjectNewChatMessageToMemberClass(mock);
       Object.keys(object.objectNewChatMessageFromUserType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+
+    // eslint-disable-next-line max-len
+    it(`twilio: should send dispatches of type ${ContentKey.customContent} and content from the sms message`, async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      const communication = await handler.communicationService.get({
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+      });
+
+      const payload = { Body: faker.lorem.word(), From: member.phone, Token: 'token' };
+      await handler.webhooksController.incomingSms(payload);
+      await delay(200);
+
+      const mock = generateChatMessageUserMock({
+        recipientClientId: member.primaryUserId.toString(),
+        senderClientId: member.id,
+        content: payload.Body,
+        sendBirdChannelUrl: communication.sendBirdChannelUrl,
+      });
+
+      const object = new ObjectChatMessageUserClass(mock);
+      Object.keys(object.objectChatMessageUserType).forEach((key) => {
         expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
           expect.objectContaining({
             type: QueueType.notifications,

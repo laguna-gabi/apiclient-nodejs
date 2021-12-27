@@ -1023,14 +1023,18 @@ export class MemberResolver extends MemberBase {
     this.logger.debug(params, MemberResolver.name, this.notifyCreateDispatch.name);
     const { memberId, userId, type, metadata } = params;
 
+    const isMemberRecipient =
+      type !== InternalNotificationType.textSmsToUser &&
+      type !== InternalNotificationType.chatMessageToUser;
+
     const createDispatch: ICreateDispatch = {
       type: InnerQueueTypes.createDispatch,
       dispatchId: params.dispatchId,
       correlationId: params.correlationId ? params.correlationId : v4(),
       serviceName: ServiceName.hepius,
       notificationType: type,
-      recipientClientId: type !== InternalNotificationType.textSmsToUser ? memberId : userId,
-      senderClientId: type !== InternalNotificationType.textSmsToUser ? userId : memberId,
+      recipientClientId: isMemberRecipient ? memberId : userId,
+      senderClientId: isMemberRecipient ? userId : memberId,
       sendBirdChannelUrl: metadata.sendBirdChannelUrl,
       appointmentTime: metadata.appointmentTime,
       appointmentId: metadata.appointmentId,
@@ -1077,12 +1081,17 @@ export class MemberResolver extends MemberBase {
         userId: member.primaryUserId.toString(),
       });
 
-      return await this.internalNotify({
+      return this.notifyCreateDispatch({
+        dispatchId: generateDispatchId(
+          ContentKey.customContent,
+          member.primaryUserId.toString(),
+          Date.now().toString(),
+        ),
+        content: params.message,
+        metadata: { contentType: ContentKey.customContent, sendBirdChannelUrl },
+        type: InternalNotificationType.chatMessageToUser,
         memberId: member.id,
         userId: member.primaryUserId.toString(),
-        type: InternalNotificationType.chatMessageToUser,
-        metadata: { sendBirdChannelUrl },
-        content: params.message,
       });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.sendSmsToChat.name, ex);
