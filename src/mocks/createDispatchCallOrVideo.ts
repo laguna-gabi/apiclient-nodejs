@@ -9,7 +9,7 @@ import {
 } from '../';
 import { v4 } from 'uuid';
 
-export type ObjectCallOrVideoType = ObjectBaseType & Pick<ICreateDispatch, 'peerId'>;
+export type ObjectCallOrVideoType = ObjectBaseType & Pick<ICreateDispatch, 'peerId' | 'path'>;
 
 export class ObjectCallOrVideoClass {
   constructor(readonly objectCallOrVideoType: ObjectCallOrVideoType) {}
@@ -20,11 +20,13 @@ export const generateObjectCallOrVideoMock = ({
   senderClientId,
   notificationType,
   peerId,
+  path,
 }: {
   recipientClientId: string;
   senderClientId: string;
   notificationType: NotificationType;
   peerId: string;
+  path: string;
 }): ObjectCallOrVideoType => {
   if (notificationType !== NotificationType.call && notificationType !== NotificationType.video) {
     throw Error(
@@ -44,5 +46,6 @@ export const generateObjectCallOrVideoMock = ({
     senderClientId,
     peerId,
     contentKey,
+    path,
   };
 };
