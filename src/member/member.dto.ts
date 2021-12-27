@@ -28,6 +28,7 @@ import { Org } from '../org';
 import { User } from '../user';
 import {
   CancelNotificationType,
+  ExternalKey,
   Honorific,
   Language,
   NotificationType,
@@ -40,6 +41,7 @@ const validatorsConfig = config.get('graphql.validators');
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
 registerEnumType(MemberRole, { name: 'MemberRole' });
+registerEnumType(ExternalKey, { name: 'ExternalKey' });
 
 export enum Sex {
   male = 'male',
@@ -356,6 +358,20 @@ export class NotifyParams {
   @Prop()
   @Field(() => NotificationMetadata)
   metadata: NotificationMetadata;
+}
+
+@InputType()
+export class NotifyContentParams {
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
+
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.userIdInvalid) })
+  userId: string;
+
+  @Field(() => ExternalKey)
+  contentKey: ExternalKey;
 }
 
 @InputType()

@@ -1,6 +1,7 @@
 import {
   ContentKey,
   CustomKey,
+  ExternalKey,
   InnerQueueTypes,
   InternalKey,
   NotificationType,
@@ -9,6 +10,7 @@ import {
   ObjectCallOrVideoClass,
   ObjectChatMessageUserClass,
   ObjectCustomContentClass,
+  ObjectExternalContentClass,
   ObjectGeneralMemberTriggeredClass,
   ObjectNewChatMessageToMemberClass,
   ObjectNewMemberClass,
@@ -20,6 +22,7 @@ import {
   generateAppointmentScheduledUserMock,
   generateChatMessageUserMock,
   generateDispatchId,
+  generateExternalContentMock,
   generateGeneralMemberTriggeredMock,
   generateNewChatMessageToMemberMock,
   generateNewControlMemberMock,
@@ -50,6 +53,7 @@ import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   generateCreateMemberParams,
   generateDailyReport,
+  generateNotifyContentParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
 } from '../generators';
@@ -481,6 +485,57 @@ describe('Integration tests: notifications', () => {
         });
         const object = new ObjectCallOrVideoClass(mock);
         Object.keys(object.objectCallOrVideoType).forEach((key) => {
+          expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+            expect.objectContaining({
+              type: QueueType.notifications,
+              message: expect.stringContaining(
+                key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+              ),
+            }),
+          );
+        });
+      },
+    );
+
+    /**
+     * Trigger : MemberResolver.notifyContent
+     * Dispatch :
+     *      1. send ExternalKey dispatch
+     */
+    test.each(Object.values(ExternalKey))(
+      `notifyContent: dispatch message of type %p`,
+      async (contentKey) => {
+        const org = await creators.createAndValidateOrg();
+        const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+        const params: RegisterForNotificationParams = {
+          platform: Platform.android,
+          isPushNotificationsEnabled: true,
+        };
+        await handler
+          .setContextUserId(member.id)
+          .mutations.registerMemberForNotifications({ registerForNotificationParams: params });
+
+        await delay(500);
+        handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+        const notifyContentParams = generateNotifyContentParams({
+          memberId: member.id,
+          userId: member.primaryUserId.toString(),
+          contentKey,
+        });
+
+        await handler.mutations.notifyContent({ notifyContentParams });
+        await delay(200);
+
+        const mock = generateExternalContentMock({
+          recipientClientId: notifyContentParams.memberId,
+          senderClientId: notifyContentParams.userId,
+          path: generatePath(NotificationType.text, contentKey),
+          contentKey,
+        });
+        const object = new ObjectExternalContentClass(mock);
+        Object.keys(object.objectExternalContentType).forEach((key) => {
           expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
             expect.objectContaining({
               type: QueueType.notifications,

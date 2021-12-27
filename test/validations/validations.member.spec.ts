@@ -10,6 +10,7 @@ import * as config from 'config';
 import { subSeconds } from 'date-fns';
 import * as faker from 'faker';
 import * as request from 'supertest';
+import { v4 } from 'uuid';
 import { ErrorType, Errors } from '../../src/common';
 import {
   AddCaregiverParams,
@@ -31,6 +32,7 @@ import {
   generateGetMemberUploadJournalAudioLinkParams,
   generateGetMemberUploadJournalImageLinkParams,
   generateId,
+  generateNotifyContentParams,
   generateNotifyParams,
   generateOrgParams,
   generateRandomName,
@@ -43,7 +45,6 @@ import {
   generateUpdateTaskStatusParams,
   urls,
 } from '../index';
-import { v4 } from 'uuid';
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
@@ -498,6 +499,25 @@ describe('Validations - member', () => {
         const cancelNotifyParams: CancelNotifyParams = generateCancelNotifyParams();
         delete cancelNotifyParams[params.field];
         await handler.mutations.cancel({ cancelNotifyParams, missingFieldError: params.error });
+      },
+    );
+  });
+
+  describe('notifyContent', () => {
+    test.each`
+      field           | error
+      ${'memberId'}   | ${`Field "memberId" of required type "String!" was not provided.`}
+      ${'userId'}     | ${`Field "userId" of required type "String!" was not provided.`}
+      ${'contentKey'} | ${`Field "contentKey" of required type "ExternalKey!" was not provided.`}
+    `(
+      `should fail to cancel a notification since mandatory field $field is missing`,
+      async (params) => {
+        const notifyContentParams = generateNotifyContentParams();
+        delete notifyContentParams[params.field];
+        await handler.mutations.notifyContent({
+          notifyContentParams,
+          missingFieldError: params.error,
+        });
       },
     );
   });

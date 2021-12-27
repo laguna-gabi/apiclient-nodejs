@@ -1,5 +1,6 @@
 import {
   CancelNotificationType,
+  ExternalKey,
   Honorific,
   IUpdateClientSettings,
   InnerQueueTypes,
@@ -52,6 +53,7 @@ import {
   ImageFormat,
   Member,
   MemberConfig,
+  NotifyContentParams,
   NotifyParams,
   ReadmissionRisk,
   Relationship,
@@ -262,12 +264,15 @@ export const generateUpdateMemberParams = ({
   };
 };
 
-export const mockGenerateMemberConfig = (): MemberConfig => {
+export const mockGenerateMemberConfig = ({
+  platform = Platform.ios,
+  isPushNotificationsEnabled = true,
+}: Partial<MemberConfig> = {}): MemberConfig => {
   return {
     memberId: generateObjectId(),
     externalUserId: v4(),
-    platform: Platform.ios,
-    isPushNotificationsEnabled: true,
+    platform,
+    isPushNotificationsEnabled,
     isRecommendationsEnabled: true,
     isAppointmentsReminderEnabled: true,
     accessToken: generateId(),
@@ -491,6 +496,14 @@ export const generateNotifyParams = ({
   metadata = { peerId: v4(), content: 'test' },
 }: Partial<NotifyParams> = {}): NotifyParams => {
   return { userId, memberId, type, metadata };
+};
+
+export const generateNotifyContentParams = ({
+  userId = generateId(),
+  memberId = generateId(),
+  contentKey = ExternalKey.setCallPermissions,
+}: Partial<NotifyContentParams> = {}): NotifyContentParams => {
+  return { userId, memberId, contentKey };
 };
 
 export const generateCancelNotifyParams = ({

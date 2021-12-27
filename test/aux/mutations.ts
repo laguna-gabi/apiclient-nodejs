@@ -25,6 +25,7 @@ import {
   CreateTaskParams,
   Journal,
   Member,
+  NotifyContentParams,
   NotifyParams,
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
@@ -792,6 +793,29 @@ export class Mutations {
     });
 
     return isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.notify;
+  };
+
+  notifyContent = async ({
+    notifyContentParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    notifyContentParams: NotifyContentParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<void> => {
+    const result = await this.apolloClient.mutate({
+      variables: { notifyContentParams: notifyContentParams },
+      mutation: gql`
+        mutation notifyContent($notifyContentParams: NotifyContentParams!) {
+          notifyContent(notifyContentParams: $notifyContentParams)
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.notifyContent
+    );
   };
 
   cancel = async ({

@@ -45,6 +45,7 @@ import {
   MemberService,
   MemberSummary,
   NotificationBuilder,
+  NotifyContentParams,
   NotifyParams,
   RecordingLinkParams,
   RecordingOutput,
@@ -852,6 +853,29 @@ export class MemberResolver extends MemberBase {
         appointmentId: metadata.appointmentId,
         triggersAt: metadata.when,
       },
+    });
+  }
+
+  @Mutation(() => String, { nullable: true })
+  @Roles(UserRole.coach, UserRole.nurse)
+  async notifyContent(
+    @Args(camelCase(NotifyContentParams.name))
+    notifyContentParams: NotifyContentParams,
+  ) {
+    const { memberId, userId, contentKey } = notifyContentParams;
+    const { member, memberConfig } = await this.extractDataOfMemberAndUser(memberId, userId);
+
+    if (memberConfig.platform === Platform.web || !memberConfig.isPushNotificationsEnabled) {
+      throw new Error(Errors.get(ErrorType.notificationNotAllowedForWebMember));
+    }
+
+    await this.notifyCreateDispatch({
+      memberId,
+      userId,
+      type: NotificationType.text,
+      correlationId: getCorrelationId(this.logger),
+      dispatchId: generateDispatchId(contentKey, member.id, Date.now().toString()),
+      metadata: { contentType: contentKey, path: generatePath(NotificationType.text, contentKey) },
     });
   }
 

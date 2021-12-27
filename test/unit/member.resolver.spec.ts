@@ -76,6 +76,7 @@ import {
   generateId,
   generateInternalNotifyParams,
   generateMemberConfig,
+  generateNotifyContentParams,
   generateNotifyParams,
   generateObjectId,
   generateSetGeneralNotesParams,
@@ -2057,6 +2058,76 @@ describe('MemberResolver', () => {
       await expect(resolver.notify(notifyParams)).rejects.toThrow(
         Errors.get(ErrorType.notificationInvalidContent),
       );
+    });
+  });
+
+  describe('notifyContent', () => {
+    let spyOnServiceGetMember;
+    let spyOnServiceGetMemberConfig;
+    let spyOnUserServiceGetUser;
+
+    beforeEach(() => {
+      spyOnServiceGetMember = jest.spyOn(service, 'get');
+      spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
+      spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetMember.mockReset();
+      spyOnServiceGetMemberConfig.mockReset();
+      spyOnUserServiceGetUser.mockReset();
+    });
+
+    it('should catch notify exception on non existing user', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => undefined);
+
+      await expect(
+        resolver.notifyContent(generateNotifyContentParams({ memberId: member.id })),
+      ).rejects.toThrow(Errors.get(ErrorType.userNotFound));
+    });
+
+    it('should catch notify exception on non existing member', async () => {
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => undefined);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+
+      await expect(
+        resolver.notifyContent(
+          generateNotifyContentParams({
+            userId: user.id,
+            memberId: memberConfig.memberId.toString(),
+          }),
+        ),
+      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+    });
+
+    test.each([
+      { platform: Platform.web },
+      { isPushNotificationsEnabled: false },
+      { platform: Platform.web, isPushNotificationsEnabled: true },
+      { platform: Platform.android, isPushNotificationsEnabled: false },
+    ])('should throw an error when member config has %p', async (param) => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig({ ...param });
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+
+      await expect(
+        resolver.notifyContent(
+          generateNotifyContentParams({
+            userId: user.id,
+            memberId: memberConfig.memberId.toString(),
+          }),
+        ),
+      ).rejects.toThrow(Errors.get(ErrorType.notificationNotAllowedForWebMember));
     });
   });
 
