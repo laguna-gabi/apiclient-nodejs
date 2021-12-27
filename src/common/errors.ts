@@ -201,3 +201,5 @@ export const Errors: Map<ErrorType, string> = new Map([
 export const DbErrors = {
   duplicateKey: 11000,
 };
+
+export const LogAsWarning = new Set([...Errors.values(), 'Forbidden resource', 'Unauthorized']);
