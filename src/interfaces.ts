@@ -166,4 +166,5 @@ export class ExtraData {
   appointmentTime?: string;
   chatLink?: string;
   scheduleLink?: string;
+  dynamicLink?: string;
 }
