@@ -2,6 +2,7 @@ export * from './utils';
 export * from './clientSettings';
 export * from './baseObject';
 export * from './createDispatchCustomContent';
+export * from './createDispatchExternalContent';
 export * from './createDispatchCallOrVideo';
 export * from './createDispatchChatMessageUser';
 export * from './createDispatchNewMemberMocks';
