@@ -1,29 +1,30 @@
 import {
   AllNotificationTypes,
   ContentKey,
+  InnerQueueTypes,
+  InternalNotificationType,
+  NotificationType,
+  ObjectAppointmentScheduleReminderClass,
+  ObjectAppointmentScheduledClass,
+  ObjectBaseClass,
+  ObjectChatMessageUserClass,
+  ObjectGeneralMemberTriggeredClass,
+  ObjectNewChatMessageToMemberClass,
+  ObjectNewMemberClass,
+  ObjectNewMemberNudgeClass,
+  Platform,
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
+  generateChatMessageUserMock,
   generateGeneralMemberTriggeredMock,
   generateNewChatMessageToMemberMock,
   generateNewControlMemberMock,
   generateNewMemberMock,
   generateNewMemberNudgeMock,
   generateObjectCallOrVideoMock,
-  generateObjectCustomContentMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
-  InnerQueueTypes,
-  InternalNotificationType,
-  NotificationType,
-  ObjectAppointmentScheduledClass,
-  ObjectAppointmentScheduleReminderClass,
-  ObjectBaseClass,
-  ObjectGeneralMemberTriggeredClass,
-  ObjectNewChatMessageToMemberClass,
-  ObjectNewMemberClass,
-  ObjectNewMemberNudgeClass,
-  Platform,
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapMinutes } from 'config';
@@ -36,8 +37,8 @@ import { replaceConfigs } from '../';
 import { translation } from '../../languages/en.json';
 import { AppModule } from '../../src/app.module';
 import {
-  DispatchesService,
   DispatchStatus,
+  DispatchesService,
   QueueService,
   TriggersService,
 } from '../../src/conductor';
@@ -533,34 +534,28 @@ describe('Notifications full flow', () => {
   );
 
   it(`should handle 'immediate' event of type ${ContentKey.customContent}`, async () => {
-    const mock = generateObjectCustomContentMock({
+    const mock = generateChatMessageUserMock({
       recipientClientId: userClient.id,
       senderClientId: webMemberClient.id,
       content: lorem.word(),
-      notificationType: InternalNotificationType.chatMessageToUser,
+      sendBirdChannelUrl: internet.url(),
     });
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    mock.sendBirdChannelUrl = lorem.word();
-    const object = new ObjectNewChatMessageToMemberClass(mock);
+    const object = new ObjectChatMessageUserClass(mock);
     spyOnSendBirdSend.mockReturnValueOnce(providerResult);
 
     const message: SQSMessage = {
       MessageId: v4(),
       Body: JSON.stringify({
         type: InnerQueueTypes.createDispatch,
-        ...object.objectNewChatMessageFromUserType,
+        ...object.objectChatMessageUserType,
       }),
     };
     await service.handleMessage(message);
 
     expect(spyOnSendBirdSend).toBeCalledWith({
-      appointmentId: undefined,
       message: mock.content,
       notificationType: InternalNotificationType.chatMessageToUser,
       orgName: undefined,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       sendBirdChannelUrl: mock.sendBirdChannelUrl,
       userId: webMemberClient.id,
     });
@@ -568,7 +563,7 @@ describe('Notifications full flow', () => {
     await compareResults({
       dispatchId: mock.dispatchId,
       status: DispatchStatus.done,
-      response: { ...object.objectNewChatMessageFromUserType },
+      response: { ...object.objectChatMessageUserType },
     });
   });
 
