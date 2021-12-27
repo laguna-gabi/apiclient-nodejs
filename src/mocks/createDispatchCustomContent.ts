@@ -1,6 +1,6 @@
 import { v4 } from 'uuid';
 import {
-  ContentKey,
+  CustomKey,
   ICreateDispatch,
   InnerQueueTypes,
   NotificationType,
@@ -28,7 +28,7 @@ export const generateObjectCustomContentMock = ({
   notificationType: NotificationType;
 }): ObjectCustomContentType => {
   validateNotificationTypeText(notificationType);
-  const contentKey = ContentKey.customContent;
+  const contentKey = CustomKey.customContent;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, Date.now().toString()),

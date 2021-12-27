@@ -1,5 +1,5 @@
 import {
-  ContentKey,
+  CustomKey,
   ICreateDispatch,
   InnerQueueTypes,
   NotificationType,
@@ -33,7 +33,7 @@ export const generateObjectCallOrVideoMock = ({
       }`,
     );
   }
-  const contentKey = ContentKey.callOrVideo;
+  const contentKey = CustomKey.callOrVideo;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId),

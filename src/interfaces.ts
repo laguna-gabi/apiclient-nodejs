@@ -108,7 +108,12 @@ export interface IEventNotifySlack {
   channel: string;
 }
 
-export enum ContentKey {
+export enum ExternalKey {
+  addCaregiverDetails = 'addCaregiverDetails',
+  setCallPermissions = 'setCallPermissions',
+}
+
+export enum InternalKey {
   newMember = 'newMember',
   newControlMember = 'newControlMember',
   newMemberNudge = 'newMemberNudge',
@@ -125,9 +130,14 @@ export enum ContentKey {
   newChatMessageFromMember = 'newChatMessageFromMember',
   appointmentScheduledUser = 'appointmentScheduledUser',
   memberNotFeelingWellMessage = 'memberNotFeelingWellMessage',
+}
+
+export enum CustomKey {
   customContent = 'customContent',
   callOrVideo = 'callOrVideo',
 }
+
+export type ContentKey = ExternalKey | InternalKey | CustomKey;
 
 export enum Language {
   en = 'en',

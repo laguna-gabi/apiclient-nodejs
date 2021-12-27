@@ -1,5 +1,5 @@
 import {
-  ContentKey,
+  CustomKey,
   ICreateDispatch,
   InnerQueueTypes,
   InternalNotificationType,
@@ -30,7 +30,7 @@ export const generateChatMessageUserMock = ({
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(
-      ContentKey.customContent,
+      CustomKey.customContent,
       recipientClientId,
       Date.now().toString(),
     ),
@@ -40,7 +40,7 @@ export const generateChatMessageUserMock = ({
     recipientClientId,
     senderClientId,
     content,
-    contentKey: ContentKey.customContent,
+    contentKey: CustomKey.customContent,
     sendBirdChannelUrl,
   };
 };
