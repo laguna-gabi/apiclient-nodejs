@@ -49,7 +49,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     token: string;
     externalUserId: string;
   }): Promise<string | undefined> {
-    this.logger.debug({ token, externalUserId }, OneSignal.name, this.register.name);
+    this.logger.info({ token, externalUserId }, OneSignal.name, this.register.name);
     try {
       const data = {
         app_id: await this.getApiId(Platform.ios),
@@ -72,7 +72,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
   }
 
   async unregister(memberConfig: MemberConfig): Promise<void> {
-    this.logger.debug(memberConfig, OneSignal.name, this.unregister.name);
+    this.logger.info(memberConfig, OneSignal.name, this.unregister.name);
     try {
       if (memberConfig.platform === Platform.ios) {
         const appId = await this.configsService.getConfig(ExternalConfigs.oneSignal.voipApiId);
@@ -88,9 +88,9 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
   }
 
   async send(sendOneSignalNotification: SendOneSignalNotification): Promise<string | void> {
-    this.logger.debug(sendOneSignalNotification, OneSignal.name, this.send.name);
+    this.logger.info(sendOneSignalNotification, OneSignal.name, this.send.name);
     const { platform, externalUserId, data, content } = sendOneSignalNotification;
-    this.logger.debug(data, OneSignal.name, this.send.name);
+    this.logger.info(data, OneSignal.name, this.send.name);
 
     const config = await this.getConfig(platform, data.type);
     const app_id = await this.getApiId(platform, data.type);
@@ -145,7 +145,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
   }
 
   async cancel(cancelNotificationParams: CancelNotificationParams): Promise<string | void> {
-    this.logger.debug(cancelNotificationParams, OneSignal.name, this.cancel.name);
+    this.logger.info(cancelNotificationParams, OneSignal.name, this.cancel.name);
     const { platform, externalUserId, data } = cancelNotificationParams;
 
     const config = await this.getConfig(platform, data.type);
@@ -191,7 +191,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
   private validateRegisterResult(externalUserId, result): string | undefined {
     const methodName = this.register.name;
     if (result.status === 200) {
-      this.logger.debug({ externalUserId }, OneSignal.name, methodName);
+      this.logger.info({ externalUserId }, OneSignal.name, methodName);
       return result.data.id;
     } else {
       this.logger.error({ externalUserId }, OneSignal.name, methodName, result.status);

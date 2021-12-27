@@ -263,11 +263,7 @@ export class CommunicationService {
   }
 
   async freezeGroupChannel({ memberId, userId }: { memberId: string; userId: string }) {
-    this.logger.debug(
-      { memberId, userId },
-      CommunicationService.name,
-      this.freezeGroupChannel.name,
-    );
+    this.logger.info({ memberId, userId }, CommunicationService.name, this.freezeGroupChannel.name);
     const [communication] = await this.communicationModel.find({
       memberId: new Types.ObjectId(memberId),
       userId: new Types.ObjectId(userId),
@@ -285,7 +281,7 @@ export class CommunicationService {
   }
 
   async deleteCommunication(communication) {
-    this.logger.debug(communication, CommunicationService.name, this.deleteCommunication.name);
+    this.logger.info(communication, CommunicationService.name, this.deleteCommunication.name);
     await this.communicationModel.deleteOne({
       memberId: communication.memberId,
       userId: communication.userId,

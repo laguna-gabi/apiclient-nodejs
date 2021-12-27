@@ -878,7 +878,7 @@ export class MemberResolver extends MemberBase {
    */
   @OnEvent(EventType.notifyInternal, { async: true })
   async internalNotify(params: InternalNotifyParams) {
-    this.logger.debug(params, MemberResolver.name, this.internalNotify.name);
+    this.logger.info(params, MemberResolver.name, this.internalNotify.name);
     const { memberId, userId, type, metadata } = params;
     let content = params.content;
 
@@ -1022,7 +1022,7 @@ export class MemberResolver extends MemberBase {
 
   @OnEvent(EventType.notifyDispatch, { async: true })
   async notifyCreateDispatch(params: IDispatchParams) {
-    this.logger.debug(params, MemberResolver.name, this.notifyCreateDispatch.name);
+    this.logger.info(params, MemberResolver.name, this.notifyCreateDispatch.name);
     const { memberId, userId, type, metadata } = params;
 
     const isMemberRecipient =
@@ -1047,7 +1047,7 @@ export class MemberResolver extends MemberBase {
       peerId: metadata.peerId,
       content: params.content,
     };
-    this.logger.debug(createDispatch, MemberResolver.name, EventType.notifyQueue);
+    this.logger.info(createDispatch, MemberResolver.name, EventType.notifyQueue);
 
     const eventParams: IEventNotifyQueue = {
       type: QueueType.notifications,
@@ -1058,7 +1058,7 @@ export class MemberResolver extends MemberBase {
 
   @OnEvent(EventType.notifyDeleteDispatch, { async: true })
   async notifyDeleteDispatch(params: { dispatchId: string }) {
-    this.logger.debug(params, MemberResolver.name, this.notifyDeleteDispatch.name);
+    this.logger.info(params, MemberResolver.name, this.notifyDeleteDispatch.name);
     const deleteDispatch: IDeleteDispatch = {
       type: InnerQueueTypes.deleteDispatch,
       dispatchId: params.dispatchId,
@@ -1102,7 +1102,7 @@ export class MemberResolver extends MemberBase {
 
   @OnEvent(EventType.onMemberBecameOffline, { async: true })
   async notifyOfflineMember(params: IEventOnMemberBecameOffline) {
-    this.logger.debug(params, MemberResolver.name, this.notifyOfflineMember.name);
+    this.logger.info(params, MemberResolver.name, this.notifyOfflineMember.name);
     const { phone, type } = params;
     const content = (params.content += `\n${config.get('hosts.dynamicLink')}`);
     try {

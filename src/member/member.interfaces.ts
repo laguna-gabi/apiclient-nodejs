@@ -45,7 +45,7 @@ export class MemberBase {
   }
 
   async createRealMember(createMemberParams: CreateMemberParams): Promise<Member> {
-    this.logger.debug(createMemberParams, MemberBase.name, this.createRealMember.name);
+    this.logger.info(createMemberParams, MemberBase.name, this.createRealMember.name);
 
     const primaryUserId = createMemberParams.userId
       ? Types.ObjectId(createMemberParams.userId)
@@ -79,7 +79,7 @@ export class MemberBase {
   }
 
   async createControlMember(createMemberParams: CreateMemberParams): Promise<Member> {
-    this.logger.debug(createMemberParams, MemberBase.name, this.createControlMember.name);
+    this.logger.info(createMemberParams, MemberBase.name, this.createControlMember.name);
     const controlMember = await this.memberService.insertControl(createMemberParams);
     this.notifyUpdatedMemberConfig({ member: controlMember });
 
@@ -123,7 +123,7 @@ export class MemberBase {
       },
       isUndefined,
     );
-    this.logger.debug(settings, MemberBase.name, this.notifyUpdatedMemberConfig.name);
+    this.logger.info(settings, MemberBase.name, this.notifyUpdatedMemberConfig.name);
     const eventParams: IEventNotifyQueue = {
       type: QueueType.notifications,
       message: JSON.stringify(settings),

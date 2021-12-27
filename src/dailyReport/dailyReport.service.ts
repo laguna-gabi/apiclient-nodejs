@@ -170,7 +170,7 @@ export class DailyReportService extends BaseService {
   }
 
   logMemberOverThresholdIndication(memberId: string) {
-    this.logger.debug(
+    this.logger.info(
       { memberId },
       DailyReportService.name,
       this.logMemberOverThresholdIndication.name,

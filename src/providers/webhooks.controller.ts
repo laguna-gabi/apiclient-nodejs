@@ -42,7 +42,7 @@ export class WebhooksController {
 
     const parsedBody = JSON.parse(payload);
 
-    this.logger.debug(
+    this.logger.info(
       { sender: parsedBody.sender?.user_id, channel: parsedBody.channel.channel_url },
       WebhooksController.name,
       this.sendbird.name,

@@ -213,7 +213,7 @@ export class CommunicationResolver {
         memberId: params.member.id,
       };
       this.eventEmitter.emit(EventType.onUpdatedUserCommunication, eventParams);
-      this.logger.debug(params, CommunicationResolver.name, this.updateUserInCommunication.name);
+      this.logger.info(params, CommunicationResolver.name, this.updateUserInCommunication.name);
     } catch (ex) {
       this.logger.error(
         params,

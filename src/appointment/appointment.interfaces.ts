@@ -67,7 +67,7 @@ export class AppointmentBase {
   }
 
   private async notifyScheduleAppointmentDispatches(appointment: Appointment) {
-    this.logger.debug(
+    this.logger.info(
       appointment,
       AppointmentBase.name,
       this.notifyScheduleAppointmentDispatches.name,
