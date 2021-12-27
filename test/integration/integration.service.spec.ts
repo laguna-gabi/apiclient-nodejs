@@ -2,10 +2,12 @@ import {
   AllNotificationTypes,
   ContentKey,
   InnerQueueTypes,
+  InternalNotificationType,
   NotificationType,
   ObjectAppointmentScheduleReminderClass,
   ObjectAppointmentScheduledClass,
   ObjectBaseClass,
+  ObjectChatMessageUserClass,
   ObjectGeneralMemberTriggeredClass,
   ObjectNewChatMessageToMemberClass,
   ObjectNewMemberClass,
@@ -14,6 +16,7 @@ import {
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
+  generateChatMessageUserMock,
   generateGeneralMemberTriggeredMock,
   generateNewChatMessageToMemberMock,
   generateNewControlMemberMock,
@@ -46,6 +49,7 @@ import {
   OneSignal,
   Provider,
   ProviderResult,
+  SendBird,
   Twilio,
 } from '../../src/providers';
 import { ClientSettings } from '../../src/settings';
@@ -63,6 +67,7 @@ describe('Notifications full flow', () => {
   let triggersService: TriggersService;
   let spyOnTwilioSend;
   let spyOnOneSignalSend;
+  let spyOnSendBirdSend;
   let internationalizationService: InternationalizationService;
   let notificationsService: NotificationsService;
   let webMemberClient: ClientSettings;
@@ -91,6 +96,10 @@ describe('Notifications full flow', () => {
     spyOnOneSignalSend = jest.spyOn(oneSignal, 'send');
     spyOnOneSignalSend.mockReturnValue(undefined);
 
+    const sendBird = module.get<SendBird>(SendBird);
+    spyOnSendBirdSend = jest.spyOn(sendBird, 'send');
+    spyOnSendBirdSend.mockReturnValue(undefined);
+
     const configsService = module.get<ConfigsService>(ConfigsService);
     jest.spyOn(configsService, 'getConfig').mockResolvedValue(lorem.word());
 
@@ -106,12 +115,14 @@ describe('Notifications full flow', () => {
   afterEach(() => {
     spyOnTwilioSend.mockReset();
     spyOnOneSignalSend.mockReset();
+    spyOnSendBirdSend.mockReset();
   });
 
   afterAll(async () => {
     await module.close();
     spyOnTwilioSend.mockRestore();
     spyOnOneSignalSend.mockRestore();
+    spyOnSendBirdSend.mockRestore();
   });
 
   it(`should handle 'immediate' event of type ${ContentKey.newMember}`, async () => {
@@ -521,6 +532,40 @@ describe('Notifications full flow', () => {
       });
     },
   );
+
+  it(`should handle 'immediate' event of type ${ContentKey.customContent}`, async () => {
+    const mock = generateChatMessageUserMock({
+      recipientClientId: userClient.id,
+      senderClientId: webMemberClient.id,
+      content: lorem.word(),
+      sendBirdChannelUrl: internet.url(),
+    });
+    const object = new ObjectChatMessageUserClass(mock);
+    spyOnSendBirdSend.mockReturnValueOnce(providerResult);
+
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({
+        type: InnerQueueTypes.createDispatch,
+        ...object.objectChatMessageUserType,
+      }),
+    };
+    await service.handleMessage(message);
+
+    expect(spyOnSendBirdSend).toBeCalledWith({
+      message: mock.content,
+      notificationType: InternalNotificationType.chatMessageToUser,
+      orgName: undefined,
+      sendBirdChannelUrl: mock.sendBirdChannelUrl,
+      userId: webMemberClient.id,
+    });
+
+    await compareResults({
+      dispatchId: mock.dispatchId,
+      status: DispatchStatus.done,
+      response: { ...object.objectChatMessageUserType },
+    });
+  });
 
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
