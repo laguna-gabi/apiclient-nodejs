@@ -33,9 +33,9 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
   }
 
   async send(sendOneSignalNotification: SendOneSignalNotification): Promise<ProviderResult> {
-    this.logger.debug(sendOneSignalNotification, OneSignal.name, this.send.name);
+    this.logger.info(sendOneSignalNotification, OneSignal.name, this.send.name);
     const { platform, externalUserId, data, content } = sendOneSignalNotification;
-    this.logger.debug(data, OneSignal.name, this.send.name);
+    this.logger.info(data, OneSignal.name, this.send.name);
 
     const config = await this.getConfig(platform, data.type);
     const app_id = await this.getApiId(platform, data.type);
@@ -93,7 +93,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
   }
 
   async cancel(cancelNotificationParams: CancelNotificationParams) {
-    this.logger.debug(cancelNotificationParams, OneSignal.name, this.cancel.name);
+    this.logger.info(cancelNotificationParams, OneSignal.name, this.cancel.name);
     const { platform, externalUserId, data } = cancelNotificationParams;
 
     const config = await this.getConfig(platform, data.type);
