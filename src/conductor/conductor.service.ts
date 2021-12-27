@@ -53,7 +53,7 @@ export class ConductorService implements OnModuleInit {
       await this.createRealTimeDispatch(dispatch);
     } else if (currentMinusInput > gapTriggersAt) {
       //past event
-      this.logger.error(dispatch, ConductorService.name, this.handleCreateDispatch.name);
+      this.logger.warn(dispatch, ConductorService.name, this.handleCreateDispatch.name);
     } else {
       await this.registerFutureDispatch(dispatch);
     }
