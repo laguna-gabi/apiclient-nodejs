@@ -1,6 +1,6 @@
 import {
   AllNotificationTypes,
-  ContentKey,
+  InternalKey,
   InternalNotificationType,
   NotificationType,
   Platform,
@@ -44,8 +44,8 @@ export class NotificationsService {
   ): Promise<ProviderResult> {
     if (
       !recipientClient.isAppointmentsReminderEnabled &&
-      (dispatch.contentKey === ContentKey.appointmentReminder ||
-        dispatch.contentKey === ContentKey.appointmentLongReminder)
+      (dispatch.contentKey === InternalKey.appointmentReminder ||
+        dispatch.contentKey === InternalKey.appointmentLongReminder)
     ) {
       return;
     }
@@ -134,25 +134,25 @@ export class NotificationsService {
     });
 
     switch (dispatch.contentKey) {
-      case ContentKey.appointmentRequest:
+      case InternalKey.appointmentRequest:
         // decorate the content for appointment reminder based on client setting
         if (recipientClient.platform === Platform.web) {
           content += this.internationalization.getContents({
-            contentKey: ContentKey.appointmentRequestLink,
+            contentKey: InternalKey.appointmentRequestLink,
             notificationType: dispatch.notificationType,
             recipientClient,
             extraData: { scheduleLink: dispatch.scheduleLink },
-          }); // TODO: do we need ContentKey.appointmentReminderLink in POEditor?
+          }); // TODO: do we need InternalKey.appointmentReminderLink in POEditor?
         } else {
           if (!recipientClient.isPushNotificationsEnabled) {
             content += `\n${hosts.get('dynamicLink')}`;
           }
         }
         break;
-      case ContentKey.appointmentReminder:
+      case InternalKey.appointmentReminder:
         if (recipientClient.platform === Platform.web) {
           content += this.internationalization.getContents({
-            contentKey: ContentKey.appointmentReminderLink,
+            contentKey: InternalKey.appointmentReminderLink,
             notificationType: dispatch.notificationType,
             recipientClient,
             extraData: { chatLink: dispatch.chatLink },
@@ -163,8 +163,8 @@ export class NotificationsService {
 
     if (
       (recipientClient.platform === Platform.web || !recipientClient.isPushNotificationsEnabled) &&
-      (dispatch.contentKey === ContentKey.newRegisteredMember ||
-        dispatch.contentKey === ContentKey.newRegisteredMemberNudge)
+      (dispatch.contentKey === InternalKey.newRegisteredMember ||
+        dispatch.contentKey === InternalKey.newRegisteredMemberNudge)
     ) {
       content += `\n${hosts.get('dynamicLink')}`;
     }

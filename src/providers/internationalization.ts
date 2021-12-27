@@ -2,6 +2,7 @@ import {
   AllNotificationTypes,
   ContentKey,
   ExtraData,
+  InternalKey,
   InternalNotificationType,
   Language,
 } from '@lagunahealth/pandora';
@@ -55,9 +56,9 @@ export class InternationalizationService implements OnModuleInit {
     }
 
     const replace =
-      params.contentKey === ContentKey.appointmentScheduledUser ||
-      params.contentKey === ContentKey.newChatMessageFromMember ||
-      params.contentKey === ContentKey.memberNotFeelingWellMessage;
+      params.contentKey === InternalKey.appointmentScheduledUser ||
+      params.contentKey === InternalKey.newChatMessageFromMember ||
+      params.contentKey === InternalKey.memberNotFeelingWellMessage;
     return this.i18n.t(`contents.${contentKey}`, {
       member: replace ? senderClient : updateRecipientClient,
       user: replace ? updateRecipientClient : senderClient,

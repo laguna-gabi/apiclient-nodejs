@@ -1,7 +1,8 @@
 import {
   AllNotificationTypes,
-  ContentKey,
+  CustomKey,
   InnerQueueTypes,
+  InternalKey,
   InternalNotificationType,
   NotificationType,
   ObjectAppointmentScheduleReminderClass,
@@ -115,7 +116,6 @@ describe('Notifications full flow', () => {
   afterEach(() => {
     spyOnTwilioSend.mockReset();
     spyOnOneSignalSend.mockReset();
-    spyOnSendBirdSend.mockReset();
   });
 
   afterAll(async () => {
@@ -125,7 +125,7 @@ describe('Notifications full flow', () => {
     spyOnSendBirdSend.mockRestore();
   });
 
-  it(`should handle 'immediate' event of type ${ContentKey.newMember}`, async () => {
+  it(`should handle 'immediate' event of type ${InternalKey.newMember}`, async () => {
     const object = new ObjectNewMemberClass(
       generateNewMemberMock({
         recipientClientId: webMemberClient.id,
@@ -141,7 +141,7 @@ describe('Notifications full flow', () => {
     await service.handleMessage(message);
 
     const body = replaceConfigs({
-      content: translation.contents[ContentKey.newMember],
+      content: translation.contents[InternalKey.newMember],
       memberClient: webMemberClient,
       userClient,
       appointmentId: object.objectNewMemberMock.appointmentId,
@@ -159,7 +159,7 @@ describe('Notifications full flow', () => {
     });
   });
 
-  it(`should handle 'immediate' event of type ${ContentKey.newControlMember}`, async () => {
+  it(`should handle 'immediate' event of type ${InternalKey.newControlMember}`, async () => {
     const object = new ObjectBaseClass(
       generateNewControlMemberMock({
         recipientClientId: webMemberClient.id,
@@ -174,7 +174,7 @@ describe('Notifications full flow', () => {
     await service.handleMessage(message);
 
     expect(spyOnTwilioSend).toBeCalledWith({
-      body: translation.contents[ContentKey.newControlMember],
+      body: translation.contents[InternalKey.newControlMember],
       orgName: webMemberClient.orgName,
       to: webMemberClient.phone,
     });
@@ -186,7 +186,7 @@ describe('Notifications full flow', () => {
     });
   });
 
-  it(`should handle 'future' event of type ${ContentKey.newMemberNudge}`, async () => {
+  it(`should handle 'future' event of type ${InternalKey.newMemberNudge}`, async () => {
     const object = new ObjectNewMemberNudgeClass(
       generateNewMemberNudgeMock({
         recipientClientId: webMemberClient.id,
@@ -216,9 +216,9 @@ describe('Notifications full flow', () => {
   });
 
   test.each([
-    { contentKey: ContentKey.newRegisteredMember, amount: 1 },
-    { contentKey: ContentKey.newRegisteredMemberNudge, amount: 2 },
-    { contentKey: ContentKey.logReminder, amount: 3 },
+    { contentKey: InternalKey.newRegisteredMember, amount: 1 },
+    { contentKey: InternalKey.newRegisteredMemberNudge, amount: 2 },
+    { contentKey: InternalKey.logReminder, amount: 3 },
   ])(`should handle 'future' event of type $contentKey`, async (params) => {
     const object = new ObjectGeneralMemberTriggeredClass(
       generateGeneralMemberTriggeredMock({
@@ -252,8 +252,8 @@ describe('Notifications full flow', () => {
   });
 
   test.each([
-    { contentKey: ContentKey.appointmentReminder, amountMinutes: gapMinutes },
-    { contentKey: ContentKey.appointmentLongReminder, amountMinutes: 24 * 60 },
+    { contentKey: InternalKey.appointmentReminder, amountMinutes: gapMinutes },
+    { contentKey: InternalKey.appointmentLongReminder, amountMinutes: 24 * 60 },
   ])(`should handle 'future' event of type $contentKey`, async (params) => {
     const appointmentTime = addDays(new Date(), 3);
     const object = new ObjectAppointmentScheduleReminderClass(
@@ -290,7 +290,9 @@ describe('Notifications full flow', () => {
     });
   });
 
-  it(`should handle 'immediate' event of type ${ContentKey.appointmentScheduledUser}`, async () => {
+  /* eslint-disable max-len */
+  it(`should handle 'immediate' event of type ${InternalKey.appointmentScheduledUser}`, async () => {
+    /* eslint-enable max-len */
     const mock = generateAppointmentScheduledUserMock({
       recipientClientId: userClient.id,
       senderClientId: webMemberClient.id,
@@ -317,7 +319,7 @@ describe('Notifications full flow', () => {
       mock.appointmentTime,
     );
     const body = replaceConfigs({
-      content: translation.contents[ContentKey.appointmentScheduledUser],
+      content: translation.contents[InternalKey.appointmentScheduledUser],
       memberClient: webMemberClient,
       userClient,
       appointmentTime: realAppointmentTime,
@@ -332,7 +334,7 @@ describe('Notifications full flow', () => {
   });
 
   // eslint-disable-next-line max-len
-  it(`should handle 'immediate' event of type ${ContentKey.appointmentScheduledMember}`, async () => {
+  it(`should handle 'immediate' event of type ${InternalKey.appointmentScheduledMember}`, async () => {
     const mock = generateAppointmentScheduledMemberMock({
       recipientClientId: webMemberClient.id,
       senderClientId: userClient.id,
@@ -359,7 +361,7 @@ describe('Notifications full flow', () => {
       mock.appointmentTime,
     );
     const body = replaceConfigs({
-      content: translation.contents[ContentKey.appointmentScheduledMember],
+      content: translation.contents[InternalKey.appointmentScheduledMember],
       memberClient: webMemberClient,
       userClient,
       appointmentTime: realAppointmentTime,
@@ -377,7 +379,7 @@ describe('Notifications full flow', () => {
     });
   });
 
-  it(`should handle 'immediate' event of type ${ContentKey.appointmentRequest}`, async () => {
+  it(`should handle 'immediate' event of type ${InternalKey.appointmentRequest}`, async () => {
     const mock = generateRequestAppointmentMock({
       recipientClientId: webMemberClient.id,
       senderClientId: userClient.id,
@@ -396,7 +398,7 @@ describe('Notifications full flow', () => {
     await service.handleMessage(message);
 
     let body = replaceConfigs({
-      content: translation.contents[ContentKey.appointmentRequest],
+      content: translation.contents[InternalKey.appointmentRequest],
       memberClient: webMemberClient,
       userClient,
     });
@@ -416,7 +418,7 @@ describe('Notifications full flow', () => {
     });
   });
 
-  test.each([ContentKey.newChatMessageFromMember, ContentKey.memberNotFeelingWellMessage])(
+  test.each([InternalKey.newChatMessageFromMember, InternalKey.memberNotFeelingWellMessage])(
     `should handle 'immediate' event of type %p`,
     async (contentKey) => {
       const mock = generateTextMessageUserMock({
@@ -452,7 +454,7 @@ describe('Notifications full flow', () => {
     },
   );
 
-  it(`should handle 'immediate' event of type ${ContentKey.newChatMessageFromUser}`, async () => {
+  it(`should handle 'immediate' event of type ${InternalKey.newChatMessageFromUser}`, async () => {
     const mock = generateNewChatMessageToMemberMock({
       recipientClientId: webMemberClient.id,
       senderClientId: userClient.id,
@@ -470,7 +472,7 @@ describe('Notifications full flow', () => {
     await service.handleMessage(message);
 
     const body = replaceConfigs({
-      content: translation.contents[ContentKey.newChatMessageFromUser],
+      content: translation.contents[InternalKey.newChatMessageFromUser],
       memberClient: webMemberClient,
       userClient,
     });
@@ -488,7 +490,7 @@ describe('Notifications full flow', () => {
   });
 
   test.each([NotificationType.video, NotificationType.call])(
-    `should handle 'immediate' event of type ${ContentKey.callOrVideo} (%p)`,
+    `should handle 'immediate' event of type ${CustomKey.callOrVideo} (%p)`,
     async (notificationType) => {
       const mock = generateObjectCallOrVideoMock({
         recipientClientId: mobileMemberClient.id,
@@ -533,7 +535,7 @@ describe('Notifications full flow', () => {
     },
   );
 
-  it(`should handle 'immediate' event of type ${ContentKey.customContent}`, async () => {
+  it(`should handle 'immediate' event of type ${CustomKey.customContent}`, async () => {
     const mock = generateChatMessageUserMock({
       recipientClientId: userClient.id,
       senderClientId: webMemberClient.id,
