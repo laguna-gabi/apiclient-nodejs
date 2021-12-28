@@ -154,13 +154,13 @@ async function main() {
       '------------------- create member journal ----------------------\n' +
       '----------------------------------------------------------------',
   );
-  const { id: journalId } = await await mutations.createJournal();
+  const { id: journalId } = await base.setContextUserId(memberId).mutations.createJournal();
 
   const updateJournalTextParams: UpdateJournalTextParams = {
     id: journalId,
     text: faker.lorem.word(),
   };
-  await mutations.updateJournalText({ updateJournalTextParams });
+  await base.setContextUserId(memberId).mutations.updateJournalText({ updateJournalTextParams });
 
   await base.cleanUp();
 }
