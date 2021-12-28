@@ -62,7 +62,7 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
       !process.env.NODE_ENV ||
       process.env.NODE_ENV === Environments.test ||
       process.env.NODE_ENV === Environments.localhost
-        ? config.get('aws.queue.notificationDL')
+        ? config.get('aws.queue.notificationDLQ')
         : await this.configsService.getConfig(queueNameNotificationsDLQ);
     const { QueueUrl: dlQueueUrl } = await this.sqs
       .getQueueUrl({ QueueName: dlQueueName })
