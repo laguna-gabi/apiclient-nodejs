@@ -27,7 +27,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
   }
 
   async send(sendSendBirdNotification: SendSendBirdNotification): Promise<ProviderResult> {
-    this.logger.debug(sendSendBirdNotification, SendBird.name, this.send.name);
+    this.logger.info(sendSendBirdNotification, SendBird.name, this.send.name);
     const { userId, sendBirdChannelUrl, message, notificationType, appointmentId } =
       sendSendBirdNotification;
     const methodName = this.send.name;
@@ -49,7 +49,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         )
         .toPromise();
       if (result.status === 200) {
-        this.logger.debug(sendSendBirdNotification, SendBird.name, methodName);
+        this.logger.info(sendSendBirdNotification, SendBird.name, methodName);
         return { provider: Provider.sendbird, content: message, id: result.data.message_id };
       } else {
         this.logger.error(sendSendBirdNotification, SendBird.name, methodName);

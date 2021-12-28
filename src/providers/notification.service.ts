@@ -1,6 +1,6 @@
 import {
   AllNotificationTypes,
-  ContentKey,
+  InternalKey,
   InternalNotificationType,
   NotificationType,
   Platform,
@@ -44,15 +44,22 @@ export class NotificationsService {
   ): Promise<ProviderResult> {
     if (
       !recipientClient.isAppointmentsReminderEnabled &&
-      (dispatch.contentKey === ContentKey.appointmentReminder ||
-        dispatch.contentKey === ContentKey.appointmentLongReminder)
+      (dispatch.contentKey === InternalKey.appointmentReminder ||
+        dispatch.contentKey === InternalKey.appointmentLongReminder)
     ) {
       return;
     }
 
     const content = await this.generateContent(dispatch, recipientClient, senderClient);
 
-    if (dispatch.notificationType === NotificationType.textSms) {
+    if (dispatch.notificationType === InternalNotificationType.chatMessageToUser) {
+      const sendSendBirdNotification = this.generateSendbirdParams(
+        dispatch,
+        recipientClient.orgName,
+      );
+      // this.logger.audit(AuditType.message, sendSendBirdNotification, this.send.name);
+      return this.sendBird.send(sendSendBirdNotification);
+    } else if (dispatch.notificationType === NotificationType.textSms) {
       const sendSendBirdNotification = this.generateSendbirdParams(
         dispatch,
         recipientClient.orgName,
@@ -64,7 +71,7 @@ export class NotificationsService {
       return this.twilio.send(sendTwilioNotification);
     } else {
       if (recipientClient.platform !== Platform.web && recipientClient.isPushNotificationsEnabled) {
-        const sendOneSignalNotification = this.generateOneSignalParams(
+        const sendOneSignalNotification = await this.generateOneSignalParams(
           dispatch,
           content,
           recipientClient,
@@ -94,6 +101,17 @@ export class NotificationsService {
     recipientClient: ClientSettings,
     senderClient: ClientSettings,
   ) {
+    if (dispatch.content) {
+      return dispatch.content;
+    }
+
+    if (
+      dispatch.notificationType === NotificationType.call ||
+      dispatch.notificationType === NotificationType.video
+    ) {
+      return undefined;
+    }
+
     const downloadLink = dispatch.appointmentId
       ? await this.bitly.shortenLink(`${hosts.get('app')}/download/${dispatch.appointmentId}`)
       : undefined;
@@ -111,30 +129,31 @@ export class NotificationsService {
           dispatch.appointmentTime,
         ),
         downloadLink,
+        dynamicLink: hosts.get('dynamicLink'),
         gapMinutes,
       },
     });
 
     switch (dispatch.contentKey) {
-      case ContentKey.appointmentRequest:
+      case InternalKey.appointmentRequest:
         // decorate the content for appointment reminder based on client setting
         if (recipientClient.platform === Platform.web) {
           content += this.internationalization.getContents({
-            contentKey: ContentKey.appointmentRequestLink,
+            contentKey: InternalKey.appointmentRequestLink,
             notificationType: dispatch.notificationType,
             recipientClient,
             extraData: { scheduleLink: dispatch.scheduleLink },
-          }); // TODO: do we need ContentKey.appointmentReminderLink in POEditor?
+          }); // TODO: do we need InternalKey.appointmentReminderLink in POEditor?
         } else {
           if (!recipientClient.isPushNotificationsEnabled) {
             content += `\n${hosts.get('dynamicLink')}`;
           }
         }
         break;
-      case ContentKey.appointmentReminder:
+      case InternalKey.appointmentReminder:
         if (recipientClient.platform === Platform.web) {
           content += this.internationalization.getContents({
-            contentKey: ContentKey.appointmentReminderLink,
+            contentKey: InternalKey.appointmentReminderLink,
             notificationType: dispatch.notificationType,
             recipientClient,
             extraData: { chatLink: dispatch.chatLink },
@@ -145,8 +164,8 @@ export class NotificationsService {
 
     if (
       (recipientClient.platform === Platform.web || !recipientClient.isPushNotificationsEnabled) &&
-      (dispatch.contentKey === ContentKey.newRegisteredMember ||
-        dispatch.contentKey === ContentKey.newRegisteredMemberNudge)
+      (dispatch.contentKey === InternalKey.newRegisteredMember ||
+        dispatch.contentKey === InternalKey.newRegisteredMemberNudge)
     ) {
       content += `\n${hosts.get('dynamicLink')}`;
     }
@@ -176,17 +195,20 @@ export class NotificationsService {
     };
   }
 
-  private generateOneSignalParams(
+  private async generateOneSignalParams(
     dispatch: Dispatch,
     content: string,
     recipientClient: ClientSettings,
     senderClient: ClientSettings,
-  ): SendOneSignalNotification {
+  ): Promise<SendOneSignalNotification> {
     const { notificationType } = dispatch;
-    let path = dispatch.path || {};
-    if (notificationType === NotificationType.call || notificationType === NotificationType.video) {
-      path = { path: 'call' };
-    }
+    const pathObject = dispatch.path ? { path: dispatch.path } : {};
+    const extraDataObject =
+      dispatch.notificationType === NotificationType.video ||
+      dispatch.notificationType === NotificationType.call
+        ? { extraData: JSON.stringify(await this.twilio.createPeerIceServers()) }
+        : {};
+    const peerIdObject = { peerId: dispatch.peerId } || {};
 
     return {
       platform: recipientClient.platform,
@@ -199,9 +221,10 @@ export class NotificationsService {
         },
         member: { phone: recipientClient.phone },
         type: notificationType,
-        ...path,
         isVideo: notificationType === NotificationType.video,
-        peerId: dispatch.peerId,
+        ...pathObject,
+        ...extraDataObject,
+        ...peerIdObject,
       },
       content,
       orgName: recipientClient.orgName,
@@ -216,7 +239,9 @@ export class NotificationsService {
     if (appointmentTime) {
       if (
         notificationType === InternalNotificationType.textSmsToMember ||
-        notificationType === InternalNotificationType.textToMember
+        notificationType === InternalNotificationType.textToMember ||
+        notificationType === NotificationType.text ||
+        notificationType === NotificationType.textSms
       ) {
         return format(
           utcToZonedTime(appointmentTime, lookup(zipCode)),

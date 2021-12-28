@@ -90,6 +90,7 @@ describe(ConductorService.name, () => {
     let spyOnDispatchesServiceInternalUpdate: SpyInstance;
     let spyOnTriggersServiceUpdate: SpyInstance;
     let spyOnError: SpyInstance;
+    let spyOnWarn: SpyInstance;
     let spyOnNotificationsService: SpyInstance;
 
     beforeAll(() => {
@@ -97,6 +98,7 @@ describe(ConductorService.name, () => {
       spyOnDispatchesServiceInternalUpdate = jest.spyOn(dispatchesService, 'internalUpdate');
       spyOnTriggersServiceUpdate = jest.spyOn(triggersService, 'update');
       spyOnError = jest.spyOn(logger, 'error');
+      spyOnWarn = jest.spyOn(logger, 'warn');
       spyOnNotificationsService = jest.spyOn(notificationsService, 'send');
     });
 
@@ -105,6 +107,7 @@ describe(ConductorService.name, () => {
       spyOnDispatchesServiceInternalUpdate.mockReset();
       spyOnTriggersServiceUpdate.mockReset();
       spyOnError.mockReset();
+      spyOnWarn.mockReset();
       spyOnNotificationsService.mockReset();
     });
 
@@ -123,7 +126,7 @@ describe(ConductorService.name, () => {
       expect(spyOnDispatchesServiceUpdate).toBeCalledWith(createDispatch);
       expect(spyOnTriggersServiceUpdate).not.toBeCalled();
       expect(spyOnNotificationsService).not.toBeCalled();
-      expect(spyOnError).toBeCalledWith(
+      expect(spyOnWarn).toBeCalledWith(
         createDispatch,
         ConductorService.name,
         'handleCreateDispatch',

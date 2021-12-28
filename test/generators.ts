@@ -1,6 +1,6 @@
 import {
-  ContentKey,
   Honorific,
+  InternalKey,
   Language,
   NotificationType,
   Platform,
@@ -77,7 +77,7 @@ export const generateDispatch = ({
   sendBirdChannelUrl = internet.url(),
   appointmentId = v4(),
   peerId = v4(),
-  contentKey = ContentKey.newMember,
+  contentKey = InternalKey.newMember,
   content = lorem.sentence(),
   chatLink = internet.url(),
   path = `connect/${generateId()}`,

@@ -1,4 +1,4 @@
-import { ContentKey, Platform } from '@lagunahealth/pandora';
+import { InternalKey, Platform } from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { internet } from 'faker';
@@ -40,7 +40,7 @@ describe(NotificationsService.name, () => {
     await module.close();
   });
 
-  test.each([ContentKey.appointmentReminder, ContentKey.appointmentLongReminder])(
+  test.each([InternalKey.appointmentReminder, InternalKey.appointmentLongReminder])(
     `should not send a $contentKey notification since isAppointmentsReminderEnabled is false`,
     async (contentKey) => {
       const dispatch = generateDispatch({ contentKey });
@@ -55,7 +55,7 @@ describe(NotificationsService.name, () => {
     },
   );
 
-  describe(`${ContentKey.appointmentRequest}`, () => {
+  describe(`${InternalKey.appointmentRequest}`, () => {
     let scheduleLink: string;
     let dispatch;
     let spyOnTwilioServiceSend: SpyInstance;
@@ -63,9 +63,10 @@ describe(NotificationsService.name, () => {
     beforeAll(async () => {
       scheduleLink = internet.url();
       dispatch = generateDispatch({
-        contentKey: ContentKey.appointmentRequest,
+        contentKey: InternalKey.appointmentRequest,
         scheduleLink,
       });
+      dispatch.content = undefined;
 
       await iService.onModuleInit();
       spyOnTwilioServiceSend = jest.spyOn(twilioService, 'send');
@@ -85,7 +86,7 @@ describe(NotificationsService.name, () => {
       await service.send(dispatch, recipientClient, senderClient);
 
       const body = replaceConfigs({
-        content: translation.contents[ContentKey.appointmentRequest],
+        content: translation.contents[InternalKey.appointmentRequest],
         memberClient: recipientClient,
         userClient: senderClient,
       });
@@ -105,7 +106,7 @@ describe(NotificationsService.name, () => {
       recipientClient.platform = await service.send(dispatch, recipientClient, senderClient);
 
       const body = replaceConfigs({
-        content: translation.contents[ContentKey.appointmentRequest],
+        content: translation.contents[InternalKey.appointmentRequest],
         memberClient: recipientClient,
         userClient: senderClient,
       });

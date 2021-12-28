@@ -27,19 +27,19 @@ export class ConductorService implements OnModuleInit {
   }
 
   async handleUpdateClientSettings(input: IUpdateClientSettings): Promise<void> {
-    this.logger.debug(input, ConductorService.name, this.handleUpdateClientSettings.name);
+    this.logger.info(input, ConductorService.name, this.handleUpdateClientSettings.name);
     const settings = this.cleanObject(input);
     await this.settingsService.update(settings);
   }
 
   async handleDeleteClientSettings(input: IDeleteClientSettings): Promise<void> {
-    this.logger.debug(input, ConductorService.name, this.handleDeleteClientSettings.name);
+    this.logger.info(input, ConductorService.name, this.handleDeleteClientSettings.name);
     const settings = this.cleanObject(input);
     await this.settingsService.delete(settings.id);
   }
 
   async handleCreateDispatch(input: ICreateDispatch): Promise<void> {
-    this.logger.debug(input, ConductorService.name, this.handleCreateDispatch.name);
+    this.logger.info(input, ConductorService.name, this.handleCreateDispatch.name);
     const cleanObject: Dispatch = this.cleanObject(input);
     const dispatch = await this.dispatchesService.update({
       ...cleanObject,
@@ -53,14 +53,14 @@ export class ConductorService implements OnModuleInit {
       await this.createRealTimeDispatch(dispatch);
     } else if (currentMinusInput > gapTriggersAt) {
       //past event
-      this.logger.error(dispatch, ConductorService.name, this.handleCreateDispatch.name);
+      this.logger.warn(dispatch, ConductorService.name, this.handleCreateDispatch.name);
     } else {
       await this.registerFutureDispatch(dispatch);
     }
   }
 
   async handleDeleteDispatch(input: IDeleteDispatch): Promise<void> {
-    this.logger.debug(input, ConductorService.name, this.handleDeleteDispatch.name);
+    this.logger.info(input, ConductorService.name, this.handleDeleteDispatch.name);
     const dispatch = this.cleanObject(input);
     const result = await this.dispatchesService.internalUpdate({
       dispatchId: dispatch.dispatchId,
@@ -87,7 +87,7 @@ export class ConductorService implements OnModuleInit {
   private async createRealTimeDispatch(dispatch: Dispatch) {
     try {
       const { dispatchId } = dispatch;
-      this.logger.debug(
+      this.logger.info(
         { ...dispatch, failureReasons: undefined },
         ConductorService.name,
         this.createRealTimeDispatch.name,
@@ -138,7 +138,7 @@ export class ConductorService implements OnModuleInit {
   }
 
   private async registerFutureDispatch(dispatch: Dispatch) {
-    this.logger.debug(dispatch, ConductorService.name, this.registerFutureDispatch.name);
+    this.logger.info(dispatch, ConductorService.name, this.registerFutureDispatch.name);
     const { _id } = await this.triggersService.update({
       dispatchId: dispatch.dispatchId,
       expireAt: dispatch.triggersAt,
@@ -155,7 +155,7 @@ export class ConductorService implements OnModuleInit {
     if (!dispatch) {
       this.logger.warn({ triggeredId }, ConductorService.name, methodName, 'not found');
     } else {
-      this.logger.debug({ triggeredId }, ConductorService.name, methodName);
+      this.logger.info({ triggeredId }, ConductorService.name, methodName);
       await this.createRealTimeDispatch(dispatch);
     }
   }

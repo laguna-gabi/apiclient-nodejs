@@ -77,7 +77,7 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
     });
     consumer.start();
 
-    this.logger.debug(
+    this.logger.info(
       { queueConsumerRunning: consumer.isRunning ? true : false },
       QueueService.name,
       this.onModuleInit.name,
@@ -85,7 +85,7 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
   }
 
   async handleMessage(message: SQSMessage): Promise<void> {
-    this.logger.debug({ MessageId: message.MessageId }, QueueService.name, this.handleMessage.name);
+    this.logger.info({ MessageId: message.MessageId }, QueueService.name, this.handleMessage.name);
 
     const body = message.Body;
     const object: IInnerQueueTypes = JSON.parse(body);

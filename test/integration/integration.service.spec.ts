@@ -1,9 +1,15 @@
 import {
-  ContentKey,
+  CustomKey,
+  ExternalKey,
   InnerQueueTypes,
+  InternalKey,
+  InternalNotificationType,
+  NotificationType,
   ObjectAppointmentScheduleReminderClass,
   ObjectAppointmentScheduledClass,
   ObjectBaseClass,
+  ObjectChatMessageUserClass,
+  ObjectExternalContentClass,
   ObjectGeneralMemberTriggeredClass,
   ObjectNewChatMessageToMemberClass,
   ObjectNewMemberClass,
@@ -12,11 +18,14 @@ import {
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
+  generateChatMessageUserMock,
+  generateExternalContentMock,
   generateGeneralMemberTriggeredMock,
   generateNewChatMessageToMemberMock,
   generateNewControlMemberMock,
   generateNewMemberMock,
   generateNewMemberNudgeMock,
+  generateObjectCallOrVideoMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
 } from '@lagunahealth/pandora';
@@ -40,8 +49,10 @@ import {
   ConfigsService,
   InternationalizationService,
   NotificationsService,
+  OneSignal,
   Provider,
   ProviderResult,
+  SendBird,
   Twilio,
 } from '../../src/providers';
 import { ClientSettings } from '../../src/settings';
@@ -50,6 +61,7 @@ import {
   generateUpdateMemberSettingsMock,
   generateUpdateUserSettingsMock,
 } from '../generators';
+import { iceServers } from './twilioPeerIceServers';
 
 describe('Notifications full flow', () => {
   let module: TestingModule;
@@ -57,9 +69,12 @@ describe('Notifications full flow', () => {
   let dispatchesService: DispatchesService;
   let triggersService: TriggersService;
   let spyOnTwilioSend;
+  let spyOnOneSignalSend;
+  let spyOnSendBirdSend;
   let internationalizationService: InternationalizationService;
   let notificationsService: NotificationsService;
   let webMemberClient: ClientSettings;
+  let mobileMemberClient: ClientSettings;
   let userClient: ClientSettings;
 
   const providerResult: ProviderResult = {
@@ -77,6 +92,16 @@ describe('Notifications full flow', () => {
     const twilio = module.get<Twilio>(Twilio);
     spyOnTwilioSend = jest.spyOn(twilio, 'send');
     spyOnTwilioSend.mockReturnValue(undefined);
+    const spyOnTwilioCreatePeerIceServers = jest.spyOn(twilio, 'createPeerIceServers');
+    spyOnTwilioCreatePeerIceServers.mockResolvedValue({ iceServers });
+
+    const oneSignal = module.get<OneSignal>(OneSignal);
+    spyOnOneSignalSend = jest.spyOn(oneSignal, 'send');
+    spyOnOneSignalSend.mockReturnValue(undefined);
+
+    const sendBird = module.get<SendBird>(SendBird);
+    spyOnSendBirdSend = jest.spyOn(sendBird, 'send');
+    spyOnSendBirdSend.mockReturnValue(undefined);
 
     const configsService = module.get<ConfigsService>(ConfigsService);
     jest.spyOn(configsService, 'getConfig').mockResolvedValue(lorem.word());
@@ -88,18 +113,21 @@ describe('Notifications full flow', () => {
     await internationalizationService.onModuleInit();
 
     await initClients();
-  });
+  }, 10000);
 
   afterEach(() => {
     spyOnTwilioSend.mockReset();
+    spyOnOneSignalSend.mockReset();
   });
 
   afterAll(async () => {
     await module.close();
     spyOnTwilioSend.mockRestore();
+    spyOnOneSignalSend.mockRestore();
+    spyOnSendBirdSend.mockRestore();
   });
 
-  it(`should handle 'immediate' event of type ${ContentKey.newMember}`, async () => {
+  it(`should handle 'immediate' event of type ${InternalKey.newMember}`, async () => {
     const object = new ObjectNewMemberClass(
       generateNewMemberMock({
         recipientClientId: webMemberClient.id,
@@ -115,7 +143,7 @@ describe('Notifications full flow', () => {
     await service.handleMessage(message);
 
     const body = replaceConfigs({
-      content: translation.contents[ContentKey.newMember],
+      content: translation.contents[InternalKey.newMember],
       memberClient: webMemberClient,
       userClient,
       appointmentId: object.objectNewMemberMock.appointmentId,
@@ -133,7 +161,7 @@ describe('Notifications full flow', () => {
     });
   });
 
-  it(`should handle 'immediate' event of type ${ContentKey.newControlMember}`, async () => {
+  it(`should handle 'immediate' event of type ${InternalKey.newControlMember}`, async () => {
     const object = new ObjectBaseClass(
       generateNewControlMemberMock({
         recipientClientId: webMemberClient.id,
@@ -148,7 +176,7 @@ describe('Notifications full flow', () => {
     await service.handleMessage(message);
 
     expect(spyOnTwilioSend).toBeCalledWith({
-      body: translation.contents[ContentKey.newControlMember],
+      body: translation.contents[InternalKey.newControlMember],
       orgName: webMemberClient.orgName,
       to: webMemberClient.phone,
     });
@@ -160,7 +188,7 @@ describe('Notifications full flow', () => {
     });
   });
 
-  it(`should handle 'future' event of type ${ContentKey.newMemberNudge}`, async () => {
+  it(`should handle 'future' event of type ${InternalKey.newMemberNudge}`, async () => {
     const object = new ObjectNewMemberNudgeClass(
       generateNewMemberNudgeMock({
         recipientClientId: webMemberClient.id,
@@ -190,15 +218,16 @@ describe('Notifications full flow', () => {
   });
 
   test.each([
-    { contentKey: ContentKey.newRegisteredMember, amount: 1 },
-    { contentKey: ContentKey.newRegisteredMemberNudge, amount: 2 },
-    { contentKey: ContentKey.logReminder, amount: 3 },
+    { contentKey: InternalKey.newRegisteredMember, amount: 1 },
+    { contentKey: InternalKey.newRegisteredMemberNudge, amount: 2 },
+    { contentKey: InternalKey.logReminder, amount: 3 },
   ])(`should handle 'future' event of type $contentKey`, async (params) => {
     const object = new ObjectGeneralMemberTriggeredClass(
       generateGeneralMemberTriggeredMock({
         recipientClientId: webMemberClient.id,
         senderClientId: userClient.id,
         contentKey: params.contentKey,
+        notificationType: NotificationType.text,
         triggersAt: addDays(new Date(), params.amount),
       }),
     );
@@ -225,8 +254,8 @@ describe('Notifications full flow', () => {
   });
 
   test.each([
-    { contentKey: ContentKey.appointmentReminder, amountMinutes: gapMinutes },
-    { contentKey: ContentKey.appointmentLongReminder, amountMinutes: 24 * 60 },
+    { contentKey: InternalKey.appointmentReminder, amountMinutes: gapMinutes },
+    { contentKey: InternalKey.appointmentLongReminder, amountMinutes: 24 * 60 },
   ])(`should handle 'future' event of type $contentKey`, async (params) => {
     const appointmentTime = addDays(new Date(), 3);
     const object = new ObjectAppointmentScheduleReminderClass(
@@ -263,7 +292,9 @@ describe('Notifications full flow', () => {
     });
   });
 
-  it(`should handle 'immediate' event of type ${ContentKey.appointmentScheduledUser}`, async () => {
+  /* eslint-disable max-len */
+  it(`should handle 'immediate' event of type ${InternalKey.appointmentScheduledUser}`, async () => {
+    /* eslint-enable max-len */
     const mock = generateAppointmentScheduledUserMock({
       recipientClientId: userClient.id,
       senderClientId: webMemberClient.id,
@@ -290,7 +321,7 @@ describe('Notifications full flow', () => {
       mock.appointmentTime,
     );
     const body = replaceConfigs({
-      content: translation.contents[ContentKey.appointmentScheduledUser],
+      content: translation.contents[InternalKey.appointmentScheduledUser],
       memberClient: webMemberClient,
       userClient,
       appointmentTime: realAppointmentTime,
@@ -305,7 +336,7 @@ describe('Notifications full flow', () => {
   });
 
   // eslint-disable-next-line max-len
-  it(`should handle 'immediate' event of type ${ContentKey.appointmentScheduledMember}`, async () => {
+  it(`should handle 'immediate' event of type ${InternalKey.appointmentScheduledMember}`, async () => {
     const mock = generateAppointmentScheduledMemberMock({
       recipientClientId: webMemberClient.id,
       senderClientId: userClient.id,
@@ -332,7 +363,7 @@ describe('Notifications full flow', () => {
       mock.appointmentTime,
     );
     const body = replaceConfigs({
-      content: translation.contents[ContentKey.appointmentScheduledMember],
+      content: translation.contents[InternalKey.appointmentScheduledMember],
       memberClient: webMemberClient,
       userClient,
       appointmentTime: realAppointmentTime,
@@ -350,7 +381,7 @@ describe('Notifications full flow', () => {
     });
   });
 
-  it(`should handle 'immediate' event of type ${ContentKey.appointmentRequest}`, async () => {
+  it(`should handle 'immediate' event of type ${InternalKey.appointmentRequest}`, async () => {
     const mock = generateRequestAppointmentMock({
       recipientClientId: webMemberClient.id,
       senderClientId: userClient.id,
@@ -369,7 +400,7 @@ describe('Notifications full flow', () => {
     await service.handleMessage(message);
 
     let body = replaceConfigs({
-      content: translation.contents[ContentKey.appointmentRequest],
+      content: translation.contents[InternalKey.appointmentRequest],
       memberClient: webMemberClient,
       userClient,
     });
@@ -389,7 +420,7 @@ describe('Notifications full flow', () => {
     });
   });
 
-  test.each([ContentKey.newChatMessageFromMember, ContentKey.memberNotFeelingWellMessage])(
+  test.each([InternalKey.newChatMessageFromMember, InternalKey.memberNotFeelingWellMessage])(
     `should handle 'immediate' event of type %p`,
     async (contentKey) => {
       const mock = generateTextMessageUserMock({
@@ -425,7 +456,7 @@ describe('Notifications full flow', () => {
     },
   );
 
-  it(`should handle 'immediate' event of type ${ContentKey.newChatMessageFromUser}`, async () => {
+  it(`should handle 'immediate' event of type ${InternalKey.newChatMessageFromUser}`, async () => {
     const mock = generateNewChatMessageToMemberMock({
       recipientClientId: webMemberClient.id,
       senderClientId: userClient.id,
@@ -443,7 +474,7 @@ describe('Notifications full flow', () => {
     await service.handleMessage(message);
 
     const body = replaceConfigs({
-      content: translation.contents[ContentKey.newChatMessageFromUser],
+      content: translation.contents[InternalKey.newChatMessageFromUser],
       memberClient: webMemberClient,
       userClient,
     });
@@ -460,6 +491,139 @@ describe('Notifications full flow', () => {
     });
   });
 
+  test.each([NotificationType.video, NotificationType.call])(
+    `should handle 'immediate' event of type ${CustomKey.callOrVideo} (%p)`,
+    async (notificationType) => {
+      const mock = generateObjectCallOrVideoMock({
+        recipientClientId: mobileMemberClient.id,
+        senderClientId: userClient.id,
+        notificationType,
+        peerId: v4(),
+        path: lorem.word(),
+      });
+      const providerResultOS: ProviderResult = { provider: Provider.oneSignal, id: generateId() };
+      spyOnOneSignalSend.mockReturnValueOnce(providerResultOS);
+
+      const message: SQSMessage = {
+        MessageId: v4(),
+        Body: JSON.stringify(
+          { type: InnerQueueTypes.createDispatch, ...mock },
+          Object.keys(mock).sort(),
+        ),
+      };
+      await service.handleMessage(message);
+
+      expect(spyOnOneSignalSend).toBeCalledWith({
+        externalUserId: mobileMemberClient.externalUserId,
+        platform: mobileMemberClient.platform,
+        data: {
+          user: { id: userClient.id, firstName: userClient.firstName, avatar: userClient.avatar },
+          member: { phone: mobileMemberClient.phone },
+          type: mock.notificationType,
+          peerId: mock.peerId,
+          isVideo: mock.notificationType === NotificationType.video,
+          path: mock.path,
+          extraData: JSON.stringify({ iceServers }),
+          content: undefined,
+        },
+        orgName: mobileMemberClient.orgName,
+      });
+
+      await compareResults({
+        dispatchId: mock.dispatchId,
+        status: DispatchStatus.done,
+        response: { ...mock },
+        pResult: providerResultOS,
+      });
+    },
+  );
+
+  it(`should handle 'immediate' event of type ${CustomKey.customContent}`, async () => {
+    const mock = generateChatMessageUserMock({
+      recipientClientId: userClient.id,
+      senderClientId: webMemberClient.id,
+      content: lorem.word(),
+      sendBirdChannelUrl: internet.url(),
+    });
+    const object = new ObjectChatMessageUserClass(mock);
+    spyOnSendBirdSend.mockReturnValueOnce(providerResult);
+
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({
+        type: InnerQueueTypes.createDispatch,
+        ...object.objectChatMessageUserType,
+      }),
+    };
+    await service.handleMessage(message);
+
+    expect(spyOnSendBirdSend).toBeCalledWith({
+      message: mock.content,
+      notificationType: InternalNotificationType.chatMessageToUser,
+      orgName: undefined,
+      sendBirdChannelUrl: mock.sendBirdChannelUrl,
+      userId: webMemberClient.id,
+    });
+
+    await compareResults({
+      dispatchId: mock.dispatchId,
+      status: DispatchStatus.done,
+      response: { ...object.objectChatMessageUserType },
+    });
+  });
+
+  test.each(Object.values(ExternalKey))(
+    `should handle 'immediate' event of type %p`,
+    async (contentKey) => {
+      const mock = generateExternalContentMock({
+        recipientClientId: mobileMemberClient.id,
+        senderClientId: userClient.id,
+        contentKey,
+        path: lorem.word(),
+      });
+      const object = new ObjectExternalContentClass(mock);
+
+      const providerResultOS: ProviderResult = { provider: Provider.oneSignal, id: generateId() };
+      spyOnOneSignalSend.mockReturnValueOnce(providerResultOS);
+
+      const message: SQSMessage = {
+        MessageId: v4(),
+        Body: JSON.stringify({
+          type: InnerQueueTypes.createDispatch,
+          ...object.objectExternalContentType,
+        }),
+      };
+      await service.handleMessage(message);
+
+      const content = replaceConfigs({
+        content: translation.contents[contentKey],
+        memberClient: mobileMemberClient,
+        userClient,
+      });
+
+      expect(spyOnOneSignalSend).toBeCalledWith({
+        externalUserId: mobileMemberClient.externalUserId,
+        platform: mobileMemberClient.platform,
+        data: {
+          user: { id: userClient.id, firstName: userClient.firstName, avatar: userClient.avatar },
+          member: { phone: mobileMemberClient.phone },
+          type: mock.notificationType,
+          isVideo: false,
+          path: mock.path,
+        },
+        content,
+        orgName: mobileMemberClient.orgName,
+      });
+
+      await compareResults({
+        dispatchId: mock.dispatchId,
+        status: DispatchStatus.done,
+        response: { ...mock },
+        pResult: providerResultOS,
+      });
+    },
+  );
+
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
@@ -470,6 +634,17 @@ describe('Notifications full flow', () => {
       Body: JSON.stringify({ type: InnerQueueTypes.updateClientSettings, ...webMemberClient }),
     };
     await service.handleMessage(webMemberClientMessage);
+
+    mobileMemberClient = generateUpdateMemberSettingsMock({
+      platform: Platform.android,
+      isPushNotificationsEnabled: true,
+      isAppointmentsReminderEnabled: true,
+    });
+    const mobileMemberClientMessage: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({ type: InnerQueueTypes.updateClientSettings, ...mobileMemberClient }),
+    };
+    await service.handleMessage(mobileMemberClientMessage);
 
     userClient = generateUpdateUserSettingsMock();
     const userClientM: SQSMessage = {
@@ -484,16 +659,18 @@ describe('Notifications full flow', () => {
     status,
     response,
     triggeredId,
+    pResult = providerResult,
   }: {
     dispatchId: string;
     status: DispatchStatus;
     response;
     triggeredId?;
+    pResult?: ProviderResult;
   }) => {
     const result = await dispatchesService.get(dispatchId);
     delete response.type;
 
-    const providerResultObject = status === DispatchStatus.done ? { providerResult } : {};
+    const providerResultObject = status === DispatchStatus.done ? { providerResult: pResult } : {};
     const sentAtObject = status === DispatchStatus.done ? { sentAt: expect.any(Date) } : {};
     const triggeredIdObject = status === DispatchStatus.received ? { triggeredId } : {};
 

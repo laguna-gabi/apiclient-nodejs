@@ -19,7 +19,8 @@
     "notifications": "#development-notifications"
   },
   "twilio": {
-    "source": "+12058511112"
+    "source": "+12058511112",
+    "traversalServiceTokenTtl": 3
   },
   "retryMax": 2,
   "gapTriggersAt": 5,
