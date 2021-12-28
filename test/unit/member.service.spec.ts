@@ -929,6 +929,25 @@ describe('MemberService', () => {
         updatedAt: afterObject['updatedAt'],
       });
     };
+
+    // eslint-disable-next-line max-len
+    it('should not change address.state and address.street when address.city changes', async () => {
+      const id = await generateMember();
+
+      // member is created with an empty address so we update to initial address value:
+      const beforeObject = await service.update({ ...generateUpdateMemberParams(), id });
+
+      const city = faker.address.city();
+
+      const afterObject = await service.update({
+        ...generateUpdateMemberParams({
+          address: { city },
+        }),
+        id,
+      });
+
+      expect(afterObject.address).toEqual({ ...beforeObject.address, city });
+    });
   });
 
   describe('insertGoal', () => {

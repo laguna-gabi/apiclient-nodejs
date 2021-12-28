@@ -98,6 +98,8 @@ export const NotNullableMemberKeys = [
   'honorific',
 ];
 
+export const EmbeddedMemberProperties = ['address'];
+
 @InputType('AddressInput')
 @ObjectType()
 export class Address {

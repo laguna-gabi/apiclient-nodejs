@@ -21,6 +21,7 @@ import {
   ControlMemberDocument,
   CreateMemberParams,
   CreateTaskParams,
+  EmbeddedMemberProperties,
   Goal,
   GoalDocument,
   Journal,
@@ -58,6 +59,7 @@ import {
   IEventUnconsentedAppointmentEnded,
   Identifier,
   LoggerService,
+  extractEmbeddedSetObject,
 } from '../common';
 import { StorageService } from '../providers';
 
@@ -130,9 +132,20 @@ export class MemberService extends BaseService {
     const { id, readmissionRisk } = updateMemberParams;
     delete updateMemberParams.id;
 
+    // support patch for embedded objects:
+    let setEmbeddedObjects = {};
+
+    EmbeddedMemberProperties.forEach((prop) => {
+      const embeddedSetObject = extractEmbeddedSetObject(updateMemberParams, prop);
+      delete updateMemberParams[prop];
+      setEmbeddedObjects = { ...setEmbeddedObjects, ...embeddedSetObject };
+    });
+
     const result = await this.memberModel.findOneAndUpdate(
       { _id: new Types.ObjectId(id) },
-      { $set: updateMemberParams },
+      {
+        $set: { ...updateMemberParams, ...setEmbeddedObjects },
+      },
       { rawResult: true },
     );
 
