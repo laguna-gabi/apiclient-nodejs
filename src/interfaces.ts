@@ -135,6 +135,7 @@ export enum InternalKey {
 export enum CustomKey {
   customContent = 'customContent',
   callOrVideo = 'callOrVideo',
+  cancelNotify = 'cancelNotify',
 }
 
 export type ContentKey = ExternalKey | InternalKey | CustomKey;
