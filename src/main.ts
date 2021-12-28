@@ -6,7 +6,7 @@ import { GlobalAuthGuard, RolesGuard } from './auth';
 import { AllExceptionsFilter, LoggerService, internalLogs } from './common'; //
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { logger: true, bodyParser: false });
+  const app = await NestFactory.create(AppModule, { logger: ['log'], bodyParser: false });
 
   app.enableCors();
 
