@@ -28,6 +28,7 @@ import { Org } from '../org';
 import { User } from '../user';
 import {
   CancelNotificationType,
+  ExternalKey,
   Honorific,
   Language,
   NotificationType,
@@ -40,6 +41,7 @@ const validatorsConfig = config.get('graphql.validators');
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
 registerEnumType(MemberRole, { name: 'MemberRole' });
+registerEnumType(ExternalKey, { name: 'ExternalKey' });
 
 export enum Sex {
   male = 'male',
@@ -95,6 +97,8 @@ export const NotNullableMemberKeys = [
   'language',
   'honorific',
 ];
+
+export const EmbeddedMemberProperties = ['address'];
 
 @InputType('AddressInput')
 @ObjectType()
@@ -204,6 +208,7 @@ export class CreateMemberParams extends ExtraMemberParams {
   @Field(() => String)
   @IsNotEmpty() /* for rest api */
   @IsString() /* for rest api */
+  @IsObjectId({ message: Errors.get(ErrorType.memberOrgIdInvalid) })
   orgId: string;
 }
 
@@ -275,15 +280,18 @@ export class UpdateMemberParams extends ExtraMemberParams {
 @InputType()
 export class ReplaceUserForMemberParams {
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
 
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.userIdInvalid) })
   userId: string;
 }
 
 @InputType()
 export class SetGeneralNotesParams {
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
 
   @Field(() => String, { nullable: true })
@@ -299,6 +307,7 @@ export class RecordingLinkParams {
   id: string;
 
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
 }
 
@@ -323,6 +332,7 @@ export class NotificationMetadata {
   sendBirdChannelUrl?: string;
 
   @Field(() => String, { nullable: true })
+  @IsObjectId({ message: Errors.get(ErrorType.appointmentIdInvalid) })
   appointmentId?: string;
 
   @Field(() => String, { nullable: true })
@@ -334,10 +344,12 @@ export class NotificationMetadata {
 export class NotifyParams {
   @Prop()
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
 
   @Prop()
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.userIdInvalid) })
   userId: string;
 
   @Prop()
@@ -351,6 +363,20 @@ export class NotifyParams {
 }
 
 @InputType()
+export class NotifyContentParams {
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
+
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.userIdInvalid) })
+  userId: string;
+
+  @Field(() => ExternalKey)
+  contentKey: ExternalKey;
+}
+
+@InputType()
 export class CancelNotificationMetadata {
   @Field(() => String, { nullable: true })
   peerId?: string;
@@ -359,6 +385,7 @@ export class CancelNotificationMetadata {
 @InputType()
 export class CancelNotifyParams {
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
 
   @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataInvalid) })

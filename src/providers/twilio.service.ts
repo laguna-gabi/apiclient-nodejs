@@ -49,7 +49,7 @@ export class TwilioService implements OnModuleInit {
   }
 
   async send(sendTwilioNotification: SendTwilioNotification) {
-    this.logger.debug(sendTwilioNotification, TwilioService.name, this.send.name);
+    this.logger.info(sendTwilioNotification, TwilioService.name, this.send.name);
     const { body, to, orgName } = sendTwilioNotification;
     if (
       process.env.NODE_ENV === Environments.production &&

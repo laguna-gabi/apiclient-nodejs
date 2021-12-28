@@ -166,6 +166,7 @@ export const mockProviders = (
   const spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
   const spyOnTwilioGetToken = jest.spyOn(twilioService, 'getAccessToken');
   const spyOnTwilioCreatePeerIceServers = jest.spyOn(twilioService, 'createPeerIceServers');
+  const spyOnTwilioValidateWebhook = jest.spyOn(twilioService, 'validateWebhook');
   const spyOnSlackBotSendMessage = jest.spyOn(slackBot, 'send');
   const spyOnCognitoServiceDisableMember = jest.spyOn(cognitoService, 'disableMember');
   const spyOnCognitoServiceDeleteMember = jest.spyOn(cognitoService, 'deleteMember');
@@ -191,6 +192,7 @@ export const mockProviders = (
   spyOnNotificationsServiceCancel.mockResolvedValue(v4());
   spyOnTwilioGetToken.mockReturnValue('token');
   spyOnTwilioCreatePeerIceServers.mockResolvedValue({ iceServers });
+  spyOnTwilioValidateWebhook.mockReturnValue(true);
   spyOnSlackBotSendMessage.mockReturnValue(undefined);
   spyOnSendBirdUpdateChannelName.mockReturnValue(undefined);
   spyOnSendBirdInvite.mockResolvedValue([generateId()]);
@@ -219,7 +221,11 @@ export const mockProviders = (
       spyOnNotificationsServiceSend,
       spyOnNotificationsServiceCancel,
     },
-    twilioService: { spyOnTwilioGetToken, spyOnTwilioCreatePeerIceServers },
+    twilioService: {
+      spyOnTwilioGetToken,
+      spyOnTwilioCreatePeerIceServers,
+      spyOnTwilioValidateWebhook,
+    },
     slackBot: { spyOnSlackBotSendMessage },
     cognitoService: { spyOnCognitoServiceDisableMember, spyOnCognitoServiceDeleteMember },
     storage: {

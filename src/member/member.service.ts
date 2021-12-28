@@ -21,6 +21,7 @@ import {
   ControlMemberDocument,
   CreateMemberParams,
   CreateTaskParams,
+  EmbeddedMemberProperties,
   Goal,
   GoalDocument,
   Journal,
@@ -58,6 +59,7 @@ import {
   IEventUnconsentedAppointmentEnded,
   Identifier,
   LoggerService,
+  extractEmbeddedSetObject,
 } from '../common';
 import { StorageService } from '../providers';
 
@@ -130,9 +132,20 @@ export class MemberService extends BaseService {
     const { id, readmissionRisk } = updateMemberParams;
     delete updateMemberParams.id;
 
+    // support patch for embedded objects:
+    let setEmbeddedObjects = {};
+
+    EmbeddedMemberProperties.forEach((prop) => {
+      const embeddedSetObject = extractEmbeddedSetObject(updateMemberParams, prop);
+      delete updateMemberParams[prop];
+      setEmbeddedObjects = { ...setEmbeddedObjects, ...embeddedSetObject };
+    });
+
     const result = await this.memberModel.findOneAndUpdate(
       { _id: new Types.ObjectId(id) },
-      { $set: updateMemberParams },
+      {
+        $set: { ...updateMemberParams, ...setEmbeddedObjects },
+      },
       { rawResult: true },
     );
 
@@ -426,7 +439,7 @@ export class MemberService extends BaseService {
   }
 
   async moveMemberToArchive(id: string): Promise<{ member: Member; memberConfig: MemberConfig }> {
-    this.logger.debug({ memberId: id }, MemberService.name, this.moveMemberToArchive.name);
+    this.logger.info({ memberId: id }, MemberService.name, this.moveMemberToArchive.name);
     const member = await this.get(id);
     const memberConfig = await this.getMemberConfig(id);
 
@@ -439,7 +452,7 @@ export class MemberService extends BaseService {
   }
 
   async deleteMember(id: string): Promise<{ member: Member; memberConfig: MemberConfig }> {
-    this.logger.debug({ memberId: id }, MemberService.name, this.deleteMember.name);
+    this.logger.info({ memberId: id }, MemberService.name, this.deleteMember.name);
     const member = await this.get(id);
     const memberConfig = await this.getMemberConfig(id);
 
@@ -608,7 +621,7 @@ export class MemberService extends BaseService {
   }
 
   async updateMemberConfigRegisteredAt(memberId: Types.ObjectId) {
-    this.logger.debug({ memberId }, MemberService.name, this.updateMemberConfigRegisteredAt.name);
+    this.logger.info({ memberId }, MemberService.name, this.updateMemberConfigRegisteredAt.name);
     const result = await this.memberConfigModel.updateOne(
       { memberId },
       { $set: { firstLoggedInAt: new Date() } },
@@ -770,7 +783,7 @@ export class MemberService extends BaseService {
    ************************************************************************************************/
 
   async updatePrimaryUser(params: ReplaceUserForMemberParams): Promise<Member> {
-    this.logger.debug(params, MemberService.name, this.updatePrimaryUser.name);
+    this.logger.info(params, MemberService.name, this.updatePrimaryUser.name);
     const { memberId, userId } = params;
 
     // replace primary user and add the new user to member's list

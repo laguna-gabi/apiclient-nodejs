@@ -81,7 +81,7 @@ export class QueueService implements OnModuleInit {
   async sendMessage(params: IEventNotifyQueue) {
     if (params.type === QueueType.audit && process.env.NODE_ENV !== Environments.production) {
       //audit log only exists in production
-      this.logger.debug(params, QueueService.name, this.sendMessage.name);
+      this.logger.info(params, QueueService.name, this.sendMessage.name);
       return;
     }
 
@@ -92,7 +92,7 @@ export class QueueService implements OnModuleInit {
           ...this.getQueueConfigs(params.type),
         })
         .promise();
-      this.logger.debug({ ...params, MessageId }, QueueService.name, this.sendMessage.name);
+      this.logger.info({ ...params, MessageId }, QueueService.name, this.sendMessage.name);
     } catch (ex) {
       this.logger.error(params, QueueService.name, this.sendMessage.name, ex);
     }

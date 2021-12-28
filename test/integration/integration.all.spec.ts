@@ -1,8 +1,8 @@
-import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
+import { CancelNotificationType, Platform } from '@lagunahealth/pandora';
 import * as config from 'config';
+import { general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow } from 'date-fns';
 import * as faker from 'faker';
-import { v4 } from 'uuid';
 import {
   Appointment,
   AppointmentMethod,
@@ -23,7 +23,6 @@ import {
   CancelNotifyParams,
   CreateTaskParams,
   Member,
-  NotifyParams,
   RecordingOutput,
   ReplaceUserForMemberParams,
   Task,
@@ -40,7 +39,6 @@ import {
   generateCancelNotifyParams,
   generateId,
   generateOrgParams,
-  generatePath,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
@@ -51,8 +49,6 @@ import {
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
 } from '../index';
-import { iceServers } from '../unit/mocks/twilioPeerIceServers';
-import { general } from 'config';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -514,149 +510,6 @@ describe('Integration tests: all', () => {
   });
 
   describe('notifications', () => {
-    test.each`
-      type                      | isVideo  | metadata
-      ${NotificationType.video} | ${true}  | ${{ peerId: v4() }}
-      ${NotificationType.call}  | ${false} | ${{ peerId: v4() }}
-      ${NotificationType.text}  | ${false} | ${{ content: 'text' }}
-    `(`should send push notification of type $type`, async (params) => {
-      const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
-      const primaryUser = member.users[0];
-
-      const registerForNotificationParams: RegisterForNotificationParams = {
-        platform: Platform.android,
-        isPushNotificationsEnabled: true,
-      };
-      await handler
-        .setContextUserId(member.id)
-        .mutations.registerMemberForNotifications({ registerForNotificationParams });
-
-      const memberConfig = await handler
-        .setContextUserId(member.id)
-        .queries.getMemberConfig({ id: member.id });
-
-      const notifyParams: NotifyParams = {
-        memberId: member.id,
-        userId: primaryUser.id,
-        type: params.type,
-        metadata: params.metadata,
-      };
-
-      await handler.mutations.notify({ notifyParams });
-
-      expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
-        sendOneSignalNotification: {
-          externalUserId: memberConfig.externalUserId,
-          platform: memberConfig.platform,
-          data: {
-            user: {
-              id: primaryUser.id,
-              firstName: primaryUser.firstName,
-              avatar: primaryUser.avatar,
-            },
-            member: { phone: member.phone },
-            type: params.type,
-            peerId: notifyParams.metadata.peerId,
-            isVideo: params.isVideo,
-            ...generatePath(params.type),
-            extraData: JSON.stringify({ iceServers }),
-          },
-          content: notifyParams.metadata.content,
-          orgName: org.name,
-        },
-      });
-
-      handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-    });
-
-    it(`should send SMS notification of type textSms`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
-      const appointmentId = generateId();
-      const registerForNotificationParams: RegisterForNotificationParams = {
-        platform: Platform.android,
-        isPushNotificationsEnabled: true,
-      };
-      await handler
-        .setContextUserId(member.id)
-        .mutations.registerMemberForNotifications({ registerForNotificationParams });
-      await delay(500);
-
-      const notifyParams: NotifyParams = {
-        memberId: member.id,
-        userId: member.primaryUserId.toString(),
-        type: NotificationType.textSms,
-        metadata: { content: 'text', appointmentId },
-      };
-
-      /**
-       * reset mock on NotificationsService so we dont count
-       * the notifications that are made on member creation
-       */
-      handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-
-      await handler.mutations.notify({ notifyParams });
-      await delay(500);
-      expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
-        sendTwilioNotification: {
-          to: member.phone,
-          body: notifyParams.metadata.content,
-          orgName: org.name,
-        },
-      });
-
-      handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-    });
-
-    it(`should send SendBird message for type textSms`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
-      const appointmentId = generateId();
-
-      const registerForNotificationParams: RegisterForNotificationParams = {
-        platform: Platform.android,
-        isPushNotificationsEnabled: true,
-      };
-      await handler
-        .setContextUserId(member.id)
-        .mutations.registerMemberForNotifications({ registerForNotificationParams });
-
-      const notifyParams: NotifyParams = {
-        memberId: member.id,
-        userId: member.primaryUserId.toString(),
-        type: NotificationType.textSms,
-        metadata: { content: 'text', appointmentId },
-      };
-
-      /**
-       * reset mock on NotificationsService so we dont count
-       * the notifications that are made on member creation
-       */
-      handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-      await delay(500);
-
-      await handler.mutations.notify({ notifyParams });
-
-      const result = await handler.communicationService.get({
-        userId: member.primaryUserId.toString(),
-        memberId: member.id,
-      });
-
-      expect(handler.notificationsService.spyOnNotificationsServiceSend).toBeCalledWith({
-        sendSendBirdNotification: {
-          userId: member.primaryUserId,
-          sendBirdChannelUrl: result.sendBirdChannelUrl,
-          message: notifyParams.metadata.content,
-          appointmentId,
-          notificationType: NotificationType.textSms,
-          orgName: org.name,
-        },
-      });
-
-      handler.notificationsService.spyOnNotificationsServiceSend.mockReset();
-    });
-
     test.each([
       CancelNotificationType.cancelVideo,
       CancelNotificationType.cancelCall,

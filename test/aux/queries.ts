@@ -10,6 +10,7 @@ import {
   RecordingLinkParams,
 } from '../../src/member';
 import { GetSlotsParams } from '../../src/user';
+import { isGQLResultValid as isResultValid } from '../../src/common';
 
 export class Queries {
   constructor(private readonly apolloClient: ApolloServerTestClient) {}
@@ -297,10 +298,12 @@ export class Queries {
 
   getMemberUploadRecordingLink = async ({
     recordingLinkParams,
-    invalidFieldsError,
+    missingFieldError,
+    invalidFieldsErrors,
   }: {
     recordingLinkParams?: RecordingLinkParams;
-    invalidFieldsError?: string;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
   } = {}): Promise<string> => {
     const result = await this.apolloClient.query({
       variables: { recordingLinkParams },
@@ -311,19 +314,20 @@ export class Queries {
       `,
     });
 
-    if (invalidFieldsError) {
-      expect(invalidFieldsError).toEqual(result.errors[0].message);
-    } else {
-      return result.data.getMemberUploadRecordingLink;
-    }
+    return (
+      isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
+      result.data.getMemberUploadRecordingLink
+    );
   };
 
   getMemberDownloadRecordingLink = async ({
     recordingLinkParams,
-    invalidFieldsError,
+    missingFieldError,
+    invalidFieldsErrors,
   }: {
     recordingLinkParams?: RecordingLinkParams;
-    invalidFieldsError?: string;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
   } = {}): Promise<string> => {
     const result = await this.apolloClient.query({
       variables: { recordingLinkParams },
@@ -334,11 +338,10 @@ export class Queries {
       `,
     });
 
-    if (invalidFieldsError) {
-      expect(invalidFieldsError).toEqual(result.errors[0].message);
-    } else {
-      return result.data.getMemberDownloadRecordingLink;
-    }
+    return (
+      isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
+      result.data.getMemberDownloadRecordingLink
+    );
   };
 
   getMembers = async (orgId?: string) => {
@@ -451,9 +454,11 @@ export class Queries {
   getCommunication = async ({
     getCommunicationParams,
     missingFieldError,
+    invalidFieldsErrors,
   }: {
     getCommunicationParams: GetCommunicationParams;
     missingFieldError?: string;
+    invalidFieldsErrors?: string[];
   }) => {
     const result = await this.apolloClient.query({
       variables: { getCommunicationParams },
@@ -471,11 +476,10 @@ export class Queries {
       `,
     });
 
-    if (missingFieldError) {
-      expect(result.errors[0].message).toMatch(missingFieldError);
-      return;
-    }
-    return result.data.getCommunication;
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.getCommunication
+    );
   };
 
   getMemberUnreadMessagesCount = async () => {
@@ -647,10 +651,12 @@ export class Queries {
 
   getMemberUploadJournalImageLink = async ({
     getMemberUploadJournalImageLinkParams,
-    invalidFieldsError,
+    missingFieldError,
+    invalidFieldsErrors,
   }: {
     getMemberUploadJournalImageLinkParams: GetMemberUploadJournalImageLinkParams;
-    invalidFieldsError?: string;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
   }) => {
     const result = await this.apolloClient.query({
       variables: { getMemberUploadJournalImageLinkParams },
@@ -667,11 +673,10 @@ export class Queries {
       `,
     });
 
-    if (invalidFieldsError) {
-      expect(result.errors[0].message).toMatch(invalidFieldsError);
-    } else {
-      return result.data.getMemberUploadJournalImageLinks;
-    }
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.getMemberUploadJournalImageLinks
+    );
   };
 
   getMemberUploadJournalAudioLink = async ({

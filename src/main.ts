@@ -6,7 +6,7 @@ import { GlobalAuthGuard, RolesGuard } from './auth';
 import { AllExceptionsFilter, LoggerService, internalLogs } from './common'; //
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { logger: true, bodyParser: false });
+  const app = await NestFactory.create(AppModule, { logger: ['log'], bodyParser: false });
 
   app.enableCors();
 
@@ -21,12 +21,12 @@ async function bootstrap() {
 
   await app.listen(3000);
 
-  logger.debug(
+  logger.info(
     { hepiusVersion: internalLogs.hepiusVersion.replace('@version@', packageJson.version) },
     'Main',
     bootstrap.name,
   );
-  logger.debug(
+  logger.info(
     { lastCommit: internalLogs.lastCommit.replace('@hash@', process.env.COMMIT_SHA) },
     'Main',
     bootstrap.name,

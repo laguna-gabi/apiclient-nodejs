@@ -1,8 +1,10 @@
 import {
   CancelNotificationType,
   ContentKey,
+  CustomKey,
   IEventNotifySlack,
   InnerQueueTypes,
+  InternalKey,
   InternalNotificationType,
   Language,
   NotificationType,
@@ -69,12 +71,12 @@ import {
   generateCommunication,
   generateCreateMemberParams,
   generateCreateTaskParams,
-  generateGetCommunication,
   generateGetMemberUploadJournalAudioLinkParams,
   generateGetMemberUploadJournalImageLinkParams,
   generateId,
   generateInternalNotifyParams,
   generateMemberConfig,
+  generateNotifyContentParams,
   generateNotifyParams,
   generateObjectId,
   generateSetGeneralNotesParams,
@@ -578,27 +580,27 @@ describe('MemberResolver', () => {
     expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
       2,
       EventType.notifyQueue,
-      generateQueueParams(ContentKey.newMemberNudge),
+      generateQueueParams(InternalKey.newMemberNudge),
     );
     expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
       3,
       EventType.notifyQueue,
-      generateQueueParams(ContentKey.newRegisteredMember),
+      generateQueueParams(InternalKey.newRegisteredMember),
     );
     expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
       4,
       EventType.notifyQueue,
-      generateQueueParams(ContentKey.newRegisteredMemberNudge),
+      generateQueueParams(InternalKey.newRegisteredMemberNudge),
     );
     expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
       5,
       EventType.notifyQueue,
-      generateQueueParams(ContentKey.logReminder),
+      generateQueueParams(InternalKey.logReminder),
     );
     expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
       6,
       EventType.notifyQueue,
-      generateQueueParams(ContentKey.customContent),
+      generateQueueParams(CustomKey.customContent),
     );
   };
 
@@ -2016,173 +2018,6 @@ describe('MemberResolver', () => {
       },
     );
 
-    it('should send to Sendbird on type textSms', async () => {
-      const member = mockGenerateMember();
-      const memberConfig = mockGenerateMemberConfig();
-      const user = mockGenerateUser();
-      const communication = generateCommunication();
-      spyOnServiceGetMember.mockImplementationOnce(async () => member);
-      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
-      spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
-
-      const notifyParams = generateNotifyParams({
-        type: NotificationType.textSms,
-      });
-
-      await resolver.notify(notifyParams);
-
-      expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendSendBirdNotification: {
-          userId: user.id,
-          sendBirdChannelUrl: communication.sendBirdChannelUrl,
-          message: notifyParams.metadata.content,
-          notificationType: NotificationType.textSms,
-          orgName: member.org.name,
-        },
-      });
-    });
-
-    it('should send SMS on type textSms', async () => {
-      const member = mockGenerateMember();
-      const memberConfig = mockGenerateMemberConfig();
-      const user = mockGenerateUser();
-      const communication = generateCommunication();
-      spyOnServiceGetMember.mockImplementationOnce(async () => member);
-      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
-      spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
-
-      const notifyParams = generateNotifyParams({
-        type: NotificationType.textSms,
-      });
-
-      await resolver.notify(notifyParams);
-
-      expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendTwilioNotification: {
-          body: notifyParams.metadata.content,
-          to: member.phone,
-          orgName: member.org.name,
-        },
-      });
-    });
-
-    it('should send SMS on type text if platform', async () => {
-      const member = mockGenerateMember();
-      const memberConfig = mockGenerateMemberConfig();
-      memberConfig.platform = Platform.web;
-      const user = mockGenerateUser();
-      spyOnServiceGetMember.mockImplementationOnce(async () => member);
-      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
-
-      const notifyParams = generateNotifyParams({
-        type: NotificationType.text,
-      });
-
-      await resolver.notify(notifyParams);
-
-      expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendTwilioNotification: {
-          body: notifyParams.metadata.content,
-          to: member.phone,
-          orgName: member.org.name,
-        },
-      });
-    });
-
-    it('should send SMS on type text if notification disabled', async () => {
-      const member = mockGenerateMember();
-      const memberConfig = mockGenerateMemberConfig();
-      memberConfig.isPushNotificationsEnabled = false;
-      const user = mockGenerateUser();
-      spyOnServiceGetMember.mockImplementationOnce(async () => member);
-      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
-
-      const notifyParams = generateNotifyParams({
-        type: NotificationType.text,
-      });
-
-      await resolver.notify(notifyParams);
-
-      expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendTwilioNotification: {
-          body: notifyParams.metadata.content,
-          to: member.phone,
-          orgName: member.org.name,
-        },
-      });
-    });
-
-    test.each([NotificationType.call, NotificationType.video])(
-      'should send push notification if type video or call',
-      async (type) => {
-        const member = mockGenerateMember();
-        const memberConfig = mockGenerateMemberConfig();
-        const user = mockGenerateUser();
-        spyOnServiceGetMember.mockImplementationOnce(async () => member);
-        spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-        spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-        spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
-        spyOnNotificationsServiceCreatePeerIceServers.mockReturnValueOnce({ iceServers });
-
-        const notifyParams = generateNotifyParams({ type });
-
-        await resolver.notify(notifyParams);
-
-        expect(spyOnNotificationsServiceSend).toBeCalledWith({
-          sendOneSignalNotification: {
-            platform: memberConfig.platform,
-            externalUserId: memberConfig.externalUserId,
-            data: {
-              user: { id: user.id, firstName: user.firstName, avatar: user.avatar },
-              member: { phone: member.phone },
-              type,
-              path: 'call',
-              isVideo: type === NotificationType.video,
-              peerId: notifyParams.metadata.peerId,
-              extraData: JSON.stringify({ iceServers }),
-            },
-            content: notifyParams.metadata.content,
-            orgName: member.org.name,
-          },
-        });
-      },
-    );
-
-    it('should call getCommunication if metadata.chatLink true', async () => {
-      const member = mockGenerateMember();
-      const memberConfig = mockGenerateMemberConfig();
-      const user = mockGenerateUser();
-      spyOnServiceGetMember.mockImplementation(async () => member);
-      spyOnServiceGetMemberConfig.mockImplementation(async () => memberConfig);
-      spyOnUserServiceGetUser.mockImplementation(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
-      spyOnCommunicationResolverGetCommunication.mockImplementationOnce(async () =>
-        generateGetCommunication(),
-      );
-
-      const notifyParams = generateNotifyParams({
-        memberId: member.id,
-        userId: member.primaryUserId.toString(),
-        type: NotificationType.text,
-        metadata: { content: faker.lorem.word(), chatLink: true },
-      });
-
-      await resolver.notify(notifyParams);
-
-      expect(spyOnCommunicationResolverGetCommunication).toBeCalledWith({
-        memberId: member.id,
-        userId: member.primaryUserId.toString(),
-      });
-    });
-
     it('should trim leading and trailing whitespaces from message', async () => {
       const member = mockGenerateMember();
       const memberConfig = mockGenerateMemberConfig();
@@ -2196,20 +2031,12 @@ describe('MemberResolver', () => {
 
       const notifyParams = generateNotifyParams({
         type: NotificationType.textSms,
-        metadata: { peerId: v4(), content: '    test message     ' },
+        metadata: { peerId: v4(), content: `    ${faker.lorem.sentence()}     ` },
       });
 
       await resolver.notify(notifyParams);
 
-      expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendSendBirdNotification: {
-          userId: user.id,
-          sendBirdChannelUrl: communication.sendBirdChannelUrl,
-          message: 'test message',
-          notificationType: NotificationType.textSms,
-          orgName: member.org.name,
-        },
-      });
+      expect(spyOnEventEmitter).toBeCalled();
     });
 
     it('should fail sending a message with only whitespaces', async () => {
@@ -2231,6 +2058,76 @@ describe('MemberResolver', () => {
       await expect(resolver.notify(notifyParams)).rejects.toThrow(
         Errors.get(ErrorType.notificationInvalidContent),
       );
+    });
+  });
+
+  describe('notifyContent', () => {
+    let spyOnServiceGetMember;
+    let spyOnServiceGetMemberConfig;
+    let spyOnUserServiceGetUser;
+
+    beforeEach(() => {
+      spyOnServiceGetMember = jest.spyOn(service, 'get');
+      spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
+      spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetMember.mockReset();
+      spyOnServiceGetMemberConfig.mockReset();
+      spyOnUserServiceGetUser.mockReset();
+    });
+
+    it('should catch notify exception on non existing user', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => undefined);
+
+      await expect(
+        resolver.notifyContent(generateNotifyContentParams({ memberId: member.id })),
+      ).rejects.toThrow(Errors.get(ErrorType.userNotFound));
+    });
+
+    it('should catch notify exception on non existing member', async () => {
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => undefined);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+
+      await expect(
+        resolver.notifyContent(
+          generateNotifyContentParams({
+            userId: user.id,
+            memberId: memberConfig.memberId.toString(),
+          }),
+        ),
+      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+    });
+
+    test.each([
+      { platform: Platform.web },
+      { isPushNotificationsEnabled: false },
+      { platform: Platform.web, isPushNotificationsEnabled: true },
+      { platform: Platform.android, isPushNotificationsEnabled: false },
+    ])('should throw an error when member config has %p', async (param) => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig({ ...param });
+      const user = mockGenerateUser();
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+
+      await expect(
+        resolver.notifyContent(
+          generateNotifyContentParams({
+            userId: user.id,
+            memberId: memberConfig.memberId.toString(),
+          }),
+        ),
+      ).rejects.toThrow(Errors.get(ErrorType.notificationNotAllowedForWebMember));
     });
   });
 
@@ -2444,7 +2341,7 @@ describe('MemberResolver', () => {
               member,
               user,
               extraData: { chatLink: 'chatLink' },
-              contentType: ContentKey.appointmentReminderLink,
+              contentType: InternalKey.appointmentReminderLink,
               language: Language.en,
             }),
           to: member.phone,
@@ -2479,7 +2376,7 @@ describe('MemberResolver', () => {
               member,
               user,
               extraData: { scheduleLink: 'scheduleLink' },
-              contentType: ContentKey.appointmentRequestLink,
+              contentType: InternalKey.appointmentRequestLink,
               language: Language.en,
             }),
           to: member.phone,
@@ -2501,7 +2398,7 @@ describe('MemberResolver', () => {
 
       const internalNotifyParams = generateInternalNotifyParams({
         type: InternalNotificationType.textToMember,
-        metadata: { contentType: ContentKey.newMember },
+        metadata: { contentType: InternalKey.newMember },
       });
 
       await resolver.internalNotify(internalNotifyParams);
@@ -2511,7 +2408,7 @@ describe('MemberResolver', () => {
           body: internationalizationService.getContents({
             member,
             user,
-            contentType: ContentKey.newMember,
+            contentType: InternalKey.newMember,
             language: Language.es,
           }),
           to: member.phone,
@@ -2673,13 +2570,13 @@ describe('MemberResolver', () => {
       await resolver.notifyChatMessage(params);
 
       expect(spyOnCreateDispatch).toBeCalledWith({
-        dispatchId: expect.stringContaining(generateDispatchId(ContentKey.newChatMessageFromUser)),
+        dispatchId: expect.stringContaining(generateDispatchId(InternalKey.newChatMessageFromUser)),
         memberId: communication.memberId.toString(),
         userId: user.id,
         type: InternalNotificationType.chatMessageToMember,
         correlationId: expect.any(String),
         metadata: {
-          contentType: ContentKey.newChatMessageFromUser,
+          contentType: InternalKey.newChatMessageFromUser,
           path: `connect/${communication.memberId.toString()}/${user.id}`,
         },
       });
@@ -2716,13 +2613,13 @@ describe('MemberResolver', () => {
 
       expect(spyOnCreateDispatch).toBeCalledWith({
         dispatchId: expect.stringContaining(
-          generateDispatchId(ContentKey.newChatMessageFromMember),
+          generateDispatchId(InternalKey.newChatMessageFromMember),
         ),
         memberId: member.id,
         userId: communication.userId.toString(),
         type: InternalNotificationType.textSmsToUser,
         correlationId: expect.any(String),
-        metadata: { contentType: ContentKey.newChatMessageFromMember },
+        metadata: { contentType: InternalKey.newChatMessageFromMember },
       });
     }, 10000);
 

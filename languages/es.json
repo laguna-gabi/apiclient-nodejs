@@ -16,7 +16,9 @@
             "logReminder": "",
             "newChatMessageFromMember": "",
             "appointmentScheduledUser": "",
-            "memberNotFeelingWellMessage": ""
+            "memberNotFeelingWellMessage": "",
+            "addCaregiverDetails": "",
+            "setCallPermissions": ""
         },
         "honorific": {
             "mr": "Señor.",

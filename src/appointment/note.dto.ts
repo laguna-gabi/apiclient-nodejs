@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsBoolean, IsOptional } from 'class-validator';
 import { Document } from 'mongoose';
-import { ErrorType, Errors, IsNoShowValid } from '../common';
+import { ErrorType, Errors, IsNoShowValid, IsObjectId } from '../common';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -63,6 +63,7 @@ export class Notes {
 @ObjectType()
 export class EndAppointmentParams {
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.appointmentIdInvalid) })
   id: string;
 
   @Field(() => Notes, { nullable: true })
@@ -87,6 +88,7 @@ export class EndAppointmentParams {
 @InputType()
 export class UpdateNotesParams {
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.appointmentIdInvalid) })
   appointmentId: string;
 
   @Field(() => Notes, { nullable: true })

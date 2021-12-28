@@ -1,9 +1,10 @@
 import {
   CancelNotificationType,
-  ContentKey,
+  ExternalKey,
   Honorific,
   IUpdateClientSettings,
   InnerQueueTypes,
+  InternalKey,
   InternalNotificationType,
   Language,
   NotificationType,
@@ -52,6 +53,7 @@ import {
   ImageFormat,
   Member,
   MemberConfig,
+  NotifyContentParams,
   NotifyParams,
   ReadmissionRisk,
   Relationship,
@@ -262,12 +264,15 @@ export const generateUpdateMemberParams = ({
   };
 };
 
-export const mockGenerateMemberConfig = (): MemberConfig => {
+export const mockGenerateMemberConfig = ({
+  platform = Platform.ios,
+  isPushNotificationsEnabled = true,
+}: Partial<MemberConfig> = {}): MemberConfig => {
   return {
     memberId: generateObjectId(),
     externalUserId: v4(),
-    platform: Platform.ios,
-    isPushNotificationsEnabled: true,
+    platform,
+    isPushNotificationsEnabled,
     isRecommendationsEnabled: true,
     isAppointmentsReminderEnabled: true,
     accessToken: generateId(),
@@ -451,10 +456,6 @@ export const generateId = (id?): string => {
   return generateObjectId(id).toString();
 };
 
-export const generatePath = (type: NotificationType) => {
-  return type === NotificationType.call || type === NotificationType.video ? { path: 'call' } : {};
-};
-
 export const generateSetGeneralNotesParams = ({
   memberId = generateId(),
   note = faker.lorem.sentence(),
@@ -497,6 +498,14 @@ export const generateNotifyParams = ({
   return { userId, memberId, type, metadata };
 };
 
+export const generateNotifyContentParams = ({
+  userId = generateId(),
+  memberId = generateId(),
+  contentKey = ExternalKey.setCallPermissions,
+}: Partial<NotifyContentParams> = {}): NotifyContentParams => {
+  return { userId, memberId, contentKey };
+};
+
 export const generateCancelNotifyParams = ({
   notificationId = v4(),
   memberId = generateId(),
@@ -523,7 +532,7 @@ export const generateInternalNotifyParams = ({
   userId = generateId(),
   type = InternalNotificationType.textToMember,
   metadata = {
-    contentType: ContentKey.logReminder,
+    contentType: InternalKey.logReminder,
     sendBirdChannelUrl: generateUniqueUrl(),
   },
   content = en.translation.contents.logReminder,

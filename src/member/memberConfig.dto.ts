@@ -3,12 +3,14 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { IsOptional } from 'class-validator';
 import { Platform } from '@lagunahealth/pandora';
+import { ErrorType, Errors, IsObjectId } from '../../src/common';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
  *************************************************************************************************/
 @InputType()
 export class UpdateMemberConfigParams {
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId?: string;
 
   @Field(() => Platform, { nullable: true })

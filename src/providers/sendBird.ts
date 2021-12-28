@@ -41,7 +41,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         .toPromise();
 
       if (result.status === 200) {
-        this.logger.debug(params, SendBird.name, methodName);
+        this.logger.info(params, SendBird.name, methodName);
         return result.data.access_token;
       } else {
         this.logger.error(params, SendBird.name, methodName, result.status, result.data);
@@ -61,7 +61,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         .toPromise();
 
       if (status === 200) {
-        this.logger.debug(params, SendBird.name, methodName);
+        this.logger.info(params, SendBird.name, methodName);
         return true;
       } else {
         this.logger.error(params, SendBird.name, methodName, status, data);
@@ -157,7 +157,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         )
         .toPromise();
       if (result.status === 200) {
-        this.logger.debug({ sendBirdChannelUrl }, SendBird.name, methodName);
+        this.logger.info({ sendBirdChannelUrl }, SendBird.name, methodName);
         return result;
       } else {
         this.logger.error({ sendBirdChannelUrl }, SendBird.name, methodName);
@@ -191,7 +191,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
   }
 
   async send(sendSendBirdNotification: SendSendBirdNotification) {
-    this.logger.debug(sendSendBirdNotification, SendBird.name, this.send.name);
+    this.logger.info(sendSendBirdNotification, SendBird.name, this.send.name);
     if (sendSendBirdNotification.notificationType === InternalNotificationType.chatMessageJournal) {
       return this.sendJournalMessage(sendSendBirdNotification);
     } else {
@@ -200,7 +200,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
   }
 
   async sendJournalMessage(sendSendBirdNotification: SendSendBirdNotification) {
-    this.logger.debug(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name);
+    this.logger.info(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name);
     const {
       userId,
       sendBirdChannelUrl,
@@ -273,7 +273,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
   }
 
   async sendAdminMessage(sendSendBirdNotification: SendSendBirdNotification) {
-    this.logger.debug(sendSendBirdNotification, SendBird.name, this.sendAdminMessage.name);
+    this.logger.info(sendSendBirdNotification, SendBird.name, this.sendAdminMessage.name);
     const { userId, sendBirdChannelUrl, message, notificationType, appointmentId } =
       sendSendBirdNotification;
     try {
@@ -316,7 +316,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         )
         .toPromise();
       if (result.status === 200) {
-        this.logger.debug({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
+        this.logger.info({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
         return result.data.members?.map((member) => member.user_id);
       } else {
         this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
@@ -341,7 +341,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         )
         .toPromise();
       if (result.status === 200) {
-        this.logger.debug({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
+        this.logger.info({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
         return result;
       } else {
         this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName);

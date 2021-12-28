@@ -3,7 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Type } from 'class-transformer';
 import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Document, Types } from 'mongoose';
-import { ErrorType, Errors, Identifier, IsDateAfter, IsFutureDate } from '../common';
+import { ErrorType, Errors, Identifier, IsDateAfter, IsFutureDate, IsObjectId } from '../common';
 import { Notes } from '.';
 
 /**************************************************************************************************
@@ -31,9 +31,11 @@ registerEnumType(AppointmentMethod, { name: 'AppointmentMethod' });
 @InputType()
 export class RequestAppointmentParams {
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
 
   @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.userIdInvalid) })
   userId: string;
 
   @Field(() => Date)
@@ -54,11 +56,13 @@ export class ScheduleAppointmentParams {
   @Field(() => String)
   @IsNotEmpty() /* for rest api */
   @IsString() /* for rest api */
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
 
   @Field(() => String)
   @IsNotEmpty() /* for rest api */
   @IsString() /* for rest api */
+  @IsObjectId({ message: Errors.get(ErrorType.userIdInvalid) })
   userId: string;
 
   @Field(() => AppointmentMethod)

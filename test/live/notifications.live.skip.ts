@@ -7,10 +7,9 @@ import {
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
-import { ErrorType, Errors, LoggerService, delay } from '../../src/common';
+import { ErrorType, Errors, LoggerService, delay, generatePath } from '../../src/common';
 import { NotificationsService } from '../../src/providers';
 import { dbDisconnect, defaultModules, mockLogger } from '../common';
-import { generatePath } from '../generators';
 
 /**
  * THIS TEST IS DISABLED
@@ -153,7 +152,7 @@ describe.skip('live: notifications (one signal)', () => {
             type: NotificationType.call,
             peerId: v4(),
             isVideo: false,
-            ...generatePath(NotificationType.call),
+            path: generatePath(NotificationType.call),
           },
         },
       });
@@ -197,7 +196,7 @@ describe.skip('live: notifications (one signal)', () => {
           type: NotificationType.call,
           peerId: v4(),
           isVideo: false,
-          ...generatePath(NotificationType.call),
+          path: generatePath(NotificationType.call),
         },
       },
     });

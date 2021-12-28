@@ -15,8 +15,7 @@ export enum ErrorType {
   userNotFound = 9106,
   slotsParams = 9107,
   userCanNotBeAssignedToMembers = 9108,
-  userIdInvalid = 9209,
-  memberIdInconsistent = 9210,
+  userIdInvalid = 9109,
 
   // Module member errors
   memberMinMaxLength = 9201,
@@ -40,6 +39,10 @@ export enum ErrorType {
   memberReplaceUserAlreadyExists = 9219,
   memberJournalImageNotFound = 9220,
   memberJournalAudioNotFound = 9221,
+  memberJournalIdInvalid = 9222,
+  memberOrgIdInvalid = 9223,
+  memberIdInvalid = 9224,
+  memberIdInconsistent = 9225,
 
   // Notifications
   notificationMetadataInvalid = 9270,
@@ -48,6 +51,7 @@ export enum ErrorType {
   notificationMetadataWhenPast = 9273,
   notificationInvalidContent = 9274,
   notificationNotAllowed = 9275,
+  notificationNotAllowedForWebMember = 9276,
 
   // Module appointment errors
   appointmentIdNotFound = 9301,
@@ -59,6 +63,7 @@ export enum ErrorType {
   appointmentNoShow = 9307,
   appointmentCanNotBeUpdated = 9308,
   appointmentOverlaps = 9309,
+  appointmentIdInvalid = 9310,
 
   // Module org errors
   orgAlreadyExists = 9401,
@@ -95,6 +100,7 @@ const phoneFormat =
   `phone number must be a valid phone number. ` +
   `please make sure you've added the country code with (+) in the beginning. ` +
   `${validPhoneExamples}`;
+const objectIdFormat = 'must be a 12 characters string';
 
 export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.userMinMaxLength.valueOf(), `user ${nameFormat}`],
@@ -108,7 +114,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.slotsParams.valueOf(), 'userId or appointmentId must be provided'],
   [ErrorType.userPhone.valueOf(), phoneFormat],
   [ErrorType.userCanNotBeAssignedToMembers.valueOf(), 'user can not be assigned to member'],
-  [ErrorType.userIdInvalid.valueOf(), 'invalid user id'],
+  [ErrorType.userIdInvalid.valueOf(), `userId ${objectIdFormat}`],
   [ErrorType.memberMinMaxLength.valueOf(), `member ${nameFormat}`],
   [ErrorType.memberPhoneAlreadyExists.valueOf(), 'An error has occurred'],
   [ErrorType.memberPhone.valueOf(), phoneFormat],
@@ -133,6 +139,9 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberReplaceUserAlreadyExists.valueOf(), `user is already assigned to member`],
   [ErrorType.memberJournalImageNotFound.valueOf(), `journal image was not found`],
   [ErrorType.memberJournalAudioNotFound.valueOf(), `journal audio was not found`],
+  [ErrorType.memberJournalIdInvalid.valueOf(), `id ${objectIdFormat}`],
+  [ErrorType.memberOrgIdInvalid.valueOf(), `orgId ${objectIdFormat}`],
+  [ErrorType.memberIdInvalid.valueOf(), `memberId ${objectIdFormat}`],
   [
     ErrorType.notificationMetadataInvalid.valueOf(),
     `when calling type 'text' or 'textSms', 'content' in metadata is required ` +
@@ -150,6 +159,11 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.notificationNotAllowed.valueOf(),
     `cannot receive video or call notification for member with isPushNotificationsEnabled=false`,
   ],
+  [
+    ErrorType.notificationNotAllowedForWebMember.valueOf(),
+    `mobile notification is not allowed if member did not login to the ` +
+      `app or/and isPushNotificationsEnabled=false`,
+  ],
   [ErrorType.appointmentIdNotFound.valueOf(), 'appointment id was not found'],
   [ErrorType.appointmentNotBeforeDate.valueOf(), `notBefore ${dateInstanceFormat}`],
   [ErrorType.appointmentNotBeforeDateInThePast.valueOf(), 'notBefore must be in the future'],
@@ -166,11 +180,11 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.appointmentCanNotBeUpdated.valueOf(),
     `can not update an appointment with status='done'`,
   ],
+  [ErrorType.appointmentIdInvalid.valueOf(), `appointment id ${objectIdFormat}`],
   [ErrorType.orgAlreadyExists.valueOf(), 'organization already exists'],
   [ErrorType.orgTrialDurationOutOfRange.valueOf(), 'trialDuration must not be less than 1'],
   [ErrorType.availabilityNotFound.valueOf(), 'availability id was not found'],
   [ErrorType.communicationMemberUserNotFound.valueOf(), 'member-user communication was not found'],
-
   [ErrorType.dailyReportQueryDateInvalid.valueOf(), 'daily report query - invalid date format'],
   [ErrorType.dailyReportMutationDateInvalid.valueOf(), 'daily report query - invalid date format'],
   [ErrorType.invalidSenderId.valueOf(), 'invalid sender id'],
@@ -193,3 +207,5 @@ export const Errors: Map<ErrorType, string> = new Map([
 export const DbErrors = {
   duplicateKey: 11000,
 };
+
+export const LogAsWarning = new Set([...Errors.values(), 'Forbidden resource', 'Unauthorized']);

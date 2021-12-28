@@ -1,4 +1,4 @@
-import { ContentKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
+import { InternalKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Types } from 'mongoose';
@@ -74,7 +74,7 @@ describe('DailyReportResolver', () => {
           memberId,
           userId: 'U0001',
           type: InternalNotificationType.textSmsToUser,
-          metadata: { contentType: ContentKey.memberNotFeelingWellMessage },
+          metadata: { contentType: InternalKey.memberNotFeelingWellMessage },
         },
       ],
       [
@@ -139,7 +139,7 @@ describe('DailyReportResolver', () => {
           context.primaryUserId,
           dailyReportCategoryInput,
         );
-        const params = { dispatchId: generateDispatchId(ContentKey.logReminder, context._id) };
+        const params = { dispatchId: generateDispatchId(InternalKey.logReminder, context._id) };
         if (emittedEventParams) {
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(
             1,

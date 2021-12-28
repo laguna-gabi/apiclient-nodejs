@@ -1,10 +1,9 @@
-import { ContentKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
+import { InternalKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { add, addDays } from 'date-fns';
 import { camelCase } from 'lodash';
-import { v4 } from 'uuid';
 import {
   Appointment,
   AppointmentBase,
@@ -29,6 +28,8 @@ import {
   Roles,
   UpdatedAppointmentAction,
   UserRole,
+  generatePath,
+  getCorrelationId,
 } from '../common';
 import { CommunicationResolver } from '../communication';
 import { Member } from '../member';
@@ -190,19 +191,18 @@ export class AppointmentResolver extends AppointmentBase {
       memberId: appointment.memberId.toString(),
       userId: appointment.userId.toString(),
       type: InternalNotificationType.textToMember,
-      correlationId: v4(),
+      correlationId: getCorrelationId(this.logger),
     };
+    const contentKey = InternalKey.appointmentRequest;
+
     const appointmentRequest: IDispatchParams = {
       ...baseEvent,
-      dispatchId: generateDispatchId(
-        ContentKey.appointmentRequest,
-        ...[baseEvent.memberId, appointment.id],
-      ),
+      dispatchId: generateDispatchId(contentKey, ...[baseEvent.memberId, appointment.id]),
       metadata: {
-        contentType: ContentKey.appointmentRequest,
+        contentType: contentKey,
         scheduleLink: appointment.link,
         appointmentId: appointment.id,
-        path: `connect/${appointment.id}`,
+        path: generatePath(baseEvent.type, contentKey, appointment.id),
       },
     };
 
@@ -222,13 +222,13 @@ export class AppointmentResolver extends AppointmentBase {
       memberId: member.id,
       userId,
       type: InternalNotificationType.textSmsToMember,
-      correlationId: v4(),
+      correlationId: getCorrelationId(this.logger),
     };
     const newMemberEvent: IDispatchParams = {
       ...baseEvent,
-      dispatchId: generateDispatchId(ContentKey.newMember, member.id),
+      dispatchId: generateDispatchId(InternalKey.newMember, member.id),
       metadata: {
-        contentType: ContentKey.newMember,
+        contentType: InternalKey.newMember,
         appointmentId,
       },
     };
@@ -236,9 +236,9 @@ export class AppointmentResolver extends AppointmentBase {
 
     const newMemberNudgeEvent: IDispatchParams = {
       ...baseEvent,
-      dispatchId: generateDispatchId(ContentKey.newMemberNudge, member.id),
+      dispatchId: generateDispatchId(InternalKey.newMemberNudge, member.id),
       metadata: {
-        contentType: ContentKey.newMemberNudge,
+        contentType: InternalKey.newMemberNudge,
         appointmentId,
         triggersAt: addDays(member.createdAt, 2),
       },
@@ -249,14 +249,14 @@ export class AppointmentResolver extends AppointmentBase {
   private deleteAppointmentReminders(appointment: Appointment) {
     this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
       dispatchId: generateDispatchId(
-        ContentKey.appointmentReminder,
+        InternalKey.appointmentReminder,
         appointment.memberId.toString(),
         appointment.id,
       ),
     });
     this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
       dispatchId: generateDispatchId(
-        ContentKey.appointmentLongReminder,
+        InternalKey.appointmentLongReminder,
         appointment.memberId.toString(),
         appointment.id,
       ),

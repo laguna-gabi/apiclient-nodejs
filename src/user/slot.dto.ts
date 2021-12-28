@@ -2,7 +2,14 @@ import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { IsDate, IsOptional } from 'class-validator';
 import { Types } from 'mongoose';
 import { AppointmentMethod } from '../appointment';
-import { ErrorType, Errors, Identifier, IsUserIdOrAppointmentId, UserRole } from '../common';
+import {
+  ErrorType,
+  Errors,
+  Identifier,
+  IsObjectId,
+  IsUserIdOrAppointmentId,
+  UserRole,
+} from '../common';
 
 export const defaultSlotsParams = {
   duration: 30,
@@ -72,9 +79,11 @@ export class Slots {
 export class GetSlotsParams {
   @Field(() => String, { nullable: true })
   @IsUserIdOrAppointmentId({ message: Errors.get(ErrorType.slotsParams) })
+  @IsObjectId({ message: Errors.get(ErrorType.userIdInvalid) })
   userId?: string;
 
   @Field(() => String, { nullable: true })
+  @IsObjectId({ message: Errors.get(ErrorType.appointmentIdInvalid) })
   appointmentId?: string;
 
   @IsOptional()

@@ -33,7 +33,7 @@ export class LoggingInterceptor implements NestInterceptor {
       type = this.getGqlType(context);
     }
 
-    this.logger.debug(Object.values(args)[0] || { sub: headers?.sub }, className, methodName);
+    this.logger.info(Object.values(args)[0] || { sub: headers?.sub }, className, methodName);
     this.logger.audit(type, Object.values(args)[0], methodName, headers?.sub);
 
     const now = Date.now();
@@ -41,7 +41,7 @@ export class LoggingInterceptor implements NestInterceptor {
       .handle()
       .pipe(
         tap(() =>
-          this.logger.debug({ finishedAndItTook: `${Date.now() - now}ms` }, className, methodName),
+          this.logger.info({ finishedAndItTook: `${Date.now() - now}ms` }, className, methodName),
         ),
       );
   }

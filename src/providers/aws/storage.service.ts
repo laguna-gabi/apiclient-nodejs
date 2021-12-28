@@ -26,7 +26,7 @@ export class StorageService implements OnModuleInit {
 
   @OnEvent(EventType.onNewMember, { async: true })
   async handleNewMember(params: IEventOnNewMember) {
-    this.logger.debug(params, StorageService.name, this.handleNewMember.name);
+    this.logger.info(params, StorageService.name, this.handleNewMember.name);
     const { id } = params.member;
     try {
       await Promise.all(
@@ -80,7 +80,7 @@ export class StorageService implements OnModuleInit {
   }
 
   async deleteMember(id: string) {
-    this.logger.debug(id, StorageService.name, this.deleteMember.name);
+    this.logger.info(id, StorageService.name, this.deleteMember.name);
     try {
       await Promise.all(
         Object.values(StorageType).map(async (type) => {
@@ -93,7 +93,7 @@ export class StorageService implements OnModuleInit {
   }
 
   async deleteRecordings(memberId: string, recordingIds: string[]) {
-    this.logger.debug({ memberId, recordingIds }, StorageService.name, this.deleteRecordings.name);
+    this.logger.info({ memberId, recordingIds }, StorageService.name, this.deleteRecordings.name);
     try {
       const deleteParams = {
         Bucket: this.bucket,
@@ -115,7 +115,7 @@ export class StorageService implements OnModuleInit {
   }
 
   async deleteJournalImages(id: string, memberId: string, imageFormat: ImageFormat) {
-    this.logger.debug(
+    this.logger.info(
       { id, memberId, imageFormat },
       StorageService.name,
       this.deleteJournalImages.name,
@@ -149,7 +149,7 @@ export class StorageService implements OnModuleInit {
   }
 
   async deleteJournalAudio(id: string, memberId: string, audioFormat: AudioFormat) {
-    this.logger.debug(
+    this.logger.info(
       { id, memberId, audioFormat },
       StorageService.name,
       this.deleteJournalAudio.name,
@@ -179,7 +179,7 @@ export class StorageService implements OnModuleInit {
   }
 
   async createJournalImageThumbnail(normalImageKey: string, smallImageKey: string) {
-    this.logger.debug(
+    this.logger.info(
       { normalImageKey, smallImageKey },
       StorageService.name,
       this.createJournalImageThumbnail.name,

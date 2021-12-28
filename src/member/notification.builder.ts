@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import * as config from 'config';
 import { Member, MemberConfig, NotificationMetadata } from '.';
 import {
+  AllNotificationTypes,
   InternalNotificationMetadata,
   LoggerService,
   SendOneSignalNotification,
@@ -96,7 +97,7 @@ export class NotificationBuilder {
     member: Member;
     memberConfig: MemberConfig;
     user: User;
-    type: InternalNotificationType;
+    type: AllNotificationTypes;
     content: string;
     metadata: InternalNotificationMetadata;
   }) {

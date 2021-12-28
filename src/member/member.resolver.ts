@@ -1,9 +1,11 @@
 import {
   ContentKey,
+  CustomKey,
   ICreateDispatch,
   IDeleteClientSettings,
   IDeleteDispatch,
   InnerQueueTypes,
+  InternalKey,
   InternalNotificationType,
   Language,
   NotificationType,
@@ -14,6 +16,7 @@ import {
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { isEmpty } from 'class-validator';
 import * as config from 'config';
 import { addDays, isAfter, millisecondsInHour } from 'date-fns';
 import { format, getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
@@ -42,6 +45,7 @@ import {
   MemberService,
   MemberSummary,
   NotificationBuilder,
+  NotifyContentParams,
   NotifyParams,
   RecordingLinkParams,
   RecordingOutput,
@@ -80,6 +84,8 @@ import {
   Roles,
   StorageType,
   UserRole,
+  generatePath,
+  getCorrelationId,
 } from '../common';
 import {
   CommunicationResolver,
@@ -719,6 +725,7 @@ export class MemberResolver extends MemberBase {
     }
     return this.memberService.getCaregiversByMemberId(memberId);
   }
+
   /************************************************************************************************
    ***************************************** Notifications ****************************************
    ************************************************************************************************/
@@ -765,13 +772,13 @@ export class MemberResolver extends MemberBase {
     this.notifyUpdatedMemberConfig({ memberConfig });
 
     if (!currentMemberConfig.firstLoggedInAt) {
-      const correlationId = v4();
+      const correlationId = getCorrelationId(this.logger);
       await this.notifyCreateDispatch(
         this.generateMobileRegistrationDispatch(
           member,
           memberConfig.firstLoggedInAt,
           correlationId,
-          ContentKey.newRegisteredMember,
+          InternalKey.newRegisteredMember,
           1,
         ),
       );
@@ -780,7 +787,7 @@ export class MemberResolver extends MemberBase {
           member,
           memberConfig.firstLoggedInAt,
           correlationId,
-          ContentKey.newRegisteredMemberNudge,
+          InternalKey.newRegisteredMemberNudge,
           2,
         ),
       );
@@ -789,14 +796,14 @@ export class MemberResolver extends MemberBase {
           member,
           memberConfig.firstLoggedInAt,
           correlationId,
-          ContentKey.logReminder,
+          InternalKey.logReminder,
           3,
         ),
       );
     }
 
     await this.notifyDeleteDispatch({
-      dispatchId: generateDispatchId(ContentKey.newMemberNudge, member.id),
+      dispatchId: generateDispatchId(InternalKey.newMemberNudge, member.id),
     });
   }
 
@@ -804,36 +811,10 @@ export class MemberResolver extends MemberBase {
   @Roles(UserRole.coach, UserRole.nurse)
   async notify(@Args(camelCase(NotifyParams.name)) notifyParams: NotifyParams) {
     const { memberId, userId, type, metadata } = notifyParams;
-    const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(memberId, userId);
+    const { member, memberConfig } = await this.extractDataOfMemberAndUser(memberId, userId);
 
-    if (metadata.when) {
-      if (isAfter(new Date(), metadata.when)) {
-        throw new Error(Errors.get(ErrorType.notificationMetadataWhenPast));
-      }
-      const dispatchParams: IDispatchParams = {
-        memberId,
-        userId,
-        correlationId: v4(),
-        dispatchId: generateDispatchId(ContentKey.customContent, memberId, Date.now().toString()),
-        type:
-          type === NotificationType.text
-            ? InternalNotificationType.textToMember
-            : InternalNotificationType.textSmsToMember,
-        content: metadata.content,
-        metadata: { contentType: ContentKey.customContent, triggersAt: metadata.when },
-      };
-
-      await this.notifyCreateDispatch(dispatchParams);
-      return;
-    }
-
-    if (metadata.chatLink) {
-      const communication = await this.communicationResolver.getCommunication({ memberId, userId });
-      if (!communication) {
-        throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
-      }
-      const chatLink = await this.bitly.shortenLink(communication.chat.memberLink);
-      metadata.content = metadata.content.concat(` ${chatLink}`);
+    if (metadata.when && isAfter(new Date(), metadata.when)) {
+      throw new Error(Errors.get(ErrorType.notificationMetadataWhenPast));
     }
 
     if (
@@ -850,19 +831,52 @@ export class MemberResolver extends MemberBase {
       throw new Error(Errors.get(ErrorType.notificationNotAllowed));
     }
 
-    if (metadata.content) {
-      metadata.content = metadata.content.trim();
-      if (!metadata.content) {
-        // nothing remained after trim -> was only whitespaces
-        throw new Error(Errors.get(ErrorType.notificationInvalidContent));
-      }
+    if (metadata.content && isEmpty(metadata.content?.trim())) {
+      throw new Error(Errors.get(ErrorType.notificationInvalidContent));
     }
 
-    if (type === NotificationType.textSms) {
-      metadata.sendBirdChannelUrl = await this.getSendBirdChannelUrl({ memberId, userId });
+    const contentKey =
+      type === NotificationType.video || type === NotificationType.call
+        ? CustomKey.callOrVideo
+        : CustomKey.customContent;
+    await this.notifyCreateDispatch({
+      dispatchId: generateDispatchId(contentKey, member.id, Date.now().toString()),
+      memberId: member.id,
+      userId: member.primaryUserId.toString(),
+      correlationId: v4(),
+      type,
+      content: metadata.content,
+      metadata: {
+        contentType: contentKey,
+        path: generatePath(type, contentKey),
+        peerId: metadata.peerId,
+        appointmentId: metadata.appointmentId,
+        triggersAt: metadata.when,
+      },
+    });
+  }
+
+  @Mutation(() => String, { nullable: true })
+  @Roles(UserRole.coach, UserRole.nurse)
+  async notifyContent(
+    @Args(camelCase(NotifyContentParams.name))
+    notifyContentParams: NotifyContentParams,
+  ) {
+    const { memberId, userId, contentKey } = notifyContentParams;
+    const { member, memberConfig } = await this.extractDataOfMemberAndUser(memberId, userId);
+
+    if (memberConfig.platform === Platform.web || !memberConfig.isPushNotificationsEnabled) {
+      throw new Error(Errors.get(ErrorType.notificationNotAllowedForWebMember));
     }
 
-    return this.notificationBuilder.notify({ member, memberConfig, user, type, metadata });
+    await this.notifyCreateDispatch({
+      memberId,
+      userId,
+      type: NotificationType.text,
+      correlationId: getCorrelationId(this.logger),
+      dispatchId: generateDispatchId(contentKey, member.id, Date.now().toString()),
+      metadata: { contentType: contentKey, path: generatePath(NotificationType.text, contentKey) },
+    });
   }
 
   @Mutation(() => String, { nullable: true })
@@ -890,7 +904,7 @@ export class MemberResolver extends MemberBase {
    */
   @OnEvent(EventType.notifyInternal, { async: true })
   async internalNotify(params: InternalNotifyParams) {
-    this.logger.debug(params, MemberResolver.name, this.internalNotify.name);
+    this.logger.info(params, MemberResolver.name, this.internalNotify.name);
     const { memberId, userId, type, metadata } = params;
     let content = params.content;
 
@@ -943,8 +957,8 @@ export class MemberResolver extends MemberBase {
       if ((metadata.scheduleLink || metadata.chatLink) && memberConfig.platform === Platform.web) {
         const getContentsParams: GetContentsParams = {
           contentType: metadata.chatLink
-            ? ContentKey.appointmentReminderLink
-            : ContentKey.appointmentRequestLink,
+            ? InternalKey.appointmentReminderLink
+            : InternalKey.appointmentRequestLink,
           member,
           user,
           extraData: metadata.chatLink
@@ -998,15 +1012,21 @@ export class MemberResolver extends MemberBase {
       }
 
       if (origin === ChatMessageOrigin.fromUser) {
+        const contentKey = InternalKey.newChatMessageFromUser;
         await this.notifyCreateDispatch({
-          dispatchId: generateDispatchId(ContentKey.newChatMessageFromUser, Date.now().toString()),
+          dispatchId: generateDispatchId(contentKey, Date.now().toString()),
           memberId: communication.memberId.toString(),
           userId: senderUserId,
           type: InternalNotificationType.chatMessageToMember,
-          correlationId: v4(),
+          correlationId: getCorrelationId(this.logger),
           metadata: {
-            contentType: ContentKey.newChatMessageFromUser,
-            path: `connect/${communication.memberId.toString()}/${senderUserId}`,
+            contentType: contentKey,
+            path: generatePath(
+              InternalNotificationType.chatMessageToMember,
+              contentKey,
+              communication.memberId.toString(),
+              senderUserId,
+            ),
           },
         });
       } else {
@@ -1016,14 +1036,14 @@ export class MemberResolver extends MemberBase {
         if (coachInfo && !coachInfo.isOnline) {
           await this.notifyCreateDispatch({
             dispatchId: generateDispatchId(
-              ContentKey.newChatMessageFromMember,
+              InternalKey.newChatMessageFromMember,
               Date.now().toString(),
             ),
             memberId: senderUserId,
             userId: communication.userId.toString(),
             type: InternalNotificationType.textSmsToUser,
-            correlationId: v4(),
-            metadata: { contentType: ContentKey.newChatMessageFromMember },
+            correlationId: getCorrelationId(this.logger),
+            metadata: { contentType: InternalKey.newChatMessageFromMember },
           });
         }
       }
@@ -1034,8 +1054,12 @@ export class MemberResolver extends MemberBase {
 
   @OnEvent(EventType.notifyDispatch, { async: true })
   async notifyCreateDispatch(params: IDispatchParams) {
-    this.logger.debug(params, MemberResolver.name, this.notifyCreateDispatch.name);
+    this.logger.info(params, MemberResolver.name, this.notifyCreateDispatch.name);
     const { memberId, userId, type, metadata } = params;
+
+    const isMemberRecipient =
+      type !== InternalNotificationType.textSmsToUser &&
+      type !== InternalNotificationType.chatMessageToUser;
 
     const createDispatch: ICreateDispatch = {
       type: InnerQueueTypes.createDispatch,
@@ -1043,8 +1067,8 @@ export class MemberResolver extends MemberBase {
       correlationId: params.correlationId ? params.correlationId : v4(),
       serviceName: ServiceName.hepius,
       notificationType: type,
-      recipientClientId: type !== InternalNotificationType.textSmsToUser ? memberId : userId,
-      senderClientId: type !== InternalNotificationType.textSmsToUser ? userId : memberId,
+      recipientClientId: isMemberRecipient ? memberId : userId,
+      senderClientId: isMemberRecipient ? userId : memberId,
       sendBirdChannelUrl: metadata.sendBirdChannelUrl,
       appointmentTime: metadata.appointmentTime,
       appointmentId: metadata.appointmentId,
@@ -1052,8 +1076,10 @@ export class MemberResolver extends MemberBase {
       contentKey: metadata.contentType,
       triggersAt: metadata.triggersAt,
       path: metadata.path,
+      peerId: metadata.peerId,
+      content: params.content,
     };
-    this.logger.debug(createDispatch, MemberResolver.name, EventType.notifyQueue);
+    this.logger.info(createDispatch, MemberResolver.name, EventType.notifyQueue);
 
     const eventParams: IEventNotifyQueue = {
       type: QueueType.notifications,
@@ -1064,7 +1090,7 @@ export class MemberResolver extends MemberBase {
 
   @OnEvent(EventType.notifyDeleteDispatch, { async: true })
   async notifyDeleteDispatch(params: { dispatchId: string }) {
-    this.logger.debug(params, MemberResolver.name, this.notifyDeleteDispatch.name);
+    this.logger.info(params, MemberResolver.name, this.notifyDeleteDispatch.name);
     const deleteDispatch: IDeleteDispatch = {
       type: InnerQueueTypes.deleteDispatch,
       dispatchId: params.dispatchId,
@@ -1089,12 +1115,17 @@ export class MemberResolver extends MemberBase {
         userId: member.primaryUserId.toString(),
       });
 
-      return await this.internalNotify({
+      return this.notifyCreateDispatch({
+        dispatchId: generateDispatchId(
+          CustomKey.customContent,
+          member.primaryUserId.toString(),
+          Date.now().toString(),
+        ),
+        content: params.message,
+        metadata: { contentType: CustomKey.customContent, sendBirdChannelUrl },
+        type: InternalNotificationType.chatMessageToUser,
         memberId: member.id,
         userId: member.primaryUserId.toString(),
-        type: InternalNotificationType.chatMessageToUser,
-        metadata: { sendBirdChannelUrl },
-        content: params.message,
       });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.sendSmsToChat.name, ex);
@@ -1103,7 +1134,7 @@ export class MemberResolver extends MemberBase {
 
   @OnEvent(EventType.onMemberBecameOffline, { async: true })
   async notifyOfflineMember(params: IEventOnMemberBecameOffline) {
-    this.logger.debug(params, MemberResolver.name, this.notifyOfflineMember.name);
+    this.logger.info(params, MemberResolver.name, this.notifyOfflineMember.name);
     const { phone, type } = params;
     const content = (params.content += `\n${config.get('hosts.dynamicLink')}`);
     try {
@@ -1125,19 +1156,19 @@ export class MemberResolver extends MemberBase {
   private async deleteSchedules(params: IEventMember) {
     try {
       await this.notifyDeleteDispatch({
-        dispatchId: generateDispatchId(ContentKey.newMemberNudge, params.memberId),
+        dispatchId: generateDispatchId(InternalKey.newMemberNudge, params.memberId),
       });
       await this.notifyDeleteDispatch({
-        dispatchId: generateDispatchId(ContentKey.newRegisteredMember, params.memberId),
+        dispatchId: generateDispatchId(InternalKey.newRegisteredMember, params.memberId),
       });
       await this.notifyDeleteDispatch({
-        dispatchId: generateDispatchId(ContentKey.newRegisteredMemberNudge, params.memberId),
+        dispatchId: generateDispatchId(InternalKey.newRegisteredMemberNudge, params.memberId),
       });
       await this.notifyDeleteDispatch({
-        dispatchId: generateDispatchId(ContentKey.logReminder, params.memberId),
+        dispatchId: generateDispatchId(InternalKey.logReminder, params.memberId),
       });
       await this.notifyDeleteDispatch({
-        dispatchId: generateDispatchId(ContentKey.customContent, params.memberId),
+        dispatchId: generateDispatchId(CustomKey.customContent, params.memberId),
       });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, ex);
@@ -1233,7 +1264,7 @@ export class MemberResolver extends MemberBase {
     return {
       memberId: member.id,
       userId: member.primaryUserId.toString(),
-      type: InternalNotificationType.textToMember,
+      type: NotificationType.text,
       correlationId,
       dispatchId: generateDispatchId(contentKey, member.id),
       metadata: {

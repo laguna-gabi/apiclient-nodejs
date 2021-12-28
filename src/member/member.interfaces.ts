@@ -8,14 +8,15 @@ import {
   IEventOnNewMember,
   LoggerService,
   QueueType,
+  getCorrelationId,
 } from '../common';
 import { UserService } from '../user';
 import { CreateMemberParams, Member, MemberConfig, MemberService } from '.';
 import {
-  ContentKey,
   IEventNotifySlack,
   IUpdateClientSettings,
   InnerQueueTypes,
+  InternalKey,
   InternalNotificationType,
   SlackChannel,
   SlackIcon,
@@ -24,7 +25,6 @@ import {
 import { FeatureFlagService } from '../providers';
 import { isUndefined, omitBy } from 'lodash';
 import { Types } from 'mongoose';
-import { v4 } from 'uuid';
 
 export class MemberBase {
   constructor(
@@ -45,7 +45,7 @@ export class MemberBase {
   }
 
   async createRealMember(createMemberParams: CreateMemberParams): Promise<Member> {
-    this.logger.debug(createMemberParams, MemberBase.name, this.createRealMember.name);
+    this.logger.info(createMemberParams, MemberBase.name, this.createRealMember.name);
 
     const primaryUserId = createMemberParams.userId
       ? Types.ObjectId(createMemberParams.userId)
@@ -79,17 +79,17 @@ export class MemberBase {
   }
 
   async createControlMember(createMemberParams: CreateMemberParams): Promise<Member> {
-    this.logger.debug(createMemberParams, MemberBase.name, this.createControlMember.name);
+    this.logger.info(createMemberParams, MemberBase.name, this.createControlMember.name);
     const controlMember = await this.memberService.insertControl(createMemberParams);
     this.notifyUpdatedMemberConfig({ member: controlMember });
 
     const newControlMemberEvent: IDispatchParams = {
       memberId: controlMember.id,
       type: InternalNotificationType.textSmsToMember,
-      correlationId: v4(),
-      dispatchId: generateDispatchId(ContentKey.newControlMember, controlMember.id),
+      correlationId: getCorrelationId(this.logger),
+      dispatchId: generateDispatchId(InternalKey.newControlMember, controlMember.id),
       metadata: {
-        contentType: ContentKey.newControlMember,
+        contentType: InternalKey.newControlMember,
       },
     };
     this.eventEmitter.emit(EventType.notifyDispatch, newControlMemberEvent);
@@ -123,7 +123,7 @@ export class MemberBase {
       },
       isUndefined,
     );
-    this.logger.debug(settings, MemberBase.name, this.notifyUpdatedMemberConfig.name);
+    this.logger.info(settings, MemberBase.name, this.notifyUpdatedMemberConfig.name);
     const eventParams: IEventNotifyQueue = {
       type: QueueType.notifications,
       message: JSON.stringify(settings),

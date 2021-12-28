@@ -11,7 +11,7 @@ import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Schema } from '@nestjs/mongoose';
 import { IsAlphanumeric, IsOptional } from 'class-validator';
 import { Types } from 'mongoose';
-import { ErrorType, Errors, IsNotPlatformWeb } from '.';
+import { ErrorType, Errors, IsNotPlatformWeb, IsObjectId } from '.';
 
 /**************************************************************************************************
  *************************** Enum registration for external gql methods ***************************
@@ -49,6 +49,9 @@ export class Identifiers {
 
 @InputType()
 export class RegisterForNotificationParams {
+  @IsOptional()
+  @Field(() => String, { nullable: true })
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId?: string;
 
   @IsNotPlatformWeb({ message: Errors.get(ErrorType.memberRegisterWebPlatform) })
@@ -103,13 +106,14 @@ export class InternalNotificationMetadata {
   triggersAt?: Date;
   checkAppointmentReminder?: boolean;
   path?: string;
+  peerId?: string;
   journalImageDownloadLink?: string;
 }
 
 export class InternalNotifyParams {
   memberId: string;
   userId?: string;
-  type: InternalNotificationType;
+  type: AllNotificationTypes;
   metadata: InternalNotificationMetadata;
   content?: string;
 }
