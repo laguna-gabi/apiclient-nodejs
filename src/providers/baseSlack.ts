@@ -12,7 +12,7 @@ export abstract class BaseSlack {
 
   async send(params: IEventNotifySlack) {
     if (!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test) {
-      this.logger.debug(params, BaseSlack.name, this.send.name);
+      this.logger.info(params, BaseSlack.name, this.send.name);
     } else {
       try {
         return this.webhook.send({
