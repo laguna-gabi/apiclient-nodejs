@@ -12,7 +12,7 @@ import * as AWS from 'aws-sdk';
 import * as config from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { ConfigsService, ExternalConfigs } from '../providers';
-import { Logger } from '../common';
+import { Environments, Logger } from '../common';
 import { ConductorService } from '.';
 
 @Injectable()
@@ -20,6 +20,13 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
   private readonly sqs = new AWS.SQS({
     region: config.get('aws.region'),
     apiVersion: '2012-11-05',
+    ...(!process.env.NODE_ENV ||
+    process.env.NODE_ENV === Environments.test ||
+    process.env.NODE_ENV === Environments.localhost
+      ? {
+          endpoint: 'http://localhost:4566',
+        }
+      : {}),
   });
   private notificationsQ;
   private notificationsDLQ;
@@ -42,11 +49,21 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     const { queueNameNotifications, queueNameNotificationsDLQ } = ExternalConfigs.aws;
 
-    const queueName = await this.configsService.getConfig(queueNameNotifications);
+    const queueName =
+      !process.env.NODE_ENV ||
+      process.env.NODE_ENV === Environments.test ||
+      process.env.NODE_ENV === Environments.localhost
+        ? config.get('aws.queue.notification')
+        : await this.configsService.getConfig(queueNameNotifications);
     const { QueueUrl: queueUrl } = await this.sqs.getQueueUrl({ QueueName: queueName }).promise();
     this.notificationsQ = queueUrl;
 
-    const dlQueueName = await this.configsService.getConfig(queueNameNotificationsDLQ);
+    const dlQueueName =
+      !process.env.NODE_ENV ||
+      process.env.NODE_ENV === Environments.test ||
+      process.env.NODE_ENV === Environments.localhost
+        ? config.get('aws.queue.notificationDL')
+        : await this.configsService.getConfig(queueNameNotificationsDLQ);
     const { QueueUrl: dlQueueUrl } = await this.sqs
       .getQueueUrl({ QueueName: dlQueueName })
       .promise();
@@ -54,6 +71,7 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
 
     // register and start consumer for NotificationQ
     const consumer = Consumer.create({
+      region: config.get('aws.region'),
       queueUrl,
       handleMessage: async (message) => {
         /**
