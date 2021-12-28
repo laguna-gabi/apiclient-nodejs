@@ -169,6 +169,8 @@ export class AnalyticsCommand implements CommandRunner {
     } catch (err) {
       console.error(`Analytics: error: got: ${err.message} (${err.stack})`);
     }
+
+    this.analyticsService.clean();
   }
 
   /**************************************** Command Options  **************************************/

@@ -20,8 +20,8 @@ import { add, differenceInDays, differenceInSeconds, differenceInYears } from 'd
 import { Injectable } from '@nestjs/common';
 import { AppointmentMethod } from '../../src/appointment';
 import { Member, MemberDocument, MemberService, Recording } from '../../src/member';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { Connection, Model } from 'mongoose';
 import { StorageService } from '../../src/providers';
 
 @Injectable()
@@ -31,7 +31,12 @@ export class AnalyticsService {
     @InjectModel(Member.name)
     private readonly memberModel: Model<MemberDocument>,
     private readonly storageService: StorageService,
+    @InjectConnection() private connection: Connection,
   ) {}
+
+  async clean() {
+    this.connection.close();
+  }
 
   // Description: get all control members
   async getAllControl(): Promise<MemberDocument[]> {
@@ -216,9 +221,9 @@ export class AnalyticsService {
       dc_summary_load_date: dcSummaryLoadDate
         ? reformatDate(dcSummaryLoadDate.toString(), DateFormat)
         : '',
-      dc_summary_received: !!dcInstructionsLoadDate,
-      dc_instructions_load_date: dcSummaryLoadDate
-        ? reformatDate(dcSummaryLoadDate.toString(), DateFormat)
+      dc_summary_received: !!dcSummaryLoadDate,
+      dc_instructions_load_date: dcInstructionsLoadDate
+        ? reformatDate(dcInstructionsLoadDate.toString(), DateFormat)
         : '',
       dc_instructions_received: !!dcInstructionsLoadDate,
       first_activation_score: firstActivationScore,
@@ -397,11 +402,10 @@ export class AnalyticsService {
     lastName: string,
     type: string,
   ): Promise<Date | null> {
-    return await this.storageService.getDocumentLastModified(
+    return this.storageService.getDocumentLastModified(
       `public/${StorageType.documents}/${memberId}/${firstName}_${lastName}_${type}.pdf`,
     );
   }
-
   // Description: calculated Length of stay based on admission admit data and discharge date
   calculateLos(admitDate: string, dischargeDate: string): number {
     if (admitDate && dischargeDate) {

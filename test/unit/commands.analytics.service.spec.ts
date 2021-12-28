@@ -9,6 +9,7 @@ import {
 import {
   AnalyticsService,
   AppointmentAttendanceStatus,
+  DateFormat,
   MemberDataAggregate,
   PopulatedAppointment,
   PopulatedMember,
@@ -18,7 +19,7 @@ import { RecordingType, reformatDate } from '../../src/common';
 import { MemberDocument, MemberModule } from '../../src/member';
 import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { Test, TestingModule } from '@nestjs/testing';
-import { AnalyticsModule, DateFormat } from '../../cmd';
+import { AnalyticsModule } from '../../cmd';
 import { ProvidersModule } from '../../src/providers';
 import { Language, Platform } from '@lagunahealth/pandora';
 import * as config from 'config';
@@ -403,8 +404,8 @@ describe('Commands: AnalyticsService', () => {
         },
         memberDetails: {
           ...mockMember,
-          admitDate: '2019/01/02',
-          dischargeDate: '2019/01/11',
+          admitDate: reformatDate(sub(now, { days: 20 }).toString(), DateFormat),
+          dischargeDate: reformatDate(sub(now, { days: 10 }).toString(), DateFormat),
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
           primaryUser: mockPrimaryUser,
         } as PopulatedMember,
@@ -434,7 +435,7 @@ describe('Commands: AnalyticsService', () => {
 
       expect(data).toEqual({
         customer_id: mockMember.id,
-        mbr_initials: analyticsService.getMemberInitials(mockMember),
+        mbr_initials: mockMember.firstName[0].toUpperCase() + mockMember.lastName[0].toUpperCase(),
         created: reformatDate(mockMember.createdAt.toString(), DateFormat),
         app_user: true,
         intervention_group: true,
@@ -447,16 +448,16 @@ describe('Commands: AnalyticsService', () => {
         city: mockMember.address.city,
         state: mockMember.address.state,
         zip_code: mockMember.zipCode,
-        admit_date: '2019-01-02',
-        discharge_date: '2019-01-11',
-        los: 9,
-        days_since_discharge: 753,
-        active: false,
-        graduated: true,
-        graduation_date: '2019-04-11',
+        admit_date: '2021-01-13',
+        discharge_date: '2021-01-23',
+        los: 10,
+        days_since_discharge: 10,
+        active: true,
+        graduated: false,
+        graduation_date: '2021-04-23',
         dc_summary_load_date: '2021-01-18',
         dc_summary_received: true,
-        dc_instructions_load_date: '2021-01-18',
+        dc_instructions_load_date: '2021-01-08',
         dc_instructions_received: true,
         first_activation_score: 1,
         last_activation_score: 4,
