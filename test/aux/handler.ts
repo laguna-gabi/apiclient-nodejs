@@ -7,6 +7,7 @@ import { createTestClient } from 'apollo-server-testing';
 import * as config from 'config';
 import * as jwt from 'jsonwebtoken';
 import { Types } from 'mongoose';
+import { Consumer } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { Mutations, Queries } from '.';
 import { generateCreateMemberParams, generateCreateUserParams, generateOrgParams } from '..';
@@ -62,6 +63,8 @@ export class Handler extends BaseHandler {
 
     this.app.useLogger(false);
     mockLogger(moduleFixture.get<LoggerService>(LoggerService));
+
+    Consumer.create = jest.fn().mockImplementation(() => ({ on: jest.fn(), start: jest.fn() }));
 
     await this.app.init();
 

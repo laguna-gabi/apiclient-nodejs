@@ -69,7 +69,7 @@ describe(QueueService.name, () => {
       expect(service.auditQueueUrl).toEqual(undefined);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      expect(service.imageQueueUrl).toEqual(undefined);
+      expect(service.imageQueueUrl).toEqual(queueUrl);
     });
 
     it('should init audit queue on production environment', async () => {

@@ -90,8 +90,10 @@ $ yarn
 We're loading a local mongodb by using [docker](https://hub.docker.com/).
 
 1. install [docker](https://docs.docker.com/get-docker/).
-2. run `docker-compose up -d` for [starting docker](./docker-compose.yml) with 2 mongodb instances(localhost and test).
+2. run `docker-compose up -d` for [starting docker](./docker-compose.yml) with 2 mongodb instances(localhost and test) and an instance of localstack.
    > **_Stop:_** After running the sample, you can stop the Docker container with `docker-compose down`<br/>
+3. run `yarn:localstack` to initialize the local _sqs_ and _s3_.
+   > after each queue creation there will be a pop up, just press `Q` on the keyboard.
 
 ### Aws
 

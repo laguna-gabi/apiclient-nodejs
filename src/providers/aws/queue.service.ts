@@ -19,10 +19,16 @@ export class QueueService implements OnModuleInit {
   private readonly sqs = new AWS.SQS({
     region: config.get('aws.region'),
     apiVersion: '2012-11-05',
+    ...(!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
+      ? {
+          endpoint: config.get('hosts.localstack'),
+        }
+      : {}),
   });
   private auditQueueUrl;
   private notificationsQueueUrl;
   private imageQueueUrl;
+  private consumer;
 
   constructor(
     private readonly configsService: ConfigsService,
@@ -39,42 +45,48 @@ export class QueueService implements OnModuleInit {
       this.auditQueueUrl = QueueUrl;
     }
 
-    const notificationsName = await this.configsService.getConfig(queueNameNotifications);
-    const { QueueUrl } = await this.sqs.getQueueUrl({ QueueName: notificationsName }).promise();
-    this.notificationsQueueUrl = QueueUrl;
+    const notificationsName =
+      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
+        ? config.get('aws.queue.notification')
+        : await this.configsService.getConfig(queueNameNotifications);
+    const { QueueUrl: notificationsQueueUrl } = await this.sqs
+      .getQueueUrl({ QueueName: notificationsName })
+      .promise();
+    this.notificationsQueueUrl = notificationsQueueUrl;
 
-    if (
-      process.env.NODE_ENV === Environments.production ||
-      process.env.NODE_ENV === Environments.development
-    ) {
-      const imageName = await this.configsService.getConfig(queueNameImage);
-      const { QueueUrl: test } = await this.sqs.getQueueUrl({ QueueName: imageName }).promise();
-      this.imageQueueUrl = test;
+    const imageName =
+      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
+        ? config.get('aws.queue.image')
+        : await this.configsService.getConfig(queueNameImage);
+    const { QueueUrl: imageQueueUrl } = await this.sqs
+      .getQueueUrl({ QueueName: imageName })
+      .promise();
+    this.imageQueueUrl = imageQueueUrl;
 
-      // register and start consumer for ImageQ
-      const consumer = Consumer.create({
-        queueUrl: this.imageQueueUrl,
-        handleMessage: async (message) => {
-          /**
-           * we need to always catch exceptions coming from message, since if we don't, it'll
-           * be stuck handling the message, and won't handle other messages.
-           */
-          try {
-            await this.handleMessage(message);
-          } catch (ex) {
-            this.logger.error({}, QueueService.name, this.handleMessage.name, ex);
-          }
-        },
-      });
+    // register and start consumer for ImageQ
+    this.consumer = Consumer.create({
+      region: config.get('aws.region'),
+      queueUrl: this.imageQueueUrl,
+      handleMessage: async (message) => {
+        /**
+         * we need to always catch exceptions coming from message, since if we don't, it'll
+         * be stuck handling the message, and won't handle other messages.
+         */
+        try {
+          await this.handleMessage(message);
+        } catch (ex) {
+          this.logger.error({}, QueueService.name, this.handleMessage.name, ex);
+        }
+      },
+    });
 
-      consumer.on('error', (ex) => {
-        this.logger.error({}, QueueService.name, this.handleMessage.name, ex);
-      });
-      consumer.on('processing_error', (ex) => {
-        this.logger.error({}, QueueService.name, this.handleMessage.name, ex);
-      });
-      consumer.start();
-    }
+    this.consumer.on('error', (ex) => {
+      this.logger.error({}, QueueService.name, this.handleMessage.name, ex);
+    });
+    this.consumer.on('processing_error', (ex) => {
+      this.logger.error({}, QueueService.name, this.handleMessage.name, ex);
+    });
+    this.consumer.start();
   }
 
   @OnEvent(EventType.notifyQueue, { async: true })

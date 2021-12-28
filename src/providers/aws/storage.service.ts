@@ -5,6 +5,7 @@ import * as config from 'config';
 import * as sharp from 'sharp';
 import { ConfigsService, ExternalConfigs } from '.';
 import {
+  Environments,
   EventType,
   IEventOnNewMember,
   LoggerService,
@@ -15,13 +16,26 @@ import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../member/jou
 
 @Injectable()
 export class StorageService implements OnModuleInit {
-  private readonly s3 = new AWS.S3({ signatureVersion: 'v4', apiVersion: '2006-03-01' });
+  private readonly s3 = new AWS.S3({
+    signatureVersion: 'v4',
+    apiVersion: '2006-03-01',
+    region: config.get('aws.region'),
+    ...(!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
+      ? {
+          endpoint: config.get('hosts.localstack'),
+          s3ForcePathStyle: true,
+        }
+      : {}),
+  });
   private bucket: string;
 
   constructor(readonly logger: LoggerService, private readonly configsService: ConfigsService) {}
 
   async onModuleInit(): Promise<void> {
-    this.bucket = await this.configsService.getConfig(ExternalConfigs.aws.memberBucketName);
+    this.bucket =
+      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
+        ? config.get('aws.storage.bucket')
+        : await this.configsService.getConfig(ExternalConfigs.aws.memberBucketName);
   }
 
   @OnEvent(EventType.onNewMember, { async: true })

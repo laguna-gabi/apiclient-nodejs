@@ -2,13 +2,16 @@ import { Injectable, ValidationPipe } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { Test, TestingModule } from '@nestjs/testing';
 import { createTestClient } from 'apollo-server-testing';
-import { BaseHandler } from '../test';
 import { AppModule } from '../src/app.module';
+import { QueueService } from '../src/providers';
 import { UserService } from '../src/user';
+import { BaseHandler } from '../test';
 import { Mutations, Queries } from '../test/aux';
 
 @Injectable()
 export class SeedBase extends BaseHandler {
+  queueService: QueueService;
+
   async init() {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -19,6 +22,7 @@ export class SeedBase extends BaseHandler {
     await this.app.init();
 
     this.module = moduleFixture.get<GraphQLModule>(GraphQLModule);
+    this.queueService = moduleFixture.get<QueueService>(QueueService);
 
     const apolloServer = createTestClient((this.module as any).apolloServer);
     this.mutations = new Mutations(apolloServer);
@@ -34,5 +38,8 @@ export class SeedBase extends BaseHandler {
      */
     await new Promise((f) => setTimeout(f, 100));
     await this.app.close();
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    await this.queueService.consumer.stop();
   }
 }

@@ -40,7 +40,8 @@
     "migrate:down": "cd migrations && migrate-mongo down",
     "analytics:dump": "ts-node ./cmd/main.ts analytics",
     "analytics:dump:dev": "export NODE_ENV=development && ts-node ./cmd/main.ts analytics",
-    "analytics:dump:prod": "export NODE_ENV=production && ts-node ./cmd/main.ts analytics"
+    "analytics:dump:prod": "export NODE_ENV=production && ts-node ./cmd/main.ts analytics",
+    "localstack": "localstack/configLocalstack.sh"
   },
   "dependencies": {
     "@lagunahealth/pandora": "0.7.19",
