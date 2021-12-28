@@ -5,7 +5,11 @@
     "dynamicLink": "https://links.lagunahealth.com/app"
   },
   "aws": {
-    "region": "us-east-1"
+    "region": "us-east-1",
+    "queue": {
+      "notification": "NotificationsQ-local",
+      "notificationDLQ": "NotificationsDLQ-local"
+    }
   },
   "db": {
     "name": "iris-localhost"
