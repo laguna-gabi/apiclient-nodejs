@@ -129,6 +129,7 @@ export class NotificationsService {
           dispatch.appointmentTime,
         ),
         downloadLink,
+        dynamicLink: hosts.get('dynamicLink'),
         gapMinutes,
       },
     });

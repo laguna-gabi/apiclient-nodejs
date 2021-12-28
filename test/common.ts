@@ -21,5 +21,6 @@ export const replaceConfigs = ({
     .replace('{{user.firstName}}', userClient.firstName)
     .replace('{{org.name}}', memberClient.orgName)
     .replace('{{appointmentTime}}', appointmentTime)
-    .replace('{{downloadLink}}', `${hosts.app}/download/${appointmentId}`);
+    .replace('{{downloadLink}}', `${hosts.app}/download/${appointmentId}`)
+    .replace('{{dynamicLink}}', `${hosts.dynamicLink}`);
 };
