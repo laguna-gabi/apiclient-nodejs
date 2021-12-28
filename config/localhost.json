@@ -1,11 +1,5 @@
 {
   "db": {
     "name": "iris-localhost"
-  },
-  "aws": {
-    "queue": {
-      "notification": "NotificationsQ-local",
-      "notificationDLQ": "NotificationsDLQ-local"
-    }
   }
 }
