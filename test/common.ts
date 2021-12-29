@@ -160,7 +160,6 @@ export const mockProviders = (
   const spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
   const spyOnNotificationsServiceUnregister = jest.spyOn(notificationsService, 'unregister');
   const spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
-  const spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
   const spyOnTwilioGetToken = jest.spyOn(twilioService, 'getAccessToken');
   const spyOnTwilioCreatePeerIceServers = jest.spyOn(twilioService, 'createPeerIceServers');
   const spyOnTwilioValidateWebhook = jest.spyOn(twilioService, 'validateWebhook');
@@ -186,7 +185,6 @@ export const mockProviders = (
   spyOnNotificationsServiceRegister.mockResolvedValue(v4());
   spyOnNotificationsServiceUnregister.mockResolvedValue(undefined);
   spyOnNotificationsServiceSend.mockResolvedValue(v4());
-  spyOnNotificationsServiceCancel.mockResolvedValue(v4());
   spyOnTwilioGetToken.mockReturnValue('token');
   spyOnTwilioCreatePeerIceServers.mockResolvedValue({ iceServers });
   spyOnTwilioValidateWebhook.mockReturnValue(true);
@@ -216,7 +214,6 @@ export const mockProviders = (
       spyOnNotificationsServiceRegister,
       spyOnNotificationsServiceUnregister,
       spyOnNotificationsServiceSend,
-      spyOnNotificationsServiceCancel,
     },
     twilioService: {
       spyOnTwilioGetToken,

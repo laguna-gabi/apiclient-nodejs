@@ -578,7 +578,6 @@ describe('Integration tests: notifications', () => {
       const cancelNotifyParams: CancelNotifyParams = {
         memberId: member.id,
         type,
-        notificationId: v4(),
         metadata: { peerId: faker.datatype.uuid() },
       };
       await handler.mutations.cancel({ cancelNotifyParams });

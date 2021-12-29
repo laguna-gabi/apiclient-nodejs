@@ -3,7 +3,6 @@ import { Injectable } from '@nestjs/common';
 import { ConfigsService, OneSignal, SendBird, TwilioService } from '.';
 import {
   AuditType,
-  CancelNotificationParams,
   LoggerService,
   SendOneSignalNotification,
   SendSendBirdNotification,
@@ -59,11 +58,6 @@ export class NotificationsService {
       this.logger.audit(AuditType.message, sendSendBirdNotification, this.send.name);
       return this.sendBird.send(sendSendBirdNotification);
     }
-  }
-
-  async cancel(cancelNotificationParams: CancelNotificationParams) {
-    this.logger.audit(AuditType.message, cancelNotificationParams, this.cancel.name);
-    return this.oneSignal.cancel(cancelNotificationParams);
   }
 
   async createPeerIceServers() {

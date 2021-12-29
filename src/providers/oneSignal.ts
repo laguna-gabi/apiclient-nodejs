@@ -1,3 +1,4 @@
+import { BaseOneSignal, InternalNotificationType, Platform } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -5,16 +6,12 @@ import * as config from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
 import {
   AllNotificationTypes,
-  CancelNotificationParams,
-  ErrorType,
-  Errors,
   EventType,
   IEventOnMemberBecameOffline,
   LoggerService,
   SendOneSignalNotification,
 } from '../common';
 import { MemberConfig } from '../member';
-import { BaseOneSignal, InternalNotificationType, Platform } from '@lagunahealth/pandora';
 
 @Injectable()
 export class OneSignal extends BaseOneSignal implements OnModuleInit {
@@ -141,47 +138,6 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
       );
     } catch (ex) {
       this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, ex);
-    }
-  }
-
-  async cancel(cancelNotificationParams: CancelNotificationParams): Promise<string | void> {
-    this.logger.info(cancelNotificationParams, OneSignal.name, this.cancel.name);
-    const { platform, externalUserId, data } = cancelNotificationParams;
-
-    const config = await this.getConfig(platform, data.type);
-    const app_id = await this.getApiId(platform, data.type);
-    const cancelUrl = `${this.notificationsUrl}/${data.notificationId}?app_id=${app_id}`;
-
-    try {
-      await this.httpService.delete(cancelUrl, config).toPromise();
-    } catch (ex) {
-      if (ex.response.data.errors[0] !== 'Notification has already been sent to all recipients') {
-        throw new Error(Errors.get(ErrorType.notificationNotFound));
-      } else {
-        const defaultApiKey = await this.configsService.getConfig(
-          ExternalConfigs.oneSignal.defaultApiKey,
-        );
-        const config = { headers: { Authorization: `Basic ${defaultApiKey}` } };
-        const app_id = await this.configsService.getConfig(ExternalConfigs.oneSignal.defaultApiId);
-
-        const body: any = {
-          app_id,
-          include_external_user_ids: [externalUserId],
-          content_available: true,
-          data,
-        };
-
-        try {
-          const result = await this.httpService
-            .post(this.notificationsUrl, body, config)
-            .toPromise();
-          if (result.status === 200 && result.data.recipients >= 1) {
-            return result.data.id;
-          }
-        } catch (ex) {
-          this.logger.error(cancelNotificationParams, OneSignal.name, this.cancel.name, ex);
-        }
-      }
     }
   }
 

@@ -1,13 +1,8 @@
-import {
-  CancelNotificationType,
-  NotificationType,
-  Platform,
-  generatePhone,
-} from '@lagunahealth/pandora';
+import { NotificationType, Platform, generatePhone } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
-import { ErrorType, Errors, LoggerService, delay, generatePath } from '../../src/common';
+import { LoggerService, delay, generatePath } from '../../src/common';
 import { NotificationsService } from '../../src/providers';
 import { dbDisconnect, defaultModules, mockLogger } from '../common';
 
@@ -72,50 +67,11 @@ describe.skip('live: notifications (one signal)', () => {
       const playerId = await notificationsService.register(params);
       expect(playerId).not.toBeUndefined();
 
-      const result = await sendNotification(params);
-
-      /* Delay so the notification has time to reach the target*/
-      await delay(1000);
-
-      await notificationsService.cancel({
-        externalUserId: params.externalUserId,
-        platform: params.platform,
-        data: {
-          peerId: v4(),
-          type: CancelNotificationType.cancelVideo,
-          notificationId: result,
-        },
-      });
+      await sendNotification(params);
       await afterEachCustom(module);
     },
     delayTime + 6000,
   );
-
-  it.concurrent('should throw an error for not existing notificationId', async () => {
-    const { notificationsService, module } = await beforeEachCustom();
-    const params = {
-      notificationsService,
-      token: 'sampleiospushkittoken3',
-      externalUserId: v4(),
-      platform: Platform.ios,
-      isPushNotificationsEnabled: true,
-    };
-    const playerId = await notificationsService.register(params);
-    expect(playerId).not.toBeUndefined();
-
-    await expect(
-      notificationsService.cancel({
-        externalUserId: params.externalUserId,
-        platform: params.platform,
-        data: {
-          peerId: v4(),
-          type: CancelNotificationType.cancelVideo,
-          notificationId: v4(),
-        },
-      }),
-    ).rejects.toThrow(Errors.get(ErrorType.notificationNotFound));
-    await afterEachCustom(module);
-  });
 
   /* eslint-disable max-len */
   /**

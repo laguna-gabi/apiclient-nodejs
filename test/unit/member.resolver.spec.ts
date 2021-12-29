@@ -1918,7 +1918,6 @@ describe('MemberResolver', () => {
     let spyOnUserServiceGetUser;
     let spyOnNotificationsServiceSend;
     let spyOnNotificationsServiceCreatePeerIceServers;
-    let spyOnNotificationsServiceCancel;
     let spyOnCommunicationResolverGetCommunication;
     let spyOnCommunicationServiceGet;
 
@@ -1931,7 +1930,6 @@ describe('MemberResolver', () => {
         notificationsService,
         'createPeerIceServers',
       );
-      spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
       spyOnCommunicationResolverGetCommunication = jest.spyOn(
         communicationResolver,
         'getCommunication',
@@ -1945,7 +1943,6 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser.mockReset();
       spyOnNotificationsServiceSend.mockReset();
       spyOnNotificationsServiceCreatePeerIceServers.mockReset();
-      spyOnNotificationsServiceCancel.mockReset();
       spyOnCommunicationResolverGetCommunication.mockReset();
       spyOnCommunicationServiceGet.mockReset();
     });
@@ -2135,14 +2132,12 @@ describe('MemberResolver', () => {
     let spyOnServiceGetMemberConfig;
     let spyOnUserServiceGetUser;
     let spyOnNotificationsServiceSend;
-    let spyOnNotificationsServiceCancel;
 
     beforeEach(() => {
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
       spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
-      spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
     });
 
     afterEach(() => {
@@ -2150,7 +2145,6 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig.mockReset();
       spyOnUserServiceGetUser.mockReset();
       spyOnNotificationsServiceSend.mockReset();
-      spyOnNotificationsServiceCancel.mockReset();
     });
 
     test.each`

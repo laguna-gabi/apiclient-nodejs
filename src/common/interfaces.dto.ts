@@ -171,7 +171,6 @@ export class CancelNotificationParams extends BaseSendNotification {
   data: {
     peerId?: string;
     type: CancelNotificationType;
-    notificationId: string;
   };
 }
 

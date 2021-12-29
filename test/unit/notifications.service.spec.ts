@@ -5,7 +5,6 @@ import { LoggerService } from '../../src/common';
 import { NotificationsService, SendBird, TwilioService } from '../../src/providers';
 import { dbDisconnect, defaultModules } from '../common';
 import {
-  generateCancelNotificationParams,
   generateSendOneSignalNotificationParams,
   generateSendSendBirdNotificationParams,
   generateSendTwilioNotificationParams,
@@ -95,16 +94,5 @@ describe('NotificationsService (offline)', () => {
     await notificationsService.send(params);
     expect(sendBirdSendMockSendJournalMessage).toBeCalledWith(params.sendSendBirdNotification);
     sendBirdSendMockSendJournalMessage.mockReset();
-  });
-
-  it('should send oneSignal cancel notification', async () => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const oneSignalCancelMock = jest.spyOn(notificationsService.oneSignal, 'cancel');
-    oneSignalCancelMock.mockResolvedValue(v4());
-    const params = generateCancelNotificationParams();
-    await notificationsService.cancel(params);
-    expect(oneSignalCancelMock).toBeCalledWith(params);
-    oneSignalCancelMock.mockReset();
   });
 });

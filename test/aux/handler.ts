@@ -110,7 +110,6 @@ export class Handler extends BaseHandler {
     this.notificationsService.spyOnNotificationsServiceRegister.mockReset();
     this.notificationsService.spyOnNotificationsServiceUnregister.mockReset();
     this.notificationsService.spyOnNotificationsServiceSend.mockReset();
-    this.notificationsService.spyOnNotificationsServiceCancel.mockReset();
     this.storage.spyOnStorageDownload.mockReset();
     this.storage.spyOnStorageUpload.mockReset();
     this.storage.spyOnStorageDeleteRecordings.mockReset();

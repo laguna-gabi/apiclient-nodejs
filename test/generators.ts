@@ -507,12 +507,11 @@ export const generateNotifyContentParams = ({
 };
 
 export const generateCancelNotifyParams = ({
-  notificationId = v4(),
   memberId = generateId(),
   type = CancelNotificationType.cancelCall,
   metadata = { peerId: v4() },
 }: Partial<CancelNotifyParams> = {}): CancelNotifyParams => {
-  return { notificationId, memberId, type, metadata };
+  return { memberId, type, metadata };
 };
 
 export const generateCancelNotificationParams = (): CancelNotificationParams => {
@@ -522,7 +521,6 @@ export const generateCancelNotificationParams = (): CancelNotificationParams => 
     data: {
       peerId: v4(),
       type: CancelNotificationType.cancelCall,
-      notificationId: v4(),
     },
   };
 };

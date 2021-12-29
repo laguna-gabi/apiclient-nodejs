@@ -442,7 +442,6 @@ describe('Validations - member', () => {
       input                            | error
       ${{ memberId: 123 }}             | ${stringError}
       ${{ type: 123 }}                 | ${'cannot represent non-string value'}
-      ${{ notificationId: 123 }}       | ${stringError}
       ${{ metadata: { peerId: 123 } }} | ${stringError}
     `(`should fail to cancel notification since setting $input is not a valid`, async (params) => {
       const cancelNotifyParams: CancelNotifyParams = generateCancelNotifyParams({
@@ -484,11 +483,10 @@ describe('Validations - member', () => {
 
     /* eslint-disable max-len */
     test.each`
-      field               | error
-      ${'memberId'}       | ${`Field "memberId" of required type "String!" was not provided.`}
-      ${'type'}           | ${`Field "type" of required type "CancelNotificationType!" was not provided.`}
-      ${'notificationId'} | ${`Field "notificationId" of required type "String!" was not provided.`}
-      ${'metadata'}       | ${`Field "metadata" of required type "CancelNotificationMetadata!" was not provided.`}
+      field         | error
+      ${'memberId'} | ${`Field "memberId" of required type "String!" was not provided.`}
+      ${'type'}     | ${`Field "type" of required type "CancelNotificationType!" was not provided.`}
+      ${'metadata'} | ${`Field "metadata" of required type "CancelNotificationMetadata!" was not provided.`}
     `(
       `should fail to cancel a notification since mandatory field $field is missing`,
       async (params) => {

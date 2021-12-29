@@ -393,9 +393,6 @@ export class CancelNotifyParams {
   @Field(() => CancelNotificationType)
   type: CancelNotificationType;
 
-  @Field(() => String)
-  notificationId: string;
-
   @Field(() => CancelNotificationMetadata)
   metadata: CancelNotificationMetadata;
 }
