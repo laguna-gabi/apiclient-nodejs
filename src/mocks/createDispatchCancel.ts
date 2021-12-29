@@ -18,7 +18,6 @@ export type ObjectCancelType = Pick<
   | 'recipientClientId'
   | 'contentKey'
   | 'peerId'
-  | 'notificationId'
 >;
 
 export class ObjectCancelClass {
@@ -29,12 +28,10 @@ export const generateObjectCancelMock = ({
   recipientClientId,
   notificationType,
   peerId,
-  notificationId,
 }: {
   recipientClientId: string;
   notificationType: CancelNotificationType;
   peerId: string;
-  notificationId: string;
 }): ObjectCancelType => {
   const contentKey = CustomKey.cancelNotify;
   return {
@@ -46,6 +43,5 @@ export const generateObjectCancelMock = ({
     recipientClientId,
     peerId,
     contentKey,
-    notificationId,
   };
 };
