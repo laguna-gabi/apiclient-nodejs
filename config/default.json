@@ -71,5 +71,10 @@
   },
   "split": {
     "apiKey": "localhost"
+  },
+  "migration": {
+    "sample": "sample",
+    "extension": ".ts",
+    "migrationDir": "/cmd/migration/scripts"
   }
 }

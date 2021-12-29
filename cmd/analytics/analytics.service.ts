@@ -15,7 +15,7 @@ import {
   RecordingSummary,
   SummaryFileSuffix,
   TimeFormat,
-} from './analytics.dto';
+} from '.';
 import { add, differenceInDays, differenceInSeconds, differenceInYears } from 'date-fns';
 import { Injectable } from '@nestjs/common';
 import { AppointmentMethod } from '../../src/appointment';

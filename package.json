@@ -36,12 +36,12 @@
     "migrate:init": "ts-node ./migrations/generateConfig.ts",
     "migrate:create": "cd migrations && migrate-mongo create",
     "migrate:status": "cd migrations && migrate-mongo status",
-    "migrate:up": "cd migrations && migrate-mongo up",
     "migrate:down": "cd migrations && migrate-mongo down",
     "analytics:dump": "ts-node ./cmd/main.ts analytics",
     "analytics:dump:dev": "export NODE_ENV=development && ts-node ./cmd/main.ts analytics",
     "analytics:dump:prod": "export NODE_ENV=production && ts-node ./cmd/main.ts analytics",
-    "localstack": "localstack/configLocalstack.sh"
+    "localstack": "localstack/configLocalstack.sh",
+    "migrate": "ts-node ./cmd/main.ts migration"
   },
   "dependencies": {
     "@lagunahealth/pandora": "0.8.4",
@@ -63,6 +63,7 @@
     "aws-sdk": "^2.983.0",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
+    "cli-table3": "^0.6.0",
     "config": "^3.3.6",
     "date-fns": "^2.23.0",
     "date-fns-tz": "^1.1.6",
