@@ -51,7 +51,9 @@ jobs:
       - name: Build project
         run: yarn build
       - name: Start docker image with mongodb to localhost and test db
-        run: docker-compose -f docker-compose.yml up -d
+        run: |
+          docker-compose -f docker-compose.yml up -d
+          sleep 10
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
