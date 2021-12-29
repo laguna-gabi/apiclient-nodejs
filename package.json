@@ -37,6 +37,7 @@
     "migrate:create": "cd migrations && migrate-mongo create",
     "migrate:status": "cd migrations && migrate-mongo status",
     "migrate:down": "cd migrations && migrate-mongo down",
+    "migrate:up": "cd migrations && migrate-mongo up",
     "analytics:dump": "ts-node ./cmd/main.ts analytics",
     "analytics:dump:dev": "export NODE_ENV=development && ts-node ./cmd/main.ts analytics",
     "analytics:dump:prod": "export NODE_ENV=production && ts-node ./cmd/main.ts analytics",
