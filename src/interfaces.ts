@@ -102,9 +102,11 @@ export enum SlackIcon {
 }
 
 export interface IEventNotifySlack {
+  header: string;
   message: string;
   icon: SlackIcon;
   channel: string;
+  orgName?: string;
 }
 
 export enum ExternalKey {

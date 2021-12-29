@@ -15,6 +15,8 @@ export abstract class BaseSlack {
       this.logger.info(params, BaseSlack.name, this.send.name);
     } else {
       try {
+        const orgName = `${params.orgName ? ` [${params.orgName}] ` : ''}`;
+        const text = `${params.header}${orgName}\n${params.message}`;
         return this.webhook.send({
           username: 'LagunaBot',
           icon_emoji: params.icon,
@@ -22,7 +24,7 @@ export abstract class BaseSlack {
           attachments: [
             {
               color: '#9733EE',
-              blocks: [{ type: 'section', text: { type: 'mrkdwn', text: params.message } }],
+              blocks: [{ type: 'section', text: { type: 'mrkdwn', text } }],
             },
           ],
         });
