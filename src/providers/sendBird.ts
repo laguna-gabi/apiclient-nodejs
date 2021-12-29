@@ -2,6 +2,7 @@ import { BaseSendBird, InternalNotificationType } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as FormData from 'form-data';
+import * as download from 'download';
 import { createReadStream, createWriteStream } from 'fs';
 import { unlink } from 'fs/promises';
 import { ConfigsService, ExternalConfigs } from '.';
@@ -214,13 +215,17 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         const ImageDownloadResult = await this.httpService
           .get(journalImageDownloadLink, { responseType: 'stream' })
           .toPromise();
-        const writer = createWriteStream(`./${userId}.png`);
-        ImageDownloadResult.data.pipe(writer);
+
+        const imageFormat = ImageDownloadResult.headers['content-type'].split('/')[1];
+
+        await download(journalImageDownloadLink).pipe(
+          createWriteStream(`./${userId}.${imageFormat}`),
+        );
 
         const form = new FormData();
         form.append('user_id', userId);
         form.append('message_type', 'FILE');
-        form.append('file', createReadStream(`./${userId}.png`));
+        form.append('file', createReadStream(`./${userId}.${imageFormat}`));
         form.append('apns_bundle_id', 'com.cca.MyChatPlain');
         form.append('custom_type', notificationType); // For use of Laguna Chat
         form.append('data', JSON.stringify({ senderId: userId, appointmentId, message })); // For use of Laguna Chat);
@@ -240,7 +245,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
           )
           .toPromise();
 
-        await unlink(`./${userId}.png`);
+        await unlink(`./${userId}.${imageFormat}`);
 
         if (result.status === 200) {
           return result.data.message_id;
