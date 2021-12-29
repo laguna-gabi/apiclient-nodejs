@@ -53,7 +53,6 @@ export interface ICreateDispatch extends IDispatch {
   content?: string;
   chatLink?: string;
   triggersAt?: Date;
-  notificationId?: string;
   path?: string;
   scheduleLink?: string;
 }
