@@ -1,4 +1,4 @@
-import { CancelNotificationType, Platform } from '@lagunahealth/pandora';
+import { Platform } from '@lagunahealth/pandora';
 import * as config from 'config';
 import { general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow } from 'date-fns';
@@ -9,18 +9,9 @@ import {
   RequestAppointmentParams,
   ScheduleAppointmentParams,
 } from '../../src/appointment';
-import {
-  ErrorType,
-  Errors,
-  Identifiers,
-  RegisterForNotificationParams,
-  UserRole,
-  delay,
-  reformatDate,
-} from '../../src/common';
+import { ErrorType, Errors, Identifiers, UserRole, delay, reformatDate } from '../../src/common';
 import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
 import {
-  CancelNotifyParams,
   CreateTaskParams,
   Member,
   RecordingOutput,
@@ -36,7 +27,6 @@ import {
   generateAddCaregiverParams,
   generateAppointmentLink,
   generateAvailabilityInput,
-  generateCancelNotifyParams,
   generateId,
   generateOrgParams,
   generateRequestAppointmentParams,
@@ -506,46 +496,6 @@ describe('Integration tests: all', () => {
         replaceUserForMemberParams,
         invalidFieldsErrors: [Errors.get(ErrorType.memberReplaceUserAlreadyExists)],
       });
-    });
-  });
-
-  describe('notifications', () => {
-    test.each([
-      CancelNotificationType.cancelVideo,
-      CancelNotificationType.cancelCall,
-      CancelNotificationType.cancelText,
-    ])(`should cancel a notification of type %p`, async (params) => {
-      const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
-      const registerForNotificationParams: RegisterForNotificationParams = {
-        platform: Platform.android,
-        isPushNotificationsEnabled: true,
-      };
-      await handler
-        .setContextUserId(member.id)
-        .mutations.registerMemberForNotifications({ registerForNotificationParams });
-
-      const memberConfig = await handler
-        .setContextUserId(member.id)
-        .queries.getMemberConfig({ id: member.id });
-
-      const cancelNotifyParams: CancelNotifyParams = generateCancelNotifyParams({
-        memberId: member.id,
-        type: params,
-      });
-
-      await handler.mutations.cancel({ cancelNotifyParams });
-      expect(handler.notificationsService.spyOnNotificationsServiceCancel).toBeCalledWith({
-        externalUserId: memberConfig.externalUserId,
-        platform: memberConfig.platform,
-        data: {
-          type: cancelNotifyParams.type,
-          peerId: cancelNotifyParams.metadata.peerId,
-          notificationId: cancelNotifyParams.notificationId,
-        },
-      });
-
-      handler.notificationsService.spyOnNotificationsServiceCancel.mockReset();
     });
   });
 

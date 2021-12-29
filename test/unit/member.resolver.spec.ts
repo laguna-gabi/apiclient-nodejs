@@ -1,5 +1,4 @@
 import {
-  CancelNotificationType,
   ContentKey,
   CustomKey,
   IEventNotifySlack,
@@ -68,7 +67,6 @@ import {
   defaultModules,
   generateAddCaregiverParams,
   generateAppointmentComposeParams,
-  generateCancelNotifyParams,
   generateCommunication,
   generateCreateMemberParams,
   generateCreateTaskParams,
@@ -2129,56 +2127,6 @@ describe('MemberResolver', () => {
           }),
         ),
       ).rejects.toThrow(Errors.get(ErrorType.notificationNotAllowedForWebMember));
-    });
-  });
-
-  describe('cancelNotify', () => {
-    let spyOnServiceGetMember;
-    let spyOnServiceGetMemberConfig;
-    let spyOnNotificationsServiceCancel;
-
-    beforeEach(() => {
-      spyOnServiceGetMember = jest.spyOn(service, 'get');
-      spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
-      spyOnNotificationsServiceCancel = jest.spyOn(notificationsService, 'cancel');
-    });
-
-    afterEach(() => {
-      spyOnServiceGetMember.mockReset();
-      spyOnServiceGetMemberConfig.mockReset();
-      spyOnNotificationsServiceCancel.mockReset();
-    });
-
-    afterEach(() => {
-      spyOnServiceGetMember.mockReset();
-      spyOnServiceGetMemberConfig.mockReset();
-      spyOnNotificationsServiceCancel.mockReset();
-    });
-
-    test.each([
-      CancelNotificationType.cancelVideo,
-      CancelNotificationType.cancelCall,
-      CancelNotificationType.cancelText,
-    ])(`should cancel a notification`, async (params) => {
-      const member = mockGenerateMember();
-      const memberConfig = mockGenerateMemberConfig();
-      spyOnServiceGetMember.mockImplementationOnce(async () => member);
-      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-      spyOnNotificationsServiceCancel.mockImplementationOnce(async () => undefined);
-
-      const cancelNotifyParams = generateCancelNotifyParams({ type: params });
-
-      await resolver.cancelNotify(cancelNotifyParams);
-
-      expect(spyOnNotificationsServiceCancel).toBeCalledWith({
-        externalUserId: memberConfig.externalUserId,
-        platform: memberConfig.platform,
-        data: {
-          type: cancelNotifyParams.type,
-          peerId: cancelNotifyParams.metadata.peerId,
-          notificationId: cancelNotifyParams.notificationId,
-        },
-      });
     });
   });
 

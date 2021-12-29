@@ -885,17 +885,15 @@ export class MemberResolver extends MemberBase {
     @Args(camelCase(CancelNotifyParams.name))
     cancelNotifyParams: CancelNotifyParams,
   ) {
-    const { memberId, type, notificationId, metadata } = cancelNotifyParams;
-    const memberConfig = await this.memberService.getMemberConfig(memberId);
+    const { memberId, type, metadata } = cancelNotifyParams;
 
-    return this.notificationsService.cancel({
-      platform: memberConfig.platform,
-      externalUserId: memberConfig.externalUserId,
-      data: {
-        type,
-        peerId: metadata.peerId,
-        notificationId,
-      },
+    const contentType = CustomKey.cancelNotify;
+    await this.notifyCreateDispatch({
+      dispatchId: generateDispatchId(contentType, memberId, Date.now().toString()),
+      memberId,
+      type,
+      correlationId: getCorrelationId(this.logger),
+      metadata: { peerId: metadata.peerId, contentType },
     });
   }
 

@@ -1,4 +1,5 @@
 import {
+  CancelNotificationType,
   ContentKey,
   CustomKey,
   ExternalKey,
@@ -8,6 +9,7 @@ import {
   ObjectAppointmentScheduledClass,
   ObjectBaseClass,
   ObjectCallOrVideoClass,
+  ObjectCancelClass,
   ObjectChatMessageUserClass,
   ObjectCustomContentClass,
   ObjectExternalContentClass,
@@ -29,6 +31,7 @@ import {
   generateNewMemberMock,
   generateNewMemberNudgeMock,
   generateObjectCallOrVideoMock,
+  generateObjectCancelMock,
   generateObjectCustomContentMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
@@ -48,7 +51,7 @@ import {
   reformatDate,
 } from '../../src/common';
 import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
-import { NotifyParams } from '../../src/member';
+import { CancelNotifyParams, NotifyParams } from '../../src/member';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   generateCreateMemberParams,
@@ -547,6 +550,58 @@ describe('Integration tests: notifications', () => {
         });
       },
     );
+
+    /**
+     * Trigger : MemberResolver.cancelNotify
+     * Dispatch :
+     *      1. send cancelVideo/cancelCall/cancelText dispatch
+     */
+    test.each([
+      CancelNotificationType.cancelCall,
+      CancelNotificationType.cancelText,
+      CancelNotificationType.cancelVideo,
+    ])(`notify: dispatch message of type %p`, async (type) => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+      const params: RegisterForNotificationParams = {
+        platform: Platform.android,
+        isPushNotificationsEnabled: true,
+      };
+      await handler
+        .setContextUserId(member.id)
+        .mutations.registerMemberForNotifications({ registerForNotificationParams: params });
+
+      await delay(500);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      const cancelNotifyParams: CancelNotifyParams = {
+        memberId: member.id,
+        type,
+        notificationId: v4(),
+        metadata: { peerId: faker.datatype.uuid() },
+      };
+      await handler.mutations.cancel({ cancelNotifyParams });
+
+      await delay(200);
+
+      const mock = generateObjectCancelMock({
+        recipientClientId: cancelNotifyParams.memberId,
+        notificationType: cancelNotifyParams.type,
+        peerId: cancelNotifyParams.metadata.peerId,
+      });
+      const object = new ObjectCancelClass(mock);
+      Object.keys(object.objectCancelType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
   });
 
   describe('Appointment', () => {
