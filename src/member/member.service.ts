@@ -592,24 +592,8 @@ export class MemberService extends BaseService {
   async updateMemberConfig(
     updateMemberConfigParams: UpdateMemberConfigParams,
   ): Promise<MemberConfig> {
-    const {
-      memberId,
-      platform,
-      isPushNotificationsEnabled,
-      isAppointmentsReminderEnabled,
-      isRecommendationsEnabled,
-    } = updateMemberConfigParams;
-
-    let setParams: any = { memberId: new Types.ObjectId(memberId) };
-    setParams = platform == null ? platform : { ...setParams, platform };
-    setParams =
-      isPushNotificationsEnabled == null ? setParams : { ...setParams, isPushNotificationsEnabled };
-    setParams =
-      isAppointmentsReminderEnabled == null
-        ? setParams
-        : { ...setParams, isAppointmentsReminderEnabled };
-    setParams =
-      isRecommendationsEnabled == null ? setParams : { ...setParams, isRecommendationsEnabled };
+    const { memberId, ...setParams } = updateMemberConfigParams;
+    this.removeNotNullable(setParams, Object.keys(setParams));
 
     const memberConfig = await this.memberConfigModel.findOneAndUpdate(
       { memberId: new Types.ObjectId(memberId) },

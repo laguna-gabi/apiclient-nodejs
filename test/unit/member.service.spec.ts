@@ -1285,6 +1285,7 @@ describe('MemberService', () => {
         isPushNotificationsEnabled: false,
         isAppointmentsReminderEnabled: false,
         isRecommendationsEnabled: true,
+        language: Language.en,
       });
 
       await service.updateMemberConfig(params1);
@@ -1295,6 +1296,7 @@ describe('MemberService', () => {
       expect(configs1.isAppointmentsReminderEnabled).toEqual(params1.isAppointmentsReminderEnabled);
       expect(configs1.isRecommendationsEnabled).toEqual(params1.isRecommendationsEnabled);
       expect(configs1.platform).toEqual(params1.platform);
+      expect(configs1.language).toEqual(params1.language);
 
       const params2 = await generateUpdateMemberConfigParams({
         memberId: generateId(id),
@@ -1302,6 +1304,7 @@ describe('MemberService', () => {
         isPushNotificationsEnabled: true,
         isAppointmentsReminderEnabled: true,
         isRecommendationsEnabled: false,
+        language: Language.es,
       });
       params2.memberId = id;
       await service.updateMemberConfig(params2);
@@ -1313,6 +1316,7 @@ describe('MemberService', () => {
       expect(configs2.isPushNotificationsEnabled).toEqual(params2.isPushNotificationsEnabled);
       expect(configs2.isAppointmentsReminderEnabled).toEqual(params2.isAppointmentsReminderEnabled);
       expect(configs2.isRecommendationsEnabled).toEqual(params2.isRecommendationsEnabled);
+      expect(configs2.language).toEqual(params2.language);
     });
 
     it('should update only isPushNotificationsEnabled', async () => {
@@ -1346,15 +1350,16 @@ describe('MemberService', () => {
       { isPushNotificationsEnabled: null },
       { isAppointmentsReminderEnabled: null },
       { isRecommendationsEnabled: null },
+      { language: null },
     ])('should not override %p since it is not define in input', async (field) => {
       const id = await generateMember();
-
+      const configsBefore = await service.getMemberConfig(id);
       let params = generateUpdateMemberConfigParams({ memberId: generateId(id) });
       params = { ...params, ...field };
       await service.updateMemberConfig(params);
 
-      const configs = await service.getMemberConfig(id);
-      expect(configs[Object.keys(field)[0]]).toEqual(true);
+      const configsAfter = await service.getMemberConfig(id);
+      expect(configsAfter[Object.keys(field)[0]]).toEqual(configsBefore[Object.keys(field)[0]]);
     });
 
     it('should not update member config on non existing member', async () => {

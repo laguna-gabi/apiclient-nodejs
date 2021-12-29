@@ -287,6 +287,7 @@ export const generateUpdateMemberConfigParams = ({
   isPushNotificationsEnabled = false,
   isAppointmentsReminderEnabled = false,
   isRecommendationsEnabled = false,
+  language = Language.en,
 }: Partial<UpdateMemberConfigParams> = {}): UpdateMemberConfigParams => {
   return {
     memberId,
@@ -294,6 +295,7 @@ export const generateUpdateMemberConfigParams = ({
     isPushNotificationsEnabled,
     isAppointmentsReminderEnabled,
     isRecommendationsEnabled,
+    language,
   };
 };
 

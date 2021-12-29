@@ -529,6 +529,7 @@ export class Queries {
             isRecommendationsEnabled
             articlesPath
             firstLoggedInAt
+            language
           }
         }
       `,

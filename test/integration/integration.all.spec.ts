@@ -1,4 +1,4 @@
-import { Platform } from '@lagunahealth/pandora';
+import { Language, Platform } from '@lagunahealth/pandora';
 import * as config from 'config';
 import { general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow } from 'date-fns';
@@ -281,6 +281,7 @@ describe('Integration tests: all', () => {
       isPushNotificationsEnabled: true,
       isAppointmentsReminderEnabled: true,
       isRecommendationsEnabled: true,
+      language: Language.en,
     });
 
     const updateMemberConfigParams = generateUpdateMemberConfigParams();
@@ -301,6 +302,7 @@ describe('Integration tests: all', () => {
       isPushNotificationsEnabled: updateMemberConfigParams.isPushNotificationsEnabled,
       isAppointmentsReminderEnabled: updateMemberConfigParams.isAppointmentsReminderEnabled,
       isRecommendationsEnabled: updateMemberConfigParams.isRecommendationsEnabled,
+      language: Language.en,
     });
   });
 
