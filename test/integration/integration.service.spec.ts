@@ -1,4 +1,5 @@
 import {
+  CancelNotificationType,
   CustomKey,
   ExternalKey,
   InnerQueueTypes,
@@ -26,6 +27,7 @@ import {
   generateNewMemberMock,
   generateNewMemberNudgeMock,
   generateObjectCallOrVideoMock,
+  generateObjectCancelMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
 } from '@lagunahealth/pandora';
@@ -70,6 +72,7 @@ describe('Notifications full flow', () => {
   let triggersService: TriggersService;
   let spyOnTwilioSend;
   let spyOnOneSignalSend;
+  let spyOnOneSignalCancel;
   let spyOnSendBirdSend;
   let internationalizationService: InternationalizationService;
   let notificationsService: NotificationsService;
@@ -102,6 +105,8 @@ describe('Notifications full flow', () => {
     const sendBird = module.get<SendBird>(SendBird);
     spyOnSendBirdSend = jest.spyOn(sendBird, 'send');
     spyOnSendBirdSend.mockReturnValue(undefined);
+    spyOnOneSignalCancel = jest.spyOn(oneSignal, 'cancel');
+    spyOnOneSignalCancel.mockReturnValue(undefined);
 
     const configsService = module.get<ConfigsService>(ConfigsService);
     jest.spyOn(configsService, 'getConfig').mockResolvedValue(lorem.word());
@@ -118,12 +123,15 @@ describe('Notifications full flow', () => {
   afterEach(() => {
     spyOnTwilioSend.mockReset();
     spyOnOneSignalSend.mockReset();
+    spyOnOneSignalCancel.mockReset();
+    spyOnSendBirdSend.mockReset();
   });
 
   afterAll(async () => {
     await module.close();
     spyOnTwilioSend.mockRestore();
     spyOnOneSignalSend.mockRestore();
+    spyOnOneSignalCancel.mockRestore();
     spyOnSendBirdSend.mockRestore();
   });
 
@@ -613,6 +621,45 @@ describe('Notifications full flow', () => {
         },
         content,
         orgName: mobileMemberClient.orgName,
+      });
+
+      await compareResults({
+        dispatchId: mock.dispatchId,
+        status: DispatchStatus.done,
+        response: { ...mock },
+        pResult: providerResultOS,
+      });
+    },
+  );
+
+  test.each(Object.values(CancelNotificationType))(
+    `should handle 'immediate' event of type ${CustomKey.cancelNotify} %p`,
+    async (notificationType) => {
+      const mock = generateObjectCancelMock({
+        recipientClientId: mobileMemberClient.id,
+        notificationType,
+        peerId: v4(),
+      });
+
+      const providerResultOS: ProviderResult = { provider: Provider.oneSignal, id: generateId() };
+      spyOnOneSignalCancel.mockReturnValueOnce(providerResultOS);
+
+      const message: SQSMessage = {
+        MessageId: v4(),
+        Body: JSON.stringify(
+          { type: InnerQueueTypes.createDispatch, ...mock },
+          Object.keys(mock).sort(),
+        ),
+      };
+      await service.handleMessage(message);
+
+      expect(spyOnOneSignalCancel).toBeCalledWith({
+        externalUserId: mobileMemberClient.externalUserId,
+        platform: mobileMemberClient.platform,
+        data: {
+          type: mock.notificationType,
+          peerId: mock.peerId,
+        },
       });
 
       await compareResults({

@@ -1,4 +1,5 @@
 import {
+  CancelNotificationType,
   ICreateDispatch,
   IDeleteClientSettings,
   IDeleteDispatch,
@@ -10,7 +11,7 @@ import { differenceInSeconds } from 'date-fns';
 import { Dispatch, DispatchStatus, DispatchesService, TriggersService } from '.';
 import { Logger } from '../common';
 import { NotificationsService } from '../providers';
-import { SettingsService } from '../settings';
+import { ClientSettings, SettingsService } from '../settings';
 
 @Injectable()
 export class ConductorService implements OnModuleInit {
@@ -46,7 +47,9 @@ export class ConductorService implements OnModuleInit {
       status: DispatchStatus.received,
     });
     const currentMinusInput = differenceInSeconds(new Date(), dispatch.triggersAt);
-    if (
+    if (Object.values(CancelNotificationType).some((type) => type === input.notificationType)) {
+      await this.deleteExistingLiveDispatch(dispatch);
+    } else if (
       !dispatch.triggersAt ||
       (currentMinusInput >= -1 * gapTriggersAt && currentMinusInput <= gapTriggersAt)
     ) {
@@ -70,7 +73,6 @@ export class ConductorService implements OnModuleInit {
     if (!result) {
       this.logger.warn(dispatch, ConductorService.name, this.handleDeleteDispatch.name);
     }
-
     await this.triggersService.delete(dispatch.dispatchId);
   }
 
@@ -96,10 +98,7 @@ export class ConductorService implements OnModuleInit {
         dispatchId,
         status: DispatchStatus.acquired,
       });
-      const recipientClient = await this.settingsService.get(dispatch.recipientClientId);
-      if (!recipientClient) {
-        throw new Error(`recipientClient ${dispatch.recipientClientId} does not exist`);
-      }
+      const recipientClient = await this.getRecipientClient(dispatch.recipientClientId);
       const senderClient = await this.settingsService.get(dispatch.senderClientId);
       const providerResult = await this.notificationsService.send(
         dispatch,
@@ -114,7 +113,7 @@ export class ConductorService implements OnModuleInit {
       });
     } catch (ex) {
       if (dispatch.retryCount <= retryMax) {
-        //TODO NOT all dispatches should retry: call? cancelNotification? sendbird? etc..)
+        //TODO NOT all dispatches should retry: call? sendbird? etc..)
         dispatch.failureReasons.push({ message: ex.message, stack: ex.stack });
         dispatch = await this.dispatchesService.internalUpdate({
           dispatchId: dispatch.dispatchId,
@@ -158,5 +157,36 @@ export class ConductorService implements OnModuleInit {
       this.logger.info({ triggeredId }, ConductorService.name, methodName);
       await this.createRealTimeDispatch(dispatch);
     }
+  }
+
+  private async deleteExistingLiveDispatch(dispatch: Dispatch) {
+    this.logger.info(dispatch, ConductorService.name, this.deleteExistingLiveDispatch.name);
+    const recipientClient = await this.getRecipientClient(dispatch.recipientClientId);
+
+    const providerResult = await this.notificationsService.cancel({
+      platform: recipientClient.platform,
+      externalUserId: recipientClient.externalUserId,
+      data: {
+        type: dispatch.notificationType as CancelNotificationType,
+        peerId: dispatch.peerId,
+        notificationId: dispatch.notificationId,
+      },
+    });
+
+    await this.dispatchesService.internalUpdate({
+      dispatchId: dispatch.dispatchId,
+      sentAt: new Date(),
+      status: DispatchStatus.done,
+      providerResult,
+    });
+  }
+
+  private async getRecipientClient(recipientClientId: string): Promise<ClientSettings> {
+    const recipientClient = await this.settingsService.get(recipientClientId);
+    if (!recipientClient) {
+      throw new Error(`recipientClient ${recipientClientId} does not exist`);
+    }
+
+    return recipientClient;
   }
 }
