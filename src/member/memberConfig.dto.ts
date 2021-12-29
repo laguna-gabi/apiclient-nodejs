@@ -2,8 +2,9 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { IsOptional } from 'class-validator';
-import { Platform } from '@lagunahealth/pandora';
+import { Language, Platform } from '@lagunahealth/pandora';
 import { ErrorType, Errors, IsObjectId } from '../../src/common';
+import { defaultMemberParams } from './member.dto';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -28,6 +29,10 @@ export class UpdateMemberConfigParams {
   @Field(() => Boolean, { nullable: true })
   @IsOptional()
   isRecommendationsEnabled?: boolean;
+
+  @Field(() => Language, { nullable: true })
+  @IsOptional()
+  language?: Language;
 }
 
 /**************************************************************************************************
@@ -68,6 +73,10 @@ export class MemberConfig {
   @Prop()
   @Field(() => Date, { nullable: true })
   firstLoggedInAt: Date;
+
+  @Prop({ default: defaultMemberParams.language })
+  @Field(() => Language)
+  language: Language;
 
   @Field(() => String, { nullable: false })
   articlesPath: string;

@@ -108,6 +108,7 @@ export const generateMemberConfig = ({
   accessToken = generateId(),
   firstLoggedInAt = faker.date.past(2),
   articlesPath = faker.system.directoryPath(),
+  language = defaultMemberParams.language,
 }: Partial<MemberConfig> = {}): MemberConfig => {
   return {
     memberId,
@@ -117,6 +118,7 @@ export const generateMemberConfig = ({
     isPushNotificationsEnabled,
     firstLoggedInAt,
     articlesPath,
+    language,
   };
 };
 
@@ -200,7 +202,6 @@ export const mockGenerateMember = (): Member => {
     org: { _id: generateId(), ...generateOrgParams() },
     users: [user],
     sex: defaultMemberParams.sex,
-    language: defaultMemberParams.language,
     createdAt: faker.date.past(1),
     honorific: defaultMemberParams.honorific,
     roles: [MemberRole.member],
@@ -223,7 +224,6 @@ export const generateUpdateMemberParams = ({
   lastName = faker.name.lastName(),
   sex = Sex.female,
   email = generateEmail(),
-  language = Language.en,
   zipCode = generateZipCode(),
   dischargeDate = generateDateOnly(faker.date.soon(10)),
   fellowName = faker.name.firstName(),
@@ -249,7 +249,6 @@ export const generateUpdateMemberParams = ({
     fellowName,
     sex,
     email,
-    language,
     zipCode,
     dischargeDate,
     drgDesc,
@@ -278,6 +277,7 @@ export const mockGenerateMemberConfig = ({
     accessToken: generateId(),
     firstLoggedInAt: faker.date.past(2),
     articlesPath: faker.system.directoryPath(),
+    language: defaultMemberParams.language,
   };
 };
 
@@ -624,7 +624,7 @@ export const generateUpdateClientSettings = ({
     orgName: member?.org?.name,
     honorific: member?.honorific,
     zipCode: member?.zipCode || member?.org?.zipCode,
-    language: member?.language,
+    language: memberConfig?.language,
     platform: memberConfig?.platform,
     isPushNotificationsEnabled: memberConfig?.isPushNotificationsEnabled,
     isAppointmentsReminderEnabled: memberConfig?.isAppointmentsReminderEnabled,

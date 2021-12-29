@@ -195,7 +195,6 @@ export class Queries {
             }
             sex
             email
-            language
             zipCode
             utcDelta
             dischargeDate

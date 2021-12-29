@@ -949,7 +949,8 @@ export class MemberResolver extends MemberBase {
           member,
           user,
           extraData: metadata.extraData,
-          language: type === InternalNotificationType.textSmsToUser ? Language.en : member.language,
+          language:
+            type === InternalNotificationType.textSmsToUser ? Language.en : memberConfig.language,
         };
         content = this.internationalizationService.getContents(getContentsParams);
       }
@@ -964,7 +965,7 @@ export class MemberResolver extends MemberBase {
           extraData: metadata.chatLink
             ? { chatLink: metadata.chatLink }
             : { scheduleLink: metadata.scheduleLink },
-          language: member.language,
+          language: memberConfig.language,
         };
         content += this.internationalizationService.getContents(getContentsParams);
       }

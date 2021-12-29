@@ -54,6 +54,7 @@ import {
   MemberResolver,
   MemberService,
   TaskStatus,
+  defaultMemberParams,
 } from '../../src/member';
 import {
   CognitoService,
@@ -2387,8 +2388,8 @@ describe('MemberResolver', () => {
 
     it('should send notification in spanish if member language = es', async () => {
       const member = mockGenerateMember();
-      member.language = Language.es;
       const memberConfig = mockGenerateMemberConfig();
+      memberConfig.language = Language.es;
       memberConfig.platform = Platform.web;
       const user = mockGenerateUser();
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
@@ -2550,6 +2551,7 @@ describe('MemberResolver', () => {
         accessToken: '123-abc',
         firstLoggedInAt: faker.date.past(1),
         articlesPath: faker.system.directoryPath(),
+        language: defaultMemberParams.language,
       };
       const communication: Communication = {
         memberId: new Types.ObjectId(member.id),

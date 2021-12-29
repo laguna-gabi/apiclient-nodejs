@@ -113,7 +113,7 @@ export class MemberBase {
         orgName: member?.org?.name,
         honorific: member?.honorific,
         zipCode: member?.zipCode || member?.org?.zipCode,
-        language: member?.language,
+        language: memberConfig?.language,
         platform: memberConfig?.platform,
         isPushNotificationsEnabled: memberConfig?.isPushNotificationsEnabled,
         isAppointmentsReminderEnabled: memberConfig?.isAppointmentsReminderEnabled,

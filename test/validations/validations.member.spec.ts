@@ -1,7 +1,6 @@
 import {
   CancelNotificationType,
   Honorific,
-  Language,
   NotificationType,
   Platform,
   generateZipCode,
@@ -85,7 +84,6 @@ describe('Validations - member', () => {
       field              | defaultValue
       ${'sex'}           | ${defaultMemberParams.sex}
       ${'email'}         | ${null}
-      ${'language'}      | ${defaultMemberParams.language}
       ${'dischargeDate'} | ${null}
       ${'honorific'}     | ${defaultMemberParams.honorific}
     `(`should set default value if exists for optional field $field`, async (params) => {
@@ -105,7 +103,6 @@ describe('Validations - member', () => {
       field          | value
       ${'sex'}       | ${Sex.female}
       ${'email'}     | ${faker.internet.email()}
-      ${'language'}  | ${Language.es}
       ${'zipCode'}   | ${generateZipCode()}
       ${'honorific'} | ${Honorific.dr}
     `(`should be able to set value for optional field $field`, async (params) => {
@@ -536,7 +533,6 @@ describe('Validations - member', () => {
       ${{ phoneSecondary: 123 }}          | ${{ missingFieldError: stringError }}
       ${{ email: 'not-valid' }}           | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberEmailFormat)] }}
       ${{ sex: 'not-valid' }}             | ${{ missingFieldError: 'does not exist in "Sex" enum' }}
-      ${{ language: 'not-valid' }}        | ${{ missingFieldError: 'does not exist in "Language" enum' }}
       ${{ zipCode: 123 }}                 | ${{ missingFieldError: stringError }}
       ${{ dischargeDate: 'not-valid' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
       ${{ address: 123 }}                 | ${{ missingFieldError: 'Expected type "AddressInput" to be an object.' }}

@@ -131,11 +131,6 @@ export class ExtraMemberParams {
   @IsOptional()
   email?: string;
 
-  @Field(() => Language, { nullable: true })
-  @IsEnum(Language) /* for rest api */
-  @IsOptional()
-  language?: Language;
-
   @Field(() => String, { nullable: true })
   @IsValidZipCode({ message: Errors.get(ErrorType.memberInvalidZipCode) })
   @IsString() /* for rest api */
@@ -210,6 +205,12 @@ export class CreateMemberParams extends ExtraMemberParams {
   @IsString() /* for rest api */
   @IsObjectId({ message: Errors.get(ErrorType.memberOrgIdInvalid) })
   orgId: string;
+
+  // language is not a part of the member object, but only used here for the first registration
+  @Field(() => Language, { nullable: true })
+  @IsEnum(Language) /* for rest api */
+  @IsOptional()
+  language?: Language;
 }
 
 @InputType()
@@ -455,10 +456,6 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   email?: string;
-
-  @Prop({ default: defaultMemberParams.language })
-  @Field(() => Language)
-  language: Language;
 
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })

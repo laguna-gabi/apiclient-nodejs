@@ -7,6 +7,7 @@ import {
   mockGenerateUser,
 } from '../index';
 import {
+  AnalyticsModule,
   AnalyticsService,
   AppointmentAttendanceStatus,
   DateFormat,
@@ -19,7 +20,6 @@ import { RecordingType, reformatDate } from '../../src/common';
 import { MemberDocument, MemberModule } from '../../src/member';
 import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { Test, TestingModule } from '@nestjs/testing';
-import { AnalyticsModule } from '../../cmd';
 import { ProvidersModule } from '../../src/providers';
 import { Language, Platform } from '@lagunahealth/pandora';
 import * as config from 'config';
@@ -163,7 +163,6 @@ describe('Commands: AnalyticsService', () => {
           ethnicity: mockMember.ethnicity,
           gender: mockMember.sex,
           intervention_group: false,
-          language: mockMember.language,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           race: mockMember.race,
           state: mockMember.address.state,
@@ -401,6 +400,7 @@ describe('Commands: AnalyticsService', () => {
         _id: new Types.ObjectId(mockMember.id),
         memberConfig: {
           platform: Platform.ios,
+          language: Language.en,
         },
         memberDetails: {
           ...mockMember,

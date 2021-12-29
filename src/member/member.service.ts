@@ -98,13 +98,14 @@ export class MemberService extends BaseService {
   ): Promise<{ member: Member; memberConfig: MemberConfig }> {
     try {
       this.removeNotNullable(createMemberParams, NotNullableMemberKeys);
-      const primitiveValues = cloneDeep(createMemberParams);
+      const { language, ...memberParams } = createMemberParams;
+      const primitiveValues = cloneDeep(memberParams);
       delete primitiveValues.orgId;
       delete primitiveValues.userId;
 
       const object = await this.memberModel.create({
         ...primitiveValues,
-        org: new Types.ObjectId(createMemberParams.orgId),
+        org: new Types.ObjectId(memberParams.orgId),
         primaryUserId,
         users: [primaryUserId],
       });
@@ -112,6 +113,7 @@ export class MemberService extends BaseService {
       const memberConfig = await this.memberConfigModel.create({
         memberId: new Types.ObjectId(object._id),
         externalUserId: v4(),
+        language,
       });
 
       const member = await this.getById(object._id);

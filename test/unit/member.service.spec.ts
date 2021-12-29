@@ -838,14 +838,13 @@ describe('MemberService', () => {
 
   describe('update', () => {
     it('should throw when trying to update non existing member', async () => {
-      await expect(service.update({ id: generateId(), language: Language.es })).rejects.toThrow(
+      await expect(service.update({ id: generateId() })).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
     });
 
     it('should be able to update partial fields', async () => {
       await updateMember({
-        language: Language.es,
         fellowName: faker.name.firstName(),
         readmissionRisk: ReadmissionRisk.high,
       });

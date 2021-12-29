@@ -71,9 +71,6 @@ export const compareMembers = (member: Member, memberBase, primaryUserId?) => {
   expect(member.lastName).toEqual(memberBase.lastName);
   expect(member.sex).toEqual(memberBase.sex ? memberBase.sex : defaultMemberParams.sex);
   expect(member.dateOfBirth).toEqual(member.dateOfBirth);
-  expect(member.language).toEqual(
-    memberBase.language ? memberBase.language : defaultMemberParams.language,
-  );
   expect(member.zipCode).toEqual(member.zipCode);
   expect(member.honorific).toEqual(
     member.honorific ? member.honorific : defaultMemberParams.honorific,

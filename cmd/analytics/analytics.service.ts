@@ -153,7 +153,6 @@ export class AnalyticsService {
         } as Member),
         created: reformatDate(member.createdAt.toString(), DateFormat),
         intervention_group: false, // control member is, by definition, not in intervention group
-        language: member.language,
         age: differenceInYears(this.getDateTime(), Date.parse(member.dateOfBirth)),
         race: member.race,
         ethnicity: member.ethnicity,
@@ -198,7 +197,7 @@ export class AnalyticsService {
         member.memberConfig.platform === Platform.android ||
         member.memberConfig.platform === Platform.ios,
       intervention_group: true,
-      language: member.memberDetails.language,
+      language: member.memberConfig.language,
       age: differenceInYears(this.getDateTime(), Date.parse(member.memberDetails.dateOfBirth)),
       race: member.memberDetails.race,
       ethnicity: member.memberDetails.ethnicity,
