@@ -68,10 +68,11 @@ export class MemberBase {
     this.eventEmitter.emit(EventType.onNewMember, eventNewMemberParams);
 
     const eventSlackMessageParams: IEventNotifySlack = {
-      /* eslint-disable-next-line max-len */
-      message: `*New customer*\n${member.firstName} [${member.id}],\nassigned to ${user.firstName}.`,
+      header: `*New _real_ member*`,
+      message: `${member.firstName} [${member.id}]\nAssigned to ${user.firstName}`,
       icon: SlackIcon.info,
       channel: SlackChannel.support,
+      orgName: member.org.name,
     };
     this.eventEmitter.emit(EventType.notifySlack, eventSlackMessageParams);
 
@@ -93,6 +94,16 @@ export class MemberBase {
       },
     };
     this.eventEmitter.emit(EventType.notifyDispatch, newControlMemberEvent);
+
+    const eventSlackMessageParams: IEventNotifySlack = {
+      header: `*New _control_ member*`,
+      message: `${controlMember.firstName} [${controlMember.id}]`,
+      icon: SlackIcon.info,
+      channel: SlackChannel.support,
+      orgName: controlMember.org.name,
+    };
+    this.eventEmitter.emit(EventType.notifySlack, eventSlackMessageParams);
+
     return controlMember;
   }
 

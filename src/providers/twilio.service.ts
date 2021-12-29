@@ -10,7 +10,6 @@ import {
   EventType,
   LoggerService,
   SendTwilioNotification,
-  generateOrgNamePrefix,
 } from '../common';
 import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 import { hoursToMilliseconds } from 'date-fns';
@@ -71,9 +70,11 @@ export class TwilioService implements OnModuleInit {
       }
     } else {
       const params: IEventNotifySlack = {
-        message: `*SMS to ${to}${generateOrgNamePrefix(orgName)}*\n${body}`,
+        header: `*SMS to ${to}*`,
+        message: body,
         icon: SlackIcon.phone,
         channel: SlackChannel.testingSms,
+        orgName,
       };
       this.eventEmitter.emit(EventType.notifySlack, params);
     }

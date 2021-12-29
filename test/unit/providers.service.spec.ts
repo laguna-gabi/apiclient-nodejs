@@ -1,6 +1,7 @@
+import { SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Environments, ErrorType, Errors, LoggerService } from '../../src/common';
+import { Environments, ErrorType, Errors, EventType, LoggerService } from '../../src/common';
 import { defaultModules } from '../common';
 import { TwilioService } from '../../src/providers';
 import * as config from 'config';
@@ -92,10 +93,11 @@ describe('Twilio', () => {
       }
 
       if (messageSentViaSlack && !logError) {
-        expect(spyOnEventEmitter).toBeCalledWith('notifySlack', {
-          channel: 'slack.testingSms',
-          icon: ':telephone_receiver:',
-          message: `*SMS to ${to}*\n${body}`,
+        expect(spyOnEventEmitter).toBeCalledWith(EventType.notifySlack, {
+          header: `*SMS to ${to}*`,
+          message: body,
+          channel: SlackChannel.testingSms,
+          icon: SlackIcon.phone,
         });
       } else if (!logError) {
         expect(spyOnEventEmitter).not.toBeCalled();
@@ -104,7 +106,7 @@ describe('Twilio', () => {
       if (logError) {
         expect(spyOnLogger).toBeCalledWith(
           { body, to },
-          'TwilioService',
+          TwilioService.name,
           'send',
           new Error(Errors.get(ErrorType.invalidPhoneNumberForMessaging)),
         );

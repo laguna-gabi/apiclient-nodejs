@@ -487,7 +487,7 @@ export class MemberService extends BaseService {
         org: new Types.ObjectId(createMemberParams.orgId),
       });
 
-      return this.replaceId(member.toObject());
+      return this.controlMemberModel.findOne({ _id: member.id }).populate({ path: 'org' });
     } catch (ex) {
       throw new Error(
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.memberPhoneAlreadyExists) : ex,

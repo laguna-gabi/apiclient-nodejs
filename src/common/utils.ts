@@ -67,10 +67,6 @@ export const extractAuthorizationHeader = (context) => {
   return jwt.decode(authorizationHeader);
 };
 
-export const generateOrgNamePrefix = (orgName?: string): string => {
-  return `${orgName ? ` [${orgName}] ` : ''}`;
-};
-
 export const delay = async (milliseconds: number) => {
   await new Promise((resolve) => setTimeout(resolve, milliseconds));
 };

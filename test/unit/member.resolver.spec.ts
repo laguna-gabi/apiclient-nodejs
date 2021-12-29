@@ -210,9 +210,11 @@ describe('MemberResolver', () => {
       );
       const eventSlackMessageParams: IEventNotifySlack = {
         /* eslint-disable-next-line max-len */
-        message: `*New customer*\n${member.firstName} [${member.id}],\nassigned to ${user.firstName}.`,
+        header: `*New _real_ member*`,
+        message: `${member.firstName} [${member.id}]\nAssigned to ${user.firstName}`,
         icon: SlackIcon.info,
         channel: SlackChannel.support,
+        orgName: member.org.name,
       };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
         3,
@@ -251,9 +253,11 @@ describe('MemberResolver', () => {
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onNewMember, eventNewMemberParams);
       const eventSlackMessageParams: IEventNotifySlack = {
         /* eslint-disable-next-line max-len */
-        message: `*New customer*\n${member.firstName} [${member.id}],\nassigned to ${user.firstName}.`,
+        header: `*New _real_ member*`,
+        message: `${member.firstName} [${member.id}]\nAssigned to ${user.firstName}`,
         icon: SlackIcon.info,
         channel: SlackChannel.support,
+        orgName: member.org.name,
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifySlack, eventSlackMessageParams);
     });
@@ -273,6 +277,19 @@ describe('MemberResolver', () => {
         message: JSON.stringify(generateUpdateClientSettings({ member })),
       };
       expect(spyOnEventEmitter).toHaveBeenCalledWith(EventType.notifyQueue, eventNotifyQueue);
+
+      const eventSlackMessageParams: IEventNotifySlack = {
+        /* eslint-disable-next-line max-len */
+        header: `*New _control_ member*`,
+        message: `${member.firstName} [${member.id}]`,
+        icon: SlackIcon.info,
+        channel: SlackChannel.support,
+        orgName: member.org.name,
+      };
+      expect(spyOnEventEmitter).toHaveBeenCalledWith(
+        EventType.notifySlack,
+        eventSlackMessageParams,
+      );
     });
   });
 

@@ -1,8 +1,14 @@
+import {
+  BaseLogger,
+  IEventNotifySlack,
+  ServiceName,
+  SlackChannel,
+  SlackIcon,
+} from '@lagunahealth/pandora';
 import { Inject, Injectable } from '@nestjs/common';
-import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { AuditType, EventType, IEventNotifyQueue, QueueType } from '.';
-import { BaseLogger, ServiceName, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 
 export const internalLogs = {
   hepiusVersion: 'Starting Hepius application version: @version@',
@@ -69,24 +75,16 @@ export class LoggerService extends BaseLogger {
     super(params, ServiceName.hepius, LoggerService.VALID_KEYS);
   }
 
-  warn(params: any = {}, className: string, methodName: string, ...reasons: any[]): void {
-    const log = super.warn(params, className, methodName, ...reasons);
-
-    this.eventEmitter.emit(EventType.notifySlack, {
-      message: log,
-      icon: SlackIcon.warning,
-      channel: SlackChannel.notifications,
-    });
-  }
-
   error(params: any = {}, className: string, methodName: string, ...reasons: any[]): void {
     const log = super.error(params, className, methodName, ...reasons);
 
-    this.eventEmitter.emit(EventType.notifySlack, {
-      message: log,
+    const slackParams: IEventNotifySlack = {
+      header: '*An error has occurred*',
+      message: log || '',
       icon: SlackIcon.critical,
       channel: SlackChannel.notifications,
-    });
+    };
+    this.eventEmitter.emit(EventType.notifySlack, slackParams);
   }
 
   audit(type: AuditType, params, methodName: string, authId?: string): void {

@@ -208,7 +208,8 @@ describe('Validations - member', () => {
     });
 
     it('rest: should fail to create member if phone already exists', async () => {
-      const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId: generateId() });
+      const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
+      const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
       await handler.mutations.createMember({ memberParams });
       const newMemberParams: CreateMemberParams = generateCreateMemberParams({
         orgId: generateId(),
