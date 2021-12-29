@@ -962,21 +962,6 @@ export class MemberResolver extends MemberBase {
         content = this.internationalizationService.getContents(getContentsParams);
       }
 
-      if ((metadata.scheduleLink || metadata.chatLink) && memberConfig.platform === Platform.web) {
-        const getContentsParams: GetContentsParams = {
-          contentType: metadata.chatLink
-            ? InternalKey.appointmentReminderLink
-            : InternalKey.appointmentRequestLink,
-          member,
-          user,
-          extraData: metadata.chatLink
-            ? { chatLink: metadata.chatLink }
-            : { scheduleLink: metadata.scheduleLink },
-          language: memberConfig.language,
-        };
-        content += this.internationalizationService.getContents(getContentsParams);
-      }
-
       return await this.notificationBuilder.internalNotify({
         member,
         memberConfig,

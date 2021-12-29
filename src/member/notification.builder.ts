@@ -34,10 +34,7 @@ export class NotificationBuilder {
     metadata: NotificationMetadata;
   }): Promise<string | void> {
     const orgName = member?.org.name;
-    let path = metadata.path || {};
-    if (type === NotificationType.call || type === NotificationType.video) {
-      path = { path: 'call' };
-    }
+    const path = { path: 'call' }; //no longer in use
 
     if (type === NotificationType.textSms) {
       const sendSendBirdNotification: SendSendBirdNotification = {

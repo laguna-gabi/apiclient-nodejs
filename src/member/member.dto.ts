@@ -1,3 +1,10 @@
+import {
+  CancelNotificationType,
+  ExternalKey,
+  Honorific,
+  Language,
+  NotificationType,
+} from '@lagunahealth/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
@@ -22,18 +29,11 @@ import {
   IsStringDate,
   IsTypeMetadataProvided,
   IsValidZipCode,
+  MemberRole,
   validPhoneExamples,
 } from '../common';
 import { Org } from '../org';
 import { User } from '../user';
-import {
-  CancelNotificationType,
-  ExternalKey,
-  Honorific,
-  Language,
-  NotificationType,
-} from '@lagunahealth/pandora';
-import { MemberRole } from '../common';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -327,17 +327,11 @@ export class NotificationMetadata {
   @Field(() => Date, { nullable: true })
   when?: Date;
 
-  @Field(() => Boolean, { nullable: true })
-  chatLink?: boolean;
-
   sendBirdChannelUrl?: string;
 
   @Field(() => String, { nullable: true })
   @IsObjectId({ message: Errors.get(ErrorType.appointmentIdInvalid) })
   appointmentId?: string;
-
-  @Field(() => String, { nullable: true })
-  path?: string;
 }
 
 @Schema({ versionKey: false, timestamps: true })
