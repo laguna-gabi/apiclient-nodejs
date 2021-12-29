@@ -108,6 +108,7 @@ export class InternalNotificationMetadata {
   path?: string;
   peerId?: string;
   journalImageDownloadLink?: string;
+  journalAudioDownloadLink?: string;
 }
 
 export class InternalNotifyParams {
@@ -163,6 +164,7 @@ export class SendSendBirdNotification extends BaseSendNotification {
   notificationType: AllNotificationTypes;
   appointmentId?: string;
   journalImageDownloadLink?: string;
+  journalAudioDownloadLink?: string;
 }
 
 export class CancelNotificationParams extends BaseSendNotification {

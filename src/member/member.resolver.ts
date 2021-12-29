@@ -588,7 +588,7 @@ export class MemberResolver extends MemberBase {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    const { imageFormat, text } = await this.memberService.updateJournal({
+    const { imageFormat, audioFormat, text } = await this.memberService.updateJournal({
       id,
       memberId,
       published: true,
@@ -599,12 +599,20 @@ export class MemberResolver extends MemberBase {
       userId: member.primaryUserId.toString(),
     });
 
-    let url;
+    let journalImageDownloadLink;
+    let journalAudioDownloadLink;
     if (imageFormat) {
-      url = await this.storageService.getDownloadUrl({
+      journalImageDownloadLink = await this.storageService.getDownloadUrl({
         storageType: StorageType.journals,
         memberId,
         id: `${id}${ImageType.NormalImage}.${imageFormat}`,
+      });
+    }
+    if (audioFormat) {
+      journalAudioDownloadLink = await this.storageService.getDownloadUrl({
+        storageType: StorageType.journals,
+        memberId,
+        id: `${id}${AudioType}.${audioFormat}`,
       });
     }
 
@@ -615,7 +623,8 @@ export class MemberResolver extends MemberBase {
       content: text,
       metadata: {
         sendBirdChannelUrl,
-        journalImageDownloadLink: url,
+        journalImageDownloadLink,
+        journalAudioDownloadLink,
       },
     });
   }
@@ -807,7 +816,7 @@ export class MemberResolver extends MemberBase {
     });
   }
 
-  @Mutation(() => String, { nullable: true })
+  @Mutation(() => Boolean, { nullable: true })
   @Roles(UserRole.coach, UserRole.nurse)
   async notify(@Args(camelCase(NotifyParams.name)) notifyParams: NotifyParams) {
     const { memberId, userId, type, metadata } = notifyParams;

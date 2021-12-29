@@ -1,14 +1,15 @@
 import { BaseSendBird, InternalNotificationType } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import * as FormData from 'form-data';
 import * as download from 'download';
+import * as FormData from 'form-data';
 import { createReadStream, createWriteStream } from 'fs';
 import { unlink } from 'fs/promises';
 import { ConfigsService, ExternalConfigs } from '.';
 import { AppointmentStatus } from '../appointment';
 import { LoggerService, SendSendBirdNotification } from '../common';
 import { CreateSendbirdGroupChannelParams, RegisterSendbirdUserParams } from '../communication';
+import { AudioFormat } from '../member/journal.dto';
 import { User } from '../user';
 
 @Injectable()
@@ -209,14 +210,15 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
       notificationType,
       appointmentId,
       journalImageDownloadLink,
+      journalAudioDownloadLink,
     } = sendSendBirdNotification;
     try {
       if (journalImageDownloadLink) {
-        const ImageDownloadResult = await this.httpService
+        const imageDownloadResult = await this.httpService
           .get(journalImageDownloadLink, { responseType: 'stream' })
           .toPromise();
 
-        const imageFormat = ImageDownloadResult.headers['content-type'].split('/')[1];
+        const imageFormat = imageDownloadResult.headers['content-type'].split('/')[1];
 
         await download(journalImageDownloadLink).pipe(
           createWriteStream(`./${userId}.${imageFormat}`),
@@ -239,7 +241,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
                 ...form.getHeaders(),
                 ...this.headers,
                 // eslint-disable-next-line max-len
-                'Content-Type': `multipart/form-data; boundary=${ImageDownloadResult.headers['content-type']}`,
+                'Content-Type': `multipart/form-data; boundary=${imageDownloadResult.headers['content-type']}`,
               },
             },
           )
@@ -247,9 +249,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
 
         await unlink(`./${userId}.${imageFormat}`);
 
-        if (result.status === 200) {
-          return result.data.message_id;
-        } else {
+        if (result.status !== 200) {
           this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name);
         }
       } else {
@@ -266,11 +266,53 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
             { headers: this.headers },
           )
           .toPromise();
-        if (result.status === 200) {
-          return result.data.message_id;
-        } else {
+        if (result.status !== 200) {
           this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name);
         }
+      }
+      if (journalAudioDownloadLink) {
+        const audioDownloadResult = await this.httpService
+          .get(journalAudioDownloadLink, { responseType: 'stream' })
+          .toPromise();
+
+        const audioFormat =
+          audioDownloadResult.headers['content-type'] === 'audio/mp4'
+            ? AudioFormat.m4a
+            : AudioFormat.mp3;
+
+        await download(journalAudioDownloadLink).pipe(
+          createWriteStream(`./${userId}.${audioFormat}`),
+        );
+
+        const form = new FormData();
+        form.append('user_id', userId);
+        form.append('message_type', 'FILE');
+        form.append('file', createReadStream(`./${userId}.${audioFormat}`));
+        form.append('apns_bundle_id', 'com.cca.MyChatPlain');
+        form.append('custom_type', notificationType); // For use of Laguna Chat
+        form.append('data', JSON.stringify({ senderId: userId, appointmentId, message })); // For use of Laguna Chat);
+
+        const result = await this.httpService
+          .post(
+            `${this.basePath}${this.suffix.groupChannels}/${sendBirdChannelUrl}/messages`,
+            form,
+            {
+              headers: {
+                ...form.getHeaders(),
+                ...this.headers,
+                // eslint-disable-next-line max-len
+                'Content-Type': `multipart/form-data; boundary=${audioDownloadResult.headers['content-type']}`,
+              },
+            },
+          )
+          .toPromise();
+
+        await unlink(`./${userId}.${audioFormat}`);
+
+        if (result.status !== 200) {
+          this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name);
+        }
+        return true;
       }
     } catch (ex) {
       this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name, ex);

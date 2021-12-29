@@ -184,6 +184,7 @@ export class NotificationBuilder {
           notificationType: type,
           orgName,
           journalImageDownloadLink: metadata.journalImageDownloadLink,
+          journalAudioDownloadLink: metadata.journalAudioDownloadLink,
         };
         return this.notificationsService.send({ sendSendBirdNotification });
       }

@@ -1513,11 +1513,13 @@ describe('MemberResolver', () => {
       const memberId = generateId();
       const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
       const communication = generateCommunication();
-      const url = generateUniqueUrl();
+      const journalImageDownloadLink = generateUniqueUrl();
+      const journalAudioDownloadLink = generateUniqueUrl();
       spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
       spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
       spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
-      spyOnStorageGetDownloadUrl.mockImplementation(async () => url);
+      spyOnStorageGetDownloadUrl.mockImplementationOnce(async () => journalImageDownloadLink);
+      spyOnStorageGetDownloadUrl.mockImplementationOnce(async () => journalAudioDownloadLink);
       spyOnServiceGetMember.mockImplementation(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
@@ -1550,7 +1552,8 @@ describe('MemberResolver', () => {
           orgName: member.org.name,
           userId: member.id,
           sendBirdChannelUrl: communication.sendBirdChannelUrl,
-          journalImageDownloadLink: url,
+          journalImageDownloadLink,
+          journalAudioDownloadLink,
         },
       });
     });
@@ -1563,6 +1566,79 @@ describe('MemberResolver', () => {
       const journal = generateMockJournalParams({
         memberId: new Types.ObjectId(memberId),
         imageFormat: null,
+      });
+      const communication = generateCommunication();
+      const journalAudioDownloadLink = generateUniqueUrl();
+      spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
+      spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
+      spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
+      spyOnStorageGetDownloadUrl.mockImplementationOnce(async () => journalAudioDownloadLink);
+      spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
+      spyOnServiceGetMember.mockImplementation(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      await resolver.publishJournal([MemberRole.member], memberId, journal.id);
+
+      expect(spyOnStorageGetDownloadUrl).toReturnTimes(1);
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendSendBirdNotification: {
+          message: journal.text,
+          notificationType: InternalNotificationType.chatMessageJournal,
+          orgName: member.org.name,
+          userId: member.id,
+          sendBirdChannelUrl: communication.sendBirdChannelUrl,
+          journalAudioDownloadLink,
+        },
+      });
+    });
+
+    it('should publish Journal with no audio', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      const memberId = generateId();
+      const journal = generateMockJournalParams({
+        memberId: new Types.ObjectId(memberId),
+        audioFormat: null,
+      });
+      const communication = generateCommunication();
+      const journalImageDownloadLink = generateUniqueUrl();
+      spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
+      spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
+      spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
+      spyOnStorageGetDownloadUrl.mockImplementationOnce(async () => journalImageDownloadLink);
+      spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
+      spyOnServiceGetMember.mockImplementation(async () => member);
+      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+
+      await resolver.publishJournal([MemberRole.member], memberId, journal.id);
+
+      expect(spyOnStorageGetDownloadUrl).toReturnTimes(1);
+      expect(spyOnNotificationsServiceSend).toBeCalledWith({
+        sendSendBirdNotification: {
+          message: journal.text,
+          notificationType: InternalNotificationType.chatMessageJournal,
+          orgName: member.org.name,
+          userId: member.id,
+          sendBirdChannelUrl: communication.sendBirdChannelUrl,
+          journalImageDownloadLink,
+        },
+      });
+    });
+
+    it('should publish Journal with no audio and no image', async () => {
+      const member = mockGenerateMember();
+      const memberConfig = mockGenerateMemberConfig();
+      const user = mockGenerateUser();
+      const memberId = generateId();
+      const journal = generateMockJournalParams({
+        memberId: new Types.ObjectId(memberId),
+        imageFormat: null,
+        audioFormat: null,
       });
       const communication = generateCommunication();
       const url = generateUniqueUrl();
