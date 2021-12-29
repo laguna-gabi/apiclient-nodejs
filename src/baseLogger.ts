@@ -1,5 +1,5 @@
 import { PARAMS_PROVIDER_TOKEN, Params, PinoLogger } from 'nestjs-pino';
-import { LogType, ServiceName, generateOrgNamePrefix } from '.';
+import { Client, LogType, ServiceName, generateOrgNamePrefix } from '.';
 import { Inject } from '@nestjs/common';
 
 export class BaseLogger extends PinoLogger {
@@ -17,9 +17,9 @@ export class BaseLogger extends PinoLogger {
     return this.logFormat(this.getCalledLog(params), className, methodName, LogType.log);
   }
 
-  info(params: any = {}, className: string, methodName: string): string | void {
+  info(params: any = {}, className: string, methodName: string, client?: Client): string | void {
     params = this.filterParams(params);
-    super.info({ params, className, methodName });
+    super.info({ params, className, methodName, client });
     return this.logFormat(this.getCalledLog(params), className, methodName, LogType.info);
   }
 
@@ -48,7 +48,7 @@ export class BaseLogger extends PinoLogger {
       `${this.getCalledLog(params)} WARN with result ${reasons}`,
       className,
       methodName,
-      LogType.error,
+      LogType.warn,
     );
   }
 
