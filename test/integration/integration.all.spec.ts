@@ -282,6 +282,7 @@ describe('Integration tests: all', () => {
       isAppointmentsReminderEnabled: true,
       isRecommendationsEnabled: true,
       language: Language.en,
+      updatedAt: expect.any(String),
     });
 
     const updateMemberConfigParams = generateUpdateMemberConfigParams();
@@ -303,6 +304,7 @@ describe('Integration tests: all', () => {
       isAppointmentsReminderEnabled: updateMemberConfigParams.isAppointmentsReminderEnabled,
       isRecommendationsEnabled: updateMemberConfigParams.isRecommendationsEnabled,
       language: Language.en,
+      updatedAt: expect.any(String),
     });
   });
 

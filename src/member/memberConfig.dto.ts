@@ -80,6 +80,9 @@ export class MemberConfig {
 
   @Field(() => String, { nullable: false })
   articlesPath: string;
+
+  @Field(() => Date)
+  updatedAt: Date;
 }
 
 /**************************************************************************************************

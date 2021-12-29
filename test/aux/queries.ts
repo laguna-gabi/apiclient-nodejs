@@ -530,6 +530,7 @@ export class Queries {
             articlesPath
             firstLoggedInAt
             language
+            updatedAt
           }
         }
       `,

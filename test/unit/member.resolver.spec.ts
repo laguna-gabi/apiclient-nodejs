@@ -2511,6 +2511,7 @@ describe('MemberResolver', () => {
         firstLoggedInAt: faker.date.past(1),
         articlesPath: faker.system.directoryPath(),
         language: defaultMemberParams.language,
+        updatedAt: faker.date.past(1),
       };
       const communication: Communication = {
         memberId: new Types.ObjectId(member.id),

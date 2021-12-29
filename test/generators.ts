@@ -109,6 +109,7 @@ export const generateMemberConfig = ({
   firstLoggedInAt = faker.date.past(2),
   articlesPath = faker.system.directoryPath(),
   language = defaultMemberParams.language,
+  updatedAt = faker.date.past(2),
 }: Partial<MemberConfig> = {}): MemberConfig => {
   return {
     memberId,
@@ -119,6 +120,7 @@ export const generateMemberConfig = ({
     firstLoggedInAt,
     articlesPath,
     language,
+    updatedAt,
   };
 };
 
@@ -278,6 +280,7 @@ export const mockGenerateMemberConfig = ({
     firstLoggedInAt: faker.date.past(2),
     articlesPath: faker.system.directoryPath(),
     language: defaultMemberParams.language,
+    updatedAt: faker.date.past(1),
   };
 };
 
