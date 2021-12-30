@@ -1,5 +1,6 @@
 export enum Environments {
   production = 'production',
   development = 'development',
-  test = 'test'
+  test = 'test',
+  localhost = 'localhost',
 }

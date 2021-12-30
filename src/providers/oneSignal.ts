@@ -8,7 +8,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { oneSignal } from 'config';
 import { CancelNotificationParams, Provider, ProviderResult, SendOneSignalNotification } from '.';
-import { ErrorType, Errors, Logger } from '../common';
+import { Logger } from '../common';
 import { ConfigsService, ExternalConfigs } from './aws';
 
 @Injectable()
@@ -66,18 +66,6 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
         .toPromise();
       if (status === 200 && data.recipients >= 1) {
         return { provider: Provider.oneSignal, content: body.contents.en, id: data.id };
-      } else if (
-        data.errors[0] === 'All included players are not subscribed' ||
-        data.errors?.invalid_external_user_ids[0] === externalUserId
-      ) {
-        //TODO
-        //https://app.shortcut.com/laguna-health/story/2208/hepius-iris-pandora-cleanup
-        // const eventParams: IEventOnMemberBecameOffline = {
-        //   phone: sendOneSignalNotification.data.member.phone,
-        //   content,
-        //   type: sendOneSignalNotification.data.type,
-        // };
-        // this.eventEmitter.emit(EventType.onMemberBecameOffline, eventParams);
       } else {
         this.logger.error(
           sendOneSignalNotification,
@@ -92,44 +80,27 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     }
   }
 
-  async cancel(cancelNotificationParams: CancelNotificationParams) {
+  async cancel(cancelNotificationParams: CancelNotificationParams): Promise<ProviderResult> {
     this.logger.info(cancelNotificationParams, OneSignal.name, this.cancel.name);
     const { platform, externalUserId, data } = cancelNotificationParams;
 
     const config = await this.getConfig(platform, data.type);
     const app_id = await this.getApiId(platform, data.type);
-    const cancelUrl = `${this.notificationsUrl}/${data.notificationId}?app_id=${app_id}`;
+
+    const body = {
+      app_id,
+      include_external_user_ids: [externalUserId],
+      content_available: true,
+      data,
+    };
 
     try {
-      await this.httpService.delete(cancelUrl, config).toPromise();
-    } catch (ex) {
-      if (ex.response.data.errors[0] !== 'Notification has already been sent to all recipients') {
-        throw new Error(Errors.get(ErrorType.notificationNotFound));
-      } else {
-        const defaultApiKey = await this.configsService.getConfig(
-          ExternalConfigs.oneSignal.defaultApiKey,
-        );
-        const config = { headers: { Authorization: `Basic ${defaultApiKey}` } };
-        const app_id = await this.configsService.getConfig(ExternalConfigs.oneSignal.defaultApiId);
-
-        const body = {
-          app_id,
-          include_external_user_ids: [externalUserId],
-          content_available: true,
-          data,
-        };
-
-        try {
-          const result = await this.httpService
-            .post(this.notificationsUrl, body, config)
-            .toPromise();
-          if (result.status === 200 && result.data.recipients >= 1) {
-            return result.data.id;
-          }
-        } catch (ex) {
-          this.logger.error(cancelNotificationParams, OneSignal.name, this.cancel.name, ex);
-        }
+      const result = await this.httpService.post(this.notificationsUrl, body, config).toPromise();
+      if (result.status === 200 && result.data.recipients >= 1) {
+        return { provider: Provider.oneSignal, content: data.peerId, id: result.data.id };
       }
+    } catch (ex) {
+      this.logger.error(cancelNotificationParams, OneSignal.name, this.cancel.name, ex);
     }
   }
 

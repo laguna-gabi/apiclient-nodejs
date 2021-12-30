@@ -1,9 +1,4 @@
-import {
-  IEventNotifySlack,
-  SlackChannel,
-  SlackIcon,
-  generateOrgNamePrefix,
-} from '@lagunahealth/pandora';
+import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as config from 'config';
 import { hoursToMilliseconds } from 'date-fns';
@@ -51,9 +46,11 @@ export class Twilio implements OnModuleInit {
       }
     } else {
       const params: IEventNotifySlack = {
-        message: `*SMS to ${to}${generateOrgNamePrefix(orgName)}*\n${body}`,
+        header: `*SMS to ${to}*`,
+        message: body,
         icon: SlackIcon.phone,
         channel: SlackChannel.testingSms,
+        orgName,
       };
       const result = await this.slack.send(params);
       return { provider: Provider.slack, content: params.message, id: result.text };
