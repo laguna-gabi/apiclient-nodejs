@@ -139,6 +139,7 @@ export enum CustomKey {
   customContent = 'customContent',
   callOrVideo = 'callOrVideo',
   cancelNotify = 'cancelNotify',
+  journalContent = 'journalContent',
 }
 
 export type ContentKey = ExternalKey | InternalKey | CustomKey;
