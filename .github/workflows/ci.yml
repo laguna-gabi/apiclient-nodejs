@@ -3,7 +3,6 @@ name: Laguna
 on:
   push:
     branches:
-      - poeditor
       - develop
       - staging
   pull_request:
@@ -77,31 +76,28 @@ jobs:
       - name: Test
         run: yarn test:cov
       - name: Zip lcov-report
-        if: github.ref != 'refs/heads/poeditor'
         uses: papeloto/action-zip@v1
         with:
           files: coverage/lcov-report
           dest: coverage.zip
       - name: Upload coverage zip
-        if: github.ref != 'refs/heads/poeditor'
         uses: actions/upload-artifact@v2
         with:
           name: coverage
           path: coverage.zip
       - name: Remove lcov-report before uploading to S3
-        if: github.ref != 'refs/heads/poeditor'
         run: |
           rm coverage.zip
           rm -rf coverage/lcov-report
       - name: Get local coverage report
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
+        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
         id: localCoverage
         uses: notiz-dev/github-action-json-property@release
         with:
           path: './coverage/coverage-summary.json'
           prop_path: 'total.lines.pct'
       - name: Download develop coverage report from S3
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
+        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
         uses: prewk/s3-cp-action@v2
         with:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -109,17 +105,17 @@ jobs:
           source: 's3://${{ secrets.COVERAGE_AWS_BUCKET }}/develop/coverage-summary.json'
           dest: './coverage/develop/coverage-summary.json'
       - name: Get develop coverage report
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
+        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
         id: developCoverage
         uses: notiz-dev/github-action-json-property@release
         with:
           path: './coverage/develop/coverage-summary.json'
           prop_path: 'total.lines.pct'
       - name: Set coverage diff
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
+        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
         run: echo "DIFF_COV=$(echo "${{steps.localCoverage.outputs.prop}}-${{steps.developCoverage.outputs.prop}}" | bc)" >> $GITHUB_ENV
       - name: Add coverage report url and diff to PR
-        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging' && github.ref != 'refs/heads/poeditor'
+        if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/staging'
         uses: mshick/add-pr-comment@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -224,14 +220,6 @@ jobs:
           service: hepius-${{ steps.branch-name.outputs.current_branch }}-service
           cluster: cluster-hepius-${{ steps.branch-name.outputs.current_branch }}
           wait-for-service-stability: true
-      - name: Merge develop to poeditor
-        if: github.ref == 'refs/heads/develop'
-        uses: devmasx/merge-branch@master
-        with:
-          type: now
-          from_branch: develop
-          target_branch: poeditor
-          github_token: ${{ github.token }}
       - name: Notify deploy to Slack
         uses: fjogeleit/http-request-action@master
         with:
@@ -303,19 +291,3 @@ jobs:
         env:
           NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
         run: echo "new tag $NEW_TAG"
-
-  sync-languages:
-    name: Sync Languages With PoEditor
-    runs-on: ubuntu-latest
-    needs: build-test-coverage
-    if: github.ref == 'refs/heads/poeditor'
-    steps:
-      - name: Checkout Git repository
-        uses: actions/checkout@v2
-      - name: create pull-request
-        uses: repo-sync/pull-request@v2
-        with:
-          destination_branch: 'develop'
-          pr_title: 'Sync Languages With PoEditor'
-          pr_body: '# This is an automatic PR from [POEditor](https://poeditor.com/projects/)'
-          github_token: ${{ secrets.GITHUB_TOKEN }}

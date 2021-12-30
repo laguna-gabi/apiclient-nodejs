@@ -18,7 +18,6 @@ import * as faker from 'faker';
 import { Types } from 'mongoose';
 import { DailyReport } from '../src/dailyReport';
 import { v4 } from 'uuid';
-import * as en from '../languages/en.json';
 import {
   AppointmentMethod,
   EndAppointmentParams,
@@ -538,7 +537,7 @@ export const generateInternalNotifyParams = ({
     contentType: InternalKey.logReminder,
     sendBirdChannelUrl: generateUniqueUrl(),
   },
-  content = en.translation.contents.logReminder,
+  content = faker.lorem.sentence(),
 }: Partial<InternalNotifyParams> = {}): InternalNotifyParams => {
   return { memberId, userId, type, metadata, content };
 };

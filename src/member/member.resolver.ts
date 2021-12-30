@@ -7,7 +7,6 @@ import {
   InnerQueueTypes,
   InternalKey,
   InternalNotificationType,
-  Language,
   NotificationType,
   Platform,
   ServiceName,
@@ -64,7 +63,6 @@ import {
   ErrorType,
   Errors,
   EventType,
-  GetContentsParams,
   IDispatchParams,
   IEventMember,
   IEventNotifyQueue,
@@ -75,7 +73,6 @@ import {
   IEventOnUpdatedMemberPlatform,
   Identifier,
   InternalNotifyParams,
-  InternationalizationService,
   LoggerService,
   LoggingInterceptor,
   MemberRole,
@@ -116,7 +113,6 @@ export class MemberResolver extends MemberBase {
     readonly userService: UserService,
     readonly communicationService: CommunicationService,
     private readonly communicationResolver: CommunicationResolver,
-    readonly internationalizationService: InternationalizationService,
     protected readonly bitly: Bitly,
     readonly logger: LoggerService,
     readonly featureFlagService: FeatureFlagService,
@@ -913,7 +909,7 @@ export class MemberResolver extends MemberBase {
   async internalNotify(params: InternalNotifyParams) {
     this.logger.info(params, MemberResolver.name, this.internalNotify.name);
     const { memberId, userId, type, metadata } = params;
-    let content = params.content;
+    const content = params.content;
 
     try {
       const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(
@@ -948,18 +944,6 @@ export class MemberResolver extends MemberBase {
             )} (UTC)`,
           };
         }
-      }
-
-      if (metadata.contentType) {
-        const getContentsParams: GetContentsParams = {
-          contentType: metadata.contentType,
-          member,
-          user,
-          extraData: metadata.extraData,
-          language:
-            type === InternalNotificationType.textSmsToUser ? Language.en : memberConfig.language,
-        };
-        content = this.internationalizationService.getContents(getContentsParams);
       }
 
       return await this.notificationBuilder.internalNotify({

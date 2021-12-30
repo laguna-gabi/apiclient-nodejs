@@ -5,7 +5,6 @@ import {
   InnerQueueTypes,
   InternalKey,
   InternalNotificationType,
-  Language,
   NotificationType,
   Platform,
   SlackChannel,
@@ -27,7 +26,6 @@ import {
   IEventOnNewMember,
   IEventOnReceivedChatMessage,
   IEventOnUpdatedMemberPlatform,
-  InternationalizationService,
   LoggerService,
   MemberRole,
   QueueType,
@@ -105,7 +103,6 @@ describe('MemberResolver', () => {
   let notificationsService: NotificationsService;
   let communicationService: CommunicationService;
   let eventEmitter: EventEmitter2;
-  let internationalizationService: InternationalizationService;
   let featureFlagService: FeatureFlagService;
   let spyOnEventEmitter;
 
@@ -126,12 +123,7 @@ describe('MemberResolver', () => {
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
     featureFlagService = module.get<FeatureFlagService>(FeatureFlagService);
-    internationalizationService = module.get<InternationalizationService>(
-      InternationalizationService,
-    );
     mockLogger(module.get<LoggerService>(LoggerService));
-
-    await internationalizationService.onModuleInit();
   });
 
   afterAll(async () => {
@@ -2346,38 +2338,6 @@ describe('MemberResolver', () => {
             isVideo: false,
           },
           content: internalNotifyParams.content,
-          orgName: member.org.name,
-        },
-      });
-    });
-
-    it('should send notification in spanish if member language = es', async () => {
-      const member = mockGenerateMember();
-      const memberConfig = mockGenerateMemberConfig();
-      memberConfig.language = Language.es;
-      memberConfig.platform = Platform.web;
-      const user = mockGenerateUser();
-      spyOnServiceGetMember.mockImplementationOnce(async () => member);
-      spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-      spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
-
-      const internalNotifyParams = generateInternalNotifyParams({
-        type: InternalNotificationType.textToMember,
-        metadata: { contentType: InternalKey.newMember },
-      });
-
-      await resolver.internalNotify(internalNotifyParams);
-
-      expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendTwilioNotification: {
-          body: internationalizationService.getContents({
-            member,
-            user,
-            contentType: InternalKey.newMember,
-            language: Language.es,
-          }),
-          to: member.phone,
           orgName: member.org.name,
         },
       });
