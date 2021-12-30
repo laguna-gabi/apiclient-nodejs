@@ -55,6 +55,8 @@ export interface ICreateDispatch extends IDispatch {
   triggersAt?: Date;
   path?: string;
   scheduleLink?: string;
+  journalImageDownloadLink?: string;
+  journalAudioDownloadLink?: string;
 }
 
 export type IDeleteDispatch = IDispatch;
