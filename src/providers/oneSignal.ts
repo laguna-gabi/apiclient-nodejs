@@ -66,18 +66,6 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
         .toPromise();
       if (status === 200 && data.recipients >= 1) {
         return { provider: Provider.oneSignal, content: body.contents.en, id: data.id };
-      } else if (
-        data.errors[0] === 'All included players are not subscribed' ||
-        data.errors?.invalid_external_user_ids[0] === externalUserId
-      ) {
-        //TODO
-        //https://app.shortcut.com/laguna-health/story/2208/hepius-iris-pandora-cleanup
-        // const eventParams: IEventOnMemberBecameOffline = {
-        //   phone: sendOneSignalNotification.data.member.phone,
-        //   content,
-        //   type: sendOneSignalNotification.data.type,
-        // };
-        // this.eventEmitter.emit(EventType.onMemberBecameOffline, eventParams);
       } else {
         this.logger.error(
           sendOneSignalNotification,
