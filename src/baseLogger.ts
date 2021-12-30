@@ -1,5 +1,5 @@
 import { PARAMS_PROVIDER_TOKEN, Params, PinoLogger } from 'nestjs-pino';
-import { Client, LogType, ServiceName, generateOrgNamePrefix } from '.';
+import { AuditType, Client, LogType, ServiceName, generateOrgNamePrefix } from '.';
 import { Inject } from '@nestjs/common';
 
 export class BaseLogger extends PinoLogger {
@@ -49,6 +49,14 @@ export class BaseLogger extends PinoLogger {
       className,
       methodName,
       LogType.warn,
+    );
+  }
+
+  formatAuditMessage(type: AuditType, params, methodName: string, authId?: string): string {
+    const userPayload = authId ? `user: ${authId}, ` : '';
+    return (
+      `${userPayload}type: ${type}, date: ${new Date().toLocaleString()}, description: ` +
+      `${this.source} ${methodName} ${this.getCalledLog(params)}`
     );
   }
 

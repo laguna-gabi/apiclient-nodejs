@@ -175,6 +175,20 @@ export class ExtraData {
   dynamicLink?: string;
 }
 
+export enum QueueType {
+  audit = 'audit',
+  notifications = 'notifications',
+}
+
+export enum AuditType {
+  write = 'write',
+  read = 'read',
+  archive = 'archive',
+  delete = 'delete',
+  message = 'message',
+  userReplaced = 'userReplaced',
+}
+
 /*******************************************************************************
  *********************************** Logger ***********************************
  ******************************************************************************/
