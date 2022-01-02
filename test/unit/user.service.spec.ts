@@ -246,24 +246,6 @@ describe('UserService', () => {
       // clean up
       await userModel.deleteOne({ _id: new Types.ObjectId(insertedUser.id) });
     });
-
-    // eslint-disable-next-line max-len
-    it('admin user should get returned as available user if we change default filtering', async () => {
-      const adminOnlyUser = generateCreateUserParams({ roles: [UserRole.admin, UserRole.coach] });
-      const insertedUser = await service.insert(adminOnlyUser);
-      await userModel.updateOne(
-        { _id: Types.ObjectId(insertedUser.id) },
-        // update so it will pop-up first on search
-        { $set: { lastMemberAssignedAt: new Date(-10000) } },
-      );
-
-      const availableUserId = await service.getAvailableUser([UserRole.admin]);
-
-      expect(availableUserId).toEqual(insertedUser.id);
-
-      // clean up
-      await userModel.deleteOne({ _id: new Types.ObjectId(insertedUser.id) });
-    });
   });
 
   describe('userConfig', () => {

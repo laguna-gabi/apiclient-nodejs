@@ -249,12 +249,12 @@ export class UserService extends BaseService {
    * we'll limit the number of lookup results to 10.
    * In production and dev we're NOT limiting the number of results.
    */
-  async getAvailableUser(roles: UserRole[] = [UserRole.coach]): Promise<Types.ObjectId> {
+  async getAvailableUser(): Promise<Types.ObjectId> {
     const users = await this.userModel.aggregate([
       {
         $match: {
           maxCustomers: { $ne: 0 },
-          roles: { $in: roles },
+          roles: { $in: [UserRole.coach] },
         },
       },
       { $sort: { lastMemberAssignedAt: 1 } },
