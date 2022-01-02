@@ -121,7 +121,13 @@ export class ConductorService implements OnModuleInit {
           status: DispatchStatus.error,
           retryCount: dispatch.retryCount + 1,
         });
-        this.logger.warn(dispatch, ConductorService.name, this.createRealTimeDispatch.name);
+        const { failureReasons, ...dispatchParams } = dispatch;
+        this.logger.warn(
+          dispatchParams,
+          ConductorService.name,
+          this.createRealTimeDispatch.name,
+          failureReasons[failureReasons.length - 1], // log only the last error
+        );
         //TODO use more sophisticated retry mechanism - maybe try 2,5,7 seconds or a better logic
         setTimeout(
           async (dispatchInput) => {
@@ -131,7 +137,13 @@ export class ConductorService implements OnModuleInit {
           dispatch,
         );
       } else {
-        this.logger.error(dispatch, ConductorService.name, this.createRealTimeDispatch.name, ex);
+        const { failureReasons, ...dispatchParams } = dispatch;
+        this.logger.error(
+          dispatchParams,
+          ConductorService.name,
+          this.createRealTimeDispatch.name,
+          failureReasons[failureReasons.length - 1], // log only the last error
+        );
       }
     }
   }
@@ -152,7 +164,9 @@ export class ConductorService implements OnModuleInit {
     const dispatch = await this.dispatchesService.find({ triggeredId });
     const methodName = this.handleFutureDispatchWasTriggered.name;
     if (!dispatch) {
-      this.logger.warn({ triggeredId }, ConductorService.name, methodName, 'not found');
+      this.logger.warn({ triggeredId }, ConductorService.name, methodName, {
+        message: 'triggeredId not found',
+      });
     } else {
       this.logger.info({ triggeredId }, ConductorService.name, methodName);
       await this.createRealTimeDispatch(dispatch);

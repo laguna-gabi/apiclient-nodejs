@@ -7,7 +7,7 @@ import {
   ProviderResult,
   SendSendBirdNotification,
 } from '.';
-import { BaseSendBird } from '@lagunahealth/pandora';
+import { BaseSendBird, formatEx } from '@lagunahealth/pandora';
 import { Logger } from '../common';
 
 @Injectable()
@@ -52,10 +52,13 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         this.logger.info(sendSendBirdNotification, SendBird.name, methodName);
         return { provider: Provider.sendbird, content: message, id: result.data.message_id };
       } else {
-        this.logger.error(sendSendBirdNotification, SendBird.name, methodName);
+        this.logger.error(sendSendBirdNotification, SendBird.name, methodName, {
+          code: result.status,
+          data: result.data,
+        });
       }
     } catch (ex) {
-      this.logger.error(sendSendBirdNotification, SendBird.name, methodName);
+      this.logger.error(sendSendBirdNotification, SendBird.name, methodName, formatEx(ex));
     }
   }
 }

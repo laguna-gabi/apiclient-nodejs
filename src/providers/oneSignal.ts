@@ -3,6 +3,7 @@ import {
   BaseOneSignal,
   InternalNotificationType,
   Platform,
+  formatEx,
 } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
@@ -67,16 +68,13 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
       if (status === 200 && data.recipients >= 1) {
         return { provider: Provider.oneSignal, content: body.contents.en, id: data.id };
       } else {
-        this.logger.error(
-          sendOneSignalNotification,
-          OneSignal.name,
-          this.send.name,
-          status,
-          JSON.stringify(data),
-        );
+        this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, {
+          code: status,
+          data,
+        });
       }
     } catch (ex) {
-      this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, ex);
+      this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, formatEx(ex));
     }
   }
 
@@ -100,7 +98,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
         return { provider: Provider.oneSignal, content: data.peerId, id: result.data.id };
       }
     } catch (ex) {
-      this.logger.error(cancelNotificationParams, OneSignal.name, this.cancel.name, ex);
+      this.logger.error(cancelNotificationParams, OneSignal.name, this.cancel.name, formatEx(ex));
     }
   }
 
