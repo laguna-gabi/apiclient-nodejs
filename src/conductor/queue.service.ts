@@ -5,16 +5,20 @@ import {
   IInnerQueueTypes,
   IUpdateClientSettings,
   InnerQueueTypes,
+  QueueType,
+  ServiceName,
   formatEx,
 } from '@lagunahealth/pandora';
 import { Injectable, NotImplementedException, OnModuleInit } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
 import * as AWS from 'aws-sdk';
 import * as config from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { ConfigsService, ExternalConfigs } from '../providers';
-import { Environments, Logger } from '../common';
+import { Environments, EventType, Logger } from '../common';
 import { ConductorService } from '.';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class QueueService extends HealthIndicator implements OnModuleInit {
@@ -29,8 +33,9 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
         }
       : {}),
   });
-  private notificationsQ;
-  private notificationsDLQ;
+  private auditQueueUrl;
+  private notificationsQueueUrl;
+  private notificationsDLQUrl;
 
   constructor(
     private readonly conductorService: ConductorService,
@@ -42,13 +47,21 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
 
   isHealthy(): HealthIndicatorResult {
     return {
-      notificationsQ: { status: this.notificationsQ ? 'up' : 'down' },
-      notificationsDLQ: { status: this.notificationsDLQ ? 'up' : 'down' },
+      auditQueueUrl: { status: this.auditQueueUrl ? 'up' : 'down' },
+      notificationsQueueUrl: { status: this.notificationsQueueUrl ? 'up' : 'down' },
+      notificationsDLQUrl: { status: this.notificationsDLQUrl ? 'up' : 'down' },
     };
   }
 
   async onModuleInit(): Promise<void> {
-    const { queueNameNotifications, queueNameNotificationsDLQ } = ExternalConfigs.aws;
+    const { queueNameAudit, queueNameNotifications, queueNameNotificationsDLQ } =
+      ExternalConfigs.aws;
+
+    if (process.env.NODE_ENV === Environments.production) {
+      const auditName = await this.configsService.getConfig(queueNameAudit);
+      const { QueueUrl } = await this.sqs.getQueueUrl({ QueueName: auditName }).promise();
+      this.auditQueueUrl = QueueUrl;
+    }
 
     const queueName =
       !process.env.NODE_ENV ||
@@ -57,7 +70,7 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
         ? config.get('aws.queue.notification')
         : await this.configsService.getConfig(queueNameNotifications);
     const { QueueUrl: queueUrl } = await this.sqs.getQueueUrl({ QueueName: queueName }).promise();
-    this.notificationsQ = queueUrl;
+    this.notificationsQueueUrl = queueUrl;
 
     const dlQueueName =
       !process.env.NODE_ENV ||
@@ -68,7 +81,7 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
     const { QueueUrl: dlQueueUrl } = await this.sqs
       .getQueueUrl({ QueueName: dlQueueName })
       .promise();
-    this.notificationsDLQ = dlQueueUrl;
+    this.notificationsDLQUrl = dlQueueUrl;
 
     // register and start consumer for NotificationQ
     const consumer = Consumer.create({
@@ -119,6 +132,29 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
         return this.conductorService.handleDeleteDispatch(object as IDeleteDispatch);
       default:
         throw new NotImplementedException();
+    }
+  }
+
+  @OnEvent(EventType.notifyQueue, { async: true })
+  async sendMessage(params: { type: QueueType; message: string }) {
+    if (params.type === QueueType.audit && process.env.NODE_ENV !== Environments.production) {
+      //audit log only exists in production
+      this.logger.info(params, QueueService.name, this.sendMessage.name);
+      return;
+    }
+
+    try {
+      const { MessageId } = await this.sqs
+        .sendMessage({
+          MessageBody: params.message,
+          MessageGroupId: ServiceName.iris,
+          MessageDeduplicationId: v4(),
+          QueueUrl: this.auditQueueUrl,
+        })
+        .promise();
+      this.logger.info({ ...params, MessageId }, QueueService.name, this.sendMessage.name);
+    } catch (ex) {
+      this.logger.error(params, QueueService.name, this.sendMessage.name, ex);
     }
   }
 }

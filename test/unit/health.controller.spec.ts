@@ -28,12 +28,12 @@ describe('HealthController', () => {
     // @ts-ignore
     controller.mongoose.pingCheck = jest.fn().mockReturnValueOnce(true);
     const check = await controller.check();
-    const queueOk = { notificationsDLQ: { status: 'down' }, notificationsQ: { status: 'down' } };
-    expect(check).toEqual({
-      status: 'ok',
-      info: queueOk,
-      error: {},
-      details: queueOk,
-    });
+    const statusDown = { status: 'down' };
+    const queueResult = {
+      auditQueueUrl: statusDown,
+      notificationsQueueUrl: statusDown,
+      notificationsDLQUrl: statusDown,
+    };
+    expect(check).toEqual({ status: 'ok', info: queueResult, error: {}, details: queueResult });
   });
 });

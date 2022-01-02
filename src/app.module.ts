@@ -9,12 +9,12 @@ import { TerminusModule } from '@nestjs/terminus';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     TerminusModule,
     DbModule,
     ProvidersModule,
     SettingsModule,
     ConductorModule,
-    EventEmitterModule.forRoot(),
   ],
   controllers: [HealthController],
 })
