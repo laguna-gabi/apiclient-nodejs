@@ -115,7 +115,9 @@ describe('Twilio', () => {
           { body, to },
           Twilio.name,
           'send',
-          new Error(Errors.get(ErrorType.invalidPhoneNumberForMessaging)),
+          expect.objectContaining({
+            message: Errors.get(ErrorType.invalidPhoneNumberForMessaging),
+          }),
         );
       } else {
         expect(spyOnLogger).not.toBeCalled();

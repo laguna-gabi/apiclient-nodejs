@@ -1,4 +1,4 @@
-import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
+import { IEventNotifySlack, SlackChannel, SlackIcon, formatEx } from '@lagunahealth/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as config from 'config';
 import { hoursToMilliseconds } from 'date-fns';
@@ -54,7 +54,7 @@ export class Twilio implements OnModuleInit {
           throw new Error(Errors.get(ErrorType.invalidPhoneNumberForMessaging));
         }
       } catch (ex) {
-        this.logger.error(sendTwilioNotification, Twilio.name, this.send.name, ex);
+        this.logger.error(sendTwilioNotification, Twilio.name, this.send.name, formatEx(ex));
       }
     } else {
       const params: IEventNotifySlack = {

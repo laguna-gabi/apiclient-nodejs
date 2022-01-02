@@ -5,6 +5,7 @@ import {
   IInnerQueueTypes,
   IUpdateClientSettings,
   InnerQueueTypes,
+  formatEx,
 } from '@lagunahealth/pandora';
 import { Injectable, NotImplementedException, OnModuleInit } from '@nestjs/common';
 import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
@@ -81,17 +82,17 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
         try {
           await this.handleMessage(message);
         } catch (ex) {
-          //TODO log this on slack and logger.error
-          console.error(ex);
+          //TODO log this on slack
+          this.logger.error({}, QueueService.name, this.handleMessage.name, formatEx(ex));
         }
       },
     });
 
-    consumer.on('error', (err) => {
-      console.error(err.message);
+    consumer.on('error', (ex) => {
+      this.logger.error({}, QueueService.name, this.handleMessage.name, formatEx(ex));
     });
-    consumer.on('processing_error', (err) => {
-      console.error(err.message);
+    consumer.on('processing_error', (ex) => {
+      this.logger.error({}, QueueService.name, this.handleMessage.name, formatEx(ex));
     });
     consumer.start();
 
