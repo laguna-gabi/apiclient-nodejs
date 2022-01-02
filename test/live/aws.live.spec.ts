@@ -1,11 +1,11 @@
-import { Platform, mockLogger } from '@lagunahealth/pandora';
+import { Environments, Platform, mockLogger } from '@lagunahealth/pandora';
 import axios from 'axios';
 import * as config from 'config';
 import { EventEmitter2 } from 'eventemitter2';
 import * as faker from 'faker';
 import { readFileSync } from 'fs';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
-import { Environments, LoggerService, StorageType } from '../../src/common';
+import { LoggerService, StorageType } from '../../src/common';
 import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../src/member';
 import { ConfigsService, StorageService } from '../../src/providers';
 import { generateId, mockGenerateMember, mockGenerateUser } from '../generators';

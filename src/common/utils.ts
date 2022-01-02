@@ -1,36 +1,14 @@
-import { ContentKey, ExternalKey, InternalKey, NotificationType } from '@lagunahealth/pandora';
-import { AllNotificationTypes } from '@lagunahealth/pandora/dist/src/enums';
-import * as config from 'config';
-import { add, differenceInDays, format } from 'date-fns';
+import {
+  AllNotificationTypes,
+  ContentKey,
+  ExternalKey,
+  InternalKey,
+  NotificationType,
+} from '@lagunahealth/pandora';
+import { format } from 'date-fns';
 import * as jwt from 'jsonwebtoken';
-import { ErrorType, Errors, LoggerService } from '.';
 import { v4 } from 'uuid';
-// Description: given a date (string format) return a range of dates (string format)
-//              from start to start+numberOfDays
-export function getListOfDates(
-  inStartDate: string,
-  inEndDate: string,
-  dateFormat?: string,
-): string[] {
-  const ret: string[] = [];
-
-  if (!dateFormat) {
-    dateFormat = config.get('general.dateFormatString');
-  }
-
-  const startDate = Date.parse(inStartDate);
-  const endDate = Date.parse(inEndDate);
-
-  if (!startDate || !endDate) {
-    throw new Error('invalid date format');
-  }
-
-  for (let i = 0; i < differenceInDays(endDate, startDate) + 1; i++) {
-    ret.push(format(add(startDate, { days: i }), dateFormat));
-  }
-
-  return ret;
-}
+import { ErrorType, Errors, LoggerService } from '.';
 
 export function reformatDate(date: string, stringFormat: string): string {
   const dateObject = Date.parse(date);

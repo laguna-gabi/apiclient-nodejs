@@ -1,10 +1,8 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { LogAsWarning, LoggerService } from '.';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  private eventEmitter = new EventEmitter2();
   constructor(private readonly logger: LoggerService) {}
 
   catch(exception, host: ArgumentsHost) {

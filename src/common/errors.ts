@@ -50,7 +50,6 @@ export enum ErrorType {
   // Notifications
   notificationMetadataInvalid = 9270,
   notificationMemberPlatformWeb = 9271,
-  notificationNotFound = 9272,
   notificationMetadataWhenPast = 9273,
   notificationInvalidContent = 9274,
   notificationNotAllowed = 9275,
@@ -158,7 +157,6 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.notificationMemberPlatformWeb.valueOf(),
     `A web member cannot receive video or call notification`,
   ],
-  [ErrorType.notificationNotFound.valueOf(), `notification not found`],
   [ErrorType.notificationMetadataWhenPast.valueOf(), `'when' in metadata must be in the future`],
   [ErrorType.notificationInvalidContent.valueOf(), `invalid content`],
   [

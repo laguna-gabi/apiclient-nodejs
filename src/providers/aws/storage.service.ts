@@ -5,7 +5,6 @@ import * as config from 'config';
 import * as sharp from 'sharp';
 import { ConfigsService, ExternalConfigs } from '.';
 import {
-  Environments,
   EventType,
   IEventOnNewMember,
   LoggerService,
@@ -13,7 +12,7 @@ import {
   StorageUrlParams,
 } from '../../common';
 import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../member/journal.dto';
-import { formatEx } from '@lagunahealth/pandora';
+import { Environments, formatEx } from '@lagunahealth/pandora';
 
 @Injectable()
 export class StorageService implements OnModuleInit {

@@ -1,22 +1,15 @@
-import { BaseOneSignal, InternalNotificationType, Platform, formatEx } from '@lagunahealth/pandora';
+import { BaseOneSignal, Platform, formatEx } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as config from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
-import {
-  AllNotificationTypes,
-  EventType,
-  IEventOnMemberBecameOffline,
-  LoggerService,
-  SendOneSignalNotification,
-} from '../common';
+import { LoggerService } from '../common';
 import { MemberConfig } from '../member';
 
 @Injectable()
 export class OneSignal extends BaseOneSignal implements OnModuleInit {
   private readonly playersUrl = `${this.oneSignalUrl}/players`;
-  private readonly notificationsUrl = `${this.oneSignalUrl}/notifications`;
 
   constructor(
     private readonly configsService: ConfigsService,
@@ -82,60 +75,6 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     }
   }
 
-  async send(sendOneSignalNotification: SendOneSignalNotification): Promise<string | void> {
-    this.logger.info(sendOneSignalNotification, OneSignal.name, this.send.name);
-    const { platform, externalUserId, data, content } = sendOneSignalNotification;
-    this.logger.info(data, OneSignal.name, this.send.name);
-
-    const config = await this.getConfig(platform, data.type);
-    const app_id = await this.getApiId(platform, data.type);
-    const extraData = OneSignal.getExtraDataByPlatform(platform);
-    const onlyChatData =
-      data.type === InternalNotificationType.chatMessageToMember
-        ? { collapse_id: data.user.id }
-        : {};
-
-    const body: any = {
-      app_id,
-      include_external_user_ids: [externalUserId],
-      content_available: true,
-      contents: { en: content },
-      headings: { en: 'Laguna' },
-      ...extraData,
-      ...onlyChatData,
-      data,
-    };
-
-    if (this.isVoipProject(platform, data.type)) {
-      body.apns_push_type_override = 'voip';
-    }
-
-    try {
-      const { status, data } = await this.httpService
-        .post(this.notificationsUrl, body, config)
-        .toPromise();
-      if (status === 200 && data.recipients >= 1) {
-        return data.id;
-      } else if (
-        data.errors[0] === 'All included players are not subscribed' ||
-        data.errors?.invalid_external_user_ids[0] === externalUserId
-      ) {
-        const eventParams: IEventOnMemberBecameOffline = {
-          phone: sendOneSignalNotification.data.member.phone,
-          content,
-          type: sendOneSignalNotification.data.type,
-        };
-        this.eventEmitter.emit(EventType.onMemberBecameOffline, eventParams);
-      }
-      this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, {
-        code: status,
-        data,
-      });
-    } catch (ex) {
-      this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, formatEx(ex));
-    }
-  }
-
   /*************************************************************************************************
    **************************************** Private methods ****************************************
    ************************************************************************************************/
@@ -151,28 +90,6 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
       });
       return undefined;
     }
-  }
-
-  private async getConfig(platform: Platform, notificationType?: AllNotificationTypes) {
-    const config = await this.configsService.getConfig(
-      this.isVoipProject(platform, notificationType)
-        ? ExternalConfigs.oneSignal.voipApiKey
-        : ExternalConfigs.oneSignal.defaultApiKey,
-    );
-
-    return { headers: { Authorization: `Basic ${config}` } };
-  }
-
-  private static getExtraDataByPlatform(platform: Platform) {
-    if (platform === Platform.android) {
-      return {
-        android_channel_id: config.get('oneSignal.androidChannelId'),
-        android_visibility: 1,
-        priority: 10,
-      };
-    }
-
-    return {};
   }
 
   private async findAndUnregister(memberConfig, appId, config) {

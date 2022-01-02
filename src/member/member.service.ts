@@ -398,55 +398,6 @@ export class MemberService extends BaseService {
     });
   }
 
-  async getNewRegisteredMembersWithNoDailyReports() {
-    const result = await this.memberConfigModel.aggregate([
-      {
-        $match: {
-          firstLoggedInAt: {
-            $gte: sub(new Date(), { days: 3 }),
-          },
-        },
-      },
-      { $project: { memberConfig: '$$ROOT' } },
-      {
-        $lookup: {
-          from: 'members',
-          localField: 'memberConfig.memberId',
-          foreignField: '_id',
-          as: 'member',
-        },
-      },
-      {
-        $unwind: {
-          path: '$member',
-        },
-      },
-      {
-        $lookup: {
-          from: 'dailyreports',
-          localField: 'memberConfig.memberId',
-          foreignField: 'memberId',
-          as: 'dailyreports',
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          memberConfig: 1,
-          member: 1,
-          dailyreportsCount: { $size: '$dailyreports' },
-        },
-      },
-    ]);
-    return result.filter((newMember) => {
-      newMember.memberConfig.id = newMember.memberConfig._id;
-      newMember.member.id = newMember.member._id;
-      delete newMember.memberConfig._id;
-      delete newMember.member._id;
-      return newMember.dailyreportsCount === 0;
-    });
-  }
-
   async moveMemberToArchive(id: string): Promise<{ member: Member; memberConfig: MemberConfig }> {
     this.logger.info({ memberId: id }, MemberService.name, this.moveMemberToArchive.name);
     const member = await this.get(id);
@@ -896,7 +847,7 @@ export class MemberService extends BaseService {
   }
 
   async getCaregiversByMemberId(memberId: string): Promise<Caregiver[]> {
-    return await this.caregiverModel.find({ memberId: new Types.ObjectId(memberId) });
+    return this.caregiverModel.find({ memberId: new Types.ObjectId(memberId) });
   }
   /*************************************************************************************************
    ******************************************** Helpers ********************************************

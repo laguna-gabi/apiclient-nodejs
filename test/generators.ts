@@ -4,8 +4,6 @@ import {
   Honorific,
   IUpdateClientSettings,
   InnerQueueTypes,
-  InternalKey,
-  InternalNotificationType,
   Language,
   NotificationType,
   Platform,
@@ -28,16 +26,7 @@ import {
   UpdateNotesParams,
 } from '../src/appointment';
 import { AvailabilityInput } from '../src/availability';
-import {
-  CancelNotificationParams,
-  InternalNotifyParams,
-  MemberRole,
-  RoleTypes,
-  SendOneSignalNotification,
-  SendSendBirdNotification,
-  UserRole,
-  reformatDate,
-} from '../src/common';
+import { MemberRole, RoleTypes, UserRole, reformatDate } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import {
   AddCaregiverParams,
@@ -437,17 +426,6 @@ export const generateReplaceUserForMemberParams = ({
   return { userId, memberId };
 };
 
-export const generateGetCommunication = () => {
-  return {
-    memberId: generateId(),
-    userId: v4(),
-    chat: {
-      memberLink: faker.datatype.uuid(),
-      userLink: faker.datatype.uuid(),
-    },
-  };
-};
-
 export const generateAppointmentLink = (appointmentId: string) => {
   return `${config.get('hosts.app')}/${appointmentId}`;
 };
@@ -516,59 +494,6 @@ export const generateCancelNotifyParams = ({
   metadata = { peerId: v4() },
 }: Partial<CancelNotifyParams> = {}): CancelNotifyParams => {
   return { memberId, type, metadata };
-};
-
-export const generateCancelNotificationParams = (): CancelNotificationParams => {
-  return {
-    externalUserId: v4(),
-    platform: Platform.ios,
-    data: {
-      peerId: v4(),
-      type: CancelNotificationType.cancelCall,
-    },
-  };
-};
-
-export const generateInternalNotifyParams = ({
-  memberId = generateId(),
-  userId = generateId(),
-  type = InternalNotificationType.textToMember,
-  metadata = {
-    contentType: InternalKey.logReminder,
-    sendBirdChannelUrl: generateUniqueUrl(),
-  },
-  content = faker.lorem.sentence(),
-}: Partial<InternalNotifyParams> = {}): InternalNotifyParams => {
-  return { memberId, userId, type, metadata, content };
-};
-
-export const generateSendOneSignalNotificationParams = (): SendOneSignalNotification => {
-  return {
-    platform: Platform.ios,
-    externalUserId: v4(),
-    data: {
-      user: {
-        id: faker.datatype.uuid(),
-        firstName: faker.name.firstName(),
-        avatar: faker.image.avatar(),
-      },
-      member: { phone: generatePhone() },
-      type: NotificationType.text,
-      isVideo: false,
-    },
-    content: faker.lorem.sentence(),
-  };
-};
-
-export const generateSendSendBirdNotificationParams = (
-  notificationType,
-): SendSendBirdNotification => {
-  return {
-    userId: v4(),
-    sendBirdChannelUrl: generateUniqueUrl(),
-    message: faker.lorem.sentence(),
-    notificationType,
-  };
 };
 
 const generateEmail = () => {

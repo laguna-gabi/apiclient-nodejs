@@ -6,14 +6,8 @@ import * as config from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { ConfigsService, ExternalConfigs, StorageService } from '.';
-import {
-  Environments,
-  EventType,
-  IEventNotifyQueue,
-  LoggerService,
-  StorageType,
-} from '../../common';
-import { formatEx } from '@lagunahealth/pandora';
+import { EventType, IEventNotifyQueue, LoggerService, StorageType } from '../../common';
+import { Environments, formatEx } from '@lagunahealth/pandora';
 
 @Injectable()
 export class QueueService implements OnModuleInit {

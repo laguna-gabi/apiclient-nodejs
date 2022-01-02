@@ -2,7 +2,6 @@
   "hosts": {
     "chat": "https://dev.chat.lagunahealth.com",
     "app": "https://dev.app.lagunahealth.com",
-    "dynamicLink": "https://links.lagunahealth.com/app",
     "harmony": "https://dev.harmony.lagunahealth.com",
     "localstack": "http://localhost:4566"
   },
@@ -34,8 +33,7 @@
   "twilio": {
     "source": "+12058511112",
     "iosExcludeRegistrationNumber": "+10011223344",
-    "identity": "the_user_id",
-    "traversalServiceTokenTtl": 3
+    "identity": "the_user_id"
   },
   "slack": {
     "support": "#support-dev",
@@ -45,13 +43,10 @@
   "oneSignal": {
     "voipRegistrationPayload": {
       "test_type": 1
-    },
-    "androidChannelId": "00349af6-be67-4729-9d48-9057a5507b14"
+    }
   },
   "scheduler": {
-    "alertBeforeInMin": 15,
-    "maxAlertGapInMin": 35791,
-    "cronJobIntervalInMin": 1
+    "alertBeforeInMin": 15
   },
   "general": {
     "dateFormatString": "yyyy/MM/dd"

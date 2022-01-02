@@ -18,7 +18,6 @@ import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { isEmpty } from 'class-validator';
-import * as config from 'config';
 import { addDays, isAfter, millisecondsInHour } from 'date-fns';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { camelCase } from 'lodash';
@@ -45,7 +44,6 @@ import {
   MemberConfig,
   MemberService,
   MemberSummary,
-  NotificationBuilder,
   NotifyContentParams,
   NotifyParams,
   RecordingLinkParams,
@@ -69,13 +67,11 @@ import {
   IDispatchParams,
   IEventMember,
   IEventNotifyQueue,
-  IEventOnMemberBecameOffline,
   IEventOnReceivedChatMessage,
   IEventOnReceivedTextMessage,
   IEventOnReplacedUserForMember,
   IEventOnUpdatedMemberPlatform,
   Identifier,
-  InternalNotifyParams,
   LoggerService,
   LoggingInterceptor,
   MemberRole,
@@ -86,35 +82,21 @@ import {
   generatePath,
   getCorrelationId,
 } from '../common';
-import {
-  CommunicationResolver,
-  CommunicationService,
-  GetCommunicationParams,
-} from '../communication';
-import {
-  Bitly,
-  CognitoService,
-  FeatureFlagService,
-  NotificationsService,
-  StorageService,
-} from '../providers';
+import { CommunicationService, GetCommunicationParams } from '../communication';
+import { Bitly, CognitoService, FeatureFlagService, OneSignal, StorageService } from '../providers';
 import { User, UserService } from '../user';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
 export class MemberResolver extends MemberBase {
-  private readonly scheduleAppointmentDateFormat = `EEEE LLLL do 'at' p`;
-
   constructor(
     readonly memberService: MemberService,
-    private readonly notificationBuilder: NotificationBuilder,
     readonly eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
     private readonly cognitoService: CognitoService,
-    private readonly notificationsService: NotificationsService,
+    private readonly oneSignal: OneSignal,
     readonly userService: UserService,
     readonly communicationService: CommunicationService,
-    private readonly communicationResolver: CommunicationResolver,
     protected readonly bitly: Bitly,
     readonly logger: LoggerService,
     readonly featureFlagService: FeatureFlagService,
@@ -184,7 +166,7 @@ export class MemberResolver extends MemberBase {
       memberId: id,
       userId: member.primaryUserId.toString(),
     });
-    await this.notificationsService.unregister(memberConfig);
+    await this.oneSignal.unregister(memberConfig);
     await this.cognitoService.disableMember(member.deviceId);
 
     this.notifyDeletedMemberConfig(member.id);
@@ -210,7 +192,7 @@ export class MemberResolver extends MemberBase {
     } else {
       await this.communicationService.deleteCommunication(communication);
     }
-    await this.notificationsService.unregister(memberConfig);
+    await this.oneSignal.unregister(memberConfig);
     if (member.deviceId) {
       await this.cognitoService.deleteMember(member.deviceId);
     }
@@ -767,10 +749,7 @@ export class MemberResolver extends MemberBase {
 
     if (registerForNotificationParams.platform === Platform.ios) {
       const { token } = registerForNotificationParams;
-      await this.notificationsService.register({
-        token,
-        externalUserId: currentMemberConfig.externalUserId,
-      });
+      await this.oneSignal.register({ token, externalUserId: currentMemberConfig.externalUserId });
     }
 
     if (!currentMemberConfig.firstLoggedInAt) {
@@ -915,37 +894,6 @@ export class MemberResolver extends MemberBase {
       correlationId: getCorrelationId(this.logger),
       metadata: { peerId: metadata.peerId, contentType },
     });
-  }
-
-  /**
-   * Event is coming from appointment.scheduler
-   */
-  @OnEvent(EventType.notifyInternal, { async: true })
-  async internalNotify(params: InternalNotifyParams) {
-    this.logger.info(params, MemberResolver.name, this.internalNotify.name);
-    const { memberId, userId, type, metadata } = params;
-    const content = params.content;
-
-    try {
-      const { member, memberConfig } = await this.extractDataOfMemberAndUser(memberId, userId);
-
-      if (
-        metadata.checkAppointmentReminder &&
-        memberConfig &&
-        !memberConfig.isAppointmentsReminderEnabled
-      ) {
-        return;
-      }
-
-      return await this.notificationBuilder.internalNotify({
-        member,
-        type,
-        content,
-        metadata,
-      });
-    } catch (ex) {
-      this.logger.error(params, MemberResolver.name, this.internalNotify.name, formatEx(ex));
-    }
   }
 
   /**
@@ -1098,27 +1046,6 @@ export class MemberResolver extends MemberBase {
       });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.sendSmsToChat.name, formatEx(ex));
-    }
-  }
-
-  @OnEvent(EventType.onMemberBecameOffline, { async: true })
-  async notifyOfflineMember(params: IEventOnMemberBecameOffline) {
-    this.logger.info(params, MemberResolver.name, this.notifyOfflineMember.name);
-    const { phone, type } = params;
-    const content = (params.content += `\n${config.get('hosts.dynamicLink')}`);
-    try {
-      if (type === NotificationType.text) {
-        const member = await this.memberService.getByPhone(phone);
-        return await this.internalNotify({
-          memberId: member.id,
-          userId: member.primaryUserId.toString(),
-          type: InternalNotificationType.textSmsToMember,
-          metadata: {},
-          content,
-        });
-      }
-    } catch (ex) {
-      this.logger.error(params, MemberResolver.name, this.notifyOfflineMember.name, formatEx(ex));
     }
   }
 

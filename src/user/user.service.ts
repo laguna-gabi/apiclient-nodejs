@@ -20,7 +20,6 @@ import {
 import {
   BaseService,
   DbErrors,
-  Environments,
   ErrorType,
   Errors,
   EventType,
@@ -31,7 +30,13 @@ import {
   LoggerService,
   UserRole,
 } from '../common';
-import { IEventNotifySlack, SlackChannel, SlackIcon, formatEx } from '@lagunahealth/pandora';
+import {
+  Environments,
+  IEventNotifySlack,
+  SlackChannel,
+  SlackIcon,
+  formatEx,
+} from '@lagunahealth/pandora';
 
 @Injectable()
 export class UserService extends BaseService {

@@ -27,7 +27,7 @@ const validatorsConfig = config.get('graphql.validators');
 
 export class Handler extends BaseHandler {
   sendBird;
-  notificationsService;
+  oneSignal;
   twilioService;
   slackBot;
   cognitoService;
@@ -74,7 +74,7 @@ export class Handler extends BaseHandler {
     this.dailyReportService = moduleFixture.get<DailyReportService>(DailyReportService);
     const providers = mockProviders(moduleFixture);
     this.sendBird = providers.sendBird;
-    this.notificationsService = providers.notificationsService;
+    this.oneSignal = providers.oneSignal;
     this.twilioService = providers.twilioService;
     this.slackBot = providers.slackBot;
     this.cognitoService = providers.cognitoService;
@@ -102,22 +102,19 @@ export class Handler extends BaseHandler {
     this.sendBird.spyOnSendBirdCreateUser.mockReset();
     this.sendBird.spyOnSendBirdCreateGroupChannel.mockReset();
     this.sendBird.spyOnSendBirdFreeze.mockReset();
-    this.sendBird.spyOnSendBirdSend.mockReset();
     this.sendBird.spyOnSendBirdLeave.mockReset();
     this.sendBird.spyOnSendBirdInvite.mockReset();
     this.sendBird.spyOnSendBirdUpdateChannelName.mockReset();
     this.sendBird.spyOnSendBirdUpdateGroupChannelMetadata.mockReset();
     this.sendBird.spyOnSendBirdDeleteGroupChannelMetadata.mockReset();
-    this.notificationsService.spyOnNotificationsServiceRegister.mockReset();
-    this.notificationsService.spyOnNotificationsServiceUnregister.mockReset();
-    this.notificationsService.spyOnNotificationsServiceSend.mockReset();
+    this.oneSignal.spyOnOneSignalRegister.mockReset();
+    this.oneSignal.spyOnOneSignalUnregister.mockReset();
     this.storage.spyOnStorageDownload.mockReset();
     this.storage.spyOnStorageUpload.mockReset();
     this.storage.spyOnStorageDeleteRecordings.mockReset();
     this.storage.spyOnStorageDeleteJournalImages.mockReset();
     this.storage.spyOnStorageHandleNewMember.mockReset();
     this.twilioService.spyOnTwilioGetToken.mockReset();
-    this.twilioService.spyOnTwilioCreatePeerIceServers.mockReset();
     this.twilioService.spyOnTwilioValidateWebhook.mockReset();
     this.slackBot.spyOnSlackBotSendMessage.mockReset();
     this.cognitoService.spyOnCognitoServiceDisableMember.mockReset();

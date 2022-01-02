@@ -1,6 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { twilio } from 'config';
-import { hoursToMilliseconds } from 'date-fns';
 import { Twilio, jwt } from 'twilio';
 import { ConfigsService, ExternalConfigs } from '.';
 
@@ -47,13 +46,5 @@ export class TwilioService implements OnModuleInit {
 
   validateWebhook(token: string) {
     return token === this.webhookToken;
-  }
-
-  async createPeerIceServers(): Promise<{ iceServers: any[] }> {
-    const { iceServers } = await this.client.tokens.create({
-      ttl: hoursToMilliseconds(twilio.traversalServiceTokenTtl),
-    });
-
-    return { iceServers };
   }
 }

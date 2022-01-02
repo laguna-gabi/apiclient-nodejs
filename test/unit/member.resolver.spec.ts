@@ -53,12 +53,7 @@ import {
   TaskStatus,
   defaultMemberParams,
 } from '../../src/member';
-import {
-  CognitoService,
-  FeatureFlagService,
-  NotificationsService,
-  StorageService,
-} from '../../src/providers';
+import { CognitoService, FeatureFlagService, OneSignal, StorageService } from '../../src/providers';
 import { UserService } from '../../src/user';
 import {
   dbDisconnect,
@@ -88,7 +83,6 @@ import {
   mockGenerateMemberConfig,
   mockGenerateUser,
 } from '../index';
-import { iceServers } from './mocks/twilioPeerIceServers';
 
 describe('MemberResolver', () => {
   let module: TestingModule;
@@ -98,7 +92,7 @@ describe('MemberResolver', () => {
   let storage: StorageService;
   let cognitoService: CognitoService;
   let communicationResolver: CommunicationResolver;
-  let notificationsService: NotificationsService;
+  let oneSignal: OneSignal;
   let communicationService: CommunicationService;
   let eventEmitter: EventEmitter2;
   let featureFlagService: FeatureFlagService;
@@ -115,7 +109,7 @@ describe('MemberResolver', () => {
     userService = module.get<UserService>(UserService);
     storage = module.get<StorageService>(StorageService);
     cognitoService = module.get<CognitoService>(CognitoService);
-    notificationsService = module.get<NotificationsService>(NotificationsService);
+    oneSignal = module.get<OneSignal>(OneSignal);
     communicationResolver = module.get<CommunicationResolver>(CommunicationResolver);
     communicationService = module.get<CommunicationService>(CommunicationService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
@@ -440,19 +434,19 @@ describe('MemberResolver', () => {
     let spyOnServiceMoveMemberToArchive;
     let spyOnCognitoServiceDisableMember;
     let spyOnCommunicationFreezeGroupChannel;
-    let spyOnNotificationsServiceUnregister;
+    let spyOnOneSignalUnregister;
     beforeEach(() => {
       spyOnServiceMoveMemberToArchive = jest.spyOn(service, 'moveMemberToArchive');
       spyOnCognitoServiceDisableMember = jest.spyOn(cognitoService, 'disableMember');
       spyOnCommunicationFreezeGroupChannel = jest.spyOn(communicationService, 'freezeGroupChannel');
-      spyOnNotificationsServiceUnregister = jest.spyOn(notificationsService, 'unregister');
+      spyOnOneSignalUnregister = jest.spyOn(oneSignal, 'unregister');
     });
 
     afterEach(() => {
       spyOnServiceMoveMemberToArchive.mockReset();
       spyOnCognitoServiceDisableMember.mockReset();
       spyOnCommunicationFreezeGroupChannel.mockReset();
-      spyOnNotificationsServiceUnregister.mockReset();
+      spyOnOneSignalUnregister.mockReset();
       spyOnEventEmitter.mockReset();
     });
 
@@ -465,7 +459,7 @@ describe('MemberResolver', () => {
       }));
       spyOnCognitoServiceDisableMember.mockImplementationOnce(() => undefined);
       spyOnCommunicationFreezeGroupChannel.mockImplementationOnce(() => undefined);
-      spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
+      spyOnOneSignalUnregister.mockImplementationOnce(() => undefined);
 
       const result = await resolver.archiveMember(member.id);
 
@@ -478,7 +472,7 @@ describe('MemberResolver', () => {
         memberId: member.id,
         userId: member.primaryUserId.toString(),
       });
-      expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
+      expect(spyOnOneSignalUnregister).toBeCalledWith(memberConfig);
 
       expect(spyOnEventEmitter).toBeCalledTimes(6);
       expectDeleteArchiveMember(member.id);
@@ -490,7 +484,7 @@ describe('MemberResolver', () => {
     let spyOnUserServiceRemoveAppointmentsFromUser;
     let spyOnCommunicationGetMemberUserCommunication;
     let spyOnCommunicationDeleteCommunication;
-    let spyOnNotificationsServiceUnregister;
+    let spyOnOneSignalUnregister;
     let spyOnCognitoServiceDeleteMember;
     let spyOnStorageServiceDeleteMember;
 
@@ -505,7 +499,7 @@ describe('MemberResolver', () => {
         communicationService,
         'deleteCommunication',
       );
-      spyOnNotificationsServiceUnregister = jest.spyOn(notificationsService, 'unregister');
+      spyOnOneSignalUnregister = jest.spyOn(oneSignal, 'unregister');
       spyOnCognitoServiceDeleteMember = jest.spyOn(cognitoService, 'deleteMember');
       spyOnStorageServiceDeleteMember = jest.spyOn(storage, 'deleteMember');
     });
@@ -516,7 +510,7 @@ describe('MemberResolver', () => {
       spyOnCommunicationGetMemberUserCommunication.mockReset();
       spyOnCommunicationDeleteCommunication.mockReset();
       spyOnCognitoServiceDeleteMember.mockReset();
-      spyOnNotificationsServiceUnregister.mockReset();
+      spyOnOneSignalUnregister.mockReset();
       spyOnStorageServiceDeleteMember.mockReset();
       spyOnEventEmitter.mockReset();
     });
@@ -548,7 +542,7 @@ describe('MemberResolver', () => {
       spyOnCommunicationGetMemberUserCommunication.mockImplementationOnce(() => communication);
       spyOnCommunicationDeleteCommunication.mockImplementationOnce(() => undefined);
       spyOnCognitoServiceDeleteMember.mockImplementationOnce(() => undefined);
-      spyOnNotificationsServiceUnregister.mockImplementationOnce(() => undefined);
+      spyOnOneSignalUnregister.mockImplementationOnce(() => undefined);
       spyOnStorageServiceDeleteMember.mockImplementationOnce(() => undefined);
 
       const result = await resolver.deleteMember(member.id);
@@ -556,7 +550,7 @@ describe('MemberResolver', () => {
 
       expect(result).toBeTruthy();
       expect(spyOnCommunicationDeleteCommunication).toBeCalledWith(communication);
-      expect(spyOnNotificationsServiceUnregister).toBeCalledWith(memberConfig);
+      expect(spyOnOneSignalUnregister).toBeCalledWith(memberConfig);
       if (member.deviceId) {
         expect(spyOnCognitoServiceDeleteMember).toBeCalledWith(member.deviceId);
       } else {
@@ -1736,14 +1730,14 @@ describe('MemberResolver', () => {
   });
 
   describe('registerMemberForNotifications', () => {
-    let spyOnNotificationsServiceRegister;
+    let spyOnOneSignalRegister;
     let spyOnServiceGetMember;
     let spyOnServiceGetMemberConfig;
     let spyOnServiceUpdateMemberConfig;
     let spyOnServiceUpdateMemberConfigRegisteredAt;
 
     beforeEach(() => {
-      spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
+      spyOnOneSignalRegister = jest.spyOn(oneSignal, 'register');
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnServiceUpdateMemberConfig = jest.spyOn(service, 'updateMemberConfig');
@@ -1754,7 +1748,7 @@ describe('MemberResolver', () => {
     });
 
     afterEach(() => {
-      spyOnNotificationsServiceRegister.mockReset();
+      spyOnOneSignalRegister.mockReset();
       spyOnServiceGetMember.mockReset();
       spyOnServiceGetMemberConfig.mockReset();
       spyOnServiceUpdateMemberConfig.mockReset();
@@ -1764,7 +1758,7 @@ describe('MemberResolver', () => {
     });
 
     it('should not call notificationsService on platform=android', async () => {
-      spyOnNotificationsServiceRegister.mockImplementationOnce(async () => undefined);
+      spyOnOneSignalRegister.mockImplementationOnce(async () => undefined);
       const currentMemberConfig = mockGenerateMemberConfig();
       delete currentMemberConfig.firstLoggedInAt;
       const member = mockGenerateMember();
@@ -1784,7 +1778,7 @@ describe('MemberResolver', () => {
       spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
       await resolver.registerMemberForNotifications([MemberRole.member], member.id, params);
 
-      expect(spyOnNotificationsServiceRegister).not.toBeCalled();
+      expect(spyOnOneSignalRegister).not.toBeCalled();
       expect(spyOnServiceGetMember).toBeCalledTimes(1);
       expect(spyOnServiceGetMember).toBeCalledWith(member.id);
       expect(spyOnServiceUpdateMemberConfig).toBeCalledTimes(1);
@@ -1822,8 +1816,8 @@ describe('MemberResolver', () => {
       spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
       await resolver.registerMemberForNotifications([MemberRole.member], member.id, params);
 
-      expect(spyOnNotificationsServiceRegister).toBeCalledTimes(1);
-      expect(spyOnNotificationsServiceRegister).toBeCalledWith({
+      expect(spyOnOneSignalRegister).toBeCalledTimes(1);
+      expect(spyOnOneSignalRegister).toBeCalledWith({
         token: params.token,
         externalUserId: currentMemberConfig.externalUserId,
       });
@@ -2011,8 +2005,6 @@ describe('MemberResolver', () => {
     let spyOnServiceGetMember;
     let spyOnServiceGetMemberConfig;
     let spyOnUserServiceGetUser;
-    let spyOnNotificationsServiceSend;
-    let spyOnNotificationsServiceCreatePeerIceServers;
     let spyOnCommunicationResolverGetCommunication;
     let spyOnCommunicationServiceGet;
     let spyOnCreateDispatch;
@@ -2021,11 +2013,6 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
-      spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
-      spyOnNotificationsServiceCreatePeerIceServers = jest.spyOn(
-        notificationsService,
-        'createPeerIceServers',
-      );
       spyOnCommunicationResolverGetCommunication = jest.spyOn(
         communicationResolver,
         'getCommunication',
@@ -2038,8 +2025,6 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockReset();
       spyOnServiceGetMemberConfig.mockReset();
       spyOnUserServiceGetUser.mockReset();
-      spyOnNotificationsServiceSend.mockReset();
-      spyOnNotificationsServiceCreatePeerIceServers.mockReset();
       spyOnCommunicationResolverGetCommunication.mockReset();
       spyOnCommunicationServiceGet.mockReset();
       spyOnCreateDispatch.mockReset();
@@ -2063,8 +2048,6 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockImplementationOnce(async () => undefined);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
-      spyOnNotificationsServiceCreatePeerIceServers.mockResolvedValueOnce({ iceServers });
 
       await expect(resolver.notify(generateNotifyParams())).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
@@ -2081,7 +2064,6 @@ describe('MemberResolver', () => {
         spyOnServiceGetMember.mockImplementationOnce(async () => member);
         spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
         spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-        spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
 
         const notifyParams = generateNotifyParams({ type: params });
 
@@ -2102,7 +2084,6 @@ describe('MemberResolver', () => {
         spyOnServiceGetMember.mockImplementationOnce(async () => member);
         spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
         spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-        spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
 
         const notifyParams = generateNotifyParams({ type: params });
 
@@ -2120,7 +2101,6 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
       spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
       spyOnCreateDispatch.mockImplementationOnce(async () => undefined);
 
@@ -2142,7 +2122,6 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
       spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
 
       const notifyParams = generateNotifyParams({
@@ -2230,23 +2209,23 @@ describe('MemberResolver', () => {
     let spyOnServiceGetMember;
     let spyOnServiceGetMemberConfig;
     let spyOnUserServiceGetUser;
-    let spyOnNotificationsServiceSend;
     let spyOnCommunicationGetByUrl;
+    let spyOnNotifyCreateDispatch;
 
     beforeEach(() => {
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
-      spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
       spyOnCommunicationGetByUrl = jest.spyOn(communicationService, 'getByChannelUrl');
+      spyOnNotifyCreateDispatch = jest.spyOn(resolver, 'notifyCreateDispatch');
     });
 
     afterEach(() => {
       spyOnServiceGetMember.mockReset();
       spyOnServiceGetMemberConfig.mockReset();
       spyOnUserServiceGetUser.mockReset();
-      spyOnNotificationsServiceSend.mockReset();
       spyOnCommunicationGetByUrl.mockReset();
+      spyOnNotifyCreateDispatch.mockReset();
     });
 
     it('should handle notify chat message sent from user', async () => {
@@ -2363,8 +2342,7 @@ describe('MemberResolver', () => {
       };
 
       await resolver.notifyChatMessage(params);
-
-      expect(spyOnNotificationsServiceSend).not.toBeCalled();
+      expect(spyOnNotifyCreateDispatch).not.toBeCalled();
     });
 
     const fakeData: IEventOnReceivedChatMessage = {
@@ -2378,8 +2356,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockImplementation(async () => undefined);
 
       await resolver.notifyChatMessage(fakeData);
-
-      expect(spyOnNotificationsServiceSend).not.toBeCalled();
+      expect(spyOnNotifyCreateDispatch).not.toBeCalled();
     });
 
     it('should disregard notify on non existing sendBirdChannelUrl', async () => {
@@ -2387,8 +2364,7 @@ describe('MemberResolver', () => {
       spyOnCommunicationGetByUrl.mockImplementation(async () => undefined);
 
       await resolver.notifyChatMessage(fakeData);
-
-      expect(spyOnNotificationsServiceSend).not.toBeCalled();
+      expect(spyOnNotifyCreateDispatch).not.toBeCalled();
     });
   });
 });

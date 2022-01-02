@@ -11,7 +11,7 @@ import { Member, defaultMemberParams } from '../src/member';
 import {
   CognitoService,
   FeatureFlagService,
-  NotificationsService,
+  OneSignal,
   QueueService,
   SendBird,
   SlackBot,
@@ -21,7 +21,6 @@ import {
 import { User, UserService } from '../src/user';
 import { Mutations, Queries } from './aux';
 import { generateId } from './generators';
-import { iceServers } from './unit/mocks/twilioPeerIceServers';
 
 export class BaseHandler {
   app: INestApplication;
@@ -109,7 +108,7 @@ export const mockProviders = (
   module: TestingModule,
 ): {
   sendBird;
-  notificationsService;
+  oneSignal;
   twilioService;
   slackBot;
   cognitoService;
@@ -119,7 +118,7 @@ export const mockProviders = (
 } => {
   const sendBird = module.get<SendBird>(SendBird);
   const storage = module.get<StorageService>(StorageService);
-  const notificationsService = module.get<NotificationsService>(NotificationsService);
+  const oneSignal = module.get<OneSignal>(OneSignal);
   const twilioService = module.get<TwilioService>(TwilioService);
   const slackBot = module.get<SlackBot>(SlackBot);
   const cognitoService = module.get<CognitoService>(CognitoService);
@@ -132,7 +131,6 @@ export const mockProviders = (
   const spyOnSendBirdFreeze = jest.spyOn(sendBird, 'freezeGroupChannel');
   const spyOnSendBirdDeleteGroupChannel = jest.spyOn(sendBird, 'deleteGroupChannel');
   const spyOnSendBirdDeleteUser = jest.spyOn(sendBird, 'deleteUser');
-  const spyOnSendBirdSend = jest.spyOn(sendBird, 'send');
   const spyOnSendBirdUpdateChannelName = jest.spyOn(sendBird, 'updateChannelName');
   const spyOnSendBirdInvite = jest.spyOn(sendBird, 'invite');
   const spyOnSendBirdLeave = jest.spyOn(sendBird, 'leave');
@@ -149,11 +147,9 @@ export const mockProviders = (
   const spyOnStorageDeleteRecordings = jest.spyOn(storage, 'deleteRecordings');
   const spyOnStorageDeleteJournalImages = jest.spyOn(storage, 'deleteJournalImages');
   const spyOnStorageHandleNewMember = jest.spyOn(storage, 'handleNewMember');
-  const spyOnNotificationsServiceRegister = jest.spyOn(notificationsService, 'register');
-  const spyOnNotificationsServiceUnregister = jest.spyOn(notificationsService, 'unregister');
-  const spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
+  const spyOnOneSignalRegister = jest.spyOn(oneSignal, 'register');
+  const spyOnOneSignalUnregister = jest.spyOn(oneSignal, 'unregister');
   const spyOnTwilioGetToken = jest.spyOn(twilioService, 'getAccessToken');
-  const spyOnTwilioCreatePeerIceServers = jest.spyOn(twilioService, 'createPeerIceServers');
   const spyOnTwilioValidateWebhook = jest.spyOn(twilioService, 'validateWebhook');
   const spyOnSlackBotSendMessage = jest.spyOn(slackBot, 'send');
   const spyOnCognitoServiceDisableMember = jest.spyOn(cognitoService, 'disableMember');
@@ -166,7 +162,6 @@ export const mockProviders = (
   spyOnSendBirdFreeze.mockResolvedValue(undefined);
   spyOnSendBirdDeleteGroupChannel.mockResolvedValue(undefined);
   spyOnSendBirdDeleteUser.mockResolvedValue(undefined);
-  spyOnSendBirdSend.mockResolvedValue(v4());
   spyOnSendBirdUpdateGroupChannelMetadata.mockResolvedValue(undefined);
   spyOnSendBirdDeleteGroupChannelMetadata.mockResolvedValue(undefined);
   spyOnStorageDownload.mockResolvedValue('https://some-url/download');
@@ -174,11 +169,9 @@ export const mockProviders = (
   spyOnStorageDeleteRecordings.mockResolvedValue(undefined);
   spyOnStorageDeleteJournalImages.mockResolvedValue(true);
   spyOnStorageHandleNewMember.mockResolvedValue(undefined);
-  spyOnNotificationsServiceRegister.mockResolvedValue(v4());
-  spyOnNotificationsServiceUnregister.mockResolvedValue(undefined);
-  spyOnNotificationsServiceSend.mockResolvedValue(v4());
+  spyOnOneSignalRegister.mockResolvedValue(v4());
+  spyOnOneSignalUnregister.mockResolvedValue(undefined);
   spyOnTwilioGetToken.mockReturnValue('token');
-  spyOnTwilioCreatePeerIceServers.mockResolvedValue({ iceServers });
   spyOnTwilioValidateWebhook.mockReturnValue(true);
   spyOnSlackBotSendMessage.mockReturnValue(undefined);
   spyOnSendBirdUpdateChannelName.mockReturnValue(undefined);
@@ -195,21 +188,18 @@ export const mockProviders = (
       spyOnSendBirdFreeze,
       spyOnSendBirdDeleteGroupChannel,
       spyOnSendBirdDeleteUser,
-      spyOnSendBirdSend,
       spyOnSendBirdUpdateGroupChannelMetadata,
       spyOnSendBirdDeleteGroupChannelMetadata,
       spyOnSendBirdUpdateChannelName,
       spyOnSendBirdInvite,
       spyOnSendBirdLeave,
     },
-    notificationsService: {
-      spyOnNotificationsServiceRegister,
-      spyOnNotificationsServiceUnregister,
-      spyOnNotificationsServiceSend,
+    oneSignal: {
+      spyOnOneSignalRegister,
+      spyOnOneSignalUnregister,
     },
     twilioService: {
       spyOnTwilioGetToken,
-      spyOnTwilioCreatePeerIceServers,
       spyOnTwilioValidateWebhook,
     },
     slackBot: { spyOnSlackBotSendMessage },
