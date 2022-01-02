@@ -67,7 +67,7 @@ jobs:
       - name: Test
         run: yarn test:cov
       - name: Zip lcov-report
-        uses: papeloto/action-zip@v1
+        uses: vimtor/action-zip@v1
         with:
           files: coverage/lcov-report
           dest: coverage.zip
