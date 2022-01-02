@@ -1,6 +1,7 @@
-import { BaseLogger, ServiceName } from '../src';
+import { BaseLogger, Client, FailureReason, ServiceName } from '../src';
 import { datatype, lorem } from 'faker';
 import { PARAMS_PROVIDER_TOKEN, Params, PinoLogger } from 'nestjs-pino';
+import { v4 } from 'uuid';
 
 const VALID_KEYS = new Set([
   'fieldWithString',
@@ -30,6 +31,8 @@ describe(BaseLogger.name, () => {
       spyOnPinoLoggerDebug = jest.spyOn(PinoLogger.prototype, 'debug');
       spyOnPinoLoggerWarn = jest.spyOn(PinoLogger.prototype, 'warn');
       spyOnPinoLoggerError = jest.spyOn(PinoLogger.prototype, 'error');
+      console.error = jest.fn();
+
     });
 
     const params = {
@@ -40,8 +43,21 @@ describe(BaseLogger.name, () => {
       fieldWithJsonContent: datatype.json(),
     };
 
+    const client: Client = {
+      id: v4(),
+      authId: v4(),
+      roles: ['member'],
+    };
+
+    const failureReason: FailureReason = {
+      message: lorem.word(),
+      code: datatype.number(),
+      stack: lorem.word(),
+      data: datatype.json(),
+    };
+
     it('should log params for info level', () => {
-      logger.info(params, BaseLogger.name, methodName);
+      logger.info(params, BaseLogger.name, methodName, client);
       console.log(params);
       console.log(JSON.stringify(params));
 
@@ -49,6 +65,7 @@ describe(BaseLogger.name, () => {
         params,
         className: BaseLogger.name,
         methodName,
+        client,
       });
       expect(spyOnPinoLoggerDebug).not.toBeCalled();
       expect(spyOnPinoLoggerWarn).not.toBeCalled();
@@ -80,29 +97,53 @@ describe(BaseLogger.name, () => {
     });
 
     it('should log params for warn level', () => {
-      logger.warn(params, BaseLogger.name, methodName, 'reason1', 'reason2');
+      logger.warn(params, BaseLogger.name, methodName, failureReason);
+      delete failureReason.stack;
       expect(spyOnPinoLoggerWarn).toHaveBeenCalledWith({
         params,
         className: BaseLogger.name,
         methodName,
-        reasons: ['reason1', 'reason2'],
+        failureReason,
       });
+      expect(console.error).not.toHaveBeenCalled();
       expect(spyOnPinoLoggerInfo).not.toBeCalled();
       expect(spyOnPinoLoggerDebug).not.toBeCalled();
       expect(spyOnPinoLoggerError).not.toBeCalled();
     });
 
+    it('should log params for warn level without failureReason', () => {
+      logger.warn(params, BaseLogger.name, methodName);
+      expect(spyOnPinoLoggerWarn).toHaveBeenCalledWith({
+        params,
+        className: BaseLogger.name,
+        methodName,
+      });
+    });
+
+
     it('should log params for error level', () => {
-      logger.error(params, BaseLogger.name, methodName, 'reason1', 'reason2');
+      logger.error(params, BaseLogger.name, methodName, failureReason);
+      const { stack, ...failureParams } = failureReason;
       expect(spyOnPinoLoggerError).toHaveBeenCalledWith({
         params,
         className: BaseLogger.name,
         methodName,
-        reasons: ['reason1', 'reason2'],
+        failureReason: failureParams,
       });
+      expect(console.error).toHaveBeenCalledWith(stack);
       expect(spyOnPinoLoggerInfo).not.toBeCalled();
       expect(spyOnPinoLoggerDebug).not.toBeCalled();
       expect(spyOnPinoLoggerWarn).not.toBeCalled();
+    });
+
+    it('should log params for error level without failureReason', () => {
+      logger.error(params, BaseLogger.name, methodName);
+      expect(spyOnPinoLoggerError).toHaveBeenCalledWith({
+        params,
+        className: BaseLogger.name,
+        methodName,
+        failureReason: {},
+      });
     });
 
     it('should not log params with null value', () => {

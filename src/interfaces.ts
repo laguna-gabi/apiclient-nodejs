@@ -198,3 +198,10 @@ export class Client {
   authId?: string;
   roles?: string[];
 }
+
+export class FailureReason {
+  message?: any;
+  code?: any;
+  stack?: any;
+  data?: any;
+}

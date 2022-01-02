@@ -1,5 +1,5 @@
 import { PARAMS_PROVIDER_TOKEN, Params, PinoLogger } from 'nestjs-pino';
-import { AuditType, Client, LogType, ServiceName, generateOrgNamePrefix } from '.';
+import { AuditType, Client, FailureReason, LogType, ServiceName, generateOrgNamePrefix } from '.';
 import { Inject } from '@nestjs/common';
 
 export class BaseLogger extends PinoLogger {
@@ -29,23 +29,28 @@ export class BaseLogger extends PinoLogger {
     return this.logFormat(this.getCalledLog(params), className, methodName, LogType.debug);
   }
 
-  error(params: any = {}, className: string, methodName: string, ...reasons: any[]): string | void {
+  // eslint-disable-next-line max-len
+  error(params: any = {}, className: string, methodName: string, failureReason?: FailureReason): string | void {
     params = this.filterParams(params);
+    const { stack, ...failureParams } = failureReason || {};
+    super.error({ params, className, methodName, failureReason: failureParams });
+    console.error(stack); // console.log the stack separately so it doesn't blow up the log
 
-    super.error({ params, className, methodName, reasons });
     return this.logFormat(
-      `${this.getCalledLog(params)} FAILED with result ${reasons}`,
+      `${this.getCalledLog(params)} FAILED with result ${failureParams?.message}`,
       className,
       methodName,
       LogType.error,
     );
   }
 
-  warn(params: any = {}, className: string, methodName: string, ...reasons: any[]): string | void {
+  // eslint-disable-next-line max-len
+  warn(params: any = {}, className: string, methodName: string, failureReason?: FailureReason): string | void {
     params = this.filterParams(params);
-    super.warn({ params, className, methodName, reasons });
+    if (failureReason) delete failureReason.stack; // not logging the stack
+    super.warn({ params, className, methodName, failureReason });
     return this.logFormat(
-      `${this.getCalledLog(params)} WARN with result ${reasons}`,
+      `${this.getCalledLog(params)} WARN with result ${failureReason?.message}`,
       className,
       methodName,
       LogType.warn,
