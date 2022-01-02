@@ -52,7 +52,10 @@ export class NotificationsService {
 
     const content = await this.generateContent(dispatch, recipientClient, senderClient);
 
-    if (dispatch.notificationType === InternalNotificationType.chatMessageToUser) {
+    if (
+      dispatch.notificationType === InternalNotificationType.chatMessageToUser ||
+      dispatch.notificationType === InternalNotificationType.chatMessageJournal
+    ) {
       const sendSendBirdNotification = this.generateSendbirdParams(
         dispatch,
         recipientClient.orgName,
@@ -181,6 +184,8 @@ export class NotificationsService {
       notificationType: dispatch.notificationType,
       orgName,
       appointmentId: dispatch.appointmentId,
+      journalImageDownloadLink: dispatch.journalImageDownloadLink,
+      journalAudioDownloadLink: dispatch.journalAudioDownloadLink,
     };
   }
 
