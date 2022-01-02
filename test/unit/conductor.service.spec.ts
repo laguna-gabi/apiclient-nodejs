@@ -1,4 +1,4 @@
-import { InnerQueueTypes } from '@lagunahealth/pandora';
+import { InnerQueueTypes, mockLogger } from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapTriggersAt } from 'config';
@@ -55,6 +55,7 @@ describe(ConductorService.name, () => {
     triggersService = module.get<TriggersService>(TriggersService);
     notificationsService = module.get<NotificationsService>(NotificationsService);
     logger = module.get<Logger>(Logger);
+    mockLogger(logger);
 
     await service.onModuleInit();
   });

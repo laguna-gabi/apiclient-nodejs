@@ -1,4 +1,4 @@
-import { SlackChannel, SlackIcon } from '@lagunahealth/pandora';
+import { SlackChannel, SlackIcon, mockLogger } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { twilio } from 'config';
 import { lorem } from 'faker';
@@ -19,8 +19,9 @@ describe('Twilio', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    twilioService = module.get<Twilio>(Twilio);
     logger = module.get<Logger>(Logger);
+    mockLogger(logger);
+    twilioService = module.get<Twilio>(Twilio);
     slack = module.get<Slack>(Slack);
 
     spyOnLogger = jest.spyOn(logger, 'error');

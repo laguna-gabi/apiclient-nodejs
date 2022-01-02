@@ -32,6 +32,7 @@ import {
   generateObjectJournalContentMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
+  mockLogger,
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapMinutes } from 'config';
@@ -43,6 +44,7 @@ import { v4 } from 'uuid';
 import { replaceConfigs } from '../';
 import { translation } from '../../languages/en.json';
 import { AppModule } from '../../src/app.module';
+import { Logger } from '../../src/common';
 import {
   DispatchStatus,
   DispatchesService,
@@ -90,6 +92,7 @@ describe('Notifications full flow', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    mockLogger(module.get<Logger>(Logger));
     service = module.get<QueueService>(QueueService);
     dispatchesService = module.get<DispatchesService>(DispatchesService);
     triggersService = module.get<TriggersService>(TriggersService);

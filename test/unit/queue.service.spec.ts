@@ -1,11 +1,11 @@
-import { Environments, InnerQueueTypes } from '@lagunahealth/pandora';
+import { Environments, InnerQueueTypes, mockLogger } from '@lagunahealth/pandora';
 import { NotImplementedException } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { internet, lorem } from 'faker';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
-import { CommonModule } from '../../src/common';
+import { CommonModule, Logger } from '../../src/common';
 import { ConductorModule, ConductorService, QueueService } from '../../src/conductor';
 import { DbModule } from '../../src/db';
 import { ConfigsService, ProvidersModule } from '../../src/providers';
@@ -29,6 +29,7 @@ describe(QueueService.name, () => {
       ],
     }).compile();
     service = module.get<QueueService>(QueueService);
+    mockLogger(module.get<Logger>(Logger));
 
     conductorService = module.get<ConductorService>(ConductorService);
 
