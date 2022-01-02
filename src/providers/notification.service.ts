@@ -1,11 +1,14 @@
 import {
   AllNotificationTypes,
+  AuditType,
   InternalKey,
   InternalNotificationType,
   NotificationType,
   Platform,
+  QueueType,
 } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { gapMinutes, hosts } from 'config';
 import { format, utcToZonedTime } from 'date-fns-tz';
 import { lookup } from 'zipcode-to-timezone';
@@ -21,6 +24,7 @@ import {
   SendTwilioNotification,
   Twilio,
 } from '.';
+import { EventType, Logger } from '../common';
 import { Dispatch } from '../conductor';
 import { ClientSettings } from '../settings';
 
@@ -34,6 +38,8 @@ export class NotificationsService {
     private readonly oneSignal: OneSignal,
     private readonly bitly: Bitly,
     private readonly internationalization: InternationalizationService,
+    private readonly logger: Logger,
+    protected readonly eventEmitter: EventEmitter2,
   ) {}
 
   // TODO handle audit https://app.shortcut.com/laguna-health/story/2208/hepius-iris-pandora-cleanup
@@ -60,17 +66,17 @@ export class NotificationsService {
         dispatch,
         recipientClient.orgName,
       );
-      // this.logger.audit(AuditType.message, sendSendBirdNotification, this.send.name);
+      this.logAudit(sendSendBirdNotification, this.send.name);
       return this.sendBird.send(sendSendBirdNotification);
     } else if (dispatch.notificationType === NotificationType.textSms) {
       const sendSendBirdNotification = this.generateSendbirdParams(
         dispatch,
         recipientClient.orgName,
       );
-      // this.logger.audit(AuditType.message, sendSendBirdNotification, this.send.name);
+      this.logAudit(sendSendBirdNotification, this.send.name);
       await this.sendBird.send(sendSendBirdNotification);
       const sendTwilioNotification = this.generateTwilioParams(content, recipientClient);
-      // this.logger.audit(AuditType.message, sendTwilioNotification, this.send.name);
+      this.logAudit(sendTwilioNotification, this.send.name);
       return this.twilio.send(sendTwilioNotification);
     } else {
       if (recipientClient.platform !== Platform.web && recipientClient.isPushNotificationsEnabled) {
@@ -80,19 +86,18 @@ export class NotificationsService {
           recipientClient,
           senderClient,
         );
-        // this.logger.audit(AuditType.message, sendOneSignalNotification, this.send.name);
+        this.logAudit(sendOneSignalNotification, this.send.name);
         return this.oneSignal.send(sendOneSignalNotification);
       } else {
         const sendTwilioNotification = this.generateTwilioParams(content, recipientClient);
-        // this.logger.audit(AuditType.message, sendTwilioNotification, this.send.name);
+        this.logAudit(sendTwilioNotification, this.send.name);
         return this.twilio.send(sendTwilioNotification);
       }
     }
   }
 
   async cancel(cancelNotificationParams: CancelNotificationParams) {
-    // TODO https://app.shortcut.com/laguna-health/story/2208/hepius-iris-pandora-cleanup
-    // this.logger.audit(AuditType.message, cancelNotificationParams, this.cancel.name);
+    this.logAudit(cancelNotificationParams, this.cancel.name);
     return this.oneSignal.cancel(cancelNotificationParams);
   }
 
@@ -260,5 +265,10 @@ export class NotificationsService {
         )} (UTC)`;
       }
     }
+  }
+
+  private logAudit(payload, method: string) {
+    const message = this.logger.formatAuditMessage(AuditType.message, payload, method);
+    this.eventEmitter.emit(EventType.notifyQueue, { type: QueueType.audit, message });
   }
 }
