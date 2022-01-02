@@ -1,10 +1,10 @@
-import { Environments } from '@lagunahealth/pandora';
+import { Environments, QueueType, ServiceName } from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
 import { internet, lorem } from 'faker';
 import { Consumer } from 'sqs-consumer';
-import { LoggerService, QueueType } from '../../src/common';
+import { LoggerService } from '../../src/common';
 import { ConfigsService, ProvidersModule, QueueService, StorageService } from '../../src/providers';
 import { mockLogger } from '../index';
 import { newImageEvent } from './mocks/sqsS3EventNewImage';
@@ -117,7 +117,7 @@ describe(QueueService.name, () => {
       expect(sendMessage).toBeCalledWith({
         MessageBody: param.message,
         MessageDeduplicationId: expect.any(String),
-        MessageGroupId: 'Hepius',
+        MessageGroupId: ServiceName.hepius,
         QueueUrl: queueUrl,
       });
       process.env.NODE_ENV = Environments.test;

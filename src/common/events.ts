@@ -2,8 +2,8 @@ import { Types } from 'mongoose';
 import { Appointment, AppointmentDocument, AppointmentStatus, Scores } from '../appointment';
 import { Member } from '../member';
 import { User } from '../user';
-import { AllNotificationTypes, QueueType, UpdatedAppointmentAction } from '.';
-import { Platform } from '@lagunahealth/pandora';
+import { AllNotificationTypes, UpdatedAppointmentAction } from '.';
+import { Platform, QueueType } from '@lagunahealth/pandora';
 
 export enum EventType {
   //member

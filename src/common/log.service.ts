@@ -8,10 +8,10 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
-import { AuditType, EventType, IEventNotifyQueue, QueueType } from '.';
+import { EventType } from '.';
 
 export const internalLogs = {
-  hepiusVersion: 'Starting Hepius application version: @version@',
+  hepiusVersion: `Starting ${ServiceName.hepius}  application version: @version@`,
   lastCommit: 'Last commit hash on this branch is: @hash@',
 };
 
@@ -85,15 +85,5 @@ export class LoggerService extends BaseLogger {
       channel: SlackChannel.notifications,
     };
     this.eventEmitter.emit(EventType.notifySlack, slackParams);
-  }
-
-  audit(type: AuditType, params, methodName: string, authId?: string): void {
-    const eventParams: IEventNotifyQueue = {
-      type: QueueType.audit,
-      message:
-        `user: ${authId}, type: ${type}, date: ${new Date().toLocaleString()}, description: ` +
-        `Hepius ${methodName} ${super.getCalledLog(params)}`,
-    };
-    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
   }
 }

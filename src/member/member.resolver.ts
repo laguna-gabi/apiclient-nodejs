@@ -9,6 +9,7 @@ import {
   InternalNotificationType,
   NotificationType,
   Platform,
+  QueueType,
   ServiceName,
   generateDispatchId,
 } from '@lagunahealth/pandora';
@@ -76,7 +77,6 @@ import {
   LoggerService,
   LoggingInterceptor,
   MemberRole,
-  QueueType,
   RegisterForNotificationParams,
   Roles,
   StorageType,

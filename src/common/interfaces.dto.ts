@@ -194,20 +194,6 @@ export enum Environments {
   test = 'test',
 }
 
-export enum QueueType {
-  audit = 'audit',
-  notifications = 'notifications',
-}
-
-export enum AuditType {
-  write = 'write',
-  read = 'read',
-  archive = 'archive',
-  delete = 'delete',
-  message = 'message',
-  userReplaced = 'userReplaced',
-}
-
 export enum RecordingType {
   voip = 'voip',
   video = 'video',

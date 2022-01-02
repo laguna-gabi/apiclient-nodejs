@@ -1,9 +1,11 @@
+import { AuditType, QueueType } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ConfigsService, OneSignal, SendBird, TwilioService } from '.';
 import {
-  AuditType,
+  EventType,
+  IEventNotifyQueue,
   LoggerService,
   SendOneSignalNotification,
   SendSendBirdNotification,
@@ -44,16 +46,23 @@ export class NotificationsService {
     sendSendBirdNotification?: SendSendBirdNotification;
   }): Promise<string | void> {
     if (sendOneSignalNotification) {
-      this.logger.audit(AuditType.message, sendOneSignalNotification, this.send.name);
+      this.logAudit(sendOneSignalNotification);
       return this.oneSignal.send(sendOneSignalNotification);
     }
     if (sendSendBirdNotification) {
-      this.logger.audit(AuditType.message, sendSendBirdNotification, this.send.name);
+      this.logAudit(sendSendBirdNotification);
       return this.sendBird.send(sendSendBirdNotification);
     }
   }
 
   async createPeerIceServers() {
     return this.twilio.createPeerIceServers();
+  }
+
+  //using send.name is intentionally
+  private logAudit(payload) {
+    const message = this.logger.formatAuditMessage(AuditType.message, payload, this.send.name);
+    const eventParams: IEventNotifyQueue = { type: QueueType.audit, message };
+    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
   }
 }

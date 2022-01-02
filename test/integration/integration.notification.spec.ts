@@ -19,6 +19,7 @@ import {
   ObjectNewMemberNudgeClass,
   ObjectUpdateMemberSettingsClass,
   Platform,
+  QueueType,
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
@@ -43,13 +44,7 @@ import { addDays, addSeconds, subDays, subMinutes } from 'date-fns';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
 import { Appointment } from '../../src/appointment';
-import {
-  QueueType,
-  RegisterForNotificationParams,
-  delay,
-  generatePath,
-  reformatDate,
-} from '../../src/common';
+import { RegisterForNotificationParams, delay, generatePath, reformatDate } from '../../src/common';
 import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
 import { CancelNotifyParams, NotifyParams } from '../../src/member';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';

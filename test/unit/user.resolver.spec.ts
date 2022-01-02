@@ -7,7 +7,6 @@ import {
   IEventNotifyQueue,
   IEventOnNewUser,
   LoggerService,
-  QueueType,
   UserRole,
 } from '../../src/common';
 import { DbModule } from '../../src/db/db.module';
@@ -26,7 +25,7 @@ import {
   mockGenerateUser,
   mockLogger,
 } from '../index';
-import { IUpdateClientSettings, InnerQueueTypes } from '@lagunahealth/pandora';
+import { IUpdateClientSettings, InnerQueueTypes, QueueType } from '@lagunahealth/pandora';
 
 describe('UserResolver', () => {
   let module: TestingModule;

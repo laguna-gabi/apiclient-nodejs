@@ -7,7 +7,6 @@ import {
   IEventNotifyQueue,
   IEventOnNewMember,
   LoggerService,
-  QueueType,
   getCorrelationId,
 } from '../common';
 import { UserService } from '../user';
@@ -18,6 +17,7 @@ import {
   InnerQueueTypes,
   InternalKey,
   InternalNotificationType,
+  QueueType,
   SlackChannel,
   SlackIcon,
   generateDispatchId,

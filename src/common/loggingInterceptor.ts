@@ -1,13 +1,17 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { Client } from '@lagunahealth/pandora';
-import { AuditType, Environments, LoggerService } from '.';
+import { AuditType, Client, QueueType } from '@lagunahealth/pandora';
+import { Environments, EventType, IEventNotifyQueue, LoggerService } from '.';
 import { GqlExecutionContext } from '@nestjs/graphql';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
-  constructor(private readonly logger: LoggerService) {}
+  constructor(
+    private readonly logger: LoggerService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     if (process.env.NODE_ENV === Environments.test) {
@@ -37,7 +41,10 @@ export class LoggingInterceptor implements NestInterceptor {
     const params = Object.values(args)[0] as Record<string, unknown>;
     const client: Client = LoggingInterceptor.getClient(request?.user);
     this.logger.info(params, className, methodName, client);
-    this.logger.audit(type, params, methodName, client?.authId);
+
+    const message = this.logger.formatAuditMessage(type, params, methodName, client?.authId);
+    const eventParams: IEventNotifyQueue = { type: QueueType.audit, message };
+    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
 
     const now = Date.now();
     return next

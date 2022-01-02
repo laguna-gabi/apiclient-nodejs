@@ -1,3 +1,4 @@
+import { QueueType, ServiceName } from '@lagunahealth/pandora';
 import { Injectable, NotImplementedException, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import * as AWS from 'aws-sdk';
@@ -10,7 +11,6 @@ import {
   EventType,
   IEventNotifyQueue,
   LoggerService,
-  QueueType,
   StorageType,
 } from '../../common';
 
@@ -114,7 +114,7 @@ export class QueueService implements OnModuleInit {
     switch (type) {
       case QueueType.audit:
         return {
-          MessageGroupId: 'Hepius',
+          MessageGroupId: ServiceName.hepius,
           MessageDeduplicationId: v4(),
           QueueUrl: this.auditQueueUrl,
         };
