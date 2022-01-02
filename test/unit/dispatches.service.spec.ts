@@ -1,7 +1,8 @@
+import { mockLogger } from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { v4 } from 'uuid';
-import { CommonModule } from '../../src/common';
+import { CommonModule, Logger } from '../../src/common';
 import {
   ConductorModule,
   Dispatch,
@@ -23,6 +24,7 @@ describe(DispatchesService.name, () => {
     }).compile();
 
     service = module.get<DispatchesService>(DispatchesService);
+    mockLogger(module.get<Logger>(Logger));
   });
 
   afterAll(async () => {

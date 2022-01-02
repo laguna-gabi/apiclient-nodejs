@@ -1,4 +1,4 @@
-import { InternalNotificationType } from '@lagunahealth/pandora';
+import { InternalNotificationType, mockLogger } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as AWS from 'aws-sdk';
@@ -41,6 +41,8 @@ describe(`live: ${SendBird.name}`, () => {
 
     const configService = new ConfigsService();
     const httpService = new HttpService();
+    const logger = new Logger(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
+    mockLogger(logger);
 
     sendBird = new SendBird(
       configService,

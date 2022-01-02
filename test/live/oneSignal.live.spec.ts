@@ -1,12 +1,17 @@
-import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
+import {
+  CancelNotificationType,
+  NotificationType,
+  Platform,
+  mockLogger,
+} from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as faker from 'faker';
+import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { v4 } from 'uuid';
 import { Logger } from '../../src/common';
 import { ConfigsService, OneSignal } from '../../src/providers';
 import { generatePath, generatePhone } from '../generators';
-import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 
 describe(`live: ${OneSignal.name}`, () => {
   let oneSignal: OneSignal;
@@ -14,12 +19,10 @@ describe(`live: ${OneSignal.name}`, () => {
   beforeAll(async () => {
     const configService = new ConfigsService();
     const httpService = new HttpService();
+    const logger = new Logger(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
+    mockLogger(logger);
 
-    oneSignal = new OneSignal(
-      configService,
-      httpService,
-      new Logger(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2()),
-    );
+    oneSignal = new OneSignal(configService, httpService, logger);
     await oneSignal.onModuleInit();
   });
 

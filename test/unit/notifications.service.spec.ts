@@ -1,7 +1,11 @@
-import { InternalKey, Platform } from '@lagunahealth/pandora';
+import { InternalKey, Platform, mockLogger } from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import { hosts } from 'config';
 import { internet } from 'faker';
+import { replaceConfigs } from '../';
+import { translation } from '../../languages/en.json';
+import { Logger } from '../../src/common';
 import { DbModule } from '../../src/db';
 import {
   InternationalizationService,
@@ -11,9 +15,6 @@ import {
 } from '../../src/providers';
 import { generateDispatch, generateUpdateMemberSettingsMock } from '../generators';
 import SpyInstance = jest.SpyInstance;
-import { hosts } from 'config';
-import { replaceConfigs } from '../';
-import { translation } from '../../languages/en.json';
 
 describe(NotificationsService.name, () => {
   let module: TestingModule;
@@ -31,6 +32,7 @@ describe(NotificationsService.name, () => {
     service = module.get<NotificationsService>(NotificationsService);
     twilioService = module.get<Twilio>(Twilio);
     iService = module.get<InternationalizationService>(InternationalizationService);
+    mockLogger(module.get<Logger>(Logger));
 
     senderClient = generateUpdateMemberSettingsMock();
     recipientClient = generateUpdateMemberSettingsMock();
