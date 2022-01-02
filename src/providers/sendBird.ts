@@ -1,4 +1,4 @@
-import { BaseSendBird, InternalNotificationType } from '@lagunahealth/pandora';
+import { BaseSendBird, InternalNotificationType, formatEx } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as download from 'download';
@@ -46,10 +46,13 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         this.logger.info(params, SendBird.name, methodName);
         return result.data.access_token;
       } else {
-        this.logger.error(params, SendBird.name, methodName, result.status, result.data);
+        this.logger.error(params, SendBird.name, methodName, {
+          code: result.status,
+          data: result.data,
+        });
       }
     } catch (ex) {
-      this.logger.error(params, SendBird.name, methodName, ex.config);
+      this.logger.error(params, SendBird.name, methodName, formatEx(ex));
     }
   }
 
@@ -66,11 +69,14 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         this.logger.info(params, SendBird.name, methodName);
         return true;
       } else {
-        this.logger.error(params, SendBird.name, methodName, status, data);
+        this.logger.error(params, SendBird.name, methodName, {
+          code: status,
+          data,
+        });
         return false;
       }
     } catch (ex) {
-      this.logger.error(params, SendBird.name, methodName, ex);
+      this.logger.error(params, SendBird.name, methodName, formatEx(ex));
     }
   }
 
@@ -162,10 +168,13 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         this.logger.info({ sendBirdChannelUrl }, SendBird.name, methodName);
         return result;
       } else {
-        this.logger.error({ sendBirdChannelUrl }, SendBird.name, methodName);
+        this.logger.error({ sendBirdChannelUrl }, SendBird.name, methodName, {
+          code: result.status,
+          data: result.data,
+        });
       }
     } catch (ex) {
-      this.logger.error({ sendBirdChannelUrl }, SendBird.name, methodName);
+      this.logger.error({ sendBirdChannelUrl }, SendBird.name, methodName, formatEx(ex));
     }
   }
 
@@ -182,13 +191,10 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     if (status === 200) {
       return data.unread[userId];
     } else {
-      this.logger.error(
-        { channelUrl, userId },
-        SendBird.name,
-        this.countUnreadMessages.name,
-        status,
+      this.logger.error({ channelUrl, userId }, SendBird.name, this.countUnreadMessages.name, {
+        code: status,
         data,
-      );
+      });
     }
   }
 
@@ -250,7 +256,10 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         await unlink(`./${userId}.${imageFormat}`);
 
         if (result.status !== 200) {
-          this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name);
+          this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name, {
+            code: result.status,
+            data: result.data,
+          });
         }
       } else {
         const result = await this.httpService
@@ -267,7 +276,10 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
           )
           .toPromise();
         if (result.status !== 200) {
-          this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name);
+          this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name, {
+            code: result.status,
+            data: result.data,
+          });
         }
       }
       if (journalAudioDownloadLink) {
@@ -310,12 +322,20 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         await unlink(`./${userId}.${audioFormat}`);
 
         if (result.status !== 200) {
-          this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name);
+          this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name, {
+            code: result.status,
+            data: result.data,
+          });
         }
         return true;
       }
     } catch (ex) {
-      this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name, ex);
+      this.logger.error(
+        sendSendBirdNotification,
+        SendBird.name,
+        this.sendJournalMessage.name,
+        formatEx(ex),
+      );
     }
   }
 
@@ -345,10 +365,18 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
       if (result.status === 200) {
         return result.data.message_id;
       } else {
-        this.logger.error(sendSendBirdNotification, SendBird.name, this.sendAdminMessage.name);
+        this.logger.error(sendSendBirdNotification, SendBird.name, this.sendAdminMessage.name, {
+          code: result.status,
+          data: result.data,
+        });
       }
     } catch (ex) {
-      this.logger.error(sendSendBirdNotification, SendBird.name, this.sendAdminMessage.name, ex);
+      this.logger.error(
+        sendSendBirdNotification,
+        SendBird.name,
+        this.sendAdminMessage.name,
+        formatEx(ex),
+      );
     }
   }
 
@@ -366,10 +394,13 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         this.logger.info({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
         return result.data.members?.map((member) => member.user_id);
       } else {
-        this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
+        this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName, {
+          code: result.status,
+          data: result.data,
+        });
       }
     } catch (ex) {
-      this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
+      this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName, formatEx(ex));
     }
   }
 
@@ -391,10 +422,13 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         this.logger.info({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
         return result;
       } else {
-        this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
+        this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName, {
+          code: result.status,
+          data: result.data,
+        });
       }
     } catch (ex) {
-      this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
+      this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName, formatEx(ex));
     }
   }
 

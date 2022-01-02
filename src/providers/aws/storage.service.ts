@@ -13,6 +13,7 @@ import {
   StorageUrlParams,
 } from '../../common';
 import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../member/journal.dto';
+import { formatEx } from '@lagunahealth/pandora';
 
 @Injectable()
 export class StorageService implements OnModuleInit {
@@ -54,7 +55,7 @@ export class StorageService implements OnModuleInit {
         }),
       );
     } catch (ex) {
-      this.logger.error(params, StorageService.name, this.handleNewMember.name, ex);
+      this.logger.error(params, StorageService.name, this.handleNewMember.name, formatEx(ex));
     }
   }
   // Description: get object head from S3
@@ -102,7 +103,7 @@ export class StorageService implements OnModuleInit {
         }),
       );
     } catch (ex) {
-      this.logger.error(id, StorageService.name, this.deleteMember.name, ex);
+      this.logger.error(id, StorageService.name, this.deleteMember.name, formatEx(ex));
     }
   }
 
@@ -123,7 +124,7 @@ export class StorageService implements OnModuleInit {
         { memberId, recordingIds },
         StorageService.name,
         this.deleteRecordings.name,
-        ex,
+        formatEx(ex),
       );
     }
   }
@@ -157,7 +158,7 @@ export class StorageService implements OnModuleInit {
         { id, memberId, imageFormat },
         StorageService.name,
         this.deleteJournalImages.name,
-        ex,
+        formatEx(ex),
       );
     }
   }
@@ -187,7 +188,7 @@ export class StorageService implements OnModuleInit {
         { id, memberId, audioFormat },
         StorageService.name,
         this.deleteJournalAudio.name,
-        ex,
+        formatEx(ex),
       );
     }
   }
@@ -222,7 +223,7 @@ export class StorageService implements OnModuleInit {
         { normalImageKey, smallImageKey },
         StorageService.name,
         this.createJournalImageThumbnail.name,
-        ex,
+        formatEx(ex),
       );
     }
   }

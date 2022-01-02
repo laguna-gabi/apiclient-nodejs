@@ -1,5 +1,6 @@
 import {
   BaseLogger,
+  FailureReason,
   IEventNotifySlack,
   ServiceName,
   SlackChannel,
@@ -75,8 +76,13 @@ export class LoggerService extends BaseLogger {
     super(params, ServiceName.hepius, LoggerService.VALID_KEYS);
   }
 
-  error(params: any = {}, className: string, methodName: string, ...reasons: any[]): void {
-    const log = super.error(params, className, methodName, ...reasons);
+  error(
+    params: any = {},
+    className: string,
+    methodName: string,
+    failureReason?: FailureReason,
+  ): void {
+    const log = super.error(params, className, methodName, failureReason);
 
     const slackParams: IEventNotifySlack = {
       header: '*An error has occurred*',

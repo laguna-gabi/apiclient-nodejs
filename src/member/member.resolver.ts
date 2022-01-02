@@ -11,6 +11,7 @@ import {
   Platform,
   QueueType,
   ServiceName,
+  formatEx,
   generateDispatchId,
 } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
@@ -203,7 +204,7 @@ export class MemberResolver extends MemberBase {
         { memberId: id, userId: member.primaryUserId },
         MemberResolver.name,
         this.deleteMember.name,
-        Errors.get(ErrorType.communicationMemberUserNotFound),
+        { message: Errors.get(ErrorType.communicationMemberUserNotFound) },
       );
     } else {
       await this.communicationService.deleteCommunication(communication);
@@ -929,7 +930,7 @@ export class MemberResolver extends MemberBase {
         metadata,
       });
     } catch (ex) {
-      this.logger.error(params, MemberResolver.name, this.internalNotify.name, ex);
+      this.logger.error(params, MemberResolver.name, this.internalNotify.name, formatEx(ex));
     }
   }
 
@@ -999,7 +1000,7 @@ export class MemberResolver extends MemberBase {
         }
       }
     } catch (ex) {
-      this.logger.error(params, MemberResolver.name, this.notifyChatMessage.name, ex);
+      this.logger.error(params, MemberResolver.name, this.notifyChatMessage.name, formatEx(ex));
     }
   }
 
@@ -1079,7 +1080,7 @@ export class MemberResolver extends MemberBase {
         userId: member.primaryUserId.toString(),
       });
     } catch (ex) {
-      this.logger.error(params, MemberResolver.name, this.sendSmsToChat.name, ex);
+      this.logger.error(params, MemberResolver.name, this.sendSmsToChat.name, formatEx(ex));
     }
   }
 
@@ -1100,7 +1101,7 @@ export class MemberResolver extends MemberBase {
         });
       }
     } catch (ex) {
-      this.logger.error(params, MemberResolver.name, this.notifyOfflineMember.name, ex);
+      this.logger.error(params, MemberResolver.name, this.notifyOfflineMember.name, formatEx(ex));
     }
   }
 
@@ -1122,7 +1123,7 @@ export class MemberResolver extends MemberBase {
         dispatchId: generateDispatchId(CustomKey.customContent, params.memberId),
       });
     } catch (ex) {
-      this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, ex);
+      this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, formatEx(ex));
     }
   }
 

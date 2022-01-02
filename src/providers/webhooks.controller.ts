@@ -104,12 +104,9 @@ export class WebhooksController {
     if (signature !== hash) {
       const message = 'The source of the request DID NOT comes from Sendbird server';
 
-      this.logger.error(
-        {},
-        WebhooksController.name,
-        this.validateMessageSentFromSendbird.name,
+      this.logger.error({}, WebhooksController.name, this.validateMessageSentFromSendbird.name, {
         message,
-      );
+      });
       throw new HttpException(message, HttpStatus.BAD_REQUEST);
     }
   }

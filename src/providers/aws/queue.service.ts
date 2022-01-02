@@ -13,6 +13,7 @@ import {
   LoggerService,
   StorageType,
 } from '../../common';
+import { formatEx } from '@lagunahealth/pandora';
 
 @Injectable()
 export class QueueService implements OnModuleInit {
@@ -75,16 +76,16 @@ export class QueueService implements OnModuleInit {
         try {
           await this.handleMessage(message);
         } catch (ex) {
-          this.logger.error({}, QueueService.name, this.handleMessage.name, ex);
+          this.logger.error({}, QueueService.name, this.handleMessage.name, formatEx(ex));
         }
       },
     });
 
     this.consumer.on('error', (ex) => {
-      this.logger.error({}, QueueService.name, this.handleMessage.name, ex);
+      this.logger.error({}, QueueService.name, this.handleMessage.name, formatEx(ex));
     });
     this.consumer.on('processing_error', (ex) => {
-      this.logger.error({}, QueueService.name, this.handleMessage.name, ex);
+      this.logger.error({}, QueueService.name, this.handleMessage.name, formatEx(ex));
     });
     this.consumer.start();
   }
@@ -106,7 +107,7 @@ export class QueueService implements OnModuleInit {
         .promise();
       this.logger.info({ ...params, MessageId }, QueueService.name, this.sendMessage.name);
     } catch (ex) {
-      this.logger.error(params, QueueService.name, this.sendMessage.name, ex);
+      this.logger.error(params, QueueService.name, this.sendMessage.name, formatEx(ex));
     }
   }
 

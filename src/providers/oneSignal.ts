@@ -1,4 +1,4 @@
-import { BaseOneSignal, InternalNotificationType, Platform } from '@lagunahealth/pandora';
+import { BaseOneSignal, InternalNotificationType, Platform, formatEx } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -58,13 +58,11 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
       const result = await this.httpService.post(this.playersUrl, data).toPromise();
       return this.validateRegisterResult(externalUserId, result);
     } catch (ex) {
-      this.logger.error(
-        { token, externalUserId },
-        OneSignal.name,
-        this.register.name,
-        ex.response?.status,
-        ex.response?.config,
-      );
+      this.logger.error({ token, externalUserId }, OneSignal.name, this.register.name, {
+        code: ex.response?.status,
+        message: ex.response?.message,
+        stack: ex.response?.config,
+      });
     }
   }
 
@@ -80,7 +78,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
       const config = await this.configsService.getConfig(ExternalConfigs.oneSignal.defaultApiKey);
       await this.findAndUnregister(memberConfig, appId, config);
     } catch (ex) {
-      this.logger.error(memberConfig, OneSignal.name, this.unregister.name, ex);
+      this.logger.error(memberConfig, OneSignal.name, this.unregister.name, formatEx(ex));
     }
   }
 
@@ -129,15 +127,12 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
         };
         this.eventEmitter.emit(EventType.onMemberBecameOffline, eventParams);
       }
-      this.logger.error(
-        sendOneSignalNotification,
-        OneSignal.name,
-        this.send.name,
-        status,
-        JSON.stringify(data),
-      );
+      this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, {
+        code: status,
+        data,
+      });
     } catch (ex) {
-      this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, ex);
+      this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, formatEx(ex));
     }
   }
 
@@ -150,7 +145,10 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
       this.logger.info({ externalUserId }, OneSignal.name, methodName);
       return result.data.id;
     } else {
-      this.logger.error({ externalUserId }, OneSignal.name, methodName, result.status);
+      this.logger.error({ externalUserId }, OneSignal.name, methodName, {
+        code: result.status,
+        data: result.data,
+      });
       return undefined;
     }
   }

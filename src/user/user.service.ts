@@ -31,7 +31,7 @@ import {
   LoggerService,
   UserRole,
 } from '../common';
-import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
+import { IEventNotifySlack, SlackChannel, SlackIcon, formatEx } from '@lagunahealth/pandora';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -309,7 +309,7 @@ export class UserService extends BaseService {
 
       return result.ok === 1;
     } catch (ex) {
-      this.logger.error(params, UserService.name, this.handleUpdateUserConfig.name, ex);
+      this.logger.error(params, UserService.name, this.handleUpdateUserConfig.name, formatEx(ex));
     }
   }
 
@@ -321,7 +321,7 @@ export class UserService extends BaseService {
         { $push: { appointments: new Types.ObjectId(params.appointmentId) } },
       );
     } catch (ex) {
-      this.logger.error(params, UserService.name, this.addAppointmentToUser.name, ex);
+      this.logger.error(params, UserService.name, this.addAppointmentToUser.name, formatEx(ex));
     }
   }
 
@@ -354,7 +354,7 @@ export class UserService extends BaseService {
         { new: true },
       );
     } catch (ex) {
-      this.logger.error(params, UserService.name, this.updateUserAppointments.name, ex);
+      this.logger.error(params, UserService.name, this.updateUserAppointments.name, formatEx(ex));
     }
   }
 }

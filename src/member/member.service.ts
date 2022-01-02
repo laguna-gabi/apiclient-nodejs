@@ -1,3 +1,4 @@
+import { formatEx } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
@@ -283,7 +284,12 @@ export class MemberService extends BaseService {
         { $addToSet: { users: userId } },
       );
     } catch (ex) {
-      this.logger.error(params, MemberService.name, this.handleAddUserToMemberList.name, ex);
+      this.logger.error(
+        params,
+        MemberService.name,
+        this.handleAddUserToMemberList.name,
+        formatEx(ex),
+      );
     }
   }
 
@@ -311,7 +317,7 @@ export class MemberService extends BaseService {
         params,
         MemberService.name,
         this.handleUnconsentedAppointmentEnded.name,
-        ex,
+        formatEx(ex),
       );
     }
   }
@@ -544,7 +550,12 @@ export class MemberService extends BaseService {
         { $set: { scores: params.scores } },
       );
     } catch (ex) {
-      this.logger.error(params, MemberService.name, this.handleAppointmentScoreUpdated.name, ex);
+      this.logger.error(
+        params,
+        MemberService.name,
+        this.handleAppointmentScoreUpdated.name,
+        formatEx(ex),
+      );
     }
   }
 
@@ -636,7 +647,12 @@ export class MemberService extends BaseService {
 
       return result.ok === 1;
     } catch (ex) {
-      this.logger.error(params, MemberService.name, this.handleUpdateMemberConfig.name, ex);
+      this.logger.error(
+        params,
+        MemberService.name,
+        this.handleUpdateMemberConfig.name,
+        formatEx(ex),
+      );
     }
   }
 

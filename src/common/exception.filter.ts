@@ -31,14 +31,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
   private logException(exception, args) {
     const { ClassName, MethodName } = this.getClassNameAndMethodName(exception);
-    const errorMessage = exception.response?.message?.toString() || exception.message || exception;
-    if (LogAsWarning.has(errorMessage)) {
+    const message = exception.response?.message?.toString() || exception.message || exception;
+    if (LogAsWarning.has(message)) {
       // log as warning without stack trace
-      this.logger.warn(Object.values(args)[0], ClassName, MethodName, errorMessage);
+      this.logger.warn(Object.values(args)[0], ClassName, MethodName, { message });
     } else {
       // log as error with stack trace
-      this.logger.error(Object.values(args)[0], ClassName, MethodName, errorMessage);
-      console.error(exception.stack.substring(exception.stack.indexOf('\n') + 1));
+      const stack = exception.stack.substring(exception.stack.indexOf('\n') + 1);
+      this.logger.error(Object.values(args)[0], ClassName, MethodName, { message, stack });
     }
   }
 
