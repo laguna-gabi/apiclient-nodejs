@@ -11,8 +11,9 @@ import {
   SendTwilioNotification,
   Slack,
 } from '.';
-import { Environments, Logger } from '../common';
+import { Environments, ErrorType, Errors, Logger } from '../common';
 import { twilio } from 'config';
+import { parsePhoneNumber } from 'libphonenumber-js';
 
 @Injectable()
 export class Twilio implements OnModuleInit {
@@ -36,11 +37,22 @@ export class Twilio implements OnModuleInit {
   async send(sendTwilioNotification: SendTwilioNotification): Promise<ProviderResult> {
     this.logger.info(sendTwilioNotification, Twilio.name, this.send.name);
     const { body, to, orgName } = sendTwilioNotification;
-    if (process.env.NODE_ENV === Environments.production && !to.startsWith('+972')) {
+    if (
+      process.env.NODE_ENV === Environments.production &&
+      !to.startsWith('+972') &&
+      to !== twilio.get('iosExcludeRegistrationNumber')
+    ) {
       try {
-        //KEEP return await when its inside try catch
-        const result = await this.client.messages.create({ body, to, from: this.source });
-        return { provider: Provider.twilio, content: result.body, id: result.sid };
+        if (
+          parsePhoneNumber(to).isValid() &&
+          twilio.get('validPhoneTypes').includes(parsePhoneNumber(to).getType())
+        ) {
+          //KEEP return await when its inside try catch
+          const result = await this.createMessage(body, to, this.source);
+          return { provider: Provider.twilio, content: result.body, id: result.sid };
+        } else {
+          throw new Error(Errors.get(ErrorType.invalidPhoneNumberForMessaging));
+        }
       } catch (ex) {
         this.logger.error(sendTwilioNotification, Twilio.name, this.send.name, ex);
       }
@@ -63,5 +75,10 @@ export class Twilio implements OnModuleInit {
     });
 
     return { iceServers };
+  }
+
+  // Description: internal service create message method
+  private async createMessage(body: string, to: string, from: string) {
+    return this.client.messages.create({ body, to, from });
   }
 }
