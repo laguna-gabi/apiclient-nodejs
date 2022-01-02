@@ -44,6 +44,7 @@ import {
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
+  UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
 } from '.';
 import { Appointment } from '../appointment';
@@ -738,8 +739,8 @@ export class MemberService extends BaseService {
   /*************************************************************************************************
    ******************************************** Recording ******************************************
    ************************************************************************************************/
-  async updateRecording(updateRecordingParams: UpdateRecordingParams): Promise<void> {
-    const { start, end, memberId, id, userId, phone, answered, appointmentId, recordingType } =
+  async updateRecording(updateRecordingParams: UpdateRecordingParams, userId): Promise<void> {
+    const { start, end, memberId, id, phone, answered, appointmentId, recordingType } =
       updateRecordingParams;
     const member = await this.memberModel.findById(memberId, { _id: 1 });
     if (!member) {
@@ -772,6 +773,62 @@ export class MemberService extends BaseService {
         ex.code === DbErrors.duplicateKey
           ? Errors.get(ErrorType.memberRecordingIdAlreadyExists)
           : ex,
+      );
+    }
+  }
+
+  async updateRecordingReview(
+    updateRecordingReviewParams: UpdateRecordingReviewParams,
+    userId,
+  ): Promise<void> {
+    const { recordingId, content } = updateRecordingReviewParams;
+
+    const recording = await this.recordingModel.findOne({ id: recordingId });
+
+    if (!recording) {
+      throw new Error(Errors.get(ErrorType.memberRecordingNotFound));
+    }
+
+    const objectUserId = new Types.ObjectId(userId);
+
+    // User cannot review own recording
+    if (recording.userId.toString() === objectUserId.toString()) {
+      throw new Error(Errors.get(ErrorType.memberRecordingSameUser));
+    }
+
+    // Only user who wrote review can update it
+    if (
+      recording.review?.userId &&
+      recording.review.userId.toString() !== objectUserId.toString()
+    ) {
+      throw new Error(Errors.get(ErrorType.memberRecordingSameUserEdit));
+    }
+
+    if (recording.review) {
+      await this.recordingModel.updateOne(
+        { id: recordingId },
+        {
+          $set: {
+            'review.userId': objectUserId,
+            'review.content': content,
+          },
+        },
+        { new: true, upsert: true },
+      );
+    } else {
+      await this.recordingModel.findOneAndUpdate(
+        { id: recordingId },
+        {
+          $set: {
+            review: {
+              userId: objectUserId,
+              content,
+              createdAt: null,
+              updatedAt: null,
+            },
+          },
+        },
+        { new: true, upsert: true },
       );
     }
   }

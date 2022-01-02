@@ -1912,10 +1912,10 @@ describe('MemberResolver', () => {
       spyOnServiceUpdate.mockResolvedValue(undefined);
 
       const recording = generateUpdateRecordingParams({ memberId });
-      await resolver.updateRecording(recording);
+      await resolver.updateRecording(recording, recording.userId);
 
       expect(spyOnServiceUpdate).toBeCalledTimes(1);
-      expect(spyOnServiceUpdate).toBeCalledWith(recording);
+      expect(spyOnServiceUpdate).toBeCalledWith(recording, recording.userId);
     });
   });
 

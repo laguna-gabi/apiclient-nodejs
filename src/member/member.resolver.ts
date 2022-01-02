@@ -58,6 +58,7 @@ import {
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
+  UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
 } from '.';
 import {
@@ -339,8 +340,19 @@ export class MemberResolver extends MemberBase {
   @Roles(UserRole.coach, UserRole.nurse)
   async updateRecording(
     @Args(camelCase(UpdateRecordingParams.name)) updateRecordingParams: UpdateRecordingParams,
+    @Client('_id') userId,
   ) {
-    return this.memberService.updateRecording(updateRecordingParams);
+    return this.memberService.updateRecording(updateRecordingParams, userId);
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  @Roles(UserRole.coach, UserRole.nurse)
+  async updateRecordingReview(
+    @Args(camelCase(UpdateRecordingReviewParams.name))
+    updateRecordingReviewParams: UpdateRecordingReviewParams,
+    @Client('_id') userId,
+  ) {
+    return this.memberService.updateRecordingReview(updateRecordingReviewParams, userId);
   }
 
   @Query(() => [RecordingOutput])

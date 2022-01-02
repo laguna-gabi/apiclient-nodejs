@@ -43,6 +43,9 @@ export enum ErrorType {
   memberOrgIdInvalid = 9223,
   memberIdInvalid = 9224,
   memberIdInconsistent = 9225,
+  memberRecordingNotFound = 9226,
+  memberRecordingSameUser = 9227,
+  memberRecordingSameUserEdit = 9228,
 
   // Notifications
   notificationMetadataInvalid = 9270,
@@ -142,6 +145,9 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberJournalIdInvalid.valueOf(), `id ${objectIdFormat}`],
   [ErrorType.memberOrgIdInvalid.valueOf(), `orgId ${objectIdFormat}`],
   [ErrorType.memberIdInvalid.valueOf(), `memberId ${objectIdFormat}`],
+  [ErrorType.memberRecordingNotFound.valueOf(), `recording not found`],
+  [ErrorType.memberRecordingSameUser.valueOf(), `user cannot review own recording`],
+  [ErrorType.memberRecordingSameUserEdit.valueOf(), `only user who wrote review can update it`],
   [
     ErrorType.notificationMetadataInvalid.valueOf(),
     `when calling type 'text' or 'textSms', 'content' in metadata is required ` +

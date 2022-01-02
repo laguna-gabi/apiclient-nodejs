@@ -64,6 +64,7 @@ import {
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
+  UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
   defaultMemberParams,
 } from '../src/member';
@@ -590,6 +591,13 @@ export const generateUpdateRecordingParams = ({
   recordingType,
 }: Partial<UpdateRecordingParams> = {}): UpdateRecordingParams => {
   return { id, memberId, userId, start, end, answered, phone, appointmentId, recordingType };
+};
+
+export const generateUpdateRecordingReviewParams = ({
+  recordingId = generateId(),
+  content = faker.random.words(5),
+}: Partial<UpdateRecordingReviewParams> = {}): UpdateRecordingReviewParams => {
+  return { recordingId, content };
 };
 
 export const generateDailyReport = ({

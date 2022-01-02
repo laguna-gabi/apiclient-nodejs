@@ -66,6 +66,7 @@ import {
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
+  generateUpdateRecordingReviewParams,
   generateUpdateTaskStatusParams,
 } from '../index';
 
@@ -1418,19 +1419,20 @@ describe('MemberService', () => {
 
   describe('updateRecording + getRecordings', () => {
     it('should fail to update recording on non existing member', async () => {
-      await expect(service.updateRecording(generateUpdateRecordingParams())).rejects.toThrow(
-        Errors.get(ErrorType.memberNotFound),
-      );
+      await expect(
+        service.updateRecording(generateUpdateRecordingParams(), generateId()),
+      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
     });
 
     it('should fail to update an existing id for different member', async () => {
+      const userId = generateId();
       const memberId1 = await generateMember();
       const recording1 = generateUpdateRecordingParams({ memberId: memberId1 });
-      await service.updateRecording(recording1);
+      await service.updateRecording(recording1, userId);
 
       const memberId2 = await generateMember();
       const recording2 = generateUpdateRecordingParams({ id: recording1.id, memberId: memberId2 });
-      await expect(service.updateRecording(recording2)).rejects.toThrow(
+      await expect(service.updateRecording(recording2, userId)).rejects.toThrow(
         Errors.get(ErrorType.memberRecordingIdAlreadyExists),
       );
     });
@@ -1438,7 +1440,7 @@ describe('MemberService', () => {
     it('should update a member recording', async () => {
       const memberId = await generateMember();
       const recording = generateUpdateRecordingParams({ memberId });
-      await service.updateRecording(recording);
+      await service.updateRecording(recording, recording.userId);
 
       const recordings = await service.getRecordings(memberId);
       expect(recordings.length).toEqual(1);
@@ -1456,7 +1458,7 @@ describe('MemberService', () => {
         appointmentId: appointmentId as string,
         recordingType: RecordingType.phone,
       });
-      await service.updateRecording(recording1);
+      await service.updateRecording(recording1, recording1.userId);
       const recording2 = generateUpdateRecordingParams({ id: recording1.id, memberId });
       recording2.start = undefined;
       recording2.end = undefined;
@@ -1465,7 +1467,7 @@ describe('MemberService', () => {
       recording2.answered = undefined;
       recording2.recordingType = undefined;
       recording2.appointmentId = undefined;
-      await service.updateRecording(recording2);
+      await service.updateRecording(recording2, undefined);
 
       const recordings = await service.getRecordings(memberId);
       expect(recordings.length).toEqual(1);
@@ -1475,13 +1477,13 @@ describe('MemberService', () => {
     it('should multiple update members recordings', async () => {
       const memberId1 = await generateMember();
       const recording1a = generateUpdateRecordingParams({ memberId: memberId1 });
-      await service.updateRecording(recording1a);
+      await service.updateRecording(recording1a, recording1a.userId);
       const recording1b = generateUpdateRecordingParams({ memberId: memberId1 });
       recording1b.end = undefined;
-      await service.updateRecording(recording1b);
+      await service.updateRecording(recording1b, recording1b.userId);
       const memberId2 = await generateMember();
       const recording2 = generateUpdateRecordingParams({ memberId: memberId2 });
-      await service.updateRecording(recording2);
+      await service.updateRecording(recording2, recording2.userId);
 
       const recordings1 = await service.getRecordings(memberId1);
       expect(recordings1.length).toEqual(2);
@@ -1491,6 +1493,84 @@ describe('MemberService', () => {
       const recordings2 = await service.getRecordings(memberId2);
       expect(recordings2.length).toEqual(1);
       expect(recordings2[0]).toEqual(expect.objectContaining(recording2));
+    });
+  });
+
+  describe('updateRecordingReview', () => {
+    it('should fail to update review on non existing member', async () => {
+      await expect(
+        service.updateRecordingReview(generateUpdateRecordingReviewParams(), generateId()),
+      ).rejects.toThrow(Errors.get(ErrorType.memberRecordingNotFound));
+    });
+
+    it('should fail to update review if user created recording', async () => {
+      const memberId = await generateMember();
+      const recording = generateUpdateRecordingParams({ memberId });
+      await service.updateRecording(recording, recording.userId);
+
+      await expect(
+        service.updateRecordingReview(
+          generateUpdateRecordingReviewParams({ recordingId: recording.id }),
+          recording.userId,
+        ),
+      ).rejects.toThrow(Errors.get(ErrorType.memberRecordingSameUser));
+    });
+
+    it('should fail to update review if different user wrote review', async () => {
+      const userId1 = generateId();
+      const userId2 = generateId();
+
+      const memberId = await generateMember();
+      const recording = generateUpdateRecordingParams({ memberId });
+      await service.updateRecording(recording, recording.userId);
+
+      const params = generateUpdateRecordingReviewParams({ recordingId: recording.id });
+      await service.updateRecordingReview(params, userId1);
+
+      await expect(
+        service.updateRecordingReview(
+          generateUpdateRecordingReviewParams({ recordingId: params.recordingId }),
+          userId2,
+        ),
+      ).rejects.toThrow(Errors.get(ErrorType.memberRecordingSameUserEdit));
+    });
+
+    it('should create a review', async () => {
+      const memberId = await generateMember();
+      const recording = generateUpdateRecordingParams({ memberId });
+      await service.updateRecording(recording, recording.userId);
+
+      const userId = generateId();
+      const params = generateUpdateRecordingReviewParams({ recordingId: recording.id });
+      await service.updateRecordingReview(params, userId);
+
+      const recordings = await service.getRecordings(memberId);
+      const { review } = recordings[0];
+
+      expect(review.content).toEqual(params.content);
+      expect(review.userId.toString()).toEqual(userId);
+      expect(review.createdAt).toBeInstanceOf(Date);
+      expect(review.createdAt).toEqual(review.updatedAt);
+    });
+
+    it('should update a review', async () => {
+      const memberId = await generateMember();
+      const recording = generateUpdateRecordingParams({ memberId });
+      await service.updateRecording(recording, recording.userId);
+
+      const userId = generateId();
+      const params = generateUpdateRecordingReviewParams({ recordingId: recording.id });
+      await service.updateRecordingReview(params, userId);
+
+      const newParams = generateUpdateRecordingReviewParams({ recordingId: recording.id });
+      await service.updateRecordingReview(newParams, userId);
+
+      const recordings = await service.getRecordings(memberId);
+      const { review } = recordings[0];
+
+      expect(review.content).toEqual(newParams.content);
+      expect(review.updatedAt).toBeInstanceOf(Date);
+      expect(review.createdAt).not.toEqual(review.updatedAt);
     });
   });
 
