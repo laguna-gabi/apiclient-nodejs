@@ -575,7 +575,7 @@ export class MemberResolver extends MemberBase {
     return this.storageService.deleteJournalAudio(id, memberId, audioFormat);
   }
 
-  @Mutation(() => String)
+  @Mutation(() => Boolean, { nullable: true })
   @Roles(MemberRole.member)
   async publishJournal(
     @Client('roles') roles,
@@ -613,12 +613,14 @@ export class MemberResolver extends MemberBase {
       });
     }
 
-    return this.internalNotify({
+    await this.notifyCreateDispatch({
+      dispatchId: generateDispatchId(CustomKey.journalContent, memberId, Date.now().toString()),
       memberId,
       userId: member.primaryUserId.toString(),
       type: InternalNotificationType.chatMessageJournal,
       content: text,
       metadata: {
+        contentType: CustomKey.journalContent,
         sendBirdChannelUrl,
         journalImageDownloadLink,
         journalAudioDownloadLink,
@@ -1011,7 +1013,8 @@ export class MemberResolver extends MemberBase {
 
     const isMemberRecipient =
       type !== InternalNotificationType.textSmsToUser &&
-      type !== InternalNotificationType.chatMessageToUser;
+      type !== InternalNotificationType.chatMessageToUser &&
+      type !== InternalNotificationType.chatMessageJournal;
 
     const createDispatch: ICreateDispatch = {
       type: InnerQueueTypes.createDispatch,
@@ -1030,6 +1033,8 @@ export class MemberResolver extends MemberBase {
       path: metadata.path,
       peerId: metadata.peerId,
       content: params.content,
+      journalImageDownloadLink: metadata.journalImageDownloadLink,
+      journalAudioDownloadLink: metadata.journalAudioDownloadLink,
     };
     this.logger.info(createDispatch, MemberResolver.name, EventType.notifyQueue);
 

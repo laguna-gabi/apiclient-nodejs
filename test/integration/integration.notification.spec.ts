@@ -34,6 +34,7 @@ import {
   generateObjectCallOrVideoMock,
   generateObjectCancelMock,
   generateObjectCustomContentMock,
+  generateObjectJournalContentMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
   generateUpdateMemberSettingsMock,
@@ -46,7 +47,7 @@ import { v4 } from 'uuid';
 import { Appointment } from '../../src/appointment';
 import { RegisterForNotificationParams, delay, generatePath, reformatDate } from '../../src/common';
 import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
-import { CancelNotifyParams, NotifyParams } from '../../src/member';
+import { CancelNotifyParams, NotifyParams, UpdateJournalTextParams } from '../../src/member';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   generateCreateMemberParams,
@@ -54,6 +55,7 @@ import {
   generateNotifyContentParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
+  generateUpdateJournalTextParams,
 } from '../generators';
 import * as sendbirdPayload from '../unit/mocks/webhookSendbirdNewMessagePayload.json';
 
@@ -750,6 +752,57 @@ describe('Integration tests: notifications', () => {
         message: JSON.stringify(mock, Object.keys(mock).sort()),
         type: QueueType.notifications,
       });
+    });
+  });
+
+  /**
+   * Trigger : MemberResolver.publishJournal
+   * Dispatches:
+   *      1. create dispatch CustomKey.journalContent
+   */
+  // eslint-disable-next-line max-len
+  it(`publishJournal: should create dispatches of types ${CustomKey.journalContent}`, async () => {
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+    await delay(200);
+
+    const communication = await handler.communicationService.get({
+      memberId: member.id,
+      userId: member.primaryUserId.toString(),
+    });
+
+    const { id: journalId } = await handler.setContextUserId(member.id).mutations.createJournal();
+    const updateJournalTextParams: UpdateJournalTextParams = generateUpdateJournalTextParams({
+      id: journalId,
+    });
+    const journal = await handler.setContextUserId(member.id).mutations.updateJournalText({
+      updateJournalTextParams,
+    });
+
+    handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+    await handler.setContextUserId(member.id).mutations.publishJournal({ id: journalId });
+
+    await delay(500);
+
+    const mock = generateObjectJournalContentMock({
+      senderClientId: member.id,
+      recipientClientId: member.primaryUserId.toString(),
+      content: journal.text,
+      sendBirdChannelUrl: communication.sendBirdChannelUrl,
+    });
+
+    const object = new ObjectBaseClass(mock);
+    Object.keys(object.objectBaseType).forEach((key) => {
+      expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+        expect.objectContaining({
+          type: QueueType.notifications,
+          message: expect.stringContaining(
+            key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+          ),
+        }),
+      );
     });
   });
 

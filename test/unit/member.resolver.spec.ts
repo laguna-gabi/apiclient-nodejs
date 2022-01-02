@@ -1038,10 +1038,10 @@ describe('MemberResolver', () => {
     let spyOnStorageDeleteJournalImages;
     let spyOnStorageDeleteJournalAudio;
     let spyOnCommunicationServiceGet;
-    let spyOnNotificationsServiceSend;
     let spyOnServiceGetMember;
     let spyOnServiceGetMemberConfig;
     let spyOnUserServiceGetUser;
+    let spyOnCreateDispatch;
 
     const generateMockJournalParams = ({
       id = generateId(),
@@ -1074,10 +1074,10 @@ describe('MemberResolver', () => {
       spyOnStorageDeleteJournalImages = jest.spyOn(storage, 'deleteJournalImages');
       spyOnStorageDeleteJournalAudio = jest.spyOn(storage, 'deleteJournalAudio');
       spyOnCommunicationServiceGet = jest.spyOn(communicationService, 'get');
-      spyOnNotificationsServiceSend = jest.spyOn(notificationsService, 'send');
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
+      spyOnCreateDispatch = jest.spyOn(resolver, 'notifyCreateDispatch');
     });
 
     afterEach(() => {
@@ -1091,10 +1091,10 @@ describe('MemberResolver', () => {
       spyOnStorageDeleteJournalImages.mockReset();
       spyOnStorageDeleteJournalAudio.mockReset();
       spyOnCommunicationServiceGet.mockReset();
-      spyOnNotificationsServiceSend.mockReset();
       spyOnServiceGetMember.mockReset();
       spyOnServiceGetMemberConfig.mockReset();
       spyOnUserServiceGetUser.mockReset();
+      spyOnCreateDispatch.mockReset();
     });
 
     it('should create journal', async () => {
@@ -1513,7 +1513,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockImplementation(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+      spyOnCreateDispatch.mockImplementationOnce(async () => undefined);
 
       await resolver.publishJournal([MemberRole.member], memberId, journal.id);
 
@@ -1524,7 +1524,7 @@ describe('MemberResolver', () => {
         published: true,
       });
 
-      expect(spyOnServiceGetMember).toBeCalledTimes(2);
+      expect(spyOnServiceGetMember).toBeCalledTimes(1);
       expect(spyOnServiceGetMember).toBeCalledWith(memberId);
       expect(spyOnCommunicationServiceGet).toBeCalledWith({
         memberId,
@@ -1535,15 +1535,17 @@ describe('MemberResolver', () => {
         memberId,
         id: `${journal.id}${ImageType.NormalImage}.${journal.imageFormat}`,
       });
-      expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendSendBirdNotification: {
-          message: journal.text,
-          notificationType: InternalNotificationType.chatMessageJournal,
-          orgName: member.org.name,
-          userId: member.id,
+      expect(spyOnCreateDispatch).toBeCalledWith({
+        content: journal.text,
+        dispatchId: expect.any(String),
+        memberId: journal.memberId.toString(),
+        type: InternalNotificationType.chatMessageJournal,
+        userId: member.primaryUserId.toString(),
+        metadata: {
+          contentType: CustomKey.journalContent,
           sendBirdChannelUrl: communication.sendBirdChannelUrl,
-          journalImageDownloadLink,
           journalAudioDownloadLink,
+          journalImageDownloadLink,
         },
       });
     });
@@ -1567,19 +1569,22 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockImplementation(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+      spyOnCreateDispatch.mockImplementationOnce(async () => undefined);
 
       await resolver.publishJournal([MemberRole.member], memberId, journal.id);
 
       expect(spyOnStorageGetDownloadUrl).toReturnTimes(1);
-      expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendSendBirdNotification: {
-          message: journal.text,
-          notificationType: InternalNotificationType.chatMessageJournal,
-          orgName: member.org.name,
-          userId: member.id,
+      expect(spyOnCreateDispatch).toBeCalledWith({
+        content: journal.text,
+        dispatchId: expect.any(String),
+        memberId: journal.memberId.toString(),
+        type: InternalNotificationType.chatMessageJournal,
+        userId: member.primaryUserId.toString(),
+        metadata: {
+          contentType: CustomKey.journalContent,
           sendBirdChannelUrl: communication.sendBirdChannelUrl,
           journalAudioDownloadLink,
+          journalImageDownloadLink: undefined,
         },
       });
     });
@@ -1603,18 +1608,21 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockImplementation(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+      spyOnCreateDispatch.mockImplementationOnce(async () => undefined);
 
       await resolver.publishJournal([MemberRole.member], memberId, journal.id);
 
       expect(spyOnStorageGetDownloadUrl).toReturnTimes(1);
-      expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendSendBirdNotification: {
-          message: journal.text,
-          notificationType: InternalNotificationType.chatMessageJournal,
-          orgName: member.org.name,
-          userId: member.id,
+      expect(spyOnCreateDispatch).toBeCalledWith({
+        content: journal.text,
+        dispatchId: expect.any(String),
+        memberId: journal.memberId.toString(),
+        type: InternalNotificationType.chatMessageJournal,
+        userId: member.primaryUserId.toString(),
+        metadata: {
+          contentType: CustomKey.journalContent,
           sendBirdChannelUrl: communication.sendBirdChannelUrl,
+          journalAudioDownloadLink: undefined,
           journalImageDownloadLink,
         },
       });
@@ -1640,18 +1648,22 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockImplementation(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
-      spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
+      spyOnCreateDispatch.mockImplementationOnce(async () => undefined);
 
       await resolver.publishJournal([MemberRole.member], memberId, journal.id);
 
       expect(spyOnStorageGetDownloadUrl).toReturnTimes(0);
-      expect(spyOnNotificationsServiceSend).toBeCalledWith({
-        sendSendBirdNotification: {
-          message: journal.text,
-          notificationType: InternalNotificationType.chatMessageJournal,
-          orgName: member.org.name,
-          userId: member.id,
+      expect(spyOnCreateDispatch).toBeCalledWith({
+        content: journal.text,
+        dispatchId: expect.any(String),
+        memberId: journal.memberId.toString(),
+        type: InternalNotificationType.chatMessageJournal,
+        userId: member.primaryUserId.toString(),
+        metadata: {
+          contentType: CustomKey.journalContent,
           sendBirdChannelUrl: communication.sendBirdChannelUrl,
+          journalAudioDownloadLink: undefined,
+          journalImageDownloadLink: undefined,
         },
       });
     });
@@ -2003,6 +2015,7 @@ describe('MemberResolver', () => {
     let spyOnNotificationsServiceCreatePeerIceServers;
     let spyOnCommunicationResolverGetCommunication;
     let spyOnCommunicationServiceGet;
+    let spyOnCreateDispatch;
 
     beforeEach(() => {
       spyOnServiceGetMember = jest.spyOn(service, 'get');
@@ -2018,6 +2031,7 @@ describe('MemberResolver', () => {
         'getCommunication',
       );
       spyOnCommunicationServiceGet = jest.spyOn(communicationService, 'get');
+      spyOnCreateDispatch = jest.spyOn(resolver, 'notifyCreateDispatch');
     });
 
     afterEach(() => {
@@ -2028,6 +2042,7 @@ describe('MemberResolver', () => {
       spyOnNotificationsServiceCreatePeerIceServers.mockReset();
       spyOnCommunicationResolverGetCommunication.mockReset();
       spyOnCommunicationServiceGet.mockReset();
+      spyOnCreateDispatch.mockReset();
     });
 
     it('should catch notify exception on non existing user', async () => {
@@ -2107,6 +2122,7 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnNotificationsServiceSend.mockImplementationOnce(async () => undefined);
       spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
+      spyOnCreateDispatch.mockImplementationOnce(async () => undefined);
 
       const notifyParams = generateNotifyParams({
         type: NotificationType.textSms,
@@ -2115,7 +2131,7 @@ describe('MemberResolver', () => {
 
       await resolver.notify(notifyParams);
 
-      expect(spyOnEventEmitter).toBeCalled();
+      expect(spyOnCreateDispatch).toBeCalled();
     });
 
     it('should fail sending a message with only whitespaces', async () => {
