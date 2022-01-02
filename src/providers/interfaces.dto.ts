@@ -32,6 +32,8 @@ export class SendSendBirdNotification extends BaseSendNotification {
   message: string;
   notificationType: AllNotificationTypes;
   appointmentId?: string;
+  journalImageDownloadLink?: string;
+  journalAudioDownloadLink?: string;
 }
 
 export class CancelNotificationParams extends BaseSendNotification {

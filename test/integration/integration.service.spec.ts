@@ -12,6 +12,7 @@ import {
   ObjectChatMessageUserClass,
   ObjectExternalContentClass,
   ObjectGeneralMemberTriggeredClass,
+  ObjectJournalContentClass,
   ObjectNewChatMessageToMemberClass,
   ObjectNewMemberClass,
   ObjectNewMemberNudgeClass,
@@ -28,6 +29,7 @@ import {
   generateNewMemberNudgeMock,
   generateObjectCallOrVideoMock,
   generateObjectCancelMock,
+  generateObjectJournalContentMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
 } from '@lagunahealth/pandora';
@@ -577,6 +579,40 @@ describe('Notifications full flow', () => {
       dispatchId: mock.dispatchId,
       status: DispatchStatus.done,
       response: { ...object.objectChatMessageUserType },
+    });
+  });
+
+  it(`should handle 'immediate' event of type ${CustomKey.journalContent}`, async () => {
+    const mock = generateObjectJournalContentMock({
+      recipientClientId: userClient.id,
+      senderClientId: webMemberClient.id,
+      content: lorem.word(),
+      sendBirdChannelUrl: internet.url(),
+    });
+    const object = new ObjectJournalContentClass(mock);
+    spyOnSendBirdSend.mockReturnValueOnce(providerResult);
+
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({
+        type: InnerQueueTypes.createDispatch,
+        ...object.objectCustomContentType,
+      }),
+    };
+    await service.handleMessage(message);
+
+    expect(spyOnSendBirdSend).toBeCalledWith({
+      message: mock.content,
+      notificationType: InternalNotificationType.chatMessageJournal,
+      orgName: undefined,
+      sendBirdChannelUrl: mock.sendBirdChannelUrl,
+      userId: webMemberClient.id,
+    });
+
+    await compareResults({
+      dispatchId: mock.dispatchId,
+      status: DispatchStatus.done,
+      response: { ...object.objectCustomContentType },
     });
   });
 
