@@ -18,7 +18,7 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { isEmpty } from 'class-validator';
 import * as config from 'config';
 import { addDays, isAfter, millisecondsInHour } from 'date-fns';
-import { format, getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
+import { getTimezoneOffset } from 'date-fns-tz';
 import { camelCase } from 'lodash';
 import { v4 } from 'uuid';
 import { lookup } from 'zipcode-to-timezone';
@@ -912,10 +912,7 @@ export class MemberResolver extends MemberBase {
     const content = params.content;
 
     try {
-      const { member, memberConfig, user } = await this.extractDataOfMemberAndUser(
-        memberId,
-        userId,
-      );
+      const { member, memberConfig } = await this.extractDataOfMemberAndUser(memberId, userId);
 
       if (
         metadata.checkAppointmentReminder &&
@@ -925,31 +922,8 @@ export class MemberResolver extends MemberBase {
         return;
       }
 
-      if (metadata.appointmentTime) {
-        if (InternalNotificationType.textSmsToMember || InternalNotificationType.textToMember) {
-          metadata.extraData = {
-            ...metadata.extraData,
-            appointmentTime: format(
-              utcToZonedTime(metadata.appointmentTime, lookup(member.zipCode)),
-              `${this.scheduleAppointmentDateFormat} (z)`,
-              { timeZone: lookup(member.zipCode) },
-            ),
-          };
-        } else if (InternalNotificationType.textSmsToUser) {
-          metadata.extraData = {
-            ...metadata.extraData,
-            appointmentTime: `${format(
-              new Date(metadata.appointmentTime.toUTCString()),
-              this.scheduleAppointmentDateFormat,
-            )} (UTC)`,
-          };
-        }
-      }
-
       return await this.notificationBuilder.internalNotify({
         member,
-        memberConfig,
-        user,
         type,
         content,
         metadata,

@@ -152,11 +152,6 @@ export class SendOneSignalNotification extends BaseSendNotification {
   content?: string;
 }
 
-export class SendTwilioNotification extends BaseSendNotification {
-  body: string;
-  to: string;
-}
-
 export class SendSendBirdNotification extends BaseSendNotification {
   userId: string; //sender
   sendBirdChannelUrl: string;

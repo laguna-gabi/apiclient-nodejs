@@ -9,7 +9,6 @@
   "db": {
     "connection": "mongodb://localhost:27017/laguna"
   },
-  "iosExcludeRegistrationNumber": "+10011223344",
   "graphql": {
     "validators": {
       "name": {
@@ -34,9 +33,9 @@
   },
   "twilio": {
     "source": "+12058511112",
+    "iosExcludeRegistrationNumber": "+10011223344",
     "identity": "the_user_id",
-    "traversalServiceTokenTtl": 3,
-    "validPhoneTypes": ["FIXED_LINE_OR_MOBILE", "MOBILE"]
+    "traversalServiceTokenTtl": 3
   },
   "slack": {
     "support": "#support-dev",

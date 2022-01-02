@@ -74,7 +74,6 @@
     "graphql-type-json": "^0.3.2",
     "json-2-csv": "^3.14.4",
     "jsonwebtoken": "^8.5.1",
-    "libphonenumber-js": "^1.9.44",
     "lodash": "^4.17.21",
     "mongoose": "^5.12.14",
     "nest-commander": "^2.3.4",

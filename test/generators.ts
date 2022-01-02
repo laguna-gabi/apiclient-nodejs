@@ -35,7 +35,6 @@ import {
   RoleTypes,
   SendOneSignalNotification,
   SendSendBirdNotification,
-  SendTwilioNotification,
   UserRole,
   reformatDate,
 } from '../src/common';
@@ -557,13 +556,6 @@ export const generateSendOneSignalNotificationParams = (): SendOneSignalNotifica
       isVideo: false,
     },
     content: faker.lorem.sentence(),
-  };
-};
-
-export const generateSendTwilioNotificationParams = (): SendTwilioNotification => {
-  return {
-    body: faker.lorem.sentence(),
-    to: faker.phone.phoneNumber(),
   };
 };
 

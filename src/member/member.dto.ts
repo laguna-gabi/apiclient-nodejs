@@ -162,7 +162,7 @@ export class ExtraMemberParams {
 @InputType()
 export class CreateMemberParams extends ExtraMemberParams {
   @Field(() => String, { description: validPhoneExamples })
-  @ValidateIf((params) => params.phone !== config.get('iosExcludeRegistrationNumber'))
+  @ValidateIf((params) => params.phone !== config.get('twilio.iosExcludeRegistrationNumber'))
   @IsPhoneNumber(undefined, { message: Errors.get(ErrorType.memberPhone) })
   @IsNotEmpty() /* for rest api */
   @IsString() /* for rest api */
