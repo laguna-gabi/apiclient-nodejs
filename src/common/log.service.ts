@@ -66,6 +66,7 @@ export class LoggerService extends BaseLogger {
     'contentKey',
     'triggersAt',
     'path',
+    'roles',
     ...Object.keys(internalLogs),
   ]);
 

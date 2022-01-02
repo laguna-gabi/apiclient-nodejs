@@ -38,7 +38,7 @@ export class LoggingInterceptor implements NestInterceptor {
       type = this.getGqlType(context);
     }
 
-    const params = Object.values(args)[0] as Record<string, unknown>;
+    const params = LoggingInterceptor.getParams(args);
     const client: Client = LoggingInterceptor.getClient(request?.user);
     this.logger.info(params, className, methodName, client);
 
@@ -54,6 +54,19 @@ export class LoggingInterceptor implements NestInterceptor {
           this.logger.info({ finishedAndItTook: `${Date.now() - now}ms` }, className, methodName),
         ),
       );
+  }
+
+  /**
+   * There are 2 ways to get params from gql:
+   * 1. Special Param object we defined (like CreateUserParams)
+   * 2. Just one independent param (like memberId)
+   * When there's just one param, the args would look like {"memberId": <id>} so we need to log the whole 'args' object.
+   * When there's a special object, the args would look like {"createUserParams": <params>},
+   * and we want to take only the value (the params)
+   */
+  private static getParams(args) {
+    const params = Object.values(args)[0];
+    return typeof params === 'string' || Array.isArray(params) ? args : params;
   }
 
   private static getClient(client) {
