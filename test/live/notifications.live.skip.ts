@@ -1,10 +1,10 @@
-import { NotificationType, Platform, generatePhone } from '@lagunahealth/pandora';
+import { NotificationType, Platform, generatePhone, mockLogger } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
 import { LoggerService, delay, generatePath } from '../../src/common';
 import { NotificationsService } from '../../src/providers';
-import { dbDisconnect, defaultModules, mockLogger } from '../common';
+import { dbDisconnect, defaultModules } from '../common';
 
 /**
  * THIS TEST IS DISABLED

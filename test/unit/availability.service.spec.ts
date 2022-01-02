@@ -1,3 +1,4 @@
+import { mockLogger } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, Types, model } from 'mongoose';
 import {
@@ -15,7 +16,6 @@ import {
   generateAvailabilityInput,
   generateCreateUserParams,
   generateId,
-  mockLogger,
 } from '../index';
 
 describe('AvailabilityService', () => {

@@ -12,6 +12,7 @@ import {
   SlackIcon,
   generateDeleteDispatchMock,
   generateDispatchId,
+  mockLogger,
 } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -86,7 +87,6 @@ import {
   mockGenerateMember,
   mockGenerateMemberConfig,
   mockGenerateUser,
-  mockLogger,
 } from '../index';
 import { iceServers } from './mocks/twilioPeerIceServers';
 

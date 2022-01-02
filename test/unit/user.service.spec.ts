@@ -1,3 +1,4 @@
+import { mockLogger } from '@lagunahealth/pandora';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -40,7 +41,6 @@ import {
   generateId,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
-  mockLogger,
 } from '../index';
 
 describe('UserService', () => {

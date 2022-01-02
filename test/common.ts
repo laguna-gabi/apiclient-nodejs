@@ -105,14 +105,6 @@ export const defaultModules = () => {
   return [DbModule, EventEmitterModule.forRoot()];
 };
 
-export const mockLogger = (logger) => {
-  jest.spyOn(logger, 'log').mockImplementation(() => undefined);
-  jest.spyOn(logger, 'debug').mockImplementation(() => undefined);
-  jest.spyOn(logger, 'error').mockImplementation(() => undefined);
-  jest.spyOn(logger, 'info').mockImplementation(() => undefined);
-  jest.spyOn(logger, 'warn').mockImplementation(() => undefined);
-};
-
 export const mockProviders = (
   module: TestingModule,
 ): {

@@ -1,3 +1,4 @@
+import { mockLogger } from '@lagunahealth/pandora';
 import { ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -20,7 +21,7 @@ import { Member, MemberService } from '../../src/member';
 import { Org, OrgService } from '../../src/org';
 import { WebhooksController } from '../../src/providers';
 import { User, UserService } from '../../src/user';
-import { BaseHandler, dbConnect, dbDisconnect, mockLogger, mockProviders } from '../common';
+import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
 
 const validatorsConfig = config.get('graphql.validators');
 

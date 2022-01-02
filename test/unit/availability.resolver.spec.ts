@@ -1,3 +1,4 @@
+import { mockLogger } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   AvailabilityModule,
@@ -5,13 +6,7 @@ import {
   AvailabilityService,
 } from '../../src/availability';
 import { LoggerService } from '../../src/common';
-import {
-  dbDisconnect,
-  defaultModules,
-  generateAvailabilityInput,
-  generateId,
-  mockLogger,
-} from '../index';
+import { dbDisconnect, defaultModules, generateAvailabilityInput, generateId } from '../index';
 
 describe('AvailabilityResolver', () => {
   let module: TestingModule;

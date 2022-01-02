@@ -1,4 +1,4 @@
-import { InternalNotificationType } from '@lagunahealth/pandora';
+import { InternalNotificationType, mockLogger } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { v4 } from 'uuid';
 import { LoggerService } from '../../src/common';
@@ -9,7 +9,6 @@ import {
   generateSendSendBirdNotificationParams,
   mockGenerateMemberConfig,
 } from '../generators';
-import { mockLogger } from '../index';
 
 describe('NotificationsService (offline)', () => {
   let module: TestingModule;

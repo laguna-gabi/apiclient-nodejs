@@ -1,16 +1,15 @@
-import { NotificationType } from '@lagunahealth/pandora';
+import { NotificationType, mockLogger } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import axios from 'axios';
 import * as faker from 'faker';
+import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { v4 } from 'uuid';
 import { AppointmentStatus } from '../../src/appointment';
 import { LoggerService, SendSendBirdNotification, UserRole } from '../../src/common';
 import { CreateSendbirdGroupChannelParams } from '../../src/communication';
 import { ConfigsService, SendBird } from '../../src/providers';
-import { mockLogger } from '../common';
 import { generateId } from '../generators';
-import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 
 describe('live: sendbird actions', () => {
   let sendBird: SendBird;

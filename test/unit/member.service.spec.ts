@@ -4,6 +4,7 @@ import {
   Platform,
   generatePhone,
   generateZipCode,
+  mockLogger,
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
@@ -66,7 +67,6 @@ import {
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
-  mockLogger,
 } from '../index';
 
 describe('MemberService', () => {

@@ -1,4 +1,9 @@
-import { InternalKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
+import {
+  InternalKey,
+  InternalNotificationType,
+  generateDispatchId,
+  mockLogger,
+} from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Types } from 'mongoose';
@@ -13,7 +18,7 @@ import {
   DailyReportResolver,
   DailyReportService,
 } from '../../src/dailyReport';
-import { dbDisconnect, defaultModules, generateId, mockLogger } from '../index';
+import { dbDisconnect, defaultModules, generateId } from '../index';
 
 describe('DailyReportResolver', () => {
   let resolver: DailyReportResolver;

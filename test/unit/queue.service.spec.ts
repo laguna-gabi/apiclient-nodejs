@@ -1,4 +1,4 @@
-import { Environments, QueueType, ServiceName } from '@lagunahealth/pandora';
+import { Environments, QueueType, ServiceName, mockLogger } from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
@@ -6,7 +6,6 @@ import { internet, lorem } from 'faker';
 import { Consumer } from 'sqs-consumer';
 import { LoggerService } from '../../src/common';
 import { ConfigsService, ProvidersModule, QueueService, StorageService } from '../../src/providers';
-import { mockLogger } from '../index';
 import { newImageEvent } from './mocks/sqsS3EventNewImage';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const AWS = require('aws-sdk');
