@@ -1,4 +1,5 @@
 import {
+  ClientCategory,
   Honorific,
   IUpdateClientSettings,
   InnerQueueTypes,
@@ -13,7 +14,7 @@ import { internet, name } from 'faker';
 export type UpdateMemberSettingsType = Omit<IUpdateClientSettings, 'avatar'>;
 export type UpdateUserSettingsType = Pick<
   IUpdateClientSettings,
-  'id' | 'type' | 'phone' | 'firstName' | 'lastName' | 'avatar'
+  'id' | 'clientCategory' | 'type' | 'phone' | 'firstName' | 'lastName' | 'avatar'
 >;
 
 export class ObjectUpdateMemberSettingsClass {
@@ -46,6 +47,7 @@ export const generateUpdateMemberSettingsMock = ({
   return {
     type: InnerQueueTypes.updateClientSettings,
     id,
+    clientCategory: ClientCategory.member,
     phone,
     firstName,
     lastName,
@@ -78,6 +80,7 @@ export const generateUpdateUserSettingsMock = ({
   return {
     type: InnerQueueTypes.updateClientSettings,
     id,
+    clientCategory: ClientCategory.user,
     phone,
     firstName,
     lastName,

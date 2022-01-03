@@ -1,5 +1,10 @@
 import { AllNotificationTypes, Platform, ServiceName } from '.';
 
+export enum ClientCategory {
+  member = 'member',
+  user = 'user',
+}
+
 export enum InnerQueueTypes {
   updateClientSettings = 'updateClientSettings',
   deleteClientSettings = 'deleteClientSettings',
@@ -13,6 +18,7 @@ export interface IInnerQueueTypes {
 
 export interface IUpdateClientSettings extends IInnerQueueTypes {
   id: string;
+  clientCategory: ClientCategory;
   phone?: string;
   firstName?: string;
   lastName?: string;
