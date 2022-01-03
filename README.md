@@ -45,8 +45,9 @@ Laguna health backend infrastructure.
   - [🚫 Role Based Access Control: RBAC](#-role-based-access-control-rbac)
   - [🔑 Token Generating](#-token-generating)
   - [🏗️ Migration](#️-migration)
-  - [### Overview](#-overview)
-  - [### Migration Support: guide](#-migration-support-guide)
+    - [Overview](#overview)
+    - [What's new in our latest release?](#whats-new-in-our-latest-release)
+    - [Migration Support: guide](#migration-support-guide)
   - [🎻 Troubleshooting](#-troubleshooting)
     - [How to view the db locally?](#how-to-view-the-db-locally)
     - [Error at connection to mongo locally](#error-at-connection-to-mongo-locally)
@@ -228,55 +229,87 @@ yarn generate:tokens:production
 
 ---
 
-In some cases, changes to the application requires db changes (adding new mandatory fields, adding per-calculated fields, updating field values, etc...).
-It is important to include those required changes in our code reviews and be able to roll back changes if needed.
+Changes to the application may require db changes (adding new mandatory fields, adding per-calculated fields, updating field values, etc...).
+It is important to include those required/applied changes as part of our code base to allow for code  reviews and to be able to roll back changes if needed.
 
-The current support is based on the [migrate-mongo] JS library.
+The current support is now a proprietary [Nest commander](https://docs.nestjs.com/recipes/nest-commander) based TS internal Hepius package.
 
 The migration status is persisted to our mongo db - `changelog` collection. **Manipulating of that collection may affect the migration status** and as a result the applied migration scripts when running the migration `up` and `down` commands.
 
 The migration is applied automatically in our ci-cd when merging our code to `develop` or `stage` branches - migration will run after the test/coverage job.
 
+---
+### What's new in our latest release?
+- Proprietary fully customizable (.ts) migration CLI and service support (now supporting only `.ts` extension files)
+- Force `up` and `down` for specific migration files (out-of-order and force for non `PENDING` migration files)
+- Dry Run flag for `up` and `down` commands - **note**: dry run mode will not update `changelog` collection
+- Removed the `init` command - not needed anymore..
+  
+---
 ### Migration Support: guide
 
 ---
 
-- **Step 0**:
-  initialize environment - create a config file based on NODE_ENV environment parameter - when running locally it will generate a [config](./migrations/migrate-mongo-config.js) file to run against `(mongodb://localhost:27017)` / `laguna` mongo db
-  ```
-  yarn migrate:init
-  ```
 - **Step 1**: create a new migration script (template):
 
   ```
-  yarn migrate:create <script-description>
+  yarn migrate create <script-description> 
   ```
 
-  A new migration script is created in the [migrations](./migrations/scripts) directory with the following format:
+  A new migration script is created in the [migrations](./cmd/migration/scripts) directory with the following format:
 
   ```
-  <now-timestamp>-<script-description>
+  <yyyyMMddHHmmss>-<script-description>
   ```
+  Example: `20220102085546-my-first-migration.ts`
 
   **! DO NOT RENAME THE FILE !**
+  
+  ---
 
-- **Step 2**: add your changes to the newly created migration script - `up` and `down` code is required - example:
+- **Step 2**: add your changes to the newly created migration script - `up` and `down` code is required 
+ 
+  Example:
 
   ```
-  module.exports = {
-    async up(db) {
-      {$set: {blacklisted: true}});
-      await db.collection('members').
-      updateMany({},{$set : {"roles":["member"]}}, {upsert:false,multi:true});
-    },
-
-    async down(db) {
-      await db.collection('members').
-      updateMany({},{$unset: {roles:1}},{upsert:false,multi:true});
+  export const up = async (dryRun: boolean, db: Db) => {
+    console.info(InfoColoring, `(${path.basename(__filename)}) migrating ${Command.up}`);
+    if (dryRun) {
+      // Note! if dry-run mode is applied the changelog will NOT get updated.
+      console.info(InfoColoring, 'dry-run mode');
     }
-  };
+  
+    db.collection('members')
+      .find()
+      .forEach((member) => {
+        console.log(`member ${member.honorific} ${member.lastName} is part of the Laguna db`);
+        db.collection('users').findOneAndUpdate(
+          { memberId: new Types.ObjectId(member.id) },
+          { $push: { members: member.id } },
+        );
+      });
+  }
   ```
+  **Note**: a mongo client is supplied to the `up` and `down` methods upon invocation and so it matches the behavior of the preview migration support we had.. however, the generated file can be customized to upload the entire Hepius app module via the Nest Factory context creation and the provide access to any available service or model - for example: 
+  
+  ---
+  ```
+    const app = await NestFactory.createApplicationContext(AppModule);
 
+    // get the Member model from the Nest factory
+    const memberModel = app.get<Model<Member>>(getModelToken(Member.name));
+
+    const members = await memberModel.find({});
+
+    members.forEach((member) => {
+      console.log(`member ${member.honorific} ${member.lastName} is part of the Laguna db`);
+      db.collection('users').findOneAndUpdate(
+        { memberId: new Types.ObjectId(member.id) },
+        { $push: { members: member.id } },
+      );
+    });
+  ```
+  ---
 - **Step 3.1**: test the code on your local mongo db - first you check the status in your local db - the results is a list of migrations applied on your local db and pending migrations which should get applied - migration is not applied in `status` command - DRY-RUN mode:
 
   ```
@@ -285,19 +318,20 @@ The migration is applied automatically in our ci-cd when merging our code to `de
 
   | Filename                               | Applied At               |
   | -------------------------------------- | ------------------------ |
-  | 20211125153552-set-member-roles.js     | 2021-11-27T09:27:54.171Z |
-  | 20211127092801-update-member-config.js | PENDING                  |
+  | 20211125153552-set-member-roles.ts     | 2021-11-27T09:27:54.171Z |
+  | 20211127092801-update-member-config.ts | PENDING                  |
 
 - **Step 3.1**: test the code on your local mongo db - apply your new migration script:
   ```
-  yarn migrate:up
+  yarn migrate up [name] [-d for optional dry run mode ]
   ```
+  Note: name field is optional and you can add a specific migration file to migrate `up` (could be out of order and not necessarily `PENDING`)
 - **Step 3.2**: undo changes - test your `down` code on your local mongo db:
 
   ```
-  yarn migrate:down
+  yarn migrate down [name] [-d for optional dry run mode ]
   ```
-
+  ---
 - **Step 4**: commit your changes - you only need to commit your newly created migration script.
 
 ## 🎻 Troubleshooting

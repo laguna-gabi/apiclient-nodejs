@@ -4,9 +4,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { migration } from 'config';
-import { readdirSync } from 'fs';
+import { readdirSync, unlinkSync } from 'fs';
 import * as faker from 'faker';
 import { add } from 'date-fns';
+import * as path from 'path';
+import { delay } from '../../src/common';
 
 jest.mock('fs', () => {
   const actualFS = jest.requireActual('fs');
@@ -145,6 +147,179 @@ describe('Commands: MigrationService', () => {
         },
         { appliedAt: 'PENDING', fileName: migrationFiles.get('migration_4') },
       ]);
+    });
+  });
+
+  describe('test `up` and `down` and `create` commands', () => {
+    const testMigrationDir = new Map<string, string>();
+    // const spyOnMockCatalogModelFind;
+    let spyFindOneAndUpdateOnMockCatalogModel: jest.SpyInstance;
+    let spyDeleteOneOnMockCatalogModel: jest.SpyInstance;
+    beforeAll(async () => {
+      testMigrationDir.set('migration_1', migrationService.create(faker.system.fileName()));
+      await delay(1000); // make sure files are not created with the same timestamp - sort should work
+      testMigrationDir.set('migration_2', migrationService.create(faker.system.fileName()));
+
+      spyFindOneAndUpdateOnMockCatalogModel = jest.spyOn(changelogModel, 'findOneAndUpdate');
+      spyDeleteOneOnMockCatalogModel = jest.spyOn(changelogModel, 'deleteOne');
+    });
+
+    afterEach(() => {
+      spyFindOneAndUpdateOnMockCatalogModel.mockReset();
+      spyDeleteOneOnMockCatalogModel.mockReset();
+    });
+
+    afterAll(async () => {
+      // Delete our test migration files
+      testMigrationDir.forEach((file) => {
+        unlinkSync(path.join(process.cwd(), migration.get('migrationDir'), file));
+      });
+    });
+
+    describe('`up` command', () => {
+      it('should do nothing if no pending migrations', async () => {
+        jest.spyOn(migrationService, 'getStatusItems').mockResolvedValueOnce([]);
+
+        await migrationService.up();
+
+        expect(spyFindOneAndUpdateOnMockCatalogModel).not.toHaveBeenCalled();
+      });
+
+      it('should run all pending migration files', async () => {
+        jest.spyOn(migrationService, 'getStatusItems').mockResolvedValueOnce([
+          { fileName: testMigrationDir.get('migration_1'), appliedAt: 'PENDING' },
+          { fileName: testMigrationDir.get('migration_2'), appliedAt: 'PENDING' },
+        ]);
+
+        await migrationService.up();
+
+        expect(spyFindOneAndUpdateOnMockCatalogModel).toHaveBeenNthCalledWith(
+          1,
+          {
+            fileName: testMigrationDir.get('migration_1'),
+          },
+          expect.anything(),
+          { upsert: true },
+        );
+        expect(spyFindOneAndUpdateOnMockCatalogModel).toHaveBeenNthCalledWith(
+          2,
+          {
+            fileName: testMigrationDir.get('migration_2'),
+          },
+          expect.anything(),
+          { upsert: true },
+        );
+      });
+
+      it('should run all pending migration files in dry run mode (2 out of 2)', async () => {
+        jest.spyOn(migrationService, 'getStatusItems').mockResolvedValueOnce([
+          { fileName: testMigrationDir.get('migration_1'), appliedAt: 'PENDING' },
+          { fileName: testMigrationDir.get('migration_2'), appliedAt: 'PENDING' },
+        ]);
+
+        await migrationService.up(true);
+
+        expect(spyFindOneAndUpdateOnMockCatalogModel).not.toHaveBeenCalled();
+      });
+
+      it('should run all pending migration files in dry run mode (2 out of 2)', async () => {
+        jest.spyOn(migrationService, 'getStatusItems').mockResolvedValueOnce([
+          { fileName: testMigrationDir.get('migration_1'), appliedAt: 'PENDING' },
+          { fileName: testMigrationDir.get('migration_2'), appliedAt: 'PENDING' },
+        ]);
+
+        await migrationService.up(true);
+
+        expect(spyFindOneAndUpdateOnMockCatalogModel).not.toHaveBeenCalled();
+      });
+
+      it('should run only pending migration files', async () => {
+        jest.spyOn(migrationService, 'getStatusItems').mockResolvedValueOnce([
+          {
+            fileName: testMigrationDir.get('migration_1'),
+            appliedAt: faker.date.past().toString(),
+          },
+          { fileName: testMigrationDir.get('migration_2'), appliedAt: 'PENDING' },
+        ]);
+
+        await migrationService.up();
+
+        expect(spyFindOneAndUpdateOnMockCatalogModel).toHaveBeenCalledTimes(1);
+        expect(spyFindOneAndUpdateOnMockCatalogModel).toHaveBeenCalledWith(
+          {
+            fileName: testMigrationDir.get('migration_2'),
+          },
+          expect.anything(),
+          { upsert: true },
+        );
+      });
+    });
+
+    describe('`down` command', () => {
+      it('should do nothing if there are no items in changelog', async () => {
+        jest.spyOn(migrationService, 'getStatusItems').mockResolvedValueOnce([]);
+
+        await migrationService.down();
+
+        expect(spyDeleteOneOnMockCatalogModel).not.toHaveBeenCalled();
+      });
+
+      it('should undo latest migration only', async () => {
+        jest.spyOn(migrationService, 'getStatusItems').mockResolvedValueOnce([
+          {
+            fileName: testMigrationDir.get('migration_1'),
+            appliedAt: faker.date.past().toString(),
+          },
+          {
+            fileName: testMigrationDir.get('migration_2'),
+            appliedAt: faker.date.past().toString(),
+          },
+        ]);
+
+        await migrationService.down();
+
+        expect(spyDeleteOneOnMockCatalogModel).toHaveBeenCalledTimes(1);
+        expect(spyDeleteOneOnMockCatalogModel).toHaveBeenCalledWith({
+          fileName: testMigrationDir.get('migration_2'),
+        });
+      });
+
+      it('should undo requested migration only', async () => {
+        jest.spyOn(migrationService, 'getStatusItems').mockResolvedValueOnce([
+          {
+            fileName: testMigrationDir.get('migration_1'),
+            appliedAt: faker.date.past().toString(),
+          },
+          {
+            fileName: testMigrationDir.get('migration_2'),
+            appliedAt: faker.date.past().toString(),
+          },
+        ]);
+
+        await migrationService.down(false, testMigrationDir.get('migration_1'));
+
+        expect(spyDeleteOneOnMockCatalogModel).toHaveBeenCalledTimes(1);
+        expect(spyDeleteOneOnMockCatalogModel).toHaveBeenCalledWith({
+          fileName: testMigrationDir.get('migration_1'),
+        });
+      });
+
+      it('should not update change log in dry-run mode', async () => {
+        jest.spyOn(migrationService, 'getStatusItems').mockResolvedValueOnce([
+          {
+            fileName: testMigrationDir.get('migration_1'),
+            appliedAt: faker.date.past().toString(),
+          },
+          {
+            fileName: testMigrationDir.get('migration_2'),
+            appliedAt: faker.date.past().toString(),
+          },
+        ]);
+
+        await migrationService.down(true);
+
+        expect(spyDeleteOneOnMockCatalogModel).not.toHaveBeenCalled();
+      });
     });
   });
 });

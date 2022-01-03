@@ -11,11 +11,9 @@ export const up = async (dryRun: boolean, db: Db) => {
     InfoColoring,
     `(${path.basename(__filename)}) migrating ${Command.up} ${dryRun ? 'in dry run mode' : ''}`,
   );
-  // Note! if dry-run mode is applied the changelog will NOT get updated.
 
-  //------------------------------------------------------------------------------------------------
-  // migration (up) code here...
-  //------------------------------------------------------------------------------------------------
+  await db.collection('members').updateMany({}, { $unset: { language: '' } });
+  await db.collection('memberconfigs').updateMany({}, { $set: { language: 'en' } });
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -27,9 +25,7 @@ export const down = async (dryRun: boolean, db: Db) => {
     InfoColoring,
     `(${path.basename(__filename)}) migrating ${Command.down} ${dryRun ? 'in dry run mode' : ''}`,
   );
-  // Note! if dry-run mode is applied the changelog will NOT get updated.
 
-  //------------------------------------------------------------------------------------------------
-  // migration (down) code here...
-  //------------------------------------------------------------------------------------------------
+  await db.collection('members').updateMany({}, { $set: { language: 'en' } });
+  await db.collection('memberconfigs').updateMany({}, { $unset: { language: '' } });
 };

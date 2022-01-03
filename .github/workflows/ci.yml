@@ -267,7 +267,7 @@ jobs:
       - name: Migrate Db
         env:
           NODE_ENV: ${{ steps.branch_check.outputs.env_name }}
-        run: yarn migrate:init; yarn migrate:up
+        run: yarn migrate up
 
   bump-version:
     name: Bump Version
