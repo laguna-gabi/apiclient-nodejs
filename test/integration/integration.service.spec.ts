@@ -6,6 +6,7 @@ import {
   InternalKey,
   InternalNotificationType,
   NotificationType,
+  ObjectAppointmentScheduleLongReminderClass,
   ObjectAppointmentScheduleReminderClass,
   ObjectAppointmentScheduledClass,
   ObjectBaseClass,
@@ -17,6 +18,7 @@ import {
   ObjectNewMemberClass,
   ObjectNewMemberNudgeClass,
   Platform,
+  generateAppointmentScheduleLongReminderMock,
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
@@ -332,19 +334,16 @@ describe('Notifications full flow', () => {
     });
   });
 
-  test.each([
-    { contentKey: InternalKey.appointmentReminder, amountMinutes: gapMinutes },
-    { contentKey: InternalKey.appointmentLongReminder, amountMinutes: 24 * 60 },
-  ])(`should handle 'future' event of type $contentKey`, async (params) => {
+  it(`should handle 'future' event of type ${InternalKey.appointmentReminder}`, async () => {
     const appointmentTime = addDays(new Date(), 3);
     const object = new ObjectAppointmentScheduleReminderClass(
       generateAppointmentScheduleReminderMock({
         recipientClientId: webMemberClient.id,
         senderClientId: userClient.id,
-        contentKey: params.contentKey,
         appointmentId: generateId(),
         appointmentTime,
-        triggersAt: subMinutes(appointmentTime, params.amountMinutes),
+        triggersAt: subMinutes(appointmentTime, gapMinutes),
+        chatLink: internet.url(),
       }),
     );
 
@@ -352,19 +351,54 @@ describe('Notifications full flow', () => {
       MessageId: v4(),
       Body: JSON.stringify({
         type: InnerQueueTypes.createDispatch,
-        ...object.objectAppointmentScheduleReminderMock,
+        ...object.objectAppointmentScheduleReminderType,
       }),
     };
     await service.handleMessage(message);
 
     const trigger = await triggersService.get(
-      object.objectAppointmentScheduleReminderMock.dispatchId,
+      object.objectAppointmentScheduleReminderType.dispatchId,
     );
-    expect(trigger.expireAt).toEqual(object.objectAppointmentScheduleReminderMock.triggersAt);
+    expect(trigger.expireAt).toEqual(object.objectAppointmentScheduleReminderType.triggersAt);
     await compareResults({
-      dispatchId: object.objectAppointmentScheduleReminderMock.dispatchId,
+      dispatchId: object.objectAppointmentScheduleReminderType.dispatchId,
       status: DispatchStatus.received,
-      response: { ...object.objectAppointmentScheduleReminderMock },
+      response: { ...object.objectAppointmentScheduleReminderType },
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      triggeredId: trigger._id.toString(),
+    });
+  });
+
+  it(`should handle 'future' event of type ${InternalKey.appointmentLongReminder}`, async () => {
+    const appointmentTime = addDays(new Date(), 3);
+    const object = new ObjectAppointmentScheduleLongReminderClass(
+      generateAppointmentScheduleLongReminderMock({
+        recipientClientId: webMemberClient.id,
+        senderClientId: userClient.id,
+        appointmentId: generateId(),
+        appointmentTime,
+        triggersAt: subMinutes(appointmentTime, gapMinutes),
+      }),
+    );
+
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({
+        type: InnerQueueTypes.createDispatch,
+        ...object.objectAppointmentScheduleLongReminderType,
+      }),
+    };
+    await service.handleMessage(message);
+
+    const trigger = await triggersService.get(
+      object.objectAppointmentScheduleLongReminderType.dispatchId,
+    );
+    expect(trigger.expireAt).toEqual(object.objectAppointmentScheduleLongReminderType.triggersAt);
+    await compareResults({
+      dispatchId: object.objectAppointmentScheduleLongReminderType.dispatchId,
+      status: DispatchStatus.received,
+      response: { ...object.objectAppointmentScheduleLongReminderType },
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       triggeredId: trigger._id.toString(),
