@@ -1,5 +1,6 @@
 import {
   CancelNotificationType,
+  ClientCategory,
   ExternalKey,
   Honorific,
   IUpdateClientSettings,
@@ -14,7 +15,6 @@ import * as config from 'config';
 import { format } from 'date-fns';
 import * as faker from 'faker';
 import { Types } from 'mongoose';
-import { DailyReport } from '../src/dailyReport';
 import { v4 } from 'uuid';
 import {
   AppointmentMethod,
@@ -28,6 +28,7 @@ import {
 import { AvailabilityInput } from '../src/availability';
 import { MemberRole, RoleTypes, UserRole, reformatDate } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
+import { DailyReport } from '../src/dailyReport';
 import {
   AddCaregiverParams,
   AppointmentCompose,
@@ -545,6 +546,7 @@ export const generateUpdateClientSettings = ({
   return {
     type: InnerQueueTypes.updateClientSettings,
     id: memberConfig?.memberId?.toString() || member.id.toString(),
+    clientCategory: ClientCategory.member,
     phone: member?.phone,
     firstName: member?.firstName,
     lastName: member?.lastName,

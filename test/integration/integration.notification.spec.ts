@@ -1,5 +1,6 @@
 import {
   CancelNotificationType,
+  ClientCategory,
   ContentKey,
   CustomKey,
   ExternalKey,
@@ -333,6 +334,7 @@ describe('Integration tests: notifications', () => {
       // send event to queue on update member config (on create control)
       const updateControlMemberSettingsMock = {
         type: InnerQueueTypes.updateClientSettings,
+        clientCategory: ClientCategory.member,
         id,
         firstName: memberParams.firstName,
         lastName: memberParams.lastName,

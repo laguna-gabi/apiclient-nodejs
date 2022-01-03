@@ -1,4 +1,5 @@
 import {
+  ClientCategory,
   IUpdateClientSettings,
   InnerQueueTypes,
   QueueType,
@@ -99,6 +100,7 @@ describe('UserResolver', () => {
       const updateClientSettings: IUpdateClientSettings = {
         type: InnerQueueTypes.updateClientSettings,
         id,
+        clientCategory: ClientCategory.user,
         phone: params.phone,
         firstName: params.firstName,
         lastName: params.lastName,
