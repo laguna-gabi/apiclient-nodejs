@@ -838,6 +838,12 @@ export class MemberResolver extends MemberBase {
       type === NotificationType.video || type === NotificationType.call
         ? CustomKey.callOrVideo
         : CustomKey.customContent;
+
+    const sendBirdChannelUrl = await this.getSendBirdChannelUrl({
+      memberId: member.id,
+      userId: member.primaryUserId.toString(),
+    });
+
     await this.notifyCreateDispatch({
       dispatchId: generateDispatchId(contentKey, member.id, Date.now().toString()),
       memberId: member.id,
@@ -851,6 +857,7 @@ export class MemberResolver extends MemberBase {
         peerId: metadata.peerId,
         appointmentId: metadata.appointmentId,
         triggersAt: metadata.when,
+        sendBirdChannelUrl,
       },
     });
   }

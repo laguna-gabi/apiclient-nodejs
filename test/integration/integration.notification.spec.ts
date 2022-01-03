@@ -13,10 +13,11 @@ import {
   ObjectChatMessageUserClass,
   ObjectCustomContentClass,
   ObjectExternalContentClass,
-  ObjectGeneralMemberTriggeredClass,
+  ObjectFutureNotifyClass,
   ObjectNewChatMessageToMemberClass,
   ObjectNewMemberClass,
   ObjectNewMemberNudgeClass,
+  ObjectRegisterMemberWithTriggeredClass,
   ObjectUpdateMemberSettingsClass,
   Platform,
   QueueType,
@@ -26,7 +27,6 @@ import {
   generateChatMessageUserMock,
   generateDispatchId,
   generateExternalContentMock,
-  generateGeneralMemberTriggeredMock,
   generateNewChatMessageToMemberMock,
   generateNewControlMemberMock,
   generateNewMemberMock,
@@ -34,7 +34,9 @@ import {
   generateObjectCallOrVideoMock,
   generateObjectCancelMock,
   generateObjectCustomContentMock,
+  generateObjectFutureNotifyMock,
   generateObjectJournalContentMock,
+  generateObjectRegisterMemberWithTriggeredMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
   generateUpdateMemberSettingsMock,
@@ -235,15 +237,15 @@ describe('Integration tests: notifications', () => {
       expectStringContaining(1, 'firstLoggedInAt', firstLoggedInAt);
 
       const checkValues = (contentKey: ContentKey, amount: number) => {
-        const mock1 = generateGeneralMemberTriggeredMock({
+        const mock1 = generateObjectRegisterMemberWithTriggeredMock({
           recipientClientId: member.id,
           senderClientId: member.primaryUserId.toString(),
           contentKey,
           triggersAt: addDays(new Date(), amount),
           notificationType: NotificationType.text,
         });
-        const object1 = new ObjectGeneralMemberTriggeredClass(mock1);
-        Object.keys(object1.objectGeneralMemberTriggeredMock).forEach((key) => {
+        const object1 = new ObjectRegisterMemberWithTriggeredClass(mock1);
+        Object.keys(object1.objectRegisterMemberWithTriggeredType).forEach((key) => {
           expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
             expect.objectContaining({
               type: QueueType.notifications,
@@ -381,15 +383,20 @@ describe('Integration tests: notifications', () => {
 
       await delay(200);
 
-      const mock = generateGeneralMemberTriggeredMock({
+      const communication = await handler.communicationService.get({
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+      });
+      const mock = generateObjectFutureNotifyMock({
         recipientClientId: member.id,
         senderClientId: member.primaryUserId.toString(),
         contentKey: CustomKey.customContent,
         notificationType: notifyParams.type,
         triggersAt: when,
+        sendBirdChannelUrl: communication.sendBirdChannelUrl,
       });
-      const object = new ObjectGeneralMemberTriggeredClass(mock);
-      Object.keys(object.objectGeneralMemberTriggeredMock).forEach((key) => {
+      const object = new ObjectFutureNotifyClass(mock);
+      Object.keys(object.objectFutureNotifyType).forEach((key) => {
         expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
           expect.objectContaining({
             type: QueueType.notifications,
@@ -425,11 +432,16 @@ describe('Integration tests: notifications', () => {
 
       await delay(200);
 
+      const communication = await handler.communicationService.get({
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+      });
       const mock = generateObjectCustomContentMock({
         recipientClientId: notifyParams.memberId,
         senderClientId: notifyParams.userId,
         notificationType: notifyParams.type,
         content: notifyParams.metadata.content,
+        sendBirdChannelUrl: communication.sendBirdChannelUrl,
       });
       const object = new ObjectCustomContentClass(mock);
       Object.keys(object.objectCustomContentType).forEach((key) => {
@@ -476,12 +488,17 @@ describe('Integration tests: notifications', () => {
 
         await delay(200);
 
+        const communication = await handler.communicationService.get({
+          memberId: member.id,
+          userId: member.primaryUserId.toString(),
+        });
         const mock = generateObjectCallOrVideoMock({
           recipientClientId: notifyParams.memberId,
           senderClientId: notifyParams.userId,
           notificationType: notifyParams.type,
           peerId: notifyParams.metadata.peerId,
           path: generatePath(notifyParams.type),
+          sendBirdChannelUrl: communication.sendBirdChannelUrl,
         });
         const object = new ObjectCallOrVideoClass(mock);
         Object.keys(object.objectCallOrVideoType).forEach((key) => {
@@ -767,11 +784,6 @@ describe('Integration tests: notifications', () => {
 
     await delay(200);
 
-    const communication = await handler.communicationService.get({
-      memberId: member.id,
-      userId: member.primaryUserId.toString(),
-    });
-
     const { id: journalId } = await handler.setContextUserId(member.id).mutations.createJournal();
     const updateJournalTextParams: UpdateJournalTextParams = generateUpdateJournalTextParams({
       id: journalId,
@@ -786,6 +798,10 @@ describe('Integration tests: notifications', () => {
 
     await delay(500);
 
+    const communication = await handler.communicationService.get({
+      memberId: member.id,
+      userId: member.primaryUserId.toString(),
+    });
     const mock = generateObjectJournalContentMock({
       senderClientId: member.id,
       recipientClientId: member.primaryUserId.toString(),
@@ -914,15 +930,14 @@ describe('Integration tests: notifications', () => {
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
-      const communication = await handler.communicationService.get({
-        memberId: member.id,
-        userId: member.primaryUserId.toString(),
-      });
-
       const payload = { Body: faker.lorem.word(), From: member.phone, Token: 'token' };
       await handler.webhooksController.incomingSms(payload);
       await delay(200);
 
+      const communication = await handler.communicationService.get({
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+      });
       const mock = generateChatMessageUserMock({
         recipientClientId: member.primaryUserId.toString(),
         senderClientId: member.id,
