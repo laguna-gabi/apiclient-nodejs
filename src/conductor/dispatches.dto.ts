@@ -89,6 +89,12 @@ export class Dispatch {
   @Prop({ isNan: true })
   path?: string;
 
+  @Prop({ isNan: true })
+  journalImageDownloadLink?: string;
+
+  @Prop({ isNan: true })
+  journalAudioDownloadLink?: string;
+
   /**
    * Internal Iris fields for dispatching a message
    */

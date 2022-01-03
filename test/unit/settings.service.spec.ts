@@ -1,5 +1,7 @@
+import { mockLogger } from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Logger } from '../../src/common';
 import { generateId, generateUpdateMemberSettingsMock } from '../';
 import { DbModule } from '../../src/db';
 import { ClientSettings, SettingsModule, SettingsService } from '../../src/settings';
@@ -14,6 +16,7 @@ describe(SettingsService.name, () => {
     }).compile();
 
     service = module.get<SettingsService>(SettingsService);
+    mockLogger(module.get<Logger>(Logger));
   });
 
   afterAll(async () => {

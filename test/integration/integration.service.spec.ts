@@ -11,7 +11,8 @@ import {
   ObjectBaseClass,
   ObjectChatMessageUserClass,
   ObjectExternalContentClass,
-  ObjectGeneralMemberTriggeredClass,
+  ObjectFutureNotifyClass,
+  ObjectJournalContentClass,
   ObjectNewChatMessageToMemberClass,
   ObjectNewMemberClass,
   ObjectNewMemberNudgeClass,
@@ -21,18 +22,20 @@ import {
   generateAppointmentScheduledUserMock,
   generateChatMessageUserMock,
   generateExternalContentMock,
-  generateGeneralMemberTriggeredMock,
   generateNewChatMessageToMemberMock,
   generateNewControlMemberMock,
   generateNewMemberMock,
   generateNewMemberNudgeMock,
   generateObjectCallOrVideoMock,
   generateObjectCancelMock,
+  generateObjectFutureNotifyMock,
+  generateObjectJournalContentMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
+  mockLogger,
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import { gapMinutes } from 'config';
+import { gapMinutes, hosts } from 'config';
 import { addDays, subMinutes } from 'date-fns';
 import { internet, lorem } from 'faker';
 import { Types } from 'mongoose';
@@ -41,6 +44,7 @@ import { v4 } from 'uuid';
 import { replaceConfigs } from '../';
 import { translation } from '../../languages/en.json';
 import { AppModule } from '../../src/app.module';
+import { Logger } from '../../src/common';
 import {
   DispatchStatus,
   DispatchesService,
@@ -55,6 +59,7 @@ import {
   Provider,
   ProviderResult,
   SendBird,
+  SendSendBirdNotification,
   Twilio,
 } from '../../src/providers';
 import { ClientSettings } from '../../src/settings';
@@ -88,6 +93,7 @@ describe('Notifications full flow', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    mockLogger(module.get<Logger>(Logger));
     service = module.get<QueueService>(QueueService);
     dispatchesService = module.get<DispatchesService>(DispatchesService);
     triggersService = module.get<TriggersService>(TriggersService);
@@ -226,17 +232,82 @@ describe('Notifications full flow', () => {
   });
 
   test.each([
+    InternalKey.newRegisteredMember,
+    InternalKey.newRegisteredMemberNudge,
+    InternalKey.logReminder,
+  ])(
+    // eslint-disable-next-line max-len
+    `should handle 'future' event of type %p(faking it to trigger now) and send to sendbird and twilio on ${NotificationType.textSms}`,
+    async (contentKey) => {
+      const mock = generateObjectFutureNotifyMock({
+        recipientClientId: webMemberClient.id,
+        senderClientId: userClient.id,
+        contentKey,
+        notificationType: NotificationType.textSms,
+        //setting this to now in order to check that sendbird is called as well
+        triggersAt: new Date(),
+        sendBirdChannelUrl: internet.url(),
+      });
+
+      const object = new ObjectFutureNotifyClass(mock);
+      spyOnTwilioSend.mockReturnValueOnce(providerResult);
+
+      const message: SQSMessage = {
+        MessageId: v4(),
+        Body: JSON.stringify({
+          type: InnerQueueTypes.createDispatch,
+          ...object.objectFutureNotifyType,
+        }),
+      };
+      await service.handleMessage(message);
+
+      const content =
+        replaceConfigs({
+          content: translation.contents[contentKey],
+          memberClient: webMemberClient,
+          userClient,
+        }) + `\n${hosts.get('dynamicLink')}`;
+
+      const sendbirdParams: SendSendBirdNotification = {
+        message: content,
+        notificationType: mock.notificationType,
+        orgName: webMemberClient.orgName,
+        sendBirdChannelUrl: mock.sendBirdChannelUrl,
+        userId: userClient.id,
+        appointmentId: undefined,
+        journalImageDownloadLink: undefined,
+        journalAudioDownloadLink: undefined,
+      };
+      expect(spyOnSendBirdSend).toBeCalledWith(sendbirdParams);
+
+      expect(spyOnTwilioSend).toBeCalledWith({
+        body: content,
+        orgName: webMemberClient.orgName,
+        to: webMemberClient.phone,
+      });
+
+      await compareResults({
+        dispatchId: mock.dispatchId,
+        status: DispatchStatus.done,
+        response: { ...object.objectFutureNotifyType },
+        pResult: providerResult,
+      });
+    },
+  );
+
+  test.each([
     { contentKey: InternalKey.newRegisteredMember, amount: 1 },
     { contentKey: InternalKey.newRegisteredMemberNudge, amount: 2 },
     { contentKey: InternalKey.logReminder, amount: 3 },
   ])(`should handle 'future' event of type $contentKey`, async (params) => {
-    const object = new ObjectGeneralMemberTriggeredClass(
-      generateGeneralMemberTriggeredMock({
-        recipientClientId: webMemberClient.id,
+    const object = new ObjectFutureNotifyClass(
+      generateObjectFutureNotifyMock({
+        recipientClientId: mobileMemberClient.id,
         senderClientId: userClient.id,
         contentKey: params.contentKey,
         notificationType: NotificationType.text,
         triggersAt: addDays(new Date(), params.amount),
+        sendBirdChannelUrl: internet.url(),
       }),
     );
 
@@ -244,17 +315,17 @@ describe('Notifications full flow', () => {
       MessageId: v4(),
       Body: JSON.stringify({
         type: InnerQueueTypes.createDispatch,
-        ...object.objectGeneralMemberTriggeredMock,
+        ...object.objectFutureNotifyType,
       }),
     };
     await service.handleMessage(message);
 
-    const trigger = await triggersService.get(object.objectGeneralMemberTriggeredMock.dispatchId);
-    expect(trigger.expireAt).toEqual(object.objectGeneralMemberTriggeredMock.triggersAt);
+    const trigger = await triggersService.get(object.objectFutureNotifyType.dispatchId);
+    expect(trigger.expireAt).toEqual(object.objectFutureNotifyType.triggersAt);
     await compareResults({
-      dispatchId: object.objectGeneralMemberTriggeredMock.dispatchId,
+      dispatchId: object.objectFutureNotifyType.dispatchId,
       status: DispatchStatus.received,
-      response: { ...object.objectGeneralMemberTriggeredMock },
+      response: { ...object.objectFutureNotifyType },
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       triggeredId: trigger._id.toString(),
@@ -508,6 +579,7 @@ describe('Notifications full flow', () => {
         notificationType,
         peerId: v4(),
         path: lorem.word(),
+        sendBirdChannelUrl: internet.url(),
       });
       const providerResultOS: ProviderResult = { provider: Provider.oneSignal, id: generateId() };
       spyOnOneSignalSend.mockReturnValueOnce(providerResultOS);
@@ -577,6 +649,40 @@ describe('Notifications full flow', () => {
       dispatchId: mock.dispatchId,
       status: DispatchStatus.done,
       response: { ...object.objectChatMessageUserType },
+    });
+  });
+
+  it(`should handle 'immediate' event of type ${CustomKey.journalContent}`, async () => {
+    const mock = generateObjectJournalContentMock({
+      recipientClientId: userClient.id,
+      senderClientId: webMemberClient.id,
+      content: lorem.word(),
+      sendBirdChannelUrl: internet.url(),
+    });
+    const object = new ObjectJournalContentClass(mock);
+    spyOnSendBirdSend.mockReturnValueOnce(providerResult);
+
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({
+        type: InnerQueueTypes.createDispatch,
+        ...object.objectCustomContentType,
+      }),
+    };
+    await service.handleMessage(message);
+
+    expect(spyOnSendBirdSend).toBeCalledWith({
+      message: mock.content,
+      notificationType: InternalNotificationType.chatMessageJournal,
+      orgName: undefined,
+      sendBirdChannelUrl: mock.sendBirdChannelUrl,
+      userId: webMemberClient.id,
+    });
+
+    await compareResults({
+      dispatchId: mock.dispatchId,
+      status: DispatchStatus.done,
+      response: { ...object.objectCustomContentType },
     });
   });
 

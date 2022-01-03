@@ -1,11 +1,11 @@
-import { InnerQueueTypes } from '@lagunahealth/pandora';
+import { Environments, InnerQueueTypes, mockLogger } from '@lagunahealth/pandora';
 import { NotImplementedException } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { internet, lorem } from 'faker';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
-import { CommonModule } from '../../src/common';
+import { CommonModule, Logger } from '../../src/common';
 import { ConductorModule, ConductorService, QueueService } from '../../src/conductor';
 import { DbModule } from '../../src/db';
 import { ConfigsService, ProvidersModule } from '../../src/providers';
@@ -29,6 +29,7 @@ describe(QueueService.name, () => {
       ],
     }).compile();
     service = module.get<QueueService>(QueueService);
+    mockLogger(module.get<Logger>(Logger));
 
     conductorService = module.get<ConductorService>(ConductorService);
 
@@ -50,15 +51,48 @@ describe(QueueService.name, () => {
 
     Consumer.create = jest.fn().mockImplementation(() => ({ on: jest.fn(), start: jest.fn() }));
 
-    it('should init queues', async () => {
-      await service.onModuleInit();
+    describe('onModuleInit', () => {
+      beforeEach(() => {
+        process.env.NODE_ENV = Environments.test;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        service.auditQueueUrl = undefined;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        service.notificationsQueueUrl = undefined;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        service.notificationsDLQUrl = undefined;
+      });
 
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      expect(service.notificationsQ).toEqual(queueUrl);
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      expect(service.notificationsDLQ).toEqual(queueUrl);
+      it('should init notification queue on non production environment', async () => {
+        await service.onModuleInit();
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        expect(service.auditQueueUrl).toEqual(undefined);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        expect(service.notificationsQueueUrl).toEqual(queueUrl);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        expect(service.notificationsDLQUrl).toEqual(queueUrl);
+      });
+
+      it('should init audit queue on production environment', async () => {
+        process.env.NODE_ENV = Environments.production;
+        await service.onModuleInit();
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        expect(service.auditQueueUrl).toEqual(queueUrl);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        expect(service.notificationsQueueUrl).toEqual(queueUrl);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        expect(service.notificationsDLQUrl).toEqual(queueUrl);
+      });
     });
   });
 
@@ -66,23 +100,28 @@ describe(QueueService.name, () => {
     it('should report up on connected queues', () => {
       const result = service.isHealthy();
       expect(result).toEqual({
-        notificationsQ: { status: 'up' },
-        notificationsDLQ: { status: 'up' },
+        auditQueueUrl: { status: 'up' },
+        notificationsQueueUrl: { status: 'up' },
+        notificationsDLQUrl: { status: 'up' },
       });
     });
 
     it('should report down on not connected queues', () => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      service.notificationsQ = undefined;
-
+      service.auditQueueUrl = undefined;
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      service.notificationsDLQ = undefined;
+      service.notificationsQueueUrl = undefined;
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      service.notificationsDLQUrl = undefined;
+
       const result = service.isHealthy();
       expect(result).toEqual({
-        notificationsQ: { status: 'down' },
-        notificationsDLQ: { status: 'down' },
+        auditQueueUrl: { status: 'down' },
+        notificationsQueueUrl: { status: 'down' },
+        notificationsDLQUrl: { status: 'down' },
       });
     });
   });

@@ -4,6 +4,8 @@ import { v4 } from 'uuid';
 import { generateId, generateTriggers } from '../';
 import { DbModule } from '../../src/db';
 import { ConductorModule, Trigger, TriggersService } from '../../src/conductor';
+import { Logger } from '../../src/common';
+import { mockLogger } from '@lagunahealth/pandora';
 
 describe(TriggersService.name, () => {
   let module: TestingModule;
@@ -15,6 +17,7 @@ describe(TriggersService.name, () => {
     }).compile();
 
     service = module.get<TriggersService>(TriggersService);
+    mockLogger(module.get<Logger>(Logger));
   });
 
   afterAll(async () => {
