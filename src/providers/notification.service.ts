@@ -72,6 +72,7 @@ export class NotificationsService {
       const sendSendBirdNotification = this.generateSendbirdParams(
         dispatch,
         recipientClient.orgName,
+        content,
       );
       this.logAudit(sendSendBirdNotification, this.send.name);
       await this.sendBird.send(sendSendBirdNotification);
@@ -173,7 +174,8 @@ export class NotificationsService {
     if (
       (recipientClient.platform === Platform.web || !recipientClient.isPushNotificationsEnabled) &&
       (dispatch.contentKey === InternalKey.newRegisteredMember ||
-        dispatch.contentKey === InternalKey.newRegisteredMemberNudge)
+        dispatch.contentKey === InternalKey.newRegisteredMemberNudge ||
+        dispatch.contentKey === InternalKey.logReminder)
     ) {
       content += `\n${hosts.get('dynamicLink')}`;
     }
@@ -181,11 +183,15 @@ export class NotificationsService {
     return content;
   }
 
-  private generateSendbirdParams(dispatch: Dispatch, orgName: string): SendSendBirdNotification {
+  private generateSendbirdParams(
+    dispatch: Dispatch,
+    orgName: string,
+    content?: string,
+  ): SendSendBirdNotification {
     return {
       userId: dispatch.senderClientId,
       sendBirdChannelUrl: dispatch.sendBirdChannelUrl,
-      message: dispatch.content,
+      message: dispatch.content || content,
       notificationType: dispatch.notificationType,
       orgName,
       appointmentId: dispatch.appointmentId,
