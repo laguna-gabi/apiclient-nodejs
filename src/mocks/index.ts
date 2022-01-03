@@ -15,5 +15,6 @@ export * from './createDispatchTextMessageUser';
 export * from './createDispatchRequestAppointment';
 export * from './createDispatchFutureNotify';
 export * from './createDispatchAppointmentScheduled';
-export * from './createDispatchScheduleAppointmentReminders';
+export * from './createDispatchScheduleAppointmentLongReminder';
+export * from './createDispatchScheduleAppointmentShortReminder';
 export * from './deleteDispatch';

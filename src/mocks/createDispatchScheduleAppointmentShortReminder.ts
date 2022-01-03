@@ -1,5 +1,4 @@
 import {
-  ContentKey,
   ICreateDispatch,
   InnerQueueTypes,
   InternalKey,
@@ -11,11 +10,11 @@ import {
 import { v4 } from 'uuid';
 
 export type ObjectAppointmentScheduleReminderType = ObjectBaseType &
-  Pick<ICreateDispatch, 'appointmentTime' | 'triggersAt'>;
+  Pick<ICreateDispatch, 'appointmentTime' | 'triggersAt' | 'chatLink'>;
 
 export class ObjectAppointmentScheduleReminderClass {
   constructor(
-    readonly objectAppointmentScheduleReminderMock: ObjectAppointmentScheduleReminderType,
+    readonly objectAppointmentScheduleReminderType: ObjectAppointmentScheduleReminderType,
   ) {}
 }
 
@@ -26,25 +25,17 @@ export const generateAppointmentScheduleReminderMock = ({
   appointmentTime,
   triggersAt,
   correlationId = v4(),
-  contentKey,
+  chatLink,
 }: {
   recipientClientId: string;
   senderClientId: string;
   appointmentId: string;
   appointmentTime: Date;
   triggersAt: Date;
+  chatLink: string;
   correlationId?: string;
-  contentKey: ContentKey;
 }): ObjectAppointmentScheduleReminderType => {
-  if (
-    contentKey !== InternalKey.appointmentReminder &&
-    contentKey !== InternalKey.appointmentLongReminder
-  ) {
-    throw Error(
-      `invalid ${contentKey} - should be ${InternalKey.appointmentReminder} ` +
-        `or ${InternalKey.appointmentLongReminder}`,
-    );
-  }
+  const contentKey = InternalKey.appointmentReminder;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, appointmentId),
@@ -56,5 +47,6 @@ export const generateAppointmentScheduleReminderMock = ({
     appointmentTime,
     triggersAt,
     contentKey,
+    chatLink,
   };
 };
