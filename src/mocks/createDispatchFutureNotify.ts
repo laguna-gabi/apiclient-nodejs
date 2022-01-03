@@ -1,6 +1,5 @@
-import { v4 } from 'uuid';
 import {
-  CustomKey,
+  ContentKey,
   ICreateDispatch,
   InnerQueueTypes,
   NotificationType,
@@ -8,40 +7,42 @@ import {
   ServiceName,
   generateDispatchId,
   validateNotificationTypeText,
-} from '../index';
+} from '../';
+import { v4 } from 'uuid';
 
-export type ObjectCustomContentType = ObjectBaseType &
-  Pick<ICreateDispatch, 'content' | 'sendBirdChannelUrl'>;
+export type ObjectFutureNotifyType = ObjectBaseType &
+  Pick<ICreateDispatch, 'notificationType' | 'triggersAt' | 'sendBirdChannelUrl'>;
 
-export class ObjectCustomContentClass {
-  constructor(readonly objectCustomContentType: ObjectCustomContentType) {}
+export class ObjectFutureNotifyClass {
+  constructor(readonly objectFutureNotifyType: ObjectFutureNotifyType) {}
 }
 
-export const generateObjectCustomContentMock = ({
+export const generateObjectFutureNotifyMock = ({
   recipientClientId,
   senderClientId,
-  content,
+  contentKey,
   notificationType,
+  triggersAt,
   sendBirdChannelUrl,
 }: {
   recipientClientId: string;
   senderClientId: string;
-  content: string;
+  contentKey: ContentKey;
   notificationType: NotificationType;
+  triggersAt: Date;
   sendBirdChannelUrl: string;
-}): ObjectCustomContentType => {
+}): ObjectFutureNotifyType => {
   validateNotificationTypeText(notificationType);
-  const contentKey = CustomKey.customContent;
   return {
     type: InnerQueueTypes.createDispatch,
-    dispatchId: generateDispatchId(contentKey, recipientClientId, Date.now().toString()),
+    dispatchId: generateDispatchId(contentKey, recipientClientId),
     correlationId: v4(),
     serviceName: ServiceName.hepius,
-    notificationType: NotificationType.textSms,
+    notificationType,
     recipientClientId,
     senderClientId,
+    triggersAt,
     contentKey,
-    content,
     sendBirdChannelUrl,
   };
 };

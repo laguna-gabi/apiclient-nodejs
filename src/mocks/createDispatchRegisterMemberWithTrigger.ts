@@ -10,14 +10,16 @@ import {
 } from '../';
 import { v4 } from 'uuid';
 
-export type ObjectGeneralMemberTriggeredType = ObjectBaseType &
+export type ObjectRegisterMemberWithTriggeredType = ObjectBaseType &
   Pick<ICreateDispatch, 'notificationType' | 'triggersAt'>;
 
-export class ObjectGeneralMemberTriggeredClass {
-  constructor(readonly objectGeneralMemberTriggeredMock: ObjectGeneralMemberTriggeredType) {}
+export class ObjectRegisterMemberWithTriggeredClass {
+  constructor(
+    readonly objectRegisterMemberWithTriggeredType: ObjectRegisterMemberWithTriggeredType,
+  ) {}
 }
 
-export const generateGeneralMemberTriggeredMock = ({
+export const generateObjectRegisterMemberWithTriggeredMock = ({
   recipientClientId,
   senderClientId,
   contentKey,
@@ -29,7 +31,7 @@ export const generateGeneralMemberTriggeredMock = ({
   contentKey: ContentKey;
   notificationType: NotificationType;
   triggersAt: Date;
-}): ObjectGeneralMemberTriggeredType => {
+}): ObjectRegisterMemberWithTriggeredType => {
   validateNotificationTypeText(notificationType);
   return {
     type: InnerQueueTypes.createDispatch,
