@@ -1,16 +1,11 @@
+import { mockLogger } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Request } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { AuthModule, AuthService, UserSecurityService } from '../../src/auth';
 import { LoggerService } from '../../src/common';
 import { User } from '../../src/user';
-import {
-  dbDisconnect,
-  defaultModules,
-  mockGenerateMember,
-  mockGenerateUser,
-  mockLogger,
-} from '../index';
+import { dbDisconnect, defaultModules, mockGenerateMember, mockGenerateUser } from '../index';
 
 describe('AuthService', () => {
   let service: AuthService;

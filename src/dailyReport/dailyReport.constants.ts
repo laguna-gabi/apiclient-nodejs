@@ -1,4 +1,5 @@
 import { DailyReportCategoryTypes } from '.';
+
 export interface DailyReportCategoryMetadata {
   threshold: number;
   disabled?: boolean;
@@ -12,15 +13,3 @@ export const DailyReportsMetadata = new Map<DailyReportCategoryTypes, DailyRepor
   [DailyReportCategoryTypes.Appetite, { threshold: 2 }],
   [DailyReportCategoryTypes.Energy, { threshold: 1 }],
 ]);
-
-export function getEnabledCategories(): DailyReportCategoryTypes[] {
-  const ret = [];
-
-  DailyReportsMetadata.forEach((categoryMetadata, category) => {
-    if (!categoryMetadata.disabled) {
-      ret.push(category);
-    }
-  });
-
-  return ret;
-}

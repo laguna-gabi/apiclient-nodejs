@@ -12,11 +12,10 @@ import {
   IEventOnNewUser,
   Identifier,
   LoggingInterceptor,
-  QueueType,
   Roles,
   UserRole,
 } from '../common';
-import { IUpdateClientSettings, InnerQueueTypes } from '@lagunahealth/pandora';
+import { IUpdateClientSettings, InnerQueueTypes, QueueType } from '@lagunahealth/pandora';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => User)

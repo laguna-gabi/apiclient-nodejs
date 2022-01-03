@@ -1,11 +1,18 @@
+import {
+  BaseLogger,
+  FailureReason,
+  IEventNotifySlack,
+  ServiceName,
+  SlackChannel,
+  SlackIcon,
+} from '@lagunahealth/pandora';
 import { Inject, Injectable } from '@nestjs/common';
-import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { AuditType, EventType, IEventNotifyQueue, QueueType } from '.';
-import { BaseLogger, ServiceName, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
+import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
+import { EventType } from '.';
 
 export const internalLogs = {
-  hepiusVersion: 'Starting Hepius application version: @version@',
+  hepiusVersion: `Starting ${ServiceName.hepius}  application version: @version@`,
   lastCommit: 'Last commit hash on this branch is: @hash@',
 };
 
@@ -59,6 +66,7 @@ export class LoggerService extends BaseLogger {
     'contentKey',
     'triggersAt',
     'path',
+    'roles',
     ...Object.keys(internalLogs),
   ]);
 
@@ -69,33 +77,20 @@ export class LoggerService extends BaseLogger {
     super(params, ServiceName.hepius, LoggerService.VALID_KEYS);
   }
 
-  warn(params: any = {}, className: string, methodName: string, ...reasons: any[]): void {
-    const log = super.warn(params, className, methodName, ...reasons);
+  error(
+    params: any = {},
+    className: string,
+    methodName: string,
+    failureReason?: FailureReason,
+  ): void {
+    const log = super.error(params, className, methodName, failureReason);
 
-    this.eventEmitter.emit(EventType.notifySlack, {
-      message: log,
-      icon: SlackIcon.warning,
-      channel: SlackChannel.notifications,
-    });
-  }
-
-  error(params: any = {}, className: string, methodName: string, ...reasons: any[]): void {
-    const log = super.error(params, className, methodName, ...reasons);
-
-    this.eventEmitter.emit(EventType.notifySlack, {
-      message: log,
+    const slackParams: IEventNotifySlack = {
+      header: '*An error has occurred*',
+      message: log || '',
       icon: SlackIcon.critical,
       channel: SlackChannel.notifications,
-    });
-  }
-
-  audit(type: AuditType, params, methodName: string, authId?: string): void {
-    const eventParams: IEventNotifyQueue = {
-      type: QueueType.audit,
-      message:
-        `user: ${authId}, type: ${type}, date: ${new Date().toLocaleString()}, description: ` +
-        `Hepius ${methodName} ${super.getCalledLog(params)}`,
     };
-    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
+    this.eventEmitter.emit(EventType.notifySlack, slackParams);
   }
 }

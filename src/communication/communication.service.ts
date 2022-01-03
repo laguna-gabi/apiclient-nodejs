@@ -24,7 +24,7 @@ import {
 import { Member } from '../member';
 import { SendBird, TwilioService } from '../providers';
 import { User } from '../user';
-import { Platform } from '@lagunahealth/pandora';
+import { Platform, formatEx } from '@lagunahealth/pandora';
 
 @Injectable()
 export class CommunicationService {
@@ -95,7 +95,7 @@ export class CommunicationService {
         { memberId: member.id, userId: user.id },
         CommunicationService.name,
         this.connectMemberToUser.name,
-        ex,
+        formatEx(ex),
       );
     }
   }
@@ -273,7 +273,7 @@ export class CommunicationService {
         { memberId, userId },
         CommunicationService.name,
         this.freezeGroupChannel.name,
-        Errors.get(ErrorType.communicationMemberUserNotFound),
+        { message: Errors.get(ErrorType.communicationMemberUserNotFound) },
       );
       return;
     }

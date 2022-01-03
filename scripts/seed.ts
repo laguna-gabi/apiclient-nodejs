@@ -19,6 +19,7 @@ import {
 import { Mutations } from '../test/aux';
 import { SeedBase } from './seedBase';
 import { generateZipCode } from '@lagunahealth/pandora';
+import { UpdateJournalTextParams } from '../src/member';
 /**
  * This is a seed file for initial local db creation.
  * The objects we're creating are:
@@ -147,6 +148,19 @@ async function main() {
       '----------------------------------------------------------------',
   );
   await setGeneralNotes(memberId);
+
+  console.debug(
+    '\n----------------------------------------------------------------\n' +
+      '------------------- create member journal ----------------------\n' +
+      '----------------------------------------------------------------',
+  );
+  const { id: journalId } = await base.setContextUserId(memberId).mutations.createJournal();
+
+  const updateJournalTextParams: UpdateJournalTextParams = {
+    id: journalId,
+    text: faker.lorem.word(),
+  };
+  await base.setContextUserId(memberId).mutations.updateJournalText({ updateJournalTextParams });
 
   await base.cleanUp();
 }

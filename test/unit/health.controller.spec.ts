@@ -1,9 +1,9 @@
+import { mockLogger } from '@lagunahealth/pandora';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { LoggerService } from '../../src/common';
 import { HealthController } from '../../src/health/health.controller';
-import { mockLogger } from '../index';
 
 describe('HealthController', () => {
   let controller: HealthController;

@@ -43,11 +43,13 @@ export enum ErrorType {
   memberOrgIdInvalid = 9223,
   memberIdInvalid = 9224,
   memberIdInconsistent = 9225,
+  memberRecordingNotFound = 9226,
+  memberRecordingSameUser = 9227,
+  memberRecordingSameUserEdit = 9228,
 
   // Notifications
   notificationMetadataInvalid = 9270,
   notificationMemberPlatformWeb = 9271,
-  notificationNotFound = 9272,
   notificationMetadataWhenPast = 9273,
   notificationInvalidContent = 9274,
   notificationNotAllowed = 9275,
@@ -142,17 +144,19 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberJournalIdInvalid.valueOf(), `id ${objectIdFormat}`],
   [ErrorType.memberOrgIdInvalid.valueOf(), `orgId ${objectIdFormat}`],
   [ErrorType.memberIdInvalid.valueOf(), `memberId ${objectIdFormat}`],
+  [ErrorType.memberRecordingNotFound.valueOf(), `recording not found`],
+  [ErrorType.memberRecordingSameUser.valueOf(), `user cannot review own recording`],
+  [ErrorType.memberRecordingSameUserEdit.valueOf(), `only user who wrote review can update it`],
   [
     ErrorType.notificationMetadataInvalid.valueOf(),
     `when calling type 'text' or 'textSms', 'content' in metadata is required ` +
       `when calling type 'video' or 'call', 'peerId' in metadata is required ` +
-      `when calling type 'video' or 'call', 'when' and 'chatLink' in metadata is not allowed`,
+      `when calling type 'video' or 'call', 'when' in metadata is not allowed`,
   ],
   [
     ErrorType.notificationMemberPlatformWeb.valueOf(),
     `A web member cannot receive video or call notification`,
   ],
-  [ErrorType.notificationNotFound.valueOf(), `notification not found`],
   [ErrorType.notificationMetadataWhenPast.valueOf(), `'when' in metadata must be in the future`],
   [ErrorType.notificationInvalidContent.valueOf(), `invalid content`],
   [
@@ -208,4 +212,9 @@ export const DbErrors = {
   duplicateKey: 11000,
 };
 
-export const LogAsWarning = new Set([...Errors.values(), 'Forbidden resource', 'Unauthorized']);
+export const LogAsWarning = new Set([
+  ...Errors.values(),
+  'Forbidden resource',
+  'Unauthorized',
+  'Argument passed in must be a single String of 12 bytes or a string of 24 hex characters',
+]);

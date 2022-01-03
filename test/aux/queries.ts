@@ -195,7 +195,6 @@ export class Queries {
             }
             sex
             email
-            language
             zipCode
             utcDelta
             dischargeDate
@@ -530,6 +529,8 @@ export class Queries {
             isRecommendationsEnabled
             articlesPath
             firstLoggedInAt
+            language
+            updatedAt
           }
         }
       `,

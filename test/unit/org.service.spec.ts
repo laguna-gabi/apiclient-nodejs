@@ -1,8 +1,9 @@
+import { mockLogger } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
 import { OrgModule, OrgService, OrgType } from '../../src/org';
 import { generateId } from '../generators';
-import { dbConnect, dbDisconnect, defaultModules, generateOrgParams, mockLogger } from '../index';
+import { dbConnect, dbDisconnect, defaultModules, generateOrgParams } from '../index';
 
 describe('OrgService', () => {
   let module: TestingModule;

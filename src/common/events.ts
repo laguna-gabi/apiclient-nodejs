@@ -1,9 +1,9 @@
+import { Platform, QueueType } from '@lagunahealth/pandora';
 import { Types } from 'mongoose';
+import { UpdatedAppointmentAction } from '.';
 import { Appointment, AppointmentDocument, AppointmentStatus, Scores } from '../appointment';
 import { Member } from '../member';
 import { User } from '../user';
-import { AllNotificationTypes, QueueType, UpdatedAppointmentAction } from '.';
-import { Platform } from '@lagunahealth/pandora';
 
 export enum EventType {
   //member
@@ -11,7 +11,6 @@ export enum EventType {
   onNewMemberCommunication = 'onNewMemberCommunication',
   onUpdatedMemberPlatform = 'onUpdatedMemberPlatform',
   onReplacedUserForMember = 'onReplacedUserForMember',
-  onMemberBecameOffline = 'onMemberBecameOffline',
   onDeletedMember = 'onDeletedMember',
 
   //user
@@ -30,7 +29,6 @@ export enum EventType {
   //notifications
   onReceivedChatMessage = 'onReceivedChatMessage',
   onReceivedTextMessage = 'onReceivedTextMessage',
-  notifyInternal = 'notifyInternal',
   notifySlack = 'notifySlack',
   notifyQueue = 'notifyQueue',
   notifyDispatch = 'notifyDispatch',
@@ -64,12 +62,6 @@ export interface IEventOnReplacedUserForMember {
   oldUserId: string;
   member: Member;
   platform: Platform;
-}
-
-export interface IEventOnMemberBecameOffline {
-  phone: string;
-  content: string;
-  type: AllNotificationTypes;
 }
 
 /*************************************************************************************************

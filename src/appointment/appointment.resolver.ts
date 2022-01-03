@@ -1,4 +1,9 @@
-import { InternalKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
+import {
+  InternalKey,
+  InternalNotificationType,
+  formatEx,
+  generateDispatchId,
+} from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -116,7 +121,7 @@ export class AppointmentResolver extends AppointmentBase {
         { memberId: member.id, userId: user.id },
         AppointmentResolver.name,
         this.onNewMember.name,
-        ex,
+        formatEx(ex),
       );
     }
   }
@@ -130,7 +135,7 @@ export class AppointmentResolver extends AppointmentBase {
         this.deleteAppointmentReminders(appointment);
       });
     } catch (ex) {
-      this.logger.error(params, AppointmentResolver.name, this.deleteSchedules.name, ex);
+      this.logger.error(params, AppointmentResolver.name, this.deleteSchedules.name, formatEx(ex));
     }
   }
 
@@ -173,7 +178,7 @@ export class AppointmentResolver extends AppointmentBase {
             params,
             AppointmentResolver.name,
             this.updateUserInAppointments.name,
-            ex,
+            formatEx(ex),
           );
         }
       }),

@@ -1,16 +1,15 @@
-import { NotificationType } from '@lagunahealth/pandora';
+import { mockLogger } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import axios from 'axios';
 import * as faker from 'faker';
+import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { v4 } from 'uuid';
 import { AppointmentStatus } from '../../src/appointment';
-import { LoggerService, SendSendBirdNotification, UserRole } from '../../src/common';
+import { LoggerService, UserRole } from '../../src/common';
 import { CreateSendbirdGroupChannelParams } from '../../src/communication';
 import { ConfigsService, SendBird } from '../../src/providers';
-import { mockLogger } from '../common';
 import { generateId } from '../generators';
-import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 
 describe('live: sendbird actions', () => {
   let sendBird: SendBird;
@@ -30,15 +29,14 @@ describe('live: sendbird actions', () => {
    * 2. Create a member
    * 3. Create a group channel between user(coach) and user(member)
    * 4. Freeze group channel
-   * 5. Send message (should work even though the channel is frozen)
-   * 6. Get member's unread messages
-   * 7. Un-freeze group channel
-   * 8. Update metadata for appointment1
-   * 9. Update metadata for appointment2 (check that we have 2 appointments in the metadata now)
-   * 10. Delete metadata for appointment2
-   * 11. Create another user (coach)
-   * 12. replace coach in channel (leave & invite)
-   * 13. replace channel name and image
+   * 5. Get member's unread messages
+   * 6. Un-freeze group channel
+   * 7. Update metadata for appointment1
+   * 8. Update metadata for appointment2 (check that we have 2 appointments in the metadata now)
+   * 9. Delete metadata for appointment2
+   * 10. Create another user (coach)
+   * 11. replace coach in channel (leave & invite)
+   * 12. replace channel name and image
    */
   // 1. Create a user (coach)
   it('should do sendbird flow', async () => {
@@ -77,33 +75,23 @@ describe('live: sendbird actions', () => {
     // 4. Freeze group channel
     await sendBird.freezeGroupChannel(params.channel_url, true);
 
-    // 5. Send message (should work even though the channel is frozen)
-    const sendSendBirdNotification: SendSendBirdNotification = {
-      userId: user.user_id,
-      sendBirdChannelUrl: params.channel_url,
-      message: 'test',
-      notificationType: NotificationType.textSms,
-    };
-    const messageId = await sendBird.send(sendSendBirdNotification);
-    expect(messageId).toEqual(expect.any(Number));
-
-    // 6. Get member's unread messages
+    // 5. Get member's unread messages
     const unreadMessagesCount = await sendBird.countUnreadMessages(
       params.channel_url,
       member.user_id,
     );
-    expect(unreadMessagesCount).toEqual(1);
+    expect(unreadMessagesCount).toEqual(0);
 
-    // 7. Un-freeze group channel
+    // 6. Un-freeze group channel
     await sendBird.freezeGroupChannel(params.channel_url, false);
 
-    // 8. Update metadata for appointment1
+    // 7. Update metadata for appointment1
     const appointmentId1 = generateId();
     const value1 = { status: AppointmentStatus.scheduled, start: faker.date.future() };
     await sendBird.updateGroupChannelMetadata(params.channel_url, appointmentId1, value1);
     await validateGroupChannel(params.channel_url, [appointmentId1], [value1]);
 
-    // 9. Update metadata for appointment2 (check that we have 2 appointments in the metadata now)
+    // 8. Update metadata for appointment2 (check that we have 2 appointments in the metadata now)
     const appointmentId2 = generateId();
     const value2 = { status: AppointmentStatus.scheduled, start: faker.date.future() };
     await sendBird.updateGroupChannelMetadata(params.channel_url, appointmentId2, value2);
@@ -113,11 +101,11 @@ describe('live: sendbird actions', () => {
       [value1, value2],
     );
 
-    // 10. Delete metadata for appointment2
+    // 9. Delete metadata for appointment2
     await sendBird.deleteGroupChannelMetadata(params.channel_url, appointmentId2);
     await validateGroupChannel(params.channel_url, [appointmentId1], [value1]);
 
-    // 11. Create another user (coach)
+    // 10. Create another user (coach)
     const newUser = {
       user_id: v4(),
       nickname: faker.name.firstName(),
@@ -127,7 +115,7 @@ describe('live: sendbird actions', () => {
     };
     await sendBird.createUser(newUser);
 
-    // 12. replace coach in channel (leave & invite)
+    // 11. replace coach in channel (leave & invite)
     const leaveResult = await sendBird.leave(params.channel_url, user.user_id);
     expect(leaveResult.data).toEqual({});
 
@@ -135,7 +123,7 @@ describe('live: sendbird actions', () => {
     expect(inviteResult[0]).toEqual(newUser.user_id);
     expect(inviteResult[1]).toEqual(member.user_id);
 
-    // 13. replace channel name and image
+    // 12. replace channel name and image
     const replaceResult = await sendBird.updateChannelName(
       params.channel_url,
       newUser.nickname,

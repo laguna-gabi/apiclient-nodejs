@@ -1,3 +1,9 @@
+import {
+  IUpdateClientSettings,
+  InnerQueueTypes,
+  QueueType,
+  mockLogger,
+} from '@lagunahealth/pandora';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -7,7 +13,6 @@ import {
   IEventNotifyQueue,
   IEventOnNewUser,
   LoggerService,
-  QueueType,
   UserRole,
 } from '../../src/common';
 import { DbModule } from '../../src/db/db.module';
@@ -24,9 +29,7 @@ import {
   generateGetSlotsParams,
   generateId,
   mockGenerateUser,
-  mockLogger,
 } from '../index';
-import { IUpdateClientSettings, InnerQueueTypes } from '@lagunahealth/pandora';
 
 describe('UserResolver', () => {
   let module: TestingModule;

@@ -1,14 +1,14 @@
-import { Platform } from '@lagunahealth/pandora';
+import { Environments, Platform, mockLogger } from '@lagunahealth/pandora';
 import axios from 'axios';
+import * as config from 'config';
 import { EventEmitter2 } from 'eventemitter2';
 import * as faker from 'faker';
 import { readFileSync } from 'fs';
-import { Environments, LoggerService, StorageType, delay } from '../../src/common';
+import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
+import { LoggerService, StorageType } from '../../src/common';
 import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../src/member';
 import { ConfigsService, StorageService } from '../../src/providers';
-import { mockLogger } from '../common';
 import { generateId, mockGenerateMember, mockGenerateUser } from '../generators';
-import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 
 describe('live: aws', () => {
   describe('storage', () => {
@@ -73,10 +73,16 @@ describe('live: aws', () => {
         files.map((file) => storageService.getDownloadUrl(getParams(file))),
       );
       expect(existingUrls[0]).toMatch(
-        `${bucketName}.s3.amazonaws.com/public/${StorageType.recordings}/${member.id}/${files[0]}`,
+        // eslint-disable-next-line max-len
+        `${config.get('hosts.localstack')}/${bucketName}/public/${StorageType.recordings}/${
+          member.id
+        }/${files[0]}`,
       );
       expect(existingUrls[1]).toMatch(
-        `${bucketName}.s3.amazonaws.com/public/${StorageType.recordings}/${member.id}/${files[1]}`,
+        // eslint-disable-next-line max-len
+        `${config.get('hosts.localstack')}/${bucketName}/public/${StorageType.recordings}/${
+          member.id
+        }/${files[1]}`,
       );
       await storageService.deleteRecordings(member.id, files);
       const nonExistingUrls = await Promise.all(
@@ -92,25 +98,32 @@ describe('live: aws', () => {
       }
       const id = generateId();
       const fileContent = readFileSync('./test/live/mocks/lagunaIcon.png');
-      const uploadParams = {
+      const normalImageUploadParams = {
         Bucket: bucketName,
         // eslint-disable-next-line max-len
         Key: `public/${StorageType.journals}/${member.id}/${id}${ImageType.NormalImage}.${ImageFormat.png}`,
         Body: fileContent,
         ContentType: 'image',
       };
+      const smallImageUploadParams = {
+        Bucket: bucketName,
+        // eslint-disable-next-line max-len
+        Key: `public/${StorageType.journals}/${member.id}/${id}${ImageType.SmallImage}.${ImageFormat.png}`,
+        Body: fileContent,
+        ContentType: 'image',
+      };
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      await storageService.s3.putObject(uploadParams).promise();
+      await storageService.s3.putObject(normalImageUploadParams).promise();
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      await storageService.s3.putObject(smallImageUploadParams).promise();
 
       const getParams = (id: string) => ({
         memberId: member.id,
         storageType: StorageType.journals,
         id,
       });
-
-      // wait for the service to resize image
-      await delay(2000);
 
       const normalImageDownloadUrl = await storageService.getDownloadUrl(
         getParams(`${id}${ImageType.NormalImage}.${ImageFormat.png}`),
@@ -121,11 +134,15 @@ describe('live: aws', () => {
 
       expect(normalImageDownloadUrl).toMatch(
         // eslint-disable-next-line max-len
-        `${bucketName}.s3.amazonaws.com/public/${StorageType.journals}/${member.id}/${id}${ImageType.NormalImage}.${ImageFormat.png}`,
+        `${config.get('hosts.localstack')}/${bucketName}/public/${StorageType.journals}/${
+          member.id
+        }/${id}${ImageType.NormalImage}.${ImageFormat.png}`,
       );
       expect(smallImageDownloadUrl).toMatch(
         // eslint-disable-next-line max-len
-        `${bucketName}.s3.amazonaws.com/public/${StorageType.journals}/${member.id}/${id}${ImageType.SmallImage}.${ImageFormat.png}`,
+        `${config.get('hosts.localstack')}/${bucketName}/public/${StorageType.journals}/${
+          member.id
+        }/${id}${ImageType.SmallImage}.${ImageFormat.png}`,
       );
       await storageService.deleteJournalImages(id, member.id, ImageFormat.png);
       const nonExistingNormalImageDownloadUrl = await storageService.getDownloadUrl(
@@ -153,7 +170,9 @@ describe('live: aws', () => {
 
       expect(uploadUrl).toMatch(
         // eslint-disable-next-line max-len
-        `${bucketName}.s3.amazonaws.com/public/${StorageType.journals}/${params.memberId}/${params.id}`,
+        `${config.get('hosts.localstack')}/${bucketName}/public/${StorageType.journals}/${
+          params.memberId
+        }/${params.id}`,
       );
       expect(uploadUrl).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
       expect(uploadUrl).toMatch(`Amz-Expires=1800`); //expiration: 30 minutes
@@ -169,7 +188,9 @@ describe('live: aws', () => {
 
       expect(url).toMatch(
         // eslint-disable-next-line max-len
-        `${bucketName}.s3.amazonaws.com/public/${StorageType.journals}/${member.id}/${journalId}${AudioType}.${AudioFormat.mp3}`,
+        `${config.get('hosts.localstack')}/${bucketName}/public/${StorageType.journals}/${
+          member.id
+        }/${journalId}${AudioType}.${AudioFormat.mp3}`,
       );
       await storageService.deleteJournalAudio(journalId, member.id, AudioFormat.mp3);
 
@@ -194,7 +215,10 @@ describe('live: aws', () => {
         const uploadUrl = await storageService.getUploadUrl(params);
 
         expect(uploadUrl).toMatch(
-          `${bucketName}.s3.amazonaws.com/public/${storageType}/${params.memberId}/${params.id}`,
+          // eslint-disable-next-line max-len
+          `${config.get('hosts.localstack')}/${bucketName}/public/${storageType}/${
+            params.memberId
+          }/${params.id}`,
         );
         expect(uploadUrl).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
         expect(uploadUrl).toMatch(`Amz-Expires=1800`); //expiration: 30 minutes
@@ -209,7 +233,9 @@ describe('live: aws', () => {
         });
 
         expect(url).toMatch(
-          `${bucketName}.s3.amazonaws.com/public/${storageType}/${member.id}/${params.id}`,
+          `${config.get('hosts.localstack')}/${bucketName}/public/${storageType}/${member.id}/${
+            params.id
+          }`,
         );
         expect(url).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
         expect(url).toMatch(`Amz-Expires=10800`); //expiration: 3 hours

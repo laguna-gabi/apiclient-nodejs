@@ -230,7 +230,6 @@ export class Mutations {
             }
             sex
             email
-            language
             zipCode
             utcDelta
             dischargeDate

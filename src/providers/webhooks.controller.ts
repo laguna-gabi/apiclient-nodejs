@@ -77,8 +77,9 @@ export class WebhooksController {
       this.eventEmitter.emit(EventType.onReceivedTextMessage, eventParams);
     } else {
       const params: IEventNotifySlack = {
-        /* eslint-disable-next-line max-len */
-        message: `*TWILIO WEBHOOK*\nrequest from an unknown client was made to Post ${apiPrefix}/${webhooks}/twilio/incoming-sms`,
+        header: `*Twilio webhook*`,
+        // eslint-disable-next-line max-len
+        message: `request from an unknown client was made to Post ${apiPrefix}/${webhooks}/twilio/incoming-sms`,
         icon: SlackIcon.warning,
         channel: SlackChannel.notifications,
       };
@@ -103,12 +104,9 @@ export class WebhooksController {
     if (signature !== hash) {
       const message = 'The source of the request DID NOT comes from Sendbird server';
 
-      this.logger.error(
-        {},
-        WebhooksController.name,
-        this.validateMessageSentFromSendbird.name,
+      this.logger.error({}, WebhooksController.name, this.validateMessageSentFromSendbird.name, {
         message,
-      );
+      });
       throw new HttpException(message, HttpStatus.BAD_REQUEST);
     }
   }

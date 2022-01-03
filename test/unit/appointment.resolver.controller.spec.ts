@@ -1,8 +1,14 @@
-import { InternalKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
+import {
+  InternalKey,
+  InternalNotificationType,
+  generateDispatchId,
+  mockLogger,
+} from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { addMinutes } from 'date-fns';
 import * as faker from 'faker';
+import { v4 } from 'uuid';
 import {
   AppointmentController,
   AppointmentMethod,
@@ -31,9 +37,7 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateUpdateNotesParams,
-  mockLogger,
 } from '../index';
-import { v4 } from 'uuid';
 
 // mock uuid.v4
 jest.mock('uuid', () => {

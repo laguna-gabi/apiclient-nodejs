@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
 import * as config from 'config';
 import { LoggerService } from '../../common';
+import { formatEx } from '@lagunahealth/pandora';
 
 @Injectable()
 export class CognitoService {
@@ -20,7 +21,7 @@ export class CognitoService {
         .promise();
     } catch (ex) {
       if (ex?.code !== 'UserNotFoundException') {
-        this.logger.error(deviceId, CognitoService.name, this.disableMember.name, ex);
+        this.logger.error(deviceId, CognitoService.name, this.disableMember.name, formatEx(ex));
       }
     }
   }
@@ -33,7 +34,7 @@ export class CognitoService {
         .promise();
     } catch (ex) {
       if (ex?.code !== 'UserNotFoundException') {
-        this.logger.error(deviceId, CognitoService.name, this.deleteMember.name, ex);
+        this.logger.error(deviceId, CognitoService.name, this.deleteMember.name, formatEx(ex));
       }
     }
   }

@@ -1,16 +1,14 @@
-import { BaseExternalConfigs } from '@lagunahealth/pandora';
+import { BaseExternalConfigs, Environments } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 import { MongooseModuleOptions, MongooseOptionsFactory } from '@nestjs/mongoose';
 import * as AWS from 'aws-sdk';
 import * as config from 'config';
-import { Environments } from '../../common';
 
 export const ExternalConfigs = {
   ...BaseExternalConfigs,
   aws: {
     ...BaseExternalConfigs.aws,
     memberBucketName: 'aws.storage.memberBucketName',
-    queueNameAudit: 'aws.sqs.queueNameAudit',
     queueNameImage: 'aws.sqs.queueNameImage',
   },
   db: {

@@ -37,9 +37,36 @@ export class UpdateRecordingParams {
   recordingType?: RecordingType;
 }
 
+@InputType({ isAbstract: true })
+export class UpdateRecordingReviewParams {
+  @Field(() => String)
+  recordingId: string;
+
+  @Field(() => String, { nullable: true })
+  content?: string;
+}
+
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
+
+@ObjectType()
+@Schema({ versionKey: false, timestamps: true })
+export class RecordingReview {
+  @Prop({ type: Types.ObjectId, index: true })
+  @Field(() => String)
+  userId: Types.ObjectId;
+
+  @Prop()
+  @Field(() => String, { nullable: true })
+  content?: string;
+
+  @Field(() => Date)
+  createdAt: Date;
+
+  @Field(() => Date)
+  updatedAt: Date;
+}
 
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
@@ -83,6 +110,10 @@ export class Recording {
   @Prop({ type: Boolean })
   @Field(() => Boolean, { nullable: true })
   deletedMedia?: boolean;
+
+  @Prop({ type: RecordingReview })
+  @Field(() => RecordingReview, { nullable: true })
+  review?: RecordingReview;
 }
 
 @ObjectType()

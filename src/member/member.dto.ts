@@ -1,3 +1,10 @@
+import {
+  CancelNotificationType,
+  ExternalKey,
+  Honorific,
+  Language,
+  NotificationType,
+} from '@lagunahealth/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
@@ -22,18 +29,11 @@ import {
   IsStringDate,
   IsTypeMetadataProvided,
   IsValidZipCode,
+  MemberRole,
   validPhoneExamples,
 } from '../common';
 import { Org } from '../org';
 import { User } from '../user';
-import {
-  CancelNotificationType,
-  ExternalKey,
-  Honorific,
-  Language,
-  NotificationType,
-} from '@lagunahealth/pandora';
-import { MemberRole } from '../common';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -131,11 +131,6 @@ export class ExtraMemberParams {
   @IsOptional()
   email?: string;
 
-  @Field(() => Language, { nullable: true })
-  @IsEnum(Language) /* for rest api */
-  @IsOptional()
-  language?: Language;
-
   @Field(() => String, { nullable: true })
   @IsValidZipCode({ message: Errors.get(ErrorType.memberInvalidZipCode) })
   @IsString() /* for rest api */
@@ -167,7 +162,7 @@ export class ExtraMemberParams {
 @InputType()
 export class CreateMemberParams extends ExtraMemberParams {
   @Field(() => String, { description: validPhoneExamples })
-  @ValidateIf((params) => params.phone !== config.get('iosExcludeRegistrationNumber'))
+  @ValidateIf((params) => params.phone !== config.get('twilio.iosExcludeRegistrationNumber'))
   @IsPhoneNumber(undefined, { message: Errors.get(ErrorType.memberPhone) })
   @IsNotEmpty() /* for rest api */
   @IsString() /* for rest api */
@@ -210,6 +205,12 @@ export class CreateMemberParams extends ExtraMemberParams {
   @IsString() /* for rest api */
   @IsObjectId({ message: Errors.get(ErrorType.memberOrgIdInvalid) })
   orgId: string;
+
+  // language is not a part of the member object, but only used here for the first registration
+  @Field(() => Language, { nullable: true })
+  @IsEnum(Language) /* for rest api */
+  @IsOptional()
+  language?: Language;
 }
 
 @InputType()
@@ -326,17 +327,11 @@ export class NotificationMetadata {
   @Field(() => Date, { nullable: true })
   when?: Date;
 
-  @Field(() => Boolean, { nullable: true })
-  chatLink?: boolean;
-
   sendBirdChannelUrl?: string;
 
   @Field(() => String, { nullable: true })
   @IsObjectId({ message: Errors.get(ErrorType.appointmentIdInvalid) })
   appointmentId?: string;
-
-  @Field(() => String, { nullable: true })
-  path?: string;
 }
 
 @Schema({ versionKey: false, timestamps: true })
@@ -391,9 +386,6 @@ export class CancelNotifyParams {
   @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataInvalid) })
   @Field(() => CancelNotificationType)
   type: CancelNotificationType;
-
-  @Field(() => String)
-  notificationId: string;
 
   @Field(() => CancelNotificationMetadata)
   metadata: CancelNotificationMetadata;
@@ -455,10 +447,6 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   email?: string;
-
-  @Prop({ default: defaultMemberParams.language })
-  @Field(() => Language)
-  language: Language;
 
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })

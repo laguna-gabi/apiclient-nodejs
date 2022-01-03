@@ -20,7 +20,6 @@ import {
 import {
   BaseService,
   DbErrors,
-  Environments,
   ErrorType,
   Errors,
   EventType,
@@ -31,7 +30,13 @@ import {
   LoggerService,
   UserRole,
 } from '../common';
-import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
+import {
+  Environments,
+  IEventNotifySlack,
+  SlackChannel,
+  SlackIcon,
+  formatEx,
+} from '@lagunahealth/pandora';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -181,9 +186,8 @@ export class UserService extends BaseService {
     if (slotsObject.slots.length === 0 && !allowEmptySlotsResponse) {
       slotsObject.slots = this.generateDefaultSlots(defaultSlotsCount, notBefore);
       const params: IEventNotifySlack = {
-        message: `*No availability*\nUser ${
-          userId ? userId : slotsObject.appointment.userId
-        } doesn't have any availability left.`,
+        header: `*No availability for user ${userId ? userId : slotsObject.appointment.userId}*`,
+        message: `There's no availability left`,
         icon: SlackIcon.warning,
         channel: SlackChannel.notifications,
       };
@@ -250,12 +254,12 @@ export class UserService extends BaseService {
    * we'll limit the number of lookup results to 10.
    * In production and dev we're NOT limiting the number of results.
    */
-  async getAvailableUser(roles: UserRole[] = [UserRole.coach]): Promise<Types.ObjectId> {
+  async getAvailableUser(): Promise<Types.ObjectId> {
     const users = await this.userModel.aggregate([
       {
         $match: {
           maxCustomers: { $ne: 0 },
-          roles: { $in: roles },
+          roles: { $in: [UserRole.coach] },
         },
       },
       { $sort: { lastMemberAssignedAt: 1 } },
@@ -289,7 +293,8 @@ export class UserService extends BaseService {
       }
     }
     const params: IEventNotifySlack = {
-      message: `*NO AVAILABLE USERS*\nAll users are fully booked.`,
+      header: `*No available users*`,
+      message: `All users are fully booked`,
       icon: SlackIcon.warning,
       channel: SlackChannel.notifications,
     };
@@ -309,7 +314,7 @@ export class UserService extends BaseService {
 
       return result.ok === 1;
     } catch (ex) {
-      this.logger.error(params, UserService.name, this.handleUpdateUserConfig.name, ex);
+      this.logger.error(params, UserService.name, this.handleUpdateUserConfig.name, formatEx(ex));
     }
   }
 
@@ -321,7 +326,7 @@ export class UserService extends BaseService {
         { $push: { appointments: new Types.ObjectId(params.appointmentId) } },
       );
     } catch (ex) {
-      this.logger.error(params, UserService.name, this.addAppointmentToUser.name, ex);
+      this.logger.error(params, UserService.name, this.addAppointmentToUser.name, formatEx(ex));
     }
   }
 
@@ -354,7 +359,7 @@ export class UserService extends BaseService {
         { new: true },
       );
     } catch (ex) {
-      this.logger.error(params, UserService.name, this.updateUserAppointments.name, ex);
+      this.logger.error(params, UserService.name, this.updateUserAppointments.name, formatEx(ex));
     }
   }
 }

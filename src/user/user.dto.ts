@@ -133,7 +133,7 @@ export class User extends Identifier {
    * we use that start of time (new Date(0)) for the default time for
    * lastMemberAssignedAt so a new user will get the next new member.
    */
-  @Prop({ default: new Date(0) })
+  @Prop()
   lastMemberAssignedAt: Date;
 }
 

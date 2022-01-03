@@ -1,3 +1,4 @@
+import { mockLogger } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { addDays, addMinutes, subDays } from 'date-fns';
@@ -32,7 +33,6 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateUpdateNotesParams,
-  mockLogger,
 } from '../index';
 
 describe('AppointmentService', () => {

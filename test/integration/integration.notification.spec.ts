@@ -1,4 +1,5 @@
 import {
+  CancelNotificationType,
   ContentKey,
   CustomKey,
   ExternalKey,
@@ -8,28 +9,34 @@ import {
   ObjectAppointmentScheduledClass,
   ObjectBaseClass,
   ObjectCallOrVideoClass,
+  ObjectCancelClass,
   ObjectChatMessageUserClass,
   ObjectCustomContentClass,
   ObjectExternalContentClass,
-  ObjectGeneralMemberTriggeredClass,
+  ObjectFutureNotifyClass,
   ObjectNewChatMessageToMemberClass,
   ObjectNewMemberClass,
   ObjectNewMemberNudgeClass,
+  ObjectRegisterMemberWithTriggeredClass,
   ObjectUpdateMemberSettingsClass,
   Platform,
+  QueueType,
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
   generateChatMessageUserMock,
   generateDispatchId,
   generateExternalContentMock,
-  generateGeneralMemberTriggeredMock,
   generateNewChatMessageToMemberMock,
   generateNewControlMemberMock,
   generateNewMemberMock,
   generateNewMemberNudgeMock,
   generateObjectCallOrVideoMock,
+  generateObjectCancelMock,
   generateObjectCustomContentMock,
+  generateObjectFutureNotifyMock,
+  generateObjectJournalContentMock,
+  generateObjectRegisterMemberWithTriggeredMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
   generateUpdateMemberSettingsMock,
@@ -40,15 +47,9 @@ import { addDays, addSeconds, subDays, subMinutes } from 'date-fns';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
 import { Appointment } from '../../src/appointment';
-import {
-  QueueType,
-  RegisterForNotificationParams,
-  delay,
-  generatePath,
-  reformatDate,
-} from '../../src/common';
+import { RegisterForNotificationParams, delay, generatePath, reformatDate } from '../../src/common';
 import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
-import { NotifyParams } from '../../src/member';
+import { CancelNotifyParams, NotifyParams, UpdateJournalTextParams } from '../../src/member';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   generateCreateMemberParams,
@@ -56,6 +57,7 @@ import {
   generateNotifyContentParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
+  generateUpdateJournalTextParams,
 } from '../generators';
 import * as sendbirdPayload from '../unit/mocks/webhookSendbirdNewMessagePayload.json';
 
@@ -235,15 +237,15 @@ describe('Integration tests: notifications', () => {
       expectStringContaining(1, 'firstLoggedInAt', firstLoggedInAt);
 
       const checkValues = (contentKey: ContentKey, amount: number) => {
-        const mock1 = generateGeneralMemberTriggeredMock({
+        const mock1 = generateObjectRegisterMemberWithTriggeredMock({
           recipientClientId: member.id,
           senderClientId: member.primaryUserId.toString(),
           contentKey,
           triggersAt: addDays(new Date(), amount),
           notificationType: NotificationType.text,
         });
-        const object1 = new ObjectGeneralMemberTriggeredClass(mock1);
-        Object.keys(object1.objectGeneralMemberTriggeredMock).forEach((key) => {
+        const object1 = new ObjectRegisterMemberWithTriggeredClass(mock1);
+        Object.keys(object1.objectRegisterMemberWithTriggeredType).forEach((key) => {
           expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
             expect.objectContaining({
               type: QueueType.notifications,
@@ -381,15 +383,20 @@ describe('Integration tests: notifications', () => {
 
       await delay(200);
 
-      const mock = generateGeneralMemberTriggeredMock({
+      const communication = await handler.communicationService.get({
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+      });
+      const mock = generateObjectFutureNotifyMock({
         recipientClientId: member.id,
         senderClientId: member.primaryUserId.toString(),
         contentKey: CustomKey.customContent,
         notificationType: notifyParams.type,
         triggersAt: when,
+        sendBirdChannelUrl: communication.sendBirdChannelUrl,
       });
-      const object = new ObjectGeneralMemberTriggeredClass(mock);
-      Object.keys(object.objectGeneralMemberTriggeredMock).forEach((key) => {
+      const object = new ObjectFutureNotifyClass(mock);
+      Object.keys(object.objectFutureNotifyType).forEach((key) => {
         expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
           expect.objectContaining({
             type: QueueType.notifications,
@@ -425,11 +432,16 @@ describe('Integration tests: notifications', () => {
 
       await delay(200);
 
+      const communication = await handler.communicationService.get({
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+      });
       const mock = generateObjectCustomContentMock({
         recipientClientId: notifyParams.memberId,
         senderClientId: notifyParams.userId,
         notificationType: notifyParams.type,
         content: notifyParams.metadata.content,
+        sendBirdChannelUrl: communication.sendBirdChannelUrl,
       });
       const object = new ObjectCustomContentClass(mock);
       Object.keys(object.objectCustomContentType).forEach((key) => {
@@ -476,12 +488,17 @@ describe('Integration tests: notifications', () => {
 
         await delay(200);
 
+        const communication = await handler.communicationService.get({
+          memberId: member.id,
+          userId: member.primaryUserId.toString(),
+        });
         const mock = generateObjectCallOrVideoMock({
           recipientClientId: notifyParams.memberId,
           senderClientId: notifyParams.userId,
           notificationType: notifyParams.type,
           peerId: notifyParams.metadata.peerId,
           path: generatePath(notifyParams.type),
+          sendBirdChannelUrl: communication.sendBirdChannelUrl,
         });
         const object = new ObjectCallOrVideoClass(mock);
         Object.keys(object.objectCallOrVideoType).forEach((key) => {
@@ -547,6 +564,57 @@ describe('Integration tests: notifications', () => {
         });
       },
     );
+
+    /**
+     * Trigger : MemberResolver.cancelNotify
+     * Dispatch :
+     *      1. send cancelVideo/cancelCall/cancelText dispatch
+     */
+    test.each([
+      CancelNotificationType.cancelCall,
+      CancelNotificationType.cancelText,
+      CancelNotificationType.cancelVideo,
+    ])(`notify: dispatch message of type %p`, async (type) => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+      const params: RegisterForNotificationParams = {
+        platform: Platform.android,
+        isPushNotificationsEnabled: true,
+      };
+      await handler
+        .setContextUserId(member.id)
+        .mutations.registerMemberForNotifications({ registerForNotificationParams: params });
+
+      await delay(500);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      const cancelNotifyParams: CancelNotifyParams = {
+        memberId: member.id,
+        type,
+        metadata: { peerId: faker.datatype.uuid() },
+      };
+      await handler.mutations.cancel({ cancelNotifyParams });
+
+      await delay(200);
+
+      const mock = generateObjectCancelMock({
+        recipientClientId: cancelNotifyParams.memberId,
+        notificationType: cancelNotifyParams.type,
+        peerId: cancelNotifyParams.metadata.peerId,
+      });
+      const object = new ObjectCancelClass(mock);
+      Object.keys(object.objectCancelType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
   });
 
   describe('Appointment', () => {
@@ -704,6 +772,56 @@ describe('Integration tests: notifications', () => {
     });
   });
 
+  /**
+   * Trigger : MemberResolver.publishJournal
+   * Dispatches:
+   *      1. create dispatch CustomKey.journalContent
+   */
+  // eslint-disable-next-line max-len
+  it(`publishJournal: should create dispatches of types ${CustomKey.journalContent}`, async () => {
+    const org = await creators.createAndValidateOrg();
+    const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+    await delay(200);
+
+    const { id: journalId } = await handler.setContextUserId(member.id).mutations.createJournal();
+    const updateJournalTextParams: UpdateJournalTextParams = generateUpdateJournalTextParams({
+      id: journalId,
+    });
+    const journal = await handler.setContextUserId(member.id).mutations.updateJournalText({
+      updateJournalTextParams,
+    });
+
+    handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+    await handler.setContextUserId(member.id).mutations.publishJournal({ id: journalId });
+
+    await delay(500);
+
+    const communication = await handler.communicationService.get({
+      memberId: member.id,
+      userId: member.primaryUserId.toString(),
+    });
+    const mock = generateObjectJournalContentMock({
+      senderClientId: member.id,
+      recipientClientId: member.primaryUserId.toString(),
+      content: journal.text,
+      sendBirdChannelUrl: communication.sendBirdChannelUrl,
+    });
+
+    const object = new ObjectBaseClass(mock);
+    Object.keys(object.objectBaseType).forEach((key) => {
+      expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+        expect.objectContaining({
+          type: QueueType.notifications,
+          message: expect.stringContaining(
+            key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+          ),
+        }),
+      );
+    });
+  });
+
   describe('Webhooks', () => {
     /**
      * Trigger : WebhooksController.sendbird
@@ -812,15 +930,14 @@ describe('Integration tests: notifications', () => {
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
-      const communication = await handler.communicationService.get({
-        memberId: member.id,
-        userId: member.primaryUserId.toString(),
-      });
-
       const payload = { Body: faker.lorem.word(), From: member.phone, Token: 'token' };
       await handler.webhooksController.incomingSms(payload);
       await delay(200);
 
+      const communication = await handler.communicationService.get({
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+      });
       const mock = generateChatMessageUserMock({
         recipientClientId: member.primaryUserId.toString(),
         senderClientId: member.id,

@@ -1,12 +1,17 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { AuditType, Environments, LoggerService, extractAuthorizationHeader } from '.';
+import { AuditType, Client, Environments, QueueType } from '@lagunahealth/pandora';
+import { EventType, IEventNotifyQueue, LoggerService } from '.';
 import { GqlExecutionContext } from '@nestjs/graphql';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
-  constructor(private readonly logger: LoggerService) {}
+  constructor(
+    private readonly logger: LoggerService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     if (process.env.NODE_ENV === Environments.test) {
@@ -17,24 +22,29 @@ export class LoggingInterceptor implements NestInterceptor {
     const methodName = context.getHandler().name;
     const className = context.getClass().name;
     let args;
-    let headers;
     let type;
+    let request;
 
     if (context.getType() === 'http') {
-      const res = context.switchToHttp();
-      headers = extractAuthorizationHeader(context);
-      const { params, body } = res.getRequest();
+      request = context.switchToHttp().getRequest();
+      const { params, body } = request;
       args = Object.keys(params).length > 0 ? { params } : {};
       args = Object.keys(body).length > 0 ? { ...args, body } : args;
-      type = res.getRequest().method === 'GET' ? AuditType.read : AuditType.write;
+      type = request.method === 'GET' ? AuditType.read : AuditType.write;
     } else {
+      const ctx = GqlExecutionContext.create(context);
+      request = ctx.getContext().req;
       args = context.getArgByIndex(1);
-      headers = extractAuthorizationHeader(GqlExecutionContext.create(context).getContext());
       type = this.getGqlType(context);
     }
 
-    this.logger.info(Object.values(args)[0] || { sub: headers?.sub }, className, methodName);
-    this.logger.audit(type, Object.values(args)[0], methodName, headers?.sub);
+    const params = LoggingInterceptor.getParams(args);
+    const client: Client = LoggingInterceptor.getClient(request?.user);
+    this.logger.info(params, className, methodName, client);
+
+    const message = this.logger.formatAuditMessage(type, params, methodName, client?.authId);
+    const eventParams: IEventNotifyQueue = { type: QueueType.audit, message };
+    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
 
     const now = Date.now();
     return next
@@ -44,6 +54,27 @@ export class LoggingInterceptor implements NestInterceptor {
           this.logger.info({ finishedAndItTook: `${Date.now() - now}ms` }, className, methodName),
         ),
       );
+  }
+
+  /**
+   * There are 2 ways to get params from gql:
+   * 1. Special Param object we defined (like CreateUserParams)
+   * 2. Just one independent param (like memberId)
+   * When there's just one param, the args would look like {"memberId": <id>} so we need to log the whole 'args' object.
+   * When there's a special object, the args would look like {"createUserParams": <params>},
+   * and we want to take only the value (the params)
+   */
+  private static getParams(args) {
+    const params = Object.values(args)[0];
+    return typeof params === 'string' || Array.isArray(params) ? args : params;
+  }
+
+  private static getClient(client) {
+    return {
+      id: client?._id?.toString(),
+      roles: client?.roles,
+      authId: client?.authId,
+    };
   }
 
   getGqlType(context: ExecutionContext): AuditType {

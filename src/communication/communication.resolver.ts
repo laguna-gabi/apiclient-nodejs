@@ -29,6 +29,7 @@ import {
   UserRole,
 } from '../common';
 import { UserService } from '../user';
+import { formatEx } from '@lagunahealth/pandora';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => CommunicationInfo)
@@ -74,7 +75,7 @@ export class CommunicationResolver {
         getCommunicationParams,
         CommunicationResolver.name,
         this.getCommunication.name,
-        ex,
+        formatEx(ex),
       );
     }
   }
@@ -146,7 +147,7 @@ export class CommunicationResolver {
         { userId: params.user.id },
         CommunicationResolver.name,
         this.handleNewUser.name,
-        ex,
+        formatEx(ex),
       );
     }
   }
@@ -165,7 +166,7 @@ export class CommunicationResolver {
         { memberId: params.member.id, userId: params.user.id },
         CommunicationResolver.name,
         this.handleNewMember.name,
-        ex,
+        formatEx(ex),
       );
     }
   }
@@ -179,7 +180,7 @@ export class CommunicationResolver {
         params,
         CommunicationResolver.name,
         this.handleUpdateMemberPlatform.name,
-        ex,
+        formatEx(ex),
       );
     }
   }
@@ -195,7 +196,12 @@ export class CommunicationResolver {
     try {
       return this.communicationService.onUpdatedAppointment(params);
     } catch (ex) {
-      this.logger.error(params, CommunicationResolver.name, this.handleUpdatedAppointment.name, ex);
+      this.logger.error(
+        params,
+        CommunicationResolver.name,
+        this.handleUpdatedAppointment.name,
+        formatEx(ex),
+      );
     }
   }
 
@@ -219,7 +225,7 @@ export class CommunicationResolver {
         params,
         CommunicationResolver.name,
         this.updateUserInCommunication.name,
-        ex,
+        formatEx(ex),
       );
     }
   }

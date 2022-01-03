@@ -141,12 +141,9 @@ export class AppointmentBase {
   private async getChatLink(memberId: string, userId: string) {
     const communication = await this.communicationResolver.getCommunication({ memberId, userId });
     if (!communication) {
-      this.logger.warn(
-        { memberId, userId },
-        AppointmentBase.name,
-        this.getChatLink.name,
-        Errors.get(ErrorType.communicationMemberUserNotFound),
-      );
+      this.logger.warn({ memberId, userId }, AppointmentBase.name, this.getChatLink.name, {
+        message: Errors.get(ErrorType.communicationMemberUserNotFound),
+      });
     } else {
       return this.bitly.shortenLink(communication.chat.memberLink);
     }

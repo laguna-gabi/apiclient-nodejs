@@ -1,3 +1,3 @@
 export * from './analytics';
-export * from './analytics.command';
+export * from './migration';
 export * from './cmd.module';

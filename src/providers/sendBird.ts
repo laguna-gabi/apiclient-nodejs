@@ -1,12 +1,9 @@
-import { BaseSendBird, InternalNotificationType } from '@lagunahealth/pandora';
+import { BaseSendBird, formatEx } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import * as FormData from 'form-data';
-import { createReadStream, createWriteStream } from 'fs';
-import { unlink } from 'fs/promises';
 import { ConfigsService, ExternalConfigs } from '.';
 import { AppointmentStatus } from '../appointment';
-import { LoggerService, SendSendBirdNotification } from '../common';
+import { LoggerService } from '../common';
 import { CreateSendbirdGroupChannelParams, RegisterSendbirdUserParams } from '../communication';
 import { User } from '../user';
 
@@ -44,10 +41,13 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         this.logger.info(params, SendBird.name, methodName);
         return result.data.access_token;
       } else {
-        this.logger.error(params, SendBird.name, methodName, result.status, result.data);
+        this.logger.error(params, SendBird.name, methodName, {
+          code: result.status,
+          data: result.data,
+        });
       }
     } catch (ex) {
-      this.logger.error(params, SendBird.name, methodName, ex.config);
+      this.logger.error(params, SendBird.name, methodName, formatEx(ex));
     }
   }
 
@@ -64,11 +64,14 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         this.logger.info(params, SendBird.name, methodName);
         return true;
       } else {
-        this.logger.error(params, SendBird.name, methodName, status, data);
+        this.logger.error(params, SendBird.name, methodName, {
+          code: status,
+          data,
+        });
         return false;
       }
     } catch (ex) {
-      this.logger.error(params, SendBird.name, methodName, ex);
+      this.logger.error(params, SendBird.name, methodName, formatEx(ex));
     }
   }
 
@@ -160,10 +163,13 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         this.logger.info({ sendBirdChannelUrl }, SendBird.name, methodName);
         return result;
       } else {
-        this.logger.error({ sendBirdChannelUrl }, SendBird.name, methodName);
+        this.logger.error({ sendBirdChannelUrl }, SendBird.name, methodName, {
+          code: result.status,
+          data: result.data,
+        });
       }
     } catch (ex) {
-      this.logger.error({ sendBirdChannelUrl }, SendBird.name, methodName);
+      this.logger.error({ sendBirdChannelUrl }, SendBird.name, methodName, formatEx(ex));
     }
   }
 
@@ -180,128 +186,10 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     if (status === 200) {
       return data.unread[userId];
     } else {
-      this.logger.error(
-        { channelUrl, userId },
-        SendBird.name,
-        this.countUnreadMessages.name,
-        status,
+      this.logger.error({ channelUrl, userId }, SendBird.name, this.countUnreadMessages.name, {
+        code: status,
         data,
-      );
-    }
-  }
-
-  async send(sendSendBirdNotification: SendSendBirdNotification) {
-    this.logger.info(sendSendBirdNotification, SendBird.name, this.send.name);
-    if (sendSendBirdNotification.notificationType === InternalNotificationType.chatMessageJournal) {
-      return this.sendJournalMessage(sendSendBirdNotification);
-    } else {
-      return this.sendAdminMessage(sendSendBirdNotification);
-    }
-  }
-
-  async sendJournalMessage(sendSendBirdNotification: SendSendBirdNotification) {
-    this.logger.info(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name);
-    const {
-      userId,
-      sendBirdChannelUrl,
-      message,
-      notificationType,
-      appointmentId,
-      journalImageDownloadLink,
-    } = sendSendBirdNotification;
-    try {
-      if (journalImageDownloadLink) {
-        const ImageDownloadResult = await this.httpService
-          .get(journalImageDownloadLink, { responseType: 'stream' })
-          .toPromise();
-        const writer = createWriteStream(`./${userId}.png`);
-        ImageDownloadResult.data.pipe(writer);
-
-        const form = new FormData();
-        form.append('user_id', userId);
-        form.append('message_type', 'FILE');
-        form.append('file', createReadStream(`./${userId}.png`));
-        form.append('apns_bundle_id', 'com.cca.MyChatPlain');
-        form.append('custom_type', notificationType); // For use of Laguna Chat
-        form.append('data', JSON.stringify({ senderId: userId, appointmentId, message })); // For use of Laguna Chat);
-
-        const result = await this.httpService
-          .post(
-            `${this.basePath}${this.suffix.groupChannels}/${sendBirdChannelUrl}/messages`,
-            form,
-            {
-              headers: {
-                ...form.getHeaders(),
-                ...this.headers,
-                // eslint-disable-next-line max-len
-                'Content-Type': `multipart/form-data; boundary=${ImageDownloadResult.headers['content-type']}`,
-              },
-            },
-          )
-          .toPromise();
-
-        await unlink(`./${userId}.png`);
-
-        if (result.status === 200) {
-          return result.data.message_id;
-        } else {
-          this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name);
-        }
-      } else {
-        const result = await this.httpService
-          .post(
-            `${this.basePath}${this.suffix.groupChannels}/${sendBirdChannelUrl}/messages`,
-            {
-              message_type: 'MESG',
-              user_id: userId,
-              message,
-              custom_type: notificationType,
-              data: JSON.stringify({ senderId: userId, appointmentId, message }),
-            },
-            { headers: this.headers },
-          )
-          .toPromise();
-        if (result.status === 200) {
-          return result.data.message_id;
-        } else {
-          this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name);
-        }
-      }
-    } catch (ex) {
-      this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalMessage.name, ex);
-    }
-  }
-
-  async sendAdminMessage(sendSendBirdNotification: SendSendBirdNotification) {
-    this.logger.info(sendSendBirdNotification, SendBird.name, this.sendAdminMessage.name);
-    const { userId, sendBirdChannelUrl, message, notificationType, appointmentId } =
-      sendSendBirdNotification;
-    try {
-      const result = await this.httpService
-        .post(
-          `${this.basePath}${this.suffix.groupChannels}/${sendBirdChannelUrl}/messages`,
-          {
-            message_type: 'ADMM', // Only admin type can be sent to a frozen chat
-            user_id: userId,
-            message,
-            custom_type: notificationType, // For use of Laguna Chat
-            data: JSON.stringify({
-              senderId: userId,
-              appointmentId,
-            }), // For use of Laguna Chat
-          },
-          {
-            headers: this.headers,
-          },
-        )
-        .toPromise();
-      if (result.status === 200) {
-        return result.data.message_id;
-      } else {
-        this.logger.error(sendSendBirdNotification, SendBird.name, this.sendAdminMessage.name);
-      }
-    } catch (ex) {
-      this.logger.error(sendSendBirdNotification, SendBird.name, this.sendAdminMessage.name, ex);
+      });
     }
   }
 
@@ -319,10 +207,13 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         this.logger.info({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
         return result.data.members?.map((member) => member.user_id);
       } else {
-        this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
+        this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName, {
+          code: result.status,
+          data: result.data,
+        });
       }
     } catch (ex) {
-      this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
+      this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName, formatEx(ex));
     }
   }
 
@@ -344,10 +235,13 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         this.logger.info({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
         return result;
       } else {
-        this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
+        this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName, {
+          code: result.status,
+          data: result.data,
+        });
       }
     } catch (ex) {
-      this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName);
+      this.logger.error({ sendBirdChannelUrl, userId }, SendBird.name, methodName, formatEx(ex));
     }
   }
 

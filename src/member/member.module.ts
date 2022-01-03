@@ -24,7 +24,6 @@ import {
   MemberRecordingDto,
   MemberResolver,
   MemberService,
-  NotificationBuilder,
   Recording,
 } from '.';
 import { Appointment, AppointmentDto } from '../appointment';
@@ -54,7 +53,7 @@ import { UserModule } from '../user';
       { name: Caregiver.name, schema: CaregiverDto },
     ]),
   ],
-  providers: [MemberResolver, MemberService, NotificationBuilder, ConfigsService],
+  providers: [MemberResolver, MemberService, ConfigsService],
   controllers: [MemberController],
   exports: [MemberService, MongooseModule],
 })

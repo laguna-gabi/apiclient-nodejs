@@ -4,8 +4,6 @@ import {
   Honorific,
   IUpdateClientSettings,
   InnerQueueTypes,
-  InternalKey,
-  InternalNotificationType,
   Language,
   NotificationType,
   Platform,
@@ -18,7 +16,6 @@ import * as faker from 'faker';
 import { Types } from 'mongoose';
 import { DailyReport } from '../src/dailyReport';
 import { v4 } from 'uuid';
-import * as en from '../languages/en.json';
 import {
   AppointmentMethod,
   EndAppointmentParams,
@@ -29,17 +26,7 @@ import {
   UpdateNotesParams,
 } from '../src/appointment';
 import { AvailabilityInput } from '../src/availability';
-import {
-  CancelNotificationParams,
-  InternalNotifyParams,
-  MemberRole,
-  RoleTypes,
-  SendOneSignalNotification,
-  SendSendBirdNotification,
-  SendTwilioNotification,
-  UserRole,
-  reformatDate,
-} from '../src/common';
+import { MemberRole, RoleTypes, UserRole, reformatDate } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import {
   AddCaregiverParams,
@@ -66,6 +53,7 @@ import {
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
+  UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
   defaultMemberParams,
 } from '../src/member';
@@ -108,6 +96,8 @@ export const generateMemberConfig = ({
   accessToken = generateId(),
   firstLoggedInAt = faker.date.past(2),
   articlesPath = faker.system.directoryPath(),
+  language = defaultMemberParams.language,
+  updatedAt = faker.date.past(2),
 }: Partial<MemberConfig> = {}): MemberConfig => {
   return {
     memberId,
@@ -117,6 +107,8 @@ export const generateMemberConfig = ({
     isPushNotificationsEnabled,
     firstLoggedInAt,
     articlesPath,
+    language,
+    updatedAt,
   };
 };
 
@@ -200,7 +192,6 @@ export const mockGenerateMember = (): Member => {
     org: { _id: generateId(), ...generateOrgParams() },
     users: [user],
     sex: defaultMemberParams.sex,
-    language: defaultMemberParams.language,
     createdAt: faker.date.past(1),
     honorific: defaultMemberParams.honorific,
     roles: [MemberRole.member],
@@ -223,7 +214,6 @@ export const generateUpdateMemberParams = ({
   lastName = faker.name.lastName(),
   sex = Sex.female,
   email = generateEmail(),
-  language = Language.en,
   zipCode = generateZipCode(),
   dischargeDate = generateDateOnly(faker.date.soon(10)),
   fellowName = faker.name.firstName(),
@@ -249,7 +239,6 @@ export const generateUpdateMemberParams = ({
     fellowName,
     sex,
     email,
-    language,
     zipCode,
     dischargeDate,
     drgDesc,
@@ -278,6 +267,8 @@ export const mockGenerateMemberConfig = ({
     accessToken: generateId(),
     firstLoggedInAt: faker.date.past(2),
     articlesPath: faker.system.directoryPath(),
+    language: defaultMemberParams.language,
+    updatedAt: faker.date.past(1),
   };
 };
 
@@ -287,6 +278,7 @@ export const generateUpdateMemberConfigParams = ({
   isPushNotificationsEnabled = false,
   isAppointmentsReminderEnabled = false,
   isRecommendationsEnabled = false,
+  language = Language.en,
 }: Partial<UpdateMemberConfigParams> = {}): UpdateMemberConfigParams => {
   return {
     memberId,
@@ -294,6 +286,7 @@ export const generateUpdateMemberConfigParams = ({
     isPushNotificationsEnabled,
     isAppointmentsReminderEnabled,
     isRecommendationsEnabled,
+    language,
   };
 };
 
@@ -433,17 +426,6 @@ export const generateReplaceUserForMemberParams = ({
   return { userId, memberId };
 };
 
-export const generateGetCommunication = () => {
-  return {
-    memberId: generateId(),
-    userId: v4(),
-    chat: {
-      memberLink: faker.datatype.uuid(),
-      userLink: faker.datatype.uuid(),
-    },
-  };
-};
-
 export const generateAppointmentLink = (appointmentId: string) => {
   return `${config.get('hosts.app')}/${appointmentId}`;
 };
@@ -507,73 +489,11 @@ export const generateNotifyContentParams = ({
 };
 
 export const generateCancelNotifyParams = ({
-  notificationId = v4(),
   memberId = generateId(),
   type = CancelNotificationType.cancelCall,
   metadata = { peerId: v4() },
 }: Partial<CancelNotifyParams> = {}): CancelNotifyParams => {
-  return { notificationId, memberId, type, metadata };
-};
-
-export const generateCancelNotificationParams = (): CancelNotificationParams => {
-  return {
-    externalUserId: v4(),
-    platform: Platform.ios,
-    data: {
-      peerId: v4(),
-      type: CancelNotificationType.cancelCall,
-      notificationId: v4(),
-    },
-  };
-};
-
-export const generateInternalNotifyParams = ({
-  memberId = generateId(),
-  userId = generateId(),
-  type = InternalNotificationType.textToMember,
-  metadata = {
-    contentType: InternalKey.logReminder,
-    sendBirdChannelUrl: generateUniqueUrl(),
-  },
-  content = en.translation.contents.logReminder,
-}: Partial<InternalNotifyParams> = {}): InternalNotifyParams => {
-  return { memberId, userId, type, metadata, content };
-};
-
-export const generateSendOneSignalNotificationParams = (): SendOneSignalNotification => {
-  return {
-    platform: Platform.ios,
-    externalUserId: v4(),
-    data: {
-      user: {
-        id: faker.datatype.uuid(),
-        firstName: faker.name.firstName(),
-        avatar: faker.image.avatar(),
-      },
-      member: { phone: generatePhone() },
-      type: NotificationType.text,
-      isVideo: false,
-    },
-    content: faker.lorem.sentence(),
-  };
-};
-
-export const generateSendTwilioNotificationParams = (): SendTwilioNotification => {
-  return {
-    body: faker.lorem.sentence(),
-    to: faker.phone.phoneNumber(),
-  };
-};
-
-export const generateSendSendBirdNotificationParams = (
-  notificationType,
-): SendSendBirdNotification => {
-  return {
-    userId: v4(),
-    sendBirdChannelUrl: generateUniqueUrl(),
-    message: faker.lorem.sentence(),
-    notificationType,
-  };
+  return { memberId, type, metadata };
 };
 
 const generateEmail = () => {
@@ -596,6 +516,13 @@ export const generateUpdateRecordingParams = ({
   recordingType,
 }: Partial<UpdateRecordingParams> = {}): UpdateRecordingParams => {
   return { id, memberId, userId, start, end, answered, phone, appointmentId, recordingType };
+};
+
+export const generateUpdateRecordingReviewParams = ({
+  recordingId = generateId(),
+  content = faker.random.words(5),
+}: Partial<UpdateRecordingReviewParams> = {}): UpdateRecordingReviewParams => {
+  return { recordingId, content };
 };
 
 export const generateDailyReport = ({
@@ -624,7 +551,7 @@ export const generateUpdateClientSettings = ({
     orgName: member?.org?.name,
     honorific: member?.honorific,
     zipCode: member?.zipCode || member?.org?.zipCode,
-    language: member?.language,
+    language: memberConfig?.language,
     platform: memberConfig?.platform,
     isPushNotificationsEnabled: memberConfig?.isPushNotificationsEnabled,
     isAppointmentsReminderEnabled: memberConfig?.isAppointmentsReminderEnabled,

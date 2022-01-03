@@ -1,3 +1,4 @@
+import { formatEx } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
@@ -43,6 +44,7 @@ import {
   UpdateMemberConfigParams,
   UpdateMemberParams,
   UpdateRecordingParams,
+  UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
 } from '.';
 import { Appointment } from '../appointment';
@@ -98,13 +100,14 @@ export class MemberService extends BaseService {
   ): Promise<{ member: Member; memberConfig: MemberConfig }> {
     try {
       this.removeNotNullable(createMemberParams, NotNullableMemberKeys);
-      const primitiveValues = cloneDeep(createMemberParams);
+      const { language, ...memberParams } = createMemberParams;
+      const primitiveValues = cloneDeep(memberParams);
       delete primitiveValues.orgId;
       delete primitiveValues.userId;
 
       const object = await this.memberModel.create({
         ...primitiveValues,
-        org: new Types.ObjectId(createMemberParams.orgId),
+        org: new Types.ObjectId(memberParams.orgId),
         primaryUserId,
         users: [primaryUserId],
       });
@@ -112,6 +115,7 @@ export class MemberService extends BaseService {
       const memberConfig = await this.memberConfigModel.create({
         memberId: new Types.ObjectId(object._id),
         externalUserId: v4(),
+        language,
       });
 
       const member = await this.getById(object._id);
@@ -281,7 +285,12 @@ export class MemberService extends BaseService {
         { $addToSet: { users: userId } },
       );
     } catch (ex) {
-      this.logger.error(params, MemberService.name, this.handleAddUserToMemberList.name, ex);
+      this.logger.error(
+        params,
+        MemberService.name,
+        this.handleAddUserToMemberList.name,
+        formatEx(ex),
+      );
     }
   }
 
@@ -309,7 +318,7 @@ export class MemberService extends BaseService {
         params,
         MemberService.name,
         this.handleUnconsentedAppointmentEnded.name,
-        ex,
+        formatEx(ex),
       );
     }
   }
@@ -389,55 +398,6 @@ export class MemberService extends BaseService {
     });
   }
 
-  async getNewRegisteredMembersWithNoDailyReports() {
-    const result = await this.memberConfigModel.aggregate([
-      {
-        $match: {
-          firstLoggedInAt: {
-            $gte: sub(new Date(), { days: 3 }),
-          },
-        },
-      },
-      { $project: { memberConfig: '$$ROOT' } },
-      {
-        $lookup: {
-          from: 'members',
-          localField: 'memberConfig.memberId',
-          foreignField: '_id',
-          as: 'member',
-        },
-      },
-      {
-        $unwind: {
-          path: '$member',
-        },
-      },
-      {
-        $lookup: {
-          from: 'dailyreports',
-          localField: 'memberConfig.memberId',
-          foreignField: 'memberId',
-          as: 'dailyreports',
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          memberConfig: 1,
-          member: 1,
-          dailyreportsCount: { $size: '$dailyreports' },
-        },
-      },
-    ]);
-    return result.filter((newMember) => {
-      newMember.memberConfig.id = newMember.memberConfig._id;
-      newMember.member.id = newMember.member._id;
-      delete newMember.memberConfig._id;
-      delete newMember.member._id;
-      return newMember.dailyreportsCount === 0;
-    });
-  }
-
   async moveMemberToArchive(id: string): Promise<{ member: Member; memberConfig: MemberConfig }> {
     this.logger.info({ memberId: id }, MemberService.name, this.moveMemberToArchive.name);
     const member = await this.get(id);
@@ -485,7 +445,7 @@ export class MemberService extends BaseService {
         org: new Types.ObjectId(createMemberParams.orgId),
       });
 
-      return this.replaceId(member.toObject());
+      return this.controlMemberModel.findOne({ _id: member.id }).populate({ path: 'org' });
     } catch (ex) {
       throw new Error(
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.memberPhoneAlreadyExists) : ex,
@@ -542,7 +502,12 @@ export class MemberService extends BaseService {
         { $set: { scores: params.scores } },
       );
     } catch (ex) {
-      this.logger.error(params, MemberService.name, this.handleAppointmentScoreUpdated.name, ex);
+      this.logger.error(
+        params,
+        MemberService.name,
+        this.handleAppointmentScoreUpdated.name,
+        formatEx(ex),
+      );
     }
   }
 
@@ -590,24 +555,8 @@ export class MemberService extends BaseService {
   async updateMemberConfig(
     updateMemberConfigParams: UpdateMemberConfigParams,
   ): Promise<MemberConfig> {
-    const {
-      memberId,
-      platform,
-      isPushNotificationsEnabled,
-      isAppointmentsReminderEnabled,
-      isRecommendationsEnabled,
-    } = updateMemberConfigParams;
-
-    let setParams: any = { memberId: new Types.ObjectId(memberId) };
-    setParams = platform == null ? platform : { ...setParams, platform };
-    setParams =
-      isPushNotificationsEnabled == null ? setParams : { ...setParams, isPushNotificationsEnabled };
-    setParams =
-      isAppointmentsReminderEnabled == null
-        ? setParams
-        : { ...setParams, isAppointmentsReminderEnabled };
-    setParams =
-      isRecommendationsEnabled == null ? setParams : { ...setParams, isRecommendationsEnabled };
+    const { memberId, ...setParams } = updateMemberConfigParams;
+    this.removeNotNullable(setParams, Object.keys(setParams));
 
     const memberConfig = await this.memberConfigModel.findOneAndUpdate(
       { memberId: new Types.ObjectId(memberId) },
@@ -650,7 +599,12 @@ export class MemberService extends BaseService {
 
       return result.ok === 1;
     } catch (ex) {
-      this.logger.error(params, MemberService.name, this.handleUpdateMemberConfig.name, ex);
+      this.logger.error(
+        params,
+        MemberService.name,
+        this.handleUpdateMemberConfig.name,
+        formatEx(ex),
+      );
     }
   }
 
@@ -736,8 +690,8 @@ export class MemberService extends BaseService {
   /*************************************************************************************************
    ******************************************** Recording ******************************************
    ************************************************************************************************/
-  async updateRecording(updateRecordingParams: UpdateRecordingParams): Promise<void> {
-    const { start, end, memberId, id, userId, phone, answered, appointmentId, recordingType } =
+  async updateRecording(updateRecordingParams: UpdateRecordingParams, userId): Promise<void> {
+    const { start, end, memberId, id, phone, answered, appointmentId, recordingType } =
       updateRecordingParams;
     const member = await this.memberModel.findById(memberId, { _id: 1 });
     if (!member) {
@@ -770,6 +724,62 @@ export class MemberService extends BaseService {
         ex.code === DbErrors.duplicateKey
           ? Errors.get(ErrorType.memberRecordingIdAlreadyExists)
           : ex,
+      );
+    }
+  }
+
+  async updateRecordingReview(
+    updateRecordingReviewParams: UpdateRecordingReviewParams,
+    userId,
+  ): Promise<void> {
+    const { recordingId, content } = updateRecordingReviewParams;
+
+    const recording = await this.recordingModel.findOne({ id: recordingId });
+
+    if (!recording) {
+      throw new Error(Errors.get(ErrorType.memberRecordingNotFound));
+    }
+
+    const objectUserId = new Types.ObjectId(userId);
+
+    // User cannot review own recording
+    if (recording.userId.toString() === objectUserId.toString()) {
+      throw new Error(Errors.get(ErrorType.memberRecordingSameUser));
+    }
+
+    // Only user who wrote review can update it
+    if (
+      recording.review?.userId &&
+      recording.review.userId.toString() !== objectUserId.toString()
+    ) {
+      throw new Error(Errors.get(ErrorType.memberRecordingSameUserEdit));
+    }
+
+    if (recording.review) {
+      await this.recordingModel.updateOne(
+        { id: recordingId },
+        {
+          $set: {
+            'review.userId': objectUserId,
+            'review.content': content,
+          },
+        },
+        { new: true, upsert: true },
+      );
+    } else {
+      await this.recordingModel.findOneAndUpdate(
+        { id: recordingId },
+        {
+          $set: {
+            review: {
+              userId: objectUserId,
+              content,
+              createdAt: null,
+              updatedAt: null,
+            },
+          },
+        },
+        { new: true, upsert: true },
       );
     }
   }
@@ -837,7 +847,7 @@ export class MemberService extends BaseService {
   }
 
   async getCaregiversByMemberId(memberId: string): Promise<Caregiver[]> {
-    return await this.caregiverModel.find({ memberId: new Types.ObjectId(memberId) });
+    return this.caregiverModel.find({ memberId: new Types.ObjectId(memberId) });
   }
   /*************************************************************************************************
    ******************************************** Helpers ********************************************

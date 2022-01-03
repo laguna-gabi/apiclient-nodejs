@@ -1,25 +1,15 @@
+import { BaseOneSignal, Platform, formatEx } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as config from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
-import {
-  AllNotificationTypes,
-  CancelNotificationParams,
-  ErrorType,
-  Errors,
-  EventType,
-  IEventOnMemberBecameOffline,
-  LoggerService,
-  SendOneSignalNotification,
-} from '../common';
+import { LoggerService } from '../common';
 import { MemberConfig } from '../member';
-import { BaseOneSignal, InternalNotificationType, Platform } from '@lagunahealth/pandora';
 
 @Injectable()
 export class OneSignal extends BaseOneSignal implements OnModuleInit {
   private readonly playersUrl = `${this.oneSignalUrl}/players`;
-  private readonly notificationsUrl = `${this.oneSignalUrl}/notifications`;
 
   constructor(
     private readonly configsService: ConfigsService,
@@ -61,13 +51,11 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
       const result = await this.httpService.post(this.playersUrl, data).toPromise();
       return this.validateRegisterResult(externalUserId, result);
     } catch (ex) {
-      this.logger.error(
-        { token, externalUserId },
-        OneSignal.name,
-        this.register.name,
-        ex.response?.status,
-        ex.response?.config,
-      );
+      this.logger.error({ token, externalUserId }, OneSignal.name, this.register.name, {
+        code: ex.response?.status,
+        message: ex.response?.message,
+        stack: ex.response?.config,
+      });
     }
   }
 
@@ -83,105 +71,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
       const config = await this.configsService.getConfig(ExternalConfigs.oneSignal.defaultApiKey);
       await this.findAndUnregister(memberConfig, appId, config);
     } catch (ex) {
-      this.logger.error(memberConfig, OneSignal.name, this.unregister.name, ex);
-    }
-  }
-
-  async send(sendOneSignalNotification: SendOneSignalNotification): Promise<string | void> {
-    this.logger.info(sendOneSignalNotification, OneSignal.name, this.send.name);
-    const { platform, externalUserId, data, content } = sendOneSignalNotification;
-    this.logger.info(data, OneSignal.name, this.send.name);
-
-    const config = await this.getConfig(platform, data.type);
-    const app_id = await this.getApiId(platform, data.type);
-    const extraData = OneSignal.getExtraDataByPlatform(platform);
-    const onlyChatData =
-      data.type === InternalNotificationType.chatMessageToMember
-        ? { collapse_id: data.user.id }
-        : {};
-
-    const body: any = {
-      app_id,
-      include_external_user_ids: [externalUserId],
-      content_available: true,
-      contents: { en: content },
-      headings: { en: 'Laguna' },
-      ...extraData,
-      ...onlyChatData,
-      data,
-    };
-
-    if (this.isVoipProject(platform, data.type)) {
-      body.apns_push_type_override = 'voip';
-    }
-
-    try {
-      const { status, data } = await this.httpService
-        .post(this.notificationsUrl, body, config)
-        .toPromise();
-      if (status === 200 && data.recipients >= 1) {
-        return data.id;
-      } else if (
-        data.errors[0] === 'All included players are not subscribed' ||
-        data.errors?.invalid_external_user_ids[0] === externalUserId
-      ) {
-        const eventParams: IEventOnMemberBecameOffline = {
-          phone: sendOneSignalNotification.data.member.phone,
-          content,
-          type: sendOneSignalNotification.data.type,
-        };
-        this.eventEmitter.emit(EventType.onMemberBecameOffline, eventParams);
-      }
-      this.logger.error(
-        sendOneSignalNotification,
-        OneSignal.name,
-        this.send.name,
-        status,
-        JSON.stringify(data),
-      );
-    } catch (ex) {
-      this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, ex);
-    }
-  }
-
-  async cancel(cancelNotificationParams: CancelNotificationParams): Promise<string | void> {
-    this.logger.info(cancelNotificationParams, OneSignal.name, this.cancel.name);
-    const { platform, externalUserId, data } = cancelNotificationParams;
-
-    const config = await this.getConfig(platform, data.type);
-    const app_id = await this.getApiId(platform, data.type);
-    const cancelUrl = `${this.notificationsUrl}/${data.notificationId}?app_id=${app_id}`;
-
-    try {
-      await this.httpService.delete(cancelUrl, config).toPromise();
-    } catch (ex) {
-      if (ex.response.data.errors[0] !== 'Notification has already been sent to all recipients') {
-        throw new Error(Errors.get(ErrorType.notificationNotFound));
-      } else {
-        const defaultApiKey = await this.configsService.getConfig(
-          ExternalConfigs.oneSignal.defaultApiKey,
-        );
-        const config = { headers: { Authorization: `Basic ${defaultApiKey}` } };
-        const app_id = await this.configsService.getConfig(ExternalConfigs.oneSignal.defaultApiId);
-
-        const body: any = {
-          app_id,
-          include_external_user_ids: [externalUserId],
-          content_available: true,
-          data,
-        };
-
-        try {
-          const result = await this.httpService
-            .post(this.notificationsUrl, body, config)
-            .toPromise();
-          if (result.status === 200 && result.data.recipients >= 1) {
-            return result.data.id;
-          }
-        } catch (ex) {
-          this.logger.error(cancelNotificationParams, OneSignal.name, this.cancel.name, ex);
-        }
-      }
+      this.logger.error(memberConfig, OneSignal.name, this.unregister.name, formatEx(ex));
     }
   }
 
@@ -194,31 +84,12 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
       this.logger.info({ externalUserId }, OneSignal.name, methodName);
       return result.data.id;
     } else {
-      this.logger.error({ externalUserId }, OneSignal.name, methodName, result.status);
+      this.logger.error({ externalUserId }, OneSignal.name, methodName, {
+        code: result.status,
+        data: result.data,
+      });
       return undefined;
     }
-  }
-
-  private async getConfig(platform: Platform, notificationType?: AllNotificationTypes) {
-    const config = await this.configsService.getConfig(
-      this.isVoipProject(platform, notificationType)
-        ? ExternalConfigs.oneSignal.voipApiKey
-        : ExternalConfigs.oneSignal.defaultApiKey,
-    );
-
-    return { headers: { Authorization: `Basic ${config}` } };
-  }
-
-  private static getExtraDataByPlatform(platform: Platform) {
-    if (platform === Platform.android) {
-      return {
-        android_channel_id: config.get('oneSignal.androidChannelId'),
-        android_visibility: 1,
-        priority: 10,
-      };
-    }
-
-    return {};
   }
 
   private async findAndUnregister(memberConfig, appId, config) {

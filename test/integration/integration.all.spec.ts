@@ -1,4 +1,4 @@
-import { CancelNotificationType, Platform } from '@lagunahealth/pandora';
+import { Language, Platform } from '@lagunahealth/pandora';
 import * as config from 'config';
 import { general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow } from 'date-fns';
@@ -9,18 +9,9 @@ import {
   RequestAppointmentParams,
   ScheduleAppointmentParams,
 } from '../../src/appointment';
-import {
-  ErrorType,
-  Errors,
-  Identifiers,
-  RegisterForNotificationParams,
-  UserRole,
-  delay,
-  reformatDate,
-} from '../../src/common';
+import { ErrorType, Errors, Identifiers, UserRole, delay, reformatDate } from '../../src/common';
 import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
 import {
-  CancelNotifyParams,
   CreateTaskParams,
   Member,
   RecordingOutput,
@@ -36,7 +27,6 @@ import {
   generateAddCaregiverParams,
   generateAppointmentLink,
   generateAvailabilityInput,
-  generateCancelNotifyParams,
   generateId,
   generateOrgParams,
   generateRequestAppointmentParams,
@@ -291,6 +281,8 @@ describe('Integration tests: all', () => {
       isPushNotificationsEnabled: true,
       isAppointmentsReminderEnabled: true,
       isRecommendationsEnabled: true,
+      language: Language.en,
+      updatedAt: expect.any(String),
     });
 
     const updateMemberConfigParams = generateUpdateMemberConfigParams();
@@ -311,6 +303,8 @@ describe('Integration tests: all', () => {
       isPushNotificationsEnabled: updateMemberConfigParams.isPushNotificationsEnabled,
       isAppointmentsReminderEnabled: updateMemberConfigParams.isAppointmentsReminderEnabled,
       isRecommendationsEnabled: updateMemberConfigParams.isRecommendationsEnabled,
+      language: Language.en,
+      updatedAt: expect.any(String),
     });
   });
 
@@ -506,46 +500,6 @@ describe('Integration tests: all', () => {
         replaceUserForMemberParams,
         invalidFieldsErrors: [Errors.get(ErrorType.memberReplaceUserAlreadyExists)],
       });
-    });
-  });
-
-  describe('notifications', () => {
-    test.each([
-      CancelNotificationType.cancelVideo,
-      CancelNotificationType.cancelCall,
-      CancelNotificationType.cancelText,
-    ])(`should cancel a notification of type %p`, async (params) => {
-      const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
-      const registerForNotificationParams: RegisterForNotificationParams = {
-        platform: Platform.android,
-        isPushNotificationsEnabled: true,
-      };
-      await handler
-        .setContextUserId(member.id)
-        .mutations.registerMemberForNotifications({ registerForNotificationParams });
-
-      const memberConfig = await handler
-        .setContextUserId(member.id)
-        .queries.getMemberConfig({ id: member.id });
-
-      const cancelNotifyParams: CancelNotifyParams = generateCancelNotifyParams({
-        memberId: member.id,
-        type: params,
-      });
-
-      await handler.mutations.cancel({ cancelNotifyParams });
-      expect(handler.notificationsService.spyOnNotificationsServiceCancel).toBeCalledWith({
-        externalUserId: memberConfig.externalUserId,
-        platform: memberConfig.platform,
-        data: {
-          type: cancelNotifyParams.type,
-          peerId: cancelNotifyParams.metadata.peerId,
-          notificationId: cancelNotifyParams.notificationId,
-        },
-      });
-
-      handler.notificationsService.spyOnNotificationsServiceCancel.mockReset();
     });
   });
 
@@ -792,9 +746,13 @@ describe('Integration tests: all', () => {
     });
 
     it('should update recordings for multiple members and get those recordings', async () => {
-      const compareRecording = (rec1: RecordingOutput, rec2: UpdateRecordingParams) => {
+      const compareRecording = (
+        rec1: RecordingOutput,
+        rec2: UpdateRecordingParams,
+        userId: string,
+      ) => {
         expect(rec1.id).toEqual(rec2.id);
-        expect(rec1.userId).toEqual(rec2.userId);
+        expect(rec1.userId).toEqual(userId);
         expect(new Date(rec1.start)).toEqual(rec2.start);
         expect(new Date(rec1.end)).toEqual(rec2.end);
         expect(rec1.answered).toEqual(rec2.answered);
@@ -802,23 +760,30 @@ describe('Integration tests: all', () => {
       };
 
       const org = await creators.createAndValidateOrg();
-      const { id: memberId1 } = await creators.createAndValidateMember({ org });
-      const { id: memberId2 } = await creators.createAndValidateMember({ org });
+      const member1 = await creators.createAndValidateMember({ org });
+      const member2 = await creators.createAndValidateMember({ org });
 
-      const rec1a = generateUpdateRecordingParams({ memberId: memberId1 });
-      const rec1b = generateUpdateRecordingParams({ memberId: memberId1 });
-      const rec2 = generateUpdateRecordingParams({ memberId: memberId2 });
-      await handler.mutations.updateRecording({ updateRecordingParams: rec1a });
-      await handler.mutations.updateRecording({ updateRecordingParams: rec1b });
-      await handler.mutations.updateRecording({ updateRecordingParams: rec2 });
+      const rec1a = generateUpdateRecordingParams({ memberId: member1.id });
+      const rec1b = generateUpdateRecordingParams({ memberId: member1.id });
+      const rec2 = generateUpdateRecordingParams({ memberId: member2.id });
 
-      const result1 = await handler.queries.getRecordings({ memberId: memberId1 });
+      await handler
+        .setContextUserId(member1.primaryUserId.toString())
+        .mutations.updateRecording({ updateRecordingParams: rec1a });
+      await handler
+        .setContextUserId(member1.primaryUserId.toString())
+        .mutations.updateRecording({ updateRecordingParams: rec1b });
+      await handler
+        .setContextUserId(member2.primaryUserId.toString())
+        .mutations.updateRecording({ updateRecordingParams: rec2 });
+
+      const result1 = await handler.queries.getRecordings({ memberId: member1.id });
       expect(result1.length).toEqual(2);
-      compareRecording(result1[0], rec1a);
-      compareRecording(result1[1], rec1b);
-      const result2 = await handler.queries.getRecordings({ memberId: memberId2 });
+      compareRecording(result1[0], rec1a, member1.primaryUserId.toString());
+      compareRecording(result1[1], rec1b, member1.primaryUserId.toString());
+      const result2 = await handler.queries.getRecordings({ memberId: member2.id });
       expect(result2.length).toEqual(1);
-      compareRecording(result2[0], rec2);
+      compareRecording(result2[0], rec2, member2.primaryUserId.toString());
     });
 
     it('should delete recordings and media files on unconsented appointment end', async () => {

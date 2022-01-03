@@ -1,4 +1,5 @@
 import {
+  AllNotificationTypes,
   CancelNotificationType,
   ContentKey,
   ExtraData,
@@ -108,71 +109,17 @@ export class InternalNotificationMetadata {
   path?: string;
   peerId?: string;
   journalImageDownloadLink?: string;
+  journalAudioDownloadLink?: string;
 }
 
-export class InternalNotifyParams {
+export class IDispatchParams {
+  dispatchId: string;
+  correlationId?: string;
   memberId: string;
   userId?: string;
   type: AllNotificationTypes;
   metadata: InternalNotificationMetadata;
   content?: string;
-}
-
-export class IDispatchParams extends InternalNotifyParams {
-  dispatchId: string;
-  correlationId?: string;
-}
-
-export type AllNotificationTypes =
-  | NotificationType
-  | CancelNotificationType
-  | InternalNotificationType;
-
-export class BaseSendNotification {
-  orgName?: string;
-}
-
-export class SendOneSignalNotification extends BaseSendNotification {
-  platform: Platform;
-  externalUserId: string;
-  data: {
-    user: {
-      id: string;
-      firstName: string;
-      avatar: string;
-    };
-    member: { phone: string };
-    peerId?: string;
-    type: AllNotificationTypes;
-    path?: string;
-    isVideo: boolean;
-    extraData?: string; //flush data to then client
-  };
-  content?: string;
-}
-
-export class SendTwilioNotification extends BaseSendNotification {
-  body: string;
-  to: string;
-}
-
-export class SendSendBirdNotification extends BaseSendNotification {
-  userId: string; //sender
-  sendBirdChannelUrl: string;
-  message: string;
-  notificationType: AllNotificationTypes;
-  appointmentId?: string;
-  journalImageDownloadLink?: string;
-}
-
-export class CancelNotificationParams extends BaseSendNotification {
-  externalUserId: string;
-  platform: Platform;
-  data: {
-    peerId?: string;
-    type: CancelNotificationType;
-    notificationId: string;
-  };
 }
 
 export enum UpdatedAppointmentAction {
@@ -190,26 +137,6 @@ export interface StorageUrlParams {
   storageType: StorageType;
   memberId: string;
   id: string;
-}
-
-export enum Environments {
-  production = 'production',
-  development = 'development',
-  test = 'test',
-}
-
-export enum QueueType {
-  audit = 'audit',
-  notifications = 'notifications',
-}
-
-export enum AuditType {
-  write = 'write',
-  read = 'read',
-  archive = 'archive',
-  delete = 'delete',
-  message = 'message',
-  userReplaced = 'userReplaced',
 }
 
 export enum RecordingType {

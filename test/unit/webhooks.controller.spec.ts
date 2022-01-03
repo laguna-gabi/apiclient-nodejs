@@ -1,3 +1,4 @@
+import { mockLogger } from '@lagunahealth/pandora';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -9,7 +10,7 @@ import {
   TwilioService,
   WebhooksController,
 } from '../../src/providers';
-import { dbDisconnect, defaultModules, mockLogger } from '../index';
+import { dbDisconnect, defaultModules } from '../index';
 import * as sendBirdAdminMessagePayload from './mocks/webhookSendbirdAdminMessagePayload.json';
 import * as sendBirdNewMessagePayload from './mocks/webhookSendbirdNewMessagePayload.json';
 

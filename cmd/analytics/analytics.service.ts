@@ -15,13 +15,13 @@ import {
   RecordingSummary,
   SummaryFileSuffix,
   TimeFormat,
-} from './analytics.dto';
+} from '.';
 import { add, differenceInDays, differenceInSeconds, differenceInYears } from 'date-fns';
 import { Injectable } from '@nestjs/common';
 import { AppointmentMethod } from '../../src/appointment';
 import { Member, MemberDocument, MemberService, Recording } from '../../src/member';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { Connection, Model } from 'mongoose';
 import { StorageService } from '../../src/providers';
 
 @Injectable()
@@ -31,7 +31,12 @@ export class AnalyticsService {
     @InjectModel(Member.name)
     private readonly memberModel: Model<MemberDocument>,
     private readonly storageService: StorageService,
+    @InjectConnection() private connection: Connection,
   ) {}
+
+  async clean() {
+    this.connection.close();
+  }
 
   // Description: get all control members
   async getAllControl(): Promise<MemberDocument[]> {
@@ -148,7 +153,6 @@ export class AnalyticsService {
         } as Member),
         created: reformatDate(member.createdAt.toString(), DateFormat),
         intervention_group: false, // control member is, by definition, not in intervention group
-        language: member.language,
         age: differenceInYears(this.getDateTime(), Date.parse(member.dateOfBirth)),
         race: member.race,
         ethnicity: member.ethnicity,
@@ -193,7 +197,7 @@ export class AnalyticsService {
         member.memberConfig.platform === Platform.android ||
         member.memberConfig.platform === Platform.ios,
       intervention_group: true,
-      language: member.memberDetails.language,
+      language: member.memberConfig.language,
       age: differenceInYears(this.getDateTime(), Date.parse(member.memberDetails.dateOfBirth)),
       race: member.memberDetails.race,
       ethnicity: member.memberDetails.ethnicity,
@@ -216,9 +220,9 @@ export class AnalyticsService {
       dc_summary_load_date: dcSummaryLoadDate
         ? reformatDate(dcSummaryLoadDate.toString(), DateFormat)
         : '',
-      dc_summary_received: !!dcInstructionsLoadDate,
-      dc_instructions_load_date: dcSummaryLoadDate
-        ? reformatDate(dcSummaryLoadDate.toString(), DateFormat)
+      dc_summary_received: !!dcSummaryLoadDate,
+      dc_instructions_load_date: dcInstructionsLoadDate
+        ? reformatDate(dcInstructionsLoadDate.toString(), DateFormat)
         : '',
       dc_instructions_received: !!dcInstructionsLoadDate,
       first_activation_score: firstActivationScore,
@@ -397,11 +401,10 @@ export class AnalyticsService {
     lastName: string,
     type: string,
   ): Promise<Date | null> {
-    return await this.storageService.getDocumentLastModified(
+    return this.storageService.getDocumentLastModified(
       `public/${StorageType.documents}/${memberId}/${firstName}_${lastName}_${type}.pdf`,
     );
   }
-
   // Description: calculated Length of stay based on admission admit data and discharge date
   calculateLos(admitDate: string, dischargeDate: string): number {
     if (admitDate && dischargeDate) {

@@ -2,13 +2,12 @@
   "hosts": {
     "chat": "https://dev.chat.lagunahealth.com",
     "app": "https://dev.app.lagunahealth.com",
-    "dynamicLink": "https://links.lagunahealth.com/app",
-    "harmony": "https://dev.harmony.lagunahealth.com"
+    "harmony": "https://dev.harmony.lagunahealth.com",
+    "localstack": "http://localhost:4566"
   },
   "db": {
     "connection": "mongodb://localhost:27017/laguna"
   },
-  "iosExcludeRegistrationNumber": "+10011223344",
   "graphql": {
     "validators": {
       "name": {
@@ -23,14 +22,18 @@
       "userPoolId": "us-east-1_EZc3XRt6s"
     },
     "storage": {
-      "thumbnailSize": 200
+      "thumbnailSize": 200,
+      "bucket": "laguna-docs-bucket-local"
+    },
+    "queue": {
+      "notification": "NotificationsQ-local",
+      "image": "ImageQ-local"
     }
   },
   "twilio": {
     "source": "+12058511112",
-    "identity": "the_user_id",
-    "traversalServiceTokenTtl": 3,
-    "validPhoneTypes": ["FIXED_LINE_OR_MOBILE", "MOBILE"]
+    "iosExcludeRegistrationNumber": "+10011223344",
+    "identity": "the_user_id"
   },
   "slack": {
     "support": "#support-dev",
@@ -40,13 +43,10 @@
   "oneSignal": {
     "voipRegistrationPayload": {
       "test_type": 1
-    },
-    "androidChannelId": "00349af6-be67-4729-9d48-9057a5507b14"
+    }
   },
   "scheduler": {
-    "alertBeforeInMin": 15,
-    "maxAlertGapInMin": 35791,
-    "cronJobIntervalInMin": 1
+    "alertBeforeInMin": 15
   },
   "general": {
     "dateFormatString": "yyyy/MM/dd"
@@ -65,5 +65,10 @@
   },
   "split": {
     "apiKey": "localhost"
+  },
+  "migration": {
+    "sample": "sample",
+    "extension": ".ts",
+    "migrationDir": "/cmd/migration/scripts"
   }
 }

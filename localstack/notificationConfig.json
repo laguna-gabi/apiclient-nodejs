@@ -1,0 +1,80 @@
+{
+  "QueueConfigurations": [
+    {
+      "Id": "image_queue_event_jpeg",
+      "QueueArn": "arn:aws:sqs:us-east-1:000000000000:ImageQ-local",
+      "Events": ["s3:ObjectCreated:*"],
+      "Filter": {
+        "Key": {
+          "FilterRules": [
+            {
+              "Name": "Prefix",
+              "Value": "public/journals/"
+            },
+            {
+              "Name": "Suffix",
+              "Value": "_NormalImage.jpeg"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Id": "image_queue_event_jpg",
+      "QueueArn": "arn:aws:sqs:us-east-1:000000000000:ImageQ-local",
+      "Events": ["s3:ObjectCreated:*"],
+      "Filter": {
+        "Key": {
+          "FilterRules": [
+            {
+              "Name": "Prefix",
+              "Value": "public/journals/"
+            },
+            {
+              "Name": "Suffix",
+              "Value": "_NormalImage.jpg"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Id": "image_queue_event_gif",
+      "QueueArn": "arn:aws:sqs:us-east-1:000000000000:ImageQ-local",
+      "Events": ["s3:ObjectCreated:*"],
+      "Filter": {
+        "Key": {
+          "FilterRules": [
+            {
+              "Name": "Prefix",
+              "Value": "public/journals/"
+            },
+            {
+              "Name": "Suffix",
+              "Value": "_NormalImage.gif"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Id": "image_queue_event_png",
+      "QueueArn": "arn:aws:sqs:us-east-1:000000000000:ImageQ-local",
+      "Events": ["s3:ObjectCreated:*"],
+      "Filter": {
+        "Key": {
+          "FilterRules": [
+            {
+              "Name": "Prefix",
+              "Value": "public/journals/"
+            },
+            {
+              "Name": "Suffix",
+              "Value": "_NormalImage.png"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
