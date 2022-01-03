@@ -1,6 +1,6 @@
 import {
-  AllNotificationTypes,
   AuditType,
+  ClientCategory,
   InternalKey,
   InternalNotificationType,
   NotificationType,
@@ -129,14 +129,9 @@ export class NotificationsService {
       contentKey: dispatch.contentKey,
       senderClient,
       recipientClient,
-      notificationType: dispatch.notificationType,
       extraData: {
         org: { name: recipientClient.orgName },
-        appointmentTime: this.formatAppointmentTime(
-          dispatch.notificationType,
-          recipientClient.zipCode,
-          dispatch.appointmentTime,
-        ),
+        appointmentTime: this.formatAppointmentTime(recipientClient, dispatch.appointmentTime),
         downloadLink,
         dynamicLink: hosts.get('dynamicLink'),
         gapMinutes,
@@ -149,7 +144,6 @@ export class NotificationsService {
         if (recipientClient.platform === Platform.web) {
           content += this.internationalization.getContents({
             contentKey: InternalKey.appointmentRequestLink,
-            notificationType: dispatch.notificationType,
             recipientClient,
             extraData: { scheduleLink: dispatch.scheduleLink },
           }); // TODO: do we need InternalKey.appointmentReminderLink in POEditor?
@@ -163,7 +157,6 @@ export class NotificationsService {
         if (recipientClient.platform === Platform.web) {
           content += this.internationalization.getContents({
             contentKey: InternalKey.appointmentReminderLink,
-            notificationType: dispatch.notificationType,
             recipientClient,
             extraData: { chatLink: dispatch.chatLink },
           });
@@ -247,24 +240,15 @@ export class NotificationsService {
     };
   }
 
-  private formatAppointmentTime(
-    notificationType: AllNotificationTypes,
-    zipCode: string,
-    appointmentTime?: Date,
-  ) {
+  private formatAppointmentTime(recipientClient: ClientSettings, appointmentTime?: Date) {
     if (appointmentTime) {
-      if (
-        notificationType === InternalNotificationType.textSmsToMember ||
-        notificationType === InternalNotificationType.textToMember ||
-        notificationType === NotificationType.text ||
-        notificationType === NotificationType.textSms
-      ) {
+      if (recipientClient.clientCategory === ClientCategory.member) {
         return format(
-          utcToZonedTime(appointmentTime, lookup(zipCode)),
+          utcToZonedTime(appointmentTime, lookup(recipientClient.zipCode)),
           `${this.scheduleAppointmentDateFormat} (z)`,
-          { timeZone: lookup(zipCode) },
+          { timeZone: lookup(recipientClient.zipCode) },
         );
-      } else if (notificationType === InternalNotificationType.textSmsToUser) {
+      } else {
         return `${format(
           new Date(appointmentTime.toUTCString()),
           this.scheduleAppointmentDateFormat,

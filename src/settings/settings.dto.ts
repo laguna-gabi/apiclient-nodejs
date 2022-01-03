@@ -1,4 +1,4 @@
-import { Honorific, Language, Platform } from '@lagunahealth/pandora';
+import { ClientCategory, Honorific, Language, Platform } from '@lagunahealth/pandora';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 /**************************************************************************************************
@@ -12,6 +12,9 @@ export class ClientSettings {
    */
   @Prop({ index: true })
   id: string;
+
+  @Prop()
+  clientCategory: ClientCategory;
 
   @Prop({ isNaN: true })
   phone?: string;

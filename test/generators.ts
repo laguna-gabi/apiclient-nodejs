@@ -1,4 +1,5 @@
 import {
+  ClientCategory,
   Honorific,
   InternalKey,
   Language,
@@ -38,6 +39,7 @@ export const generateUpdateMemberSettingsMock = ({
 } = {}): Omit<ClientSettings, 'avatar'> => {
   return {
     id,
+    clientCategory: ClientCategory.member,
     phone: generatePhone(),
     firstName: name.firstName(),
     lastName: name.lastName(),
@@ -56,10 +58,11 @@ export const generateUpdateMemberSettingsMock = ({
 
 export const generateUpdateUserSettingsMock = (): Pick<
   ClientSettings,
-  'id' | 'phone' | 'firstName' | 'lastName' | 'avatar'
+  'id' | 'clientCategory' | 'phone' | 'firstName' | 'lastName' | 'avatar'
 > => {
   return {
     id: v4(),
+    clientCategory: ClientCategory.user,
     phone: generatePhone(),
     firstName: name.firstName(),
     lastName: name.lastName(),

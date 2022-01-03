@@ -395,8 +395,7 @@ describe('Notifications full flow', () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const realAppointmentTime = notificationsService.formatAppointmentTime(
-      mock.notificationType,
-      undefined,
+      userClient,
       mock.appointmentTime,
     );
     const body = replaceConfigs({
@@ -437,8 +436,7 @@ describe('Notifications full flow', () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const realAppointmentTime = notificationsService.formatAppointmentTime(
-      mock.notificationType,
-      webMemberClient.zipCode,
+      webMemberClient,
       mock.appointmentTime,
     );
     const body = replaceConfigs({

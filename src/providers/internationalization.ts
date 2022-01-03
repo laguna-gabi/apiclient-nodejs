@@ -1,11 +1,4 @@
-import {
-  AllNotificationTypes,
-  ContentKey,
-  ExtraData,
-  InternalKey,
-  InternalNotificationType,
-  Language,
-} from '@lagunahealth/pandora';
+import { ContentKey, ExtraData, InternalKey, Language } from '@lagunahealth/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as i18next from 'i18next';
 import { cloneDeep } from 'lodash';
@@ -18,7 +11,6 @@ export class GetContentsParams {
   recipientClient?: ClientSettings;
   senderClient?: ClientSettings;
   extraData?: ExtraData;
-  notificationType: AllNotificationTypes;
 }
 
 @Injectable()
@@ -35,14 +27,11 @@ export class InternationalizationService implements OnModuleInit {
   }
 
   getContents(params: GetContentsParams) {
-    const { contentKey, recipientClient, senderClient, extraData, notificationType } = params;
+    const { contentKey, recipientClient, senderClient, extraData } = params;
     // eslint-disable-next-line max-len
     // if getContents is applied more than once the honorific value in recipientClient may be corrupted
     const updateRecipientClient = cloneDeep(recipientClient);
-    const lng =
-      notificationType === InternalNotificationType.textSmsToUser
-        ? Language.en
-        : recipientClient.language;
+    const lng = recipientClient.language || Language.en;
 
     if (recipientClient && recipientClient.honorific) {
       updateRecipientClient.honorific = this.i18n.t(`honorific.${recipientClient.honorific}`, {
