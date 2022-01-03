@@ -22,6 +22,7 @@ import {
   ObjectUpdateMemberSettingsClass,
   Platform,
   QueueType,
+  generateAppointmentScheduleLongReminderMock,
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
@@ -653,28 +654,33 @@ describe('Integration tests: notifications', () => {
           senderClientId: appointment.userId.toString(),
           ...baseParams,
         });
-        const mockReminders = (contentKey: ContentKey, triggersAt: Date) => {
-          return generateAppointmentScheduleReminderMock({
-            recipientClientId: appointment.memberId.toString(),
-            senderClientId: appointment.userId.toString(),
-            ...baseParams,
-            triggersAt,
-            contentKey,
-          });
-        };
+        const communication = await handler.queries.getCommunication({
+          getCommunicationParams: {
+            memberId: appointment.memberId.toString(),
+            userId: appointment.userId.toString(),
+          },
+        });
 
         checkValues(4, mockForUser);
         checkValues(5, mockForMember);
         checkValues(
           6,
-          mockReminders(
-            InternalKey.appointmentReminder,
-            subMinutes(appointment.start, scheduler.alertBeforeInMin),
-          ),
+          generateAppointmentScheduleReminderMock({
+            recipientClientId: appointment.memberId.toString(),
+            senderClientId: appointment.userId.toString(),
+            ...baseParams,
+            triggersAt: subMinutes(appointment.start, scheduler.alertBeforeInMin),
+            chatLink: communication.chat.memberLink,
+          }),
         );
         checkValues(
           7,
-          mockReminders(InternalKey.appointmentLongReminder, subDays(appointment.start, 1)),
+          generateAppointmentScheduleLongReminderMock({
+            recipientClientId: appointment.memberId.toString(),
+            senderClientId: appointment.userId.toString(),
+            ...baseParams,
+            triggersAt: subDays(appointment.start, 1),
+          }),
         );
       },
     );
