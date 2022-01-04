@@ -62,6 +62,8 @@ describe('Commands: MigrationService', () => {
       'migration_5_js_ext',
       add(startDate, { hours: 4 }).getTime() + faker.lorem.slug() + '.js',
     );
+
+    jest.spyOn(console, 'info').mockImplementation(); // suppress log messages during test
   });
 
   afterAll(async () => {
