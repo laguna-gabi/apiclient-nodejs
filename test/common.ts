@@ -1,12 +1,11 @@
-import { ClientSettings } from '../src/settings';
-import { translation } from '../languages/en.json';
 import { hosts } from 'config';
+import { translation } from '../languages/en.json';
+import { ClientSettings } from '../src/settings';
 
 export const replaceConfigs = ({
   content,
   memberClient,
   userClient,
-  appointmentId,
   appointmentTime,
 }: {
   content: string;
@@ -21,6 +20,5 @@ export const replaceConfigs = ({
     .replace('{{user.firstName}}', userClient.firstName)
     .replace('{{org.name}}', memberClient.orgName)
     .replace('{{appointmentTime}}', appointmentTime)
-    .replace('{{downloadLink}}', `${hosts.app}/download/${appointmentId}`)
     .replace('{{dynamicLink}}', `${hosts.dynamicLink}`);
 };

@@ -121,10 +121,6 @@ export class NotificationsService {
       return undefined;
     }
 
-    const downloadLink = dispatch.appointmentId
-      ? await this.bitly.shortenLink(`${hosts.get('app')}/download/${dispatch.appointmentId}`)
-      : undefined;
-
     let content = this.internationalization.getContents({
       contentKey: dispatch.contentKey,
       senderClient,
@@ -132,7 +128,6 @@ export class NotificationsService {
       extraData: {
         org: { name: recipientClient.orgName },
         appointmentTime: this.formatAppointmentTime(recipientClient, dispatch.appointmentTime),
-        downloadLink,
         dynamicLink: hosts.get('dynamicLink'),
         gapMinutes,
       },
