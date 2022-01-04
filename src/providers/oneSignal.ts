@@ -9,7 +9,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { oneSignal } from 'config';
 import { CancelNotificationParams, Provider, ProviderResult, SendOneSignalNotification } from '.';
-import { Logger } from '../common';
+import { Logger, generateCustomErrorMessage } from '../common';
 import { ConfigsService, ExternalConfigs } from './aws';
 
 @Injectable()
@@ -62,19 +62,19 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     }
 
     try {
-      const { status, data } = await this.httpService
-        .post(this.notificationsUrl, body, config)
-        .toPromise();
-      if (status === 200 && data.recipients >= 1) {
-        return { provider: Provider.oneSignal, content: body.contents.en, id: data.id };
+      const result = await this.httpService.post(this.notificationsUrl, body, config).toPromise();
+      if (result.status === 200 && result.data.recipients >= 1) {
+        return { provider: Provider.oneSignal, content: body.contents.en, id: result.data.id };
       } else {
         this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, {
-          code: status,
+          code: result.status,
           data,
         });
+        throw new Error(generateCustomErrorMessage(OneSignal.name, this.send.name, result));
       }
     } catch (ex) {
       this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, formatEx(ex));
+      throw ex;
     }
   }
 
@@ -96,9 +96,12 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
       const result = await this.httpService.post(this.notificationsUrl, body, config).toPromise();
       if (result.status === 200 && result.data.recipients >= 1) {
         return { provider: Provider.oneSignal, content: data.peerId, id: result.data.id };
+      } else {
+        throw new Error(generateCustomErrorMessage(OneSignal.name, this.cancel.name, result));
       }
     } catch (ex) {
       this.logger.error(cancelNotificationParams, OneSignal.name, this.cancel.name, formatEx(ex));
+      throw ex;
     }
   }
 

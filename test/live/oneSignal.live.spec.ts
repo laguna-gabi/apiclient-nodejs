@@ -37,31 +37,35 @@ describe(`live: ${OneSignal.name}`, () => {
       isPushNotificationsEnabled: true,
     };
 
-    await oneSignal.send({
-      platform: params.platform,
-      externalUserId: params.externalUserId,
-      data: {
-        user: {
-          id: faker.datatype.uuid(),
-          firstName: faker.name.firstName(),
-          avatar: faker.image.avatar(),
+    await expect(
+      oneSignal.send({
+        platform: params.platform,
+        externalUserId: params.externalUserId,
+        data: {
+          user: {
+            id: faker.datatype.uuid(),
+            firstName: faker.name.firstName(),
+            avatar: faker.image.avatar(),
+          },
+          member: { phone: generatePhone() },
+          type: NotificationType.call,
+          peerId: v4(),
+          isVideo: false,
+          ...generatePath(NotificationType.call),
         },
-        member: { phone: generatePhone() },
-        type: NotificationType.call,
-        peerId: v4(),
-        isVideo: false,
-        ...generatePath(NotificationType.call),
-      },
-    });
+      }),
+    ).rejects.toThrowError();
 
-    await oneSignal.cancel({
-      externalUserId: params.externalUserId,
-      platform: params.platform,
-      data: {
-        peerId: v4(),
-        type: CancelNotificationType.cancelVideo,
-        notificationId: faker.datatype.uuid(),
-      },
-    });
+    await expect(
+      oneSignal.cancel({
+        externalUserId: params.externalUserId,
+        platform: params.platform,
+        data: {
+          peerId: v4(),
+          type: CancelNotificationType.cancelVideo,
+          notificationId: faker.datatype.uuid(),
+        },
+      }),
+    ).rejects.toThrowError();
   });
 });

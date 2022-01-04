@@ -55,6 +55,7 @@ export class Twilio implements OnModuleInit {
         }
       } catch (ex) {
         this.logger.error(sendTwilioNotification, Twilio.name, this.send.name, formatEx(ex));
+        throw ex;
       }
     } else {
       const params: IEventNotifySlack = {
