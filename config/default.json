@@ -26,6 +26,9 @@
     "validPhoneTypes": ["FIXED_LINE_OR_MOBILE", "MOBILE"],
     "traversalServiceTokenTtl": 3
   },
+  "general": {
+    "timezone": "UTC"
+  },
   "retryMax": 2,
   "gapTriggersAt": 5,
   "gapMinutes": 15,
