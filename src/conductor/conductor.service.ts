@@ -4,12 +4,13 @@ import {
   IDeleteClientSettings,
   IDeleteDispatch,
   IUpdateClientSettings,
+  formatEx,
 } from '@lagunahealth/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { gapTriggersAt, retryMax } from 'config';
 import { differenceInSeconds } from 'date-fns';
 import { Dispatch, DispatchStatus, DispatchesService, TriggersService } from '.';
-import { Logger } from '../common';
+import { ErrorType, Errors, Logger } from '../common';
 import { NotificationsService } from '../providers';
 import { ClientSettings, SettingsService } from '../settings';
 
@@ -56,7 +57,9 @@ export class ConductorService implements OnModuleInit {
       await this.createRealTimeDispatch(dispatch);
     } else if (currentMinusInput > gapTriggersAt) {
       //past event
-      this.logger.warn(dispatch, ConductorService.name, this.handleCreateDispatch.name);
+      this.logger.warn(dispatch, ConductorService.name, this.handleCreateDispatch.name, {
+        message: Errors.get(ErrorType.triggersAtPast),
+      });
     } else {
       await this.registerFutureDispatch(dispatch);
     }
@@ -71,7 +74,9 @@ export class ConductorService implements OnModuleInit {
     });
 
     if (!result) {
-      this.logger.warn(dispatch, ConductorService.name, this.handleDeleteDispatch.name);
+      this.logger.warn(dispatch, ConductorService.name, this.handleDeleteDispatch.name, {
+        message: Errors.get(ErrorType.dispatchNotFound),
+      });
     }
     await this.triggersService.delete(dispatch.dispatchId);
   }
@@ -165,7 +170,7 @@ export class ConductorService implements OnModuleInit {
     const methodName = this.handleFutureDispatchWasTriggered.name;
     if (!dispatch) {
       this.logger.warn({ triggeredId }, ConductorService.name, methodName, {
-        message: 'triggeredId not found',
+        message: Errors.get(ErrorType.triggeredIdNotFound),
       });
     } else {
       this.logger.info({ triggeredId }, ConductorService.name, methodName);
@@ -175,30 +180,38 @@ export class ConductorService implements OnModuleInit {
 
   private async deleteExistingLiveDispatch(dispatch: Dispatch) {
     this.logger.info(dispatch, ConductorService.name, this.deleteExistingLiveDispatch.name);
-    const recipientClient = await this.getRecipientClient(dispatch.recipientClientId);
+    try {
+      const recipientClient = await this.getRecipientClient(dispatch.recipientClientId);
+      const providerResult = await this.notificationsService.cancel({
+        platform: recipientClient.platform,
+        externalUserId: recipientClient.externalUserId,
+        data: {
+          type: dispatch.notificationType as CancelNotificationType,
+          peerId: dispatch.peerId,
+          notificationId: dispatch.notificationId,
+        },
+      });
 
-    const providerResult = await this.notificationsService.cancel({
-      platform: recipientClient.platform,
-      externalUserId: recipientClient.externalUserId,
-      data: {
-        type: dispatch.notificationType as CancelNotificationType,
-        peerId: dispatch.peerId,
-        notificationId: dispatch.notificationId,
-      },
-    });
-
-    await this.dispatchesService.internalUpdate({
-      dispatchId: dispatch.dispatchId,
-      sentAt: new Date(),
-      status: DispatchStatus.done,
-      providerResult,
-    });
+      await this.dispatchesService.internalUpdate({
+        dispatchId: dispatch.dispatchId,
+        sentAt: new Date(),
+        status: DispatchStatus.done,
+        providerResult,
+      });
+    } catch (ex) {
+      this.logger.error(
+        dispatch,
+        ConductorService.name,
+        this.deleteExistingLiveDispatch.name,
+        formatEx(ex),
+      );
+    }
   }
 
   private async getRecipientClient(recipientClientId: string): Promise<ClientSettings> {
     const recipientClient = await this.settingsService.get(recipientClientId);
     if (!recipientClient) {
-      throw new Error(`recipientClient ${recipientClientId} does not exist`);
+      throw new Error(Errors.get(ErrorType.recipientClientNotFound));
     }
 
     return recipientClient;

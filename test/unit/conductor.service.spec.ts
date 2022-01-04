@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { gapTriggersAt } from 'config';
 import { addDays, addHours, addSeconds, subSeconds } from 'date-fns';
 import { animal, lorem } from 'faker';
-import { CommonModule, Logger } from '../../src/common';
+import { CommonModule, ErrorType, Errors, Logger } from '../../src/common';
 import {
   ConductorModule,
   ConductorService,
@@ -131,6 +131,7 @@ describe(ConductorService.name, () => {
         createDispatch,
         ConductorService.name,
         'handleCreateDispatch',
+        { message: Errors.get(ErrorType.triggersAtPast) },
       );
     });
 
@@ -336,6 +337,7 @@ describe(ConductorService.name, () => {
         deleteDispatch,
         ConductorService.name,
         'handleDeleteDispatch',
+        { message: Errors.get(ErrorType.dispatchNotFound) },
       );
 
       spyOnWarn.mockReset();
