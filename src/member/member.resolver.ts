@@ -999,6 +999,7 @@ export class MemberResolver extends MemberBase {
       triggersAt: metadata.triggersAt,
       path: metadata.path,
       peerId: metadata.peerId,
+      chatLink: metadata.chatLink,
       content: params.content,
       journalImageDownloadLink: metadata.journalImageDownloadLink,
       journalAudioDownloadLink: metadata.journalAudioDownloadLink,

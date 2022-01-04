@@ -12,6 +12,7 @@ import {
 import { UserService } from '../user';
 import { CreateMemberParams, Member, MemberConfig, MemberService } from '.';
 import {
+  ClientCategory,
   IEventNotifySlack,
   IUpdateClientSettings,
   InnerQueueTypes,
@@ -118,6 +119,7 @@ export class MemberBase {
       {
         type: InnerQueueTypes.updateClientSettings,
         id: memberConfig?.memberId?.toString() || member.id.toString(),
+        clientCategory: ClientCategory.member,
         phone: member?.phone,
         firstName: member?.firstName,
         lastName: member?.lastName,

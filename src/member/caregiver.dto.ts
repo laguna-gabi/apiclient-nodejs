@@ -1,6 +1,6 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { IsEmail, IsPhoneNumber } from 'class-validator';
+import { IsEmail, IsOptional, IsPhoneNumber } from 'class-validator';
 import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, Identifier, IsObjectId } from '../common';
 
@@ -41,9 +41,10 @@ export class AddCaregiverParams {
   phone: string;
 
   @Prop()
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
+  @IsOptional()
   @IsEmail(undefined, { message: Errors.get(ErrorType.caregiverEmailInvalid) })
-  email: string;
+  email?: string;
 }
 
 @InputType()
@@ -77,8 +78,8 @@ export class Caregiver extends Identifier {
   phone: string;
 
   @Prop()
-  @Field(() => String)
-  email: string;
+  @Field(() => String, { nullable: true })
+  email?: string;
 
   @Prop()
   @Field(() => Relationship)

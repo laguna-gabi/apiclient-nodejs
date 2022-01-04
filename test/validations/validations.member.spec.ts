@@ -948,7 +948,6 @@ describe('Validations - member', () => {
         field             | error
         ${'firstName'}    | ${`Field "firstName" of required type "String!" was not provided.`}
         ${'lastName'}     | ${`Field "lastName" of required type "String!" was not provided.`}
-        ${'email'}        | ${`Field "email" of required type "String!" was not provided.`}
         ${'relationship'} | ${`Field "relationship" of required type "Relationship!" was not provided.`}
         ${'phone'}        | ${`Field "phone" of required type "String!" was not provided.`}
       `(`should fail to add a caregiver if $field is missing`, async (params) => {

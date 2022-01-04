@@ -15,7 +15,12 @@ import {
   Roles,
   UserRole,
 } from '../common';
-import { IUpdateClientSettings, InnerQueueTypes, QueueType } from '@lagunahealth/pandora';
+import {
+  ClientCategory,
+  IUpdateClientSettings,
+  InnerQueueTypes,
+  QueueType,
+} from '@lagunahealth/pandora';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => User)
@@ -79,6 +84,7 @@ export class UserResolver {
       {
         type: InnerQueueTypes.updateClientSettings,
         id: user.id,
+        clientCategory: ClientCategory.user,
         phone: user.phone,
         firstName: user.firstName,
         lastName: user.lastName,
