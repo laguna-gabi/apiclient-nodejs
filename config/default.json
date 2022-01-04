@@ -1,7 +1,5 @@
 {
   "hosts": {
-    "chat": "https://dev.chat.lagunahealth.com",
-    "app": "https://dev.app.lagunahealth.com",
     "dynamicLink": "https://links.lagunahealth.com/app"
   },
   "aws": {
