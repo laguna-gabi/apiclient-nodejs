@@ -8,6 +8,7 @@ import * as config from 'config';
 
 export const DateFormat = 'yyyy-MM-dd';
 export const TimeFormat = 'HH:mm:ss';
+export const DateTimeFormat = 'yyyy-MM-dd HH:mm';
 export const DayOfWeekFormat = 'EEEE';
 export const HourFormat = 'H';
 export const DefaultOutputDir = './outputs';
@@ -117,5 +118,4 @@ export type MemberDataAggregate = Member & {
 export interface RecordingSummary {
   totalDuration: number;
   primaryChannel?: RecordingType;
-  totalOutreachAttempts: number;
 }

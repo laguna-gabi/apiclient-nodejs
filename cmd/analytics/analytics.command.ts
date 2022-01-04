@@ -126,7 +126,7 @@ export class AnalyticsCommand implements CommandRunner {
               );
             }
           },
-          { emptyFieldValue: '' },
+          { emptyFieldValue: 'null' },
         );
       }
       if (options.sheet === SheetOption.appointments || options.sheet === SheetOption.all) {
@@ -163,7 +163,7 @@ export class AnalyticsCommand implements CommandRunner {
               );
             }
           },
-          { emptyFieldValue: '' },
+          { emptyFieldValue: 'null' },
         );
       }
     } catch (err) {

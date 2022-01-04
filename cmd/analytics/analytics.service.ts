@@ -4,6 +4,7 @@ import {
   AppointmentAttendanceStatus,
   AppointmentsMemberData,
   DateFormat,
+  DateTimeFormat,
   DayOfWeekFormat,
   GraduationPeriod,
   HarmonyLink,
@@ -23,6 +24,7 @@ import { Member, MemberDocument, MemberService, Recording } from '../../src/memb
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
 import { StorageService } from '../../src/providers';
+import { User, UserDocument } from '../../src/user';
 
 @Injectable()
 export class AnalyticsService {
@@ -32,8 +34,11 @@ export class AnalyticsService {
     private readonly memberModel: Model<MemberDocument>,
     private readonly storageService: StorageService,
     @InjectConnection() private connection: Connection,
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
   ) {}
 
+  private userData: Map<string, string>;
   async clean() {
     this.connection.close();
   }
@@ -41,6 +46,16 @@ export class AnalyticsService {
   // Description: get all control members
   async getAllControl(): Promise<MemberDocument[]> {
     return this.memberService.getAllControl();
+  }
+
+  async uploadUserData(): Promise<void> {
+    this.userData = new Map<string, string>();
+
+    const users = await this.userModel.find({}, { _id: 1, firstName: 1, lastName: 1 });
+
+    users.forEach((user) => {
+      this.userData.set(user._id.toString(), `${user.firstName} ${user.lastName}`);
+    });
   }
 
   // Description: join member associated data - appointments, recordings, notes, primary user, configuration,
@@ -240,6 +255,8 @@ export class AnalyticsService {
   async buildAppointmentsMemberData(
     member: MemberDataAggregate,
   ): Promise<AppointmentsMemberData[]> {
+    // upload users - full name is required for the appointment entry
+    await this.uploadUserData();
     // Member/General details: calculated once for all entries
     const created = reformatDate(member.memberDetails.createdAt.toString(), DateFormat);
     const customer_id = member._id.toString();
@@ -250,13 +267,12 @@ export class AnalyticsService {
     const daysSinceDischarge = this.calculateDaysSinceDischarge(member.memberDetails.dischargeDate);
     const harmony_link = `${HarmonyLink}/details/${member._id.toString()}`;
     // eslint-disable-next-line max-len
-    const coach_name = `${member.memberDetails.primaryUser.firstName} ${member.memberDetails.primaryUser.lastName}`;
     const graduation_date = this.calculateGraduationDate(member.memberDetails.dischargeDate);
     const results = [];
 
     // load appointment 0: (according to example excel spreadsheet we have appointment 0 also for engaged members)
     results.push({
-      created: reformatDate(member.memberDetails.createdAt.toString(), DateFormat),
+      created,
       customer_id: member._id.toString(),
       mbr_initials,
       appt_number: 0,
@@ -285,7 +301,7 @@ export class AnalyticsService {
         const recordingsSummary = this.getRecordingsSummary(appointment.recordings);
 
         results.push({
-          created,
+          created: reformatDate(appointment?.start?.toString(), DateTimeFormat),
           customer_id,
           mbr_initials,
           appt_number: appointment.noShow ? undefined : count,
@@ -298,7 +314,7 @@ export class AnalyticsService {
           status: appointment.status,
           missed_appt: this.getAppointmentsMissedIndication(appointment.status, appointment.noShow),
           total_duration: recordingsSummary.totalDuration,
-          total_outreach_attempts: recordingsSummary.totalOutreachAttempts, // TODO: Placeholder: Alex confirmed that this is not required in initial version
+          total_outreach_attempts: appointment.recordings?.length || 0,
           channel_primary: recordingsSummary.primaryChannel,
           event_type_primary: undefined, // TODO: confirm with Alex how to determine primary event
           graduated: daysSinceDischarge >= GraduationPeriod,
@@ -306,7 +322,7 @@ export class AnalyticsService {
           is_video_call: appointment.method === AppointmentMethod.videoCall,
           is_phone_call: appointment.method === AppointmentMethod.phoneCall,
           harmony_link,
-          coach_name,
+          coach_name: this.userData?.get(appointment.userId.toString()),
         });
       });
 
@@ -347,7 +363,6 @@ export class AnalyticsService {
   //              primary channel used for communication and total outreach attempts
   getRecordingsSummary(recordings: Recording[]): RecordingSummary {
     let totalDuration = 0;
-    let totalOutreachAttempts = 0;
     let primaryChannel: RecordingType;
 
     const channelTotalDuration: { [recordingType: string]: number } = {};
@@ -360,11 +375,8 @@ export class AnalyticsService {
       let duration = 0;
       if (entry.end && entry.start) {
         duration = differenceInSeconds(entry.end, entry.start);
-      }
-      if (entry.answered) {
-        totalDuration += duration;
-      } else {
-        totalOutreachAttempts++;
+
+        totalDuration += entry.answered ? duration : 0;
       }
 
       switch (entry.recordingType) {
@@ -391,7 +403,7 @@ export class AnalyticsService {
       }
     }
 
-    return { primaryChannel, totalDuration, totalOutreachAttempts };
+    return { primaryChannel, totalDuration };
   }
 
   // Description: get discharge notes (by type) from S3 - this is to determine if files were loaded to member
