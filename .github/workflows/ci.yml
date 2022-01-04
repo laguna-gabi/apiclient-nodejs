@@ -112,16 +112,13 @@ jobs:
         with:
           path: './package.json'
           prop_path: 'version'
-      - name: Set outputs
-        id: vars
-        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
       - name: Update package.json version
         if: github.ref != 'refs/heads/master'
         uses: jossef/action-set-json-field@v1
         with:
           file: package.json
           field: version
-          value: ${{steps.packageVersion.outputs.prop}}-${{ github.head_ref }}-${{ steps.vars.outputs.sha_short }}
+          value: ${{steps.packageVersion.outputs.prop}}-${{ github.sha }}
       - name: Deploy snapshot
         if: github.ref != 'refs/heads/master'
         run: yarn publish
@@ -140,7 +137,7 @@ jobs:
             ___
             ### snapshot version:
             ```
-            ${{steps.packageVersion.outputs.prop}}-${{ github.head_ref }}-${{ steps.vars.outputs.sha_short }}
+            ${{steps.packageVersion.outputs.prop}}-${{ github.sha }}
             ```
           allow-repeats: false
       - name: Remove master coverage from S3 if exists (only on master branch)
