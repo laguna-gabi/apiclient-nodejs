@@ -9,7 +9,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { oneSignal } from 'config';
 import { CancelNotificationParams, Provider, ProviderResult, SendOneSignalNotification } from '.';
-import { Logger, generateCustomErrorMessage } from '../common';
+import { LoggerService, generateCustomErrorMessage } from '../common';
 import { ConfigsService, ExternalConfigs } from './aws';
 
 @Injectable()
@@ -19,7 +19,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
   constructor(
     private readonly configsService: ConfigsService,
     private readonly httpService: HttpService,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
   ) {
     super();
   }

@@ -16,7 +16,7 @@ import {
   ProviderResult,
   SendSendBirdNotification,
 } from '.';
-import { Logger, generateCustomErrorMessage } from '../common';
+import { LoggerService, generateCustomErrorMessage } from '../common';
 
 export type RequestType = 'admin' | 'journalText' | 'journalImage' | 'journalAudio';
 
@@ -25,7 +25,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
   constructor(
     private readonly configsService: ConfigsService,
     private readonly httpService: HttpService,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
   ) {
     super();
   }

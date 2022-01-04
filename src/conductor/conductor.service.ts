@@ -10,14 +10,14 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { gapTriggersAt, retryMax } from 'config';
 import { differenceInSeconds } from 'date-fns';
 import { Dispatch, DispatchStatus, DispatchesService, TriggersService } from '.';
-import { ErrorType, Errors, Logger } from '../common';
+import { ErrorType, Errors, LoggerService } from '../common';
 import { NotificationsService } from '../providers';
 import { ClientSettings, SettingsService } from '../settings';
 
 @Injectable()
 export class ConductorService implements OnModuleInit {
   constructor(
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
     private readonly settingsService: SettingsService,
     private readonly dispatchesService: DispatchesService,
     private readonly triggersService: TriggersService,

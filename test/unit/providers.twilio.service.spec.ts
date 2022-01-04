@@ -4,34 +4,34 @@ import { twilio } from 'config';
 import { lorem } from 'faker';
 import { v4 } from 'uuid';
 import { AppModule } from '../../src/app.module';
-import { Environments, ErrorType, Errors, Logger } from '../../src/common';
+import { Environments, ErrorType, Errors, LoggerService } from '../../src/common';
 import { Slack, Twilio } from '../../src/providers';
 
 describe('Twilio', () => {
   let module: TestingModule;
   let twilioService: Twilio;
-  let logger: Logger;
+  let logger: LoggerService;
   let slack: Slack;
 
   let spyOnInternalSend;
-  let spyOnLogger;
+  let spyOnError;
   let spyOnSlack;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    logger = module.get<Logger>(Logger);
+    logger = module.get<LoggerService>(LoggerService);
     mockLogger(logger);
     twilioService = module.get<Twilio>(Twilio);
     slack = module.get<Slack>(Slack);
 
-    spyOnLogger = jest.spyOn(logger, 'error');
+    spyOnError = jest.spyOn(logger, 'error');
     spyOnInternalSend = jest.spyOn(twilioService as any, 'createMessage');
     spyOnSlack = jest.spyOn(slack, 'send');
   });
 
   afterAll(async () => {
     await module.close();
-    spyOnLogger.mockReset();
+    spyOnError.mockReset();
     spyOnInternalSend.mockReset();
     spyOnSlack.mockReset();
   });
@@ -99,7 +99,7 @@ describe('Twilio', () => {
         expect(spyOnSlack).not.toBeCalled();
       }
 
-      expect(spyOnLogger).not.toBeCalled();
+      expect(spyOnError).not.toBeCalled();
     });
 
     it('invalid phone in production env - should throw an error message', async () => {

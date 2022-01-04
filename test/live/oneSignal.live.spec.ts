@@ -9,7 +9,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as faker from 'faker';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { v4 } from 'uuid';
-import { Logger } from '../../src/common';
+import { LoggerService } from '../../src/common';
 import { ConfigsService, OneSignal } from '../../src/providers';
 import { generatePath, generatePhone } from '../generators';
 
@@ -19,7 +19,7 @@ describe(`live: ${OneSignal.name}`, () => {
   beforeAll(async () => {
     const configService = new ConfigsService();
     const httpService = new HttpService();
-    const logger = new Logger(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
+    const logger = new LoggerService(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
     mockLogger(logger);
 
     oneSignal = new OneSignal(configService, httpService, logger);

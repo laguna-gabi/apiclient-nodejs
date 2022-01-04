@@ -6,7 +6,7 @@ import { aws } from 'config';
 import * as faker from 'faker';
 import { existsSync, unlinkSync } from 'fs';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
-import { Environments, Logger } from '../../src/common';
+import { Environments, LoggerService } from '../../src/common';
 import {
   ConfigsService,
   ExternalConfigs,
@@ -46,14 +46,10 @@ describe(`live: ${SendBird.name}`, () => {
 
     const configService = new ConfigsService();
     const httpService = new HttpService();
-    const logger = new Logger(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
+    const logger = new LoggerService(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
     mockLogger(logger);
 
-    sendBird = new SendBird(
-      configService,
-      httpService,
-      new Logger(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2()),
-    );
+    sendBird = new SendBird(configService, httpService, logger);
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

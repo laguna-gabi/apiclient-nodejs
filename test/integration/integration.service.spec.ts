@@ -46,7 +46,7 @@ import { v4 } from 'uuid';
 import { replaceConfigs } from '../';
 import { translation } from '../../languages/en.json';
 import { AppModule } from '../../src/app.module';
-import { Logger } from '../../src/common';
+import { LoggerService } from '../../src/common';
 import {
   DispatchStatus,
   DispatchesService,
@@ -95,7 +95,7 @@ describe('Notifications full flow', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
     service = module.get<QueueService>(QueueService);
     dispatchesService = module.get<DispatchesService>(DispatchesService);
     triggersService = module.get<TriggersService>(TriggersService);

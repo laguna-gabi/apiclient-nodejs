@@ -24,7 +24,7 @@ import {
   SendTwilioNotification,
   Twilio,
 } from '.';
-import { EventType, Logger } from '../common';
+import { EventType, LoggerService } from '../common';
 import { Dispatch } from '../conductor';
 import { ClientSettings } from '../settings';
 
@@ -38,7 +38,7 @@ export class NotificationsService {
     private readonly oneSignal: OneSignal,
     private readonly bitly: Bitly,
     private readonly internationalization: InternationalizationService,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
     protected readonly eventEmitter: EventEmitter2,
   ) {}
 

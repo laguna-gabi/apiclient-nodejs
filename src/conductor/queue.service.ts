@@ -16,7 +16,7 @@ import * as AWS from 'aws-sdk';
 import * as config from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { ConfigsService, ExternalConfigs } from '../providers';
-import { Environments, EventType, Logger } from '../common';
+import { Environments, EventType, LoggerService } from '../common';
 import { ConductorService } from '.';
 import { v4 } from 'uuid';
 
@@ -40,7 +40,7 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
   constructor(
     private readonly conductorService: ConductorService,
     private readonly configsService: ConfigsService,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
   ) {
     super();
   }

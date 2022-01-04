@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { gapTriggersAt } from 'config';
 import { addDays, addHours, addSeconds, subSeconds } from 'date-fns';
 import { animal, lorem } from 'faker';
-import { CommonModule, ErrorType, Errors, Logger } from '../../src/common';
+import { CommonModule, ErrorType, Errors, LoggerService } from '../../src/common';
 import {
   ConductorModule,
   ConductorService,
@@ -36,7 +36,7 @@ describe(ConductorService.name, () => {
   let dispatchesService: DispatchesService;
   let triggersService: TriggersService;
   let notificationsService: NotificationsService;
-  let logger: Logger;
+  let logger: LoggerService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -54,7 +54,7 @@ describe(ConductorService.name, () => {
     dispatchesService = module.get<DispatchesService>(DispatchesService);
     triggersService = module.get<TriggersService>(TriggersService);
     notificationsService = module.get<NotificationsService>(NotificationsService);
-    logger = module.get<Logger>(Logger);
+    logger = module.get<LoggerService>(LoggerService);
     mockLogger(logger);
 
     await service.onModuleInit();
@@ -321,7 +321,7 @@ describe(ConductorService.name, () => {
       const deleteDispatch = { dispatchId: generateId() };
       spyOnDispatchesServiceInternalUpdate.mockResolvedValueOnce(null);
 
-      const logger = module.get<Logger>(Logger);
+      const logger = module.get<LoggerService>(LoggerService);
       const spyOnWarn = jest.spyOn(logger, 'warn');
       spyOnWarn.mockImplementationOnce(() => null);
 

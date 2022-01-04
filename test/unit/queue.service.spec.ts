@@ -5,7 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { internet, lorem } from 'faker';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
-import { CommonModule, Logger } from '../../src/common';
+import { CommonModule, LoggerService } from '../../src/common';
 import { ConductorModule, ConductorService, QueueService } from '../../src/conductor';
 import { DbModule } from '../../src/db';
 import { ConfigsService, ProvidersModule } from '../../src/providers';
@@ -29,7 +29,7 @@ describe(QueueService.name, () => {
       ],
     }).compile();
     service = module.get<QueueService>(QueueService);
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
 
     conductorService = module.get<ConductorService>(ConductorService);
 

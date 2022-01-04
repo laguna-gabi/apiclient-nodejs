@@ -11,7 +11,7 @@ import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { EventType } from './events';
 
 @Injectable()
-export class Logger extends BaseLogger {
+export class LoggerService extends BaseLogger {
   private static VALID_KEYS = new Set([
     //queue
     'queueConsumerRunning',
@@ -48,7 +48,7 @@ export class Logger extends BaseLogger {
     @Inject(PARAMS_PROVIDER_TOKEN) params: Params,
     private readonly eventEmitter: EventEmitter2,
   ) {
-    super(params, ServiceName.iris, Logger.VALID_KEYS);
+    super(params, ServiceName.iris, LoggerService.VALID_KEYS);
   }
 
   error(
