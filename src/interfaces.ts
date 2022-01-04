@@ -172,7 +172,6 @@ export enum Honorific {
 
 export class ExtraData {
   org?: { name: string };
-  downloadLink?: string;
   appointmentStart?: string;
   gapMinutes?: string;
   appointmentTime?: string;
