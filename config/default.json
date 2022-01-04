@@ -49,7 +49,8 @@
     "alertBeforeInMin": 15
   },
   "general": {
-    "dateFormatString": "yyyy/MM/dd"
+    "dateFormatString": "yyyy/MM/dd",
+    "timezone": "UTC"
   },
   "dailyReport": {
     "thresholdIndicator": 3
