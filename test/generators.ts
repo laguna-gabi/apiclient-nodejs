@@ -58,7 +58,7 @@ import {
   UpdateTaskStatusParams,
   defaultMemberParams,
 } from '../src/member';
-import { CreateOrgParams, OrgType } from '../src/org';
+import { CreateOrgParams, Org, OrgType } from '../src/org';
 import { CreateUserParams, GetSlotsParams, User, defaultUserParams } from '../src/user';
 
 export const generateCreateUserParams = ({
@@ -194,6 +194,7 @@ export const mockGenerateMember = (): Member => {
     users: [user],
     sex: defaultMemberParams.sex,
     createdAt: faker.date.past(1),
+    updatedAt: faker.date.past(1),
     honorific: defaultMemberParams.honorific,
     roles: [MemberRole.member],
     race: defaultMemberParams.race,
@@ -205,6 +206,22 @@ export const mockGenerateMember = (): Member => {
       city: faker.address.city(),
       state: faker.address.state(),
     },
+  };
+};
+
+export const mockGenerateOrg = ({
+  id = generateId(),
+  type = OrgType.hospital,
+  name = faker.company.companyName(),
+  trialDuration = faker.datatype.number(),
+  zipCode = faker.address.zipCode(),
+}: Partial<Org> = {}): Org => {
+  return {
+    id,
+    type,
+    name,
+    trialDuration,
+    zipCode,
   };
 };
 
