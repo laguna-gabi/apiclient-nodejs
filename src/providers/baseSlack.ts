@@ -11,9 +11,10 @@ export abstract class BaseSlack {
   abstract onModuleInit(): Promise<void>;
 
   async send(params: IEventNotifySlack) {
-    if (!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test) {
-      this.logger.info(params, BaseSlack.name, this.send.name);
-    } else {
+    if (
+      process.env.NODE_ENV === Environments.development ||
+      process.env.NODE_ENV === Environments.production
+    ) {
       try {
         const orgName = `${params.orgName ? ` [${params.orgName}] ` : ''}`;
         const text = `${params.header}${orgName}\n${params.message}`;
@@ -31,6 +32,8 @@ export abstract class BaseSlack {
       } catch (ex) {
         this.logger.error(params, BaseSlack.name, this.send.name, ex);
       }
+    } else {
+      this.logger.info(params, BaseSlack.name, this.send.name);
     }
   }
 }
