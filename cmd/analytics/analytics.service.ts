@@ -40,6 +40,12 @@ export class AnalyticsService {
   ) {}
 
   private userData: Map<string, string>;
+
+  async init() {
+    // upload users - full name is required for the appointment entry
+    await this.uploadUserData();
+  }
+
   async clean() {
     this.connection.close();
   }
@@ -88,12 +94,12 @@ export class AnalyticsService {
         },
       },
       {
-        // propagate notes into the appointment document
+        // propagate notes data into the appointment document
         $lookup: {
           from: 'notes',
           localField: 'appointments.notes',
           foreignField: '_id',
-          as: 'appointments.note',
+          as: 'appointments.notesData',
         },
       },
       {
@@ -106,9 +112,9 @@ export class AnalyticsService {
         },
       },
       {
-        // flatten notes - make sure not to loose appointments without notes
+        // flatten notes data - make sure not to loose appointments without notes
         $unwind: {
-          path: '$appointments.note',
+          path: '$appointments.notesData',
           preserveNullAndEmptyArrays: true,
         },
       },
@@ -282,8 +288,6 @@ export class AnalyticsService {
   async buildAppointmentsMemberData(
     member: MemberDataAggregate,
   ): Promise<AppointmentsMemberData[]> {
-    // upload users - full name is required for the appointment entry
-    await this.uploadUserData();
     // Member/General details: calculated once for all entries
     const created = reformatDate(member.memberDetails.createdAt.toString(), DateFormat);
     const customer_id = member._id.toString();
@@ -331,6 +335,16 @@ export class AnalyticsService {
 
         results.push({
           created: reformatDate(appointment?.start?.toString(), DateTimeFormat),
+          updated: reformatDate(appointment?.updatedAt?.toString(), DateTimeFormat),
+          recap: appointment?.notesData?.recap,
+          strengths: appointment?.notesData?.strengths,
+          member_plan: appointment?.notesData?.memberActionItem,
+          coach_plan: appointment?.notesData?.userActionItem,
+          activation_score: appointment?.notesData?.scores?.adherence,
+          activation_reason: appointment?.notesData?.scores?.adherenceText,
+          wellbeing_score: appointment?.notesData?.scores?.wellbeing,
+          wellbeing_reason: appointment?.notesData?.scores?.wellbeingText,
+          recorded_consent: appointment?.recordingConsent,
           customer_id,
           mbr_initials,
           appt_number: appointment.noShow ? undefined : count,
@@ -352,6 +366,7 @@ export class AnalyticsService {
           is_phone_call: appointment.method === AppointmentMethod.phoneCall,
           harmony_link,
           coach_name: this.userData?.get(appointment.userId.toString()),
+          coach_id: appointment.userId.toString(),
         });
       });
 
@@ -483,20 +498,15 @@ export class AnalyticsService {
     let lastWellbeingScore;
 
     appointments
-      ?.filter((a) => a.start && a.end && a.note)
+      ?.filter((a) => a.start && a.end && a.notesData)
       .sort((a, b) => {
         return differenceInDays(a.start, b.start);
       })
       .forEach((appointment) => {
-        if (firstActivationScore === undefined) {
-          firstActivationScore = appointment.note.scores?.adherence;
-        }
-        lastActivationScore = appointment.note.scores?.adherence;
-
-        if (firstWellbeingScore === undefined) {
-          firstWellbeingScore = appointment.note.scores?.wellbeing;
-        }
-        lastWellbeingScore = appointment.note.scores?.wellbeing;
+        firstActivationScore ??= appointment.notesData.scores?.adherence;
+        lastActivationScore = appointment.notesData.scores?.adherence;
+        firstWellbeingScore ??= appointment.notesData.scores?.wellbeing;
+        lastWellbeingScore = appointment.notesData.scores?.wellbeing;
       });
     return {
       firstActivationScore,

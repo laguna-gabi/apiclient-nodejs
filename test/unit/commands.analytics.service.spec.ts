@@ -2,6 +2,7 @@ import {
   dbDisconnect,
   defaultModules,
   generateId,
+  generateNotesParams,
   generateObjectId,
   mockGenerateMember,
   mockGenerateMemberConfig,
@@ -40,7 +41,7 @@ describe('Commands: AnalyticsService', () => {
   // Mock actors
   const mockPrimaryUser = mockGenerateUser();
   const mockOrg = mockGenerateOrg();
-  const fellowUser = mockGenerateUser();
+  const mockFellowUser = mockGenerateUser();
   const mockMember = mockGenerateMember();
   const mockMemberConfig = mockGenerateMemberConfig();
   mockMember.primaryUserId = new Types.ObjectId(mockPrimaryUser.id);
@@ -60,6 +61,16 @@ describe('Commands: AnalyticsService', () => {
 
     analyticsService = module.get<AnalyticsService>(AnalyticsService);
     userModel = module.get<Model<User>>(getModelToken(User.name));
+
+    // mock the user model to upload all actors (users) during init
+    jest
+      .spyOn(userModel, 'find')
+      .mockResolvedValue([
+        { ...mockPrimaryUser, _id: new Types.ObjectId(mockPrimaryUser.id) } as UserDocument,
+        { ...mockFellowUser, _id: new Types.ObjectId(mockFellowUser.id) } as UserDocument,
+      ]);
+    await analyticsService.init();
+
     jest.spyOn(analyticsService, 'getDateTime').mockImplementation(() => now.getTime());
   });
 
@@ -169,7 +180,7 @@ describe('Commands: AnalyticsService', () => {
       expect(
         analyticsService.getActivationAndWellbeingStats([
           {
-            note: {
+            notesData: {
               // missing start/end - should be filtered out
               scores: {
                 adherence: 4,
@@ -180,7 +191,7 @@ describe('Commands: AnalyticsService', () => {
           {
             start: sub(now, { days: 5 }),
             end: sub(now, { days: 4 }),
-            note: {
+            notesData: {
               scores: {
                 adherence: 3,
                 wellbeing: 4,
@@ -190,7 +201,7 @@ describe('Commands: AnalyticsService', () => {
           {
             start: sub(now, { days: 10 }),
             end: sub(now, { days: 9 }),
-            note: {
+            notesData: {
               scores: {
                 adherence: 2,
                 wellbeing: 3,
@@ -200,7 +211,7 @@ describe('Commands: AnalyticsService', () => {
           {
             start: sub(now, { days: 2 }),
             end: sub(now, { days: 1 }),
-            note: {
+            notesData: {
               scores: {
                 adherence: 1,
                 wellbeing: 2,
@@ -247,12 +258,7 @@ describe('Commands: AnalyticsService', () => {
       const app3Id = generateObjectId();
       const app4Id = generateObjectId();
 
-      jest
-        .spyOn(userModel, 'find')
-        .mockResolvedValue([
-          { ...mockPrimaryUser, _id: new Types.ObjectId(mockPrimaryUser.id) } as UserDocument,
-          { ...fellowUser, _id: new Types.ObjectId(fellowUser.id) } as UserDocument,
-        ]);
+      const app3Notes = generateNotesParams();
 
       const data = await analyticsService.buildAppointmentsMemberData({
         _id: new Types.ObjectId(mockMember.id),
@@ -265,7 +271,7 @@ describe('Commands: AnalyticsService', () => {
         appointments: [
           {
             _id: app1Id, // no start date so should be filtered out
-            userId: new Types.ObjectId(fellowUser.id),
+            userId: new Types.ObjectId(mockFellowUser.id),
             end: sub(now, { days: 25 }),
             method: AppointmentMethod.phoneCall,
           } as PopulatedAppointment,
@@ -277,11 +283,12 @@ describe('Commands: AnalyticsService', () => {
           } as PopulatedAppointment,
           {
             _id: app3Id,
-            userId: new Types.ObjectId(fellowUser.id),
+            userId: new Types.ObjectId(mockFellowUser.id),
             start: sub(now, { days: 10 }),
             end: sub(now, { days: 9, hours: 23.5 }),
             status: AppointmentStatus.done,
             method: AppointmentMethod.chat,
+            notesData: app3Notes,
             recordings: [
               {
                 id: generateId(),
@@ -332,6 +339,7 @@ describe('Commands: AnalyticsService', () => {
           is_phone_call: true,
           harmony_link: config.get('hosts.harmony') + `/details/${mockMember.id}`,
           coach_name: `${mockPrimaryUser.firstName} ${mockPrimaryUser.lastName}`,
+          coach_id: mockPrimaryUser.id,
         },
         {
           created: reformatDate(sub(now, { days: 10 }).toString(), DateTimeFormat),
@@ -354,7 +362,16 @@ describe('Commands: AnalyticsService', () => {
           is_video_call: false,
           is_phone_call: false,
           harmony_link: config.get('hosts.harmony') + `/details/${mockMember.id}`,
-          coach_name: `${fellowUser.firstName} ${fellowUser.lastName}`,
+          coach_name: `${mockFellowUser.firstName} ${mockFellowUser.lastName}`,
+          coach_id: mockFellowUser.id,
+          wellbeing_score: app3Notes.scores.wellbeing,
+          wellbeing_reason: app3Notes.scores.wellbeingText,
+          activation_score: app3Notes.scores.adherence,
+          activation_reason: app3Notes.scores.adherenceText,
+          recap: app3Notes.recap,
+          member_plan: app3Notes.memberActionItem,
+          coach_plan: app3Notes.userActionItem,
+          strengths: app3Notes.strengths,
         },
         {
           created: reformatDate(sub(now, { days: 5 }).toString(), DateTimeFormat),
@@ -374,6 +391,7 @@ describe('Commands: AnalyticsService', () => {
           is_phone_call: false,
           harmony_link: config.get('hosts.harmony') + `/details/${mockMember.id}`,
           coach_name: `${mockPrimaryUser.firstName} ${mockPrimaryUser.lastName}`,
+          coach_id: mockPrimaryUser.id,
         },
       ]);
     });
@@ -402,7 +420,7 @@ describe('Commands: AnalyticsService', () => {
           {
             start: sub(now, { days: 10 }),
             end: sub(now, { days: 9, hours: 23.5 }),
-            note: {
+            notesData: {
               scores: {
                 adherence: 4,
                 wellbeing: 5,
@@ -412,7 +430,7 @@ describe('Commands: AnalyticsService', () => {
           {
             start: sub(now, { days: 20 }),
             end: sub(now, { days: 20, hours: 23.5 }),
-            note: {
+            notesData: {
               scores: {
                 adherence: 1,
                 wellbeing: 2,

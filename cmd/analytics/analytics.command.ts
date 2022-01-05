@@ -21,8 +21,9 @@ interface AnalyticsCommandOptions {
 })
 export class AnalyticsCommand implements CommandRunner {
   constructor(private readonly analyticsService: AnalyticsService) {}
-  async run(passedParam: string[], options?: AnalyticsCommandOptions): Promise<void> {
+  async run(_passedParam: string[], options?: AnalyticsCommandOptions): Promise<void> {
     let outFileName;
+    await this.analyticsService.init();
     const timestamp = Date.now();
     try {
       /***************************** Resolve Command Options  *************************************/

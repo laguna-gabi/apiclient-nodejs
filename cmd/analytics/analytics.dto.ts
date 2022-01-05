@@ -100,6 +100,16 @@ export class MemberData {
 // AppointmentsMemberData represent the Analytics `appointments` expected spreadsheet columns list
 export class AppointmentsMemberData {
   created: string;
+  updated: string;
+  recap?: string;
+  strengths?: string;
+  member_plan?: string;
+  coach_plan?: string;
+  activation_score?: number;
+  activation_reason?: string;
+  wellbeing_score?: number;
+  wellbeing_reason?: string;
+  recorded_consent?: boolean;
   customer_id: string;
   mbr_initials: string;
   appt_number: number;
@@ -121,12 +131,13 @@ export class AppointmentsMemberData {
   graduated?: boolean;
   engaged?: boolean;
   coach_name?: string;
+  coach_id?: string;
   harmony_link?: string;
 }
 
 export type PopulatedAppointment = Appointment & {
   _id: Types.ObjectId;
-  note: Notes;
+  notesData: Notes;
   recordings: Recording[];
 };
 
