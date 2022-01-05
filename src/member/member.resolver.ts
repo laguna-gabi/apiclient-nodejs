@@ -938,12 +938,12 @@ export class MemberResolver extends MemberBase {
           dispatchId: generateDispatchId(contentKey, Date.now().toString()),
           memberId: communication.memberId.toString(),
           userId: senderUserId,
-          type: InternalNotificationType.chatMessageToMember,
+          type: NotificationType.text,
           correlationId: getCorrelationId(this.logger),
           metadata: {
             contentType: contentKey,
             path: generatePath(
-              InternalNotificationType.chatMessageToMember,
+              NotificationType.text,
               contentKey,
               communication.memberId.toString(),
               senderUserId,

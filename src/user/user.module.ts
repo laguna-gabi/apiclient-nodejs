@@ -24,6 +24,6 @@ import { ProvidersModule } from '../providers';
   ],
   providers: [UserResolver, UserService, SlotService],
   controllers: [UserController],
-  exports: [UserService],
+  exports: [UserService, MongooseModule],
 })
 export class UserModule {}

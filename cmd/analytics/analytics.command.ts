@@ -63,7 +63,9 @@ export class AnalyticsCommand implements CommandRunner {
           '---------------  Aggregate Data for Analytics ------------------\n' +
           '----------------------------------------------------------------',
       );
-      const members: MemberDataAggregate[] = await this.analyticsService.getMemberDataAggregate();
+      const members: MemberDataAggregate[] = (
+        await this.analyticsService.getMemberDataAggregate()
+      ).concat(await this.analyticsService.getAllControl());
 
       if (options.debug) {
         fs.writeFile(
@@ -91,17 +93,11 @@ export class AnalyticsCommand implements CommandRunner {
             '----------------------------------------------------------------',
         );
 
-        let memberProcessedData: MemberData[] = await Promise.all(
+        const memberProcessedData: MemberData[] = await Promise.all(
           members.map(async (member) => {
             return this.analyticsService.buildMemberData(member);
           }),
         );
-
-        /**************************** Processing Control Members  *****************************************/
-        const controlMembersData = await this.analyticsService.getControlMemberData(
-          await this.analyticsService.getAllControl(),
-        );
-        memberProcessedData = memberProcessedData.concat(controlMembersData);
 
         /**************************** Creating an output .csv  ********************************************/
 
@@ -126,7 +122,7 @@ export class AnalyticsCommand implements CommandRunner {
               );
             }
           },
-          { emptyFieldValue: '' },
+          { emptyFieldValue: 'null' },
         );
       }
       if (options.sheet === SheetOption.appointments || options.sheet === SheetOption.all) {
@@ -163,7 +159,7 @@ export class AnalyticsCommand implements CommandRunner {
               );
             }
           },
-          { emptyFieldValue: '' },
+          { emptyFieldValue: 'null' },
         );
       }
     } catch (err) {

@@ -3,7 +3,8 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import * as packageJson from '../package.json';
 import { AppModule } from './app.module';
 import { GlobalAuthGuard, RolesGuard } from './auth';
-import { AllExceptionsFilter, LoggerService, internalLogs } from './common'; //
+import { AllExceptionsFilter, LoggerService, internalLogs } from './common';
+import { general } from 'config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: ['log'], bodyParser: false });
@@ -18,6 +19,8 @@ async function bootstrap() {
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new GlobalAuthGuard());
   app.useGlobalGuards(new RolesGuard(reflector));
+
+  process.env.TZ = general.get('timezone');
 
   await app.listen(3000);
 

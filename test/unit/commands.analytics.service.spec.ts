@@ -4,6 +4,8 @@ import {
   generateId,
   generateObjectId,
   mockGenerateMember,
+  mockGenerateMemberConfig,
+  mockGenerateOrg,
   mockGenerateUser,
 } from '../index';
 import {
@@ -11,39 +13,53 @@ import {
   AnalyticsService,
   AppointmentAttendanceStatus,
   DateFormat,
+  DateTimeFormat,
   MemberDataAggregate,
   PopulatedAppointment,
   PopulatedMember,
 } from '../../cmd';
 import { add, sub } from 'date-fns';
 import { RecordingType, reformatDate } from '../../src/common';
-import { MemberDocument, MemberModule } from '../../src/member';
+import { MemberModule } from '../../src/member';
 import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProvidersModule } from '../../src/providers';
-import { Language, Platform } from '@lagunahealth/pandora';
+import { Language } from '@lagunahealth/pandora';
 import * as config from 'config';
-import { Types } from 'mongoose';
+import { Model, Types } from 'mongoose';
+import { User, UserDocument, UserModule } from '../../src/user';
+import { getModelToken } from '@nestjs/mongoose';
 
 describe('Commands: AnalyticsService', () => {
   let module: TestingModule;
   let analyticsService: AnalyticsService;
+  let userModel: Model<User>;
 
   const now = new Date(Date.UTC(2021, 1, 2, 3, 4, 5));
 
   // Mock actors
   const mockPrimaryUser = mockGenerateUser();
+  const mockOrg = mockGenerateOrg();
+  const fellowUser = mockGenerateUser();
   const mockMember = mockGenerateMember();
+  const mockMemberConfig = mockGenerateMemberConfig();
   mockMember.primaryUserId = new Types.ObjectId(mockPrimaryUser.id);
   mockMember.dateOfBirth = reformatDate(sub(now, { years: 40 }).toString(), DateFormat);
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: defaultModules().concat(MemberModule, ProvidersModule, AnalyticsModule),
-      providers: [AnalyticsService],
+      imports: defaultModules().concat(MemberModule, UserModule, ProvidersModule, AnalyticsModule),
+      providers: [
+        AnalyticsService,
+        {
+          provide: getModelToken(User.name),
+          useValue: Model,
+        },
+      ],
     }).compile();
 
     analyticsService = module.get<AnalyticsService>(AnalyticsService);
+    userModel = module.get<Model<User>>(getModelToken(User.name));
     jest.spyOn(analyticsService, 'getDateTime').mockImplementation(() => now.getTime());
   });
 
@@ -56,12 +72,11 @@ describe('Commands: AnalyticsService', () => {
     it('to return empty summary when no recordings', async () => {
       expect(analyticsService.getRecordingsSummary([])).toEqual({
         totalDuration: 0,
-        totalOutreachAttempts: 0,
       });
     });
 
     // eslint-disable-next-line max-len
-    it('to return an outreach attempt count with 0 duration when all recordings are for un-answered calls', async () => {
+    it('to return 0 duration when all recordings are for un-answered calls', async () => {
       const memberId = generateObjectId();
       expect(
         analyticsService.getRecordingsSummary([
@@ -83,12 +98,11 @@ describe('Commands: AnalyticsService', () => {
         ]),
       ).toEqual({
         totalDuration: 0,
-        totalOutreachAttempts: 2,
       });
     });
 
     // eslint-disable-next-line max-len
-    it('to return an outreach attempt count (for un-answered) and a calculated duration (for answered) calls', async () => {
+    it('to return primary channel and total duration for answered calls', async () => {
       const memberId = generateObjectId();
       expect(
         analyticsService.getRecordingsSummary([
@@ -136,40 +150,7 @@ describe('Commands: AnalyticsService', () => {
       ).toEqual({
         primaryChannel: RecordingType.video,
         totalDuration: 50,
-        totalOutreachAttempts: 2,
       });
-    });
-  });
-
-  describe('getControlMemberData', () => {
-    it('to return empty array for when no members in control group', async () => {
-      expect(await analyticsService.getControlMemberData([])).toEqual([]);
-    });
-
-    it('to return a control members in control group', async () => {
-      expect(
-        await analyticsService.getControlMemberData([
-          {
-            ...mockMember,
-            _id: new Types.ObjectId(mockMember.id),
-          } as MemberDocument,
-        ]),
-      ).toEqual([
-        {
-          age: 40,
-          city: mockMember.address.city,
-          created: reformatDate(mockMember.createdAt.toString(), DateFormat),
-          customer_id: mockMember.id,
-          ethnicity: mockMember.ethnicity,
-          gender: mockMember.sex,
-          intervention_group: false,
-          mbr_initials: analyticsService.getMemberInitials(mockMember),
-          race: mockMember.race,
-          state: mockMember.address.state,
-          street_address: mockMember.address.street,
-          zip_code: mockMember.zipCode,
-        },
-      ]);
     });
   });
 
@@ -261,11 +242,17 @@ describe('Commands: AnalyticsService', () => {
     // eslint-disable-next-line max-len
     it('to return sorted appointment where `non-scheduled` appointments are filtered out.', async () => {
       // Generate pre-defined ids for assertion
-
       const app1Id = generateObjectId();
       const app2Id = generateObjectId();
       const app3Id = generateObjectId();
       const app4Id = generateObjectId();
+
+      jest
+        .spyOn(userModel, 'find')
+        .mockResolvedValue([
+          { ...mockPrimaryUser, _id: new Types.ObjectId(mockPrimaryUser.id) } as UserDocument,
+          { ...fellowUser, _id: new Types.ObjectId(fellowUser.id) } as UserDocument,
+        ]);
 
       const data = await analyticsService.buildAppointmentsMemberData({
         _id: new Types.ObjectId(mockMember.id),
@@ -278,16 +265,19 @@ describe('Commands: AnalyticsService', () => {
         appointments: [
           {
             _id: app1Id, // no start date so should be filtered out
+            userId: new Types.ObjectId(fellowUser.id),
             end: sub(now, { days: 25 }),
             method: AppointmentMethod.phoneCall,
           } as PopulatedAppointment,
           {
             _id: app2Id,
+            userId: new Types.ObjectId(mockPrimaryUser.id),
             start: sub(now, { days: 5 }),
             method: AppointmentMethod.videoCall,
           } as PopulatedAppointment,
           {
             _id: app3Id,
+            userId: new Types.ObjectId(fellowUser.id),
             start: sub(now, { days: 10 }),
             end: sub(now, { days: 9, hours: 23.5 }),
             status: AppointmentStatus.done,
@@ -306,6 +296,7 @@ describe('Commands: AnalyticsService', () => {
           {
             // no-show should appear first
             _id: app4Id,
+            userId: new Types.ObjectId(mockPrimaryUser.id),
             start: sub(now, { days: 5 }),
             method: AppointmentMethod.phoneCall,
             noShow: true,
@@ -323,7 +314,7 @@ describe('Commands: AnalyticsService', () => {
           graduation_date: '2021-02-03',
         },
         {
-          created: reformatDate(mockMember.createdAt.toString(), DateFormat),
+          created: reformatDate(sub(now, { days: 5 }).toString(), DateTimeFormat),
           customer_id: mockMember.id,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           chat_id: app4Id.toString(),
@@ -343,7 +334,7 @@ describe('Commands: AnalyticsService', () => {
           coach_name: `${mockPrimaryUser.firstName} ${mockPrimaryUser.lastName}`,
         },
         {
-          created: reformatDate(mockMember.createdAt.toString(), DateFormat),
+          created: reformatDate(sub(now, { days: 10 }).toString(), DateTimeFormat),
           customer_id: mockMember.id,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           appt_number: 1,
@@ -356,17 +347,17 @@ describe('Commands: AnalyticsService', () => {
           status: 'done',
           missed_appt: 'FALSE',
           total_duration: 15,
-          total_outreach_attempts: 0,
+          total_outreach_attempts: 1,
           channel_primary: RecordingType.phone,
           graduated: false,
           graduation_date: '2021-02-03',
           is_video_call: false,
           is_phone_call: false,
           harmony_link: config.get('hosts.harmony') + `/details/${mockMember.id}`,
-          coach_name: `${mockPrimaryUser.firstName} ${mockPrimaryUser.lastName}`,
+          coach_name: `${fellowUser.firstName} ${fellowUser.lastName}`,
         },
         {
-          created: reformatDate(mockMember.createdAt.toString(), DateFormat),
+          created: reformatDate(sub(now, { days: 5 }).toString(), DateTimeFormat),
           customer_id: mockMember.id,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           appt_number: 2,
@@ -390,7 +381,7 @@ describe('Commands: AnalyticsService', () => {
 
   describe('buildMemberData', () => {
     // eslint-disable-next-line max-len
-    it('to return a calculated member data for analytics.', async () => {
+    it('to return a calculated member data for analytics for a member in intervention group.', async () => {
       jest
         .spyOn(analyticsService, 'getDCFileLoadDate')
         .mockImplementationOnce(async () => sub(now, { days: 25 }))
@@ -398,16 +389,14 @@ describe('Commands: AnalyticsService', () => {
 
       const data = await analyticsService.buildMemberData({
         _id: new Types.ObjectId(mockMember.id),
-        memberConfig: {
-          platform: Platform.ios,
-          language: Language.en,
-        },
+        memberConfig: mockMemberConfig,
         memberDetails: {
           ...mockMember,
           admitDate: reformatDate(sub(now, { days: 20 }).toString(), DateFormat),
           dischargeDate: reformatDate(sub(now, { days: 10 }).toString(), DateFormat),
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
           primaryUser: mockPrimaryUser,
+          orgData: { ...mockOrg, _id: Types.ObjectId(mockOrg.id) },
         } as PopulatedMember,
         appointments: [
           {
@@ -436,7 +425,7 @@ describe('Commands: AnalyticsService', () => {
       expect(data).toEqual({
         customer_id: mockMember.id,
         mbr_initials: mockMember.firstName[0].toUpperCase() + mockMember.lastName[0].toUpperCase(),
-        created: reformatDate(mockMember.createdAt.toString(), DateFormat),
+        created: reformatDate(mockMember.createdAt.toString(), DateTimeFormat),
         app_user: true,
         intervention_group: true,
         language: Language.en,
@@ -466,6 +455,60 @@ describe('Commands: AnalyticsService', () => {
         fellow: mockMember.fellowName,
         harmony_link: config.get('hosts.harmony') + `/details/${mockMember.id}`,
         coach_name: `${mockPrimaryUser.firstName} ${mockPrimaryUser.lastName}`,
+        dob: mockMember.dateOfBirth,
+        first_name: mockMember.firstName,
+        last_name: mockMember.lastName,
+        honorific: mockMember.honorific,
+        phone: mockMember.phone,
+        platform: mockMemberConfig.platform,
+        updated: reformatDate(mockMember.updatedAt.toString(), DateTimeFormat),
+        app_first_login: reformatDate(mockMemberConfig.firstLoggedInAt.toString(), DateTimeFormat),
+        app_last_login: reformatDate(mockMemberConfig.updatedAt.toString(), DateTimeFormat),
+        coach_id: mockPrimaryUser.id,
+        org_id: mockOrg.id,
+        org_name: mockOrg.name,
+      });
+    });
+
+    it('to return a calculated member data for analytics for a control member.', async () => {
+      jest
+        .spyOn(analyticsService, 'getDCFileLoadDate')
+        .mockImplementationOnce(async () => undefined)
+        .mockImplementationOnce(async () => undefined);
+
+      const data = await analyticsService.buildMemberData({
+        _id: new Types.ObjectId(mockMember.id),
+        memberDetails: {
+          ...mockMember,
+          primaryUserId: undefined,
+        } as PopulatedMember,
+        isControlMember: true,
+      } as MemberDataAggregate);
+
+      expect(data).toEqual({
+        customer_id: mockMember.id,
+        mbr_initials: mockMember.firstName[0].toUpperCase() + mockMember.lastName[0].toUpperCase(),
+        created: reformatDate(mockMember.createdAt.toString(), DateTimeFormat),
+        intervention_group: false,
+        age: 40,
+        race: mockMember.race,
+        ethnicity: mockMember.ethnicity,
+        gender: mockMember.sex,
+        street_address: mockMember.address.street,
+        city: mockMember.address.city,
+        state: mockMember.address.state,
+        zip_code: mockMember.zipCode,
+        graduated: false,
+        fellow: mockMember.fellowName,
+        dob: mockMember.dateOfBirth,
+        first_name: mockMember.firstName,
+        last_name: mockMember.lastName,
+        honorific: mockMember.honorific,
+        phone: mockMember.phone,
+        updated: reformatDate(mockMember.updatedAt.toString(), DateTimeFormat),
+        dc_instructions_received: false,
+        dc_summary_received: false,
+        active: false,
       });
     });
   });

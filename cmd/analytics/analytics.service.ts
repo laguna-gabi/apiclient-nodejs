@@ -4,6 +4,7 @@ import {
   AppointmentAttendanceStatus,
   AppointmentsMemberData,
   DateFormat,
+  DateTimeFormat,
   DayOfWeekFormat,
   GraduationPeriod,
   HarmonyLink,
@@ -12,6 +13,7 @@ import {
   MemberData,
   MemberDataAggregate,
   PopulatedAppointment,
+  PopulatedMember,
   RecordingSummary,
   SummaryFileSuffix,
   TimeFormat,
@@ -21,8 +23,9 @@ import { Injectable } from '@nestjs/common';
 import { AppointmentMethod } from '../../src/appointment';
 import { Member, MemberDocument, MemberService, Recording } from '../../src/member';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Connection, Model } from 'mongoose';
+import { Connection, Model, Types } from 'mongoose';
 import { StorageService } from '../../src/providers';
+import { User, UserDocument } from '../../src/user';
 
 @Injectable()
 export class AnalyticsService {
@@ -32,15 +35,37 @@ export class AnalyticsService {
     private readonly memberModel: Model<MemberDocument>,
     private readonly storageService: StorageService,
     @InjectConnection() private connection: Connection,
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
   ) {}
 
+  private userData: Map<string, string>;
   async clean() {
     this.connection.close();
   }
 
   // Description: get all control members
-  async getAllControl(): Promise<MemberDocument[]> {
-    return this.memberService.getAllControl();
+  async getAllControl(): Promise<MemberDataAggregate[]> {
+    const controlMembers = await this.memberService.getAllControl();
+
+    return controlMembers.map(
+      (member) =>
+        ({
+          _id: new Types.ObjectId(member.id),
+          memberDetails: member as PopulatedMember,
+          isControlMember: true,
+        } as MemberDataAggregate),
+    );
+  }
+
+  async uploadUserData(): Promise<void> {
+    this.userData = new Map<string, string>();
+
+    const users = await this.userModel.find({}, { _id: 1, firstName: 1, lastName: 1 });
+
+    users.forEach((user) => {
+      this.userData.set(user._id.toString(), `${user.firstName} ${user.lastName}`);
+    });
   }
 
   // Description: join member associated data - appointments, recordings, notes, primary user, configuration,
@@ -137,32 +162,22 @@ export class AnalyticsService {
           preserveNullAndEmptyArrays: true,
         },
       },
+      {
+        $lookup: {
+          from: 'orgs',
+          localField: 'memberDetails.org',
+          foreignField: '_id',
+          as: 'memberDetails.orgData',
+        },
+      },
+      {
+        $unwind: {
+          path: '$memberDetails.orgData',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       // { $allowDiskUse: true }, // "Analytics: error: got: MongoError: $allowDiskUse is not allowed in this atlas tier" :(
     ]);
-  }
-
-  // Description: since our control members located in a separate collection and
-  // we have a separate (simple) find query to get all members
-  async getControlMemberData(members: MemberDocument[]): Promise<MemberData[]> {
-    return members.map((member) => {
-      return {
-        customer_id: member._id.toString(),
-        mbr_initials: this.getMemberInitials({
-          firstName: member.firstName,
-          lastName: member.lastName,
-        } as Member),
-        created: reformatDate(member.createdAt.toString(), DateFormat),
-        intervention_group: false, // control member is, by definition, not in intervention group
-        age: differenceInYears(this.getDateTime(), Date.parse(member.dateOfBirth)),
-        race: member.race,
-        ethnicity: member.ethnicity,
-        gender: member.sex,
-        street_address: member.address?.street,
-        city: member.address?.city,
-        state: member.address?.state,
-        zip_code: member.zipCode,
-      } as MemberData;
-    });
   }
 
   // Description: transform a member aggregated data to a calculated CSV entry representation (`members` sheet)
@@ -192,12 +207,24 @@ export class AnalyticsService {
         firstName: member.memberDetails.firstName,
         lastName: member.memberDetails.lastName,
       } as Member),
-      created: reformatDate(member.memberDetails.createdAt.toString(), DateFormat),
+      first_name: member.memberDetails.firstName,
+      last_name: member.memberDetails.lastName,
+      honorific: member.memberDetails.honorific,
+      dob: member.memberDetails.dateOfBirth,
+      phone: member.memberDetails.phone,
+      phone_secondary: member.memberDetails.phoneSecondary,
+      email: member.memberDetails.email,
+      readmission_risk: member.memberDetails.readmissionRisk,
+      drg: member.memberDetails.drg,
+      drg_desc: member.memberDetails.drgDesc,
+      created: reformatDate(member.memberDetails.createdAt.toString(), DateTimeFormat),
+      updated: reformatDate(member.memberDetails.updatedAt.toString(), DateTimeFormat),
       app_user:
-        member.memberConfig.platform === Platform.android ||
-        member.memberConfig.platform === Platform.ios,
-      intervention_group: true,
-      language: member.memberConfig.language,
+        member.memberConfig &&
+        (member.memberConfig?.platform === Platform.android ||
+          member.memberConfig?.platform === Platform.ios),
+      intervention_group: !member.isControlMember,
+      language: member.memberConfig?.language,
       age: differenceInYears(this.getDateTime(), Date.parse(member.memberDetails.dateOfBirth)),
       race: member.memberDetails.race,
       ethnicity: member.memberDetails.ethnicity,
@@ -208,10 +235,10 @@ export class AnalyticsService {
       zip_code: member.memberDetails.zipCode,
       admit_date: member.memberDetails.admitDate
         ? reformatDate(member.memberDetails.admitDate, DateFormat)
-        : '',
+        : undefined,
       discharge_date: member.memberDetails.dischargeDate
         ? reformatDate(member.memberDetails.dischargeDate, DateFormat)
-        : '',
+        : undefined,
       los: this.calculateLos(member.memberDetails.admitDate, member.memberDetails.dischargeDate),
       days_since_discharge: daysSinceDischarge,
       active: daysSinceDischarge < GraduationPeriod,
@@ -219,20 +246,35 @@ export class AnalyticsService {
       graduation_date: this.calculateGraduationDate(member.memberDetails.dischargeDate),
       dc_summary_load_date: dcSummaryLoadDate
         ? reformatDate(dcSummaryLoadDate.toString(), DateFormat)
-        : '',
+        : undefined,
       dc_summary_received: !!dcSummaryLoadDate,
       dc_instructions_load_date: dcInstructionsLoadDate
         ? reformatDate(dcInstructionsLoadDate.toString(), DateFormat)
-        : '',
+        : undefined,
       dc_instructions_received: !!dcInstructionsLoadDate,
       first_activation_score: firstActivationScore,
       last_activation_score: lastActivationScore,
       first_wellbeing_score: firstWellbeingScore,
       last_wellbeing_score: lastWellbeingScore,
       fellow: member.memberDetails.fellowName,
-      harmony_link: `${HarmonyLink}/details/${member._id.toString()}`,
+      harmony_link: !member.isControlMember
+        ? `${HarmonyLink}/details/${member._id.toString()}`
+        : undefined,
+      platform: member.memberConfig?.platform,
+      app_first_login:
+        member.memberConfig &&
+        reformatDate(member.memberConfig.firstLoggedInAt.toString(), DateTimeFormat),
+      app_last_login:
+        member.memberConfig &&
+        reformatDate(member.memberConfig.updatedAt.toString(), DateTimeFormat),
+      org_name: member.memberDetails.orgData?.name,
+      org_id: member.memberDetails.orgData?._id.toString(),
       // eslint-disable-next-line max-len
-      coach_name: `${member.memberDetails.primaryUser.firstName} ${member.memberDetails.primaryUser.lastName}`,
+      coach_name: member.memberDetails.primaryUser
+        ? // eslint-disable-next-line max-len
+          `${member.memberDetails.primaryUser.firstName} ${member.memberDetails.primaryUser.lastName}`
+        : undefined,
+      coach_id: member.memberDetails.primaryUserId?.toString(),
     };
   }
 
@@ -240,6 +282,8 @@ export class AnalyticsService {
   async buildAppointmentsMemberData(
     member: MemberDataAggregate,
   ): Promise<AppointmentsMemberData[]> {
+    // upload users - full name is required for the appointment entry
+    await this.uploadUserData();
     // Member/General details: calculated once for all entries
     const created = reformatDate(member.memberDetails.createdAt.toString(), DateFormat);
     const customer_id = member._id.toString();
@@ -248,15 +292,16 @@ export class AnalyticsService {
       lastName: member.memberDetails.lastName,
     } as Member);
     const daysSinceDischarge = this.calculateDaysSinceDischarge(member.memberDetails.dischargeDate);
-    const harmony_link = `${HarmonyLink}/details/${member._id.toString()}`;
+    const harmony_link = !member.isControlMember
+      ? `${HarmonyLink}/details/${member._id.toString()}`
+      : undefined;
     // eslint-disable-next-line max-len
-    const coach_name = `${member.memberDetails.primaryUser.firstName} ${member.memberDetails.primaryUser.lastName}`;
     const graduation_date = this.calculateGraduationDate(member.memberDetails.dischargeDate);
     const results = [];
 
     // load appointment 0: (according to example excel spreadsheet we have appointment 0 also for engaged members)
     results.push({
-      created: reformatDate(member.memberDetails.createdAt.toString(), DateFormat),
+      created,
       customer_id: member._id.toString(),
       mbr_initials,
       appt_number: 0,
@@ -285,7 +330,7 @@ export class AnalyticsService {
         const recordingsSummary = this.getRecordingsSummary(appointment.recordings);
 
         results.push({
-          created,
+          created: reformatDate(appointment?.start?.toString(), DateTimeFormat),
           customer_id,
           mbr_initials,
           appt_number: appointment.noShow ? undefined : count,
@@ -298,7 +343,7 @@ export class AnalyticsService {
           status: appointment.status,
           missed_appt: this.getAppointmentsMissedIndication(appointment.status, appointment.noShow),
           total_duration: recordingsSummary.totalDuration,
-          total_outreach_attempts: recordingsSummary.totalOutreachAttempts, // TODO: Placeholder: Alex confirmed that this is not required in initial version
+          total_outreach_attempts: appointment.recordings?.length || 0,
           channel_primary: recordingsSummary.primaryChannel,
           event_type_primary: undefined, // TODO: confirm with Alex how to determine primary event
           graduated: daysSinceDischarge >= GraduationPeriod,
@@ -306,7 +351,7 @@ export class AnalyticsService {
           is_video_call: appointment.method === AppointmentMethod.videoCall,
           is_phone_call: appointment.method === AppointmentMethod.phoneCall,
           harmony_link,
-          coach_name,
+          coach_name: this.userData?.get(appointment.userId.toString()),
         });
       });
 
@@ -347,7 +392,6 @@ export class AnalyticsService {
   //              primary channel used for communication and total outreach attempts
   getRecordingsSummary(recordings: Recording[]): RecordingSummary {
     let totalDuration = 0;
-    let totalOutreachAttempts = 0;
     let primaryChannel: RecordingType;
 
     const channelTotalDuration: { [recordingType: string]: number } = {};
@@ -360,11 +404,8 @@ export class AnalyticsService {
       let duration = 0;
       if (entry.end && entry.start) {
         duration = differenceInSeconds(entry.end, entry.start);
-      }
-      if (entry.answered) {
-        totalDuration += duration;
-      } else {
-        totalOutreachAttempts++;
+
+        totalDuration += entry.answered ? duration : 0;
       }
 
       switch (entry.recordingType) {
@@ -391,7 +432,7 @@ export class AnalyticsService {
       }
     }
 
-    return { primaryChannel, totalDuration, totalOutreachAttempts };
+    return { primaryChannel, totalDuration };
   }
 
   // Description: get discharge notes (by type) from S3 - this is to determine if files were loaded to member
@@ -442,7 +483,7 @@ export class AnalyticsService {
     let lastWellbeingScore;
 
     appointments
-      .filter((a) => a.start && a.end && a.note)
+      ?.filter((a) => a.start && a.end && a.note)
       .sort((a, b) => {
         return differenceInDays(a.start, b.start);
       })

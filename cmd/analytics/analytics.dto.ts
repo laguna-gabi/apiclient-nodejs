@@ -2,12 +2,22 @@ import { Types } from 'mongoose';
 import { Appointment, AppointmentStatus, Notes } from '../../src/appointment';
 import { User } from '../../src/user';
 import { RecordingType } from '../../src/common';
-import { Ethnicity, Member, MemberConfig, Race, Recording, Sex } from '../../src/member';
-import { Language } from '@lagunahealth/pandora';
+import {
+  Ethnicity,
+  Member,
+  MemberConfig,
+  Race,
+  ReadmissionRisk,
+  Recording,
+  Sex,
+} from '../../src/member';
+import { Honorific, Language, Platform } from '@lagunahealth/pandora';
 import * as config from 'config';
+import { Org } from '../../src/org';
 
 export const DateFormat = 'yyyy-MM-dd';
 export const TimeFormat = 'HH:mm:ss';
+export const DateTimeFormat = 'yyyy-MM-dd HH:mm';
 export const DayOfWeekFormat = 'EEEE';
 export const HourFormat = 'H';
 export const DefaultOutputDir = './outputs';
@@ -38,8 +48,23 @@ export enum AppointmentsEventType {
 export class MemberData {
   customer_id: string;
   mbr_initials: string;
+  first_name: string;
+  last_name: string;
+  honorific: Honorific;
+  dob: string;
+  phone: string;
+  phone_secondary?: string;
+  email?: string;
+  // bmi?: string; // not supported yet
+  readmission_risk?: ReadmissionRisk;
+  drg?: string;
+  drg_desc?: string;
   created: string;
+  updated: string;
+  platform: Platform;
   app_user: boolean; // is member using Laguna app?
+  app_first_login?: string;
+  app_last_login?: string;
   intervention_group: boolean; // is member in control group?
   language: Language;
   age: number;
@@ -63,6 +88,9 @@ export class MemberData {
   last_wellbeing_score: number;
   fellow: string;
   coach_name: string;
+  coach_id: string;
+  org_name: string;
+  org_id: string;
   harmony_link: string;
   dc_summary_received: boolean;
   dc_instructions_received: boolean;
@@ -103,19 +131,20 @@ export type PopulatedAppointment = Appointment & {
 };
 
 export type PopulatedMember = Member & {
-  primaryUser: User;
+  primaryUser?: User;
+  orgData?: Org & { _id: Types.ObjectId };
 };
 
 export type MemberDataAggregate = Member & {
   _id: Types.ObjectId;
   memberDetails: PopulatedMember;
-  memberConfig: MemberConfig;
-  appointments: PopulatedAppointment[];
-  primaryUser: User;
+  memberConfig?: MemberConfig;
+  appointments?: PopulatedAppointment[];
+  primaryUser?: User;
+  isControlMember?: boolean;
 };
 
 export interface RecordingSummary {
   totalDuration: number;
   primaryChannel?: RecordingType;
-  totalOutreachAttempts: number;
 }

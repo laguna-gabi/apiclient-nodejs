@@ -23,35 +23,46 @@ export class LoggerService extends BaseLogger {
     'memberId',
     'userId',
     'orgId',
-    'appointmentId',
+    'sub',
+    // member
+    'platform',
+    'externalUserId',
+    'deviceId',
+    // member journal
+    'normalImageKey',
+    'smallImageKey',
+    'imageFormat',
+    'audioFormat',
+    // member replace user
+    'newUserId',
+    'oldUserId',
+    // member recordings
+    'recordingIds',
+    // appointment
+    'updatedAppointmentAction',
+    'notBefore',
+    // availabilities
+    'availabilities',
+    // notes
+    'scores',
+    // general
+    'type',
     'start',
     'end',
-    'notBefore',
-    'type',
-    'availabilities',
-    'externalUserId',
+    //sendbird
     'sendBirdChannelUrl',
+    'sendBirdMemberInfo',
     'senderUserId',
-    'deviceId',
-    'sub',
-    //sendbird create user params
+    'sender',
     'channel_url',
     'cover_url',
     'inviter_id',
     'user_ids',
     'user_id',
+    //slack
+    'channel',
     //general finish method time
     'finishedAndItTook',
-    //slackbot
-    'channel',
-    //replace user
-    'newUserId',
-    'oldUserId',
-    //sendbird webhook
-    'sender',
-    //memeber journal
-    'normalImageKey',
-    'smallImageKey',
     //queue
     'MessageId',
     //dispatches
