@@ -179,62 +179,6 @@ describe(ConductorService.name, () => {
       expect(spyOnError).not.toBeCalled();
     };
 
-    it('should retry a dispatch', async () => {
-      const memberSettings = generateUpdateMemberSettingsMock();
-      const userSettings = generateUpdateUserSettingsMock();
-      const type: InnerQueueTypes = InnerQueueTypes.updateClientSettings;
-      await service.handleUpdateClientSettings({ ...memberSettings, type });
-      await service.handleUpdateClientSettings({ ...userSettings, type });
-
-      const dispatch = generateDispatch({
-        recipientClientId: memberSettings.id,
-        senderClientId: userSettings.id,
-      });
-      dispatch.triggersAt = undefined;
-      spyOnDispatchesServiceUpdate.mockResolvedValueOnce(dispatch);
-
-      const failureReasons = [
-        { message: animal.dog(), stack: animal.crocodilia() },
-        { message: animal.cow(), stack: animal.horse() },
-      ];
-      const generateObject = (status, retryCount: number, failureReasons: any[] = []) => {
-        return { ...dispatch, failureReasons, status, retryCount };
-      };
-      const resolvedValues = [
-        generateObject(DispatchStatus.acquired, 0),
-        generateObject(DispatchStatus.error, 1, [failureReasons[0]]),
-        generateObject(DispatchStatus.acquired, 1, [failureReasons[0]]),
-        generateObject(DispatchStatus.error, 2, failureReasons),
-        generateObject(DispatchStatus.acquired, 2, failureReasons),
-        generateObject(DispatchStatus.done, 2),
-      ];
-      resolvedValues.map((value) => {
-        spyOnDispatchesServiceInternalUpdate.mockResolvedValueOnce(value);
-      });
-
-      spyOnNotificationsService.mockRejectedValueOnce(failureReasons[0]);
-      spyOnNotificationsService.mockRejectedValueOnce(failureReasons[1]);
-      spyOnNotificationsService.mockResolvedValueOnce(undefined);
-
-      await service.handleCreateDispatch({ ...dispatch, type: InnerQueueTypes.createDispatch });
-
-      await delay(7000);
-
-      expect(spyOnDispatchesServiceInternalUpdate).toBeCalledTimes(resolvedValues.length);
-      for (let i = 1; i <= resolvedValues.length; i++) {
-        expect(spyOnDispatchesServiceInternalUpdate).toHaveBeenNthCalledWith(
-          i,
-          expect.objectContaining({ status: resolvedValues[i - 1].status }),
-        );
-      }
-      expect(spyOnNotificationsService).toBeCalledWith(
-        resolvedValues[resolvedValues.length - 2],
-        expect.objectContaining(memberSettings),
-        expect.objectContaining(userSettings),
-      );
-      expect(spyOnError).not.toBeCalled();
-    }, 12000);
-
     it(`should handle triggersAt more than ${gapTriggersAt} seconds in the future`, async () => {
       const createDispatch = generateDispatch({
         triggersAt: addSeconds(new Date(), gapTriggersAt + 2),
@@ -290,6 +234,113 @@ describe(ConductorService.name, () => {
         expireAt: dispatch2.triggersAt,
       });
     });
+
+    it('should retry a dispatch and be successful at the last retry', async () => {
+      const { memberSettings, userSettings, dispatch } = await retryTestInit();
+
+      const failureReasons = [
+        { message: animal.dog(), stack: animal.crocodilia() },
+        { message: animal.cow(), stack: animal.horse() },
+      ];
+      const generateObject = (status, retryCount: number, failureReasons: any[] = []) => {
+        return { ...dispatch, failureReasons, status, retryCount };
+      };
+      const resolvedValues = [
+        generateObject(DispatchStatus.acquired, 0),
+        generateObject(DispatchStatus.error, 1, [failureReasons[0]]),
+        generateObject(DispatchStatus.acquired, 1, [failureReasons[0]]),
+        generateObject(DispatchStatus.error, 2, failureReasons),
+        generateObject(DispatchStatus.acquired, 2, failureReasons),
+        generateObject(DispatchStatus.done, 2),
+      ];
+      resolvedValues.map((value) => {
+        spyOnDispatchesServiceInternalUpdate.mockResolvedValueOnce(value);
+      });
+
+      failureReasons.forEach((reason) => {
+        spyOnNotificationsService.mockRejectedValueOnce(reason);
+      });
+      spyOnNotificationsService.mockResolvedValueOnce(undefined);
+
+      await service.handleCreateDispatch({ ...dispatch, type: InnerQueueTypes.createDispatch });
+
+      await delay(7000);
+
+      await retryTestEnd({ memberSettings, userSettings, failureReasons, resolvedValues });
+    }, 12000);
+
+    it('should failed to send dispatch on all retries', async () => {
+      const { memberSettings, userSettings, dispatch } = await retryTestInit();
+
+      const failureReasons = [
+        { message: animal.dog(), stack: animal.crocodilia() },
+        { message: animal.cow(), stack: animal.horse() },
+        { message: animal.snake(), stack: animal.rabbit() },
+      ];
+      const generateObject = (status, retryCount: number, failureReasons: any[] = []) => {
+        return { ...dispatch, failureReasons, status, retryCount };
+      };
+      const resolvedValues = [
+        generateObject(DispatchStatus.acquired, 0),
+        generateObject(DispatchStatus.error, 1, [failureReasons[0]]),
+        generateObject(DispatchStatus.acquired, 1, [failureReasons[0]]),
+        generateObject(DispatchStatus.error, 2, failureReasons.slice(1, 2)),
+        generateObject(DispatchStatus.acquired, 2, failureReasons.slice(1, 2)),
+        generateObject(DispatchStatus.error, 3, failureReasons),
+      ];
+      resolvedValues.map((value) => {
+        spyOnDispatchesServiceInternalUpdate.mockResolvedValueOnce(value);
+      });
+
+      failureReasons.forEach((reason) => {
+        spyOnNotificationsService.mockRejectedValueOnce(reason);
+      });
+      spyOnNotificationsService.mockResolvedValueOnce(undefined);
+
+      await service.handleCreateDispatch({ ...dispatch, type: InnerQueueTypes.createDispatch });
+
+      await delay(9000);
+
+      await retryTestEnd({ memberSettings, userSettings, failureReasons, resolvedValues });
+    }, 15000);
+
+    const retryTestInit = async () => {
+      const memberSettings = generateUpdateMemberSettingsMock();
+      const userSettings = generateUpdateUserSettingsMock();
+      const type: InnerQueueTypes = InnerQueueTypes.updateClientSettings;
+      await service.handleUpdateClientSettings({ ...memberSettings, type });
+      await service.handleUpdateClientSettings({ ...userSettings, type });
+
+      const dispatch = generateDispatch({
+        recipientClientId: memberSettings.id,
+        senderClientId: userSettings.id,
+      });
+      dispatch.triggersAt = undefined;
+      spyOnDispatchesServiceUpdate.mockResolvedValueOnce(dispatch);
+
+      return { memberSettings, userSettings, dispatch };
+    };
+
+    const retryTestEnd = async ({
+      memberSettings,
+      userSettings,
+      failureReasons,
+      resolvedValues,
+    }) => {
+      expect(spyOnDispatchesServiceInternalUpdate).toBeCalledTimes(resolvedValues.length);
+      for (let i = 1; i <= resolvedValues.length; i++) {
+        expect(spyOnDispatchesServiceInternalUpdate).toHaveBeenNthCalledWith(
+          i,
+          expect.objectContaining({ status: resolvedValues[i - 1].status }),
+        );
+      }
+      expect(spyOnNotificationsService).toBeCalledWith(
+        resolvedValues[resolvedValues.length - 2],
+        expect.objectContaining(memberSettings),
+        expect.objectContaining(userSettings),
+      );
+      expect(spyOnWarn).toBeCalledTimes(failureReasons.length);
+    };
   });
 
   describe('handleDeleteDispatch', () => {

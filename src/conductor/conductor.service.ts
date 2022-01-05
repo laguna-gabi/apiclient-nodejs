@@ -117,22 +117,22 @@ export class ConductorService implements OnModuleInit {
         providerResult,
       });
     } catch (ex) {
+      dispatch.failureReasons.push({ message: ex.message, stack: ex.stack });
+      //TODO NOT all dispatches should retry: call? sendbird? etc..)
+      dispatch = await this.dispatchesService.internalUpdate({
+        dispatchId: dispatch.dispatchId,
+        failureReasons: dispatch.failureReasons,
+        status: DispatchStatus.error,
+        retryCount: dispatch.retryCount + 1,
+      });
+      const { failureReasons, ...dispatchParams } = dispatch;
+      this.logger.warn(
+        dispatchParams,
+        ConductorService.name,
+        this.createRealTimeDispatch.name,
+        failureReasons[failureReasons.length - 1],
+      );
       if (dispatch.retryCount <= retryMax) {
-        //TODO NOT all dispatches should retry: call? sendbird? etc..)
-        dispatch.failureReasons.push({ message: ex.message, stack: ex.stack });
-        dispatch = await this.dispatchesService.internalUpdate({
-          dispatchId: dispatch.dispatchId,
-          failureReasons: dispatch.failureReasons,
-          status: DispatchStatus.error,
-          retryCount: dispatch.retryCount + 1,
-        });
-        const { failureReasons, ...dispatchParams } = dispatch;
-        this.logger.warn(
-          dispatchParams,
-          ConductorService.name,
-          this.createRealTimeDispatch.name,
-          failureReasons[failureReasons.length - 1], // log only the last error
-        );
         //TODO use more sophisticated retry mechanism - maybe try 2,5,7 seconds or a better logic
         setTimeout(
           async (dispatchInput) => {
@@ -140,14 +140,6 @@ export class ConductorService implements OnModuleInit {
           },
           2000,
           dispatch,
-        );
-      } else {
-        const { failureReasons, ...dispatchParams } = dispatch;
-        this.logger.error(
-          dispatchParams,
-          ConductorService.name,
-          this.createRealTimeDispatch.name,
-          failureReasons[failureReasons.length - 1], // log only the last error
         );
       }
     }
