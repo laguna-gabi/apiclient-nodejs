@@ -5,7 +5,7 @@ import { hosts } from 'config';
 import { internet } from 'faker';
 import { replaceConfigs } from '../';
 import { translation } from '../../languages/en.json';
-import { Logger } from '../../src/common';
+import { LoggerService } from '../../src/common';
 import { DbModule } from '../../src/db';
 import {
   InternationalizationService,
@@ -32,7 +32,7 @@ describe(NotificationsService.name, () => {
     service = module.get<NotificationsService>(NotificationsService);
     twilioService = module.get<Twilio>(Twilio);
     iService = module.get<InternationalizationService>(InternationalizationService);
-    mockLogger(module.get<Logger>(Logger));
+    mockLogger(module.get<LoggerService>(LoggerService));
 
     senderClient = generateUpdateMemberSettingsMock();
     recipientClient = generateUpdateMemberSettingsMock();

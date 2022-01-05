@@ -1,4 +1,9 @@
-import { BaseSendBird, InternalNotificationType, formatEx } from '@lagunahealth/pandora';
+import {
+  BaseSendBird,
+  FailureReason,
+  InternalNotificationType,
+  formatEx,
+} from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as FormData from 'form-data';
@@ -11,14 +16,16 @@ import {
   ProviderResult,
   SendSendBirdNotification,
 } from '.';
-import { Logger } from '../common';
+import { LoggerService, generateCustomErrorMessage } from '../common';
+
+export type RequestType = 'admin' | 'journalText' | 'journalImage' | 'journalAudio';
 
 @Injectable()
 export class SendBird extends BaseSendBird implements OnModuleInit {
   constructor(
     private readonly configsService: ConfigsService,
     private readonly httpService: HttpService,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
   ) {
     super();
   }
@@ -29,31 +36,38 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     await super.onModuleInit();
   }
 
-  async send(sendSendBirdNotification: SendSendBirdNotification): Promise<ProviderResult> {
-    this.logger.info(sendSendBirdNotification, SendBird.name, this.send.name);
-    const { journalImageDownloadLink, journalAudioDownloadLink, notificationType, message } =
-      sendSendBirdNotification;
-    let id;
+  async send(params: SendSendBirdNotification): Promise<ProviderResult> {
+    this.logger.info(params, SendBird.name, this.send.name);
+    const { journalImageDownloadLink, journalAudioDownloadLink, notificationType } = params;
 
+    const results: ProviderResult[] = [];
     if (notificationType === InternalNotificationType.chatMessageJournal) {
       if (journalImageDownloadLink) {
-        id = await this.sendJournalImage(sendSendBirdNotification);
+        const result = await this.sendJournalImage(params);
+        results.push(this.formatMessageByType('journalImage', result));
       } else {
-        id = await this.sendJournalText(sendSendBirdNotification);
+        const result = await this.sendJournalText(params);
+        results.push(this.formatMessageByType('journalText', result));
       }
       if (journalAudioDownloadLink) {
-        await this.sendJournalAudio(sendSendBirdNotification);
+        const result = await this.sendJournalAudio(params);
+        results.push(this.formatMessageByType('journalAudio', result));
       }
     } else {
-      id = await this.sendAdminMessage(sendSendBirdNotification);
+      const result = await this.sendAdminMessage(params);
+      results.push(this.formatMessageByType('admin', result));
     }
-    return { provider: Provider.sendbird, content: message, id };
+
+    return {
+      provider: Provider.sendbird,
+      content: results.map((result) => result.content).join(', '),
+      id: results.map((result) => result.id).join(', '),
+    };
   }
 
-  async sendJournalText(sendSendBirdNotification: SendSendBirdNotification) {
-    this.logger.info(sendSendBirdNotification, SendBird.name, this.sendJournalText.name);
-    const { userId, sendBirdChannelUrl, message, notificationType, appointmentId } =
-      sendSendBirdNotification;
+  async sendJournalText(params: SendSendBirdNotification): Promise<ProviderResult> {
+    this.logger.info(params, SendBird.name, this.sendJournalText.name);
+    const { userId, sendBirdChannelUrl, message, notificationType, appointmentId } = params;
     try {
       const result = await this.httpService
         .post(
@@ -68,159 +82,46 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
           { headers: this.headers },
         )
         .toPromise();
-      if (result.status === 200) {
-        return result.data.message_id;
-      } else {
-        this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalText.name, {
-          code: result.status,
-          data: result.data,
-        });
-      }
+      return this.parseResult(params, result, this.sendJournalText.name);
     } catch (ex) {
-      this.logger.error(
-        sendSendBirdNotification,
-        SendBird.name,
-        this.sendJournalText.name,
-        formatEx(ex),
-      );
+      this.logger.error(params, SendBird.name, this.sendJournalText.name, formatEx(ex));
+      throw ex;
     }
   }
 
-  async sendJournalImage(sendSendBirdNotification: SendSendBirdNotification) {
-    this.logger.info(sendSendBirdNotification, SendBird.name, this.sendJournalImage.name);
-    const {
-      userId,
-      sendBirdChannelUrl,
-      message,
-      notificationType,
-      appointmentId,
-      journalImageDownloadLink,
-    } = sendSendBirdNotification;
-    try {
-      const imageDownloadResult = await this.httpService
-        .get(journalImageDownloadLink, { responseType: 'stream' })
-        .toPromise();
+  async sendJournalImage(params: SendSendBirdNotification): Promise<ProviderResult> {
+    const imageDownloadResult = await this.httpService
+      .get(params.journalImageDownloadLink, { responseType: 'stream' })
+      .toPromise();
 
-      const imageFormat = imageDownloadResult.headers['content-type'].split('/')[1];
+    const imageFormat = imageDownloadResult.headers['content-type'].split('/')[1];
 
-      const writer = createWriteStream(`./${userId}.${imageFormat}`);
-      imageDownloadResult.data.pipe(writer);
-
-      writer.on('finish', async () => {
-        const form = new FormData();
-        form.append('user_id', userId);
-        form.append('message_type', 'FILE');
-        form.append('file', createReadStream(`./${userId}.${imageFormat}`));
-        form.append('apns_bundle_id', 'com.cca.MyChatPlain');
-        form.append('custom_type', notificationType); // For use of Laguna Chat
-        // eslint-disable-next-line max-len
-        form.append('data', JSON.stringify({ senderId: userId, appointmentId, message })); // For use of Laguna Chat);
-
-        const result = await this.httpService
-          .post(
-            `${this.basePath}${this.suffix.groupChannels}/${sendBirdChannelUrl}/messages`,
-            form,
-            {
-              headers: {
-                ...form.getHeaders(),
-                ...this.headers,
-                // eslint-disable-next-line max-len
-                'Content-Type': `multipart/form-data; boundary=${imageDownloadResult.headers['content-type']}`,
-              },
-            },
-          )
-          .toPromise();
-
-        await unlink(`./${userId}.${imageFormat}`);
-
-        if (result.status === 200) {
-          return result.data.message_id;
-        } else {
-          this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalImage.name, {
-            code: result.status,
-            data: result.data,
-          });
-        }
-      });
-    } catch (ex) {
-      this.logger.error(
-        sendSendBirdNotification,
-        SendBird.name,
-        this.sendJournalImage.name,
-        formatEx(ex),
-      );
-    }
+    return this.sendFile(
+      params,
+      `./${params.userId}.${imageFormat}`,
+      imageDownloadResult,
+      this.sendJournalImage.name,
+    );
   }
 
-  async sendJournalAudio(sendSendBirdNotification: SendSendBirdNotification) {
-    this.logger.info(sendSendBirdNotification, SendBird.name, this.sendJournalAudio.name);
-    const {
-      userId,
-      sendBirdChannelUrl,
-      message,
-      notificationType,
-      appointmentId,
-      journalAudioDownloadLink,
-    } = sendSendBirdNotification;
-    try {
-      const audioDownloadResult = await this.httpService
-        .get(journalAudioDownloadLink, { responseType: 'stream' })
-        .toPromise();
+  async sendJournalAudio(params: SendSendBirdNotification): Promise<ProviderResult> {
+    const audioDownloadResult = await this.httpService
+      .get(params.journalAudioDownloadLink, { responseType: 'stream' })
+      .toPromise();
 
-      const audioFormat =
-        audioDownloadResult.headers['content-type'] === 'audio/mp4' ? 'm4a' : 'mp3';
+    const audioFormat = audioDownloadResult.headers['content-type'] === 'audio/mp4' ? 'm4a' : 'mp3';
 
-      const writer = createWriteStream(`./${userId}.${audioFormat}`);
-      audioDownloadResult.data.pipe(writer);
-
-      writer.on('finish', async () => {
-        const form = new FormData();
-        form.append('user_id', userId);
-        form.append('message_type', 'FILE');
-        form.append('file', createReadStream(`./${userId}.${audioFormat}`));
-        form.append('apns_bundle_id', 'com.cca.MyChatPlain');
-        form.append('custom_type', notificationType); // For use of Laguna Chat
-        // eslint-disable-next-line max-len
-        form.append('data', JSON.stringify({ senderId: userId, appointmentId, message })); // For use of Laguna Chat);
-
-        const result = await this.httpService
-          .post(
-            `${this.basePath}${this.suffix.groupChannels}/${sendBirdChannelUrl}/messages`,
-            form,
-            {
-              headers: {
-                ...form.getHeaders(),
-                ...this.headers,
-                // eslint-disable-next-line max-len
-                'Content-Type': `multipart/form-data; boundary=${audioDownloadResult.headers['content-type']}`,
-              },
-            },
-          )
-          .toPromise();
-
-        await unlink(`./${userId}.${audioFormat}`);
-
-        if (result.status !== 200) {
-          this.logger.error(sendSendBirdNotification, SendBird.name, this.sendJournalAudio.name, {
-            code: result.status,
-            data: result.data,
-          });
-        }
-      });
-    } catch (ex) {
-      this.logger.error(
-        sendSendBirdNotification,
-        SendBird.name,
-        this.sendJournalAudio.name,
-        formatEx(ex),
-      );
-    }
+    return this.sendFile(
+      params,
+      `./${params.userId}.${audioFormat}`,
+      audioDownloadResult,
+      this.sendJournalAudio.name,
+    );
   }
 
-  async sendAdminMessage(sendSendBirdNotification: SendSendBirdNotification) {
-    this.logger.info(sendSendBirdNotification, SendBird.name, this.sendAdminMessage.name);
-    const { userId, sendBirdChannelUrl, message, notificationType, appointmentId } =
-      sendSendBirdNotification;
+  async sendAdminMessage(params: SendSendBirdNotification): Promise<ProviderResult> {
+    this.logger.info(params, SendBird.name, this.sendAdminMessage.name);
+    const { userId, sendBirdChannelUrl, message, notificationType, appointmentId } = params;
     try {
       const result = await this.httpService
         .post(
@@ -238,21 +139,101 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
           { headers: this.headers },
         )
         .toPromise();
-      if (result.status === 200) {
-        return result.data.message_id;
-      } else {
-        this.logger.error(sendSendBirdNotification, SendBird.name, this.sendAdminMessage.name, {
-          code: result.status,
-          data: result.data,
-        });
-      }
+      return this.parseResult(params, result, this.sendAdminMessage.name);
     } catch (ex) {
-      this.logger.error(
-        sendSendBirdNotification,
-        SendBird.name,
-        this.sendAdminMessage.name,
-        formatEx(ex),
-      );
+      this.logger.error(params, SendBird.name, this.sendAdminMessage.name, formatEx(ex));
+      throw ex;
+    }
+  }
+
+  private async sendFile(
+    params: SendSendBirdNotification,
+    fileName: string,
+    pipeResult,
+    functionName: string,
+  ): Promise<ProviderResult> {
+    this.logger.info(params, SendBird.name, functionName);
+    const { userId, sendBirdChannelUrl, message, notificationType, appointmentId } = params;
+
+    return new Promise(async (resolve, reject) => {
+      try {
+        const writer = createWriteStream(fileName);
+        pipeResult.data.pipe(writer);
+
+        writer.on('finish', async () => {
+          const form = new FormData();
+          form.append('user_id', userId);
+          form.append('message_type', 'FILE');
+          form.append('file', createReadStream(fileName));
+          form.append('apns_bundle_id', 'com.cca.MyChatPlain');
+          form.append('custom_type', notificationType); // For use of Laguna Chat
+          // eslint-disable-next-line max-len
+          form.append('data', JSON.stringify({ senderId: userId, appointmentId, message })); // For use of Laguna Chat);
+
+          const result = await this.httpService
+            .post(
+              `${this.basePath}${this.suffix.groupChannels}/${sendBirdChannelUrl}/messages`,
+              form,
+              {
+                headers: {
+                  ...form.getHeaders(),
+                  ...this.headers,
+                  // eslint-disable-next-line max-len
+                  'Content-Type': `multipart/form-data; boundary=${pipeResult.headers['content-type']}`,
+                },
+              },
+            )
+            .toPromise();
+
+          await unlink(fileName);
+
+          if (result.status === 200) {
+            resolve({
+              provider: Provider.sendbird,
+              content: message,
+              id: result.data.message_id.toString(),
+            });
+          } else {
+            this.logger.error(params, SendBird.name, functionName, {
+              code: result.status,
+              data: result.data,
+            });
+            reject(generateCustomErrorMessage(SendBird.name, functionName, result));
+          }
+        });
+      } catch (ex) {
+        const message: FailureReason = formatEx(ex);
+        this.logger.error(params, SendBird.name, functionName, message);
+        reject(`failed to send to ${SendBird.name}: ${message}`);
+      }
+    });
+  }
+
+  private formatMessageByType(requestType: RequestType, result: ProviderResult): ProviderResult {
+    return {
+      provider: result.provider,
+      content: `${requestType}: ${result.content}`,
+      id: `${requestType}Id: ${result.id}`,
+    };
+  }
+
+  private parseResult(
+    params: SendSendBirdNotification,
+    result,
+    functionName: string,
+  ): ProviderResult {
+    if (result.status === 200) {
+      return {
+        provider: Provider.sendbird,
+        content: params.message,
+        id: result.data.message_id.toString(),
+      };
+    } else {
+      this.logger.error(params, SendBird.name, functionName, {
+        code: result.status,
+        data: result.data,
+      });
+      throw new Error(generateCustomErrorMessage(SendBird.name, functionName, result));
     }
   }
 }

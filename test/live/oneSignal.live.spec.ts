@@ -1,5 +1,6 @@
 import {
   CancelNotificationType,
+  CustomKey,
   NotificationType,
   Platform,
   mockLogger,
@@ -9,7 +10,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as faker from 'faker';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { v4 } from 'uuid';
-import { Logger } from '../../src/common';
+import { LoggerService } from '../../src/common';
 import { ConfigsService, OneSignal } from '../../src/providers';
 import { generatePath, generatePhone } from '../generators';
 
@@ -19,7 +20,7 @@ describe(`live: ${OneSignal.name}`, () => {
   beforeAll(async () => {
     const configService = new ConfigsService();
     const httpService = new HttpService();
-    const logger = new Logger(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
+    const logger = new LoggerService(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
     mockLogger(logger);
 
     oneSignal = new OneSignal(configService, httpService, logger);
@@ -37,31 +38,36 @@ describe(`live: ${OneSignal.name}`, () => {
       isPushNotificationsEnabled: true,
     };
 
-    await oneSignal.send({
-      platform: params.platform,
-      externalUserId: params.externalUserId,
-      data: {
-        user: {
-          id: faker.datatype.uuid(),
-          firstName: faker.name.firstName(),
-          avatar: faker.image.avatar(),
+    await expect(
+      oneSignal.send({
+        platform: params.platform,
+        externalUserId: params.externalUserId,
+        data: {
+          user: {
+            id: faker.datatype.uuid(),
+            firstName: faker.name.firstName(),
+            avatar: faker.image.avatar(),
+          },
+          member: { phone: generatePhone() },
+          type: NotificationType.call,
+          contentKey: CustomKey.callOrVideo,
+          peerId: v4(),
+          isVideo: false,
+          ...generatePath(NotificationType.call),
         },
-        member: { phone: generatePhone() },
-        type: NotificationType.call,
-        peerId: v4(),
-        isVideo: false,
-        ...generatePath(NotificationType.call),
-      },
-    });
+      }),
+    ).rejects.toThrowError();
 
-    await oneSignal.cancel({
-      externalUserId: params.externalUserId,
-      platform: params.platform,
-      data: {
-        peerId: v4(),
-        type: CancelNotificationType.cancelVideo,
-        notificationId: faker.datatype.uuid(),
-      },
-    });
+    await expect(
+      oneSignal.cancel({
+        externalUserId: params.externalUserId,
+        platform: params.platform,
+        data: {
+          peerId: v4(),
+          type: CancelNotificationType.cancelVideo,
+          notificationId: faker.datatype.uuid(),
+        },
+      }),
+    ).rejects.toThrowError();
   });
 });

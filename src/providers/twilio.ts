@@ -11,7 +11,7 @@ import {
   SendTwilioNotification,
   Slack,
 } from '.';
-import { Environments, ErrorType, Errors, Logger } from '../common';
+import { Environments, ErrorType, Errors, LoggerService } from '../common';
 import { twilio } from 'config';
 import { parsePhoneNumber } from 'libphonenumber-js';
 
@@ -23,7 +23,7 @@ export class Twilio implements OnModuleInit {
   constructor(
     private readonly configsService: ConfigsService,
     private readonly slack: Slack,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
   ) {
     this.source = config.get('twilio.source');
   }
@@ -55,6 +55,7 @@ export class Twilio implements OnModuleInit {
         }
       } catch (ex) {
         this.logger.error(sendTwilioNotification, Twilio.name, this.send.name, formatEx(ex));
+        throw ex;
       }
     } else {
       const params: IEventNotifySlack = {

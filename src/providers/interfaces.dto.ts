@@ -1,4 +1,9 @@
-import { AllNotificationTypes, CancelNotificationType, Platform } from '@lagunahealth/pandora';
+import {
+  AllNotificationTypes,
+  CancelNotificationType,
+  ContentKey,
+  Platform,
+} from '@lagunahealth/pandora';
 import { Prop, Schema } from '@nestjs/mongoose';
 import { SenderClient } from '../conductor';
 
@@ -14,6 +19,7 @@ export class SendOneSignalNotification extends BaseSendNotification {
     member: { phone: string };
     peerId?: string;
     type: AllNotificationTypes;
+    contentKey: ContentKey;
     path?: string;
     isVideo: boolean;
     extraData?: string;

@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
-import { Logger } from '.';
+import { LoggerService } from '.';
 import { PinoHttpConfig } from '@lagunahealth/pandora';
 
 @Module({
-  providers: [Logger],
-  exports: [Logger],
+  providers: [LoggerService],
+  exports: [LoggerService],
   imports: [
     LoggerModule.forRoot({
-      pinoHttp: PinoHttpConfig
+      pinoHttp: PinoHttpConfig,
     }),
   ],
 })

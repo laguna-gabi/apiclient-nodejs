@@ -1,7 +1,7 @@
 import {
   AllNotificationTypes,
   BaseOneSignal,
-  InternalNotificationType,
+  InternalKey,
   Platform,
   formatEx,
 } from '@lagunahealth/pandora';
@@ -9,7 +9,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { oneSignal } from 'config';
 import { CancelNotificationParams, Provider, ProviderResult, SendOneSignalNotification } from '.';
-import { Logger } from '../common';
+import { LoggerService, generateCustomErrorMessage } from '../common';
 import { ConfigsService, ExternalConfigs } from './aws';
 
 @Injectable()
@@ -19,7 +19,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
   constructor(
     private readonly configsService: ConfigsService,
     private readonly httpService: HttpService,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
   ) {
     super();
   }
@@ -41,10 +41,8 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     const config = await this.getConfig(platform, data.type);
     const app_id = await this.getApiId(platform, data.type);
     const extraData = this.getExtraDataByPlatform(platform);
-    const onlyChatData =
-      data.type === InternalNotificationType.chatMessageToMember
-        ? { collapse_id: data.user.id }
-        : {};
+    const collapseOnClient =
+      data.contentKey === InternalKey.newChatMessageFromUser ? { collapse_id: data.user.id } : {};
 
     const body: any = {
       app_id,
@@ -53,7 +51,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
       contents: { en: content },
       headings: { en: 'Laguna' },
       ...extraData,
-      ...onlyChatData,
+      ...collapseOnClient,
       data,
     };
 
@@ -62,19 +60,19 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     }
 
     try {
-      const { status, data } = await this.httpService
-        .post(this.notificationsUrl, body, config)
-        .toPromise();
-      if (status === 200 && data.recipients >= 1) {
-        return { provider: Provider.oneSignal, content: body.contents.en, id: data.id };
+      const result = await this.httpService.post(this.notificationsUrl, body, config).toPromise();
+      if (result.status === 200 && result.data.recipients >= 1) {
+        return { provider: Provider.oneSignal, content: body.contents.en, id: result.data.id };
       } else {
         this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, {
-          code: status,
+          code: result.status,
           data,
         });
+        throw new Error(generateCustomErrorMessage(OneSignal.name, this.send.name, result));
       }
     } catch (ex) {
       this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, formatEx(ex));
+      throw ex;
     }
   }
 
@@ -96,9 +94,12 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
       const result = await this.httpService.post(this.notificationsUrl, body, config).toPromise();
       if (result.status === 200 && result.data.recipients >= 1) {
         return { provider: Provider.oneSignal, content: data.peerId, id: result.data.id };
+      } else {
+        throw new Error(generateCustomErrorMessage(OneSignal.name, this.cancel.name, result));
       }
     } catch (ex) {
       this.logger.error(cancelNotificationParams, OneSignal.name, this.cancel.name, formatEx(ex));
+      throw ex;
     }
   }
 

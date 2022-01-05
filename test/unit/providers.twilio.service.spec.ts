@@ -4,34 +4,34 @@ import { twilio } from 'config';
 import { lorem } from 'faker';
 import { v4 } from 'uuid';
 import { AppModule } from '../../src/app.module';
-import { Environments, ErrorType, Errors, Logger } from '../../src/common';
+import { Environments, ErrorType, Errors, LoggerService } from '../../src/common';
 import { Slack, Twilio } from '../../src/providers';
 
 describe('Twilio', () => {
   let module: TestingModule;
   let twilioService: Twilio;
-  let logger: Logger;
+  let logger: LoggerService;
   let slack: Slack;
 
   let spyOnInternalSend;
-  let spyOnLogger;
+  let spyOnError;
   let spyOnSlack;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    logger = module.get<Logger>(Logger);
+    logger = module.get<LoggerService>(LoggerService);
     mockLogger(logger);
     twilioService = module.get<Twilio>(Twilio);
     slack = module.get<Slack>(Slack);
 
-    spyOnLogger = jest.spyOn(logger, 'error');
+    spyOnError = jest.spyOn(logger, 'error');
     spyOnInternalSend = jest.spyOn(twilioService as any, 'createMessage');
     spyOnSlack = jest.spyOn(slack, 'send');
   });
 
   afterAll(async () => {
     await module.close();
-    spyOnLogger.mockReset();
+    spyOnError.mockReset();
     spyOnInternalSend.mockReset();
     spyOnSlack.mockReset();
   });
@@ -54,7 +54,6 @@ describe('Twilio', () => {
         twilio.get('iosExcludeRegistrationNumber'),
         false, // message sent via Twilio
         true, // message sent via Slack
-        false, // error message issued
         Environments.production,
       ],
       [
@@ -62,7 +61,6 @@ describe('Twilio', () => {
         '+972501234567',
         false, // message sent via Twilio
         true, // message sent via Slack
-        false, // error message issued
         Environments.production,
       ],
       [
@@ -70,7 +68,6 @@ describe('Twilio', () => {
         '+12133734253',
         false, // message sent via Twilio
         true, // message sent via Slack
-        false, // error message issued
         Environments.test,
       ],
       [
@@ -78,21 +75,12 @@ describe('Twilio', () => {
         '+12133734253',
         true, // message sent via Twilio
         false, // message sent via Slack
-        false, // error message issued
         Environments.production,
       ],
-      [
-        'invalid phone in production env - should log error message',
-        '+1234567',
-        undefined, // message sent via Twilio (twilio is invoked with error)
-        false, // message sent via Slack
-        true, // error message issued
-        Environments.production,
-      ],
-    ])('%p', (_, to, messageSentToTwilio, messageSentViaSlack, logError, env) => {
+    ])('%p', async (_, to, messageSentToTwilio, messageSentViaSlack, env) => {
       process.env.NODE_ENV = env;
       const body = lorem.sentence();
-      twilioService.send({ body, to });
+      await twilioService.send({ body, to });
 
       if (messageSentToTwilio) {
         expect(spyOnInternalSend).toBeCalledWith(body, to, twilio.get('source'));
@@ -100,29 +88,26 @@ describe('Twilio', () => {
         expect(spyOnInternalSend).not.toBeCalled();
       }
 
-      if (messageSentViaSlack && !logError) {
+      if (messageSentViaSlack) {
         expect(spyOnSlack).toBeCalledWith({
           header: `*SMS to ${to}*`,
           message: body,
           channel: SlackChannel.testingSms,
           icon: SlackIcon.phone,
         });
-      } else if (!logError) {
+      } else {
         expect(spyOnSlack).not.toBeCalled();
       }
 
-      if (logError) {
-        expect(spyOnLogger).toBeCalledWith(
-          { body, to },
-          Twilio.name,
-          'send',
-          expect.objectContaining({
-            message: Errors.get(ErrorType.invalidPhoneNumberForMessaging),
-          }),
-        );
-      } else {
-        expect(spyOnLogger).not.toBeCalled();
-      }
+      expect(spyOnError).not.toBeCalled();
+    });
+
+    it('invalid phone in production env - should throw an error message', async () => {
+      process.env.NODE_ENV = Environments.production;
+      const body = lorem.sentence();
+      await expect(twilioService.send({ body, to: '+1234567' })).rejects.toThrow(
+        Error(Errors.get(ErrorType.invalidPhoneNumberForMessaging)),
+      );
     });
   });
 });

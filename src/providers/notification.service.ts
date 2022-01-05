@@ -24,7 +24,7 @@ import {
   SendTwilioNotification,
   Twilio,
 } from '.';
-import { EventType, Logger } from '../common';
+import { EventType, LoggerService } from '../common';
 import { Dispatch } from '../conductor';
 import { ClientSettings } from '../settings';
 
@@ -38,7 +38,7 @@ export class NotificationsService {
     private readonly oneSignal: OneSignal,
     private readonly bitly: Bitly,
     private readonly internationalization: InternationalizationService,
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
     protected readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -121,10 +121,6 @@ export class NotificationsService {
       return undefined;
     }
 
-    const downloadLink = dispatch.appointmentId
-      ? await this.bitly.shortenLink(`${hosts.get('app')}/download/${dispatch.appointmentId}`)
-      : undefined;
-
     let content = this.internationalization.getContents({
       contentKey: dispatch.contentKey,
       senderClient,
@@ -132,7 +128,6 @@ export class NotificationsService {
       extraData: {
         org: { name: recipientClient.orgName },
         appointmentTime: this.formatAppointmentTime(recipientClient, dispatch.appointmentTime),
-        downloadLink,
         dynamicLink: hosts.get('dynamicLink'),
         gapMinutes,
       },
@@ -213,8 +208,7 @@ export class NotificationsService {
     const { notificationType } = dispatch;
     const pathObject = dispatch.path ? { path: dispatch.path } : {};
     const extraDataObject =
-      dispatch.notificationType === NotificationType.video ||
-      dispatch.notificationType === NotificationType.call
+      notificationType === NotificationType.video || notificationType === NotificationType.call
         ? { extraData: JSON.stringify(await this.twilio.createPeerIceServers()) }
         : {};
     const peerIdObject = { peerId: dispatch.peerId } || {};
@@ -230,6 +224,7 @@ export class NotificationsService {
         },
         member: { phone: recipientClient.phone },
         type: notificationType,
+        contentKey: dispatch.contentKey,
         isVideo: notificationType === NotificationType.video,
         ...pathObject,
         ...extraDataObject,
