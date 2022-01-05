@@ -2264,7 +2264,7 @@ describe('MemberResolver', () => {
         dispatchId: expect.stringContaining(generateDispatchId(InternalKey.newChatMessageFromUser)),
         memberId: communication.memberId.toString(),
         userId: user.id,
-        type: InternalNotificationType.chatMessageToMember,
+        type: NotificationType.text,
         correlationId: expect.any(String),
         metadata: {
           contentType: InternalKey.newChatMessageFromUser,
