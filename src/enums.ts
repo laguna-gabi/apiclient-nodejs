@@ -1,4 +1,4 @@
-import {v4} from 'uuid';
+import { v4 } from 'uuid';
 
 /*******************************************************************************
  *********************************** General ***********************************
@@ -7,7 +7,7 @@ export enum Environments {
   production = 'production',
   development = 'development',
   test = 'test',
-  localhost = 'localhost'
+  localhost = 'localhost',
 }
 
 /*******************************************************************************
@@ -47,7 +47,6 @@ export enum InternalNotificationType {
   textToMember = 'textToMember',
   textSmsToMember = 'textSmsToMember',
   textSmsToUser = 'textSmsToUser',
-  chatMessageToMember = 'chatMessageToMember',
   chatMessageToUser = 'chatMessageToUser',
   chatMessageJournal = 'chatMessageJournal',
 }
@@ -56,7 +55,6 @@ export type AllNotificationTypes =
   | NotificationType
   | CancelNotificationType
   | InternalNotificationType;
-
 
 /*******************************************************************************
  *********************************** Logger ***********************************
@@ -76,13 +74,15 @@ export const PinoHttpConfig = {
   quietReqLogger: true,
   level: LogType.debug,
   prettyPrint:
-    !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test ||
-    process.env.NODE_ENV === Environments.localhost ? {
-        colorize: true,
-        translateTime: 'SYS:dd/mm/yyyy, H:M:ss',
-        singleLine: true,
-        messageFormat: '[{className}] [{methodName}] {reasons}',
-        ignore: 'pid,hostname,className,methodName,reasons',
-      }
-      : false
+    !process.env.NODE_ENV ||
+    process.env.NODE_ENV === Environments.test ||
+    process.env.NODE_ENV === Environments.localhost
+      ? {
+          colorize: true,
+          translateTime: 'SYS:dd/mm/yyyy, H:M:ss',
+          singleLine: true,
+          messageFormat: '[{className}] [{methodName}] {reasons}',
+          ignore: 'pid,hostname,className,methodName,reasons',
+        }
+      : false,
 };
