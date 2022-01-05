@@ -208,8 +208,7 @@ export class NotificationsService {
     const { notificationType } = dispatch;
     const pathObject = dispatch.path ? { path: dispatch.path } : {};
     const extraDataObject =
-      dispatch.notificationType === NotificationType.video ||
-      dispatch.notificationType === NotificationType.call
+      notificationType === NotificationType.video || notificationType === NotificationType.call
         ? { extraData: JSON.stringify(await this.twilio.createPeerIceServers()) }
         : {};
     const peerIdObject = { peerId: dispatch.peerId } || {};
@@ -225,6 +224,7 @@ export class NotificationsService {
         },
         member: { phone: recipientClient.phone },
         type: notificationType,
+        contentKey: dispatch.contentKey,
         isVideo: notificationType === NotificationType.video,
         ...pathObject,
         ...extraDataObject,

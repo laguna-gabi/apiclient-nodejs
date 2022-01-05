@@ -1,5 +1,6 @@
 import {
   CancelNotificationType,
+  CustomKey,
   NotificationType,
   Platform,
   mockLogger,
@@ -49,6 +50,7 @@ describe(`live: ${OneSignal.name}`, () => {
           },
           member: { phone: generatePhone() },
           type: NotificationType.call,
+          contentKey: CustomKey.callOrVideo,
           peerId: v4(),
           isVideo: false,
           ...generatePath(NotificationType.call),

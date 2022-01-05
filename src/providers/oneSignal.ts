@@ -1,7 +1,7 @@
 import {
   AllNotificationTypes,
   BaseOneSignal,
-  InternalNotificationType,
+  InternalKey,
   Platform,
   formatEx,
 } from '@lagunahealth/pandora';
@@ -41,10 +41,8 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     const config = await this.getConfig(platform, data.type);
     const app_id = await this.getApiId(platform, data.type);
     const extraData = this.getExtraDataByPlatform(platform);
-    const onlyChatData =
-      data.type === InternalNotificationType.chatMessageToMember
-        ? { collapse_id: data.user.id }
-        : {};
+    const collapseOnClient =
+      data.contentKey === InternalKey.newChatMessageFromUser ? { collapse_id: data.user.id } : {};
 
     const body: any = {
       app_id,
@@ -53,7 +51,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
       contents: { en: content },
       headings: { en: 'Laguna' },
       ...extraData,
-      ...onlyChatData,
+      ...collapseOnClient,
       data,
     };
 
