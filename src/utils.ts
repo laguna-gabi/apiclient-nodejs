@@ -23,3 +23,8 @@ export const mockLogger = (logger) => {
   jest.spyOn(logger, 'info').mockImplementation(() => undefined);
   jest.spyOn(logger, 'warn').mockImplementation(() => undefined);
 };
+
+// mocking the process warnings in order to avoid the prettyPrint deprecation warning in the tests
+export const mockProcessWarnings = () => {
+  jest.spyOn(process, 'emitWarning').mockImplementation(() => undefined);
+};
