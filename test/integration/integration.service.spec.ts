@@ -691,6 +691,8 @@ describe('Notifications full flow', () => {
       senderClientId: webMemberClient.id,
       content: lorem.word(),
       sendBirdChannelUrl: internet.url(),
+      journalAudioDownloadLink: internet.url(),
+      journalImageDownloadLink: internet.url(),
     });
     const object = new ObjectJournalContentClass(mock);
     spyOnSendBirdSend.mockReturnValueOnce(providerResult);
@@ -708,8 +710,10 @@ describe('Notifications full flow', () => {
       message: mock.content,
       notificationType: InternalNotificationType.chatMessageJournal,
       orgName: undefined,
-      sendBirdChannelUrl: mock.sendBirdChannelUrl,
       userId: webMemberClient.id,
+      sendBirdChannelUrl: mock.sendBirdChannelUrl,
+      journalAudioDownloadLink: mock.journalAudioDownloadLink,
+      journalImageDownloadLink: mock.journalImageDownloadLink,
     });
 
     await compareResults({
