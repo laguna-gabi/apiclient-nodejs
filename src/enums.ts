@@ -44,8 +44,6 @@ export enum CancelNotificationType {
 }
 
 export enum InternalNotificationType {
-  textSmsToMember = 'textSmsToMember',
-  textSmsToUser = 'textSmsToUser',
   chatMessageToUser = 'chatMessageToUser',
   chatMessageJournal = 'chatMessageJournal',
 }
