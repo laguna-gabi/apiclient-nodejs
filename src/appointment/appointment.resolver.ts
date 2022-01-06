@@ -1,6 +1,7 @@
 import {
   InternalKey,
   InternalNotificationType,
+  NotificationType,
   formatEx,
   generateDispatchId,
 } from '@lagunahealth/pandora';
@@ -193,7 +194,7 @@ export class AppointmentResolver extends AppointmentBase {
 
   private notifyRequestAppointment(appointment: Appointment) {
     const contentKey = InternalKey.appointmentRequest;
-    const notificationType = InternalNotificationType.textToMember;
+    const notificationType = NotificationType.text;
 
     const appointmentRequest: IInternalDispatch = {
       correlationId: getCorrelationId(this.logger),

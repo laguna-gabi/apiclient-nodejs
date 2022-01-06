@@ -1,4 +1,9 @@
-import { InternalKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
+import {
+  InternalKey,
+  InternalNotificationType,
+  NotificationType,
+  generateDispatchId,
+} from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { scheduler } from 'config';
 import { addDays, addMinutes, isBefore, subDays, subMinutes } from 'date-fns';
@@ -109,7 +114,7 @@ export class AppointmentBase {
       const appointmentReminderShortEvent: IInternalDispatch = {
         correlationId,
         dispatchId: generateDispatchId(contentKey, memberId, appointment.id),
-        notificationType: InternalNotificationType.textToMember,
+        notificationType: NotificationType.text,
         recipientClientId: memberId,
         senderClientId: userId,
         contentKey,
@@ -124,7 +129,7 @@ export class AppointmentBase {
       const appointmentReminderLongEvent: IInternalDispatch = {
         correlationId,
         dispatchId: generateDispatchId(contentKey, memberId, appointment.id),
-        notificationType: InternalNotificationType.textToMember,
+        notificationType: NotificationType.text,
         recipientClientId: memberId,
         senderClientId: userId,
         contentKey,
