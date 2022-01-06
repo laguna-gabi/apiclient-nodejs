@@ -28,12 +28,13 @@ Laguna health shared component for interfaces of sending/receiving a message.
 <br/>Written in typescript
 
 - [📨 Pandora](#-pandora)
-    * [💡 Project introduction](#-project-introduction)
-    * [📋 Prerequisites](#-prerequisites)
-        + [Installation](#installation)
-        + [Aws](#aws)
-        + [Shared code settings](#shared-code-settings)
-    
+  - [💡 Project introduction](#-project-introduction)
+  - [📋 Prerequisites](#-prerequisites)
+    - [Installation](#installation)
+    - [Aws](#aws)
+    - [Shared code settings](#shared-code-settings)
+  - [🏠 Working locally](#-working-locally)
+
 ## 💡 Project introduction
 
 This project handles all shared data, interfaces and logic for sending data to [iris](https://github.com/LagunaHealth/iris)
@@ -63,3 +64,23 @@ In order to work locally with aws cli and `package.json` dependencies, install
 
 1. Set up your ide to run with `.prettierrc` file which exists on the main root of the project.
 2. Set up your ide to run with `.eslintrc.js` file which exists on the main root of the project.
+
+## 🏠 Working locally
+
+When working locally we would like to be able to test our changes in `Hepius` and `Iris`.
+
+For that reason we create a snapshot for every commit you make on a _Pull Request_, this snapshot consists of the current version of pandora with that hash of the commit.
+
+you can find the snapshot version that was created in the _Pull Request_ page as a comment with the coverage. Simply paste the snapshot version in the `package.json` of the project you want to test
+
+```json
+  .
+  .
+  },
+  "dependencies": {
+    "@lagunahealth/pandora": "[the version commented on the PR]",
+  .
+  .
+```
+
+and run `$ yarn` to install the snapshot package.
