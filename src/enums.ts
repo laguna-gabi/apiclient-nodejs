@@ -35,6 +35,7 @@ export enum NotificationType {
   call = 'call',
   text = 'text',
   textSms = 'textSms',
+  chat = 'chat',
 }
 
 export enum CancelNotificationType {
@@ -42,16 +43,6 @@ export enum CancelNotificationType {
   cancelCall = 'cancelCall',
   cancelText = 'cancelText',
 }
-
-export enum InternalNotificationType {
-  chatMessageToUser = 'chatMessageToUser',
-  chatMessageJournal = 'chatMessageJournal',
-}
-
-export type AllNotificationTypes =
-  | NotificationType
-  | CancelNotificationType
-  | InternalNotificationType;
 
 /*******************************************************************************
  *********************************** Logger ***********************************
