@@ -1,4 +1,4 @@
-import { InternalNotificationType, mockLogger } from '@lagunahealth/pandora';
+import { Environments, InternalNotificationType, mockLogger } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as AWS from 'aws-sdk';
@@ -6,7 +6,7 @@ import { aws } from 'config';
 import * as faker from 'faker';
 import { existsSync, unlinkSync } from 'fs';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
-import { Environments, LoggerService } from '../../src/common';
+import { LoggerService } from '../../src/common';
 import {
   ConfigsService,
   ExternalConfigs,
@@ -31,11 +31,7 @@ describe(`live: ${SendBird.name}`, () => {
 
   beforeAll(async () => {
     const secretsManager = new AWS.SecretsManager({ region: aws.region });
-    const result = await secretsManager
-      .getSecretValue({
-        SecretId: Environments.test,
-      })
-      .promise();
+    const result = await secretsManager.getSecretValue({ SecretId: Environments.test }).promise();
     const data = JSON.parse(result.SecretString);
 
     const appId = data[ExternalConfigs.sendbird.apiId];
