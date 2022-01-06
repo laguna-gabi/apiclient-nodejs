@@ -1,4 +1,4 @@
-import { mockLogger } from '@lagunahealth/pandora';
+import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
@@ -11,6 +11,7 @@ describe('HealthController', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = module.createNestApplication();
 

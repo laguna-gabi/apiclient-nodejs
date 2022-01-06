@@ -1,4 +1,10 @@
-import { Environments, QueueType, ServiceName, mockLogger } from '@lagunahealth/pandora';
+import {
+  Environments,
+  QueueType,
+  ServiceName,
+  mockLogger,
+  mockProcessWarnings,
+} from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
@@ -28,6 +34,7 @@ describe(QueueService.name, () => {
   let storageService;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       imports: [ProvidersModule, EventEmitterModule.forRoot()],
     }).compile();

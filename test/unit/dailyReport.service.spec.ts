@@ -10,6 +10,7 @@ import {
 } from '../../src/dailyReport';
 import { dbDisconnect, generateId, generateObjectId } from '../index';
 import { LoggerService } from '../../src/common';
+import { mockProcessWarnings } from '@lagunahealth/pandora';
 
 describe('DailyReportCategoryService', () => {
   let service: DailyReportService;
@@ -17,6 +18,7 @@ describe('DailyReportCategoryService', () => {
   let module: TestingModule;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       providers: [
         {

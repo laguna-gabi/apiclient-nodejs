@@ -9,6 +9,7 @@ import * as faker from 'faker';
 import { add } from 'date-fns';
 import * as path from 'path';
 import { delay } from '../../src/common';
+import { mockProcessWarnings } from '@lagunahealth/pandora';
 
 jest.mock('fs', () => {
   const actualFS = jest.requireActual('fs');
@@ -25,6 +26,7 @@ describe('Commands: MigrationService', () => {
   const startDate = faker.datatype.datetime();
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       imports: defaultModules().concat(MigrationModule),
       providers: [

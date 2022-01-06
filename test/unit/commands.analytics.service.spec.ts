@@ -25,7 +25,7 @@ import { MemberModule } from '../../src/member';
 import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProvidersModule } from '../../src/providers';
-import { Language } from '@lagunahealth/pandora';
+import { Language, mockProcessWarnings } from '@lagunahealth/pandora';
 import * as config from 'config';
 import { Model, Types } from 'mongoose';
 import { User, UserDocument, UserModule } from '../../src/user';
@@ -48,6 +48,7 @@ describe('Commands: AnalyticsService', () => {
   mockMember.dateOfBirth = reformatDate(sub(now, { years: 40 }).toString(), DateFormat);
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       imports: defaultModules().concat(MemberModule, UserModule, ProvidersModule, AnalyticsModule),
       providers: [

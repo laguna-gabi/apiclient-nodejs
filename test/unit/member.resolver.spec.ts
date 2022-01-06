@@ -12,6 +12,7 @@ import {
   generateDeleteDispatchMock,
   generateDispatchId,
   mockLogger,
+  mockProcessWarnings,
 } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -98,6 +99,7 @@ describe('MemberResolver', () => {
   let spyOnEventEmitter;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       imports: defaultModules().concat(MemberModule),
     }).compile();

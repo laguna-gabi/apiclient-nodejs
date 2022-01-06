@@ -3,6 +3,7 @@ import {
   InternalNotificationType,
   generateDispatchId,
   mockLogger,
+  mockProcessWarnings,
 } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -28,6 +29,7 @@ describe('DailyReportResolver', () => {
   let memberId: string;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       providers: [DailyReportResolver, LoggerService],
       imports: defaultModules().concat(DailyReportModule),

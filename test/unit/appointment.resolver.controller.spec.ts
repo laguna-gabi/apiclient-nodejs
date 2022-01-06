@@ -1,4 +1,9 @@
-import { InternalKey, generateDispatchId, mockLogger } from '@lagunahealth/pandora';
+import {
+  InternalKey,
+  generateDispatchId,
+  mockLogger,
+  mockProcessWarnings,
+} from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { addMinutes } from 'date-fns';
@@ -50,6 +55,7 @@ describe('AppointmentResolver', () => {
   const fakeUUID = faker.datatype.uuid();
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       imports: defaultModules().concat(AppointmentModule),
     }).compile();
