@@ -15,6 +15,7 @@ import {
   ObjectCustomContentClass,
   ObjectExternalContentClass,
   ObjectFutureNotifyClass,
+  ObjectJournalContentClass,
   ObjectNewChatMessageToMemberClass,
   ObjectNewMemberClass,
   ObjectNewMemberNudgeClass,
@@ -47,11 +48,18 @@ import {
 import { general, hosts, scheduler } from 'config';
 import { addDays, addSeconds, subDays, subMinutes } from 'date-fns';
 import * as faker from 'faker';
+import { internet } from 'faker';
 import { v4 } from 'uuid';
 import { Appointment } from '../../src/appointment';
 import { RegisterForNotificationParams, delay, generatePath, reformatDate } from '../../src/common';
 import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
-import { CancelNotifyParams, NotifyParams, UpdateJournalTextParams } from '../../src/member';
+import {
+  AudioFormat,
+  CancelNotifyParams,
+  ImageFormat,
+  NotifyParams,
+  UpdateJournalTextParams,
+} from '../../src/member';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   generateCreateMemberParams,
@@ -783,52 +791,112 @@ describe('Integration tests: notifications', () => {
   /**
    * Trigger : MemberResolver.publishJournal
    * Dispatches:
-   *      1. create dispatch CustomKey.journalContent
+   *      1. create dispatch CustomKey.journalContent having at least a content and/or links
+   *          content
+   *          journalImageDownloadLink
+   *          journalAudioDownloadLink
    */
-  // eslint-disable-next-line max-len
-  it(`publishJournal: should create dispatches of types ${CustomKey.journalContent}`, async () => {
-    const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org, useNewUser: true });
+  test.each`
+    audioLink | imageLink | description
+    ${false}  | ${false}  | ${'having content'}
+    ${true}   | ${true}   | ${'having content, journalImageDownloadLink, journalAudioDownloadLink'}
+    ${false}  | ${true}   | ${'having content, journalImageDownloadLink'}
+    ${true}   | ${false}  | ${'having content, journalAudioDownloadLink'}
+  `(
+    `publishJournal: should create dispatches of types ${CustomKey.journalContent} $description`,
+    async (params) => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
 
-    await delay(200);
+      await delay(200);
 
-    const { id: journalId } = await handler.setContextUserId(member.id).mutations.createJournal();
-    const updateJournalTextParams: UpdateJournalTextParams = generateUpdateJournalTextParams({
-      id: journalId,
-    });
-    const journal = await handler.setContextUserId(member.id).mutations.updateJournalText({
-      updateJournalTextParams,
-    });
+      const { id: journalId } = await handler.setContextUserId(member.id).mutations.createJournal();
+      const updateJournalTextParams: UpdateJournalTextParams = generateUpdateJournalTextParams({
+        id: journalId,
+      });
+      const journal = await handler.setContextUserId(member.id).mutations.updateJournalText({
+        updateJournalTextParams,
+      });
 
-    handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+      const { journalAudioDownloadLink, journalImageDownloadLink } = await generateLinksMocks({
+        params,
+        journalId,
+        memberId: member.id,
+      });
 
-    await handler.setContextUserId(member.id).mutations.publishJournal({ id: journalId });
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
-    await delay(500);
+      await handler.setContextUserId(member.id).mutations.publishJournal({ id: journalId });
 
-    const communication = await handler.communicationService.get({
-      memberId: member.id,
-      userId: member.primaryUserId.toString(),
-    });
-    const mock = generateObjectJournalContentMock({
-      senderClientId: member.id,
-      recipientClientId: member.primaryUserId.toString(),
-      content: journal.text,
-      sendBirdChannelUrl: communication.sendBirdChannelUrl,
-    });
+      await delay(500);
 
-    const object = new ObjectBaseClass(mock);
-    Object.keys(object.objectBaseType).forEach((key) => {
-      expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
-        expect.objectContaining({
-          type: QueueType.notifications,
-          message: expect.stringContaining(
-            key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
-          ),
-        }),
-      );
-    });
-  });
+      const communication = await handler.communicationService.get({
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+      });
+      const mock = generateObjectJournalContentMock({
+        senderClientId: member.id,
+        recipientClientId: member.primaryUserId.toString(),
+        content: journal.text,
+        sendBirdChannelUrl: communication.sendBirdChannelUrl,
+        journalAudioDownloadLink,
+        journalImageDownloadLink,
+      });
+
+      const object = new ObjectJournalContentClass(mock);
+      Object.keys(object.objectCustomContentType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    },
+  );
+
+  const generateLinksMocks = async ({
+    params,
+    journalId,
+    memberId,
+  }): Promise<{ journalAudioDownloadLink; journalImageDownloadLink }> => {
+    let journalImageDownloadLink, journalAudioDownloadLink;
+
+    if (params.imageLink) {
+      const link = internet.url();
+      handler.storage.spyOnStorageUpload.mockReturnValueOnce(link);
+      handler.storage.spyOnStorageDownload.mockReturnValueOnce(link);
+
+      const { normalImageLink } = await handler
+        .setContextUserId(memberId)
+        .queries.getMemberUploadJournalImageLink({
+          getMemberUploadJournalImageLinkParams: {
+            id: journalId,
+            imageFormat: ImageFormat.jpg,
+          },
+        });
+      journalImageDownloadLink = normalImageLink;
+    }
+    if (params.audioLink) {
+      const link = internet.url();
+      handler.storage.spyOnStorageUpload.mockReturnValueOnce(link);
+      handler.storage.spyOnStorageDownload.mockReturnValueOnce(link);
+
+      const { audioLink } = await handler
+        .setContextUserId(memberId)
+        .queries.getMemberUploadJournalAudioLink({
+          getMemberUploadJournalAudioLinkParams: {
+            id: journalId,
+            audioFormat: AudioFormat.mp3,
+          },
+        });
+      journalAudioDownloadLink = audioLink;
+    }
+
+    return { journalImageDownloadLink, journalAudioDownloadLink };
+  };
 
   describe('Webhooks', () => {
     /**

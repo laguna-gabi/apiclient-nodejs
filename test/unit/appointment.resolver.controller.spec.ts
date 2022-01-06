@@ -1,9 +1,4 @@
-import {
-  InternalKey,
-  InternalNotificationType,
-  generateDispatchId,
-  mockLogger,
-} from '@lagunahealth/pandora';
+import { InternalKey, generateDispatchId, mockLogger } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { addMinutes } from 'date-fns';
@@ -22,7 +17,6 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IDispatchParams,
   IEventOnUpdatedAppointment,
   IEventOnUpdatedUserCommunication,
   LoggerService,
@@ -106,25 +100,7 @@ describe('AppointmentResolver', () => {
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith(appointment);
-
-      const eventParams: IDispatchParams = {
-        memberId: params.memberId,
-        dispatchId: generateDispatchId(
-          InternalKey.appointmentRequest,
-          appointment.id,
-          params.memberId,
-        ),
-        correlationId: fakeUUID,
-        userId: params.userId,
-        type: InternalNotificationType.textToMember,
-        metadata: {
-          contentType: InternalKey.appointmentRequest,
-          appointmentId: appointment.id,
-          scheduleLink: `${appointment.link}`,
-          path: `connect/${appointment.id}`,
-        },
-      };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDispatch, eventParams);
+      expect(spyOnEventEmitter).toBeCalled();
     });
   });
 

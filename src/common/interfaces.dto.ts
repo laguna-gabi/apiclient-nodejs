@@ -1,8 +1,6 @@
 import {
-  AllNotificationTypes,
   CancelNotificationType,
-  ContentKey,
-  ExtraData,
+  ICreateDispatch,
   InternalNotificationType,
   Language,
   NotificationType,
@@ -96,31 +94,7 @@ export abstract class BaseService {
   }
 }
 
-export class InternalNotificationMetadata {
-  contentType?: ContentKey;
-  extraData?: ExtraData;
-  chatLink?: string;
-  scheduleLink?: string;
-  sendBirdChannelUrl?: string;
-  appointmentTime?: Date;
-  appointmentId?: string;
-  triggersAt?: Date;
-  checkAppointmentReminder?: boolean;
-  path?: string;
-  peerId?: string;
-  journalImageDownloadLink?: string;
-  journalAudioDownloadLink?: string;
-}
-
-export class IDispatchParams {
-  dispatchId: string;
-  correlationId?: string;
-  memberId: string;
-  userId?: string;
-  type: AllNotificationTypes;
-  metadata: InternalNotificationMetadata;
-  content?: string;
-}
+export type IInternalDispatch = Omit<ICreateDispatch, 'type' | 'serviceName'>;
 
 export enum UpdatedAppointmentAction {
   edit = 'edit',

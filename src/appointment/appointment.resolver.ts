@@ -22,12 +22,12 @@ import {
 } from '.';
 import {
   EventType,
-  IDispatchParams,
   IEventMember,
   IEventOnNewMember,
   IEventOnUpdatedAppointment,
   IEventOnUpdatedUserAppointments,
   IEventOnUpdatedUserCommunication,
+  IInternalDispatch,
   LoggerService,
   LoggingInterceptor,
   Roles,
@@ -192,25 +192,20 @@ export class AppointmentResolver extends AppointmentBase {
    ************************************************************************************************/
 
   private notifyRequestAppointment(appointment: Appointment) {
-    const baseEvent = {
-      memberId: appointment.memberId.toString(),
-      userId: appointment.userId.toString(),
-      type: InternalNotificationType.textToMember,
-      correlationId: getCorrelationId(this.logger),
-    };
     const contentKey = InternalKey.appointmentRequest;
+    const notificationType = InternalNotificationType.textToMember;
 
-    const appointmentRequest: IDispatchParams = {
-      ...baseEvent,
-      dispatchId: generateDispatchId(contentKey, ...[baseEvent.memberId, appointment.id]),
-      metadata: {
-        contentType: contentKey,
-        scheduleLink: appointment.link,
-        appointmentId: appointment.id,
-        path: generatePath(baseEvent.type, contentKey, appointment.id),
-      },
+    const appointmentRequest: IInternalDispatch = {
+      correlationId: getCorrelationId(this.logger),
+      dispatchId: generateDispatchId(contentKey, appointment.memberId.toString(), appointment.id),
+      notificationType,
+      recipientClientId: appointment.memberId.toString(),
+      senderClientId: appointment.userId.toString(),
+      contentKey,
+      scheduleLink: appointment.link,
+      appointmentId: appointment.id,
+      path: generatePath(notificationType, contentKey, appointment.id),
     };
-
     this.eventEmitter.emit(EventType.notifyDispatch, appointmentRequest);
   }
 
@@ -224,29 +219,30 @@ export class AppointmentResolver extends AppointmentBase {
     appointmentId: string;
   }) {
     const baseEvent = {
-      memberId: member.id,
-      userId,
-      type: InternalNotificationType.textSmsToMember,
+      notificationType: InternalNotificationType.textSmsToMember,
       correlationId: getCorrelationId(this.logger),
     };
-    const newMemberEvent: IDispatchParams = {
+
+    const contentKeyNewMember = InternalKey.newMember;
+    const newMemberEvent: IInternalDispatch = {
       ...baseEvent,
-      dispatchId: generateDispatchId(InternalKey.newMember, member.id),
-      metadata: {
-        contentType: InternalKey.newMember,
-        appointmentId,
-      },
+      dispatchId: generateDispatchId(contentKeyNewMember, member.id),
+      recipientClientId: member.id,
+      senderClientId: userId,
+      contentKey: contentKeyNewMember,
+      appointmentId,
     };
     this.eventEmitter.emit(EventType.notifyDispatch, newMemberEvent);
 
-    const newMemberNudgeEvent: IDispatchParams = {
+    const contentKeyNewMemberNudge = InternalKey.newMemberNudge;
+    const newMemberNudgeEvent: IInternalDispatch = {
       ...baseEvent,
-      dispatchId: generateDispatchId(InternalKey.newMemberNudge, member.id),
-      metadata: {
-        contentType: InternalKey.newMemberNudge,
-        appointmentId,
-        triggersAt: addDays(member.createdAt, 2),
-      },
+      dispatchId: generateDispatchId(contentKeyNewMemberNudge, member.id),
+      recipientClientId: member.id,
+      senderClientId: userId,
+      contentKey: contentKeyNewMemberNudge,
+      appointmentId,
+      triggersAt: addDays(member.createdAt, 2),
     };
     this.eventEmitter.emit(EventType.notifyDispatch, newMemberNudgeEvent);
   }

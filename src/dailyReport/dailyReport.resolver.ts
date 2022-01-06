@@ -16,7 +16,7 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IDispatchParams,
+  IInternalDispatch,
   LoggerService,
   LoggingInterceptor,
   MemberRole,
@@ -62,18 +62,19 @@ export class DailyReportResolver {
       dailyReportObject.statsOverThreshold?.length > 0 &&
       !dailyReportObject.notificationSent
     ) {
-      const memberNotFeelingWellEvent: IDispatchParams = {
-        memberId: dailyReportCategoriesInput.memberId,
-        userId: primaryUserId,
-        type: InternalNotificationType.textSmsToUser,
+      const contentKey = InternalKey.memberNotFeelingWellMessage;
+      const memberNotFeelingWellEvent: IInternalDispatch = {
         correlationId: getCorrelationId(this.logger),
         dispatchId: generateDispatchId(
-          InternalKey.memberNotFeelingWellMessage,
+          contentKey,
           primaryUserId,
           dailyReportCategoriesInput.memberId,
           Date.now().toString(),
         ),
-        metadata: { contentType: InternalKey.memberNotFeelingWellMessage },
+        notificationType: InternalNotificationType.textSmsToUser,
+        recipientClientId: primaryUserId,
+        senderClientId: dailyReportCategoriesInput.memberId,
+        contentKey,
       };
       this.eventEmitter.emit(EventType.notifyDispatch, memberNotFeelingWellEvent);
 

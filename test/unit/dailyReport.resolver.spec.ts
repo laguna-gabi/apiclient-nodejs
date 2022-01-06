@@ -76,10 +76,10 @@ describe('DailyReportResolver', () => {
           categories: [{ category: DailyReportCategoryTypes.Pain, rank: 0 }],
         } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
         {
-          memberId,
-          userId: 'U0001',
-          type: InternalNotificationType.textSmsToUser,
-          metadata: { contentType: InternalKey.memberNotFeelingWellMessage },
+          contentKey: InternalKey.memberNotFeelingWellMessage,
+          notificationType: InternalNotificationType.textSmsToUser,
+          recipientClientId: 'U0001',
+          senderClientId: memberId,
         },
       ],
       [
