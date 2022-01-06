@@ -170,16 +170,6 @@ export enum Honorific {
   father = 'father',
 }
 
-export class ExtraData {
-  org?: { name: string };
-  appointmentStart?: string;
-  gapMinutes?: string;
-  appointmentTime?: string;
-  chatLink?: string;
-  scheduleLink?: string;
-  dynamicLink?: string;
-}
-
 export enum QueueType {
   audit = 'audit',
   notifications = 'notifications',
