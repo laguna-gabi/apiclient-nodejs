@@ -4,7 +4,7 @@ import {
   IUpdateClientSettings,
   InnerQueueTypes,
   InternalKey,
-  InternalNotificationType,
+  NotificationType,
   QueueType,
   SlackChannel,
   SlackIcon,
@@ -89,7 +89,7 @@ export class MemberBase {
     const newControlMemberEvent: IInternalDispatch = {
       correlationId: getCorrelationId(this.logger),
       dispatchId: generateDispatchId(contentKey, controlMember.id),
-      notificationType: InternalNotificationType.textSmsToMember,
+      notificationType: NotificationType.textSms,
       recipientClientId: controlMember.id,
       contentKey,
     };

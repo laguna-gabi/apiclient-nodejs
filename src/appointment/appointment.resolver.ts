@@ -1,10 +1,4 @@
-import {
-  InternalKey,
-  InternalNotificationType,
-  NotificationType,
-  formatEx,
-  generateDispatchId,
-} from '@lagunahealth/pandora';
+import { InternalKey, NotificationType, formatEx, generateDispatchId } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -220,7 +214,7 @@ export class AppointmentResolver extends AppointmentBase {
     appointmentId: string;
   }) {
     const baseEvent = {
-      notificationType: InternalNotificationType.textSmsToMember,
+      notificationType: NotificationType.textSms,
       correlationId: getCorrelationId(this.logger),
     };
 

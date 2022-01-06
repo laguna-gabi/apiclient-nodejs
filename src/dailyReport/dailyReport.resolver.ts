@@ -1,4 +1,4 @@
-import { InternalKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
+import { InternalKey, NotificationType, generateDispatchId } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -40,7 +40,6 @@ export class DailyReportResolver {
     @Client('roles') roles,
     @Client('_id') memberId,
     @Client('primaryUserId') primaryUserId,
-
     @Args(
       camelCase(DailyReportCategoriesInput.name),
       { type: () => DailyReportCategoriesInput },
@@ -71,7 +70,7 @@ export class DailyReportResolver {
           dailyReportCategoriesInput.memberId,
           Date.now().toString(),
         ),
-        notificationType: InternalNotificationType.textSmsToUser,
+        notificationType: NotificationType.textSms,
         recipientClientId: primaryUserId,
         senderClientId: dailyReportCategoriesInput.memberId,
         contentKey,

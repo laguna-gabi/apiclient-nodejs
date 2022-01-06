@@ -962,7 +962,7 @@ export class MemberResolver extends MemberBase {
             dispatchId: generateDispatchId(contentKey, Date.now().toString()),
             recipientClientId: communication.userId.toString(),
             senderClientId: senderUserId,
-            notificationType: InternalNotificationType.textSmsToUser,
+            notificationType: NotificationType.textSms,
             contentKey,
           };
           await this.notifyCreateDispatch(dispatch);

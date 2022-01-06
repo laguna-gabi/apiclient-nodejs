@@ -1,6 +1,6 @@
 import {
   InternalKey,
-  InternalNotificationType,
+  NotificationType,
   generateDispatchId,
   mockLogger,
   mockProcessWarnings,
@@ -79,7 +79,7 @@ describe('DailyReportResolver', () => {
         } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
         {
           contentKey: InternalKey.memberNotFeelingWellMessage,
-          notificationType: InternalNotificationType.textSmsToUser,
+          notificationType: NotificationType.textSms,
           recipientClientId: 'U0001',
           senderClientId: memberId,
         },
