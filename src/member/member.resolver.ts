@@ -912,6 +912,7 @@ export class MemberResolver extends MemberBase {
    */
   @OnEvent(EventType.onReceivedChatMessage, { async: true })
   async notifyChatMessage(params: IEventOnReceivedChatMessage) {
+    this.logger.info(params, MemberResolver.name, this.notifyChatMessage.name);
     const { senderUserId, sendBirdChannelUrl } = params;
 
     let origin: ChatMessageOrigin;
@@ -1010,6 +1011,7 @@ export class MemberResolver extends MemberBase {
    */
   @OnEvent(EventType.onReceivedTextMessage, { async: true })
   async sendSmsToChat(params: IEventOnReceivedTextMessage) {
+    this.logger.info(params, MemberResolver.name, this.sendSmsToChat.name);
     try {
       const member = await this.memberService.getByPhone(params.phone);
       const sendBirdChannelUrl = await this.getSendBirdChannelUrl({

@@ -13,6 +13,7 @@ import {
   DailyReportsMetadata,
 } from '.';
 import { BaseService, EventType, IEventMember, LoggerService } from '../common';
+
 @Injectable()
 export class DailyReportService extends BaseService {
   constructor(
@@ -179,6 +180,7 @@ export class DailyReportService extends BaseService {
 
   @OnEvent(EventType.onDeletedMember, { async: true })
   async deleteDailyReports(params: IEventMember) {
+    this.logger.info(params, DailyReportService.name, this.deleteDailyReports.name);
     await this.dailyReport.deleteMany({ memberId: new Types.ObjectId(params.memberId) });
   }
 }

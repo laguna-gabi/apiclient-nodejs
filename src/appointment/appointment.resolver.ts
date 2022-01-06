@@ -102,6 +102,7 @@ export class AppointmentResolver extends AppointmentBase {
 
   @OnEvent(EventType.onNewMember, { async: true })
   async onNewMember(params: IEventOnNewMember) {
+    this.logger.info(params, AppointmentResolver.name, this.onNewMember.name);
     const { member, user } = params;
     try {
       const requestAppointmentParams: RequestAppointmentParams = {
@@ -123,6 +124,7 @@ export class AppointmentResolver extends AppointmentBase {
 
   @OnEvent(EventType.onDeletedMember, { async: true })
   async deleteSchedules(params: IEventMember) {
+    this.logger.info(params, AppointmentResolver.name, this.deleteSchedules.name);
     const { memberId } = params;
     try {
       const appointments = await this.appointmentService.getMemberScheduledAppointments(memberId);
@@ -136,6 +138,7 @@ export class AppointmentResolver extends AppointmentBase {
 
   @OnEvent(EventType.onUpdatedUserCommunication, { async: true })
   async updateUserInAppointments(params: IEventOnUpdatedUserCommunication) {
+    this.logger.info(params, AppointmentResolver.name, this.updateUserInAppointments.name);
     const appointments = await this.appointmentService.getFutureAppointments(
       params.oldUserId,
       params.memberId,
