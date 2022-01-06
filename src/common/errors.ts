@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import * as config from 'config';
 
 const graphqlConfig = config.get('graphql.validators.name');
@@ -66,6 +67,8 @@ export enum ErrorType {
   appointmentCanNotBeUpdated = 9308,
   appointmentOverlaps = 9309,
   appointmentIdInvalid = 9310,
+  appointmentStartDateOutOfRange = 9311,
+  appointmentNotBeforeDateOutOfRange = 9312,
 
   // Module org errors
   orgAlreadyExists = 9401,
@@ -173,6 +176,14 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.appointmentNotBeforeDateInThePast.valueOf(), 'notBefore must be in the future'],
   [ErrorType.appointmentStartDate.valueOf(), `start ${dateInstanceFormat}`],
   [ErrorType.appointmentEndDate.valueOf(), `end ${dateInstanceFormat}`],
+  [
+    ErrorType.appointmentStartDateOutOfRange.valueOf(),
+    `appointment start date must not be over ${config.general.notificationRange} days in the future`,
+  ],
+  [
+    ErrorType.appointmentNotBeforeDateOutOfRange.valueOf(),
+    `appointment notBefore date must not be over ${config.general.notificationRange} days in the future`,
+  ],
   [ErrorType.appointmentEndAfterStart.valueOf(), 'end date must be after start date'],
   [ErrorType.appointmentOverlaps.valueOf(), 'Appointment overlaps another appointment'],
   [
