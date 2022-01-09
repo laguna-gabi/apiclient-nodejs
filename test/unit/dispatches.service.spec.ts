@@ -1,4 +1,4 @@
-import { mockLogger } from '@lagunahealth/pandora';
+import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { v4 } from 'uuid';
@@ -19,6 +19,7 @@ describe(DispatchesService.name, () => {
   let service: DispatchesService;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       imports: [DbModule, ConductorModule, CommonModule, EventEmitterModule.forRoot()],
     }).compile();

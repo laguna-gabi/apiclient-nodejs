@@ -5,13 +5,14 @@ import { generateId, generateTriggers } from '../';
 import { DbModule } from '../../src/db';
 import { ConductorModule, Trigger, TriggersService } from '../../src/conductor';
 import { LoggerService } from '../../src/common';
-import { mockLogger } from '@lagunahealth/pandora';
+import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 
 describe(TriggersService.name, () => {
   let module: TestingModule;
   let service: TriggersService;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       imports: [DbModule, ConductorModule, EventEmitterModule.forRoot()],
     }).compile();

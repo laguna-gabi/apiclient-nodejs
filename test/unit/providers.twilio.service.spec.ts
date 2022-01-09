@@ -1,4 +1,10 @@
-import { Environments, SlackChannel, SlackIcon, mockLogger } from '@lagunahealth/pandora';
+import {
+  Environments,
+  SlackChannel,
+  SlackIcon,
+  mockLogger,
+  mockProcessWarnings,
+} from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { twilio } from 'config';
 import { lorem } from 'faker';
@@ -18,6 +24,7 @@ describe('Twilio', () => {
   let spyOnSlack;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({ imports: [AppModule] }).compile();
     logger = module.get<LoggerService>(LoggerService);
     mockLogger(logger);

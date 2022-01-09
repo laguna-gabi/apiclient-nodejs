@@ -1,4 +1,4 @@
-import { InnerQueueTypes, mockLogger } from '@lagunahealth/pandora';
+import { InnerQueueTypes, mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapTriggersAt } from 'config';
@@ -39,6 +39,7 @@ describe(ConductorService.name, () => {
   let logger: LoggerService;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       imports: [
         DbModule,

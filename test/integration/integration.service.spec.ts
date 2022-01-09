@@ -35,6 +35,7 @@ import {
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
   mockLogger,
+  mockProcessWarnings,
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapMinutes, hosts } from 'config';
@@ -94,6 +95,7 @@ describe('Notifications full flow', () => {
   };
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({ imports: [AppModule] }).compile();
     mockLogger(module.get<LoggerService>(LoggerService));
     service = module.get<QueueService>(QueueService);

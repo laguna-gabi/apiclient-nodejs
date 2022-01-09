@@ -1,4 +1,9 @@
-import { Environments, InnerQueueTypes, mockLogger } from '@lagunahealth/pandora';
+import {
+  Environments,
+  InnerQueueTypes,
+  mockLogger,
+  mockProcessWarnings,
+} from '@lagunahealth/pandora';
 import { NotImplementedException } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -19,6 +24,7 @@ describe(QueueService.name, () => {
   let conductorService: ConductorService;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       imports: [
         DbModule,
