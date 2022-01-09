@@ -1,31 +1,31 @@
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import {
-  ErrorType,
-  Errors,
-  EventType,
-  IDispatchParams,
-  IEventNotifyQueue,
-  IEventOnNewMember,
-  LoggerService,
-  getCorrelationId,
-} from '../common';
-import { UserService } from '../user';
-import { CreateMemberParams, Member, MemberConfig, MemberService } from '.';
 import {
   ClientCategory,
   IEventNotifySlack,
   IUpdateClientSettings,
   InnerQueueTypes,
   InternalKey,
-  InternalNotificationType,
+  NotificationType,
   QueueType,
   SlackChannel,
   SlackIcon,
   generateDispatchId,
 } from '@lagunahealth/pandora';
-import { FeatureFlagService } from '../providers';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { isUndefined, omitBy } from 'lodash';
 import { Types } from 'mongoose';
+import { CreateMemberParams, Member, MemberConfig, MemberService } from '.';
+import {
+  ErrorType,
+  Errors,
+  EventType,
+  IEventNotifyQueue,
+  IEventOnNewMember,
+  IInternalDispatch,
+  LoggerService,
+  getCorrelationId,
+} from '../common';
+import { FeatureFlagService } from '../providers';
+import { UserService } from '../user';
 
 export class MemberBase {
   constructor(
@@ -85,14 +85,13 @@ export class MemberBase {
     const controlMember = await this.memberService.insertControl(createMemberParams);
     this.notifyUpdatedMemberConfig({ member: controlMember });
 
-    const newControlMemberEvent: IDispatchParams = {
-      memberId: controlMember.id,
-      type: InternalNotificationType.textSmsToMember,
+    const contentKey = InternalKey.newControlMember;
+    const newControlMemberEvent: IInternalDispatch = {
       correlationId: getCorrelationId(this.logger),
-      dispatchId: generateDispatchId(InternalKey.newControlMember, controlMember.id),
-      metadata: {
-        contentType: InternalKey.newControlMember,
-      },
+      dispatchId: generateDispatchId(contentKey, controlMember.id),
+      notificationType: NotificationType.textSms,
+      recipientClientId: controlMember.id,
+      contentKey,
     };
     this.eventEmitter.emit(EventType.notifyDispatch, newControlMemberEvent);
 

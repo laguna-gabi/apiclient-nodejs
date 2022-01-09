@@ -140,6 +140,7 @@ export class CommunicationResolver {
 
   @OnEvent(EventType.onNewUser, { async: true })
   async handleNewUser(params: IEventOnNewUser) {
+    this.logger.info(params, CommunicationResolver.name, this.handleNewUser.name);
     try {
       await this.communicationService.createUser(params.user);
     } catch (ex) {
@@ -154,6 +155,7 @@ export class CommunicationResolver {
 
   @OnEvent(EventType.onNewMember, { async: true })
   async handleNewMember(params: IEventOnNewMember) {
+    this.logger.info(params, CommunicationResolver.name, this.handleNewMember.name);
     try {
       await this.communicationService.createMember(params.member);
       await this.communicationService.connectMemberToUser(
@@ -173,6 +175,7 @@ export class CommunicationResolver {
 
   @OnEvent(EventType.onUpdatedMemberPlatform, { async: true })
   async handleUpdateMemberPlatform(params: IEventOnUpdatedMemberPlatform) {
+    this.logger.info(params, CommunicationResolver.name, this.handleUpdateMemberPlatform.name);
     try {
       return await this.communicationService.onUpdateMemberPlatform(params);
     } catch (ex) {
@@ -193,6 +196,7 @@ export class CommunicationResolver {
     value?: { status: AppointmentStatus; start: Date };
     updatedAppointmentAction: UpdatedAppointmentAction;
   }) {
+    this.logger.info(params, CommunicationResolver.name, this.handleUpdatedAppointment.name);
     try {
       return this.communicationService.onUpdatedAppointment(params);
     } catch (ex) {
@@ -211,6 +215,7 @@ export class CommunicationResolver {
 
   @OnEvent(EventType.onReplacedUserForMember, { async: true })
   async updateUserInCommunication(params: IEventOnReplacedUserForMember) {
+    this.logger.info(params, CommunicationResolver.name, this.updateUserInCommunication.name);
     try {
       await this.communicationService.updateUserInCommunication(params);
       const eventParams: IEventOnUpdatedUserCommunication = {

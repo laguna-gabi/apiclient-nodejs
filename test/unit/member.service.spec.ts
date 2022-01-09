@@ -5,6 +5,7 @@ import {
   generatePhone,
   generateZipCode,
   mockLogger,
+  mockProcessWarnings,
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
@@ -83,6 +84,7 @@ describe('MemberService', () => {
   let modelAppointment: Model<typeof AppointmentDto>;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       imports: defaultModules().concat(MemberModule, AppointmentModule),
     }).compile();

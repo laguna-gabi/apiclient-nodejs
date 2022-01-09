@@ -1,4 +1,4 @@
-import { InternalKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
+import { InternalKey, NotificationType, generateDispatchId } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -16,7 +16,7 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IDispatchParams,
+  IInternalDispatch,
   LoggerService,
   LoggingInterceptor,
   MemberRole,
@@ -40,7 +40,6 @@ export class DailyReportResolver {
     @Client('roles') roles,
     @Client('_id') memberId,
     @Client('primaryUserId') primaryUserId,
-
     @Args(
       camelCase(DailyReportCategoriesInput.name),
       { type: () => DailyReportCategoriesInput },
@@ -62,18 +61,19 @@ export class DailyReportResolver {
       dailyReportObject.statsOverThreshold?.length > 0 &&
       !dailyReportObject.notificationSent
     ) {
-      const memberNotFeelingWellEvent: IDispatchParams = {
-        memberId: dailyReportCategoriesInput.memberId,
-        userId: primaryUserId,
-        type: InternalNotificationType.textSmsToUser,
+      const contentKey = InternalKey.memberNotFeelingWellMessage;
+      const memberNotFeelingWellEvent: IInternalDispatch = {
         correlationId: getCorrelationId(this.logger),
         dispatchId: generateDispatchId(
-          InternalKey.memberNotFeelingWellMessage,
+          contentKey,
           primaryUserId,
           dailyReportCategoriesInput.memberId,
           Date.now().toString(),
         ),
-        metadata: { contentType: InternalKey.memberNotFeelingWellMessage },
+        notificationType: NotificationType.textSms,
+        recipientClientId: primaryUserId,
+        senderClientId: dailyReportCategoriesInput.memberId,
+        contentKey,
       };
       this.eventEmitter.emit(EventType.notifyDispatch, memberNotFeelingWellEvent);
 

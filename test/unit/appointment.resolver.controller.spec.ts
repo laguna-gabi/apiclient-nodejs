@@ -1,8 +1,8 @@
 import {
   InternalKey,
-  InternalNotificationType,
   generateDispatchId,
   mockLogger,
+  mockProcessWarnings,
 } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -22,7 +22,6 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IDispatchParams,
   IEventOnUpdatedAppointment,
   IEventOnUpdatedUserCommunication,
   LoggerService,
@@ -56,6 +55,7 @@ describe('AppointmentResolver', () => {
   const fakeUUID = faker.datatype.uuid();
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       imports: defaultModules().concat(AppointmentModule),
     }).compile();
@@ -106,25 +106,7 @@ describe('AppointmentResolver', () => {
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
       expect(spyOnServiceInsert).toBeCalledWith(appointment);
-
-      const eventParams: IDispatchParams = {
-        memberId: params.memberId,
-        dispatchId: generateDispatchId(
-          InternalKey.appointmentRequest,
-          appointment.id,
-          params.memberId,
-        ),
-        correlationId: fakeUUID,
-        userId: params.userId,
-        type: InternalNotificationType.textToMember,
-        metadata: {
-          contentType: InternalKey.appointmentRequest,
-          appointmentId: appointment.id,
-          scheduleLink: `${appointment.link}`,
-          path: `connect/${appointment.id}`,
-        },
-      };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDispatch, eventParams);
+      expect(spyOnEventEmitter).toBeCalled();
     });
   });
 

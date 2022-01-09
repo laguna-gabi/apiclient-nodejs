@@ -1,8 +1,11 @@
-import { Platform } from '@lagunahealth/pandora';
+import { Language, Platform } from '@lagunahealth/pandora';
 import { AppointmentStatus, RecordingType, StorageType, reformatDate } from '../../src/common';
 import {
   AppointmentAttendanceStatus,
   AppointmentsMemberData,
+  BaseMember,
+  CoachData,
+  CoachDataAggregate,
   DateFormat,
   DateTimeFormat,
   DayOfWeekFormat,
@@ -15,6 +18,7 @@ import {
   PopulatedAppointment,
   PopulatedMember,
   RecordingSummary,
+  SheetOption,
   SummaryFileSuffix,
   TimeFormat,
 } from '.';
@@ -26,6 +30,8 @@ import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model, Types } from 'mongoose';
 import { StorageService } from '../../src/providers';
 import { User, UserDocument } from '../../src/user';
+import * as fs from 'fs';
+import { json2csv } from 'json-2-csv';
 
 @Injectable()
 export class AnalyticsService {
@@ -40,6 +46,12 @@ export class AnalyticsService {
   ) {}
 
   private userData: Map<string, string>;
+
+  async init() {
+    // upload users - full name is required for the appointment entry
+    await this.uploadUserData();
+  }
+
   async clean() {
     this.connection.close();
   }
@@ -88,12 +100,12 @@ export class AnalyticsService {
         },
       },
       {
-        // propagate notes into the appointment document
+        // propagate notes data into the appointment document
         $lookup: {
           from: 'notes',
           localField: 'appointments.notes',
           foreignField: '_id',
-          as: 'appointments.note',
+          as: 'appointments.notesData',
         },
       },
       {
@@ -106,9 +118,9 @@ export class AnalyticsService {
         },
       },
       {
-        // flatten notes - make sure not to loose appointments without notes
+        // flatten notes data - make sure not to loose appointments without notes
         $unwind: {
-          path: '$appointments.note',
+          path: '$appointments.notesData',
           preserveNullAndEmptyArrays: true,
         },
       },
@@ -177,6 +189,51 @@ export class AnalyticsService {
         },
       },
       // { $allowDiskUse: true }, // "Analytics: error: got: MongoError: $allowDiskUse is not allowed in this atlas tier" :(
+    ]);
+  }
+
+  async getCoachersDataAggregate(): Promise<CoachDataAggregate[]> {
+    return this.userModel.aggregate([
+      {
+        // populate appointments for every member
+        $lookup: {
+          from: 'members',
+          localField: '_id',
+          foreignField: 'primaryUserId',
+          as: 'members',
+        },
+      },
+      {
+        // flatten members
+        $unwind: {
+          path: '$members',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        // group by id again and re-construct appointments per member
+        $group: {
+          _id: '$_id',
+          members: {
+            $push: '$members',
+          },
+        },
+      },
+      {
+        // re-insert user data
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        // flatten user data
+        $unwind: {
+          path: '$user',
+        },
+      },
     ]);
   }
 
@@ -262,7 +319,7 @@ export class AnalyticsService {
         : undefined,
       platform: member.memberConfig?.platform,
       app_first_login:
-        member.memberConfig &&
+        member.memberConfig?.firstLoggedInAt &&
         reformatDate(member.memberConfig.firstLoggedInAt.toString(), DateTimeFormat),
       app_last_login:
         member.memberConfig &&
@@ -278,12 +335,34 @@ export class AnalyticsService {
     };
   }
 
+  // Description: transform a coach aggregated data to a calculated CSV entry representation (`coach` sheet)
+  buildCoachData(data: CoachDataAggregate): CoachData {
+    return {
+      created: reformatDate(data.user.createdAt.toString(), DateTimeFormat),
+      user_id: data._id.toString(),
+      first_name: data.user.firstName,
+      last_name: data.user.lastName,
+      roles: data.user.roles,
+      title: data.user.title,
+      phone: data.user.phone,
+      email: data.user.email,
+      spanish: data.user.languages?.includes(Language.es),
+      bio: data.user.description,
+      avatar: data.user.avatar,
+      max_members: data.user.maxCustomers,
+      assigned_members: this.getNonGraduatedMembers(data.members),
+    };
+  }
+
+  getNonGraduatedMembers(members: BaseMember[]): string[] {
+    // TODO: filter out graduated members
+    return members
+      .filter((member) => !this.isGraduated(member.dischargeDate))
+      .map((member) => member._id.toString());
+  }
+
   // Description: transform a member aggregated data to a calculated CSV entry representation (`appointments` sheet)
-  async buildAppointmentsMemberData(
-    member: MemberDataAggregate,
-  ): Promise<AppointmentsMemberData[]> {
-    // upload users - full name is required for the appointment entry
-    await this.uploadUserData();
+  buildAppointmentsMemberData(member: MemberDataAggregate): AppointmentsMemberData[] {
     // Member/General details: calculated once for all entries
     const created = reformatDate(member.memberDetails.createdAt.toString(), DateFormat);
     const customer_id = member._id.toString();
@@ -305,7 +384,7 @@ export class AnalyticsService {
       customer_id: member._id.toString(),
       mbr_initials,
       appt_number: 0,
-      graduated: daysSinceDischarge >= GraduationPeriod,
+      graduated: this.isGraduated(member.memberDetails.dischargeDate),
       graduation_date,
     });
 
@@ -331,6 +410,16 @@ export class AnalyticsService {
 
         results.push({
           created: reformatDate(appointment?.start?.toString(), DateTimeFormat),
+          updated: reformatDate(appointment?.updatedAt?.toString(), DateTimeFormat),
+          recap: appointment?.notesData?.recap,
+          strengths: appointment?.notesData?.strengths,
+          member_plan: appointment?.notesData?.memberActionItem,
+          coach_plan: appointment?.notesData?.userActionItem,
+          activation_score: appointment?.notesData?.scores?.adherence,
+          activation_reason: appointment?.notesData?.scores?.adherenceText,
+          wellbeing_score: appointment?.notesData?.scores?.wellbeing,
+          wellbeing_reason: appointment?.notesData?.scores?.wellbeingText,
+          recorded_consent: appointment?.recordingConsent,
           customer_id,
           mbr_initials,
           appt_number: appointment.noShow ? undefined : count,
@@ -352,6 +441,7 @@ export class AnalyticsService {
           is_phone_call: appointment.method === AppointmentMethod.phoneCall,
           harmony_link,
           coach_name: this.userData?.get(appointment.userId.toString()),
+          coach_id: appointment.userId.toString(),
         });
       });
 
@@ -483,20 +573,15 @@ export class AnalyticsService {
     let lastWellbeingScore;
 
     appointments
-      ?.filter((a) => a.start && a.end && a.note)
+      ?.filter((a) => a.start && a.end && a.notesData)
       .sort((a, b) => {
         return differenceInDays(a.start, b.start);
       })
       .forEach((appointment) => {
-        if (firstActivationScore === undefined) {
-          firstActivationScore = appointment.note.scores?.adherence;
-        }
-        lastActivationScore = appointment.note.scores?.adherence;
-
-        if (firstWellbeingScore === undefined) {
-          firstWellbeingScore = appointment.note.scores?.wellbeing;
-        }
-        lastWellbeingScore = appointment.note.scores?.wellbeing;
+        firstActivationScore ??= appointment.notesData.scores?.adherence;
+        lastActivationScore = appointment.notesData.scores?.adherence;
+        firstWellbeingScore ??= appointment.notesData.scores?.wellbeing;
+        lastWellbeingScore = appointment.notesData.scores?.wellbeing;
       });
     return {
       firstActivationScore,
@@ -513,5 +598,42 @@ export class AnalyticsService {
 
   getMemberInitials(member: Member): string {
     return member.firstName[0].toUpperCase() + member.lastName[0].toUpperCase();
+  }
+
+  isGraduated(dischargeDate: string): boolean {
+    return this.calculateDaysSinceDischarge(dischargeDate) >= GraduationPeriod;
+  }
+
+  dumpCSV(outFileName: string, sheetName: SheetOption, timestamp: number, data: any[]) {
+    json2csv(
+      data,
+      (err, csv) => {
+        if (err) {
+          throw err;
+        } else {
+          fs.writeFileSync(
+            `${outFileName}/${timestamp}.${sheetName}.${
+              process.env.NODE_ENV ? process.env.NODE_ENV : 'test'
+            }.csv`,
+            csv,
+          );
+        }
+      },
+      { emptyFieldValue: 'null' },
+    );
+  }
+
+  writeToFile(outFileName: string, sheetName: SheetOption, timestamp: number, data: any[]) {
+    fs.writeFile(
+      `${outFileName}/${timestamp}.${sheetName}.${
+        process.env.NODE_ENV ? process.env.NODE_ENV : 'test'
+      }.json`,
+      JSON.stringify(data),
+      (err) => {
+        if (err) {
+          throw err;
+        }
+      },
+    );
   }
 }

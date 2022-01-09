@@ -676,7 +676,7 @@ export class Queries {
 
     return (
       isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.getMemberUploadJournalImageLinks
+      result.data.getMemberUploadJournalImageLink
     );
   };
 

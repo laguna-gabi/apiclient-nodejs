@@ -1,4 +1,4 @@
-import { InternalKey, InternalNotificationType, generateDispatchId } from '@lagunahealth/pandora';
+import { InternalKey, NotificationType, generateDispatchId } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { scheduler } from 'config';
 import { addDays, addMinutes, isBefore, subDays, subMinutes } from 'date-fns';
@@ -7,8 +7,8 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IDispatchParams,
   IEventOnUpdatedAppointment,
+  IInternalDispatch,
   LoggerService,
   UpdatedAppointmentAction,
   getCorrelationId,
@@ -72,58 +72,64 @@ export class AppointmentBase {
       AppointmentBase.name,
       this.notifyScheduleAppointmentDispatches.name,
     );
-    const memberId = appointment.memberId.toString();
-    const userId = appointment.userId.toString();
-    const baseEvent = { memberId, userId, correlationId: getCorrelationId(this.logger) };
-
     if (isBefore(appointment.start, new Date())) {
       return;
     }
 
-    const contentKey1 = InternalKey.appointmentScheduledUser;
-    const appointmentScheduledUserEvent: IDispatchParams = {
-      ...baseEvent,
-      dispatchId: generateDispatchId(contentKey1, userId, appointment.id),
-      type: InternalNotificationType.textSmsToUser,
-      metadata: { contentType: contentKey1, appointmentTime: appointment.start },
+    const memberId = appointment.memberId.toString();
+    const userId = appointment.userId.toString();
+    const correlationId = getCorrelationId(this.logger);
+
+    const contentKeyUser = InternalKey.appointmentScheduledUser;
+    const appointmentScheduledUserEvent: IInternalDispatch = {
+      correlationId,
+      dispatchId: generateDispatchId(contentKeyUser, userId, appointment.id),
+      notificationType: NotificationType.textSms,
+      recipientClientId: userId,
+      senderClientId: memberId,
+      contentKey: contentKeyUser,
+      appointmentTime: appointment.start,
     };
     this.eventEmitter.emit(EventType.notifyDispatch, appointmentScheduledUserEvent);
 
-    const contentKey2 = InternalKey.appointmentScheduledMember;
-    const appointmentScheduledMemberEvent: IDispatchParams = {
-      ...baseEvent,
-      dispatchId: generateDispatchId(contentKey2, memberId, appointment.id),
-      type: InternalNotificationType.textSmsToMember,
-      metadata: { contentType: contentKey2, appointmentTime: appointment.start },
+    const contentKey = InternalKey.appointmentScheduledMember;
+    const appointmentScheduledMemberEvent: IInternalDispatch = {
+      correlationId,
+      dispatchId: generateDispatchId(contentKey, memberId, appointment.id),
+      notificationType: NotificationType.textSms,
+      recipientClientId: memberId,
+      senderClientId: userId,
+      contentKey,
+      appointmentTime: appointment.start,
     };
     this.eventEmitter.emit(EventType.notifyDispatch, appointmentScheduledMemberEvent);
 
     if (appointment.start >= addMinutes(new Date(), scheduler.alertBeforeInMin)) {
-      const contentKey3 = InternalKey.appointmentReminder;
-      const appointmentReminderShortEvent: IDispatchParams = {
-        ...baseEvent,
-        dispatchId: generateDispatchId(contentKey3, memberId, appointment.id),
-        type: InternalNotificationType.textToMember,
-        metadata: {
-          contentType: contentKey3,
-          appointmentTime: appointment.start,
-          triggersAt: subMinutes(appointment.start, scheduler.alertBeforeInMin),
-          chatLink: await this.getChatLink(memberId, userId),
-        },
+      const contentKey = InternalKey.appointmentReminder;
+      const appointmentReminderShortEvent: IInternalDispatch = {
+        correlationId,
+        dispatchId: generateDispatchId(contentKey, memberId, appointment.id),
+        notificationType: NotificationType.text,
+        recipientClientId: memberId,
+        senderClientId: userId,
+        contentKey,
+        appointmentTime: appointment.start,
+        triggersAt: subMinutes(appointment.start, scheduler.alertBeforeInMin),
+        chatLink: await this.getChatLink(memberId, userId),
       };
       this.eventEmitter.emit(EventType.notifyDispatch, appointmentReminderShortEvent);
     }
     if (appointment.start >= addDays(new Date(), 1)) {
-      const contentKey4 = InternalKey.appointmentLongReminder;
-      const appointmentReminderLongEvent: IDispatchParams = {
-        ...baseEvent,
-        dispatchId: generateDispatchId(contentKey4, memberId, appointment.id),
-        type: InternalNotificationType.textToMember,
-        metadata: {
-          contentType: contentKey4,
-          appointmentTime: appointment.start,
-          triggersAt: subDays(appointment.start, 1),
-        },
+      const contentKey = InternalKey.appointmentLongReminder;
+      const appointmentReminderLongEvent: IInternalDispatch = {
+        correlationId,
+        dispatchId: generateDispatchId(contentKey, memberId, appointment.id),
+        notificationType: NotificationType.text,
+        recipientClientId: memberId,
+        senderClientId: userId,
+        contentKey,
+        appointmentTime: appointment.start,
+        triggersAt: subDays(appointment.start, 1),
       };
       this.eventEmitter.emit(EventType.notifyDispatch, appointmentReminderLongEvent);
     }

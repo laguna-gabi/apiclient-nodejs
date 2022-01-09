@@ -1,9 +1,9 @@
 import * as fs from 'fs';
-import { json2csv } from 'json-2-csv';
 import { Command, CommandRunner, Option } from 'nest-commander';
 import {
   AnalyticsService,
   AppointmentsMemberData,
+  CoachDataAggregate,
   DefaultOutputDir,
   MemberData,
   MemberDataAggregate,
@@ -17,17 +17,20 @@ interface AnalyticsCommandOptions {
 }
 @Command({
   name: 'analytics',
-  description: 'Collect members data and generate .csv spreadsheets for analytics',
+  description: 'Collect members and coachers data and generate .csv spreadsheets for analytics',
 })
 export class AnalyticsCommand implements CommandRunner {
   constructor(private readonly analyticsService: AnalyticsService) {}
-  async run(passedParam: string[], options?: AnalyticsCommandOptions): Promise<void> {
+  async run(_passedParam: string[], options?: AnalyticsCommandOptions): Promise<void> {
     let outFileName;
-    const timestamp = Date.now();
+    await this.analyticsService.init();
+    const timestamp = this.analyticsService.getDateTime();
+    this.analyticsService.init(); // loading cache data
+
     try {
       /***************************** Resolve Command Options  *************************************/
       if (options?.debug) {
-        console.log(`Analytics: running in debug mode`);
+        console.log(`${AnalyticsCommand.name}: running in debug mode`);
       }
 
       if (options?.sheet !== undefined && options?.sheet !== null) {
@@ -55,34 +58,41 @@ export class AnalyticsCommand implements CommandRunner {
       if (!fs.existsSync(outFileName)) {
         fs.mkdirSync(outFileName, { recursive: true });
       }
-      console.log(`Analytics: dumping ${options.sheet} sheet`);
 
       /***************************** Aggregate Data for Analytics  ********************************/
-      console.debug(
-        '\n----------------------------------------------------------------\n' +
-          '---------------  Aggregate Data for Analytics ------------------\n' +
-          '----------------------------------------------------------------',
-      );
-      const members: MemberDataAggregate[] = (
-        await this.analyticsService.getMemberDataAggregate()
-      ).concat(await this.analyticsService.getAllControl());
+      let membersDataAggregate: MemberDataAggregate[];
+      let coachDataAggregate: CoachDataAggregate[];
 
-      if (options.debug) {
-        fs.writeFile(
-          `${outFileName}/${timestamp}_aggregated.data.${
-            process.env.NODE_ENV ? process.env.NODE_ENV : 'test'
-          }.json`,
-          JSON.stringify(members),
-          function (err) {
-            if (err) {
-              console.error(err);
-            } else {
-              console.log(
-                `Analytics: debug aggregated data (count: ${members.length} members) - saved`,
-              );
-            }
-          },
+      if (
+        [SheetOption.members, SheetOption.appointments, SheetOption.all].includes(
+          options.sheet as SheetOption,
+        )
+      ) {
+        membersDataAggregate = (await this.analyticsService.getMemberDataAggregate()).concat(
+          await this.analyticsService.getAllControl(),
         );
+
+        if (options.debug) {
+          this.analyticsService.writeToFile(
+            outFileName,
+            SheetOption.members,
+            timestamp,
+            membersDataAggregate,
+          );
+        }
+      }
+
+      if ([SheetOption.coachers, SheetOption.all].includes(options.sheet as SheetOption)) {
+        coachDataAggregate = await this.analyticsService.getCoachersDataAggregate();
+
+        if (options.debug) {
+          this.analyticsService.writeToFile(
+            outFileName,
+            SheetOption.coachers,
+            timestamp,
+            coachDataAggregate,
+          );
+        }
       }
 
       /***************************** Generate Analytics Data **************************************/
@@ -94,35 +104,16 @@ export class AnalyticsCommand implements CommandRunner {
         );
 
         const memberProcessedData: MemberData[] = await Promise.all(
-          members.map(async (member) => {
+          membersDataAggregate.map(async (member) => {
             return this.analyticsService.buildMemberData(member);
           }),
         );
 
-        /**************************** Creating an output .csv  ********************************************/
-
-        json2csv(
+        this.analyticsService.dumpCSV(
+          outFileName,
+          SheetOption.members,
+          timestamp,
           memberProcessedData,
-          (err, csv) => {
-            if (err) {
-              console.error(err);
-            } else {
-              fs.writeFile(
-                `${outFileName}/${timestamp}_dump.members.${
-                  process.env.NODE_ENV ? process.env.NODE_ENV : 'test'
-                }.csv`,
-                csv,
-                function (err) {
-                  if (err) {
-                    console.error(err);
-                  } else {
-                    console.log('Analytics: members CSV saved!');
-                  }
-                },
-              );
-            }
-          },
-          { emptyFieldValue: 'null' },
         );
       }
       if (options.sheet === SheetOption.appointments || options.sheet === SheetOption.all) {
@@ -132,38 +123,33 @@ export class AnalyticsCommand implements CommandRunner {
             '----------------------------------------------------------------',
         );
 
-        const appointmentsMemberProcessedData: AppointmentsMemberData[][] = await Promise.all(
-          members.map(async (member) => {
-            return this.analyticsService.buildAppointmentsMemberData(member);
-          }),
+        const appointmentsMemberProcessedData: AppointmentsMemberData[][] =
+          membersDataAggregate.map((member) =>
+            this.analyticsService.buildAppointmentsMemberData(member),
+          );
+        this.analyticsService.dumpCSV(
+          outFileName,
+          SheetOption.appointments,
+          timestamp,
+          [].concat(...appointmentsMemberProcessedData),
+        );
+      }
+      if (options.sheet === SheetOption.coachers || options.sheet === SheetOption.all) {
+        console.debug(
+          '\n----------------------------------------------------------------\n' +
+            '------------ Generating Coachers .csv Sheet ----------------\n' +
+            '----------------------------------------------------------------',
         );
 
-        json2csv(
-          [].concat(...appointmentsMemberProcessedData),
-          (err, csv) => {
-            if (err) {
-              console.error(err);
-            } else {
-              fs.writeFile(
-                `${outFileName}/${timestamp}_dump.appointments.${
-                  process.env.NODE_ENV ? process.env.NODE_ENV : 'test'
-                }.csv`,
-                csv,
-                function (err) {
-                  if (err) {
-                    console.error(err);
-                  } else {
-                    console.log('Analytics: appointments CSV saved!');
-                  }
-                },
-              );
-            }
-          },
-          { emptyFieldValue: 'null' },
+        this.analyticsService.dumpCSV(
+          outFileName,
+          SheetOption.coachers,
+          timestamp,
+          coachDataAggregate.map((coach) => this.analyticsService.buildCoachData(coach)),
         );
       }
     } catch (err) {
-      console.error(`Analytics: error: got: ${err.message} (${err.stack})`);
+      console.error(`${AnalyticsCommand}: error: got: ${err.message} (${err.stack})`);
     }
 
     this.analyticsService.clean();
@@ -182,7 +168,7 @@ export class AnalyticsCommand implements CommandRunner {
 
   @Option({
     flags: '-s, --sheet [string]',
-    description: 'select a sheet to dump [members, appointments, all]}',
+    description: `select a sheet to dump: {${Object.keys(SheetOption)}}`,
   })
   parseSheet(val: string): string {
     return val;

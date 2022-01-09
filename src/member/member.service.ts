@@ -278,6 +278,7 @@ export class MemberService extends BaseService {
 
   @OnEvent(EventType.onNewAppointment, { async: true })
   async handleAddUserToMemberList(params: IEventOnNewAppointment) {
+    this.logger.info(params, MemberService.name, this.handleAddUserToMemberList.name);
     try {
       const { memberId, userId } = params;
       await this.memberModel.updateOne(
@@ -296,6 +297,7 @@ export class MemberService extends BaseService {
 
   @OnEvent(EventType.onUnconsentedAppointmentEnded, { async: true })
   async handleUnconsentedAppointmentEnded(params: IEventUnconsentedAppointmentEnded) {
+    this.logger.info(params, MemberService.name, this.handleUnconsentedAppointmentEnded.name);
     try {
       const { appointmentId, memberId } = params;
       const recordingsToDeleteMedia = await this.recordingModel.find({
@@ -496,6 +498,7 @@ export class MemberService extends BaseService {
 
   @OnEvent(EventType.onUpdatedAppointmentScores, { async: true })
   async handleAppointmentScoreUpdated(params: IEventOnUpdatedAppointmentScores) {
+    this.logger.info(params, MemberService.name, this.handleAppointmentScoreUpdated.name);
     try {
       await this.memberModel.updateOne(
         { _id: params.memberId },
@@ -591,6 +594,7 @@ export class MemberService extends BaseService {
 
   @OnEvent(EventType.onNewMemberCommunication, { async: true })
   async handleUpdateMemberConfig(params: IEventOnNewMemberCommunication): Promise<boolean> {
+    this.logger.info(params, MemberService.name, this.handleUpdateMemberConfig.name);
     try {
       const result = await this.memberConfigModel.updateOne(
         { memberId: new Types.ObjectId(params.memberId) },
