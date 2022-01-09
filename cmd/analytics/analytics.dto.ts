@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { Appointment, AppointmentStatus, Notes } from '../../src/appointment';
 import { User } from '../../src/user';
-import { RecordingType } from '../../src/common';
+import { RecordingType, UserRole } from '../../src/common';
 import {
   Ethnicity,
   Member,
@@ -29,6 +29,7 @@ export const GraduationPeriod = 90;
 export enum SheetOption {
   members = 'members',
   appointments = 'appointments',
+  coachers = 'coachers',
   all = 'all',
 }
 
@@ -97,6 +98,22 @@ export class MemberData {
   dc_summary_load_date: string; // Discharge Summary document load date (in S3)
   dc_instructions_load_date: string;
 }
+
+export class CoachData {
+  created: string;
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  roles: UserRole[];
+  title?: string;
+  phone: string;
+  email: string;
+  spanish: boolean;
+  bio?: string;
+  avatar?: string;
+  max_members?: number;
+  assigned_members: string[];
+}
 // AppointmentsMemberData represent the Analytics `appointments` expected spreadsheet columns list
 export class AppointmentsMemberData {
   created: string;
@@ -146,13 +163,20 @@ export type PopulatedMember = Member & {
   orgData?: Org & { _id: Types.ObjectId };
 };
 
-export type MemberDataAggregate = Member & {
-  _id: Types.ObjectId;
+export type MemberDataAggregate = BaseMember & {
   memberDetails: PopulatedMember;
   memberConfig?: MemberConfig;
   appointments?: PopulatedAppointment[];
   primaryUser?: User;
   isControlMember?: boolean;
+};
+export type BaseMember = Member & {
+  _id: Types.ObjectId;
+};
+export type CoachDataAggregate = {
+  _id: Types.ObjectId;
+  members: BaseMember[];
+  user: User;
 };
 
 export interface RecordingSummary {

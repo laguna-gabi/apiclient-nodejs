@@ -15,6 +15,7 @@ import {
   AppointmentAttendanceStatus,
   DateFormat,
   DateTimeFormat,
+  GraduationPeriod,
   MemberDataAggregate,
   PopulatedAppointment,
   PopulatedMember,
@@ -528,6 +529,48 @@ describe('Commands: AnalyticsService', () => {
         dc_instructions_received: false,
         dc_summary_received: false,
         active: false,
+      });
+    });
+  });
+
+  describe('buildMemberData', () => {
+    // eslint-disable-next-line max-len
+    const graduatedMember = mockGenerateMember();
+    graduatedMember.dischargeDate = reformatDate(
+      sub(now, { days: GraduationPeriod + 2 }).toString(),
+      DateFormat,
+    );
+
+    const activeMember = mockGenerateMember();
+    activeMember.dischargeDate = reformatDate(
+      sub(now, { days: GraduationPeriod - 2 }).toString(),
+      DateFormat,
+    );
+
+    it('to return a calculated coach data.', async () => {
+      const data = await analyticsService.buildCoachData({
+        _id: new Types.ObjectId(mockPrimaryUser.id),
+        members: [
+          { ...graduatedMember, _id: Types.ObjectId(graduatedMember.id) },
+          { ...activeMember, _id: Types.ObjectId(activeMember.id) },
+        ],
+        user: mockPrimaryUser,
+      });
+
+      expect(data).toEqual({
+        created: reformatDate(mockPrimaryUser.createdAt.toString(), DateTimeFormat),
+        user_id: mockPrimaryUser.id,
+        first_name: mockPrimaryUser.firstName,
+        last_name: mockPrimaryUser.lastName,
+        roles: mockPrimaryUser.roles,
+        title: mockPrimaryUser.title,
+        phone: mockPrimaryUser.phone,
+        email: mockPrimaryUser.email,
+        spanish: mockPrimaryUser.languages?.includes(Language.es),
+        bio: mockPrimaryUser.description,
+        avatar: mockPrimaryUser.avatar,
+        max_members: mockPrimaryUser.maxCustomers,
+        assigned_members: [activeMember.id],
       });
     });
   });

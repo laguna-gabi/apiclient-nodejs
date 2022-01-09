@@ -1,8 +1,11 @@
-import { Platform } from '@lagunahealth/pandora';
+import { Language, Platform } from '@lagunahealth/pandora';
 import { AppointmentStatus, RecordingType, StorageType, reformatDate } from '../../src/common';
 import {
   AppointmentAttendanceStatus,
   AppointmentsMemberData,
+  BaseMember,
+  CoachData,
+  CoachDataAggregate,
   DateFormat,
   DateTimeFormat,
   DayOfWeekFormat,
@@ -15,6 +18,7 @@ import {
   PopulatedAppointment,
   PopulatedMember,
   RecordingSummary,
+  SheetOption,
   SummaryFileSuffix,
   TimeFormat,
 } from '.';
@@ -26,6 +30,8 @@ import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model, Types } from 'mongoose';
 import { StorageService } from '../../src/providers';
 import { User, UserDocument } from '../../src/user';
+import * as fs from 'fs';
+import { json2csv } from 'json-2-csv';
 
 @Injectable()
 export class AnalyticsService {
@@ -186,6 +192,51 @@ export class AnalyticsService {
     ]);
   }
 
+  async getCoachersDataAggregate(): Promise<CoachDataAggregate[]> {
+    return this.userModel.aggregate([
+      {
+        // populate appointments for every member
+        $lookup: {
+          from: 'members',
+          localField: '_id',
+          foreignField: 'primaryUserId',
+          as: 'members',
+        },
+      },
+      {
+        // flatten members
+        $unwind: {
+          path: '$members',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        // group by id again and re-construct appointments per member
+        $group: {
+          _id: '$_id',
+          members: {
+            $push: '$members',
+          },
+        },
+      },
+      {
+        // re-insert user data
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        // flatten user data
+        $unwind: {
+          path: '$user',
+        },
+      },
+    ]);
+  }
+
   // Description: transform a member aggregated data to a calculated CSV entry representation (`members` sheet)
   async buildMemberData(member: MemberDataAggregate): Promise<MemberData> {
     const dcInstructionsLoadDate = await this.getDCFileLoadDate(
@@ -268,7 +319,7 @@ export class AnalyticsService {
         : undefined,
       platform: member.memberConfig?.platform,
       app_first_login:
-        member.memberConfig &&
+        member.memberConfig?.firstLoggedInAt &&
         reformatDate(member.memberConfig.firstLoggedInAt.toString(), DateTimeFormat),
       app_last_login:
         member.memberConfig &&
@@ -284,10 +335,34 @@ export class AnalyticsService {
     };
   }
 
+  // Description: transform a coach aggregated data to a calculated CSV entry representation (`coach` sheet)
+  buildCoachData(data: CoachDataAggregate): CoachData {
+    return {
+      created: reformatDate(data.user.createdAt.toString(), DateTimeFormat),
+      user_id: data._id.toString(),
+      first_name: data.user.firstName,
+      last_name: data.user.lastName,
+      roles: data.user.roles,
+      title: data.user.title,
+      phone: data.user.phone,
+      email: data.user.email,
+      spanish: data.user.languages?.includes(Language.es),
+      bio: data.user.description,
+      avatar: data.user.avatar,
+      max_members: data.user.maxCustomers,
+      assigned_members: this.getNonGraduatedMembers(data.members),
+    };
+  }
+
+  getNonGraduatedMembers(members: BaseMember[]): string[] {
+    // TODO: filter out graduated members
+    return members
+      .filter((member) => !this.isGraduated(member.dischargeDate))
+      .map((member) => member._id.toString());
+  }
+
   // Description: transform a member aggregated data to a calculated CSV entry representation (`appointments` sheet)
-  async buildAppointmentsMemberData(
-    member: MemberDataAggregate,
-  ): Promise<AppointmentsMemberData[]> {
+  buildAppointmentsMemberData(member: MemberDataAggregate): AppointmentsMemberData[] {
     // Member/General details: calculated once for all entries
     const created = reformatDate(member.memberDetails.createdAt.toString(), DateFormat);
     const customer_id = member._id.toString();
@@ -309,7 +384,7 @@ export class AnalyticsService {
       customer_id: member._id.toString(),
       mbr_initials,
       appt_number: 0,
-      graduated: daysSinceDischarge >= GraduationPeriod,
+      graduated: this.isGraduated(member.memberDetails.dischargeDate),
       graduation_date,
     });
 
@@ -523,5 +598,42 @@ export class AnalyticsService {
 
   getMemberInitials(member: Member): string {
     return member.firstName[0].toUpperCase() + member.lastName[0].toUpperCase();
+  }
+
+  isGraduated(dischargeDate: string): boolean {
+    return this.calculateDaysSinceDischarge(dischargeDate) >= GraduationPeriod;
+  }
+
+  dumpCSV(outFileName: string, sheetName: SheetOption, timestamp: number, data: any[]) {
+    json2csv(
+      data,
+      (err, csv) => {
+        if (err) {
+          throw err;
+        } else {
+          fs.writeFileSync(
+            `${outFileName}/${timestamp}.${sheetName}.${
+              process.env.NODE_ENV ? process.env.NODE_ENV : 'test'
+            }.csv`,
+            csv,
+          );
+        }
+      },
+      { emptyFieldValue: 'null' },
+    );
+  }
+
+  writeToFile(outFileName: string, sheetName: SheetOption, timestamp: number, data: any[]) {
+    fs.writeFile(
+      `${outFileName}/${timestamp}.${sheetName}.${
+        process.env.NODE_ENV ? process.env.NODE_ENV : 'test'
+      }.json`,
+      JSON.stringify(data),
+      (err) => {
+        if (err) {
+          throw err;
+        }
+      },
+    );
   }
 }
