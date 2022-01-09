@@ -19,7 +19,8 @@ export abstract class BaseOneSignal {
   protected isVoipProject(platform: Platform, notificationType?: AllNotificationTypes): boolean {
     return (
       platform === Platform.ios &&
-      (notificationType === NotificationType.call ||
+      (!notificationType ||
+        notificationType === NotificationType.call ||
         notificationType === NotificationType.video ||
         notificationType === CancelNotificationType.cancelVideo ||
         notificationType === CancelNotificationType.cancelCall)
