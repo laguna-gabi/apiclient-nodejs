@@ -1,17 +1,10 @@
-import { ContentKey, ExtraData, InternalKey, Language } from '@lagunahealth/pandora';
+import { InternalKey, Language } from '@lagunahealth/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as i18next from 'i18next';
 import { cloneDeep } from 'lodash';
 import * as en from '../../languages/en.json';
 import * as es from '../../languages/es.json';
-import { ClientSettings } from '../settings';
-
-export class GetContentsParams {
-  contentKey: ContentKey;
-  recipientClient?: ClientSettings;
-  senderClient?: ClientSettings;
-  extraData?: ExtraData;
-}
+import { GetContentsParams } from '../common';
 
 @Injectable()
 export class InternationalizationService implements OnModuleInit {

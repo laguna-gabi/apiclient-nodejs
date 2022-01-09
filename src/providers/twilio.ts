@@ -1,4 +1,10 @@
-import { IEventNotifySlack, SlackChannel, SlackIcon, formatEx } from '@lagunahealth/pandora';
+import {
+  Environments,
+  IEventNotifySlack,
+  SlackChannel,
+  SlackIcon,
+  formatEx,
+} from '@lagunahealth/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as config from 'config';
 import { hoursToMilliseconds } from 'date-fns';
@@ -11,7 +17,7 @@ import {
   SendTwilioNotification,
   Slack,
 } from '.';
-import { Environments, ErrorType, Errors, LoggerService } from '../common';
+import { ErrorType, Errors, LoggerService } from '../common';
 import { twilio } from 'config';
 import { parsePhoneNumber } from 'libphonenumber-js';
 

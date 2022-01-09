@@ -1,4 +1,5 @@
 import {
+  Environments,
   ICreateDispatch,
   IDeleteClientSettings,
   IDeleteDispatch,
@@ -16,7 +17,7 @@ import * as AWS from 'aws-sdk';
 import * as config from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { ConfigsService, ExternalConfigs } from '../providers';
-import { Environments, EventType, LoggerService } from '../common';
+import { EventType, LoggerService } from '../common';
 import { ConductorService } from '.';
 import { v4 } from 'uuid';
 

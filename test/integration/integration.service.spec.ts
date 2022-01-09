@@ -35,6 +35,7 @@ import {
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
   mockLogger,
+  mockProcessWarnings,
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapMinutes, hosts } from 'config';
@@ -94,6 +95,7 @@ describe('Notifications full flow', () => {
   };
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({ imports: [AppModule] }).compile();
     mockLogger(module.get<LoggerService>(LoggerService));
     service = module.get<QueueService>(QueueService);
@@ -691,6 +693,8 @@ describe('Notifications full flow', () => {
       senderClientId: webMemberClient.id,
       content: lorem.word(),
       sendBirdChannelUrl: internet.url(),
+      journalAudioDownloadLink: internet.url(),
+      journalImageDownloadLink: internet.url(),
     });
     const object = new ObjectJournalContentClass(mock);
     spyOnSendBirdSend.mockReturnValueOnce(providerResult);
@@ -708,8 +712,10 @@ describe('Notifications full flow', () => {
       message: mock.content,
       notificationType: InternalNotificationType.chatMessageJournal,
       orgName: undefined,
-      sendBirdChannelUrl: mock.sendBirdChannelUrl,
       userId: webMemberClient.id,
+      sendBirdChannelUrl: mock.sendBirdChannelUrl,
+      journalAudioDownloadLink: mock.journalAudioDownloadLink,
+      journalImageDownloadLink: mock.journalImageDownloadLink,
     });
 
     await compareResults({

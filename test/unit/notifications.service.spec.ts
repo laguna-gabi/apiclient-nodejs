@@ -1,4 +1,4 @@
-import { InternalKey, Platform, mockLogger } from '@lagunahealth/pandora';
+import { InternalKey, Platform, mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { hosts } from 'config';
@@ -25,6 +25,7 @@ describe(NotificationsService.name, () => {
   let iService: InternationalizationService;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       imports: [DbModule, ProvidersModule, EventEmitterModule.forRoot()],
     }).compile();
