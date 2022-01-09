@@ -1,4 +1,4 @@
-import { CancelNotificationType, NotificationType, Platform, ServiceName } from '.';
+import { AllNotificationTypes, Platform, ServiceName } from '.';
 
 export enum ClientCategory {
   member = 'member',
@@ -48,7 +48,7 @@ interface IDispatch extends IInnerQueueTypes {
 export interface ICreateDispatch extends IDispatch {
   correlationId: string;
   serviceName: ServiceName;
-  notificationType: NotificationType | CancelNotificationType;
+  notificationType: AllNotificationTypes;
   recipientClientId: string;
   senderClientId?: string;
   sendBirdChannelUrl?: string;

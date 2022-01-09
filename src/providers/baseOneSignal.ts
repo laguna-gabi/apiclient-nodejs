@@ -1,4 +1,4 @@
-import { CancelNotificationType, NotificationType, Platform } from '../enums';
+import { AllNotificationTypes, CancelNotificationType, NotificationType, Platform } from '../enums';
 
 export abstract class BaseOneSignal {
   protected readonly oneSignalUrl = 'https://onesignal.com/api/v1';
@@ -11,15 +11,12 @@ export abstract class BaseOneSignal {
 
   protected async getApiId(
     platform: Platform,
-    notificationType?: NotificationType | CancelNotificationType,
+    notificationType?: AllNotificationTypes,
   ): Promise<string> {
     return this.isVoipProject(platform, notificationType) ? this.voipApiId : this.defaultApiId;
   }
 
-  protected isVoipProject(
-    platform: Platform,
-    notificationType?: NotificationType | CancelNotificationType,
-  ): boolean {
+  protected isVoipProject(platform: Platform, notificationType?: AllNotificationTypes): boolean {
     return (
       platform === Platform.ios &&
       (notificationType === NotificationType.call ||
