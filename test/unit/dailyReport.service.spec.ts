@@ -1,15 +1,17 @@
+import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, Types } from 'mongoose';
+import { LoggerService } from '../../src/common';
 import {
   DailyReport,
   DailyReportCategoriesInput,
   DailyReportCategoryTypes,
   DailyReportDocument,
+  DailyReportModule,
   DailyReportService,
 } from '../../src/dailyReport';
-import { dbDisconnect, generateId, generateObjectId } from '../index';
-import { LoggerService } from '../../src/common';
+import { dbDisconnect, defaultModules, generateId, generateObjectId } from '../index';
 
 describe('DailyReportCategoryService', () => {
   let service: DailyReportService;
@@ -17,22 +19,15 @@ describe('DailyReportCategoryService', () => {
   let module: TestingModule;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
-      providers: [
-        {
-          provide: getModelToken(DailyReport.name),
-          useValue: Model,
-        },
-        {
-          provide: LoggerService,
-          useValue: LoggerService,
-        },
-        DailyReportService,
-      ],
+      imports: defaultModules().concat(DailyReportModule),
     }).compile();
 
     service = module.get<DailyReportService>(DailyReportService);
     dailyReportModel = module.get<Model<DailyReport>>(getModelToken(DailyReport.name));
+
+    mockLogger(module.get<LoggerService>(LoggerService));
   });
 
   afterAll(async () => {

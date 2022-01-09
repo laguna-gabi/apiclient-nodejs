@@ -1,7 +1,6 @@
 import {
   ContentKey,
   CustomKey,
-  ICreateDispatch,
   IDeleteClientSettings,
   IDeleteDispatch,
   InnerQueueTypes,
@@ -21,7 +20,6 @@ import { isEmpty } from 'class-validator';
 import { addDays, isAfter, millisecondsInHour } from 'date-fns';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { camelCase } from 'lodash';
-import { v4 } from 'uuid';
 import { lookup } from 'zipcode-to-timezone';
 import {
   AddCaregiverParams,
@@ -64,13 +62,13 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IDispatchParams,
   IEventMember,
   IEventNotifyQueue,
   IEventOnReceivedChatMessage,
   IEventOnReceivedTextMessage,
   IEventOnReplacedUserForMember,
   IEventOnUpdatedMemberPlatform,
+  IInternalDispatch,
   Identifier,
   LoggerService,
   LoggingInterceptor,
@@ -607,19 +605,19 @@ export class MemberResolver extends MemberBase {
       });
     }
 
-    await this.notifyCreateDispatch({
+    const dispatch: IInternalDispatch = {
+      correlationId: getCorrelationId(this.logger),
       dispatchId: generateDispatchId(CustomKey.journalContent, memberId, Date.now().toString()),
-      memberId,
-      userId: member.primaryUserId.toString(),
-      type: InternalNotificationType.chatMessageJournal,
+      recipientClientId: member.primaryUserId.toString(),
+      senderClientId: member.id,
+      notificationType: InternalNotificationType.chatMessageJournal,
+      contentKey: CustomKey.journalContent,
+      sendBirdChannelUrl,
       content: text,
-      metadata: {
-        contentType: CustomKey.journalContent,
-        sendBirdChannelUrl,
-        journalImageDownloadLink,
-        journalAudioDownloadLink,
-      },
-    });
+      journalImageDownloadLink,
+      journalAudioDownloadLink,
+    };
+    await this.notifyCreateDispatch(dispatch);
   }
 
   private async addMemberDownloadJournalLinks(journal: Journal) {
@@ -844,22 +842,21 @@ export class MemberResolver extends MemberBase {
       userId: member.primaryUserId.toString(),
     });
 
-    await this.notifyCreateDispatch({
+    const dispatch: IInternalDispatch = {
+      correlationId: getCorrelationId(this.logger),
       dispatchId: generateDispatchId(contentKey, member.id, Date.now().toString()),
-      memberId: member.id,
-      userId: member.primaryUserId.toString(),
-      correlationId: v4(),
-      type,
+      notificationType: type,
+      recipientClientId: member.id,
+      senderClientId: member.primaryUserId.toString(),
+      contentKey,
       content: metadata.content,
-      metadata: {
-        contentType: contentKey,
-        path: generatePath(type, contentKey),
-        peerId: metadata.peerId,
-        appointmentId: metadata.appointmentId,
-        triggersAt: metadata.when,
-        sendBirdChannelUrl,
-      },
-    });
+      path: generatePath(type, contentKey),
+      peerId: metadata.peerId,
+      appointmentId: metadata.appointmentId,
+      triggersAt: metadata.when,
+      sendBirdChannelUrl,
+    };
+    await this.notifyCreateDispatch(dispatch);
   }
 
   @Mutation(() => String, { nullable: true })
@@ -875,14 +872,17 @@ export class MemberResolver extends MemberBase {
       throw new Error(Errors.get(ErrorType.notificationNotAllowedForWebMember));
     }
 
-    await this.notifyCreateDispatch({
-      memberId,
-      userId,
-      type: NotificationType.text,
+    const notificationType = NotificationType.text;
+    const dispatch: IInternalDispatch = {
       correlationId: getCorrelationId(this.logger),
       dispatchId: generateDispatchId(contentKey, member.id, Date.now().toString()),
-      metadata: { contentType: contentKey, path: generatePath(NotificationType.text, contentKey) },
-    });
+      recipientClientId: member.id,
+      senderClientId: member.primaryUserId.toString(),
+      notificationType,
+      contentKey,
+      path: generatePath(notificationType, contentKey),
+    };
+    await this.notifyCreateDispatch(dispatch);
   }
 
   @Mutation(() => String, { nullable: true })
@@ -893,14 +893,16 @@ export class MemberResolver extends MemberBase {
   ) {
     const { memberId, type, metadata } = cancelNotifyParams;
 
-    const contentType = CustomKey.cancelNotify;
-    await this.notifyCreateDispatch({
-      dispatchId: generateDispatchId(contentType, memberId, Date.now().toString()),
-      memberId,
-      type,
+    const contentKey = CustomKey.cancelNotify;
+    const dispatch: IInternalDispatch = {
       correlationId: getCorrelationId(this.logger),
-      metadata: { peerId: metadata.peerId, contentType },
-    });
+      dispatchId: generateDispatchId(contentKey, memberId, Date.now().toString()),
+      recipientClientId: memberId,
+      notificationType: type,
+      contentKey,
+      peerId: metadata.peerId,
+    };
+    await this.notifyCreateDispatch(dispatch);
   }
 
   /**
@@ -910,6 +912,7 @@ export class MemberResolver extends MemberBase {
    */
   @OnEvent(EventType.onReceivedChatMessage, { async: true })
   async notifyChatMessage(params: IEventOnReceivedChatMessage) {
+    this.logger.info(params, MemberResolver.name, this.notifyChatMessage.name);
     const { senderUserId, sendBirdChannelUrl } = params;
 
     let origin: ChatMessageOrigin;
@@ -934,38 +937,36 @@ export class MemberResolver extends MemberBase {
 
       if (origin === ChatMessageOrigin.fromUser) {
         const contentKey = InternalKey.newChatMessageFromUser;
-        await this.notifyCreateDispatch({
-          dispatchId: generateDispatchId(contentKey, Date.now().toString()),
-          memberId: communication.memberId.toString(),
-          userId: senderUserId,
-          type: NotificationType.text,
+        const dispatch: IInternalDispatch = {
           correlationId: getCorrelationId(this.logger),
-          metadata: {
-            contentType: contentKey,
-            path: generatePath(
-              NotificationType.text,
-              contentKey,
-              communication.memberId.toString(),
-              senderUserId,
-            ),
-          },
-        });
+          dispatchId: generateDispatchId(contentKey, Date.now().toString()),
+          recipientClientId: communication.memberId.toString(),
+          senderClientId: senderUserId,
+          notificationType: NotificationType.text,
+          contentKey,
+          path: generatePath(
+            NotificationType.text,
+            contentKey,
+            communication.memberId.toString(),
+            senderUserId,
+          ),
+        };
+        await this.notifyCreateDispatch(dispatch);
       } else {
         const coachInfo = params.sendBirdMemberInfo.find(
           (member) => member.memberId === communication.userId.toString(),
         );
         if (coachInfo && !coachInfo.isOnline) {
-          await this.notifyCreateDispatch({
-            dispatchId: generateDispatchId(
-              InternalKey.newChatMessageFromMember,
-              Date.now().toString(),
-            ),
-            memberId: senderUserId,
-            userId: communication.userId.toString(),
-            type: InternalNotificationType.textSmsToUser,
+          const contentKey = InternalKey.newChatMessageFromMember;
+          const dispatch: IInternalDispatch = {
             correlationId: getCorrelationId(this.logger),
-            metadata: { contentType: InternalKey.newChatMessageFromMember },
-          });
+            dispatchId: generateDispatchId(contentKey, Date.now().toString()),
+            recipientClientId: communication.userId.toString(),
+            senderClientId: senderUserId,
+            notificationType: NotificationType.textSms,
+            contentKey,
+          };
+          await this.notifyCreateDispatch(dispatch);
         }
       }
     } catch (ex) {
@@ -974,41 +975,18 @@ export class MemberResolver extends MemberBase {
   }
 
   @OnEvent(EventType.notifyDispatch, { async: true })
-  async notifyCreateDispatch(params: IDispatchParams) {
-    this.logger.info(params, MemberResolver.name, this.notifyCreateDispatch.name);
-    const { memberId, userId, type, metadata } = params;
+  async notifyCreateDispatch(createDispatch: IInternalDispatch) {
+    this.logger.info(createDispatch, MemberResolver.name, this.notifyCreateDispatch.name);
 
-    const isMemberRecipient =
-      type !== InternalNotificationType.textSmsToUser &&
-      type !== InternalNotificationType.chatMessageToUser &&
-      type !== InternalNotificationType.chatMessageJournal;
-
-    const createDispatch: ICreateDispatch = {
+    const dispatch = {
       type: InnerQueueTypes.createDispatch,
-      dispatchId: params.dispatchId,
-      correlationId: params.correlationId ? params.correlationId : v4(),
       serviceName: ServiceName.hepius,
-      notificationType: type,
-      recipientClientId: isMemberRecipient ? memberId : userId,
-      senderClientId: isMemberRecipient ? userId : memberId,
-      sendBirdChannelUrl: metadata.sendBirdChannelUrl,
-      appointmentTime: metadata.appointmentTime,
-      appointmentId: metadata.appointmentId,
-      scheduleLink: metadata.scheduleLink,
-      contentKey: metadata.contentType,
-      triggersAt: metadata.triggersAt,
-      path: metadata.path,
-      peerId: metadata.peerId,
-      chatLink: metadata.chatLink,
-      content: params.content,
-      journalImageDownloadLink: metadata.journalImageDownloadLink,
-      journalAudioDownloadLink: metadata.journalAudioDownloadLink,
+      ...createDispatch,
     };
-    this.logger.info(createDispatch, MemberResolver.name, EventType.notifyQueue);
 
     const eventParams: IEventNotifyQueue = {
       type: QueueType.notifications,
-      message: JSON.stringify(createDispatch, Object.keys(createDispatch).sort()),
+      message: JSON.stringify(dispatch, Object.keys(dispatch).sort()),
     };
     this.eventEmitter.emit(EventType.notifyQueue, eventParams);
   }
@@ -1033,6 +1011,7 @@ export class MemberResolver extends MemberBase {
    */
   @OnEvent(EventType.onReceivedTextMessage, { async: true })
   async sendSmsToChat(params: IEventOnReceivedTextMessage) {
+    this.logger.info(params, MemberResolver.name, this.sendSmsToChat.name);
     try {
       const member = await this.memberService.getByPhone(params.phone);
       const sendBirdChannelUrl = await this.getSendBirdChannelUrl({
@@ -1040,18 +1019,21 @@ export class MemberResolver extends MemberBase {
         userId: member.primaryUserId.toString(),
       });
 
-      return this.notifyCreateDispatch({
+      const dispatch: IInternalDispatch = {
+        correlationId: getCorrelationId(this.logger),
         dispatchId: generateDispatchId(
           CustomKey.customContent,
           member.primaryUserId.toString(),
           Date.now().toString(),
         ),
+        notificationType: InternalNotificationType.chatMessageToUser,
+        recipientClientId: member.primaryUserId.toString(),
+        senderClientId: member.id,
+        sendBirdChannelUrl,
+        contentKey: CustomKey.customContent,
         content: params.message,
-        metadata: { contentType: CustomKey.customContent, sendBirdChannelUrl },
-        type: InternalNotificationType.chatMessageToUser,
-        memberId: member.id,
-        userId: member.primaryUserId.toString(),
-      });
+      };
+      return this.notifyCreateDispatch(dispatch);
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.sendSmsToChat.name, formatEx(ex));
     }
@@ -1164,17 +1146,15 @@ export class MemberResolver extends MemberBase {
     correlationId: string,
     contentKey: ContentKey,
     amount: number,
-  ): IDispatchParams {
+  ): IInternalDispatch {
     return {
-      memberId: member.id,
-      userId: member.primaryUserId.toString(),
-      type: NotificationType.text,
       correlationId,
       dispatchId: generateDispatchId(contentKey, member.id),
-      metadata: {
-        contentType: contentKey,
-        triggersAt: addDays(firstLoggedInAt, amount),
-      },
+      recipientClientId: member.id,
+      senderClientId: member.primaryUserId.toString(),
+      notificationType: NotificationType.text,
+      contentKey,
+      triggersAt: addDays(firstLoggedInAt, amount),
     };
   }
 }

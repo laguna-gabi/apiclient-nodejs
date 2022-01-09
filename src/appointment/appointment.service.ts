@@ -24,6 +24,7 @@ import {
   IEventOnNewAppointment,
   IEventOnUpdatedAppointmentScores,
   IEventUnconsentedAppointmentEnded,
+  LoggerService,
 } from '../common';
 import { isUndefined, omitBy } from 'lodash';
 
@@ -37,6 +38,7 @@ export class AppointmentService extends BaseService {
     @InjectModel(Notes.name)
     private readonly notesModel: Model<NotesDocument>,
     private eventEmitter: EventEmitter2,
+    readonly logger: LoggerService,
   ) {
     super();
   }
@@ -321,6 +323,7 @@ export class AppointmentService extends BaseService {
 
   @OnEvent(EventType.onDeletedMember, { async: true })
   async deleteMemberAppointments(params: IEventMember) {
+    this.logger.info(params, AppointmentService.name, this.deleteMemberAppointments.name);
     const { memberId } = params;
     const appointments = await this.appointmentModel.find({
       memberId: new Types.ObjectId(memberId),

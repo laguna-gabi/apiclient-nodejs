@@ -308,6 +308,7 @@ export class UserService extends BaseService {
 
   @OnEvent(EventType.onUpdatedUserConfig, { async: true })
   async handleUpdateUserConfig(params: IEventOnUpdateUserConfig): Promise<boolean> {
+    this.logger.info(params, UserService.name, this.handleUpdateUserConfig.name);
     try {
       const { userId, accessToken } = params;
       const result = await this.userConfigModel.updateOne({ userId }, { $set: { accessToken } });
@@ -320,6 +321,7 @@ export class UserService extends BaseService {
 
   @OnEvent(EventType.onNewAppointment, { async: true })
   async addAppointmentToUser(params: IEventOnNewAppointment): Promise<void> {
+    this.logger.info(params, UserService.name, this.addAppointmentToUser.name);
     try {
       await this.userModel.updateOne(
         { _id: params.userId },
@@ -332,6 +334,7 @@ export class UserService extends BaseService {
 
   @OnEvent(EventType.onDeletedMemberAppointments, { async: true })
   async deleteAppointments(params: IEventOnDeletedMemberAppointments): Promise<void> {
+    this.logger.info(params, UserService.name, this.deleteAppointments.name);
     const { appointments } = params;
     await Promise.all(
       appointments.map(async (appointment) => {
@@ -345,6 +348,7 @@ export class UserService extends BaseService {
 
   @OnEvent(EventType.onUpdatedUserAppointments, { async: true })
   async updateUserAppointments(params: IEventOnUpdatedUserAppointments): Promise<void> {
+    this.logger.info(params, UserService.name, this.updateUserAppointments.name);
     const appointmentIds = params.appointments.map((appointment) => Types.ObjectId(appointment.id));
 
     try {

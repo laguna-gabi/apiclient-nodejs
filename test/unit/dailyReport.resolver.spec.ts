@@ -1,8 +1,9 @@
 import {
   InternalKey,
-  InternalNotificationType,
+  NotificationType,
   generateDispatchId,
   mockLogger,
+  mockProcessWarnings,
 } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -28,6 +29,7 @@ describe('DailyReportResolver', () => {
   let memberId: string;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       providers: [DailyReportResolver, LoggerService],
       imports: defaultModules().concat(DailyReportModule),
@@ -76,10 +78,10 @@ describe('DailyReportResolver', () => {
           categories: [{ category: DailyReportCategoryTypes.Pain, rank: 0 }],
         } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
         {
-          memberId,
-          userId: 'U0001',
-          type: InternalNotificationType.textSmsToUser,
-          metadata: { contentType: InternalKey.memberNotFeelingWellMessage },
+          contentKey: InternalKey.memberNotFeelingWellMessage,
+          notificationType: NotificationType.textSms,
+          recipientClientId: 'U0001',
+          senderClientId: memberId,
         },
       ],
       [

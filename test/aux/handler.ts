@@ -1,4 +1,4 @@
-import { mockLogger } from '@lagunahealth/pandora';
+import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -49,6 +49,7 @@ export class Handler extends BaseHandler {
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
 
   async beforeAll(withGuards = false) {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();

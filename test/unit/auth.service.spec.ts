@@ -1,4 +1,4 @@
-import { mockLogger } from '@lagunahealth/pandora';
+import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Request } from 'express';
 import * as jwt from 'jsonwebtoken';
@@ -13,6 +13,7 @@ describe('AuthService', () => {
   let securityService: UserSecurityService;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       imports: defaultModules().concat(AuthModule),
     }).compile();

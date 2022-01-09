@@ -3,7 +3,15 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Type } from 'class-transformer';
 import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Document, Types } from 'mongoose';
-import { ErrorType, Errors, Identifier, IsDateAfter, IsFutureDate, IsObjectId } from '../common';
+import {
+  ErrorType,
+  Errors,
+  Identifier,
+  IsDateAfter,
+  IsDateInNotificationRange,
+  IsFutureDate,
+  IsObjectId,
+} from '../common';
 import { Notes } from '.';
 
 /**************************************************************************************************
@@ -42,6 +50,7 @@ export class RequestAppointmentParams {
   @IsFutureDate({
     message: Errors.get(ErrorType.appointmentNotBeforeDateInThePast),
   })
+  @IsDateInNotificationRange({ message: Errors.get(ErrorType.appointmentNotBeforeDateOutOfRange) })
   @IsDate({ message: Errors.get(ErrorType.appointmentNotBeforeDate) })
   notBefore: Date;
 
@@ -72,6 +81,7 @@ export class ScheduleAppointmentParams {
 
   @Field(() => Date)
   @Type(() => Date) /* for rest api */
+  @IsDateInNotificationRange({ message: Errors.get(ErrorType.appointmentStartDateOutOfRange) })
   @IsDate({ message: Errors.get(ErrorType.appointmentStartDate) })
   @IsNotEmpty() /* for rest api */
   start: Date;

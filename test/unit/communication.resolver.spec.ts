@@ -1,4 +1,4 @@
-import { Platform, mockLogger } from '@lagunahealth/pandora';
+import { Platform, mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
@@ -39,6 +39,7 @@ describe('CommunicationResolver', () => {
   let spyOnEventEmitter;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       imports: [DbModule, CommunicationModule, EventEmitterModule.forRoot()],
     }).compile();

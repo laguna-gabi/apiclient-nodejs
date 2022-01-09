@@ -1,4 +1,4 @@
-import { mockLogger } from '@lagunahealth/pandora';
+import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -52,6 +52,7 @@ describe('UserService', () => {
   let userModel: Model<typeof UserDto>;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       imports: defaultModules().concat(UserModule, AppointmentModule, AvailabilityModule),
       providers: [{ provide: getModelToken(User.name), useValue: Model }],

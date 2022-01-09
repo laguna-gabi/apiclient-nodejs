@@ -4,6 +4,7 @@ import {
   InnerQueueTypes,
   QueueType,
   mockLogger,
+  mockProcessWarnings,
 } from '@lagunahealth/pandora';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -41,6 +42,7 @@ describe('UserResolver', () => {
   let spyOnEventEmitter;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       imports: [DbModule, UserModule, EventEmitterModule.forRoot()],
     }).compile();

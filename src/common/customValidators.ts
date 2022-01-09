@@ -2,7 +2,8 @@ import { ValidationArguments, ValidationOptions, registerDecorator } from 'class
 import { lookup } from 'zipcode-to-timezone';
 import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 import { Types as MongooseTypes } from 'mongoose';
-
+import { general } from 'config';
+import { differenceInMilliseconds } from 'date-fns';
 /**
  * When there are 2 params of dates, and we want to make sure that one param is
  * before the other, we can use this custom validator.
@@ -40,6 +41,24 @@ export function IsFutureDate(options?: ValidationOptions) {
       validator: {
         validate(date?: Date) {
           return date?.getTime() > new Date().getTime();
+        },
+      },
+    });
+  };
+}
+
+export function IsDateInNotificationRange(options?: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(date?: Date) {
+          return (
+            differenceInMilliseconds(date?.getTime(), new Date().getTime()) <=
+            general.notificationRange * 24 * 60 * 60 * 1000
+          );
         },
       },
     });

@@ -8,16 +8,14 @@ import {
 import { format } from 'date-fns';
 import * as jwt from 'jsonwebtoken';
 import { v4 } from 'uuid';
-import { ErrorType, Errors, LoggerService } from '.';
+import { LoggerService } from '.';
 
 export function reformatDate(date: string, stringFormat: string): string {
   const dateObject = Date.parse(date);
 
-  if (!dateObject) {
-    throw new Error(Errors.get(ErrorType.dailyReportQueryDateInvalid));
+  if (dateObject) {
+    return format(dateObject, stringFormat);
   }
-
-  return format(dateObject, stringFormat);
 }
 
 export function capitalize(content: string): string {

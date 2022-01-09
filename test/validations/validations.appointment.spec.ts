@@ -11,6 +11,8 @@ import {
   generateUpdateNotesParams,
   urls,
 } from '../index';
+import { general } from 'config';
+import { addMilliseconds } from 'date-fns';
 
 const stringError = `String cannot represent a non string value`;
 const floatError = `Float cannot represent non numeric value`;
@@ -76,6 +78,18 @@ describe('Validations - appointment', () => {
       await handler.mutations.requestAppointment({
         appointmentParams: generateRequestAppointmentParams({ notBefore }),
         invalidFieldsErrors: [Errors.get(ErrorType.appointmentNotBeforeDateInThePast)],
+      });
+    });
+
+    it('should fail since notBefore date is not in notification range', async () => {
+      await handler.mutations.requestAppointment({
+        appointmentParams: generateRequestAppointmentParams({
+          notBefore: addMilliseconds(
+            new Date(),
+            general.notificationRange * 24 * 60 * 60 * 1000 + 10000, // adding 10 seconds over range
+          ),
+        }),
+        invalidFieldsErrors: [Errors.get(ErrorType.appointmentNotBeforeDateOutOfRange)],
       });
     });
   });
@@ -166,6 +180,19 @@ describe('Validations - appointment', () => {
       await handler.mutations.scheduleAppointment({
         appointmentParams,
         invalidFieldsErrors: [Errors.get(ErrorType.appointmentEndAfterStart)],
+      });
+    });
+
+    // eslint-disable-next-line max-len
+    it('should validate that an error is thrown if start date is not in notification range', async () => {
+      const appointmentParams = generateScheduleAppointmentParams({
+        start: addMilliseconds(new Date(), general.notificationRange * 24 * 60 * 60 * 1000 + 10000), // adding 10 seconds over range),
+        end: undefined,
+      });
+
+      await handler.mutations.scheduleAppointment({
+        appointmentParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.appointmentStartDateOutOfRange)],
       });
     });
   });

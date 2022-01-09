@@ -5,6 +5,7 @@ import { UserSecurityService } from '../../src/auth';
 import { Member } from '../../src/member';
 import { User } from '../../src/user';
 import { dbDisconnect } from '../index';
+import { mockProcessWarnings } from '@lagunahealth/pandora';
 
 describe('UserSecurityService', () => {
   let service: UserSecurityService;
@@ -13,6 +14,7 @@ describe('UserSecurityService', () => {
   let userModel: Model<User>;
 
   beforeAll(async () => {
+    mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
       providers: [
         {
