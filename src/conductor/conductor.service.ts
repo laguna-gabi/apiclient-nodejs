@@ -11,7 +11,7 @@ import { gapTriggersAt, retryMax } from 'config';
 import { differenceInSeconds } from 'date-fns';
 import { Dispatch, DispatchStatus, DispatchesService, TriggersService } from '.';
 import { ErrorType, Errors, LoggerService } from '../common';
-import { NotificationsService } from '../providers';
+import { NotificationsService, OneSignal } from '../providers';
 import { ClientSettings, SettingsService } from '../settings';
 
 @Injectable()
@@ -132,7 +132,8 @@ export class ConductorService implements OnModuleInit {
         this.createRealTimeDispatch.name,
         failureReasons[failureReasons.length - 1],
       );
-      if (dispatch.retryCount <= retryMax) {
+      const oneSignalIndexInText = ex.message?.toString()?.indexOf(OneSignal.name);
+      if (dispatch.retryCount <= retryMax && oneSignalIndexInText < 0) {
         //TODO use more sophisticated retry mechanism - maybe try 2,5,7 seconds or a better logic
         setTimeout(
           async (dispatchInput) => {
