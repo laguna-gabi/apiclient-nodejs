@@ -119,7 +119,6 @@ export interface IEventOnDeletedMemberAppointments {
 export interface IEventOnReceivedChatMessage {
   senderUserId: string;
   sendBirdChannelUrl: string;
-  sendBirdMemberInfo?: { memberId: string; isOnline: boolean }[];
 }
 
 export interface IEventOnReceivedTextMessage {

@@ -59,16 +59,6 @@ describe('WebhooksController', () => {
       const eventParams: IEventOnReceivedChatMessage = {
         senderUserId: sendBirdNewMessagePayload.sender.user_id,
         sendBirdChannelUrl: sendBirdNewMessagePayload.channel.channel_url,
-        sendBirdMemberInfo: [
-          {
-            isOnline: sendBirdNewMessagePayload.members[0].is_online,
-            memberId: sendBirdNewMessagePayload.members[0].user_id,
-          },
-          {
-            isOnline: sendBirdNewMessagePayload.members[1].is_online,
-            memberId: sendBirdNewMessagePayload.members[1].user_id,
-          },
-        ],
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onReceivedChatMessage, eventParams);
     });
