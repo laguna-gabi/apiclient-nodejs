@@ -57,10 +57,6 @@ export class WebhooksController {
       const event: IEventOnReceivedChatMessage = {
         senderUserId,
         sendBirdChannelUrl,
-        sendBirdMemberInfo: parsedBody.members.map((memberInfo) => ({
-          memberId: memberInfo.user_id,
-          isOnline: memberInfo.is_online,
-        })),
       };
       this.eventEmitter.emit(EventType.onReceivedChatMessage, event);
     }

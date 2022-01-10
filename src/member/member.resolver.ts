@@ -80,7 +80,7 @@ import {
   generatePath,
   getCorrelationId,
 } from '../common';
-import { CommunicationService, GetCommunicationParams } from '../communication';
+import { Communication, CommunicationService, GetCommunicationParams } from '../communication';
 import { Bitly, CognitoService, FeatureFlagService, OneSignal, StorageService } from '../providers';
 import { User, UserService } from '../user';
 
@@ -917,6 +917,7 @@ export class MemberResolver extends MemberBase {
 
     let origin: ChatMessageOrigin;
     let member: Member;
+    let communication: Communication;
     try {
       const user = await this.userService.get(senderUserId);
       if (!user) {
@@ -927,12 +928,14 @@ export class MemberResolver extends MemberBase {
         origin = ChatMessageOrigin.fromMember;
       } else {
         origin = ChatMessageOrigin.fromUser;
-      }
-
-      const communication = await this.communicationService.getByChannelUrl(sendBirdChannelUrl);
-
-      if (!communication) {
-        throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
+        // getting communication in order to find the memberId
+        communication = await this.communicationService.getByChannelUrlAndUser(
+          sendBirdChannelUrl,
+          user.id,
+        );
+        if (!communication) {
+          throw new Error(Errors.get(ErrorType.communicationMemberUserNotFound));
+        }
       }
 
       if (origin === ChatMessageOrigin.fromUser) {
@@ -953,21 +956,17 @@ export class MemberResolver extends MemberBase {
         };
         await this.notifyCreateDispatch(dispatch);
       } else {
-        const coachInfo = params.sendBirdMemberInfo.find(
-          (member) => member.memberId === communication.userId.toString(),
-        );
-        if (coachInfo && !coachInfo.isOnline) {
-          const contentKey = InternalKey.newChatMessageFromMember;
-          const dispatch: IInternalDispatch = {
-            correlationId: getCorrelationId(this.logger),
-            dispatchId: generateDispatchId(contentKey, Date.now().toString()),
-            recipientClientId: communication.userId.toString(),
-            senderClientId: senderUserId,
-            notificationType: NotificationType.textSms,
-            contentKey,
-          };
-          await this.notifyCreateDispatch(dispatch);
-        }
+        // send text to the member's primary user
+        const contentKey = InternalKey.newChatMessageFromMember;
+        const dispatch: IInternalDispatch = {
+          correlationId: getCorrelationId(this.logger),
+          dispatchId: generateDispatchId(contentKey, Date.now().toString()),
+          recipientClientId: member.primaryUserId.toString(),
+          senderClientId: senderUserId,
+          notificationType: NotificationType.textSms,
+          contentKey,
+        };
+        await this.notifyCreateDispatch(dispatch);
       }
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.notifyChatMessage.name, formatEx(ex));

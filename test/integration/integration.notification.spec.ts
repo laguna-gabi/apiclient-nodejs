@@ -918,7 +918,6 @@ describe('Integration tests: notifications', () => {
       const payload = { ...sendbirdPayload };
       payload.sender.user_id = member.id;
       payload.channel.channel_url = communication.sendBirdChannelUrl;
-      payload.members = [{ user_id: member.primaryUserId.toString(), is_online: false }];
 
       const spyOnValidate = jest.spyOn(
         handler.webhooksController,
@@ -968,7 +967,6 @@ describe('Integration tests: notifications', () => {
       const payload = { ...sendbirdPayload };
       payload.sender.user_id = member.primaryUserId.toString();
       payload.channel.channel_url = communication.sendBirdChannelUrl;
-      payload.members = [{ user_id: member.primaryUserId.toString(), is_online: false }];
 
       const spyOnValidate = jest.spyOn(
         handler.webhooksController,

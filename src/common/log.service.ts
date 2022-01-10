@@ -51,7 +51,6 @@ export class LoggerService extends BaseLogger {
     'end',
     //sendbird
     'sendBirdChannelUrl',
-    'sendBirdMemberInfo',
     'senderUserId',
     'sender',
     'channel_url',

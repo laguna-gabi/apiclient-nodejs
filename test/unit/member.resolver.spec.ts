@@ -2168,7 +2168,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
-      spyOnCommunicationGetByUrl = jest.spyOn(communicationService, 'getByChannelUrl');
+      spyOnCommunicationGetByUrl = jest.spyOn(communicationService, 'getByChannelUrlAndUser');
       spyOnNotifyCreateDispatch = jest.spyOn(resolver, 'notifyCreateDispatch');
     });
 
@@ -2214,67 +2214,18 @@ describe('MemberResolver', () => {
       expect(spyOnCreateDispatch).toBeCalled();
     });
 
-    it('should notify the coach on chat message sent from member - coach is offline', async () => {
+    it('should notify the coach on chat message sent from member', async () => {
       const member = mockGenerateMember();
-      const user = mockGenerateUser();
-      const communication: Communication = {
-        memberId: new Types.ObjectId(member.id),
-        userId: new Types.ObjectId(user.id),
-        sendBirdChannelUrl: generateUniqueUrl(),
-      };
       spyOnServiceGetMember.mockImplementation(async () => member);
-      spyOnUserServiceGetUser.mockImplementation(async (userId: string) => {
-        if (userId === user.id) {
-          return user;
-        }
-        return undefined;
-      });
-
-      spyOnCommunicationGetByUrl.mockImplementation(async () => communication);
       const spyOnCreateDispatch = jest.spyOn(resolver, 'notifyCreateDispatch');
       const params: IEventOnReceivedChatMessage = {
         senderUserId: member.id,
-        sendBirdChannelUrl: communication.sendBirdChannelUrl,
-        sendBirdMemberInfo: [
-          { memberId: member.id, isOnline: true },
-          { memberId: user.id, isOnline: false },
-        ],
+        sendBirdChannelUrl: generateUniqueUrl(),
       };
 
       await resolver.notifyChatMessage(params);
       expect(spyOnCreateDispatch).toBeCalled();
     }, 10000);
-
-    /* eslint-disable-next-line max-len */
-    it('should not notify the coach on chat message sent from member - coach is online', async () => {
-      const member = mockGenerateMember();
-      const user = mockGenerateUser();
-      const communication: Communication = {
-        memberId: new Types.ObjectId(member.id),
-        userId: new Types.ObjectId(user.id),
-        sendBirdChannelUrl: generateUniqueUrl(),
-      };
-      spyOnServiceGetMember.mockImplementation(async () => member);
-      spyOnUserServiceGetUser.mockImplementation(async (userId: string) => {
-        if (userId === user.id) {
-          return user;
-        }
-        return undefined;
-      });
-
-      spyOnCommunicationGetByUrl.mockImplementation(async () => communication);
-      const params: IEventOnReceivedChatMessage = {
-        senderUserId: member.id,
-        sendBirdChannelUrl: communication.sendBirdChannelUrl,
-        sendBirdMemberInfo: [
-          { memberId: member.id, isOnline: true },
-          { memberId: user.id, isOnline: true },
-        ],
-      };
-
-      await resolver.notifyChatMessage(params);
-      expect(spyOnNotifyCreateDispatch).not.toBeCalled();
-    });
 
     const fakeData: IEventOnReceivedChatMessage = {
       senderUserId: v4(),
