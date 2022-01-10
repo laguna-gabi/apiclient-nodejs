@@ -1,7 +1,7 @@
 import {
-  AllNotificationTypes,
   CancelNotificationType,
   ContentKey,
+  NotificationType,
   Platform,
 } from '@lagunahealth/pandora';
 import { Prop, Schema } from '@nestjs/mongoose';
@@ -18,7 +18,7 @@ export class SendOneSignalNotification extends BaseSendNotification {
     user: SenderClient;
     member: { phone: string };
     peerId?: string;
-    type: AllNotificationTypes;
+    type: NotificationType | CancelNotificationType;
     contentKey: ContentKey;
     path?: string;
     isVideo: boolean;
@@ -36,7 +36,8 @@ export class SendSendBirdNotification extends BaseSendNotification {
   userId: string; //sender
   sendBirdChannelUrl: string;
   message: string;
-  notificationType: AllNotificationTypes;
+  notificationType: NotificationType | CancelNotificationType;
+  contentKey: ContentKey;
   appointmentId?: string;
   journalImageDownloadLink?: string;
   journalAudioDownloadLink?: string;

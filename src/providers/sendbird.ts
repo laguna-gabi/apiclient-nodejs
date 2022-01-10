@@ -1,9 +1,4 @@
-import {
-  BaseSendBird,
-  FailureReason,
-  InternalNotificationType,
-  formatEx,
-} from '@lagunahealth/pandora';
+import { BaseSendBird, CustomKey, FailureReason, formatEx } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as FormData from 'form-data';
@@ -38,10 +33,10 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
 
   async send(params: SendSendBirdNotification): Promise<ProviderResult> {
     this.logger.info(params, SendBird.name, this.send.name);
-    const { journalImageDownloadLink, journalAudioDownloadLink, notificationType } = params;
+    const { journalImageDownloadLink, journalAudioDownloadLink, contentKey } = params;
 
     const results: ProviderResult[] = [];
-    if (notificationType === InternalNotificationType.chatMessageJournal) {
+    if (contentKey === CustomKey.journalContent) {
       if (journalImageDownloadLink) {
         const result = await this.sendJournalImage(params);
         results.push(this.formatMessageByType('journalImage', result));

@@ -1,4 +1,4 @@
-import { Environments, InternalNotificationType, mockLogger } from '@lagunahealth/pandora';
+import { CustomKey, Environments, NotificationType, mockLogger } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as AWS from 'aws-sdk';
@@ -71,7 +71,8 @@ describe(`live: ${SendBird.name}`, () => {
       userId,
       sendBirdChannelUrl,
       message: faker.lorem.word(),
-      notificationType: InternalNotificationType.chatMessageToUser,
+      contentKey: CustomKey.customContent,
+      notificationType: NotificationType.chat,
     };
     await checkResult('admin', params);
   });
@@ -81,7 +82,8 @@ describe(`live: ${SendBird.name}`, () => {
       userId,
       sendBirdChannelUrl,
       message: faker.lorem.word(),
-      notificationType: InternalNotificationType.chatMessageJournal,
+      notificationType: NotificationType.chat,
+      contentKey: CustomKey.journalContent,
     };
     await checkResult('journalText', params);
   });
@@ -91,7 +93,8 @@ describe(`live: ${SendBird.name}`, () => {
       userId,
       sendBirdChannelUrl,
       message: faker.lorem.word(),
-      notificationType: InternalNotificationType.chatMessageJournal,
+      notificationType: NotificationType.chat,
+      contentKey: CustomKey.journalContent,
       journalImageDownloadLink,
     };
     await checkResult('journalImage', params);
@@ -102,7 +105,8 @@ describe(`live: ${SendBird.name}`, () => {
       userId,
       sendBirdChannelUrl,
       message: faker.lorem.word(),
-      notificationType: InternalNotificationType.chatMessageJournal,
+      notificationType: NotificationType.chat,
+      contentKey: CustomKey.journalContent,
       journalAudioDownloadLink,
     };
     const result = await sendBird.send(params);
@@ -119,7 +123,8 @@ describe(`live: ${SendBird.name}`, () => {
       userId,
       sendBirdChannelUrl,
       message: faker.lorem.word(),
-      notificationType: InternalNotificationType.chatMessageJournal,
+      notificationType: NotificationType.chat,
+      contentKey: CustomKey.journalContent,
       journalAudioDownloadLink,
       journalImageDownloadLink,
     };

@@ -4,7 +4,6 @@ import {
   ExternalKey,
   InnerQueueTypes,
   InternalKey,
-  InternalNotificationType,
   NotificationType,
   ObjectAppointmentScheduleLongReminderClass,
   ObjectAppointmentScheduleReminderClass,
@@ -275,6 +274,7 @@ describe('Notifications full flow', () => {
       const sendbirdParams: SendSendBirdNotification = {
         message: content,
         notificationType: mock.notificationType,
+        contentKey: mock.contentKey,
         orgName: webMemberClient.orgName,
         sendBirdChannelUrl: mock.sendBirdChannelUrl,
         userId: userClient.id,
@@ -674,7 +674,8 @@ describe('Notifications full flow', () => {
 
     expect(spyOnSendBirdSend).toBeCalledWith({
       message: mock.content,
-      notificationType: InternalNotificationType.chatMessageToUser,
+      notificationType: NotificationType.chat,
+      contentKey: mock.contentKey,
       orgName: undefined,
       sendBirdChannelUrl: mock.sendBirdChannelUrl,
       userId: webMemberClient.id,
@@ -710,7 +711,8 @@ describe('Notifications full flow', () => {
 
     expect(spyOnSendBirdSend).toBeCalledWith({
       message: mock.content,
-      notificationType: InternalNotificationType.chatMessageJournal,
+      notificationType: NotificationType.chat,
+      contentKey: mock.contentKey,
       orgName: undefined,
       userId: webMemberClient.id,
       sendBirdChannelUrl: mock.sendBirdChannelUrl,

@@ -1,7 +1,8 @@
 import {
-  AllNotificationTypes,
   BaseOneSignal,
+  CancelNotificationType,
   InternalKey,
+  NotificationType,
   Platform,
   formatEx,
 } from '@lagunahealth/pandora';
@@ -103,7 +104,10 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     }
   }
 
-  private async getConfig(platform: Platform, notificationType?: AllNotificationTypes) {
+  private async getConfig(
+    platform: Platform,
+    notificationType?: NotificationType | CancelNotificationType,
+  ) {
     const config = await this.configsService.getConfig(
       this.isVoipProject(platform, notificationType)
         ? ExternalConfigs.oneSignal.voipApiKey

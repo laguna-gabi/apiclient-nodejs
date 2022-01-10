@@ -1,4 +1,9 @@
-import { AllNotificationTypes, ContentKey, ServiceName } from '@lagunahealth/pandora';
+import {
+  CancelNotificationType,
+  ContentKey,
+  NotificationType,
+  ServiceName,
+} from '@lagunahealth/pandora';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ProviderResult } from '../providers';
 
@@ -42,7 +47,7 @@ export class Dispatch {
   serviceName: ServiceName;
 
   @Prop()
-  notificationType: AllNotificationTypes;
+  notificationType: NotificationType | CancelNotificationType;
 
   @Prop()
   recipientClientId: string;

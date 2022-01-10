@@ -2,7 +2,6 @@ import {
   AuditType,
   ClientCategory,
   InternalKey,
-  InternalNotificationType,
   NotificationType,
   Platform,
   QueueType,
@@ -58,10 +57,7 @@ export class NotificationsService {
 
     const content = await this.generateContent(dispatch, recipientClient, senderClient);
 
-    if (
-      dispatch.notificationType === InternalNotificationType.chatMessageToUser ||
-      dispatch.notificationType === InternalNotificationType.chatMessageJournal
-    ) {
+    if (dispatch.notificationType === NotificationType.chat) {
       const sendSendBirdNotification = this.generateSendbirdParams(
         dispatch,
         recipientClient.orgName,
@@ -181,6 +177,7 @@ export class NotificationsService {
       sendBirdChannelUrl: dispatch.sendBirdChannelUrl,
       message: dispatch.content || content,
       notificationType: dispatch.notificationType,
+      contentKey: dispatch.contentKey,
       orgName,
       appointmentId: dispatch.appointmentId,
       journalImageDownloadLink: dispatch.journalImageDownloadLink,
