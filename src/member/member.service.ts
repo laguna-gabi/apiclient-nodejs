@@ -694,7 +694,10 @@ export class MemberService extends BaseService {
   /*************************************************************************************************
    ******************************************** Recording ******************************************
    ************************************************************************************************/
-  async updateRecording(updateRecordingParams: UpdateRecordingParams, userId): Promise<void> {
+  async updateRecording(
+    updateRecordingParams: UpdateRecordingParams,
+    userId,
+  ): Promise<RecordingDocument> {
     const { start, end, memberId, id, phone, answered, appointmentId, recordingType } =
       updateRecordingParams;
     const member = await this.memberModel.findById(memberId, { _id: 1 });
@@ -716,19 +719,24 @@ export class MemberService extends BaseService {
       },
       isNil,
     );
-
-    try {
-      await this.recordingModel.updateOne(
-        { id, memberId: objectMemberId },
-        { $set: setParams },
-        { new: true, upsert: true },
+    if (id) {
+      const exists = await this.recordingModel.findById(new Types.ObjectId(id));
+      if (exists.memberId.toString() !== objectMemberId.toString()) {
+        throw new Error(Errors.get(ErrorType.memberRecordingSameUserEdit));
+      }
+      const result = await this.recordingModel.findOneAndUpdate(
+        { _id: new Types.ObjectId(id) },
+        setParams,
+        {
+          upsert: false,
+          new: true,
+          rawResult: true,
+        },
       );
-    } catch (ex) {
-      throw new Error(
-        ex.code === DbErrors.duplicateKey
-          ? Errors.get(ErrorType.memberRecordingIdAlreadyExists)
-          : ex,
-      );
+      return this.replaceId(result.value.toObject() as RecordingDocument);
+    } else {
+      const result = await this.recordingModel.create(setParams);
+      return this.replaceId(result.toObject() as RecordingDocument);
     }
   }
 
@@ -738,7 +746,8 @@ export class MemberService extends BaseService {
   ): Promise<void> {
     const { recordingId, content } = updateRecordingReviewParams;
 
-    const recording = await this.recordingModel.findOne({ id: recordingId });
+    const recordingIdObject = new Types.ObjectId(recordingId);
+    const recording = await this.recordingModel.findById(recordingIdObject);
 
     if (!recording) {
       throw new Error(Errors.get(ErrorType.memberRecordingNotFound));
@@ -761,7 +770,7 @@ export class MemberService extends BaseService {
 
     if (recording.review) {
       await this.recordingModel.updateOne(
-        { id: recordingId },
+        { _id: recordingIdObject },
         {
           $set: {
             'review.userId': objectUserId,
@@ -772,7 +781,7 @@ export class MemberService extends BaseService {
       );
     } else {
       await this.recordingModel.findOneAndUpdate(
-        { id: recordingId },
+        { _id: recordingIdObject },
         {
           $set: {
             review: {

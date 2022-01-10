@@ -523,7 +523,7 @@ export const generateUniqueUrl = () => {
 };
 
 export const generateUpdateRecordingParams = ({
-  id = generateId(),
+  id,
   memberId = generateId(),
   userId = generateId(),
   start = faker.date.soon(1),
@@ -533,7 +533,8 @@ export const generateUpdateRecordingParams = ({
   appointmentId,
   recordingType,
 }: Partial<UpdateRecordingParams> = {}): UpdateRecordingParams => {
-  return { id, memberId, userId, start, end, answered, phone, appointmentId, recordingType };
+  const obj = id ? { id } : {};
+  return { ...obj, memberId, userId, start, end, answered, phone, appointmentId, recordingType };
 };
 
 export const generateUpdateRecordingReviewParams = ({
