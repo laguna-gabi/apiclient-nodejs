@@ -14,12 +14,12 @@ import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/daily
 import {
   CreateTaskParams,
   Member,
+  Recording,
   RecordingOutput,
   ReplaceUserForMemberParams,
   Task,
   TaskStatus,
   UpdateJournalTextParams,
-  UpdateRecordingParams,
 } from '../../src/member';
 import { User, defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
@@ -746,15 +746,11 @@ describe('Integration tests: all', () => {
     });
 
     it('should update recordings for multiple members and get those recordings', async () => {
-      const compareRecording = (
-        rec1: RecordingOutput,
-        rec2: UpdateRecordingParams,
-        userId: string,
-      ) => {
+      const compareRecording = (rec1: RecordingOutput, rec2: Recording, userId: string) => {
         expect(rec1.id).toEqual(rec2.id);
         expect(rec1.userId).toEqual(userId);
-        expect(new Date(rec1.start)).toEqual(rec2.start);
-        expect(new Date(rec1.end)).toEqual(rec2.end);
+        expect(rec1.start).toEqual(rec2.start);
+        expect(rec1.end).toEqual(rec2.end);
         expect(rec1.answered).toEqual(rec2.answered);
         expect(rec1.phone).toEqual(rec2.phone);
       };
@@ -763,19 +759,19 @@ describe('Integration tests: all', () => {
       const member1 = await creators.createAndValidateMember({ org });
       const member2 = await creators.createAndValidateMember({ org });
 
-      const rec1a = generateUpdateRecordingParams({ memberId: member1.id });
-      const rec1b = generateUpdateRecordingParams({ memberId: member1.id });
-      const rec2 = generateUpdateRecordingParams({ memberId: member2.id });
+      const params1a = generateUpdateRecordingParams({ memberId: member1.id });
+      const params1b = generateUpdateRecordingParams({ memberId: member1.id });
+      const params2 = generateUpdateRecordingParams({ memberId: member2.id });
 
-      await handler
+      const rec1a = await handler
         .setContextUserId(member1.primaryUserId.toString())
-        .mutations.updateRecording({ updateRecordingParams: rec1a });
-      await handler
+        .mutations.updateRecording({ updateRecordingParams: params1a });
+      const rec1b = await handler
         .setContextUserId(member1.primaryUserId.toString())
-        .mutations.updateRecording({ updateRecordingParams: rec1b });
-      await handler
+        .mutations.updateRecording({ updateRecordingParams: params1b });
+      const rec2 = await handler
         .setContextUserId(member2.primaryUserId.toString())
-        .mutations.updateRecording({ updateRecordingParams: rec2 });
+        .mutations.updateRecording({ updateRecordingParams: params2 });
 
       const result1 = await handler.queries.getRecordings({ memberId: member1.id });
       expect(result1.length).toEqual(2);

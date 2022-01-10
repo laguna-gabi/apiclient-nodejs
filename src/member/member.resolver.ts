@@ -44,6 +44,7 @@ import {
   MemberSummary,
   NotifyContentParams,
   NotifyParams,
+  Recording,
   RecordingLinkParams,
   RecordingOutput,
   ReplaceUserForMemberParams,
@@ -316,7 +317,7 @@ export class MemberResolver extends MemberBase {
     });
   }
 
-  @Mutation(() => Boolean, { nullable: true })
+  @Mutation(() => Recording)
   @Roles(UserRole.coach, UserRole.nurse)
   async updateRecording(
     @Args(camelCase(UpdateRecordingParams.name)) updateRecordingParams: UpdateRecordingParams,
