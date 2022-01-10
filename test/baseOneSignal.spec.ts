@@ -1,10 +1,4 @@
-import {
-  AllNotificationTypes,
-  BaseOneSignal,
-  CancelNotificationType,
-  NotificationType,
-  Platform,
-} from '../src';
+import { BaseOneSignal, CancelNotificationType, NotificationType, Platform } from '../src';
 import { OnModuleInit } from '@nestjs/common';
 import { v4 } from 'uuid';
 
@@ -25,11 +19,17 @@ class OneSignal extends BaseOneSignal implements OnModuleInit {
     };
   }
 
-  async getApiId(platform: Platform, notificationType?: AllNotificationTypes): Promise<string> {
+  async getApiId(
+    platform: Platform,
+    notificationType?: NotificationType | CancelNotificationType,
+  ): Promise<string> {
     return super.getApiId(platform, notificationType);
   }
 
-  isVoipProject(platform: Platform, notificationType?: AllNotificationTypes): boolean {
+  isVoipProject(
+    platform: Platform,
+    notificationType?: NotificationType | CancelNotificationType,
+  ): boolean {
     return super.isVoipProject(platform, notificationType);
   }
 }
