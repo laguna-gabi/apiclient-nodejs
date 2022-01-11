@@ -6,6 +6,7 @@ import { Model, Types } from 'mongoose';
 import {
   Appointment,
   AppointmentDocument,
+  AppointmentStatus,
   EndAppointmentParams,
   Notes,
   NotesDocument,
@@ -14,7 +15,6 @@ import {
   UpdateNotesParams,
 } from '.';
 import {
-  AppointmentStatus,
   BaseService,
   ErrorType,
   Errors,
@@ -77,7 +77,10 @@ export class AppointmentService extends BaseService {
   }
 
   async get(id: string): Promise<Appointment> {
-    const result = await this.appointmentModel.findById({ _id: id }).populate('notes');
+    const result = await this.appointmentModel
+      .findOne({ _id: id, status: { $ne: AppointmentStatus.deleted } })
+      .populate('notes');
+
     return this.replaceId(result);
   }
 
@@ -171,7 +174,10 @@ export class AppointmentService extends BaseService {
   }
 
   async end(params: EndAppointmentParams): Promise<Appointment> {
-    const existing = await this.appointmentModel.findById({ _id: params.id });
+    const existing = await this.appointmentModel.findOne({
+      _id: params.id,
+      status: { $ne: AppointmentStatus.deleted },
+    });
     const { noShow, recordingConsent, id, noShowReason } = params;
     let result;
     if (!existing) {
@@ -241,6 +247,7 @@ export class AppointmentService extends BaseService {
     const object = await this.appointmentModel.findOneAndUpdate(
       {
         _id: new Types.ObjectId(id),
+        status: { $ne: AppointmentStatus.deleted },
       },
       {
         $set: setParams,
@@ -279,7 +286,10 @@ export class AppointmentService extends BaseService {
   }
 
   async updateNotes(params: UpdateNotesParams): Promise<Notes | null> {
-    const existing = await this.appointmentModel.findById({ _id: params.appointmentId });
+    const existing = await this.appointmentModel.findOne({
+      _id: params.appointmentId,
+      status: { $ne: AppointmentStatus.deleted },
+    });
 
     if (!existing) {
       throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
@@ -319,6 +329,18 @@ export class AppointmentService extends BaseService {
       memberId: new Types.ObjectId(memberId),
       status: AppointmentStatus.scheduled,
     });
+  }
+
+  async validateUpdateAppointment(id: string) {
+    if (id) {
+      const existingAppointment = await this.get(id);
+      if (!existingAppointment) {
+        throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
+      }
+      if (existingAppointment.status === AppointmentStatus.done) {
+        throw new Error(Errors.get(ErrorType.appointmentCanNotBeUpdated));
+      }
+    }
   }
 
   @OnEvent(EventType.onDeletedMember, { async: true })

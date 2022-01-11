@@ -1,5 +1,5 @@
 import { Language, Platform } from '@lagunahealth/pandora';
-import { AppointmentStatus, RecordingType, StorageType, reformatDate } from '../../src/common';
+import { RecordingType, StorageType, reformatDate } from '../../src/common';
 import {
   AppointmentAttendanceStatus,
   AppointmentsMemberData,
@@ -24,7 +24,7 @@ import {
 } from '.';
 import { add, differenceInDays, differenceInSeconds, differenceInYears } from 'date-fns';
 import { Injectable } from '@nestjs/common';
-import { AppointmentMethod } from '../../src/appointment';
+import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { Member, MemberDocument, MemberService, Recording } from '../../src/member';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model, Types } from 'mongoose';

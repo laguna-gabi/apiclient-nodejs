@@ -76,6 +76,20 @@ export class AppointmentResolver extends AppointmentBase {
     return super.scheduleAppointment(scheduleAppointmentParams);
   }
 
+  @Mutation(() => Boolean)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async deleteAppointment(@Args('id', { type: () => String }) id: string) {
+    await this.appointmentService.validateUpdateAppointment(id);
+
+    const appointment = await this.appointmentService.updateAppointment(id, {
+      status: AppointmentStatus.deleted,
+    });
+
+    await this.deleteAppointmentReminders(appointment);
+
+    return true;
+  }
+
   @Mutation(() => Appointment)
   @Roles(UserRole.coach, UserRole.nurse)
   async endAppointment(

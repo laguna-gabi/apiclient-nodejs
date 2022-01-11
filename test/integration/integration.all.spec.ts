@@ -1005,6 +1005,23 @@ describe('Integration tests: all', () => {
       expect(status).toBeTruthy();
     }, 10000);
   });
+
+  describe('Appointments', () => {
+    it('should delete a scheduled appointment', async () => {
+      const user = await creators.createAndValidateUser([UserRole.coach]);
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+      const appointment = await appointmentsActions.requestAppointment({
+        userId: user.id,
+        member,
+      });
+
+      await handler.mutations.deleteAppointment({ id: appointment.id });
+
+      expect(await handler.queries.getAppointment(appointment.id)).toBeFalsy();
+    }, 10000);
+  });
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

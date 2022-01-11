@@ -433,6 +433,14 @@ describe('MemberService', () => {
       startUser2.setHours(startUser2.getHours() + 8);
       await generateAppointment({ userId: userId2, memberId, start: startUser2 });
 
+      // insert a deleted appointment - should not be counted
+      await generateAppointment({
+        userId: userId2,
+        memberId,
+        start: startUser2,
+        status: AppointmentStatus.deleted,
+      });
+
       const result = await service.getByOrg(orgId);
       expect(result.length).toEqual(1);
       expect(result[0]).toEqual(

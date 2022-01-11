@@ -10,15 +10,16 @@ import { addMinutes } from 'date-fns';
 import * as faker from 'faker';
 import { v4 } from 'uuid';
 import {
+  Appointment,
   AppointmentController,
   AppointmentMethod,
   AppointmentModule,
   AppointmentResolver,
   AppointmentService,
+  AppointmentStatus,
   ScheduleAppointmentParams,
 } from '../../src/appointment';
 import {
-  AppointmentStatus,
   ErrorType,
   Errors,
   EventType,
@@ -33,6 +34,7 @@ import {
   generateAppointmentLink,
   generateId,
   generateNotesParams,
+  generateObjectId,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateUpdateNotesParams,
@@ -250,6 +252,60 @@ describe('AppointmentResolver', () => {
         value: { status: result.status, start: result.start },
       };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedAppointment, eventParams);
+    });
+  });
+
+  describe('deleteAppointment', () => {
+    let spyOnServiceValidatedUpdateAppointment: jest.SpyInstance;
+    let spyOnUpdateAppointment: jest.SpyInstance;
+    let spyOnGet: jest.SpyInstance;
+
+    beforeEach(() => {
+      spyOnServiceValidatedUpdateAppointment = jest.spyOn(service, 'validateUpdateAppointment');
+      spyOnUpdateAppointment = jest.spyOn(service, 'updateAppointment');
+      spyOnGet = jest.spyOn(service, 'get');
+    });
+
+    afterEach(() => {
+      spyOnServiceValidatedUpdateAppointment.mockReset();
+      spyOnUpdateAppointment.mockReset();
+      spyOnEventEmitter.mockReset();
+      spyOnGet.mockReset();
+    });
+
+    // eslint-disable-next-line max-len
+    it(`should fail to delete an existing appointment with status ${AppointmentStatus.done}`, async () => {
+      spyOnGet.mockResolvedValue({ status: AppointmentStatus.done } as Appointment);
+
+      await expect(resolver.deleteAppointment(generateId())).rejects.toThrow(
+        Errors.get(ErrorType.appointmentCanNotBeUpdated),
+      );
+
+      expect(spyOnUpdateAppointment).not.toHaveBeenCalled();
+      expect(spyOnEventEmitter).not.toHaveBeenCalled();
+    });
+
+    // eslint-disable-next-line max-len
+    it(`should delete an existing appointment with status ${AppointmentStatus.scheduled}`, async () => {
+      const appointment = {
+        id: generateId(),
+        memberId: generateObjectId(),
+        status: AppointmentStatus.scheduled,
+      };
+
+      spyOnGet.mockResolvedValue(appointment as Appointment);
+      spyOnUpdateAppointment.mockResolvedValue({
+        ...appointment,
+        status: AppointmentStatus.deleted,
+      } as Appointment);
+
+      await resolver.deleteAppointment(appointment.id);
+
+      expect(spyOnUpdateAppointment).toBeCalledWith(appointment.id, {
+        status: AppointmentStatus.deleted,
+      });
+
+      expect(spyOnEventEmitter).toBeCalled();
     });
   });
 

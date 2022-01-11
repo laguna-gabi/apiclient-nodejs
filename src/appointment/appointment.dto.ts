@@ -21,6 +21,7 @@ export enum AppointmentStatus {
   requested = 'requested',
   scheduled = 'scheduled',
   done = 'done',
+  deleted = 'deleted',
 }
 
 registerEnumType(AppointmentStatus, { name: 'AppointmentStatus' });

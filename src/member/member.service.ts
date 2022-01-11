@@ -47,9 +47,8 @@ import {
   UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
 } from '.';
-import { Appointment } from '../appointment';
+import { Appointment, AppointmentStatus } from '../appointment';
 import {
-  AppointmentStatus,
   BaseService,
   DbErrors,
   ErrorType,
@@ -871,7 +870,11 @@ export class MemberService extends BaseService {
     const allAppointments = member.users
       .map((user) => user.appointments)
       .reduce((acc = [], current) => acc.concat(current), [])
-      .filter((app: Appointment) => app.memberId.toString() === member.id.toString());
+      .filter(
+        (app: Appointment) =>
+          app.memberId.toString() === member.id.toString() &&
+          app.status !== AppointmentStatus.deleted,
+      );
 
     const nextAppointment = allAppointments
       .filter(

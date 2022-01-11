@@ -752,6 +752,43 @@ describe('Integration tests: notifications', () => {
     );
 
     /**
+     * Trigger : AppointmentResolver.deleteAppointment
+     * Dispatches:
+     *      1. delete dispatch InternalKey.appointmentReminder
+     *      2. delete dispatch InternalKey.appointmentLongReminder
+     */
+    it(
+      `deleteAppointment: should delete dispatches of types ` +
+        `${InternalKey.appointmentReminder}, ${InternalKey.appointmentLongReminder}`,
+      async () => {
+        const appointment = await generateScheduleAppointment();
+        await delay(1000);
+        handler.queueService.spyOnQueueServiceSendMessage.mockReset();
+
+        await handler.mutations.deleteAppointment({ id: appointment.id });
+        await delay(500);
+
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(2);
+        checkValues(1, {
+          type: InnerQueueTypes.deleteDispatch,
+          dispatchId: generateDispatchId(
+            InternalKey.appointmentReminder,
+            appointment.memberId.toString(),
+            appointment.id,
+          ),
+        });
+        checkValues(2, {
+          type: InnerQueueTypes.deleteDispatch,
+          dispatchId: generateDispatchId(
+            InternalKey.appointmentLongReminder,
+            appointment.memberId.toString(),
+            appointment.id,
+          ),
+        });
+      },
+    );
+
+    /**
      * Trigger : AppointmentResolver.requestAppointment
      * Dispatches:
      *      1. send appointmentRequest dispatch

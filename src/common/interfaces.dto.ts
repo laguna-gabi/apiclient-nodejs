@@ -21,14 +21,6 @@ registerEnumType(NotificationType, { name: 'NotificationType' });
 registerEnumType(Platform, { name: 'Platform' });
 registerEnumType(Language, { name: 'Language' });
 
-export enum AppointmentStatus {
-  requested = 'requested',
-  scheduled = 'scheduled',
-  done = 'done',
-}
-
-registerEnumType(AppointmentStatus, { name: 'AppointmentStatus' });
-
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
  *************************************************************************************************/
