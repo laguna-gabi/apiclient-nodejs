@@ -39,6 +39,7 @@ import {
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
 } from '../index';
+import { v4 } from 'uuid';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -760,23 +761,34 @@ describe('Integration tests: all', () => {
       const member2 = await creators.createAndValidateMember({ org });
 
       const params1a = generateUpdateRecordingParams({ memberId: member1.id });
-      const params1b = generateUpdateRecordingParams({ memberId: member1.id });
-      const params2 = generateUpdateRecordingParams({ memberId: member2.id });
-
       const rec1a = await handler
         .setContextUserId(member1.primaryUserId.toString())
         .mutations.updateRecording({ updateRecordingParams: params1a });
+      let result1 = await handler.queries.getRecordings({ memberId: member1.id });
+      compareRecording(result1[0], rec1a, member1.primaryUserId.toString());
+
+      //overriding existing recording with different params
+      const params1b = generateUpdateRecordingParams({ memberId: member1.id, id: rec1a.id });
       const rec1b = await handler
         .setContextUserId(member1.primaryUserId.toString())
         .mutations.updateRecording({ updateRecordingParams: params1b });
+      result1 = await handler.queries.getRecordings({ memberId: member1.id });
+      compareRecording(result1[0], rec1b, member1.primaryUserId.toString());
+
+      const params1c = generateUpdateRecordingParams({ memberId: member1.id });
+      const rec1c = await handler
+        .setContextUserId(member1.primaryUserId.toString())
+        .mutations.updateRecording({ updateRecordingParams: params1c });
+
+      const params2 = generateUpdateRecordingParams({ memberId: member2.id, id: v4() });
       const rec2 = await handler
         .setContextUserId(member2.primaryUserId.toString())
         .mutations.updateRecording({ updateRecordingParams: params2 });
 
-      const result1 = await handler.queries.getRecordings({ memberId: member1.id });
+      result1 = await handler.queries.getRecordings({ memberId: member1.id });
       expect(result1.length).toEqual(2);
-      compareRecording(result1[0], rec1a, member1.primaryUserId.toString());
-      compareRecording(result1[1], rec1b, member1.primaryUserId.toString());
+      compareRecording(result1[0], rec1b, member1.primaryUserId.toString());
+      compareRecording(result1[1], rec1c, member1.primaryUserId.toString());
       const result2 = await handler.queries.getRecordings({ memberId: member2.id });
       expect(result2.length).toEqual(1);
       compareRecording(result2[0], rec2, member2.primaryUserId.toString());
@@ -1003,6 +1015,23 @@ describe('Integration tests: all', () => {
       ).toBeFalsy();
 
       expect(status).toBeTruthy();
+    }, 10000);
+  });
+
+  describe('Appointments', () => {
+    it('should delete a scheduled appointment', async () => {
+      const user = await creators.createAndValidateUser([UserRole.coach]);
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+
+      const appointment = await appointmentsActions.requestAppointment({
+        userId: user.id,
+        member,
+      });
+
+      await handler.mutations.deleteAppointment({ id: appointment.id });
+
+      expect(await handler.queries.getAppointment(appointment.id)).toBeFalsy();
     }, 10000);
   });
   /************************************************************************************************

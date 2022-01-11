@@ -47,9 +47,8 @@ import {
   UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
 } from '.';
-import { Appointment } from '../appointment';
+import { Appointment, AppointmentStatus } from '../appointment';
 import {
-  AppointmentStatus,
   BaseService,
   DbErrors,
   ErrorType,
@@ -694,10 +693,7 @@ export class MemberService extends BaseService {
   /*************************************************************************************************
    ******************************************** Recording ******************************************
    ************************************************************************************************/
-  async updateRecording(
-    updateRecordingParams: UpdateRecordingParams,
-    userId,
-  ): Promise<RecordingDocument> {
+  async updateRecording(updateRecordingParams: UpdateRecordingParams, userId): Promise<Recording> {
     const { start, end, memberId, id, phone, answered, appointmentId, recordingType } =
       updateRecordingParams;
     const member = await this.memberModel.findById(memberId, { _id: 1 });
@@ -719,24 +715,21 @@ export class MemberService extends BaseService {
       },
       isNil,
     );
+
     if (id) {
-      const exists = await this.recordingModel.findById(new Types.ObjectId(id));
-      if (exists.memberId.toString() !== objectMemberId.toString()) {
+      const exists = await this.recordingModel.findOne({ id });
+      if (exists && exists.memberId.toString() !== objectMemberId.toString()) {
         throw new Error(Errors.get(ErrorType.memberRecordingSameUserEdit));
       }
-      const result = await this.recordingModel.findOneAndUpdate(
-        { _id: new Types.ObjectId(id) },
-        setParams,
-        {
-          upsert: false,
-          new: true,
-          rawResult: true,
-        },
-      );
-      return this.replaceId(result.value.toObject() as RecordingDocument);
+      const result = await this.recordingModel.findOneAndUpdate({ id }, setParams, {
+        upsert: true,
+        new: true,
+        rawResult: true,
+      });
+      return result.value.toObject();
     } else {
-      const result = await this.recordingModel.create(setParams);
-      return this.replaceId(result.toObject() as RecordingDocument);
+      const result = await this.recordingModel.create({ ...setParams, id: v4() });
+      return result.toObject() as RecordingDocument;
     }
   }
 
@@ -746,8 +739,7 @@ export class MemberService extends BaseService {
   ): Promise<void> {
     const { recordingId, content } = updateRecordingReviewParams;
 
-    const recordingIdObject = new Types.ObjectId(recordingId);
-    const recording = await this.recordingModel.findById(recordingIdObject);
+    const recording = await this.recordingModel.findOne({ id: recordingId });
 
     if (!recording) {
       throw new Error(Errors.get(ErrorType.memberRecordingNotFound));
@@ -770,7 +762,7 @@ export class MemberService extends BaseService {
 
     if (recording.review) {
       await this.recordingModel.updateOne(
-        { _id: recordingIdObject },
+        { id: recordingId },
         {
           $set: {
             'review.userId': objectUserId,
@@ -781,7 +773,7 @@ export class MemberService extends BaseService {
       );
     } else {
       await this.recordingModel.findOneAndUpdate(
-        { _id: recordingIdObject },
+        { id: recordingId },
         {
           $set: {
             review: {
@@ -871,7 +863,11 @@ export class MemberService extends BaseService {
     const allAppointments = member.users
       .map((user) => user.appointments)
       .reduce((acc = [], current) => acc.concat(current), [])
-      .filter((app: Appointment) => app.memberId.toString() === member.id.toString());
+      .filter(
+        (app: Appointment) =>
+          app.memberId.toString() === member.id.toString() &&
+          app.status !== AppointmentStatus.deleted,
+      );
 
     const nextAppointment = allAppointments
       .filter(

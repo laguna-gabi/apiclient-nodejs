@@ -2,7 +2,7 @@ import { InternalKey, NotificationType, generateDispatchId } from '@lagunahealth
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { scheduler } from 'config';
 import { addDays, addMinutes, isBefore, subDays, subMinutes } from 'date-fns';
-import { Appointment, AppointmentService, AppointmentStatus, ScheduleAppointmentParams } from '.';
+import { Appointment, AppointmentService, ScheduleAppointmentParams } from '.';
 import {
   ErrorType,
   Errors,
@@ -26,7 +26,7 @@ export class AppointmentBase {
   ) {}
 
   async scheduleAppointment(scheduleAppointmentParams: ScheduleAppointmentParams) {
-    await this.validateUpdateScheduleAppointment(scheduleAppointmentParams.id);
+    await this.appointmentService.validateUpdateAppointment(scheduleAppointmentParams.id);
     const appointment = await this.appointmentService.schedule(scheduleAppointmentParams);
 
     this.updateAppointmentExternalData(appointment);
@@ -132,15 +132,6 @@ export class AppointmentBase {
         triggersAt: subDays(appointment.start, 1),
       };
       this.eventEmitter.emit(EventType.notifyDispatch, appointmentReminderLongEvent);
-    }
-  }
-
-  private async validateUpdateScheduleAppointment(id: string) {
-    if (id) {
-      const existingAppointment = await this.appointmentService.get(id);
-      if (existingAppointment?.status === AppointmentStatus.done) {
-        throw new Error(Errors.get(ErrorType.appointmentCanNotBeUpdated));
-      }
     }
   }
 

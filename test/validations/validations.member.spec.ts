@@ -421,6 +421,16 @@ describe('Validations - member', () => {
         });
       },
     );
+
+    it(`should fail on notify with type ${NotificationType.chat}`, async () => {
+      const notifyParams: NotifyParams = generateNotifyParams({
+        type: NotificationType.chat,
+      });
+      await handler.mutations.notify({
+        notifyParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.notificationChatNotSupported)],
+      });
+    });
   });
 
   /* eslint-disable max-len */

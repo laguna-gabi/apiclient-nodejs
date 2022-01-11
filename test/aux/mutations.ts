@@ -1,4 +1,5 @@
 import { ApolloServerTestClient } from 'apollo-server-testing';
+import { GraphQLResponse } from 'graphql-extensions';
 import gql from 'graphql-tag';
 import { camelCase } from 'lodash';
 import {
@@ -348,6 +349,16 @@ export class Mutations {
       result.data.endAppointment
     );
   };
+
+  deleteAppointment = async ({ id }: { id: string }): Promise<GraphQLResponse> =>
+    await this.apolloClient.mutate({
+      variables: { id: id },
+      mutation: gql`
+        mutation deleteAppointment($id: String!) {
+          deleteAppointment(id: $id)
+        }
+      `,
+    });
 
   updateNotes = async ({
     updateNotesParams,

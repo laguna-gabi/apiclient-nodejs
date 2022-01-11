@@ -10,10 +10,10 @@ import {
   AppointmentMethod,
   AppointmentModule,
   AppointmentService,
+  AppointmentStatus,
   EndAppointmentParams,
 } from '../../src/appointment';
 import {
-  AppointmentStatus,
   ErrorType,
   Errors,
   EventType,
@@ -100,6 +100,16 @@ describe('AppointmentService', () => {
       const result = await service.get(id);
       expect(result.status).toEqual(AppointmentStatus.scheduled);
       validateNewAppointmentEvent(appointment.memberId, appointment.userId, id);
+    });
+
+    it('should not return a deleted appointment', async () => {
+      const appointment = generateScheduleAppointmentParams();
+      const { id } = await service.schedule(appointment);
+
+      await service.updateAppointment(id, { status: AppointmentStatus.deleted }); // delete the appointment
+
+      const result = await service.get(id);
+      expect(result).toBeNull();
     });
   });
 
@@ -447,6 +457,14 @@ describe('AppointmentService', () => {
   describe('end', () => {
     it('should not be able to end a non existing appointment', async () => {
       await expect(service.end({ id: generateId() })).rejects.toThrow(
+        Errors.get(ErrorType.appointmentIdNotFound),
+      );
+    });
+
+    it('should not be able to end a deleted appointment', async () => {
+      const { id } = await service.schedule(generateScheduleAppointmentParams());
+      await service.updateAppointment(id, { status: AppointmentStatus.deleted });
+      await expect(service.end({ id })).rejects.toThrow(
         Errors.get(ErrorType.appointmentIdNotFound),
       );
     });
