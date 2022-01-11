@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType, OmitType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
-import { Identifier, RecordingType } from '../common';
+import { RecordingType } from '../common';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -9,8 +9,8 @@ import { Identifier, RecordingType } from '../common';
 
 @InputType({ isAbstract: true })
 export class UpdateRecordingParams {
-  @Field(() => String, { nullable: true })
-  id?: string;
+  @Field(() => String)
+  id: string;
 
   @Field(() => String)
   memberId: string;
@@ -70,7 +70,11 @@ export class RecordingReview {
 
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
-export class Recording extends Identifier {
+export class Recording {
+  @Prop({ type: String, index: true, unique: true })
+  @Field(() => String)
+  id: string;
+
   @Prop({ type: Types.ObjectId, index: true })
   @Field(() => String)
   memberId: Types.ObjectId;

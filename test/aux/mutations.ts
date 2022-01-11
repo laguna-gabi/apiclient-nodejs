@@ -28,7 +28,6 @@ import {
   Member,
   NotifyContentParams,
   NotifyParams,
-  Recording,
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
   UpdateCaregiverParams,
@@ -860,28 +859,12 @@ export class Mutations {
     updateRecordingParams?: UpdateRecordingParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
-  }): Promise<Recording> => {
+  }): Promise<void> => {
     const result = await this.apolloClient.mutate({
       variables: { updateRecordingParams: updateRecordingParams },
       mutation: gql`
         mutation updateRecording($updateRecordingParams: UpdateRecordingParams!) {
-          updateRecording(updateRecordingParams: $updateRecordingParams) {
-            id
-            userId
-            memberId
-            start
-            end
-            answered
-            phone
-            recordingType
-            deletedMedia
-            review {
-              userId
-              content
-              createdAt
-              updatedAt
-            }
-          }
+          updateRecording(updateRecordingParams: $updateRecordingParams)
         }
       `,
     });
