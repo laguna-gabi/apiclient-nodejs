@@ -1,6 +1,6 @@
+import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 import { ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
 import { lookup } from 'zipcode-to-timezone';
-import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 import { Types as MongooseTypes } from 'mongoose';
 import { general } from 'config';
 import { differenceInMilliseconds } from 'date-fns';
@@ -153,6 +153,21 @@ export function IsTypeMetadataProvided(options: ValidationOptions) {
               return whenNotInMetadata;
             }
           }
+        },
+      },
+    });
+  };
+}
+
+export function IsNotChat(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(notificationType: NotificationType) {
+          return notificationType !== NotificationType.chat;
         },
       },
     });

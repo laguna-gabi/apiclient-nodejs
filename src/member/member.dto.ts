@@ -25,6 +25,7 @@ import {
   ErrorType,
   Errors,
   Identifier,
+  IsNotChat,
   IsObjectId,
   IsStringDate,
   IsTypeMetadataProvided,
@@ -348,6 +349,7 @@ export class NotifyParams {
   userId: string;
 
   @Prop()
+  @IsNotChat({ message: Errors.get(ErrorType.notificationChatNotSupported) })
   @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataInvalid) })
   @Field(() => NotificationType)
   type: NotificationType;

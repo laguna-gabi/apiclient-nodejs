@@ -1,7 +1,6 @@
 import {
   CancelNotificationType,
   ICreateDispatch,
-  InternalNotificationType,
   Language,
   NotificationType,
   Platform,
@@ -16,7 +15,6 @@ import { ErrorType, Errors, IsNotPlatformWeb, IsObjectId } from '.';
  *************************** Enum registration for external gql methods ***************************
  *************************************************************************************************/
 registerEnumType(CancelNotificationType, { name: 'CancelNotificationType' });
-registerEnumType(InternalNotificationType, { name: 'InternalNotificationType' });
 registerEnumType(NotificationType, { name: 'NotificationType' });
 registerEnumType(Platform, { name: 'Platform' });
 registerEnumType(Language, { name: 'Language' });

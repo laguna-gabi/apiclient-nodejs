@@ -55,6 +55,7 @@ export enum ErrorType {
   notificationInvalidContent = 9274,
   notificationNotAllowed = 9275,
   notificationNotAllowedForWebMember = 9276,
+  notificationChatNotSupported = 9277,
 
   // Module appointment errors
   appointmentIdNotFound = 9301,
@@ -171,6 +172,7 @@ export const Errors: Map<ErrorType, string> = new Map([
     `mobile notification is not allowed if member did not login to the ` +
       `app or/and isPushNotificationsEnabled=false`,
   ],
+  [ErrorType.notificationChatNotSupported.valueOf(), `notification type chat is not supported`],
   [ErrorType.appointmentIdNotFound.valueOf(), 'appointment id was not found'],
   [ErrorType.appointmentNotBeforeDate.valueOf(), `notBefore ${dateInstanceFormat}`],
   [ErrorType.appointmentNotBeforeDateInThePast.valueOf(), 'notBefore must be in the future'],

@@ -1,5 +1,5 @@
 import {
-  AllNotificationTypes,
+  CancelNotificationType,
   ContentKey,
   ExternalKey,
   InternalKey,
@@ -73,7 +73,7 @@ export const getCorrelationId = (logger: LoggerService) =>
   logger?.logger?.bindings?.().reqId || v4();
 
 export const generatePath = (
-  type: AllNotificationTypes,
+  type: NotificationType | CancelNotificationType,
   contentKey?: ContentKey,
   ...params: string[]
 ) => {
