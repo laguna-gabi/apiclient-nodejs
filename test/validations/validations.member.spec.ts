@@ -885,7 +885,6 @@ describe('Validations - member', () => {
   describe('updateRecording', () => {
     test.each`
       field         | error
-      ${'id'}       | ${`Field "id" of required type "String!" was not provided.`}
       ${'memberId'} | ${`Field "memberId" of required type "String!" was not provided.`}
     `(`should fail to update recording since mandatory field $field is missing`, async (params) => {
       const updateRecordingParams = generateUpdateRecordingParams();

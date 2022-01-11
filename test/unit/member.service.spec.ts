@@ -11,6 +11,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import * as faker from 'faker';
 import { datatype, date, internet } from 'faker';
+import { isNil, omitBy } from 'lodash';
 import { Model, Types, model } from 'mongoose';
 import { performance } from 'perf_hooks';
 import {
@@ -70,6 +71,7 @@ import {
   generateUpdateRecordingReviewParams,
   generateUpdateTaskStatusParams,
 } from '../index';
+import { v4 } from 'uuid';
 
 describe('MemberService', () => {
   let module: TestingModule;
@@ -1437,63 +1439,76 @@ describe('MemberService', () => {
     it('should fail to update an existing id for different member', async () => {
       const userId = generateId();
       const memberId1 = await generateMember();
-      const recording1 = generateUpdateRecordingParams({ memberId: memberId1 });
-      await service.updateRecording(recording1, userId);
+      const params1 = generateUpdateRecordingParams({ memberId: memberId1 });
+      const recording1 = await service.updateRecording(params1, userId);
 
       const memberId2 = await generateMember();
       const recording2 = generateUpdateRecordingParams({ id: recording1.id, memberId: memberId2 });
       await expect(service.updateRecording(recording2, userId)).rejects.toThrow(
-        Errors.get(ErrorType.memberRecordingIdAlreadyExists),
+        Errors.get(ErrorType.memberRecordingSameUserEdit),
       );
+    });
+
+    it('should fail to update a non existing id', async () => {
+      const userId = generateId();
+      const memberId = await generateMember();
+      const params = generateUpdateRecordingParams({ memberId, id: v4() });
+      await expect(service.updateRecording(params, userId)).rejects.toThrow(
+        Errors.get(ErrorType.memberRecordingNotFound),
+      );
+    });
+
+    it('should create a member recording with undefined id on 1st time', async () => {
+      const memberId = await generateMember();
+      const params = generateUpdateRecordingParams({ memberId });
+      params.id = undefined;
+      const result = await service.updateRecording(params, params.userId);
+      expect(result).toEqual(expect.objectContaining(omitBy(params, isNil)));
     });
 
     it('should update a member recording', async () => {
       const memberId = await generateMember();
-      const recording = generateUpdateRecordingParams({ memberId });
-      await service.updateRecording(recording, recording.userId);
+      const params = generateUpdateRecordingParams({ memberId });
+      const recording = await service.updateRecording(params, params.userId);
 
       const recordings = await service.getRecordings(memberId);
       expect(recordings.length).toEqual(1);
       expect(recordings[0].id).toEqual(recording.id);
-      expect(recordings[0]).toEqual(expect.objectContaining(recording));
+      expect(recordings[0]).toEqual(expect.objectContaining(omitBy(params, isNil)));
     });
 
-    it('should not override optional fields when not set from params', async () => {
-      const memberId = await generateMember();
-      const appointmentId = new Types.ObjectId(generateId());
-      const recording1 = generateUpdateRecordingParams({
-        memberId,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        appointmentId: appointmentId as string,
-        recordingType: RecordingType.phone,
-      });
-      await service.updateRecording(recording1, recording1.userId);
-      const recording2 = generateUpdateRecordingParams({ id: recording1.id, memberId });
-      recording2.start = undefined;
-      recording2.end = undefined;
-      recording2.userId = undefined;
-      recording2.phone = undefined;
-      recording2.answered = undefined;
-      recording2.recordingType = undefined;
-      recording2.appointmentId = undefined;
-      await service.updateRecording(recording2, undefined);
+    test.each(['start', 'end', 'userId', 'phone', 'answered', 'recordingType', 'appointmentId'])(
+      'should not override optional field %p when not set from params',
+      async (param) => {
+        const memberId = await generateMember();
+        const params1 = generateUpdateRecordingParams({
+          memberId,
+          appointmentId: generateId(),
+          recordingType: RecordingType.phone,
+        });
+        const { id } = await service.updateRecording(params1, params1.userId);
+        const params2 = generateUpdateRecordingParams({ id, memberId });
+        delete params2[param];
+        await service.updateRecording(params2, params2.userId);
 
-      const recordings = await service.getRecordings(memberId);
-      expect(recordings.length).toEqual(1);
-      expect(recordings[0]).toEqual(expect.objectContaining(recording1));
-    });
+        const recordings = await service.getRecordings(memberId);
+        expect(recordings.length).toEqual(1);
+        expect(recordings[0][param]).toEqual(
+          param === 'appointmentId' ? new Types.ObjectId(params1.appointmentId) : params1[param],
+        );
+      },
+    );
 
     it('should multiple update members recordings', async () => {
       const memberId1 = await generateMember();
-      const recording1a = generateUpdateRecordingParams({ memberId: memberId1 });
-      await service.updateRecording(recording1a, recording1a.userId);
-      const recording1b = generateUpdateRecordingParams({ memberId: memberId1 });
-      recording1b.end = undefined;
-      await service.updateRecording(recording1b, recording1b.userId);
+      const params1a = generateUpdateRecordingParams({ memberId: memberId1 });
+      const recording1a = await service.updateRecording(params1a, params1a.userId);
+      const params1b = generateUpdateRecordingParams({ memberId: memberId1 });
+      params1b.end = undefined;
+      const recording1b = await service.updateRecording(params1b, params1b.userId);
       const memberId2 = await generateMember();
-      const recording2 = generateUpdateRecordingParams({ memberId: memberId2 });
-      await service.updateRecording(recording2, recording2.userId);
+      const params2 = generateUpdateRecordingParams({ memberId: memberId2 });
+      const recording2 = await service.updateRecording(params2, params2.userId);
 
       const recordings1 = await service.getRecordings(memberId1);
       expect(recordings1.length).toEqual(2);
@@ -1515,8 +1530,8 @@ describe('MemberService', () => {
 
     it('should fail to update review if user created recording', async () => {
       const memberId = await generateMember();
-      const recording = generateUpdateRecordingParams({ memberId });
-      await service.updateRecording(recording, recording.userId);
+      const params = generateUpdateRecordingParams({ memberId });
+      const recording = await service.updateRecording(params, params.userId);
 
       await expect(
         service.updateRecordingReview(
@@ -1531,15 +1546,15 @@ describe('MemberService', () => {
       const userId2 = generateId();
 
       const memberId = await generateMember();
-      const recording = generateUpdateRecordingParams({ memberId });
-      await service.updateRecording(recording, recording.userId);
+      const params1 = generateUpdateRecordingParams({ memberId });
+      const recording = await service.updateRecording(params1, params1.userId);
 
-      const params = generateUpdateRecordingReviewParams({ recordingId: recording.id });
-      await service.updateRecordingReview(params, userId1);
+      const paramsReview = generateUpdateRecordingReviewParams({ recordingId: recording.id });
+      await service.updateRecordingReview(paramsReview, userId1);
 
       await expect(
         service.updateRecordingReview(
-          generateUpdateRecordingReviewParams({ recordingId: params.recordingId }),
+          generateUpdateRecordingReviewParams({ recordingId: paramsReview.recordingId }),
           userId2,
         ),
       ).rejects.toThrow(Errors.get(ErrorType.memberRecordingSameUserEdit));
@@ -1547,17 +1562,17 @@ describe('MemberService', () => {
 
     it('should create a review', async () => {
       const memberId = await generateMember();
-      const recording = generateUpdateRecordingParams({ memberId });
-      await service.updateRecording(recording, recording.userId);
+      const params = generateUpdateRecordingParams({ memberId });
+      const recording = await service.updateRecording(params, params.userId);
 
       const userId = generateId();
-      const params = generateUpdateRecordingReviewParams({ recordingId: recording.id });
-      await service.updateRecordingReview(params, userId);
+      const paramsReview = generateUpdateRecordingReviewParams({ recordingId: recording.id });
+      await service.updateRecordingReview(paramsReview, userId);
 
       const recordings = await service.getRecordings(memberId);
       const { review } = recordings[0];
 
-      expect(review.content).toEqual(params.content);
+      expect(review.content).toEqual(paramsReview.content);
       expect(review.userId.toString()).toEqual(userId);
       expect(review.createdAt).toBeInstanceOf(Date);
       expect(review.createdAt).toEqual(review.updatedAt);
@@ -1565,12 +1580,12 @@ describe('MemberService', () => {
 
     it('should update a review', async () => {
       const memberId = await generateMember();
-      const recording = generateUpdateRecordingParams({ memberId });
-      await service.updateRecording(recording, recording.userId);
+      const params = generateUpdateRecordingParams({ memberId });
+      const recording = await service.updateRecording(params, params.userId);
 
       const userId = generateId();
-      const params = generateUpdateRecordingReviewParams({ recordingId: recording.id });
-      await service.updateRecordingReview(params, userId);
+      const paramsReview = generateUpdateRecordingReviewParams({ recordingId: recording.id });
+      await service.updateRecordingReview(paramsReview, userId);
 
       const newParams = generateUpdateRecordingReviewParams({ recordingId: recording.id });
       await service.updateRecordingReview(newParams, userId);

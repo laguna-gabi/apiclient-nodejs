@@ -9,8 +9,8 @@ import { RecordingType } from '../common';
 
 @InputType({ isAbstract: true })
 export class UpdateRecordingParams {
-  @Field(() => String)
-  id: string;
+  @Field(() => String, { nullable: true })
+  id?: string;
 
   @Field(() => String)
   memberId: string;
