@@ -42,6 +42,7 @@ export class LoggerService extends BaseLogger {
     //settings data
     'id',
     'externalUserId',
+    'userId',
   ]);
 
   constructor(

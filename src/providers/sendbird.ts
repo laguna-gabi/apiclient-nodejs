@@ -136,7 +136,11 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         .toPromise();
       return this.parseResult(params, result, this.sendAdminMessage.name);
     } catch (ex) {
-      this.logger.error(params, SendBird.name, this.sendAdminMessage.name, formatEx(ex));
+      this.logger.error(params, SendBird.name, this.sendAdminMessage.name, {
+        message: ex.response?.data?.message || ex.message,
+        stack: ex.stack,
+        code: ex.response?.status,
+      });
       throw ex;
     }
   }
