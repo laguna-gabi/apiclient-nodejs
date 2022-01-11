@@ -16,6 +16,7 @@ import {
   ObjectNewChatMessageToMemberClass,
   ObjectNewMemberClass,
   ObjectNewMemberNudgeClass,
+  ObjectRegisterMemberWithTriggeredClass,
   Platform,
   generateAppointmentScheduleLongReminderMock,
   generateAppointmentScheduleReminderMock,
@@ -31,6 +32,7 @@ import {
   generateObjectCancelMock,
   generateObjectFutureNotifyMock,
   generateObjectJournalContentMock,
+  generateObjectRegisterMemberWithTriggeredMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
   mockLogger,
@@ -242,24 +244,22 @@ describe('Notifications full flow', () => {
     // eslint-disable-next-line max-len
     `should handle 'future' event of type %p(faking it to trigger now) and send to sendbird and twilio on ${NotificationType.textSms}`,
     async (contentKey) => {
-      const mock = generateObjectFutureNotifyMock({
+      const mock = generateObjectRegisterMemberWithTriggeredMock({
         recipientClientId: webMemberClient.id,
         senderClientId: userClient.id,
         contentKey,
-        notificationType: NotificationType.textSms,
-        //setting this to now in order to check that sendbird is called as well
+        notificationType: NotificationType.text,
         triggersAt: new Date(),
-        sendBirdChannelUrl: internet.url(),
       });
 
-      const object = new ObjectFutureNotifyClass(mock);
+      const object = new ObjectRegisterMemberWithTriggeredClass(mock);
       spyOnTwilioSend.mockReturnValueOnce(providerResult);
 
       const message: SQSMessage = {
         MessageId: v4(),
         Body: JSON.stringify({
           type: InnerQueueTypes.createDispatch,
-          ...object.objectFutureNotifyType,
+          ...object.objectRegisterMemberWithTriggeredType,
         }),
       };
       await service.handleMessage(message);
@@ -271,19 +271,6 @@ describe('Notifications full flow', () => {
           userClient,
         }) + `\n${hosts.get('dynamicLink')}`;
 
-      const sendbirdParams: SendSendBirdNotification = {
-        message: content,
-        notificationType: mock.notificationType,
-        contentKey: mock.contentKey,
-        orgName: webMemberClient.orgName,
-        sendBirdChannelUrl: mock.sendBirdChannelUrl,
-        userId: userClient.id,
-        appointmentId: undefined,
-        journalImageDownloadLink: undefined,
-        journalAudioDownloadLink: undefined,
-      };
-      expect(spyOnSendBirdSend).toBeCalledWith(sendbirdParams);
-
       expect(spyOnTwilioSend).toBeCalledWith({
         body: content,
         orgName: webMemberClient.orgName,
@@ -293,7 +280,7 @@ describe('Notifications full flow', () => {
       await compareResults({
         dispatchId: mock.dispatchId,
         status: DispatchStatus.done,
-        response: { ...object.objectFutureNotifyType },
+        response: { ...object.objectRegisterMemberWithTriggeredType },
         pResult: providerResult,
       });
     },
@@ -304,35 +291,49 @@ describe('Notifications full flow', () => {
     { contentKey: InternalKey.newRegisteredMemberNudge, amount: 2 },
     { contentKey: InternalKey.logReminder, amount: 3 },
   ])(`should handle 'future' event of type $contentKey`, async (params) => {
-    const object = new ObjectFutureNotifyClass(
-      generateObjectFutureNotifyMock({
-        recipientClientId: mobileMemberClient.id,
-        senderClientId: userClient.id,
-        contentKey: params.contentKey,
-        notificationType: NotificationType.text,
-        triggersAt: addDays(new Date(), params.amount),
-        sendBirdChannelUrl: internet.url(),
-      }),
-    );
+    const newWebMemberClient = generateUpdateMemberSettingsMock({ platform: Platform.web });
+    const webMemberClientMessage: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({ type: InnerQueueTypes.updateClientSettings, ...newWebMemberClient }),
+    };
+    await service.handleMessage(webMemberClientMessage);
+
+    const mock = generateObjectRegisterMemberWithTriggeredMock({
+      recipientClientId: newWebMemberClient.id,
+      senderClientId: userClient.id,
+      contentKey: params.contentKey,
+      notificationType: NotificationType.text,
+      triggersAt: addDays(new Date(), params.amount),
+    });
+
+    const object = new ObjectRegisterMemberWithTriggeredClass(mock);
 
     const message: SQSMessage = {
       MessageId: v4(),
       Body: JSON.stringify({
         type: InnerQueueTypes.createDispatch,
-        ...object.objectFutureNotifyType,
+        ...object.objectRegisterMemberWithTriggeredType,
       }),
     };
     await service.handleMessage(message);
 
-    const trigger = await triggersService.get(object.objectFutureNotifyType.dispatchId);
-    expect(trigger.expireAt).toEqual(object.objectFutureNotifyType.triggersAt);
-    await compareResults({
-      dispatchId: object.objectFutureNotifyType.dispatchId,
+    const trigger = await triggersService.get(
+      object.objectRegisterMemberWithTriggeredType.dispatchId,
+    );
+    expect(trigger.expireAt).toEqual(object.objectRegisterMemberWithTriggeredType.triggersAt);
+
+    const items = { ...object.objectRegisterMemberWithTriggeredType };
+    delete items.type;
+    const result = await dispatchesService.get(trigger.dispatchId);
+    expect(result).toEqual({
+      dispatchId: object.objectRegisterMemberWithTriggeredType.dispatchId,
       status: DispatchStatus.received,
-      response: { ...object.objectFutureNotifyType },
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       triggeredId: trigger._id.toString(),
+      ...items,
+      retryCount: 0,
+      failureReasons: [],
     });
   });
 
@@ -653,7 +654,8 @@ describe('Notifications full flow', () => {
     },
   );
 
-  it(`should handle 'immediate' event of type ${CustomKey.customContent}`, async () => {
+  // eslint-disable-next-line max-len
+  it(`should handle 'immediate' event of type ${CustomKey.customContent}(${NotificationType.chat})`, async () => {
     const mock = generateChatMessageUserMock({
       recipientClientId: userClient.id,
       senderClientId: webMemberClient.id,
@@ -685,6 +687,63 @@ describe('Notifications full flow', () => {
       dispatchId: mock.dispatchId,
       status: DispatchStatus.done,
       response: { ...object.objectChatMessageUserType },
+    });
+  });
+
+  // eslint-disable-next-line max-len
+  it(`should handle 'immediate' event of type ${CustomKey.customContent}(${NotificationType.textSms})`, async () => {
+    const mock = generateObjectFutureNotifyMock({
+      recipientClientId: webMemberClient.id,
+      senderClientId: userClient.id,
+      content: lorem.sentence(),
+      notificationType: NotificationType.textSms,
+      //setting this to now in order to check that sendbird is called as well
+      sendBirdChannelUrl: internet.url(),
+      triggersAt: new Date(),
+    });
+
+    const object = new ObjectFutureNotifyClass(mock);
+    spyOnTwilioSend.mockReturnValueOnce(providerResult);
+
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({
+        type: InnerQueueTypes.createDispatch,
+        ...object.objectFutureNotifyType,
+      }),
+    };
+    await service.handleMessage(message);
+
+    const content = replaceConfigs({
+      content: mock.content,
+      memberClient: webMemberClient,
+      userClient,
+    });
+
+    const sendbirdParams: SendSendBirdNotification = {
+      message: content,
+      notificationType: mock.notificationType,
+      contentKey: mock.contentKey,
+      orgName: webMemberClient.orgName,
+      sendBirdChannelUrl: mock.sendBirdChannelUrl,
+      userId: userClient.id,
+      appointmentId: undefined,
+      journalImageDownloadLink: undefined,
+      journalAudioDownloadLink: undefined,
+    };
+    expect(spyOnSendBirdSend).toBeCalledWith(sendbirdParams);
+
+    expect(spyOnTwilioSend).toBeCalledWith({
+      body: content,
+      orgName: webMemberClient.orgName,
+      to: webMemberClient.phone,
+    });
+
+    await compareResults({
+      dispatchId: mock.dispatchId,
+      status: DispatchStatus.done,
+      response: { ...object.objectFutureNotifyType },
+      pResult: providerResult,
     });
   });
 

@@ -1,6 +1,7 @@
 import {
   AuditType,
   ClientCategory,
+  CustomKey,
   InternalKey,
   NotificationType,
   Platform,
@@ -65,13 +66,15 @@ export class NotificationsService {
       this.logAudit(sendSendBirdNotification, this.send.name);
       return this.sendBird.send(sendSendBirdNotification);
     } else if (dispatch.notificationType === NotificationType.textSms) {
-      const sendSendBirdNotification = this.generateSendbirdParams(
-        dispatch,
-        recipientClient.orgName,
-        content,
-      );
-      this.logAudit(sendSendBirdNotification, this.send.name);
-      await this.sendBird.send(sendSendBirdNotification);
+      if (dispatch.contentKey === CustomKey.customContent) {
+        const sendSendBirdNotification = this.generateSendbirdParams(
+          dispatch,
+          recipientClient.orgName,
+          content,
+        );
+        this.logAudit(sendSendBirdNotification, this.send.name);
+        await this.sendBird.send(sendSendBirdNotification);
+      }
       const sendTwilioNotification = this.generateTwilioParams(content, recipientClient);
       this.logAudit(sendTwilioNotification, this.send.name);
       return this.twilio.send(sendTwilioNotification);
