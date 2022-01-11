@@ -1,5 +1,5 @@
 import {
-  ContentKey,
+  CustomKey,
   ICreateDispatch,
   InnerQueueTypes,
   NotificationType,
@@ -11,7 +11,7 @@ import {
 import { v4 } from 'uuid';
 
 export type ObjectFutureNotifyTypeWithSendbirdType = ObjectBaseType &
-  Pick<ICreateDispatch, 'notificationType' | 'triggersAt' | 'sendBirdChannelUrl'>;
+  Pick<ICreateDispatch, 'notificationType' | 'triggersAt' | 'sendBirdChannelUrl' | 'content'>;
 
 export class ObjectFutureNotifyTypeWithSendbirdClass {
   constructor(
@@ -22,19 +22,20 @@ export class ObjectFutureNotifyTypeWithSendbirdClass {
 export const generateObjectFutureNotifyTypeWithSendbirdMock = ({
   recipientClientId,
   senderClientId,
-  contentKey,
   notificationType,
   triggersAt,
   sendBirdChannelUrl,
+  content,
 }: {
   recipientClientId: string;
   senderClientId: string;
-  contentKey: ContentKey;
   notificationType: NotificationType;
   triggersAt: Date;
   sendBirdChannelUrl: string;
+  content: string;
 }): ObjectFutureNotifyTypeWithSendbirdType => {
   validateNotificationTypeText(notificationType);
+  const contentKey = CustomKey.customContent;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId),
@@ -46,5 +47,6 @@ export const generateObjectFutureNotifyTypeWithSendbirdMock = ({
     triggersAt,
     contentKey,
     sendBirdChannelUrl,
+    content,
   };
 };
