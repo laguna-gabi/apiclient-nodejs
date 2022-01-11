@@ -39,6 +39,7 @@ import {
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
 } from '../index';
+import { v4 } from 'uuid';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -779,7 +780,7 @@ describe('Integration tests: all', () => {
         .setContextUserId(member1.primaryUserId.toString())
         .mutations.updateRecording({ updateRecordingParams: params1c });
 
-      const params2 = generateUpdateRecordingParams({ memberId: member2.id });
+      const params2 = generateUpdateRecordingParams({ memberId: member2.id, id: v4() });
       const rec2 = await handler
         .setContextUserId(member2.primaryUserId.toString())
         .mutations.updateRecording({ updateRecordingParams: params2 });

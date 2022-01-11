@@ -1449,13 +1449,11 @@ describe('MemberService', () => {
       );
     });
 
-    it('should fail to update a non existing id', async () => {
-      const userId = generateId();
+    it('should insert recording if id does not exist', async () => {
       const memberId = await generateMember();
       const params = generateUpdateRecordingParams({ memberId, id: v4() });
-      await expect(service.updateRecording(params, userId)).rejects.toThrow(
-        Errors.get(ErrorType.memberRecordingNotFound),
-      );
+      const result = await service.updateRecording(params, params.userId);
+      expect(result).toEqual(expect.objectContaining(omitBy(params, isNil)));
     });
 
     it('should create a member recording with undefined id on 1st time', async () => {

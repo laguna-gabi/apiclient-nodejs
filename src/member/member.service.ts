@@ -718,9 +718,7 @@ export class MemberService extends BaseService {
 
     if (id) {
       const exists = await this.recordingModel.findOne({ id });
-      if (!exists) {
-        throw new Error(Errors.get(ErrorType.memberRecordingNotFound));
-      } else if (exists?.memberId.toString() !== objectMemberId.toString()) {
+      if (exists && exists.memberId.toString() !== objectMemberId.toString()) {
         throw new Error(Errors.get(ErrorType.memberRecordingSameUserEdit));
       }
       const result = await this.recordingModel.findOneAndUpdate({ id }, setParams, {
