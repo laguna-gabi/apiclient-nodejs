@@ -32,7 +32,6 @@ describe(BaseLogger.name, () => {
       spyOnPinoLoggerWarn = jest.spyOn(PinoLogger.prototype, 'warn');
       spyOnPinoLoggerError = jest.spyOn(PinoLogger.prototype, 'error');
       console.error = jest.fn();
-
     });
 
     const params = {
@@ -120,7 +119,6 @@ describe(BaseLogger.name, () => {
       });
     });
 
-
     it('should log params for error level', () => {
       logger.error(params, BaseLogger.name, methodName, failureReason);
       const { stack, ...failureParams } = failureReason;
@@ -143,28 +141,6 @@ describe(BaseLogger.name, () => {
         className: BaseLogger.name,
         methodName,
         failureReason: {},
-      });
-    });
-
-    it('should not log params with null value', () => {
-      const params = { fieldWithNumber: null };
-
-      logger.info(params, BaseLogger.name, methodName);
-      expect(spyOnPinoLoggerInfo).toHaveBeenCalledWith({
-        params: {},
-        className: BaseLogger.name,
-        methodName,
-      });
-    });
-
-    it('should not log params with undefined value', () => {
-      const params = { fieldWithNumber: undefined };
-
-      logger.info(params, BaseLogger.name, methodName);
-      expect(spyOnPinoLoggerInfo).toHaveBeenCalledWith({
-        params: {},
-        className: BaseLogger.name,
-        methodName,
       });
     });
 

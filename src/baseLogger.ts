@@ -29,28 +29,40 @@ export class BaseLogger extends PinoLogger {
     return this.logFormat(this.getCalledLog(params), className, methodName, LogType.debug);
   }
 
-  // eslint-disable-next-line max-len
-  error(params: any = {}, className: string, methodName: string, failureReason?: FailureReason): string | void {
+  error(
+    params: any = {},
+    className: string,
+    methodName: string,
+    failureReason?: FailureReason,
+  ): string | void {
     params = this.filterParams(params);
     const { stack, ...failureParams } = failureReason || {};
     super.error({ params, className, methodName, failureReason: failureParams });
     console.error(stack); // console.log the stack separately so it doesn't blow up the log
 
     return this.logFormat(
-      `${this.getCalledLog(params)} FAILED with result ${failureParams?.message}`,
+      `${this.getCalledLog(params)} FAILED with result ${
+        failureReason?.message || failureReason?.code
+      }`,
       className,
       methodName,
       LogType.error,
     );
   }
 
-  // eslint-disable-next-line max-len
-  warn(params: any = {}, className: string, methodName: string, failureReason?: FailureReason): string | void {
+  warn(
+    params: any = {},
+    className: string,
+    methodName: string,
+    failureReason?: FailureReason,
+  ): string | void {
     params = this.filterParams(params);
     if (failureReason) delete failureReason.stack; // not logging the stack
     super.warn({ params, className, methodName, failureReason });
     return this.logFormat(
-      `${this.getCalledLog(params)} WARN with result ${failureReason?.message}`,
+      `${this.getCalledLog(params)} WARN with result ${
+        failureReason?.message || failureReason?.code
+      }`,
       className,
       methodName,
       LogType.warn,
@@ -90,9 +102,7 @@ export class BaseLogger extends PinoLogger {
     if (typeof params === 'string') {
       return params;
     } else {
-      return Object.fromEntries(
-        Object.entries(params).filter(([key, value]) => this.validKeys.has(key) && value !== null),
-      );
+      return Object.fromEntries(Object.entries(params).filter(([key]) => this.validKeys.has(key)));
     }
   }
 

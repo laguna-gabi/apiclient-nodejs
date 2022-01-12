@@ -69,8 +69,8 @@ export const PinoHttpConfig = {
           colorize: true,
           translateTime: 'SYS:dd/mm/yyyy, H:M:ss',
           singleLine: true,
-          messageFormat: '[{className}] [{methodName}] {reasons}',
-          ignore: 'pid,hostname,className,methodName,reasons',
+          messageFormat: '[{className}] [{methodName}] {failureReason.message}',
+          ignore: 'pid,hostname,className,methodName',
         }
       : false,
 };
