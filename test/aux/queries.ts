@@ -7,6 +7,7 @@ import {
   DischargeDocumentsLinks,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
+  MultipartUploadRecordingLinkParams,
   RecordingLinkParams,
 } from '../../src/member';
 import { GetSlotsParams } from '../../src/user';
@@ -309,6 +310,36 @@ export class Queries {
       query: gql`
         query getMemberUploadRecordingLink($recordingLinkParams: RecordingLinkParams!) {
           getMemberUploadRecordingLink(recordingLinkParams: $recordingLinkParams)
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
+      result.data.getMemberUploadRecordingLink
+    );
+  };
+  getMemberMultipartUploadRecordingLink = async ({
+    multipartUploadRecordingLinkParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    multipartUploadRecordingLinkParams?: MultipartUploadRecordingLinkParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  } = {}): Promise<string> => {
+    const result = await this.apolloClient.query({
+      variables: { multipartUploadRecordingLinkParams },
+      query: gql`
+        query getMemberMultipartUploadRecordingLink(
+          $multipartUploadRecordingLinkParams: MultipartUploadRecordingLinkParams!
+        ) {
+          getMemberMultipartUploadRecordingLink(
+            multipartUploadRecordingLinkParams: $multipartUploadRecordingLinkParams
+          ) {
+            url
+            uploadId
+          }
         }
       `,
     });

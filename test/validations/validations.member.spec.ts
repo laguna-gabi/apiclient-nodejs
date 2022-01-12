@@ -65,6 +65,30 @@ describe('Validations - member', () => {
     await handler.afterAll();
   });
 
+  const checkNoneExistingMemberAndWrongMemberID = (
+    title: string,
+    getFunction: () => (props: any) => Promise<any>,
+    getMainInput: (memberId: string) => any,
+  ) => {
+    describe(title, () => {
+      it('should throw error on non existing member', async () => {
+        const fn = getFunction();
+        await fn({
+          ...getMainInput(generateId()),
+          invalidFieldsErrors: [Errors.get(ErrorType.memberNotFound)],
+        });
+      });
+
+      it('should throw error on invalid member id', async () => {
+        const fn = getFunction();
+        await fn({
+          ...getMainInput('123'),
+          invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)],
+        });
+      });
+    });
+  };
+
   describe('createMember + getMember', () => {
     /* eslint-disable max-len */
     test.each`
@@ -245,37 +269,42 @@ describe('Validations - member', () => {
     });
   });
 
-  describe('getMemberUploadRecordingLink', () => {
-    it('should throw error on non existing member', async () => {
-      await handler.queries.getMemberUploadRecordingLink({
-        recordingLinkParams: { memberId: generateId(), id: generateId() },
-        invalidFieldsErrors: [Errors.get(ErrorType.memberNotFound)],
-      });
-    });
+  checkNoneExistingMemberAndWrongMemberID(
+    'getMemberUploadRecordingLink',
+    () => handler.queries.getMemberUploadRecordingLink,
+    (memberId) => ({ recordingLinkParams: { memberId, id: generateId() } }),
+  );
 
-    it('should throw error on invalid member id', async () => {
-      await handler.queries.getMemberUploadRecordingLink({
-        recordingLinkParams: { memberId: '123', id: generateId() },
-        invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)],
-      });
-    });
-  });
+  checkNoneExistingMemberAndWrongMemberID(
+    'getMemberMultipartUploadRecordingLink',
+    () => handler.queries.getMemberMultipartUploadRecordingLink,
+    (memberId) => ({
+      multipartUploadRecordingLinkParams: {
+        memberId,
+        id: generateId(),
+        uploadId: generateId(),
+        partNumber: 0,
+      },
+    }),
+  );
 
-  describe('getMemberDownloadRecordingLink', () => {
-    it('should throw error on non existing member', async () => {
-      await handler.queries.getMemberDownloadRecordingLink({
-        recordingLinkParams: { memberId: generateId(), id: generateId() },
-        invalidFieldsErrors: [Errors.get(ErrorType.memberNotFound)],
-      });
-    });
+  checkNoneExistingMemberAndWrongMemberID(
+    'completeMultipartUpload',
+    () => handler.mutations.completeMultipartUpload,
+    (memberId) => ({
+      completeMultipartUploadParams: {
+        memberId,
+        id: generateId(),
+        uploadId: generateId(),
+      },
+    }),
+  );
 
-    it('should throw error on invalid member id', async () => {
-      await handler.queries.getMemberDownloadRecordingLink({
-        recordingLinkParams: { memberId: '123', id: generateId() },
-        invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)],
-      });
-    });
-  });
+  checkNoneExistingMemberAndWrongMemberID(
+    'getMemberDownloadRecordingLink',
+    () => handler.queries.getMemberDownloadRecordingLink,
+    (memberId) => ({ recordingLinkParams: { memberId, id: generateId() } }),
+  );
 
   describe('getMemberConfig', () => {
     it('should throw error on non existing member', async () => {

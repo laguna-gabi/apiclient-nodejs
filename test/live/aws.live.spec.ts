@@ -31,7 +31,6 @@ describe('live: aws', () => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       bucketName = storageService.bucket;
-
       const user = mockGenerateUser();
       await storageService.handleNewMember({ member, user, platform: Platform.android });
     });
@@ -244,5 +243,67 @@ describe('live: aws', () => {
         expect(statusDownload).toEqual(200);
       },
     );
+
+    it('should get multipart upload, complete it and get a download link', async () => {
+      //not running on production as this test is too risky for that (we're emptyDir in afterAll)
+      if (process.env.NODE_ENV === Environments.production) {
+        return;
+      }
+      const storageType = StorageType.recordings;
+      const uploadPart = async (fileName: string, partNumber: number, data: any, id?: string) => {
+        const params = {
+          memberId: member.id,
+          storageType,
+          id: fileName,
+          partNumber,
+          uploadId: id,
+        };
+        const { url: uploadUrl, uploadId } = await storageService.getMultipartUploadUrl(params);
+        expect(uploadUrl).toMatch(
+          // eslint-disable-next-line max-len
+          `${config.get('hosts.localstack')}/${bucketName}/public/${storageType}/${
+            params.memberId
+          }/${params.id}`,
+        );
+        expect(uploadUrl).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
+        expect(uploadUrl).toMatch(`Amz-Expires=1800`); //expiration: 30 minutes
+
+        const { status: uploadStatus } = await axios.put(uploadUrl, data, {
+          maxBodyLength: Infinity,
+        });
+        expect(uploadStatus).toEqual(200);
+        return uploadId;
+      };
+
+      const fileName = `${faker.lorem.word()}.mp4`;
+      const buffer = readFileSync('./test/live/mocks/tempFile.ogg');
+
+      const uploadID = await uploadPart(fileName, 0, buffer.toString('hex'));
+      await uploadPart(fileName, 1, faker.lorem.sentence(), uploadID);
+
+      await storageService.completeMultipartUpload({
+        uploadId: uploadID,
+        memberId: member.id,
+        id: fileName,
+        storageType,
+      });
+
+      const url = await storageService.getDownloadUrl({
+        storageType,
+        memberId: member.id,
+        id: fileName,
+      });
+
+      expect(url).toMatch(
+        `${config.get('hosts.localstack')}/${bucketName}/public/${storageType}/${
+          member.id
+        }/${fileName}`,
+      );
+      expect(url).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
+      expect(url).toMatch(`Amz-Expires=10800`); //expiration: 3 hours
+
+      const { status: statusDownload } = await axios.get(url);
+      expect(statusDownload).toEqual(200);
+    });
   });
 });

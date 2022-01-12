@@ -313,6 +313,35 @@ export class RecordingLinkParams {
   memberId: string;
 }
 
+@InputType()
+export class MultipartUploadRecordingLinkParams {
+  @Field(() => String)
+  id: string;
+
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
+
+  @Field(() => Number)
+  partNumber: number;
+
+  @Field(() => String, { nullable: true })
+  uploadId?: string;
+}
+
+@InputType()
+export class CompleteMultipartUploadParams {
+  @Field(() => String)
+  id: string;
+
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
+
+  @Field(() => String)
+  uploadId: string;
+}
+
 /************************************************************************************************
  ***************************************** Notifications ****************************************
  ************************************************************************************************/
@@ -603,6 +632,15 @@ export class DischargeDocumentsLinks {
 
   @Field(() => String, { nullable: true })
   dischargeInstructionsLink?: string;
+}
+
+@ObjectType()
+export class MultipartUploadInfo {
+  @Field(() => String)
+  url: string;
+
+  @Field(() => String)
+  uploadId: string;
 }
 
 @ObjectType()

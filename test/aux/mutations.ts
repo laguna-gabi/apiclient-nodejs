@@ -22,6 +22,7 @@ import {
   AddCaregiverParams,
   CancelNotifyParams,
   Caregiver,
+  CompleteMultipartUploadParams,
   CreateMemberParams,
   CreateTaskParams,
   Journal,
@@ -1021,6 +1022,32 @@ export class Mutations {
       mutation: gql`
         mutation deleteCaregiver($id: String!) {
           deleteCaregiver(id: $id)
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
+      result.data.deleteCaregiver
+    );
+  };
+
+  completeMultipartUpload = async ({
+    completeMultipartUploadParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    completeMultipartUploadParams?: CompleteMultipartUploadParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<boolean> => {
+    const result = await this.apolloClient.mutate({
+      variables: { completeMultipartUploadParams },
+      mutation: gql`
+        mutation completeMultipartUpload(
+          $completeMultipartUploadParams: CompleteMultipartUploadParams!
+        ) {
+          completeMultipartUpload(completeMultipartUploadParams: $completeMultipartUploadParams)
         }
       `,
     });

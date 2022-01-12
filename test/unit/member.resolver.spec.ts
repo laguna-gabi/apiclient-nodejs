@@ -744,6 +744,110 @@ describe('MemberResolver', () => {
     });
   });
 
+  describe('getMemberMultipartUploadRecordingLink', () => {
+    let spyOnServiceGet;
+    let spyOnStorageUpload;
+
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'get');
+      spyOnStorageUpload = jest.spyOn(storage, 'getMultipartUploadUrl');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+      spyOnStorageUpload.mockReset();
+    });
+
+    it('should get a member multipart upload recording link', async () => {
+      const member = mockGenerateMember();
+      spyOnServiceGet.mockImplementationOnce(async () => member);
+      spyOnStorageUpload.mockImplementation(async () => 'https://aws-bucket-path/extras');
+
+      const id = generateId();
+      await resolver.getMemberMultipartUploadRecordingLink({
+        id,
+        memberId: member.id,
+        partNumber: 0,
+        uploadId: 'SOME_ID',
+      });
+
+      expect(spyOnServiceGet).toBeCalledTimes(1);
+      expect(spyOnServiceGet).toBeCalledWith(member.id);
+      expect(spyOnStorageUpload).toBeCalledWith({
+        storageType: StorageType.recordings,
+        memberId: member.id,
+        partNumber: 0,
+        id,
+        uploadId: 'SOME_ID',
+      });
+    });
+
+    it('should throw exception on a non valid member', async () => {
+      spyOnServiceGet.mockImplementationOnce(async () => {
+        throw Error(Errors.get(ErrorType.memberNotFound));
+      });
+
+      await expect(
+        resolver.getMemberMultipartUploadRecordingLink({
+          id: generateId(),
+          memberId: generateId(),
+          partNumber: 0,
+        }),
+      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+    });
+  });
+
+  describe('completeMultipartUpload', () => {
+    let spyOnServiceGet;
+    let spyOnStorageComplete;
+
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'get');
+      spyOnStorageComplete = jest.spyOn(storage, 'completeMultipartUpload');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+      spyOnStorageComplete.mockReset();
+    });
+
+    it('should get a member multipart upload recording link', async () => {
+      const member = mockGenerateMember();
+      spyOnServiceGet.mockImplementationOnce(async () => member);
+      spyOnStorageComplete.mockImplementation(async () => true);
+
+      const id = generateId();
+      await resolver.completeMultipartUpload({
+        id,
+        memberId: member.id,
+        uploadId: 'SOME_ID',
+      });
+
+      expect(spyOnServiceGet).toBeCalledTimes(1);
+      expect(spyOnServiceGet).toBeCalledWith(member.id);
+      expect(spyOnStorageComplete).toBeCalledWith({
+        storageType: StorageType.recordings,
+        memberId: member.id,
+        id,
+        uploadId: 'SOME_ID',
+      });
+    });
+
+    it('should throw exception on a non valid member', async () => {
+      spyOnServiceGet.mockImplementationOnce(async () => {
+        throw Error(Errors.get(ErrorType.memberNotFound));
+      });
+
+      await expect(
+        resolver.completeMultipartUpload({
+          id: generateId(),
+          memberId: generateId(),
+          uploadId: 'SOME_ID',
+        }),
+      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+    });
+  });
+
   describe('getMemberDownloadRecordingLink', () => {
     let spyOnServiceGet;
     let spyOnStorage;

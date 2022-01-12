@@ -27,6 +27,7 @@ import {
   CancelNotifyParams,
   Caregiver,
   ChatMessageOrigin,
+  CompleteMultipartUploadParams,
   CreateMemberParams,
   CreateTaskParams,
   DischargeDocumentsLinks,
@@ -41,6 +42,8 @@ import {
   MemberConfig,
   MemberService,
   MemberSummary,
+  MultipartUploadInfo,
+  MultipartUploadRecordingLinkParams,
   NotifyContentParams,
   NotifyParams,
   Recording,
@@ -298,6 +301,34 @@ export class MemberResolver extends MemberBase {
     await this.memberService.get(recordingLinkParams.memberId);
     return this.storageService.getUploadUrl({
       ...recordingLinkParams,
+      storageType: StorageType.recordings,
+    });
+  }
+
+  @Query(() => MultipartUploadInfo)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getMemberMultipartUploadRecordingLink(
+    @Args(camelCase(MultipartUploadRecordingLinkParams.name))
+    multipartUploadRecordingLinkParams: MultipartUploadRecordingLinkParams,
+  ) {
+    // Validating member exists
+    await this.memberService.get(multipartUploadRecordingLinkParams.memberId);
+    return this.storageService.getMultipartUploadUrl({
+      ...multipartUploadRecordingLinkParams,
+      storageType: StorageType.recordings,
+    });
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async completeMultipartUpload(
+    @Args(camelCase(CompleteMultipartUploadParams.name))
+    completeMultipartUploadParams: CompleteMultipartUploadParams,
+  ) {
+    // Validating member exists
+    await this.memberService.get(completeMultipartUploadParams.memberId);
+    return this.storageService.completeMultipartUpload({
+      ...completeMultipartUploadParams,
       storageType: StorageType.recordings,
     });
   }

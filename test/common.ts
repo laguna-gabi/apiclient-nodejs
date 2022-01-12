@@ -144,6 +144,7 @@ export const mockProviders = (
   );
   const spyOnStorageDownload = jest.spyOn(storage, 'getDownloadUrl');
   const spyOnStorageUpload = jest.spyOn(storage, 'getUploadUrl');
+  const spyOnStorageMultipartUpload = jest.spyOn(storage, 'getMultipartUploadUrl');
   const spyOnStorageDeleteRecordings = jest.spyOn(storage, 'deleteRecordings');
   const spyOnStorageDeleteJournalImages = jest.spyOn(storage, 'deleteJournalImages');
   const spyOnStorageHandleNewMember = jest.spyOn(storage, 'handleNewMember');
@@ -166,6 +167,10 @@ export const mockProviders = (
   spyOnSendBirdDeleteGroupChannelMetadata.mockResolvedValue(undefined);
   spyOnStorageDownload.mockResolvedValue('https://some-url/download');
   spyOnStorageUpload.mockResolvedValue('https://some-url/upload');
+  spyOnStorageMultipartUpload.mockResolvedValue({
+    url: 'https://some-url/multipartUpload',
+    uploadId: 'some_upload_id',
+  });
   spyOnStorageDeleteRecordings.mockResolvedValue(undefined);
   spyOnStorageDeleteJournalImages.mockResolvedValue(true);
   spyOnStorageHandleNewMember.mockResolvedValue(undefined);
