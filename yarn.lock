@@ -703,10 +703,10 @@
   resolved "https://registry.npmjs.org/@josephg/resolvable/-/resolvable-1.0.1.tgz"
   integrity sha512-CtzORUwWTTOTqfVtHaKRJ0I1kNQd1bpn3sUh8I3nJDVY+5/M/Oe1DnEWzPQvqq/xPIIkzzzIP7mfCoAjFRvDhg==
 
-"@lagunahealth/pandora@0.9.18-2724a1d063628a7e64368f7011d2aa0ec06c5872":
-  version "0.9.18-2724a1d063628a7e64368f7011d2aa0ec06c5872"
-  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.9.18-2724a1d063628a7e64368f7011d2aa0ec06c5872/02056ba0fc471d27c6d66387d591a5508fc74205cd2ba06b7d8bd2985e88a90d#f7cc8ddd51022b9c8a1e13774dfd8dd17a1459f0"
-  integrity sha512-PhMKukljGPo+EM1i91h/0F+Mamv2Z+BI2/loRZtoLJxP5gQFoCuLHddfrokllRu0UQY05CydBkUtZHgZDzhM2w==
+"@lagunahealth/pandora@0.9.18":
+  version "0.9.18"
+  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.9.18/e27d12ebd9b9dd7cc8f4ce3d77d927dc581c3d0cc9fd8c390b59da8ce26ac4b0#bef3875626f33a3eb6818b48d552aa4a976c309c"
+  integrity sha512-xJvA+PAVxn3i0tYu+g/kT+7s5UTDwasnCuU/FUhEgSg6Q2G7UNsBc5By7ufQYHO8BOrbf05Wr+HKFyj4s98J2g==
   dependencies:
     "@slack/types" "^2.2.0"
     "@slack/webhook" "^6.0.0"
