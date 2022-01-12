@@ -401,10 +401,10 @@ describe('Integration tests: notifications', () => {
       const mock = generateObjectFutureNotifyMock({
         recipientClientId: member.id,
         senderClientId: member.primaryUserId.toString(),
-        contentKey: CustomKey.customContent,
         notificationType: notifyParams.type,
         triggersAt: when,
         sendBirdChannelUrl: communication.sendBirdChannelUrl,
+        content: notifyParams.metadata.content,
       });
       const object = new ObjectFutureNotifyClass(mock);
       Object.keys(object.objectFutureNotifyType).forEach((key) => {
