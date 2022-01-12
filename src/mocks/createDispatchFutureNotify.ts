@@ -10,16 +10,14 @@ import {
 } from '../';
 import { v4 } from 'uuid';
 
-export type ObjectFutureNotifyTypeWithSendbirdType = ObjectBaseType &
+export type ObjectFutureNotifyType = ObjectBaseType &
   Pick<ICreateDispatch, 'notificationType' | 'triggersAt' | 'sendBirdChannelUrl' | 'content'>;
 
-export class ObjectFutureNotifyTypeWithSendbirdClass {
-  constructor(
-    readonly objectFutureNotifyTypeWithSendbirdType: ObjectFutureNotifyTypeWithSendbirdType,
-  ) {}
+export class ObjectFutureNotifyClass {
+  constructor(readonly objectFutureNotifyType: ObjectFutureNotifyType) {}
 }
 
-export const generateObjectFutureNotifyTypeWithSendbirdMock = ({
+export const generateObjectFutureNotifyMock = ({
   recipientClientId,
   senderClientId,
   notificationType,
@@ -33,7 +31,7 @@ export const generateObjectFutureNotifyTypeWithSendbirdMock = ({
   triggersAt: Date;
   sendBirdChannelUrl: string;
   content: string;
-}): ObjectFutureNotifyTypeWithSendbirdType => {
+}): ObjectFutureNotifyType => {
   validateNotificationTypeText(notificationType);
   const contentKey = CustomKey.customContent;
   return {

@@ -14,7 +14,6 @@ export * from './createDispatchNewChatMessageToMember';
 export * from './createDispatchTextMessageUser';
 export * from './createDispatchRequestAppointment';
 export * from './createDispatchFutureNotify';
-export * from './createDispatchFutureNotifyWithSendbird';
 export * from './createDispatchAppointmentScheduled';
 export * from './createDispatchScheduleAppointmentLongReminder';
 export * from './createDispatchScheduleAppointmentShortReminder';
