@@ -312,18 +312,10 @@ describe('MemberResolver', () => {
       spyOnServiceGetByOrg.mockReset();
     });
 
-    it('should get a member for a given context', async () => {
-      const member = mockGenerateMember();
-      spyOnServiceGet.mockImplementationOnce(async () => member);
-      const result = await resolver.getMember([MemberRole.member], member.id);
-
-      expect(result).toEqual(member);
-    });
-
     it('should get a member for a given id', async () => {
       const member = mockGenerateMember();
       spyOnServiceGet.mockImplementationOnce(async () => member);
-      const result = await resolver.getMember([MemberRole.member], member.id);
+      const result = await resolver.getMember(member.id);
       expect(result).toEqual(member);
     });
 
@@ -331,7 +323,7 @@ describe('MemberResolver', () => {
       spyOnServiceGet.mockImplementationOnce(async () => {
         throw Error(Errors.get(ErrorType.memberNotFound));
       });
-      await expect(resolver.getMember([MemberRole.member], generateId())).rejects.toThrow(
+      await expect(resolver.getMember(generateId())).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
     });
@@ -340,7 +332,7 @@ describe('MemberResolver', () => {
       spyOnServiceGet.mockImplementationOnce(async () => {
         throw Error(Errors.get(ErrorType.memberNotFound));
       });
-      await expect(resolver.getMember([MemberRole.member], 'not-valid')).rejects.toThrow(
+      await expect(resolver.getMember('not-valid')).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
     });
@@ -349,14 +341,14 @@ describe('MemberResolver', () => {
       const member: any = mockGenerateMember();
       delete member.zipCode;
       spyOnServiceGet.mockResolvedValue(member);
-      const result = await resolver.getMember([MemberRole.member], member.id);
+      const result = await resolver.getMember(member.id);
       expect(result.zipCode).toEqual(member.org.zipCode);
     });
 
     it('should calculate utcDelta if zipCode exists', async () => {
       const member: any = mockGenerateMember();
       spyOnServiceGet.mockResolvedValue(member);
-      const result = await resolver.getMember([MemberRole.member], member.id);
+      const result = await resolver.getMember(member.id);
       expect(result.utcDelta).toBeLessThan(0);
     });
   });
@@ -671,15 +663,11 @@ describe('MemberResolver', () => {
       spyOnStorage.mockReset();
     });
 
-    it('should get a member download discharge documents links for a given context', async () => {
+    it('should get a member download discharge documents links for a given memberId', async () => {
       const member = mockGenerateMember();
       spyOnServiceGet.mockImplementationOnce(async () => member);
       spyOnStorage.mockImplementation(async () => 'https://aws-bucket-path/extras');
-      await resolver.getMemberDownloadDischargeDocumentsLinks(
-        [MemberRole.member],
-        member.id,
-        member.id,
-      );
+      await resolver.getMemberDownloadDischargeDocumentsLinks(member.id);
 
       checkDocumentsCall(member, spyOnServiceGet, spyOnStorage);
     });
@@ -689,13 +677,9 @@ describe('MemberResolver', () => {
         throw Error(Errors.get(ErrorType.memberNotFound));
       });
 
-      await expect(
-        resolver.getMemberDownloadDischargeDocumentsLinks(
-          [MemberRole.member],
-          generateId(),
-          generateId(),
-        ),
-      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+      await expect(resolver.getMemberDownloadDischargeDocumentsLinks(generateId())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
     });
   });
 
@@ -1066,20 +1050,9 @@ describe('MemberResolver', () => {
     it('should get all caregiver for a member', async () => {
       const memberId = generateId();
 
-      await resolver.getCaregivers(memberId, [MemberRole.member]);
+      await resolver.getCaregivers(memberId);
       expect(spyOnGetCaregiversByMemberIdServiceMethod).toBeCalledTimes(1);
       expect(spyOnGetCaregiversByMemberIdServiceMethod).toBeCalledWith(memberId);
-    });
-
-    it('should fail to get caregivers for a member due to inconsistent member id', async () => {
-      const memberId1 = generateId();
-      const memberId2 = generateId();
-
-      await expect(
-        resolver.getCaregivers(memberId1, [MemberRole.member], memberId2),
-      ).rejects.toThrow(Errors.get(ErrorType.memberIdInconsistent));
-
-      expect(spyOnGetCaregiversByMemberIdServiceMethod).not.toHaveBeenCalled();
     });
 
     it('should delete a caregiver', async () => {
@@ -1742,11 +1715,7 @@ describe('MemberResolver', () => {
     it('should call MemberConfig', async () => {
       const memberConfig = mockGenerateMemberConfig();
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-      await resolver.getMemberConfig(
-        [MemberRole.member],
-        memberConfig.memberId.toString(),
-        memberConfig.memberId.toString(),
-      );
+      await resolver.getMemberConfig(memberConfig.memberId.toString());
 
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(memberConfig.memberId.toString());

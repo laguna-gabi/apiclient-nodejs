@@ -228,7 +228,10 @@ describe('Validations - member', () => {
     it('should throw error on non existing member from mobile', async () => {
       await handler
         .setContextUserId(generateId())
-        .queries.getMember({ invalidFieldsError: Errors.get(ErrorType.memberNotFound) });
+        .queries.getMember({
+          id: generateId(),
+          invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+        });
     });
 
     it('rest: should fail to create member if phone already exists', async () => {
@@ -309,6 +312,7 @@ describe('Validations - member', () => {
   describe('getMemberConfig', () => {
     it('should throw error on non existing member', async () => {
       await handler.setContextUserId(generateId()).queries.getMemberConfig({
+        id: generateId(),
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
     });

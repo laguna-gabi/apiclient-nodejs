@@ -8,6 +8,7 @@ export * from './constants';
 export * from './exception.filter';
 export * from './log.service';
 export * from './loggingInterceptor';
+export * from './memberUserRouteInterceptor';
 export * from './utils';
 export * from './commonModule';
 export * from './json-body.middleware';

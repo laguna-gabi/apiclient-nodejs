@@ -75,7 +75,10 @@ import {
   Identifier,
   LoggerService,
   LoggingInterceptor,
+  MemberIdParam,
+  MemberIdParamType,
   MemberRole,
+  MemberUserRouteInterceptor,
   RegisterForNotificationParams,
   Roles,
   StorageType,
@@ -115,14 +118,13 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => Member, { nullable: true })
-  @Roles(MemberRole.member, UserRole.coach)
+  @MemberIdParam(MemberIdParamType.id)
+  @UseInterceptors(MemberUserRouteInterceptor)
+  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
   async getMember(
-    @Client('roles') roles,
-    @Client('_id') memberId,
     @Args('id', { type: () => String, nullable: true }) id?: string,
   ): Promise<Member> {
-    memberId = roles.includes(MemberRole.member) ? memberId : id;
-    const member = await this.memberService.get(memberId);
+    const member = await this.memberService.get(id);
     member.zipCode = member.zipCode || member.org.zipCode;
     member.utcDelta = MemberResolver.getTimezoneDeltaFromZipcode(member.zipCode);
     return member;
@@ -259,27 +261,25 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => DischargeDocumentsLinks)
-  @Roles(MemberRole.member, UserRole.coach)
+  @MemberIdParam(MemberIdParamType.id)
+  @UseInterceptors(MemberUserRouteInterceptor)
+  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
   async getMemberDownloadDischargeDocumentsLinks(
-    @Client('roles') roles,
-    @Client('_id') memberId,
     @Args('id', { type: () => String, nullable: true }) id?: string,
   ) {
-    memberId = roles.includes(MemberRole.member) ? memberId : id;
-    const member = await this.memberService.get(memberId);
-
+    const member = await this.memberService.get(id);
     const { firstName, lastName } = member;
 
     const storageType = StorageType.documents;
     const [dischargeNotesLink, dischargeInstructionsLink] = await Promise.all([
       await this.storageService.getDownloadUrl({
         storageType,
-        memberId,
+        memberId: id,
         id: `${firstName}_${lastName}_Summary.pdf`,
       }),
       await this.storageService.getDownloadUrl({
         storageType,
-        memberId,
+        memberId: id,
         id: `${firstName}_${lastName}_Instructions.pdf`,
       }),
     ]);
@@ -742,18 +742,12 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [Caregiver])
-  @Roles(MemberRole.member, UserRole.coach)
+  @MemberIdParam(MemberIdParamType.memberId)
+  @UseInterceptors(MemberUserRouteInterceptor)
+  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
   async getCaregivers(
-    @Client('_id') clientId,
-    @Client('roles') roles,
     @Args('memberId', { type: () => String, nullable: true }) memberId?: string,
   ): Promise<Caregiver[]> {
-    if (roles.includes(MemberRole.member)) {
-      if (memberId && clientId != memberId) {
-        throw new Error(Errors.get(ErrorType.memberIdInconsistent));
-      }
-      memberId = clientId;
-    }
     return this.memberService.getCaregiversByMemberId(memberId);
   }
 
@@ -1095,14 +1089,11 @@ export class MemberResolver extends MemberBase {
    **************************************** Member Internal ***************************************
    ************************************************************************************************/
   @Query(() => MemberConfig)
-  @Roles(MemberRole.member, UserRole.coach)
-  async getMemberConfig(
-    @Client('roles') roles,
-    @Client('_id') memberId,
-    @Args('id', { type: () => String, nullable: true }) id?: string,
-  ) {
-    memberId = roles.includes(MemberRole.member) ? memberId : id;
-    return this.memberService.getMemberConfig(memberId);
+  @MemberIdParam(MemberIdParamType.id)
+  @UseInterceptors(MemberUserRouteInterceptor)
+  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
+  async getMemberConfig(@Args('id', { type: () => String, nullable: true }) id?: string) {
+    return this.memberService.getMemberConfig(id);
   }
 
   @Mutation(() => Boolean)

@@ -47,6 +47,7 @@ export enum ErrorType {
   memberRecordingNotFound = 9226,
   memberRecordingSameUser = 9227,
   memberRecordingSameUserEdit = 9228,
+  memberIdMetadataMissing = 9229,
 
   // Notifications
   notificationMetadataInvalid = 9270,
@@ -151,6 +152,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberRecordingNotFound.valueOf(), `recording not found`],
   [ErrorType.memberRecordingSameUser.valueOf(), `user cannot review own recording`],
   [ErrorType.memberRecordingSameUserEdit.valueOf(), `only user who wrote review can update it`],
+  [ErrorType.memberIdMetadataMissing.valueOf(), `@MemberIdParam is missing on route`],
   [
     ErrorType.notificationMetadataInvalid.valueOf(),
     `when calling type 'text' or 'textSms', 'content' in metadata is required ` +

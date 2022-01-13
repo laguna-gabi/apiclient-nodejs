@@ -119,3 +119,8 @@ export enum RecordingType {
 registerEnumType(RecordingType, {
   name: 'RecordingType',
 });
+
+export enum MemberIdParamType {
+  memberId = 'memberId',
+  id = 'id',
+}
