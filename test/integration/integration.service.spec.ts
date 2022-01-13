@@ -146,20 +146,49 @@ describe('Notifications full flow', () => {
     spyOnSendBirdSend.mockRestore();
   });
 
-  it(`should handle 'immediate' event of type ${InternalKey.newMember}`, async () => {
-    const object = new ObjectNewMemberClass(
-      generateNewMemberMock({
-        recipientClientId: webMemberClient.id,
-        senderClientId: userClient.id,
-      }),
-    );
-    spyOnTwilioSend.mockReturnValueOnce(providerResult);
-
-    const message: SQSMessage = {
+  it('should delete client settings and all its related dispatches and triggers', async () => {
+    const client1 = generateUpdateMemberSettingsMock({ platform: Platform.web });
+    const message1: SQSMessage = {
       MessageId: v4(),
-      Body: JSON.stringify({ type: InnerQueueTypes.createDispatch, ...object.objectNewMemberMock }),
+      Body: JSON.stringify({ type: InnerQueueTypes.updateClientSettings, ...client1 }),
     };
-    await service.handleMessage(message);
+    await service.handleMessage(message1);
+
+    const { objectNewMemberMock } = await generateNewMemberRequest(client1.id);
+    const { objectAppointmentScheduleReminderType } =
+      await generateAppointmentScheduleReminderRequest(client1.id);
+
+    let dispatchNewMember = await dispatchesService.get(objectNewMemberMock.dispatchId);
+    expect(dispatchNewMember).not.toBeNull();
+    let dispatchAppointment = await dispatchesService.get(
+      objectAppointmentScheduleReminderType.dispatchId,
+    );
+    expect(dispatchAppointment).not.toBeNull();
+    let triggerAppointment = await triggersService.get(
+      objectAppointmentScheduleReminderType.dispatchId,
+    );
+    expect(triggerAppointment).not.toBeNull();
+
+    const deleteMessage: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({ type: InnerQueueTypes.deleteClientSettings, id: client1.id }),
+    };
+    await service.handleMessage(deleteMessage);
+
+    dispatchNewMember = await dispatchesService.get(objectNewMemberMock.dispatchId);
+    expect(dispatchNewMember).toBeNull();
+    dispatchAppointment = await dispatchesService.get(
+      objectAppointmentScheduleReminderType.dispatchId,
+    );
+    expect(dispatchAppointment).toBeNull();
+    triggerAppointment = await triggersService.get(
+      objectAppointmentScheduleReminderType.dispatchId,
+    );
+    expect(triggerAppointment).toBeNull();
+  });
+
+  it(`should handle 'immediate' event of type ${InternalKey.newMember}`, async () => {
+    const object = await generateNewMemberRequest(webMemberClient.id);
 
     const body = replaceConfigs({
       content: translation.contents[InternalKey.newMember],
@@ -347,26 +376,7 @@ describe('Notifications full flow', () => {
   });
 
   it(`should handle 'future' event of type ${InternalKey.appointmentReminder}`, async () => {
-    const appointmentTime = addDays(new Date(), 3);
-    const object = new ObjectAppointmentScheduleReminderClass(
-      generateAppointmentScheduleReminderMock({
-        recipientClientId: webMemberClient.id,
-        senderClientId: userClient.id,
-        appointmentId: generateId(),
-        appointmentTime,
-        triggersAt: subMinutes(appointmentTime, gapMinutes),
-        chatLink: internet.url(),
-      }),
-    );
-
-    const message: SQSMessage = {
-      MessageId: v4(),
-      Body: JSON.stringify({
-        type: InnerQueueTypes.createDispatch,
-        ...object.objectAppointmentScheduleReminderType,
-      }),
-    };
-    await service.handleMessage(message);
+    const object = await generateAppointmentScheduleReminderRequest(webMemberClient.id);
 
     const trigger = await triggersService.get(
       object.objectAppointmentScheduleReminderType.dispatchId,
@@ -976,5 +986,50 @@ describe('Notifications full flow', () => {
       retryCount: 0,
       status,
     });
+  };
+
+  const generateNewMemberRequest = async (
+    recipientClientId: string,
+  ): Promise<ObjectNewMemberClass> => {
+    const object = new ObjectNewMemberClass(
+      generateNewMemberMock({
+        recipientClientId,
+        senderClientId: userClient.id,
+      }),
+    );
+    spyOnTwilioSend.mockReturnValueOnce(providerResult);
+    const messageNewMember: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({ type: InnerQueueTypes.createDispatch, ...object.objectNewMemberMock }),
+    };
+    await service.handleMessage(messageNewMember);
+
+    return object;
+  };
+
+  const generateAppointmentScheduleReminderRequest = async (
+    recipientClientId: string,
+  ): Promise<ObjectAppointmentScheduleReminderClass> => {
+    const appointmentTime = addDays(new Date(), 3);
+    const object = new ObjectAppointmentScheduleReminderClass(
+      generateAppointmentScheduleReminderMock({
+        recipientClientId,
+        senderClientId: userClient.id,
+        appointmentId: generateId(),
+        appointmentTime,
+        triggersAt: subMinutes(appointmentTime, gapMinutes),
+        chatLink: internet.url(),
+      }),
+    );
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({
+        type: InnerQueueTypes.createDispatch,
+        ...object.objectAppointmentScheduleReminderType,
+      }),
+    };
+    await service.handleMessage(message);
+
+    return object;
   };
 });

@@ -52,11 +52,14 @@ describe(TriggersService.name, () => {
   it('should add to ignoreDeletes a delete from the api', async () => {
     const trigger: Trigger = generateTriggers();
     const { _id } = await service.update(trigger);
-    await service.delete(trigger.dispatchId);
+    await service.delete([trigger.dispatchId]);
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     expect(service.ignoreDeletes.has(_id.toString())).toBeTruthy();
+
+    const result = await service.get(trigger.dispatchId);
+    expect(result).toBeNull();
   });
 
   it('should not add to ignoreDeletes a trigger which does not exist', async () => {
@@ -64,10 +67,28 @@ describe(TriggersService.name, () => {
     // @ts-ignore
     const ignoreDeletesBefore = service.ignoreDeletes;
     const dispatchId = generateId();
-    await service.delete(dispatchId);
+    await service.delete([dispatchId]);
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     expect(service.ignoreDeletes).toEqual(ignoreDeletesBefore);
+
+    const result = await service.get(dispatchId);
+    expect(result).toBeNull();
+  });
+
+  it('should be able to delete multiple triggers', async () => {
+    const { dispatchId: dispatchId1 } = await service.update(generateTriggers());
+    const { dispatchId: dispatchId2 } = await service.update(generateTriggers());
+    const { dispatchId: dispatchId3 } = await service.update(generateTriggers());
+
+    await service.delete([dispatchId1, dispatchId2, generateId()]);
+
+    let result = await service.get(dispatchId1);
+    expect(result).toBeNull();
+    result = await service.get(dispatchId2);
+    expect(result).toBeNull();
+    result = await service.get(dispatchId3);
+    expect(result).not.toBeNull();
   });
 });

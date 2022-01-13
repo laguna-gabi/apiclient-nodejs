@@ -38,6 +38,12 @@ export class ConductorService implements OnModuleInit {
     this.logger.info(input, ConductorService.name, this.handleDeleteClientSettings.name);
     const settings = this.cleanObject(input);
     await this.settingsService.delete(settings.id);
+    const deletedItems = await this.dispatchesService.delete(settings.id);
+    await this.triggersService.delete(
+      deletedItems
+        .filter((dispatch) => dispatch.triggeredId)
+        .map((dispatch) => dispatch.dispatchId),
+    );
   }
 
   async handleCreateDispatch(input: ICreateDispatch): Promise<void> {
@@ -78,7 +84,7 @@ export class ConductorService implements OnModuleInit {
         message: Errors.get(ErrorType.dispatchNotFound),
       });
     }
-    await this.triggersService.delete(dispatch.dispatchId);
+    await this.triggersService.delete([dispatch.dispatchId]);
   }
 
   /*************************************************************************************************

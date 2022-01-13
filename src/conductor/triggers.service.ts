@@ -55,11 +55,15 @@ export class TriggersService implements OnModuleInit, OnModuleDestroy {
     return this.triggerModel.findOne({ dispatchId });
   }
 
-  async delete(dispatchId: string) {
-    const result = await this.triggerModel.findOne({ dispatchId });
-    if (result) {
-      this.ignoreDeletes.add(result._id.toString());
-      await this.triggerModel.deleteOne({ dispatchId });
-    }
+  async delete(dispatchIds: string[]) {
+    await Promise.all(
+      dispatchIds.map(async (dispatchId) => {
+        const result = await this.triggerModel.findOne({ dispatchId });
+        if (result) {
+          this.ignoreDeletes.add(result._id.toString());
+          await this.triggerModel.deleteOne({ dispatchId });
+        }
+      }),
+    );
   }
 }

@@ -205,4 +205,30 @@ describe(DispatchesService.name, () => {
     const result = await service.find({ triggeredId: dispatch.triggeredId });
     expect(result).toEqual(dispatch);
   });
+
+  it('should be able to delete existing dispatches of specific client', async () => {
+    const client1 = generateId();
+    const client2 = generateId();
+    const data1a = generateDispatch({ recipientClientId: client1 });
+    const data1b = generateDispatch({ recipientClientId: client1 });
+    const data2 = generateDispatch({ recipientClientId: client2 });
+
+    await service.update({ ...data1a, triggeredId: generateId() });
+    await service.update({ ...data1b, triggeredId: generateId() });
+    await service.update({ ...data2, triggeredId: generateId() });
+
+    await service.delete(client1);
+
+    let result = await service.get(data1a.dispatchId);
+    expect(result).toBeNull();
+    result = await service.get(data1b.dispatchId);
+    expect(result).toBeNull();
+    result = await service.get(data2.dispatchId);
+    expect(result).not.toBeNull();
+  });
+
+  it('should be able to call delete dispatch, even if client does not exist', async () => {
+    const result = await service.delete(generateId());
+    expect(result).toHaveLength(0);
+  });
 });

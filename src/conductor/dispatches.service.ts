@@ -52,4 +52,14 @@ export class DispatchesService {
       lean: true,
     });
   }
+
+  async delete(clientId: string) {
+    const results = await this.dispatchesModel.find({ recipientClientId: clientId });
+
+    await this.dispatchesModel.deleteMany({
+      dispatchId: { $in: results.map((result) => result.dispatchId) },
+    });
+
+    return results;
+  }
 }

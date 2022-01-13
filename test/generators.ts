@@ -85,6 +85,7 @@ export const generateDispatch = ({
   chatLink = internet.url(),
   path = `connect/${generateId()}`,
   triggersAt = add(new Date(), { seconds: 1 }),
+  triggeredId,
   notificationId = v4(),
   status = defaultDispatchParams.status,
   deliveredAt = add(new Date(), { seconds: 2 }),
@@ -92,6 +93,7 @@ export const generateDispatch = ({
   failureReasons = [lorem.sentence()],
   scheduleLink = internet.url(),
 }: Partial<Dispatch> = {}): Dispatch => {
+  const triggeredIdObj = triggeredId ? { triggeredId } : {};
   return {
     dispatchId,
     correlationId,
@@ -113,6 +115,7 @@ export const generateDispatch = ({
     retryCount,
     failureReasons,
     scheduleLink,
+    ...triggeredIdObj,
   };
 };
 

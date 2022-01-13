@@ -87,6 +87,40 @@ describe(ConductorService.name, () => {
     });
   });
 
+  describe('handleDeleteClientSettings', () => {
+    let spyOnSettingsServiceDelete: SpyInstance;
+    let spyOnDispatchServiceDelete: SpyInstance;
+    let spyOnTriggersServiceDelete: SpyInstance;
+
+    beforeAll(() => {
+      spyOnSettingsServiceDelete = jest.spyOn(settingsService, 'delete');
+      spyOnDispatchServiceDelete = jest.spyOn(dispatchesService, 'delete');
+      spyOnTriggersServiceDelete = jest.spyOn(triggersService, 'delete');
+    });
+    afterEach(async () => {
+      spyOnSettingsServiceDelete.mockRestore();
+      spyOnDispatchServiceDelete.mockRestore();
+      spyOnTriggersServiceDelete.mockRestore();
+    });
+
+    it('should call handleUpdateClientSettings', async () => {
+      spyOnSettingsServiceDelete.mockResolvedValueOnce(undefined);
+      const deletedItems = [
+        generateDispatch({ triggeredId: generateId() }),
+        generateDispatch(),
+        generateDispatch(),
+      ];
+      spyOnDispatchServiceDelete.mockResolvedValueOnce(deletedItems);
+      spyOnTriggersServiceDelete.mockResolvedValueOnce(undefined);
+
+      const params = { id: generateId(), type: InnerQueueTypes.deleteClientSettings };
+      await service.handleDeleteClientSettings(params);
+      expect(spyOnSettingsServiceDelete).toBeCalledWith(params.id);
+      expect(spyOnDispatchServiceDelete).toBeCalledWith(params.id);
+      expect(spyOnTriggersServiceDelete).toBeCalledWith([deletedItems[0].dispatchId]);
+    });
+  });
+
   describe('handleCreateDispatch', () => {
     let spyOnDispatchesServiceUpdate: SpyInstance;
     let spyOnDispatchesServiceInternalUpdate: SpyInstance;
