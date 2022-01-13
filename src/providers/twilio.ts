@@ -40,8 +40,11 @@ export class Twilio implements OnModuleInit {
     this.client = new TwilioClient(accountSid, authToken);
   }
 
-  async send(sendTwilioNotification: SendTwilioNotification): Promise<ProviderResult> {
-    this.logger.info(sendTwilioNotification, Twilio.name, this.send.name);
+  async send(
+    sendTwilioNotification: SendTwilioNotification,
+    correlationId: string,
+  ): Promise<ProviderResult> {
+    this.logger.info({ ...sendTwilioNotification, correlationId }, Twilio.name, this.send.name);
     const { body, to, orgName } = sendTwilioNotification;
     if (
       process.env.NODE_ENV === Environments.production &&
@@ -60,7 +63,12 @@ export class Twilio implements OnModuleInit {
           throw new Error(Errors.get(ErrorType.invalidPhoneNumberForMessaging));
         }
       } catch (ex) {
-        this.logger.error(sendTwilioNotification, Twilio.name, this.send.name, formatEx(ex));
+        this.logger.error(
+          { ...sendTwilioNotification, correlationId },
+          Twilio.name,
+          this.send.name,
+          formatEx(ex),
+        );
         throw ex;
       }
     } else {

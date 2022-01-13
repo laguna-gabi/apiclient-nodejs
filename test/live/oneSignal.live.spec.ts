@@ -39,23 +39,26 @@ describe(`live: ${OneSignal.name}`, () => {
     };
 
     await expect(
-      oneSignal.send({
-        platform: params.platform,
-        externalUserId: params.externalUserId,
-        data: {
-          user: {
-            id: faker.datatype.uuid(),
-            firstName: faker.name.firstName(),
-            avatar: faker.image.avatar(),
+      oneSignal.send(
+        {
+          platform: params.platform,
+          externalUserId: params.externalUserId,
+          data: {
+            user: {
+              id: faker.datatype.uuid(),
+              firstName: faker.name.firstName(),
+              avatar: faker.image.avatar(),
+            },
+            member: { phone: generatePhone() },
+            type: NotificationType.call,
+            contentKey: CustomKey.callOrVideo,
+            peerId: v4(),
+            isVideo: false,
+            ...generatePath(NotificationType.call),
           },
-          member: { phone: generatePhone() },
-          type: NotificationType.call,
-          contentKey: CustomKey.callOrVideo,
-          peerId: v4(),
-          isVideo: false,
-          ...generatePath(NotificationType.call),
         },
-      }),
+        v4(),
+      ),
     ).rejects.toThrowError();
 
     await expect(

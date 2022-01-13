@@ -31,8 +31,8 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     await super.onModuleInit();
   }
 
-  async send(params: SendSendBirdNotification): Promise<ProviderResult> {
-    this.logger.info(params, SendBird.name, this.send.name);
+  async send(params: SendSendBirdNotification, correlationId: string): Promise<ProviderResult> {
+    this.logger.info({ ...params, correlationId }, SendBird.name, this.send.name);
     const { journalImageDownloadLink, journalAudioDownloadLink, contentKey } = params;
 
     const results: ProviderResult[] = [];
@@ -41,7 +41,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         const result = await this.sendJournalImage(params);
         results.push(this.formatMessageByType('journalImage', result));
       } else {
-        const result = await this.sendJournalText(params);
+        const result = await this.sendJournalText(params, correlationId);
         results.push(this.formatMessageByType('journalText', result));
       }
       if (journalAudioDownloadLink) {
@@ -49,7 +49,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         results.push(this.formatMessageByType('journalAudio', result));
       }
     } else {
-      const result = await this.sendAdminMessage(params);
+      const result = await this.sendAdminMessage(params, correlationId);
       results.push(this.formatMessageByType('admin', result));
     }
 
@@ -60,8 +60,11 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     };
   }
 
-  async sendJournalText(params: SendSendBirdNotification): Promise<ProviderResult> {
-    this.logger.info(params, SendBird.name, this.sendJournalText.name);
+  async sendJournalText(
+    params: SendSendBirdNotification,
+    correlationId: string,
+  ): Promise<ProviderResult> {
+    this.logger.info({ ...params, correlationId }, SendBird.name, this.sendJournalText.name);
     const { userId, sendBirdChannelUrl, message, notificationType, appointmentId } = params;
     try {
       const result = await this.httpService
@@ -79,7 +82,11 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         .toPromise();
       return this.parseResult(params, result, this.sendJournalText.name);
     } catch (ex) {
-      this.logger.error(params, SendBird.name, this.sendJournalText.name, formatEx(ex));
+      this.logger.error({ ...params, correlationId }, SendBird.name, this.sendJournalText.name, {
+        message: ex.response?.data?.message || ex.message,
+        stack: ex.stack,
+        code: ex.response?.status,
+      });
       throw ex;
     }
   }
@@ -114,8 +121,11 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     );
   }
 
-  async sendAdminMessage(params: SendSendBirdNotification): Promise<ProviderResult> {
-    this.logger.info(params, SendBird.name, this.sendAdminMessage.name);
+  async sendAdminMessage(
+    params: SendSendBirdNotification,
+    correlationId: string,
+  ): Promise<ProviderResult> {
+    this.logger.info({ ...params, correlationId }, SendBird.name, this.sendAdminMessage.name);
     const { userId, sendBirdChannelUrl, message, notificationType, appointmentId } = params;
     try {
       const result = await this.httpService
@@ -136,7 +146,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
         .toPromise();
       return this.parseResult(params, result, this.sendAdminMessage.name);
     } catch (ex) {
-      this.logger.error(params, SendBird.name, this.sendAdminMessage.name, {
+      this.logger.error({ ...params, correlationId }, SendBird.name, this.sendAdminMessage.name, {
         message: ex.response?.data?.message || ex.message,
         stack: ex.stack,
         code: ex.response?.status,

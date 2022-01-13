@@ -94,11 +94,14 @@ describe(NotificationsService.name, () => {
         userClient: senderClient,
       });
 
-      expect(spyOnTwilioServiceSend).toBeCalledWith({
-        body: body + `:\n${scheduleLink}.`,
-        orgName: recipientClient.orgName,
-        to: recipientClient.phone,
-      });
+      expect(spyOnTwilioServiceSend).toBeCalledWith(
+        {
+          body: body + `:\n${scheduleLink}.`,
+          orgName: recipientClient.orgName,
+          to: recipientClient.phone,
+        },
+        dispatch.correlationId,
+      );
     });
 
     // eslint-disable-next-line max-len
@@ -114,11 +117,14 @@ describe(NotificationsService.name, () => {
         userClient: senderClient,
       });
 
-      expect(spyOnTwilioServiceSend).toBeCalledWith({
-        body: body + `\n${hosts.get('dynamicLink')}`,
-        orgName: recipientClient.orgName,
-        to: recipientClient.phone,
-      });
+      expect(spyOnTwilioServiceSend).toBeCalledWith(
+        {
+          body: body + `\n${hosts.get('dynamicLink')}`,
+          orgName: recipientClient.orgName,
+          to: recipientClient.phone,
+        },
+        dispatch.correlationId,
+      );
     });
   });
 });

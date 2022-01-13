@@ -1,6 +1,7 @@
 import { CustomKey, Environments, NotificationType, mockLogger } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { v4 } from 'uuid';
 import * as AWS from 'aws-sdk';
 import { aws } from 'config';
 import * as faker from 'faker';
@@ -109,7 +110,7 @@ describe(`live: ${SendBird.name}`, () => {
       contentKey: CustomKey.journalContent,
       journalAudioDownloadLink,
     };
-    const result = await sendBird.send(params);
+    const result = await sendBird.send(params, v4());
 
     expect(result).toEqual({
       provider: Provider.sendbird,
@@ -128,7 +129,7 @@ describe(`live: ${SendBird.name}`, () => {
       journalAudioDownloadLink,
       journalImageDownloadLink,
     };
-    const result = await sendBird.send(params);
+    const result = await sendBird.send(params, v4());
 
     expect(result).toEqual({
       provider: Provider.sendbird,
@@ -138,7 +139,7 @@ describe(`live: ${SendBird.name}`, () => {
   });
 
   async function checkResult(requestType: RequestType, params: SendSendBirdNotification) {
-    const result: ProviderResult = await sendBird.send(params);
+    const result: ProviderResult = await sendBird.send(params, v4());
     expect(result).toEqual({
       provider: Provider.sendbird,
       content: `${requestType}: ${params.message}`,

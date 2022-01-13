@@ -167,11 +167,14 @@ describe('Notifications full flow', () => {
       userClient,
       appointmentId: object.objectNewMemberMock.appointmentId,
     });
-    expect(spyOnTwilioSend).toBeCalledWith({
-      body,
-      orgName: webMemberClient.orgName,
-      to: webMemberClient.phone,
-    });
+    expect(spyOnTwilioSend).toBeCalledWith(
+      {
+        body,
+        orgName: webMemberClient.orgName,
+        to: webMemberClient.phone,
+      },
+      expect.any(String),
+    );
 
     await compareResults({
       dispatchId: object.objectNewMemberMock.dispatchId,
@@ -194,11 +197,14 @@ describe('Notifications full flow', () => {
     };
     await service.handleMessage(message);
 
-    expect(spyOnTwilioSend).toBeCalledWith({
-      body: translation.contents[InternalKey.newControlMember],
-      orgName: webMemberClient.orgName,
-      to: webMemberClient.phone,
-    });
+    expect(spyOnTwilioSend).toBeCalledWith(
+      {
+        body: translation.contents[InternalKey.newControlMember],
+        orgName: webMemberClient.orgName,
+        to: webMemberClient.phone,
+      },
+      expect.any(String),
+    );
 
     await compareResults({
       dispatchId: object.objectBaseType.dispatchId,
@@ -271,11 +277,14 @@ describe('Notifications full flow', () => {
           userClient,
         }) + `\n${hosts.get('dynamicLink')}`;
 
-      expect(spyOnTwilioSend).toBeCalledWith({
-        body: content,
-        orgName: webMemberClient.orgName,
-        to: webMemberClient.phone,
-      });
+      expect(spyOnTwilioSend).toBeCalledWith(
+        {
+          body: content,
+          orgName: webMemberClient.orgName,
+          to: webMemberClient.phone,
+        },
+        expect.any(String),
+      );
 
       await compareResults({
         dispatchId: mock.dispatchId,
@@ -441,7 +450,10 @@ describe('Notifications full flow', () => {
       userClient,
       appointmentTime: realAppointmentTime,
     });
-    expect(spyOnTwilioSend).toBeCalledWith({ body, orgName: undefined, to: userClient.phone });
+    expect(spyOnTwilioSend).toBeCalledWith(
+      { body, orgName: undefined, to: userClient.phone },
+      expect.any(String),
+    );
 
     await compareResults({
       dispatchId: mock.dispatchId,
@@ -482,11 +494,14 @@ describe('Notifications full flow', () => {
       userClient,
       appointmentTime: realAppointmentTime,
     });
-    expect(spyOnTwilioSend).toBeCalledWith({
-      body,
-      orgName: webMemberClient.orgName,
-      to: webMemberClient.phone,
-    });
+    expect(spyOnTwilioSend).toBeCalledWith(
+      {
+        body,
+        orgName: webMemberClient.orgName,
+        to: webMemberClient.phone,
+      },
+      expect.any(String),
+    );
 
     await compareResults({
       dispatchId: mock.dispatchId,
@@ -521,11 +536,14 @@ describe('Notifications full flow', () => {
 
     body += `:\n${mock.scheduleLink}.`;
 
-    expect(spyOnTwilioSend).toBeCalledWith({
-      body,
-      orgName: webMemberClient.orgName,
-      to: webMemberClient.phone,
-    });
+    expect(spyOnTwilioSend).toBeCalledWith(
+      {
+        body,
+        orgName: webMemberClient.orgName,
+        to: webMemberClient.phone,
+      },
+      expect.any(String),
+    );
 
     await compareResults({
       dispatchId: mock.dispatchId,
@@ -556,11 +574,14 @@ describe('Notifications full flow', () => {
         memberClient: webMemberClient,
         userClient,
       });
-      expect(spyOnTwilioSend).toBeCalledWith({
-        body,
-        orgName: undefined,
-        to: userClient.phone,
-      });
+      expect(spyOnTwilioSend).toBeCalledWith(
+        {
+          body,
+          orgName: undefined,
+          to: userClient.phone,
+        },
+        expect.any(String),
+      );
 
       await compareResults({
         dispatchId: mock.dispatchId,
@@ -592,11 +613,14 @@ describe('Notifications full flow', () => {
       memberClient: webMemberClient,
       userClient,
     });
-    expect(spyOnTwilioSend).toBeCalledWith({
-      body,
-      orgName: webMemberClient.orgName,
-      to: webMemberClient.phone,
-    });
+    expect(spyOnTwilioSend).toBeCalledWith(
+      {
+        body,
+        orgName: webMemberClient.orgName,
+        to: webMemberClient.phone,
+      },
+      expect.any(String),
+    );
 
     await compareResults({
       dispatchId: mock.dispatchId,
@@ -628,22 +652,25 @@ describe('Notifications full flow', () => {
       };
       await service.handleMessage(message);
 
-      expect(spyOnOneSignalSend).toBeCalledWith({
-        externalUserId: mobileMemberClient.externalUserId,
-        platform: mobileMemberClient.platform,
-        data: {
-          user: { id: userClient.id, firstName: userClient.firstName, avatar: userClient.avatar },
-          member: { phone: mobileMemberClient.phone },
-          type: mock.notificationType,
-          contentKey: mock.contentKey,
-          peerId: mock.peerId,
-          isVideo: mock.notificationType === NotificationType.video,
-          path: mock.path,
-          extraData: JSON.stringify({ iceServers }),
-          content: undefined,
+      expect(spyOnOneSignalSend).toBeCalledWith(
+        {
+          externalUserId: mobileMemberClient.externalUserId,
+          platform: mobileMemberClient.platform,
+          data: {
+            user: { id: userClient.id, firstName: userClient.firstName, avatar: userClient.avatar },
+            member: { phone: mobileMemberClient.phone },
+            type: mock.notificationType,
+            contentKey: mock.contentKey,
+            peerId: mock.peerId,
+            isVideo: mock.notificationType === NotificationType.video,
+            path: mock.path,
+            extraData: JSON.stringify({ iceServers }),
+            content: undefined,
+          },
+          orgName: mobileMemberClient.orgName,
         },
-        orgName: mobileMemberClient.orgName,
-      });
+        expect.any(String),
+      );
 
       await compareResults({
         dispatchId: mock.dispatchId,
@@ -674,14 +701,17 @@ describe('Notifications full flow', () => {
     };
     await service.handleMessage(message);
 
-    expect(spyOnSendBirdSend).toBeCalledWith({
-      message: mock.content,
-      notificationType: NotificationType.chat,
-      contentKey: mock.contentKey,
-      orgName: undefined,
-      sendBirdChannelUrl: mock.sendBirdChannelUrl,
-      userId: webMemberClient.id,
-    });
+    expect(spyOnSendBirdSend).toBeCalledWith(
+      {
+        message: mock.content,
+        notificationType: NotificationType.chat,
+        contentKey: mock.contentKey,
+        orgName: undefined,
+        sendBirdChannelUrl: mock.sendBirdChannelUrl,
+        userId: webMemberClient.id,
+      },
+      expect.any(String),
+    );
 
     await compareResults({
       dispatchId: mock.dispatchId,
@@ -731,13 +761,16 @@ describe('Notifications full flow', () => {
       journalImageDownloadLink: undefined,
       journalAudioDownloadLink: undefined,
     };
-    expect(spyOnSendBirdSend).toBeCalledWith(sendbirdParams);
+    expect(spyOnSendBirdSend).toBeCalledWith(sendbirdParams, expect.any(String));
 
-    expect(spyOnTwilioSend).toBeCalledWith({
-      body: content,
-      orgName: webMemberClient.orgName,
-      to: webMemberClient.phone,
-    });
+    expect(spyOnTwilioSend).toBeCalledWith(
+      {
+        body: content,
+        orgName: webMemberClient.orgName,
+        to: webMemberClient.phone,
+      },
+      expect.any(String),
+    );
 
     await compareResults({
       dispatchId: mock.dispatchId,
@@ -768,16 +801,19 @@ describe('Notifications full flow', () => {
     };
     await service.handleMessage(message);
 
-    expect(spyOnSendBirdSend).toBeCalledWith({
-      message: mock.content,
-      notificationType: NotificationType.chat,
-      contentKey: mock.contentKey,
-      orgName: undefined,
-      userId: webMemberClient.id,
-      sendBirdChannelUrl: mock.sendBirdChannelUrl,
-      journalAudioDownloadLink: mock.journalAudioDownloadLink,
-      journalImageDownloadLink: mock.journalImageDownloadLink,
-    });
+    expect(spyOnSendBirdSend).toBeCalledWith(
+      {
+        message: mock.content,
+        notificationType: NotificationType.chat,
+        contentKey: mock.contentKey,
+        orgName: undefined,
+        userId: webMemberClient.id,
+        sendBirdChannelUrl: mock.sendBirdChannelUrl,
+        journalAudioDownloadLink: mock.journalAudioDownloadLink,
+        journalImageDownloadLink: mock.journalImageDownloadLink,
+      },
+      expect.any(String),
+    );
 
     await compareResults({
       dispatchId: mock.dispatchId,
@@ -815,20 +851,23 @@ describe('Notifications full flow', () => {
         userClient,
       });
 
-      expect(spyOnOneSignalSend).toBeCalledWith({
-        externalUserId: mobileMemberClient.externalUserId,
-        platform: mobileMemberClient.platform,
-        data: {
-          user: { id: userClient.id, firstName: userClient.firstName, avatar: userClient.avatar },
-          member: { phone: mobileMemberClient.phone },
-          type: mock.notificationType,
-          contentKey: mock.contentKey,
-          isVideo: false,
-          path: mock.path,
+      expect(spyOnOneSignalSend).toBeCalledWith(
+        {
+          externalUserId: mobileMemberClient.externalUserId,
+          platform: mobileMemberClient.platform,
+          data: {
+            user: { id: userClient.id, firstName: userClient.firstName, avatar: userClient.avatar },
+            member: { phone: mobileMemberClient.phone },
+            type: mock.notificationType,
+            contentKey: mock.contentKey,
+            isVideo: false,
+            path: mock.path,
+          },
+          content,
+          orgName: mobileMemberClient.orgName,
         },
-        content,
-        orgName: mobileMemberClient.orgName,
-      });
+        expect.any(String),
+      );
 
       await compareResults({
         dispatchId: mock.dispatchId,

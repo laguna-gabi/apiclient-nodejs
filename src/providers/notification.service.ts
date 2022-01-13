@@ -55,7 +55,7 @@ export class NotificationsService {
     ) {
       return;
     }
-
+    const correlationId = dispatch.correlationId;
     const content = await this.generateContent(dispatch, recipientClient, senderClient);
 
     if (dispatch.notificationType === NotificationType.chat) {
@@ -64,7 +64,7 @@ export class NotificationsService {
         recipientClient.orgName,
       );
       this.logAudit(sendSendBirdNotification, this.send.name);
-      return this.sendBird.send(sendSendBirdNotification);
+      return this.sendBird.send(sendSendBirdNotification, correlationId);
     } else if (dispatch.notificationType === NotificationType.textSms) {
       if (dispatch.contentKey === CustomKey.customContent) {
         const sendSendBirdNotification = this.generateSendbirdParams(
@@ -73,11 +73,11 @@ export class NotificationsService {
           content,
         );
         this.logAudit(sendSendBirdNotification, this.send.name);
-        await this.sendBird.send(sendSendBirdNotification);
+        await this.sendBird.send(sendSendBirdNotification, correlationId);
       }
       const sendTwilioNotification = this.generateTwilioParams(content, recipientClient);
       this.logAudit(sendTwilioNotification, this.send.name);
-      return this.twilio.send(sendTwilioNotification);
+      return this.twilio.send(sendTwilioNotification, correlationId);
     } else {
       if (recipientClient.platform !== Platform.web && recipientClient.isPushNotificationsEnabled) {
         const sendOneSignalNotification = await this.generateOneSignalParams(
@@ -87,11 +87,11 @@ export class NotificationsService {
           senderClient,
         );
         this.logAudit(sendOneSignalNotification, this.send.name);
-        return this.oneSignal.send(sendOneSignalNotification);
+        return this.oneSignal.send(sendOneSignalNotification, correlationId);
       } else {
         const sendTwilioNotification = this.generateTwilioParams(content, recipientClient);
         this.logAudit(sendTwilioNotification, this.send.name);
-        return this.twilio.send(sendTwilioNotification);
+        return this.twilio.send(sendTwilioNotification, correlationId);
       }
     }
   }

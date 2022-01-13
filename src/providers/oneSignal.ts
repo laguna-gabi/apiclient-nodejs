@@ -34,8 +34,15 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     this.voipApiKey = await this.configsService.getConfig(ExternalConfigs.oneSignal.voipApiKey);
   }
 
-  async send(sendOneSignalNotification: SendOneSignalNotification): Promise<ProviderResult> {
-    this.logger.info(sendOneSignalNotification, OneSignal.name, this.send.name);
+  async send(
+    sendOneSignalNotification: SendOneSignalNotification,
+    correlationId: string,
+  ): Promise<ProviderResult> {
+    this.logger.info(
+      { ...sendOneSignalNotification, correlationId },
+      OneSignal.name,
+      this.send.name,
+    );
     const { platform, externalUserId, data, content } = sendOneSignalNotification;
     this.logger.info(data, OneSignal.name, this.send.name);
 
@@ -65,14 +72,24 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
       if (result.status === 200 && result.data.recipients >= 1) {
         return { provider: Provider.oneSignal, content: body.contents.en, id: result.data.id };
       } else {
-        this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, {
-          code: result.status,
-          data,
-        });
+        this.logger.error(
+          { ...sendOneSignalNotification, correlationId },
+          OneSignal.name,
+          this.send.name,
+          {
+            code: result.status,
+            data,
+          },
+        );
         throw new Error(generateCustomErrorMessage(OneSignal.name, this.send.name, result));
       }
     } catch (ex) {
-      this.logger.error(sendOneSignalNotification, OneSignal.name, this.send.name, formatEx(ex));
+      this.logger.error(
+        { ...sendOneSignalNotification, correlationId },
+        OneSignal.name,
+        this.send.name,
+        formatEx(ex),
+      );
       throw ex;
     }
   }

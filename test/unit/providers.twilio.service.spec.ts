@@ -87,7 +87,7 @@ describe('Twilio', () => {
     ])('%p', async (_, to, messageSentToTwilio, messageSentViaSlack, env) => {
       process.env.NODE_ENV = env;
       const body = lorem.sentence();
-      await twilioService.send({ body, to });
+      await twilioService.send({ body, to }, v4());
 
       if (messageSentToTwilio) {
         expect(spyOnInternalSend).toBeCalledWith(body, to, twilio.get('source'));
@@ -112,7 +112,7 @@ describe('Twilio', () => {
     it('invalid phone in production env - should throw an error message', async () => {
       process.env.NODE_ENV = Environments.production;
       const body = lorem.sentence();
-      await expect(twilioService.send({ body, to: '+1234567' })).rejects.toThrow(
+      await expect(twilioService.send({ body, to: '+1234567' }, v4())).rejects.toThrow(
         Error(Errors.get(ErrorType.invalidPhoneNumberForMessaging)),
       );
     });
