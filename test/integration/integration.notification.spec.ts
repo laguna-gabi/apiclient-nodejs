@@ -28,6 +28,7 @@ import {
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
   generateChatMessageUserMock,
+  generateDeleteDispatchMock,
   generateDispatchId,
   generateExternalContentMock,
   generateNewChatMessageToMemberMock,
@@ -1155,27 +1156,37 @@ describe('Integration tests: notifications', () => {
   };
 
   const checkDeleteDispatches = (memberId: string, withLogReminder = false, startFromIndex = 1) => {
-    checkValues(startFromIndex, {
-      type: InnerQueueTypes.deleteDispatch,
-      dispatchId: generateDispatchId(InternalKey.newMemberNudge, memberId),
-    });
-    checkValues(startFromIndex + 1, {
-      type: InnerQueueTypes.deleteDispatch,
-      dispatchId: generateDispatchId(InternalKey.newRegisteredMember, memberId),
-    });
-    checkValues(startFromIndex + 2, {
-      type: InnerQueueTypes.deleteDispatch,
-      dispatchId: generateDispatchId(InternalKey.newRegisteredMemberNudge, memberId),
-    });
+    checkValues(
+      startFromIndex,
+      generateDeleteDispatchMock({
+        dispatchId: generateDispatchId(InternalKey.newMemberNudge, memberId),
+      }),
+    );
+    checkValues(
+      startFromIndex + 1,
+      generateDeleteDispatchMock({
+        dispatchId: generateDispatchId(InternalKey.newRegisteredMember, memberId),
+      }),
+    );
+    checkValues(
+      startFromIndex + 2,
+      generateDeleteDispatchMock({
+        dispatchId: generateDispatchId(InternalKey.newRegisteredMemberNudge, memberId),
+      }),
+    );
     if (withLogReminder) {
-      checkValues(startFromIndex + 3, {
-        type: InnerQueueTypes.deleteDispatch,
-        dispatchId: generateDispatchId(InternalKey.logReminder, memberId),
-      });
-      checkValues(startFromIndex + 4, {
-        type: InnerQueueTypes.deleteDispatch,
-        dispatchId: generateDispatchId(CustomKey.customContent, memberId),
-      });
+      checkValues(
+        startFromIndex + 3,
+        generateDeleteDispatchMock({
+          dispatchId: generateDispatchId(InternalKey.logReminder, memberId),
+        }),
+      );
+      checkValues(
+        startFromIndex + 4,
+        generateDeleteDispatchMock({
+          dispatchId: generateDispatchId(CustomKey.customContent, memberId),
+        }),
+      );
     }
   };
 

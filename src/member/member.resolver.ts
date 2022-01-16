@@ -1021,6 +1021,7 @@ export class MemberResolver extends MemberBase {
     const deleteDispatch: IDeleteDispatch = {
       type: InnerQueueTypes.deleteDispatch,
       dispatchId: params.dispatchId,
+      correlationId: getCorrelationId(this.logger),
     };
     const eventParams: IEventNotifyQueue = {
       type: QueueType.notifications,
