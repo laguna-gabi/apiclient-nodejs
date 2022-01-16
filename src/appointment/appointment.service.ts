@@ -139,7 +139,7 @@ export class AppointmentService extends BaseService {
   async validateOverlap(params: ScheduleAppointmentParams) {
     const sharedQuery = {
       userId: new Types.ObjectId(params.userId),
-      status: { $ne: AppointmentStatus.done },
+      status: { $nin: [AppointmentStatus.done, AppointmentStatus.deleted] },
       ...(params.id ? { _id: { $ne: new Types.ObjectId(params.id) } } : {}),
     };
     const isOverlappingAppointments = await this.appointmentModel.exists({
