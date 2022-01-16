@@ -124,4 +124,4 @@ export enum MemberIdParamType {
   id = 'id',
 }
 
-export type PhoneCarrier = 'landline' | 'mobile' | 'voip';
+export type PhoneType = 'landline' | 'mobile' | 'voip';

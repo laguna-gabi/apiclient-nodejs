@@ -134,7 +134,7 @@ export class Queries {
           getMember(id: $id) {
             id
             phone
-            phoneCarrier
+            phoneType
             deviceId
             firstName
             lastName
@@ -216,7 +216,7 @@ export class Queries {
             drgDesc
 
             phoneSecondary
-            phoneSecondaryCarrier
+            phoneSecondaryType
             generalNotes
             nurseNotes
             admitDate
@@ -385,7 +385,7 @@ export class Queries {
             id
             name
             phone
-            phoneCarrier
+            phoneType
             dischargeDate
             adherence
             wellbeing

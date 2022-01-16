@@ -20,13 +20,13 @@ export const up = async (dryRun: boolean) => {
   const members = await memberModel.find({});
   await Promise.all(
     members.map(async (member) => {
-      const phoneCarrier = await twilioService.getPhoneCarrier(member.phone);
-      const objPhoneSecondaryCarrier = member.phoneSecondary
-        ? { phoneSecondaryCarrier: await twilioService.getPhoneCarrier(member.phoneSecondary) }
+      const phoneType = await twilioService.getPhoneType(member.phone);
+      const objPhoneSecondary = member.phoneSecondary
+        ? { phoneSecondaryType: await twilioService.getPhoneType(member.phoneSecondary) }
         : {};
       await memberModel.findByIdAndUpdate(
         { _id: member._id },
-        { $set: { phoneCarrier, ...objPhoneSecondaryCarrier } },
+        { $set: { phoneType, ...objPhoneSecondary } },
       );
     }),
   );

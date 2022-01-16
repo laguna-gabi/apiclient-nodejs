@@ -697,7 +697,7 @@ describe('Integration tests: all', () => {
       expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.123'));
     });
 
-    it('should set phoneCarrier and phoneSecondaryCarrier', async () => {
+    it('should set phoneType and phoneSecondaryType', async () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org });
 
@@ -707,8 +707,8 @@ describe('Integration tests: all', () => {
       const memberResult = await handler
         .setContextUserId(member.id)
         .queries.getMember({ id: member.id });
-      expect(memberResult.phoneCarrier).toEqual('mobile');
-      expect(memberResult.phoneSecondaryCarrier).toEqual('mobile');
+      expect(memberResult.phoneType).toEqual('mobile');
+      expect(memberResult.phoneSecondaryType).toEqual('mobile');
     });
   });
 

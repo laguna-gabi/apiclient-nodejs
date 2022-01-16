@@ -13,19 +13,19 @@ describe('live: twilio', () => {
     await twilio.onModuleInit();
   });
 
-  describe('getPhoneCarrier', () => {
+  describe('getPhoneType', () => {
     it('should return landline on a landline phone', async () => {
-      const result = await twilio.getPhoneCarrier('+18476757942');
+      const result = await twilio.getPhoneType('+18476757942');
       expect(result).toEqual('landline');
     });
 
     it('should return mobile on a mobile phone', async () => {
-      const result = await twilio.getPhoneCarrier('+16414250000');
+      const result = await twilio.getPhoneType('+16414250000');
       expect(result).toEqual('mobile');
     });
 
     it('should catch error internally on twilio incase number is not valid', async () => {
-      const result = await twilio.getPhoneCarrier('abc');
+      const result = await twilio.getPhoneType('abc');
       expect(result).toBeUndefined();
     });
   });

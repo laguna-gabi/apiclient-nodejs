@@ -144,7 +144,7 @@ export class MemberResolver extends MemberBase {
     @Args(camelCase(UpdateMemberParams.name)) params: UpdateMemberParams,
   ): Promise<Member> {
     const objMobile = params.phoneSecondary
-      ? { phoneSecondaryCarrier: await this.twilio.getPhoneCarrier(params.phoneSecondary) }
+      ? { phoneSecondaryType: await this.twilio.getPhoneType(params.phoneSecondary) }
       : {};
     const member = await this.memberService.update({ ...params, ...objMobile });
     member.zipCode = member.zipCode || member.org.zipCode;

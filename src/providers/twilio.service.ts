@@ -3,7 +3,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { twilio } from 'config';
 import { Twilio, jwt } from 'twilio';
 import { ConfigsService, ExternalConfigs } from '.';
-import { LoggerService, PhoneCarrier } from '../common';
+import { LoggerService, PhoneType } from '../common';
 
 @Injectable()
 export class TwilioService implements OnModuleInit {
@@ -50,14 +50,14 @@ export class TwilioService implements OnModuleInit {
     return token === this.webhookToken;
   }
 
-  async getPhoneCarrier(phone: string): Promise<PhoneCarrier> {
+  async getPhoneType(phone: string): Promise<PhoneType> {
     try {
       const { carrier } = await this.client.lookups
         .phoneNumbers(phone)
         .fetch({ type: ['carrier'] });
       return carrier.type;
     } catch (ex) {
-      this.logger.error({}, TwilioService.name, this.getPhoneCarrier.name, formatEx(ex));
+      this.logger.error({}, TwilioService.name, this.getPhoneType.name, formatEx(ex));
     }
     return undefined;
   }

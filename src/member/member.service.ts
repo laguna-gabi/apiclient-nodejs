@@ -207,7 +207,7 @@ export class MemberService extends BaseService {
           id: '$_id',
           name: { $concat: ['$firstName', ' ', '$lastName'] },
           phone: '$phone',
-          phoneCarrier: '$phoneCarrier',
+          phoneType: '$phoneType',
           dischargeDate: { $ifNull: ['$dischargeDate', undefined] },
           adherence: { $ifNull: ['$scores.adherence', 0] },
           wellbeing: { $ifNull: ['$scores.wellbeing', 0] },

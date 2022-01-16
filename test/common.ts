@@ -152,7 +152,7 @@ export const mockProviders = (
   const spyOnOneSignalUnregister = jest.spyOn(oneSignal, 'unregister');
   const spyOnTwilioGetToken = jest.spyOn(twilioService, 'getAccessToken');
   const spyOnTwilioValidateWebhook = jest.spyOn(twilioService, 'validateWebhook');
-  const spyOnTwilioGetPhoneCarrier = jest.spyOn(twilioService, 'getPhoneCarrier');
+  const spyOnTwilioGetPhoneType = jest.spyOn(twilioService, 'getPhoneType');
   const spyOnSlackBotSendMessage = jest.spyOn(slackBot, 'send');
   const spyOnCognitoServiceDisableMember = jest.spyOn(cognitoService, 'disableMember');
   const spyOnCognitoServiceDeleteMember = jest.spyOn(cognitoService, 'deleteMember');
@@ -179,7 +179,7 @@ export const mockProviders = (
   spyOnOneSignalUnregister.mockResolvedValue(undefined);
   spyOnTwilioGetToken.mockReturnValue('token');
   spyOnTwilioValidateWebhook.mockReturnValue(true);
-  spyOnTwilioGetPhoneCarrier.mockResolvedValue('mobile');
+  spyOnTwilioGetPhoneType.mockResolvedValue('mobile');
   spyOnSlackBotSendMessage.mockReturnValue(undefined);
   spyOnSendBirdUpdateChannelName.mockReturnValue(undefined);
   spyOnSendBirdInvite.mockResolvedValue([generateId()]);
@@ -208,7 +208,7 @@ export const mockProviders = (
     twilioService: {
       spyOnTwilioGetToken,
       spyOnTwilioValidateWebhook,
-      spyOnTwilioGetPhoneCarrier,
+      spyOnTwilioGetPhoneType,
     },
     slackBot: { spyOnSlackBotSendMessage },
     cognitoService: { spyOnCognitoServiceDisableMember, spyOnCognitoServiceDeleteMember },

@@ -179,7 +179,7 @@ export const generateCreateMemberParams = ({
 export const generateInternalCreateMemberParams = ({
   authId = v4(),
   phone = generatePhone(),
-  phoneCarrier = 'mobile',
+  phoneType = 'mobile',
   firstName = faker.name.firstName(),
   lastName = faker.name.lastName(),
   dateOfBirth = generateDateOnly(faker.date.past()),
@@ -197,7 +197,7 @@ export const generateInternalCreateMemberParams = ({
   return {
     authId,
     phone,
-    phoneCarrier,
+    phoneType,
     firstName,
     lastName,
     dateOfBirth,
@@ -221,7 +221,7 @@ export const mockGenerateMember = (): Member => {
     authId: v4(),
     primaryUserId: generateObjectId(user.id),
     phone: generatePhone(),
-    phoneCarrier: 'mobile',
+    phoneType: 'mobile',
     deviceId: faker.datatype.uuid(),
     firstName,
     lastName,

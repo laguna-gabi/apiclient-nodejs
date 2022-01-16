@@ -22,7 +22,7 @@ import {
   AppointmentModule,
   AppointmentStatus,
 } from '../../src/appointment';
-import { ErrorType, Errors, LoggerService, PhoneCarrier, RecordingType } from '../../src/common';
+import { ErrorType, Errors, LoggerService, PhoneType, RecordingType } from '../../src/common';
 import {
   ActionItem,
   ActionItemDto,
@@ -292,7 +292,7 @@ describe('MemberService', () => {
           id: memberId,
           name: `${member.firstName} ${member.lastName}`,
           phone: member.phone,
-          phoneCarrier: 'mobile',
+          phoneType: 'mobile',
           dischargeDate: null,
           adherence: 0,
           wellbeing: 0,
@@ -311,11 +311,11 @@ describe('MemberService', () => {
     it('should handle member with all values', async () => {
       const primaryUserId = await generateUser();
       const orgId = await generateOrg();
-      const phoneCarrier: PhoneCarrier = 'landline';
+      const phoneType: PhoneType = 'landline';
 
       const dischargeDate = generateDateOnly(date.future(1));
       const { member: createdMember } = await service.insert(
-        { ...generateCreateMemberParams({ orgId, dischargeDate }), phoneCarrier },
+        { ...generateCreateMemberParams({ orgId, dischargeDate }), phoneType },
         new Types.ObjectId(primaryUserId),
       );
       const memberId = createdMember.id;
@@ -343,7 +343,7 @@ describe('MemberService', () => {
           id: memberId,
           name: `${member.firstName} ${member.lastName}`,
           phone: member.phone,
-          phoneCarrier,
+          phoneType,
           dischargeDate: member.dischargeDate,
           adherence: 0,
           wellbeing: 0,
@@ -1754,7 +1754,7 @@ describe('MemberService', () => {
     userId = userId ? userId : await generateUser();
     const createMemberParams = generateCreateMemberParams({ orgId });
     const { member } = await service.insert(
-      { ...createMemberParams, phoneCarrier: 'mobile' },
+      { ...createMemberParams, phoneType: 'mobile' },
       new Types.ObjectId(userId),
     );
     return member.id;
