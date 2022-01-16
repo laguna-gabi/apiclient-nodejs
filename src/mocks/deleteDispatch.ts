@@ -13,5 +13,6 @@ export const generateDeleteDispatchMock = ({
   return {
     type: InnerQueueTypes.deleteDispatch,
     dispatchId: dispatchId,
+    correlationId: v4(),
   };
 };

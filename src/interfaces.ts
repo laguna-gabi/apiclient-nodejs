@@ -43,10 +43,10 @@ export interface IDeleteClientSettings extends IInnerQueueTypes {
 
 interface IDispatch extends IInnerQueueTypes {
   dispatchId: string;
+  correlationId: string;
 }
 
 export interface ICreateDispatch extends IDispatch {
-  correlationId: string;
   serviceName: ServiceName;
   notificationType: NotificationType | CancelNotificationType;
   recipientClientId: string;
