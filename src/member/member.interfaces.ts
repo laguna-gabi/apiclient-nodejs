@@ -13,7 +13,13 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { isUndefined, omitBy } from 'lodash';
 import { Types } from 'mongoose';
-import { CreateMemberParams, Member, MemberConfig, MemberService } from '.';
+import {
+  CreateMemberParams,
+  InternalCreateMemberParams,
+  Member,
+  MemberConfig,
+  MemberService,
+} from '.';
 import {
   ErrorType,
   Errors,
@@ -24,7 +30,7 @@ import {
   LoggerService,
   getCorrelationId,
 } from '../common';
-import { FeatureFlagService } from '../providers';
+import { FeatureFlagService, TwilioService } from '../providers';
 import { UserService } from '../user';
 
 export class MemberBase {
@@ -33,23 +39,25 @@ export class MemberBase {
     readonly eventEmitter: EventEmitter2,
     readonly userService: UserService,
     readonly featureFlagService: FeatureFlagService,
+    readonly twilio: TwilioService,
     readonly logger: LoggerService,
   ) {}
 
   async createMember(createMemberParams: CreateMemberParams): Promise<Member> {
+    const phoneCarrier = await this.twilio.getPhoneCarrier(createMemberParams.phone);
     const control = !createMemberParams.userId && (await this.featureFlagService.isControlGroup());
     if (control) {
-      return this.createControlMember(createMemberParams);
+      return this.createControlMember({ ...createMemberParams, phoneCarrier });
     } else {
-      return this.createRealMember(createMemberParams);
+      return this.createRealMember({ ...createMemberParams, phoneCarrier });
     }
   }
 
-  async createRealMember(createMemberParams: CreateMemberParams): Promise<Member> {
-    this.logger.info(createMemberParams, MemberBase.name, this.createRealMember.name);
+  async createRealMember(params: InternalCreateMemberParams): Promise<Member> {
+    this.logger.info(params, MemberBase.name, this.createRealMember.name);
 
-    const primaryUserId = createMemberParams.userId
-      ? Types.ObjectId(createMemberParams.userId)
+    const primaryUserId = params.userId
+      ? Types.ObjectId(params.userId)
       : await this.userService.getAvailableUser();
 
     const user = await this.userService.get(primaryUserId.toString());
@@ -58,10 +66,7 @@ export class MemberBase {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
 
-    const { member, memberConfig } = await this.memberService.insert(
-      createMemberParams,
-      primaryUserId,
-    );
+    const { member, memberConfig } = await this.memberService.insert(params, primaryUserId);
     const { platform } = await this.memberService.getMemberConfig(member.id);
     this.notifyUpdatedMemberConfig({ member, memberConfig });
 
@@ -80,9 +85,9 @@ export class MemberBase {
     return member;
   }
 
-  async createControlMember(createMemberParams: CreateMemberParams): Promise<Member> {
-    this.logger.info(createMemberParams, MemberBase.name, this.createControlMember.name);
-    const controlMember = await this.memberService.insertControl(createMemberParams);
+  async createControlMember(params: InternalCreateMemberParams): Promise<Member> {
+    this.logger.info(params, MemberBase.name, this.createControlMember.name);
+    const controlMember = await this.memberService.insertControl(params);
     this.notifyUpdatedMemberConfig({ member: controlMember });
 
     const contentKey = InternalKey.newControlMember;

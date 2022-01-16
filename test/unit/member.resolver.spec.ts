@@ -23,6 +23,7 @@ import {
   IEventOnUpdatedMemberPlatform,
   LoggerService,
   MemberRole,
+  PhoneCarrier,
   RegisterForNotificationParams,
   StorageType,
   UserRole,
@@ -47,7 +48,13 @@ import {
   TaskStatus,
   defaultMemberParams,
 } from '../../src/member';
-import { CognitoService, FeatureFlagService, OneSignal, StorageService } from '../../src/providers';
+import {
+  CognitoService,
+  FeatureFlagService,
+  OneSignal,
+  StorageService,
+  TwilioService,
+} from '../../src/providers';
 import { UserService } from '../../src/user';
 import {
   dbDisconnect,
@@ -90,6 +97,7 @@ describe('MemberResolver', () => {
   let communicationService: CommunicationService;
   let eventEmitter: EventEmitter2;
   let featureFlagService: FeatureFlagService;
+  let twilioService: TwilioService;
   let spyOnEventEmitter;
 
   beforeAll(async () => {
@@ -110,6 +118,7 @@ describe('MemberResolver', () => {
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
     featureFlagService = module.get<FeatureFlagService>(FeatureFlagService);
+    twilioService = module.get<TwilioService>(TwilioService);
     mockLogger(module.get<LoggerService>(LoggerService));
   });
 
@@ -129,6 +138,7 @@ describe('MemberResolver', () => {
     let spyOnUserServiceGetUser;
     let spyOnServiceGetMemberConfig;
     let spyOnFeatureFlagControlGroup;
+    let spyOnTwilioGetPhoneCarrier;
 
     beforeEach(() => {
       spyOnServiceInsert = jest.spyOn(service, 'insert');
@@ -137,6 +147,7 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnFeatureFlagControlGroup = jest.spyOn(featureFlagService, 'isControlGroup');
+      spyOnTwilioGetPhoneCarrier = jest.spyOn(twilioService, 'getPhoneCarrier');
     });
 
     afterEach(() => {
@@ -147,6 +158,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig.mockReset();
       spyOnEventEmitter.mockReset();
       spyOnFeatureFlagControlGroup.mockReset();
+      spyOnTwilioGetPhoneCarrier.mockReset();
     });
 
     it('should create a member', async () => {
@@ -156,20 +168,23 @@ describe('MemberResolver', () => {
         memberId: generateObjectId(member.id),
         platform: Platform.android,
       });
+      const phoneCarrier = 'mobile';
       spyOnServiceInsert.mockImplementationOnce(async () => ({ member, memberConfig }));
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetAvailableUser.mockImplementationOnce(async () => member.primaryUserId);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => false);
+      spyOnTwilioGetPhoneCarrier.mockResolvedValueOnce(phoneCarrier);
 
       const params = generateCreateMemberParams({ orgId: generateId() });
       await resolver.createMember(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
-      expect(spyOnServiceInsert).toBeCalledWith(params, member.primaryUserId);
+      expect(spyOnServiceInsert).toBeCalledWith({ ...params, phoneCarrier }, member.primaryUserId);
       expect(spyOnServiceGetAvailableUser).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
+      expect(spyOnTwilioGetPhoneCarrier).toBeCalledWith(params.phone);
       const eventNewMemberParams: IEventOnNewMember = {
         member,
         user,
@@ -210,18 +225,23 @@ describe('MemberResolver', () => {
         userId: member.primaryUserId,
         platform: Platform.android,
       };
+      const phoneCarrier = 'landline';
       spyOnServiceInsert.mockImplementationOnce(async () => ({ member, memberConfig }));
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetAvailableUser.mockImplementationOnce(async () => member.primaryUserId);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       //forcing true to be sure it won't be control member, even if control rolled true.
       spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => true);
+      spyOnTwilioGetPhoneCarrier.mockResolvedValueOnce(phoneCarrier);
 
       const params = generateCreateMemberParams({ orgId: generateId(), userId: user.id });
       await resolver.createMember(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
-      expect(spyOnServiceInsert).toBeCalledWith(params, Types.ObjectId(user.id));
+      expect(spyOnServiceInsert).toBeCalledWith(
+        { ...params, phoneCarrier },
+        Types.ObjectId(user.id),
+      );
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
       const eventNewMemberParams: IEventOnNewMember = {
@@ -243,14 +263,16 @@ describe('MemberResolver', () => {
 
     it('should create a control member', async () => {
       const member = mockGenerateMember();
+      const phoneCarrier: PhoneCarrier = 'mobile';
       spyOnServiceInsertControl.mockImplementationOnce(async () => member);
       spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => true);
+      spyOnTwilioGetPhoneCarrier.mockResolvedValueOnce(phoneCarrier);
 
       const params = generateCreateMemberParams({ orgId: generateId() });
       await resolver.createMember(params);
 
       expect(spyOnServiceInsertControl).toBeCalledTimes(1);
-      expect(spyOnServiceInsertControl).toBeCalledWith(params);
+      expect(spyOnServiceInsertControl).toBeCalledWith({ ...params, phoneCarrier });
       const eventNotifyQueue: IEventNotifyQueue = {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ member })),
@@ -274,21 +296,44 @@ describe('MemberResolver', () => {
 
   describe('updateMember', () => {
     let spyOnServiceUpdate;
+    let spyOnTwilioGetPhoneCarrier;
+
     beforeEach(() => {
       spyOnServiceUpdate = jest.spyOn(service, 'update');
+      spyOnTwilioGetPhoneCarrier = jest.spyOn(twilioService, 'getPhoneCarrier');
     });
 
     afterEach(() => {
       spyOnServiceUpdate.mockReset();
+      spyOnTwilioGetPhoneCarrier.mockReset();
     });
 
-    it('should update a member', async () => {
+    test.each(['mobile', 'landline', 'voip'])(
+      `should update a member with phoneSecondary and phoneSecondaryCarrier=%p`,
+      async (phoneSecondaryCarrier) => {
+        const updateMemberParams = generateUpdateMemberParams();
+        spyOnServiceUpdate.mockImplementationOnce(async () => ({ ...updateMemberParams }));
+        spyOnTwilioGetPhoneCarrier.mockResolvedValueOnce(phoneSecondaryCarrier);
+
+        await resolver.updateMember(updateMemberParams);
+
+        expect(spyOnServiceUpdate).toBeCalledTimes(1);
+        expect(spyOnServiceUpdate).toBeCalledWith({
+          ...updateMemberParams,
+          phoneSecondaryCarrier,
+        });
+      },
+    );
+
+    it('should update a member without phoneSecondary and phoneSecondaryCarrier', async () => {
       const updateMemberParams = generateUpdateMemberParams();
-      spyOnServiceUpdate.mockImplementationOnce(async () => updateMemberParams);
+      updateMemberParams.phoneSecondary = undefined;
+      spyOnServiceUpdate.mockImplementationOnce(async () => ({ ...updateMemberParams }));
 
       await resolver.updateMember(updateMemberParams);
 
       expect(spyOnServiceUpdate).toBeCalledTimes(1);
+      expect(spyOnTwilioGetPhoneCarrier).not.toBeCalled();
       expect(spyOnServiceUpdate).toBeCalledWith(updateMemberParams);
     });
   });

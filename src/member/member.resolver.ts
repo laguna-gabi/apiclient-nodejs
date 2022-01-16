@@ -87,7 +87,14 @@ import {
   getCorrelationId,
 } from '../common';
 import { Communication, CommunicationService, GetCommunicationParams } from '../communication';
-import { Bitly, CognitoService, FeatureFlagService, OneSignal, StorageService } from '../providers';
+import {
+  Bitly,
+  CognitoService,
+  FeatureFlagService,
+  OneSignal,
+  StorageService,
+  TwilioService,
+} from '../providers';
 import { User, UserService } from '../user';
 
 @UseInterceptors(LoggingInterceptor)
@@ -104,8 +111,9 @@ export class MemberResolver extends MemberBase {
     protected readonly bitly: Bitly,
     readonly logger: LoggerService,
     readonly featureFlagService: FeatureFlagService,
+    readonly twilio: TwilioService,
   ) {
-    super(memberService, eventEmitter, userService, featureFlagService, logger);
+    super(memberService, eventEmitter, userService, featureFlagService, twilio, logger);
   }
 
   @Mutation(() => Identifier)
@@ -133,9 +141,12 @@ export class MemberResolver extends MemberBase {
   @Mutation(() => Member)
   @Roles(UserRole.coach, UserRole.nurse)
   async updateMember(
-    @Args(camelCase(UpdateMemberParams.name)) updateMemberParams: UpdateMemberParams,
+    @Args(camelCase(UpdateMemberParams.name)) params: UpdateMemberParams,
   ): Promise<Member> {
-    const member = await this.memberService.update(updateMemberParams);
+    const objMobile = params.phoneSecondary
+      ? { phoneSecondaryCarrier: await this.twilio.getPhoneCarrier(params.phoneSecondary) }
+      : {};
+    const member = await this.memberService.update({ ...params, ...objMobile });
     member.zipCode = member.zipCode || member.org.zipCode;
     member.utcDelta = MemberResolver.getTimezoneDeltaFromZipcode(member.zipCode);
     return member;

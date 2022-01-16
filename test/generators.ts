@@ -39,6 +39,7 @@ import {
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
   ImageFormat,
+  InternalCreateMemberParams,
   Member,
   MemberConfig,
   NotifyContentParams,
@@ -157,10 +158,46 @@ export const generateCreateMemberParams = ({
   dischargeDate,
   honorific = defaultMemberParams.honorific,
   userId,
-}: Partial<CreateMemberParams> & { orgId: string }): CreateMemberParams => {
+}: Partial<CreateMemberParams> & { orgId: string }): CreateMemberParams & { orgId: string } => {
   return {
     authId,
     phone,
+    firstName,
+    lastName,
+    dateOfBirth,
+    orgId,
+    sex,
+    email,
+    language,
+    zipCode,
+    dischargeDate,
+    honorific,
+    userId,
+  };
+};
+
+export const generateInternalCreateMemberParams = ({
+  authId = v4(),
+  phone = generatePhone(),
+  phoneCarrier = 'mobile',
+  firstName = faker.name.firstName(),
+  lastName = faker.name.lastName(),
+  dateOfBirth = generateDateOnly(faker.date.past()),
+  orgId,
+  sex,
+  email,
+  language,
+  zipCode = generateZipCode(),
+  dischargeDate,
+  honorific = defaultMemberParams.honorific,
+  userId,
+}: Partial<InternalCreateMemberParams> & { orgId: string }): InternalCreateMemberParams & {
+  orgId: string;
+} => {
+  return {
+    authId,
+    phone,
+    phoneCarrier,
     firstName,
     lastName,
     dateOfBirth,
@@ -184,6 +221,7 @@ export const mockGenerateMember = (): Member => {
     authId: v4(),
     primaryUserId: generateObjectId(user.id),
     phone: generatePhone(),
+    phoneCarrier: 'mobile',
     deviceId: faker.datatype.uuid(),
     firstName,
     lastName,

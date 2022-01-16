@@ -14,6 +14,7 @@ import { datatype, date, internet } from 'faker';
 import { isNil, omitBy } from 'lodash';
 import { Model, Types, model } from 'mongoose';
 import { performance } from 'perf_hooks';
+import { v4 } from 'uuid';
 import {
   Appointment,
   AppointmentDocument,
@@ -21,16 +22,16 @@ import {
   AppointmentModule,
   AppointmentStatus,
 } from '../../src/appointment';
-import { ErrorType, Errors, LoggerService, RecordingType } from '../../src/common';
+import { ErrorType, Errors, LoggerService, PhoneCarrier, RecordingType } from '../../src/common';
 import {
   ActionItem,
   ActionItemDto,
   ControlMember,
   ControlMemberDto,
-  CreateMemberParams,
   Goal,
   GoalDto,
   ImageFormat,
+  InternalCreateMemberParams,
   Journal,
   JournalDto,
   Member,
@@ -58,6 +59,7 @@ import {
   generateDateOnly,
   generateGetMemberUploadJournalImageLinkParams,
   generateId,
+  generateInternalCreateMemberParams,
   generateObjectId,
   generateOrgParams,
   generateRequestAppointmentParams,
@@ -71,7 +73,6 @@ import {
   generateUpdateRecordingReviewParams,
   generateUpdateTaskStatusParams,
 } from '../index';
-import { v4 } from 'uuid';
 
 describe('MemberService', () => {
   let module: TestingModule;
@@ -291,6 +292,7 @@ describe('MemberService', () => {
           id: memberId,
           name: `${member.firstName} ${member.lastName}`,
           phone: member.phone,
+          phoneCarrier: 'mobile',
           dischargeDate: null,
           adherence: 0,
           wellbeing: 0,
@@ -309,10 +311,11 @@ describe('MemberService', () => {
     it('should handle member with all values', async () => {
       const primaryUserId = await generateUser();
       const orgId = await generateOrg();
+      const phoneCarrier: PhoneCarrier = 'landline';
 
       const dischargeDate = generateDateOnly(date.future(1));
       const { member: createdMember } = await service.insert(
-        generateCreateMemberParams({ orgId, dischargeDate }),
+        { ...generateCreateMemberParams({ orgId, dischargeDate }), phoneCarrier },
         new Types.ObjectId(primaryUserId),
       );
       const memberId = createdMember.id;
@@ -340,6 +343,7 @@ describe('MemberService', () => {
           id: memberId,
           name: `${member.firstName} ${member.lastName}`,
           phone: member.phone,
+          phoneCarrier,
           dischargeDate: member.dischargeDate,
           adherence: 0,
           wellbeing: 0,
@@ -641,7 +645,7 @@ describe('MemberService', () => {
     const generateMemberAndAppointment = async ({ primaryUserId, orgId, numberOfAppointments }) => {
       const params = { firstName: faker.name.firstName(), lastName: faker.name.lastName() };
       const { member } = await service.insert(
-        generateCreateMemberParams({ orgId, ...params }),
+        generateInternalCreateMemberParams({ orgId, ...params }),
         primaryUserId,
       );
 
@@ -660,9 +664,7 @@ describe('MemberService', () => {
       const primaryUser = await modelUser.create(generateCreateUserParams());
       const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateCreateMemberParams({
-        orgId: org._id,
-      });
+      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id });
       createMemberParams.zipCode = undefined;
       const { member } = await service.insert(createMemberParams, primaryUser._id);
 
@@ -676,7 +678,7 @@ describe('MemberService', () => {
       const primaryUser = await modelUser.create(generateCreateUserParams());
       const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateCreateMemberParams({
+      const createMemberParams = generateInternalCreateMemberParams({
         orgId: org._id,
         sex: Sex.female,
         email: internet.email(),
@@ -705,7 +707,7 @@ describe('MemberService', () => {
       const primaryUser = await modelUser.create(generateCreateUserParams());
       const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateCreateMemberParams({ orgId: org._id });
+      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id });
 
       NotNullableMemberKeys.forEach((key) => {
         createMemberParams[key] = null;
@@ -724,17 +726,17 @@ describe('MemberService', () => {
     });
 
     it('should insert a member even with primaryUser not exists', async () => {
-      const createMemberParams: CreateMemberParams = generateCreateMemberParams({
+      const params: InternalCreateMemberParams = generateInternalCreateMemberParams({
         orgId: generateId(),
       });
-      const { member } = await service.insert(createMemberParams, new Types.ObjectId(generateId()));
+      const { member } = await service.insert(params, new Types.ObjectId(generateId()));
 
       expect(member?.id).not.toBeUndefined();
     });
 
     it('should fail to insert an already existing member', async () => {
       const primaryUserId = generateId();
-      const createMemberParams = generateCreateMemberParams({ orgId: generateId() });
+      const createMemberParams = generateInternalCreateMemberParams({ orgId: generateId() });
       await service.insert(createMemberParams, new Types.ObjectId(primaryUserId));
 
       await expect(
@@ -748,7 +750,7 @@ describe('MemberService', () => {
       const orgParams = generateOrgParams();
       const org = await modelOrg.create(orgParams);
 
-      const createMemberParams = generateCreateMemberParams({ orgId: org._id });
+      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id });
       const member = await service.insertControl(createMemberParams);
       const createdMember: any = await controlMemberModel.findById(member.id);
       compareMembers(createdMember, createMemberParams);
@@ -761,10 +763,10 @@ describe('MemberService', () => {
     });
 
     it('should fail to insert an already existing member', async () => {
-      const createMemberParams = generateCreateMemberParams({ orgId: generateId() });
-      await service.insertControl(createMemberParams);
+      const params = generateInternalCreateMemberParams({ orgId: generateId() });
+      await service.insertControl(params);
 
-      await expect(service.insertControl(createMemberParams)).rejects.toThrow(
+      await expect(service.insertControl(params)).rejects.toThrow(
         Errors.get(ErrorType.memberPhoneAlreadyExists),
       );
     });
@@ -772,7 +774,7 @@ describe('MemberService', () => {
     it('should remove not nullable optional params if null is passed', async () => {
       const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateCreateMemberParams({ orgId: org._id });
+      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id });
 
       NotNullableMemberKeys.forEach((key) => {
         createMemberParams[key] = null;
@@ -1751,7 +1753,10 @@ describe('MemberService', () => {
     orgId = orgId ? orgId : await generateOrg();
     userId = userId ? userId : await generateUser();
     const createMemberParams = generateCreateMemberParams({ orgId });
-    const { member } = await service.insert(createMemberParams, new Types.ObjectId(userId));
+    const { member } = await service.insert(
+      { ...createMemberParams, phoneCarrier: 'mobile' },
+      new Types.ObjectId(userId),
+    );
     return member.id;
   };
 

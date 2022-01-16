@@ -1,7 +1,9 @@
+import { formatEx } from '@lagunahealth/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { twilio } from 'config';
 import { Twilio, jwt } from 'twilio';
 import { ConfigsService, ExternalConfigs } from '.';
+import { LoggerService, PhoneCarrier } from '../common';
 
 @Injectable()
 export class TwilioService implements OnModuleInit {
@@ -15,7 +17,7 @@ export class TwilioService implements OnModuleInit {
   private readonly source;
   private readonly identity;
 
-  constructor(private readonly configsService: ConfigsService) {
+  constructor(private readonly configsService: ConfigsService, private logger: LoggerService) {
     this.source = twilio.get('source');
     this.identity = twilio.get('identity');
   }
@@ -46,5 +48,17 @@ export class TwilioService implements OnModuleInit {
 
   validateWebhook(token: string) {
     return token === this.webhookToken;
+  }
+
+  async getPhoneCarrier(phone: string): Promise<PhoneCarrier> {
+    try {
+      const { carrier } = await this.client.lookups
+        .phoneNumbers(phone)
+        .fetch({ type: ['carrier'] });
+      return carrier.type;
+    } catch (ex) {
+      this.logger.error({}, TwilioService.name, this.getPhoneCarrier.name, formatEx(ex));
+    }
+    return undefined;
   }
 }

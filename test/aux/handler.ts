@@ -11,7 +11,11 @@ import { Types } from 'mongoose';
 import { Consumer } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { Mutations, Queries } from '.';
-import { generateCreateMemberParams, generateCreateUserParams, generateOrgParams } from '..';
+import {
+  generateCreateUserParams,
+  generateInternalCreateMemberParams,
+  generateOrgParams,
+} from '..';
 import { AppModule } from '../../src/app.module';
 import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
 import { LoggerService, bearerToken } from '../../src/common';
@@ -149,7 +153,7 @@ export class Handler extends BaseHandler {
     );
     this.patientZero = (
       await this.memberService.insert(
-        generateCreateMemberParams({ authId: v4(), orgId: this.lagunaOrg.id }),
+        generateInternalCreateMemberParams({ authId: v4(), orgId: this.lagunaOrg.id }),
         Types.ObjectId(this.adminUser.id),
       )
     ).member;

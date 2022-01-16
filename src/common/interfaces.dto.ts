@@ -115,7 +115,6 @@ export enum RecordingType {
   video = 'video',
   phone = 'phone',
 }
-
 registerEnumType(RecordingType, {
   name: 'RecordingType',
 });
@@ -124,3 +123,5 @@ export enum MemberIdParamType {
   memberId = 'memberId',
   id = 'id',
 }
+
+export type PhoneCarrier = 'landline' | 'mobile' | 'voip';

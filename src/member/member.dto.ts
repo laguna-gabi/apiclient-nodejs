@@ -32,6 +32,7 @@ import {
   IsTypeMetadataProvided,
   IsValidZipCode,
   MemberRole,
+  PhoneCarrier,
   validPhoneExamples,
 } from '../common';
 import { Org } from '../org';
@@ -215,6 +216,10 @@ export class CreateMemberParams extends ExtraMemberParams {
   language?: Language;
 }
 
+export class InternalCreateMemberParams extends CreateMemberParams {
+  phoneCarrier: PhoneCarrier;
+}
+
 @InputType()
 export class UpdateMemberParams extends ExtraMemberParams {
   @Field(() => String)
@@ -260,6 +265,10 @@ export class UpdateMemberParams extends ExtraMemberParams {
     message: Errors.get(ErrorType.memberPhone),
   })
   phoneSecondary?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  phoneSecondaryCarrier?: PhoneCarrier;
 
   @Field(() => Address, { nullable: true })
   @IsOptional()
@@ -445,6 +454,10 @@ export class Member extends Identifier {
   @Field(() => String)
   phone: string;
 
+  @Prop()
+  @Field(() => String, { nullable: true })
+  phoneCarrier: PhoneCarrier;
+
   @Prop({ index: true, isNaN: true })
   @Field(() => String, { nullable: true })
   deviceId: string;
@@ -523,6 +536,10 @@ export class Member extends Identifier {
   })
   phoneSecondary?: string;
 
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  phoneSecondaryCarrier?: PhoneCarrier;
+
   @Prop()
   @Field(() => Date)
   createdAt: Date;
@@ -577,6 +594,9 @@ export class MemberSummary extends Identifier {
 
   @Field(() => String)
   phone: string;
+
+  @Field(() => String, { nullable: true })
+  phoneCarrier: PhoneCarrier;
 
   @Field(() => String, { nullable: true })
   dischargeDate?: string;

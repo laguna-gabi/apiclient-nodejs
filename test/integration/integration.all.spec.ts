@@ -696,6 +696,20 @@ describe('Integration tests: all', () => {
         .queries.getMemberConfig({ id: member.id });
       expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.123'));
     });
+
+    it('should set phoneCarrier and phoneSecondaryCarrier', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+
+      const updateMemberParams = generateUpdateMemberParams({ id: member.id, drg: '123' });
+      await handler.mutations.updateMember({ updateMemberParams });
+
+      const memberResult = await handler
+        .setContextUserId(member.id)
+        .queries.getMember({ id: member.id });
+      expect(memberResult.phoneCarrier).toEqual('mobile');
+      expect(memberResult.phoneSecondaryCarrier).toEqual('mobile');
+    });
   });
 
   describe('recordings', () => {
