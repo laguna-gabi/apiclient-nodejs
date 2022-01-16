@@ -3,6 +3,7 @@ import * as config from 'config';
 import { general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow } from 'date-fns';
 import * as faker from 'faker';
+import { v4 } from 'uuid';
 import {
   Appointment,
   AppointmentMethod,
@@ -39,7 +40,6 @@ import {
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
 } from '../index';
-import { v4 } from 'uuid';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -670,27 +670,6 @@ describe('Integration tests: all', () => {
         .queries.getMember({ id: member.id });
       expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
       expect(memberResult.nurseNotes).toEqual(setGeneralNotesParams.nurseNotes);
-    });
-
-    it('should be able to set null note and nurseNotes for a member', async () => {
-      const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
-
-      const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: member.id });
-      await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
-
-      let memberResult = await handler
-        .setContextUserId(member.id)
-        .queries.getMember({ id: member.id });
-      expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
-
-      delete setGeneralNotesParams.note;
-      delete setGeneralNotesParams.nurseNotes;
-      await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
-
-      memberResult = await handler.setContextUserId(member.id).queries.getMember({ id: member.id });
-      expect(memberResult.generalNotes).toBeNull();
-      expect(memberResult.nurseNotes).toBeNull();
     });
   });
 

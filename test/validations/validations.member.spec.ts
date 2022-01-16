@@ -226,12 +226,10 @@ describe('Validations - member', () => {
     });
 
     it('should throw error on non existing member from mobile', async () => {
-      await handler
-        .setContextUserId(generateId())
-        .queries.getMember({
-          id: generateId(),
-          invalidFieldsError: Errors.get(ErrorType.memberNotFound),
-        });
+      await handler.setContextUserId(generateId()).queries.getMember({
+        id: generateId(),
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+      });
     });
 
     it('rest: should fail to create member if phone already exists', async () => {
@@ -721,14 +719,18 @@ describe('Validations - member', () => {
       });
     });
 
-    test.each`
-      field                  | invalid
-      ${{ memberId: '123' }} | ${[Errors.get(ErrorType.memberIdInvalid)]}
-    `(`should fail to set notes since $input is not a valid type`, async (params) => {
-      const setGeneralNotesParams = generateSetGeneralNotesParams({ ...params.field });
+    it(`should fail to set notes since memberId is not a valid type`, async () => {
+      const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: '123' });
       await handler.mutations.setGeneralNotes({
         setGeneralNotesParams,
-        invalidFieldsErrors: params.invalid,
+        invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)],
+      });
+    });
+
+    it(`should fail to set notes since $input does not contain notes or nurseNotes`, async () => {
+      await handler.mutations.setGeneralNotes({
+        setGeneralNotesParams: { memberId: generateId() },
+        invalidFieldsErrors: [Errors.get(ErrorType.memberNotesAndNurseNotesNotProvided)],
       });
     });
   });

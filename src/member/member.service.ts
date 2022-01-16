@@ -615,14 +615,16 @@ export class MemberService extends BaseService {
    ****************************************** General notes ****************************************
    ************************************************************************************************/
   async setGeneralNotes(setGeneralNotesParams: SetGeneralNotesParams): Promise<void> {
+    const setParams = omitBy(
+      {
+        generalNotes: setGeneralNotesParams.note,
+        nurseNotes: setGeneralNotesParams.nurseNotes,
+      },
+      isNil,
+    );
     const result = await this.memberModel.updateOne(
       { _id: new Types.ObjectId(setGeneralNotesParams.memberId) },
-      {
-        $set: {
-          generalNotes: setGeneralNotesParams.note,
-          nurseNotes: setGeneralNotesParams.nurseNotes,
-        },
-      },
+      { $set: setParams },
     );
 
     if (result.nModified === 0) {

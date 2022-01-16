@@ -26,6 +26,7 @@ import {
   Errors,
   Identifier,
   IsNotChat,
+  IsNoteOrNurseNoteProvided,
   IsObjectId,
   IsStringDate,
   IsTypeMetadataProvided,
@@ -300,6 +301,7 @@ export class SetGeneralNotesParams {
   note?: string;
 
   @Field(() => String, { nullable: true })
+  @IsNoteOrNurseNoteProvided({ message: Errors.get(ErrorType.memberNotesAndNurseNotesNotProvided) })
   nurseNotes?: string;
 }
 

@@ -204,3 +204,18 @@ export function IsObjectId(options?: ValidationOptions) {
     });
   };
 }
+
+export function IsNoteOrNurseNoteProvided(options?: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(object, args: ValidationArguments) {
+          return args.object['note'] || args.object['nurseNotes'];
+        },
+      },
+    });
+  };
+}
