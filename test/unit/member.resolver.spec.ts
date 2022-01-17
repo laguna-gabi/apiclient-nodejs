@@ -1,16 +1,10 @@
 import {
-  ContentKey,
-  CustomKey,
   IEventNotifySlack,
-  InnerQueueTypes,
-  InternalKey,
   NotificationType,
   Platform,
   QueueType,
   SlackChannel,
   SlackIcon,
-  generateDeleteDispatchMock,
-  generateDispatchId,
   mockLogger,
   mockProcessWarnings,
 } from '@lagunahealth/pandora';
@@ -29,6 +23,7 @@ import {
   IEventOnUpdatedMemberPlatform,
   LoggerService,
   MemberRole,
+  PhoneType,
   RegisterForNotificationParams,
   StorageType,
   UserRole,
@@ -53,7 +48,13 @@ import {
   TaskStatus,
   defaultMemberParams,
 } from '../../src/member';
-import { CognitoService, FeatureFlagService, OneSignal, StorageService } from '../../src/providers';
+import {
+  CognitoService,
+  FeatureFlagService,
+  OneSignal,
+  StorageService,
+  TwilioService,
+} from '../../src/providers';
 import { UserService } from '../../src/user';
 import {
   dbDisconnect,
@@ -96,6 +97,7 @@ describe('MemberResolver', () => {
   let communicationService: CommunicationService;
   let eventEmitter: EventEmitter2;
   let featureFlagService: FeatureFlagService;
+  let twilioService: TwilioService;
   let spyOnEventEmitter;
 
   beforeAll(async () => {
@@ -116,6 +118,7 @@ describe('MemberResolver', () => {
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
     featureFlagService = module.get<FeatureFlagService>(FeatureFlagService);
+    twilioService = module.get<TwilioService>(TwilioService);
     mockLogger(module.get<LoggerService>(LoggerService));
   });
 
@@ -135,6 +138,7 @@ describe('MemberResolver', () => {
     let spyOnUserServiceGetUser;
     let spyOnServiceGetMemberConfig;
     let spyOnFeatureFlagControlGroup;
+    let spyOnTwilioGetPhoneType;
 
     beforeEach(() => {
       spyOnServiceInsert = jest.spyOn(service, 'insert');
@@ -143,6 +147,7 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser = jest.spyOn(userService, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnFeatureFlagControlGroup = jest.spyOn(featureFlagService, 'isControlGroup');
+      spyOnTwilioGetPhoneType = jest.spyOn(twilioService, 'getPhoneType');
     });
 
     afterEach(() => {
@@ -153,6 +158,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig.mockReset();
       spyOnEventEmitter.mockReset();
       spyOnFeatureFlagControlGroup.mockReset();
+      spyOnTwilioGetPhoneType.mockReset();
     });
 
     it('should create a member', async () => {
@@ -162,20 +168,23 @@ describe('MemberResolver', () => {
         memberId: generateObjectId(member.id),
         platform: Platform.android,
       });
+      const phoneType: PhoneType = 'mobile';
       spyOnServiceInsert.mockImplementationOnce(async () => ({ member, memberConfig }));
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetAvailableUser.mockImplementationOnce(async () => member.primaryUserId);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => false);
+      spyOnTwilioGetPhoneType.mockResolvedValueOnce(phoneType);
 
       const params = generateCreateMemberParams({ orgId: generateId() });
       await resolver.createMember(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
-      expect(spyOnServiceInsert).toBeCalledWith(params, member.primaryUserId);
+      expect(spyOnServiceInsert).toBeCalledWith({ ...params, phoneType }, member.primaryUserId);
       expect(spyOnServiceGetAvailableUser).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
+      expect(spyOnTwilioGetPhoneType).toBeCalledWith(params.phone);
       const eventNewMemberParams: IEventOnNewMember = {
         member,
         user,
@@ -216,18 +225,20 @@ describe('MemberResolver', () => {
         userId: member.primaryUserId,
         platform: Platform.android,
       };
+      const phoneType: PhoneType = 'landline';
       spyOnServiceInsert.mockImplementationOnce(async () => ({ member, memberConfig }));
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnServiceGetAvailableUser.mockImplementationOnce(async () => member.primaryUserId);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       //forcing true to be sure it won't be control member, even if control rolled true.
       spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => true);
+      spyOnTwilioGetPhoneType.mockResolvedValueOnce(phoneType);
 
       const params = generateCreateMemberParams({ orgId: generateId(), userId: user.id });
       await resolver.createMember(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
-      expect(spyOnServiceInsert).toBeCalledWith(params, Types.ObjectId(user.id));
+      expect(spyOnServiceInsert).toBeCalledWith({ ...params, phoneType }, Types.ObjectId(user.id));
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
       const eventNewMemberParams: IEventOnNewMember = {
@@ -249,14 +260,16 @@ describe('MemberResolver', () => {
 
     it('should create a control member', async () => {
       const member = mockGenerateMember();
+      const phoneType: PhoneType = 'mobile';
       spyOnServiceInsertControl.mockImplementationOnce(async () => member);
       spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => true);
+      spyOnTwilioGetPhoneType.mockResolvedValueOnce(phoneType);
 
       const params = generateCreateMemberParams({ orgId: generateId() });
       await resolver.createMember(params);
 
       expect(spyOnServiceInsertControl).toBeCalledTimes(1);
-      expect(spyOnServiceInsertControl).toBeCalledWith(params);
+      expect(spyOnServiceInsertControl).toBeCalledWith({ ...params, phoneType });
       const eventNotifyQueue: IEventNotifyQueue = {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ member })),
@@ -280,21 +293,44 @@ describe('MemberResolver', () => {
 
   describe('updateMember', () => {
     let spyOnServiceUpdate;
+    let spyOnTwilioGetPhoneType;
+
     beforeEach(() => {
       spyOnServiceUpdate = jest.spyOn(service, 'update');
+      spyOnTwilioGetPhoneType = jest.spyOn(twilioService, 'getPhoneType');
     });
 
     afterEach(() => {
       spyOnServiceUpdate.mockReset();
+      spyOnTwilioGetPhoneType.mockReset();
     });
 
-    it('should update a member', async () => {
+    test.each(['mobile', 'landline', 'voip'])(
+      `should update a member with phoneSecondary and phoneSecondaryType=%p`,
+      async (phoneSecondaryType) => {
+        const updateMemberParams = generateUpdateMemberParams();
+        spyOnServiceUpdate.mockImplementationOnce(async () => ({ ...updateMemberParams }));
+        spyOnTwilioGetPhoneType.mockResolvedValueOnce(phoneSecondaryType);
+
+        await resolver.updateMember(updateMemberParams);
+
+        expect(spyOnServiceUpdate).toBeCalledTimes(1);
+        expect(spyOnServiceUpdate).toBeCalledWith({
+          ...updateMemberParams,
+          phoneSecondaryType,
+        });
+      },
+    );
+
+    it('should update a member without phoneSecondary and phoneSecondaryType', async () => {
       const updateMemberParams = generateUpdateMemberParams();
-      spyOnServiceUpdate.mockImplementationOnce(async () => updateMemberParams);
+      updateMemberParams.phoneSecondary = undefined;
+      spyOnServiceUpdate.mockImplementationOnce(async () => ({ ...updateMemberParams }));
 
       await resolver.updateMember(updateMemberParams);
 
       expect(spyOnServiceUpdate).toBeCalledTimes(1);
+      expect(spyOnTwilioGetPhoneType).not.toBeCalled();
       expect(spyOnServiceUpdate).toBeCalledWith(updateMemberParams);
     });
   });
@@ -312,18 +348,10 @@ describe('MemberResolver', () => {
       spyOnServiceGetByOrg.mockReset();
     });
 
-    it('should get a member for a given context', async () => {
-      const member = mockGenerateMember();
-      spyOnServiceGet.mockImplementationOnce(async () => member);
-      const result = await resolver.getMember([MemberRole.member], member.id);
-
-      expect(result).toEqual(member);
-    });
-
     it('should get a member for a given id', async () => {
       const member = mockGenerateMember();
       spyOnServiceGet.mockImplementationOnce(async () => member);
-      const result = await resolver.getMember([MemberRole.member], member.id);
+      const result = await resolver.getMember(member.id);
       expect(result).toEqual(member);
     });
 
@@ -331,7 +359,7 @@ describe('MemberResolver', () => {
       spyOnServiceGet.mockImplementationOnce(async () => {
         throw Error(Errors.get(ErrorType.memberNotFound));
       });
-      await expect(resolver.getMember([MemberRole.member], generateId())).rejects.toThrow(
+      await expect(resolver.getMember(generateId())).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
     });
@@ -340,7 +368,7 @@ describe('MemberResolver', () => {
       spyOnServiceGet.mockImplementationOnce(async () => {
         throw Error(Errors.get(ErrorType.memberNotFound));
       });
-      await expect(resolver.getMember([MemberRole.member], 'not-valid')).rejects.toThrow(
+      await expect(resolver.getMember('not-valid')).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
     });
@@ -349,14 +377,14 @@ describe('MemberResolver', () => {
       const member: any = mockGenerateMember();
       delete member.zipCode;
       spyOnServiceGet.mockResolvedValue(member);
-      const result = await resolver.getMember([MemberRole.member], member.id);
+      const result = await resolver.getMember(member.id);
       expect(result.zipCode).toEqual(member.org.zipCode);
     });
 
     it('should calculate utcDelta if zipCode exists', async () => {
       const member: any = mockGenerateMember();
       spyOnServiceGet.mockResolvedValue(member);
-      const result = await resolver.getMember([MemberRole.member], member.id);
+      const result = await resolver.getMember(member.id);
       expect(result.utcDelta).toBeLessThan(0);
     });
   });
@@ -436,11 +464,16 @@ describe('MemberResolver', () => {
     let spyOnCognitoServiceDisableMember;
     let spyOnCommunicationFreezeGroupChannel;
     let spyOnOneSignalUnregister;
+    let spyOnDeleteSchedules;
+
     beforeEach(() => {
       spyOnServiceMoveMemberToArchive = jest.spyOn(service, 'moveMemberToArchive');
       spyOnCognitoServiceDisableMember = jest.spyOn(cognitoService, 'disableMember');
       spyOnCommunicationFreezeGroupChannel = jest.spyOn(communicationService, 'freezeGroupChannel');
       spyOnOneSignalUnregister = jest.spyOn(oneSignal, 'unregister');
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      spyOnDeleteSchedules = jest.spyOn(resolver, 'deleteSchedules');
     });
 
     afterEach(() => {
@@ -448,6 +481,7 @@ describe('MemberResolver', () => {
       spyOnCognitoServiceDisableMember.mockReset();
       spyOnCommunicationFreezeGroupChannel.mockReset();
       spyOnOneSignalUnregister.mockReset();
+      spyOnDeleteSchedules.mockReset();
       spyOnEventEmitter.mockReset();
     });
 
@@ -476,7 +510,8 @@ describe('MemberResolver', () => {
       expect(spyOnOneSignalUnregister).toBeCalledWith(memberConfig);
 
       expect(spyOnEventEmitter).toBeCalledTimes(6);
-      expectDeleteArchiveMember(member.id);
+      expect(spyOnDeleteSchedules).toBeCalledWith({ memberId: member.id });
+      // expectDeleteArchiveMember(member.id);
     });
   });
 
@@ -488,6 +523,7 @@ describe('MemberResolver', () => {
     let spyOnOneSignalUnregister;
     let spyOnCognitoServiceDeleteMember;
     let spyOnStorageServiceDeleteMember;
+    let spyOnDeleteSchedules;
 
     beforeEach(() => {
       spyOnServiceDeleteMember = jest.spyOn(service, 'deleteMember');
@@ -503,6 +539,9 @@ describe('MemberResolver', () => {
       spyOnOneSignalUnregister = jest.spyOn(oneSignal, 'unregister');
       spyOnCognitoServiceDeleteMember = jest.spyOn(cognitoService, 'deleteMember');
       spyOnStorageServiceDeleteMember = jest.spyOn(storage, 'deleteMember');
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      spyOnDeleteSchedules = jest.spyOn(resolver, 'deleteSchedules');
     });
 
     afterEach(() => {
@@ -514,6 +553,7 @@ describe('MemberResolver', () => {
       spyOnOneSignalUnregister.mockReset();
       spyOnStorageServiceDeleteMember.mockReset();
       spyOnEventEmitter.mockReset();
+      spyOnDeleteSchedules.mockReset();
     });
 
     it('should be able to delete a member and his/her cognito identification', async () => {
@@ -545,7 +585,9 @@ describe('MemberResolver', () => {
       spyOnCognitoServiceDeleteMember.mockImplementationOnce(() => undefined);
       spyOnOneSignalUnregister.mockImplementationOnce(() => undefined);
       spyOnStorageServiceDeleteMember.mockImplementationOnce(() => undefined);
+      spyOnDeleteSchedules.mockImplementationOnce(() => undefined);
 
+      spyOnEventEmitter.mockReset();
       const result = await resolver.deleteMember(member.id);
       await delay(500);
 
@@ -559,51 +601,10 @@ describe('MemberResolver', () => {
       }
       expect(spyOnStorageServiceDeleteMember).toBeCalledWith(member.id);
 
-      expect(spyOnEventEmitter).toBeCalledTimes(7);
-      expectDeleteArchiveMember(member.id);
+      expect(spyOnDeleteSchedules).toBeCalledWith({ memberId: member.id });
+      expect(spyOnEventEmitter).toBeCalledTimes(2);
     };
   });
-
-  const expectDeleteArchiveMember = (memberId: string) => {
-    const queueEventParams: IEventNotifyQueue = {
-      type: QueueType.notifications,
-      message: JSON.stringify({ type: InnerQueueTypes.deleteClientSettings, id: memberId }),
-    };
-    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, queueEventParams);
-    const generateQueueParams = (contentKey: ContentKey): IEventNotifyQueue => {
-      return {
-        type: QueueType.notifications,
-        message: JSON.stringify(
-          generateDeleteDispatchMock({ dispatchId: generateDispatchId(contentKey, memberId) }),
-        ),
-      };
-    };
-    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
-      2,
-      EventType.notifyQueue,
-      generateQueueParams(InternalKey.newMemberNudge),
-    );
-    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
-      3,
-      EventType.notifyQueue,
-      generateQueueParams(InternalKey.newRegisteredMember),
-    );
-    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
-      4,
-      EventType.notifyQueue,
-      generateQueueParams(InternalKey.newRegisteredMemberNudge),
-    );
-    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
-      5,
-      EventType.notifyQueue,
-      generateQueueParams(InternalKey.logReminder),
-    );
-    expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
-      6,
-      EventType.notifyQueue,
-      generateQueueParams(CustomKey.customContent),
-    );
-  };
 
   describe('getMemberUploadDischargeDocumentsLinks', () => {
     let spyOnServiceGet;
@@ -671,15 +672,11 @@ describe('MemberResolver', () => {
       spyOnStorage.mockReset();
     });
 
-    it('should get a member download discharge documents links for a given context', async () => {
+    it('should get a member download discharge documents links for a given memberId', async () => {
       const member = mockGenerateMember();
       spyOnServiceGet.mockImplementationOnce(async () => member);
       spyOnStorage.mockImplementation(async () => 'https://aws-bucket-path/extras');
-      await resolver.getMemberDownloadDischargeDocumentsLinks(
-        [MemberRole.member],
-        member.id,
-        member.id,
-      );
+      await resolver.getMemberDownloadDischargeDocumentsLinks(member.id);
 
       checkDocumentsCall(member, spyOnServiceGet, spyOnStorage);
     });
@@ -689,13 +686,9 @@ describe('MemberResolver', () => {
         throw Error(Errors.get(ErrorType.memberNotFound));
       });
 
-      await expect(
-        resolver.getMemberDownloadDischargeDocumentsLinks(
-          [MemberRole.member],
-          generateId(),
-          generateId(),
-        ),
-      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+      await expect(resolver.getMemberDownloadDischargeDocumentsLinks(generateId())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
     });
   });
 
@@ -740,6 +733,110 @@ describe('MemberResolver', () => {
 
       await expect(
         resolver.getMemberUploadRecordingLink({ id: generateId(), memberId: generateId() }),
+      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+    });
+  });
+
+  describe('getMemberMultipartUploadRecordingLink', () => {
+    let spyOnServiceGet;
+    let spyOnStorageUpload;
+
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'get');
+      spyOnStorageUpload = jest.spyOn(storage, 'getMultipartUploadUrl');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+      spyOnStorageUpload.mockReset();
+    });
+
+    it('should get a member multipart upload recording link', async () => {
+      const member = mockGenerateMember();
+      spyOnServiceGet.mockImplementationOnce(async () => member);
+      spyOnStorageUpload.mockImplementation(async () => 'https://aws-bucket-path/extras');
+
+      const id = generateId();
+      await resolver.getMemberMultipartUploadRecordingLink({
+        id,
+        memberId: member.id,
+        partNumber: 0,
+        uploadId: 'SOME_ID',
+      });
+
+      expect(spyOnServiceGet).toBeCalledTimes(1);
+      expect(spyOnServiceGet).toBeCalledWith(member.id);
+      expect(spyOnStorageUpload).toBeCalledWith({
+        storageType: StorageType.recordings,
+        memberId: member.id,
+        partNumber: 0,
+        id,
+        uploadId: 'SOME_ID',
+      });
+    });
+
+    it('should throw exception on a non valid member', async () => {
+      spyOnServiceGet.mockImplementationOnce(async () => {
+        throw Error(Errors.get(ErrorType.memberNotFound));
+      });
+
+      await expect(
+        resolver.getMemberMultipartUploadRecordingLink({
+          id: generateId(),
+          memberId: generateId(),
+          partNumber: 0,
+        }),
+      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+    });
+  });
+
+  describe('completeMultipartUpload', () => {
+    let spyOnServiceGet;
+    let spyOnStorageComplete;
+
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'get');
+      spyOnStorageComplete = jest.spyOn(storage, 'completeMultipartUpload');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+      spyOnStorageComplete.mockReset();
+    });
+
+    it('should get a member multipart upload recording link', async () => {
+      const member = mockGenerateMember();
+      spyOnServiceGet.mockImplementationOnce(async () => member);
+      spyOnStorageComplete.mockImplementation(async () => true);
+
+      const id = generateId();
+      await resolver.completeMultipartUpload({
+        id,
+        memberId: member.id,
+        uploadId: 'SOME_ID',
+      });
+
+      expect(spyOnServiceGet).toBeCalledTimes(1);
+      expect(spyOnServiceGet).toBeCalledWith(member.id);
+      expect(spyOnStorageComplete).toBeCalledWith({
+        storageType: StorageType.recordings,
+        memberId: member.id,
+        id,
+        uploadId: 'SOME_ID',
+      });
+    });
+
+    it('should throw exception on a non valid member', async () => {
+      spyOnServiceGet.mockImplementationOnce(async () => {
+        throw Error(Errors.get(ErrorType.memberNotFound));
+      });
+
+      await expect(
+        resolver.completeMultipartUpload({
+          id: generateId(),
+          memberId: generateId(),
+          uploadId: 'SOME_ID',
+        }),
       ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
     });
   });
@@ -962,20 +1059,9 @@ describe('MemberResolver', () => {
     it('should get all caregiver for a member', async () => {
       const memberId = generateId();
 
-      await resolver.getCaregivers(memberId, [MemberRole.member]);
+      await resolver.getCaregivers(memberId);
       expect(spyOnGetCaregiversByMemberIdServiceMethod).toBeCalledTimes(1);
       expect(spyOnGetCaregiversByMemberIdServiceMethod).toBeCalledWith(memberId);
-    });
-
-    it('should fail to get caregivers for a member due to inconsistent member id', async () => {
-      const memberId1 = generateId();
-      const memberId2 = generateId();
-
-      await expect(
-        resolver.getCaregivers(memberId1, [MemberRole.member], memberId2),
-      ).rejects.toThrow(Errors.get(ErrorType.memberIdInconsistent));
-
-      expect(spyOnGetCaregiversByMemberIdServiceMethod).not.toHaveBeenCalled();
     });
 
     it('should delete a caregiver', async () => {
@@ -1638,11 +1724,7 @@ describe('MemberResolver', () => {
     it('should call MemberConfig', async () => {
       const memberConfig = mockGenerateMemberConfig();
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
-      await resolver.getMemberConfig(
-        [MemberRole.member],
-        memberConfig.memberId.toString(),
-        memberConfig.memberId.toString(),
-      );
+      await resolver.getMemberConfig(memberConfig.memberId.toString());
 
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(memberConfig.memberId.toString());

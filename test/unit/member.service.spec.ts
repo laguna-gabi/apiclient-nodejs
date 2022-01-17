@@ -14,6 +14,7 @@ import { datatype, date, internet } from 'faker';
 import { isNil, omitBy } from 'lodash';
 import { Model, Types, model } from 'mongoose';
 import { performance } from 'perf_hooks';
+import { v4 } from 'uuid';
 import {
   Appointment,
   AppointmentDocument,
@@ -21,16 +22,16 @@ import {
   AppointmentModule,
   AppointmentStatus,
 } from '../../src/appointment';
-import { ErrorType, Errors, LoggerService, RecordingType } from '../../src/common';
+import { ErrorType, Errors, LoggerService, PhoneType, RecordingType } from '../../src/common';
 import {
   ActionItem,
   ActionItemDto,
   ControlMember,
   ControlMemberDto,
-  CreateMemberParams,
   Goal,
   GoalDto,
   ImageFormat,
+  InternalCreateMemberParams,
   Journal,
   JournalDto,
   Member,
@@ -58,6 +59,7 @@ import {
   generateDateOnly,
   generateGetMemberUploadJournalImageLinkParams,
   generateId,
+  generateInternalCreateMemberParams,
   generateObjectId,
   generateOrgParams,
   generateRequestAppointmentParams,
@@ -71,7 +73,6 @@ import {
   generateUpdateRecordingReviewParams,
   generateUpdateTaskStatusParams,
 } from '../index';
-import { v4 } from 'uuid';
 
 describe('MemberService', () => {
   let module: TestingModule;
@@ -291,6 +292,7 @@ describe('MemberService', () => {
           id: memberId,
           name: `${member.firstName} ${member.lastName}`,
           phone: member.phone,
+          phoneType: 'mobile',
           dischargeDate: null,
           adherence: 0,
           wellbeing: 0,
@@ -309,10 +311,11 @@ describe('MemberService', () => {
     it('should handle member with all values', async () => {
       const primaryUserId = await generateUser();
       const orgId = await generateOrg();
+      const phoneType: PhoneType = 'landline';
 
       const dischargeDate = generateDateOnly(date.future(1));
       const { member: createdMember } = await service.insert(
-        generateCreateMemberParams({ orgId, dischargeDate }),
+        { ...generateCreateMemberParams({ orgId, dischargeDate }), phoneType },
         new Types.ObjectId(primaryUserId),
       );
       const memberId = createdMember.id;
@@ -340,6 +343,7 @@ describe('MemberService', () => {
           id: memberId,
           name: `${member.firstName} ${member.lastName}`,
           phone: member.phone,
+          phoneType,
           dischargeDate: member.dischargeDate,
           adherence: 0,
           wellbeing: 0,
@@ -641,7 +645,7 @@ describe('MemberService', () => {
     const generateMemberAndAppointment = async ({ primaryUserId, orgId, numberOfAppointments }) => {
       const params = { firstName: faker.name.firstName(), lastName: faker.name.lastName() };
       const { member } = await service.insert(
-        generateCreateMemberParams({ orgId, ...params }),
+        generateInternalCreateMemberParams({ orgId, ...params }),
         primaryUserId,
       );
 
@@ -660,9 +664,7 @@ describe('MemberService', () => {
       const primaryUser = await modelUser.create(generateCreateUserParams());
       const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateCreateMemberParams({
-        orgId: org._id,
-      });
+      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id });
       createMemberParams.zipCode = undefined;
       const { member } = await service.insert(createMemberParams, primaryUser._id);
 
@@ -676,7 +678,7 @@ describe('MemberService', () => {
       const primaryUser = await modelUser.create(generateCreateUserParams());
       const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateCreateMemberParams({
+      const createMemberParams = generateInternalCreateMemberParams({
         orgId: org._id,
         sex: Sex.female,
         email: internet.email(),
@@ -705,7 +707,7 @@ describe('MemberService', () => {
       const primaryUser = await modelUser.create(generateCreateUserParams());
       const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateCreateMemberParams({ orgId: org._id });
+      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id });
 
       NotNullableMemberKeys.forEach((key) => {
         createMemberParams[key] = null;
@@ -724,17 +726,17 @@ describe('MemberService', () => {
     });
 
     it('should insert a member even with primaryUser not exists', async () => {
-      const createMemberParams: CreateMemberParams = generateCreateMemberParams({
+      const params: InternalCreateMemberParams = generateInternalCreateMemberParams({
         orgId: generateId(),
       });
-      const { member } = await service.insert(createMemberParams, new Types.ObjectId(generateId()));
+      const { member } = await service.insert(params, new Types.ObjectId(generateId()));
 
       expect(member?.id).not.toBeUndefined();
     });
 
     it('should fail to insert an already existing member', async () => {
       const primaryUserId = generateId();
-      const createMemberParams = generateCreateMemberParams({ orgId: generateId() });
+      const createMemberParams = generateInternalCreateMemberParams({ orgId: generateId() });
       await service.insert(createMemberParams, new Types.ObjectId(primaryUserId));
 
       await expect(
@@ -748,7 +750,7 @@ describe('MemberService', () => {
       const orgParams = generateOrgParams();
       const org = await modelOrg.create(orgParams);
 
-      const createMemberParams = generateCreateMemberParams({ orgId: org._id });
+      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id });
       const member = await service.insertControl(createMemberParams);
       const createdMember: any = await controlMemberModel.findById(member.id);
       compareMembers(createdMember, createMemberParams);
@@ -761,10 +763,10 @@ describe('MemberService', () => {
     });
 
     it('should fail to insert an already existing member', async () => {
-      const createMemberParams = generateCreateMemberParams({ orgId: generateId() });
-      await service.insertControl(createMemberParams);
+      const params = generateInternalCreateMemberParams({ orgId: generateId() });
+      await service.insertControl(params);
 
-      await expect(service.insertControl(createMemberParams)).rejects.toThrow(
+      await expect(service.insertControl(params)).rejects.toThrow(
         Errors.get(ErrorType.memberPhoneAlreadyExists),
       );
     });
@@ -772,7 +774,7 @@ describe('MemberService', () => {
     it('should remove not nullable optional params if null is passed', async () => {
       const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateCreateMemberParams({ orgId: org._id });
+      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id });
 
       NotNullableMemberKeys.forEach((key) => {
         createMemberParams[key] = null;
@@ -1017,7 +1019,7 @@ describe('MemberService', () => {
   });
 
   describe('setGeneralNotes', () => {
-    it('should set general notes for a member', async () => {
+    it('should set general notes and nurse notes for a member', async () => {
       const memberId = await generateMember();
 
       const generalNotes = generateSetGeneralNotesParams({ memberId });
@@ -1033,6 +1035,124 @@ describe('MemberService', () => {
       await expect(service.setGeneralNotes(generalNotes)).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
+    });
+
+    it('should set general notes', async () => {
+      const memberId = await generateMember();
+
+      const notes = generateSetGeneralNotesParams({ memberId });
+      delete notes.nurseNotes;
+      await service.setGeneralNotes(notes);
+
+      const result: any = await memberModel.findById(memberId);
+
+      expect(result.generalNotes).toEqual(notes.note);
+      expect(result.nurseNotes).toBeUndefined();
+    });
+
+    it('should set nurse notes', async () => {
+      const memberId = await generateMember();
+
+      const notes = generateSetGeneralNotesParams({ memberId });
+      delete notes.note;
+      await service.setGeneralNotes(notes);
+
+      const result: any = await memberModel.findById(memberId);
+
+      expect(result.nurseNotes).toEqual(notes.nurseNotes);
+      expect(result.generalNotes).toBeUndefined();
+    });
+
+    it('should override general notes when provided', async () => {
+      const memberId = await generateMember();
+
+      const notes1 = generateSetGeneralNotesParams({ memberId });
+      await service.setGeneralNotes(notes1);
+
+      const notes2 = generateSetGeneralNotesParams({ memberId });
+      notes2.note = faker.lorem.sentence();
+      delete notes2.nurseNotes;
+      await service.setGeneralNotes(notes2);
+
+      const result: any = await memberModel.findById(memberId);
+
+      expect(result.nurseNotes).toEqual(notes1.nurseNotes);
+      expect(result.generalNotes).toEqual(notes2.note);
+    });
+
+    it('should override nurse notes when provided', async () => {
+      const memberId = await generateMember();
+
+      const notes1 = generateSetGeneralNotesParams({ memberId });
+      await service.setGeneralNotes(notes1);
+
+      const notes2 = generateSetGeneralNotesParams({ memberId });
+      notes2.nurseNotes = faker.lorem.sentence();
+      delete notes2.note;
+      await service.setGeneralNotes(notes2);
+
+      const result: any = await memberModel.findById(memberId);
+
+      expect(result.nurseNotes).toEqual(notes2.nurseNotes);
+      expect(result.generalNotes).toEqual(notes1.note);
+    });
+
+    it('should set notes and then nurse notes', async () => {
+      const memberId = await generateMember();
+
+      const notes1 = generateSetGeneralNotesParams({ memberId });
+      delete notes1.nurseNotes;
+      await service.setGeneralNotes(notes1);
+
+      const notes2 = generateSetGeneralNotesParams({ memberId });
+      delete notes2.note;
+      await service.setGeneralNotes(notes2);
+
+      const result: any = await memberModel.findById(memberId);
+
+      expect(result.nurseNotes).toEqual(notes2.nurseNotes);
+      expect(result.generalNotes).toEqual(notes1.note);
+    });
+
+    it('should set nurse notes and then general notes', async () => {
+      const memberId = await generateMember();
+
+      const notes1 = generateSetGeneralNotesParams({ memberId });
+      delete notes1.note;
+      await service.setGeneralNotes(notes1);
+
+      const notes2 = generateSetGeneralNotesParams({ memberId });
+      delete notes2.nurseNotes;
+      await service.setGeneralNotes(notes2);
+
+      const result: any = await memberModel.findById(memberId);
+
+      expect(result.nurseNotes).toEqual(notes1.nurseNotes);
+      expect(result.generalNotes).toEqual(notes2.note);
+    });
+
+    it('should be able to set empty notes or generalNotes similar to harmony calls', async () => {
+      const memberId = await generateMember();
+
+      const params1 = generateSetGeneralNotesParams({ memberId });
+      await service.setGeneralNotes(params1);
+      let result: any = await memberModel.findById(memberId);
+      expect(result.nurseNotes).toEqual(params1.nurseNotes);
+      expect(result.generalNotes).toEqual(params1.note);
+
+      const params2 = generateSetGeneralNotesParams({ memberId, note: '' });
+      delete params2.nurseNotes;
+      await service.setGeneralNotes(params2);
+      result = await memberModel.findById(memberId);
+      expect(result.nurseNotes).toEqual(params1.nurseNotes);
+      expect(result.generalNotes).toEqual(params2.note);
+
+      const params3 = generateSetGeneralNotesParams({ memberId, nurseNotes: '' });
+      delete params3.note;
+      await service.setGeneralNotes(params3);
+      result = await memberModel.findById(memberId);
+      expect(result.nurseNotes).toEqual(params3.nurseNotes);
+      expect(result.generalNotes).toEqual(params2.note);
     });
   });
 
@@ -1633,7 +1753,10 @@ describe('MemberService', () => {
     orgId = orgId ? orgId : await generateOrg();
     userId = userId ? userId : await generateUser();
     const createMemberParams = generateCreateMemberParams({ orgId });
-    const { member } = await service.insert(createMemberParams, new Types.ObjectId(userId));
+    const { member } = await service.insert(
+      { ...createMemberParams, phoneType: 'mobile' },
+      new Types.ObjectId(userId),
+    );
     return member.id;
   };
 

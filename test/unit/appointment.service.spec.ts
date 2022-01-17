@@ -370,6 +370,35 @@ describe('AppointmentService', () => {
       expect(appointment2.id).not.toEqual(appointment3.id);
     });
 
+    it('should allow scheduling overlapping a deleted appointment', async () => {
+      const startDate = new Date();
+      const memberId = generateId();
+      const userId = generateId();
+
+      const schedule = async (start: Date): Promise<Appointment> => {
+        const appointmentParams = generateScheduleAppointmentParams({
+          memberId,
+          userId,
+          start,
+          end: addMinutes(start, 30),
+        });
+        const result = await service.schedule(appointmentParams);
+        validateNewAppointmentEvent(
+          appointmentParams.memberId,
+          appointmentParams.userId,
+          result.id,
+        );
+        return result;
+      };
+
+      // scheduling a new appointment and marking as delete
+      await service.updateAppointment((await schedule(addMinutes(startDate, 30))).id, {
+        status: AppointmentStatus.deleted,
+      });
+
+      expect(await schedule(addMinutes(startDate, 30))).not.toBeFalsy();
+    });
+
     test.each`
       startDelta | endDelta | explanation
       ${0}       | ${0}     | ${'similar appointment'}

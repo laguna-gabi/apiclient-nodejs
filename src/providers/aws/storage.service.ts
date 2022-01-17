@@ -5,9 +5,11 @@ import * as config from 'config';
 import * as sharp from 'sharp';
 import { ConfigsService, ExternalConfigs } from '.';
 import {
+  CompleteMultipartUploadUrlParams,
   EventType,
   IEventOnNewMember,
   LoggerService,
+  MultipartUploadUrlParams,
   StorageType,
   StorageUrlParams,
 } from '../../common';
@@ -91,6 +93,51 @@ export class StorageService implements OnModuleInit {
 
     //expires in 30 minutes
     return this.s3.getSignedUrlPromise('putObject', { ...params, Expires: 0.5 * 60 * 60 });
+  }
+
+  async getMultipartUploadUrl(
+    urlParams: MultipartUploadUrlParams,
+  ): Promise<{ uploadId: string; url: string }> {
+    const { storageType, memberId, id, partNumber, uploadId } = urlParams;
+    const params = { Bucket: this.bucket, Key: `public/${storageType}/${memberId}/${id}` };
+
+    const UploadId = uploadId || (await this.s3.createMultipartUpload(params).promise()).UploadId;
+
+    const url = await this.s3.getSignedUrlPromise('uploadPart', {
+      ...params,
+      Expires: 0.5 * 60 * 60,
+      UploadId,
+      PartNumber: partNumber + 1,
+    });
+    return { url, uploadId: UploadId };
+  }
+
+  async completeMultipartUpload({
+    uploadId,
+    memberId,
+    id,
+    storageType,
+  }: CompleteMultipartUploadUrlParams): Promise<boolean> {
+    const Bucket = this.bucket;
+    const Key = `public/${storageType}/${memberId}/${id}`;
+    const UploadId = uploadId;
+    const listPartsParams: AWS.S3.Types.ListPartsRequest = {
+      Bucket,
+      Key,
+      UploadId,
+    };
+    const partsList = await this.s3.listParts(listPartsParams).promise();
+    const Parts = partsList.Parts.map((part) => ({ ETag: part.ETag, PartNumber: part.PartNumber }));
+
+    const params: AWS.S3.Types.CompleteMultipartUploadRequest = {
+      ...listPartsParams,
+      MultipartUpload: {
+        Parts,
+      },
+    };
+
+    await this.s3.completeMultipartUpload(params).promise();
+    return true;
   }
 
   async deleteMember(id: string) {

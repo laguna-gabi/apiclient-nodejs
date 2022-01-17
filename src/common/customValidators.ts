@@ -1,5 +1,6 @@
 import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 import { ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
+import { isNil } from 'lodash';
 import { lookup } from 'zipcode-to-timezone';
 import { Types as MongooseTypes } from 'mongoose';
 import { general } from 'config';
@@ -199,6 +200,21 @@ export function IsObjectId(options?: ValidationOptions) {
       validator: {
         validate(value: any) {
           return MongooseTypes.ObjectId.isValid(value) || value == undefined;
+        },
+      },
+    });
+  };
+}
+
+export function IsNoteOrNurseNoteProvided(options?: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(object, args: ValidationArguments) {
+          return !isNil(args.object['note']) || !isNil(args.object['nurseNotes']);
         },
       },
     });

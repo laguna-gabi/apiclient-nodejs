@@ -102,13 +102,26 @@ export interface StorageUrlParams {
   memberId: string;
   id: string;
 }
+export interface MultipartUploadUrlParams extends StorageUrlParams {
+  partNumber: number;
+  uploadId?: string;
+}
+export interface CompleteMultipartUploadUrlParams extends StorageUrlParams {
+  uploadId: string;
+}
 
 export enum RecordingType {
   voip = 'voip',
   video = 'video',
   phone = 'phone',
 }
-
 registerEnumType(RecordingType, {
   name: 'RecordingType',
 });
+
+export enum MemberIdParamType {
+  memberId = 'memberId',
+  id = 'id',
+}
+
+export type PhoneType = 'landline' | 'mobile' | 'voip';

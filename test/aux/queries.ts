@@ -7,6 +7,7 @@ import {
   DischargeDocumentsLinks,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
+  MultipartUploadRecordingLinkParams,
   RecordingLinkParams,
 } from '../../src/member';
 import { GetSlotsParams } from '../../src/user';
@@ -133,6 +134,7 @@ export class Queries {
           getMember(id: $id) {
             id
             phone
+            phoneType
             deviceId
             firstName
             lastName
@@ -214,6 +216,7 @@ export class Queries {
             drgDesc
 
             phoneSecondary
+            phoneSecondaryType
             generalNotes
             nurseNotes
             admitDate
@@ -318,6 +321,36 @@ export class Queries {
       result.data.getMemberUploadRecordingLink
     );
   };
+  getMemberMultipartUploadRecordingLink = async ({
+    multipartUploadRecordingLinkParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    multipartUploadRecordingLinkParams?: MultipartUploadRecordingLinkParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  } = {}): Promise<string> => {
+    const result = await this.apolloClient.query({
+      variables: { multipartUploadRecordingLinkParams },
+      query: gql`
+        query getMemberMultipartUploadRecordingLink(
+          $multipartUploadRecordingLinkParams: MultipartUploadRecordingLinkParams!
+        ) {
+          getMemberMultipartUploadRecordingLink(
+            multipartUploadRecordingLinkParams: $multipartUploadRecordingLinkParams
+          ) {
+            url
+            uploadId
+          }
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
+      result.data.getMemberUploadRecordingLink
+    );
+  };
 
   getMemberDownloadRecordingLink = async ({
     recordingLinkParams,
@@ -352,6 +385,7 @@ export class Queries {
             id
             name
             phone
+            phoneType
             dischargeDate
             adherence
             wellbeing

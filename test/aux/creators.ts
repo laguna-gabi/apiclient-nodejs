@@ -78,6 +78,7 @@ export class Creators {
     const member = await this.handler.setContextUserId(id).queries.getMember({ id });
 
     expect(member.phone).toEqual(memberParams.phone);
+    expect(member.phoneType).toEqual('mobile');
     expect(member.firstName).toEqual(memberParams.firstName);
     expect(member.lastName).toEqual(memberParams.lastName);
 

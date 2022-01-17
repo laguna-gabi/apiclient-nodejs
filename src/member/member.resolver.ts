@@ -27,6 +27,7 @@ import {
   CancelNotifyParams,
   Caregiver,
   ChatMessageOrigin,
+  CompleteMultipartUploadParams,
   CreateMemberParams,
   CreateTaskParams,
   DischargeDocumentsLinks,
@@ -41,6 +42,8 @@ import {
   MemberConfig,
   MemberService,
   MemberSummary,
+  MultipartUploadInfo,
+  MultipartUploadRecordingLinkParams,
   NotifyContentParams,
   NotifyParams,
   Recording,
@@ -72,7 +75,10 @@ import {
   Identifier,
   LoggerService,
   LoggingInterceptor,
+  MemberIdParam,
+  MemberIdParamType,
   MemberRole,
+  MemberUserRouteInterceptor,
   RegisterForNotificationParams,
   Roles,
   StorageType,
@@ -81,7 +87,14 @@ import {
   getCorrelationId,
 } from '../common';
 import { Communication, CommunicationService, GetCommunicationParams } from '../communication';
-import { Bitly, CognitoService, FeatureFlagService, OneSignal, StorageService } from '../providers';
+import {
+  Bitly,
+  CognitoService,
+  FeatureFlagService,
+  OneSignal,
+  StorageService,
+  TwilioService,
+} from '../providers';
 import { User, UserService } from '../user';
 
 @UseInterceptors(LoggingInterceptor)
@@ -98,8 +111,9 @@ export class MemberResolver extends MemberBase {
     protected readonly bitly: Bitly,
     readonly logger: LoggerService,
     readonly featureFlagService: FeatureFlagService,
+    readonly twilio: TwilioService,
   ) {
-    super(memberService, eventEmitter, userService, featureFlagService, logger);
+    super(memberService, eventEmitter, userService, featureFlagService, twilio, logger);
   }
 
   @Mutation(() => Identifier)
@@ -112,14 +126,13 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => Member, { nullable: true })
-  @Roles(MemberRole.member, UserRole.coach)
+  @MemberIdParam(MemberIdParamType.id)
+  @UseInterceptors(MemberUserRouteInterceptor)
+  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
   async getMember(
-    @Client('roles') roles,
-    @Client('_id') memberId,
     @Args('id', { type: () => String, nullable: true }) id?: string,
   ): Promise<Member> {
-    memberId = roles.includes(MemberRole.member) ? memberId : id;
-    const member = await this.memberService.get(memberId);
+    const member = await this.memberService.get(id);
     member.zipCode = member.zipCode || member.org.zipCode;
     member.utcDelta = MemberResolver.getTimezoneDeltaFromZipcode(member.zipCode);
     return member;
@@ -128,9 +141,12 @@ export class MemberResolver extends MemberBase {
   @Mutation(() => Member)
   @Roles(UserRole.coach, UserRole.nurse)
   async updateMember(
-    @Args(camelCase(UpdateMemberParams.name)) updateMemberParams: UpdateMemberParams,
+    @Args(camelCase(UpdateMemberParams.name)) params: UpdateMemberParams,
   ): Promise<Member> {
-    const member = await this.memberService.update(updateMemberParams);
+    const objMobile = params.phoneSecondary
+      ? { phoneSecondaryType: await this.twilio.getPhoneType(params.phoneSecondary) }
+      : {};
+    const member = await this.memberService.update({ ...params, ...objMobile });
     member.zipCode = member.zipCode || member.org.zipCode;
     member.utcDelta = MemberResolver.getTimezoneDeltaFromZipcode(member.zipCode);
     return member;
@@ -256,27 +272,25 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => DischargeDocumentsLinks)
-  @Roles(MemberRole.member, UserRole.coach)
+  @MemberIdParam(MemberIdParamType.id)
+  @UseInterceptors(MemberUserRouteInterceptor)
+  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
   async getMemberDownloadDischargeDocumentsLinks(
-    @Client('roles') roles,
-    @Client('_id') memberId,
     @Args('id', { type: () => String, nullable: true }) id?: string,
   ) {
-    memberId = roles.includes(MemberRole.member) ? memberId : id;
-    const member = await this.memberService.get(memberId);
-
+    const member = await this.memberService.get(id);
     const { firstName, lastName } = member;
 
     const storageType = StorageType.documents;
     const [dischargeNotesLink, dischargeInstructionsLink] = await Promise.all([
       await this.storageService.getDownloadUrl({
         storageType,
-        memberId,
+        memberId: id,
         id: `${firstName}_${lastName}_Summary.pdf`,
       }),
       await this.storageService.getDownloadUrl({
         storageType,
-        memberId,
+        memberId: id,
         id: `${firstName}_${lastName}_Instructions.pdf`,
       }),
     ]);
@@ -298,6 +312,34 @@ export class MemberResolver extends MemberBase {
     await this.memberService.get(recordingLinkParams.memberId);
     return this.storageService.getUploadUrl({
       ...recordingLinkParams,
+      storageType: StorageType.recordings,
+    });
+  }
+
+  @Query(() => MultipartUploadInfo)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getMemberMultipartUploadRecordingLink(
+    @Args(camelCase(MultipartUploadRecordingLinkParams.name))
+    multipartUploadRecordingLinkParams: MultipartUploadRecordingLinkParams,
+  ) {
+    // Validating member exists
+    await this.memberService.get(multipartUploadRecordingLinkParams.memberId);
+    return this.storageService.getMultipartUploadUrl({
+      ...multipartUploadRecordingLinkParams,
+      storageType: StorageType.recordings,
+    });
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async completeMultipartUpload(
+    @Args(camelCase(CompleteMultipartUploadParams.name))
+    completeMultipartUploadParams: CompleteMultipartUploadParams,
+  ) {
+    // Validating member exists
+    await this.memberService.get(completeMultipartUploadParams.memberId);
+    return this.storageService.completeMultipartUpload({
+      ...completeMultipartUploadParams,
       storageType: StorageType.recordings,
     });
   }
@@ -711,18 +753,12 @@ export class MemberResolver extends MemberBase {
   }
 
   @Query(() => [Caregiver])
-  @Roles(MemberRole.member, UserRole.coach)
+  @MemberIdParam(MemberIdParamType.memberId)
+  @UseInterceptors(MemberUserRouteInterceptor)
+  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
   async getCaregivers(
-    @Client('_id') clientId,
-    @Client('roles') roles,
     @Args('memberId', { type: () => String, nullable: true }) memberId?: string,
   ): Promise<Caregiver[]> {
-    if (roles.includes(MemberRole.member)) {
-      if (memberId && clientId != memberId) {
-        throw new Error(Errors.get(ErrorType.memberIdInconsistent));
-      }
-      memberId = clientId;
-    }
     return this.memberService.getCaregiversByMemberId(memberId);
   }
 
@@ -996,6 +1032,7 @@ export class MemberResolver extends MemberBase {
     const deleteDispatch: IDeleteDispatch = {
       type: InnerQueueTypes.deleteDispatch,
       dispatchId: params.dispatchId,
+      correlationId: getCorrelationId(this.logger),
     };
     const eventParams: IEventNotifyQueue = {
       type: QueueType.notifications,
@@ -1064,14 +1101,11 @@ export class MemberResolver extends MemberBase {
    **************************************** Member Internal ***************************************
    ************************************************************************************************/
   @Query(() => MemberConfig)
-  @Roles(MemberRole.member, UserRole.coach)
-  async getMemberConfig(
-    @Client('roles') roles,
-    @Client('_id') memberId,
-    @Args('id', { type: () => String, nullable: true }) id?: string,
-  ) {
-    memberId = roles.includes(MemberRole.member) ? memberId : id;
-    return this.memberService.getMemberConfig(memberId);
+  @MemberIdParam(MemberIdParamType.id)
+  @UseInterceptors(MemberUserRouteInterceptor)
+  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
+  async getMemberConfig(@Args('id', { type: () => String, nullable: true }) id?: string) {
+    return this.memberService.getMemberConfig(id);
   }
 
   @Mutation(() => Boolean)

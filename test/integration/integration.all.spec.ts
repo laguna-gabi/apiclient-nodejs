@@ -3,6 +3,7 @@ import * as config from 'config';
 import { general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow } from 'date-fns';
 import * as faker from 'faker';
+import { v4 } from 'uuid';
 import {
   Appointment,
   AppointmentMethod,
@@ -39,7 +40,6 @@ import {
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
 } from '../index';
-import { v4 } from 'uuid';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -672,25 +672,33 @@ describe('Integration tests: all', () => {
       expect(memberResult.nurseNotes).toEqual(setGeneralNotesParams.nurseNotes);
     });
 
-    it('should be able to set null note and nurseNotes for a member', async () => {
+    it('should accept empty note or nurseNotes for a member', async () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org });
 
-      const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: member.id });
-      await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
+      const params1 = generateSetGeneralNotesParams({
+        memberId: member.id,
+        note: '',
+      });
+      await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams: params1 });
 
-      let memberResult = await handler
+      const result1 = await handler
         .setContextUserId(member.id)
         .queries.getMember({ id: member.id });
-      expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
+      expect(result1.generalNotes).toEqual(params1.note);
+      expect(result1.nurseNotes).toEqual(params1.nurseNotes);
 
-      delete setGeneralNotesParams.note;
-      delete setGeneralNotesParams.nurseNotes;
-      await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
+      const params2 = generateSetGeneralNotesParams({
+        memberId: member.id,
+        nurseNotes: '',
+      });
+      await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams: params2 });
 
-      memberResult = await handler.setContextUserId(member.id).queries.getMember({ id: member.id });
-      expect(memberResult.generalNotes).toBeNull();
-      expect(memberResult.nurseNotes).toBeNull();
+      const result2 = await handler
+        .setContextUserId(member.id)
+        .queries.getMember({ id: member.id });
+      expect(result2.generalNotes).toEqual(params2.note);
+      expect(result2.nurseNotes).toEqual(params2.nurseNotes);
     });
   });
 
@@ -716,6 +724,20 @@ describe('Integration tests: all', () => {
         .setContextUserId(member.id)
         .queries.getMemberConfig({ id: member.id });
       expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.123'));
+    });
+
+    it('should set phoneType and phoneSecondaryType', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+
+      const updateMemberParams = generateUpdateMemberParams({ id: member.id, drg: '123' });
+      await handler.mutations.updateMember({ updateMemberParams });
+
+      const memberResult = await handler
+        .setContextUserId(member.id)
+        .queries.getMember({ id: member.id });
+      expect(memberResult.phoneType).toEqual('mobile');
+      expect(memberResult.phoneSecondaryType).toEqual('mobile');
     });
   });
 

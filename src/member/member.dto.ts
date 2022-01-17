@@ -26,11 +26,13 @@ import {
   Errors,
   Identifier,
   IsNotChat,
+  IsNoteOrNurseNoteProvided,
   IsObjectId,
   IsStringDate,
   IsTypeMetadataProvided,
   IsValidZipCode,
   MemberRole,
+  PhoneType,
   validPhoneExamples,
 } from '../common';
 import { Org } from '../org';
@@ -214,6 +216,10 @@ export class CreateMemberParams extends ExtraMemberParams {
   language?: Language;
 }
 
+export class InternalCreateMemberParams extends CreateMemberParams {
+  phoneType: PhoneType;
+}
+
 @InputType()
 export class UpdateMemberParams extends ExtraMemberParams {
   @Field(() => String)
@@ -260,6 +266,10 @@ export class UpdateMemberParams extends ExtraMemberParams {
   })
   phoneSecondary?: string;
 
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  phoneSecondaryType?: PhoneType;
+
   @Field(() => Address, { nullable: true })
   @IsOptional()
   address?: Address;
@@ -300,6 +310,7 @@ export class SetGeneralNotesParams {
   note?: string;
 
   @Field(() => String, { nullable: true })
+  @IsNoteOrNurseNoteProvided({ message: Errors.get(ErrorType.memberNotesAndNurseNotesNotProvided) })
   nurseNotes?: string;
 }
 
@@ -311,6 +322,35 @@ export class RecordingLinkParams {
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
+}
+
+@InputType()
+export class MultipartUploadRecordingLinkParams {
+  @Field(() => String)
+  id: string;
+
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
+
+  @Field(() => Number)
+  partNumber: number;
+
+  @Field(() => String, { nullable: true })
+  uploadId?: string;
+}
+
+@InputType()
+export class CompleteMultipartUploadParams {
+  @Field(() => String)
+  id: string;
+
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
+
+  @Field(() => String)
+  uploadId: string;
 }
 
 /************************************************************************************************
@@ -414,6 +454,10 @@ export class Member extends Identifier {
   @Field(() => String)
   phone: string;
 
+  @Prop()
+  @Field(() => String, { nullable: true })
+  phoneType: PhoneType;
+
   @Prop({ index: true, isNaN: true })
   @Field(() => String, { nullable: true })
   deviceId: string;
@@ -492,6 +536,10 @@ export class Member extends Identifier {
   })
   phoneSecondary?: string;
 
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  phoneSecondaryType?: PhoneType;
+
   @Prop()
   @Field(() => Date)
   createdAt: Date;
@@ -546,6 +594,9 @@ export class MemberSummary extends Identifier {
 
   @Field(() => String)
   phone: string;
+
+  @Field(() => String, { nullable: true })
+  phoneType: PhoneType;
 
   @Field(() => String, { nullable: true })
   dischargeDate?: string;
@@ -603,6 +654,15 @@ export class DischargeDocumentsLinks {
 
   @Field(() => String, { nullable: true })
   dischargeInstructionsLink?: string;
+}
+
+@ObjectType()
+export class MultipartUploadInfo {
+  @Field(() => String)
+  url: string;
+
+  @Field(() => String)
+  uploadId: string;
 }
 
 @ObjectType()

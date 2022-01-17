@@ -1,10 +1,13 @@
 import { SetMetadata } from '@nestjs/common';
 import { ExecutionContext, createParamDecorator } from '@nestjs/common';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
+import { MemberIdParamType } from '.';
 
 export const Public = () => SetMetadata('isPublic', true);
 
 export const Roles = (...roles: string[]) => SetMetadata('roles', roles);
+
+export const MemberIdParam = (memberId: MemberIdParamType) => SetMetadata('memberId', memberId);
 
 export const Client = createParamDecorator((data: string, context: ExecutionContext) => {
   let request;

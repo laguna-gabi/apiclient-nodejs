@@ -65,6 +65,30 @@ describe('Validations - member', () => {
     await handler.afterAll();
   });
 
+  const checkNoneExistingMemberAndWrongMemberID = (
+    title: string,
+    getFunction: () => (props: any) => Promise<any>,
+    getMainInput: (memberId: string) => any,
+  ) => {
+    describe(title, () => {
+      it('should throw error on non existing member', async () => {
+        const fn = getFunction();
+        await fn({
+          ...getMainInput(generateId()),
+          invalidFieldsErrors: [Errors.get(ErrorType.memberNotFound)],
+        });
+      });
+
+      it('should throw error on invalid member id', async () => {
+        const fn = getFunction();
+        await fn({
+          ...getMainInput('123'),
+          invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)],
+        });
+      });
+    });
+  };
+
   describe('createMember + getMember', () => {
     /* eslint-disable max-len */
     test.each`
@@ -202,9 +226,10 @@ describe('Validations - member', () => {
     });
 
     it('should throw error on non existing member from mobile', async () => {
-      await handler
-        .setContextUserId(generateId())
-        .queries.getMember({ invalidFieldsError: Errors.get(ErrorType.memberNotFound) });
+      await handler.setContextUserId(generateId()).queries.getMember({
+        id: generateId(),
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+      });
     });
 
     it('rest: should fail to create member if phone already exists', async () => {
@@ -245,41 +270,47 @@ describe('Validations - member', () => {
     });
   });
 
-  describe('getMemberUploadRecordingLink', () => {
-    it('should throw error on non existing member', async () => {
-      await handler.queries.getMemberUploadRecordingLink({
-        recordingLinkParams: { memberId: generateId(), id: generateId() },
-        invalidFieldsErrors: [Errors.get(ErrorType.memberNotFound)],
-      });
-    });
+  checkNoneExistingMemberAndWrongMemberID(
+    'getMemberUploadRecordingLink',
+    () => handler.queries.getMemberUploadRecordingLink,
+    (memberId) => ({ recordingLinkParams: { memberId, id: generateId() } }),
+  );
 
-    it('should throw error on invalid member id', async () => {
-      await handler.queries.getMemberUploadRecordingLink({
-        recordingLinkParams: { memberId: '123', id: generateId() },
-        invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)],
-      });
-    });
-  });
+  checkNoneExistingMemberAndWrongMemberID(
+    'getMemberMultipartUploadRecordingLink',
+    () => handler.queries.getMemberMultipartUploadRecordingLink,
+    (memberId) => ({
+      multipartUploadRecordingLinkParams: {
+        memberId,
+        id: generateId(),
+        uploadId: generateId(),
+        partNumber: 0,
+      },
+    }),
+  );
 
-  describe('getMemberDownloadRecordingLink', () => {
-    it('should throw error on non existing member', async () => {
-      await handler.queries.getMemberDownloadRecordingLink({
-        recordingLinkParams: { memberId: generateId(), id: generateId() },
-        invalidFieldsErrors: [Errors.get(ErrorType.memberNotFound)],
-      });
-    });
+  checkNoneExistingMemberAndWrongMemberID(
+    'completeMultipartUpload',
+    () => handler.mutations.completeMultipartUpload,
+    (memberId) => ({
+      completeMultipartUploadParams: {
+        memberId,
+        id: generateId(),
+        uploadId: generateId(),
+      },
+    }),
+  );
 
-    it('should throw error on invalid member id', async () => {
-      await handler.queries.getMemberDownloadRecordingLink({
-        recordingLinkParams: { memberId: '123', id: generateId() },
-        invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)],
-      });
-    });
-  });
+  checkNoneExistingMemberAndWrongMemberID(
+    'getMemberDownloadRecordingLink',
+    () => handler.queries.getMemberDownloadRecordingLink,
+    (memberId) => ({ recordingLinkParams: { memberId, id: generateId() } }),
+  );
 
   describe('getMemberConfig', () => {
     it('should throw error on non existing member', async () => {
       await handler.setContextUserId(generateId()).queries.getMemberConfig({
+        id: generateId(),
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
     });
@@ -688,14 +719,35 @@ describe('Validations - member', () => {
       });
     });
 
-    test.each`
-      field                  | invalid
-      ${{ memberId: '123' }} | ${[Errors.get(ErrorType.memberIdInvalid)]}
-    `(`should fail to set notes since $input is not a valid type`, async (params) => {
-      const setGeneralNotesParams = generateSetGeneralNotesParams({ ...params.field });
+    it(`should fail to set notes since memberId is not a valid type`, async () => {
+      const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: '123' });
       await handler.mutations.setGeneralNotes({
         setGeneralNotesParams,
-        invalidFieldsErrors: params.invalid,
+        invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)],
+      });
+    });
+
+    it(`should fail to set notes since $input does not contain notes or nurseNotes`, async () => {
+      await handler.mutations.setGeneralNotes({
+        setGeneralNotesParams: { memberId: generateId() },
+        invalidFieldsErrors: [Errors.get(ErrorType.memberNotesAndNurseNotesNotProvided)],
+      });
+    });
+
+    test.each([
+      { note: undefined, nurseNotes: undefined },
+      { note: undefined, nurseNotes: null },
+      { note: null, nurseNotes: undefined },
+      { note: null, nurseNotes: null },
+      { note: undefined },
+      { note: null },
+      { nurseNotes: undefined },
+      { nurseNotes: null },
+      {},
+    ])('should fail to set notes since %p does not contain notes or nurseNotes', async (input) => {
+      await handler.mutations.setGeneralNotes({
+        setGeneralNotesParams: { memberId: generateId(), ...input },
+        invalidFieldsErrors: [Errors.get(ErrorType.memberNotesAndNurseNotesNotProvided)],
       });
     });
   });

@@ -20,11 +20,11 @@ import {
   CaregiverDocument,
   ControlMember,
   ControlMemberDocument,
-  CreateMemberParams,
   CreateTaskParams,
   EmbeddedMemberProperties,
   Goal,
   GoalDocument,
+  InternalCreateMemberParams,
   Journal,
   JournalDocument,
   Member,
@@ -94,12 +94,12 @@ export class MemberService extends BaseService {
   }
 
   async insert(
-    createMemberParams: CreateMemberParams,
+    params: InternalCreateMemberParams,
     primaryUserId: Types.ObjectId,
   ): Promise<{ member: Member; memberConfig: MemberConfig }> {
     try {
-      this.removeNotNullable(createMemberParams, NotNullableMemberKeys);
-      const { language, ...memberParams } = createMemberParams;
+      this.removeNotNullable(params, NotNullableMemberKeys);
+      const { language, ...memberParams } = params;
       const primitiveValues = cloneDeep(memberParams);
       delete primitiveValues.orgId;
       delete primitiveValues.userId;
@@ -207,6 +207,7 @@ export class MemberService extends BaseService {
           id: '$_id',
           name: { $concat: ['$firstName', ' ', '$lastName'] },
           phone: '$phone',
+          phoneType: '$phoneType',
           dischargeDate: { $ifNull: ['$dischargeDate', undefined] },
           adherence: { $ifNull: ['$scores.adherence', 0] },
           wellbeing: { $ifNull: ['$scores.wellbeing', 0] },
@@ -435,15 +436,15 @@ export class MemberService extends BaseService {
    ******************************************** Control *******************************************
    ************************************************************************************************/
 
-  async insertControl(createMemberParams: CreateMemberParams): Promise<Member> {
+  async insertControl(params: InternalCreateMemberParams): Promise<Member> {
     try {
-      this.removeNotNullable(createMemberParams, NotNullableMemberKeys);
-      const primitiveValues = cloneDeep(createMemberParams);
+      this.removeNotNullable(params, NotNullableMemberKeys);
+      const primitiveValues = cloneDeep(params);
       delete primitiveValues.orgId;
 
       const member = await this.controlMemberModel.create({
         ...primitiveValues,
-        org: new Types.ObjectId(createMemberParams.orgId),
+        org: new Types.ObjectId(params.orgId),
       });
 
       return this.controlMemberModel.findOne({ _id: member.id }).populate({ path: 'org' });
@@ -615,14 +616,16 @@ export class MemberService extends BaseService {
    ****************************************** General notes ****************************************
    ************************************************************************************************/
   async setGeneralNotes(setGeneralNotesParams: SetGeneralNotesParams): Promise<void> {
+    const setParams = omitBy(
+      {
+        generalNotes: setGeneralNotesParams.note,
+        nurseNotes: setGeneralNotesParams.nurseNotes,
+      },
+      isNil,
+    );
     const result = await this.memberModel.updateOne(
       { _id: new Types.ObjectId(setGeneralNotesParams.memberId) },
-      {
-        $set: {
-          generalNotes: setGeneralNotesParams.note,
-          nurseNotes: setGeneralNotesParams.nurseNotes,
-        },
-      },
+      { $set: setParams },
     );
 
     if (result.nModified === 0) {
