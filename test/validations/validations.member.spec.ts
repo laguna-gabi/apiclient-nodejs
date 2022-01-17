@@ -733,6 +733,23 @@ describe('Validations - member', () => {
         invalidFieldsErrors: [Errors.get(ErrorType.memberNotesAndNurseNotesNotProvided)],
       });
     });
+
+    test.each([
+      { note: undefined, nurseNotes: undefined },
+      { note: undefined, nurseNotes: null },
+      { note: null, nurseNotes: undefined },
+      { note: null, nurseNotes: null },
+      { note: undefined },
+      { note: null },
+      { nurseNotes: undefined },
+      { nurseNotes: null },
+      {},
+    ])('should fail to set notes since %p does not contain notes or nurseNotes', async (input) => {
+      await handler.mutations.setGeneralNotes({
+        setGeneralNotesParams: { memberId: generateId(), ...input },
+        invalidFieldsErrors: [Errors.get(ErrorType.memberNotesAndNurseNotesNotProvided)],
+      });
+    });
   });
 
   describe('updateJournalText', () => {

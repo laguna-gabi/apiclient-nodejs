@@ -671,6 +671,35 @@ describe('Integration tests: all', () => {
       expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
       expect(memberResult.nurseNotes).toEqual(setGeneralNotesParams.nurseNotes);
     });
+
+    it('should accept empty note or nurseNotes for a member', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org });
+
+      const params1 = generateSetGeneralNotesParams({
+        memberId: member.id,
+        note: '',
+      });
+      await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams: params1 });
+
+      const result1 = await handler
+        .setContextUserId(member.id)
+        .queries.getMember({ id: member.id });
+      expect(result1.generalNotes).toEqual(params1.note);
+      expect(result1.nurseNotes).toEqual(params1.nurseNotes);
+
+      const params2 = generateSetGeneralNotesParams({
+        memberId: member.id,
+        nurseNotes: '',
+      });
+      await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams: params2 });
+
+      const result2 = await handler
+        .setContextUserId(member.id)
+        .queries.getMember({ id: member.id });
+      expect(result2.generalNotes).toEqual(params2.note);
+      expect(result2.nurseNotes).toEqual(params2.nurseNotes);
+    });
   });
 
   describe('drg', () => {
