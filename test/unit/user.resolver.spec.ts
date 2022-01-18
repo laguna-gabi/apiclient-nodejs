@@ -6,7 +6,7 @@ import {
   mockLogger,
   mockProcessWarnings,
 } from '@lagunahealth/pandora';
-import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   ErrorType,
@@ -17,7 +17,6 @@ import {
   LoggerService,
   UserRole,
 } from '../../src/common';
-import { DbModule } from '../../src/db/db.module';
 import {
   GetSlotsParams,
   UserController,
@@ -27,6 +26,7 @@ import {
 } from '../../src/user';
 import {
   dbDisconnect,
+  defaultModules,
   generateCreateUserParams,
   generateGetSlotsParams,
   generateId,
@@ -44,7 +44,7 @@ describe('UserResolver', () => {
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
-      imports: [DbModule, UserModule, EventEmitterModule.forRoot()],
+      imports: defaultModules().concat(UserModule),
     }).compile();
 
     resolver = module.get<UserResolver>(UserResolver);

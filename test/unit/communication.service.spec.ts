@@ -1,5 +1,5 @@
 import { Platform, mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
-import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
 import { Model, Types, model } from 'mongoose';
@@ -21,10 +21,10 @@ import {
   CommunicationModule,
   CommunicationService,
 } from '../../src/communication';
-import { DbModule } from '../../src/db/db.module';
 import {
   dbConnect,
   dbDisconnect,
+  defaultModules,
   generateId,
   generateUniqueUrl,
   mockGenerateMember,
@@ -43,7 +43,7 @@ describe('CommunicationService', () => {
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
-      imports: [DbModule, CommunicationModule, EventEmitterModule.forRoot()],
+      imports: defaultModules().concat(CommunicationModule),
     }).compile();
 
     service = module.get<CommunicationService>(CommunicationService);

@@ -11,7 +11,7 @@ import { AvailabilityModule } from './availability';
 import { Errors, JsonBodyMiddleware, RawBodyMiddleware } from './common';
 import { CommunicationModule } from './communication';
 import { DailyReportModule } from './dailyReport';
-import { DbModule } from './db/db.module';
+import { DbModule } from './db';
 import { HealthController } from './health/health.controller';
 import { MemberModule } from './member';
 import { OrgModule } from './org';

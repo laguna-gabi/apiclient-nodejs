@@ -6,7 +6,7 @@ import * as config from 'config';
 import { connect, disconnect } from 'mongoose';
 import { v4 } from 'uuid';
 import { MemberRole, RoleTypes, apiPrefix, webhooks } from '../src/common';
-import { DbModule } from '../src/db/db.module';
+import { DbModule } from '../src/db';
 import { Member, defaultMemberParams } from '../src/member';
 import {
   CognitoService,

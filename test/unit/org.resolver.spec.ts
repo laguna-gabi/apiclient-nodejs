@@ -1,10 +1,8 @@
 import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerService } from '../../src/common';
-import { DbModule } from '../../src/db/db.module';
 import { OrgModule, OrgResolver, OrgService } from '../../src/org';
-import { dbDisconnect, generateId, generateOrgParams } from '../index';
+import { dbDisconnect, defaultModules, generateId, generateOrgParams } from '../index';
 
 describe('OrgResolver', () => {
   let module: TestingModule;
@@ -14,7 +12,7 @@ describe('OrgResolver', () => {
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
-      imports: [DbModule, OrgModule, EventEmitterModule.forRoot()],
+      imports: defaultModules().concat(OrgModule),
     }).compile();
 
     resolver = module.get<OrgResolver>(OrgResolver);
