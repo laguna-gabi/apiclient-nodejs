@@ -206,7 +206,7 @@ describe(DispatchesService.name, () => {
     expect(result).toEqual(dispatch);
   });
 
-  describe.only('find', () => {
+  describe('find', () => {
     const senderClientId = generateId();
     const dispatchData1 = generateDispatch({ senderClientId });
     let dispatch1;
