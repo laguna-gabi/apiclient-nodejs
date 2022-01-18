@@ -202,8 +202,67 @@ describe(DispatchesService.name, () => {
   it('should be able to find based on filter: dispatchId', async () => {
     const data = generateDispatch();
     const dispatch = await service.update({ ...data, triggeredId: generateId() });
-    const result = await service.find({ triggeredId: dispatch.triggeredId });
+    const result = await service.findOne({ triggeredId: dispatch.triggeredId });
     expect(result).toEqual(dispatch);
+  });
+
+  describe.only('find', () => {
+    const senderClientId = generateId();
+    const dispatchData1 = generateDispatch({ senderClientId });
+    let dispatch1;
+    const dispatchData2 = generateDispatch({ senderClientId });
+    let dispatch2;
+
+    beforeAll(async () => {
+      // Fixtures (2 dispatch objects from the same sender):
+      dispatch1 = await service.update(dispatchData1);
+      dispatch2 = await service.update(dispatchData2);
+    });
+
+    it('should be able to find based on senderClientId with projection', async () => {
+      const results = await service.find({ senderClientId }, [
+        'dispatchId',
+        'serviceName',
+        'senderClientId',
+      ]);
+
+      expect(results).toEqual([
+        {
+          dispatchId: dispatch1.dispatchId,
+          serviceName: dispatch1.serviceName,
+          senderClientId: dispatch1.senderClientId,
+        },
+        {
+          dispatchId: dispatch2.dispatchId,
+          serviceName: dispatch2.serviceName,
+          senderClientId: dispatch2.senderClientId,
+        },
+      ]);
+    });
+
+    it('should find an empty list for a user without dispatches', async () => {
+      const results = await service.find({ senderClientId: generateId() }, [
+        'dispatchId',
+        'serviceName',
+        'senderClientId',
+      ]);
+
+      expect(results).toEqual([]);
+    });
+
+    it('should be able to find based on senderClientId without projection', async () => {
+      const results = await service.find({ senderClientId }, []);
+
+      results.forEach((result) => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        delete result.createdAt;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        delete result.updatedAt;
+      });
+      expect(results).toEqual([dispatch1, dispatch2]);
+    });
   });
 
   it('should be able to delete existing dispatches of specific client', async () => {

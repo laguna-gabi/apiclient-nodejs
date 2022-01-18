@@ -55,7 +55,9 @@ describe(QueueService.name, () => {
       }),
     }));
 
-    Consumer.create = jest.fn().mockImplementation(() => ({ on: jest.fn(), start: jest.fn() }));
+    Consumer.create = jest
+      .fn()
+      .mockImplementation(() => ({ on: jest.fn(), start: jest.fn(), stop: jest.fn() }));
 
     describe('onModuleInit', () => {
       beforeEach(() => {

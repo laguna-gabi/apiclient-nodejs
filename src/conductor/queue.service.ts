@@ -10,7 +10,7 @@ import {
   ServiceName,
   formatEx,
 } from '@lagunahealth/pandora';
-import { Injectable, NotImplementedException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotImplementedException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
 import * as AWS from 'aws-sdk';
@@ -22,7 +22,7 @@ import { ConductorService } from '.';
 import { v4 } from 'uuid';
 
 @Injectable()
-export class QueueService extends HealthIndicator implements OnModuleInit {
+export class QueueService extends HealthIndicator implements OnModuleInit, OnModuleDestroy {
   private readonly sqs = new AWS.SQS({
     region: config.get('aws.region'),
     apiVersion: '2012-11-05',
@@ -37,6 +37,7 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
   private auditQueueUrl;
   private notificationsQueueUrl;
   private notificationsDLQUrl;
+  private consumer: Consumer;
 
   constructor(
     private readonly conductorService: ConductorService,
@@ -85,7 +86,7 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
     this.notificationsDLQUrl = dlQueueUrl;
 
     // register and start consumer for NotificationQ
-    const consumer = Consumer.create({
+    this.consumer = Consumer.create({
       region: config.get('aws.region'),
       queueUrl,
       handleMessage: async (message) => {
@@ -102,19 +103,23 @@ export class QueueService extends HealthIndicator implements OnModuleInit {
       },
     });
 
-    consumer.on('error', (ex) => {
+    this.consumer.on('error', (ex) => {
       this.logger.error({}, QueueService.name, this.handleMessage.name, formatEx(ex));
     });
-    consumer.on('processing_error', (ex) => {
+    this.consumer.on('processing_error', (ex) => {
       this.logger.error({}, QueueService.name, this.handleMessage.name, formatEx(ex));
     });
-    consumer.start();
+    this.consumer.start();
 
     this.logger.info(
-      { queueConsumerRunning: consumer.isRunning ? true : false },
+      { queueConsumerRunning: this.consumer.isRunning ? true : false },
       QueueService.name,
       this.onModuleInit.name,
     );
+  }
+
+  onModuleDestroy() {
+    this.consumer?.stop();
   }
 
   async handleMessage(message: SQSMessage): Promise<void> {

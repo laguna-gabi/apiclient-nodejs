@@ -47,10 +47,16 @@ export class DispatchesService {
     });
   }
 
-  async find(filters: { triggeredId: string }): Promise<Dispatch | null> {
+  async findOne(filters: { triggeredId: string }): Promise<Dispatch | null> {
     return this.dispatchesModel.findOne(filters, this.returnResults.projection, {
       lean: true,
     });
+  }
+
+  async find(filter: any, projection?: string[]): Promise<Dispatch[] | null> {
+    const project = projection && {};
+    projection?.forEach((field) => (project[field.trim()] = 1));
+    return this.dispatchesModel.find(filter, { ...project, ...{ _id: 0 } }, { lean: true });
   }
 
   async delete(clientId: string) {

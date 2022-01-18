@@ -23,6 +23,6 @@ import { SettingsModule } from '../settings';
     MongooseModule.forFeature([{ name: Dispatch.name, schema: DispatchDto }]),
   ],
   providers: [ConductorService, QueueService, DispatchesService, TriggersService],
-  exports: [QueueService],
+  exports: [QueueService, DispatchesService],
 })
 export class ConductorModule {}

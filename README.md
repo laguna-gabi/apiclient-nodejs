@@ -27,17 +27,18 @@ Laguna health messages component.
 <br/>Written in typescript by using [Nest](https://github.com/nestjs/nest) framework.
 
 - [📨 Iris](#-iris)
-   * [💡 Project introduction](#-project-introduction)
-      + [entities](#entities)
-   * [📋 Prerequisites](#-prerequisites)
-      + [Installation](#installation)
-      + [Aws](#aws)
-      + [Shared code settings](#shared-code-settings)
-   * [🚀 Running the app](#-running-the-app)
-   * [🧪 Testing the app](#-testing-the-app)
-   * [🎻 Troubleshooting](#-troubleshooting)
-      + [How to view the db locally](#how-to-view-the-db-locally)
-      + [Error at connection to mongo locally](#error-at-connection-to-mongo-locally)
+  - [💡 Project introduction](#-project-introduction)
+    - [entities](#entities)
+  - [📋 Prerequisites](#-prerequisites)
+    - [Installation](#installation)
+    - [Aws](#aws)
+    - [Shared code settings](#shared-code-settings)
+  - [🚀 Running the app](#-running-the-app)
+  - [API](#api)
+  - [🧪 Testing the app](#-testing-the-app)
+  - [🎻 Troubleshooting](#-troubleshooting)
+    - [How to view the db locally](#how-to-view-the-db-locally)
+    - [Error at connection to mongo locally](#error-at-connection-to-mongo-locally)
 
 ## 💡 Project introduction
 
@@ -84,6 +85,13 @@ In order to work with _iris_:
 1. init and load local mongodb as described on [docker section](#docker)
 2. start the server by using one of the following methods:
    run `yarn start:watch` if you just want to use _iris_ locally
+
+## API 
+`Iris` is exposing an internal API (service.2.service) and Swagger documentation is attached.. try it out in:
+```
+${hostname}:3001/api
+```
+
 
 ## 🧪 Testing the app
 
