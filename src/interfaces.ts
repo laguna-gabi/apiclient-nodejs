@@ -121,6 +121,7 @@ export interface IEventNotifySlack {
 export enum ExternalKey {
   addCaregiverDetails = 'addCaregiverDetails',
   setCallPermissions = 'setCallPermissions',
+  scheduleAppointment = 'scheduleAppointment',
 }
 
 export enum InternalKey {

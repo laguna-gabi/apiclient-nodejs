@@ -1,4 +1,5 @@
 import {
+  ContentKey,
   ExternalKey,
   ICreateDispatch,
   InnerQueueTypes,
@@ -6,16 +7,21 @@ import {
   ObjectBaseType,
   ServiceName,
   generateDispatchId,
+  validateContentKey,
 } from '../index';
 import { v4 } from 'uuid';
 
-export type ObjectExternalContentType = ObjectBaseType & Pick<ICreateDispatch, 'path'>;
+const allowedContentKeys = new Set<ContentKey>();
+allowedContentKeys.add(ExternalKey.addCaregiverDetails);
+allowedContentKeys.add(ExternalKey.setCallPermissions);
 
-export class ObjectExternalContentClass {
-  constructor(readonly objectExternalContentType: ObjectExternalContentType) {}
+export type ObjectExternalContentMobileType = ObjectBaseType & Pick<ICreateDispatch, 'path'>;
+
+export class ObjectExternalContentMobileClass {
+  constructor(readonly objectExternalContentMobileType: ObjectExternalContentMobileType) {}
 }
 
-export const generateExternalContentMock = ({
+export const generateExternalContentMobileMock = ({
   recipientClientId,
   senderClientId,
   path,
@@ -25,7 +31,9 @@ export const generateExternalContentMock = ({
   senderClientId: string;
   path: string;
   contentKey: ExternalKey;
-}): ObjectExternalContentType => {
+}): ObjectExternalContentMobileType => {
+  validateContentKey(allowedContentKeys, contentKey);
+
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, Date.now().toString()),

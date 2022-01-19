@@ -1,6 +1,7 @@
 import { address } from 'faker';
 import { lookup } from 'zipcode-to-timezone';
 import { NotificationType } from '../enums';
+import { ContentKey } from '../interfaces';
 
 export const generatePhone = () => {
   const random = () => Math.floor(Math.random() * 9) + 1;
@@ -35,5 +36,11 @@ export const validateNotificationTypeText = (notificationType: NotificationType)
         (NotificationType.text, NotificationType.textSms)
       }`,
     );
+  }
+};
+
+export const validateContentKey = (allowedContentKeys: Set<ContentKey>, contentKey: ContentKey) => {
+  if (!allowedContentKeys.has(contentKey)) {
+    throw Error(`invalid ${contentKey} - should be ${Array.from(allowedContentKeys.values())}`);
   }
 };

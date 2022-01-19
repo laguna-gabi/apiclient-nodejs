@@ -6,8 +6,13 @@ import {
   ObjectBaseType,
   ServiceName,
   generateDispatchId,
+  validateContentKey,
 } from '../index';
 import { v4 } from 'uuid';
+
+const allowedContentKeys = new Set<ContentKey>();
+allowedContentKeys.add(InternalKey.newChatMessageFromMember);
+allowedContentKeys.add(InternalKey.memberNotFeelingWellMessage);
 
 export const generateTextMessageUserMock = ({
   recipientClientId,
@@ -18,13 +23,7 @@ export const generateTextMessageUserMock = ({
   senderClientId: string;
   contentKey: ContentKey;
 }): ObjectBaseType => {
-  const allowedContentKeys = new Set();
-  allowedContentKeys.add(InternalKey.newChatMessageFromMember);
-  allowedContentKeys.add(InternalKey.memberNotFeelingWellMessage);
-
-  if (!allowedContentKeys.has(contentKey)) {
-    throw Error(`invalid ${contentKey} - should be ${Array.from(allowedContentKeys.values())}`);
-  }
+  validateContentKey(allowedContentKeys, contentKey);
 
   return {
     type: InnerQueueTypes.createDispatch,
