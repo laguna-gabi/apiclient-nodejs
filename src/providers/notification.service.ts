@@ -2,6 +2,7 @@ import {
   AuditType,
   ClientCategory,
   CustomKey,
+  ExternalKey,
   InternalKey,
   NotificationType,
   Platform,
@@ -132,6 +133,7 @@ export class NotificationsService {
 
     switch (dispatch.contentKey) {
       case InternalKey.appointmentRequest:
+      case ExternalKey.scheduleAppointment:
         // decorate the content for appointment reminder based on client setting
         if (recipientClient.platform === Platform.web) {
           content += this.internationalization.getContents({

@@ -10,7 +10,8 @@ import {
   ObjectAppointmentScheduledClass,
   ObjectBaseClass,
   ObjectChatMessageUserClass,
-  ObjectExternalContentClass,
+  ObjectExternalContentMobileClass,
+  ObjectExternalContentWebScheduleAppointmentClass,
   ObjectFutureNotifyClass,
   ObjectJournalContentClass,
   ObjectNewChatMessageToMemberClass,
@@ -23,7 +24,8 @@ import {
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
   generateChatMessageUserMock,
-  generateExternalContentMock,
+  generateExternalContentMobileMock,
+  generateExternalContentWebScheduleAppointmentMock,
   generateNewChatMessageToMemberMock,
   generateNewControlMemberMock,
   generateNewMemberMock,
@@ -538,13 +540,11 @@ describe('Notifications full flow', () => {
     };
     await service.handleMessage(message);
 
-    let body = replaceConfigs({
+    const body = `${replaceConfigs({
       content: translation.contents[InternalKey.appointmentRequest],
       memberClient: webMemberClient,
       userClient,
-    });
-
-    body += `:\n${mock.scheduleLink}`;
+    })}:\n${mock.scheduleLink}`;
 
     expect(spyOnTwilioSend).toBeCalledWith(
       {
@@ -832,16 +832,16 @@ describe('Notifications full flow', () => {
     });
   });
 
-  test.each(Object.values(ExternalKey))(
+  test.each([ExternalKey.addCaregiverDetails, ExternalKey.setCallPermissions])(
     `should handle 'immediate' event of type %p`,
     async (contentKey) => {
-      const mock = generateExternalContentMock({
+      const mock = generateExternalContentMobileMock({
         recipientClientId: mobileMemberClient.id,
         senderClientId: userClient.id,
         contentKey,
         path: lorem.word(),
       });
-      const object = new ObjectExternalContentClass(mock);
+      const object = new ObjectExternalContentMobileClass(mock);
 
       const providerResultOS: ProviderResult = { provider: Provider.oneSignal, id: generateId() };
       spyOnOneSignalSend.mockReturnValueOnce(providerResultOS);
@@ -850,7 +850,7 @@ describe('Notifications full flow', () => {
         MessageId: v4(),
         Body: JSON.stringify({
           type: InnerQueueTypes.createDispatch,
-          ...object.objectExternalContentType,
+          ...object.objectExternalContentMobileType,
         }),
       };
       await service.handleMessage(message);
@@ -887,6 +887,47 @@ describe('Notifications full flow', () => {
       });
     },
   );
+
+  it(`should handle 'immediate' event of type ${ExternalKey.scheduleAppointment}`, async () => {
+    spyOnTwilioSend.mockReturnValueOnce(providerResult);
+    const contentKey = ExternalKey.scheduleAppointment;
+    const mock = generateExternalContentWebScheduleAppointmentMock({
+      recipientClientId: webMemberClient.id,
+      senderClientId: userClient.id,
+      scheduleLink: internet.url(),
+    });
+    const object = new ObjectExternalContentWebScheduleAppointmentClass(mock);
+
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({
+        type: InnerQueueTypes.createDispatch,
+        ...object.objectExternalContentWebScheduleAppointmentType,
+      }),
+    };
+    await service.handleMessage(message);
+
+    const body = `${replaceConfigs({
+      content: translation.contents[contentKey],
+      memberClient: webMemberClient,
+      userClient,
+    })}:\n${mock.scheduleLink}`;
+
+    expect(spyOnTwilioSend).toBeCalledWith(
+      {
+        body,
+        to: webMemberClient.phone,
+        orgName: webMemberClient.orgName,
+      },
+      expect.any(String),
+    );
+
+    await compareResults({
+      dispatchId: mock.dispatchId,
+      status: DispatchStatus.done,
+      response: { ...mock },
+    });
+  });
 
   test.each(Object.values(CancelNotificationType))(
     `should handle 'immediate' event of type ${CustomKey.cancelNotify} %p`,
