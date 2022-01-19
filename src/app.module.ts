@@ -18,6 +18,7 @@ import { OrgModule } from './org';
 import { ProvidersModule } from './providers';
 import { TodoModule } from './todo';
 import { UserModule } from './user';
+import { CareModule } from './care';
 
 const badRequestException = 'Bad Request Exception';
 
@@ -35,6 +36,7 @@ const badRequestException = 'Bad Request Exception';
     ProvidersModule,
     DbModule,
     TerminusModule,
+    CareModule,
     EventEmitterModule.forRoot(),
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql',
