@@ -18,7 +18,8 @@
             "appointmentScheduledUser": "",
             "memberNotFeelingWellMessage": "",
             "addCaregiverDetails": "",
-            "setCallPermissions": ""
+            "setCallPermissions": "",
+            "scheduleAppointment": ""
         },
         "honorific": {
             "mr": "Señor.",

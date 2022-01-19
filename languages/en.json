@@ -18,7 +18,8 @@
             "appointmentScheduledUser": "Hello {{user.firstName}}, an appointment has been added to your schedule on {{appointmentTime}}.",
             "memberNotFeelingWellMessage": "Your member, {{member.honorific}} {{member.lastName}}, logged a score that requires your attention.",
             "addCaregiverDetails": "Tap to add caregiver details",
-            "setCallPermissions": "Tap to set your call permissions"
+            "setCallPermissions": "Tap to set your call permissions",
+            "scheduleAppointment": "Hello {{member.honorific}} {{member.lastName}}, please tap the link below to schedule the first check-in."
         },
         "honorific": {
             "mr": "Mr.",
