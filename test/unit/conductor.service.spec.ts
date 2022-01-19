@@ -390,7 +390,7 @@ describe(ConductorService.name, () => {
     });
 
     it('should call handleDeleteDispatch with an existing dispatch', async () => {
-      const deleteDispatch = { dispatchId: generateId() };
+      const deleteDispatch = { dispatchId: generateId(), correlationId: generateId() };
       spyOnDispatchesServiceInternalUpdate.mockResolvedValueOnce(deleteDispatch);
 
       await service.handleDeleteDispatch({
@@ -404,7 +404,7 @@ describe(ConductorService.name, () => {
     });
 
     it('should log warn on handleDeleteDispatch with a non existing dispatch', async () => {
-      const deleteDispatch = { dispatchId: generateId() };
+      const deleteDispatch = { dispatchId: generateId(), correlationId: generateId() };
       spyOnDispatchesServiceInternalUpdate.mockResolvedValueOnce(null);
 
       const logger = module.get<LoggerService>(LoggerService);

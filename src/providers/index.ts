@@ -5,6 +5,5 @@ export * from './oneSignal';
 export * from './sendbird';
 export * from './slack';
 export * from './twilio';
-export * from './bitly';
 export * from './notification.service';
 export * from './providers.module';

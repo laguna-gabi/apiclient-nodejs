@@ -13,7 +13,6 @@ import { gapMinutes, hosts } from 'config';
 import { format, utcToZonedTime } from 'date-fns-tz';
 import { lookup } from 'zipcode-to-timezone';
 import {
-  Bitly,
   CancelNotificationParams,
   InternationalizationService,
   OneSignal,
@@ -36,7 +35,6 @@ export class NotificationsService {
     private readonly twilio: Twilio,
     private readonly sendBird: SendBird,
     private readonly oneSignal: OneSignal,
-    private readonly bitly: Bitly,
     private readonly internationalization: InternationalizationService,
     private readonly logger: LoggerService,
     protected readonly eventEmitter: EventEmitter2,
