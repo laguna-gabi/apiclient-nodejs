@@ -96,7 +96,7 @@ describe(NotificationsService.name, () => {
 
       expect(spyOnTwilioServiceSend).toBeCalledWith(
         {
-          body: body + `:\n${scheduleLink}.`,
+          body: body + `:\n${scheduleLink}`,
           orgName: recipientClient.orgName,
           to: recipientClient.phone,
         },

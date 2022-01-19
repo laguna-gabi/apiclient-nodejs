@@ -544,7 +544,7 @@ describe('Notifications full flow', () => {
       userClient,
     });
 
-    body += `:\n${mock.scheduleLink}.`;
+    body += `:\n${mock.scheduleLink}`;
 
     expect(spyOnTwilioSend).toBeCalledWith(
       {
