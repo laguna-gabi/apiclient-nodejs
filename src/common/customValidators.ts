@@ -1,10 +1,12 @@
 import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
 import { ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
-import { isNil } from 'lodash';
-import { lookup } from 'zipcode-to-timezone';
-import { Types as MongooseTypes } from 'mongoose';
 import { general } from 'config';
+import { isValidCron } from 'cron-validator';
 import { differenceInMilliseconds } from 'date-fns';
+import { isNil } from 'lodash';
+import { Types as MongooseTypes } from 'mongoose';
+import { lookup } from 'zipcode-to-timezone';
+
 /**
  * When there are 2 params of dates, and we want to make sure that one param is
  * before the other, we can use this custom validator.
@@ -215,6 +217,21 @@ export function IsNoteOrNurseNoteProvided(options?: ValidationOptions) {
       validator: {
         validate(object, args: ValidationArguments) {
           return !isNil(args.object['note']) || !isNil(args.object['nurseNotes']);
+        },
+      },
+    });
+  };
+}
+
+export function IsCronExpression(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(cronExpressions: string[]) {
+          return cronExpressions.every((cronExpression) => isValidCron(cronExpression));
         },
       },
     });

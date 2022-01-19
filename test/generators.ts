@@ -60,6 +60,14 @@ import {
   defaultMemberParams,
 } from '../src/member';
 import { CreateOrgParams, Org, OrgType } from '../src/org';
+import {
+  CreateTodoParams,
+  DeleteTodoParams,
+  EndAndCreateTodoParams,
+  Label,
+  Todo,
+  TodoStatus,
+} from '../src/todo';
 import { CreateUserParams, GetSlotsParams, User, defaultUserParams } from '../src/user';
 
 export const generateCreateUserParams = ({
@@ -645,4 +653,88 @@ export const generateUpdateCaregiverParams = ({
   phone = '+12133734253',
 }: Partial<UpdateCaregiverParams> = {}): UpdateCaregiverParams => {
   return { id, firstName, lastName, email, relationship, phone };
+};
+
+export const mockGenerateTodo = ({
+  id = generateId(),
+  memberId = generateObjectId(),
+  text = faker.lorem.words(5),
+  label = Label.APPT,
+  cronExpressions = ['0 10 * * 6'],
+  start = new Date(),
+  end = faker.date.soon(2),
+  status = TodoStatus.active,
+  createdBy = generateObjectId(),
+  updatedBy = generateObjectId(),
+  deletedBy = generateObjectId(),
+}: Partial<Todo> = {}): Todo => {
+  return {
+    id,
+    memberId,
+    text,
+    label,
+    cronExpressions,
+    start,
+    end,
+    status,
+    createdBy,
+    updatedBy,
+    deletedBy,
+  };
+};
+
+export const generateCreateTodoParams = ({
+  memberId,
+  text = faker.lorem.words(5),
+  label = Label.APPT,
+  cronExpressions = ['0 10 * * 6'],
+  start = new Date(),
+  end = faker.date.soon(2),
+  createdBy,
+  updatedBy,
+}: Partial<CreateTodoParams> = {}) => {
+  return {
+    memberId,
+    text,
+    label,
+    cronExpressions,
+    start,
+    end,
+    createdBy,
+    updatedBy,
+  };
+};
+
+export const generateEndAndCreateTodoParams = ({
+  id = generateId(),
+  memberId,
+  text = faker.lorem.words(5),
+  label = Label.MEDS,
+  cronExpressions = ['0 10,17,21,23 * * *'],
+  start = new Date(),
+  end = faker.date.soon(3),
+  updatedBy,
+}: Partial<EndAndCreateTodoParams> = {}) => {
+  return {
+    id,
+    memberId,
+    text,
+    label,
+    cronExpressions,
+    start,
+    end,
+    updatedBy,
+  };
+};
+
+export const generateDeleteTodoParams = ({
+  id = generateId(),
+  memberId,
+  deletedBy,
+}: Partial<DeleteTodoParams> = {}) => {
+  return {
+    id,
+    memberId,
+    deletedBy,
+  };
 };

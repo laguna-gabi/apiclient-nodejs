@@ -1,0 +1,203 @@
+import * as faker from 'faker';
+import { ErrorType, Errors, UserRole } from '../../src/common';
+import { CreateTodoParams, DeleteTodoParams, EndAndCreateTodoParams } from '../../src/todo';
+import { Handler } from '../aux/handler';
+import {
+  generateDeleteTodoParams,
+  generateEndAndCreateTodoParams,
+  generateId,
+} from '../generators';
+import { generateCreateTodoParams, generateCreateUserParams } from '../index';
+
+const stringError = `String cannot represent a non string value`;
+
+describe('Validations - todo', () => {
+  const handler: Handler = new Handler();
+
+  beforeAll(async () => {
+    await handler.beforeAll();
+    const { id } = await handler.mutations.createUser({ userParams: generateCreateUserParams() });
+    handler.setContextUserId(id, '', [UserRole.coach]);
+  });
+
+  afterAll(async () => {
+    await handler.afterAll();
+  });
+
+  describe('createTodo', () => {
+    /* eslint-disable max-len */
+    test.each`
+      field                | error
+      ${'text'}            | ${`Field "text" of required type "String!" was not provided.`}
+      ${'cronExpressions'} | ${`Field "cronExpressions" of required type "[String!]!" was not provided.`}
+      ${'start'}           | ${`Field "start" of required type "DateTime!" was not provided.`}
+    `(`should fail to create a todo since mandatory field $field is missing`, async (params) => {
+      /* eslint-enable max-len */
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId: generateId(),
+      });
+      delete createTodoParams[params.field];
+      await handler.mutations.createTodo({ createTodoParams, missingFieldError: params.error });
+    });
+
+    test.each`
+      input                       | error
+      ${{ memberId: 123 }}        | ${{ missingFieldError: stringError }}
+      ${{ text: 123 }}            | ${{ missingFieldError: stringError }}
+      ${{ label: 'not-valid' }}   | ${{ missingFieldError: 'does not exist in "Label" enum.' }}
+      ${{ cronExpressions: 123 }} | ${{ missingFieldError: stringError }}
+    `(`should fail to create a todo since $input is not a valid`, async (params) => {
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId: generateId(),
+        ...params.input,
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      await handler.mutations.createTodo({ createTodoParams, ...params.error });
+    });
+
+    it(`should fail to create a todo since start after end`, async () => {
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId: generateId(),
+        end: new Date(),
+        start: faker.date.soon(2),
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      await handler.mutations.createTodo({
+        createTodoParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.todoEndAfterStart)],
+      });
+    });
+
+    it(`should fail to create a todo since cron array is empty`, async () => {
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId: generateId(),
+        cronExpressions: [],
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      await handler.mutations.createTodo({
+        createTodoParams,
+        missingFieldError: 'cronExpressions should not be empty',
+      });
+    });
+
+    it(`should fail to create a todo since invalid cron expression`, async () => {
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId: generateId(),
+        cronExpressions: ['not-valid'],
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      await handler.mutations.createTodo({
+        createTodoParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.todoInvalidCronExpression)],
+      });
+    });
+  });
+
+  describe('getTodos', () => {
+    it('should fail to get todos since memberId is not a valid', async () => {
+      await handler.queries.getTodos({ memberId: 123, invalidFieldsError: stringError });
+    });
+  });
+
+  describe('endAndCreateTodo', () => {
+    /* eslint-disable max-len */
+    test.each`
+      field                | error
+      ${'id'}              | ${`Field "id" of required type "String!" was not provided.`}
+      ${'text'}            | ${`Field "text" of required type "String!" was not provided.`}
+      ${'cronExpressions'} | ${`Field "cronExpressions" of required type "[String!]!" was not provided.`}
+      ${'start'}           | ${`Field "start" of required type "DateTime!" was not provided.`}
+    `(`should fail to update a todo since mandatory field $field is missing`, async (params) => {
+      /* eslint-enable max-len */
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        memberId: generateId(),
+      });
+      delete endAndCreateTodoParams[params.field];
+      await handler.mutations.endAndCreateTodo({
+        endAndCreateTodoParams,
+        missingFieldError: params.error,
+      });
+    });
+
+    test.each`
+      input                       | error
+      ${{ id: 123 }}              | ${{ missingFieldError: stringError }}
+      ${{ memberId: 123 }}        | ${{ missingFieldError: stringError }}
+      ${{ text: 123 }}            | ${{ missingFieldError: stringError }}
+      ${{ label: 'not-valid' }}   | ${{ missingFieldError: 'does not exist in "Label" enum.' }}
+      ${{ cronExpressions: 123 }} | ${{ missingFieldError: stringError }}
+    `(`should fail to update a todo since $input is not a valid`, async (params) => {
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        memberId: generateId(),
+        ...params.input,
+      });
+      delete endAndCreateTodoParams.updatedBy;
+
+      await handler.mutations.endAndCreateTodo({ endAndCreateTodoParams, ...params.error });
+    });
+
+    it(`should fail to update a todo since start after end`, async () => {
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        memberId: generateId(),
+        end: new Date(),
+        start: faker.date.soon(2),
+      });
+      delete endAndCreateTodoParams.updatedBy;
+
+      await handler.mutations.endAndCreateTodo({
+        endAndCreateTodoParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.todoEndAfterStart)],
+      });
+    });
+
+    it(`should fail to update a todo since cron array is empty`, async () => {
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        memberId: generateId(),
+        cronExpressions: [],
+      });
+      delete endAndCreateTodoParams.updatedBy;
+
+      await handler.mutations.endAndCreateTodo({
+        endAndCreateTodoParams,
+        missingFieldError: 'cronExpressions should not be empty',
+      });
+    });
+
+    it(`should fail to update a todo since invalid cron expression`, async () => {
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        memberId: generateId(),
+        cronExpressions: ['not-valid'],
+      });
+      delete endAndCreateTodoParams.updatedBy;
+
+      await handler.mutations.endAndCreateTodo({
+        endAndCreateTodoParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.todoInvalidCronExpression)],
+      });
+    });
+  });
+
+  describe('deleteTodo', () => {
+    test.each`
+      input                | error
+      ${{ id: 123 }}       | ${{ missingFieldError: stringError }}
+      ${{ memberId: 123 }} | ${{ missingFieldError: stringError }}
+    `(`should fail to delete a todo since $input is not a valid`, async (params) => {
+      const deleteTodoParams: DeleteTodoParams = generateDeleteTodoParams({
+        memberId: generateId(),
+        ...params.input,
+      });
+      delete deleteTodoParams.deletedBy;
+
+      await handler.mutations.deleteTodo({ deleteTodoParams, ...params.error });
+    });
+  });
+});

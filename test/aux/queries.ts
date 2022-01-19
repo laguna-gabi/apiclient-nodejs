@@ -1,5 +1,6 @@
 import { ApolloServerTestClient } from 'apollo-server-testing';
 import gql from 'graphql-tag';
+import { isGQLResultValid as isResultValid } from '../../src/common';
 import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
 import {
@@ -10,8 +11,8 @@ import {
   MultipartUploadRecordingLinkParams,
   RecordingLinkParams,
 } from '../../src/member';
+import { Todo } from '../../src/todo';
 import { GetSlotsParams } from '../../src/user';
-import { isGQLResultValid as isResultValid } from '../../src/common';
 
 export class Queries {
   constructor(private readonly apolloClient: ApolloServerTestClient) {}
@@ -802,6 +803,41 @@ export class Queries {
       expect(result.errors[0][0].message).toMatch(invalidFieldsError);
     } else {
       return result.data.getCaregivers;
+    }
+  };
+
+  getTodos = async ({
+    memberId,
+    invalidFieldsError,
+  }: {
+    memberId?;
+    invalidFieldsError?: string;
+  } = {}): Promise<Todo[]> => {
+    const result = await this.apolloClient.mutate({
+      variables: { memberId },
+      mutation: gql`
+        query getTodos($memberId: String) {
+          getTodos(memberId: $memberId) {
+            id
+            memberId
+            text
+            label
+            cronExpressions
+            start
+            end
+            status
+            createdBy
+            updatedBy
+            deletedBy
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(result.errors[0].message).toMatch(invalidFieldsError);
+    } else {
+      return result.data.getTodos;
     }
   };
 }

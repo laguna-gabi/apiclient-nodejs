@@ -40,6 +40,7 @@ import {
   UpdateTaskStatusParams,
 } from '../../src/member';
 import { CreateOrgParams } from '../../src/org';
+import { CreateTodoParams, DeleteTodoParams, EndAndCreateTodoParams, Todo } from '../../src/todo';
 import { CreateUserParams } from '../../src/user';
 
 const FRAGMENT_APPOINTMENT = gql`
@@ -1055,6 +1056,90 @@ export class Mutations {
     return (
       isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
       result.data.deleteCaregiver
+    );
+  };
+
+  createTodo = async ({
+    createTodoParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    createTodoParams: CreateTodoParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Identifier> => {
+    const result = await this.apolloClient.mutate({
+      variables: { createTodoParams },
+      mutation: gql`
+        mutation createTodo($createTodoParams: CreateTodoParams!) {
+          createTodo(createTodoParams: $createTodoParams) {
+            id
+          }
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createTodo
+    );
+  };
+
+  endAndCreateTodo = async ({
+    endAndCreateTodoParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    endAndCreateTodoParams: EndAndCreateTodoParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Todo> => {
+    const result = await this.apolloClient.mutate({
+      variables: { endAndCreateTodoParams },
+      mutation: gql`
+        mutation endAndCreateTodo($endAndCreateTodoParams: EndAndCreateTodoParams!) {
+          endAndCreateTodo(endAndCreateTodoParams: $endAndCreateTodoParams) {
+            id
+            memberId
+            text
+            label
+            cronExpressions
+            start
+            end
+            status
+            createdBy
+            updatedBy
+            deletedBy
+          }
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.endAndCreateTodo
+    );
+  };
+
+  deleteTodo = async ({
+    deleteTodoParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    deleteTodoParams: DeleteTodoParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<boolean> => {
+    const result = await this.apolloClient.mutate({
+      variables: { deleteTodoParams },
+      mutation: gql`
+        mutation deleteTodo($deleteTodoParams: DeleteTodoParams!) {
+          deleteTodo(deleteTodoParams: $deleteTodoParams)
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.deleteTodo
     );
   };
 }

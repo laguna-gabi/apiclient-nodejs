@@ -96,6 +96,12 @@ export enum ErrorType {
   caregiverEmailInvalid = 9902,
   caregiverIdInvalid = 9903,
   caregiverDeleteNotAllowed = 9904,
+
+  // Todo's
+  todoNotFound = 10001,
+  todoIdInvalid = 10002,
+  todoInvalidCronExpression = 10003,
+  todoEndAfterStart = 10004,
 }
 
 const nameFormat = `name must be between ${graphqlConfig.get('minLength')} and ${graphqlConfig.get(
@@ -223,6 +229,10 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.invalidPhoneNumberForMessaging.valueOf(),
     'invalid phone or landline - can not send SMS',
   ],
+  [ErrorType.todoNotFound.valueOf(), 'todo id was not found'],
+  [ErrorType.todoIdInvalid.valueOf(), `todo id ${objectIdFormat}`],
+  [ErrorType.todoInvalidCronExpression.valueOf(), 'invalid cron expression'],
+  [ErrorType.todoEndAfterStart.valueOf(), 'end date must be after start date'],
 ]);
 
 export const DbErrors = {

@@ -16,6 +16,7 @@ import { HealthController } from './health/health.controller';
 import { MemberModule } from './member';
 import { OrgModule } from './org';
 import { ProvidersModule } from './providers';
+import { TodoModule } from './todo';
 import { UserModule } from './user';
 
 const badRequestException = 'Bad Request Exception';
@@ -30,6 +31,7 @@ const badRequestException = 'Bad Request Exception';
     OrgModule,
     AvailabilityModule,
     DailyReportModule,
+    TodoModule,
     ProvidersModule,
     DbModule,
     TerminusModule,

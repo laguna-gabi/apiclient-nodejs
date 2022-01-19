@@ -60,8 +60,8 @@ export const isGQLResultValid = ({
       expect(result.errors[0][i]?.code || result.errors[0]?.code).not.toEqual(-1);
     }
   } else if (missingFieldError) {
-    expect(result.errors[0].message).toMatch(missingFieldError);
-    expect(result.errors[0].code).toEqual(-1);
+    expect(result.errors[0].message || result.errors[0][0].message).toMatch(missingFieldError);
+    expect(result.errors[0].code || result.errors[0][0].code).toEqual(-1);
   } else {
     return true;
   }
