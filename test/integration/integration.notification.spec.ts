@@ -13,7 +13,8 @@ import {
   ObjectCancelClass,
   ObjectChatMessageUserClass,
   ObjectCustomContentClass,
-  ObjectExternalContentClass,
+  ObjectExternalContentMobileClass,
+  ObjectExternalContentWebScheduleAppointmentClass,
   ObjectFutureNotifyClass,
   ObjectJournalContentClass,
   ObjectNewChatMessageToMemberClass,
@@ -30,7 +31,8 @@ import {
   generateChatMessageUserMock,
   generateDeleteDispatchMock,
   generateDispatchId,
-  generateExternalContentMock,
+  generateExternalContentMobileMock,
+  generateExternalContentWebScheduleAppointmentMock,
   generateNewChatMessageToMemberMock,
   generateNewControlMemberMock,
   generateNewMemberMock,
@@ -529,10 +531,10 @@ describe('Integration tests: notifications', () => {
     /**
      * Trigger : MemberResolver.notifyContent
      * Dispatch :
-     *      1. send ExternalKey dispatch
+     *      1. send ExternalKey dispatch of types ExternalKey.addCaregiverDetails or ExternalKey.setCallPermissions
      */
-    test.each(Object.values(ExternalKey))(
-      `notifyContent: dispatch message of type %p`,
+    test.each([ExternalKey.addCaregiverDetails, ExternalKey.setCallPermissions])(
+      `notifyContent: dispatch message of %p`,
       async (contentKey) => {
         const org = await creators.createAndValidateOrg();
         const member = await creators.createAndValidateMember({ org, useNewUser: true });
@@ -557,14 +559,14 @@ describe('Integration tests: notifications', () => {
         await handler.mutations.notifyContent({ notifyContentParams });
         await delay(200);
 
-        const mock = generateExternalContentMock({
+        const mock = generateExternalContentMobileMock({
           recipientClientId: notifyContentParams.memberId,
           senderClientId: notifyContentParams.userId,
           path: generatePath(NotificationType.text, contentKey),
           contentKey,
         });
-        const object = new ObjectExternalContentClass(mock);
-        Object.keys(object.objectExternalContentType).forEach((key) => {
+        const object = new ObjectExternalContentMobileClass(mock);
+        Object.keys(object.objectExternalContentMobileType).forEach((key) => {
           expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
             expect.objectContaining({
               type: QueueType.notifications,
@@ -576,6 +578,45 @@ describe('Integration tests: notifications', () => {
         });
       },
     );
+
+    /**
+     * Trigger : MemberResolver.notifyContent
+     * Dispatch :
+     *      1. send ExternalKey dispatch of types ExternalKey.scheduleAppointment
+     */
+    it(`notifyContent: dispatch message of ${ExternalKey.scheduleAppointment}`, async () => {
+      const org = await creators.createAndValidateOrg();
+      const { id } = await creators.createAndValidateMember({ org, useNewUser: true });
+
+      const member = await handler.queries.getMember({ id });
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      const notifyContentParams = generateNotifyContentParams({
+        memberId: member.id,
+        userId: member.primaryUserId.toString(),
+        contentKey: ExternalKey.scheduleAppointment,
+      });
+
+      await handler.mutations.notifyContent({ notifyContentParams });
+      await delay(200);
+
+      const mock = generateExternalContentWebScheduleAppointmentMock({
+        recipientClientId: notifyContentParams.memberId,
+        senderClientId: notifyContentParams.userId,
+        scheduleLink: member.users[0].appointments[0].link,
+      });
+      const object = new ObjectExternalContentWebScheduleAppointmentClass(mock);
+      Object.keys(object.objectExternalContentWebScheduleAppointmentType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
 
     /**
      * Trigger : MemberResolver.cancelNotify

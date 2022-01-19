@@ -1,4 +1,5 @@
 import {
+  ExternalKey,
   IEventNotifySlack,
   NotificationType,
   Platform,
@@ -64,6 +65,7 @@ import {
   generateCommunication,
   generateCreateMemberParams,
   generateCreateTaskParams,
+  generateEndAppointmentParams,
   generateGetMemberUploadJournalAudioLinkParams,
   generateGetMemberUploadJournalImageLinkParams,
   generateId,
@@ -71,6 +73,7 @@ import {
   generateNotifyContentParams,
   generateNotifyParams,
   generateObjectId,
+  generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
   generateUniqueUrl,
   generateUpdateCaregiverParams,
@@ -2215,27 +2218,72 @@ describe('MemberResolver', () => {
       ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
     });
 
-    test.each([
-      { platform: Platform.web },
-      { isPushNotificationsEnabled: false },
-      { platform: Platform.web, isPushNotificationsEnabled: true },
-      { platform: Platform.android, isPushNotificationsEnabled: false },
-    ])('should throw an error when member config has %p', async (param) => {
+    /* eslint-disable max-len */
+    test.each`
+      memberConfig                                                         | contentKey                         | error
+      ${{ platform: Platform.web }}                                        | ${ExternalKey.addCaregiverDetails} | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ platform: Platform.web }}                                        | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ isPushNotificationsEnabled: false }}                             | ${ExternalKey.addCaregiverDetails} | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ isPushNotificationsEnabled: false }}                             | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ platform: Platform.web, isPushNotificationsEnabled: true }}      | ${ExternalKey.addCaregiverDetails} | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ platform: Platform.web, isPushNotificationsEnabled: true }}      | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ platform: Platform.android, isPushNotificationsEnabled: false }} | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ platform: Platform.ios, isPushNotificationsEnabled: false }}     | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ platform: Platform.android, isPushNotificationsEnabled: false }} | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ platform: Platform.ios, isPushNotificationsEnabled: false }}     | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ platform: Platform.android }}                                    | ${ExternalKey.scheduleAppointment} | ${ErrorType.notificationNotAllowedForMobileMember}
+      ${{ platform: Platform.ios }}                                        | ${ExternalKey.scheduleAppointment} | ${ErrorType.notificationNotAllowedForMobileMember}
+    `(
+      `should throw an error when memberConfig=$memberConfig and contentKey=$contentKey`,
+      async (params) => {
+        /* eslint-enable max-len */
+        const member = mockGenerateMember();
+        const memberConfig = mockGenerateMemberConfig({ ...params.memberConfig });
+        const user = mockGenerateUser();
+        spyOnServiceGetMember.mockImplementationOnce(async () => member);
+        spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+        spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
+
+        await expect(
+          resolver.notifyContent(
+            generateNotifyContentParams({
+              userId: user.id,
+              memberId: memberConfig.memberId.toString(),
+              contentKey: params.contentKey,
+            }),
+          ),
+        ).rejects.toThrow(Errors.get(params.error));
+      },
+    );
+
+    // eslint-disable-next-line max-len
+    it(`should throw error when there are no requested appointments for ${ExternalKey.scheduleAppointment}`, async () => {
       const member = mockGenerateMember();
-      const memberConfig = mockGenerateMemberConfig({ ...param });
-      const user = mockGenerateUser();
-      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      const memberConfig = mockGenerateMemberConfig({
+        platform: Platform.web,
+        isPushNotificationsEnabled: false,
+      });
+      const user = {
+        ...mockGenerateUser(),
+        id: member.primaryUserId,
+        appointments: [
+          generateScheduleAppointmentParams({ userId: member.primaryUserId.toString() }),
+          { ...generateEndAppointmentParams(), userId: member.primaryUserId.toString() },
+        ],
+      };
+      spyOnServiceGetMember.mockImplementationOnce(async () => ({ ...member, users: [user] }));
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
 
       await expect(
         resolver.notifyContent(
           generateNotifyContentParams({
-            userId: user.id,
+            userId: member.primaryUserId.toString(),
             memberId: memberConfig.memberId.toString(),
+            contentKey: ExternalKey.scheduleAppointment,
           }),
         ),
-      ).rejects.toThrow(Errors.get(ErrorType.notificationNotAllowedForWebMember));
+      ).rejects.toThrow(Errors.get(ErrorType.notificationNotAllowedNoRequestedAppointment));
     });
   });
 
