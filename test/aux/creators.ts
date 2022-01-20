@@ -61,12 +61,14 @@ export class Creators {
   createAndValidateMember = async ({
     org,
     useNewUser = false,
+    userId, // support the case where we want to assign the member to an existing user
   }: {
     org: Org;
     useNewUser?: boolean;
+    userId?: string;
   }): Promise<Member> => {
     const userParams = generateCreateUserParams();
-    let userId;
+
     if (useNewUser) {
       const { id } = await this.handler.mutations.createUser({ userParams });
       userId = id;

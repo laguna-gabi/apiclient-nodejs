@@ -5,9 +5,11 @@ import {
   Honorific,
   IUpdateClientSettings,
   InnerQueueTypes,
+  InternalKey,
   Language,
   NotificationType,
   Platform,
+  ServiceName,
   generatePhone,
   generateZipCode,
 } from '@lagunahealth/pandora';
@@ -15,6 +17,7 @@ import * as config from 'config';
 import { format } from 'date-fns';
 import * as faker from 'faker';
 import { Types } from 'mongoose';
+import { Dispatch } from '../src/services';
 import { v4 } from 'uuid';
 import {
   AppointmentMethod,
@@ -31,6 +34,8 @@ import { Communication, GetCommunicationParams } from '../src/communication';
 import { DailyReport } from '../src/dailyReport';
 import {
   AddCaregiverParams,
+  Alert,
+  AlertType,
   AppointmentCompose,
   AudioFormat,
   CancelNotifyParams,
@@ -137,6 +142,7 @@ export const mockGenerateUser = (): User => {
     phone: generatePhone(),
     authId: v4(),
     lastMemberAssignedAt: new Date(0),
+    lastQueryAlert: faker.date.past(2),
   };
 };
 
@@ -421,6 +427,49 @@ export const generateNotesParams = ({
       wellbeing,
       wellbeingText,
     },
+  };
+};
+
+export const mockGenerateAlert = ({
+  member = mockGenerateMember(),
+  type = randomEnum(AlertType) as AlertType,
+  date = faker.date.past(),
+  isNew = false,
+  dismissed = false,
+}: Partial<Alert> = {}): Alert => {
+  return {
+    id: `${generateId()}_${type}`,
+    date,
+    type,
+    member,
+    isNew,
+    dismissed,
+  };
+};
+
+export const mockGenerateDispatch = ({
+  dispatchId = generateId(),
+  notificationType = randomEnum(NotificationType) as NotificationType,
+  recipientClientId = generateId(),
+  senderClientId = generateId(),
+  contentKey = randomEnum(InternalKey) as InternalKey,
+  sentAt = faker.date.past(1),
+  triggersAt = faker.date.past(1),
+  correlationId = generateId(),
+  serviceName = ServiceName.hepius,
+  type = InnerQueueTypes.createDispatch,
+}: Partial<Dispatch> = {}): Dispatch => {
+  return {
+    dispatchId,
+    notificationType,
+    recipientClientId,
+    senderClientId,
+    contentKey,
+    sentAt,
+    triggersAt,
+    correlationId,
+    serviceName,
+    type,
   };
 };
 
@@ -738,3 +787,12 @@ export const generateDeleteTodoParams = ({
     deletedBy,
   };
 };
+
+/*************************************************************************************************
+ ******************************************** Helpers ********************************************
+ ************************************************************************************************/
+export function randomEnum<T>(enumType: T): string {
+  const enumValues = Object.keys(enumType);
+  const randomIndex = Math.floor(Math.random() * enumValues.length);
+  return enumValues[randomIndex];
+}

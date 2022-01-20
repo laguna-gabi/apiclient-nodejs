@@ -977,6 +977,50 @@ export class Mutations {
     );
   };
 
+  dismissAlert = async ({
+    alertId,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    alertId: string;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<boolean> => {
+    const result = await this.apolloClient.mutate({
+      variables: { alertId },
+      mutation: gql`
+        mutation dismissAlert($alertId: String!) {
+          dismissAlert(alertId: $alertId)
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, invalidFieldsErrors, missingFieldError }) && result.data.dismissAlert
+    );
+  };
+
+  setLastQueryAlert = async ({
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<boolean> => {
+    const result = await this.apolloClient.mutate({
+      mutation: gql`
+        mutation setLastQueryAlert {
+          setLastQueryAlert
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
+      result.data.setLastQueryAlert
+    );
+  };
+
   updateCaregiver = async ({
     updateCaregiverParams,
     missingFieldError,

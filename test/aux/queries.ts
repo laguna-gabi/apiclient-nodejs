@@ -13,6 +13,7 @@ import {
 } from '../../src/member';
 import { Todo } from '../../src/todo';
 import { GetSlotsParams } from '../../src/user';
+import { Dispatch } from '../../src/services';
 
 export class Queries {
   constructor(private readonly apolloClient: ApolloServerTestClient) {}
@@ -35,6 +36,7 @@ export class Queries {
             title
             maxCustomers
             languages
+            lastQueryAlert
             appointments {
               id
               notBefore
@@ -782,9 +784,9 @@ export class Queries {
     memberId: string;
     invalidFieldsError?: string;
   }): Promise<Caregiver[]> => {
-    const result = await this.apolloClient.mutate({
+    const result = await this.apolloClient.query({
       variables: { memberId },
-      mutation: gql`
+      query: gql`
         query getCaregivers($memberId: String) {
           getCaregivers(memberId: $memberId) {
             id
@@ -804,6 +806,27 @@ export class Queries {
     } else {
       return result.data.getCaregivers;
     }
+  };
+
+  getAlerts = async (): Promise<Dispatch[]> => {
+    const result = await this.apolloClient.query({
+      query: gql`
+        query getAlerts {
+          getAlerts {
+            id
+            type
+            date
+            dismissed
+            isNew
+            member {
+              firstName
+              lastName
+            }
+          }
+        }
+      `,
+    });
+    return result.data?.getAlerts;
   };
 
   getTodos = async ({

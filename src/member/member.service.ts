@@ -6,11 +6,14 @@ import * as config from 'config';
 import { sub } from 'date-fns';
 import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
+import { Dispatch, NotificationService } from '../../src/services';
 import { v4 } from 'uuid';
 import {
   ActionItem,
   ActionItemDocument,
   AddCaregiverParams,
+  Alert,
+  AlertType,
   AppointmentCompose,
   ArchiveMember,
   ArchiveMemberConfig,
@@ -21,6 +24,8 @@ import {
   ControlMember,
   ControlMemberDocument,
   CreateTaskParams,
+  DismissedAlert,
+  DismissedAlertDocument,
   EmbeddedMemberProperties,
   Goal,
   GoalDocument,
@@ -63,6 +68,7 @@ import {
   extractEmbeddedSetObject,
 } from '../common';
 import { StorageService } from '../providers';
+import { differenceInMilliseconds } from 'date-fns';
 
 @Injectable()
 export class MemberService extends BaseService {
@@ -87,7 +93,10 @@ export class MemberService extends BaseService {
     private readonly controlMemberModel: Model<ControlMemberDocument>,
     @InjectModel(Caregiver.name)
     private readonly caregiverModel: Model<CaregiverDocument>,
+    @InjectModel(DismissedAlert.name)
+    private readonly dismissAlertModel: Model<DismissedAlertDocument>,
     private readonly storageService: StorageService,
+    private readonly notificationService: NotificationService,
     readonly logger: LoggerService,
   ) {
     super();
@@ -857,9 +866,88 @@ export class MemberService extends BaseService {
   async getCaregiversByMemberId(memberId: string): Promise<Caregiver[]> {
     return this.caregiverModel.find({ memberId: new Types.ObjectId(memberId) });
   }
+
+  /*************************************************************************************************
+   ******************************************* Alerts ******************************************
+   ************************************************************************************************/
+  async dismissAlert(userId: string, alertId: string) {
+    return this.dismissAlertModel.findOneAndUpdate({ alertId, userId }, undefined, {
+      upsert: true,
+    });
+  }
+
+  async getAlerts(userId: string, lastQueryAlert: Date): Promise<Alert[]> {
+    let alerts = [];
+
+    // Get all user's dismissed alerts
+    const dismissedAlertsIds = (await this.getUserDismissedAlerts(userId)).map(
+      (dismissedAlerts) => dismissedAlerts.alertId,
+    );
+
+    const members = await this.getMembersForPrimaryUser(userId);
+
+    // Generate Notification (Dispatch) based Alerts: collect all Notifications (Dispatch) sent from every member on my list
+    alerts = alerts
+      .concat(
+        ...(await Promise.all(
+          members?.map(async (member) => {
+            const dispatches = await this.notificationService.getDispatchesByClientSenderId(
+              member.id,
+            );
+
+            return dispatches?.map((dispatch) =>
+              this.notificationDispatchToAlerts(dispatch, member),
+            );
+          }),
+        )),
+      )
+      .flat()
+      .filter((alert) => alert !== undefined);
+
+    // Generate Member based alerts:
+    // TBD
+
+    // Generate Appointment based alerts:
+    // TBD
+
+    // Generate Action Items based alerts:
+    // TBD
+
+    // set user status fields - dismissed / isNew - for every alerts
+    alerts.forEach((alert) => {
+      alert.dismissed = dismissedAlertsIds?.includes(alert.id);
+      alert.isNew = !lastQueryAlert || lastQueryAlert < alert.date;
+    });
+
+    return alerts.sort((a1: Alert, a2: Alert) => {
+      return differenceInMilliseconds(a2.date, a1.date);
+    });
+  }
+
+  notificationDispatchToAlerts(dispatch: Dispatch, member: Member): Alert {
+    const alertType = AlertType[dispatch.contentKey];
+
+    if (alertType) {
+      return {
+        id: dispatch.dispatchId,
+        member,
+        type: alertType,
+        date: new Date(dispatch.sentAt),
+      } as Alert;
+    }
+  }
+
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
+  private async getMembersForPrimaryUser(userId: string): Promise<Member[]> {
+    return this.memberModel.find({ primaryUserId: new Types.ObjectId(userId) });
+  }
+
+  private async getUserDismissedAlerts(userId: string): Promise<DismissedAlert[]> {
+    return this.dismissAlertModel.find({ userId });
+  }
+
   private calculateAppointments = (
     member: Member,
   ): { appointmentsCount: number; nextAppointment: Date } => {

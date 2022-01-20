@@ -2,6 +2,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import {
   Bitly,
+  CloudMapService,
   CognitoService,
   ConfigsService,
   FeatureFlagService,
@@ -28,6 +29,7 @@ import { CommonModule } from '../common';
     ConfigsService,
     QueueService,
     FeatureFlagService,
+    CloudMapService,
   ],
   exports: [
     Bitly,
@@ -39,6 +41,7 @@ import { CommonModule } from '../common';
     CognitoService,
     ConfigsService,
     FeatureFlagService,
+    CloudMapService,
   ],
   controllers: [WebhooksController],
 })

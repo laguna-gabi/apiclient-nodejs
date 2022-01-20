@@ -23,6 +23,7 @@ import { camelCase } from 'lodash';
 import { lookup } from 'zipcode-to-timezone';
 import {
   AddCaregiverParams,
+  Alert,
   AppointmentCompose,
   AudioType,
   CancelNotifyParams,
@@ -762,6 +763,28 @@ export class MemberResolver extends MemberBase {
     @Args('memberId', { type: () => String, nullable: true }) memberId?: string,
   ): Promise<Caregiver[]> {
     return this.memberService.getCaregiversByMemberId(memberId);
+  }
+
+  /*************************************************************************************************
+   ********************************************* Alerts ********************************************
+   ************************************************************************************************/
+  @Mutation(() => Boolean)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async dismissAlert(
+    @Client('_id') userId: string,
+    @Args('alertId', { type: () => String }) alertId: string,
+  ): Promise<boolean> {
+    await this.memberService.dismissAlert(userId, alertId);
+    return true;
+  }
+
+  @Query(() => [Alert])
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getAlerts(
+    @Client('_id') userId: string,
+    @Client('lastQueryAlert') lastQueryAlert: Date,
+  ): Promise<Alert[]> {
+    return this.memberService.getAlerts(userId, lastQueryAlert);
   }
 
   /************************************************************************************************

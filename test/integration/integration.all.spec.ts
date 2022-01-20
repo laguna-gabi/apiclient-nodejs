@@ -1,7 +1,7 @@
-import { Language, Platform } from '@lagunahealth/pandora';
+import { InternalKey, Language, Platform } from '@lagunahealth/pandora';
 import * as config from 'config';
 import { general } from 'config';
-import { add, addDays, startOfToday, startOfTomorrow } from 'date-fns';
+import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
 import * as faker from 'faker';
 import {
   CreateTodoParams,
@@ -19,6 +19,7 @@ import {
 import { ErrorType, Errors, Identifiers, UserRole, delay, reformatDate } from '../../src/common';
 import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
 import {
+  AlertType,
   CreateTaskParams,
   Member,
   Recording,
@@ -48,6 +49,7 @@ import {
   generateUpdateMemberParams,
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
+  mockGenerateDispatch,
 } from '../index';
 
 describe('Integration tests: all', () => {
@@ -996,6 +998,152 @@ describe('Integration tests: all', () => {
         id: journalId,
         invalidFieldsError: Errors.get(ErrorType.memberJournalNotFound),
       });
+    });
+  });
+
+  describe('Alerts', () => {
+    let member1, member2, notification1, notification2, primaryUser;
+    beforeAll(async () => {
+      // Fixtures: generate 2 members with the same primary user
+      const org = await creators.createAndValidateOrg();
+
+      member1 = await creators.createAndValidateMember({ org, useNewUser: true });
+      primaryUser = member1.primaryUserId.toString();
+      member2 = await creators.createAndValidateMember({
+        org,
+        useNewUser: false,
+        userId: primaryUser,
+      });
+
+      notification1 = mockGenerateDispatch({
+        senderClientId: member1.id,
+        contentKey: InternalKey.appointmentScheduledUser,
+      });
+      notification2 = mockGenerateDispatch({
+        sentAt: sub(notification1.sentAt, { hours: 1 }),
+        senderClientId: member2.id,
+        contentKey: InternalKey.memberNotFeelingWellMessage,
+      });
+    });
+
+    beforeEach(() => {
+      handler.notificationService.spyOnNotificationServiceGetDispatchesByClientSenderId.mockReset();
+      // Notification service to return expected response
+      // eslint-disable-next-line max-len
+      handler.notificationService.spyOnNotificationServiceGetDispatchesByClientSenderId.mockResolvedValueOnce(
+        [notification1],
+      );
+      // eslint-disable-next-line max-len
+      handler.notificationService.spyOnNotificationServiceGetDispatchesByClientSenderId.mockResolvedValueOnce(
+        [notification2],
+      );
+    });
+
+    it('should get alerts', async () => {
+      const alerts = await handler
+        .setContextUserId(primaryUser, undefined, [UserRole.coach])
+        .queries.getAlerts();
+
+      expect(alerts).toEqual([
+        {
+          date: notification1.sentAt.toISOString(),
+          dismissed: false,
+          id: notification1.dispatchId,
+          isNew: true,
+          member: {
+            firstName: member1.firstName,
+            lastName: member1.lastName,
+          },
+          type: AlertType.appointmentScheduledUser,
+        },
+        {
+          date: notification2.sentAt.toISOString(),
+          dismissed: false,
+          id: notification2.dispatchId,
+          isNew: true,
+          member: {
+            firstName: member2.firstName,
+            lastName: member2.lastName,
+          },
+          type: AlertType.memberNotFeelingWellMessage,
+        },
+      ]);
+    });
+
+    it('should get alerts with dismissed indication', async () => {
+      // User will dismiss one alert - we should expect to see the alert as dismissed
+      await handler
+        .setContextUserId(primaryUser, undefined, [UserRole.coach])
+        .mutations.dismissAlert({ alertId: notification1.dispatchId });
+
+      const alerts = await handler
+        .setContextUserId(primaryUser, undefined, [UserRole.coach])
+        .queries.getAlerts();
+
+      expect(alerts).toEqual([
+        {
+          date: notification1.sentAt.toISOString(),
+          dismissed: true,
+          id: notification1.dispatchId,
+          isNew: true,
+          member: {
+            firstName: member1.firstName,
+            lastName: member1.lastName,
+          },
+          type: AlertType.appointmentScheduledUser,
+        },
+        {
+          date: notification2.sentAt.toISOString(),
+          dismissed: false,
+          id: notification2.dispatchId,
+          isNew: true,
+          member: {
+            firstName: member2.firstName,
+            lastName: member2.lastName,
+          },
+          type: AlertType.memberNotFeelingWellMessage,
+        },
+      ]);
+    });
+
+    it('should get alerts with isNew set to false after setLastQueryAlert', async () => {
+      // User setLastQueryAlert to now
+      await handler
+        .setContextUserId(primaryUser, undefined, [UserRole.coach])
+        .mutations.setLastQueryAlert({});
+
+      const { lastQueryAlert } = await handler
+        .setContextUserId(primaryUser, undefined, [UserRole.coach])
+        .queries.getUser();
+
+      const alerts = await handler
+        .setContextUserId(primaryUser, undefined, [UserRole.coach], lastQueryAlert)
+        .queries.getAlerts();
+
+      expect(alerts).toEqual([
+        {
+          date: notification1.sentAt.toISOString(),
+          dismissed: true,
+          id: notification1.dispatchId,
+          isNew: false,
+          member: {
+            firstName: member1.firstName,
+            lastName: member1.lastName,
+          },
+          type: AlertType.appointmentScheduledUser,
+        },
+        {
+          date: notification2.sentAt.toISOString(),
+          dismissed: false,
+          id: notification2.dispatchId,
+          isNew: false,
+          member: {
+            firstName: member2.firstName,
+            lastName: member2.lastName,
+          },
+          type: AlertType.memberNotFeelingWellMessage,
+        },
+      ]);
     });
   });
 

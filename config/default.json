@@ -28,6 +28,15 @@
     "queue": {
       "notification": "NotificationsQ-local",
       "image": "ImageQ-local"
+    },
+    "cloudMap": {
+      "namespace": "LagunaCloudMap-develop"
+    }
+  },
+  "services": {
+    "notification": {
+      "port": 3001,
+      "taskName": "iris"
     }
   },
   "twilio": {

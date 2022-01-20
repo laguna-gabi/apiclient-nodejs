@@ -4,6 +4,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import { connect, disconnect } from 'mongoose';
+import { NotificationService } from '../src/services';
 import { v4 } from 'uuid';
 import { MemberRole, RoleTypes, apiPrefix, webhooks } from '../src/common';
 import { DbModule } from '../src/db';
@@ -33,6 +34,7 @@ export class BaseHandler {
     userId: string,
     primaryUserId = '',
     roles: RoleTypes[] = [MemberRole.member],
+    lastQueryAlert: Date = undefined,
   ) => {
     (this.module as any).apolloServer.context = () => ({
       req: {
@@ -40,6 +42,7 @@ export class BaseHandler {
           _id: userId,
           roles,
           primaryUserId,
+          lastQueryAlert,
         },
       },
     });
@@ -115,6 +118,7 @@ export const mockProviders = (
   storage;
   featureFlagService;
   queueService;
+  notificationService;
 } => {
   const sendBird = module.get<SendBird>(SendBird);
   const storage = module.get<StorageService>(StorageService);
@@ -124,6 +128,7 @@ export const mockProviders = (
   const cognitoService = module.get<CognitoService>(CognitoService);
   const featureFlagService = module.get<FeatureFlagService>(FeatureFlagService);
   const queueService = module.get<QueueService>(QueueService);
+  const notificationService = module.get<NotificationService>(NotificationService);
 
   const spyOnFeatureFlagControlGroup = jest.spyOn(featureFlagService, 'isControlGroup');
   const spyOnSendBirdCreateUser = jest.spyOn(sendBird, 'createUser');
@@ -157,6 +162,10 @@ export const mockProviders = (
   const spyOnCognitoServiceDisableMember = jest.spyOn(cognitoService, 'disableMember');
   const spyOnCognitoServiceDeleteMember = jest.spyOn(cognitoService, 'deleteMember');
   const spyOnQueueServiceSendMessage = jest.spyOn(queueService, 'sendMessage');
+  const spyOnNotificationServiceGetDispatchesByClientSenderId = jest.spyOn(
+    notificationService,
+    'getDispatchesByClientSenderId',
+  );
 
   spyOnSendBirdCreateUser.mockResolvedValue(v4());
   spyOnFeatureFlagControlGroup.mockResolvedValue(false);
@@ -187,6 +196,7 @@ export const mockProviders = (
   spyOnCognitoServiceDisableMember.mockReturnValue(undefined);
   spyOnCognitoServiceDeleteMember.mockReturnValue(undefined);
   spyOnQueueServiceSendMessage.mockReturnValue(undefined);
+  spyOnNotificationServiceGetDispatchesByClientSenderId.mockResolvedValue([undefined]);
 
   return {
     sendBird: {
@@ -221,5 +231,6 @@ export const mockProviders = (
     },
     featureFlagService: { spyOnFeatureFlagControlGroup },
     queueService: { spyOnQueueServiceSendMessage },
+    notificationService: { spyOnNotificationServiceGetDispatchesByClientSenderId },
   };
 };

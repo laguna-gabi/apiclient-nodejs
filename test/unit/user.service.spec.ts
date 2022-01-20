@@ -552,4 +552,17 @@ describe('UserService', () => {
       ]);
     };
   });
+
+  describe('setLatestQueryAlert', () => {
+    it('should create userConfig on userCreate', async () => {
+      const user = generateCreateUserParams();
+      const createdUser = await service.insert(user);
+
+      expect(createdUser.lastQueryAlert).toBeFalsy();
+
+      const updatedUser = await service.setLatestQueryAlert(createdUser.id);
+
+      expect(updatedUser.lastQueryAlert).toBeTruthy();
+    });
+  });
 });

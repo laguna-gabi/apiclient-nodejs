@@ -83,6 +83,7 @@ import {
   generateUpdateMemberParams,
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
+  mockGenerateAlert,
   mockGenerateMember,
   mockGenerateMemberConfig,
   mockGenerateUser,
@@ -2377,6 +2378,51 @@ describe('MemberResolver', () => {
 
       await resolver.notifyChatMessage(fakeData);
       expect(spyOnNotifyCreateDispatch).not.toBeCalled();
+    });
+  });
+
+  describe('dismissAlert', () => {
+    let spyOnServiceDismissAlert;
+    beforeEach(() => {
+      spyOnServiceDismissAlert = jest.spyOn(service, 'dismissAlert');
+    });
+
+    afterEach(() => {
+      spyOnServiceDismissAlert.mockReset();
+    });
+
+    it('should call dismissAlert', async () => {
+      const alertId = generateId();
+      const userId = generateId();
+      await resolver.dismissAlert(userId, alertId);
+
+      expect(spyOnServiceDismissAlert).toBeCalledTimes(1);
+      expect(spyOnServiceDismissAlert).toBeCalledWith(userId, alertId);
+    });
+  });
+
+  describe('getAlerts', () => {
+    let spyOnServiceGetAlerts;
+    beforeEach(() => {
+      spyOnServiceGetAlerts = jest.spyOn(service, 'getAlerts');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetAlerts.mockReset();
+    });
+
+    it('should call getAlerts', async () => {
+      const userId = generateId();
+      const lastQueryAlert = faker.date.past(1);
+      const alert = mockGenerateAlert();
+
+      spyOnServiceGetAlerts.mockResolvedValue([alert]);
+
+      const alerts = await resolver.getAlerts(userId, lastQueryAlert);
+
+      expect(spyOnServiceGetAlerts).toBeCalledTimes(1);
+      expect(spyOnServiceGetAlerts).toBeCalledWith(userId, lastQueryAlert);
+      expect(alerts).toEqual([alert]);
     });
   });
 });
