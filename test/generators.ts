@@ -66,11 +66,13 @@ import {
 } from '../src/member';
 import { CreateOrgParams, Org, OrgType } from '../src/org';
 import {
+  CreateTodoDoneParams,
   CreateTodoParams,
   DeleteTodoParams,
   EndAndCreateTodoParams,
   Label,
   Todo,
+  TodoDone,
   TodoStatus,
 } from '../src/todo';
 import { CreateUserParams, GetSlotsParams, User, defaultUserParams } from '../src/user';
@@ -732,6 +734,20 @@ export const mockGenerateTodo = ({
   };
 };
 
+export const mockGenerateTodoDone = ({
+  id = generateId(),
+  memberId = generateObjectId(),
+  todoId = generateObjectId(),
+  done = new Date(),
+}: Partial<TodoDone> = {}): TodoDone => {
+  return {
+    id,
+    memberId,
+    todoId,
+    done,
+  };
+};
+
 export const generateCreateTodoParams = ({
   memberId,
   text = faker.lorem.words(5),
@@ -785,6 +801,18 @@ export const generateDeleteTodoParams = ({
     id,
     memberId,
     deletedBy,
+  };
+};
+
+export const generateCreateTodoDoneParams = ({
+  todoId = generateId(),
+  done = new Date(),
+  memberId = generateId(),
+}: Partial<CreateTodoDoneParams> = {}) => {
+  return {
+    todoId,
+    done,
+    memberId,
   };
 };
 

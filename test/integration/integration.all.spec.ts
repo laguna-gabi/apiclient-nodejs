@@ -4,6 +4,7 @@ import { general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
 import * as faker from 'faker';
 import {
+  CreateTodoDoneParams,
   CreateTodoParams,
   DeleteTodoParams,
   EndAndCreateTodoParams,
@@ -35,6 +36,7 @@ import {
   generateAddCaregiverParams,
   generateAppointmentLink,
   generateAvailabilityInput,
+  generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateDeleteTodoParams,
   generateEndAndCreateTodoParams,
@@ -1220,6 +1222,7 @@ describe('Integration tests: all', () => {
        * 1. User creates a todo for member
        * 2. Member updates the todo
        * 3. User deletes the todo
+       * 4. create TodoDone
        */
       const user = await creators.createAndValidateUser([UserRole.coach]);
       const userId = user.id;
@@ -1295,6 +1298,18 @@ describe('Integration tests: all', () => {
       expect(todosAfterDelete[1].updatedBy).toEqual(memberId);
       expect(todosAfterDelete[1].deletedBy).toEqual(userId);
       expect(todosAfterDelete[1].status).toEqual(TodoStatus.deleted);
+
+      const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        todoId: id,
+        done: new Date(),
+      });
+      delete createTodoDoneParams.memberId;
+
+      const { id: todoDoneId } = await handler
+        .setContextUserId(memberId)
+        .mutations.createTodoDone({ createTodoDoneParams });
+
+      expect(todoDoneId).not.toBeUndefined();
     });
   });
   /************************************************************************************************

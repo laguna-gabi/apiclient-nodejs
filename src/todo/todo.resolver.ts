@@ -1,9 +1,18 @@
 import { UseInterceptors } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
-import { CreateTodoParams, DeleteTodoParams, EndAndCreateTodoParams, Todo, TodoService } from '.';
+import {
+  CreateTodoDoneParams,
+  CreateTodoParams,
+  DeleteTodoParams,
+  EndAndCreateTodoParams,
+  Todo,
+  TodoService,
+} from '.';
 import {
   Client,
+  ErrorType,
+  Errors,
   Identifier,
   LoggingInterceptor,
   MemberIdParam,
@@ -62,5 +71,21 @@ export class TodoResolver {
     @Args(camelCase(DeleteTodoParams.name)) deleteTodoParams: DeleteTodoParams,
   ) {
     return this.todoService.deleteTodo({ ...deleteTodoParams, deletedBy: clientId });
+  }
+
+  @Mutation(() => Identifier)
+  @MemberIdParam(MemberIdParamType.memberId)
+  @UseInterceptors(MemberUserRouteInterceptor)
+  @Roles(MemberRole.member)
+  async createTodoDone(
+    @Client('roles') roles,
+    @Args(camelCase(CreateTodoDoneParams.name)) createTodoDoneParams: CreateTodoDoneParams,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    const { todoId, memberId } = createTodoDoneParams;
+    await this.todoService.getTodo(todoId, memberId);
+    return this.todoService.createTodoDone(createTodoDoneParams);
   }
 }

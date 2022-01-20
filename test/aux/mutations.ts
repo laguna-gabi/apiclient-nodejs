@@ -40,7 +40,13 @@ import {
   UpdateTaskStatusParams,
 } from '../../src/member';
 import { CreateOrgParams } from '../../src/org';
-import { CreateTodoParams, DeleteTodoParams, EndAndCreateTodoParams, Todo } from '../../src/todo';
+import {
+  CreateTodoDoneParams,
+  CreateTodoParams,
+  DeleteTodoParams,
+  EndAndCreateTodoParams,
+  Todo,
+} from '../../src/todo';
 import { CreateUserParams } from '../../src/user';
 
 const FRAGMENT_APPOINTMENT = gql`
@@ -1184,6 +1190,32 @@ export class Mutations {
 
     return (
       isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.deleteTodo
+    );
+  };
+
+  createTodoDone = async ({
+    createTodoDoneParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    createTodoDoneParams: CreateTodoDoneParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Identifier> => {
+    const result = await this.apolloClient.mutate({
+      variables: { createTodoDoneParams },
+      mutation: gql`
+        mutation createTodoDone($createTodoDoneParams: CreateTodoDoneParams!) {
+          createTodoDone(createTodoDoneParams: $createTodoDoneParams) {
+            id
+          }
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.createTodoDone
     );
   };
 }

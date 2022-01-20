@@ -3,19 +3,25 @@ import { InjectModel } from '@nestjs/mongoose';
 import { cloneDeep } from 'lodash';
 import { Model, Types } from 'mongoose';
 import {
+  CreateTodoDoneParams,
   CreateTodoParams,
   DeleteTodoParams,
   EndAndCreateTodoParams,
   NotNullableTodoKeys,
   Todo,
   TodoDocument,
+  TodoDone,
+  TodoDoneDocument,
   TodoStatus,
 } from '.';
 import { BaseService, ErrorType, Errors, Identifier } from '../common';
 
 @Injectable()
 export class TodoService extends BaseService {
-  constructor(@InjectModel(Todo.name) private readonly todoModel: Model<TodoDocument>) {
+  constructor(
+    @InjectModel(Todo.name) private readonly todoModel: Model<TodoDocument>,
+    @InjectModel(TodoDone.name) private readonly todoDoneModel: Model<TodoDoneDocument>,
+  ) {
     super();
   }
 
@@ -35,6 +41,19 @@ export class TodoService extends BaseService {
 
   async getTodos(memberId: string): Promise<Todo[]> {
     return this.todoModel.find({ memberId: new Types.ObjectId(memberId) });
+  }
+
+  async getTodo(id: string, memberId: string): Promise<Todo> {
+    const result = await this.todoModel.findOne({
+      _id: new Types.ObjectId(id),
+      memberId: new Types.ObjectId(memberId),
+    });
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.todoNotFound));
+    }
+
+    return result;
   }
 
   async endAndCreateTodo(endAndCreateTodoParams: EndAndCreateTodoParams): Promise<Todo> {
@@ -86,5 +105,17 @@ export class TodoService extends BaseService {
     }
 
     return true;
+  }
+
+  async createTodoDone(createTodoDoneParams: CreateTodoDoneParams): Promise<Identifier> {
+    const { todoId, memberId } = createTodoDoneParams;
+
+    const { _id } = await this.todoDoneModel.create({
+      ...createTodoDoneParams,
+      todoId: new Types.ObjectId(todoId),
+      memberId: new Types.ObjectId(memberId),
+    });
+
+    return { id: _id };
   }
 }

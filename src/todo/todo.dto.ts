@@ -90,6 +90,18 @@ export class DeleteTodoParams {
   deletedBy: string;
 }
 
+@InputType()
+export class CreateTodoDoneParams {
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.todoIdInvalid) })
+  todoId: string;
+
+  @Field(() => Date)
+  done: Date;
+
+  memberId: string;
+}
+
 /********∏******************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
@@ -138,9 +150,28 @@ export class Todo extends Identifier {
   deletedBy?: Types.ObjectId;
 }
 
+@ObjectType()
+@Schema({ versionKey: false, timestamps: true })
+export class TodoDone extends Identifier {
+  @Prop({ index: true, type: Types.ObjectId })
+  @Field(() => String)
+  memberId: Types.ObjectId;
+
+  @Prop({ index: true, type: Types.ObjectId })
+  @Field(() => String)
+  todoId: Types.ObjectId;
+
+  @Prop({ type: Date })
+  @Field(() => Date)
+  done: Date;
+}
+
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 
 export type TodoDocument = Todo & Document;
 export const TodoDto = SchemaFactory.createForClass(Todo);
+
+export type TodoDoneDocument = TodoDone & Document;
+export const TodoDoneDto = SchemaFactory.createForClass(TodoDone);

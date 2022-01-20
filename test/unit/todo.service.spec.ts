@@ -4,10 +4,13 @@ import { cloneDeep } from 'lodash';
 import { Model, model } from 'mongoose';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
 import {
+  CreateTodoDoneParams,
   CreateTodoParams,
   DeleteTodoParams,
   EndAndCreateTodoParams,
   Todo,
+  TodoDone,
+  TodoDoneDto,
   TodoDto,
   TodoModule,
   TodoService,
@@ -17,6 +20,7 @@ import {
   dbConnect,
   dbDisconnect,
   defaultModules,
+  generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateDeleteTodoParams,
   generateEndAndCreateTodoParams,
@@ -28,6 +32,7 @@ describe('TodoService', () => {
   let module: TestingModule;
   let service: TodoService;
   let todoModel: Model<typeof TodoDto>;
+  let todoDoneModel: Model<typeof TodoDoneDto>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -39,6 +44,7 @@ describe('TodoService', () => {
     mockLogger(module.get<LoggerService>(LoggerService));
 
     todoModel = model(Todo.name, TodoDto);
+    todoDoneModel = model(TodoDone.name, TodoDoneDto);
 
     await dbConnect();
   });
@@ -136,6 +142,37 @@ describe('TodoService', () => {
     it('should get empty array if member doesnt have todos', async () => {
       const createdTodos = await service.getTodos(generateId());
       expect(createdTodos).toEqual([]);
+    });
+  });
+
+  describe('getTodo', () => {
+    it('should get todo', async () => {
+      const memberId = generateId();
+
+      const params: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+        createdBy: memberId,
+        updatedBy: memberId,
+      });
+
+      const { id } = await service.createTodo(params);
+
+      const createdTodo = await todoModel.findById(id);
+      const result = await service.getTodo(id, memberId);
+
+      expect(createdTodo).toEqual(
+        expect.objectContaining({
+          ...result,
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        }),
+      );
+    });
+
+    it('should throw an error if todo does not exists', async () => {
+      await expect(service.getTodo(generateId(), generateId())).rejects.toThrow(
+        Errors.get(ErrorType.todoNotFound),
+      );
     });
   });
 
@@ -254,6 +291,38 @@ describe('TodoService', () => {
       });
 
       await expect(service.deleteTodo(params)).rejects.toThrow(Errors.get(ErrorType.todoNotFound));
+    });
+  });
+
+  describe('createTodoDone', () => {
+    it('should create TodoDone', async () => {
+      const memberId = generateId();
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+        createdBy: memberId,
+        updatedBy: memberId,
+      });
+
+      const { id: todoId } = await service.createTodo(createTodoParams);
+
+      const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        todoId,
+        memberId,
+      });
+
+      const { id: todoDoneId } = await service.createTodoDone(createTodoDoneParams);
+      expect(todoDoneId).not.toBeUndefined();
+
+      const createdTodoDone = await todoDoneModel.findById(todoDoneId).lean();
+      expect(createdTodoDone).toEqual(
+        expect.objectContaining({
+          ...createTodoDoneParams,
+          _id: todoDoneId,
+          memberId: generateObjectId(memberId),
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        }),
+      );
     });
   });
 });

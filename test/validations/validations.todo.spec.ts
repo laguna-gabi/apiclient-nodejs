@@ -1,8 +1,14 @@
 import * as faker from 'faker';
 import { ErrorType, Errors, UserRole } from '../../src/common';
-import { CreateTodoParams, DeleteTodoParams, EndAndCreateTodoParams } from '../../src/todo';
+import {
+  CreateTodoDoneParams,
+  CreateTodoParams,
+  DeleteTodoParams,
+  EndAndCreateTodoParams,
+} from '../../src/todo';
 import { Handler } from '../aux/handler';
 import {
+  generateCreateTodoDoneParams,
   generateDeleteTodoParams,
   generateEndAndCreateTodoParams,
   generateId,
@@ -198,6 +204,41 @@ describe('Validations - todo', () => {
       delete deleteTodoParams.deletedBy;
 
       await handler.mutations.deleteTodo({ deleteTodoParams, ...params.error });
+    });
+  });
+
+  describe('createTodoDone', () => {
+    /* eslint-disable max-len */
+    test.each`
+      field       | error
+      ${'todoId'} | ${`Field "todoId" of required type "String!" was not provided.`}
+      ${'done'}   | ${`Field "done" of required type "DateTime!" was not provided.`}
+    `(
+      `should fail to create a todoDone since mandatory field $field is missing`,
+      async (params) => {
+        /* eslint-enable max-len */
+        const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams();
+        delete createTodoDoneParams[params.field];
+
+        await handler.mutations.createTodoDone({
+          createTodoDoneParams,
+          missingFieldError: params.error,
+        });
+      },
+    );
+
+    it('should fail to create a todoDone since todoId is not valid', async () => {
+      const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        todoId: 123,
+      });
+      delete createTodoDoneParams.memberId;
+
+      await handler.mutations.createTodoDone({
+        createTodoDoneParams,
+        missingFieldError: stringError,
+      });
     });
   });
 });
