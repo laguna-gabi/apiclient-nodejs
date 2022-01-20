@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Barrier, BarrierDto, RedFlag, RedFlagDto } from '.';
+import { Barrier, BarrierDto, CareService, RedFlag, RedFlagDto } from '.';
 
 @Module({
   imports: [
@@ -9,5 +9,6 @@ import { Barrier, BarrierDto, RedFlag, RedFlagDto } from '.';
       { name: Barrier.name, schema: BarrierDto },
     ]),
   ],
+  providers: [CareService],
 })
 export class CareModule {}

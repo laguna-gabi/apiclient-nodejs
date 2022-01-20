@@ -19,6 +19,8 @@ export class CreateRedFlagParams {
 
   @Field(() => String, { nullable: true })
   notes?: string;
+
+  createdBy: string;
 }
 
 /**************************************************************************************************

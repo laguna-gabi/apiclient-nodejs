@@ -76,6 +76,7 @@ import {
   TodoStatus,
 } from '../src/todo';
 import { CreateUserParams, GetSlotsParams, User, defaultUserParams } from '../src/user';
+import { CreateRedFlagParams, RedFlagType } from '../src/care';
 
 export const generateCreateUserParams = ({
   authId = v4(),
@@ -801,6 +802,20 @@ export const generateDeleteTodoParams = ({
     id,
     memberId,
     deletedBy,
+  };
+};
+
+export const generateCreateRedFlagParams = ({
+  memberId = generateId(),
+  redFlagType = RedFlagType.health,
+  notes = faker.lorem.words(4),
+  createdBy,
+}: Partial<CreateRedFlagParams> = {}) => {
+  return {
+    memberId,
+    redFlagType,
+    notes,
+    createdBy,
   };
 };
 
