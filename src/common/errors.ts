@@ -99,7 +99,7 @@ export enum ErrorType {
   caregiverIdInvalid = 9903,
   caregiverDeleteNotAllowed = 9904,
 
-  // Todo's
+  // To do's
   todoNotFound = 10001,
   todoIdInvalid = 10002,
   todoInvalidCronExpression = 10003,
@@ -108,6 +108,7 @@ export enum ErrorType {
   // Module Care
   redFlagIdInvalid = 10101,
   barrierIdInvalid = 10102,
+  carePlanIdInvalid = 10103,
 }
 
 const nameFormat = `name must be between ${graphqlConfig.get('minLength')} and ${graphqlConfig.get(
@@ -250,6 +251,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   // Module Care
   [ErrorType.redFlagIdInvalid.valueOf(), 'invalid red flag id'],
   [ErrorType.barrierIdInvalid.valueOf(), 'invalid barrier id'],
+  [ErrorType.carePlanIdInvalid.valueOf(), 'invalid care plan id'],
 ]);
 
 export const DbErrors = {

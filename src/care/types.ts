@@ -62,3 +62,12 @@ export enum BarrierType {
 }
 
 registerEnumType(BarrierType, { name: 'BarrierType' });
+
+export enum CarePlanType {
+  // waiting for final care plans from product
+  temporary1 = 'temporary1',
+  temporary2 = 'temporary2',
+  temporary3 = 'temporary3',
+}
+
+registerEnumType(CarePlanType, { name: 'CarePlanType' });
