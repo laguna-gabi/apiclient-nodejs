@@ -13,7 +13,6 @@ import {
 } from '../../src/member';
 import { Honorific, Language, Platform } from '@lagunahealth/pandora';
 import * as config from 'config';
-import { Org } from '../../src/org';
 
 export const DateFormat = 'yyyy-MM-dd';
 export const TimeFormat = 'HH:mm:ss';
@@ -97,6 +96,8 @@ export class MemberData {
   dc_instructions_received: boolean;
   dc_summary_load_date: string; // Discharge Summary document load date (in S3)
   dc_instructions_load_date: string;
+  general_notes?: string;
+  nurse_notes?: string;
 }
 
 export class CoachData {
@@ -160,7 +161,6 @@ export type PopulatedAppointment = Appointment & {
 
 export type PopulatedMember = Member & {
   primaryUser?: User;
-  orgData?: Org & { _id: Types.ObjectId };
 };
 
 export type MemberDataAggregate = BaseMember & {

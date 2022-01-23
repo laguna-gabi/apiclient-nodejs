@@ -465,7 +465,7 @@ export class MemberService extends BaseService {
   }
 
   async getAllControl(): Promise<MemberDocument[]> {
-    return this.controlMemberModel.find();
+    return this.controlMemberModel.find().populate({ path: 'org' });
   }
 
   /*************************************************************************************************

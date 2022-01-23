@@ -281,12 +281,14 @@ describe('Commands: AnalyticsService', () => {
             _id: app2Id,
             userId: new Types.ObjectId(mockPrimaryUser.id),
             start: sub(now, { days: 5 }),
+            createdAt: sub(now, { days: 10 }),
             method: AppointmentMethod.videoCall,
           } as PopulatedAppointment,
           {
             _id: app3Id,
             userId: new Types.ObjectId(mockFellowUser.id),
             start: sub(now, { days: 10 }),
+            createdAt: sub(now, { days: 15 }),
             end: sub(now, { days: 9, hours: 23.5 }),
             status: AppointmentStatus.done,
             method: AppointmentMethod.chat,
@@ -307,6 +309,7 @@ describe('Commands: AnalyticsService', () => {
             _id: app4Id,
             userId: new Types.ObjectId(mockPrimaryUser.id),
             start: sub(now, { days: 5 }),
+            createdAt: sub(now, { days: 10 }),
             method: AppointmentMethod.phoneCall,
             noShow: true,
           } as PopulatedAppointment,
@@ -323,7 +326,7 @@ describe('Commands: AnalyticsService', () => {
           graduation_date: '2021-02-03',
         },
         {
-          created: reformatDate(sub(now, { days: 5 }).toString(), DateTimeFormat),
+          created: reformatDate(sub(now, { days: 10 }).toString(), DateTimeFormat),
           customer_id: mockMember.id,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           chat_id: app4Id.toString(),
@@ -344,7 +347,7 @@ describe('Commands: AnalyticsService', () => {
           coach_id: mockPrimaryUser.id,
         },
         {
-          created: reformatDate(sub(now, { days: 10 }).toString(), DateTimeFormat),
+          created: reformatDate(sub(now, { days: 15 }).toString(), DateTimeFormat),
           customer_id: mockMember.id,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           appt_number: 1,
@@ -376,7 +379,7 @@ describe('Commands: AnalyticsService', () => {
           strengths: app3Notes.strengths,
         },
         {
-          created: reformatDate(sub(now, { days: 5 }).toString(), DateTimeFormat),
+          created: reformatDate(sub(now, { days: 10 }).toString(), DateTimeFormat),
           customer_id: mockMember.id,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           appt_number: 2,
@@ -416,7 +419,7 @@ describe('Commands: AnalyticsService', () => {
           dischargeDate: reformatDate(sub(now, { days: 10 }).toString(), DateFormat),
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
           primaryUser: mockPrimaryUser,
-          orgData: { ...mockOrg, _id: Types.ObjectId(mockOrg.id) },
+          org: { ...mockOrg, _id: Types.ObjectId(mockOrg.id) },
         } as PopulatedMember,
         appointments: [
           {
@@ -487,6 +490,8 @@ describe('Commands: AnalyticsService', () => {
         coach_id: mockPrimaryUser.id,
         org_id: mockOrg.id,
         org_name: mockOrg.name,
+        general_notes: mockMember.generalNotes,
+        nurse_notes: mockMember.nurseNotes,
       });
     });
 
@@ -501,6 +506,7 @@ describe('Commands: AnalyticsService', () => {
         memberDetails: {
           ...mockMember,
           primaryUserId: undefined,
+          org: { ...mockOrg, _id: Types.ObjectId(mockOrg.id) },
         } as PopulatedMember,
         isControlMember: true,
       } as MemberDataAggregate);
@@ -529,6 +535,8 @@ describe('Commands: AnalyticsService', () => {
         dc_instructions_received: false,
         dc_summary_received: false,
         active: false,
+        org_id: mockOrg.id,
+        org_name: mockOrg.name,
       });
     });
   });

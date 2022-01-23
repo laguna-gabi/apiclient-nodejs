@@ -261,6 +261,8 @@ export const mockGenerateMember = (): Member => {
       city: faker.address.city(),
       state: faker.address.state(),
     },
+    nurse_notes: faker.lorem.sentence(),
+    general_notes: faker.lorem.sentence(),
   };
 };
 
