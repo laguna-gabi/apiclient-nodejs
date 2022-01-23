@@ -19,12 +19,12 @@ export class AvailabilityService {
     return { ids: result.map((item) => item._id) };
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.availabilityModel.deleteOne({ _id: id });
-
-    if (result.deletedCount === 0) {
+  async delete(id: string, deletedBy: string): Promise<boolean> {
+    const result = await this.availabilityModel.findById(new Types.ObjectId(id));
+    if (!result) {
       throw new Error(Errors.get(ErrorType.availabilityNotFound));
     }
+    await result.delete(new Types.ObjectId(deletedBy));
     return true;
   }
 

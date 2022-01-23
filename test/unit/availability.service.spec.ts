@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Model, Types, model } from 'mongoose';
 import {
   Availability,
+  AvailabilityDocument,
   AvailabilityDto,
   AvailabilityModule,
   AvailabilityService,
@@ -21,7 +22,7 @@ import {
 describe('AvailabilityService', () => {
   let module: TestingModule;
   let service: AvailabilityService;
-  let availabilityModel: Model<typeof AvailabilityDto>;
+  let availabilityModel: Model<AvailabilityDocument>;
   let modelUser: Model<typeof UserDto>;
 
   beforeAll(async () => {
@@ -149,15 +150,32 @@ describe('AvailabilityService', () => {
       let result = await availabilityModel.findById(ids[0]);
       expect(result).not.toBeNull();
 
-      await service.delete(ids[0]);
+      await service.delete(ids[0], userId);
 
       result = await availabilityModel.findById(ids[0]);
       expect(result).toBeNull();
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const deletedResult = await availabilityModel.findWithDeleted(ids[0]);
+      expect(deletedResult).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: ids[0],
+            ...params,
+            deleted: true,
+            deletedAt: expect.any(Date),
+            deletedBy: new Types.ObjectId(userId),
+          }),
+        ]),
+      );
     });
 
     it('should throw exception when trying to delete a non existing availability', async () => {
       const id = generateId();
-      await expect(service.delete(id)).rejects.toThrow(Errors.get(ErrorType.availabilityNotFound));
+      await expect(service.delete(id, generateId())).rejects.toThrow(
+        Errors.get(ErrorType.availabilityNotFound),
+      );
     });
   });
 
@@ -171,5 +189,30 @@ describe('AvailabilityService', () => {
 
     expect(result.createdAt).toEqual(expect.any(Date));
     expect(result.updatedAt).toEqual(expect.any(Date));
+  });
+
+  it('should not get a deleted availability', async () => {
+    const user = await modelUser.create(generateCreateUserParams());
+
+    const params1 = [generateAvailabilityInput(), generateAvailabilityInput()];
+    const params2 = [generateAvailabilityInput(), generateAvailabilityInput()];
+    const { ids: nonDeletedIds } = await service.create(params1, user.id);
+    const { ids: deletedIds } = await service.create(params2, user.id);
+
+    await Promise.all(
+      deletedIds.map(async (id) => {
+        await service.delete(id, user.id);
+      }),
+    );
+
+    const allResult = await service.get();
+    const filtered = allResult.filter((result) => result.userId.toString() === user.id);
+    expect(filtered.length).toEqual(nonDeletedIds.length);
+    expect(filtered).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(params1[0]),
+        expect.objectContaining(params1[1]),
+      ]),
+    );
   });
 });

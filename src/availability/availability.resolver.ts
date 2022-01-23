@@ -26,7 +26,7 @@ export class AvailabilityResolver {
 
   @Mutation(() => Boolean)
   @Roles(UserRole.coach, UserRole.nurse)
-  async deleteAvailability(@Args('id', { type: () => String }) id: string) {
-    return this.availabilityService.delete(id);
+  async deleteAvailability(@Client('_id') userId, @Args('id', { type: () => String }) id: string) {
+    return this.availabilityService.delete(id, userId);
   }
 }

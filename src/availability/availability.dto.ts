@@ -1,7 +1,8 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { Identifier } from '../common';
+import { ISoftDelete } from '../db';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -52,5 +53,5 @@ export class AvailabilitySlot extends Identifier {
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type AvailabilityDocument = Availability & Document;
+export type AvailabilityDocument = Availability & Document & ISoftDelete<Availability>;
 export const AvailabilityDto = SchemaFactory.createForClass(Availability);
