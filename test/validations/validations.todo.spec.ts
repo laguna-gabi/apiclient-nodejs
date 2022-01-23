@@ -241,4 +241,10 @@ describe('Validations - todo', () => {
       });
     });
   });
+
+  describe('getTodoDones', () => {
+    it('should fail to get todoDones since memberId is not a valid', async () => {
+      await handler.queries.getTodoDones({ memberId: 123, invalidFieldsError: stringError });
+    });
+  });
 });

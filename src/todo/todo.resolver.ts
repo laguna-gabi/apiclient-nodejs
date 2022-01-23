@@ -7,6 +7,7 @@ import {
   DeleteTodoParams,
   EndAndCreateTodoParams,
   Todo,
+  TodoDone,
   TodoService,
 } from '.';
 import {
@@ -87,5 +88,13 @@ export class TodoResolver {
     const { todoId, memberId } = createTodoDoneParams;
     await this.todoService.getTodo(todoId, memberId);
     return this.todoService.createTodoDone(createTodoDoneParams);
+  }
+
+  @Query(() => [TodoDone])
+  @MemberIdParam(MemberIdParamType.memberId)
+  @UseInterceptors(MemberUserRouteInterceptor)
+  @Roles(UserRole.coach, UserRole.nurse, MemberRole.member)
+  async getTodoDones(@Args('memberId', { type: () => String, nullable: true }) memberId?: string) {
+    return this.todoService.getTodoDones(memberId);
   }
 }

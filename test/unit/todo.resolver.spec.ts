@@ -21,6 +21,7 @@ import {
   generateObjectId,
   mockGenerateMember,
   mockGenerateTodo,
+  mockGenerateTodoDone,
   mockGenerateUser,
 } from '../index';
 
@@ -260,5 +261,38 @@ describe('TodoResolver', () => {
         ).rejects.toThrow(Error(Errors.get(ErrorType.memberAllowedOnly)));
       },
     );
+  });
+
+  describe('getTodoDones', () => {
+    let spyOnServiceGetTodoDones;
+
+    beforeEach(() => {
+      spyOnServiceGetTodoDones = jest.spyOn(service, 'getTodoDones');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetTodoDones.mockReset();
+    });
+
+    it('should get Todos by member', async () => {
+      const memberId = generateId();
+      const todoId = generateId();
+      const todoDones = [
+        mockGenerateTodoDone({
+          memberId: generateObjectId(memberId),
+          todoId: generateObjectId(todoId),
+        }),
+        mockGenerateTodoDone({
+          memberId: generateObjectId(memberId),
+          todoId: generateObjectId(todoId),
+        }),
+      ];
+      spyOnServiceGetTodoDones.mockImplementationOnce(async () => todoDones);
+
+      const result = await resolver.getTodoDones(memberId);
+
+      expect(spyOnServiceGetTodoDones).toHaveBeenCalledWith(memberId);
+      expect(result).toEqual(todoDones);
+    });
   });
 });

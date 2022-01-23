@@ -11,7 +11,7 @@ import {
   MultipartUploadRecordingLinkParams,
   RecordingLinkParams,
 } from '../../src/member';
-import { Todo } from '../../src/todo';
+import { Todo, TodoDone } from '../../src/todo';
 import { GetSlotsParams } from '../../src/user';
 import { Dispatch } from '../../src/services';
 
@@ -836,9 +836,9 @@ export class Queries {
     memberId?;
     invalidFieldsError?: string;
   } = {}): Promise<Todo[]> => {
-    const result = await this.apolloClient.mutate({
+    const result = await this.apolloClient.query({
       variables: { memberId },
-      mutation: gql`
+      query: gql`
         query getTodos($memberId: String) {
           getTodos(memberId: $memberId) {
             id
@@ -861,6 +861,34 @@ export class Queries {
       expect(result.errors[0].message).toMatch(invalidFieldsError);
     } else {
       return result.data.getTodos;
+    }
+  };
+
+  getTodoDones = async ({
+    memberId,
+    invalidFieldsError,
+  }: {
+    memberId?;
+    invalidFieldsError?: string;
+  } = {}): Promise<TodoDone[]> => {
+    const result = await this.apolloClient.query({
+      variables: { memberId },
+      query: gql`
+        query getTodoDones($memberId: String) {
+          getTodoDones(memberId: $memberId) {
+            id
+            memberId
+            todoId
+            done
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(result.errors[0].message).toMatch(invalidFieldsError);
+    } else {
+      return result.data.getTodoDones;
     }
   };
 }

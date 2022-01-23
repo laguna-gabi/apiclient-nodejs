@@ -1301,7 +1301,6 @@ describe('Integration tests: all', () => {
 
       const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
         todoId: id,
-        done: new Date(),
       });
       delete createTodoDoneParams.memberId;
 
@@ -1310,6 +1309,20 @@ describe('Integration tests: all', () => {
         .mutations.createTodoDone({ createTodoDoneParams });
 
       expect(todoDoneId).not.toBeUndefined();
+
+      const TodoDones = await handler.setContextUserId(memberId).queries.getTodoDones({ memberId });
+
+      expect(TodoDones.length).toEqual(1);
+      expect(TodoDones).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: todoDoneId,
+            memberId,
+            todoId: id,
+            done: createTodoDoneParams.done.toISOString(),
+          }),
+        ]),
+      );
     });
   });
   /************************************************************************************************

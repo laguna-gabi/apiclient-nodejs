@@ -118,4 +118,8 @@ export class TodoService extends BaseService {
 
     return { id: _id };
   }
+
+  async getTodoDones(memberId: string): Promise<TodoDone[]> {
+    return this.todoDoneModel.find({ memberId: new Types.ObjectId(memberId) });
+  }
 }

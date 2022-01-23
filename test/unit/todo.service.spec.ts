@@ -325,4 +325,54 @@ describe('TodoService', () => {
       );
     });
   });
+
+  describe('getTodoDones', () => {
+    it('should get todoDones', async () => {
+      const memberId = generateId();
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+        createdBy: memberId,
+        updatedBy: memberId,
+      });
+
+      const { id: todoId } = await service.createTodo(createTodoParams);
+
+      const createTodoDoneParams1: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        todoId,
+        memberId,
+      });
+      const createTodoDoneParams2: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        todoId,
+        memberId,
+      });
+
+      const { id: todoDoneId1 } = await service.createTodoDone(createTodoDoneParams1);
+      const { id: todoDoneId2 } = await service.createTodoDone(createTodoDoneParams2);
+
+      const createdTodoDones = await service.getTodoDones(memberId);
+      expect(createdTodoDones).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: todoDoneId1,
+            memberId: generateObjectId(memberId),
+            done: createTodoDoneParams1.done,
+            createdAt: expect.any(Date),
+            updatedAt: expect.any(Date),
+          }),
+          expect.objectContaining({
+            _id: todoDoneId2,
+            memberId: generateObjectId(memberId),
+            done: createTodoDoneParams2.done,
+            createdAt: expect.any(Date),
+            updatedAt: expect.any(Date),
+          }),
+        ]),
+      );
+    });
+
+    it('should get empty array if member doesnt have todoDones', async () => {
+      const createdTodoDones = await service.getTodoDones(generateId());
+      expect(createdTodoDones).toEqual([]);
+    });
+  });
 });
