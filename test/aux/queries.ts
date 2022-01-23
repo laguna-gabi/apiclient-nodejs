@@ -14,6 +14,7 @@ import {
 import { Todo, TodoDone } from '../../src/todo';
 import { GetSlotsParams } from '../../src/user';
 import { Dispatch } from '../../src/services';
+import { RedFlag } from '../../src/care';
 
 export class Queries {
   constructor(private readonly apolloClient: ApolloServerTestClient) {}
@@ -891,6 +892,36 @@ export class Queries {
       expect(result.errors[0].message).toMatch(invalidFieldsError);
     } else {
       return result.data.getTodoDones;
+    }
+  };
+
+  getMemberRedFlags = async ({
+    memberId,
+    invalidFieldsError,
+  }: {
+    memberId: string;
+    invalidFieldsError?: string;
+  }): Promise<RedFlag[]> => {
+    const result = await this.apolloClient.query({
+      variables: { memberId },
+      query: gql`
+        query getMemberRedFlags($memberId: String!) {
+          getMemberRedFlags(memberId: $memberId) {
+            id
+            memberId
+            createdBy
+            redFlagType
+            notes
+            createdBy
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(result.errors[0].message).toMatch(invalidFieldsError);
+    } else {
+      return result.data.getMemberRedFlags;
     }
   };
 }

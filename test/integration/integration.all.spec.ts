@@ -36,6 +36,7 @@ import {
   generateAddCaregiverParams,
   generateAppointmentLink,
   generateAvailabilityInput,
+  generateCreateRedFlagParams,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateDeleteTodoParams,
@@ -53,6 +54,7 @@ import {
   generateUpdateRecordingParams,
   mockGenerateDispatch,
 } from '../index';
+import { CreateRedFlagParams } from '../../src/care';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -1385,6 +1387,51 @@ describe('Integration tests: all', () => {
       );
     });
   });
+
+  describe('Care', () => {
+    it('should create and get and red flags', async () => {
+      const org = await creators.createAndValidateOrg();
+      const { id: memberId } = await creators.createAndValidateMember({ org, useNewUser: true });
+
+      // create first red flag
+      const { id: userId } = await creators.createAndValidateUser([UserRole.coach]);
+      const createRedFlagParams: CreateRedFlagParams = generateCreateRedFlagParams({
+        memberId,
+      });
+      delete createRedFlagParams.createdBy;
+
+      const { id } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.createRedFlag({
+          createRedFlagParams,
+        });
+
+      // create second red flag
+      const { id: userId2 } = await creators.createAndValidateUser([UserRole.coach]);
+      const createRedFlagParams2: CreateRedFlagParams = generateCreateRedFlagParams({
+        memberId,
+      });
+      delete createRedFlagParams2.createdBy;
+
+      const { id: id2 } = await handler
+        .setContextUserId(userId2, '', [UserRole.coach])
+        .mutations.createRedFlag({
+          createRedFlagParams: createRedFlagParams2,
+        });
+
+      // get red flags
+      const redFlags = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .queries.getMemberRedFlags({ memberId });
+
+      expect(redFlags.length).toEqual(2);
+      expect.arrayContaining([
+        expect.objectContaining({ ...createRedFlagParams, id, createdBy: userId }),
+        expect.objectContaining({ ...createRedFlagParams2, id2, createdBy: userId2 }),
+      ]);
+    });
+  });
+
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

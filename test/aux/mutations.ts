@@ -48,6 +48,7 @@ import {
   Todo,
 } from '../../src/todo';
 import { CreateUserParams } from '../../src/user';
+import { CreateRedFlagParams } from '../../src/care';
 
 const FRAGMENT_APPOINTMENT = gql`
   fragment appointmentFragment on Appointment {
@@ -1216,6 +1217,31 @@ export class Mutations {
     return (
       isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.createTodoDone
+    );
+  };
+
+  createRedFlag = async ({
+    createRedFlagParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    createRedFlagParams: CreateRedFlagParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Identifier> => {
+    const result = await this.apolloClient.mutate({
+      variables: { createRedFlagParams },
+      mutation: gql`
+        mutation createRedFlag($createRedFlagParams: CreateRedFlagParams!) {
+          createRedFlag(createRedFlagParams: $createRedFlagParams) {
+            id
+          }
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createRedFlag
     );
   };
 }
