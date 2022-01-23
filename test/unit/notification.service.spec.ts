@@ -29,13 +29,16 @@ describe('NotificationService', () => {
 
   describe('getDispatchesByClientSenderId', () => {
     let spyOnHttpServiceGet: jest.SpyInstance;
+    let spyOnServiceOnModuleInit: jest.SpyInstance;
 
     beforeEach(() => {
       spyOnHttpServiceGet = jest.spyOn(httpService, 'get');
+      spyOnServiceOnModuleInit = jest.spyOn(service, 'onModuleInit');
     });
 
     afterEach(() => {
       spyOnHttpServiceGet.mockReset();
+      spyOnServiceOnModuleInit.mockReset();
     });
 
     it('should successfully send a request', async () => {
@@ -55,6 +58,7 @@ describe('NotificationService', () => {
         `http://localhost:3001/dispatches/${senderClientId}`,
         {
           params: { projection: 'field1,field2', status: 'done' },
+          timeout: 2000,
         },
       );
       expect(result).toEqual([dispatch]);
@@ -76,6 +80,31 @@ describe('NotificationService', () => {
         `http://localhost:3001/dispatches/${senderClientId}`,
         {
           params: { projection: 'field1,field2', status: 'done' },
+          timeout: 2000,
+        },
+      );
+    });
+
+    it('should fail after 4 retries due to ENOTFOUND', async () => {
+      const senderClientId = generateId();
+
+      spyOnHttpServiceGet.mockImplementation(() => {
+        throw { code: 'ENOTFOUND' };
+      });
+
+      try {
+        await service.getDispatchesByClientSenderId(senderClientId, ['field1', 'field2']);
+      } catch (ex) {
+        expect(ex).toEqual({ code: 'ENOTFOUND' });
+      }
+
+      expect(spyOnHttpServiceGet).toBeCalledTimes(4);
+      expect(spyOnServiceOnModuleInit).toBeCalledTimes(3);
+      expect(spyOnHttpServiceGet).toBeCalledWith(
+        `http://localhost:3001/dispatches/${senderClientId}`,
+        {
+          params: { projection: 'field1,field2', status: 'done' },
+          timeout: 2000,
         },
       );
     });

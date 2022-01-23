@@ -26,11 +26,13 @@ export class NotificationService implements OnModuleInit {
   async getDispatchesByClientSenderId(
     clientSenderId: string,
     projection?: string[],
+    retryAttempt = 0,
   ): Promise<Dispatch[]> {
     try {
       const result = await this.httpService
         .get(`${this.namespace}/dispatches/${clientSenderId}`, {
           params: { status: 'done', projection: projection?.join(',') },
+          timeout: services.timeout,
         })
         .toPromise();
 
@@ -51,6 +53,14 @@ export class NotificationService implements OnModuleInit {
         this.getDispatchesByClientSenderId.name,
         formatEx(ex),
       );
+
+      if (
+        ['ECONNREFUSED', 'ECONNABORTED', 'ENOTFOUND'].includes(ex.code) &&
+        retryAttempt < services.retries
+      ) {
+        await this.onModuleInit(); // re-discover instance
+        return this.getDispatchesByClientSenderId(clientSenderId, projection, ++retryAttempt);
+      }
 
       throw ex;
     }

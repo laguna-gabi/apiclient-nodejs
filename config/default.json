@@ -37,7 +37,9 @@
     "notification": {
       "port": 3001,
       "taskName": "iris"
-    }
+    },
+    "timeout": 2000,
+    "retries": 3
   },
   "twilio": {
     "source": "+12058511112",
