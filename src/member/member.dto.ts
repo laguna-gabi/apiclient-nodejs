@@ -5,7 +5,7 @@ import {
   Language,
   NotificationType,
 } from '@lagunahealth/pandora';
-import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType, PickType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
   IsEmail,
@@ -586,6 +586,14 @@ export class Member extends Identifier {
   @Field(() => [ReadmissionRiskHistory], { nullable: true })
   readmissionRiskHistory?: ReadmissionRiskHistory[];
 }
+
+@ObjectType()
+export class MemberInfo extends PickType(Member, [
+  'firstName',
+  'lastName',
+  'honorific',
+  'id',
+] as const) {}
 
 @ObjectType()
 export class MemberSummary extends Identifier {

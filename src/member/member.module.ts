@@ -56,6 +56,7 @@ import { ServiceModule } from '../services';
       { name: ControlMember.name, schema: ControlMemberDto },
       { name: Caregiver.name, schema: CaregiverDto },
       { name: DismissedAlert.name, schema: DismissedAlertDto },
+      { name: Appointment.name, schema: AppointmentDto },
     ]),
   ],
   providers: [MemberResolver, MemberService, ConfigsService],

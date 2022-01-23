@@ -1004,7 +1004,7 @@ describe('Integration tests: all', () => {
   });
 
   describe('Alerts', () => {
-    let member1, member2, notification1, notification2, primaryUser;
+    let member1, member2, notification1, notification2, notification3, primaryUser;
     beforeAll(async () => {
       // Fixtures: generate 2 members with the same primary user
       const org = await creators.createAndValidateOrg();
@@ -1026,6 +1026,12 @@ describe('Integration tests: all', () => {
         senderClientId: member2.id,
         contentKey: InternalKey.memberNotFeelingWellMessage,
       });
+      // should be ignored.. over 30 days
+      notification3 = mockGenerateDispatch({
+        sentAt: sub(new Date(), { days: 30 }),
+        senderClientId: member2.id,
+        contentKey: InternalKey.memberNotFeelingWellMessage,
+      });
     });
 
     beforeEach(() => {
@@ -1037,7 +1043,7 @@ describe('Integration tests: all', () => {
       );
       // eslint-disable-next-line max-len
       handler.notificationService.spyOnNotificationServiceGetDispatchesByClientSenderId.mockResolvedValueOnce(
-        [notification2],
+        [notification2, notification3],
       );
     });
 
@@ -1048,14 +1054,33 @@ describe('Integration tests: all', () => {
 
       expect(alerts).toEqual([
         {
+          date: member2.createdAt,
+          dismissed: false,
+          id: `${member2.id}_${AlertType.memberAssigned}`,
+          isNew: true,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member2),
+          type: AlertType.memberAssigned,
+        },
+        {
+          date: member1.createdAt,
+          dismissed: false,
+          id: `${member1.id}_${AlertType.memberAssigned}`,
+          isNew: true,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member1),
+          type: AlertType.memberAssigned,
+        },
+        {
           date: notification1.sentAt.toISOString(),
           dismissed: false,
           id: notification1.dispatchId,
           isNew: true,
-          member: {
-            firstName: member1.firstName,
-            lastName: member1.lastName,
-          },
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member1),
           type: AlertType.appointmentScheduledUser,
         },
         {
@@ -1063,10 +1088,9 @@ describe('Integration tests: all', () => {
           dismissed: false,
           id: notification2.dispatchId,
           isNew: true,
-          member: {
-            firstName: member2.firstName,
-            lastName: member2.lastName,
-          },
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member2),
           type: AlertType.memberNotFeelingWellMessage,
         },
       ]);
@@ -1084,14 +1108,33 @@ describe('Integration tests: all', () => {
 
       expect(alerts).toEqual([
         {
+          date: member2.createdAt,
+          dismissed: false,
+          id: `${member2.id}_${AlertType.memberAssigned}`,
+          isNew: true,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member2),
+          type: AlertType.memberAssigned,
+        },
+        {
+          date: member1.createdAt,
+          dismissed: false,
+          id: `${member1.id}_${AlertType.memberAssigned}`,
+          isNew: true,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member1),
+          type: AlertType.memberAssigned,
+        },
+        {
           date: notification1.sentAt.toISOString(),
           dismissed: true,
           id: notification1.dispatchId,
           isNew: true,
-          member: {
-            firstName: member1.firstName,
-            lastName: member1.lastName,
-          },
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member1),
           type: AlertType.appointmentScheduledUser,
         },
         {
@@ -1099,10 +1142,9 @@ describe('Integration tests: all', () => {
           dismissed: false,
           id: notification2.dispatchId,
           isNew: true,
-          member: {
-            firstName: member2.firstName,
-            lastName: member2.lastName,
-          },
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member2),
           type: AlertType.memberNotFeelingWellMessage,
         },
       ]);
@@ -1124,14 +1166,33 @@ describe('Integration tests: all', () => {
 
       expect(alerts).toEqual([
         {
+          date: member2.createdAt,
+          dismissed: false,
+          id: `${member2.id}_${AlertType.memberAssigned}`,
+          isNew: false,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member2),
+          type: AlertType.memberAssigned,
+        },
+        {
+          date: member1.createdAt,
+          dismissed: false,
+          id: `${member1.id}_${AlertType.memberAssigned}`,
+          isNew: false,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member1),
+          type: AlertType.memberAssigned,
+        },
+        {
           date: notification1.sentAt.toISOString(),
           dismissed: true,
           id: notification1.dispatchId,
           isNew: false,
-          member: {
-            firstName: member1.firstName,
-            lastName: member1.lastName,
-          },
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member1),
           type: AlertType.appointmentScheduledUser,
         },
         {
@@ -1139,10 +1200,9 @@ describe('Integration tests: all', () => {
           dismissed: false,
           id: notification2.dispatchId,
           isNew: false,
-          member: {
-            firstName: member2.firstName,
-            lastName: member2.lastName,
-          },
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member2),
           type: AlertType.memberNotFeelingWellMessage,
         },
       ]);

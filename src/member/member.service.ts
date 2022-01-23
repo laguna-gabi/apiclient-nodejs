@@ -3,10 +3,10 @@ import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import * as config from 'config';
-import { sub } from 'date-fns';
-import { cloneDeep, isNil, omitBy } from 'lodash';
+import { add, sub } from 'date-fns';
+import { cloneDeep, isNil, omitBy, pick } from 'lodash';
 import { Model, Types } from 'mongoose';
-import { Dispatch, NotificationService } from '../../src/services';
+import { NotificationService } from '../../src/services';
 import { v4 } from 'uuid';
 import {
   ActionItem,
@@ -36,6 +36,7 @@ import {
   MemberConfig,
   MemberConfigDocument,
   MemberDocument,
+  MemberInfo,
   MemberSummary,
   NotNullableMemberKeys,
   Recording,
@@ -52,7 +53,7 @@ import {
   UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
 } from '.';
-import { Appointment, AppointmentStatus } from '../appointment';
+import { Appointment, AppointmentDocument, AppointmentStatus } from '../appointment';
 import {
   BaseService,
   DbErrors,
@@ -95,6 +96,8 @@ export class MemberService extends BaseService {
     private readonly caregiverModel: Model<CaregiverDocument>,
     @InjectModel(DismissedAlert.name)
     private readonly dismissAlertModel: Model<DismissedAlertDocument>,
+    @InjectModel(Appointment.name)
+    private readonly appointmentModel: Model<AppointmentDocument>,
     private readonly storageService: StorageService,
     private readonly notificationService: NotificationService,
     readonly logger: LoggerService,
@@ -868,7 +871,7 @@ export class MemberService extends BaseService {
   }
 
   /*************************************************************************************************
-   ******************************************* Alerts ******************************************
+   ******************************************* Alerts **********************************************
    ************************************************************************************************/
   async dismissAlert(userId: string, alertId: string) {
     return this.dismissAlertModel.findOneAndUpdate({ alertId, userId }, undefined, {
@@ -876,72 +879,149 @@ export class MemberService extends BaseService {
     });
   }
 
-  async getAlerts(userId: string, lastQueryAlert: Date): Promise<Alert[]> {
-    let alerts = [];
+  async getAlerts(userId: string, lastQueryAlert?: Date): Promise<Alert[]> {
+    const members = await this.memberModel.find({ primaryUserId: new Types.ObjectId(userId) });
 
+    // --------------------------------------------------------------------------------------------
+    // Collect Alerts
+    // --------------------------------------------------------------------------------------------
+    // Generate Notification (Dispatch) based Alerts
+    const alerts = (
+      await Promise.all(
+        [
+          members?.map(async (member) => this.notificationDispatchToAlerts(member)),
+          members?.map(async (member) => this.entityToAlerts(member)),
+        ].flat(),
+      )
+    ).flat();
+
+    // --------------------------------------------------------------------------------------------
+    // Add metadata (dismissed? / isNew?)
+    // --------------------------------------------------------------------------------------------
     // Get all user's dismissed alerts
     const dismissedAlertsIds = (await this.getUserDismissedAlerts(userId)).map(
       (dismissedAlerts) => dismissedAlerts.alertId,
     );
 
-    const members = await this.getMembersForPrimaryUser(userId);
-
-    // Generate Notification (Dispatch) based Alerts: collect all Notifications (Dispatch) sent from every member on my list
-    alerts = alerts
-      .concat(
-        ...(await Promise.all(
-          members?.map(async (member) => {
-            const dispatches = await this.notificationService.getDispatchesByClientSenderId(
-              member.id,
-            );
-
-            return dispatches?.map((dispatch) =>
-              this.notificationDispatchToAlerts(dispatch, member),
-            );
-          }),
-        )),
-      )
-      .flat()
-      .filter((alert) => alert !== undefined);
-
-    // Generate Member based alerts:
-    // TBD
-
-    // Generate Appointment based alerts:
-    // TBD
-
-    // Generate Action Items based alerts:
-    // TBD
-
-    // set user status fields - dismissed / isNew - for every alerts
-    alerts.forEach((alert) => {
+    // set status fields - dismissed / isNew - for every alert
+    alerts.forEach((alert: Alert) => {
       alert.dismissed = dismissedAlertsIds?.includes(alert.id);
       alert.isNew = !lastQueryAlert || lastQueryAlert < alert.date;
     });
 
-    return alerts.sort((a1: Alert, a2: Alert) => {
-      return differenceInMilliseconds(a2.date, a1.date);
-    });
-  }
-
-  notificationDispatchToAlerts(dispatch: Dispatch, member: Member): Alert {
-    const alertType = AlertType[dispatch.contentKey];
-
-    if (alertType) {
-      return {
-        id: dispatch.dispatchId,
-        member,
-        type: alertType,
-        date: new Date(dispatch.sentAt),
-      } as Alert;
-    }
+    return alerts
+      .filter((alert: Alert) => alert.date > sub(new Date(), { days: 30 }))
+      .sort((a1: Alert, a2: Alert) => {
+        return differenceInMilliseconds(a2.date, a1.date);
+      });
   }
 
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
-  private async getMembersForPrimaryUser(userId: string): Promise<Member[]> {
-    return this.memberModel.find({ primaryUserId: new Types.ObjectId(userId) });
+  private async notificationDispatchToAlerts(member: Member): Promise<Alert[]> {
+    const dispatches = await this.notificationService.getDispatchesByClientSenderId(member.id);
+
+    return (
+      dispatches
+        ?.filter((dispatch) => AlertType[dispatch.contentKey])
+        .map(
+          (dispatch) =>
+            ({
+              id: dispatch.dispatchId,
+              member: this.getMemberInfo(member),
+              type: AlertType[dispatch.contentKey],
+              date: new Date(dispatch.sentAt),
+            } as Alert),
+        ) || []
+    );
+  }
+
+  private async entityToAlerts(member: Member): Promise<Alert[]> {
+    let alerts: Alert[];
+
+    // first alert - AlertType.memberAssigned
+    alerts = [
+      {
+        id: `${member.id}_${AlertType.memberAssigned}`,
+        member: this.getMemberInfo(member),
+        type: AlertType.memberAssigned,
+        date: member.createdAt,
+      } as Alert,
+    ];
+
+    // collect actionItemOverdue alerts
+    alerts = alerts.concat(await this.actionItemsToAlerts(member));
+
+    // Collect appointment related alerts
+    alerts = alerts.concat(await this.appointmentsItemsToAlerts(member));
+
+    return alerts;
+  }
+
+  private async appointmentsItemsToAlerts(member: Member): Promise<Alert[]> {
+    const reviewedAppointments = [];
+
+    // collect all member recordings
+    const recordings = await this.recordingModel.find({
+      memberId: new Types.ObjectId(member.id),
+      review: { $exists: true },
+    });
+
+    // collect all reviewed appointments (push all reviewed appointment ids to an array)
+    const reviewAppointmentAlerts = recordings.map((recording) => {
+      reviewedAppointments.push(recording.appointmentId);
+
+      return {
+        id: `${recording.id}_${AlertType.appointmentReviewed}`,
+        member: this.getMemberInfo(member),
+        type: AlertType.appointmentReviewed,
+        date: recording.review.createdAt,
+      } as Alert;
+    });
+
+    // grab all `done` (status) appointments where `end` occurred more than 24hrs ago (overdue for review)
+    const appointments = await this.appointmentModel.find({
+      memberId: new Types.ObjectId(member.id),
+      status: AppointmentStatus.done,
+      end: { $lte: sub(new Date(), { days: 1 }) },
+    });
+
+    // if an overdue appointment is not included in the list of reviewed appointments we generate an alert
+    const reviewOverDueAlerts = appointments.map((appointment) => {
+      if (!reviewedAppointments.includes(appointment.id)) {
+        return {
+          id: `${appointment.id}_${AlertType.appointmentReviewOverdue}`,
+          member: this.getMemberInfo(member),
+          type: AlertType.appointmentReviewOverdue,
+          date: add(appointment.end, { days: 1 }),
+        } as Alert;
+      }
+    });
+
+    return [reviewAppointmentAlerts, reviewOverDueAlerts].flat();
+  }
+
+  private async actionItemsToAlerts(member: Member): Promise<Alert[]> {
+    const actionItems = await this.actionItemModel.find({ _id: { $in: member.actionItems } });
+    return actionItems
+      .filter(
+        (actionItem) =>
+          actionItem.status === TaskStatus.pending && actionItem.deadline < new Date(),
+      )
+      .map(
+        (actionItem) =>
+          ({
+            id: `${actionItem.id}_${AlertType.actionItemOverdue}`,
+            member: this.getMemberInfo(member),
+            type: AlertType.actionItemOverdue,
+            date: actionItem.deadline,
+          } as Alert),
+      );
+  }
+
+  private getMemberInfo(member: Member): MemberInfo {
+    return pick(member, ['firstName', 'lastName', 'id', 'honorific']);
   }
 
   private async getUserDismissedAlerts(userId: string): Promise<DismissedAlert[]> {

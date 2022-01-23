@@ -821,6 +821,8 @@ export class Queries {
             member {
               firstName
               lastName
+              honorific
+              id
             }
           }
         }
