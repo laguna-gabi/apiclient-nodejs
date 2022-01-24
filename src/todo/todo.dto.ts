@@ -17,14 +17,6 @@ export const NotNullableTodoKeys = ['label', 'end'];
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
 
-export enum TodoStatus {
-  active = 'active',
-  ended = 'ended',
-  deleted = 'deleted',
-}
-
-registerEnumType(TodoStatus, { name: 'TodoStatus' });
-
 export enum Label {
   APPT = 'APPT',
   MEDS = 'MEDS',
@@ -78,19 +70,6 @@ export class EndAndCreateTodoParams extends ExtraTodoParams {
 }
 
 @InputType()
-export class DeleteTodoParams {
-  @Field(() => String)
-  @IsObjectId({ message: Errors.get(ErrorType.todoIdInvalid) })
-  id: string;
-
-  @Field(() => String, { nullable: true })
-  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
-  memberId?: string;
-
-  deletedBy: string;
-}
-
-@InputType()
 export class CreateTodoDoneParams {
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.todoIdInvalid) })
@@ -133,10 +112,6 @@ export class Todo extends Identifier {
   @Field(() => Date, { nullable: true })
   end?: Date;
 
-  @Prop({ default: TodoStatus.active })
-  @Field(() => TodoStatus)
-  status: TodoStatus;
-
   @Prop({ type: Types.ObjectId })
   @Field(() => String)
   createdBy: Types.ObjectId;
@@ -144,10 +119,6 @@ export class Todo extends Identifier {
   @Prop({ type: Types.ObjectId })
   @Field(() => String)
   updatedBy: Types.ObjectId;
-
-  @Prop({ type: Types.ObjectId })
-  @Field(() => String, { nullable: true })
-  deletedBy?: Types.ObjectId;
 }
 
 @ObjectType()
@@ -169,7 +140,6 @@ export class TodoDone extends Identifier {
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-
 export type TodoDocument = Todo & Document;
 export const TodoDto = SchemaFactory.createForClass(Todo);
 

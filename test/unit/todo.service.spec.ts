@@ -6,7 +6,6 @@ import { ErrorType, Errors, LoggerService } from '../../src/common';
 import {
   CreateTodoDoneParams,
   CreateTodoParams,
-  DeleteTodoParams,
   EndAndCreateTodoParams,
   Todo,
   TodoDone,
@@ -14,7 +13,6 @@ import {
   TodoDto,
   TodoModule,
   TodoService,
-  TodoStatus,
 } from '../../src/todo';
 import {
   dbConnect,
@@ -22,7 +20,6 @@ import {
   defaultModules,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
-  generateDeleteTodoParams,
   generateEndAndCreateTodoParams,
   generateId,
   generateObjectId,
@@ -73,7 +70,6 @@ describe('TodoService', () => {
           ...params,
           _id: id,
           memberId: generateObjectId(memberId),
-          status: TodoStatus.active,
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(memberId),
           createdAt: expect.any(Date),
@@ -115,7 +111,6 @@ describe('TodoService', () => {
             cronExpressions: expect.arrayContaining([...params1.cronExpressions]),
             start: params1.start,
             end: params1.end,
-            status: TodoStatus.active,
             createdBy: generateObjectId(memberId),
             updatedBy: generateObjectId(memberId),
             createdAt: expect.any(Date),
@@ -129,7 +124,6 @@ describe('TodoService', () => {
             cronExpressions: expect.arrayContaining([...params2.cronExpressions]),
             start: params2.start,
             end: params2.end,
-            status: TodoStatus.active,
             createdBy: generateObjectId(userId),
             updatedBy: generateObjectId(userId),
             createdAt: expect.any(Date),
@@ -206,7 +200,6 @@ describe('TodoService', () => {
           ...createParams,
           _id: generateObjectId(id),
           memberId: generateObjectId(memberId),
-          status: TodoStatus.ended,
           end: expect.any(Date),
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(userId),
@@ -223,7 +216,6 @@ describe('TodoService', () => {
           _id: endedTodo._id,
           memberId: generateObjectId(memberId),
           cronExpressions: expect.arrayContaining([...updateParams.cronExpressions]),
-          status: TodoStatus.active,
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(userId),
           createdAt: expect.any(Date),
@@ -245,8 +237,8 @@ describe('TodoService', () => {
     });
   });
 
-  describe('deleteTodo', () => {
-    it('should delete Todo', async () => {
+  describe('endTodo', () => {
+    it('should end Todo', async () => {
       const memberId = generateId();
       const userId = generateId();
 
@@ -258,25 +250,18 @@ describe('TodoService', () => {
 
       const { id } = await service.createTodo(createParams);
 
-      const deleteParams: DeleteTodoParams = generateDeleteTodoParams({
-        id,
-        memberId: memberId,
-        deletedBy: userId,
-      });
-
-      const result = await service.deleteTodo(deleteParams);
+      const result = await service.endTodo(id, userId);
       expect(result).toBeTruthy();
 
-      const deletedTodo = await todoModel.findById(id).lean();
-      expect(deletedTodo).toEqual(
+      const endedTodo = await todoModel.findById(id).lean();
+      expect(endedTodo).toEqual(
         expect.objectContaining({
           ...createParams,
           _id: generateObjectId(id),
           memberId: generateObjectId(memberId),
-          status: TodoStatus.deleted,
           createdBy: generateObjectId(memberId),
-          updatedBy: generateObjectId(memberId),
-          deletedBy: generateObjectId(userId),
+          updatedBy: generateObjectId(userId),
+          end: expect.any(Date),
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
         }),
@@ -284,13 +269,9 @@ describe('TodoService', () => {
     });
 
     it('should throw an error if todo does not exists', async () => {
-      const params: DeleteTodoParams = generateDeleteTodoParams({
-        id: generateId(),
-        memberId: generateId(),
-        deletedBy: generateId(),
-      });
-
-      await expect(service.deleteTodo(params)).rejects.toThrow(Errors.get(ErrorType.todoNotFound));
+      await expect(service.endTodo(generateId(), generateId())).rejects.toThrow(
+        Errors.get(ErrorType.todoNotFound),
+      );
     });
   });
 

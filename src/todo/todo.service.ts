@@ -5,14 +5,12 @@ import { Model, Types } from 'mongoose';
 import {
   CreateTodoDoneParams,
   CreateTodoParams,
-  DeleteTodoParams,
   EndAndCreateTodoParams,
   NotNullableTodoKeys,
   Todo,
   TodoDocument,
   TodoDone,
   TodoDoneDocument,
-  TodoStatus,
 } from '.';
 import { BaseService, ErrorType, Errors, Identifier } from '../common';
 
@@ -67,7 +65,6 @@ export class TodoService extends BaseService {
       {
         $set: {
           end: new Date(),
-          status: TodoStatus.ended,
           updatedBy: new Types.ObjectId(updatedBy),
         },
       },
@@ -87,20 +84,18 @@ export class TodoService extends BaseService {
     return createdTodo;
   }
 
-  async deleteTodo(deleteTodoParams: DeleteTodoParams): Promise<boolean> {
-    const { memberId, id, deletedBy } = deleteTodoParams;
-
-    const result = await this.todoModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(id), memberId: new Types.ObjectId(memberId) },
+  async endTodo(id, updatedBy): Promise<boolean> {
+    const endedTodo = await this.todoModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(id) },
       {
         $set: {
-          status: TodoStatus.deleted,
-          deletedBy: new Types.ObjectId(deletedBy),
+          end: new Date(),
+          updatedBy: new Types.ObjectId(updatedBy),
         },
       },
     );
 
-    if (!result) {
+    if (!endedTodo) {
       throw new Error(Errors.get(ErrorType.todoNotFound));
     }
 

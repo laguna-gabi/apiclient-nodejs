@@ -4,7 +4,6 @@ import { ErrorType, Errors, LoggerService, MemberRole, UserRole } from '../../sr
 import {
   CreateTodoDoneParams,
   CreateTodoParams,
-  DeleteTodoParams,
   EndAndCreateTodoParams,
   TodoModule,
   TodoResolver,
@@ -15,7 +14,6 @@ import {
   defaultModules,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
-  generateDeleteTodoParams,
   generateEndAndCreateTodoParams,
   generateId,
   generateObjectId,
@@ -180,45 +178,47 @@ describe('TodoResolver', () => {
   });
 
   describe('deleteTodo', () => {
-    let spyOnServiceDeleteTodo;
+    let spyOnServiceGetTodo;
+    let spyOnServiceEndTodo;
 
     beforeEach(() => {
-      spyOnServiceDeleteTodo = jest.spyOn(service, 'deleteTodo');
+      spyOnServiceGetTodo = jest.spyOn(service, 'getTodo');
+      spyOnServiceEndTodo = jest.spyOn(service, 'endTodo');
     });
 
     afterEach(() => {
-      spyOnServiceDeleteTodo.mockReset();
+      spyOnServiceGetTodo.mockReset();
+      spyOnServiceEndTodo.mockReset();
     });
 
     it('should delete Todo by member', async () => {
-      const member = mockGenerateMember();
-      const memberId = member.id;
+      const memberId = generateId();
+      const id = generateId();
+      const todo = mockGenerateTodo({ id, memberId: generateObjectId(memberId) });
 
-      spyOnServiceDeleteTodo.mockImplementationOnce(async () => true);
-      const params: DeleteTodoParams = generateDeleteTodoParams();
+      spyOnServiceGetTodo.mockImplementationOnce(async () => todo);
+      spyOnServiceEndTodo.mockImplementationOnce(async () => true);
 
-      const result = await resolver.deleteTodo(memberId, params);
+      const result = await resolver.endTodo(memberId, [MemberRole.member], id);
 
-      params.deletedBy = memberId;
-
-      expect(spyOnServiceDeleteTodo).toHaveBeenCalledWith(params);
+      expect(spyOnServiceEndTodo).toHaveBeenCalledWith(id, memberId);
+      expect(spyOnServiceGetTodo).toHaveBeenCalledWith(id, memberId);
       expect(result).toBeTruthy();
     });
 
     it('should delete Todo by user', async () => {
-      const member = mockGenerateMember();
-      const memberId = member.id;
-      const user = mockGenerateUser();
-      const userId = user.id;
+      const userId = generateId();
+      const memberId = generateId();
+      const id = generateId();
+      const todo = mockGenerateTodo({ id, memberId: generateObjectId(memberId) });
 
-      spyOnServiceDeleteTodo.mockImplementationOnce(async () => true);
-      const params: DeleteTodoParams = generateDeleteTodoParams({ memberId });
+      spyOnServiceGetTodo.mockImplementationOnce(async () => todo);
+      spyOnServiceEndTodo.mockImplementationOnce(async () => true);
 
-      const result = await resolver.deleteTodo(userId, params);
+      const result = await resolver.endTodo(userId, [UserRole.coach], id);
 
-      params.deletedBy = userId;
-
-      expect(spyOnServiceDeleteTodo).toHaveBeenCalledWith(params);
+      expect(spyOnServiceGetTodo).not.toHaveBeenCalled();
+      expect(spyOnServiceEndTodo).toHaveBeenCalledWith(id, userId);
       expect(result).toBeTruthy();
     });
   });

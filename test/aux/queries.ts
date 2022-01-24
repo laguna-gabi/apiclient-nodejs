@@ -851,10 +851,8 @@ export class Queries {
             cronExpressions
             start
             end
-            status
             createdBy
             updatedBy
-            deletedBy
           }
         }
       `,

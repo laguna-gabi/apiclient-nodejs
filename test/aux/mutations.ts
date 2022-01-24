@@ -43,7 +43,6 @@ import { CreateOrgParams } from '../../src/org';
 import {
   CreateTodoDoneParams,
   CreateTodoParams,
-  DeleteTodoParams,
   EndAndCreateTodoParams,
   Todo,
 } from '../../src/todo';
@@ -1156,10 +1155,8 @@ export class Mutations {
             cronExpressions
             start
             end
-            status
             createdBy
             updatedBy
-            deletedBy
           }
         }
       `,
@@ -1171,27 +1168,25 @@ export class Mutations {
     );
   };
 
-  deleteTodo = async ({
-    deleteTodoParams,
+  endTodo = async ({
+    id,
     missingFieldError,
     invalidFieldsErrors,
   }: {
-    deleteTodoParams: DeleteTodoParams;
+    id;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   }): Promise<boolean> => {
     const result = await this.apolloClient.mutate({
-      variables: { deleteTodoParams },
+      variables: { id },
       mutation: gql`
-        mutation deleteTodo($deleteTodoParams: DeleteTodoParams!) {
-          deleteTodo(deleteTodoParams: $deleteTodoParams)
+        mutation endTodo($id: String!) {
+          endTodo(id: $id)
         }
       `,
     });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.deleteTodo
-    );
+    return isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.endTodo;
   };
 
   createTodoDone = async ({

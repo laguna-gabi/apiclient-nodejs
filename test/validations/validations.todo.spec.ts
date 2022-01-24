@@ -1,15 +1,9 @@
 import * as faker from 'faker';
 import { ErrorType, Errors, UserRole } from '../../src/common';
-import {
-  CreateTodoDoneParams,
-  CreateTodoParams,
-  DeleteTodoParams,
-  EndAndCreateTodoParams,
-} from '../../src/todo';
+import { CreateTodoDoneParams, CreateTodoParams, EndAndCreateTodoParams } from '../../src/todo';
 import { Handler } from '../aux/handler';
 import {
   generateCreateTodoDoneParams,
-  generateDeleteTodoParams,
   generateEndAndCreateTodoParams,
   generateId,
 } from '../generators';
@@ -191,19 +185,9 @@ describe('Validations - todo', () => {
     });
   });
 
-  describe('deleteTodo', () => {
-    test.each`
-      input                | error
-      ${{ id: 123 }}       | ${{ missingFieldError: stringError }}
-      ${{ memberId: 123 }} | ${{ missingFieldError: stringError }}
-    `(`should fail to delete a todo since $input is not a valid`, async (params) => {
-      const deleteTodoParams: DeleteTodoParams = generateDeleteTodoParams({
-        memberId: generateId(),
-        ...params.input,
-      });
-      delete deleteTodoParams.deletedBy;
-
-      await handler.mutations.deleteTodo({ deleteTodoParams, ...params.error });
+  describe('endTodo', () => {
+    it('should fail to end a todo since id is not a valid', async () => {
+      await handler.mutations.endTodo({ id: 123, missingFieldError: stringError });
     });
   });
 

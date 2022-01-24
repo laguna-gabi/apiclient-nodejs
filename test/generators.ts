@@ -17,7 +17,6 @@ import * as config from 'config';
 import { format } from 'date-fns';
 import * as faker from 'faker';
 import { Types } from 'mongoose';
-import { Dispatch } from '../src/services';
 import { v4 } from 'uuid';
 import {
   AppointmentMethod,
@@ -29,6 +28,14 @@ import {
   UpdateNotesParams,
 } from '../src/appointment';
 import { AvailabilityInput } from '../src/availability';
+import {
+  BarrierType,
+  CareStatus,
+  CreateBarrierParams,
+  CreateRedFlagParams,
+  RedFlagType,
+  UpdateBarrierParams,
+} from '../src/care';
 import { MemberRole, RoleTypes, UserRole, reformatDate } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import { DailyReport } from '../src/dailyReport';
@@ -65,25 +72,16 @@ import {
   defaultMemberParams,
 } from '../src/member';
 import { CreateOrgParams, Org, OrgType } from '../src/org';
+import { Dispatch } from '../src/services';
 import {
   CreateTodoDoneParams,
   CreateTodoParams,
-  DeleteTodoParams,
   EndAndCreateTodoParams,
   Label,
   Todo,
   TodoDone,
-  TodoStatus,
 } from '../src/todo';
 import { CreateUserParams, GetSlotsParams, User, defaultUserParams } from '../src/user';
-import {
-  BarrierType,
-  CareStatus,
-  CreateBarrierParams,
-  CreateRedFlagParams,
-  RedFlagType,
-  UpdateBarrierParams,
-} from '../src/care';
 
 export const generateCreateUserParams = ({
   authId = v4(),
@@ -724,10 +722,8 @@ export const mockGenerateTodo = ({
   cronExpressions = ['0 10 * * 6'],
   start = new Date(),
   end = faker.date.soon(2),
-  status = TodoStatus.active,
   createdBy = generateObjectId(),
   updatedBy = generateObjectId(),
-  deletedBy = generateObjectId(),
 }: Partial<Todo> = {}): Todo => {
   return {
     id,
@@ -737,10 +733,8 @@ export const mockGenerateTodo = ({
     cronExpressions,
     start,
     end,
-    status,
     createdBy,
     updatedBy,
-    deletedBy,
   };
 };
 
@@ -799,18 +793,6 @@ export const generateEndAndCreateTodoParams = ({
     start,
     end,
     updatedBy,
-  };
-};
-
-export const generateDeleteTodoParams = ({
-  id = generateId(),
-  memberId,
-  deletedBy,
-}: Partial<DeleteTodoParams> = {}) => {
-  return {
-    id,
-    memberId,
-    deletedBy,
   };
 };
 

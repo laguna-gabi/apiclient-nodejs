@@ -4,7 +4,6 @@ import { camelCase } from 'lodash';
 import {
   CreateTodoDoneParams,
   CreateTodoParams,
-  DeleteTodoParams,
   EndAndCreateTodoParams,
   Todo,
   TodoDone,
@@ -64,14 +63,16 @@ export class TodoResolver {
   }
 
   @Mutation(() => Boolean)
-  @MemberIdParam(MemberIdParamType.memberId)
-  @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(UserRole.coach, UserRole.nurse, MemberRole.member)
-  async deleteTodo(
+  async endTodo(
     @Client('_id') clientId,
-    @Args(camelCase(DeleteTodoParams.name)) deleteTodoParams: DeleteTodoParams,
+    @Client('roles') roles,
+    @Args('id', { type: () => String }) id: string,
   ) {
-    return this.todoService.deleteTodo({ ...deleteTodoParams, deletedBy: clientId });
+    if (roles.includes(MemberRole.member)) {
+      await this.todoService.getTodo(id, clientId);
+    }
+    return this.todoService.endTodo(id, clientId);
   }
 
   @Mutation(() => Identifier)

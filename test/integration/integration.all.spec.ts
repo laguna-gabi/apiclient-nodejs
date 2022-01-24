@@ -3,13 +3,7 @@ import * as config from 'config';
 import { general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
 import * as faker from 'faker';
-import {
-  CreateTodoDoneParams,
-  CreateTodoParams,
-  DeleteTodoParams,
-  EndAndCreateTodoParams,
-  TodoStatus,
-} from '../../src/todo';
+import { CreateTodoDoneParams, CreateTodoParams, EndAndCreateTodoParams } from '../../src/todo';
 import { v4 } from 'uuid';
 import {
   Appointment,
@@ -39,7 +33,6 @@ import {
   generateCreateRedFlagParams,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
-  generateDeleteTodoParams,
   generateEndAndCreateTodoParams,
   generateId,
   generateOrgParams,
@@ -1309,15 +1302,22 @@ describe('Integration tests: all', () => {
         .queries.getTodos({ memberId });
 
       expect(todos.length).toEqual(1);
-      expect(todos[0].id).toEqual(id);
-      expect(todos[0].memberId).toEqual(memberId);
-      expect(todos[0].createdBy).toEqual(userId);
-      expect(todos[0].updatedBy).toEqual(userId);
-      expect(todos[0].status).toEqual(TodoStatus.active);
+      expect(todos).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...createTodoParams,
+            id,
+            start: createTodoParams.start.toISOString(),
+            end: createTodoParams.end.toISOString(),
+            createdBy: userId,
+            updatedBy: userId,
+          }),
+        ]),
+      );
 
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({ id });
       delete endAndCreateTodoParams.updatedBy;
-      const endedTodo = await handler
+      const updatedTodo = await handler
         .setContextUserId(memberId)
         .mutations.endAndCreateTodo({ endAndCreateTodoParams });
 
@@ -1326,40 +1326,59 @@ describe('Integration tests: all', () => {
         .queries.getTodos({ memberId });
 
       expect(todosAfterUpdate.length).toEqual(2);
-      expect(todosAfterUpdate[0].id).toEqual(id);
-      expect(todosAfterUpdate[0].memberId).toEqual(memberId);
-      expect(todosAfterUpdate[0].createdBy).toEqual(userId);
-      expect(todosAfterUpdate[0].updatedBy).toEqual(memberId);
-      expect(todosAfterUpdate[0].status).toEqual(TodoStatus.ended);
-      expect(todosAfterUpdate[1].id).toEqual(endedTodo.id);
-      expect(todosAfterUpdate[1].memberId).toEqual(memberId);
-      expect(todosAfterUpdate[1].createdBy).toEqual(userId);
-      expect(todosAfterUpdate[1].updatedBy).toEqual(memberId);
-      expect(todosAfterUpdate[1].status).toEqual(TodoStatus.active);
+      delete createTodoParams.end;
+      expect(todosAfterUpdate).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...createTodoParams,
+            id,
+            start: createTodoParams.start.toISOString(),
+            createdBy: userId,
+            updatedBy: memberId,
+          }),
+          expect.objectContaining({
+            ...endAndCreateTodoParams,
+            id: updatedTodo.id,
+            memberId,
+            start: endAndCreateTodoParams.start.toISOString(),
+            end: endAndCreateTodoParams.end.toISOString(),
+            createdBy: userId,
+            updatedBy: memberId,
+          }),
+        ]),
+      );
 
-      const deleteTodoParams: DeleteTodoParams = generateDeleteTodoParams({
-        id: endedTodo.id,
-        memberId,
-      });
-      delete deleteTodoParams.deletedBy;
-
-      const deleteTodo = await handler
+      const endTodo = await handler
         .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.deleteTodo({ deleteTodoParams });
+        .mutations.endTodo({ id: updatedTodo.id });
 
-      expect(deleteTodo).toBeTruthy();
+      expect(endTodo).toBeTruthy();
 
       const todosAfterDelete = await handler
         .setContextUserId(userId, '', [UserRole.coach])
         .queries.getTodos({ memberId });
 
+      delete endAndCreateTodoParams.end;
       expect(todosAfterDelete.length).toEqual(2);
-      expect(todosAfterDelete[1].id).toEqual(endedTodo.id);
-      expect(todosAfterDelete[1].memberId).toEqual(memberId);
-      expect(todosAfterDelete[1].createdBy).toEqual(userId);
-      expect(todosAfterDelete[1].updatedBy).toEqual(memberId);
-      expect(todosAfterDelete[1].deletedBy).toEqual(userId);
-      expect(todosAfterDelete[1].status).toEqual(TodoStatus.deleted);
+      expect(todosAfterDelete).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...createTodoParams,
+            id,
+            start: createTodoParams.start.toISOString(),
+            createdBy: userId,
+            updatedBy: memberId,
+          }),
+          expect.objectContaining({
+            ...endAndCreateTodoParams,
+            id: updatedTodo.id,
+            memberId,
+            start: endAndCreateTodoParams.start.toISOString(),
+            createdBy: userId,
+            updatedBy: userId,
+          }),
+        ]),
+      );
 
       const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
         todoId: id,
