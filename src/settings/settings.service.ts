@@ -19,11 +19,20 @@ export class SettingsService {
     );
   }
 
+  /**
+   * @param id dispatchId (and not _id)
+   */
   async get(id: string): Promise<ClientSettings | null> {
     return this.clientSettingsModel.findOne({ id });
   }
 
+  /**
+   * @param id dispatchId (and not _id)
+   */
   async delete(id: string): Promise<void> {
-    await this.clientSettingsModel.deleteOne({ id });
+    const result = await this.clientSettingsModel.find({ id });
+    if (result?.length >= 1) {
+      await result[0].delete();
+    }
   }
 }

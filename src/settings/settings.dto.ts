@@ -1,5 +1,6 @@
 import { ClientCategory, Honorific, Language, Platform } from '@lagunahealth/pandora';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { ISoftDelete } from '../db';
 
 /**************************************************************************************************
  ***************************************** Mongodb schemas ****************************************
@@ -68,5 +69,5 @@ export class ClientSettings {
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type ClientSettingsDocument = ClientSettings & Document;
+export type ClientSettingsDocument = ClientSettings & Document & ISoftDelete<ClientSettings>;
 export const ClientSettingsDto = SchemaFactory.createForClass(ClientSettings);
