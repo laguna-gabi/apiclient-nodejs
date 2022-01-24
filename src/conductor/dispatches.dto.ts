@@ -5,6 +5,7 @@ import {
   ServiceName,
 } from '@lagunahealth/pandora';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { ISoftDelete } from '../db';
 import { ProviderResult } from '../providers';
 
 /**************************************************************************************************
@@ -124,5 +125,5 @@ export type DispatchInternalUpdate = Partial<Dispatch>;
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type DispatchDocument = Dispatch & Document;
+export type DispatchDocument = Dispatch & Document & ISoftDelete<Dispatch>;
 export const DispatchDto = SchemaFactory.createForClass(Dispatch);

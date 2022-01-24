@@ -61,11 +61,15 @@ export class DispatchesService {
 
   async delete(clientId: string) {
     const results = await this.dispatchesModel.find({ recipientClientId: clientId });
-
-    await this.dispatchesModel.deleteMany({
-      dispatchId: { $in: results.map((result) => result.dispatchId) },
-    });
-
-    return results;
+    return Promise.all(
+      results.map(async (result) => {
+        result.status =
+          [DispatchStatus.done, DispatchStatus.error].indexOf(result.status) >= 0
+            ? result.status
+            : DispatchStatus.canceled;
+        await result.delete();
+        return result;
+      }),
+    );
   }
 }

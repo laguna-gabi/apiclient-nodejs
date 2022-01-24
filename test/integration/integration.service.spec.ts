@@ -374,6 +374,7 @@ describe('Notifications full flow', () => {
       ...items,
       retryCount: 0,
       failureReasons: [],
+      deleted: false,
     });
   });
 
@@ -1026,6 +1027,7 @@ describe('Notifications full flow', () => {
       failureReasons: [],
       retryCount: 0,
       status,
+      deleted: false,
     });
   };
 
