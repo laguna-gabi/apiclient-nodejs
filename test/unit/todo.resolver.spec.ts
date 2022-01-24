@@ -126,17 +126,17 @@ describe('TodoResolver', () => {
   });
 
   describe('endAndCreateTodo', () => {
-    let spyOnServiceUpdateTodo;
+    let spyOnServiceEndAndCreateTodo;
 
     beforeEach(() => {
-      spyOnServiceUpdateTodo = jest.spyOn(service, 'endAndCreateTodo');
+      spyOnServiceEndAndCreateTodo = jest.spyOn(service, 'endAndCreateTodo');
     });
 
     afterEach(() => {
-      spyOnServiceUpdateTodo.mockReset();
+      spyOnServiceEndAndCreateTodo.mockReset();
     });
 
-    it('should update Todo by member', async () => {
+    it('should end and create Todo by member', async () => {
       const member = mockGenerateMember();
       const memberId = member.id;
       const newTodo = mockGenerateTodo({
@@ -144,18 +144,18 @@ describe('TodoResolver', () => {
         createdBy: generateObjectId(memberId),
         updatedBy: generateObjectId(memberId),
       });
-      spyOnServiceUpdateTodo.mockImplementationOnce(async () => newTodo);
+      spyOnServiceEndAndCreateTodo.mockImplementationOnce(async () => newTodo);
       const params: EndAndCreateTodoParams = generateEndAndCreateTodoParams();
 
       const result = await resolver.endAndCreateTodo(memberId, params);
 
       params.updatedBy = memberId;
 
-      expect(spyOnServiceUpdateTodo).toHaveBeenCalledWith(params);
+      expect(spyOnServiceEndAndCreateTodo).toHaveBeenCalledWith(params);
       expect(result).toEqual(newTodo);
     });
 
-    it('should update Todo by user', async () => {
+    it('should end and create Todo by user', async () => {
       const member = mockGenerateMember();
       const memberId = member.id;
       const user = mockGenerateUser();
@@ -165,19 +165,19 @@ describe('TodoResolver', () => {
         createdBy: generateObjectId(memberId),
         updatedBy: generateObjectId(memberId),
       });
-      spyOnServiceUpdateTodo.mockImplementationOnce(async () => newTodo);
+      spyOnServiceEndAndCreateTodo.mockImplementationOnce(async () => newTodo);
       const params: EndAndCreateTodoParams = generateEndAndCreateTodoParams({ memberId });
 
       const result = await resolver.endAndCreateTodo(userId, params);
 
       params.updatedBy = userId;
 
-      expect(spyOnServiceUpdateTodo).toHaveBeenCalledWith(params);
+      expect(spyOnServiceEndAndCreateTodo).toHaveBeenCalledWith(params);
       expect(result).toEqual(newTodo);
     });
   });
 
-  describe('deleteTodo', () => {
+  describe('endTodo', () => {
     let spyOnServiceGetTodo;
     let spyOnServiceEndTodo;
 
@@ -191,7 +191,7 @@ describe('TodoResolver', () => {
       spyOnServiceEndTodo.mockReset();
     });
 
-    it('should delete Todo by member', async () => {
+    it('should end Todo by member', async () => {
       const memberId = generateId();
       const id = generateId();
       const todo = mockGenerateTodo({ id, memberId: generateObjectId(memberId) });
@@ -206,7 +206,7 @@ describe('TodoResolver', () => {
       expect(result).toBeTruthy();
     });
 
-    it('should delete Todo by user', async () => {
+    it('should end Todo by user', async () => {
       const userId = generateId();
       const memberId = generateId();
       const id = generateId();

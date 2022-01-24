@@ -183,15 +183,15 @@ describe('TodoService', () => {
 
       const { id } = await service.createTodo(createParams);
 
-      const updateParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         id,
         memberId,
         updatedBy: userId,
       });
-      const updateParamsWithNoId = cloneDeep(updateParams);
-      delete updateParamsWithNoId.id;
+      const endAndCreateTodoParamsWithNoId = cloneDeep(endAndCreateTodoParams);
+      delete endAndCreateTodoParamsWithNoId.id;
 
-      const endedTodo = await service.endAndCreateTodo(updateParams);
+      const endedTodo = await service.endAndCreateTodo(endAndCreateTodoParams);
       const oldTodo = await todoModel.findById(id).lean();
       delete createParams.end;
 
@@ -210,12 +210,12 @@ describe('TodoService', () => {
 
       expect(endedTodo).toEqual(
         expect.objectContaining({
-          ...updateParamsWithNoId,
+          ...endAndCreateTodoParamsWithNoId,
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           _id: endedTodo._id,
           memberId: generateObjectId(memberId),
-          cronExpressions: expect.arrayContaining([...updateParams.cronExpressions]),
+          cronExpressions: expect.arrayContaining([...endAndCreateTodoParams.cronExpressions]),
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(userId),
           createdAt: expect.any(Date),
