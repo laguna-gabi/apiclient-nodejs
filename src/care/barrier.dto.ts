@@ -1,8 +1,8 @@
+import { BarrierType, CareStatus } from '.';
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, Identifier, IsObjectId } from '../common';
-import { BarrierType, CareStatus } from '.';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -23,6 +23,8 @@ export class CreateBarrierParams {
   @Field(() => String, { nullable: true })
   @IsObjectId({ message: Errors.get(ErrorType.redFlagIdInvalid) })
   redFlagId?: string;
+
+  createdBy: string;
 }
 
 @InputType()
@@ -59,7 +61,7 @@ export class BaseCare extends Identifier {
   @Field(() => Date)
   updatedAt: Date;
 
-  @Prop({ index: true, type: CareStatus })
+  @Prop({ index: true, default: CareStatus.active })
   @Field(() => CareStatus)
   status: CareStatus;
 

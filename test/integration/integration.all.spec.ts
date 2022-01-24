@@ -1425,9 +1425,9 @@ describe('Integration tests: all', () => {
         .queries.getMemberRedFlags({ memberId });
 
       expect(redFlags.length).toEqual(2);
-      expect.arrayContaining([
+      expect(redFlags).toEqual([
         expect.objectContaining({ ...createRedFlagParams, id, createdBy: userId }),
-        expect.objectContaining({ ...createRedFlagParams2, id2, createdBy: userId2 }),
+        expect.objectContaining({ ...createRedFlagParams2, id: id2, createdBy: userId2 }),
       ]);
     });
   });
