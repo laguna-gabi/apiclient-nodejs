@@ -356,4 +356,38 @@ describe('TodoService', () => {
       expect(createdTodoDones).toEqual([]);
     });
   });
+
+  describe('deleteTodoDone', () => {
+    it('should delete TodoDone', async () => {
+      const memberId = generateId();
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+        createdBy: memberId,
+        updatedBy: memberId,
+      });
+
+      const { id: todoId } = await service.createTodo(createTodoParams);
+
+      const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        todoId,
+        memberId,
+      });
+
+      const { id: todoDoneId } = await service.createTodoDone(createTodoDoneParams);
+
+      const createdTodoDone = await todoDoneModel.findById(todoDoneId).lean();
+      expect(createdTodoDone).not.toBeUndefined();
+
+      const result = await service.deleteTodoDone(todoDoneId, memberId);
+      expect(result).toBeTruthy();
+      const deletedTodoDone = await todoDoneModel.findById(todoDoneId).lean();
+      expect(deletedTodoDone).toBeNull();
+    });
+
+    it('should throw an error if todoDone does not exists', async () => {
+      await expect(service.deleteTodoDone(generateId(), generateId())).rejects.toThrow(
+        Errors.get(ErrorType.todoDoneNotFound),
+      );
+    });
+  });
 });

@@ -231,4 +231,10 @@ describe('Validations - todo', () => {
       await handler.queries.getTodoDones({ memberId: 123, invalidFieldsError: stringError });
     });
   });
+
+  describe('deleteTodoDone', () => {
+    it('should fail to delete TodoDone since id is not a valid', async () => {
+      await handler.mutations.deleteTodoDone({ id: 123, missingFieldError: stringError });
+    });
+  });
 });

@@ -1278,6 +1278,7 @@ describe('Integration tests: all', () => {
        * 2. Member updates the todo
        * 3. User deletes the todo
        * 4. create TodoDone
+       * 5. delete TodoDone
        */
       const user = await creators.createAndValidateUser([UserRole.coach]);
       const userId = user.id;
@@ -1380,30 +1381,96 @@ describe('Integration tests: all', () => {
         ]),
       );
 
+      const createTodoDoneParams1: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        todoId: id,
+      });
+      const createTodoDoneParams2: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        todoId: id,
+      });
+      delete createTodoDoneParams1.memberId;
+      delete createTodoDoneParams2.memberId;
+
+      const { id: todoDoneId1 } = await handler
+        .setContextUserId(memberId)
+        .mutations.createTodoDone({ createTodoDoneParams: createTodoDoneParams1 });
+      const { id: todoDoneId2 } = await handler
+        .setContextUserId(memberId)
+        .mutations.createTodoDone({ createTodoDoneParams: createTodoDoneParams2 });
+
+      expect(todoDoneId1).not.toBeUndefined();
+      expect(todoDoneId2).not.toBeUndefined();
+
+      const TodoDones = await handler.setContextUserId(memberId).queries.getTodoDones({ memberId });
+
+      expect(TodoDones.length).toEqual(2);
+      expect(TodoDones).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: todoDoneId1,
+            memberId,
+            todoId: id,
+            done: createTodoDoneParams1.done.toISOString(),
+          }),
+          expect.objectContaining({
+            id: todoDoneId2,
+            memberId,
+            todoId: id,
+            done: createTodoDoneParams2.done.toISOString(),
+          }),
+        ]),
+      );
+
+      await handler.setContextUserId(memberId).mutations.deleteTodoDone({ id: todoDoneId1 });
+
+      const TodoDonesAfterDelete = await handler
+        .setContextUserId(memberId)
+        .queries.getTodoDones({ memberId });
+
+      expect(TodoDonesAfterDelete.length).toEqual(1);
+      expect(TodoDonesAfterDelete).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: todoDoneId2,
+            memberId,
+            todoId: id,
+            done: createTodoDoneParams2.done.toISOString(),
+          }),
+        ]),
+      );
+    });
+
+    it('should fail to delete TodoDone of another member', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member1 = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId1 = member1.id;
+      const member2 = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId2 = member2.id;
+
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId: memberId1,
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      const { id } = await handler.setContextUserId(memberId1).mutations.createTodo({
+        createTodoParams,
+      });
+
       const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
         todoId: id,
       });
       delete createTodoDoneParams.memberId;
 
       const { id: todoDoneId } = await handler
-        .setContextUserId(memberId)
-        .mutations.createTodoDone({ createTodoDoneParams });
+        .setContextUserId(memberId1)
+        .mutations.createTodoDone({ createTodoDoneParams: createTodoDoneParams });
 
-      expect(todoDoneId).not.toBeUndefined();
-
-      const TodoDones = await handler.setContextUserId(memberId).queries.getTodoDones({ memberId });
-
-      expect(TodoDones.length).toEqual(1);
-      expect(TodoDones).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: todoDoneId,
-            memberId,
-            todoId: id,
-            done: createTodoDoneParams.done.toISOString(),
-          }),
-        ]),
-      );
+      await handler
+        .setContextUserId(memberId2)
+        .mutations.deleteTodoDone({
+          id: todoDoneId,
+          invalidFieldsErrors: [Errors.get(ErrorType.todoDoneNotFound)],
+        });
     });
   });
 

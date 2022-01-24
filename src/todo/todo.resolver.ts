@@ -98,4 +98,17 @@ export class TodoResolver {
   async getTodoDones(@Args('memberId', { type: () => String, nullable: true }) memberId?: string) {
     return this.todoService.getTodoDones(memberId);
   }
+
+  @Mutation(() => Boolean)
+  @Roles(MemberRole.member)
+  async deleteTodoDone(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args('id', { type: () => String }) id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    return this.todoService.deleteTodoDone(id, memberId);
+  }
 }

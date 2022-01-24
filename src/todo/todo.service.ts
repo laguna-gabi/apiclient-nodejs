@@ -117,4 +117,17 @@ export class TodoService extends BaseService {
   async getTodoDones(memberId: string): Promise<TodoDone[]> {
     return this.todoDoneModel.find({ memberId: new Types.ObjectId(memberId) });
   }
+
+  async deleteTodoDone(id: string, memberId: string): Promise<boolean> {
+    const result = await this.todoDoneModel.findOneAndDelete({
+      _id: new Types.ObjectId(id),
+      memberId: new Types.ObjectId(memberId),
+    });
+
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.todoDoneNotFound));
+    }
+
+    return true;
+  }
 }

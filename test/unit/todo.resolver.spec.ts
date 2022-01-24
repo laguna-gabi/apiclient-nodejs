@@ -295,4 +295,37 @@ describe('TodoResolver', () => {
       expect(result).toEqual(todoDones);
     });
   });
+
+  describe('deleteTodoDone', () => {
+    let spyOnServiceDeleteTodoDone;
+
+    beforeEach(() => {
+      spyOnServiceDeleteTodoDone = jest.spyOn(service, 'deleteTodoDone');
+    });
+
+    afterEach(() => {
+      spyOnServiceDeleteTodoDone.mockReset();
+    });
+
+    it('should delete TodoDone', async () => {
+      const memberId = generateId();
+      const id = generateId();
+
+      spyOnServiceDeleteTodoDone.mockImplementationOnce(async () => true);
+
+      const result = await resolver.deleteTodoDone([MemberRole.member], memberId, id);
+
+      expect(spyOnServiceDeleteTodoDone).toHaveBeenCalledWith(id, memberId);
+      expect(result).toBeTruthy();
+    });
+
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on delete todoDone if role = %p',
+      async (role) => {
+        await expect(resolver.deleteTodoDone([role], generateId(), generateId())).rejects.toThrow(
+          Error(Errors.get(ErrorType.memberAllowedOnly)),
+        );
+      },
+    );
+  });
 });

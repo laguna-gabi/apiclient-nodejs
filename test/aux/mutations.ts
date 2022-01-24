@@ -1239,4 +1239,28 @@ export class Mutations {
       isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createRedFlag
     );
   };
+
+  deleteTodoDone = async ({
+    id,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    id;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<boolean> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id },
+      mutation: gql`
+        mutation deleteTodoDone($id: String!) {
+          deleteTodoDone(id: $id)
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.deleteTodoDone
+    );
+  };
 }
