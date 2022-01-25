@@ -5,6 +5,7 @@ import { Handler } from '../aux/handler';
 import {
   generateCreateTodoDoneParams,
   generateEndAndCreateTodoParams,
+  generateGetTodoDonesParams,
   generateId,
 } from '../generators';
 import { generateCreateTodoParams, generateCreateUserParams } from '../index';
@@ -230,8 +231,31 @@ describe('Validations - todo', () => {
   });
 
   describe('getTodoDones', () => {
-    it('should fail to get todoDones since memberId is not a valid', async () => {
-      await handler.queries.getTodoDones({ memberId: 123, invalidFieldsError: stringError });
+    test.each`
+      field      | error
+      ${'start'} | ${`Field "start" of required type "DateTime!" was not provided.`}
+      ${'end'}   | ${`Field "end" of required type "DateTime!" was not provided.`}
+    `(`should fail to get todoDones since mandatory field $field is missing`, async (params) => {
+      const getTodoDonesParams = generateGetTodoDonesParams({ memberId: generateId() });
+      delete getTodoDonesParams[params.field];
+
+      await handler.queries.getTodoDones({
+        getTodoDonesParams,
+        invalidFieldsError: params.error,
+      });
+    });
+
+    it(`should fail to get todoDones since start after end`, async () => {
+      const getTodoDonesParams = generateGetTodoDonesParams({
+        memberId: generateId(),
+        start: faker.date.soon(2),
+        end: new Date(),
+      });
+
+      await handler.queries.getTodoDones({
+        getTodoDonesParams,
+        invalidFieldsError: Errors.get(ErrorType.todoEndAfterStart),
+      });
     });
   });
 

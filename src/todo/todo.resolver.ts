@@ -5,6 +5,7 @@ import {
   CreateTodoDoneParams,
   CreateTodoParams,
   EndAndCreateTodoParams,
+  GetTodoDonesParams,
   Todo,
   TodoDone,
   TodoService,
@@ -95,8 +96,10 @@ export class TodoResolver {
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(UserRole.coach, UserRole.nurse, MemberRole.member)
-  async getTodoDones(@Args('memberId', { type: () => String, nullable: true }) memberId?: string) {
-    return this.todoService.getTodoDones(memberId);
+  async getTodoDones(
+    @Args(camelCase(GetTodoDonesParams.name)) getTodoDonesParams: GetTodoDonesParams,
+  ) {
+    return this.todoService.getTodoDones(getTodoDonesParams);
   }
 
   @Mutation(() => Boolean)

@@ -81,6 +81,22 @@ export class CreateTodoDoneParams {
   memberId: string;
 }
 
+@InputType()
+export class GetTodoDonesParams {
+  @Field(() => String, { nullable: true })
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId?: string;
+
+  @Field(() => Date)
+  start: Date;
+
+  @Field(() => Date)
+  @IsDateAfter('start', {
+    message: Errors.get(ErrorType.todoEndAfterStart),
+  })
+  end: Date;
+}
+
 /********∏******************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/

@@ -3,7 +3,6 @@ import * as config from 'config';
 import { general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
 import * as faker from 'faker';
-import { CreateTodoDoneParams, CreateTodoParams, EndAndCreateTodoParams } from '../../src/todo';
 import { v4 } from 'uuid';
 import {
   Appointment,
@@ -11,6 +10,7 @@ import {
   RequestAppointmentParams,
   ScheduleAppointmentParams,
 } from '../../src/appointment';
+import { CreateRedFlagParams } from '../../src/care';
 import { ErrorType, Errors, Identifiers, UserRole, delay, reformatDate } from '../../src/common';
 import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
 import {
@@ -24,6 +24,7 @@ import {
   TaskStatus,
   UpdateJournalTextParams,
 } from '../../src/member';
+import { CreateTodoDoneParams, CreateTodoParams, EndAndCreateTodoParams } from '../../src/todo';
 import { User, defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
@@ -34,6 +35,7 @@ import {
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateEndAndCreateTodoParams,
+  generateGetTodoDonesParams,
   generateId,
   generateOrgParams,
   generateRequestAppointmentParams,
@@ -47,7 +49,6 @@ import {
   generateUpdateRecordingParams,
   mockGenerateDispatch,
 } from '../index';
-import { CreateRedFlagParams } from '../../src/care';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -1400,7 +1401,11 @@ describe('Integration tests: all', () => {
       expect(todoDoneId1).not.toBeUndefined();
       expect(todoDoneId2).not.toBeUndefined();
 
-      const TodoDones = await handler.setContextUserId(memberId).queries.getTodoDones({ memberId });
+      const getTodoDonesParams = generateGetTodoDonesParams({ memberId });
+
+      const TodoDones = await handler
+        .setContextUserId(memberId)
+        .queries.getTodoDones({ getTodoDonesParams });
 
       expect(TodoDones.length).toEqual(2);
       expect(TodoDones).toEqual(
@@ -1424,7 +1429,7 @@ describe('Integration tests: all', () => {
 
       const TodoDonesAfterDelete = await handler
         .setContextUserId(memberId)
-        .queries.getTodoDones({ memberId });
+        .queries.getTodoDones({ getTodoDonesParams });
 
       expect(TodoDonesAfterDelete.length).toEqual(1);
       expect(TodoDonesAfterDelete).toEqual(
@@ -1465,12 +1470,10 @@ describe('Integration tests: all', () => {
         .setContextUserId(memberId1)
         .mutations.createTodoDone({ createTodoDoneParams: createTodoDoneParams });
 
-      await handler
-        .setContextUserId(memberId2)
-        .mutations.deleteTodoDone({
-          id: todoDoneId,
-          invalidFieldsErrors: [Errors.get(ErrorType.todoDoneNotFound)],
-        });
+      await handler.setContextUserId(memberId2).mutations.deleteTodoDone({
+        id: todoDoneId,
+        invalidFieldsErrors: [Errors.get(ErrorType.todoDoneNotFound)],
+      });
     });
   });
 

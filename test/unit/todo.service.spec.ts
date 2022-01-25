@@ -1,5 +1,6 @@
 import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
+import { add } from 'date-fns';
 import * as faker from 'faker';
 import { cloneDeep } from 'lodash';
 import { Model, model } from 'mongoose';
@@ -22,6 +23,7 @@ import {
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateEndAndCreateTodoParams,
+  generateGetTodoDonesParams,
   generateId,
   generateObjectId,
 } from '../index';
@@ -362,16 +364,21 @@ describe('TodoService', () => {
       const createTodoDoneParams1: CreateTodoDoneParams = generateCreateTodoDoneParams({
         todoId,
         memberId,
+        done: add(new Date(), { days: 1 }),
       });
       const createTodoDoneParams2: CreateTodoDoneParams = generateCreateTodoDoneParams({
         todoId,
         memberId,
+        done: add(new Date(), { days: 2 }),
       });
 
       const { id: todoDoneId1 } = await service.createTodoDone(createTodoDoneParams1);
       const { id: todoDoneId2 } = await service.createTodoDone(createTodoDoneParams2);
 
-      const createdTodoDones = await service.getTodoDones(memberId);
+      let getTodoDonesParams = generateGetTodoDonesParams({ memberId });
+
+      let createdTodoDones = await service.getTodoDones(getTodoDonesParams);
+      expect(createdTodoDones.length).toEqual(2);
       expect(createdTodoDones).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -390,10 +397,30 @@ describe('TodoService', () => {
           }),
         ]),
       );
+
+      getTodoDonesParams = generateGetTodoDonesParams({
+        memberId,
+        end: add(new Date(), { days: 1, hours: 1 }),
+      });
+
+      createdTodoDones = await service.getTodoDones(getTodoDonesParams);
+      expect(createdTodoDones.length).toEqual(1);
+      expect(createdTodoDones).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: todoDoneId1,
+            memberId: generateObjectId(memberId),
+            done: createTodoDoneParams1.done,
+            createdAt: expect.any(Date),
+            updatedAt: expect.any(Date),
+          }),
+        ]),
+      );
     });
 
     it('should get empty array if member doesnt have todoDones', async () => {
-      const createdTodoDones = await service.getTodoDones(generateId());
+      const getTodoDonesParams = generateGetTodoDonesParams({ memberId: generateId() });
+      const createdTodoDones = await service.getTodoDones(getTodoDonesParams);
       expect(createdTodoDones).toEqual([]);
     });
   });

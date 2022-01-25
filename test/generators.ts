@@ -14,7 +14,7 @@ import {
   generateZipCode,
 } from '@lagunahealth/pandora';
 import * as config from 'config';
-import { format } from 'date-fns';
+import { add, format, sub } from 'date-fns';
 import * as faker from 'faker';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
@@ -77,6 +77,7 @@ import {
   CreateTodoDoneParams,
   CreateTodoParams,
   EndAndCreateTodoParams,
+  GetTodoDonesParams,
   Label,
   Todo,
   TodoDone,
@@ -774,6 +775,18 @@ export const generateCreateTodoParams = ({
   };
 };
 
+export const generateGetTodoDonesParams = ({
+  start = sub(new Date(), { days: 7 }),
+  end = add(new Date(), { days: 7 }),
+  memberId,
+}: Partial<GetTodoDonesParams> = {}) => {
+  return {
+    start,
+    end,
+    memberId,
+  };
+};
+
 export const generateEndAndCreateTodoParams = ({
   id = generateId(),
   memberId,
@@ -793,6 +806,18 @@ export const generateEndAndCreateTodoParams = ({
     start,
     end,
     updatedBy,
+  };
+};
+
+export const generateCreateTodoDoneParams = ({
+  todoId = generateId(),
+  done = new Date(),
+  memberId = generateId(),
+}: Partial<CreateTodoDoneParams> = {}) => {
+  return {
+    todoId,
+    done,
+    memberId,
   };
 };
 
@@ -835,18 +860,6 @@ export const generateUpdateBarrierParams = ({
     id,
     notes,
     status,
-  };
-};
-
-export const generateCreateTodoDoneParams = ({
-  todoId = generateId(),
-  done = new Date(),
-  memberId = generateId(),
-}: Partial<CreateTodoDoneParams> = {}) => {
-  return {
-    todoId,
-    done,
-    memberId,
   };
 };
 

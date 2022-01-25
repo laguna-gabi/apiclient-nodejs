@@ -15,6 +15,7 @@ import {
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateEndAndCreateTodoParams,
+  generateGetTodoDonesParams,
   generateId,
   generateObjectId,
   mockGenerateMember,
@@ -289,9 +290,10 @@ describe('TodoResolver', () => {
       ];
       spyOnServiceGetTodoDones.mockImplementationOnce(async () => todoDones);
 
-      const result = await resolver.getTodoDones(memberId);
+      const getTodoDonesParams = generateGetTodoDonesParams({ memberId });
+      const result = await resolver.getTodoDones(getTodoDonesParams);
 
-      expect(spyOnServiceGetTodoDones).toHaveBeenCalledWith(memberId);
+      expect(spyOnServiceGetTodoDones).toHaveBeenCalledWith(getTodoDonesParams);
       expect(result).toEqual(todoDones);
     });
   });

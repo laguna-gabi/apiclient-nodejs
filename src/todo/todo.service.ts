@@ -6,6 +6,7 @@ import {
   CreateTodoDoneParams,
   CreateTodoParams,
   EndAndCreateTodoParams,
+  GetTodoDonesParams,
   NotNullableTodoKeys,
   Todo,
   TodoDocument,
@@ -127,8 +128,12 @@ export class TodoService extends BaseService {
     return { id: _id };
   }
 
-  async getTodoDones(memberId: string): Promise<TodoDone[]> {
-    return this.todoDoneModel.find({ memberId: new Types.ObjectId(memberId) });
+  async getTodoDones(getTodoDonesParams: GetTodoDonesParams): Promise<TodoDone[]> {
+    const { memberId, start, end } = getTodoDonesParams;
+    return this.todoDoneModel.find({
+      memberId: new Types.ObjectId(memberId),
+      done: { $gte: start, $lte: end },
+    });
   }
 
   async deleteTodoDone(id: string, memberId: string): Promise<boolean> {
