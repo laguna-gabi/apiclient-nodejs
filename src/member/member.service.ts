@@ -317,7 +317,9 @@ export class MemberService extends BaseService {
         answered: true,
       });
       const recordingIds = recordingsToDeleteMedia.map((doc) => doc.id);
-      await this.storageService.deleteRecordings(memberId, recordingIds);
+      if (recordingIds.length >= 1) {
+        await this.storageService.deleteRecordings(memberId, recordingIds);
+      }
       await this.recordingModel.updateMany(
         {
           appointmentId: Types.ObjectId(appointmentId),
