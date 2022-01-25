@@ -84,6 +84,7 @@ export class LoggerService extends BaseLogger {
     'roles',
     //alerts
     'serviceName',
+    'serviceNamespace',
     'clientSenderId',
     ...Object.keys(internalLogs),
   ]);

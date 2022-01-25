@@ -27,7 +27,7 @@ export class CloudMapService {
       return response?.Instances[0].Attributes?.AWS_INSTANCE_IPV4;
     } catch (ex) {
       this.logger.error(
-        { serviceName },
+        { serviceName, serviceNamespace: aws.cloudMap.namespace },
         CloudMapService.name,
         this.discoverInstance.name,
         formatEx(ex),
