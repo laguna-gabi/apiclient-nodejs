@@ -90,7 +90,7 @@ export const compareMembers = (member: Member, memberBase, primaryUserId?) => {
   }
 };
 
-export const checkDelete = (deletedResult, id: Types.ObjectId, deletedBy: string) => {
+export const checkDelete = (deletedResult, id: Types.ObjectId | string, deletedBy: string) => {
   expect(deletedResult).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
