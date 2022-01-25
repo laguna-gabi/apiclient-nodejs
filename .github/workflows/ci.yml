@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - poeditor
   pull_request:
     branches:
       - master
@@ -160,6 +161,14 @@ jobs:
           aws_bucket: ${{ secrets.COVERAGE_AWS_BUCKET }}
           source_dir: './coverage'
           destination_dir: 'master'
+      - name: Merge master to poeditor
+        if: github.ref == 'refs/heads/master'
+        uses: devmasx/merge-branch@master
+        with:
+          type: now
+          from_branch: master
+          target_branch: poeditor
+          github_token: ${{ github.token }}
       - name: Cleanup docker
         run: docker system prune -a --volumes --force
 
@@ -201,3 +210,19 @@ jobs:
         run: yarn publish
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+
+  sync-languages:
+    name: Sync Languages With PoEditor
+    runs-on: self-hosted
+    needs: build-test-coverage-publish-snapshot
+    if: github.ref == 'refs/heads/poeditor'
+    steps:
+      - name: Checkout Git repository
+        uses: actions/checkout@v2
+      - name: create pull-request
+        uses: repo-sync/pull-request@v2
+        with:
+          destination_branch: 'master'
+          pr_title: 'Sync Languages With PoEditor'
+          pr_body: '# This is an automatic PR from [POEditor](https://poeditor.com/projects/)'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
