@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { ErrorType, Errors, IsObjectId } from '../common';
+import { ErrorType, Errors, IsCustomOrSuggestedCarePlan, IsObjectId } from '../common';
 import { BaseCare, CarePlanType, CareStatus } from '.';
 
 /**************************************************************************************************
@@ -15,6 +15,7 @@ export class CreateCarePlanParams {
   memberId: string;
 
   @Field(() => CarePlanType, { nullable: true })
+  @IsCustomOrSuggestedCarePlan({ message: Errors.get(ErrorType.carePlanTypeOrCustomInvalid) })
   carePlanType?: CarePlanType; // NULL if custom CarePlan
 
   @Field(() => String, { nullable: true })
@@ -31,6 +32,8 @@ export class CreateCarePlanParams {
   @Prop({ type: Date })
   @Field(() => Date, { nullable: true })
   dueDate?: Date;
+
+  createdBy: string;
 }
 
 @InputType()

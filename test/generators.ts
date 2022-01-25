@@ -28,14 +28,6 @@ import {
   UpdateNotesParams,
 } from '../src/appointment';
 import { AvailabilityInput } from '../src/availability';
-import {
-  BarrierType,
-  CareStatus,
-  CreateBarrierParams,
-  CreateRedFlagParams,
-  RedFlagType,
-  UpdateBarrierParams,
-} from '../src/care';
 import { MemberRole, RoleTypes, UserRole, reformatDate } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import { DailyReport } from '../src/dailyReport';
@@ -83,7 +75,16 @@ import {
   TodoDone,
 } from '../src/todo';
 import { CreateUserParams, GetSlotsParams, User, defaultUserParams } from '../src/user';
-
+import {
+  BarrierType,
+  CareStatus,
+  CreateBarrierParams,
+  CreateCarePlanParams,
+  CreateRedFlagParams,
+  RedFlagType,
+  UpdateBarrierParams,
+  UpdateCarePlanParams,
+} from '../src/care';
 export const generateCreateUserParams = ({
   authId = v4(),
   roles = [UserRole.coach],
@@ -856,6 +857,38 @@ export const generateUpdateBarrierParams = ({
   notes = faker.lorem.words(4),
   status = CareStatus.completed,
 }: Partial<UpdateBarrierParams> = {}) => {
+  return {
+    id,
+    notes,
+    status,
+  };
+};
+
+export const generateCreateCarePlanParams = ({
+  memberId = generateId(),
+  carePlanType,
+  notes = faker.lorem.words(4),
+  barrierId = generateId(),
+  customValue,
+  dueDate = faker.date.soon(2),
+  createdBy,
+}: Partial<CreateCarePlanParams> = {}) => {
+  return {
+    memberId,
+    carePlanType,
+    notes,
+    barrierId,
+    customValue,
+    dueDate,
+    createdBy,
+  };
+};
+
+export const generateUpdateCarePlanParams = ({
+  id,
+  notes = faker.lorem.words(4),
+  status = CareStatus.completed,
+}: Partial<UpdateCarePlanParams> = {}) => {
   return {
     id,
     notes,

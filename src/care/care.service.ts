@@ -4,12 +4,16 @@ import { Model, Types } from 'mongoose';
 import {
   Barrier,
   BarrierDocument,
+  CarePlan,
+  CarePlanDocument,
   CareStatus,
   CreateBarrierParams,
+  CreateCarePlanParams,
   CreateRedFlagParams,
   RedFlag,
   RedFlagDocument,
   UpdateBarrierParams,
+  UpdateCarePlanParams,
 } from '.';
 import { ErrorType, Errors } from '../common';
 import { isNil, omitBy } from 'lodash';
@@ -21,19 +25,24 @@ export class CareService {
     private readonly redFlagModel: Model<RedFlagDocument>,
     @InjectModel(Barrier.name)
     private readonly barrierModel: Model<BarrierDocument>,
+    @InjectModel(CarePlan.name)
+    private readonly carePlanModel: Model<CarePlanDocument>,
   ) {}
 
   /**************************************************************************************************
    ******************************************** Red Flag ********************************************
    *************************************************************************************************/
 
-  async createRedFlag(createRedFlagParams: CreateRedFlagParams): Promise<RedFlag> {
-    const { memberId, createdBy } = createRedFlagParams;
-    return this.redFlagModel.create({
-      ...createRedFlagParams,
-      memberId: new Types.ObjectId(memberId),
-      createdBy: new Types.ObjectId(createdBy),
-    });
+  async createRedFlag(params: CreateRedFlagParams): Promise<RedFlag> {
+    const createParams: Partial<CreateRedFlagParams> = omitBy(
+      {
+        ...params,
+        memberId: new Types.ObjectId(params.memberId),
+        createdBy: new Types.ObjectId(params.createdBy),
+      },
+      isNil,
+    );
+    return this.redFlagModel.create(createParams);
   }
 
   async getMemberRedFlags(memberId: string): Promise<RedFlag[]> {
@@ -47,18 +56,21 @@ export class CareService {
    ******************************************** Barrier ********************************************
    *************************************************************************************************/
 
-  async createBarrier(createBarrierParams: CreateBarrierParams): Promise<Barrier> {
-    const { memberId, createdBy, redFlagId } = createBarrierParams;
-    return this.barrierModel.create({
-      ...createBarrierParams,
-      memberId: new Types.ObjectId(memberId),
-      createdBy: new Types.ObjectId(createdBy),
-      redFlagId: new Types.ObjectId(redFlagId),
-    });
+  async createBarrier(params: CreateBarrierParams): Promise<Barrier> {
+    const createParams: Partial<CreateBarrierParams> = omitBy(
+      {
+        ...params,
+        memberId: new Types.ObjectId(params.memberId),
+        createdBy: new Types.ObjectId(params.createdBy),
+        redFlagId: params.redFlagId ? new Types.ObjectId(params.redFlagId) : undefined,
+      },
+      isNil,
+    );
+    return this.barrierModel.create(createParams);
   }
 
   async updateBarrier(updateBarrierParams: UpdateBarrierParams): Promise<Barrier> {
-    const setParams: any = omitBy(
+    const updateParams: Partial<UpdateBarrierParams> = omitBy(
       {
         ...updateBarrierParams,
         completedAt:
@@ -68,7 +80,7 @@ export class CareService {
     );
     const result = this.barrierModel.findOneAndUpdate(
       { _id: new Types.ObjectId(updateBarrierParams.id) },
-      { $set: setParams },
+      { $set: updateParams },
       { new: true },
     );
     if (!result) {
@@ -83,5 +95,50 @@ export class CareService {
 
   async getBarrier(id: string): Promise<Barrier> {
     return this.barrierModel.findById(new Types.ObjectId(id));
+  }
+
+  /**************************************************************************************************
+   ******************************************** Care Plan ********************************************
+   *************************************************************************************************/
+
+  async createCarePlan(params: CreateCarePlanParams): Promise<CarePlan> {
+    const createParams: Partial<CreateCarePlanParams> = omitBy(
+      {
+        ...params,
+        memberId: new Types.ObjectId(params.memberId),
+        createdBy: new Types.ObjectId(params.createdBy),
+        barrierId: params.barrierId ? new Types.ObjectId(params.barrierId) : undefined,
+      },
+      isNil,
+    );
+    return this.carePlanModel.create(createParams);
+  }
+
+  async updateCarePlan(updateCarePlanParams: UpdateCarePlanParams): Promise<CarePlan> {
+    const updateParams: Partial<UpdateCarePlanParams> = omitBy(
+      {
+        ...updateCarePlanParams,
+        completedAt:
+          updateCarePlanParams.status === CareStatus.completed ? new Date(Date.now()) : undefined,
+      },
+      isNil,
+    );
+    const result = this.carePlanModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(updateCarePlanParams.id) },
+      { $set: updateParams },
+      { new: true },
+    );
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.carePlanNotFound));
+    }
+    return result;
+  }
+
+  async getMemberCarePlans(memberId: string): Promise<CarePlan[]> {
+    return this.carePlanModel.find({ memberId: new Types.ObjectId(memberId) });
+  }
+
+  async getCarePlan(id: string): Promise<CarePlan> {
+    return this.carePlanModel.findById(new Types.ObjectId(id));
   }
 }

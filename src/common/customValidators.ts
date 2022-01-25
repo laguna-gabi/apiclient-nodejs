@@ -237,3 +237,18 @@ export function IsCronExpression(options: ValidationOptions) {
     });
   };
 }
+
+export function IsCustomOrSuggestedCarePlan(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(carePlanType: string, args: ValidationArguments) {
+          return Boolean(args.object['carePlanType']) == Boolean(args.object['appointmentId']);
+        },
+      },
+    });
+  };
+}

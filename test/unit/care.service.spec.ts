@@ -6,11 +6,16 @@ import {
   dbDisconnect,
   defaultModules,
   generateCreateBarrierParams,
+  generateCreateCarePlanParams,
   generateCreateRedFlagParams,
   generateId,
   generateUpdateBarrierParams,
+  generateUpdateCarePlanParams,
+  randomEnum,
 } from '../index';
-import { CareModule, CareService, CareStatus } from '../../src/care';
+import { CareModule, CarePlanType, CareService, CareStatus } from '../../src/care';
+import { lorem } from 'faker';
+import { Types } from 'mongoose';
 
 describe('CareService', () => {
   let module: TestingModule;
@@ -37,10 +42,14 @@ describe('CareService', () => {
       const params = generateCreateRedFlagParams({ createdBy: generateId() });
       const { id } = await service.createRedFlag(params);
 
-      const result: any = await service.getRedFlag(id);
-      result.memberId = result.memberId.toString();
-      result.createdBy = result.createdBy.toString();
-      expect(result).toEqual(expect.objectContaining(params));
+      const result = await service.getRedFlag(id);
+      expect(result).toEqual(
+        expect.objectContaining({
+          ...params,
+          memberId: new Types.ObjectId(params.memberId),
+          createdBy: new Types.ObjectId(params.createdBy),
+        }),
+      );
     });
 
     it('should get multiple red flags by memberId', async () => {
@@ -52,12 +61,12 @@ describe('CareService', () => {
 
       const redFlag = await service.getRedFlag(id);
       const redFlag2 = await service.getRedFlag(id2);
-      const result: any = await service.getMemberRedFlags(memberId);
+      const result = await service.getMemberRedFlags(memberId);
       expect(result).toEqual([redFlag, redFlag2]);
     });
 
     it('should return empty list when there are no red flags for member', async () => {
-      const result: any = await service.getMemberRedFlags(generateId());
+      const result = await service.getMemberRedFlags(generateId());
       expect(result).toEqual([]);
     });
   });
@@ -67,12 +76,16 @@ describe('CareService', () => {
       const params = generateCreateBarrierParams({ createdBy: generateId() });
       const { id } = await service.createBarrier(params);
 
-      const result: any = await service.getBarrier(id);
-      result.memberId = result.memberId.toString();
-      result.createdBy = result.createdBy.toString();
-      result.redFlagId = result.redFlagId.toString();
-      expect(result).toEqual(expect.objectContaining(params));
-      expect(result.status).toEqual(CareStatus.active);
+      const result = await service.getBarrier(id);
+      expect(result).toEqual(
+        expect.objectContaining({
+          ...params,
+          status: CareStatus.active,
+          memberId: new Types.ObjectId(params.memberId),
+          createdBy: new Types.ObjectId(params.createdBy),
+          redFlagId: new Types.ObjectId(params.redFlagId),
+        }),
+      );
     });
 
     it('should get multiple barriers by memberId', async () => {
@@ -84,7 +97,7 @@ describe('CareService', () => {
 
       const barrier = await service.getBarrier(id);
       const barrier2 = await service.getBarrier(id2);
-      const result: any = await service.getMemberBarriers(memberId);
+      const result = await service.getMemberBarriers(memberId);
       expect(result).toEqual([barrier, barrier2]);
     });
 
@@ -94,12 +107,12 @@ describe('CareService', () => {
         createdBy: generateId(),
       });
       const { id } = await service.createBarrier(params);
-      const barrierBefore: any = await service.getBarrier(id);
+      const barrierBefore = await service.getBarrier(id);
       expect(barrierBefore.completedAt).toBeUndefined();
 
       const updateParams = generateUpdateBarrierParams({ id });
 
-      const result: any = await service.updateBarrier(updateParams);
+      const result = await service.updateBarrier(updateParams);
       expect(result.status).toEqual(updateParams.status);
       expect(result.notes).toEqual(updateParams.notes);
       expect(result.completedAt).toEqual(expect.any(Date));
@@ -113,13 +126,13 @@ describe('CareService', () => {
           createdBy: generateId(),
         });
         const { id } = await service.createBarrier(params);
-        const barrierBefore: any = await service.getBarrier(id);
+        const barrierBefore = await service.getBarrier(id);
         expect(barrierBefore.completedAt).toBeUndefined();
 
         const updateParams = generateUpdateBarrierParams({ id });
         delete updateParams[param];
 
-        const result: any = await service.updateBarrier(updateParams);
+        const result = await service.updateBarrier(updateParams);
         expect(result.id).toEqual(id);
         expect(result[param]).toEqual(barrierBefore[param]);
         if (param !== 'status') {
@@ -132,7 +145,102 @@ describe('CareService', () => {
     );
 
     it('should return empty list when there are no barriers for member', async () => {
-      const result: any = await service.getMemberBarriers(generateId());
+      const result = await service.getMemberBarriers(generateId());
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('CarePlan', () => {
+    test.each`
+      title          | param
+      ${'suggested'} | ${{ carePlanType: randomEnum(CarePlanType) as CarePlanType }}
+      ${'custom'}    | ${{ customValue: lorem.words(4) }}
+    `(`should create a $title care plan`, async (params) => {
+      const createCarePlanParams = generateCreateCarePlanParams({
+        createdBy: generateId(),
+        ...params.param,
+      });
+      const { id } = await service.createCarePlan(createCarePlanParams);
+
+      const result = await service.getCarePlan(id);
+      expect(result).toEqual(
+        expect.objectContaining({
+          ...createCarePlanParams,
+          status: CareStatus.active,
+          memberId: new Types.ObjectId(createCarePlanParams.memberId),
+          createdBy: new Types.ObjectId(createCarePlanParams.createdBy),
+          barrierId: new Types.ObjectId(createCarePlanParams.barrierId),
+        }),
+      );
+    });
+
+    it('should get multiple care plans by memberId', async () => {
+      const memberId = generateId();
+      const params = generateCreateCarePlanParams({
+        memberId,
+        createdBy: generateId(),
+        carePlanType: CarePlanType.temporary1,
+      });
+      const { id } = await service.createCarePlan(params);
+      const params2 = generateCreateCarePlanParams({
+        memberId,
+        createdBy: generateId(),
+        carePlanType: CarePlanType.temporary2,
+      });
+      const { id: id2 } = await service.createCarePlan(params2);
+
+      const carePlan = await service.getCarePlan(id);
+      const carePlan2 = await service.getCarePlan(id2);
+      const result = await service.getMemberCarePlans(memberId);
+      expect(result).toEqual([carePlan, carePlan2]);
+    });
+
+    it('should update care plans and set completedAt', async () => {
+      const params = generateCreateCarePlanParams({
+        memberId: generateId(),
+        createdBy: generateId(),
+        carePlanType: CarePlanType.temporary1,
+      });
+      const { id } = await service.createCarePlan(params);
+      const carePlanBefore = await service.getCarePlan(id);
+      expect(carePlanBefore.completedAt).toBeUndefined();
+
+      const updateParams = generateUpdateCarePlanParams({ id });
+      const result = await service.updateCarePlan(updateParams);
+      expect(result.status).toEqual(updateParams.status);
+      expect(result.notes).toEqual(updateParams.notes);
+      expect(result.completedAt).toEqual(expect.any(Date));
+    });
+
+    test.each(['notes', 'status'])(
+      'should not override optional field %p when not set from params',
+      async (param) => {
+        const params = generateCreateCarePlanParams({
+          memberId: generateId(),
+          createdBy: generateId(),
+          carePlanType: CarePlanType.temporary1,
+        });
+        const { id } = await service.createCarePlan(params);
+        const carePlanBefore = await service.getCarePlan(id);
+        expect(carePlanBefore.completedAt).toBeUndefined();
+
+        const updateParams = generateUpdateCarePlanParams({ id });
+        delete updateParams[param];
+
+        const result = await service.updateCarePlan(updateParams);
+        expect(result.id).toEqual(id);
+        expect(result[param]).toEqual(carePlanBefore[param]);
+        if (param !== 'status') {
+          // should update completedAt only when status is set to completed
+          expect(result.completedAt).toEqual(expect.any(Date));
+        } else {
+          expect(result.completedAt).toBeUndefined();
+        }
+      },
+    );
+
+    it('should return empty list when there are no care plans for member', async () => {
+      const result = await service.getMemberCarePlans(generateId());
       expect(result).toEqual([]);
     });
   });

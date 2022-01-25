@@ -112,6 +112,8 @@ export enum ErrorType {
   barrierIdInvalid = 10102,
   carePlanIdInvalid = 10103,
   barrierNotFound = 10104,
+  carePlanNotFound = 10105,
+  carePlanTypeOrCustomInvalid = 10106,
 }
 
 const nameFormat = `name must be between ${graphqlConfig.get('minLength')} and ${graphqlConfig.get(
@@ -258,6 +260,11 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.barrierIdInvalid.valueOf(), 'invalid barrier id'],
   [ErrorType.carePlanIdInvalid.valueOf(), 'invalid care plan id'],
   [ErrorType.barrierNotFound.valueOf(), 'barrier id was not found'],
+  [ErrorType.carePlanNotFound.valueOf(), 'care plan id was not found'],
+  [
+    ErrorType.carePlanTypeOrCustomInvalid.valueOf(),
+    'must be either carePlanType or customValue, not both',
+  ],
 ]);
 
 export const DbErrors = {
