@@ -60,19 +60,27 @@ export class TodoService extends BaseService {
     const params = cloneDeep(endAndCreateTodoParams);
     delete params.id;
 
-    const endedTodo = await this.todoModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(id), memberId: new Types.ObjectId(memberId) },
-      {
-        $set: {
-          end: new Date(),
-          updatedBy: new Types.ObjectId(updatedBy),
-        },
-      },
-    );
+    const endedTodo = await this.todoModel.findOne({
+      _id: new Types.ObjectId(id),
+      memberId: new Types.ObjectId(memberId),
+    });
 
     if (!endedTodo) {
       throw new Error(Errors.get(ErrorType.todoNotFound));
     }
+
+    if (endedTodo.end) {
+      if (endedTodo.end.getTime() < new Date().getTime()) {
+        throw new Error(Errors.get(ErrorType.todoEndEndedTodo));
+      }
+    }
+
+    await endedTodo.updateOne({
+      $set: {
+        end: new Date(),
+        updatedBy: new Types.ObjectId(updatedBy),
+      },
+    });
 
     const createdTodo = await this.todoModel.create({
       ...params,
@@ -85,19 +93,24 @@ export class TodoService extends BaseService {
   }
 
   async endTodo(id, updatedBy): Promise<boolean> {
-    const endedTodo = await this.todoModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(id) },
-      {
-        $set: {
-          end: new Date(),
-          updatedBy: new Types.ObjectId(updatedBy),
-        },
-      },
-    );
+    const endedTodo = await this.todoModel.findOne({ _id: new Types.ObjectId(id) });
 
     if (!endedTodo) {
       throw new Error(Errors.get(ErrorType.todoNotFound));
     }
+
+    if (endedTodo.end) {
+      if (endedTodo.end.getTime() < new Date().getTime()) {
+        throw new Error(Errors.get(ErrorType.todoEndEndedTodo));
+      }
+    }
+
+    await endedTodo.updateOne({
+      $set: {
+        end: new Date(),
+        updatedBy: new Types.ObjectId(updatedBy),
+      },
+    });
 
     return true;
   }
