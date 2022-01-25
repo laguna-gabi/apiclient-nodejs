@@ -21,7 +21,7 @@
       "userPoolId": "us-east-1_kMLRLqG3r"
     },
     "cloudMap": {
-      "namespace": "LagunaCloudMap-stage"
+      "namespace": "LagunaCloudMap-staging"
     }
   }
 }
