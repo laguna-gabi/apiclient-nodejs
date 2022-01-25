@@ -12,6 +12,8 @@ import {
   CaregiverDto,
   ControlMember,
   ControlMemberDto,
+  DismissedAlert,
+  DismissedAlertDto,
   Goal,
   GoalDto,
   Journal,
@@ -31,12 +33,14 @@ import { CommonModule } from '../common';
 import { CommunicationModule } from '../communication';
 import { ConfigsService, ProvidersModule } from '../providers';
 import { UserModule } from '../user';
+import { ServiceModule } from '../services';
 
 @Module({
   imports: [
     CommunicationModule,
     UserModule,
     ProvidersModule,
+    ServiceModule,
     HttpModule,
     CommonModule,
     MongooseModule.forFeature([
@@ -51,6 +55,8 @@ import { UserModule } from '../user';
       { name: ArchiveMemberConfig.name, schema: ArchiveMemberConfigDto },
       { name: ControlMember.name, schema: ControlMemberDto },
       { name: Caregiver.name, schema: CaregiverDto },
+      { name: DismissedAlert.name, schema: DismissedAlertDto },
+      { name: Appointment.name, schema: AppointmentDto },
     ]),
   ],
   providers: [MemberResolver, MemberService, ConfigsService],

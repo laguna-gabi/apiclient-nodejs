@@ -1,8 +1,9 @@
-import { Language, Platform } from '@lagunahealth/pandora';
+import { InternalKey, Language, Platform } from '@lagunahealth/pandora';
 import * as config from 'config';
 import { general } from 'config';
-import { add, addDays, startOfToday, startOfTomorrow } from 'date-fns';
+import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
 import * as faker from 'faker';
+import { CreateTodoDoneParams, CreateTodoParams, EndAndCreateTodoParams } from '../../src/todo';
 import { v4 } from 'uuid';
 import {
   Appointment,
@@ -13,6 +14,7 @@ import {
 import { ErrorType, Errors, Identifiers, UserRole, delay, reformatDate } from '../../src/common';
 import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
 import {
+  AlertType,
   CreateTaskParams,
   Member,
   Recording,
@@ -28,6 +30,10 @@ import {
   generateAddCaregiverParams,
   generateAppointmentLink,
   generateAvailabilityInput,
+  generateCreateRedFlagParams,
+  generateCreateTodoDoneParams,
+  generateCreateTodoParams,
+  generateEndAndCreateTodoParams,
   generateId,
   generateOrgParams,
   generateRequestAppointmentParams,
@@ -39,7 +45,9 @@ import {
   generateUpdateMemberParams,
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
+  mockGenerateDispatch,
 } from '../index';
+import { CreateRedFlagParams } from '../../src/care';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();
@@ -990,6 +998,212 @@ describe('Integration tests: all', () => {
     });
   });
 
+  describe('Alerts', () => {
+    let member1, member2, notification1, notification2, notification3, primaryUser;
+    beforeAll(async () => {
+      // Fixtures: generate 2 members with the same primary user
+      const org = await creators.createAndValidateOrg();
+
+      member1 = await creators.createAndValidateMember({ org, useNewUser: true });
+      primaryUser = member1.primaryUserId.toString();
+      member2 = await creators.createAndValidateMember({
+        org,
+        useNewUser: false,
+        userId: primaryUser,
+      });
+
+      notification1 = mockGenerateDispatch({
+        senderClientId: member1.id,
+        contentKey: InternalKey.appointmentScheduledUser,
+      });
+      notification2 = mockGenerateDispatch({
+        sentAt: sub(notification1.sentAt, { hours: 1 }),
+        senderClientId: member2.id,
+        contentKey: InternalKey.memberNotFeelingWellMessage,
+      });
+      // should be ignored.. over 30 days
+      notification3 = mockGenerateDispatch({
+        sentAt: sub(new Date(), { days: 30 }),
+        senderClientId: member2.id,
+        contentKey: InternalKey.memberNotFeelingWellMessage,
+      });
+    });
+
+    beforeEach(() => {
+      handler.notificationService.spyOnNotificationServiceGetDispatchesByClientSenderId.mockReset();
+      // Notification service to return expected response
+      // eslint-disable-next-line max-len
+      handler.notificationService.spyOnNotificationServiceGetDispatchesByClientSenderId.mockResolvedValueOnce(
+        [notification1],
+      );
+      // eslint-disable-next-line max-len
+      handler.notificationService.spyOnNotificationServiceGetDispatchesByClientSenderId.mockResolvedValueOnce(
+        [notification2, notification3],
+      );
+    });
+
+    it('should get alerts', async () => {
+      const alerts = await handler
+        .setContextUserId(primaryUser, undefined, [UserRole.coach])
+        .queries.getAlerts();
+
+      expect(alerts).toEqual([
+        {
+          date: member2.createdAt,
+          dismissed: false,
+          id: `${member2.id}_${AlertType.memberAssigned}`,
+          isNew: true,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member2),
+          type: AlertType.memberAssigned,
+        },
+        {
+          date: member1.createdAt,
+          dismissed: false,
+          id: `${member1.id}_${AlertType.memberAssigned}`,
+          isNew: true,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member1),
+          type: AlertType.memberAssigned,
+        },
+        {
+          date: notification1.sentAt.toISOString(),
+          dismissed: false,
+          id: notification1.dispatchId,
+          isNew: true,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member1),
+          type: AlertType.appointmentScheduledUser,
+        },
+        {
+          date: notification2.sentAt.toISOString(),
+          dismissed: false,
+          id: notification2.dispatchId,
+          isNew: true,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member2),
+          type: AlertType.memberNotFeelingWellMessage,
+        },
+      ]);
+    });
+
+    it('should get alerts with dismissed indication', async () => {
+      // User will dismiss one alert - we should expect to see the alert as dismissed
+      await handler
+        .setContextUserId(primaryUser, undefined, [UserRole.coach])
+        .mutations.dismissAlert({ alertId: notification1.dispatchId });
+
+      const alerts = await handler
+        .setContextUserId(primaryUser, undefined, [UserRole.coach])
+        .queries.getAlerts();
+
+      expect(alerts).toEqual([
+        {
+          date: member2.createdAt,
+          dismissed: false,
+          id: `${member2.id}_${AlertType.memberAssigned}`,
+          isNew: true,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member2),
+          type: AlertType.memberAssigned,
+        },
+        {
+          date: member1.createdAt,
+          dismissed: false,
+          id: `${member1.id}_${AlertType.memberAssigned}`,
+          isNew: true,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member1),
+          type: AlertType.memberAssigned,
+        },
+        {
+          date: notification1.sentAt.toISOString(),
+          dismissed: true,
+          id: notification1.dispatchId,
+          isNew: true,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member1),
+          type: AlertType.appointmentScheduledUser,
+        },
+        {
+          date: notification2.sentAt.toISOString(),
+          dismissed: false,
+          id: notification2.dispatchId,
+          isNew: true,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member2),
+          type: AlertType.memberNotFeelingWellMessage,
+        },
+      ]);
+    });
+
+    it('should get alerts with isNew set to false after setLastQueryAlert', async () => {
+      // User setLastQueryAlert to now
+      await handler
+        .setContextUserId(primaryUser, undefined, [UserRole.coach])
+        .mutations.setLastQueryAlert({});
+
+      const { lastQueryAlert } = await handler
+        .setContextUserId(primaryUser, undefined, [UserRole.coach])
+        .queries.getUser();
+
+      const alerts = await handler
+        .setContextUserId(primaryUser, undefined, [UserRole.coach], lastQueryAlert)
+        .queries.getAlerts();
+
+      expect(alerts).toEqual([
+        {
+          date: member2.createdAt,
+          dismissed: false,
+          id: `${member2.id}_${AlertType.memberAssigned}`,
+          isNew: false,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member2),
+          type: AlertType.memberAssigned,
+        },
+        {
+          date: member1.createdAt,
+          dismissed: false,
+          id: `${member1.id}_${AlertType.memberAssigned}`,
+          isNew: false,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member1),
+          type: AlertType.memberAssigned,
+        },
+        {
+          date: notification1.sentAt.toISOString(),
+          dismissed: true,
+          id: notification1.dispatchId,
+          isNew: false,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member1),
+          type: AlertType.appointmentScheduledUser,
+        },
+        {
+          date: notification2.sentAt.toISOString(),
+          dismissed: false,
+          id: notification2.dispatchId,
+          isNew: false,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          member: handler.memberService.getMemberInfo(member2),
+          type: AlertType.memberNotFeelingWellMessage,
+        },
+      ]);
+    });
+  });
+
   describe('Caregiver', () => {
     it('should add, get, update and delete a member caregiver', async () => {
       const org = await creators.createAndValidateOrg();
@@ -1056,6 +1270,254 @@ describe('Integration tests: all', () => {
       expect(await handler.queries.getAppointment(appointment.id)).toBeFalsy();
     }, 10000);
   });
+
+  describe('Todos', () => {
+    it('should create end and delete Todo', async () => {
+      /**
+       * 1. User creates a todo for member
+       * 2. Member end and create todo
+       * 3. User ends the todo
+       * 4. create TodoDone
+       * 5. delete TodoDone
+       */
+      const user = await creators.createAndValidateUser([UserRole.coach]);
+      const userId = user.id;
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId = member.id;
+
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      const { id } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.createTodo({
+          createTodoParams,
+        });
+
+      const todos = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .queries.getTodos({ memberId });
+
+      expect(todos.length).toEqual(1);
+      expect(todos).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...createTodoParams,
+            id,
+            start: createTodoParams.start.toISOString(),
+            end: createTodoParams.end.toISOString(),
+            createdBy: userId,
+            updatedBy: userId,
+          }),
+        ]),
+      );
+
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({ id });
+      delete endAndCreateTodoParams.updatedBy;
+      const newCreatedTodo = await handler
+        .setContextUserId(memberId)
+        .mutations.endAndCreateTodo({ endAndCreateTodoParams });
+
+      const todosAfterEndAndCreate = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .queries.getTodos({ memberId });
+
+      expect(todosAfterEndAndCreate.length).toEqual(2);
+      delete createTodoParams.end;
+      expect(todosAfterEndAndCreate).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...createTodoParams,
+            id,
+            start: createTodoParams.start.toISOString(),
+            createdBy: userId,
+            updatedBy: memberId,
+          }),
+          expect.objectContaining({
+            ...endAndCreateTodoParams,
+            id: newCreatedTodo.id,
+            memberId,
+            start: endAndCreateTodoParams.start.toISOString(),
+            end: endAndCreateTodoParams.end.toISOString(),
+            createdBy: userId,
+            updatedBy: memberId,
+          }),
+        ]),
+      );
+
+      const endTodo = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.endTodo({ id: newCreatedTodo.id });
+
+      expect(endTodo).toBeTruthy();
+
+      const todosAfterEnd = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .queries.getTodos({ memberId });
+
+      delete endAndCreateTodoParams.end;
+      expect(todosAfterEnd.length).toEqual(2);
+      expect(todosAfterEnd).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...createTodoParams,
+            id,
+            start: createTodoParams.start.toISOString(),
+            createdBy: userId,
+            updatedBy: memberId,
+          }),
+          expect.objectContaining({
+            ...endAndCreateTodoParams,
+            id: newCreatedTodo.id,
+            memberId,
+            start: endAndCreateTodoParams.start.toISOString(),
+            createdBy: userId,
+            updatedBy: userId,
+          }),
+        ]),
+      );
+
+      const createTodoDoneParams1: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        todoId: id,
+      });
+      const createTodoDoneParams2: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        todoId: id,
+      });
+      delete createTodoDoneParams1.memberId;
+      delete createTodoDoneParams2.memberId;
+
+      const { id: todoDoneId1 } = await handler
+        .setContextUserId(memberId)
+        .mutations.createTodoDone({ createTodoDoneParams: createTodoDoneParams1 });
+      const { id: todoDoneId2 } = await handler
+        .setContextUserId(memberId)
+        .mutations.createTodoDone({ createTodoDoneParams: createTodoDoneParams2 });
+
+      expect(todoDoneId1).not.toBeUndefined();
+      expect(todoDoneId2).not.toBeUndefined();
+
+      const TodoDones = await handler.setContextUserId(memberId).queries.getTodoDones({ memberId });
+
+      expect(TodoDones.length).toEqual(2);
+      expect(TodoDones).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: todoDoneId1,
+            memberId,
+            todoId: id,
+            done: createTodoDoneParams1.done.toISOString(),
+          }),
+          expect.objectContaining({
+            id: todoDoneId2,
+            memberId,
+            todoId: id,
+            done: createTodoDoneParams2.done.toISOString(),
+          }),
+        ]),
+      );
+
+      await handler.setContextUserId(memberId).mutations.deleteTodoDone({ id: todoDoneId1 });
+
+      const TodoDonesAfterDelete = await handler
+        .setContextUserId(memberId)
+        .queries.getTodoDones({ memberId });
+
+      expect(TodoDonesAfterDelete.length).toEqual(1);
+      expect(TodoDonesAfterDelete).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: todoDoneId2,
+            memberId,
+            todoId: id,
+            done: createTodoDoneParams2.done.toISOString(),
+          }),
+        ]),
+      );
+    });
+
+    it('should fail to delete TodoDone of another member', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member1 = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId1 = member1.id;
+      const member2 = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId2 = member2.id;
+
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId: memberId1,
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      const { id } = await handler.setContextUserId(memberId1).mutations.createTodo({
+        createTodoParams,
+      });
+
+      const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        todoId: id,
+      });
+      delete createTodoDoneParams.memberId;
+
+      const { id: todoDoneId } = await handler
+        .setContextUserId(memberId1)
+        .mutations.createTodoDone({ createTodoDoneParams: createTodoDoneParams });
+
+      await handler
+        .setContextUserId(memberId2)
+        .mutations.deleteTodoDone({
+          id: todoDoneId,
+          invalidFieldsErrors: [Errors.get(ErrorType.todoDoneNotFound)],
+        });
+    });
+  });
+
+  describe('Care', () => {
+    it('should create and get and red flags', async () => {
+      const org = await creators.createAndValidateOrg();
+      const { id: memberId } = await creators.createAndValidateMember({ org, useNewUser: true });
+
+      // create first red flag
+      const { id: userId } = await creators.createAndValidateUser([UserRole.coach]);
+      const createRedFlagParams: CreateRedFlagParams = generateCreateRedFlagParams({
+        memberId,
+      });
+      delete createRedFlagParams.createdBy;
+
+      const { id } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.createRedFlag({
+          createRedFlagParams,
+        });
+
+      // create second red flag
+      const { id: userId2 } = await creators.createAndValidateUser([UserRole.coach]);
+      const createRedFlagParams2: CreateRedFlagParams = generateCreateRedFlagParams({
+        memberId,
+      });
+      delete createRedFlagParams2.createdBy;
+
+      const { id: id2 } = await handler
+        .setContextUserId(userId2, '', [UserRole.coach])
+        .mutations.createRedFlag({
+          createRedFlagParams: createRedFlagParams2,
+        });
+
+      // get red flags
+      const redFlags = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .queries.getMemberRedFlags({ memberId });
+
+      expect(redFlags.length).toEqual(2);
+      expect(redFlags).toEqual([
+        expect.objectContaining({ ...createRedFlagParams, id, createdBy: userId }),
+        expect.objectContaining({ ...createRedFlagParams2, id: id2, createdBy: userId2 }),
+      ]);
+    });
+  });
+
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

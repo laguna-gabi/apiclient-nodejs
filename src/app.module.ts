@@ -11,12 +11,15 @@ import { AvailabilityModule } from './availability';
 import { Errors, JsonBodyMiddleware, RawBodyMiddleware } from './common';
 import { CommunicationModule } from './communication';
 import { DailyReportModule } from './dailyReport';
-import { DbModule } from './db/db.module';
+import { DbModule } from './db';
 import { HealthController } from './health/health.controller';
 import { MemberModule } from './member';
 import { OrgModule } from './org';
 import { ProvidersModule } from './providers';
+import { ServiceModule } from './services';
+import { TodoModule } from './todo';
 import { UserModule } from './user';
+import { CareModule } from './care';
 
 const badRequestException = 'Bad Request Exception';
 
@@ -30,9 +33,12 @@ const badRequestException = 'Bad Request Exception';
     OrgModule,
     AvailabilityModule,
     DailyReportModule,
+    TodoModule,
     ProvidersModule,
+    ServiceModule,
     DbModule,
     TerminusModule,
+    CareModule,
     EventEmitterModule.forRoot(),
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql',

@@ -1,5 +1,6 @@
 import {
   Honorific,
+  InternalKey,
   Language,
   Platform,
   generatePhone,
@@ -14,7 +15,6 @@ import { datatype, date, internet } from 'faker';
 import { isNil, omitBy } from 'lodash';
 import { Model, Types, model } from 'mongoose';
 import { performance } from 'perf_hooks';
-import { v4 } from 'uuid';
 import {
   Appointment,
   AppointmentDocument,
@@ -26,8 +26,11 @@ import { ErrorType, Errors, LoggerService, PhoneType, RecordingType } from '../.
 import {
   ActionItem,
   ActionItemDto,
+  AlertType,
   ControlMember,
   ControlMemberDto,
+  DismissedAlert,
+  DismissedAlertDto,
   Goal,
   GoalDto,
   ImageFormat,
@@ -37,9 +40,11 @@ import {
   Member,
   MemberDto,
   MemberModule,
+  MemberRecordingDto,
   MemberService,
   NotNullableMemberKeys,
   ReadmissionRisk,
+  Recording,
   Sex,
   TaskStatus,
   UpdateMemberParams,
@@ -72,7 +77,11 @@ import {
   generateUpdateRecordingParams,
   generateUpdateRecordingReviewParams,
   generateUpdateTaskStatusParams,
+  mockGenerateDispatch,
 } from '../index';
+import { v4 } from 'uuid';
+import { NotificationService } from '../../src/services';
+import { add, sub } from 'date-fns';
 
 describe('MemberService', () => {
   let module: TestingModule;
@@ -85,6 +94,8 @@ describe('MemberService', () => {
   let modelActionItem: Model<typeof ActionItemDto>;
   let modelJournal: Model<typeof JournalDto>;
   let modelAppointment: Model<typeof AppointmentDto>;
+  let modelDismissedAlert: Model<typeof DismissedAlertDto>;
+  let modelRecording: Model<typeof MemberRecordingDto>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -103,6 +114,8 @@ describe('MemberService', () => {
     modelActionItem = model(ActionItem.name, ActionItemDto);
     modelJournal = model(Journal.name, JournalDto);
     modelAppointment = model(Appointment.name, AppointmentDto);
+    modelDismissedAlert = model(DismissedAlert.name, DismissedAlertDto);
+    modelRecording = model(Recording.name, MemberRecordingDto);
     await dbConnect();
   });
 
@@ -1404,6 +1417,381 @@ describe('MemberService', () => {
 
         const caregiver: any = await service.getCaregiver(caregiverId);
         expect(caregiver).toBeFalsy();
+      });
+
+      it('should get a caregiver by member id', async () => {
+        const updateCaregiverParams = generateUpdateCaregiverParams({ id: caregiverId });
+        const memberId = generateId();
+
+        const caregiver = await service.updateCaregiver(memberId, updateCaregiverParams);
+
+        expect(await service.getCaregiversByMemberId(memberId)).toEqual([caregiver]);
+      });
+    });
+  });
+
+  describe('dismissAlert and getUserDismissedAlerts', () => {
+    it('should dismiss alert for user', async () => {
+      const userId = generateId();
+      const alertId = generateId();
+      await service.dismissAlert(userId, alertId);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userDismissedAlerts = await service.getUserDismissedAlerts(userId);
+      expect(userDismissedAlerts.length).toBe(1);
+      expect(userDismissedAlerts[0]).toEqual(
+        expect.objectContaining({
+          alertId,
+          userId,
+        }),
+      );
+    });
+  });
+
+  describe('getAlerts', () => {
+    let mockNotificationGetDispatchesByClientSenderId: jest.SpyInstance;
+
+    beforeAll(() => {
+      mockNotificationGetDispatchesByClientSenderId = jest.spyOn(
+        module.get<NotificationService>(NotificationService),
+        `getDispatchesByClientSenderId`,
+      );
+    });
+
+    afterEach(() => {
+      mockNotificationGetDispatchesByClientSenderId.mockReset();
+    });
+
+    describe('notification based alerts', () => {
+      let orgId, userId, member1, member2, dispatchM1, dispatchM2;
+      let now: Date;
+
+      beforeAll(async () => {
+        now = new Date();
+
+        // generate a single user with multiple assigned members
+        orgId = await generateOrg();
+        userId = await generateUser();
+
+        member1 = await memberModel.findOne({
+          _id: new Types.ObjectId(await generateMember(orgId, userId)),
+        });
+
+        member2 = await memberModel.findOne({
+          _id: new Types.ObjectId(await generateMember(orgId, userId)),
+        });
+
+        dispatchM1 = mockGenerateDispatch({
+          senderClientId: member1.id,
+          contentKey: InternalKey.appointmentScheduledUser,
+          sentAt: sub(now, { days: 10 }),
+        });
+        dispatchM2 = mockGenerateDispatch({
+          senderClientId: member2.id,
+          contentKey: InternalKey.newChatMessageFromMember,
+          sentAt: sub(now, { days: 20 }),
+        });
+      });
+
+      beforeEach(() => {
+        // Mock data from `Iris`
+        mockNotificationGetDispatchesByClientSenderId.mockResolvedValueOnce([dispatchM1]);
+        mockNotificationGetDispatchesByClientSenderId.mockResolvedValueOnce([dispatchM2]);
+
+        // reset the date which will affect the `isNew` flag
+        modelUser.updateOne({ _id: new Types.ObjectId(userId) }, { $unset: 'lastQueryAlert' });
+        // delete dismissed alerts which will affect the `dismissed` flag
+        modelDismissedAlert.deleteMany({ userId: new Types.ObjectId(userId) });
+      });
+
+      afterEach(() => {
+        mockNotificationGetDispatchesByClientSenderId.mockReset();
+      });
+
+      it('should return an empty list of alerts for a user without members', async () => {
+        // generate a single user with multiple assigned members
+        const userId = await generateUser();
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const { lastQueryAlert } = await modelUser.findOne(
+          { _id: new Types.ObjectId(userId) },
+          { lean: true },
+        );
+        expect(await service.getAlerts(userId, lastQueryAlert)).toEqual([]);
+      });
+
+      it('should get alerts', async () => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const { lastQueryAlert } = await modelUser.findOne(
+          { _id: new Types.ObjectId(userId) },
+          { lean: true },
+        );
+        expect(await service.getAlerts(userId, lastQueryAlert)).toEqual([
+          {
+            date: member2.createdAt,
+            dismissed: false,
+            id: `${member2.id}_${AlertType.memberAssigned}`,
+            isNew: true,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            member: service.getMemberInfo(member2),
+            type: AlertType.memberAssigned,
+          },
+          {
+            date: member1.createdAt,
+            dismissed: false,
+            id: `${member1.id}_${AlertType.memberAssigned}`,
+            isNew: true,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            member: service.getMemberInfo(member1),
+            type: AlertType.memberAssigned,
+          },
+          {
+            date: dispatchM1.sentAt,
+            dismissed: false,
+            id: dispatchM1.dispatchId,
+            isNew: true,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            member: service.getMemberInfo(member1),
+            type: AlertType.appointmentScheduledUser,
+          },
+          {
+            date: dispatchM2.sentAt,
+            dismissed: false,
+            id: dispatchM2.dispatchId,
+            isNew: true,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            member: service.getMemberInfo(member2),
+            type: AlertType.newChatMessageFromMember,
+          },
+        ]);
+      });
+
+      // eslint-disable-next-line max-len
+      it('should get alerts - some with dismissed flag indication and some are not new', async () => {
+        await service.dismissAlert(userId, dispatchM1.dispatchId);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const { lastQueryAlert } = await modelUser.findOneAndUpdate(
+          { _id: new Types.ObjectId(userId) },
+          { $set: { lastQueryAlert: sub(now, { days: 15 }) } },
+          { lean: true, new: true },
+        );
+
+        expect(await service.getAlerts(userId, lastQueryAlert)).toEqual([
+          {
+            date: member2.createdAt,
+            dismissed: false,
+            id: `${member2.id}_${AlertType.memberAssigned}`,
+            isNew: true,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            member: service.getMemberInfo(member2),
+            type: AlertType.memberAssigned,
+          },
+          {
+            date: member1.createdAt,
+            dismissed: false,
+            id: `${member1.id}_${AlertType.memberAssigned}`,
+            isNew: true,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            member: service.getMemberInfo(member1),
+            type: AlertType.memberAssigned,
+          },
+          {
+            date: dispatchM1.sentAt,
+            dismissed: true,
+            id: dispatchM1.dispatchId,
+            isNew: true,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            member: service.getMemberInfo(member1),
+            type: AlertType.appointmentScheduledUser,
+          },
+          {
+            date: dispatchM2.sentAt,
+            dismissed: false,
+            id: dispatchM2.dispatchId,
+            isNew: false,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            member: service.getMemberInfo(member2),
+            type: AlertType.newChatMessageFromMember,
+          },
+        ]);
+      });
+    });
+
+    describe('entity based alerts', () => {
+      it('should return pending post deadline action item alerts', async () => {
+        mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
+        // create a new member
+        const memberId = await generateMember();
+
+        const member = await service.get(memberId);
+
+        // add an overdue Action Item - out of range (over 30 days since deadline)
+        await service.insertActionItem({
+          createTaskParams: generateCreateTaskParams({
+            memberId,
+            deadline: sub(new Date(), { days: 31 }),
+          }),
+          status: TaskStatus.pending,
+        });
+
+        // add an overdue Action Item - within range (less than 30 days since deadline)
+        const createTaskParams = generateCreateTaskParams({
+          memberId,
+          deadline: sub(new Date(), { days: 29 }),
+        });
+        const actionItemId = await service.insertActionItem({
+          createTaskParams,
+          status: TaskStatus.pending,
+        });
+
+        // add a `reached` Action Item (should not trigger an alert)
+        await service.insertActionItem({
+          createTaskParams: generateCreateTaskParams({ memberId }),
+          status: TaskStatus.reached,
+        });
+
+        const alerts = await service.getAlerts(member.primaryUserId.toString());
+
+        expect(alerts).toEqual([
+          {
+            id: `${memberId}_${AlertType.memberAssigned}`,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            member: service.getMemberInfo(member),
+            type: AlertType.memberAssigned,
+            date: member.createdAt,
+            dismissed: false,
+            isNew: true,
+          },
+          {
+            id: `${actionItemId.id}_${AlertType.actionItemOverdue}`,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            member: service.getMemberInfo(member),
+            type: AlertType.actionItemOverdue,
+            date: createTaskParams.deadline,
+            dismissed: false,
+            isNew: true,
+          },
+        ]);
+      });
+
+      it('should return appointment reviewed alerts', async () => {
+        mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
+        // create a new member
+        const memberId = await generateMember();
+
+        const member = await service.get(memberId);
+
+        // Create a reviewed recording
+        const recordingParams = generateUpdateRecordingParams({ memberId });
+        const recording = await service.updateRecording(
+          recordingParams,
+          member.primaryUserId.toString(),
+        );
+
+        const recordingReviewParams = generateUpdateRecordingReviewParams({
+          recordingId: recording.id,
+        });
+        await service.updateRecordingReview(recordingReviewParams, recordingParams.userId);
+
+        const updatedRecording = await modelRecording.findOne({
+          memberId: new Types.ObjectId(memberId),
+        });
+
+        // Create a recording without a review - we are not expecting to see this review alert
+        await service.updateRecording(
+          generateUpdateRecordingParams({ memberId }),
+          member.primaryUserId.toString(),
+        );
+
+        const alerts = await service.getAlerts(member.primaryUserId.toString());
+
+        expect(alerts).toEqual([
+          {
+            id: `${recording.id}_${AlertType.appointmentReviewed}`,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            member: service.getMemberInfo(member),
+            type: AlertType.appointmentReviewed,
+            date: (updatedRecording.toObject() as any).review.createdAt,
+            dismissed: false,
+            isNew: true,
+          },
+          {
+            id: `${memberId}_${AlertType.memberAssigned}`,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            member: service.getMemberInfo(member),
+            type: AlertType.memberAssigned,
+            date: member.createdAt,
+            dismissed: false,
+            isNew: true,
+          },
+        ]);
+      });
+
+      it('should return appointment reviewed overdue alerts', async () => {
+        mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
+        // create a new member
+        const memberId = await generateMember();
+
+        const member = await service.get(memberId);
+
+        // create a `done` appointment for the member (and primary user)
+        const { id: appointmentId } = await generateAppointment({
+          memberId,
+          userId: member.primaryUserId.toString(),
+          status: AppointmentStatus.done,
+        });
+
+        const endDate = sub(new Date(), { days: 2 });
+        // set an `end` date over 24hrs ago (2 days ago)
+        await modelAppointment.updateOne(
+          { _id: new Types.ObjectId(appointmentId) },
+          { $set: { end: endDate } },
+        );
+
+        // Create a recording without a review - we are not expecting to see this review alert
+        await service.updateRecording(
+          generateUpdateRecordingParams({ memberId, appointmentId }),
+          member.primaryUserId.toString(),
+        );
+
+        const alerts = await service.getAlerts(member.primaryUserId.toString());
+
+        expect(alerts).toEqual([
+          {
+            id: `${memberId}_${AlertType.memberAssigned}`,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            member: service.getMemberInfo(member),
+            type: AlertType.memberAssigned,
+            date: member.createdAt,
+            dismissed: false,
+            isNew: true,
+          },
+          {
+            id: `${appointmentId}_${AlertType.appointmentReviewOverdue}`,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            member: service.getMemberInfo(member),
+            type: AlertType.appointmentReviewOverdue,
+            date: add(endDate, { days: 1 }),
+            dismissed: false,
+            isNew: true,
+          },
+        ]);
       });
     });
   });

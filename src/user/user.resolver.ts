@@ -79,6 +79,14 @@ export class UserResolver {
     return this.userService.getUserConfig(id);
   }
 
+  @Mutation(() => Boolean)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async setLastQueryAlert(@Client('_id') userId: string): Promise<boolean> {
+    await this.userService.setLatestQueryAlert(userId);
+
+    return true;
+  }
+
   protected notifyUpdatedUserConfig(user: User) {
     const settings: Partial<IUpdateClientSettings> = omitBy(
       {

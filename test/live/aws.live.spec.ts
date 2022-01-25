@@ -7,8 +7,9 @@ import { readFileSync } from 'fs';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { LoggerService, StorageType } from '../../src/common';
 import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../src/member';
-import { ConfigsService, StorageService } from '../../src/providers';
+import { CloudMapService, ConfigsService, StorageService } from '../../src/providers';
 import { generateId, mockGenerateMember, mockGenerateUser } from '../generators';
+import { services } from 'config';
 
 describe('live: aws', () => {
   describe('storage', () => {
@@ -304,6 +305,29 @@ describe('live: aws', () => {
 
       const { status: statusDownload } = await axios.get(url);
       expect(statusDownload).toEqual(200);
+    });
+  });
+
+  describe('cloudMap', () => {
+    let cloudMapService: CloudMapService;
+
+    beforeAll(async () => {
+      const logger = new LoggerService(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
+      mockLogger(logger);
+      cloudMapService = new CloudMapService(logger);
+    });
+
+    it('should be able to find a service by name', async () => {
+      const service = await cloudMapService.discoverInstance(services.notification.taskName);
+      expect(service).toBeTruthy();
+    });
+
+    it('should throw an exception id service is not found', async () => {
+      await expect(
+        cloudMapService.discoverInstance(services.notification.taskName + `+invalid`),
+      ).rejects.toThrow(
+        new Error(`could not find instance ${services.notification.taskName + `+invalid`}`),
+      );
     });
   });
 });

@@ -40,7 +40,7 @@
     "migrate": "ts-node ./cmd/main.ts migration"
   },
   "dependencies": {
-    "@lagunahealth/pandora": "0.9.21",
+    "@lagunahealth/pandora": "0.9.22",
     "@nestjs/axios": "^0.0.1",
     "@nestjs/common": "^7.6.15",
     "@nestjs/core": "^7.6.15",
@@ -62,6 +62,7 @@
     "cli-table3": "^0.6.0",
     "commander": "^8.3.0",
     "config": "^3.3.6",
+    "cron-validator": "^1.2.1",
     "date-fns": "^2.23.0",
     "date-fns-tz": "^1.1.6",
     "download": "^8.0.0",
@@ -72,6 +73,7 @@
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.21",
     "mongoose": "^5.12.14",
+    "mongoose-delete": "^0.5.4",
     "nest-commander": "^2.3.4",
     "nestjs-pino": "^2.4.0",
     "passport": "^0.5.0",

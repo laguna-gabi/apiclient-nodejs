@@ -5,9 +5,11 @@ import {
   Honorific,
   IUpdateClientSettings,
   InnerQueueTypes,
+  InternalKey,
   Language,
   NotificationType,
   Platform,
+  ServiceName,
   generatePhone,
   generateZipCode,
 } from '@lagunahealth/pandora';
@@ -26,11 +28,21 @@ import {
   UpdateNotesParams,
 } from '../src/appointment';
 import { AvailabilityInput } from '../src/availability';
+import {
+  BarrierType,
+  CareStatus,
+  CreateBarrierParams,
+  CreateRedFlagParams,
+  RedFlagType,
+  UpdateBarrierParams,
+} from '../src/care';
 import { MemberRole, RoleTypes, UserRole, reformatDate } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import { DailyReport } from '../src/dailyReport';
 import {
   AddCaregiverParams,
+  Alert,
+  AlertType,
   AppointmentCompose,
   AudioFormat,
   CancelNotifyParams,
@@ -60,6 +72,15 @@ import {
   defaultMemberParams,
 } from '../src/member';
 import { CreateOrgParams, Org, OrgType } from '../src/org';
+import { Dispatch } from '../src/services';
+import {
+  CreateTodoDoneParams,
+  CreateTodoParams,
+  EndAndCreateTodoParams,
+  Label,
+  Todo,
+  TodoDone,
+} from '../src/todo';
 import { CreateUserParams, GetSlotsParams, User, defaultUserParams } from '../src/user';
 
 export const generateCreateUserParams = ({
@@ -129,6 +150,7 @@ export const mockGenerateUser = (): User => {
     phone: generatePhone(),
     authId: v4(),
     lastMemberAssignedAt: new Date(0),
+    lastQueryAlert: faker.date.past(2),
   };
 };
 
@@ -244,6 +266,8 @@ export const mockGenerateMember = (): Member => {
       city: faker.address.city(),
       state: faker.address.state(),
     },
+    nurse_notes: faker.lorem.sentence(),
+    general_notes: faker.lorem.sentence(),
   };
 };
 
@@ -413,6 +437,49 @@ export const generateNotesParams = ({
       wellbeing,
       wellbeingText,
     },
+  };
+};
+
+export const mockGenerateAlert = ({
+  member = mockGenerateMember(),
+  type = randomEnum(AlertType) as AlertType,
+  date = faker.date.past(),
+  isNew = false,
+  dismissed = false,
+}: Partial<Alert> = {}): Alert => {
+  return {
+    id: `${generateId()}_${type}`,
+    date,
+    type,
+    member,
+    isNew,
+    dismissed,
+  };
+};
+
+export const mockGenerateDispatch = ({
+  dispatchId = generateId(),
+  notificationType = randomEnum(NotificationType) as NotificationType,
+  recipientClientId = generateId(),
+  senderClientId = generateId(),
+  contentKey = randomEnum(InternalKey) as InternalKey,
+  sentAt = faker.date.recent(20),
+  triggersAt = faker.date.recent(20),
+  correlationId = generateId(),
+  serviceName = ServiceName.hepius,
+  type = InnerQueueTypes.createDispatch,
+}: Partial<Dispatch> = {}): Dispatch => {
+  return {
+    dispatchId,
+    notificationType,
+    recipientClientId,
+    senderClientId,
+    contentKey,
+    sentAt,
+    triggersAt,
+    correlationId,
+    serviceName,
+    type,
   };
 };
 
@@ -646,3 +713,148 @@ export const generateUpdateCaregiverParams = ({
 }: Partial<UpdateCaregiverParams> = {}): UpdateCaregiverParams => {
   return { id, firstName, lastName, email, relationship, phone };
 };
+
+export const mockGenerateTodo = ({
+  id = generateId(),
+  memberId = generateObjectId(),
+  text = faker.lorem.words(5),
+  label = Label.APPT,
+  cronExpressions = ['0 10 * * 6'],
+  start = new Date(),
+  end = faker.date.soon(2),
+  createdBy = generateObjectId(),
+  updatedBy = generateObjectId(),
+}: Partial<Todo> = {}): Todo => {
+  return {
+    id,
+    memberId,
+    text,
+    label,
+    cronExpressions,
+    start,
+    end,
+    createdBy,
+    updatedBy,
+  };
+};
+
+export const mockGenerateTodoDone = ({
+  id = generateId(),
+  memberId = generateObjectId(),
+  todoId = generateObjectId(),
+  done = new Date(),
+}: Partial<TodoDone> = {}): TodoDone => {
+  return {
+    id,
+    memberId,
+    todoId,
+    done,
+  };
+};
+
+export const generateCreateTodoParams = ({
+  memberId,
+  text = faker.lorem.words(5),
+  label = Label.APPT,
+  cronExpressions = ['0 10 * * 6'],
+  start = new Date(),
+  end = faker.date.soon(2),
+  createdBy,
+  updatedBy,
+}: Partial<CreateTodoParams> = {}) => {
+  return {
+    memberId,
+    text,
+    label,
+    cronExpressions,
+    start,
+    end,
+    createdBy,
+    updatedBy,
+  };
+};
+
+export const generateEndAndCreateTodoParams = ({
+  id = generateId(),
+  memberId,
+  text = faker.lorem.words(5),
+  label = Label.MEDS,
+  cronExpressions = ['0 10,17,21,23 * * *'],
+  start = new Date(),
+  end = faker.date.soon(3),
+  updatedBy,
+}: Partial<EndAndCreateTodoParams> = {}) => {
+  return {
+    id,
+    memberId,
+    text,
+    label,
+    cronExpressions,
+    start,
+    end,
+    updatedBy,
+  };
+};
+
+export const generateCreateRedFlagParams = ({
+  memberId = generateId(),
+  redFlagType = randomEnum(RedFlagType) as RedFlagType,
+  notes = faker.lorem.words(4),
+  createdBy,
+}: Partial<CreateRedFlagParams> = {}) => {
+  return {
+    memberId,
+    redFlagType,
+    notes,
+    createdBy,
+  };
+};
+
+export const generateCreateBarrierParams = ({
+  memberId = generateId(),
+  barrierType = randomEnum(BarrierType) as BarrierType,
+  notes = faker.lorem.words(4),
+  redFlagId = generateId(),
+  createdBy,
+}: Partial<CreateBarrierParams> = {}) => {
+  return {
+    memberId,
+    barrierType,
+    notes,
+    redFlagId,
+    createdBy,
+  };
+};
+
+export const generateUpdateBarrierParams = ({
+  id,
+  notes = faker.lorem.words(4),
+  status = CareStatus.completed,
+}: Partial<UpdateBarrierParams> = {}) => {
+  return {
+    id,
+    notes,
+    status,
+  };
+};
+
+export const generateCreateTodoDoneParams = ({
+  todoId = generateId(),
+  done = new Date(),
+  memberId = generateId(),
+}: Partial<CreateTodoDoneParams> = {}) => {
+  return {
+    todoId,
+    done,
+    memberId,
+  };
+};
+
+/*************************************************************************************************
+ ******************************************** Helpers ********************************************
+ ************************************************************************************************/
+export function randomEnum<T>(enumType: T): string {
+  const enumValues = Object.keys(enumType);
+  const randomIndex = Math.floor(Math.random() * enumValues.length);
+  return enumValues[randomIndex];
+}

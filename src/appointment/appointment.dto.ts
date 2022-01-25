@@ -155,6 +155,9 @@ export class Appointment extends Identifier {
   @Field(() => Date)
   updatedAt: Date;
 
+  @Field(() => Date)
+  createdAt: Date;
+
   @Prop()
   @Field(() => String)
   link: string;

@@ -232,6 +232,14 @@ export class UserService extends BaseService {
     return object;
   }
 
+  async setLatestQueryAlert(userId: string): Promise<User> {
+    return this.userModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(userId) },
+      { $set: { lastQueryAlert: new Date() } },
+      { new: true },
+    );
+  }
+
   /**
    * Internal method for all receiving users who where fully registered -
    * users who have sendbird accessToken in userConfig

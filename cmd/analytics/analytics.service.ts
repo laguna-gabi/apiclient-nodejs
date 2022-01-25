@@ -179,12 +179,12 @@ export class AnalyticsService {
           from: 'orgs',
           localField: 'memberDetails.org',
           foreignField: '_id',
-          as: 'memberDetails.orgData',
+          as: 'memberDetails.org',
         },
       },
       {
         $unwind: {
-          path: '$memberDetails.orgData',
+          path: '$memberDetails.org',
           preserveNullAndEmptyArrays: true,
         },
       },
@@ -267,7 +267,7 @@ export class AnalyticsService {
       first_name: member.memberDetails.firstName,
       last_name: member.memberDetails.lastName,
       honorific: member.memberDetails.honorific,
-      dob: member.memberDetails.dateOfBirth,
+      dob: reformatDate(member.memberDetails.dateOfBirth, DateFormat),
       phone: member.memberDetails.phone,
       phone_secondary: member.memberDetails.phoneSecondary,
       email: member.memberDetails.email,
@@ -324,14 +324,18 @@ export class AnalyticsService {
       app_last_login:
         member.memberConfig &&
         reformatDate(member.memberConfig.updatedAt.toString(), DateTimeFormat),
-      org_name: member.memberDetails.orgData?.name,
-      org_id: member.memberDetails.orgData?._id.toString(),
+      org_name: member.memberDetails.org?.name,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
+      org_id: member.memberDetails.org?._id.toString(),
       // eslint-disable-next-line max-len
       coach_name: member.memberDetails.primaryUser
         ? // eslint-disable-next-line max-len
           `${member.memberDetails.primaryUser.firstName} ${member.memberDetails.primaryUser.lastName}`
         : undefined,
       coach_id: member.memberDetails.primaryUserId?.toString(),
+      general_notes: member.memberDetails.generalNotes,
+      nurse_notes: member.memberDetails.nurseNotes,
     };
   }
 
@@ -409,7 +413,7 @@ export class AnalyticsService {
         const recordingsSummary = this.getRecordingsSummary(appointment.recordings);
 
         results.push({
-          created: reformatDate(appointment?.start?.toString(), DateTimeFormat),
+          created: reformatDate(appointment?.createdAt?.toString(), DateTimeFormat),
           updated: reformatDate(appointment?.updatedAt?.toString(), DateTimeFormat),
           recap: appointment?.notesData?.recap,
           strengths: appointment?.notesData?.strengths,

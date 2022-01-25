@@ -45,6 +45,11 @@ export class LoggerService extends BaseLogger {
     'availabilities',
     // notes
     'scores',
+    // todo
+    'cronExpressions',
+    'label',
+    'createdBy',
+    'updatedBy',
     // general
     'type',
     'start',
@@ -77,6 +82,9 @@ export class LoggerService extends BaseLogger {
     'triggersAt',
     'path',
     'roles',
+    //alerts
+    'serviceName',
+    'clientSenderId',
     ...Object.keys(internalLogs),
   ]);
 

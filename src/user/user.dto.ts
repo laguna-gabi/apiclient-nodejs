@@ -129,6 +129,10 @@ export class User extends Identifier {
   @Field(() => [Language], { nullable: true })
   languages?: Language[];
 
+  @Prop()
+  @Field(() => Date, { nullable: true })
+  lastQueryAlert: Date;
+
   /**
    * we use that start of time (new Date(0)) for the default time for
    * lastMemberAssignedAt so a new user will get the next new member.

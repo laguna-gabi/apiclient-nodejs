@@ -38,6 +38,7 @@ export class Handler extends BaseHandler {
   storage;
   featureFlagService;
   queueService;
+  notificationService;
   eventEmitter: EventEmitter2;
   communicationService: CommunicationService;
   memberService: MemberService;
@@ -87,6 +88,7 @@ export class Handler extends BaseHandler {
     this.featureFlagService = providers.featureFlagService;
     this.queueService = providers.queueService;
     this.cognitoService = providers.cognitoService;
+    this.notificationService = providers.notificationService;
     const apolloServer = createTestClient((this.module as any).apolloServer);
     this.mutations = new Mutations(apolloServer);
 

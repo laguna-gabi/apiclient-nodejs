@@ -40,7 +40,14 @@ import {
   UpdateTaskStatusParams,
 } from '../../src/member';
 import { CreateOrgParams } from '../../src/org';
+import {
+  CreateTodoDoneParams,
+  CreateTodoParams,
+  EndAndCreateTodoParams,
+  Todo,
+} from '../../src/todo';
 import { CreateUserParams } from '../../src/user';
+import { CreateRedFlagParams } from '../../src/care';
 
 const FRAGMENT_APPOINTMENT = gql`
   fragment appointmentFragment on Appointment {
@@ -976,6 +983,50 @@ export class Mutations {
     );
   };
 
+  dismissAlert = async ({
+    alertId,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    alertId: string;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<boolean> => {
+    const result = await this.apolloClient.mutate({
+      variables: { alertId },
+      mutation: gql`
+        mutation dismissAlert($alertId: String!) {
+          dismissAlert(alertId: $alertId)
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, invalidFieldsErrors, missingFieldError }) && result.data.dismissAlert
+    );
+  };
+
+  setLastQueryAlert = async ({
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<boolean> => {
+    const result = await this.apolloClient.mutate({
+      mutation: gql`
+        mutation setLastQueryAlert {
+          setLastQueryAlert
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
+      result.data.setLastQueryAlert
+    );
+  };
+
   updateCaregiver = async ({
     updateCaregiverParams,
     missingFieldError,
@@ -1055,6 +1106,161 @@ export class Mutations {
     return (
       isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
       result.data.deleteCaregiver
+    );
+  };
+
+  createTodo = async ({
+    createTodoParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    createTodoParams: CreateTodoParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Identifier> => {
+    const result = await this.apolloClient.mutate({
+      variables: { createTodoParams },
+      mutation: gql`
+        mutation createTodo($createTodoParams: CreateTodoParams!) {
+          createTodo(createTodoParams: $createTodoParams) {
+            id
+          }
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createTodo
+    );
+  };
+
+  endAndCreateTodo = async ({
+    endAndCreateTodoParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    endAndCreateTodoParams: EndAndCreateTodoParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Todo> => {
+    const result = await this.apolloClient.mutate({
+      variables: { endAndCreateTodoParams },
+      mutation: gql`
+        mutation endAndCreateTodo($endAndCreateTodoParams: EndAndCreateTodoParams!) {
+          endAndCreateTodo(endAndCreateTodoParams: $endAndCreateTodoParams) {
+            id
+            memberId
+            text
+            label
+            cronExpressions
+            start
+            end
+            createdBy
+            updatedBy
+          }
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.endAndCreateTodo
+    );
+  };
+
+  endTodo = async ({
+    id,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    id;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<boolean> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id },
+      mutation: gql`
+        mutation endTodo($id: String!) {
+          endTodo(id: $id)
+        }
+      `,
+    });
+
+    return isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.endTodo;
+  };
+
+  createTodoDone = async ({
+    createTodoDoneParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    createTodoDoneParams: CreateTodoDoneParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Identifier> => {
+    const result = await this.apolloClient.mutate({
+      variables: { createTodoDoneParams },
+      mutation: gql`
+        mutation createTodoDone($createTodoDoneParams: CreateTodoDoneParams!) {
+          createTodoDone(createTodoDoneParams: $createTodoDoneParams) {
+            id
+          }
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.createTodoDone
+    );
+  };
+
+  createRedFlag = async ({
+    createRedFlagParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    createRedFlagParams: CreateRedFlagParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Identifier> => {
+    const result = await this.apolloClient.mutate({
+      variables: { createRedFlagParams },
+      mutation: gql`
+        mutation createRedFlag($createRedFlagParams: CreateRedFlagParams!) {
+          createRedFlag(createRedFlagParams: $createRedFlagParams) {
+            id
+          }
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createRedFlag
+    );
+  };
+
+  deleteTodoDone = async ({
+    id,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    id;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<boolean> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id },
+      mutation: gql`
+        mutation deleteTodoDone($id: String!) {
+          deleteTodoDone(id: $id)
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.deleteTodoDone
     );
   };
 }

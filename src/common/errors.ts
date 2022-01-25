@@ -56,8 +56,10 @@ export enum ErrorType {
   notificationMetadataWhenPast = 9273,
   notificationInvalidContent = 9274,
   notificationNotAllowed = 9275,
-  notificationNotAllowedForWebMember = 9276,
-  notificationChatNotSupported = 9277,
+  notificationChatNotSupported = 9276,
+  notificationNotAllowedForWebMember = 9277,
+  notificationNotAllowedForMobileMember = 9278,
+  notificationNotAllowedNoRequestedAppointment = 9279,
 
   // Module appointment errors
   appointmentIdNotFound = 9301,
@@ -96,6 +98,19 @@ export enum ErrorType {
   caregiverEmailInvalid = 9902,
   caregiverIdInvalid = 9903,
   caregiverDeleteNotAllowed = 9904,
+
+  // To do's
+  todoNotFound = 10001,
+  todoIdInvalid = 10002,
+  todoInvalidCronExpression = 10003,
+  todoEndAfterStart = 10004,
+  todoDoneNotFound = 10005,
+
+  // Module Care
+  redFlagIdInvalid = 10101,
+  barrierIdInvalid = 10102,
+  carePlanIdInvalid = 10103,
+  barrierNotFound = 10104,
 }
 
 const nameFormat = `name must be between ${graphqlConfig.get('minLength')} and ${graphqlConfig.get(
@@ -171,12 +186,20 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.notificationNotAllowed.valueOf(),
     `cannot receive video or call notification for member with isPushNotificationsEnabled=false`,
   ],
+  [ErrorType.notificationChatNotSupported.valueOf(), `notification type chat is not supported`],
   [
     ErrorType.notificationNotAllowedForWebMember.valueOf(),
     `mobile notification is not allowed if member did not login to the ` +
       `app or/and isPushNotificationsEnabled=false`,
   ],
-  [ErrorType.notificationChatNotSupported.valueOf(), `notification type chat is not supported`],
+  [
+    ErrorType.notificationNotAllowedForMobileMember.valueOf(),
+    `web notification is not allowed if member login to the app`,
+  ],
+  [
+    ErrorType.notificationNotAllowedNoRequestedAppointment.valueOf(),
+    `scheduleAppointment notification can not be preformed since you do not have a requested appointment with this member`,
+  ],
   [ErrorType.appointmentIdNotFound.valueOf(), 'appointment id was not found'],
   [ErrorType.appointmentNotBeforeDate.valueOf(), `notBefore ${dateInstanceFormat}`],
   [ErrorType.appointmentNotBeforeDateInThePast.valueOf(), 'notBefore must be in the future'],
@@ -223,6 +246,16 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.invalidPhoneNumberForMessaging.valueOf(),
     'invalid phone or landline - can not send SMS',
   ],
+  [ErrorType.todoNotFound.valueOf(), 'todo id was not found'],
+  [ErrorType.todoIdInvalid.valueOf(), `todo id ${objectIdFormat}`],
+  [ErrorType.todoInvalidCronExpression.valueOf(), 'invalid cron expression'],
+  [ErrorType.todoEndAfterStart.valueOf(), 'end date must be after start date'],
+  [ErrorType.todoDoneNotFound.valueOf(), 'todoDone id was not found'],
+  // Module Care
+  [ErrorType.redFlagIdInvalid.valueOf(), 'invalid red flag id'],
+  [ErrorType.barrierIdInvalid.valueOf(), 'invalid barrier id'],
+  [ErrorType.carePlanIdInvalid.valueOf(), 'invalid care plan id'],
+  [ErrorType.barrierNotFound.valueOf(), 'barrier id was not found'],
 ]);
 
 export const DbErrors = {

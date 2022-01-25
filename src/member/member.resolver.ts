@@ -1,6 +1,7 @@
 import {
   ContentKey,
   CustomKey,
+  ExternalKey,
   IDeleteClientSettings,
   IDeleteDispatch,
   InnerQueueTypes,
@@ -22,6 +23,7 @@ import { camelCase } from 'lodash';
 import { lookup } from 'zipcode-to-timezone';
 import {
   AddCaregiverParams,
+  Alert,
   AppointmentCompose,
   AudioType,
   CancelNotifyParams,
@@ -60,6 +62,7 @@ import {
   UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
 } from '.';
+import { AppointmentStatus } from '../appointment';
 import {
   Client,
   ErrorType,
@@ -762,6 +765,28 @@ export class MemberResolver extends MemberBase {
     return this.memberService.getCaregiversByMemberId(memberId);
   }
 
+  /*************************************************************************************************
+   ********************************************* Alerts ********************************************
+   ************************************************************************************************/
+  @Mutation(() => Boolean)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async dismissAlert(
+    @Client('_id') userId: string,
+    @Args('alertId', { type: () => String }) alertId: string,
+  ): Promise<boolean> {
+    await this.memberService.dismissAlert(userId, alertId);
+    return true;
+  }
+
+  @Query(() => [Alert])
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getAlerts(
+    @Client('_id') userId: string,
+    @Client('lastQueryAlert') lastQueryAlert: Date,
+  ): Promise<Alert[]> {
+    return this.memberService.getAlerts(userId, lastQueryAlert);
+  }
+
   /************************************************************************************************
    ***************************************** Notifications ****************************************
    ************************************************************************************************/
@@ -904,11 +929,13 @@ export class MemberResolver extends MemberBase {
     const { memberId, userId, contentKey } = notifyContentParams;
     const { member, memberConfig } = await this.extractDataOfMemberAndUser(memberId, userId);
 
-    if (memberConfig.platform === Platform.web || !memberConfig.isPushNotificationsEnabled) {
-      throw new Error(Errors.get(ErrorType.notificationNotAllowedForWebMember));
-    }
+    const { notificationType, baseParams } = this.extractNotificationTypeAndBaseParams({
+      member,
+      memberConfig,
+      userId,
+      contentKey,
+    });
 
-    const notificationType = NotificationType.text;
     const dispatch: IInternalDispatch = {
       correlationId: getCorrelationId(this.logger),
       dispatchId: generateDispatchId(contentKey, member.id, Date.now().toString()),
@@ -916,7 +943,7 @@ export class MemberResolver extends MemberBase {
       senderClientId: member.primaryUserId.toString(),
       notificationType,
       contentKey,
-      path: generatePath(notificationType, contentKey),
+      ...baseParams,
     };
     await this.notifyCreateDispatch(dispatch);
   }
@@ -1189,5 +1216,46 @@ export class MemberResolver extends MemberBase {
       contentKey,
       triggersAt: addDays(firstLoggedInAt, amount),
     };
+  }
+
+  private extractNotificationTypeAndBaseParams({
+    member,
+    memberConfig,
+    userId,
+    contentKey,
+  }: {
+    member: Member;
+    memberConfig: MemberConfig;
+    userId: string;
+    contentKey: ContentKey;
+  }): { notificationType: NotificationType; baseParams } {
+    switch (contentKey) {
+      case ExternalKey.setCallPermissions:
+      case ExternalKey.addCaregiverDetails:
+        if (memberConfig.platform === Platform.web || !memberConfig.isPushNotificationsEnabled) {
+          throw new Error(Errors.get(ErrorType.notificationNotAllowedForWebMember));
+        }
+        const notificationType = NotificationType.text;
+        return {
+          notificationType,
+          baseParams: { path: generatePath(notificationType, contentKey) },
+        };
+      case ExternalKey.scheduleAppointment:
+        if (memberConfig.platform !== Platform.web) {
+          throw new Error(Errors.get(ErrorType.notificationNotAllowedForMobileMember));
+        }
+        const appointments = member.users
+          .find((user) => user.id.toString() === userId.toString())
+          ?.appointments.filter(
+            (appointment) => appointment.status === AppointmentStatus.requested,
+          );
+        if (appointments.length === 0) {
+          throw new Error(Errors.get(ErrorType.notificationNotAllowedNoRequestedAppointment));
+        }
+        return {
+          notificationType: NotificationType.textSms,
+          baseParams: { scheduleLink: appointments[0].link },
+        };
+    }
   }
 }
