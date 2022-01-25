@@ -500,6 +500,28 @@ describe('UserService', () => {
       expect(isAfter(result.slots[0], add(future, { days: 1 }))).toBeFalsy();
     });
 
+    it('should include deleted appointment slot time', async () => {
+      const user = await service.insert(generateCreateUserParams());
+      await createDefaultAvailabilities(user.id);
+
+      const appointment = await scheduleAppointmentWithDate({
+        memberId: generateId(),
+        userId: user.id,
+        start: add(startOfToday(), { hours: 11 }),
+        end: add(startOfToday(), { hours: 11, minutes: defaultSlotsParams.duration }),
+      });
+
+      await appointmentResolver.deleteAppointment(user.id, appointment.id);
+
+      const result = await service.getSlots({
+        userId: user.id,
+        notBefore: add(startOfToday(), { hours: 10 }),
+      });
+
+      expect(result.slots[2]).toEqual(appointment.start);
+      expect(result.slots[3]).toEqual(appointment.end);
+    });
+
     const preformGetUserSlots = async (override: Partial<GetSlotsParams> = {}) => {
       const user = await service.insert(generateCreateUserParams());
       await createDefaultAvailabilities(user.id);

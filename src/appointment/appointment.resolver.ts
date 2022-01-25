@@ -16,6 +16,7 @@ import {
   UpdateNotesParams,
 } from '.';
 import {
+  Client,
   EventType,
   IEventMember,
   IEventOnNewMember,
@@ -78,13 +79,11 @@ export class AppointmentResolver extends AppointmentBase {
 
   @Mutation(() => Boolean)
   @Roles(UserRole.coach, UserRole.nurse)
-  async deleteAppointment(@Args('id', { type: () => String }) id: string) {
+  async deleteAppointment(@Client('_id') userId, @Args('id', { type: () => String }) id: string) {
     await this.appointmentService.validateUpdateAppointment(id);
 
-    const appointment = await this.appointmentService.updateAppointment(id, {
-      status: AppointmentStatus.deleted,
-    });
-
+    const appointment = await this.appointmentService.get(id);
+    await this.appointmentService.delete(id, userId);
     await this.deleteAppointmentReminders(appointment);
 
     return true;

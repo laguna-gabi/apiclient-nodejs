@@ -257,18 +257,18 @@ describe('AppointmentResolver', () => {
 
   describe('deleteAppointment', () => {
     let spyOnServiceValidatedUpdateAppointment: jest.SpyInstance;
-    let spyOnUpdateAppointment: jest.SpyInstance;
+    let spyOnDeleteAppointment: jest.SpyInstance;
     let spyOnGet: jest.SpyInstance;
 
     beforeEach(() => {
       spyOnServiceValidatedUpdateAppointment = jest.spyOn(service, 'validateUpdateAppointment');
-      spyOnUpdateAppointment = jest.spyOn(service, 'updateAppointment');
+      spyOnDeleteAppointment = jest.spyOn(service, 'delete');
       spyOnGet = jest.spyOn(service, 'get');
     });
 
     afterEach(() => {
       spyOnServiceValidatedUpdateAppointment.mockReset();
-      spyOnUpdateAppointment.mockReset();
+      spyOnDeleteAppointment.mockReset();
       spyOnEventEmitter.mockReset();
       spyOnGet.mockReset();
     });
@@ -277,11 +277,11 @@ describe('AppointmentResolver', () => {
     it(`should fail to delete an existing appointment with status ${AppointmentStatus.done}`, async () => {
       spyOnGet.mockResolvedValue({ status: AppointmentStatus.done } as Appointment);
 
-      await expect(resolver.deleteAppointment(generateId())).rejects.toThrow(
+      await expect(resolver.deleteAppointment(generateId(), generateId())).rejects.toThrow(
         Errors.get(ErrorType.appointmentCanNotBeUpdated),
       );
 
-      expect(spyOnUpdateAppointment).not.toHaveBeenCalled();
+      expect(spyOnDeleteAppointment).not.toHaveBeenCalled();
       expect(spyOnEventEmitter).not.toHaveBeenCalled();
     });
 
@@ -292,19 +292,14 @@ describe('AppointmentResolver', () => {
         memberId: generateObjectId(),
         status: AppointmentStatus.scheduled,
       };
+      const userId = generateId();
 
       spyOnGet.mockResolvedValue(appointment as Appointment);
-      spyOnUpdateAppointment.mockResolvedValue({
-        ...appointment,
-        status: AppointmentStatus.deleted,
-      } as Appointment);
+      spyOnDeleteAppointment.mockResolvedValue(true);
 
-      await resolver.deleteAppointment(appointment.id);
+      await resolver.deleteAppointment(userId, appointment.id);
 
-      expect(spyOnUpdateAppointment).toBeCalledWith(appointment.id, {
-        status: AppointmentStatus.deleted,
-      });
-
+      expect(spyOnDeleteAppointment).toBeCalledWith(appointment.id, userId);
       expect(spyOnEventEmitter).toBeCalled();
     });
   });

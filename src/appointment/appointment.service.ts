@@ -52,17 +52,20 @@ export class AppointmentService extends BaseService {
           status: AppointmentStatus.requested,
         };
 
-    const result = await this.appointmentModel.findOneAndUpdate(
-      filter,
-      {
-        $set: {
-          userId: new Types.ObjectId(params.userId),
-          notBefore: params.notBefore,
-          status: AppointmentStatus.requested,
+    const result = await this.appointmentModel
+      .findOneAndUpdate(
+        filter,
+        {
+          $set: {
+            userId: new Types.ObjectId(params.userId),
+            notBefore: params.notBefore,
+            status: AppointmentStatus.requested,
+            deleted: false,
+          },
         },
-      },
-      { upsert: true, new: true, rawResult: true },
-    );
+        { upsert: true, new: true, rawResult: true },
+      )
+      .lean();
 
     if (result.lastErrorObject.upserted) {
       const { _id, userId } = result.value;
@@ -73,27 +76,24 @@ export class AppointmentService extends BaseService {
       });
     }
 
-    return this.replaceId(result.value.toObject() as AppointmentDocument);
+    return this.replaceId(result.value);
   }
 
   async get(id: string): Promise<Appointment> {
-    const result = await this.appointmentModel
-      .findOne({ _id: id, status: { $ne: AppointmentStatus.deleted } })
-      .populate('notes');
-
+    const result = await this.appointmentModel.findById(new Types.ObjectId(id)).populate('notes');
     return this.replaceId(result);
   }
 
   async getFutureAppointments(userId: string, memberId: string): Promise<Appointment[]> {
-    const result = await this.appointmentModel.find({
-      userId: new Types.ObjectId(userId),
-      memberId: new Types.ObjectId(memberId),
-      status: { $ne: AppointmentStatus.done },
-      start: { $gte: new Date() },
-    });
-    return result.map(
-      (appointment) => this.replaceId(appointment.toObject()) as AppointmentDocument,
-    );
+    const result = await this.appointmentModel
+      .find({
+        userId: new Types.ObjectId(userId),
+        memberId: new Types.ObjectId(memberId),
+        status: { $ne: AppointmentStatus.done },
+        start: { $gte: new Date() },
+      })
+      .lean();
+    return result.map((appointment) => this.replaceId(appointment));
   }
 
   async schedule(params: ScheduleAppointmentParams): Promise<Appointment> {
@@ -107,20 +107,23 @@ export class AppointmentService extends BaseService {
 
     await this.validateOverlap(params);
 
-    const object = await this.appointmentModel.findOneAndUpdate(
-      filter,
-      {
-        $set: {
-          userId: new Types.ObjectId(params.userId),
-          memberId: new Types.ObjectId(params.memberId),
-          method: params.method,
-          start: params.start,
-          end: params.end,
-          status: AppointmentStatus.scheduled,
+    const object = await this.appointmentModel
+      .findOneAndUpdate(
+        filter,
+        {
+          $set: {
+            userId: new Types.ObjectId(params.userId),
+            memberId: new Types.ObjectId(params.memberId),
+            method: params.method,
+            start: params.start,
+            end: params.end,
+            status: AppointmentStatus.scheduled,
+            deleted: false,
+          },
         },
-      },
-      { upsert: params.id === undefined, new: true, rawResult: true },
-    );
+        { upsert: params.id === undefined, new: true, rawResult: true },
+      )
+      .lean();
 
     if (params.id && object.lastErrorObject.n === 0) {
       throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
@@ -134,12 +137,12 @@ export class AppointmentService extends BaseService {
       });
     }
 
-    return this.replaceId(object.value.toObject() as AppointmentDocument);
+    return this.replaceId(object.value);
   }
   async validateOverlap(params: ScheduleAppointmentParams) {
     const sharedQuery = {
       userId: new Types.ObjectId(params.userId),
-      status: { $nin: [AppointmentStatus.done, AppointmentStatus.deleted] },
+      status: { $nin: [AppointmentStatus.done] },
       ...(params.id ? { _id: { $ne: new Types.ObjectId(params.id) } } : {}),
     };
     const isOverlappingAppointments = await this.appointmentModel.exists({
@@ -174,15 +177,13 @@ export class AppointmentService extends BaseService {
   }
 
   async end(params: EndAppointmentParams): Promise<Appointment> {
-    const existing = await this.appointmentModel.findOne({
-      _id: params.id,
-      status: { $ne: AppointmentStatus.deleted },
-    });
-    const { noShow, recordingConsent, id, noShowReason } = params;
-    let result;
+    const existing = await this.appointmentModel.findById(new Types.ObjectId(params.id));
     if (!existing) {
       throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
     }
+
+    const { noShow, recordingConsent, id, noShowReason } = params;
+    let result;
     const update: any = omitBy(
       {
         status: AppointmentStatus.done,
@@ -199,7 +200,7 @@ export class AppointmentService extends BaseService {
         .populate('notes');
     } else if (params.notes === null) {
       if (existing.notes) {
-        await this.notesModel.deleteOne({ _id: existing.notes });
+        await this.deleteNotes(existing.notes);
       }
       result = await this.appointmentModel
         .findOneAndUpdate({ _id: params.id }, { $set: { ...update, notes: null } }, { new: true })
@@ -244,14 +245,9 @@ export class AppointmentService extends BaseService {
   }
 
   async updateAppointment(id, setParams): Promise<Appointment> {
-    const object = await this.appointmentModel.findOneAndUpdate(
-      {
-        _id: new Types.ObjectId(id),
-        status: { $ne: AppointmentStatus.deleted },
-      },
-      {
-        $set: setParams,
-      },
+    const object = await this.appointmentModel.findByIdAndUpdate(
+      new Types.ObjectId(id),
+      { $set: setParams },
       { upsert: false, new: true },
     );
 
@@ -260,6 +256,30 @@ export class AppointmentService extends BaseService {
     }
 
     return this.replaceId(object.toObject());
+  }
+
+  async delete(id: string, deletedBy: string): Promise<boolean> {
+    const result = await this.appointmentModel.findById(new Types.ObjectId(id));
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
+    }
+    const deletedByObject = new Types.ObjectId(deletedBy);
+    await result.delete(deletedByObject);
+
+    if (result.notes) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      await this.deleteNotes(result.notes._id, deletedByObject);
+    }
+
+    return true;
+  }
+
+  private async deleteNotes(notes, deletedBy?: Types.ObjectId) {
+    const notesResult = await this.notesModel.findOne({ _id: notes });
+    if (notesResult) {
+      await notesResult.delete(deletedBy);
+    }
   }
 
   private async postNewAppointmentAction({
@@ -276,28 +296,26 @@ export class AppointmentService extends BaseService {
 
     const link = `${this.APP_URL}/${appointmentId.toString()}`;
 
-    const result = await this.appointmentModel.findOneAndUpdate(
-      { _id: appointmentId },
-      { $set: { link } },
-      { upsert: true, new: true, rawResult: true },
-    );
+    const result = await this.appointmentModel
+      .findOneAndUpdate(
+        { _id: appointmentId },
+        { $set: { link } },
+        { upsert: true, new: true, rawResult: true },
+      )
+      .lean();
 
-    return this.replaceId(result.value.toObject() as AppointmentDocument);
+    return this.replaceId(result.value);
   }
 
   async updateNotes(params: UpdateNotesParams): Promise<Notes | null> {
-    const existing = await this.appointmentModel.findOne({
-      _id: params.appointmentId,
-      status: { $ne: AppointmentStatus.deleted },
-    });
-
+    const existing = await this.appointmentModel.findById(new Types.ObjectId(params.appointmentId));
     if (!existing) {
       throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
     }
 
     if (params.notes === null) {
       if (existing.notes) {
-        await this.notesModel.deleteOne({ _id: existing.notes });
+        await this.deleteNotes(existing.notes);
         await this.appointmentModel.findOneAndUpdate(
           { _id: params.appointmentId },
           { $set: { notes: null } },
@@ -352,7 +370,7 @@ export class AppointmentService extends BaseService {
     });
     for (let index = 0; index < appointments.length; index++) {
       if (appointments[index].notes) {
-        await this.notesModel.deleteOne({ _id: appointments[index].notes });
+        await this.deleteNotes(appointments[index].notes);
       }
     }
     await this.appointmentModel.deleteMany({ memberId: new Types.ObjectId(memberId) });

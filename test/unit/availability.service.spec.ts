@@ -11,6 +11,7 @@ import {
 import { ErrorType, Errors, LoggerService } from '../../src/common';
 import { User, UserDto } from '../../src/user';
 import {
+  checkDelete,
   dbConnect,
   dbDisconnect,
   defaultModules,
@@ -158,17 +159,7 @@ describe('AvailabilityService', () => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const deletedResult = await availabilityModel.findWithDeleted(ids[0]);
-      expect(deletedResult).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            _id: ids[0],
-            ...params,
-            deleted: true,
-            deletedAt: expect.any(Date),
-            deletedBy: new Types.ObjectId(userId),
-          }),
-        ]),
-      );
+      checkDelete(deletedResult, ids[0], userId);
     });
 
     it('should throw exception when trying to delete a non existing availability', async () => {

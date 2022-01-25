@@ -3,6 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsBoolean, IsOptional } from 'class-validator';
 import { Document } from 'mongoose';
 import { ErrorType, Errors, IsNoShowValid, IsObjectId } from '../common';
+import { ISoftDelete } from '../db';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -98,5 +99,5 @@ export class UpdateNotesParams {
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type NotesDocument = Notes & Document;
+export type NotesDocument = Notes & Document & ISoftDelete<Notes>;
 export const NotesDto = SchemaFactory.createForClass(Notes);

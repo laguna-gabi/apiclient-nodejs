@@ -6,12 +6,16 @@ import * as faker from 'faker';
 import { Model, model } from 'mongoose';
 import {
   Appointment,
+  AppointmentDocument,
   AppointmentDto,
   AppointmentMethod,
   AppointmentModule,
   AppointmentService,
   AppointmentStatus,
   EndAppointmentParams,
+  Notes,
+  NotesDocument,
+  NotesDto,
 } from '../../src/appointment';
 import {
   ErrorType,
@@ -23,6 +27,7 @@ import {
   LoggerService,
 } from '../../src/common';
 import {
+  checkDelete,
   dbConnect,
   dbDisconnect,
   defaultModules,
@@ -39,7 +44,8 @@ describe('AppointmentService', () => {
   let module: TestingModule;
   let service: AppointmentService;
   let eventEmitter: EventEmitter2;
-  let appointmentModel: Model<typeof AppointmentDto>;
+  let appointmentModel: Model<AppointmentDocument>;
+  let notesModel: Model<NotesDocument>;
   let spyOnEventEmitter;
 
   beforeAll(async () => {
@@ -53,6 +59,7 @@ describe('AppointmentService', () => {
     mockLogger(module.get<LoggerService>(LoggerService));
 
     appointmentModel = model(Appointment.name, AppointmentDto);
+    notesModel = model(Notes.name, NotesDto);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
 
     await dbConnect();
@@ -89,6 +96,7 @@ describe('AppointmentService', () => {
           status: AppointmentStatus.requested,
           link: generateAppointmentLink(id),
           updatedAt: expect.any(Date),
+          deleted: false,
         }),
       );
     });
@@ -102,14 +110,28 @@ describe('AppointmentService', () => {
       validateNewAppointmentEvent(appointment.memberId, appointment.userId, id);
     });
 
-    it('should not return a deleted appointment', async () => {
-      const appointment = generateScheduleAppointmentParams();
-      const { id } = await service.schedule(appointment);
+    it('should successfully delete an appointment with its notes', async () => {
+      const params = generateScheduleAppointmentParams();
+      const { id } = await service.schedule(params);
+      const notes = generateNotesParams({});
+      const appointment = await service.end({ id, notes, noShow: false, recordingConsent: true });
 
-      await service.updateAppointment(id, { status: AppointmentStatus.deleted }); // delete the appointment
+      await service.delete(id, params.userId);
 
       const result = await service.get(id);
       expect(result).toBeNull();
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const deletedResult = await appointmentModel.findWithDeleted(id);
+      checkDelete(deletedResult, id, params.userId);
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const deletedNotesResult = await notesModel.findWithDeleted(appointment.notes._id);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      checkDelete(deletedNotesResult, appointment.notes._id, params.userId);
     });
   });
 
@@ -126,6 +148,7 @@ describe('AppointmentService', () => {
           status: AppointmentStatus.requested,
           link: generateAppointmentLink(result.id),
           updatedAt: expect.any(Date),
+          deleted: false,
         }),
       );
 
@@ -140,6 +163,7 @@ describe('AppointmentService', () => {
           status: AppointmentStatus.requested,
           link: generateAppointmentLink(result.id),
           updatedAt: expect.any(Date),
+          deleted: false,
         }),
       );
     });
@@ -177,6 +201,7 @@ describe('AppointmentService', () => {
           status: AppointmentStatus.requested,
           link: generateAppointmentLink(record1.id),
           updatedAt: expect.any(Date),
+          deleted: false,
         }),
       );
     });
@@ -304,6 +329,7 @@ describe('AppointmentService', () => {
           status: AppointmentStatus.scheduled,
           link: generateAppointmentLink(appointment.id),
           updatedAt: expect.any(Date),
+          deleted: false,
         }),
       );
     });
@@ -392,9 +418,8 @@ describe('AppointmentService', () => {
       };
 
       // scheduling a new appointment and marking as delete
-      await service.updateAppointment((await schedule(addMinutes(startDate, 30))).id, {
-        status: AppointmentStatus.deleted,
-      });
+      const appointment = await schedule(addMinutes(startDate, 30));
+      await service.delete(appointment.id, userId);
 
       expect(await schedule(addMinutes(startDate, 30))).not.toBeFalsy();
     });
@@ -491,8 +516,9 @@ describe('AppointmentService', () => {
     });
 
     it('should not be able to end a deleted appointment', async () => {
-      const { id } = await service.schedule(generateScheduleAppointmentParams());
-      await service.updateAppointment(id, { status: AppointmentStatus.deleted });
+      const params = generateScheduleAppointmentParams();
+      const { id } = await service.schedule(params);
+      await service.delete(id, params.userId);
       await expect(service.end({ id })).rejects.toThrow(
         Errors.get(ErrorType.appointmentIdNotFound),
       );

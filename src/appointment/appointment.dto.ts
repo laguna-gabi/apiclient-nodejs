@@ -13,6 +13,7 @@ import {
   IsObjectId,
 } from '../common';
 import { Notes } from '.';
+import { ISoftDelete } from '../db';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -21,7 +22,6 @@ export enum AppointmentStatus {
   requested = 'requested',
   scheduled = 'scheduled',
   done = 'done',
-  deleted = 'deleted',
 }
 
 registerEnumType(AppointmentStatus, { name: 'AppointmentStatus' });
@@ -169,5 +169,5 @@ export class AppointmentData extends OmitType(Appointment, ['userId', 'memberId'
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type AppointmentDocument = Appointment & Document;
+export type AppointmentDocument = Appointment & Document & ISoftDelete<Appointment>;
 export const AppointmentDto = SchemaFactory.createForClass(Appointment);

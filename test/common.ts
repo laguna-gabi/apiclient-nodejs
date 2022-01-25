@@ -3,7 +3,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TestingModule } from '@nestjs/testing';
 import * as config from 'config';
-import { connect, disconnect } from 'mongoose';
+import { Types, connect, disconnect } from 'mongoose';
 import { NotificationService } from '../src/services';
 import { v4 } from 'uuid';
 import { MemberRole, RoleTypes, apiPrefix, webhooks } from '../src/common';
@@ -88,6 +88,19 @@ export const compareMembers = (member: Member, memberBase, primaryUserId?) => {
   if (primaryUserId) {
     expect(member.primaryUserId).toEqual(primaryUserId);
   }
+};
+
+export const checkDelete = (deletedResult, id: Types.ObjectId, deletedBy: string) => {
+  expect(deletedResult).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        _id: id,
+        deleted: true,
+        deletedAt: expect.any(Date),
+        deletedBy: new Types.ObjectId(deletedBy),
+      }),
+    ]),
+  );
 };
 
 export const dbConnect = async () => {

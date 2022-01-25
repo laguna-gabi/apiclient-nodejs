@@ -11,17 +11,29 @@ import {
 } from '.';
 import { CommonModule } from '../common';
 import { CommunicationModule } from '../communication';
+import { useFactoryOptions } from '../db';
 import { OrgModule } from '../org';
 import { ProvidersModule } from '../providers';
+import * as mongooseDelete from 'mongoose-delete';
 
 @Module({
   imports: [
     ProvidersModule,
     CommunicationModule,
     CommonModule,
-    MongooseModule.forFeature([
-      { name: Appointment.name, schema: AppointmentDto },
-      { name: Notes.name, schema: NotesDto },
+    MongooseModule.forFeatureAsync([
+      {
+        name: Appointment.name,
+        useFactory: () => {
+          return AppointmentDto.plugin(mongooseDelete, useFactoryOptions);
+        },
+      },
+      {
+        name: Notes.name,
+        useFactory: () => {
+          return NotesDto.plugin(mongooseDelete, useFactoryOptions);
+        },
+      },
     ]),
     OrgModule,
   ],

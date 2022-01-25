@@ -37,7 +37,6 @@ import {
   SlackIcon,
   formatEx,
 } from '@lagunahealth/pandora';
-import { AppointmentStatus } from '../../src/appointment';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -151,7 +150,7 @@ export class UserService extends BaseService {
             $filter: {
               input: '$ap',
               as: 'ap',
-              cond: { $ne: ['$$ap.status', AppointmentStatus.deleted] },
+              cond: { $eq: ['$$ap.deleted', false] },
             },
           },
           availabilities: allowEmptySlotsResponse

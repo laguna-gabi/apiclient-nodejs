@@ -1037,9 +1037,8 @@ export class MemberService extends BaseService {
       .map((user) => user.appointments)
       .reduce((acc = [], current) => acc.concat(current), [])
       .filter(
-        (app: Appointment) =>
-          app.memberId.toString() === member.id.toString() &&
-          app.status !== AppointmentStatus.deleted,
+        (app: AppointmentDocument) =>
+          app.memberId.toString() === member.id.toString() && !app.get('deleted'),
       );
 
     const nextAppointment = allAppointments

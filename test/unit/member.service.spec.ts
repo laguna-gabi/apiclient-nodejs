@@ -93,7 +93,7 @@ describe('MemberService', () => {
   let modelGoal: Model<typeof GoalDto>;
   let modelActionItem: Model<typeof ActionItemDto>;
   let modelJournal: Model<typeof JournalDto>;
-  let modelAppointment: Model<typeof AppointmentDto>;
+  let modelAppointment: Model<AppointmentDocument>;
   let modelDismissedAlert: Model<typeof DismissedAlertDto>;
   let modelRecording: Model<typeof MemberRecordingDto>;
 
@@ -452,12 +452,14 @@ describe('MemberService', () => {
       await generateAppointment({ userId: userId2, memberId, start: startUser2 });
 
       // insert a deleted appointment - should not be counted
-      await generateAppointment({
+      const startUser3 = new Date();
+      startUser3.setHours(startUser3.getHours() + 12);
+      const deletedAppointment = await generateAppointment({
         userId: userId2,
         memberId,
-        start: startUser2,
-        status: AppointmentStatus.deleted,
+        start: startUser3,
       });
+      await deletedAppointment.delete(new Types.ObjectId(userId2));
 
       const result = await service.getByOrg(orgId);
       expect(result.length).toEqual(1);
