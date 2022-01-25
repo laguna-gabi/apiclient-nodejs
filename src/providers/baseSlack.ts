@@ -35,5 +35,6 @@ export abstract class BaseSlack {
     } else {
       this.logger.info(params, BaseSlack.name, this.send.name);
     }
+    return {};
   }
 }
