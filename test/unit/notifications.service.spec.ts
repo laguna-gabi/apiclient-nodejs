@@ -8,7 +8,7 @@ import { translation } from '../../languages/en.json';
 import { LoggerService } from '../../src/common';
 import { DbModule } from '../../src/db';
 import {
-  InternationalizationService,
+  Internationalization,
   NotificationsService,
   ProvidersModule,
   Twilio,
@@ -22,7 +22,7 @@ describe(NotificationsService.name, () => {
   let twilioService: Twilio;
   let senderClient;
   let recipientClient;
-  let iService: InternationalizationService;
+  let iService: Internationalization;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -32,7 +32,7 @@ describe(NotificationsService.name, () => {
 
     service = module.get<NotificationsService>(NotificationsService);
     twilioService = module.get<Twilio>(Twilio);
-    iService = module.get<InternationalizationService>(InternationalizationService);
+    iService = module.get<Internationalization>(Internationalization);
     mockLogger(module.get<LoggerService>(LoggerService));
 
     senderClient = generateUpdateMemberSettingsMock();

@@ -15,7 +15,7 @@ import { format, utcToZonedTime } from 'date-fns-tz';
 import { lookup } from 'zipcode-to-timezone';
 import {
   CancelNotificationParams,
-  InternationalizationService,
+  Internationalization,
   OneSignal,
   ProviderResult,
   SendBird,
@@ -36,7 +36,7 @@ export class NotificationsService {
     private readonly twilio: Twilio,
     private readonly sendBird: SendBird,
     private readonly oneSignal: OneSignal,
-    private readonly internationalization: InternationalizationService,
+    private readonly internationalization: Internationalization,
     private readonly logger: LoggerService,
     protected readonly eventEmitter: EventEmitter2,
   ) {}
