@@ -1,5 +1,5 @@
 import { hosts } from 'config';
-import { translation } from '../languages/en.json';
+import { translation } from '@lagunahealth/pandora';
 import { ClientSettings } from '../src/settings';
 
 export const replaceConfigs = ({

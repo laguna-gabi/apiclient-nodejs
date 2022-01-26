@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { hosts } from 'config';
 import { internet } from 'faker';
 import { replaceConfigs } from '../';
-import { translation } from '../../languages/en.json';
+import { translation } from '@lagunahealth/pandora';
 import { LoggerService } from '../../src/common';
 import { DbModule } from '../../src/db';
 import {

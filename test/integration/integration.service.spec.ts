@@ -48,7 +48,7 @@ import { Types } from 'mongoose';
 import { SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { replaceConfigs } from '../';
-import { translation } from '../../languages/en.json';
+import { translation } from '@lagunahealth/pandora';
 import { AppModule } from '../../src/app.module';
 import { LoggerService } from '../../src/common';
 import {
