@@ -3,6 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, Identifier, IsObjectId } from '../common';
 import { RedFlagType } from '.';
+import { ISoftDelete } from '../db';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -56,5 +57,5 @@ export class RedFlag extends Identifier {
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type RedFlagDocument = RedFlag & Document;
+export type RedFlagDocument = RedFlag & Document & ISoftDelete<RedFlag>;
 export const RedFlagDto = SchemaFactory.createForClass(RedFlag);

@@ -32,4 +32,10 @@ export class CareResolver {
   ): Promise<RedFlag[]> {
     return this.careService.getMemberRedFlags(memberId);
   }
+
+  @Mutation(() => Boolean)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async deleteRedFlag(@Client('_id') userId, @Args('id', { type: () => String }) id: string) {
+    return this.careService.deleteRedFlag(id, userId);
+  }
 }

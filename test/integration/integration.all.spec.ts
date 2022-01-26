@@ -1489,7 +1489,7 @@ describe('Integration tests: all', () => {
   });
 
   describe('Care', () => {
-    it('should create and get and red flags', async () => {
+    it('should create, get and delete red flags', async () => {
       const org = await creators.createAndValidateOrg();
       const { id: memberId } = await creators.createAndValidateMember({ org, useNewUser: true });
 
@@ -1529,6 +1529,19 @@ describe('Integration tests: all', () => {
         expect.objectContaining({ ...createRedFlagParams, id, createdBy: userId }),
         expect.objectContaining({ ...createRedFlagParams2, id: id2, createdBy: userId2 }),
       ]);
+
+      // delete red flag
+      const result = await handler
+        .setContextUserId(userId2, '', [UserRole.coach])
+        .mutations.deleteRedFlag({ id });
+      expect(result).toBeTruthy();
+
+      // Get again (confirm record was deleted)
+      const redFlagsAfter = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .queries.getMemberRedFlags({ memberId });
+      expect(redFlagsAfter.length).toEqual(1);
+      expect(redFlagsAfter[0].id).toEqual(id2);
     });
   });
 

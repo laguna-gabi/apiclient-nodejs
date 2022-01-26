@@ -1241,6 +1241,25 @@ export class Mutations {
     );
   };
 
+  deleteRedFlag = async ({
+    id,
+    invalidFieldsErrors,
+  }: {
+    id: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<boolean> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id },
+      mutation: gql`
+        mutation deleteRedFlag($id: String!) {
+          deleteRedFlag(id: $id)
+        }
+      `,
+    });
+
+    return isResultValid({ result, invalidFieldsErrors }) && result.data.deleteRedFlag;
+  };
+
   deleteTodoDone = async ({
     id,
     missingFieldError,

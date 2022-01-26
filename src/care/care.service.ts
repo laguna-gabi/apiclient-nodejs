@@ -52,6 +52,23 @@ export class CareService {
   async getRedFlag(id: string): Promise<RedFlag> {
     return this.redFlagModel.findById(new Types.ObjectId(id));
   }
+
+  async deleteRedFlag(id: string, deletedBy: string): Promise<boolean> {
+    const result = await this.redFlagModel.findById(new Types.ObjectId(id));
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.redFlagNotFound));
+    }
+    await result.delete(new Types.ObjectId(deletedBy));
+
+    // remove reference to the deleted redFlag from related barriers
+    await this.barrierModel.updateMany(
+      { redFlagId: new Types.ObjectId(id) },
+      { $unset: { redFlagId: '' } },
+    );
+
+    return true;
+  }
+
   /**************************************************************************************************
    ******************************************** Barrier ********************************************
    *************************************************************************************************/

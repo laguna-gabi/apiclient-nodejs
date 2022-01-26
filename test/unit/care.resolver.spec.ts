@@ -28,15 +28,20 @@ describe('CareResolver', () => {
   describe('RedFlag', () => {
     let spyOnServiceCreateRedFlag;
     let spyOnServiceGetMemberRedFlags;
+    let spyOnServiceDeleteRedFlags;
+
     beforeEach(() => {
       spyOnServiceCreateRedFlag = jest.spyOn(service, 'createRedFlag');
       spyOnServiceGetMemberRedFlags = jest.spyOn(service, 'getMemberRedFlags');
+      spyOnServiceDeleteRedFlags = jest.spyOn(service, 'deleteRedFlag');
       spyOnServiceCreateRedFlag.mockImplementationOnce(async () => undefined);
+      spyOnServiceDeleteRedFlags.mockImplementationOnce(async () => true);
     });
 
     afterEach(() => {
       spyOnServiceCreateRedFlag.mockReset();
       spyOnServiceGetMemberRedFlags.mockReset();
+      spyOnServiceDeleteRedFlags.mockReset();
     });
 
     it('should create a red flag', async () => {
@@ -54,6 +59,16 @@ describe('CareResolver', () => {
 
       expect(spyOnServiceGetMemberRedFlags).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberRedFlags).toBeCalledWith(memberId);
+    });
+
+    it('should delete a red flag', async () => {
+      const userId = generateId();
+      const id = generateId();
+      const result = await resolver.deleteRedFlag(userId, id);
+      expect(result).toBeTruthy();
+
+      expect(spyOnServiceDeleteRedFlags).toBeCalledTimes(1);
+      expect(spyOnServiceDeleteRedFlags).toBeCalledWith(id, userId);
     });
   });
 });

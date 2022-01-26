@@ -2,6 +2,7 @@ import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerService } from '../../src/common';
 import {
+  checkDelete,
   dbConnect,
   dbDisconnect,
   defaultModules,
@@ -13,13 +14,22 @@ import {
   generateUpdateCarePlanParams,
   randomEnum,
 } from '../index';
-import { CareModule, CarePlanType, CareService, CareStatus } from '../../src/care';
+import {
+  CareModule,
+  CarePlanType,
+  CareService,
+  CareStatus,
+  RedFlag,
+  RedFlagDocument,
+  RedFlagDto,
+} from '../../src/care';
+import { Model, Types, model } from 'mongoose';
 import { lorem } from 'faker';
-import { Types } from 'mongoose';
 
 describe('CareService', () => {
   let module: TestingModule;
   let service: CareService;
+  let redFlagModel: Model<RedFlagDocument>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -29,6 +39,7 @@ describe('CareService', () => {
 
     service = module.get<CareService>(CareService);
     mockLogger(module.get<LoggerService>(LoggerService));
+    redFlagModel = model(RedFlag.name, RedFlagDto);
     await dbConnect();
   });
 
@@ -68,6 +79,89 @@ describe('CareService', () => {
     it('should return empty list when there are no red flags for member', async () => {
       const result = await service.getMemberRedFlags(generateId());
       expect(result).toEqual([]);
+    });
+
+    it('should delete a red flag', async () => {
+      const userId = generateId();
+      const params = generateCreateRedFlagParams({
+        memberId: generateId(),
+        createdBy: generateId(),
+      });
+      const { id } = await service.createRedFlag(params);
+
+      const redFlagBefore = await service.getRedFlag(id);
+      expect(redFlagBefore.id).toEqual(id);
+
+      const result = await service.deleteRedFlag(id, userId);
+      expect(result).toBeTruthy();
+      const redFlagAfter = await service.getRedFlag(id);
+      expect(redFlagAfter).toBeNull();
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const deletedResult = await redFlagModel.findWithDeleted(new Types.ObjectId(id));
+      await checkDelete(deletedResult, new Types.ObjectId(id), userId);
+    });
+
+    // eslint-disable-next-line max-len
+    it('should delete redFlagId references from child barriers when deleting a red flag', async () => {
+      const memberId = generateId();
+      // create red flags
+      const createRedFlagParams = generateCreateRedFlagParams({
+        memberId,
+        createdBy: generateId(),
+      });
+      const { id: redFlagId } = await service.createRedFlag(createRedFlagParams);
+      // create barrier related to the red flag
+      const createBarrierParams = generateCreateBarrierParams({
+        createdBy: generateId(),
+        redFlagId,
+        memberId,
+      });
+      await service.createBarrier(createBarrierParams);
+
+      // create independent barrier (not related to the red flag)
+      const createBarrierParams2 = generateCreateBarrierParams({
+        createdBy: generateId(),
+        memberId,
+      });
+      await service.createBarrier(createBarrierParams2);
+
+      const redFlagsBefore = await service.getMemberRedFlags(memberId);
+      expect(redFlagsBefore.length).toEqual(1);
+      const barriersBefore = await service.getMemberBarriers(memberId);
+      expect(barriersBefore.length).toEqual(2);
+      expect(barriersBefore).toEqual([
+        expect.objectContaining({ redFlagId: new Types.ObjectId(redFlagId) }),
+        expect.not.objectContaining({ redFlagId: new Types.ObjectId(redFlagId) }),
+      ]);
+
+      const deleteResult = await service.deleteRedFlag(redFlagId, generateId());
+      expect(deleteResult).toBeTruthy();
+
+      const redFlagsAfter = await service.getMemberRedFlags(memberId);
+      expect(redFlagsAfter.length).toEqual(0);
+      const barriersAfter = await service.getMemberBarriers(memberId);
+      expect(barriersAfter.length).toEqual(2);
+      expect(barriersAfter).toEqual([
+        expect.not.objectContaining({ redFlagId: new Types.ObjectId(redFlagId) }),
+        expect.not.objectContaining({ redFlagId: new Types.ObjectId(redFlagId) }),
+      ]);
+    });
+
+    it('should not get deleted red flags on getMemberRedFlags', async () => {
+      const memberId = generateId();
+      const params = generateCreateRedFlagParams({ memberId, createdBy: generateId() });
+      const { id } = await service.createRedFlag(params);
+      const params2 = generateCreateRedFlagParams({ memberId, createdBy: generateId() });
+      const { id: id2 } = await service.createRedFlag(params2);
+
+      const deleteResult = await service.deleteRedFlag(id2, generateId());
+      expect(deleteResult).toBeTruthy();
+
+      const redFlag = await service.getRedFlag(id);
+      const result = await service.getMemberRedFlags(memberId);
+      expect(result).toEqual([redFlag]);
     });
   });
 
