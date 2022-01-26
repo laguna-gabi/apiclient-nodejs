@@ -12,6 +12,7 @@ import {
   TodoDocument,
   TodoDone,
   TodoDoneDocument,
+  TodoStatus,
 } from '.';
 import { BaseService, ErrorType, Errors, Identifier } from '../common';
 
@@ -70,15 +71,13 @@ export class TodoService extends BaseService {
       throw new Error(Errors.get(ErrorType.todoNotFound));
     }
 
-    if (endedTodo.end) {
-      if (endedTodo.end.getTime() < new Date().getTime()) {
-        throw new Error(Errors.get(ErrorType.todoEndEndedTodo));
-      }
+    if (endedTodo.end?.getTime() < new Date().getTime() || endedTodo.status === TodoStatus.ended) {
+      throw new Error(Errors.get(ErrorType.todoEndEndedTodo));
     }
 
     await endedTodo.updateOne({
       $set: {
-        end: new Date(),
+        status: TodoStatus.ended,
         updatedBy: new Types.ObjectId(updatedBy),
       },
     });
@@ -100,15 +99,13 @@ export class TodoService extends BaseService {
       throw new Error(Errors.get(ErrorType.todoNotFound));
     }
 
-    if (endedTodo.end) {
-      if (endedTodo.end.getTime() < new Date().getTime()) {
-        throw new Error(Errors.get(ErrorType.todoEndEndedTodo));
-      }
+    if (endedTodo.end?.getTime() < new Date().getTime() || endedTodo.status === TodoStatus.ended) {
+      throw new Error(Errors.get(ErrorType.todoEndEndedTodo));
     }
 
     await endedTodo.updateOne({
       $set: {
-        end: new Date(),
+        status: TodoStatus.ended,
         updatedBy: new Types.ObjectId(updatedBy),
       },
     });

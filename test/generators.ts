@@ -73,6 +73,7 @@ import {
   Label,
   Todo,
   TodoDone,
+  TodoStatus,
 } from '../src/todo';
 import { CreateUserParams, GetSlotsParams, User, defaultUserParams } from '../src/user';
 import {
@@ -724,6 +725,7 @@ export const mockGenerateTodo = ({
   cronExpressions = ['0 10 * * 6'],
   start = new Date(),
   end = faker.date.soon(2),
+  status = TodoStatus.active,
   createdBy = generateObjectId(),
   updatedBy = generateObjectId(),
 }: Partial<Todo> = {}): Todo => {
@@ -735,6 +737,7 @@ export const mockGenerateTodo = ({
     cronExpressions,
     start,
     end,
+    status,
     createdBy,
     updatedBy,
   };

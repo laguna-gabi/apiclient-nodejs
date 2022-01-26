@@ -1155,6 +1155,7 @@ export class Mutations {
             cronExpressions
             start
             end
+            status
             createdBy
             updatedBy
           }

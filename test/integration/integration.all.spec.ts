@@ -24,7 +24,12 @@ import {
   TaskStatus,
   UpdateJournalTextParams,
 } from '../../src/member';
-import { CreateTodoDoneParams, CreateTodoParams, EndAndCreateTodoParams } from '../../src/todo';
+import {
+  CreateTodoDoneParams,
+  CreateTodoParams,
+  EndAndCreateTodoParams,
+  TodoStatus,
+} from '../../src/todo';
 import { User, defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
@@ -1311,6 +1316,7 @@ describe('Integration tests: all', () => {
             id,
             start: createTodoParams.start.toISOString(),
             end: createTodoParams.end.toISOString(),
+            status: TodoStatus.active,
             createdBy: userId,
             updatedBy: userId,
           }),
@@ -1328,13 +1334,14 @@ describe('Integration tests: all', () => {
         .queries.getTodos({ memberId });
 
       expect(todosAfterEndAndCreate.length).toEqual(2);
-      delete createTodoParams.end;
       expect(todosAfterEndAndCreate).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             ...createTodoParams,
             id,
             start: createTodoParams.start.toISOString(),
+            end: createTodoParams.end.toISOString(),
+            status: TodoStatus.ended,
             createdBy: userId,
             updatedBy: memberId,
           }),
@@ -1344,6 +1351,7 @@ describe('Integration tests: all', () => {
             memberId,
             start: endAndCreateTodoParams.start.toISOString(),
             end: endAndCreateTodoParams.end.toISOString(),
+            status: TodoStatus.active,
             createdBy: userId,
             updatedBy: memberId,
           }),
@@ -1360,7 +1368,6 @@ describe('Integration tests: all', () => {
         .setContextUserId(userId, '', [UserRole.coach])
         .queries.getTodos({ memberId });
 
-      delete endAndCreateTodoParams.end;
       expect(todosAfterEnd.length).toEqual(2);
       expect(todosAfterEnd).toEqual(
         expect.arrayContaining([
@@ -1368,6 +1375,8 @@ describe('Integration tests: all', () => {
             ...createTodoParams,
             id,
             start: createTodoParams.start.toISOString(),
+            end: createTodoParams.end.toISOString(),
+            status: TodoStatus.ended,
             createdBy: userId,
             updatedBy: memberId,
           }),
@@ -1376,6 +1385,8 @@ describe('Integration tests: all', () => {
             id: newCreatedTodo.id,
             memberId,
             start: endAndCreateTodoParams.start.toISOString(),
+            end: endAndCreateTodoParams.end.toISOString(),
+            status: TodoStatus.ended,
             createdBy: userId,
             updatedBy: userId,
           }),

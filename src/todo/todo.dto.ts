@@ -17,6 +17,13 @@ export const NotNullableTodoKeys = ['label', 'end'];
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
 
+export enum TodoStatus {
+  active = 'active',
+  ended = 'ended',
+}
+
+registerEnumType(TodoStatus, { name: 'TodoStatus' });
+
 export enum Label {
   APPT = 'APPT',
   MEDS = 'MEDS',
@@ -127,6 +134,10 @@ export class Todo extends Identifier {
   @Prop({ type: Date })
   @Field(() => Date, { nullable: true })
   end?: Date;
+
+  @Prop({ default: TodoStatus.active })
+  @Field(() => TodoStatus)
+  status: TodoStatus;
 
   @Prop({ type: Types.ObjectId })
   @Field(() => String)
