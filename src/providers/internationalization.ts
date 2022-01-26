@@ -1,22 +1,12 @@
-import { InternalKey, Language } from '@lagunahealth/pandora';
+import { BaseInternationalization, InternalKey, Language } from '@lagunahealth/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import * as i18next from 'i18next';
 import { cloneDeep } from 'lodash';
-import * as en from '../../languages/en.json';
-import * as es from '../../languages/es.json';
 import { GetContentsParams } from '../common';
 
 @Injectable()
-export class InternationalizationService implements OnModuleInit {
-  i18n = i18next as any; // typescript doesn't support the i18next library
-
+export class Internationalization extends BaseInternationalization implements OnModuleInit {
   async onModuleInit() {
-    await this.i18n.init({
-      lng: Language.en,
-      fallbackLng: Language.en,
-      resources: { en, es },
-      interpolation: { escapeValue: false },
-    });
+    await super.onModuleInit();
   }
 
   getContents(params: GetContentsParams) {

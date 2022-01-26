@@ -769,13 +769,14 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
-"@lagunahealth/pandora@0.9.22":
-  version "0.9.22"
-  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.9.22/a48f6c6af0e674526cad411d0c4aaee6f2bb70bc1e9078c9d8f1c24dc15a8350#cd127f8a0dfb360795a5fc827475c159abd57d38"
-  integrity sha512-tJMvC699ISSdST1v5ZuUXnYG6bbEIgE9j0T+bbJa+RcqgLono30CCXetIaKmnDM+rAzQJ/Zm7GfZsWtusWmofg==
+"@lagunahealth/pandora@0.9.28":
+  version "0.9.28"
+  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.9.28/ef6847da4ec3ea1ec8c2c5177e67514b011e2559dd49ecdbb0b3f32343bf7b44#4ef23ec78ec1966c9199e9da2758b894191e8a79"
+  integrity sha512-d2VYe6ToeDaUqAoNZ5BHKtOETbgiJWeZJI/KE47ATRBSIT7/v0wSBNCBMFRsLnKamQx1jBZHJwVTC7uSdvEVww==
   dependencies:
     "@slack/types" "^2.2.0"
     "@slack/webhook" "^6.0.0"
+    i18next "^21.6.7"
     nestjs-pino "^2.4.0"
     uuid "^8.3.2"
     zipcode-to-timezone "^0.0.9"
@@ -3195,10 +3196,10 @@ human-signals@^2.1.0:
   resolved "https://registry.yarnpkg.com/human-signals/-/human-signals-2.1.0.tgz#dc91fcba42e4d06e4abaed33b3e7a3c02f514ea0"
   integrity sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==
 
-i18next@^21.5.4:
-  version "21.5.4"
-  resolved "https://registry.npmjs.org/i18next/-/i18next-21.5.4.tgz#55ab39c31cc0b4f9f58c3a599db50c4515698284"
-  integrity sha512-ukwRJpLhYg4EUfCOtbaKjlwF71qyel1XMXQN78OkQMcaQG68UzlYgLC6g2fhoTNBvoH2tJkaaqzDumhC9skAhA==
+i18next@^21.6.7:
+  version "21.6.7"
+  resolved "https://registry.npmjs.org/i18next/-/i18next-21.6.7.tgz#062560decbabcdb691885e6401f2843ec25c3c10"
+  integrity sha512-26dTDa2gBz+vMk6WPf1pxTx3S5HIAptbyODmni/JsN6R1W2WNkGVFXBusUK7T6y1wLeJi5CIrqmQ2gl18vdh3A==
   dependencies:
     "@babel/runtime" "^7.12.0"
 
