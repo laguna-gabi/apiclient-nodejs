@@ -33,6 +33,17 @@
             "captain": "Capitán.",
             "coach": "Entrenador.",
             "father": "El padre."
+        },
+        "alerts": {
+            "customContent": "",
+            "newChatMessageFromMember": "",
+            "actionItemOverdue": "",
+            "appointmentReviewOverdue": "",
+            "appointmentScheduledUser": "",
+            "memberAssigned": "",
+            "memberNotFeelingWellMessage": "",
+            "journalContent": "",
+            "appointmentReviewed": ""
         }
     }
 }
