@@ -33,6 +33,17 @@
             "captain": "Captain.",
             "coach": "Coach.",
             "father": "Father."
+        },
+        "alerts": {
+            "customContent": "{{member.firstName}} sent you a message via text",
+            "newChatMessageFromMember": "{{member.firstName}} sent you a message via chat",
+            "actionItemOverdue": "your action item for {{member.firstName}} is overdue",
+            "appointmentReviewOverdue": "your session with {{member.firstName}} needs to be submitted",
+            "appointmentScheduledUser": "{{member.firstName}} scheduled an appointment",
+            "memberAssigned": "{{member.firstName}} was assigned to you",
+            "memberNotFeelingWellMessage": "{{member.firstName}} logged status - requires your attention",
+            "journalContent": "{{member.firstName}} shared a journal item with you",
+            "appointmentReviewed": "your session with {{member.firstName}} was reviewed by anther coach"
         }
     }
 }
