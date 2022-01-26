@@ -59,7 +59,7 @@ import {
 } from '../../src/conductor';
 import {
   ConfigsService,
-  InternationalizationService,
+  Internationalization,
   NotificationsService,
   OneSignal,
   Provider,
@@ -85,7 +85,7 @@ describe('Notifications full flow', () => {
   let spyOnOneSignalSend;
   let spyOnOneSignalCancel;
   let spyOnSendBirdSend;
-  let internationalizationService: InternationalizationService;
+  let internationalization: Internationalization;
   let notificationsService: NotificationsService;
   let webMemberClient: ClientSettings;
   let mobileMemberClient: ClientSettings;
@@ -125,10 +125,8 @@ describe('Notifications full flow', () => {
     jest.spyOn(configsService, 'getConfig').mockResolvedValue(lorem.word());
 
     notificationsService = module.get<NotificationsService>(NotificationsService);
-    internationalizationService = module.get<InternationalizationService>(
-      InternationalizationService,
-    );
-    await internationalizationService.onModuleInit();
+    internationalization = module.get<Internationalization>(Internationalization);
+    await internationalization.onModuleInit();
 
     await initClients();
   }, 10000);

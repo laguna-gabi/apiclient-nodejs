@@ -2,7 +2,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import {
   ConfigsService,
-  InternationalizationService,
+  Internationalization,
   NotificationsService,
   OneSignal,
   SendBird,
@@ -19,9 +19,9 @@ import { CommonModule } from '../common';
     Slack,
     OneSignal,
     Twilio,
-    InternationalizationService,
+    Internationalization,
     NotificationsService,
   ],
-  exports: [ConfigsService, InternationalizationService, NotificationsService],
+  exports: [ConfigsService, Internationalization, NotificationsService],
 })
 export class ProvidersModule {}
