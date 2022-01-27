@@ -1,3 +1,4 @@
+import { mockLogger } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { LoggerService } from '../../src/common';
@@ -9,6 +10,8 @@ describe('live: twilio', () => {
   beforeAll(async () => {
     const configService = new ConfigsService();
     const logger = new LoggerService(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
+    mockLogger(logger);
+
     twilio = new TwilioService(configService, logger);
     await twilio.onModuleInit();
   });

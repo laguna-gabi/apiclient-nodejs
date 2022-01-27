@@ -719,7 +719,7 @@ describe('Integration tests: notifications', () => {
             recipientClientId: appointment.memberId.toString(),
             senderClientId: appointment.userId.toString(),
             ...baseParams,
-            triggersAt: subMinutes(appointment.start, scheduler.alertBeforeInMin),
+            triggersAt: subMinutes(new Date(appointment.start), scheduler.alertBeforeInMin),
             chatLink: communication.chat.memberLink,
           }),
         );
@@ -729,7 +729,7 @@ describe('Integration tests: notifications', () => {
             recipientClientId: appointment.memberId.toString(),
             senderClientId: appointment.userId.toString(),
             ...baseParams,
-            triggersAt: subDays(appointment.start, 1),
+            triggersAt: subDays(new Date(appointment.start), 1),
           }),
         );
       },
