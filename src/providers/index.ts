@@ -6,4 +6,5 @@ export * from './twilio.service';
 export * from './oneSignal';
 export * from './featureFlag.service';
 export * from './webhooks.controller';
+export * from './internationalization';
 export * from './providers.module';

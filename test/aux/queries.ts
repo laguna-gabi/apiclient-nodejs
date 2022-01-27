@@ -819,12 +819,8 @@ export class Queries {
             date
             dismissed
             isNew
-            member {
-              firstName
-              lastName
-              honorific
-              id
-            }
+            memberId
+            text
           }
         }
       `,

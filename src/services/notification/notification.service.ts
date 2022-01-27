@@ -47,13 +47,6 @@ export class NotificationService implements OnModuleInit {
         throw new Error(`request failed with code ${result.status}`);
       }
     } catch (ex) {
-      this.logger.error(
-        { clientSenderId },
-        NotificationService.name,
-        this.getDispatchesByClientSenderId.name,
-        formatEx(ex),
-      );
-
       if (
         ['ECONNREFUSED', 'ECONNABORTED', 'ENOTFOUND'].includes(ex.code) &&
         retryAttempt < services.retries
@@ -62,6 +55,12 @@ export class NotificationService implements OnModuleInit {
         return this.getDispatchesByClientSenderId(clientSenderId, projection, ++retryAttempt);
       }
 
+      this.logger.error(
+        { clientSenderId },
+        NotificationService.name,
+        this.getDispatchesByClientSenderId.name,
+        formatEx(ex),
+      );
       throw ex;
     }
   }

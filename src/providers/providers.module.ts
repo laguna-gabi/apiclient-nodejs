@@ -15,6 +15,7 @@ import {
   WebhooksController,
 } from '.';
 import { CommonModule } from '../common';
+import { Internationalization } from './internationalization';
 
 @Module({
   imports: [HttpModule, CommonModule],
@@ -30,6 +31,7 @@ import { CommonModule } from '../common';
     QueueService,
     FeatureFlagService,
     CloudMapService,
+    Internationalization,
   ],
   exports: [
     Bitly,
@@ -42,6 +44,7 @@ import { CommonModule } from '../common';
     ConfigsService,
     FeatureFlagService,
     CloudMapService,
+    Internationalization,
   ],
   controllers: [WebhooksController],
 })

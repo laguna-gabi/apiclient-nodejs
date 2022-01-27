@@ -4,7 +4,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import * as config from 'config';
 import { add, sub } from 'date-fns';
-import { cloneDeep, isNil, omitBy, pick } from 'lodash';
+import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
 import { NotificationService } from '../../src/services';
 import { v4 } from 'uuid';
@@ -36,7 +36,6 @@ import {
   MemberConfig,
   MemberConfigDocument,
   MemberDocument,
-  MemberInfo,
   MemberSummary,
   NotNullableMemberKeys,
   Recording,
@@ -68,7 +67,7 @@ import {
   LoggerService,
   extractEmbeddedSetObject,
 } from '../common';
-import { StorageService } from '../providers';
+import { Internationalization, StorageService } from '../providers';
 import { differenceInMilliseconds } from 'date-fns';
 
 @Injectable()
@@ -100,6 +99,7 @@ export class MemberService extends BaseService {
     private readonly appointmentModel: Model<AppointmentDocument>,
     private readonly storageService: StorageService,
     private readonly notificationService: NotificationService,
+    private readonly internationalization: Internationalization,
     readonly logger: LoggerService,
   ) {
     super();
@@ -889,12 +889,7 @@ export class MemberService extends BaseService {
     // --------------------------------------------------------------------------------------------
     // Generate Notification (Dispatch) based Alerts
     const alerts = (
-      await Promise.all(
-        [
-          members?.map(async (member) => this.notificationDispatchToAlerts(member)),
-          members?.map(async (member) => this.entityToAlerts(member)),
-        ].flat(),
-      )
+      await Promise.all(members?.map(async (member) => this.entityToAlerts(member)))
     ).flat();
 
     // --------------------------------------------------------------------------------------------
@@ -921,6 +916,36 @@ export class MemberService extends BaseService {
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
+
+  private async entityToAlerts(member: Member): Promise<Alert[]> {
+    let alerts: Alert[];
+
+    // first alert - AlertType.memberAssigned
+    alerts = [
+      {
+        id: `${member.id}_${AlertType.memberAssigned}`,
+        memberId: member.id,
+        type: AlertType.memberAssigned,
+        date: member.createdAt,
+      } as Alert,
+    ];
+
+    // collect actionItemOverdue alerts
+    alerts = alerts.concat(await this.notificationDispatchToAlerts(member));
+
+    // collect actionItemOverdue alerts
+    alerts = alerts.concat(await this.actionItemsToAlerts(member));
+
+    // Collect appointment related alerts
+    alerts = alerts.concat(await this.appointmentsItemsToAlerts(member));
+
+    alerts.forEach((alert: Alert) => {
+      alert.text = this.internationalization.getAlerts(alert.type, member);
+      alert.memberId = member.id;
+    });
+    return alerts;
+  }
+
   private async notificationDispatchToAlerts(member: Member): Promise<Alert[]> {
     const dispatches = await this.notificationService.getDispatchesByClientSenderId(member.id);
 
@@ -931,34 +956,12 @@ export class MemberService extends BaseService {
           (dispatch) =>
             ({
               id: dispatch.dispatchId,
-              member: this.getMemberInfo(member),
+              memberId: member.id,
               type: AlertType[dispatch.contentKey],
               date: new Date(dispatch.sentAt),
             } as Alert),
         ) || []
     );
-  }
-
-  private async entityToAlerts(member: Member): Promise<Alert[]> {
-    let alerts: Alert[];
-
-    // first alert - AlertType.memberAssigned
-    alerts = [
-      {
-        id: `${member.id}_${AlertType.memberAssigned}`,
-        member: this.getMemberInfo(member),
-        type: AlertType.memberAssigned,
-        date: member.createdAt,
-      } as Alert,
-    ];
-
-    // collect actionItemOverdue alerts
-    alerts = alerts.concat(await this.actionItemsToAlerts(member));
-
-    // Collect appointment related alerts
-    alerts = alerts.concat(await this.appointmentsItemsToAlerts(member));
-
-    return alerts;
   }
 
   private async appointmentsItemsToAlerts(member: Member): Promise<Alert[]> {
@@ -976,7 +979,6 @@ export class MemberService extends BaseService {
 
       return {
         id: `${recording.id}_${AlertType.appointmentReviewed}`,
-        member: this.getMemberInfo(member),
         type: AlertType.appointmentReviewed,
         date: recording.review.createdAt,
       } as Alert;
@@ -994,7 +996,6 @@ export class MemberService extends BaseService {
       if (!reviewedAppointments.includes(appointment.id)) {
         return {
           id: `${appointment.id}_${AlertType.appointmentReviewOverdue}`,
-          member: this.getMemberInfo(member),
           type: AlertType.appointmentReviewOverdue,
           date: add(appointment.end, { days: 1 }),
         } as Alert;
@@ -1015,15 +1016,10 @@ export class MemberService extends BaseService {
         (actionItem) =>
           ({
             id: `${actionItem.id}_${AlertType.actionItemOverdue}`,
-            member: this.getMemberInfo(member),
             type: AlertType.actionItemOverdue,
             date: actionItem.deadline,
           } as Alert),
       );
-  }
-
-  private getMemberInfo(member: Member): MemberInfo {
-    return pick(member, ['firstName', 'lastName', 'id', 'honorific']);
   }
 
   private async getUserDismissedAlerts(userId: string): Promise<DismissedAlert[]> {

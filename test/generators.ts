@@ -444,17 +444,19 @@ export const generateNotesParams = ({
 };
 
 export const mockGenerateAlert = ({
-  member = mockGenerateMember(),
+  memberId = generateId(),
   type = randomEnum(AlertType) as AlertType,
   date = faker.date.past(),
   isNew = false,
   dismissed = false,
+  text = faker.lorem.sentence(),
 }: Partial<Alert> = {}): Alert => {
   return {
     id: `${generateId()}_${type}`,
     date,
     type,
-    member,
+    text,
+    memberId,
     isNew,
     dismissed,
   };

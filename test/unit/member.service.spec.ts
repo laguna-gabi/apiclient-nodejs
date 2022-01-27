@@ -1534,40 +1534,50 @@ describe('MemberService', () => {
             date: member2.createdAt,
             dismissed: false,
             id: `${member2.id}_${AlertType.memberAssigned}`,
-            isNew: true,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            member: service.getMemberInfo(member2),
+            text: service.internationalization.getAlerts(AlertType.memberAssigned, member1),
+            isNew: true,
+            memberId: member2.id.toString(),
             type: AlertType.memberAssigned,
           },
           {
             date: member1.createdAt,
             dismissed: false,
             id: `${member1.id}_${AlertType.memberAssigned}`,
-            isNew: true,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            member: service.getMemberInfo(member1),
+            text: service.internationalization.getAlerts(AlertType.memberAssigned, member1),
+            isNew: true,
+            memberId: member1.id.toString(),
             type: AlertType.memberAssigned,
           },
           {
             date: dispatchM1.sentAt,
             dismissed: false,
             id: dispatchM1.dispatchId,
-            isNew: true,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            member: service.getMemberInfo(member1),
+            text: service.internationalization.getAlerts(
+              AlertType.appointmentScheduledUser,
+              member1,
+            ),
+            isNew: true,
+            memberId: member1.id.toString(),
             type: AlertType.appointmentScheduledUser,
           },
           {
             date: dispatchM2.sentAt,
             dismissed: false,
             id: dispatchM2.dispatchId,
-            isNew: true,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            member: service.getMemberInfo(member2),
+            text: service.internationalization.getAlerts(
+              AlertType.newChatMessageFromMember,
+              member1,
+            ),
+            isNew: true,
+            memberId: member2.id.toString(),
             type: AlertType.newChatMessageFromMember,
           },
         ]);
@@ -1589,40 +1599,50 @@ describe('MemberService', () => {
             date: member2.createdAt,
             dismissed: false,
             id: `${member2.id}_${AlertType.memberAssigned}`,
-            isNew: true,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            member: service.getMemberInfo(member2),
+            text: service.internationalization.getAlerts(AlertType.memberAssigned, member2),
+            isNew: true,
+            memberId: member2.id.toString(),
             type: AlertType.memberAssigned,
           },
           {
             date: member1.createdAt,
             dismissed: false,
             id: `${member1.id}_${AlertType.memberAssigned}`,
-            isNew: true,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            member: service.getMemberInfo(member1),
+            text: service.internationalization.getAlerts(AlertType.memberAssigned, member1),
+            isNew: true,
+            memberId: member1.id.toString(),
             type: AlertType.memberAssigned,
           },
           {
             date: dispatchM1.sentAt,
             dismissed: true,
             id: dispatchM1.dispatchId,
-            isNew: true,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            member: service.getMemberInfo(member1),
+            text: service.internationalization.getAlerts(
+              AlertType.appointmentScheduledUser,
+              member1,
+            ),
+            isNew: true,
+            memberId: member1.id.toString(),
             type: AlertType.appointmentScheduledUser,
           },
           {
             date: dispatchM2.sentAt,
             dismissed: false,
             id: dispatchM2.dispatchId,
-            isNew: false,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            member: service.getMemberInfo(member2),
+            text: service.internationalization.getAlerts(
+              AlertType.newChatMessageFromMember,
+              member1,
+            ),
+            isNew: false,
+            memberId: member2.id.toString(),
             type: AlertType.newChatMessageFromMember,
           },
         ]);
@@ -1669,7 +1689,8 @@ describe('MemberService', () => {
             id: `${memberId}_${AlertType.memberAssigned}`,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            member: service.getMemberInfo(member),
+            text: service.internationalization.getAlerts(AlertType.memberAssigned, member),
+            memberId: member.id.toString(),
             type: AlertType.memberAssigned,
             date: member.createdAt,
             dismissed: false,
@@ -1679,7 +1700,8 @@ describe('MemberService', () => {
             id: `${actionItemId.id}_${AlertType.actionItemOverdue}`,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            member: service.getMemberInfo(member),
+            text: service.internationalization.getAlerts(AlertType.actionItemOverdue, member),
+            memberId: member.id.toString(),
             type: AlertType.actionItemOverdue,
             date: createTaskParams.deadline,
             dismissed: false,
@@ -1724,7 +1746,8 @@ describe('MemberService', () => {
             id: `${recording.id}_${AlertType.appointmentReviewed}`,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            member: service.getMemberInfo(member),
+            text: service.internationalization.getAlerts(AlertType.appointmentReviewed, member),
+            memberId: member.id.toString(),
             type: AlertType.appointmentReviewed,
             date: (updatedRecording.toObject() as any).review.createdAt,
             dismissed: false,
@@ -1734,7 +1757,8 @@ describe('MemberService', () => {
             id: `${memberId}_${AlertType.memberAssigned}`,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            member: service.getMemberInfo(member),
+            text: service.internationalization.getAlerts(AlertType.memberAssigned, member),
+            memberId: member.id.toString(),
             type: AlertType.memberAssigned,
             date: member.createdAt,
             dismissed: false,
@@ -1775,9 +1799,10 @@ describe('MemberService', () => {
         expect(alerts).toEqual([
           {
             id: `${memberId}_${AlertType.memberAssigned}`,
+            memberId: member.id.toString(),
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            member: service.getMemberInfo(member),
+            text: service.internationalization.getAlerts(AlertType.memberAssigned, member),
             type: AlertType.memberAssigned,
             date: member.createdAt,
             dismissed: false,
@@ -1787,7 +1812,11 @@ describe('MemberService', () => {
             id: `${appointmentId}_${AlertType.appointmentReviewOverdue}`,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            member: service.getMemberInfo(member),
+            text: service.internationalization.getAlerts(
+              AlertType.appointmentReviewOverdue,
+              member,
+            ),
+            memberId: member.id.toString(),
             type: AlertType.appointmentReviewOverdue,
             date: add(endDate, { days: 1 }),
             dismissed: false,

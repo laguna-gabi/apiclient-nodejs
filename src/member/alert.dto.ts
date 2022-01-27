@@ -1,7 +1,6 @@
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { MemberInfo } from './member.dto';
 
 export enum AlertType {
   appointmentScheduledUser = 'appointmentScheduledUser',
@@ -22,11 +21,14 @@ export class Alert {
   @Field(() => String)
   id: string;
 
-  @Field(() => MemberInfo)
-  member: MemberInfo;
+  @Field(() => String)
+  memberId: string;
 
   @Field(() => AlertType)
   type: AlertType;
+
+  @Field(() => String)
+  text: string;
 
   @Field(() => Date)
   date: Date;
