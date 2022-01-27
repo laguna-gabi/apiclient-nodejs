@@ -313,7 +313,7 @@ The migration is applied automatically in our ci-cd when merging our code to `de
 - **Step 3.1**: test the code on your local mongo db - first you check the status in your local db - the results is a list of migrations applied on your local db and pending migrations which should get applied - migration is not applied in `status` command - DRY-RUN mode:
 
   ```
-  yarn migrate:status
+  yarn migrate status
   ```
 
   | Filename                               | Applied At               |

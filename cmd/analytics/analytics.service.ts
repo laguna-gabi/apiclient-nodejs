@@ -435,6 +435,7 @@ export class AnalyticsService {
           appt_hour: reformatDate(startDateTime.toString(), HourFormat),
           status: appointment.status,
           missed_appt: this.getAppointmentsMissedIndication(appointment.status, appointment.noShow),
+          no_show_reason: appointment.noShowReason,
           total_duration: recordingsSummary.totalDuration,
           total_outreach_attempts: appointment.recordings?.length || 0,
           channel_primary: recordingsSummary.primaryChannel,

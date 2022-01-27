@@ -139,6 +139,7 @@ export class AppointmentsMemberData {
   appt_hour?: number;
   status?: AppointmentStatus; // TODO: confirm with Alex that 'done' can replace 'closed' (consistency with our dto)
   missed_appt?: string;
+  no_show_reason?: string;
   total_duration?: number;
   total_outreach_attempts?: number;
   channel_primary?: RecordingType; // TODO: confirm with Alex that we can use the appointment method (not a 3'rd party vendor names - this coupling may not be healthy)

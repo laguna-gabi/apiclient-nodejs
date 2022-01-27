@@ -312,6 +312,7 @@ describe('Commands: AnalyticsService', () => {
             createdAt: sub(now, { days: 10 }),
             method: AppointmentMethod.phoneCall,
             noShow: true,
+            noShowReason: 'no show reason',
           } as PopulatedAppointment,
         ],
       } as MemberDataAggregate);
@@ -336,6 +337,7 @@ describe('Commands: AnalyticsService', () => {
           appt_day_of_week_name: 'Thursday',
           appt_hour: '3',
           missed_appt: 'TRUE',
+          no_show_reason: 'no show reason',
           total_duration: 0,
           total_outreach_attempts: 0,
           graduated: false,
@@ -541,8 +543,7 @@ describe('Commands: AnalyticsService', () => {
     });
   });
 
-  describe('buildMemberData', () => {
-    // eslint-disable-next-line max-len
+  describe('buildCoachData', () => {
     const graduatedMember = mockGenerateMember();
     graduatedMember.dischargeDate = reformatDate(
       sub(now, { days: GraduationPeriod + 2 }).toString(),
