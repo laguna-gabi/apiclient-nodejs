@@ -1,6 +1,6 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { ArrayNotEmpty } from 'class-validator';
+import { ArrayNotEmpty, IsOptional } from 'class-validator';
 import { Document, Types } from 'mongoose';
 import {
   ErrorType,
@@ -9,6 +9,7 @@ import {
   IsCronExpression,
   IsDateAfter,
   IsObjectId,
+  IsUnscheduledTodo,
 } from '../common';
 
 export const NotNullableTodoKeys = ['label', 'end'];
@@ -47,13 +48,15 @@ export class ExtraTodoParams {
   @Field(() => Label, { nullable: true })
   label?: Label;
 
-  @Field(() => [String])
+  @Field(() => [String], { nullable: true })
   @IsCronExpression({ message: Errors.get(ErrorType.todoInvalidCronExpression) })
+  @IsOptional()
   @ArrayNotEmpty()
-  cronExpressions: string[];
+  cronExpressions?: string[];
 
-  @Field(() => Date)
-  start: Date;
+  @Field(() => Date, { nullable: true })
+  @IsUnscheduledTodo({ message: Errors.get(ErrorType.todoUnscheduled) })
+  start?: Date;
 
   @Field(() => Date, { nullable: true })
   @IsDateAfter('start', {
@@ -123,13 +126,13 @@ export class Todo extends Identifier {
   @Field(() => Label, { nullable: true })
   label?: Label;
 
-  @Prop()
-  @Field(() => [String])
-  cronExpressions: string[];
+  @Prop({ default: undefined })
+  @Field(() => [String], { nullable: true })
+  cronExpressions?: string[];
 
   @Prop({ type: Date })
-  @Field(() => Date)
-  start: Date;
+  @Field(() => Date, { nullable: true })
+  start?: Date;
 
   @Prop({ type: Date })
   @Field(() => Date, { nullable: true })

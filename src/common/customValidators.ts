@@ -231,7 +231,33 @@ export function IsCronExpression(options: ValidationOptions) {
       options,
       validator: {
         validate(cronExpressions: string[]) {
-          return cronExpressions.every((cronExpression) => isValidCron(cronExpression));
+          return cronExpressions
+            ? cronExpressions.every((cronExpression) => isValidCron(cronExpression))
+            : true;
+        },
+      },
+    });
+  };
+}
+
+export function IsUnscheduledTodo(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(value, args: ValidationArguments) {
+          const cronExpressions = args.object['cronExpressions'];
+          const start = args.object['start'];
+          const end = args.object['end'];
+          if (!cronExpressions && !start && !end) {
+            return true;
+          } else if (cronExpressions && start) {
+            return true;
+          } else {
+            return false;
+          }
         },
       },
     });

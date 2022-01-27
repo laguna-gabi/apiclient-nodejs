@@ -88,7 +88,10 @@ export class TodoResolver {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
     const { todoId, memberId } = createTodoDoneParams;
-    await this.todoService.getTodo(todoId, memberId);
+    const todo = await this.todoService.getTodo(todoId, memberId);
+    if (!todo.cronExpressions && !todo.start && !todo.end) {
+      await this.todoService.endTodo(todoId, memberId);
+    }
     return this.todoService.createTodoDone(createTodoDoneParams);
   }
 

@@ -106,6 +106,7 @@ export enum ErrorType {
   todoEndAfterStart = 10004,
   todoDoneNotFound = 10005,
   todoEndEndedTodo = 10006,
+  todoUnscheduled = 10006,
 
   // Module Care
   redFlagIdInvalid = 10101,
@@ -256,6 +257,11 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.todoEndAfterStart.valueOf(), 'end date must be after start date'],
   [ErrorType.todoDoneNotFound.valueOf(), 'todoDone id was not found'],
   [ErrorType.todoEndEndedTodo.valueOf(), 'can not end an already ended todo'],
+  [
+    ErrorType.todoUnscheduled.valueOf(),
+    'scheduled todo must have cron expression and start start, end is optional, ' +
+      'unscheduled todo can not have cron expression start and end',
+  ],
   // Module Care
   [ErrorType.redFlagIdInvalid.valueOf(), 'invalid red flag id'],
   [ErrorType.barrierIdInvalid.valueOf(), 'invalid barrier id'],

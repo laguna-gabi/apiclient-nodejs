@@ -28,10 +28,8 @@ describe('Validations - todo', () => {
   describe('createTodo', () => {
     /* eslint-disable max-len */
     test.each`
-      field                | error
-      ${'text'}            | ${`Field "text" of required type "String!" was not provided.`}
-      ${'cronExpressions'} | ${`Field "cronExpressions" of required type "[String!]!" was not provided.`}
-      ${'start'}           | ${`Field "start" of required type "DateTime!" was not provided.`}
+      field     | error
+      ${'text'} | ${`Field "text" of required type "String!" was not provided.`}
     `(`should fail to create a todo since mandatory field $field is missing`, async (params) => {
       /* eslint-enable max-len */
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
@@ -100,6 +98,29 @@ describe('Validations - todo', () => {
         invalidFieldsErrors: [Errors.get(ErrorType.todoInvalidCronExpression)],
       });
     });
+
+    test.each`
+      input
+      ${['start']}
+      ${['cronExpressions']}
+      ${['start', 'cronExpressions']}
+      ${['cronExpressions', 'end']}
+      ${['start', 'end']}
+    `(`should fail to create unscheduled/scheduled todo since invalid params`, async (params) => {
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId: generateId(),
+      });
+      params.input.forEach((element) => {
+        delete createTodoParams[element];
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      await handler.mutations.createTodo({
+        createTodoParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.todoUnscheduled)],
+      });
+    });
   });
 
   describe('getTodos', () => {
@@ -111,11 +132,9 @@ describe('Validations - todo', () => {
   describe('endAndCreateTodo', () => {
     /* eslint-disable max-len */
     test.each`
-      field                | error
-      ${'id'}              | ${`Field "id" of required type "String!" was not provided.`}
-      ${'text'}            | ${`Field "text" of required type "String!" was not provided.`}
-      ${'cronExpressions'} | ${`Field "cronExpressions" of required type "[String!]!" was not provided.`}
-      ${'start'}           | ${`Field "start" of required type "DateTime!" was not provided.`}
+      field     | error
+      ${'id'}   | ${`Field "id" of required type "String!" was not provided.`}
+      ${'text'} | ${`Field "text" of required type "String!" was not provided.`}
     `(
       `should fail to endAndCreate a todo since mandatory field $field is missing`,
       async (params) => {
@@ -185,6 +204,28 @@ describe('Validations - todo', () => {
       await handler.mutations.endAndCreateTodo({
         endAndCreateTodoParams,
         invalidFieldsErrors: [Errors.get(ErrorType.todoInvalidCronExpression)],
+      });
+    });
+
+    test.each`
+      input
+      ${['start']}
+      ${['cronExpressions']}
+      ${['start', 'cronExpressions']}
+      ${['cronExpressions', 'end']}
+      ${['start', 'end']}
+    `(`should fail to create unscheduled/scheduled todo since invalid params`, async (params) => {
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        memberId: generateId(),
+      });
+      params.input.forEach((element) => {
+        delete endAndCreateTodoParams[element];
+      });
+      delete endAndCreateTodoParams.updatedBy;
+
+      await handler.mutations.endAndCreateTodo({
+        endAndCreateTodoParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.todoUnscheduled)],
       });
     });
   });

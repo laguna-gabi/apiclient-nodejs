@@ -1453,6 +1453,66 @@ describe('Integration tests: all', () => {
           }),
         ]),
       );
+    }, 10000);
+
+    it('should create and end an scheduled todo', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId = member.id;
+
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+      });
+      delete createTodoParams.cronExpressions;
+      delete createTodoParams.start;
+      delete createTodoParams.end;
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      const { id } = await handler.setContextUserId(memberId).mutations.createTodo({
+        createTodoParams,
+      });
+
+      const todos = await handler.setContextUserId(memberId).queries.getTodos({ memberId });
+
+      expect(todos.length).toEqual(1);
+      expect(todos).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...createTodoParams,
+            id,
+            status: TodoStatus.active,
+            createdBy: memberId,
+            updatedBy: memberId,
+          }),
+        ]),
+      );
+
+      const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        todoId: id,
+      });
+      delete createTodoDoneParams.memberId;
+
+      await handler
+        .setContextUserId(memberId)
+        .mutations.createTodoDone({ createTodoDoneParams: createTodoDoneParams });
+
+      const todosAfterDone = await handler
+        .setContextUserId(memberId)
+        .queries.getTodos({ memberId });
+
+      expect(todosAfterDone.length).toEqual(1);
+      expect(todosAfterDone).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...createTodoParams,
+            id,
+            status: TodoStatus.ended,
+            createdBy: memberId,
+            updatedBy: memberId,
+          }),
+        ]),
+      );
     });
 
     it('should fail to delete TodoDone of another member', async () => {
