@@ -34,6 +34,8 @@ import { CommunicationModule } from '../communication';
 import { ConfigsService, ProvidersModule } from '../providers';
 import { UserModule } from '../user';
 import { ServiceModule } from '../services';
+import { useFactoryOptions } from '../db';
+import * as mongooseDelete from 'mongoose-delete';
 
 @Module({
   imports: [
@@ -49,14 +51,20 @@ import { ServiceModule } from '../services';
       { name: ActionItem.name, schema: ActionItemDto },
       { name: Journal.name, schema: JournalDto },
       { name: MemberConfig.name, schema: MemberConfigDto },
-      { name: Appointment.name, schema: AppointmentDto },
       { name: Recording.name, schema: MemberRecordingDto },
       { name: ArchiveMember.name, schema: ArchiveMemberDto },
       { name: ArchiveMemberConfig.name, schema: ArchiveMemberConfigDto },
       { name: ControlMember.name, schema: ControlMemberDto },
       { name: Caregiver.name, schema: CaregiverDto },
       { name: DismissedAlert.name, schema: DismissedAlertDto },
-      { name: Appointment.name, schema: AppointmentDto },
+    ]),
+    MongooseModule.forFeatureAsync([
+      {
+        name: Appointment.name,
+        useFactory: () => {
+          return AppointmentDto.plugin(mongooseDelete, useFactoryOptions);
+        },
+      },
     ]),
   ],
   providers: [MemberResolver, MemberService, ConfigsService],
