@@ -115,6 +115,26 @@ export class TodoService extends BaseService {
 
   async createTodoDone(createTodoDoneParams: CreateTodoDoneParams): Promise<Identifier> {
     const { todoId, memberId } = createTodoDoneParams;
+    const todo = await this.todoModel.findOne({
+      _id: new Types.ObjectId(todoId),
+      memberId: new Types.ObjectId(memberId),
+    });
+
+    if (!todo) {
+      throw new Error(Errors.get(ErrorType.todoNotFound));
+    }
+
+    if (todo.status === TodoStatus.ended) {
+      throw new Error(Errors.get(ErrorType.todoEndedCreateDone));
+    }
+
+    if (this.isUnscheduled(todo)) {
+      await todo.updateOne({
+        $set: {
+          status: TodoStatus.ended,
+        },
+      });
+    }
 
     const { _id } = await this.todoDoneModel.create({
       ...createTodoDoneParams,
@@ -134,15 +154,38 @@ export class TodoService extends BaseService {
   }
 
   async deleteTodoDone(id: string, memberId: string): Promise<boolean> {
-    const result = await this.todoDoneModel.findOneAndDelete({
+    const todoDone = await this.todoDoneModel.findOne({
       _id: new Types.ObjectId(id),
       memberId: new Types.ObjectId(memberId),
     });
 
-    if (!result) {
+    if (!todoDone) {
       throw new Error(Errors.get(ErrorType.todoDoneNotFound));
     }
 
+    const todo = await this.todoModel.findById(todoDone.todoId);
+
+    if (todo.status === TodoStatus.ended) {
+      if (this.isUnscheduled(todo)) {
+        await todo.updateOne({
+          $set: {
+            status: TodoStatus.active,
+          },
+        });
+      } else {
+        throw new Error(Errors.get(ErrorType.todoEndedCreateDone));
+      }
+    }
+
+    await todoDone.deleteOne();
+
     return true;
+  }
+  /*************************************************************************************************
+   ******************************************** Helpers ********************************************
+   ************************************************************************************************/
+
+  private isUnscheduled(todo: Todo): boolean {
+    return !todo.cronExpressions && !todo.start && !todo.end;
   }
 }

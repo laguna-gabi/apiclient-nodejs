@@ -225,58 +225,32 @@ describe('TodoResolver', () => {
   });
 
   describe('createTodoDone', () => {
-    let spyOnServiceGetTodo;
     let spyOnServiceCreateTodoDone;
     let spyOnServiceEndTodo;
 
     beforeEach(() => {
-      spyOnServiceGetTodo = jest.spyOn(service, 'getTodo');
       spyOnServiceCreateTodoDone = jest.spyOn(service, 'createTodoDone');
       spyOnServiceEndTodo = jest.spyOn(service, 'endTodo');
     });
 
     afterEach(() => {
-      spyOnServiceGetTodo.mockReset();
       spyOnServiceCreateTodoDone.mockReset();
       spyOnServiceEndTodo.mockReset();
     });
 
     it('should create TodoDone', async () => {
       const id = generateId();
-      const todo = mockGenerateTodo();
 
-      spyOnServiceGetTodo.mockImplementationOnce(async () => todo);
       spyOnServiceCreateTodoDone.mockImplementationOnce(async () => id);
       spyOnServiceEndTodo.mockImplementationOnce(async () => true);
 
       const params: CreateTodoDoneParams = generateCreateTodoDoneParams();
-      const { todoId, memberId } = params;
 
       const result = await resolver.createTodoDone([MemberRole.member], params);
 
       expect(result).toEqual(id);
-      expect(spyOnServiceGetTodo).toHaveBeenCalledWith(todoId, memberId);
       expect(spyOnServiceCreateTodoDone).toHaveBeenCalledWith(params);
       expect(spyOnServiceEndTodo).not.toHaveBeenCalled();
-    });
-
-    it('should end todo if unschedule', async () => {
-      const id = generateId();
-      const todo = mockGenerateTodo();
-      delete todo.cronExpressions;
-      delete todo.start;
-      delete todo.end;
-
-      spyOnServiceGetTodo.mockImplementationOnce(async () => todo);
-      spyOnServiceCreateTodoDone.mockImplementationOnce(async () => id);
-      spyOnServiceEndTodo.mockImplementationOnce(async () => true);
-
-      const params: CreateTodoDoneParams = generateCreateTodoDoneParams();
-      const { todoId, memberId } = params;
-
-      await resolver.createTodoDone([MemberRole.member], params);
-
-      expect(spyOnServiceEndTodo).toHaveBeenCalledWith(todoId, memberId);
     });
 
     test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(

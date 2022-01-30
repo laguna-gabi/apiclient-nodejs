@@ -1332,9 +1332,9 @@ describe('Integration tests: all', () => {
       /**
        * 1. User creates a todo for member
        * 2. Member end and create todo
-       * 3. User ends the todo
-       * 4. create TodoDone
-       * 5. delete TodoDone
+       * 3. create TodoDone
+       * 4. delete TodoDone
+       * 5. User ends the todo
        */
       const user = await creators.createAndValidateUser([UserRole.coach]);
       const userId = user.id;
@@ -1408,6 +1408,67 @@ describe('Integration tests: all', () => {
         ]),
       );
 
+      const createTodoDoneParams1: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        todoId: newCreatedTodo.id,
+      });
+      const createTodoDoneParams2: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        todoId: newCreatedTodo.id,
+      });
+      delete createTodoDoneParams1.memberId;
+      delete createTodoDoneParams2.memberId;
+
+      const { id: todoDoneId1 } = await handler
+        .setContextUserId(memberId)
+        .mutations.createTodoDone({ createTodoDoneParams: createTodoDoneParams1 });
+      const { id: todoDoneId2 } = await handler
+        .setContextUserId(memberId)
+        .mutations.createTodoDone({ createTodoDoneParams: createTodoDoneParams2 });
+
+      expect(todoDoneId1).not.toBeUndefined();
+      expect(todoDoneId2).not.toBeUndefined();
+
+      const getTodoDonesParams = generateGetTodoDonesParams({ memberId });
+
+      const TodoDones = await handler
+        .setContextUserId(memberId)
+        .queries.getTodoDones({ getTodoDonesParams });
+
+      expect(TodoDones.length).toEqual(2);
+      expect(TodoDones).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: todoDoneId1,
+            memberId,
+            todoId: newCreatedTodo.id,
+            done: createTodoDoneParams1.done.toISOString(),
+          }),
+          expect.objectContaining({
+            id: todoDoneId2,
+            memberId,
+            todoId: newCreatedTodo.id,
+            done: createTodoDoneParams2.done.toISOString(),
+          }),
+        ]),
+      );
+
+      await handler.setContextUserId(memberId).mutations.deleteTodoDone({ id: todoDoneId1 });
+
+      const TodoDonesAfterDelete = await handler
+        .setContextUserId(memberId)
+        .queries.getTodoDones({ getTodoDonesParams });
+
+      expect(TodoDonesAfterDelete.length).toEqual(1);
+      expect(TodoDonesAfterDelete).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: todoDoneId2,
+            memberId,
+            todoId: newCreatedTodo.id,
+            done: createTodoDoneParams2.done.toISOString(),
+          }),
+        ]),
+      );
+
       const endTodo = await handler
         .setContextUserId(userId, '', [UserRole.coach])
         .mutations.endTodo({ id: newCreatedTodo.id });
@@ -1439,67 +1500,6 @@ describe('Integration tests: all', () => {
             status: TodoStatus.ended,
             createdBy: userId,
             updatedBy: userId,
-          }),
-        ]),
-      );
-
-      const createTodoDoneParams1: CreateTodoDoneParams = generateCreateTodoDoneParams({
-        todoId: id,
-      });
-      const createTodoDoneParams2: CreateTodoDoneParams = generateCreateTodoDoneParams({
-        todoId: id,
-      });
-      delete createTodoDoneParams1.memberId;
-      delete createTodoDoneParams2.memberId;
-
-      const { id: todoDoneId1 } = await handler
-        .setContextUserId(memberId)
-        .mutations.createTodoDone({ createTodoDoneParams: createTodoDoneParams1 });
-      const { id: todoDoneId2 } = await handler
-        .setContextUserId(memberId)
-        .mutations.createTodoDone({ createTodoDoneParams: createTodoDoneParams2 });
-
-      expect(todoDoneId1).not.toBeUndefined();
-      expect(todoDoneId2).not.toBeUndefined();
-
-      const getTodoDonesParams = generateGetTodoDonesParams({ memberId });
-
-      const TodoDones = await handler
-        .setContextUserId(memberId)
-        .queries.getTodoDones({ getTodoDonesParams });
-
-      expect(TodoDones.length).toEqual(2);
-      expect(TodoDones).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: todoDoneId1,
-            memberId,
-            todoId: id,
-            done: createTodoDoneParams1.done.toISOString(),
-          }),
-          expect.objectContaining({
-            id: todoDoneId2,
-            memberId,
-            todoId: id,
-            done: createTodoDoneParams2.done.toISOString(),
-          }),
-        ]),
-      );
-
-      await handler.setContextUserId(memberId).mutations.deleteTodoDone({ id: todoDoneId1 });
-
-      const TodoDonesAfterDelete = await handler
-        .setContextUserId(memberId)
-        .queries.getTodoDones({ getTodoDonesParams });
-
-      expect(TodoDonesAfterDelete.length).toEqual(1);
-      expect(TodoDonesAfterDelete).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: todoDoneId2,
-            memberId,
-            todoId: id,
-            done: createTodoDoneParams2.done.toISOString(),
           }),
         ]),
       );
