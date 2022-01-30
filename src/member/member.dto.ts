@@ -37,6 +37,7 @@ import {
 } from '../common';
 import { Org } from '../org';
 import { User } from '../user';
+import { ISoftDelete } from '../db';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -675,13 +676,6 @@ export class ReadmissionRiskHistory {
 }
 
 /**************************************************************************************************
- ********************************************* Archive ********************************************
- *************************************************************************************************/
-
-@Schema({ versionKey: false, timestamps: true })
-export class ArchiveMember extends Member {}
-
-/**************************************************************************************************
  ********************************************* Control ********************************************
  *************************************************************************************************/
 
@@ -691,9 +685,7 @@ export class ControlMember extends Member {}
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type MemberDocument = Member & Document;
+export type MemberDocument = Member & Document & ISoftDelete<Member>;
 export const MemberDto = SchemaFactory.createForClass(Member);
-export type ArchiveMemberDocument = ArchiveMember & Document;
-export const ArchiveMemberDto = SchemaFactory.createForClass(ArchiveMember);
 export type ControlMemberDocument = ControlMember & Document;
 export const ControlMemberDto = SchemaFactory.createForClass(ControlMember);

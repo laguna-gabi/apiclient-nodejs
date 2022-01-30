@@ -5,6 +5,7 @@ import { IsOptional } from 'class-validator';
 import { Language, Platform } from '@lagunahealth/pandora';
 import { ErrorType, Errors, IsObjectId } from '../../src/common';
 import { defaultMemberParams } from './member.dto';
+import { ISoftDelete } from '../db';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -86,16 +87,7 @@ export class MemberConfig {
 }
 
 /**************************************************************************************************
- ********************************************* Archive ********************************************
- *************************************************************************************************/
-
-@Schema({ versionKey: false, timestamps: true })
-export class ArchiveMemberConfig extends MemberConfig {}
-
-/**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type MemberConfigDocument = MemberConfig & Document;
+export type MemberConfigDocument = MemberConfig & Document & ISoftDelete<MemberConfig>;
 export const MemberConfigDto = SchemaFactory.createForClass(MemberConfig);
-export type ArchiveMemberConfigDocument = ArchiveMemberConfig & Document;
-export const ArchiveMemberConfigDto = SchemaFactory.createForClass(ArchiveMemberConfig);

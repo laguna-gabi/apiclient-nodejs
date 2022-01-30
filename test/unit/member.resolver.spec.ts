@@ -464,14 +464,14 @@ describe('MemberResolver', () => {
   });
 
   describe('archiveMember', () => {
-    let spyOnServiceMoveMemberToArchive;
+    let spyOnServiceArchiveMember;
     let spyOnCognitoServiceDisableMember;
     let spyOnCommunicationFreezeGroupChannel;
     let spyOnOneSignalUnregister;
     let spyOnDeleteSchedules;
 
     beforeEach(() => {
-      spyOnServiceMoveMemberToArchive = jest.spyOn(service, 'moveMemberToArchive');
+      spyOnServiceArchiveMember = jest.spyOn(service, 'archiveMember');
       spyOnCognitoServiceDisableMember = jest.spyOn(cognitoService, 'disableMember');
       spyOnCommunicationFreezeGroupChannel = jest.spyOn(communicationService, 'freezeGroupChannel');
       spyOnOneSignalUnregister = jest.spyOn(oneSignal, 'unregister');
@@ -481,7 +481,7 @@ describe('MemberResolver', () => {
     });
 
     afterEach(() => {
-      spyOnServiceMoveMemberToArchive.mockReset();
+      spyOnServiceArchiveMember.mockReset();
       spyOnCognitoServiceDisableMember.mockReset();
       spyOnCommunicationFreezeGroupChannel.mockReset();
       spyOnOneSignalUnregister.mockReset();
@@ -490,9 +490,10 @@ describe('MemberResolver', () => {
     });
 
     it('should archive a member given an id', async () => {
+      const userId = generateId();
       const member = mockGenerateMember();
       const memberConfig = generateMemberConfig({ memberId: generateObjectId(member.id) });
-      spyOnServiceMoveMemberToArchive.mockImplementationOnce(async () => ({
+      spyOnServiceArchiveMember.mockImplementationOnce(async () => ({
         member,
         memberConfig,
       }));
@@ -500,12 +501,12 @@ describe('MemberResolver', () => {
       spyOnCommunicationFreezeGroupChannel.mockImplementationOnce(() => undefined);
       spyOnOneSignalUnregister.mockImplementationOnce(() => undefined);
 
-      const result = await resolver.archiveMember(member.id);
+      const result = await resolver.archiveMember(userId, member.id);
 
       await delay(300);
 
       expect(result).toBeTruthy();
-      expect(spyOnServiceMoveMemberToArchive).toBeCalledWith(member.id);
+      expect(spyOnServiceArchiveMember).toBeCalledWith(member.id, userId);
       expect(spyOnCognitoServiceDisableMember).toBeCalledWith(member.deviceId);
       expect(spyOnCommunicationFreezeGroupChannel).toBeCalledWith({
         memberId: member.id,

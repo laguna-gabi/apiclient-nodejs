@@ -38,6 +38,8 @@ import {
   Journal,
   JournalDto,
   Member,
+  MemberConfig,
+  MemberConfigDto,
   MemberDto,
   MemberModule,
   MemberRecordingDto,
@@ -52,6 +54,7 @@ import {
 import { Org, OrgDto } from '../../src/org';
 import { User, UserDto } from '../../src/user';
 import {
+  checkDelete,
   compareMembers,
   compareUsers,
   dbConnect,
@@ -87,6 +90,7 @@ describe('MemberService', () => {
   let module: TestingModule;
   let service: MemberService;
   let memberModel: Model<typeof MemberDto>;
+  let memberConfigModel: Model<typeof MemberConfigDto>;
   let controlMemberModel: Model<typeof ControlMemberDto>;
   let modelUser: Model<typeof UserDto>;
   let modelOrg: Model<typeof OrgDto>;
@@ -107,6 +111,7 @@ describe('MemberService', () => {
     mockLogger(module.get<LoggerService>(LoggerService));
 
     memberModel = model(Member.name, MemberDto);
+    memberConfigModel = model(MemberConfig.name, MemberConfigDto);
     controlMemberModel = model(ControlMember.name, ControlMemberDto);
     modelUser = model(User.name, UserDto);
     modelOrg = model(Org.name, OrgDto);
@@ -810,20 +815,54 @@ describe('MemberService', () => {
 
   describe('archive', () => {
     it('should throw an error when trying to archive non existing member', async () => {
-      await expect(service.moveMemberToArchive(generateId())).rejects.toThrow(
+      await expect(service.archiveMember(generateId(), generateId())).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
     });
 
-    /* eslint-disable-next-line max-len */
-    it('should move member and memberConfig from members and memberconfigs collection', async () => {
+    it('should soft delete member & member config', async () => {
       const memberId = await generateMember();
+      const userId = generateId();
       const member = await service.get(memberId);
       const memberConfig = await service.getMemberConfig(memberId);
+      const memberConfigDocument = await memberConfigModel.findOne({
+        memberId,
+      });
 
-      const result = await service.moveMemberToArchive(memberId);
-      expect(result.member).toEqual(member);
-      expect(result.memberConfig).toEqual(memberConfig);
+      const result = await service.archiveMember(memberId, userId);
+      expect(result.member).toEqual(
+        expect.objectContaining({
+          id: member.id,
+          authId: member.authId,
+          firstName: member.firstName,
+          primaryUserId: member.primaryUserId,
+        }),
+      );
+      expect(result.memberConfig).toEqual(
+        expect.objectContaining({
+          memberId: memberConfig.memberId,
+          language: memberConfig.language,
+          platform: memberConfig.platform,
+          externalUserId: memberConfig.externalUserId,
+        }),
+      );
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const memberDeletedResult = await memberModel.findWithDeleted(new Types.ObjectId(memberId));
+      await checkDelete(memberDeletedResult, new Types.ObjectId(memberId), userId);
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const memberConfigDeletedResult = await memberConfigModel.findWithDeleted(
+        memberConfigDocument._id,
+      );
+      await checkDelete(memberConfigDeletedResult, memberConfigDocument._id, userId);
+    });
+
+    it('should not get deleted members on get member and getMemberConfig', async () => {
+      const memberId = await generateMember();
+      await service.archiveMember(memberId, generateId());
 
       await expect(service.get(memberId)).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
       await expect(service.getMemberConfig(memberId)).rejects.toThrow(
@@ -834,7 +873,7 @@ describe('MemberService', () => {
 
   describe('delete', () => {
     it('should throw an error when trying to delete non existing member', async () => {
-      await expect(service.moveMemberToArchive(generateId())).rejects.toThrow(
+      await expect(service.deleteMember(generateId())).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
     });

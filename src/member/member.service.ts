@@ -6,7 +6,7 @@ import * as config from 'config';
 import { add, sub } from 'date-fns';
 import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
-import { NotificationService } from '../../src/services';
+import { NotificationService } from '../services';
 import { v4 } from 'uuid';
 import {
   ActionItem,
@@ -15,10 +15,6 @@ import {
   Alert,
   AlertType,
   AppointmentCompose,
-  ArchiveMember,
-  ArchiveMemberConfig,
-  ArchiveMemberConfigDocument,
-  ArchiveMemberDocument,
   Caregiver,
   CaregiverDocument,
   ControlMember,
@@ -85,10 +81,6 @@ export class MemberService extends BaseService {
     private readonly memberConfigModel: Model<MemberConfigDocument>,
     @InjectModel(Recording.name)
     private readonly recordingModel: Model<RecordingDocument>,
-    @InjectModel(ArchiveMember.name)
-    private readonly archiveMemberModel: Model<ArchiveMemberDocument>,
-    @InjectModel(ArchiveMemberConfig.name)
-    private readonly archiveMemberConfigModel: Model<ArchiveMemberConfigDocument>,
     @InjectModel(ControlMember.name)
     private readonly controlMemberModel: Model<ControlMemberDocument>,
     @InjectModel(Caregiver.name)
@@ -414,16 +406,22 @@ export class MemberService extends BaseService {
     });
   }
 
-  async moveMemberToArchive(id: string): Promise<{ member: Member; memberConfig: MemberConfig }> {
-    this.logger.info({ memberId: id }, MemberService.name, this.moveMemberToArchive.name);
-    const member = await this.get(id);
-    const memberConfig = await this.getMemberConfig(id);
+  async archiveMember(
+    id: string,
+    deletedBy: string,
+  ): Promise<{ member: Member; memberConfig: MemberConfig }> {
+    this.logger.info({ memberId: id }, MemberService.name, this.archiveMember.name);
+    const member = await this.memberModel.findById(id);
+    const memberConfig = await this.memberConfigModel.findOne({
+      memberId: new Types.ObjectId(id),
+    });
 
-    await this.archiveMemberModel.insertMany(member);
-    await this.archiveMemberConfigModel.insertMany(memberConfig);
-    await this.memberModel.deleteOne({ _id: new Types.ObjectId(id) });
-    await this.memberConfigModel.deleteOne({ memberId: new Types.ObjectId(id) });
+    if (!member || !memberConfig) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
 
+    await member.delete(new Types.ObjectId(deletedBy));
+    await memberConfig.delete(new Types.ObjectId(deletedBy));
     return { member, memberConfig };
   }
 
@@ -469,7 +467,7 @@ export class MemberService extends BaseService {
     }
   }
 
-  async getAllControl(): Promise<MemberDocument[]> {
+  async getAllControl(): Promise<ControlMemberDocument[]> {
     return this.controlMemberModel.find().populate({ path: 'org' });
   }
 

@@ -4,10 +4,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import {
   ActionItem,
   ActionItemDto,
-  ArchiveMember,
-  ArchiveMemberConfig,
-  ArchiveMemberConfigDto,
-  ArchiveMemberDto,
   Caregiver,
   CaregiverDto,
   ControlMember,
@@ -46,14 +42,10 @@ import * as mongooseDelete from 'mongoose-delete';
     HttpModule,
     CommonModule,
     MongooseModule.forFeature([
-      { name: Member.name, schema: MemberDto },
       { name: Goal.name, schema: GoalDto },
       { name: ActionItem.name, schema: ActionItemDto },
       { name: Journal.name, schema: JournalDto },
-      { name: MemberConfig.name, schema: MemberConfigDto },
       { name: Recording.name, schema: MemberRecordingDto },
-      { name: ArchiveMember.name, schema: ArchiveMemberDto },
-      { name: ArchiveMemberConfig.name, schema: ArchiveMemberConfigDto },
       { name: ControlMember.name, schema: ControlMemberDto },
       { name: Caregiver.name, schema: CaregiverDto },
       { name: DismissedAlert.name, schema: DismissedAlertDto },
@@ -63,6 +55,18 @@ import * as mongooseDelete from 'mongoose-delete';
         name: Appointment.name,
         useFactory: () => {
           return AppointmentDto.plugin(mongooseDelete, useFactoryOptions);
+        },
+      },
+      {
+        name: Member.name,
+        useFactory: () => {
+          return MemberDto.plugin(mongooseDelete, useFactoryOptions);
+        },
+      },
+      {
+        name: MemberConfig.name,
+        useFactory: () => {
+          return MemberConfigDto.plugin(mongooseDelete, useFactoryOptions);
         },
       },
     ]),

@@ -398,7 +398,9 @@ describe('Integration tests: all', () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org });
 
-      const result = await handler.mutations.archiveMember({ id: member.id });
+      const result = await handler
+        .setContextUserId(generateId())
+        .mutations.archiveMember({ id: member.id });
       expect(result).toBeTruthy();
 
       const memberResult = await handler

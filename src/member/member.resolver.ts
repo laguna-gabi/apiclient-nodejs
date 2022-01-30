@@ -177,8 +177,8 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean)
   @Roles(UserRole.admin)
-  async archiveMember(@Args('id', { type: () => String }) id: string) {
-    const { member, memberConfig } = await this.memberService.moveMemberToArchive(id);
+  async archiveMember(@Client('_id') userId, @Args('id', { type: () => String }) id: string) {
+    const { member, memberConfig } = await this.memberService.archiveMember(id, userId);
     await this.communicationService.freezeGroupChannel({
       memberId: id,
       userId: member.primaryUserId.toString(),
