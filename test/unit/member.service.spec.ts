@@ -777,11 +777,6 @@ describe('MemberService', () => {
       expect(member.org).toEqual(expect.objectContaining(orgParams));
     });
 
-    it('should return null when calling getControl on non existing control member', async () => {
-      const controlMember = await controlMemberModel.findById(generateId());
-      expect(controlMember).toBeNull();
-    });
-
     it('should fail to insert an already existing member', async () => {
       const params = generateInternalCreateMemberParams({ orgId: generateId() });
       await service.insertControl(params);
