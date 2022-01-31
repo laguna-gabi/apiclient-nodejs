@@ -26,7 +26,7 @@ registerEnumType(Relationship, { name: 'Relationship' });
  *************************************************************************************************/
 
 @InputType()
-export class AddCaregiverParams {
+export class BaseCaregiverMutationParams {
   @Field(() => Relationship)
   relationship: Relationship;
 
@@ -45,10 +45,19 @@ export class AddCaregiverParams {
   @IsOptional()
   @IsEmail(undefined, { message: Errors.get(ErrorType.caregiverEmailInvalid) })
   email?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId?: string;
 }
 
 @InputType()
-export class UpdateCaregiverParams extends AddCaregiverParams {
+export class AddCaregiverParams extends BaseCaregiverMutationParams {
+  createdBy: string;
+}
+
+@InputType()
+export class UpdateCaregiverParams extends BaseCaregiverMutationParams {
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.caregiverIdInvalid) })
   id: string;
@@ -84,6 +93,9 @@ export class Caregiver extends Identifier {
   @Prop()
   @Field(() => Relationship)
   relationship: Relationship;
+
+  @Prop({ type: Types.ObjectId })
+  createdBy: Types.ObjectId;
 }
 
 /**************************************************************************************************

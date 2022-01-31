@@ -1418,24 +1418,28 @@ describe('MemberService', () => {
 
     describe('addCaregiver and getCaregiver', () => {
       it('should add a caregiver', async () => {
-        const caregiverParams = generateAddCaregiverParams();
         const memberId = generateId();
-        const { id } = await service.addCaregiver(memberId, caregiverParams);
+        const caregiverParams = generateAddCaregiverParams({ memberId, createdBy: memberId });
+        const { id } = await service.addCaregiver(caregiverParams);
         caregiverId = id;
         const caregiver: any = await service.getCaregiver(id);
 
         expect(service.replaceId(caregiver.toObject())).toMatchObject({
           ...caregiverParams,
           memberId: new Types.ObjectId(memberId),
+          createdBy: new Types.ObjectId(memberId),
           id: new Types.ObjectId(id),
         });
       });
 
       it('should update a caregiver', async () => {
-        const updateCaregiverParams = generateUpdateCaregiverParams({ id: caregiverId });
         const memberId = generateId();
+        const updateCaregiverParams = generateUpdateCaregiverParams({
+          id: caregiverId,
+          memberId,
+        });
 
-        const { id } = await service.updateCaregiver(memberId, updateCaregiverParams);
+        const { id } = await service.updateCaregiver(updateCaregiverParams);
 
         const caregiver: any = await service.getCaregiver(id);
 
@@ -1456,10 +1460,10 @@ describe('MemberService', () => {
       });
 
       it('should get a caregiver by member id', async () => {
-        const updateCaregiverParams = generateUpdateCaregiverParams({ id: caregiverId });
         const memberId = generateId();
+        const updateCaregiverParams = generateUpdateCaregiverParams({ id: caregiverId, memberId });
 
-        const caregiver = await service.updateCaregiver(memberId, updateCaregiverParams);
+        const caregiver = await service.updateCaregiver(updateCaregiverParams);
 
         expect(await service.getCaregiversByMemberId(memberId)).toEqual([caregiver]);
       });

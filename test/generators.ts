@@ -704,8 +704,10 @@ export const generateAddCaregiverParams = ({
   email = faker.internet.email(),
   relationship = Relationship.neighbour,
   phone = '+12133734253',
+  createdBy,
+  memberId,
 }: Partial<AddCaregiverParams> = {}): AddCaregiverParams => {
-  return { firstName, lastName, email, relationship, phone };
+  return { firstName, lastName, email, relationship, phone, createdBy, memberId };
 };
 
 export const generateUpdateCaregiverParams = ({
@@ -715,8 +717,9 @@ export const generateUpdateCaregiverParams = ({
   email = faker.internet.email(),
   relationship = Relationship.neighbour,
   phone = '+12133734253',
+  memberId,
 }: Partial<UpdateCaregiverParams> = {}): UpdateCaregiverParams => {
-  return { id, firstName, lastName, email, relationship, phone };
+  return { id, firstName, lastName, email, relationship, phone, memberId };
 };
 
 export const mockGenerateTodo = ({

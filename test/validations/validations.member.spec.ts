@@ -1032,6 +1032,9 @@ describe('Validations - member', () => {
             ...params.input,
           });
 
+          //TODO: remove when adding the auto 'createdBy'
+          delete addCaregiverParams.createdBy;
+
           await handler.setContextUserId(handler.patientZero.id).mutations.addCaregiver({
             addCaregiverParams,
             ...params.error,

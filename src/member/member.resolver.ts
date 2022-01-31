@@ -702,36 +702,21 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Mutation(() => Caregiver)
-  @Roles(MemberRole.member)
+  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
+  @MemberIdParam(MemberIdParamType.memberId)
+  @UseInterceptors(MemberUserRouteInterceptor)
   async addCaregiver(
-    @Client('_id') memberId,
-    @Client('roles') roles,
+    @Client('_id') createdBy,
     @Args(camelCase(AddCaregiverParams.name), { type: () => AddCaregiverParams })
     addCaregiverParams: AddCaregiverParams,
   ): Promise<Caregiver> {
-    if (!roles.includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
-    }
-
-    return this.memberService.addCaregiver(memberId, addCaregiverParams);
+    return this.memberService.addCaregiver({ ...addCaregiverParams, createdBy });
   }
 
   @Mutation(() => Boolean)
-  @Roles(MemberRole.member)
-  async deleteCaregiver(
-    @Client('_id') memberId,
-    @Client('roles') roles,
-    @Args('id', { type: () => String }) id: string,
-  ): Promise<boolean | never> {
-    if (!roles.includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
-    }
-
-    // only allow a member to delete his own caregiver records
+  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
+  async deleteCaregiver(@Args('id', { type: () => String }) id: string): Promise<boolean | never> {
     const caregiver = await this.memberService.getCaregiver(id);
-    if (caregiver && caregiver.memberId.toString() != memberId) {
-      throw new Error(Errors.get(ErrorType.caregiverDeleteNotAllowed));
-    }
 
     if (caregiver) {
       await this.memberService.deleteCaregiver(id);
@@ -741,18 +726,14 @@ export class MemberResolver extends MemberBase {
   }
 
   @Mutation(() => Caregiver)
-  @Roles(MemberRole.member)
+  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
+  @MemberIdParam(MemberIdParamType.memberId)
+  @UseInterceptors(MemberUserRouteInterceptor)
   async updateCaregiver(
-    @Client('_id') memberId,
-    @Client('roles') roles,
     @Args(camelCase(UpdateCaregiverParams.name), { type: () => UpdateCaregiverParams })
     updateCaregiverParams: UpdateCaregiverParams,
   ): Promise<Caregiver> {
-    if (!roles.includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
-    }
-
-    return await this.memberService.updateCaregiver(memberId, updateCaregiverParams);
+    return this.memberService.updateCaregiver(updateCaregiverParams);
   }
 
   @Query(() => [Caregiver])

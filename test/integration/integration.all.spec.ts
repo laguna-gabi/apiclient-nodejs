@@ -1265,7 +1265,9 @@ describe('Integration tests: all', () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org });
       // Add:
-      const addCaregiverParams = generateAddCaregiverParams();
+      const addCaregiverParams = generateAddCaregiverParams({ memberId: member.id });
+      delete addCaregiverParams.createdBy;
+
       const caregiver = await handler
         .setContextUserId(member.id)
         .mutations.addCaregiver({ addCaregiverParams });
@@ -1282,6 +1284,7 @@ describe('Integration tests: all', () => {
       // Update:
       const updateCaregiverParams = generateUpdateCaregiverParams({
         id: persistedCaregivers[0].id,
+        memberId: member.id,
       });
 
       const updatedCaregiver = await handler.setContextUserId(member.id).mutations.updateCaregiver({

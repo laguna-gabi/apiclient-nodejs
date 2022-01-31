@@ -838,11 +838,12 @@ export class MemberService extends BaseService {
    ******************************************* Caregivers ******************************************
    ************************************************************************************************/
 
-  async addCaregiver(memberId: string, addCaregiverParams: AddCaregiverParams): Promise<Caregiver> {
+  async addCaregiver(addCaregiverParams: AddCaregiverParams): Promise<Caregiver> {
     return this.replaceId(
       await this.caregiverModel.create({
         ...addCaregiverParams,
-        memberId: new Types.ObjectId(memberId),
+        memberId: new Types.ObjectId(addCaregiverParams.memberId),
+        createdBy: new Types.ObjectId(addCaregiverParams.createdBy),
       }),
     );
   }
@@ -855,19 +856,22 @@ export class MemberService extends BaseService {
     return this.caregiverModel.findOne({ _id: new Types.ObjectId(id) });
   }
 
-  async updateCaregiver(
-    memberId: string,
-    updateCaregiverParams: UpdateCaregiverParams,
-  ): Promise<Caregiver> {
+  async updateCaregiver(updateCaregiverParams: UpdateCaregiverParams): Promise<Caregiver> {
     return this.caregiverModel.findOneAndUpdate(
       { _id: new Types.ObjectId(updateCaregiverParams.id) },
-      { $set: { ...updateCaregiverParams, memberId: new Types.ObjectId(memberId) } },
+      {
+        $set: {
+          ...updateCaregiverParams,
+          memberId: new Types.ObjectId(updateCaregiverParams.memberId),
+        },
+      },
       { upsert: true, new: true },
     );
   }
 
   async getCaregiversByMemberId(memberId: string): Promise<Caregiver[]> {
-    return this.caregiverModel.find({ memberId: new Types.ObjectId(memberId) });
+    const res = await this.caregiverModel.find({ memberId: new Types.ObjectId(memberId) });
+    return res;
   }
 
   /*************************************************************************************************
