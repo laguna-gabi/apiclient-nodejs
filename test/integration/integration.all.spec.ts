@@ -28,6 +28,7 @@ import {
   CreateTodoDoneParams,
   CreateTodoParams,
   EndAndCreateTodoParams,
+  Label,
   TodoStatus,
 } from '../../src/todo';
 import { User, defaultSlotsParams } from '../../src/user';
@@ -1563,6 +1564,62 @@ describe('Integration tests: all', () => {
             status: TodoStatus.ended,
             createdBy: memberId,
             updatedBy: memberId,
+          }),
+        ]),
+      );
+    });
+
+    it('should create requested todo and approve it', async () => {
+      const user = await creators.createAndValidateUser([UserRole.coach]);
+      const userId = user.id;
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId = member.id;
+
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+        label: Label.MEDS,
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      const { id } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.createTodo({
+          createTodoParams,
+        });
+
+      const todos = await handler.setContextUserId(memberId).queries.getTodos({ memberId });
+      expect(todos.length).toEqual(1);
+      expect(todos).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...createTodoParams,
+            id,
+            start: createTodoParams.start.toISOString(),
+            end: createTodoParams.end.toISOString(),
+            status: TodoStatus.requested,
+            createdBy: userId,
+            updatedBy: userId,
+          }),
+        ]),
+      );
+
+      await handler.setContextUserId(memberId).mutations.approveTodo({ id });
+
+      const todosAfterApproving = await handler
+        .setContextUserId(memberId)
+        .queries.getTodos({ memberId });
+      expect(todosAfterApproving).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...createTodoParams,
+            id,
+            start: createTodoParams.start.toISOString(),
+            end: createTodoParams.end.toISOString(),
+            status: TodoStatus.active,
+            createdBy: userId,
+            updatedBy: userId,
           }),
         ]),
       );

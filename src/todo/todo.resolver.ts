@@ -5,10 +5,13 @@ import {
   CreateTodoDoneParams,
   CreateTodoParams,
   EndAndCreateTodoParams,
+  ExtraTodoParams,
   GetTodoDonesParams,
+  Label,
   Todo,
   TodoDone,
   TodoService,
+  TodoStatus,
 } from '.';
 import {
   Client,
@@ -20,6 +23,7 @@ import {
   MemberIdParamType,
   MemberRole,
   MemberUserRouteInterceptor,
+  RoleTypes,
   Roles,
   UserRole,
 } from '../common';
@@ -34,11 +38,14 @@ export class TodoResolver {
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(UserRole.coach, UserRole.nurse, MemberRole.member)
   async createTodo(
+    @Client('roles') roles,
     @Client('_id') clientId,
     @Args(camelCase(CreateTodoParams.name)) createTodoParams: CreateTodoParams,
   ) {
+    const status = this.getTodoStatus(createTodoParams, roles);
     return this.todoService.createTodo({
       ...createTodoParams,
+      status,
       createdBy: clientId,
       updatedBy: clientId,
     });
@@ -57,10 +64,16 @@ export class TodoResolver {
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(UserRole.coach, UserRole.nurse, MemberRole.member)
   async endAndCreateTodo(
+    @Client('roles') roles,
     @Client('_id') clientId,
     @Args(camelCase(EndAndCreateTodoParams.name)) endAndCreateTodoParams: EndAndCreateTodoParams,
   ) {
-    return this.todoService.endAndCreateTodo({ ...endAndCreateTodoParams, updatedBy: clientId });
+    const status = this.getTodoStatus(endAndCreateTodoParams, roles);
+    return this.todoService.endAndCreateTodo({
+      ...endAndCreateTodoParams,
+      status,
+      updatedBy: clientId,
+    });
   }
 
   @Mutation(() => Boolean)
@@ -74,6 +87,19 @@ export class TodoResolver {
       await this.todoService.getTodo(id, clientId);
     }
     return this.todoService.endTodo(id, clientId);
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(MemberRole.member)
+  async approveTodo(
+    @Client('roles') roles,
+    @Client('_id') memberId,
+    @Args('id', { type: () => String }) id: string,
+  ) {
+    if (!roles.includes(MemberRole.member)) {
+      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
+    }
+    return this.todoService.approveTodo(id, memberId);
   }
 
   @Mutation(() => Identifier)
@@ -111,5 +137,16 @@ export class TodoResolver {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
     return this.todoService.deleteTodoDone(id, memberId);
+  }
+
+  /*************************************************************************************************
+   ******************************************** Helpers ********************************************
+   ************************************************************************************************/
+
+  private getTodoStatus(params: ExtraTodoParams, roles: RoleTypes): TodoStatus {
+    return (roles.includes(UserRole.coach) || roles.includes(UserRole.nurse)) &&
+      params.label === Label.MEDS
+      ? TodoStatus.requested
+      : TodoStatus.active;
   }
 }

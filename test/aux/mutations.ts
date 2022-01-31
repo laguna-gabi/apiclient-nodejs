@@ -11,6 +11,7 @@ import {
   UpdateNotesParams,
 } from '../../src/appointment';
 import { AvailabilityInput } from '../../src/availability';
+import { CreateRedFlagParams } from '../../src/care';
 import {
   Identifier,
   Identifiers,
@@ -47,7 +48,6 @@ import {
   Todo,
 } from '../../src/todo';
 import { CreateUserParams } from '../../src/user';
-import { CreateRedFlagParams } from '../../src/care';
 
 const FRAGMENT_APPOINTMENT = gql`
   fragment appointmentFragment on Appointment {
@@ -1190,6 +1190,29 @@ export class Mutations {
     return isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.endTodo;
   };
 
+  approveTodo = async ({
+    id,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    id;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<boolean> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id },
+      mutation: gql`
+        mutation approveTodo($id: String!) {
+          approveTodo(id: $id)
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.approveTodo
+    );
+  };
+
   createTodoDone = async ({
     createTodoDoneParams,
     missingFieldError,
@@ -1213,6 +1236,30 @@ export class Mutations {
     return (
       isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
       result.data.createTodoDone
+    );
+  };
+
+  deleteTodoDone = async ({
+    id,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    id;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<boolean> => {
+    const result = await this.apolloClient.mutate({
+      variables: { id },
+      mutation: gql`
+        mutation deleteTodoDone($id: String!) {
+          deleteTodoDone(id: $id)
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.deleteTodoDone
     );
   };
 
@@ -1258,29 +1305,5 @@ export class Mutations {
     });
 
     return isResultValid({ result, invalidFieldsErrors }) && result.data.deleteRedFlag;
-  };
-
-  deleteTodoDone = async ({
-    id,
-    missingFieldError,
-    invalidFieldsErrors,
-  }: {
-    id;
-    missingFieldError?: string;
-    invalidFieldsErrors?: string[];
-  }): Promise<boolean> => {
-    const result = await this.apolloClient.mutate({
-      variables: { id },
-      mutation: gql`
-        mutation deleteTodoDone($id: String!) {
-          deleteTodoDone(id: $id)
-        }
-      `,
-    });
-
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.deleteTodoDone
-    );
   };
 }

@@ -9,6 +9,7 @@ import {
   CreateTodoDoneParams,
   CreateTodoParams,
   EndAndCreateTodoParams,
+  Label,
   Todo,
   TodoDone,
   TodoDoneDto,
@@ -344,6 +345,73 @@ describe('TodoService', () => {
     });
   });
 
+  describe('approveTodo', () => {
+    it('should approve todo', async () => {
+      const memberId = generateId();
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+        label: Label.MEDS,
+        createdBy: memberId,
+        updatedBy: memberId,
+      });
+      createTodoParams.status = TodoStatus.requested;
+
+      const { id: todoId } = await service.createTodo(createTodoParams);
+
+      let createdTodo = await todoModel.findById(todoId).lean();
+      expect(createdTodo).toEqual(
+        expect.objectContaining({
+          ...createTodoParams,
+          _id: todoId,
+          memberId: generateObjectId(memberId),
+          status: TodoStatus.requested,
+          createdBy: generateObjectId(memberId),
+          updatedBy: generateObjectId(memberId),
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        }),
+      );
+
+      const result = await service.approveTodo(todoId, memberId);
+      expect(result).toBeTruthy();
+
+      createdTodo = await todoModel.findById(todoId).lean();
+      expect(createdTodo).toEqual(
+        expect.objectContaining({
+          ...createTodoParams,
+          _id: todoId,
+          memberId: generateObjectId(memberId),
+          status: TodoStatus.active,
+          createdBy: generateObjectId(memberId),
+          updatedBy: generateObjectId(memberId),
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        }),
+      );
+    });
+
+    it('should fail if todo does not exists', async () => {
+      await expect(service.approveTodo(generateId(), generateId())).rejects.toThrow(
+        Errors.get(ErrorType.todoNotFoundOrApproveNotRequested),
+      );
+    });
+
+    it('should fail if status is not requested', async () => {
+      const memberId = generateId();
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+        createdBy: memberId,
+        updatedBy: memberId,
+      });
+
+      const { id: todoId } = await service.createTodo(createTodoParams);
+
+      await expect(service.approveTodo(todoId, memberId)).rejects.toThrow(
+        Errors.get(ErrorType.todoNotFoundOrApproveNotRequested),
+      );
+    });
+  });
+
   describe('createTodoDone', () => {
     it('should create TodoDone', async () => {
       const memberId = generateId();
@@ -381,26 +449,29 @@ describe('TodoService', () => {
       );
     });
 
-    it(`should throw an error if status=${TodoStatus.ended}`, async () => {
-      const memberId = generateId();
-      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
-        memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
-      });
+    test.each([TodoStatus.ended, TodoStatus.requested])(
+      `should throw an error if status=%p`,
+      async (status) => {
+        const memberId = generateId();
+        const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+          memberId,
+          createdBy: memberId,
+          updatedBy: memberId,
+        });
 
-      const { id: todoId } = await service.createTodo(createTodoParams);
-      await service.endTodo(todoId, memberId);
+        const { id: todoId } = await service.createTodo(createTodoParams);
+        await todoModel.findOneAndUpdate({ _id: generateObjectId(todoId) }, { $set: { status } });
 
-      const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
-        todoId,
-        memberId,
-      });
+        const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
+          todoId,
+          memberId,
+        });
 
-      await expect(service.createTodoDone(createTodoDoneParams)).rejects.toThrow(
-        Errors.get(ErrorType.todoEndedCreateDone),
-      );
-    });
+        await expect(service.createTodoDone(createTodoDoneParams)).rejects.toThrow(
+          Errors.get(ErrorType.todoCreateDoneStatus),
+        );
+      },
+    );
 
     it(`if unscheduled todo should change status to ${TodoStatus.ended}`, async () => {
       const memberId = generateId();
@@ -567,7 +638,7 @@ describe('TodoService', () => {
       await service.endTodo(todoId, memberId);
 
       await expect(service.deleteTodoDone(todoDoneId, memberId)).rejects.toThrow(
-        Errors.get(ErrorType.todoEndedCreateDone),
+        Errors.get(ErrorType.todoDeleteDoneStatus),
       );
     });
 

@@ -21,6 +21,7 @@ export const NotNullableTodoKeys = ['label', 'end'];
 export enum TodoStatus {
   active = 'active',
   ended = 'ended',
+  requested = 'requested',
 }
 
 registerEnumType(TodoStatus, { name: 'TodoStatus' });
@@ -63,6 +64,8 @@ export class ExtraTodoParams {
     message: Errors.get(ErrorType.todoEndAfterStart),
   })
   end?: Date;
+
+  status?: TodoStatus;
 
   updatedBy: string;
 }

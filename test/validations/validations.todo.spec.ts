@@ -236,6 +236,12 @@ describe('Validations - todo', () => {
     });
   });
 
+  describe('approveTodo', () => {
+    it('should fail to approve Todo since id is not a valid', async () => {
+      await handler.mutations.approveTodo({ id: 123, missingFieldError: stringError });
+    });
+  });
+
   describe('createTodoDone', () => {
     /* eslint-disable max-len */
     test.each`

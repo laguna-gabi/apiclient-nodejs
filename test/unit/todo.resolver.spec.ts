@@ -5,9 +5,11 @@ import {
   CreateTodoDoneParams,
   CreateTodoParams,
   EndAndCreateTodoParams,
+  Label,
   TodoModule,
   TodoResolver,
   TodoService,
+  TodoStatus,
 } from '../../src/todo';
 import {
   dbDisconnect,
@@ -63,16 +65,16 @@ describe('TodoResolver', () => {
       spyOnServiceCreateTodo.mockImplementationOnce(async () => id);
       const params: CreateTodoParams = generateCreateTodoParams();
 
-      const result = await resolver.createTodo(memberId, params);
+      const result = await resolver.createTodo([MemberRole.member], memberId, params);
 
       params.createdBy = memberId;
       params.updatedBy = memberId;
 
-      expect(spyOnServiceCreateTodo).toHaveBeenCalledWith(params);
+      expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({ ...params, status: TodoStatus.active });
       expect(result).toEqual(id);
     });
 
-    it('should create a Todo by user', async () => {
+    test.each([UserRole.coach, UserRole.coach])('should create a Todo by user', async (role) => {
       const member = mockGenerateMember();
       const memberId = member.id;
       const user = mockGenerateUser();
@@ -80,15 +82,40 @@ describe('TodoResolver', () => {
       const id = generateId();
       spyOnServiceCreateTodo.mockImplementationOnce(async () => id);
       const params: CreateTodoParams = generateCreateTodoParams({ memberId });
+      delete params.label;
 
-      const result = await resolver.createTodo(userId, params);
+      const result = await resolver.createTodo([role], userId, params);
 
       params.createdBy = userId;
       params.updatedBy = userId;
 
-      expect(spyOnServiceCreateTodo).toHaveBeenCalledWith(params);
+      expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({ ...params, status: TodoStatus.active });
       expect(result).toEqual(id);
     });
+
+    test.each([UserRole.coach, UserRole.coach])(
+      `should create a Todo by user in status requested if label ${Label.MEDS}`,
+      async (role) => {
+        const member = mockGenerateMember();
+        const memberId = member.id;
+        const user = mockGenerateUser();
+        const userId = user.id;
+        const id = generateId();
+        spyOnServiceCreateTodo.mockImplementationOnce(async () => id);
+        const params: CreateTodoParams = generateCreateTodoParams({ memberId, label: Label.MEDS });
+        params.label = Label.MEDS;
+
+        const result = await resolver.createTodo([role], userId, params);
+
+        params.createdBy = userId;
+        params.updatedBy = userId;
+        expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({
+          ...params,
+          status: TodoStatus.requested,
+        });
+        expect(result).toEqual(id);
+      },
+    );
   });
 
   describe('getTodos', () => {
@@ -148,34 +175,69 @@ describe('TodoResolver', () => {
       spyOnServiceEndAndCreateTodo.mockImplementationOnce(async () => newTodo);
       const params: EndAndCreateTodoParams = generateEndAndCreateTodoParams();
 
-      const result = await resolver.endAndCreateTodo(memberId, params);
+      const result = await resolver.endAndCreateTodo([MemberRole.member], memberId, params);
 
       params.updatedBy = memberId;
 
-      expect(spyOnServiceEndAndCreateTodo).toHaveBeenCalledWith(params);
-      expect(result).toEqual(newTodo);
-    });
-
-    it('should end and create Todo by user', async () => {
-      const member = mockGenerateMember();
-      const memberId = member.id;
-      const user = mockGenerateUser();
-      const userId = user.id;
-      const newTodo = mockGenerateTodo({
-        memberId: generateObjectId(memberId),
-        createdBy: generateObjectId(memberId),
-        updatedBy: generateObjectId(memberId),
+      expect(spyOnServiceEndAndCreateTodo).toHaveBeenCalledWith({
+        ...params,
+        status: TodoStatus.active,
       });
-      spyOnServiceEndAndCreateTodo.mockImplementationOnce(async () => newTodo);
-      const params: EndAndCreateTodoParams = generateEndAndCreateTodoParams({ memberId });
-
-      const result = await resolver.endAndCreateTodo(userId, params);
-
-      params.updatedBy = userId;
-
-      expect(spyOnServiceEndAndCreateTodo).toHaveBeenCalledWith(params);
       expect(result).toEqual(newTodo);
     });
+
+    test.each([UserRole.coach, UserRole.coach])(
+      'should end and create Todo by user',
+      async (role) => {
+        const memberId = generateId();
+        const userId = generateId();
+        const newTodo = mockGenerateTodo({
+          memberId: generateObjectId(memberId),
+          createdBy: generateObjectId(memberId),
+          updatedBy: generateObjectId(memberId),
+        });
+        spyOnServiceEndAndCreateTodo.mockImplementationOnce(async () => newTodo);
+        const params: EndAndCreateTodoParams = generateEndAndCreateTodoParams({ memberId });
+        delete params.label;
+
+        const result = await resolver.endAndCreateTodo([role], userId, params);
+
+        params.updatedBy = userId;
+
+        expect(spyOnServiceEndAndCreateTodo).toHaveBeenCalledWith({
+          ...params,
+          status: TodoStatus.active,
+        });
+        expect(result).toEqual(newTodo);
+      },
+    );
+
+    test.each([UserRole.coach, UserRole.coach])(
+      `should end and create Todo by user in status requested if label ${Label.MEDS}`,
+      async (role) => {
+        const memberId = generateId();
+        const userId = generateId();
+        const newTodo = mockGenerateTodo({
+          memberId: generateObjectId(memberId),
+          createdBy: generateObjectId(memberId),
+          updatedBy: generateObjectId(memberId),
+        });
+        spyOnServiceEndAndCreateTodo.mockImplementationOnce(async () => newTodo);
+        const params: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+          memberId,
+          label: Label.MEDS,
+        });
+
+        const result = await resolver.endAndCreateTodo([role], userId, params);
+
+        params.updatedBy = userId;
+        expect(spyOnServiceEndAndCreateTodo).toHaveBeenCalledWith({
+          ...params,
+          status: TodoStatus.requested,
+        });
+        expect(result).toEqual(newTodo);
+      },
+    );
   });
 
   describe('endTodo', () => {
@@ -222,6 +284,39 @@ describe('TodoResolver', () => {
       expect(spyOnServiceEndTodo).toHaveBeenCalledWith(id, userId);
       expect(result).toBeTruthy();
     });
+  });
+
+  describe('approveTodo', () => {
+    let spyOnServiceApproveTodo;
+
+    beforeEach(() => {
+      spyOnServiceApproveTodo = jest.spyOn(service, 'approveTodo');
+    });
+
+    afterEach(() => {
+      spyOnServiceApproveTodo.mockReset();
+    });
+
+    it('should approve Todo', async () => {
+      const memberId = generateId();
+      const id = generateId();
+
+      spyOnServiceApproveTodo.mockImplementationOnce(async () => true);
+
+      const result = await resolver.approveTodo([MemberRole.member], memberId, id);
+
+      expect(spyOnServiceApproveTodo).toHaveBeenCalledWith(id, memberId);
+      expect(result).toBeTruthy();
+    });
+
+    test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
+      'should throw an error on approve todo if role = %p',
+      async (role) => {
+        await expect(resolver.approveTodo([role], generateId(), generateId())).rejects.toThrow(
+          Error(Errors.get(ErrorType.memberAllowedOnly)),
+        );
+      },
+    );
   });
 
   describe('createTodoDone', () => {

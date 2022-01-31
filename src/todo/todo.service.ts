@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { cloneDeep } from 'lodash';
 import { Model, Types } from 'mongoose';
 import {
   CreateTodoDoneParams,
@@ -58,9 +57,7 @@ export class TodoService extends BaseService {
 
   async endAndCreateTodo(endAndCreateTodoParams: EndAndCreateTodoParams): Promise<Todo> {
     this.removeNotNullable(endAndCreateTodoParams, NotNullableTodoKeys);
-    const { memberId, id, updatedBy } = endAndCreateTodoParams;
-    const params = cloneDeep(endAndCreateTodoParams);
-    delete params.id;
+    const { memberId, id, updatedBy, ...params } = endAndCreateTodoParams;
 
     const endedTodo = await this.todoModel.findOne({
       _id: new Types.ObjectId(id),
@@ -113,6 +110,23 @@ export class TodoService extends BaseService {
     return true;
   }
 
+  async approveTodo(id: string, memberId: string): Promise<boolean> {
+    const todo = await this.todoModel.findOneAndUpdate(
+      {
+        _id: new Types.ObjectId(id),
+        memberId: new Types.ObjectId(memberId),
+        status: TodoStatus.requested,
+      },
+      { $set: { status: TodoStatus.active } },
+    );
+
+    if (!todo) {
+      throw new Error(Errors.get(ErrorType.todoNotFoundOrApproveNotRequested));
+    }
+
+    return true;
+  }
+
   async createTodoDone(createTodoDoneParams: CreateTodoDoneParams): Promise<Identifier> {
     const { todoId, memberId } = createTodoDoneParams;
     const todo = await this.todoModel.findOne({
@@ -124,8 +138,8 @@ export class TodoService extends BaseService {
       throw new Error(Errors.get(ErrorType.todoNotFound));
     }
 
-    if (todo.status === TodoStatus.ended) {
-      throw new Error(Errors.get(ErrorType.todoEndedCreateDone));
+    if (todo.status === TodoStatus.ended || todo.status === TodoStatus.requested) {
+      throw new Error(Errors.get(ErrorType.todoCreateDoneStatus));
     }
 
     if (this.isUnscheduled(todo)) {
@@ -173,7 +187,7 @@ export class TodoService extends BaseService {
           },
         });
       } else {
-        throw new Error(Errors.get(ErrorType.todoEndedCreateDone));
+        throw new Error(Errors.get(ErrorType.todoDeleteDoneStatus));
       }
     }
 
@@ -181,6 +195,7 @@ export class TodoService extends BaseService {
 
     return true;
   }
+
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
