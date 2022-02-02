@@ -313,6 +313,8 @@ export const generateUpdateMemberParams = ({
   honorific = Honorific.mr,
   deviceId = faker.datatype.uuid(),
   readmissionRisk = ReadmissionRisk.medium,
+  healthPlan = faker.datatype.string(10),
+  preferredGenderPronoun = faker.datatype.string(10),
 }: Partial<UpdateMemberParams> = {}): UpdateMemberParams => {
   return {
     id,
@@ -333,6 +335,8 @@ export const generateUpdateMemberParams = ({
     honorific,
     deviceId,
     readmissionRisk,
+    healthPlan,
+    preferredGenderPronoun,
   };
 };
 

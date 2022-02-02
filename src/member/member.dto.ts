@@ -161,6 +161,16 @@ export class ExtraMemberParams {
   @IsEnum(Ethnicity) /* for rest api */
   @IsOptional()
   ethnicity?: Ethnicity;
+
+  @Field(() => String, { nullable: true })
+  @IsString() /* for rest api */
+  @IsOptional()
+  healthPlan?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsString() /* for rest api */
+  @IsOptional()
+  preferredGenderPronoun?: string;
 }
 
 @InputType()
@@ -586,6 +596,14 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => [ReadmissionRiskHistory], { nullable: true })
   readmissionRiskHistory?: ReadmissionRiskHistory[];
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  healthPlan?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  preferredGenderPronoun?: string;
 }
 
 @ObjectType()
