@@ -20,6 +20,7 @@ import { ServiceModule } from './services';
 import { TodoModule } from './todo';
 import { UserModule } from './user';
 import { CareModule } from './care';
+import { QuestionnaireModule } from './questionnaire';
 
 const badRequestException = 'Bad Request Exception';
 
@@ -39,6 +40,7 @@ const badRequestException = 'Bad Request Exception';
     DbModule,
     TerminusModule,
     CareModule,
+    QuestionnaireModule,
     EventEmitterModule.forRoot(),
     GraphQLModule.forRoot({
       autoSchemaFile: 'schema.gql',

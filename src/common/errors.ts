@@ -119,6 +119,10 @@ export enum ErrorType {
   carePlanNotFound = 10105,
   redFlagNotFound = 10106,
   carePlanTypeOrCustomInvalid = 10107,
+
+  // Module Questionnaire
+  questionnaireItemsDuplicateCode = 10201,
+  questionnaireItemMissingOptionsCode = 10202,
 }
 
 const nameFormat = `name must be between ${graphqlConfig.get('minLength')} and ${graphqlConfig.get(
@@ -283,6 +287,14 @@ export const Errors: Map<ErrorType, string> = new Map([
   [
     ErrorType.carePlanTypeOrCustomInvalid.valueOf(),
     'must be either carePlanType or customValue, not both',
+  ],
+  [
+    ErrorType.questionnaireItemsDuplicateCode.valueOf(),
+    'invalid questionnaire items list - item code values are not unique',
+  ],
+  [
+    ErrorType.questionnaireItemMissingOptionsCode.valueOf(),
+    'invalid questionnaire items list - missing option code for `choice` type items',
   ],
   [ErrorType.redFlagNotFound.valueOf(), 'red flag id was not found'],
 ]);

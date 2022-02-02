@@ -3,6 +3,7 @@ import * as config from 'config';
 import { general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
 import * as faker from 'faker';
+import { CreateQuestionnaireParams } from '../../src/questionnaire';
 import { v4 } from 'uuid';
 import {
   Appointment,
@@ -37,6 +38,7 @@ import {
   generateAddCaregiverParams,
   generateAppointmentLink,
   generateAvailabilityInput,
+  generateCreateQuestionnaireParams,
   generateCreateRedFlagParams,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
@@ -1712,6 +1714,27 @@ describe('Integration tests: all', () => {
         .queries.getMemberRedFlags({ memberId });
       expect(redFlagsAfter.length).toEqual(1);
       expect(redFlagsAfter[0].id).toEqual(id2);
+    });
+  });
+
+  describe('Questionnaire', () => {
+    it('should create and get questionnaires', async () => {
+      const { id: userId } = await creators.createAndValidateUser([UserRole.admin]);
+      const createQuestionnaireParams: CreateQuestionnaireParams =
+        generateCreateQuestionnaireParams();
+
+      const { id } = await handler
+        .setContextUserId(userId, '', [UserRole.admin])
+        .mutations.createQuestionnaire({
+          createQuestionnaireParams,
+        });
+
+      const questionnaires = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .queries.getQuestionnaires();
+
+      expect(questionnaires.length).toBeGreaterThanOrEqual(1);
+      expect(questionnaires.find((questionnaire) => questionnaire.id === id)).toBeTruthy();
     });
   });
 

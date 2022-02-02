@@ -11,7 +11,6 @@ import {
   UpdateNotesParams,
 } from '../../src/appointment';
 import { AvailabilityInput } from '../../src/availability';
-import { CreateRedFlagParams } from '../../src/care';
 import {
   Identifier,
   Identifiers,
@@ -48,6 +47,8 @@ import {
   Todo,
 } from '../../src/todo';
 import { CreateUserParams } from '../../src/user';
+import { CreateRedFlagParams } from '../../src/care';
+import { CreateQuestionnaireParams } from '../../src/questionnaire';
 
 const FRAGMENT_APPOINTMENT = gql`
   fragment appointmentFragment on Appointment {
@@ -1285,6 +1286,32 @@ export class Mutations {
 
     return (
       isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createRedFlag
+    );
+  };
+
+  createQuestionnaire = async ({
+    createQuestionnaireParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    createQuestionnaireParams: CreateQuestionnaireParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Identifier> => {
+    const result = await this.apolloClient.mutate({
+      variables: { createQuestionnaireParams },
+      mutation: gql`
+        mutation createQuestionnaire($createQuestionnaireParams: CreateQuestionnaireParams!) {
+          createQuestionnaire(createQuestionnaireParams: $createQuestionnaireParams) {
+            id
+          }
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.createQuestionnaire
     );
   };
 

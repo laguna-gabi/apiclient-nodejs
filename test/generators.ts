@@ -28,7 +28,7 @@ import {
   UpdateNotesParams,
 } from '../src/appointment';
 import { AvailabilityInput } from '../src/availability';
-import { MemberRole, RoleTypes, UserRole, reformatDate } from '../src/common';
+import { ItemType, MemberRole, RoleTypes, UserRole, reformatDate } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import { DailyReport } from '../src/dailyReport';
 import {
@@ -86,6 +86,12 @@ import {
   UpdateBarrierParams,
   UpdateCarePlanParams,
 } from '../src/care';
+import {
+  CreateQuestionnaireParams,
+  Item,
+  Questionnaire,
+  QuestionnaireType,
+} from '../src/questionnaire';
 export const generateCreateUserParams = ({
   authId = v4(),
   roles = [UserRole.coach],
@@ -905,6 +911,59 @@ export const generateUpdateCarePlanParams = ({
     id,
     notes,
     status,
+  };
+};
+
+export const mockGenerateQuestionnaireItem = ({
+  code = faker.lorem.word(),
+  name = faker.lorem.words(5),
+  type = ItemType[randomEnum(ItemType)],
+  order = 1,
+  required = true,
+  options = type === ItemType.choice
+    ? [
+        { name: faker.lorem.words(3), value: 0 },
+        { name: faker.lorem.words(3), value: 1 },
+      ]
+    : undefined,
+  items = type === ItemType.group ? mockGenerateQuestionnaireItem() : undefined,
+}: Partial<Item> = {}): Item => {
+  return {
+    code,
+    name,
+    type,
+    order,
+    required,
+    options,
+    items,
+  };
+};
+
+export const mockGenerateQuestionnaire = ({
+  id = generateId(),
+  name = faker.lorem.words(3),
+  type = QuestionnaireType[randomEnum(QuestionnaireType)],
+  active = true,
+  items = mockGenerateQuestionnaireItem(),
+}: Partial<Questionnaire> = {}): Questionnaire => {
+  return {
+    id,
+    name,
+    type,
+    active,
+    items,
+  };
+};
+
+export const generateCreateQuestionnaireParams = ({
+  name = faker.lorem.words(3),
+  type = QuestionnaireType[randomEnum(QuestionnaireType)],
+  items = [mockGenerateQuestionnaireItem()],
+}: Partial<CreateQuestionnaireParams> = {}): CreateQuestionnaireParams => {
+  return {
+    name,
+    type,
+    items,
   };
 };
 

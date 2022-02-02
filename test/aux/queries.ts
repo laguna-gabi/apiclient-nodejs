@@ -15,6 +15,7 @@ import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
 import { GetSlotsParams } from '../../src/user';
 import { Dispatch } from '../../src/services';
 import { RedFlag } from '../../src/care';
+import { Questionnaire } from '../../src/questionnaire';
 
 export class Queries {
   constructor(private readonly apolloClient: ApolloServerTestClient) {}
@@ -918,5 +919,42 @@ export class Queries {
     } else {
       return result.data.getMemberRedFlags;
     }
+  };
+
+  getQuestionnaires = async (): Promise<Questionnaire[]> => {
+    const result = await this.apolloClient.query({
+      query: gql`
+        query getQuestionnaires {
+          getQuestionnaires {
+            id
+            name
+            type
+            active
+            items {
+              name
+              code
+              type
+              order
+              options {
+                name
+                value
+              }
+              items {
+                name
+                code
+                type
+                order
+                options {
+                  name
+                  value
+                }
+              }
+            }
+          }
+        }
+      `,
+    });
+
+    return result.data.getQuestionnaires;
   };
 }

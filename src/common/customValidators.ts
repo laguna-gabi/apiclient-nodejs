@@ -6,6 +6,7 @@ import { differenceInMilliseconds } from 'date-fns';
 import { isNil } from 'lodash';
 import { Types as MongooseTypes } from 'mongoose';
 import { lookup } from 'zipcode-to-timezone';
+import { ItemInterface, ItemType } from '.';
 
 /**
  * When there are 2 params of dates, and we want to make sure that one param is
@@ -126,6 +127,36 @@ export function IsValidZipCode(options: ValidationOptions) {
       validator: {
         validate(zipCode) {
           return lookup(zipCode);
+        },
+      },
+    });
+  };
+}
+
+export function IsDuplicateCodeInItemList(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(items) {
+          return questionnaireItemsDuplicateCodeValidation(items);
+        },
+      },
+    });
+  };
+}
+
+export function IsMissingOptionsInChoiceTypeItem(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(items) {
+          return questionnaireItemsMissingOptionsValidation(items);
         },
       },
     });
@@ -278,3 +309,32 @@ export function IsCustomOrSuggestedCarePlan(options: ValidationOptions) {
     });
   };
 }
+
+/**************************************************************************************************
+ ******************************************** Helpers *********************************************
+ *************************************************************************************************/
+const questionnaireItemsDuplicateCodeValidation = (
+  items: ItemInterface[],
+  codes: Set<string> = new Set<string>(),
+): boolean => {
+  try {
+    items.forEach((item: ItemInterface) => {
+      if (
+        codes.has(item.code) ||
+        (item.type === ItemType.group &&
+          !questionnaireItemsDuplicateCodeValidation(item.items, codes))
+      ) {
+        throw new Error();
+      }
+      codes.add(item.code);
+    });
+  } catch {
+    return false;
+  }
+
+  return true;
+};
+
+const questionnaireItemsMissingOptionsValidation = (items: ItemInterface[]): boolean => {
+  return !items.find((item) => item.type === ItemType.choice && !item.options);
+};
