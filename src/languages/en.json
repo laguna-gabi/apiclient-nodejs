@@ -20,9 +20,9 @@
             "addCaregiverDetails": "Tap to add caregiver details",
             "setCallPermissions": "Tap to set your call permissions",
             "scheduleAppointment": "Hello {{member.honorific}} {{member.lastName}}, please tap the link below to schedule the first check-in",
-            "createTodo": "Your coach, {{user.firstName}}, added a new {{todoLabel}} for you. Tap here to review",
-            "updateTodo": "Your coach, {{user.firstName}}, changed your {{todoLabel}}. Tap here to review",
-            "deleteTodo": "Your coach, {{user.firstName}}, deleted {{todoLabel}}. Tap here to review"
+            "createTodo": "Your coach, {{user.firstName}}, added a new {{todoType}} for you. Tap here to review",
+            "updateTodo": "Your coach, {{user.firstName}}, changed {{todoType}}. Tap here to review",
+            "deleteTodo": "Your coach, {{user.firstName}}, deleted {{todoType}}. Tap here to review"
         },
         "honorific": {
             "mr": "Mr.",
