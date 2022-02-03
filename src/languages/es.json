@@ -19,7 +19,10 @@
             "memberNotFeelingWellMessage": "",
             "addCaregiverDetails": "",
             "setCallPermissions": "",
-            "scheduleAppointment": ""
+            "scheduleAppointment": "",
+            "createTodo": "",
+            "updateTodo": "",
+            "deleteTodo": ""
         },
         "honorific": {
             "mr": "Señor.",
