@@ -45,7 +45,7 @@ export class LoggerService extends BaseLogger {
     'availabilities',
     // notes
     'scores',
-    // todo
+    // to do
     'cronExpressions',
     'label',
     'createdBy',
