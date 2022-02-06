@@ -18,7 +18,7 @@ import {
 import {
   Client,
   EventType,
-  IEventMember,
+  IEventDeleteMember,
   IEventOnNewMember,
   IEventOnUpdatedAppointment,
   IEventOnUpdatedUserAppointments,
@@ -136,7 +136,7 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @OnEvent(EventType.onDeletedMember, { async: true })
-  async deleteSchedules(params: IEventMember) {
+  async deleteSchedules(params: IEventDeleteMember) {
     this.logger.info(params, AppointmentResolver.name, this.deleteSchedules.name);
     const { memberId } = params;
     try {

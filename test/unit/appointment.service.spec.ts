@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { addDays, addMinutes, subDays } from 'date-fns';
 import * as faker from 'faker';
-import { Model, model } from 'mongoose';
+import { Model, Types, model } from 'mongoose';
 import {
   Appointment,
   AppointmentDocument,
@@ -21,6 +21,7 @@ import {
   ErrorType,
   Errors,
   EventType,
+  IEventDeleteMember,
   IEventOnNewAppointment,
   IEventOnUpdatedAppointmentScores,
   IEventUnconsentedAppointmentEnded,
@@ -744,6 +745,32 @@ describe('AppointmentService', () => {
       const result = await service.getFutureAppointments(userId, memberId);
       futureAppointments.shift();
       expect(result).toEqual(futureAppointments);
+    });
+  });
+
+  describe('delete', () => {
+    it('should delete members appointments - hard delete', async () => {
+      const memberId = generateId();
+
+      const appointment = generateRequestAppointmentParams({ memberId });
+      const appointment2 = generateRequestAppointmentParams({ memberId });
+      await service.request(appointment);
+      await service.request(appointment2);
+
+      const params: IEventDeleteMember = {
+        memberId: memberId,
+        deletedBy: generateId(),
+        hard: true,
+        primaryUserId: generateId(),
+      };
+      const appointmentsBefore = await appointmentModel.find({
+        memberId: new Types.ObjectId(params.memberId),
+      });
+      expect(appointmentsBefore.length).toEqual(2);
+
+      await service.deleteMemberAppointments(params);
+      const result = await appointmentModel.find({ memberId: new Types.ObjectId(params.memberId) });
+      expect(result).toEqual([]);
     });
   });
 

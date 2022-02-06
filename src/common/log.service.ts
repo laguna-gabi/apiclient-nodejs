@@ -28,6 +28,7 @@ export class LoggerService extends BaseLogger {
     'platform',
     'externalUserId',
     'deviceId',
+    'hard',
     // member journal
     'normalImageKey',
     'smallImageKey',

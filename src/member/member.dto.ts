@@ -444,6 +444,16 @@ export class CancelNotifyParams {
   metadata: CancelNotificationMetadata;
 }
 
+@InputType()
+export class DeleteMemberParams {
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
+
+  @Field(() => Boolean, { defaultValue: false })
+  hard?: boolean;
+}
+
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/

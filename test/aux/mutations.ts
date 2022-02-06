@@ -25,6 +25,7 @@ import {
   CompleteMultipartUploadParams,
   CreateMemberParams,
   CreateTaskParams,
+  DeleteMemberParams,
   Journal,
   Member,
   NotifyContentParams,
@@ -762,36 +763,27 @@ export class Mutations {
     );
   };
 
-  archiveMember = async ({
-    id,
-    invalidFieldsErrors,
-  }: { id?: string; invalidFieldsErrors?: string[] } = {}): Promise<Identifiers> => {
-    const result = await this.apolloClient.mutate({
-      variables: { id: id },
-      mutation: gql`
-        mutation archiveMember($id: String!) {
-          archiveMember(id: $id)
-        }
-      `,
-    });
-
-    return isResultValid({ result, invalidFieldsErrors }) && result.data.archiveMember;
-  };
-
   deleteMember = async ({
-    id,
+    deleteMemberParams,
+    missingFieldError,
     invalidFieldsErrors,
-  }: { id?: string; invalidFieldsErrors?: string[] } = {}): Promise<Identifiers> => {
+  }: {
+    deleteMemberParams: DeleteMemberParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<void> => {
     const result = await this.apolloClient.mutate({
-      variables: { id: id },
+      variables: { deleteMemberParams: deleteMemberParams },
       mutation: gql`
-        mutation deleteMember($id: String!) {
-          deleteMember(id: $id)
+        mutation deleteMember($deleteMemberParams: DeleteMemberParams!) {
+          deleteMember(deleteMemberParams: $deleteMemberParams)
         }
       `,
     });
 
-    return isResultValid({ result, invalidFieldsErrors }) && result.data.deleteMember;
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.deleteMember
+    );
   };
 
   notify = async ({

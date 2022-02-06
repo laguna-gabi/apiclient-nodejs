@@ -42,6 +42,7 @@ import {
   generateCreateRedFlagParams,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
+  generateDeleteMemberParams,
   generateEndAndCreateTodoParams,
   generateGetTodoDonesParams,
   generateId,
@@ -396,43 +397,54 @@ describe('Integration tests: all', () => {
     });
   });
 
-  describe('archive member', () => {
-    it('should archive member', async () => {
-      const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
-
-      const result = await handler
-        .setContextUserId(generateId())
-        .mutations.archiveMember({ id: member.id });
-      expect(result).toBeTruthy();
-
-      const memberResult = await handler
-        .setContextUserId(member.id)
-        .queries.getMember({ id: member.id });
-      await expect(memberResult).toEqual({
-        errors: [{ code: ErrorType.memberNotFound, message: Errors.get(ErrorType.memberNotFound) }],
-      });
-    });
-  });
-
   describe('delete member', () => {
-    it('should delete member', async () => {
+    test.each([true, false])('should delete a member ', async (hard) => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org, useNewUser: true });
       const appointment = await creators.createAndValidateAppointment({ member });
-
-      const result = await handler.mutations.deleteMember({ id: member.id });
+      const deleteMemberParams = generateDeleteMemberParams({ memberId: member.id, hard });
+      const result = await handler
+        .setContextUserId(generateId())
+        .mutations.deleteMember({ deleteMemberParams });
       expect(result).toBeTruthy();
       await delay(500);
 
+      // test that everything was deleted
       const memberResult = await handler
         .setContextUserId(member.id)
         .queries.getMember({ id: member.id });
       await expect(memberResult).toEqual({
         errors: [{ code: ErrorType.memberNotFound, message: Errors.get(ErrorType.memberNotFound) }],
       });
-      const appointmentReult = await handler.queries.getAppointment(appointment.id);
-      expect(appointmentReult).toBeNull();
+
+      if (hard) {
+        // todo: add soft delete for these and then remove condition
+        const appointmentResult = await handler.queries.getAppointment(appointment.id);
+        expect(appointmentResult).toBeNull();
+
+        const communication = await handler.queries.getCommunication({
+          getCommunicationParams: { memberId: member.id, userId: member.primaryUserId.toString() },
+        });
+        expect(communication).toBeNull();
+
+        const startDate = faker.date.past();
+        const day1 = reformatDate(startDate.toString(), general.get('dateFormatString'));
+        const day2 = reformatDate(
+          add(startDate, { days: 2 }).toString(),
+          general.get('dateFormatString'),
+        );
+        const dailyReports = await handler.queries.getDailyReports({
+          dailyReportQueryInput: {
+            memberId: member.id,
+            startDate: day1,
+            endDate: day2,
+          },
+        });
+        expect(dailyReports.dailyReports.data).toEqual([]);
+
+        const recordings = await handler.queries.getRecordings({ memberId: member.id });
+        expect(recordings).toEqual([]);
+      }
     });
   });
 

@@ -2,7 +2,7 @@ import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, Types } from 'mongoose';
-import { LoggerService } from '../../src/common';
+import { IEventDeleteMember, LoggerService } from '../../src/common';
 import {
   DailyReport,
   DailyReportCategoriesInput,
@@ -344,14 +344,20 @@ describe('DailyReportCategoryService', () => {
   });
 
   describe('deleteDailyReports', () => {
-    it(`model deleteMany should be called with the correct parameters`, () => {
+    it(`model deleteMany should be called with the correct parameters - hard delete`, async () => {
       const spyOnDailyReportCategoryModel = jest
         .spyOn(dailyReportModel, 'deleteMany')
         .mockResolvedValue(undefined);
 
       const memberId = generateId();
 
-      service.deleteDailyReports({ memberId });
+      const params: IEventDeleteMember = {
+        memberId: memberId,
+        deletedBy: generateId(),
+        hard: true,
+        primaryUserId: generateId(),
+      };
+      await service.deleteMemberDailyReports(params);
 
       expect(spyOnDailyReportCategoryModel).toBeCalledWith({
         memberId: new Types.ObjectId(memberId),

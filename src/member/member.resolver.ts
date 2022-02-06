@@ -32,6 +32,7 @@ import {
   CompleteMultipartUploadParams,
   CreateMemberParams,
   CreateTaskParams,
+  DeleteMemberParams,
   DischargeDocumentsLinks,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
@@ -68,6 +69,7 @@ import {
   ErrorType,
   Errors,
   EventType,
+  IEventDeleteMember,
   IEventMember,
   IEventNotifyQueue,
   IEventOnReceivedChatMessage,
@@ -177,49 +179,41 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean)
   @Roles(UserRole.admin)
-  async archiveMember(@Client('_id') userId, @Args('id', { type: () => String }) id: string) {
-    const { member, memberConfig } = await this.memberService.archiveMember(id, userId);
-    await this.communicationService.freezeGroupChannel({
-      memberId: id,
-      userId: member.primaryUserId.toString(),
-    });
-    await this.oneSignal.unregister(memberConfig);
-    await this.cognitoService.disableMember(member.deviceId);
-
-    this.notifyDeletedMemberConfig(member.id);
-    await this.deleteSchedules({ memberId: id });
+  async deleteMember(
+    @Client('_id') userId,
+    @Args(camelCase(DeleteMemberParams.name))
+    deleteMemberParams: DeleteMemberParams,
+  ) {
+    const { memberId, hard } = deleteMemberParams;
+    const { member, memberConfig } = await this.memberService.deleteMember(
+      deleteMemberParams,
+      userId,
+    );
+    const eventParams: IEventDeleteMember = {
+      memberId,
+      deletedBy: userId,
+      hard,
+      primaryUserId: member.primaryUserId.toString(),
+    };
+    await this.deleteSchedules(eventParams);
+    this.notifyDeletedMemberConfig(memberId);
+    this.eventEmitter.emit(EventType.onDeletedMember, eventParams);
+    await this.deleteMemberFromServices(member, memberConfig, hard);
     return true;
   }
 
-  @Mutation(() => Boolean)
-  @Roles(UserRole.admin)
-  async deleteMember(@Args('id', { type: () => String }) id: string) {
-    const { member, memberConfig } = await this.memberService.deleteMember(id);
-    const communication = await this.communicationService.getMemberUserCommunication({
-      memberId: id,
-      userId: member.primaryUserId.toString(),
-    });
-    if (!communication) {
-      this.logger.warn(
-        { memberId: id, userId: member.primaryUserId },
-        MemberResolver.name,
-        this.deleteMember.name,
-        { message: Errors.get(ErrorType.communicationMemberUserNotFound) },
-      );
-    } else {
-      await this.communicationService.deleteCommunication(communication);
-    }
+  private async deleteMemberFromServices(
+    member: Member,
+    memberConfig: MemberConfig,
+    hard: boolean,
+  ) {
     await this.oneSignal.unregister(memberConfig);
     if (member.deviceId) {
       await this.cognitoService.deleteMember(member.deviceId);
     }
-    await this.storageService.deleteMember(id);
-
-    this.notifyDeletedMemberConfig(member.id);
-    const eventParams: IEventMember = { memberId: id };
-    await this.deleteSchedules(eventParams);
-    this.eventEmitter.emit(EventType.onDeletedMember, eventParams);
-    return true;
+    if (hard) {
+      await this.storageService.deleteMember(member.id);
+    }
   }
 
   @Mutation(() => Boolean, { nullable: true })

@@ -31,8 +31,6 @@ import {
   ControlMemberDto,
   DismissedAlert,
   DismissedAlertDto,
-  Goal,
-  GoalDto,
   ImageFormat,
   InternalCreateMemberParams,
   Journal,
@@ -65,6 +63,7 @@ import {
   generateCreateTaskParams,
   generateCreateUserParams,
   generateDateOnly,
+  generateDeleteMemberParams,
   generateGetMemberUploadJournalImageLinkParams,
   generateId,
   generateInternalCreateMemberParams,
@@ -94,7 +93,6 @@ describe('MemberService', () => {
   let controlMemberModel: Model<typeof ControlMemberDto>;
   let modelUser: Model<typeof UserDto>;
   let modelOrg: Model<typeof OrgDto>;
-  let modelGoal: Model<typeof GoalDto>;
   let modelActionItem: Model<typeof ActionItemDto>;
   let modelJournal: Model<typeof JournalDto>;
   let modelAppointment: Model<AppointmentDocument>;
@@ -115,7 +113,6 @@ describe('MemberService', () => {
     controlMemberModel = model(ControlMember.name, ControlMemberDto);
     modelUser = model(User.name, UserDto);
     modelOrg = model(Org.name, OrgDto);
-    modelGoal = model(Goal.name, GoalDto);
     modelActionItem = model(ActionItem.name, ActionItemDto);
     modelJournal = model(Journal.name, JournalDto);
     modelAppointment = model(Appointment.name, AppointmentDto);
@@ -808,23 +805,21 @@ describe('MemberService', () => {
     });
   });
 
-  describe('archive', () => {
-    it('should throw an error when trying to archive non existing member', async () => {
-      await expect(service.archiveMember(generateId(), generateId())).rejects.toThrow(
-        Errors.get(ErrorType.memberNotFound),
-      );
+  describe('delete', () => {
+    it('should throw an error when trying to delete non existing member', async () => {
+      await expect(
+        service.deleteMember(generateDeleteMemberParams(), generateId()),
+      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
     });
 
-    it('should soft delete member & member config', async () => {
+    it('should return member and member config when deleting a member', async () => {
       const memberId = await generateMember();
       const userId = generateId();
       const member = await service.get(memberId);
       const memberConfig = await service.getMemberConfig(memberId);
-      const memberConfigDocument = await memberConfigModel.findOne({
-        memberId,
-      });
 
-      const result = await service.archiveMember(memberId, userId);
+      const deleteMemberParams = generateDeleteMemberParams({ memberId, hard: false });
+      const result = await service.deleteMember(deleteMemberParams, userId);
       expect(result.member).toEqual(
         expect.objectContaining({
           id: member.id,
@@ -841,62 +836,125 @@ describe('MemberService', () => {
           externalUserId: memberConfig.externalUserId,
         }),
       );
+    });
 
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    /* eslint-disable @typescript-eslint/ban-ts-comment */
+    test.each([true, false])('should delete member, member config & actionItems', async (hard) => {
+      const memberId = await generateMember();
+      const userId = generateId();
+      const memberConfigDocument = await memberConfigModel.findOne({
+        memberId,
+      });
+      const { id: actionItemId } = await service.insertActionItem({
+        createTaskParams: generateCreateTaskParams({ memberId }),
+        status: TaskStatus.pending,
+      });
+      const params = generateUpdateRecordingParams({ memberId });
+      await service.updateRecording(params, params.userId);
+
+      const result = await service.deleteMember(
+        generateDeleteMemberParams({ memberId, hard }),
+        userId,
+      );
+      expect(result).toBeTruthy();
+
       // @ts-ignore
       const memberDeletedResult = await memberModel.findWithDeleted(new Types.ObjectId(memberId));
-      await checkDelete(memberDeletedResult, new Types.ObjectId(memberId), userId);
-
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const memberConfigDeletedResult = await memberConfigModel.findWithDeleted(
         memberConfigDocument._id,
       );
-      await checkDelete(memberConfigDeletedResult, memberConfigDocument._id, userId);
-    });
+      // @ts-ignore
+      const ActionItemsDeletedResult = await modelActionItem.findWithDeleted(actionItemId);
 
-    it('should not get deleted members on get member and getMemberConfig', async () => {
-      const memberId = await generateMember();
-      await service.archiveMember(memberId, generateId());
+      //todo: add goals if necessary
 
-      await expect(service.get(memberId)).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
-      await expect(service.getMemberConfig(memberId)).rejects.toThrow(
-        Errors.get(ErrorType.memberNotFound),
-      );
-    });
-  });
-
-  describe('delete', () => {
-    it('should throw an error when trying to delete non existing member', async () => {
-      await expect(service.deleteMember(generateId())).rejects.toThrow(
-        Errors.get(ErrorType.memberNotFound),
-      );
-    });
-
-    it('should delete member', async () => {
-      const memberId = await generateMember();
-      const member = await service.get(memberId);
-      const memberConfig = await service.getMemberConfig(memberId);
-      const result = await service.deleteMember(memberId);
-      expect(result.member).toEqual(member);
-      expect(result.memberConfig).toEqual(memberConfig);
-      await expect(service.get(memberId)).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
-      await expect(service.getMemberConfig(memberId)).rejects.toThrow(
-        Errors.get(ErrorType.memberNotFound),
-      );
-      for (let index = 0; index < member.goals.length; index++) {
-        const goalResult = await modelGoal.findById(member.goals[index]);
-        expect(goalResult).toBeNull();
+      if (hard) {
+        const recordings = await modelRecording.find({ memberId: new Types.ObjectId(memberId) });
+        [
+          memberDeletedResult,
+          memberConfigDeletedResult,
+          ActionItemsDeletedResult,
+          recordings,
+        ].forEach((result) => {
+          expect(result).toEqual([]);
+        });
+      } else {
+        await checkDelete(memberDeletedResult, new Types.ObjectId(memberId), userId);
+        await checkDelete(memberConfigDeletedResult, memberConfigDocument._id, userId);
+        await checkDelete(ActionItemsDeletedResult, actionItemId, userId);
       }
+    });
 
-      for (let index = 0; index < member.actionItems.length; index++) {
-        const actionItemsResult = await modelActionItem.findById(member.actionItems[index]);
-        expect(actionItemsResult).toBeNull();
-      }
-      const appointmentResult = await modelAppointment.find({
-        memberId: new Types.ObjectId(memberId),
+    test.each([true, false])(
+      'should not get deleted members on get member and getMemberConfig ',
+      async (hard) => {
+        const memberId = await generateMember();
+        const userId = generateId();
+        const deleteMemberParams = generateDeleteMemberParams({ memberId, hard });
+        await service.deleteMember(deleteMemberParams, userId);
+        await expect(service.get(memberId)).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+        await expect(service.getMemberConfig(memberId)).rejects.toThrow(
+          Errors.get(ErrorType.memberNotFound),
+        );
+      },
+    );
+
+    it('should be able to hard delete after sost delete', async () => {
+      const memberId = await generateMember();
+      const userId = generateId();
+      const memberConfigDocument = await memberConfigModel.findOne({
+        memberId,
       });
-      expect(appointmentResult).toEqual([]);
+      const { id: actionItemId } = await service.insertActionItem({
+        createTaskParams: generateCreateTaskParams({ memberId }),
+        status: TaskStatus.pending,
+      });
+
+      const result = await service.deleteMember(
+        generateDeleteMemberParams({ memberId, hard: false }),
+        userId,
+      );
+      expect(result).toBeTruthy();
+
+      // @ts-ignore
+      const memberDeletedResult = await memberModel.findWithDeleted(new Types.ObjectId(memberId));
+      // @ts-ignore
+      const memberConfigDeletedResult = await memberConfigModel.findWithDeleted(
+        memberConfigDocument._id,
+      );
+      // @ts-ignore
+      const ActionItemsDeletedResult = await modelActionItem.findWithDeleted(actionItemId);
+
+      await checkDelete(memberDeletedResult, new Types.ObjectId(memberId), userId);
+      await checkDelete(memberConfigDeletedResult, memberConfigDocument._id, userId);
+      await checkDelete(ActionItemsDeletedResult, actionItemId, userId);
+
+      //todo: add goals if necessary
+
+      const resultHard = await service.deleteMember(
+        generateDeleteMemberParams({ memberId, hard: true }),
+        userId,
+      );
+      expect(resultHard).toBeTruthy();
+
+      // @ts-ignore
+      const memberDeletedResultHard = await memberModel.findWithDeleted(
+        new Types.ObjectId(memberId),
+      );
+      // @ts-ignore
+      const memberConfigDeletedResultHard = await memberConfigModel.findWithDeleted(
+        memberConfigDocument._id,
+      );
+      // @ts-ignore
+      const ActionItemsDeletedResultHard = await modelActionItem.findWithDeleted(actionItemId);
+      [
+        memberDeletedResultHard,
+        memberConfigDeletedResultHard,
+        ActionItemsDeletedResultHard,
+      ].forEach((result) => {
+        expect(result).toEqual([]);
+      });
     });
   });
 

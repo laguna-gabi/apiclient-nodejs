@@ -20,6 +20,7 @@ import {
   ControlMember,
   ControlMemberDocument,
   CreateTaskParams,
+  DeleteMemberParams,
   DismissedAlert,
   DismissedAlertDocument,
   EmbeddedMemberProperties,
@@ -65,20 +66,22 @@ import {
 } from '../common';
 import { Internationalization, StorageService } from '../providers';
 import { differenceInMilliseconds } from 'date-fns';
+import { ISoftDelete } from '../db';
 
 @Injectable()
 export class MemberService extends BaseService {
   constructor(
     @InjectModel(Member.name)
-    private readonly memberModel: Model<MemberDocument>,
+    private readonly memberModel: Model<MemberDocument> & ISoftDelete<MemberDocument>,
     @InjectModel(Goal.name)
     private readonly goalModel: Model<GoalDocument>,
     @InjectModel(ActionItem.name)
-    private readonly actionItemModel: Model<ActionItemDocument>,
+    private readonly actionItemModel: Model<ActionItemDocument> & ISoftDelete<ActionItemDocument>,
     @InjectModel(Journal.name)
     private readonly journalModel: Model<JournalDocument>,
     @InjectModel(MemberConfig.name)
-    private readonly memberConfigModel: Model<MemberConfigDocument>,
+    private readonly memberConfigModel: Model<MemberConfigDocument> &
+      ISoftDelete<MemberConfigDocument>,
     @InjectModel(Recording.name)
     private readonly recordingModel: Model<RecordingDocument>,
     @InjectModel(ControlMember.name)
@@ -406,44 +409,65 @@ export class MemberService extends BaseService {
     });
   }
 
-  async archiveMember(
-    id: string,
+  /*************************************************************************************************
+   ******************************************* Delete **********************************************
+   ************************************************************************************************/
+
+  async deleteMember(
+    params: DeleteMemberParams,
     deletedBy: string,
   ): Promise<{ member: Member; memberConfig: MemberConfig }> {
-    this.logger.info({ memberId: id }, MemberService.name, this.archiveMember.name);
-    const member = await this.memberModel.findById(id);
-    const memberConfig = await this.memberConfigModel.findOne({
-      memberId: new Types.ObjectId(id),
+    this.logger.info(params, MemberService.name, this.deleteMember.name);
+    const { memberId, hard } = params;
+    const member = await this.memberModel.findOneWithDeleted({ _id: new Types.ObjectId(memberId) });
+    const memberConfig = await this.memberConfigModel.findOneWithDeleted({
+      memberId: new Types.ObjectId(memberId),
     });
-
     if (!member || !memberConfig) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
 
+    if (hard) {
+      await this.hardDeleteMember(member);
+    } else {
+      await this.softDeleteMember(member, memberConfig, deletedBy);
+    }
+    return { member, memberConfig };
+  }
+
+  private async softDeleteMember(
+    member: MemberDocument,
+    memberConfig: MemberConfigDocument,
+    deletedBy: string,
+  ) {
     await member.delete(new Types.ObjectId(deletedBy));
     await memberConfig.delete(new Types.ObjectId(deletedBy));
-    return { member, memberConfig };
+    await Promise.all(
+      member.actionItems.map(async (actionItemId) => {
+        const actionItem = await this.actionItemModel.findOneWithDeleted({ _id: actionItemId });
+        await actionItem.delete(new Types.ObjectId(deletedBy));
+      }),
+    );
+    // todo - add goals if necessary
   }
 
-  async deleteMember(id: string): Promise<{ member: Member; memberConfig: MemberConfig }> {
-    this.logger.info({ memberId: id }, MemberService.name, this.deleteMember.name);
-    const member = await this.get(id);
-    const memberConfig = await this.getMemberConfig(id);
-
-    await this.memberModel.deleteOne({ _id: new Types.ObjectId(id) });
-    await this.memberConfigModel.deleteOne({ memberId: new Types.ObjectId(id) });
-
-    for (let index = 0; index < member.goals.length; index++) {
-      await this.goalModel.deleteOne({ _id: member.goals[index] });
-    }
-
-    for (let index = 0; index < member.actionItems.length; index++) {
-      await this.actionItemModel.deleteOne({ _id: member.actionItems[index] });
-    }
-    await this.recordingModel.deleteMany({ memberId: new Types.ObjectId(id) });
-
-    return { member, memberConfig };
+  private async hardDeleteMember(member: MemberDocument) {
+    await this.memberModel.deleteOne({ _id: new Types.ObjectId(member.id) });
+    await this.memberConfigModel.deleteOne({ memberId: new Types.ObjectId(member.id) });
+    await Promise.all(
+      member.goals.map(async (goal) => {
+        await this.goalModel.deleteOne({ _id: goal });
+      }),
+    );
+    await Promise.all(
+      member.actionItems.map(async (actionItem) => {
+        await this.actionItemModel.deleteOne({ _id: actionItem });
+      }),
+    );
+    // todo: take recording out to an event triggered method & add soft
+    await this.recordingModel.deleteMany({ memberId: new Types.ObjectId(member.id) });
   }
+
   /************************************************************************************************
    ******************************************** Control *******************************************
    ************************************************************************************************/

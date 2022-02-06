@@ -28,6 +28,7 @@ import {
   generateCreateTaskParams,
   generateCreateUserParams,
   generateDateOnly,
+  generateDeleteMemberParams,
   generateGetMemberUploadJournalAudioLinkParams,
   generateGetMemberUploadJournalImageLinkParams,
   generateId,
@@ -47,6 +48,7 @@ import {
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
+const BoolenError = `Boolean cannot represent a non boolean value`;
 
 describe('Validations - member', () => {
   const handler: Handler = new Handler();
@@ -1044,10 +1046,23 @@ describe('Validations - member', () => {
     });
   });
 
-  describe('archiveMember', () => {
+  describe('deleteMember', () => {
+    test.each`
+      input                | error
+      ${{ memberId: 123 }} | ${stringError}
+      ${{ hard: 123 }}     | ${BoolenError}
+    `(`should fail to set new user to member since $input is not a valid type`, async (params) => {
+      const deleteMemberParams = generateDeleteMemberParams({ ...params.input });
+      await handler.setContextUserId(generateId()).mutations.deleteMember({
+        deleteMemberParams,
+        missingFieldError: params.error,
+      });
+    });
+
     it('should throw error on non existing member', async () => {
-      await handler.mutations.archiveMember({
-        id: generateId(),
+      const deleteMemberParams = generateDeleteMemberParams();
+      await handler.setContextUserId(generateId()).mutations.deleteMember({
+        deleteMemberParams,
         invalidFieldsErrors: [Errors.get(ErrorType.memberNotFound)],
       });
     });

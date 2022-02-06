@@ -40,6 +40,7 @@ import {
   CancelNotifyParams,
   CreateMemberParams,
   CreateTaskParams,
+  DeleteMemberParams,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
   ImageFormat,
@@ -964,6 +965,16 @@ export const generateCreateQuestionnaireParams = ({
     name,
     type,
     items,
+  };
+};
+
+export const generateDeleteMemberParams = ({
+  memberId = generateId(),
+  hard = false,
+}: Partial<DeleteMemberParams> = {}) => {
+  return {
+    memberId,
+    hard,
   };
 };
 

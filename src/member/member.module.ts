@@ -43,9 +43,7 @@ import * as mongooseDelete from 'mongoose-delete';
     CommonModule,
     MongooseModule.forFeature([
       { name: Goal.name, schema: GoalDto },
-      { name: ActionItem.name, schema: ActionItemDto },
       { name: Journal.name, schema: JournalDto },
-      { name: Recording.name, schema: MemberRecordingDto },
       { name: ControlMember.name, schema: ControlMemberDto },
       { name: Caregiver.name, schema: CaregiverDto },
       { name: DismissedAlert.name, schema: DismissedAlertDto },
@@ -67,6 +65,18 @@ import * as mongooseDelete from 'mongoose-delete';
         name: MemberConfig.name,
         useFactory: () => {
           return MemberConfigDto.plugin(mongooseDelete, useFactoryOptions);
+        },
+      },
+      {
+        name: ActionItem.name,
+        useFactory: () => {
+          return ActionItemDto.plugin(mongooseDelete, useFactoryOptions);
+        },
+      },
+      {
+        name: Recording.name,
+        useFactory: () => {
+          return MemberRecordingDto.plugin(mongooseDelete, useFactoryOptions);
         },
       },
     ]),

@@ -1,5 +1,5 @@
 import { Injectable, NotImplementedException } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { v4 } from 'uuid';
@@ -15,6 +15,7 @@ import {
   ErrorType,
   Errors,
   EventType,
+  IEventDeleteMember,
   IEventOnNewMemberCommunication,
   IEventOnUpdateUserConfig,
   LoggerService,
@@ -280,14 +281,39 @@ export class CommunicationService {
     return this.sendBird.freezeGroupChannel(communication.sendBirdChannelUrl, true);
   }
 
-  async deleteCommunication(communication) {
-    this.logger.info(communication, CommunicationService.name, this.deleteCommunication.name);
-    await this.communicationModel.deleteOne({
-      memberId: communication.memberId,
-      userId: communication.userId,
-    });
-    await this.sendBird.deleteGroupChannel(communication.sendBirdChannelUrl);
-    await this.sendBird.deleteUser(communication.memberId.toString());
+  @OnEvent(EventType.onDeletedMember, { async: true })
+  async deleteMemberCommunication(params: IEventDeleteMember) {
+    this.logger.info(params, CommunicationService.name, this.deleteMemberCommunication.name);
+    const { memberId, hard, primaryUserId } = params;
+    try {
+      // todo: get with deleted
+      const communication = await this.getMemberUserCommunication({
+        memberId,
+        userId: primaryUserId,
+      });
+      if (hard) {
+        // todo: delete all member's communications and not just one
+        await this.communicationModel.deleteOne({
+          memberId: communication.memberId,
+          userId: communication.userId,
+        });
+        await this.sendBird.deleteGroupChannel(communication.sendBirdChannelUrl);
+        await this.sendBird.deleteUser(communication.memberId.toString());
+      } else {
+        // todo: add soft delete
+        await this.freezeGroupChannel({
+          memberId,
+          userId: primaryUserId,
+        });
+      }
+    } catch (ex) {
+      this.logger.error(
+        params,
+        CommunicationService.name,
+        this.deleteMemberCommunication.name,
+        formatEx(ex),
+      );
+    }
   }
 
   getTwilioAccessToken() {

@@ -19,7 +19,7 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventMember,
+  IEventDeleteMember,
   IEventOnDeletedMemberAppointments,
   IEventOnNewAppointment,
   IEventOnUpdatedAppointmentScores,
@@ -362,19 +362,23 @@ export class AppointmentService extends BaseService {
   }
 
   @OnEvent(EventType.onDeletedMember, { async: true })
-  async deleteMemberAppointments(params: IEventMember) {
+  async deleteMemberAppointments(params: IEventDeleteMember) {
     this.logger.info(params, AppointmentService.name, this.deleteMemberAppointments.name);
-    const { memberId } = params;
+    const { memberId, hard } = params;
+    // todo: find with deleted
     const appointments = await this.appointmentModel.find({
       memberId: new Types.ObjectId(memberId),
     });
-    for (let index = 0; index < appointments.length; index++) {
-      if (appointments[index].notes) {
-        await this.deleteNotes(appointments[index].notes);
-      }
-    }
-    await this.appointmentModel.deleteMany({ memberId: new Types.ObjectId(memberId) });
     const eventParams: IEventOnDeletedMemberAppointments = { appointments };
     this.eventEmitter.emit(EventType.onDeletedMemberAppointments, eventParams);
+    if (hard) {
+      for (let index = 0; index < appointments.length; index++) {
+        if (appointments[index].notes) {
+          await this.deleteNotes(appointments[index].notes);
+        }
+      }
+      await this.appointmentModel.deleteMany({ memberId: new Types.ObjectId(memberId) });
+    }
+    // todo: add soft delete
   }
 }

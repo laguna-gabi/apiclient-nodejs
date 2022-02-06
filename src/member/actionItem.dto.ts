@@ -2,6 +2,7 @@ import { ObjectType } from '@nestjs/graphql';
 import { Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { Task } from '.';
+import { ISoftDelete } from '../db';
 
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
@@ -13,5 +14,5 @@ export class ActionItem extends Task {}
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type ActionItemDocument = ActionItem & Document;
+export type ActionItemDocument = ActionItem & Document & ISoftDelete<ActionItem>;
 export const ActionItemDto = SchemaFactory.createForClass(ActionItem);

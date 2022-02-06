@@ -67,6 +67,8 @@ import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   generateCreateMemberParams,
   generateDailyReport,
+  generateDeleteMemberParams,
+  generateId,
   generateNotifyContentParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
@@ -179,7 +181,7 @@ describe('Integration tests: notifications', () => {
     });
 
     /**
-     * Trigger : MemberResolver.archiveMember / MemberResolver.deleteMember
+     * Trigger : MemberResolver.deleteMember
      * Settings :
      *      1. delete member client settings
      * Dispatches :
@@ -189,26 +191,22 @@ describe('Integration tests: notifications', () => {
      *      5. delete dispatch InternalKey.logReminder
      *      6. delete dispatch InternalKey.customContent
      */
-    test.each`
-      title              | method
-      ${'archiveMember'} | ${async ({ id }) => await handler.mutations.archiveMember({ id })}
-      ${'deleteMember'}  | ${async ({ id }) => await handler.mutations.deleteMember({ id })}
-    `(
-      `$title: should delete settings and ${InternalKey.newMemberNudge} dispatch`,
-      async (params) => {
+    test.each([true, false])(
+      `should delete settings and ${InternalKey.newMemberNudge} dispatch`,
+      async (hard) => {
         const org = await creators.createAndValidateOrg();
         const user = await creators.createAndValidateUser();
         const memberParams = generateCreateMemberParams({ userId: user.id, orgId: org.id });
         const { id } = await handler.mutations.createMember({ memberParams });
         await delay(200);
         handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
-
-        await params.method({ id });
+        const deleteMemberParams = generateDeleteMemberParams({ memberId: id, hard });
+        await handler.setContextUserId(generateId()).mutations.deleteMember({ deleteMemberParams });
         await delay(200);
 
         expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(6);
-        checkValues(1, { type: InnerQueueTypes.deleteClientSettings, id });
-        checkDeleteDispatches(id, true, 2);
+        checkDeleteDispatches(id, true, 1);
+        checkValues(6, { type: InnerQueueTypes.deleteClientSettings, id });
       },
     );
 
@@ -1179,11 +1177,11 @@ describe('Integration tests: notifications', () => {
     return handler.mutations.scheduleAppointment({ appointmentParams });
   };
 
-  const checkValues = (amount: number, mock) => {
+  const checkValues = (index: number, mock) => {
     const object = new ObjectAppointmentScheduledClass(mock);
     Object.keys(object.objectAppointmentScheduledType).forEach((key) => {
       expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(
-        amount,
+        index,
         expect.objectContaining({
           type: QueueType.notifications,
           message: expect.stringContaining(

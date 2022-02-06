@@ -42,6 +42,12 @@ export interface IEventMember {
   memberId: string;
 }
 
+export interface IEventDeleteMember extends IEventMember {
+  deletedBy: string;
+  primaryUserId: string;
+  hard: boolean;
+}
+
 export interface IEventOnNewMember {
   member: Member;
   user: User;
