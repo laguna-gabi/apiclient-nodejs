@@ -322,7 +322,7 @@ export class AnalyticsService {
         member.memberConfig?.firstLoggedInAt &&
         reformatDate(member.memberConfig.firstLoggedInAt.toString(), DateTimeFormat),
       app_last_login:
-        member.memberConfig &&
+        member.memberConfig?.firstLoggedInAt &&
         reformatDate(member.memberConfig.updatedAt.toString(), DateTimeFormat),
       org_name: member.memberDetails.org?.name,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment

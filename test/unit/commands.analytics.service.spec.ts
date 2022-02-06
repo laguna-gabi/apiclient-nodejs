@@ -497,6 +497,96 @@ describe('Commands: AnalyticsService', () => {
       });
     });
 
+    // eslint-disable-next-line max-len
+    it('to return a calculated member data for analytics for a member in intervention group (not logged in).', async () => {
+      jest
+        .spyOn(analyticsService, 'getDCFileLoadDate')
+        .mockImplementationOnce(async () => sub(now, { days: 25 }))
+        .mockImplementationOnce(async () => sub(now, { days: 15 }));
+
+      const data = await analyticsService.buildMemberData({
+        _id: new Types.ObjectId(mockMember.id),
+        memberConfig: { ...mockMemberConfig, firstLoggedInAt: undefined },
+        memberDetails: {
+          ...mockMember,
+          admitDate: reformatDate(sub(now, { days: 20 }).toString(), DateFormat),
+          dischargeDate: reformatDate(sub(now, { days: 10 }).toString(), DateFormat),
+          primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
+          primaryUser: mockPrimaryUser,
+          org: { ...mockOrg, _id: Types.ObjectId(mockOrg.id) },
+        } as PopulatedMember,
+        appointments: [
+          {
+            start: sub(now, { days: 10 }),
+            end: sub(now, { days: 9, hours: 23.5 }),
+            notesData: {
+              scores: {
+                adherence: 4,
+                wellbeing: 5,
+              },
+            },
+          } as PopulatedAppointment,
+          {
+            start: sub(now, { days: 20 }),
+            end: sub(now, { days: 20, hours: 23.5 }),
+            notesData: {
+              scores: {
+                adherence: 1,
+                wellbeing: 2,
+              },
+            },
+          } as PopulatedAppointment,
+        ],
+      } as MemberDataAggregate);
+
+      expect(data).toEqual({
+        customer_id: mockMember.id,
+        mbr_initials: mockMember.firstName[0].toUpperCase() + mockMember.lastName[0].toUpperCase(),
+        created: reformatDate(mockMember.createdAt.toString(), DateTimeFormat),
+        app_user: true,
+        intervention_group: true,
+        language: Language.en,
+        age: 40,
+        race: mockMember.race,
+        ethnicity: mockMember.ethnicity,
+        gender: mockMember.sex,
+        street_address: mockMember.address.street,
+        city: mockMember.address.city,
+        state: mockMember.address.state,
+        zip_code: mockMember.zipCode,
+        admit_date: '2021-01-13',
+        discharge_date: '2021-01-23',
+        los: 10,
+        days_since_discharge: 10,
+        active: true,
+        graduated: false,
+        graduation_date: '2021-04-23',
+        dc_summary_load_date: '2021-01-18',
+        dc_summary_received: true,
+        dc_instructions_load_date: '2021-01-08',
+        dc_instructions_received: true,
+        first_activation_score: 1,
+        last_activation_score: 4,
+        first_wellbeing_score: 2,
+        last_wellbeing_score: 5,
+        fellow: mockMember.fellowName,
+        harmony_link: config.get('hosts.harmony') + `/details/${mockMember.id}`,
+        coach_name: `${mockPrimaryUser.firstName} ${mockPrimaryUser.lastName}`,
+        dob: mockMember.dateOfBirth,
+        first_name: mockMember.firstName,
+        last_name: mockMember.lastName,
+        honorific: mockMember.honorific,
+        phone: mockMember.phone,
+        platform: mockMemberConfig.platform,
+        updated: reformatDate(mockMember.updatedAt.toString(), DateTimeFormat),
+        coach_id: mockPrimaryUser.id,
+        org_id: mockOrg.id,
+        org_name: mockOrg.name,
+        general_notes: mockMember.generalNotes,
+        nurse_notes: mockMember.nurseNotes,
+      });
+    });
+
     it('to return a calculated member data for analytics for a control member.', async () => {
       jest
         .spyOn(analyticsService, 'getDCFileLoadDate')
