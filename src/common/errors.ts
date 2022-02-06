@@ -123,6 +123,8 @@ export enum ErrorType {
   // Module Questionnaire
   questionnaireItemsDuplicateCode = 10201,
   questionnaireItemMissingOptionsCode = 10202,
+  questionnaireItemMissingRangeCode = 10203,
+  questionnaireSeverityLevelInvalidCode = 10204,
 }
 
 const nameFormat = `name must be between ${graphqlConfig.get('minLength')} and ${graphqlConfig.get(
@@ -295,6 +297,14 @@ export const Errors: Map<ErrorType, string> = new Map([
   [
     ErrorType.questionnaireItemMissingOptionsCode.valueOf(),
     'invalid questionnaire items list - missing option code for `choice` type items',
+  ],
+  [
+    ErrorType.questionnaireItemMissingRangeCode.valueOf(),
+    'invalid questionnaire items list - missing range value for `range` type items',
+  ],
+  [
+    ErrorType.questionnaireSeverityLevelInvalidCode.valueOf(),
+    'invalid questionnaire severity level list',
   ],
   [ErrorType.redFlagNotFound.valueOf(), 'red flag id was not found'],
 ]);

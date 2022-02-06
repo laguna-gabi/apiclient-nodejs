@@ -917,54 +917,71 @@ export const generateUpdateCarePlanParams = ({
 
 export const mockGenerateQuestionnaireItem = ({
   code = faker.lorem.word(),
-  name = faker.lorem.words(5),
+  label = faker.lorem.words(5),
   type = ItemType[randomEnum(ItemType)],
   order = 1,
   required = true,
   options = type === ItemType.choice
     ? [
-        { name: faker.lorem.words(3), value: 0 },
-        { name: faker.lorem.words(3), value: 1 },
+        { label: faker.lorem.words(3), value: 0 },
+        { label: faker.lorem.words(3), value: 1 },
       ]
     : undefined,
   items = type === ItemType.group ? mockGenerateQuestionnaireItem() : undefined,
+  range = type === ItemType.range
+    ? {
+        min: { value: 0, label: faker.lorem.words(3) },
+        max: { value: faker.datatype.number({ min: 1, max: 10 }), label: faker.lorem.words(3) },
+      }
+    : undefined,
 }: Partial<Item> = {}): Item => {
   return {
     code,
-    name,
+    label,
     type,
     order,
     required,
     options,
+    range,
     items,
   };
 };
 
 export const mockGenerateQuestionnaire = ({
   id = generateId(),
-  name = faker.lorem.words(3),
+  name: name = faker.lorem.words(3),
   type = QuestionnaireType[randomEnum(QuestionnaireType)],
   active = true,
   items = mockGenerateQuestionnaireItem(),
+  severityLevels = [
+    { min: 0, max: 4, label: 'severity 1' },
+    { min: 5, max: 6, label: 'severity 2' },
+  ],
 }: Partial<Questionnaire> = {}): Questionnaire => {
   return {
     id,
-    name,
+    name: name,
     type,
     active,
     items,
+    severityLevels,
   };
 };
 
 export const generateCreateQuestionnaireParams = ({
-  name = faker.lorem.words(3),
+  name: name = faker.lorem.words(3),
   type = QuestionnaireType[randomEnum(QuestionnaireType)],
   items = [mockGenerateQuestionnaireItem()],
+  severityLevels = [
+    { min: 0, max: 4, label: 'severity 1' },
+    { min: 5, max: 6, label: 'severity 2' },
+  ],
 }: Partial<CreateQuestionnaireParams> = {}): CreateQuestionnaireParams => {
   return {
-    name,
+    name: name,
     type,
     items,
+    severityLevels,
   };
 };
 

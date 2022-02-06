@@ -134,20 +134,36 @@ export enum ItemType {
   choice = 'choice',
   date = 'date',
   text = 'text',
+  range = 'range',
   group = 'group',
 }
 
 export interface ItemInterface {
   code: string;
-  name: string;
+  label: string;
   type: ItemType;
   order: number;
   required: boolean;
   options?: OptionInterface[];
+  range?: RangeInterface;
   items?: ItemInterface[];
 }
 
 export interface OptionInterface {
-  name: string;
+  label: string;
   value: number;
+}
+export interface RangeInterface {
+  min: RangeElementInterface;
+  max: RangeElementInterface;
+}
+export interface RangeElementInterface {
+  value: number;
+  label: string;
+}
+
+export interface SeverityLevelInterface {
+  min: number;
+  max: number;
+  label: string;
 }

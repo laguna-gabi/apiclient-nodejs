@@ -7,9 +7,14 @@ import {
   Identifier,
   IsDuplicateCodeInItemList,
   IsMissingOptionsInChoiceTypeItem,
+  IsMissingRangeInRangeTypeItem,
+  IsOverlappingRangeInSeverityLevelEntries,
   ItemInterface,
   ItemType,
   OptionInterface,
+  RangeElementInterface,
+  RangeInterface,
+  SeverityLevelInterface,
 } from '../common';
 
 /**************************************************************************************************
@@ -60,13 +65,75 @@ export class CreateQuestionnaireParams {
     message: Errors.get(ErrorType.questionnaireItemMissingOptionsCode),
   })
   @IsDuplicateCodeInItemList({ message: Errors.get(ErrorType.questionnaireItemsDuplicateCode) })
+  @IsMissingRangeInRangeTypeItem({
+    message: Errors.get(ErrorType.questionnaireItemMissingRangeCode),
+  })
   @Field(() => [Item])
   items: Item[];
+
+  @IsOverlappingRangeInSeverityLevelEntries({
+    message: Errors.get(ErrorType.questionnaireSeverityLevelInvalidCode),
+  })
+  @Field(() => [SeverityLevel], { nullable: true })
+  severityLevels?: SeverityLevel[];
 }
 
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
+
+@InputType('OptionInput')
+@ObjectType()
+export class Option implements OptionInterface {
+  @Prop()
+  @Field(() => String)
+  label: string;
+
+  @Prop()
+  @Field(() => Number)
+  value: number;
+}
+
+@InputType('RangeElementInput')
+@ObjectType()
+export class RangeElement implements RangeElementInterface {
+  @Prop()
+  @Field(() => Number)
+  value: number;
+
+  @Prop()
+  @Field(() => String)
+  label: string;
+}
+
+@InputType('RangeInput')
+@ObjectType()
+export class Range implements RangeInterface {
+  @Prop()
+  @Field(() => RangeElement)
+  min: RangeElement;
+
+  @Prop()
+  @Field(() => RangeElement)
+  max: RangeElement;
+}
+
+@InputType('SeverityLevelInput')
+@ObjectType()
+export class SeverityLevel implements SeverityLevelInterface {
+  @Prop()
+  @Field(() => Number)
+  min: number;
+
+  @Prop()
+  @Field(() => Number)
+  max: number;
+
+  @Prop()
+  @Field(() => String)
+  label: string;
+}
+
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class Questionnaire extends Identifier {
@@ -85,6 +152,10 @@ export class Questionnaire extends Identifier {
   @Prop()
   @Field(() => [Item])
   items: Item[];
+
+  @Prop()
+  @Field(() => [SeverityLevel], { nullable: true })
+  severityLevels: SeverityLevel[];
 }
 
 @InputType('ItemInput')
@@ -96,7 +167,7 @@ export class Item implements ItemInterface {
 
   @Prop()
   @Field(() => String)
-  name: string;
+  label: string;
 
   @Prop()
   @Field(() => ItemType)
@@ -115,20 +186,12 @@ export class Item implements ItemInterface {
   options?: Option[];
 
   @Prop()
+  @Field(() => Range, { nullable: true })
+  range?: Range;
+
+  @Prop()
   @Field(() => [Item], { nullable: true })
   items?: Item[];
-}
-
-@InputType('OptionInput')
-@ObjectType()
-export class Option implements OptionInterface {
-  @Prop()
-  @Field(() => String)
-  name: string;
-
-  @Prop()
-  @Field(() => Number)
-  value: number;
 }
 
 /**************************************************************************************************

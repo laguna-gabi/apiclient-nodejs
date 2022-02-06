@@ -6,7 +6,7 @@ import { differenceInMilliseconds } from 'date-fns';
 import { isNil } from 'lodash';
 import { Types as MongooseTypes } from 'mongoose';
 import { lookup } from 'zipcode-to-timezone';
-import { ItemInterface, ItemType } from '.';
+import { ItemInterface, ItemType, SeverityLevelInterface } from '.';
 
 /**
  * When there are 2 params of dates, and we want to make sure that one param is
@@ -157,6 +157,36 @@ export function IsMissingOptionsInChoiceTypeItem(options: ValidationOptions) {
       validator: {
         validate(items) {
           return questionnaireItemsMissingOptionsValidation(items);
+        },
+      },
+    });
+  };
+}
+
+export function IsMissingRangeInRangeTypeItem(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(items) {
+          return questionnaireRangeItemsValidation(items);
+        },
+      },
+    });
+  };
+}
+
+export function IsOverlappingRangeInSeverityLevelEntries(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(severityLevels) {
+          return questionnaireSeverityLevelsValidation(severityLevels);
         },
       },
     });
@@ -337,4 +367,29 @@ const questionnaireItemsDuplicateCodeValidation = (
 
 const questionnaireItemsMissingOptionsValidation = (items: ItemInterface[]): boolean => {
   return !items.find((item) => item.type === ItemType.choice && !item.options);
+};
+
+const questionnaireRangeItemsValidation = (items: ItemInterface[]): boolean => {
+  return !items.find((item) => item.type === ItemType.range && !item.range);
+};
+
+export const questionnaireSeverityLevelsValidation = (
+  severityLevel: SeverityLevelInterface[],
+): boolean => {
+  let prev;
+  try {
+    severityLevel
+      ?.sort((levelA, levelB) => levelA.min - levelB.min)
+      .forEach((item) => {
+        if (item.min > item.max || (prev && prev.max + 1 !== item.min)) {
+          throw new Error();
+        }
+
+        prev = item;
+      });
+  } catch {
+    return false;
+  }
+
+  return true;
 };

@@ -931,21 +931,21 @@ export class Queries {
             type
             active
             items {
-              name
+              label
               code
               type
               order
               options {
-                name
+                label
                 value
               }
               items {
-                name
+                label
                 code
                 type
                 order
                 options {
-                  name
+                  label
                   value
                 }
               }

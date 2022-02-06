@@ -68,5 +68,38 @@ describe('Validations - questionnaire', () => {
         invalidFieldsErrors: [Errors.get(ErrorType.questionnaireItemMissingOptionsCode)],
       });
     });
+
+    // eslint-disable-next-line max-len
+    it('should fail to create a questionnaire due to missing range in a `range` type item', async () => {
+      const createQuestionnaireParams: CreateQuestionnaireParams =
+        generateCreateQuestionnaireParams({
+          items: [{ ...mockGenerateQuestionnaireItem(), type: ItemType.range, range: undefined }],
+        });
+
+      await handler.mutations.createQuestionnaire({
+        createQuestionnaireParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.questionnaireItemMissingRangeCode)],
+      });
+    });
+
+    it('should fail to create a questionnaire due to invalid severity level list', async () => {
+      const createQuestionnaireParams: CreateQuestionnaireParams =
+        generateCreateQuestionnaireParams({
+          items: [
+            {
+              ...mockGenerateQuestionnaireItem(),
+            },
+          ],
+          severityLevels: [
+            { min: 0, max: 4, label: 'low level' },
+            { min: 4, max: 5, label: 'high level' }, // invalid range (max of N element must equal N+1 element min value + 1)
+          ],
+        });
+
+      await handler.mutations.createQuestionnaire({
+        createQuestionnaireParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.questionnaireSeverityLevelInvalidCode)],
+      });
+    });
   });
 });
