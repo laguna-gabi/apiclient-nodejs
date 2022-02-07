@@ -2,6 +2,7 @@ import { Field, InputType, ObjectType, OmitType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { RecordingType } from '../common';
+import { ISoftDelete } from '../db';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -122,5 +123,5 @@ export class RecordingOutput extends OmitType(Recording, ['memberId'] as const) 
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type RecordingDocument = Recording & Document;
+export type RecordingDocument = Recording & Document & ISoftDelete<Recording>;
 export const MemberRecordingDto = SchemaFactory.createForClass(Recording);

@@ -56,6 +56,7 @@ import {
   ErrorType,
   Errors,
   EventType,
+  IEventDeleteMember,
   IEventOnNewAppointment,
   IEventOnNewMemberCommunication,
   IEventOnUpdatedAppointmentScores,
@@ -83,7 +84,7 @@ export class MemberService extends BaseService {
     private readonly memberConfigModel: Model<MemberConfigDocument> &
       ISoftDelete<MemberConfigDocument>,
     @InjectModel(Recording.name)
-    private readonly recordingModel: Model<RecordingDocument>,
+    private readonly recordingModel: Model<RecordingDocument> & ISoftDelete<RecordingDocument>,
     @InjectModel(ControlMember.name)
     private readonly controlMemberModel: Model<ControlMemberDocument>,
     @InjectModel(Caregiver.name)
@@ -828,6 +829,30 @@ export class MemberService extends BaseService {
 
   async getRecordings(memberId: string): Promise<RecordingOutput[]> {
     return this.recordingModel.find({ memberId: new Types.ObjectId(memberId) });
+  }
+
+  @OnEvent(EventType.onDeletedMember, { async: true })
+  async deleteMemberRecordings(params: IEventDeleteMember) {
+    this.logger.info(params, MemberService.name, this.deleteMemberRecordings.name);
+    const { memberId, hard, deletedBy } = params;
+    try {
+      const recordings = await this.recordingModel.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
+      if (!recordings) return;
+
+      if (hard) {
+        await this.recordingModel.deleteMany({ memberId: new Types.ObjectId(memberId) });
+      } else {
+        await Promise.all(
+          recordings.map(async (recording) => {
+            await recording.delete(new Types.ObjectId(deletedBy));
+          }),
+        );
+      }
+    } catch (ex) {
+      this.logger.error(params, MemberService.name, this.deleteMemberRecordings.name, formatEx(ex));
+    }
   }
 
   /************************************************************************************************

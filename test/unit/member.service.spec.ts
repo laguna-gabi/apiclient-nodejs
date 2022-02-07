@@ -22,7 +22,14 @@ import {
   AppointmentModule,
   AppointmentStatus,
 } from '../../src/appointment';
-import { ErrorType, Errors, LoggerService, PhoneType, RecordingType } from '../../src/common';
+import {
+  ErrorType,
+  Errors,
+  IEventDeleteMember,
+  LoggerService,
+  PhoneType,
+  RecordingType,
+} from '../../src/common';
 import {
   ActionItem,
   ActionItemDto,
@@ -2225,6 +2232,67 @@ describe('MemberService', () => {
       expect(review.content).toEqual(newParams.content);
       expect(review.updatedAt).toBeInstanceOf(Date);
       expect(review.createdAt).not.toEqual(review.updatedAt);
+    });
+  });
+
+  describe('deleteMemberRecordings', () => {
+    test.each([true, false])('should delete member recordings', async (hard) => {
+      const memberId = await generateMember();
+      const params = generateUpdateRecordingParams({ memberId });
+      const params2 = generateUpdateRecordingParams({ memberId });
+      await service.updateRecording(params, params.userId);
+      await service.updateRecording(params2, params2.userId);
+      const deletedBy = generateId();
+
+      const eventParams: IEventDeleteMember = {
+        memberId,
+        deletedBy,
+        hard,
+      };
+
+      await service.deleteMemberRecordings(eventParams);
+      // @ts-ignore
+      const deletedResult = await modelRecording.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
+
+      if (hard) {
+        expect(deletedResult).toEqual([]);
+      } else {
+        expect(deletedResult.length).toEqual(2);
+        await checkDelete(deletedResult, { memberId: new Types.ObjectId(memberId) }, deletedBy);
+      }
+    });
+
+    it('should be able to hard delete after soft delete', async () => {
+      const memberId = await generateMember();
+      const params = generateUpdateRecordingParams({ memberId });
+      const params2 = generateUpdateRecordingParams({ memberId });
+      await service.updateRecording(params, params.userId);
+      await service.updateRecording(params2, params2.userId);
+      const deletedBy = generateId();
+
+      const eventParams: IEventDeleteMember = {
+        memberId,
+        deletedBy,
+        hard: false,
+      };
+
+      await service.deleteMemberRecordings(eventParams);
+      // @ts-ignore
+      const deletedResult = await modelRecording.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
+
+      expect(deletedResult.length).toEqual(2);
+      await checkDelete(deletedResult, { memberId: new Types.ObjectId(memberId) }, deletedBy);
+
+      await service.deleteMemberRecordings({ ...eventParams, hard: true });
+      // @ts-ignore
+      const deletedResultHard = await modelRecording.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
+      expect(deletedResultHard).toEqual([]);
     });
   });
 

@@ -402,6 +402,13 @@ describe('Integration tests: all', () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org, useNewUser: true });
       const appointment = await creators.createAndValidateAppointment({ member });
+      const recording = generateUpdateRecordingParams({
+        memberId: member.id,
+        appointmentId: appointment.id,
+        end: new Date(),
+      });
+      await handler.mutations.updateRecording({ updateRecordingParams: recording });
+
       const deleteMemberParams = generateDeleteMemberParams({ memberId: member.id, hard });
       const result = await handler
         .setContextUserId(generateId())
@@ -422,6 +429,9 @@ describe('Integration tests: all', () => {
       });
       expect(communication).toBeNull();
 
+      const recordings = await handler.queries.getRecordings({ memberId: member.id });
+      expect(recordings).toEqual([]);
+
       if (hard) {
         // todo: add soft delete for these and then remove condition
         const appointmentResult = await handler.queries.getAppointment(appointment.id);
@@ -441,9 +451,6 @@ describe('Integration tests: all', () => {
           },
         });
         expect(dailyReports.dailyReports.data).toEqual([]);
-
-        const recordings = await handler.queries.getRecordings({ memberId: member.id });
-        expect(recordings).toEqual([]);
       }
     });
   });
