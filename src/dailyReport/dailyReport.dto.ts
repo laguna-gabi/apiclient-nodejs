@@ -3,6 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, IsObjectId, IsStringDate } from '../common';
 import { IsOptional } from 'class-validator';
+import { ISoftDelete } from '../db';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -109,7 +110,7 @@ export class DailyReportResults {
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type DailyReportDocument = DailyReport & Document;
+export type DailyReportDocument = DailyReport & Document & ISoftDelete<DailyReport>;
 export const DailyReportDto = SchemaFactory.createForClass(DailyReport).index(
   { memberId: 1, date: 1 },
   { unique: true },

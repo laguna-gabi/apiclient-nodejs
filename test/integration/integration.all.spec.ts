@@ -399,6 +399,7 @@ describe('Integration tests: all', () => {
 
   describe('delete member', () => {
     test.each([true, false])('should delete a member ', async (hard) => {
+      // setup
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org, useNewUser: true });
       const appointment = await creators.createAndValidateAppointment({ member });
@@ -409,6 +410,20 @@ describe('Integration tests: all', () => {
       });
       await handler.mutations.updateRecording({ updateRecordingParams: recording });
 
+      const startDate = faker.date.past();
+      const day1 = reformatDate(startDate.toString(), general.get('dateFormatString'));
+      const day2 = reformatDate(
+        add(startDate, { days: 2 }).toString(),
+        general.get('dateFormatString'),
+      );
+      await handler.setContextUserId(member.id).mutations.setDailyReportCategories({
+        dailyReportCategoriesInput: {
+          date: day1,
+          categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
+        },
+      });
+
+      // delete member
       const deleteMemberParams = generateDeleteMemberParams({ memberId: member.id, hard });
       const result = await handler
         .setContextUserId(generateId())
@@ -432,25 +447,20 @@ describe('Integration tests: all', () => {
       const recordings = await handler.queries.getRecordings({ memberId: member.id });
       expect(recordings).toEqual([]);
 
+      const dailyReports = await handler.queries.getDailyReports({
+        dailyReportQueryInput: {
+          memberId: member.id,
+          startDate: day1,
+          endDate: day2,
+        },
+      });
+      expect(dailyReports.dailyReports.data).toEqual([]);
+
       if (hard) {
         // todo: add soft delete for these and then remove condition
         const appointmentResult = await handler.queries.getAppointment(appointment.id);
         expect(appointmentResult).toBeNull();
 
-        const startDate = faker.date.past();
-        const day1 = reformatDate(startDate.toString(), general.get('dateFormatString'));
-        const day2 = reformatDate(
-          add(startDate, { days: 2 }).toString(),
-          general.get('dateFormatString'),
-        );
-        const dailyReports = await handler.queries.getDailyReports({
-          dailyReportQueryInput: {
-            memberId: member.id,
-            startDate: day1,
-            endDate: day2,
-          },
-        });
-        expect(dailyReports.dailyReports.data).toEqual([]);
       }
     });
   });

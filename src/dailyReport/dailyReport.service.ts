@@ -14,12 +14,13 @@ import {
 } from '.';
 import { BaseService, EventType, IEventDeleteMember, LoggerService } from '../common';
 import { formatEx } from '@lagunahealth/pandora';
+import { ISoftDelete } from '../db';
 
 @Injectable()
 export class DailyReportService extends BaseService {
   constructor(
     @InjectModel(DailyReport.name)
-    private readonly dailyReport: Model<DailyReportDocument>,
+    private readonly dailyReport: Model<DailyReportDocument> & ISoftDelete<DailyReportDocument>,
     private readonly logger: LoggerService,
   ) {
     super();
@@ -98,7 +99,7 @@ export class DailyReportService extends BaseService {
         memberId: Types.ObjectId(dailyReportCategoryEntry.memberId),
         date: dailyReportCategoryEntry.date,
       },
-      dbObject,
+      { ...dbObject, deleted: false },
       {
         upsert: true,
         new: true,
@@ -182,12 +183,21 @@ export class DailyReportService extends BaseService {
   @OnEvent(EventType.onDeletedMember, { async: true })
   async deleteMemberDailyReports(params: IEventDeleteMember) {
     this.logger.info(params, DailyReportService.name, this.deleteMemberDailyReports.name);
-    const { memberId, hard } = params;
+    const { memberId, hard, deletedBy } = params;
     try {
+      const dailyReports = await this.dailyReport.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
+      if (!dailyReports) return;
       if (hard) {
         await this.dailyReport.deleteMany({ memberId: new Types.ObjectId(memberId) });
+      } else {
+        await Promise.all(
+          dailyReports.map(async (dailyReport) => {
+            await dailyReport.delete(new Types.ObjectId(deletedBy));
+          }),
+        );
       }
-      // todo: add soft delete
     } catch (ex) {
       this.logger.error(
         params,

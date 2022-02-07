@@ -11,7 +11,7 @@ import {
   DailyReportModule,
   DailyReportService,
 } from '../../src/dailyReport';
-import { dbDisconnect, defaultModules, generateId, generateObjectId } from '../index';
+import { checkDelete, dbDisconnect, defaultModules, generateId, generateObjectId } from '../index';
 
 describe('DailyReportCategoryService', () => {
   let service: DailyReportService;
@@ -343,24 +343,64 @@ describe('DailyReportCategoryService', () => {
     });
   });
 
-  describe('deleteDailyReports', () => {
-    it(`model deleteMany should be called with the correct parameters - hard delete`, async () => {
-      const spyOnDailyReportCategoryModel = jest
-        .spyOn(dailyReportModel, 'deleteMany')
-        .mockResolvedValue(undefined);
-
+  /* eslint-disable @typescript-eslint/ban-ts-comment */
+  describe('deleteMemberDailyReports', () => {
+    test.each([true, false])(`should delete members daily report`, async (hard) => {
       const memberId = generateId();
+      const deletedBy = generateId();
+      const dailyReport: DailyReport = {
+        date: '2015/01/01',
+        memberId: Types.ObjectId(memberId),
+        categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
+      };
+      await dailyReportModel.create(dailyReport);
 
       const params: IEventDeleteMember = {
         memberId: memberId,
-        deletedBy: generateId(),
-        hard: true,
+        deletedBy,
+        hard,
       };
       await service.deleteMemberDailyReports(params);
-
-      expect(spyOnDailyReportCategoryModel).toBeCalledWith({
+      // @ts-ignore
+      const deletedResult = await dailyReportModel.findWithDeleted({
         memberId: new Types.ObjectId(memberId),
       });
+
+      if (hard) {
+        expect(deletedResult).toEqual([]);
+      } else {
+        await checkDelete(deletedResult, { memberId: new Types.ObjectId(memberId) }, deletedBy);
+      }
+    });
+
+    it(`should be able to hard delete after soft delete`, async () => {
+      const memberId = generateId();
+      const deletedBy = generateId();
+      const dailyReport: DailyReport = {
+        date: '2015/01/01',
+        memberId: Types.ObjectId(memberId),
+        categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
+      };
+      await dailyReportModel.create(dailyReport);
+
+      const params: IEventDeleteMember = {
+        memberId: memberId,
+        deletedBy,
+        hard: false,
+      };
+      await service.deleteMemberDailyReports(params);
+      // @ts-ignore
+      const deletedResult = await dailyReportModel.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
+      await checkDelete(deletedResult, { memberId: new Types.ObjectId(memberId) }, deletedBy);
+
+      await service.deleteMemberDailyReports({ ...params, hard: true });
+      // @ts-ignore
+      const deletedResultHard = await dailyReportModel.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
+      expect(deletedResultHard).toEqual([]);
     });
   });
 });
