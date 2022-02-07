@@ -23,17 +23,17 @@
             "createTodo": {
                 "MEDS": "",
                 "APPT": "",
-                "todo": ""
+                "TODO": ""
             },
             "updateTodo": {
                 "MEDS": "",
                 "APPT": "",
-                "todo": ""
+                "TODO": ""
             },
             "deleteTodo": {
                 "MEDS": "",
                 "APPT": "",
-                "todo": ""
+                "TODO": ""
             }
         },
         "honorific": {

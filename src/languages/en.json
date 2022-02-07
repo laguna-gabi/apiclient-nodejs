@@ -23,17 +23,17 @@
             "createTodo": {
                 "MEDS": "Your coach, {{user.firstName}}, added a new medication for you. Tap here to review",
                 "APPT": "Your coach, {{user.firstName}}, added a new appointment for you. Tap here to review",
-                "todo": "Your coach, {{user.firstName}}, added a new to-do for you. Tap here to review"
+                "TODO": "Your coach, {{user.firstName}}, added a new to-do for you. Tap here to review"
             },
             "updateTodo": {
                 "MEDS": "Your coach, {{user.firstName}}, changed your medications. Tap here to review",
                 "APPT": "Your coach, {{user.firstName}}, changed an appointment details. Tap here to review",
-                "todo": "Your coach, {{user.firstName}}, changed a to-do. Tap here to review"
+                "TODO": "Your coach, {{user.firstName}}, changed a to-do. Tap here to review"
             },
             "deleteTodo": {
                 "MEDS": "Your coach, {{user.firstName}}, deleted a medication. Tap here to review",
                 "APPT": "Your coach, {{user.firstName}}, deleted an appointment details. Tap here to review",
-                "todo": "Your coach, {{user.firstName}}, deleted a to-d. Tap here to review"
+                "TODO": "Your coach, {{user.firstName}}, deleted a to-do. Tap here to review"
             }
         },
         "honorific": {
