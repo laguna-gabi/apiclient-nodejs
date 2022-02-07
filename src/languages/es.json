@@ -21,19 +21,16 @@
             "setCallPermissions": "",
             "scheduleAppointment": "",
             "createTodo": {
-                "content": "",
                 "MEDS": "",
                 "APPT": "",
                 "todo": ""
             },
             "updateTodo": {
-                "content": "",
                 "MEDS": "",
                 "APPT": "",
                 "todo": ""
             },
             "deleteTodo": {
-                "content": "",
                 "MEDS": "",
                 "APPT": "",
                 "todo": ""
