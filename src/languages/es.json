@@ -1,1 +1,52 @@
-
+{
+    "translation": {
+        "contents": {
+            "newMember": "",
+            "newControlMember": "",
+            "newMemberNudge": "",
+            "newRegisteredMember": "",
+            "newRegisteredMemberNudge": "",
+            "appointmentScheduledMember": "",
+            "appointmentLongReminder": "",
+            "appointmentReminder": "",
+            "appointmentReminderLink": "",
+            "appointmentRequest": "",
+            "appointmentRequestLink": "",
+            "newChatMessageFromUser": "",
+            "logReminder": "",
+            "newChatMessageFromMember": "",
+            "appointmentScheduledUser": "",
+            "memberNotFeelingWellMessage": "",
+            "addCaregiverDetails": "",
+            "setCallPermissions": "",
+            "scheduleAppointment": "",
+            "createTodo": "",
+            "updateTodo": "",
+            "deleteTodo": ""
+        },
+        "honorific": {
+            "mr": "Señor.",
+            "mrs": "Señora.",
+            "ms": "Sra.",
+            "miss": "Señorita.",
+            "mx": "Mx.",
+            "dr": "Dr.",
+            "reverend": "Reverend.",
+            "professor": "Profesor.",
+            "captain": "Capitán.",
+            "coach": "Entrenador.",
+            "father": "El padre."
+        },
+        "alerts": {
+            "customContent": "",
+            "newChatMessageFromMember": "",
+            "actionItemOverdue": "",
+            "appointmentReviewOverdue": "",
+            "appointmentScheduledUser": "",
+            "memberAssigned": "",
+            "memberNotFeelingWellMessage": "",
+            "journalContent": "",
+            "appointmentReviewed": ""
+        }
+    }
+}
