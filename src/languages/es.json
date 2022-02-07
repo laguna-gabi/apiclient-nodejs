@@ -20,9 +20,24 @@
             "addCaregiverDetails": "",
             "setCallPermissions": "",
             "scheduleAppointment": "",
-            "createTodo": "",
-            "updateTodo": "",
-            "deleteTodo": ""
+            "createTodo": {
+                "content": "",
+                "MEDS": "",
+                "APPT": "",
+                "todo": ""
+            },
+            "updateTodo": {
+                "content": "",
+                "MEDS": "",
+                "APPT": "",
+                "todo": ""
+            },
+            "deleteTodo": {
+                "content": "",
+                "MEDS": "",
+                "APPT": "",
+                "todo": ""
+            }
         },
         "honorific": {
             "mr": "Señor.",
