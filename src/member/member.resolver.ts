@@ -193,7 +193,6 @@ export class MemberResolver extends MemberBase {
       memberId,
       deletedBy: userId,
       hard,
-      primaryUserId: member.primaryUserId.toString(),
     };
     await this.deleteSchedules(eventParams);
     this.notifyDeletedMemberConfig(memberId);

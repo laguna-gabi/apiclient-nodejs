@@ -159,7 +159,7 @@ describe('AvailabilityService', () => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const deletedResult = await availabilityModel.findWithDeleted(ids[0]);
-      checkDelete(deletedResult, ids[0], userId);
+      checkDelete(deletedResult, { _id: ids[0] }, userId);
     });
 
     it('should throw exception when trying to delete a non existing availability', async () => {

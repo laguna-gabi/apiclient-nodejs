@@ -417,15 +417,15 @@ describe('Integration tests: all', () => {
         errors: [{ code: ErrorType.memberNotFound, message: Errors.get(ErrorType.memberNotFound) }],
       });
 
+      const communication = await handler.queries.getCommunication({
+        getCommunicationParams: { memberId: member.id, userId: member.primaryUserId.toString() },
+      });
+      expect(communication).toBeNull();
+
       if (hard) {
         // todo: add soft delete for these and then remove condition
         const appointmentResult = await handler.queries.getAppointment(appointment.id);
         expect(appointmentResult).toBeNull();
-
-        const communication = await handler.queries.getCommunication({
-          getCommunicationParams: { memberId: member.id, userId: member.primaryUserId.toString() },
-        });
-        expect(communication).toBeNull();
 
         const startDate = faker.date.past();
         const day1 = reformatDate(startDate.toString(), general.get('dateFormatString'));

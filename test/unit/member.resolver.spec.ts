@@ -529,7 +529,6 @@ describe('MemberResolver', () => {
         memberId: member.id,
         deletedBy: userId,
         hard: params.hard,
-        primaryUserId: member.primaryUserId.toString(),
       };
       expect(spyOnDeleteSchedules).toBeCalledWith(eventParams);
       expect(spyOnServiceDeleteMember).toBeCalledWith(deleteMemberParams, userId);

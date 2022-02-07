@@ -842,9 +842,7 @@ describe('MemberService', () => {
     test.each([true, false])('should delete member, member config & actionItems', async (hard) => {
       const memberId = await generateMember();
       const userId = generateId();
-      const memberConfigDocument = await memberConfigModel.findOne({
-        memberId,
-      });
+
       const { id: actionItemId } = await service.insertActionItem({
         createTaskParams: generateCreateTaskParams({ memberId }),
         status: TaskStatus.pending,
@@ -861,9 +859,7 @@ describe('MemberService', () => {
       // @ts-ignore
       const memberDeletedResult = await memberModel.findWithDeleted(new Types.ObjectId(memberId));
       // @ts-ignore
-      const memberConfigDeletedResult = await memberConfigModel.findWithDeleted(
-        memberConfigDocument._id,
-      );
+      const memberConfigDeletedResult = await memberConfigModel.findWithDeleted({ memberId });
       // @ts-ignore
       const ActionItemsDeletedResult = await modelActionItem.findWithDeleted(actionItemId);
 
@@ -880,9 +876,9 @@ describe('MemberService', () => {
           expect(result).toEqual([]);
         });
       } else {
-        await checkDelete(memberDeletedResult, new Types.ObjectId(memberId), userId);
-        await checkDelete(memberConfigDeletedResult, memberConfigDocument._id, userId);
-        await checkDelete(ActionItemsDeletedResult, actionItemId, userId);
+        await checkDelete(memberDeletedResult, { _id: new Types.ObjectId(memberId) }, userId);
+        await checkDelete(memberConfigDeletedResult, { memberId }, userId);
+        await checkDelete(ActionItemsDeletedResult, { _id: actionItemId }, userId);
       }
     });
 
@@ -926,9 +922,9 @@ describe('MemberService', () => {
       // @ts-ignore
       const ActionItemsDeletedResult = await modelActionItem.findWithDeleted(actionItemId);
 
-      await checkDelete(memberDeletedResult, new Types.ObjectId(memberId), userId);
-      await checkDelete(memberConfigDeletedResult, memberConfigDocument._id, userId);
-      await checkDelete(ActionItemsDeletedResult, actionItemId, userId);
+      await checkDelete(memberDeletedResult, { _id: new Types.ObjectId(memberId) }, userId);
+      await checkDelete(memberConfigDeletedResult, { memberId }, userId);
+      await checkDelete(ActionItemsDeletedResult, { _id: actionItemId }, userId);
 
       //todo: add goals if necessary
 

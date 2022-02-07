@@ -355,7 +355,6 @@ describe('DailyReportCategoryService', () => {
         memberId: memberId,
         deletedBy: generateId(),
         hard: true,
-        primaryUserId: generateId(),
       };
       await service.deleteMemberDailyReports(params);
 

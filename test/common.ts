@@ -90,14 +90,14 @@ export const compareMembers = (member: Member, memberBase, primaryUserId?) => {
   }
 };
 
-export const checkDelete = (deletedResult, id: Types.ObjectId | string, deletedBy: string) => {
+export const checkDelete = (deletedResult, paramsToTest, deletedBy: string) => {
   expect(deletedResult).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        _id: id,
         deleted: true,
         deletedAt: expect.any(Date),
         deletedBy: new Types.ObjectId(deletedBy),
+        ...paramsToTest,
       }),
     ]),
   );

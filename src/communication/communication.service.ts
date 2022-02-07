@@ -26,12 +26,14 @@ import { Member } from '../member';
 import { SendBird, TwilioService } from '../providers';
 import { User } from '../user';
 import { Platform, formatEx } from '@lagunahealth/pandora';
+import { ISoftDelete } from '../db';
 
 @Injectable()
 export class CommunicationService {
   constructor(
     @InjectModel(Communication.name)
-    private readonly communicationModel: Model<CommunicationDocument>,
+    private readonly communicationModel: Model<CommunicationDocument> &
+      ISoftDelete<CommunicationDocument>,
     private readonly sendBird: SendBird,
     private eventEmitter: EventEmitter2,
     private readonly twilio: TwilioService,
@@ -263,48 +265,27 @@ export class CommunicationService {
     return { count, memberId: result.memberId.toString(), userId: result.userId.toString() };
   }
 
-  async freezeGroupChannel({ memberId, userId }: { memberId: string; userId: string }) {
-    this.logger.info({ memberId, userId }, CommunicationService.name, this.freezeGroupChannel.name);
-    const [communication] = await this.communicationModel.find({
-      memberId: new Types.ObjectId(memberId),
-      userId: new Types.ObjectId(userId),
-    });
-    if (!communication) {
-      this.logger.warn(
-        { memberId, userId },
-        CommunicationService.name,
-        this.freezeGroupChannel.name,
-        { message: Errors.get(ErrorType.communicationMemberUserNotFound) },
-      );
-      return;
-    }
-    return this.sendBird.freezeGroupChannel(communication.sendBirdChannelUrl, true);
-  }
-
   @OnEvent(EventType.onDeletedMember, { async: true })
   async deleteMemberCommunication(params: IEventDeleteMember) {
     this.logger.info(params, CommunicationService.name, this.deleteMemberCommunication.name);
-    const { memberId, hard, primaryUserId } = params;
+    const { memberId, hard, deletedBy } = params;
     try {
-      // todo: get with deleted
-      const communication = await this.getMemberUserCommunication({
-        memberId,
-        userId: primaryUserId,
+      const communications = await this.communicationModel.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
       });
+      if (!communications) return;
       if (hard) {
-        // todo: delete all member's communications and not just one
-        await this.communicationModel.deleteOne({
-          memberId: communication.memberId,
-          userId: communication.userId,
-        });
-        await this.sendBird.deleteGroupChannel(communication.sendBirdChannelUrl);
-        await this.sendBird.deleteUser(communication.memberId.toString());
+        await this.communicationModel.deleteMany({ memberId: new Types.ObjectId(memberId) });
+        // assuming all communications have the same sendbird channel
+        await this.sendBird.deleteGroupChannel(communications[0].sendBirdChannelUrl);
+        await this.sendBird.deleteUser(memberId.toString());
       } else {
-        // todo: add soft delete
-        await this.freezeGroupChannel({
-          memberId,
-          userId: primaryUserId,
-        });
+        await this.sendBird.freezeGroupChannel(communications[0].sendBirdChannelUrl, true);
+        await Promise.all(
+          communications.map(async (communication) => {
+            await communication.delete(new Types.ObjectId(deletedBy));
+          }),
+        );
       }
     } catch (ex) {
       this.logger.error(

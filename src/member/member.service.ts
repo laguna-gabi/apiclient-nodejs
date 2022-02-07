@@ -426,7 +426,6 @@ export class MemberService extends BaseService {
     if (!member || !memberConfig) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
-
     if (hard) {
       await this.hardDeleteMember(member);
     } else {
@@ -467,7 +466,6 @@ export class MemberService extends BaseService {
     // todo: take recording out to an event triggered method & add soft
     await this.recordingModel.deleteMany({ memberId: new Types.ObjectId(member.id) });
   }
-
   /************************************************************************************************
    ******************************************** Control *******************************************
    ************************************************************************************************/

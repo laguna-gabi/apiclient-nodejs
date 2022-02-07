@@ -24,9 +24,11 @@ import {
   CommunicationService,
 } from '../../src/communication';
 import {
+  checkDelete,
   dbConnect,
   dbDisconnect,
   defaultModules,
+  generateCommunication,
   generateId,
   generateUniqueUrl,
   mockGenerateMember,
@@ -367,7 +369,6 @@ describe('CommunicationService', () => {
         platform,
       };
       mockServiceGet.mockImplementationOnce(async () => undefined);
-
       await service.updateUserInCommunication(params);
       expect(spyOnServicesConnectMemberToUser).toBeCalledWith(member, newUser, platform);
     });
@@ -375,65 +376,100 @@ describe('CommunicationService', () => {
 
   describe('deleteMemberCommunication', () => {
     let mockServiceGetMemberUserCommunication;
-    let mockServiceFreezeGroupChannel;
 
     beforeEach(() => {
       mockServiceGetMemberUserCommunication = jest.spyOn(service, 'getMemberUserCommunication');
-      mockServiceFreezeGroupChannel = jest.spyOn(service, 'freezeGroupChannel');
     });
 
     afterEach(() => {
       mockServiceGetMemberUserCommunication.mockReset();
-      mockServiceFreezeGroupChannel.mockReset();
       sendBirdMock.spyOnSendBirdDeleteGroupChannel.mockReset();
       sendBirdMock.spyOnSendBirdDeleteUser.mockReset();
+      sendBirdMock.spyOnSendBirdFreeze.mockReset();
     });
 
-    it('should delete member sendBird user and channel - hard delete', async () => {
+    /* eslint-disable @typescript-eslint/ban-ts-comment */
+    test.each([true, false])('should delete member communications', async (hard) => {
       const member = mockGenerateMember();
       const user = mockGenerateUser();
-
-      const communication = {
+      const user2 = mockGenerateUser();
+      const sendBirdChannelUrl = generateUniqueUrl();
+      const deletedBy = generateId();
+      const communication = generateCommunication({
         memberId: new Types.ObjectId(member.id),
-        userId: user.id,
-        sendBirdChannelUrl: generateUniqueUrl(),
-      };
-      mockServiceGetMemberUserCommunication.mockImplementationOnce(async () => communication);
+        userId: new Types.ObjectId(user.id),
+        sendBirdChannelUrl,
+      });
+      const communication2 = generateCommunication({
+        memberId: new Types.ObjectId(member.id),
+        userId: new Types.ObjectId(user2.id),
+        sendBirdChannelUrl,
+      });
+      await communicationModel.create(communication);
+      await communicationModel.create(communication2);
 
       const params: IEventDeleteMember = {
         memberId: member.id,
-        deletedBy: generateId(),
-        hard: true,
-        primaryUserId: generateId(),
+        deletedBy,
+        hard,
       };
-
-      await communicationModel.create(communication);
       await service.deleteMemberCommunication(params);
 
-      const communicationResult = await communicationModel.find(communication);
-      expect(communicationResult).toEqual([]);
+      // @ts-ignore
+      const deletedResult = await communicationModel.findWithDeleted({
+        memberId: new Types.ObjectId(member.id),
+      });
+
+      if (hard) {
+        expect(deletedResult).toEqual([]);
+        expect(sendBirdMock.spyOnSendBirdDeleteGroupChannel).toBeCalledWith(
+          communication.sendBirdChannelUrl,
+        );
+        expect(sendBirdMock.spyOnSendBirdDeleteUser).toBeCalledWith(member.id);
+      } else {
+        expect(deletedResult.length).toEqual(2);
+        await checkDelete(deletedResult, { memberId: new Types.ObjectId(member.id) }, deletedBy);
+        expect(sendBirdMock.spyOnSendBirdFreeze).toBeCalledWith(sendBirdChannelUrl, true);
+      }
+    });
+
+    it('should be able to hard delete after soft delete', async () => {
+      const member = mockGenerateMember();
+      const user = mockGenerateUser();
+      const sendBirdChannelUrl = generateUniqueUrl();
+      const deletedBy = generateId();
+      const communication = generateCommunication({
+        memberId: new Types.ObjectId(member.id),
+        userId: new Types.ObjectId(user.id),
+        sendBirdChannelUrl,
+      });
+      await communicationModel.create(communication);
+
+      const params: IEventDeleteMember = {
+        memberId: member.id,
+        deletedBy,
+        hard: false,
+      };
+      await service.deleteMemberCommunication(params);
+      // @ts-ignore
+      const deletedResult = await communicationModel.findWithDeleted({
+        memberId: new Types.ObjectId(member.id),
+      });
+
+      expect(deletedResult.length).toEqual(1);
+      await checkDelete(deletedResult, { memberId: new Types.ObjectId(member.id) }, deletedBy);
+      expect(sendBirdMock.spyOnSendBirdFreeze).toBeCalledWith(sendBirdChannelUrl, true);
+
+      await service.deleteMemberCommunication({ ...params, hard: true });
+      // @ts-ignore
+      const deletedResultHard = await communicationModel.findWithDeleted({
+        memberId: new Types.ObjectId(member.id),
+      });
+      expect(deletedResultHard).toEqual([]);
       expect(sendBirdMock.spyOnSendBirdDeleteGroupChannel).toBeCalledWith(
         communication.sendBirdChannelUrl,
       );
       expect(sendBirdMock.spyOnSendBirdDeleteUser).toBeCalledWith(member.id);
-    });
-
-    it('should freeze sendbird channel - soft delete', async () => {
-      const member = mockGenerateMember();
-      const user = mockGenerateUser();
-
-      const params: IEventDeleteMember = {
-        memberId: member.id,
-        deletedBy: generateId(),
-        hard: false,
-        primaryUserId: user.id,
-      };
-
-      await service.deleteMemberCommunication(params);
-      expect(mockServiceFreezeGroupChannel).toBeCalledWith({
-        memberId: member.id,
-        userId: user.id,
-      });
     });
   });
 

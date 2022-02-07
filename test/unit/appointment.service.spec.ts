@@ -125,14 +125,14 @@ describe('AppointmentService', () => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const deletedResult = await appointmentModel.findWithDeleted(id);
-      checkDelete(deletedResult, id, params.userId);
+      checkDelete(deletedResult, { _id: id }, params.userId);
 
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const deletedNotesResult = await notesModel.findWithDeleted(appointment.notes._id);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      checkDelete(deletedNotesResult, appointment.notes._id, params.userId);
+      checkDelete(deletedNotesResult, { _id: appointment.notes._id }, params.userId);
     });
   });
 
@@ -761,7 +761,6 @@ describe('AppointmentService', () => {
         memberId: memberId,
         deletedBy: generateId(),
         hard: true,
-        primaryUserId: generateId(),
       };
       const appointmentsBefore = await appointmentModel.find({
         memberId: new Types.ObjectId(params.memberId),

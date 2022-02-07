@@ -553,8 +553,8 @@ export const generateGetCommunicationParams = ({
 export const generateCommunication = ({
   userId = v4(),
   memberId = v4(),
+  sendBirdChannelUrl = faker.datatype.uuid(),
 }: Partial<Communication> = {}): Communication => {
-  const sendBirdChannelUrl = faker.datatype.uuid();
   return { memberId, userId, sendBirdChannelUrl };
 };
 

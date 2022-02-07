@@ -44,7 +44,6 @@ export interface IEventMember {
 
 export interface IEventDeleteMember extends IEventMember {
   deletedBy: string;
-  primaryUserId: string;
   hard: boolean;
 }
 

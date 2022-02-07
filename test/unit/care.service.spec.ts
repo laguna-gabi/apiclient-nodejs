@@ -100,7 +100,7 @@ describe('CareService', () => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const deletedResult = await redFlagModel.findWithDeleted(new Types.ObjectId(id));
-      await checkDelete(deletedResult, new Types.ObjectId(id), userId);
+      await checkDelete(deletedResult, { _id: new Types.ObjectId(id) }, userId);
     });
 
     // eslint-disable-next-line max-len
