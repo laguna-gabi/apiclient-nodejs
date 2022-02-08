@@ -14,6 +14,8 @@ import {
 
 export const NotNullableTodoKeys = ['label', 'end'];
 
+export type TodoNotificationsType = 'createTodo' | 'updateTodo' | 'deleteTodo';
+
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
  *************************************************************************************************/
@@ -27,8 +29,8 @@ export enum TodoStatus {
 registerEnumType(TodoStatus, { name: 'TodoStatus' });
 
 export enum Label {
-  APPT = 'APPT',
   MEDS = 'MEDS',
+  APPT = 'APPT',
 }
 
 registerEnumType(Label, { name: 'Label' });

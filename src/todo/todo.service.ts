@@ -24,18 +24,16 @@ export class TodoService extends BaseService {
     super();
   }
 
-  async createTodo(createTodoParams: CreateTodoParams): Promise<Identifier> {
+  async createTodo(createTodoParams: CreateTodoParams): Promise<Todo> {
     this.removeNotNullable(createTodoParams, NotNullableTodoKeys);
     const { memberId, createdBy, updatedBy } = createTodoParams;
 
-    const { _id } = await this.todoModel.create({
+    return this.todoModel.create({
       ...createTodoParams,
       memberId: new Types.ObjectId(memberId),
       createdBy: new Types.ObjectId(createdBy),
       updatedBy: new Types.ObjectId(updatedBy),
     });
-
-    return { id: _id };
   }
 
   async getTodos(memberId: string): Promise<Todo[]> {
@@ -79,17 +77,15 @@ export class TodoService extends BaseService {
       },
     });
 
-    const createdTodo = await this.todoModel.create({
+    return this.todoModel.create({
       ...params,
       memberId: new Types.ObjectId(memberId),
       createdBy: new Types.ObjectId(endedTodo.createdBy),
       updatedBy: new Types.ObjectId(updatedBy),
     });
-
-    return createdTodo;
   }
 
-  async endTodo(id, updatedBy): Promise<boolean> {
+  async endTodo(id, updatedBy): Promise<Todo> {
     const endedTodo = await this.todoModel.findOne({ _id: new Types.ObjectId(id) });
 
     if (!endedTodo) {
@@ -107,7 +103,7 @@ export class TodoService extends BaseService {
       },
     });
 
-    return true;
+    return endedTodo;
   }
 
   async approveTodo(id: string, memberId: string): Promise<boolean> {

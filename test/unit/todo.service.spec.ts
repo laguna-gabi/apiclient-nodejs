@@ -66,14 +66,14 @@ describe('TodoService', () => {
         updatedBy: memberId,
       });
 
-      const { id } = await service.createTodo(params);
-      expect(id).not.toBeUndefined();
+      const todo = await service.createTodo(params);
+      expect(todo).not.toBeUndefined();
 
-      const createdTodo = await todoModel.findById(id).lean();
+      const createdTodo = await todoModel.findById(todo.id).lean();
       expect(createdTodo).toEqual(
         expect.objectContaining({
           ...params,
-          _id: id,
+          _id: generateObjectId(todo.id),
           memberId: generateObjectId(memberId),
           status: TodoStatus.active,
           createdBy: generateObjectId(memberId),
@@ -110,7 +110,7 @@ describe('TodoService', () => {
       expect(createdTodos).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            _id: id1,
+            _id: generateObjectId(id1),
             memberId: generateObjectId(memberId),
             text: params1.text,
             label: params1.label,
@@ -124,7 +124,7 @@ describe('TodoService', () => {
             updatedAt: expect.any(Date),
           }),
           expect.objectContaining({
-            _id: id2,
+            _id: generateObjectId(id2),
             memberId: generateObjectId(memberId),
             text: params2.text,
             label: params2.label,
@@ -283,8 +283,7 @@ describe('TodoService', () => {
 
       const { id } = await service.createTodo(createParams);
 
-      const result = await service.endTodo(id, userId);
-      expect(result).toBeTruthy();
+      await service.endTodo(id, userId);
 
       const endedTodo = await todoModel.findById(id).lean();
       expect(endedTodo).toEqual(
@@ -362,7 +361,7 @@ describe('TodoService', () => {
       expect(createdTodo).toEqual(
         expect.objectContaining({
           ...createTodoParams,
-          _id: todoId,
+          _id: generateObjectId(todoId),
           memberId: generateObjectId(memberId),
           status: TodoStatus.requested,
           createdBy: generateObjectId(memberId),
@@ -379,7 +378,7 @@ describe('TodoService', () => {
       expect(createdTodo).toEqual(
         expect.objectContaining({
           ...createTodoParams,
-          _id: todoId,
+          _id: generateObjectId(todoId),
           memberId: generateObjectId(memberId),
           status: TodoStatus.active,
           createdBy: generateObjectId(memberId),
@@ -435,6 +434,7 @@ describe('TodoService', () => {
       expect(createdTodoDone).toEqual(
         expect.objectContaining({
           ...createTodoDoneParams,
+          todoId: generateObjectId(todoId),
           _id: todoDoneId,
           memberId: generateObjectId(memberId),
           createdAt: expect.any(Date),
@@ -498,7 +498,7 @@ describe('TodoService', () => {
       expect(createdTodo).toEqual(
         expect.objectContaining({
           ...CreateTodoParams,
-          _id: todoId,
+          _id: generateObjectId(todoId),
           memberId: generateObjectId(memberId),
           status: TodoStatus.ended,
           createdBy: generateObjectId(memberId),
@@ -665,7 +665,7 @@ describe('TodoService', () => {
       expect(createdTodo).toEqual(
         expect.objectContaining({
           ...CreateTodoParams,
-          _id: todoId,
+          _id: generateObjectId(todoId),
           memberId: generateObjectId(memberId),
           status: TodoStatus.ended,
           createdBy: generateObjectId(memberId),
@@ -684,7 +684,7 @@ describe('TodoService', () => {
       expect(createdTodo).toEqual(
         expect.objectContaining({
           ...CreateTodoParams,
-          _id: todoId,
+          _id: generateObjectId(todoId),
           memberId: generateObjectId(memberId),
           status: TodoStatus.active,
           createdBy: generateObjectId(memberId),

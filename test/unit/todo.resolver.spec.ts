@@ -1,6 +1,20 @@
-import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
+import {
+  InternalKey,
+  NotificationType,
+  generateDispatchId,
+  mockLogger,
+  mockProcessWarnings,
+} from '@lagunahealth/pandora';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ErrorType, Errors, LoggerService, MemberRole, UserRole } from '../../src/common';
+import {
+  ErrorType,
+  Errors,
+  EventType,
+  LoggerService,
+  MemberRole,
+  UserRole,
+} from '../../src/common';
 import {
   CreateTodoDoneParams,
   CreateTodoParams,
@@ -23,13 +37,14 @@ import {
   mockGenerateMember,
   mockGenerateTodo,
   mockGenerateTodoDone,
-  mockGenerateUser,
 } from '../index';
 
 describe('TodoResolver', () => {
   let module: TestingModule;
   let resolver: TodoResolver;
   let service: TodoService;
+  let eventEmitter: EventEmitter2;
+  let spyOnEventEmitter;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -39,12 +54,19 @@ describe('TodoResolver', () => {
 
     resolver = module.get<TodoResolver>(TodoResolver);
     service = module.get<TodoService>(TodoService);
+    eventEmitter = module.get<EventEmitter2>(EventEmitter2);
+    spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
+
     mockLogger(module.get<LoggerService>(LoggerService));
   });
 
   afterAll(async () => {
     await module.close();
     await dbDisconnect();
+  });
+
+  afterEach(() => {
+    spyOnEventEmitter.mockReset();
   });
 
   describe('createTodo', () => {
@@ -56,13 +78,13 @@ describe('TodoResolver', () => {
 
     afterEach(() => {
       spyOnServiceCreateTodo.mockReset();
+      spyOnEventEmitter.mockReset();
     });
 
     it('should create a Todo by member', async () => {
-      const member = mockGenerateMember();
-      const memberId = member.id;
-      const id = generateId();
-      spyOnServiceCreateTodo.mockImplementationOnce(async () => id);
+      const memberId = generateId();
+      const todo = mockGenerateTodo({ memberId: generateObjectId(memberId) });
+      spyOnServiceCreateTodo.mockImplementationOnce(async () => todo);
       const params: CreateTodoParams = generateCreateTodoParams();
 
       const result = await resolver.createTodo([MemberRole.member], memberId, params);
@@ -71,16 +93,14 @@ describe('TodoResolver', () => {
       params.updatedBy = memberId;
 
       expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({ ...params, status: TodoStatus.active });
-      expect(result).toEqual(id);
+      expect(result).toEqual({ id: todo.id });
     });
 
-    test.each([UserRole.coach, UserRole.coach])('should create a Todo by user', async (role) => {
-      const member = mockGenerateMember();
-      const memberId = member.id;
-      const user = mockGenerateUser();
-      const userId = user.id;
-      const id = generateId();
-      spyOnServiceCreateTodo.mockImplementationOnce(async () => id);
+    test.each([UserRole.coach, UserRole.nurse])('should create a Todo by user', async (role) => {
+      const memberId = generateId();
+      const userId = generateId();
+      const todo = mockGenerateTodo({ memberId: generateObjectId(memberId) });
+      spyOnServiceCreateTodo.mockImplementationOnce(async () => todo);
       const params: CreateTodoParams = generateCreateTodoParams({ memberId });
       delete params.label;
 
@@ -89,19 +109,53 @@ describe('TodoResolver', () => {
       params.createdBy = userId;
       params.updatedBy = userId;
 
-      expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({ ...params, status: TodoStatus.active });
-      expect(result).toEqual(id);
+      expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({
+        ...params,
+        status: TodoStatus.active,
+      });
+      expect(result).toEqual({ id: todo.id });
     });
 
-    test.each([UserRole.coach, UserRole.coach])(
+    test.each([Label.MEDS, Label.APPT, undefined])(
+      'should create a Todo by user and send notification to member',
+      async (label) => {
+        const memberId = generateId();
+        const userId = generateId();
+        const todo = mockGenerateTodo({ memberId: generateObjectId(memberId), label });
+        spyOnServiceCreateTodo.mockImplementationOnce(async () => todo);
+        const params: CreateTodoParams = generateCreateTodoParams({ memberId });
+        delete params.label;
+
+        const result = await resolver.createTodo([UserRole.coach], userId, params);
+
+        params.createdBy = userId;
+        params.updatedBy = userId;
+
+        expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({
+          ...params,
+          status: TodoStatus.active,
+        });
+        expect(result).toEqual({ id: todo.id });
+
+        const contentKey = InternalKey[`createTodo${todo.label ? todo.label : 'TODO'}`];
+        expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDispatch, {
+          correlationId: expect.any(String),
+          dispatchId: generateDispatchId(contentKey, todo.memberId.toString(), todo.id),
+          notificationType: NotificationType.text,
+          recipientClientId: todo.memberId.toString(),
+          senderClientId: userId,
+          contentKey,
+        });
+      },
+    );
+
+    test.each([UserRole.coach, UserRole.nurse])(
       `should create a Todo by user in status requested if label ${Label.MEDS}`,
       async (role) => {
-        const member = mockGenerateMember();
-        const memberId = member.id;
-        const user = mockGenerateUser();
-        const userId = user.id;
-        const id = generateId();
-        spyOnServiceCreateTodo.mockImplementationOnce(async () => id);
+        const memberId = generateId();
+        const userId = generateId();
+        const todo = mockGenerateTodo({ memberId: generateObjectId(memberId) });
+        spyOnServiceCreateTodo.mockImplementationOnce(async () => todo);
         const params: CreateTodoParams = generateCreateTodoParams({ memberId, label: Label.MEDS });
         params.label = Label.MEDS;
 
@@ -113,7 +167,7 @@ describe('TodoResolver', () => {
           ...params,
           status: TodoStatus.requested,
         });
-        expect(result).toEqual(id);
+        expect(result).toEqual({ id: todo.id });
       },
     );
   });
@@ -162,6 +216,7 @@ describe('TodoResolver', () => {
 
     afterEach(() => {
       spyOnServiceEndAndCreateTodo.mockReset();
+      spyOnEventEmitter.mockReset();
     });
 
     it('should end and create Todo by member', async () => {
@@ -186,7 +241,7 @@ describe('TodoResolver', () => {
       expect(result).toEqual(newTodo);
     });
 
-    test.each([UserRole.coach, UserRole.coach])(
+    test.each([UserRole.coach, UserRole.nurse])(
       'should end and create Todo by user',
       async (role) => {
         const memberId = generateId();
@@ -212,7 +267,35 @@ describe('TodoResolver', () => {
       },
     );
 
-    test.each([UserRole.coach, UserRole.coach])(
+    test.each([Label.MEDS, Label.APPT, undefined])(
+      'should end and create a Todo by user and send notification to member with label = %p',
+      async (label) => {
+        const memberId = generateId();
+        const userId = generateId();
+        const newTodo = mockGenerateTodo({
+          memberId: generateObjectId(memberId),
+          createdBy: generateObjectId(memberId),
+          updatedBy: generateObjectId(memberId),
+          label,
+        });
+        spyOnServiceEndAndCreateTodo.mockImplementationOnce(async () => newTodo);
+        const params: EndAndCreateTodoParams = generateEndAndCreateTodoParams({ memberId });
+
+        await resolver.endAndCreateTodo([UserRole.coach], userId, params);
+
+        const contentKey = InternalKey[`updateTodo${newTodo.label ? newTodo.label : 'TODO'}`];
+        expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDispatch, {
+          correlationId: expect.any(String),
+          dispatchId: generateDispatchId(contentKey, newTodo.memberId.toString(), newTodo.id),
+          notificationType: NotificationType.text,
+          recipientClientId: newTodo.memberId.toString(),
+          senderClientId: userId,
+          contentKey,
+        });
+      },
+    );
+
+    test.each([UserRole.coach, UserRole.nurse])(
       `should end and create Todo by user in status requested if label ${Label.MEDS}`,
       async (role) => {
         const memberId = generateId();
@@ -252,6 +335,7 @@ describe('TodoResolver', () => {
     afterEach(() => {
       spyOnServiceGetTodo.mockReset();
       spyOnServiceEndTodo.mockReset();
+      spyOnEventEmitter.mockReset();
     });
 
     it('should end Todo by member', async () => {
@@ -276,7 +360,7 @@ describe('TodoResolver', () => {
       const todo = mockGenerateTodo({ id, memberId: generateObjectId(memberId) });
 
       spyOnServiceGetTodo.mockImplementationOnce(async () => todo);
-      spyOnServiceEndTodo.mockImplementationOnce(async () => true);
+      spyOnServiceEndTodo.mockImplementationOnce(async () => todo);
 
       const result = await resolver.endTodo(userId, [UserRole.coach], id);
 
@@ -284,6 +368,30 @@ describe('TodoResolver', () => {
       expect(spyOnServiceEndTodo).toHaveBeenCalledWith(id, userId);
       expect(result).toBeTruthy();
     });
+
+    test.each([Label.MEDS, Label.APPT, undefined])(
+      'should end a Todo by user and send notification to member with label = %p',
+      async (label) => {
+        const userId = generateId();
+        const memberId = generateId();
+        const id = generateId();
+        const todo = mockGenerateTodo({ id, memberId: generateObjectId(memberId), label });
+        spyOnServiceGetTodo.mockImplementationOnce(async () => todo);
+        spyOnServiceEndTodo.mockImplementationOnce(async () => todo);
+
+        await resolver.endTodo(userId, [UserRole.coach], id);
+
+        const contentKey = InternalKey[`deleteTodo${todo.label ? todo.label : 'TODO'}`];
+        expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDispatch, {
+          correlationId: expect.any(String),
+          dispatchId: generateDispatchId(contentKey, todo.memberId.toString(), todo.id),
+          notificationType: NotificationType.text,
+          recipientClientId: todo.memberId.toString(),
+          senderClientId: userId,
+          contentKey,
+        });
+      },
+    );
   });
 
   describe('approveTodo', () => {

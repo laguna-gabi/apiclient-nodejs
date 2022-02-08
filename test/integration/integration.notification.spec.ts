@@ -29,7 +29,13 @@ import {
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
   generateChatMessageUserMock,
+  generateCreateTodoAPPTMock,
+  generateCreateTodoMEDSMock,
+  generateCreateTodoTODOMock,
   generateDeleteDispatchMock,
+  generateDeleteTodoAPPTMock,
+  generateDeleteTodoMEDSMock,
+  generateDeleteTodoTODOMock,
   generateDispatchId,
   generateExternalContentMobileMock,
   generateExternalContentWebScheduleAppointmentMock,
@@ -46,6 +52,9 @@ import {
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
   generateUpdateMemberSettingsMock,
+  generateUpdateTodoAPPTMock,
+  generateUpdateTodoMEDSMock,
+  generateUpdateTodoTODOMock,
   generateUpdateUserSettingsMock,
 } from '@lagunahealth/pandora';
 import { general, hosts, scheduler } from 'config';
@@ -54,7 +63,13 @@ import * as faker from 'faker';
 import { internet } from 'faker';
 import { v4 } from 'uuid';
 import { Appointment } from '../../src/appointment';
-import { RegisterForNotificationParams, delay, generatePath, reformatDate } from '../../src/common';
+import {
+  RegisterForNotificationParams,
+  UserRole,
+  delay,
+  generatePath,
+  reformatDate,
+} from '../../src/common';
 import { DailyReportCategoriesInput, DailyReportCategoryTypes } from '../../src/dailyReport';
 import {
   AudioFormat,
@@ -63,11 +78,14 @@ import {
   NotifyParams,
   UpdateJournalTextParams,
 } from '../../src/member';
+import { CreateTodoParams, EndAndCreateTodoParams, Label } from '../../src/todo';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   generateCreateMemberParams,
+  generateCreateTodoParams,
   generateDailyReport,
   generateDeleteMemberParams,
+  generateEndAndCreateTodoParams,
   generateId,
   generateNotifyContentParams,
   generateRequestAppointmentParams,
@@ -861,6 +879,494 @@ describe('Integration tests: notifications', () => {
       expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(5, {
         message: JSON.stringify(mock, Object.keys(mock).sort()),
         type: QueueType.notifications,
+      });
+    });
+  });
+
+  describe('todo', () => {
+    /**
+     * Trigger : TodoResolver.createTodo
+     * Dispatches:
+     *      1. send createTodo dispatch
+     */
+    it(`createTodo: should send dispatch ${InternalKey.createTodoMEDS}`, async () => {
+      const user = await creators.createAndValidateUser([UserRole.coach]);
+      const userId = user.id;
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId = member.id;
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+        label: Label.MEDS,
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      const { id } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.createTodo({
+          createTodoParams,
+        });
+      await delay(200);
+
+      const mock = generateCreateTodoMEDSMock({
+        recipientClientId: memberId,
+        senderClientId: userId,
+        todoId: id,
+      });
+
+      const object = new ObjectBaseClass(mock);
+      Object.keys(object.objectBaseType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+
+    /**
+     * Trigger : TodoResolver.createTodo
+     * Dispatches:
+     *      1. send createTodo dispatch
+     */
+    it(`createTodo: should send dispatch ${InternalKey.createTodoAPPT}`, async () => {
+      const user = await creators.createAndValidateUser([UserRole.coach]);
+      const userId = user.id;
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId = member.id;
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+        label: Label.APPT,
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      const { id } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.createTodo({
+          createTodoParams,
+        });
+      await delay(200);
+
+      const mock = generateCreateTodoAPPTMock({
+        recipientClientId: memberId,
+        senderClientId: userId,
+        todoId: id,
+      });
+
+      const object = new ObjectBaseClass(mock);
+      Object.keys(object.objectBaseType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+
+    /**
+     * Trigger : TodoResolver.createTodo
+     * Dispatches:
+     *      1. send createTodo dispatch
+     */
+    it(`createTodo: should send dispatch ${InternalKey.createTodoTODO}`, async () => {
+      const user = await creators.createAndValidateUser([UserRole.coach]);
+      const userId = user.id;
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId = member.id;
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+      delete createTodoParams.label;
+
+      const { id } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.createTodo({
+          createTodoParams,
+        });
+      await delay(200);
+
+      const mock = generateCreateTodoTODOMock({
+        recipientClientId: memberId,
+        senderClientId: userId,
+        todoId: id,
+      });
+
+      const object = new ObjectBaseClass(mock);
+      Object.keys(object.objectBaseType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+
+    /**
+     * Trigger : TodoResolver.updateTodo
+     * Dispatches:
+     *      1. send updateTodo dispatch
+     */
+    it(`updateTodo: should send dispatch ${InternalKey.updateTodoMEDS}`, async () => {
+      const user = await creators.createAndValidateUser([UserRole.coach]);
+      const userId = user.id;
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId = member.id;
+
+      await delay(200);
+
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      const { id: oldTodoId } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.createTodo({
+          createTodoParams,
+        });
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        id: oldTodoId,
+        memberId,
+        label: Label.MEDS,
+      });
+      delete endAndCreateTodoParams.updatedBy;
+
+      const { id } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.endAndCreateTodo({ endAndCreateTodoParams });
+
+      await delay(200);
+
+      const mock = generateUpdateTodoMEDSMock({
+        recipientClientId: memberId,
+        senderClientId: userId,
+        todoId: id,
+      });
+
+      const object = new ObjectBaseClass(mock);
+      Object.keys(object.objectBaseType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+
+    /**
+     * Trigger : TodoResolver.updateTodo
+     * Dispatches:
+     *      1. send updateTodo dispatch
+     */
+    it(`updateTodo: should send dispatch ${InternalKey.updateTodoAPPT}`, async () => {
+      const user = await creators.createAndValidateUser([UserRole.coach]);
+      const userId = user.id;
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId = member.id;
+
+      await delay(200);
+
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      const { id: oldTodoId } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.createTodo({
+          createTodoParams,
+        });
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        id: oldTodoId,
+        memberId,
+        label: Label.APPT,
+      });
+      delete endAndCreateTodoParams.updatedBy;
+
+      const { id } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.endAndCreateTodo({ endAndCreateTodoParams });
+
+      await delay(200);
+
+      const mock = generateUpdateTodoAPPTMock({
+        recipientClientId: memberId,
+        senderClientId: userId,
+        todoId: id,
+      });
+
+      const object = new ObjectBaseClass(mock);
+      Object.keys(object.objectBaseType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+
+    /**
+     * Trigger : TodoResolver.updateTodo
+     * Dispatches:
+     *      1. send updateTodo dispatch
+     */
+    it(`updateTodo: should send dispatch ${InternalKey.updateTodoTODO}`, async () => {
+      const user = await creators.createAndValidateUser([UserRole.coach]);
+      const userId = user.id;
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId = member.id;
+
+      await delay(200);
+
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      const { id: oldTodoId } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.createTodo({
+          createTodoParams,
+        });
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        id: oldTodoId,
+        memberId,
+      });
+      delete endAndCreateTodoParams.updatedBy;
+      delete endAndCreateTodoParams.label;
+
+      const { id } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.endAndCreateTodo({ endAndCreateTodoParams });
+
+      await delay(200);
+
+      const mock = generateUpdateTodoTODOMock({
+        recipientClientId: memberId,
+        senderClientId: userId,
+        todoId: id,
+      });
+
+      const object = new ObjectBaseClass(mock);
+      Object.keys(object.objectBaseType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+
+    /**
+     * Trigger : TodoResolver.deleteTodo
+     * Dispatches:
+     *      1. send deleteTodo dispatch
+     */
+    it(`deleteTodo: should send dispatch ${InternalKey.deleteTodoMEDS}`, async () => {
+      const user = await creators.createAndValidateUser([UserRole.coach]);
+      const userId = user.id;
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId = member.id;
+
+      await delay(200);
+
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+        label: Label.MEDS,
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      const { id } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.createTodo({
+          createTodoParams,
+        });
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      await handler.setContextUserId(userId, '', [UserRole.coach]).mutations.endTodo({ id });
+
+      await delay(200);
+
+      const mock = generateDeleteTodoMEDSMock({
+        recipientClientId: memberId,
+        senderClientId: userId,
+        todoId: id,
+      });
+
+      const object = new ObjectBaseClass(mock);
+      Object.keys(object.objectBaseType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+
+    /**
+     * Trigger : TodoResolver.deleteTodo
+     * Dispatches:
+     *      1. send deleteTodo dispatch
+     */
+    it(`deleteTodo: should send dispatch ${InternalKey.deleteTodoAPPT}`, async () => {
+      const user = await creators.createAndValidateUser([UserRole.coach]);
+      const userId = user.id;
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId = member.id;
+
+      await delay(200);
+
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+        label: Label.APPT,
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      const { id } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.createTodo({
+          createTodoParams,
+        });
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      await handler.setContextUserId(userId, '', [UserRole.coach]).mutations.endTodo({ id });
+
+      await delay(200);
+
+      const mock = generateDeleteTodoAPPTMock({
+        recipientClientId: memberId,
+        senderClientId: userId,
+        todoId: id,
+      });
+
+      const object = new ObjectBaseClass(mock);
+      Object.keys(object.objectBaseType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+
+    /**
+     * Trigger : TodoResolver.deleteTodo
+     * Dispatches:
+     *      1. send deleteTodo dispatch
+     */
+    it(`deleteTodo: should send dispatch ${InternalKey.deleteTodoTODO}`, async () => {
+      const user = await creators.createAndValidateUser([UserRole.coach]);
+      const userId = user.id;
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId = member.id;
+
+      await delay(200);
+
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+      delete createTodoParams.label;
+
+      const { id } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.createTodo({
+          createTodoParams,
+        });
+
+      await delay(200);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      await handler.setContextUserId(userId, '', [UserRole.coach]).mutations.endTodo({ id });
+
+      await delay(200);
+
+      const mock = generateDeleteTodoTODOMock({
+        recipientClientId: memberId,
+        senderClientId: userId,
+        todoId: id,
+      });
+
+      const object = new ObjectBaseClass(mock);
+      Object.keys(object.objectBaseType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
       });
     });
   });
