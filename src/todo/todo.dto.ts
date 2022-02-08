@@ -12,7 +12,7 @@ import {
   IsUnscheduledTodo,
 } from '../common';
 
-export const NotNullableTodoKeys = ['label', 'end'];
+export const NotNullableTodoKeys = ['label', 'cronExpressions', 'start', 'end'];
 
 export type TodoNotificationsType = 'createTodo' | 'updateTodo' | 'deleteTodo';
 
