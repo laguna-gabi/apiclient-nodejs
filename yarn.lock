@@ -769,10 +769,10 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
-"@lagunahealth/pandora@0.9.29":
-  version "0.9.29"
-  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.9.29/884814fd4f4bb6f013f6fb47d3c7ff46a17b0deb43f9a7fd5fd684e9eddd0081#7ee0384412964cc7deec20c7e671fd3c0b4ca20b"
-  integrity sha512-2gGDE28I756cdZHxiCN5eGx8/NnLoSxmfFE4vIhUdgHd3I/gfhoIihuW2ZUw/Jr+r4sZe/9wf51hJ2rY9rpQXw==
+"@lagunahealth/pandora@0.9.35":
+  version "0.9.35"
+  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.9.35/2091742e44427e32891b91494d812ebcb90b60d704071d7b5029c630aaab7228#1faf9b194bbecc4825f1ae98cffac1db9612e67a"
+  integrity sha512-PDb/UmAsnsSbCMIFr+gkKtgtnd+PzYWpxVeoKsQ4lMNk4NLJZR/NBeiphchomlhlxtj36HZ1jQ3IhCQP0i8ElA==
   dependencies:
     "@slack/types" "^2.2.0"
     "@slack/webhook" "^6.0.0"

@@ -10,6 +10,7 @@ import {
   ObjectAppointmentScheduledClass,
   ObjectBaseClass,
   ObjectChatMessageUserClass,
+  ObjectCreateTodoClass,
   ObjectExternalContentMobileClass,
   ObjectExternalContentWebScheduleAppointmentClass,
   ObjectFutureNotifyClass,
@@ -24,6 +25,12 @@ import {
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
   generateChatMessageUserMock,
+  generateCreateTodoAPPTMock,
+  generateCreateTodoMEDSMock,
+  generateCreateTodoTODOMock,
+  generateDeleteTodoAPPTMock,
+  generateDeleteTodoMEDSMock,
+  generateDeleteTodoTODOMock,
   generateExternalContentMobileMock,
   generateExternalContentWebScheduleAppointmentMock,
   generateNewChatMessageToMemberMock,
@@ -37,8 +44,12 @@ import {
   generateObjectRegisterMemberWithTriggeredMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
+  generateUpdateTodoAPPTMock,
+  generateUpdateTodoMEDSMock,
+  generateUpdateTodoTODOMock,
   mockLogger,
   mockProcessWarnings,
+  translation,
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapMinutes, hosts } from 'config';
@@ -48,7 +59,6 @@ import { Types } from 'mongoose';
 import { SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { replaceConfigs } from '../';
-import { translation } from '@lagunahealth/pandora';
 import { AppModule } from '../../src/app.module';
 import { LoggerService } from '../../src/common';
 import {
@@ -967,6 +977,96 @@ describe('Notifications full flow', () => {
     },
   );
 
+  it(`should handle 'immediate' event of type ${InternalKey.createTodoMEDS}`, async () => {
+    const mock = generateCreateTodoMEDSMock({
+      recipientClientId: mobileMemberClient.id,
+      senderClientId: userClient.id,
+      todoId: generateId(),
+    });
+
+    await compareTodos(mock);
+  });
+
+  it(`should handle 'immediate' event of type ${InternalKey.createTodoAPPT}`, async () => {
+    const mock = generateCreateTodoAPPTMock({
+      recipientClientId: mobileMemberClient.id,
+      senderClientId: userClient.id,
+      todoId: generateId(),
+    });
+
+    await compareTodos(mock);
+  });
+
+  it(`should handle 'immediate' event of type ${InternalKey.createTodoTODO}`, async () => {
+    const mock = generateCreateTodoTODOMock({
+      recipientClientId: mobileMemberClient.id,
+      senderClientId: userClient.id,
+      todoId: generateId(),
+    });
+
+    await compareTodos(mock);
+  });
+
+  it(`should handle 'immediate' event of type ${InternalKey.updateTodoMEDS}`, async () => {
+    const mock = generateUpdateTodoMEDSMock({
+      recipientClientId: mobileMemberClient.id,
+      senderClientId: userClient.id,
+      todoId: generateId(),
+    });
+
+    await compareTodos(mock);
+  });
+
+  it(`should handle 'immediate' event of type ${InternalKey.updateTodoAPPT}`, async () => {
+    const mock = generateUpdateTodoAPPTMock({
+      recipientClientId: mobileMemberClient.id,
+      senderClientId: userClient.id,
+      todoId: generateId(),
+    });
+
+    await compareTodos(mock);
+  });
+
+  it(`should handle 'immediate' event of type ${InternalKey.updateTodoTODO}`, async () => {
+    const mock = generateUpdateTodoTODOMock({
+      recipientClientId: mobileMemberClient.id,
+      senderClientId: userClient.id,
+      todoId: generateId(),
+    });
+
+    await compareTodos(mock);
+  });
+
+  it(`should handle 'immediate' event of type ${InternalKey.deleteTodoMEDS}`, async () => {
+    const mock = generateDeleteTodoMEDSMock({
+      recipientClientId: mobileMemberClient.id,
+      senderClientId: userClient.id,
+      todoId: generateId(),
+    });
+
+    await compareTodos(mock);
+  });
+
+  it(`should handle 'immediate' event of type ${InternalKey.deleteTodoAPPT}`, async () => {
+    const mock = generateDeleteTodoAPPTMock({
+      recipientClientId: mobileMemberClient.id,
+      senderClientId: userClient.id,
+      todoId: generateId(),
+    });
+
+    await compareTodos(mock);
+  });
+
+  it(`should handle 'immediate' event of type ${InternalKey.deleteTodoTODO}`, async () => {
+    const mock = generateDeleteTodoTODOMock({
+      recipientClientId: mobileMemberClient.id,
+      senderClientId: userClient.id,
+      todoId: generateId(),
+    });
+
+    await compareTodos(mock);
+  });
+
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
@@ -1072,5 +1172,52 @@ describe('Notifications full flow', () => {
     await service.handleMessage(message);
 
     return object;
+  };
+
+  const compareTodos = async (mock) => {
+    const object = new ObjectCreateTodoClass(mock);
+
+    const providerResultOS: ProviderResult = { provider: Provider.oneSignal, id: generateId() };
+    spyOnOneSignalSend.mockReturnValueOnce(providerResultOS);
+
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({
+        type: InnerQueueTypes.createDispatch,
+        ...object.objectCreateTodoMock,
+      }),
+    };
+
+    await service.handleMessage(message);
+
+    const content = replaceConfigs({
+      content: translation.contents[mock.contentKey.split('.')[0]][mock.contentKey.split('.')[1]],
+      memberClient: mobileMemberClient,
+      userClient,
+    });
+
+    expect(spyOnOneSignalSend).toBeCalledWith(
+      {
+        platform: mobileMemberClient.platform,
+        externalUserId: mobileMemberClient.externalUserId,
+        data: {
+          user: { id: userClient.id, firstName: userClient.firstName, avatar: userClient.avatar },
+          member: { phone: mobileMemberClient.phone },
+          type: mock.notificationType,
+          contentKey: mock.contentKey,
+          isVideo: false,
+        },
+        content,
+        orgName: mobileMemberClient.orgName,
+      },
+      expect.any(String),
+    );
+
+    await compareResults({
+      dispatchId: mock.dispatchId,
+      status: DispatchStatus.done,
+      response: { ...mock },
+      pResult: providerResultOS,
+    });
   };
 });
