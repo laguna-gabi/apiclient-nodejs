@@ -141,6 +141,15 @@ export enum InternalKey {
   newChatMessageFromMember = 'newChatMessageFromMember',
   appointmentScheduledUser = 'appointmentScheduledUser',
   memberNotFeelingWellMessage = 'memberNotFeelingWellMessage',
+  createTodoMEDS = 'createTodo.MEDS',
+  createTodoAPPT = 'createTodo.APPT',
+  createTodoTODO = 'createTodo.TODO',
+  updateTodoMEDS = 'updateTodo.MEDS',
+  updateTodoAPPT = 'updateTodo.APPT',
+  updateTodoTODO = 'updateTodo.TODO',
+  deleteTodoMEDS = 'deleteTodo.MEDS',
+  deleteTodoAPPT = 'deleteTodo.APPT',
+  deleteTodoTODO = 'deleteTodo.TODO',
 }
 
 export enum CustomKey {
