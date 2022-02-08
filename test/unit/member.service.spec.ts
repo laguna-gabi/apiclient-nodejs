@@ -825,7 +825,7 @@ describe('MemberService', () => {
       const member = await service.get(memberId);
       const memberConfig = await service.getMemberConfig(memberId);
 
-      const deleteMemberParams = generateDeleteMemberParams({ memberId, hard: false });
+      const deleteMemberParams = generateDeleteMemberParams({ id: memberId, hard: false });
       const result = await service.deleteMember(deleteMemberParams, userId);
       expect(result.member).toEqual(
         expect.objectContaining({
@@ -858,7 +858,7 @@ describe('MemberService', () => {
       await service.updateRecording(params, params.userId);
 
       const result = await service.deleteMember(
-        generateDeleteMemberParams({ memberId, hard }),
+        generateDeleteMemberParams({ id: memberId, hard }),
         userId,
       );
       expect(result).toBeTruthy();
@@ -894,7 +894,7 @@ describe('MemberService', () => {
       async (hard) => {
         const memberId = await generateMember();
         const userId = generateId();
-        const deleteMemberParams = generateDeleteMemberParams({ memberId, hard });
+        const deleteMemberParams = generateDeleteMemberParams({ id: memberId, hard });
         await service.deleteMember(deleteMemberParams, userId);
         await expect(service.get(memberId)).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
         await expect(service.getMemberConfig(memberId)).rejects.toThrow(
@@ -915,7 +915,7 @@ describe('MemberService', () => {
       });
 
       const result = await service.deleteMember(
-        generateDeleteMemberParams({ memberId, hard: false }),
+        generateDeleteMemberParams({ id: memberId, hard: false }),
         userId,
       );
       expect(result).toBeTruthy();
@@ -936,7 +936,7 @@ describe('MemberService', () => {
       //todo: add goals if necessary
 
       const resultHard = await service.deleteMember(
-        generateDeleteMemberParams({ memberId, hard: true }),
+        generateDeleteMemberParams({ id: memberId, hard: true }),
         userId,
       );
       expect(resultHard).toBeTruthy();

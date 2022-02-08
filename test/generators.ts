@@ -986,11 +986,11 @@ export const generateCreateQuestionnaireParams = ({
 };
 
 export const generateDeleteMemberParams = ({
-  memberId = generateId(),
+  id = generateId(),
   hard = false,
 }: Partial<DeleteMemberParams> = {}) => {
   return {
-    memberId,
+    id,
     hard,
   };
 };

@@ -448,7 +448,7 @@ export class CancelNotifyParams {
 export class DeleteMemberParams {
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
-  memberId: string;
+  id: string;
 
   @Field(() => Boolean, { defaultValue: false })
   hard?: boolean;

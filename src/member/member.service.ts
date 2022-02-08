@@ -419,10 +419,10 @@ export class MemberService extends BaseService {
     deletedBy: string,
   ): Promise<{ member: Member; memberConfig: MemberConfig }> {
     this.logger.info(params, MemberService.name, this.deleteMember.name);
-    const { memberId, hard } = params;
-    const member = await this.memberModel.findOneWithDeleted({ _id: new Types.ObjectId(memberId) });
+    const { id, hard } = params;
+    const member = await this.memberModel.findOneWithDeleted({ _id: new Types.ObjectId(id) });
     const memberConfig = await this.memberConfigModel.findOneWithDeleted({
-      memberId: new Types.ObjectId(memberId),
+      memberId: new Types.ObjectId(id),
     });
     if (!member || !memberConfig) {
       throw new Error(Errors.get(ErrorType.memberNotFound));

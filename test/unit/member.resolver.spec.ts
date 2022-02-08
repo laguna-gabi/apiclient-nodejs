@@ -510,7 +510,7 @@ describe('MemberResolver', () => {
       const memberConfig = generateMemberConfig({ memberId: generateObjectId(member.id) });
       spyOnServiceDeleteMember.mockImplementationOnce(async () => ({ member, memberConfig }));
       const deleteMemberParams = generateDeleteMemberParams({
-        memberId: member.id,
+        id: member.id,
         hard: params.hard,
       });
       const userId = generateId();

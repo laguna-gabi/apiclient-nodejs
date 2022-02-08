@@ -218,7 +218,7 @@ describe('Integration tests: notifications', () => {
         const { id } = await handler.mutations.createMember({ memberParams });
         await delay(200);
         handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
-        const deleteMemberParams = generateDeleteMemberParams({ memberId: id, hard });
+        const deleteMemberParams = generateDeleteMemberParams({ id, hard });
         await handler.setContextUserId(generateId()).mutations.deleteMember({ deleteMemberParams });
         await delay(200);
 

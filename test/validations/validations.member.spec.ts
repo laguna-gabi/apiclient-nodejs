@@ -1048,9 +1048,9 @@ describe('Validations - member', () => {
 
   describe('deleteMember', () => {
     test.each`
-      input                | error
-      ${{ memberId: 123 }} | ${stringError}
-      ${{ hard: 123 }}     | ${BoolenError}
+      input            | error
+      ${{ id: 123 }}   | ${stringError}
+      ${{ hard: 123 }} | ${BoolenError}
     `(`should fail to set new user to member since $input is not a valid type`, async (params) => {
       const deleteMemberParams = generateDeleteMemberParams({ ...params.input });
       await handler.setContextUserId(generateId()).mutations.deleteMember({

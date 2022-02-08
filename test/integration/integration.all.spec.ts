@@ -424,7 +424,7 @@ describe('Integration tests: all', () => {
       });
 
       // delete member
-      const deleteMemberParams = generateDeleteMemberParams({ memberId: member.id, hard });
+      const deleteMemberParams = generateDeleteMemberParams({ id: member.id, hard });
       const result = await handler
         .setContextUserId(generateId())
         .mutations.deleteMember({ deleteMemberParams });

@@ -184,18 +184,18 @@ export class MemberResolver extends MemberBase {
     @Args(camelCase(DeleteMemberParams.name))
     deleteMemberParams: DeleteMemberParams,
   ) {
-    const { memberId, hard } = deleteMemberParams;
+    const { id, hard } = deleteMemberParams;
     const { member, memberConfig } = await this.memberService.deleteMember(
       deleteMemberParams,
       userId,
     );
     const eventParams: IEventDeleteMember = {
-      memberId,
+      memberId: id,
       deletedBy: userId,
       hard,
     };
     await this.deleteSchedules(eventParams);
-    this.notifyDeletedMemberConfig(memberId);
+    this.notifyDeletedMemberConfig(id);
     this.eventEmitter.emit(EventType.onDeletedMember, eventParams);
     await this.deleteMemberFromServices(member, memberConfig, hard);
     return true;
