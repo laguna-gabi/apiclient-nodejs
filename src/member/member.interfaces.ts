@@ -44,8 +44,9 @@ export class MemberBase {
   ) {}
 
   async createMember(createMemberParams: CreateMemberParams): Promise<Member> {
-    const phoneType = await this.twilio.getPhoneType(createMemberParams.phone);
-    const control = !createMemberParams.userId && (await this.featureFlagService.isControlGroup());
+    const { userId, orgId, phone } = createMemberParams;
+    const phoneType = await this.twilio.getPhoneType(phone);
+    const control = !userId && (await this.featureFlagService.isControlGroup(orgId));
     if (control) {
       return this.createControlMember({ ...createMemberParams, phoneType });
     } else {

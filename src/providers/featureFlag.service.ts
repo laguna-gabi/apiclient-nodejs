@@ -33,9 +33,11 @@ export class FeatureFlagService implements OnModuleInit {
     this.client?.destroy?.();
   }
 
-  async isControlGroup(): Promise<boolean> {
+  async isControlGroup(orgId: string): Promise<boolean> {
     // the id has to be random in order to avoid getting the same treatment everytime
-    const treatment: SplitIO.Treatment = await this.client.getTreatment(v4(), 'control_group');
+    const treatment: SplitIO.Treatment = await this.client.getTreatment(v4(), 'control_group', {
+      orgId,
+    });
     return treatment == Treatment.on;
   }
 }
