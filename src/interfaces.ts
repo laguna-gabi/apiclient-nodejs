@@ -205,8 +205,8 @@ export class Client {
 }
 
 export class FailureReason {
-  message?: any;
-  code?: any;
-  stack?: any;
-  data?: any;
+  message?: string;
+  code?: number;
+  stack?: string;
+  data?: string;
 }
