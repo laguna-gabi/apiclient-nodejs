@@ -99,6 +99,7 @@ export enum SlackChannel {
   support = 'slack.support',
   testingSms = 'slack.testingSms',
   notifications = 'slack.notifications',
+  escalation = 'slack.escalation',
 }
 
 export enum SlackIcon {
