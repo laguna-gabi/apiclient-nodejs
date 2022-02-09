@@ -6,7 +6,7 @@ import * as es from '../languages/es.json';
 
 @Injectable()
 export class BaseInternationalization implements OnModuleInit {
-  protected i18n = i18next as any; // typescript doesn't support the i18next library
+  protected i18n = i18next;
 
   async onModuleInit() {
     await this.i18n.init({

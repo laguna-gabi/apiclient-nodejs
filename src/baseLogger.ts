@@ -11,26 +11,26 @@ export class BaseLogger extends PinoLogger {
     super(params);
   }
 
-  log(params: any = {}, className: string, methodName: string): string | void {
+  log(params = {}, className: string, methodName: string): string | void {
     params = this.filterParams(params);
     super.info({ params, className, methodName });
     return this.logFormat(this.getCalledLog(params), className, methodName, LogType.log);
   }
 
-  info(params: any = {}, className: string, methodName: string, client?: Client): string | void {
+  info(params = {}, className: string, methodName: string, client?: Client): string | void {
     params = this.filterParams(params);
     super.info({ params, className, methodName, client });
     return this.logFormat(this.getCalledLog(params), className, methodName, LogType.info);
   }
 
-  debug(params: any = {}, className: string, methodName: string): string | void {
+  debug(params = {}, className: string, methodName: string): string | void {
     params = this.filterParams(params);
     super.debug({ params, className, methodName });
     return this.logFormat(this.getCalledLog(params), className, methodName, LogType.debug);
   }
 
   error(
-    params: any = {},
+    params = {},
     className: string,
     methodName: string,
     failureReason?: FailureReason,
@@ -51,7 +51,7 @@ export class BaseLogger extends PinoLogger {
   }
 
   warn(
-    params: any = {},
+    params = {},
     className: string,
     methodName: string,
     failureReason?: FailureReason,
