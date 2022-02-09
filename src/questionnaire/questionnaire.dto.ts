@@ -1,6 +1,7 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { ArrayNotEmpty } from 'class-validator';
+import { Document, Types } from 'mongoose';
 import {
   ErrorType,
   Errors,
@@ -8,6 +9,7 @@ import {
   IsDuplicateCodeInItemList,
   IsMissingOptionsInChoiceTypeItem,
   IsMissingRangeInRangeTypeItem,
+  IsObjectId,
   IsOverlappingRangeInSeverityLevelEntries,
   ItemInterface,
   ItemType,
@@ -39,12 +41,33 @@ registerEnumType(QuestionnaireType, {
   },
 });
 
+export enum AlertConditionType {
+  equal = 'equal',
+  gte = 'gte',
+  lte = 'lte',
+}
+
+registerEnumType(AlertConditionType, {
+  name: 'AlertConditionType',
+  description: 'A list of alert condition types',
+  valuesMap: {
+    equal: { description: 'Answer value equals to alert condition value will trigger an alert' },
+    gte: {
+      description:
+        'Answer value greater than or equal to alert condition value will trigger an alert',
+    },
+    lte: {
+      description:
+        'Answer value lower than or equal to alert condition value will trigger an alert',
+    },
+  },
+});
+
 registerEnumType(ItemType, {
   name: 'ItemType',
   description: 'A list of question types',
   valuesMap: {
     choice: { description: 'single choice' },
-    date: { description: 'date' },
     text: { description: 'free (short) text' },
     group: { description: 'group of questions (no answer is expected for group items)' },
   },
@@ -57,6 +80,9 @@ registerEnumType(ItemType, {
 export class CreateQuestionnaireParams {
   @Field(() => String)
   name: string;
+
+  @Field(() => String)
+  shortName: string;
 
   @Field(() => QuestionnaireType)
   type: QuestionnaireType;
@@ -76,6 +102,31 @@ export class CreateQuestionnaireParams {
   })
   @Field(() => [SeverityLevel], { nullable: true })
   severityLevels?: SeverityLevel[];
+
+  @Prop(() => Number)
+  @Field(() => Number, { nullable: true })
+  notificationScoreThreshold?: number;
+
+  createdBy?: string;
+}
+
+@InputType()
+export class SubmitQuestionnaireResponseParams {
+  @IsObjectId({ message: Errors.get(ErrorType.questionnaireResponseInvalidQuestionnaireId) })
+  @Field(() => String)
+  questionnaireId: string;
+
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  @Field(() => String)
+  memberId: string;
+
+  @ArrayNotEmpty({
+    message: Errors.get(ErrorType.questionnaireResponseInvalidResponseEmptyAnswerList),
+  })
+  @Field(() => [Answer])
+  answers: Answer[];
+
+  createdBy?: string;
 }
 
 /**************************************************************************************************
@@ -142,6 +193,10 @@ export class Questionnaire extends Identifier {
   name: string;
 
   @Prop()
+  @Field(() => String)
+  shortName: string;
+
+  @Prop()
   @Field(() => QuestionnaireType)
   type: QuestionnaireType;
 
@@ -156,6 +211,58 @@ export class Questionnaire extends Identifier {
   @Prop()
   @Field(() => [SeverityLevel], { nullable: true })
   severityLevels: SeverityLevel[];
+
+  @Prop(() => Number)
+  @Field(() => Number, { nullable: true })
+  notificationScoreThreshold?: number;
+
+  @Prop()
+  @Field(() => String, { nullable: true })
+  createdBy?: Types.ObjectId;
+}
+
+@ObjectType()
+export class QuestionnaireResponseResult {
+  @Prop()
+  @Field(() => Number, { nullable: true })
+  score?: number;
+
+  @Prop()
+  @Field(() => String, { nullable: true })
+  severity?: string;
+
+  @Prop()
+  @Field(() => Boolean, { nullable: true })
+  alert?: boolean;
+}
+
+@ObjectType()
+@Schema({ versionKey: false, timestamps: true })
+export class QuestionnaireResponse extends Identifier {
+  @Prop()
+  @Field(() => String)
+  questionnaireId: Types.ObjectId;
+
+  @Prop()
+  @Field(() => String)
+  memberId: Types.ObjectId;
+
+  @Prop()
+  @Field(() => [Answer])
+  answers: Answer[];
+
+  @Prop()
+  @Field(() => String)
+  createdBy: Types.ObjectId;
+
+  @Field(() => Date)
+  createdAt: Date;
+
+  @Field(() => QuestionnaireResponseResult, { nullable: true })
+  result?: QuestionnaireResponseResult;
+
+  @Field(() => QuestionnaireType)
+  type?: QuestionnaireType;
 }
 
 @InputType('ItemInput')
@@ -192,10 +299,42 @@ export class Item implements ItemInterface {
   @Prop()
   @Field(() => [Item], { nullable: true })
   items?: Item[];
+
+  @Prop()
+  @Field(() => [AlertCondition], { nullable: true })
+  alertCondition?: AlertCondition[];
+}
+
+@InputType('AlertConditionInput')
+@ObjectType()
+export class AlertCondition {
+  @Prop()
+  @Field(() => AlertConditionType)
+  type: AlertConditionType;
+
+  @Prop()
+  @Field(() => String)
+  value: string;
+}
+
+@InputType('AnswerInput')
+@ObjectType()
+export class Answer {
+  @Prop()
+  @Field(() => String)
+  code: string;
+
+  @Prop()
+  @Field(() => String)
+  value: string;
 }
 
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
+
 export type QuestionnaireDocument = Questionnaire & Document;
 export const QuestionnaireDto = SchemaFactory.createForClass(Questionnaire);
+
+export type QuestionnaireResponseDocument = QuestionnaireResponse & Document;
+export const QuestionnaireResponseDto = SchemaFactory.createForClass(QuestionnaireResponse);

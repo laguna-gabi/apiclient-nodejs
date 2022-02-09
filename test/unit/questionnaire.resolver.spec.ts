@@ -1,6 +1,12 @@
 import { mockProcessWarnings } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import { dbDisconnect, defaultModules, generateCreateQuestionnaireParams } from '../../test';
+import {
+  dbDisconnect,
+  defaultModules,
+  generateCreateQuestionnaireParams,
+  generateId,
+  generateSubmitQuestionnaireResponseParams,
+} from '../../test';
 import {
   CreateQuestionnaireParams,
   QuestionnaireModule,
@@ -32,37 +38,120 @@ describe('QuestionnaireResolver', () => {
     let spyOnServiceCreate: jest.SpyInstance;
 
     beforeEach(() => {
-      spyOnServiceCreate = jest.spyOn(service, 'create');
+      spyOnServiceCreate = jest.spyOn(service, 'createQuestionnaire');
+      spyOnServiceCreate.mockImplementation(() => undefined);
     });
 
     afterEach(() => {
       spyOnServiceCreate.mockReset();
     });
 
-    it('should create a Questionnaire', async () => {
+    it('should create a Questionnaire (template)', async () => {
       const params: CreateQuestionnaireParams = generateCreateQuestionnaireParams();
+      const createdBy = generateId();
+      await resolver.createQuestionnaire(createdBy, params);
 
-      await resolver.createQuestionnaire(params);
-
-      expect(spyOnServiceCreate).toHaveBeenCalledWith(params);
+      expect(spyOnServiceCreate).toHaveBeenCalledWith({ ...params, createdBy });
     });
   });
 
-  describe('getQuestionnaires', () => {
+  describe('getActiveQuestionnaires', () => {
     let spyOnServiceGet: jest.SpyInstance;
 
     beforeEach(() => {
-      spyOnServiceGet = jest.spyOn(service, 'get');
+      spyOnServiceGet = jest.spyOn(service, 'getActiveQuestionnaires');
+      spyOnServiceGet.mockImplementation(() => undefined);
     });
 
     afterEach(() => {
       spyOnServiceGet.mockReset();
     });
 
-    it('should get a Questionnaire', async () => {
-      await resolver.getQuestionnaires();
+    it('should get all active Questionnaires (templates)', async () => {
+      await resolver.getActiveQuestionnaires();
 
       expect(spyOnServiceGet).toHaveBeenCalled();
+    });
+  });
+
+  describe('getQuestionnaire', () => {
+    let spyOnServiceGetById: jest.SpyInstance;
+
+    beforeEach(() => {
+      spyOnServiceGetById = jest.spyOn(service, 'getQuestionnaireById');
+      spyOnServiceGetById.mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      spyOnServiceGetById.mockReset();
+    });
+
+    it('should get a Questionnaire', async () => {
+      const qId = generateId();
+      await resolver.getQuestionnaire(qId);
+
+      expect(spyOnServiceGetById).toHaveBeenCalledWith(qId);
+    });
+  });
+
+  describe('getMemberQuestionnaireResponses', () => {
+    let spyOnServiceGetByMemberId: jest.SpyInstance;
+
+    beforeEach(() => {
+      spyOnServiceGetByMemberId = jest.spyOn(service, 'getQuestionnaireResponseByMemberId');
+      spyOnServiceGetByMemberId.mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      spyOnServiceGetByMemberId.mockReset();
+    });
+
+    it('should get all member Questionnaire Responses', async () => {
+      const mId = generateId();
+      await resolver.getMemberQuestionnaireResponses(mId);
+
+      expect(spyOnServiceGetByMemberId).toHaveBeenCalledWith(mId);
+    });
+  });
+
+  describe('getQuestionnaireResponse', () => {
+    let spyOnServiceGetQRById: jest.SpyInstance;
+
+    beforeEach(() => {
+      spyOnServiceGetQRById = jest.spyOn(service, 'getQuestionnaireResponseById');
+      spyOnServiceGetQRById.mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      spyOnServiceGetQRById.mockReset();
+    });
+
+    it('should get a Questionnaire Response', async () => {
+      const qrId = generateId();
+      await resolver.getQuestionnaireResponse(qrId);
+
+      expect(spyOnServiceGetQRById).toHaveBeenCalledWith(qrId);
+    });
+  });
+
+  describe('submitQuestionnaireResponse', () => {
+    let spyOnServiceSubmitQR: jest.SpyInstance;
+
+    beforeEach(() => {
+      spyOnServiceSubmitQR = jest.spyOn(service, 'submitQuestionnaireResponse');
+      spyOnServiceSubmitQR.mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      spyOnServiceSubmitQR.mockReset();
+    });
+
+    it('should submit a Questionnaire Response', async () => {
+      const qrSubmitParams = generateSubmitQuestionnaireResponseParams();
+      const createdBy = generateId();
+      await resolver.submitQuestionnaireResponse(createdBy, qrSubmitParams);
+
+      expect(spyOnServiceSubmitQR).toHaveBeenCalledWith({ ...qrSubmitParams, createdBy });
     });
   });
 });

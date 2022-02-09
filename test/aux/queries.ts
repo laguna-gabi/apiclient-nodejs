@@ -15,7 +15,7 @@ import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
 import { GetSlotsParams } from '../../src/user';
 import { Dispatch } from '../../src/services';
 import { RedFlag } from '../../src/care';
-import { Questionnaire } from '../../src/questionnaire';
+import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
 
 export class Queries {
   constructor(private readonly apolloClient: ApolloServerTestClient) {}
@@ -921,11 +921,11 @@ export class Queries {
     }
   };
 
-  getQuestionnaires = async (): Promise<Questionnaire[]> => {
+  getActiveQuestionnaires = async (): Promise<Questionnaire[]> => {
     const result = await this.apolloClient.query({
       query: gql`
-        query getQuestionnaires {
-          getQuestionnaires {
+        query getActiveQuestionnaires {
+          getActiveQuestionnaires {
             id
             name
             type
@@ -955,6 +955,111 @@ export class Queries {
       `,
     });
 
-    return result.data.getQuestionnaires;
+    return result.data.getActiveQuestionnaires;
+  };
+
+  getQuestionnaire = async ({
+    id,
+    invalidFieldsError,
+  }: {
+    id;
+    invalidFieldsError?: string;
+  }): Promise<Questionnaire> => {
+    const result = await this.apolloClient.query({
+      variables: { id },
+      query: gql`
+        query getQuestionnaire($id: String!) {
+          getQuestionnaire(id: $id) {
+            id
+            items {
+              code
+              label
+              items {
+                code
+                label
+              }
+            }
+            severityLevels {
+              label
+              min
+              max
+            }
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(result.errors[0].message).toMatch(invalidFieldsError);
+    } else {
+      return result.data.getQuestionnaire;
+    }
+  };
+
+  getQuestionnaireResponse = async ({
+    id,
+    invalidFieldsError,
+  }: {
+    id;
+    invalidFieldsError?: string;
+  }): Promise<QuestionnaireResponse> => {
+    const result = await this.apolloClient.query({
+      variables: { id },
+      query: gql`
+        query getQuestionnaireResponse($id: String!) {
+          getQuestionnaireResponse(id: $id) {
+            id
+            type
+            result {
+              severity
+              score
+              alert
+            }
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(result.errors[0].message).toMatch(invalidFieldsError);
+    } else {
+      return result.data.getQuestionnaireResponse;
+    }
+  };
+
+  getMemberQuestionnaireResponses = async ({
+    memberId,
+    invalidFieldsError,
+  }: {
+    memberId;
+    invalidFieldsError?: string;
+  }): Promise<QuestionnaireResponse[]> => {
+    const result = await this.apolloClient.query({
+      variables: { memberId },
+      query: gql`
+        query getMemberQuestionnaireResponses($memberId: String!) {
+          getMemberQuestionnaireResponses(memberId: $memberId) {
+            id
+            type
+            answers {
+              code
+              value
+            }
+            createdBy
+            createdAt
+            result {
+              score
+              severity
+            }
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(result.errors[0].message).toMatch(invalidFieldsError);
+    } else {
+      return result.data.getMemberQuestionnaireResponses;
+    }
   };
 }

@@ -6,6 +6,7 @@ import { Db } from 'mongodb';
 import { AppModule } from '../../../src/app.module';
 import { NestFactory } from '@nestjs/core';
 import {
+  AlertConditionType,
   CreateQuestionnaireParams,
   Item,
   QuestionnaireService,
@@ -32,13 +33,13 @@ export const up = async (dryRun: boolean, db: Db) => {
   const qService = app.get<QuestionnaireService>(QuestionnaireService);
 
   // GAD-7
-  qService.create(buildGAD7Questionnaire());
+  await qService.createQuestionnaire(buildGAD7Questionnaire());
   // PHQ-9
-  qService.create(buildPHQ9Questionnaire());
+  await qService.createQuestionnaire(buildPHQ9Questionnaire());
   // WHO-5
-  qService.create(buildWHO5Questionnaire());
+  await qService.createQuestionnaire(buildWHO5Questionnaire());
   // NPS
-  qService.create(buildNPSQuestionnaire());
+  await qService.createQuestionnaire(buildNPSQuestionnaire());
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -94,6 +95,7 @@ const buildGAD7Questionnaire = (): CreateQuestionnaireParams => {
 
   return {
     name: `Generalized Anxiety Disorder 7`,
+    shortName: 'GAD-7',
     type: QuestionnaireType.gad7,
     items: [
       {
@@ -111,6 +113,7 @@ const buildGAD7Questionnaire = (): CreateQuestionnaireParams => {
       { min: 10, max: 14, label: 'Moderate Anxiety' },
       { min: 15, max: 21, label: 'Severe Anxiety' },
     ],
+    notificationScoreThreshold: 6,
   };
 };
 
@@ -143,12 +146,17 @@ const buildPHQ9Questionnaire = (): CreateQuestionnaireParams => {
     label: question,
     type: ItemType.choice,
     order: count,
-    required: true,
+    required: false,
+    alertCondition:
+      question === 'Thoughts that you would be better off dead or of hurting yourself in some way'
+        ? [{ type: AlertConditionType.equal, value: '3' }]
+        : undefined,
     options,
   }));
 
   return {
     name: `Patient Health Questionnaire 9`,
+    shortName: 'PHQ-9',
     type: QuestionnaireType.phq9,
     items: [
       {
@@ -156,7 +164,7 @@ const buildPHQ9Questionnaire = (): CreateQuestionnaireParams => {
         label: groupTitle,
         type: ItemType.group,
         order: 0,
-        required: true,
+        required: false,
         items: groupItems,
       },
     ],
@@ -168,6 +176,7 @@ const buildPHQ9Questionnaire = (): CreateQuestionnaireParams => {
       { min: 15, max: 19, label: 'Moderately Severe Depression' },
       { min: 20, max: 29, label: 'Severe Depression' },
     ],
+    notificationScoreThreshold: 10,
   };
 };
 
@@ -198,12 +207,13 @@ const buildWHO5Questionnaire = (): CreateQuestionnaireParams => {
     label: question,
     type: ItemType.choice,
     order: count,
-    required: true,
+    required: false,
     options,
   }));
 
   return {
     name: `World Health Organization 5`,
+    shortName: 'WHO-5',
     type: QuestionnaireType.who5,
     items: [
       {
@@ -211,7 +221,7 @@ const buildWHO5Questionnaire = (): CreateQuestionnaireParams => {
         label: groupTitle,
         type: ItemType.group,
         order: 0,
-        required: true,
+        required: false,
         items: groupItems,
       },
     ],
@@ -221,6 +231,7 @@ const buildWHO5Questionnaire = (): CreateQuestionnaireParams => {
 const buildNPSQuestionnaire = (): CreateQuestionnaireParams => {
   return {
     name: `Net Promoter Score`,
+    shortName: 'NPS',
     type: QuestionnaireType.nps,
     items: [
       {

@@ -40,7 +40,7 @@
     "migrate": "ts-node ./cmd/main.ts migration"
   },
   "dependencies": {
-    "@lagunahealth/pandora": "0.9.35",
+    "@lagunahealth/pandora": "0.10.0",
     "@nestjs/axios": "^0.0.1",
     "@nestjs/common": "^7.6.15",
     "@nestjs/core": "^7.6.15",

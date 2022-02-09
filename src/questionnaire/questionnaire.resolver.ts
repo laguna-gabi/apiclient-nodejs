@@ -1,8 +1,14 @@
 import { UseInterceptors } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
-import { CreateQuestionnaireParams, Questionnaire, QuestionnaireService } from '.';
-import { LoggingInterceptor, Roles, UserRole } from '../common';
+import {
+  CreateQuestionnaireParams,
+  Questionnaire,
+  QuestionnaireResponse,
+  QuestionnaireService,
+  SubmitQuestionnaireResponseParams,
+} from '.';
+import { Client, LoggingInterceptor, Roles, UserRole } from '../common';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()
@@ -12,15 +18,56 @@ export class QuestionnaireResolver {
   @Mutation(() => Questionnaire)
   @Roles(UserRole.admin)
   async createQuestionnaire(
+    @Client('_id') userId: string,
     @Args(camelCase(CreateQuestionnaireParams.name), { type: () => CreateQuestionnaireParams })
     createQuestionnaireParams: CreateQuestionnaireParams,
   ): Promise<Questionnaire> {
-    return this.questionnaireService.create(createQuestionnaireParams);
+    return this.questionnaireService.createQuestionnaire({
+      ...createQuestionnaireParams,
+      createdBy: userId,
+    });
   }
 
   @Query(() => [Questionnaire])
   @Roles(UserRole.coach, UserRole.nurse)
-  async getQuestionnaires(): Promise<Questionnaire[]> {
-    return this.questionnaireService.get();
+  async getActiveQuestionnaires(): Promise<Questionnaire[]> {
+    return this.questionnaireService.getActiveQuestionnaires();
+  }
+
+  @Query(() => Questionnaire, { nullable: true })
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getQuestionnaire(@Args('id', { type: () => String }) id: string): Promise<Questionnaire> {
+    return this.questionnaireService.getQuestionnaireById(id);
+  }
+
+  @Query(() => [QuestionnaireResponse])
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getMemberQuestionnaireResponses(
+    @Args('memberId', { type: () => String }) memberId: string,
+  ): Promise<QuestionnaireResponse[]> {
+    return this.questionnaireService.getQuestionnaireResponseByMemberId(memberId);
+  }
+
+  @Query(() => QuestionnaireResponse, { nullable: true })
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getQuestionnaireResponse(
+    @Args('id', { type: () => String }) id: string,
+  ): Promise<QuestionnaireResponse> {
+    return this.questionnaireService.getQuestionnaireResponseById(id);
+  }
+
+  @Mutation(() => QuestionnaireResponse)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async submitQuestionnaireResponse(
+    @Client('_id') userId: string,
+    @Args(camelCase(SubmitQuestionnaireResponseParams.name), {
+      type: () => SubmitQuestionnaireResponseParams,
+    })
+    submitQuestionnaireResponseParams: SubmitQuestionnaireResponseParams,
+  ): Promise<QuestionnaireResponse> {
+    return this.questionnaireService.submitQuestionnaireResponse({
+      ...submitQuestionnaireResponseParams,
+      createdBy: userId,
+    });
   }
 }

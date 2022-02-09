@@ -12,7 +12,15 @@ import {
   ScheduleAppointmentParams,
 } from '../../src/appointment';
 import { CreateRedFlagParams } from '../../src/care';
-import { ErrorType, Errors, Identifiers, UserRole, delay, reformatDate } from '../../src/common';
+import {
+  ErrorType,
+  Errors,
+  Identifiers,
+  ItemType,
+  UserRole,
+  delay,
+  reformatDate,
+} from '../../src/common';
 import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
 import {
   AlertType,
@@ -50,6 +58,7 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
+  generateSubmitQuestionnaireResponseParams,
   generateUpdateCaregiverParams,
   generateUpdateJournalTextParams,
   generateUpdateMemberConfigParams,
@@ -57,6 +66,7 @@ import {
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
   mockGenerateDispatch,
+  mockGenerateQuestionnaireItem,
 } from '../index';
 
 describe('Integration tests: all', () => {
@@ -1748,23 +1758,74 @@ describe('Integration tests: all', () => {
   });
 
   describe('Questionnaire', () => {
-    it('should create and get questionnaires', async () => {
+    it('should create, get and submit questionnaires', async () => {
       const { id: userId } = await creators.createAndValidateUser([UserRole.admin]);
       const createQuestionnaireParams: CreateQuestionnaireParams =
-        generateCreateQuestionnaireParams();
+        generateCreateQuestionnaireParams({
+          items: [
+            mockGenerateQuestionnaireItem({
+              type: ItemType.choice,
+              code: 'q1',
+              options: [
+                { label: faker.lorem.words(3), value: 0 },
+                { label: faker.lorem.words(3), value: 1 },
+              ],
+            }),
+          ],
+        });
 
-      const { id } = await handler
+      const { id: questionnaireId } = await handler
         .setContextUserId(userId, '', [UserRole.admin])
         .mutations.createQuestionnaire({
           createQuestionnaireParams,
         });
 
+      // Get All Active Questionnaires
       const questionnaires = await handler
         .setContextUserId(userId, '', [UserRole.coach])
-        .queries.getQuestionnaires();
+        .queries.getActiveQuestionnaires();
 
       expect(questionnaires.length).toBeGreaterThanOrEqual(1);
-      expect(questionnaires.find((questionnaire) => questionnaire.id === id)).toBeTruthy();
+      expect(
+        questionnaires.find((questionnaire) => questionnaire.id === questionnaireId),
+      ).toBeTruthy();
+
+      // Get a questionnaire by id
+      const questionnaire = await handler
+        .setContextUserId(userId, '', [UserRole.nurse])
+        .queries.getQuestionnaire({ id: questionnaireId });
+
+      expect(questionnaire).toBeTruthy();
+      expect(questionnaire.id).toEqual(questionnaireId);
+
+      // Submit a questionnaire response
+      const memberId = generateId();
+      let qr = await handler
+        .setContextUserId(userId, '', [UserRole.nurse])
+        .mutations.submitQuestionnaireResponse({
+          submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
+            questionnaireId,
+            memberId,
+            answers: [{ code: 'q1', value: '1' }],
+          }),
+        });
+
+      expect(qr.id).toBeTruthy();
+
+      // Get a questionnaire response (by id)
+      qr = await handler
+        .setContextUserId(userId, '', [UserRole.nurse])
+        .queries.getQuestionnaireResponse({ id: qr.id });
+
+      expect(qr.id).toBeTruthy();
+
+      // Get questionnaire responses (by member id)
+      const qrs = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .queries.getMemberQuestionnaireResponses({ memberId });
+
+      expect(qrs.length).toEqual(1);
+      expect(qrs.find((qrItem) => qrItem.id === qr.id)).toBeTruthy();
     });
   });
 

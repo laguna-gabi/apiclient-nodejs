@@ -88,10 +88,12 @@ import {
   UpdateCarePlanParams,
 } from '../src/care';
 import {
+  Answer,
   CreateQuestionnaireParams,
   Item,
   Questionnaire,
   QuestionnaireType,
+  SubmitQuestionnaireResponseParams,
 } from '../src/questionnaire';
 export const generateCreateUserParams = ({
   authId = v4(),
@@ -926,14 +928,15 @@ export const mockGenerateQuestionnaireItem = ({
         { label: faker.lorem.words(3), value: 0 },
         { label: faker.lorem.words(3), value: 1 },
       ]
-    : undefined,
-  items = type === ItemType.group ? mockGenerateQuestionnaireItem() : undefined,
+    : null,
+  items = type === ItemType.group ? mockGenerateQuestionnaireItem() : null,
   range = type === ItemType.range
     ? {
         min: { value: 0, label: faker.lorem.words(3) },
         max: { value: faker.datatype.number({ min: 1, max: 10 }), label: faker.lorem.words(3) },
       }
-    : undefined,
+    : null,
+  alertCondition,
 }: Partial<Item> = {}): Item => {
   return {
     code,
@@ -944,12 +947,24 @@ export const mockGenerateQuestionnaireItem = ({
     options,
     range,
     items,
+    alertCondition,
+  };
+};
+
+export const mockGenerateQuestionnaireAnswer = ({
+  code = faker.lorem.word(),
+  value = faker.datatype.number({ min: 0, max: 3 }).toString(),
+}: Partial<Answer> = {}): Answer => {
+  return {
+    code,
+    value,
   };
 };
 
 export const mockGenerateQuestionnaire = ({
   id = generateId(),
-  name: name = faker.lorem.words(3),
+  name = faker.lorem.words(3),
+  shortName = faker.lorem.word(3),
   type = QuestionnaireType[randomEnum(QuestionnaireType)],
   active = true,
   items = mockGenerateQuestionnaireItem(),
@@ -957,19 +972,23 @@ export const mockGenerateQuestionnaire = ({
     { min: 0, max: 4, label: 'severity 1' },
     { min: 5, max: 6, label: 'severity 2' },
   ],
+  createdBy = generateObjectId(),
 }: Partial<Questionnaire> = {}): Questionnaire => {
   return {
     id,
-    name: name,
+    name,
+    shortName,
     type,
     active,
     items,
     severityLevels,
+    createdBy,
   };
 };
 
 export const generateCreateQuestionnaireParams = ({
-  name: name = faker.lorem.words(3),
+  name = faker.lorem.words(3),
+  shortName = faker.lorem.word(3),
   type = QuestionnaireType[randomEnum(QuestionnaireType)],
   items = [mockGenerateQuestionnaireItem()],
   severityLevels = [
@@ -978,7 +997,8 @@ export const generateCreateQuestionnaireParams = ({
   ],
 }: Partial<CreateQuestionnaireParams> = {}): CreateQuestionnaireParams => {
   return {
-    name: name,
+    name,
+    shortName,
     type,
     items,
     severityLevels,
@@ -992,6 +1012,18 @@ export const generateDeleteMemberParams = ({
   return {
     id,
     hard,
+  };
+};
+
+export const generateSubmitQuestionnaireResponseParams = ({
+  questionnaireId = generateId(),
+  memberId = generateId(),
+  answers = [mockGenerateQuestionnaireAnswer(), mockGenerateQuestionnaireAnswer()],
+}: Partial<SubmitQuestionnaireResponseParams> = {}): SubmitQuestionnaireResponseParams => {
+  return {
+    questionnaireId,
+    memberId,
+    answers,
   };
 };
 
