@@ -11,6 +11,7 @@ import {
   IsObjectId,
   IsUnscheduledTodo,
 } from '../common';
+import { ISoftDelete } from '../db';
 
 export const NotNullableTodoKeys = ['label', 'cronExpressions', 'start', 'end'];
 
@@ -175,8 +176,8 @@ export class TodoDone extends Identifier {
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type TodoDocument = Todo & Document;
+export type TodoDocument = Todo & Document & ISoftDelete<Todo>;
 export const TodoDto = SchemaFactory.createForClass(Todo);
 
-export type TodoDoneDocument = TodoDone & Document;
+export type TodoDoneDocument = TodoDone & Document & ISoftDelete<TodoDone>;
 export const TodoDoneDto = SchemaFactory.createForClass(TodoDone);

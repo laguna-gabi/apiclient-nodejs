@@ -423,6 +423,8 @@ describe('Integration tests: all', () => {
         },
       });
 
+      await createTodos(member.id);
+
       // delete member
       const deleteMemberParams = generateDeleteMemberParams({ id: member.id, hard });
       const result = await handler
@@ -456,11 +458,13 @@ describe('Integration tests: all', () => {
       });
       expect(dailyReports.dailyReports.data).toEqual([]);
 
+      const todos = await handler.queries.getTodos({ memberId: member.id });
+      expect(todos).toEqual([]);
+
       if (hard) {
         // todo: add soft delete for these and then remove condition
         const appointmentResult = await handler.queries.getAppointment(appointment.id);
         expect(appointmentResult).toBeNull();
-
       }
     });
   });
@@ -1801,5 +1805,25 @@ describe('Integration tests: all', () => {
     expect(resultFiltered.length).toEqual(availabilities.length);
 
     return { ids };
+  };
+
+  const createTodos = async (memberId: string) => {
+    const createTodoParams = generateCreateTodoParams({ memberId });
+    delete createTodoParams.createdBy;
+    delete createTodoParams.updatedBy;
+    const { id: todoId } = await handler.mutations.createTodo({ createTodoParams });
+    const createTodoDoneParams = generateCreateTodoDoneParams({ todoId, done: new Date() });
+    delete createTodoDoneParams.memberId;
+    await handler.mutations.createTodoDone({ createTodoDoneParams });
+    const todos = await handler.queries.getTodos({ memberId });
+    expect(todos).toHaveLength(1);
+    const todoDones = await handler.queries.getTodoDones({
+      getTodoDonesParams: {
+        memberId,
+        start: createTodoParams.start,
+        end: createTodoParams.end,
+      },
+    });
+    expect(todoDones).toHaveLength(1);
   };
 });

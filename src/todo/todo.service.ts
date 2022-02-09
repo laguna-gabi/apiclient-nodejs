@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
@@ -13,13 +14,23 @@ import {
   TodoDoneDocument,
   TodoStatus,
 } from '.';
-import { BaseService, ErrorType, Errors, Identifier } from '../common';
+import {
+  BaseService,
+  ErrorType,
+  Errors,
+  EventType,
+  IEventDeleteMember,
+  Identifier,
+} from '../common';
+import { ISoftDelete } from '../db';
 
 @Injectable()
 export class TodoService extends BaseService {
   constructor(
-    @InjectModel(Todo.name) private readonly todoModel: Model<TodoDocument>,
-    @InjectModel(TodoDone.name) private readonly todoDoneModel: Model<TodoDoneDocument>,
+    @InjectModel(Todo.name)
+    private readonly todoModel: Model<TodoDocument> & ISoftDelete<TodoDocument>,
+    @InjectModel(TodoDone.name)
+    private readonly todoDoneModel: Model<TodoDoneDocument> & ISoftDelete<TodoDoneDocument>,
   ) {
     super();
   }
@@ -190,6 +201,40 @@ export class TodoService extends BaseService {
     await todoDone.deleteOne();
 
     return true;
+  }
+
+  @OnEvent(EventType.onDeletedMember, { async: true })
+  async deleteTodos(params: IEventDeleteMember) {
+    const { memberId, hard, deletedBy } = params;
+    const todos = await this.todoModel.findWithDeleted({ memberId: new Types.ObjectId(memberId) });
+    if (!todos) {
+      return;
+    }
+    if (hard) {
+      await this.todoModel.deleteMany({ memberId: new Types.ObjectId(memberId) });
+    } else {
+      await Promise.all(
+        todos.map(async (todo) => {
+          await todo.delete(new Types.ObjectId(deletedBy));
+        }),
+      );
+    }
+
+    const doneTodos = await this.todoDoneModel.findWithDeleted({
+      memberId: new Types.ObjectId(memberId),
+    });
+    if (!doneTodos) {
+      return;
+    }
+    if (hard) {
+      await this.todoDoneModel.deleteMany({ memberId: new Types.ObjectId(memberId) });
+    } else {
+      await Promise.all(
+        doneTodos.map(async (doneTodo) => {
+          await doneTodo.delete(new Types.ObjectId(deletedBy));
+        }),
+      );
+    }
   }
 
   /*************************************************************************************************

@@ -19,6 +19,7 @@ import {
   TodoStatus,
 } from '../../src/todo';
 import {
+  checkDelete,
   dbConnect,
   dbDisconnect,
   defaultModules,
@@ -80,6 +81,7 @@ describe('TodoService', () => {
           updatedBy: generateObjectId(memberId),
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
+          deleted: false,
         }),
       );
     });
@@ -122,6 +124,7 @@ describe('TodoService', () => {
             updatedBy: generateObjectId(memberId),
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
+            deleted: false,
           }),
           expect.objectContaining({
             _id: generateObjectId(id2),
@@ -136,6 +139,7 @@ describe('TodoService', () => {
             updatedBy: generateObjectId(userId),
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
+            deleted: false,
           }),
         ]),
       );
@@ -214,6 +218,7 @@ describe('TodoService', () => {
           updatedBy: generateObjectId(userId),
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
+          deleted: false,
         }),
       );
 
@@ -230,6 +235,7 @@ describe('TodoService', () => {
           updatedBy: generateObjectId(userId),
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
+          deleted: false,
         }),
       );
     });
@@ -296,6 +302,7 @@ describe('TodoService', () => {
           updatedBy: generateObjectId(userId),
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
+          deleted: false,
         }),
       );
     });
@@ -368,6 +375,7 @@ describe('TodoService', () => {
           updatedBy: generateObjectId(memberId),
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
+          deleted: false,
         }),
       );
 
@@ -385,6 +393,7 @@ describe('TodoService', () => {
           updatedBy: generateObjectId(memberId),
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
+          deleted: false,
         }),
       );
     });
@@ -439,6 +448,7 @@ describe('TodoService', () => {
           memberId: generateObjectId(memberId),
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
+          deleted: false,
         }),
       );
     });
@@ -505,6 +515,7 @@ describe('TodoService', () => {
           updatedBy: generateObjectId(memberId),
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
+          deleted: false,
         }),
       );
     });
@@ -547,6 +558,7 @@ describe('TodoService', () => {
             done: createTodoDoneParams1.done,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
+            deleted: false,
           }),
           expect.objectContaining({
             _id: todoDoneId2,
@@ -554,6 +566,7 @@ describe('TodoService', () => {
             done: createTodoDoneParams2.done,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
+            deleted: false,
           }),
         ]),
       );
@@ -573,6 +586,7 @@ describe('TodoService', () => {
             done: createTodoDoneParams1.done,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
+            deleted: false,
           }),
         ]),
       );
@@ -672,6 +686,7 @@ describe('TodoService', () => {
           updatedBy: generateObjectId(memberId),
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
+          deleted: false,
         }),
       );
 
@@ -691,8 +706,60 @@ describe('TodoService', () => {
           updatedBy: generateObjectId(memberId),
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
+          deleted: false,
         }),
       );
+    });
+  });
+
+  describe('deleteTodos', () => {
+    test.each([true, false])('should soft delete member Todos and TodoDones', async (hard) => {
+      const memberId = generateId();
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+        createdBy: memberId,
+        updatedBy: memberId,
+      });
+
+      const { id: todoId } = await service.createTodo(createTodoParams);
+
+      const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        todoId,
+        memberId,
+      });
+
+      await service.createTodoDone(createTodoDoneParams);
+
+      const getResults = async () => {
+        const resTodo = await service.getTodos(memberId);
+        const resTodoDone = await service.getTodoDones({
+          start: createTodoParams.start,
+          end: createTodoParams.end,
+          memberId,
+        });
+
+        return { resTodo, resTodoDone };
+      };
+
+      const { resTodo, resTodoDone } = await getResults();
+      expect(resTodo).toHaveLength(1);
+      expect(resTodoDone).toHaveLength(1);
+      await service.deleteTodos({ memberId, deletedBy: memberId, hard });
+      const { resTodo: resTodoDeleted, resTodoDone: resTodoDoneDeleted } = await getResults();
+      expect(resTodoDeleted).toHaveLength(0);
+      expect(resTodoDoneDeleted).toHaveLength(0);
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const deletedTodo = await todoModel.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
+
+      if (hard) {
+        expect(deletedTodo).toEqual([]);
+      } else {
+        await checkDelete(deletedTodo, { memberId: new Types.ObjectId(memberId) }, memberId);
+      }
     });
   });
 });

@@ -11,6 +11,7 @@ import {
   ErrorType,
   Errors,
   EventType,
+  IEventDeleteMember,
   LoggerService,
   MemberRole,
   UserRole,
@@ -531,5 +532,29 @@ describe('TodoResolver', () => {
         );
       },
     );
+  });
+
+  describe('deleteMemberTodo', () => {
+    let spyOnServiceDeleteTodos;
+
+    beforeEach(() => {
+      spyOnServiceDeleteTodos = jest.spyOn(service, 'deleteTodos');
+    });
+
+    afterEach(() => {
+      spyOnServiceDeleteTodos.mockReset();
+    });
+
+    it('should call service deleteMemberTodo', async () => {
+      const params: IEventDeleteMember = {
+        memberId: generateId(),
+        hard: false,
+        deletedBy: generateId(),
+      };
+      spyOnServiceDeleteTodos.mockImplementationOnce(async () => undefined);
+      await resolver.deleteTodos(params);
+
+      expect(spyOnServiceDeleteTodos).toBeCalledWith(params);
+    });
   });
 });
