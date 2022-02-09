@@ -458,14 +458,11 @@ describe('Integration tests: all', () => {
       });
       expect(dailyReports.dailyReports.data).toEqual([]);
 
+      const appointmentResult = await handler.queries.getAppointment(appointment.id);
+      expect(appointmentResult).toBeNull();
+
       const todos = await handler.queries.getTodos({ memberId: member.id });
       expect(todos).toEqual([]);
-
-      if (hard) {
-        // todo: add soft delete for these and then remove condition
-        const appointmentResult = await handler.queries.getAppointment(appointment.id);
-        expect(appointmentResult).toBeNull();
-      }
     });
   });
 

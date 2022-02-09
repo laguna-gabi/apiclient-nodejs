@@ -257,18 +257,18 @@ describe('AppointmentResolver', () => {
 
   describe('deleteAppointment', () => {
     let spyOnServiceValidatedUpdateAppointment: jest.SpyInstance;
-    let spyOnDeleteAppointment: jest.SpyInstance;
+    let spyOnServiceDeleteAppointment: jest.SpyInstance;
     let spyOnGet: jest.SpyInstance;
 
     beforeEach(() => {
       spyOnServiceValidatedUpdateAppointment = jest.spyOn(service, 'validateUpdateAppointment');
-      spyOnDeleteAppointment = jest.spyOn(service, 'delete');
+      spyOnServiceDeleteAppointment = jest.spyOn(service, 'delete');
       spyOnGet = jest.spyOn(service, 'get');
     });
 
     afterEach(() => {
       spyOnServiceValidatedUpdateAppointment.mockReset();
-      spyOnDeleteAppointment.mockReset();
+      spyOnServiceDeleteAppointment.mockReset();
       spyOnEventEmitter.mockReset();
       spyOnGet.mockReset();
     });
@@ -281,7 +281,7 @@ describe('AppointmentResolver', () => {
         Errors.get(ErrorType.appointmentCanNotBeUpdated),
       );
 
-      expect(spyOnDeleteAppointment).not.toHaveBeenCalled();
+      expect(spyOnServiceDeleteAppointment).not.toHaveBeenCalled();
       expect(spyOnEventEmitter).not.toHaveBeenCalled();
     });
 
@@ -295,11 +295,14 @@ describe('AppointmentResolver', () => {
       const userId = generateId();
 
       spyOnGet.mockResolvedValue(appointment as Appointment);
-      spyOnDeleteAppointment.mockResolvedValue(true);
+      spyOnServiceDeleteAppointment.mockResolvedValue(true);
 
       await resolver.deleteAppointment(userId, appointment.id);
 
-      expect(spyOnDeleteAppointment).toBeCalledWith(appointment.id, userId);
+      expect(spyOnServiceDeleteAppointment).toBeCalledWith({
+        id: appointment.id,
+        deletedBy: userId,
+      });
       expect(spyOnEventEmitter).toBeCalled();
     });
   });

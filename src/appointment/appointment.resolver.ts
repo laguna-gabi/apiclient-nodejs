@@ -83,7 +83,7 @@ export class AppointmentResolver extends AppointmentBase {
     await this.appointmentService.validateUpdateAppointment(id);
 
     const appointment = await this.appointmentService.get(id);
-    await this.appointmentService.delete(id, userId);
+    await this.appointmentService.delete({ id, deletedBy: userId });
     await this.deleteAppointmentReminders(appointment);
 
     return true;

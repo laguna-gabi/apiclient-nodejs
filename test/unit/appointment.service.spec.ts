@@ -111,30 +111,6 @@ describe('AppointmentService', () => {
       expect(result.status).toEqual(AppointmentStatus.scheduled);
       validateNewAppointmentEvent(appointment.memberId, appointment.userId, id);
     });
-
-    it('should successfully delete an appointment with its notes', async () => {
-      const params = generateScheduleAppointmentParams();
-      const { id } = await service.schedule(params);
-      const notes = generateNotesParams({});
-      const appointment = await service.end({ id, notes, noShow: false, recordingConsent: true });
-
-      await service.delete(id, params.userId);
-
-      const result = await service.get(id);
-      expect(result).toBeNull();
-
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const deletedResult = await appointmentModel.findWithDeleted(id);
-      checkDelete(deletedResult, { _id: id }, params.userId);
-
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const deletedNotesResult = await notesModel.findWithDeleted(appointment.notes._id);
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      checkDelete(deletedNotesResult, { _id: appointment.notes._id }, params.userId);
-    });
   });
 
   describe('request', () => {
@@ -421,7 +397,7 @@ describe('AppointmentService', () => {
 
       // scheduling a new appointment and marking as delete
       const appointment = await schedule(addMinutes(startDate, 30));
-      await service.delete(appointment.id, userId);
+      await service.delete({ id: appointment.id, deletedBy: userId });
 
       expect(await schedule(addMinutes(startDate, 30))).not.toBeFalsy();
     });
@@ -520,7 +496,7 @@ describe('AppointmentService', () => {
     it('should not be able to end a deleted appointment', async () => {
       const params = generateScheduleAppointmentParams();
       const { id } = await service.schedule(params);
-      await service.delete(id, params.userId);
+      await service.delete({ id, deletedBy: params.userId });
       await expect(service.end({ id })).rejects.toThrow(
         Errors.get(ErrorType.appointmentIdNotFound),
       );
@@ -749,29 +725,111 @@ describe('AppointmentService', () => {
     });
   });
 
+  /* eslint-disable @typescript-eslint/ban-ts-comment */
   describe('delete', () => {
-    it('should delete members appointments - hard delete', async () => {
-      const memberId = generateId();
+    test.each([false, true])(
+      'should successfully delete an appointment with its notes',
+      async (hard) => {
+        const params = generateScheduleAppointmentParams();
+        const { id } = await service.schedule(params);
+        const notes = generateNotesParams({});
+        const appointment = await service.end({ id, notes, noShow: false, recordingConsent: true });
 
-      const appointment = generateRequestAppointmentParams({ memberId });
-      const appointment2 = generateRequestAppointmentParams({ memberId });
-      await service.request(appointment);
-      await service.request(appointment2);
+        await service.delete({ id, deletedBy: params.userId, hard });
 
-      const params: IEventDeleteMember = {
-        memberId: memberId,
-        deletedBy: generateId(),
-        hard: true,
-      };
-      const appointmentsBefore = await appointmentModel.find({
-        memberId: new Types.ObjectId(params.memberId),
-      });
-      expect(appointmentsBefore.length).toEqual(2);
+        const result = await service.get(id);
+        expect(result).toBeNull();
 
-      await service.deleteMemberAppointments(params);
-      const result = await appointmentModel.find({ memberId: new Types.ObjectId(params.memberId) });
-      expect(result).toEqual([]);
+        // @ts-ignore
+        const deletedResult = await appointmentModel.findWithDeleted(id);
+        // @ts-ignore
+        const deletedNotesResult = await notesModel.findWithDeleted(appointment.notes._id);
+
+        if (hard) {
+          expect(deletedResult).toEqual([]);
+          expect(deletedNotesResult).toEqual([]);
+        } else {
+          checkDelete(deletedResult, { _id: id }, params.userId);
+          // @ts-ignore
+          checkDelete(deletedNotesResult, { _id: appointment.notes._id }, params.userId);
+        }
+      },
+    );
+
+    it('should be able to hard delete after soft delete', async () => {
+      const params = generateScheduleAppointmentParams();
+      const { id } = await service.schedule(params);
+      const notes = generateNotesParams({});
+      const appointment = await service.end({ id, notes, noShow: false, recordingConsent: true });
+
+      await service.delete({ id, deletedBy: params.userId, hard: false });
+
+      const result = await service.get(id);
+      expect(result).toBeNull();
+
+      // @ts-ignore
+      const deletedResult = await appointmentModel.findWithDeleted(id);
+      // @ts-ignore
+      const deletedNotesResult = await notesModel.findWithDeleted(appointment.notes._id);
+
+      checkDelete(deletedResult, { _id: id }, params.userId);
+      // @ts-ignore
+      checkDelete(deletedNotesResult, { _id: appointment.notes._id }, params.userId);
+
+      await service.delete({ id, deletedBy: params.userId, hard: true });
+
+      // @ts-ignore
+      const deletedResultHard = await appointmentModel.findWithDeleted(id);
+      // @ts-ignore
+      const deletedNotesResultHard = await notesModel.findWithDeleted(appointment.notes._id);
+      expect(deletedResultHard).toEqual([]);
+      expect(deletedNotesResultHard).toEqual([]);
     });
+
+    test.each([false, true])(
+      "should successfully delete member's appointments with their notes",
+      async (hard) => {
+        const memberId = generateId();
+        const params = generateScheduleAppointmentParams({ memberId });
+        const params2 = generateScheduleAppointmentParams({ memberId });
+        const { id } = await service.schedule(params);
+        const { id: id2 } = await service.schedule(params2);
+        const notes = generateNotesParams({});
+        const notes2 = generateNotesParams({});
+        const appointment = await service.end({ id, notes, noShow: false, recordingConsent: true });
+        await service.end({
+          id: id2,
+          notes: notes2,
+          noShow: false,
+          recordingConsent: true,
+        });
+
+        const deleteParams: IEventDeleteMember = {
+          memberId,
+          deletedBy: params.userId,
+          hard,
+        };
+        await service.deleteMemberAppointments(deleteParams);
+
+        // @ts-ignore
+        const deletedResult = await appointmentModel.findWithDeleted({
+          memberId: new Types.ObjectId(memberId),
+        });
+        // @ts-ignore
+        const deletedNotesResult = await notesModel.findWithDeleted(appointment.notes._id);
+
+        if (hard) {
+          expect(deletedResult).toEqual([]);
+          expect(deletedNotesResult).toEqual([]);
+        } else {
+          expect(deletedResult.length).toEqual(2);
+          checkDelete(deletedResult, { _id: id }, params.userId);
+          expect(deletedNotesResult.length).toEqual(1);
+          // @ts-ignore
+          checkDelete(deletedNotesResult, { _id: appointment.notes._id }, params.userId);
+        }
+      },
+    );
   });
 
   const requestAppointment = async ({

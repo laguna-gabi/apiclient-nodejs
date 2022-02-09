@@ -27,6 +27,8 @@ import {
   LoggerService,
 } from '../common';
 import { isUndefined, omitBy } from 'lodash';
+import { ISoftDelete } from '../db';
+import { formatEx } from '@lagunahealth/pandora';
 
 @Injectable()
 export class AppointmentService extends BaseService {
@@ -34,9 +36,10 @@ export class AppointmentService extends BaseService {
 
   constructor(
     @InjectModel(Appointment.name)
-    private readonly appointmentModel: Model<AppointmentDocument>,
+    private readonly appointmentModel: Model<AppointmentDocument> &
+      ISoftDelete<AppointmentDocument>,
     @InjectModel(Notes.name)
-    private readonly notesModel: Model<NotesDocument>,
+    private readonly notesModel: Model<NotesDocument> & ISoftDelete<NotesDocument>,
     private eventEmitter: EventEmitter2,
     readonly logger: LoggerService,
   ) {
@@ -200,7 +203,7 @@ export class AppointmentService extends BaseService {
         .populate('notes');
     } else if (params.notes === null) {
       if (existing.notes) {
-        await this.deleteNotes(existing.notes);
+        await this.deleteNotes({ notes: existing.notes });
       }
       result = await this.appointmentModel
         .findOneAndUpdate({ _id: params.id }, { $set: { ...update, notes: null } }, { new: true })
@@ -258,26 +261,47 @@ export class AppointmentService extends BaseService {
     return this.replaceId(object.toObject());
   }
 
-  async delete(id: string, deletedBy: string): Promise<boolean> {
-    const result = await this.appointmentModel.findById(new Types.ObjectId(id));
+  async delete({
+    id,
+    deletedBy,
+    hard = false,
+  }: {
+    id: string;
+    deletedBy?: string;
+    hard?: boolean;
+  }): Promise<boolean> {
+    const result = await this.appointmentModel.findOneWithDeleted(new Types.ObjectId(id));
     if (!result) {
       throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
     }
     const deletedByObject = new Types.ObjectId(deletedBy);
-    await result.delete(deletedByObject);
+    if (hard) {
+      await this.appointmentModel.deleteOne({ _id: new Types.ObjectId(id) });
+    } else {
+      await result.delete(deletedByObject);
+    }
 
     if (result.notes) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      await this.deleteNotes(result.notes._id, deletedByObject);
+      await this.deleteNotes({ notes: result.notes._id, deletedBy: deletedByObject, hard });
     }
-
     return true;
   }
 
-  private async deleteNotes(notes, deletedBy?: Types.ObjectId) {
-    const notesResult = await this.notesModel.findOne({ _id: notes });
-    if (notesResult) {
+  private async deleteNotes({
+    notes,
+    deletedBy,
+    hard = false,
+  }: {
+    notes;
+    deletedBy?: Types.ObjectId;
+    hard?: boolean;
+  }) {
+    if (hard) {
+      await this.notesModel.deleteOne({ _id: notes });
+    } else {
+      const notesResult = await this.notesModel.findOneWithDeleted({ _id: notes });
       await notesResult.delete(deletedBy);
     }
   }
@@ -315,7 +339,7 @@ export class AppointmentService extends BaseService {
 
     if (params.notes === null) {
       if (existing.notes) {
-        await this.deleteNotes(existing.notes);
+        await this.deleteNotes({ notes: existing.notes });
         await this.appointmentModel.findOneAndUpdate(
           { _id: params.appointmentId },
           { $set: { notes: null } },
@@ -364,21 +388,26 @@ export class AppointmentService extends BaseService {
   @OnEvent(EventType.onDeletedMember, { async: true })
   async deleteMemberAppointments(params: IEventDeleteMember) {
     this.logger.info(params, AppointmentService.name, this.deleteMemberAppointments.name);
-    const { memberId, hard } = params;
-    // todo: find with deleted
-    const appointments = await this.appointmentModel.find({
-      memberId: new Types.ObjectId(memberId),
-    });
-    const eventParams: IEventOnDeletedMemberAppointments = { appointments };
-    this.eventEmitter.emit(EventType.onDeletedMemberAppointments, eventParams);
-    if (hard) {
-      for (let index = 0; index < appointments.length; index++) {
-        if (appointments[index].notes) {
-          await this.deleteNotes(appointments[index].notes);
-        }
-      }
-      await this.appointmentModel.deleteMany({ memberId: new Types.ObjectId(memberId) });
+    const { memberId, hard, deletedBy } = params;
+    try {
+      const appointments = await this.appointmentModel.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
+      if (!appointments) return;
+      const eventParams: IEventOnDeletedMemberAppointments = { appointments };
+      this.eventEmitter.emit(EventType.onDeletedMemberAppointments, eventParams);
+      await Promise.all(
+        appointments.map(async (appointment) => {
+          await this.delete({ id: appointment.id, deletedBy, hard });
+        }),
+      );
+    } catch (ex) {
+      this.logger.error(
+        params,
+        AppointmentService.name,
+        this.deleteMemberAppointments.name,
+        formatEx(ex),
+      );
     }
-    // todo: add soft delete
   }
 }
