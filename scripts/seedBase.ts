@@ -24,7 +24,7 @@ export class SeedBase extends BaseHandler {
     this.module = moduleFixture.get<GraphQLModule>(GraphQLModule);
     this.queueService = moduleFixture.get<QueueService>(QueueService);
 
-    const apolloServer = createTestClient((this.module as any).apolloServer);
+    const apolloServer = createTestClient(this.module.apolloServer);
     this.mutations = new Mutations(apolloServer);
     this.queries = new Queries(apolloServer);
     this.userService = moduleFixture.get<UserService>(UserService);

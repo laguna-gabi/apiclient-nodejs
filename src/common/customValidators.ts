@@ -261,7 +261,7 @@ export function IsObjectId(options?: ValidationOptions) {
       propertyName,
       options,
       validator: {
-        validate(value: any) {
+        validate(value) {
           return MongooseTypes.ObjectId.isValid(value) || value == undefined;
         },
       },

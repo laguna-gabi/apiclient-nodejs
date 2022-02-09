@@ -67,10 +67,10 @@ describe('Validations - member', () => {
     await handler.afterAll();
   });
 
-  const checkNoneExistingMemberAndWrongMemberID = (
+  const checkNoneExistingMemberAndWrongMemberID = <T>(
     title: string,
-    getFunction: () => (props: any) => Promise<any>,
-    getMainInput: (memberId: string) => any,
+    getFunction: () => (props: T) => Promise<string>,
+    getMainInput: (memberId: string) => T,
   ) => {
     describe(title, () => {
       it('should throw error on non existing member', async () => {

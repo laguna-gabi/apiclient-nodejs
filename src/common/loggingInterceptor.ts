@@ -13,7 +13,7 @@ export class LoggingInterceptor implements NestInterceptor {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<void> {
     if (process.env.NODE_ENV === Environments.test) {
       //disabling intercept log on tests, it causes a dump
       return next.handle().pipe(tap(() => undefined));

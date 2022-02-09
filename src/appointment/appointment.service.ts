@@ -184,7 +184,7 @@ export class AppointmentService extends BaseService {
 
     const { noShow, recordingConsent, id, noShowReason } = params;
     let result;
-    const update: any = omitBy(
+    const update = omitBy(
       {
         status: AppointmentStatus.done,
         noShow,

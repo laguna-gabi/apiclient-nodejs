@@ -250,7 +250,7 @@ export class StorageService implements OnModuleInit {
         Bucket: this.bucket,
         Key: normalImageKey,
       };
-      const originalImage: any = await this.s3.getObject(downloadParams).promise();
+      const originalImage = await this.s3.getObject(downloadParams).promise();
 
       // Use the sharp module to resize the image and save in a buffer.
       const buffer = await sharp(originalImage.Body)

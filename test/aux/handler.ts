@@ -89,7 +89,7 @@ export class Handler extends BaseHandler {
     this.queueService = providers.queueService;
     this.cognitoService = providers.cognitoService;
     this.notificationService = providers.notificationService;
-    const apolloServer = createTestClient((this.module as any).apolloServer);
+    const apolloServer = createTestClient(this.module.apolloServer);
     this.mutations = new Mutations(apolloServer);
 
     this.queries = new Queries(apolloServer);
@@ -133,7 +133,7 @@ export class Handler extends BaseHandler {
   }
 
   setContextUser = (deviceId?: string, sub?: string): Handler => {
-    (this.module as any).apolloServer.context = () => ({
+    this.module.apolloServer['context'] = () => ({
       req: {
         headers: {
           authorization: bearerToken + jwt.sign({ username: deviceId, sub }, 'shhh'),

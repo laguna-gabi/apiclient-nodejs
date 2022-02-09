@@ -36,7 +36,7 @@ export class BaseHandler {
     roles: RoleTypes[] = [MemberRole.member],
     lastQueryAlert: Date = undefined,
   ) => {
-    (this.module as any).apolloServer.context = () => ({
+    this.module.apolloServer['context'] = () => ({
       req: {
         user: {
           _id: userId,
@@ -119,6 +119,8 @@ export const dbDisconnect = async () => {
 export const defaultModules = () => {
   return [DbModule, EventEmitterModule.forRoot()];
 };
+
+export type defaultTimestampsDbValues = { createdAt: Date; updatedAt: Date };
 
 export const mockProviders = (
   module: TestingModule,

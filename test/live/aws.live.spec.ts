@@ -251,7 +251,12 @@ describe('live: aws', () => {
         return;
       }
       const storageType = StorageType.recordings;
-      const uploadPart = async (fileName: string, partNumber: number, data: any, id?: string) => {
+      const uploadPart = async (
+        fileName: string,
+        partNumber: number,
+        data: string,
+        id?: string,
+      ) => {
         const params = {
           memberId: member.id,
           storageType,

@@ -14,10 +14,8 @@ export class SlotService {
     end?: Date,
   ): Date[] {
     // sort by start date
-    availabilities.sort((a: any, b: any) => {
-      a = new Date(a.start);
-      b = new Date(b.start);
-      return a - b;
+    availabilities.sort((a: Availability, b: Availability) => {
+      return a.start.getTime() - b.start.getTime();
     });
     const slots: Date[] = [];
 

@@ -133,7 +133,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     const url = `${this.basePath}${this.suffix.groupChannels}/${channelUrl}`;
     const current = await this.httpService.get(url, { headers: this.headers }).toPromise();
 
-    let data: any = current.data.data ? JSON.parse(current.data.data) : {};
+    let data = current.data.data ? JSON.parse(current.data.data) : {};
     if (!data.appointments) {
       data = { ...data, appointments: {} };
     }

@@ -25,6 +25,7 @@ import {
   GetSlotsParams,
   NotNullableUserKeys,
   User,
+  UserDocument,
   UserDto,
   UserModule,
   UserService,
@@ -36,6 +37,7 @@ import {
   dbConnect,
   dbDisconnect,
   defaultModules,
+  defaultTimestampsDbValues,
   generateAvailabilityInput,
   generateCreateUserParams,
   generateId,
@@ -49,7 +51,7 @@ describe('UserService', () => {
   let availabilityResolver: AvailabilityResolver;
   let appointmentResolver: AppointmentResolver;
   let mockUserModel;
-  let userModel: Model<typeof UserDto>;
+  let userModel: Model<UserDocument & defaultTimestampsDbValues>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -108,7 +110,7 @@ describe('UserService', () => {
       const user = generateCreateUserParams();
 
       const { id } = await service.insert(user);
-      const createdUser: any = await userModel.findById(id);
+      const createdUser = await userModel.findById(id);
 
       expect(createdUser.createdAt).toEqual(expect.any(Date));
       expect(createdUser.updatedAt).toEqual(expect.any(Date));

@@ -2,9 +2,9 @@ import { Environments } from '@lagunahealth/pandora';
 import * as jwt from 'jsonwebtoken';
 import { Model, connect, disconnect, model } from 'mongoose';
 import { v4 } from 'uuid';
-import { Member, MemberDto } from '../src/member';
+import { Member, MemberDocument, MemberDto } from '../src/member';
 import { ConfigsService } from '../src/providers';
-import { User, UserDto } from '../src/user';
+import { User, UserDocument, UserDto } from '../src/user';
 
 async function main() {
   const { uri } = await new ConfigsService().createMongooseOptions();
@@ -14,8 +14,8 @@ async function main() {
     useFindAndModify: false,
     useCreateIndex: true,
   });
-  const memberModel: Model<typeof MemberDto> = model(Member.name, MemberDto);
-  const userModel: Model<typeof UserDto> = model(User.name, UserDto);
+  const memberModel: Model<MemberDocument> = model(Member.name, MemberDto);
+  const userModel: Model<UserDocument> = model(User.name, UserDto);
 
   /**
    * In here we are generating authId for members if they dont have it.
@@ -38,7 +38,7 @@ async function main() {
   }
 
   const members = await memberModel.find();
-  const mappedMembers = members.map((member: any) => {
+  const mappedMembers = members.map((member: MemberDocument) => {
     return {
       id: member._id,
       authId: member.authId,
@@ -54,7 +54,7 @@ async function main() {
   console.log(mappedMembers);
 
   const users = await userModel.find();
-  const mappedUsers = users.map((user: any) => {
+  const mappedUsers = users.map((user: UserDocument) => {
     return {
       id: user._id,
       authId: user.authId,

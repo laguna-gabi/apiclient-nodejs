@@ -20,10 +20,10 @@ import { ErrorType, Errors, MemberRole, UserRole } from '.';
  * first add the metadata @MemberIdParam() and then the MemberUserRouteInterceptor.
  */
 @Injectable()
-export class MemberUserRouteInterceptor implements NestInterceptor {
+export class MemberUserRouteInterceptor implements NestInterceptor<void> {
   constructor(private reflector: Reflector) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<void> {
     const params = Object.values(context.getArgByIndex(1))[0];
     const { _id: clientId, roles: clientRoles } =
       GqlExecutionContext.create(context).getContext().req.user;

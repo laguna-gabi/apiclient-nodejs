@@ -380,7 +380,7 @@ describe('MemberResolver', () => {
     });
 
     it('should return org zip code if member does not have one', async () => {
-      const member: any = mockGenerateMember();
+      const member = mockGenerateMember();
       delete member.zipCode;
       spyOnServiceGet.mockResolvedValue(member);
       const result = await resolver.getMember(member.id);
@@ -388,7 +388,7 @@ describe('MemberResolver', () => {
     });
 
     it('should calculate utcDelta if zipCode exists', async () => {
-      const member: any = mockGenerateMember();
+      const member = mockGenerateMember();
       spyOnServiceGet.mockResolvedValue(member);
       const result = await resolver.getMember(member.id);
       expect(result.utcDelta).toBeLessThan(0);

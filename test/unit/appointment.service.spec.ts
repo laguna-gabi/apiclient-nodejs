@@ -32,6 +32,7 @@ import {
   dbConnect,
   dbDisconnect,
   defaultModules,
+  defaultTimestampsDbValues,
   generateAppointmentLink,
   generateId,
   generateNotesParams,
@@ -45,7 +46,7 @@ describe('AppointmentService', () => {
   let module: TestingModule;
   let service: AppointmentService;
   let eventEmitter: EventEmitter2;
-  let appointmentModel: Model<AppointmentDocument>;
+  let appointmentModel: Model<AppointmentDocument & defaultTimestampsDbValues>;
   let notesModel: Model<NotesDocument>;
   let spyOnEventEmitter;
 
@@ -283,7 +284,7 @@ describe('AppointmentService', () => {
 
       validateNewAppointmentEvent(params.memberId, params.userId, id);
 
-      const createdAppointment: any = await appointmentModel.findById(id);
+      const createdAppointment = await appointmentModel.findById(id);
       expect(createdAppointment.createdAt).toEqual(expect.any(Date));
       expect(createdAppointment.updatedAt).toEqual(expect.any(Date));
     });
@@ -794,7 +795,7 @@ describe('AppointmentService', () => {
     const result = await service.request(appointmentParams);
     expect(result.id).not.toBeUndefined();
 
-    const record: any = await appointmentModel.findById(result.id);
+    const record = await appointmentModel.findById(result.id);
     return { notBefore, id: result.id, record };
   };
 

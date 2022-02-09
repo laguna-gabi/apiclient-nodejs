@@ -12,7 +12,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import * as faker from 'faker';
 import { datatype, date, internet } from 'faker';
-import { isNil, omitBy } from 'lodash';
+import { isNil, omitBy, pickBy } from 'lodash';
 import { Model, Types, model } from 'mongoose';
 import { performance } from 'perf_hooks';
 import {
@@ -35,6 +35,7 @@ import {
   ActionItemDto,
   AlertType,
   ControlMember,
+  ControlMemberDocument,
   ControlMemberDto,
   DismissedAlert,
   DismissedAlertDto,
@@ -45,6 +46,7 @@ import {
   Member,
   MemberConfig,
   MemberConfigDto,
+  MemberDocument,
   MemberDto,
   MemberModule,
   MemberRecordingDto,
@@ -52,6 +54,7 @@ import {
   NotNullableMemberKeys,
   ReadmissionRisk,
   Recording,
+  RecordingDocument,
   Sex,
   TaskStatus,
   UpdateMemberParams,
@@ -65,6 +68,7 @@ import {
   dbConnect,
   dbDisconnect,
   defaultModules,
+  defaultTimestampsDbValues,
   generateAddCaregiverParams,
   generateCreateMemberParams,
   generateCreateTaskParams,
@@ -95,16 +99,16 @@ import { add, sub } from 'date-fns';
 describe('MemberService', () => {
   let module: TestingModule;
   let service: MemberService;
-  let memberModel: Model<typeof MemberDto>;
+  let memberModel: Model<MemberDocument & defaultTimestampsDbValues>;
   let memberConfigModel: Model<typeof MemberConfigDto>;
-  let controlMemberModel: Model<typeof ControlMemberDto>;
+  let controlMemberModel: Model<ControlMemberDocument & defaultTimestampsDbValues>;
   let modelUser: Model<typeof UserDto>;
   let modelOrg: Model<typeof OrgDto>;
   let modelActionItem: Model<typeof ActionItemDto>;
   let modelJournal: Model<typeof JournalDto>;
   let modelAppointment: Model<AppointmentDocument>;
   let modelDismissedAlert: Model<typeof DismissedAlertDto>;
-  let modelRecording: Model<typeof MemberRecordingDto>;
+  let modelRecording: Model<RecordingDocument>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -694,7 +698,7 @@ describe('MemberService', () => {
 
       expect(member?.id).not.toBeUndefined();
 
-      const createdMember: any = await memberModel.findById(member.id);
+      const createdMember = await memberModel.findById(member.id);
       compareMembers(createdMember, createMemberParams);
     });
 
@@ -715,14 +719,14 @@ describe('MemberService', () => {
 
       expect(member?.id).not.toBeUndefined();
 
-      const createdMember: any = await memberModel.findById(member.id);
+      const createdMember = await memberModel.findById(member.id);
       compareMembers(createdMember, createMemberParams);
     });
 
     it('should check that createdAt and updatedAt exists in the collection', async () => {
       const id = await generateMember();
 
-      const createdMember: any = await memberModel.findById(id);
+      const createdMember = await memberModel.findById(id);
       expect(createdMember.createdAt).toEqual(expect.any(Date));
       expect(createdMember.updatedAt).toEqual(expect.any(Date));
     });
@@ -776,7 +780,7 @@ describe('MemberService', () => {
 
       const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id });
       const member = await service.insertControl(createMemberParams);
-      const createdMember: any = await controlMemberModel.findById(member.id);
+      const createdMember = await controlMemberModel.findById(member.id);
       compareMembers(createdMember, createMemberParams);
       expect(member.org).toEqual(expect.objectContaining(orgParams));
     });
@@ -1041,10 +1045,10 @@ describe('MemberService', () => {
     const updateMember = async (updateMemberParams?: Omit<UpdateMemberParams, 'id' | 'authId'>) => {
       const id = await generateMember();
 
-      const beforeObject: any = await memberModel.findById(id);
+      const beforeObject = await memberModel.findById(id);
 
       await service.update({ id, ...updateMemberParams });
-      const afterObject: any = await memberModel.findById(id);
+      const afterObject = await memberModel.findById(id);
 
       expect(afterObject.toJSON()).toEqual({
         ...beforeObject.toJSON(),
@@ -1135,7 +1139,7 @@ describe('MemberService', () => {
       const generalNotes = generateSetGeneralNotesParams({ memberId });
       await service.setGeneralNotes(generalNotes);
 
-      const result: any = await memberModel.findById(memberId);
+      const result = await memberModel.findById(memberId);
 
       expect(result.generalNotes).toEqual(generalNotes.note);
     });
@@ -1154,7 +1158,7 @@ describe('MemberService', () => {
       delete notes.nurseNotes;
       await service.setGeneralNotes(notes);
 
-      const result: any = await memberModel.findById(memberId);
+      const result = await memberModel.findById(memberId);
 
       expect(result.generalNotes).toEqual(notes.note);
       expect(result.nurseNotes).toBeUndefined();
@@ -1167,7 +1171,7 @@ describe('MemberService', () => {
       delete notes.note;
       await service.setGeneralNotes(notes);
 
-      const result: any = await memberModel.findById(memberId);
+      const result = await memberModel.findById(memberId);
 
       expect(result.nurseNotes).toEqual(notes.nurseNotes);
       expect(result.generalNotes).toBeUndefined();
@@ -1184,7 +1188,7 @@ describe('MemberService', () => {
       delete notes2.nurseNotes;
       await service.setGeneralNotes(notes2);
 
-      const result: any = await memberModel.findById(memberId);
+      const result = await memberModel.findById(memberId);
 
       expect(result.nurseNotes).toEqual(notes1.nurseNotes);
       expect(result.generalNotes).toEqual(notes2.note);
@@ -1201,7 +1205,7 @@ describe('MemberService', () => {
       delete notes2.note;
       await service.setGeneralNotes(notes2);
 
-      const result: any = await memberModel.findById(memberId);
+      const result = await memberModel.findById(memberId);
 
       expect(result.nurseNotes).toEqual(notes2.nurseNotes);
       expect(result.generalNotes).toEqual(notes1.note);
@@ -1218,7 +1222,7 @@ describe('MemberService', () => {
       delete notes2.note;
       await service.setGeneralNotes(notes2);
 
-      const result: any = await memberModel.findById(memberId);
+      const result = await memberModel.findById(memberId);
 
       expect(result.nurseNotes).toEqual(notes2.nurseNotes);
       expect(result.generalNotes).toEqual(notes1.note);
@@ -1235,7 +1239,7 @@ describe('MemberService', () => {
       delete notes2.nurseNotes;
       await service.setGeneralNotes(notes2);
 
-      const result: any = await memberModel.findById(memberId);
+      const result = await memberModel.findById(memberId);
 
       expect(result.nurseNotes).toEqual(notes1.nurseNotes);
       expect(result.generalNotes).toEqual(notes2.note);
@@ -1246,7 +1250,7 @@ describe('MemberService', () => {
 
       const params1 = generateSetGeneralNotesParams({ memberId });
       await service.setGeneralNotes(params1);
-      let result: any = await memberModel.findById(memberId);
+      let result = await memberModel.findById(memberId);
       expect(result.nurseNotes).toEqual(params1.nurseNotes);
       expect(result.generalNotes).toEqual(params1.note);
 
@@ -1271,7 +1275,7 @@ describe('MemberService', () => {
       const memberId = generateId();
 
       const { id } = await service.createJournal(memberId);
-      const result: any = await modelJournal.findById(id);
+      const result = await modelJournal.findById(id);
 
       expect(result).toMatchObject({
         _id: id,
@@ -1289,7 +1293,7 @@ describe('MemberService', () => {
       const updateJournalTextParams = generateUpdateJournalTextParams({ id });
 
       const journal = await service.updateJournal({ ...updateJournalTextParams, memberId });
-      const result: any = await modelJournal.findById(id);
+      const result = await modelJournal.findById(id);
 
       expect(result).toMatchObject(journal);
     });
@@ -1319,7 +1323,7 @@ describe('MemberService', () => {
       const updateJournalImageFormatParams = generateGetMemberUploadJournalImageLinkParams({ id });
 
       const journal = await service.updateJournal({ ...updateJournalImageFormatParams, memberId });
-      const result: any = await modelJournal.findById(id);
+      const result = await modelJournal.findById(id);
 
       expect(result).toMatchObject(journal);
     });
@@ -1355,7 +1359,7 @@ describe('MemberService', () => {
 
       await service.updateJournal({ ...updateJournalTextParams, memberId });
 
-      const result: any = await modelJournal.findById(id);
+      const result = await modelJournal.findById(id);
       const journal = await service.getJournal(id, memberId);
 
       expect(result).toMatchObject({
@@ -1483,14 +1487,19 @@ describe('MemberService', () => {
         const caregiverParams = generateAddCaregiverParams({ memberId, createdBy: memberId });
         const { id } = await service.addCaregiver(caregiverParams);
         caregiverId = id;
-        const caregiver: any = await service.getCaregiver(id);
+        const caregiver = await service.getCaregiver(id);
 
-        expect(service.replaceId(caregiver.toObject())).toMatchObject({
-          ...caregiverParams,
-          memberId: new Types.ObjectId(memberId),
-          createdBy: new Types.ObjectId(memberId),
-          id: new Types.ObjectId(id),
-        });
+        expect(caregiver).toEqual(
+          expect.objectContaining({
+            ...pickBy(
+              caregiverParams,
+              (value, key) => ['memberId', 'id', 'createdBy'].indexOf(key) >= 0,
+            ),
+            memberId: new Types.ObjectId(memberId),
+            createdBy: new Types.ObjectId(memberId),
+            _id: new Types.ObjectId(id),
+          }),
+        );
       });
 
       it('should update a caregiver', async () => {
@@ -1502,13 +1511,14 @@ describe('MemberService', () => {
 
         const { id } = await service.updateCaregiver(updateCaregiverParams);
 
-        const caregiver: any = await service.getCaregiver(id);
-
-        expect(service.replaceId(caregiver.toObject())).toMatchObject({
-          ...updateCaregiverParams,
-          memberId: new Types.ObjectId(memberId),
-          id: new Types.ObjectId(id),
-        });
+        const caregiver = await service.getCaregiver(id);
+        expect(caregiver).toEqual(
+          expect.objectContaining({
+            ...pickBy(updateCaregiverParams, (value, key) => key !== 'id' && key !== 'memberId'),
+            memberId: new Types.ObjectId(memberId),
+            _id: new Types.ObjectId(id),
+          }),
+        );
       });
 
       it('should delete a caregiver', async () => {
@@ -1516,7 +1526,7 @@ describe('MemberService', () => {
 
         expect(status).toBeTruthy();
 
-        const caregiver: any = await service.getCaregiver(caregiverId);
+        const caregiver = await service.getCaregiver(caregiverId);
         expect(caregiver).toBeFalsy();
       });
 
@@ -1848,7 +1858,7 @@ describe('MemberService', () => {
             text: service.internationalization.getAlerts(AlertType.appointmentReviewed, member),
             memberId: member.id.toString(),
             type: AlertType.appointmentReviewed,
-            date: (updatedRecording.toObject() as any).review.createdAt,
+            date: updatedRecording.review.createdAt,
             dismissed: false,
             isNew: true,
           },
@@ -2373,6 +2383,6 @@ describe('MemberService', () => {
       { _id: Types.ObjectId(memberId) },
       { $addToSet: { users: userId } },
     );
-    return appointment as any;
+    return appointment;
   };
 });

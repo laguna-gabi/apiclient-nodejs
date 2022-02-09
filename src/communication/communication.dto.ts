@@ -12,7 +12,7 @@ export interface RegisterSendbirdUserParams {
   nickname: string;
   profile_url: string;
   issue_access_token: boolean;
-  metadata: any;
+  metadata: { role?: string };
 }
 
 export interface CreateSendbirdGroupChannelParams {

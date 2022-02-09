@@ -1084,7 +1084,7 @@ export class Mutations {
     completeMultipartUploadParams?: CompleteMultipartUploadParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
-  }): Promise<boolean> => {
+  }): Promise<string> => {
     const result = await this.apolloClient.mutate({
       variables: { completeMultipartUploadParams },
       mutation: gql`

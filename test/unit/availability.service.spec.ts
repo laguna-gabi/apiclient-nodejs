@@ -15,6 +15,7 @@ import {
   dbConnect,
   dbDisconnect,
   defaultModules,
+  defaultTimestampsDbValues,
   generateAvailabilityInput,
   generateCreateUserParams,
   generateId,
@@ -23,7 +24,7 @@ import {
 describe('AvailabilityService', () => {
   let module: TestingModule;
   let service: AvailabilityService;
-  let availabilityModel: Model<AvailabilityDocument>;
+  let availabilityModel: Model<AvailabilityDocument & defaultTimestampsDbValues>;
   let modelUser: Model<typeof UserDto>;
 
   beforeAll(async () => {
@@ -52,7 +53,7 @@ describe('AvailabilityService', () => {
       const params = generateAvailabilityInput();
       const { ids } = await service.create([params], userId);
 
-      const result: any = await availabilityModel.findById(ids[0]);
+      const result = await availabilityModel.findById(ids[0]);
       expect(result.userId.toString()).toEqual(userId);
       expect(result.start).toEqual(params.start);
       expect(result.end).toEqual(params.end);
@@ -176,8 +177,7 @@ describe('AvailabilityService', () => {
 
     const { ids } = await service.create([params], userId);
 
-    const result: any = await availabilityModel.findById(ids[0]);
-
+    const result = await availabilityModel.findById(ids[0]);
     expect(result.createdAt).toEqual(expect.any(Date));
     expect(result.updatedAt).toEqual(expect.any(Date));
   });

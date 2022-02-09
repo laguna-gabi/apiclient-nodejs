@@ -740,7 +740,7 @@ export class MemberService extends BaseService {
     }
 
     const objectMemberId = new Types.ObjectId(memberId);
-    const setParams: any = omitBy(
+    const setParams = omitBy(
       {
         memberId: objectMemberId,
         start,

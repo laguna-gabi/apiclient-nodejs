@@ -136,7 +136,7 @@ describe('live: sendbird actions', () => {
   const validateGroupChannel = async (
     channelUrl: string,
     appointmentIds: string[],
-    compareTo: any[],
+    compareTo: { status: AppointmentStatus; start: Date }[],
   ) => {
     //eslint-disable-next-line @typescript-eslint/ban-ts-comment
     //@ts-ignore

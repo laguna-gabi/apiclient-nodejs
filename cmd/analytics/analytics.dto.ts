@@ -154,6 +154,8 @@ export class AppointmentsMemberData {
   harmony_link?: string;
 }
 
+export type AnalyticsData = CoachData | MemberData | AppointmentsMemberData;
+
 export type PopulatedAppointment = Appointment & {
   _id: Types.ObjectId;
   notesData: Notes;
@@ -179,6 +181,8 @@ export type CoachDataAggregate = {
   members: BaseMember[];
   user: User;
 };
+
+export type AnalyticsDataAggregate = CoachDataAggregate | MemberDataAggregate;
 
 export interface RecordingSummary {
   totalDuration: number;

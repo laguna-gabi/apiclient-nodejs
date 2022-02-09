@@ -1,6 +1,8 @@
 import { Language, Platform } from '@lagunahealth/pandora';
 import { RecordingType, StorageType, reformatDate } from '../../src/common';
 import {
+  AnalyticsData,
+  AnalyticsDataAggregate,
   AppointmentAttendanceStatus,
   AppointmentsMemberData,
   BaseMember,
@@ -609,7 +611,7 @@ export class AnalyticsService {
     return this.calculateDaysSinceDischarge(dischargeDate) >= GraduationPeriod;
   }
 
-  dumpCSV(outFileName: string, sheetName: SheetOption, timestamp: number, data: any[]) {
+  dumpCSV(outFileName: string, sheetName: SheetOption, timestamp: number, data: AnalyticsData[]) {
     json2csv(
       data,
       (err, csv) => {
@@ -628,7 +630,12 @@ export class AnalyticsService {
     );
   }
 
-  writeToFile(outFileName: string, sheetName: SheetOption, timestamp: number, data: any[]) {
+  writeToFile(
+    outFileName: string,
+    sheetName: SheetOption,
+    timestamp: number,
+    data: AnalyticsDataAggregate[],
+  ) {
     fs.writeFile(
       `${outFileName}/${timestamp}.${sheetName}.${
         process.env.NODE_ENV ? process.env.NODE_ENV : 'test'
