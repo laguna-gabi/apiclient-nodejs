@@ -1,6 +1,6 @@
-import { InternalKey, NotificationType, formatEx, generateDispatchId } from '@lagunahealth/pandora';
+import { InternalKey, NotificationType, generateDispatchId } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
 import {
@@ -21,7 +21,6 @@ import {
   ErrorType,
   Errors,
   EventType,
-  IEventDeleteMember,
   IInternalDispatch,
   Identifier,
   LoggerService,
@@ -155,16 +154,6 @@ export class TodoResolver {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
     return this.todoService.deleteTodoDone(id, memberId);
-  }
-
-  @OnEvent(EventType.onDeletedMember, { async: true })
-  async deleteTodos(params: IEventDeleteMember) {
-    this.logger.info(params, TodoResolver.name, this.deleteTodos.name);
-    try {
-      await this.todoService.deleteTodos(params);
-    } catch (ex) {
-      this.logger.error(params, TodoResolver.name, this.deleteTodos.name, formatEx(ex));
-    }
   }
 
   /*************************************************************************************************
