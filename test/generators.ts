@@ -90,7 +90,7 @@ export const generateDispatch = ({
   status = defaultDispatchParams.status,
   deliveredAt = add(new Date(), { seconds: 2 }),
   retryCount = defaultDispatchParams.retryCount,
-  failureReasons = [lorem.sentence()],
+  failureReasons = [{ message: lorem.sentence(), stack: lorem.sentence() }],
   scheduleLink = internet.url(),
 }: Partial<Dispatch> = {}): Dispatch => {
   const triggeredIdObj = triggeredId ? { triggeredId } : {};

@@ -17,3 +17,8 @@ export class ExtraData {
   scheduleLink?: string;
   dynamicLink?: string;
 }
+
+export class FailureReason {
+  message: string;
+  stack: string;
+}

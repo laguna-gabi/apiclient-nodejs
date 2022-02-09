@@ -7,7 +7,9 @@ import {
 } from '@lagunahealth/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as config from 'config';
+import { twilio } from 'config';
 import { hoursToMilliseconds } from 'date-fns';
+import { parsePhoneNumber } from 'libphonenumber-js';
 import { Twilio as TwilioClient } from 'twilio';
 import {
   ConfigsService,
@@ -18,12 +20,10 @@ import {
   Slack,
 } from '.';
 import { ErrorType, Errors, LoggerService } from '../common';
-import { twilio } from 'config';
-import { parsePhoneNumber } from 'libphonenumber-js';
 
 @Injectable()
 export class Twilio implements OnModuleInit {
-  private client;
+  private client: TwilioClient;
   private readonly source;
 
   constructor(
@@ -84,7 +84,7 @@ export class Twilio implements OnModuleInit {
     }
   }
 
-  async createPeerIceServers(): Promise<{ iceServers: any[] }> {
+  async createPeerIceServers(): Promise<{ iceServers }> {
     const { iceServers } = await this.client.tokens.create({
       ttl: hoursToMilliseconds(twilio.traversalServiceTokenTtl),
     });

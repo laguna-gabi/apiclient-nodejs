@@ -32,6 +32,8 @@ describe('Twilio', () => {
     slack = module.get<Slack>(Slack);
 
     spyOnError = jest.spyOn(logger, 'error');
+    // in general, don't disable this rule. we're doing it here since i can't mock twilio instance
+    /* eslint-disable  @typescript-eslint/no-explicit-any */
     spyOnInternalSend = jest.spyOn(twilioService as any, 'createMessage');
     spyOnSlack = jest.spyOn(slack, 'send');
   });

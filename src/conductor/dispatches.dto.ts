@@ -5,6 +5,7 @@ import {
   ServiceName,
 } from '@lagunahealth/pandora';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { FailureReason } from '../common';
 import { ISoftDelete } from '../db';
 import { ProviderResult } from '../providers';
 
@@ -114,7 +115,7 @@ export class Dispatch {
   retryCount?: number;
 
   @Prop({ isNan: true })
-  failureReasons?: any[];
+  failureReasons?: FailureReason[];
 
   @Prop({ isNan: true })
   providerResult?: ProviderResult;

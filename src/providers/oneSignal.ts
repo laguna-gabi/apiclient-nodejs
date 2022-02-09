@@ -52,7 +52,10 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     const collapseOnClient =
       data.contentKey === InternalKey.newChatMessageFromUser ? { collapse_id: data.user.id } : {};
 
-    const body: any = {
+    const apnsPushTypeOverrideObject = this.isVoipProject(platform, data.type)
+      ? { apns_push_type_override: 'voip' }
+      : {};
+    const body = {
       app_id,
       include_external_user_ids: [externalUserId],
       content_available: true,
@@ -61,11 +64,8 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
       ...extraData,
       ...collapseOnClient,
       data,
+      ...apnsPushTypeOverrideObject,
     };
-
-    if (this.isVoipProject(platform, data.type)) {
-      body.apns_push_type_override = 'voip';
-    }
 
     try {
       const result = await this.httpService.post(this.notificationsUrl, body, config).toPromise();

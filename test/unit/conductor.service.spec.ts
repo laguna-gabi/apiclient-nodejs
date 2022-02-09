@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { gapTriggersAt } from 'config';
 import { addDays, addHours, addSeconds, subSeconds } from 'date-fns';
 import { animal, lorem } from 'faker';
-import { CommonModule, ErrorType, Errors, LoggerService } from '../../src/common';
+import { CommonModule, ErrorType, Errors, FailureReason, LoggerService } from '../../src/common';
 import {
   ConductorModule,
   ConductorService,
@@ -277,7 +277,7 @@ describe(ConductorService.name, () => {
         { message: animal.dog(), stack: animal.crocodilia() },
         { message: animal.cow(), stack: animal.horse() },
       ];
-      const generateObject = (status, retryCount: number, failureReasons: any[] = []) => {
+      const generateObject = (status, retryCount: number, failureReasons: FailureReason[] = []) => {
         return { ...dispatch, failureReasons, status, retryCount };
       };
       const resolvedValues = [
@@ -312,7 +312,7 @@ describe(ConductorService.name, () => {
         { message: animal.cow(), stack: animal.horse() },
         { message: animal.snake(), stack: animal.rabbit() },
       ];
-      const generateObject = (status, retryCount: number, failureReasons: any[] = []) => {
+      const generateObject = (status, retryCount: number, failureReasons: FailureReason[] = []) => {
         return { ...dispatch, failureReasons, status, retryCount };
       };
       const resolvedValues = [
