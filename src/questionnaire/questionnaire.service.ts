@@ -1,13 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { BaseService, ErrorType, Errors, ItemType, LoggerService } from '../common';
 import {
+  BaseService,
+  ErrorType,
+  Errors,
+  EventType,
+  IEventOnAlertForQRSubmit,
+  ItemType,
+  LoggerService,
+} from '../common';
+import {
+  AlertCondition,
   AlertConditionType,
   Answer,
   CreateQuestionnaireParams,
   Item,
   Questionnaire,
+  QuestionnaireAlerts,
   QuestionnaireDocument,
   QuestionnaireResponse,
   QuestionnaireResponseDocument,
@@ -16,6 +26,7 @@ import {
   SubmitQuestionnaireResponseParams,
 } from '.';
 import { formatEx } from '@lagunahealth/pandora';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class QuestionnaireService extends BaseService {
@@ -26,6 +37,7 @@ export class QuestionnaireService extends BaseService {
     @InjectModel(QuestionnaireResponse.name)
     private readonly questionnaireResponse: Model<QuestionnaireResponseDocument>,
     readonly logger: LoggerService,
+    readonly eventEmitter: EventEmitter2,
   ) {
     super();
   }
@@ -89,11 +101,30 @@ export class QuestionnaireService extends BaseService {
     });
 
     // 3. upload on-the-fly calculated information
-    return {
+    const out: QuestionnaireResponse = {
       ...this.replaceId(qr.toObject()),
       type: template.type,
       result: this.buildResult(submitQuestionnaireResponseParams.answers, template),
     };
+
+    // 4. notify #escalation-support (if needed)
+    if (
+      out.result.alert ||
+      (template.notificationScoreThreshold &&
+        out.result.score >= template.notificationScoreThreshold)
+    ) {
+      const params: IEventOnAlertForQRSubmit = {
+        memberId: submitQuestionnaireResponseParams.memberId,
+        score:
+          out.result.alert && QuestionnaireAlerts.get(template.type)
+            ? QuestionnaireAlerts.get(template.type)
+            : out.result.score.toString(),
+        questionnaireName: template.shortName,
+      };
+      this.eventEmitter.emit(EventType.onAlertForQRSubmit, params);
+    }
+
+    return out;
   }
 
   async getQuestionnaireResponseByMemberId(memberId: string): Promise<QuestionnaireResponse[]> {
@@ -188,21 +219,20 @@ export class QuestionnaireService extends BaseService {
   private isAlertConditionsSatisfied(answer: Answer, template: Questionnaire): boolean {
     const item = this.findItemByCode(template.items, answer.code);
 
-    return item?.alertCondition?.find((condition) => {
+    const isSatisfied = (condition: AlertCondition): boolean => {
       switch (condition.type) {
         case AlertConditionType.equal:
           return answer.value === condition.value;
-          break;
         case AlertConditionType.lte:
           return parseInt(answer.value) <= parseInt(condition.value);
-          break;
         case AlertConditionType.gte:
           return parseInt(answer.value) >= parseInt(condition.value);
-          break;
       }
-    })
-      ? true
-      : false;
+
+      return false;
+    };
+
+    return item?.alertCondition?.find(isSatisfied) ? true : false;
   }
 
   private findItemByCode(items: Item[], code: string): Item {

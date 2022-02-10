@@ -4,12 +4,15 @@ import {
   ExternalKey,
   IDeleteClientSettings,
   IDeleteDispatch,
+  IEventNotifySlack,
   InnerQueueTypes,
   InternalKey,
   NotificationType,
   Platform,
   QueueType,
   ServiceName,
+  SlackChannel,
+  SlackIcon,
   formatEx,
   generateDispatchId,
 } from '@lagunahealth/pandora';
@@ -72,6 +75,7 @@ import {
   IEventDeleteMember,
   IEventMember,
   IEventNotifyQueue,
+  IEventOnAlertForQRSubmit,
   IEventOnReceivedChatMessage,
   IEventOnReceivedTextMessage,
   IEventOnReplacedUserForMember,
@@ -101,6 +105,7 @@ import {
   TwilioService,
 } from '../providers';
 import { User, UserService } from '../user';
+import { hosts } from 'config';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
@@ -1076,6 +1081,38 @@ export class MemberResolver extends MemberBase {
     }
   }
 
+  /**
+   * Send an alert to the escalation slack channel on QR submit.
+   */
+  @OnEvent(EventType.onAlertForQRSubmit, { async: true })
+  async handleAlertForQRSubmit(params: IEventOnAlertForQRSubmit) {
+    this.logger.info(params, MemberResolver.name, this.handleAlertForQRSubmit.name);
+    try {
+      const member = await this.memberService.get(params.memberId);
+      const primaryUser = member.users.find((user) => user.id === member.primaryUserId.toString());
+
+      const notificationParams: IEventNotifySlack = {
+        header: `*High Assessment Score [${member.org.name}]*`,
+        message:
+          `Alerting results on ` +
+          `${params.questionnaireName} for ` +
+          `${primaryUser.firstName} ${primaryUser.lastName}’s member - ` +
+          `<${hosts.harmony}/details/${member.id}|${this.getMemberInitials(member)}>. ` +
+          `Scored a '${params.score}'`,
+
+        icon: SlackIcon.warning,
+        channel: SlackChannel.escalation,
+      };
+      this.eventEmitter.emit(EventType.notifySlack, notificationParams);
+    } catch (ex) {
+      this.logger.error(
+        params,
+        MemberResolver.name,
+        this.handleAlertForQRSubmit.name,
+        formatEx(ex),
+      );
+    }
+  }
   private async deleteSchedules(params: IEventMember) {
     try {
       await this.notifyDeleteDispatch({
@@ -1135,6 +1172,10 @@ export class MemberResolver extends MemberBase {
       const timeZone = lookup(zipCode);
       return getTimezoneOffset(timeZone) / millisecondsInHour;
     }
+  }
+
+  private getMemberInitials(member: Member): string {
+    return member.firstName[0].toUpperCase() + member.lastName[0].toUpperCase();
   }
 
   private async extractDataOfMemberAndUser(

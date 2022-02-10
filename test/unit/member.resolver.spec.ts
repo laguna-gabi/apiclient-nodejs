@@ -20,6 +20,7 @@ import {
   EventType,
   IEventDeleteMember,
   IEventNotifyQueue,
+  IEventOnAlertForQRSubmit,
   IEventOnNewMember,
   IEventOnReceivedChatMessage,
   IEventOnUpdatedMemberPlatform,
@@ -2306,6 +2307,43 @@ describe('MemberResolver', () => {
       expect(spyOnServiceGetAlerts).toBeCalledTimes(1);
       expect(spyOnServiceGetAlerts).toBeCalledWith(userId, lastQueryAlert);
       expect(alerts).toEqual([alert]);
+    });
+  });
+
+  describe('handleAlertForQRSubmit', () => {
+    let spyOnServiceGetMember;
+
+    beforeEach(() => {
+      spyOnServiceGetMember = jest.spyOn(service, 'get');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetMember.mockReset();
+    });
+
+    it('should handle alert for QR submit', async () => {
+      const user = mockGenerateUser();
+      const member = mockGenerateMember(user);
+
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+
+      const params: IEventOnAlertForQRSubmit = {
+        memberId: member.id,
+        questionnaireName: 'PHQ-9',
+        score: '10',
+      };
+
+      await resolver.handleAlertForQRSubmit(params);
+      expect(spyOnEventEmitter).toHaveBeenCalledWith(EventType.notifySlack, {
+        channel: 'slack.escalation',
+        header: `*High Assessment Score [${member.org.name}]*`,
+        icon: ':warning:',
+        message:
+          `Alerting results on PHQ-9 for ` +
+          `${user.firstName} ${user.lastName}’s member - ` +
+          `<https://dev.harmony.lagunahealth.com/details/${member.id}|` +
+          `${member.firstName[0].toUpperCase() + member.lastName[0].toUpperCase()}>. Scored a '10'`,
+      });
     });
   });
 });

@@ -971,6 +971,7 @@ export class Queries {
         query getQuestionnaire($id: String!) {
           getQuestionnaire(id: $id) {
             id
+            shortName
             items {
               code
               label

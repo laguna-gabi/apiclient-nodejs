@@ -3,7 +3,7 @@ import * as config from 'config';
 import { general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
 import * as faker from 'faker';
-import { CreateQuestionnaireParams } from '../../src/questionnaire';
+import { CreateQuestionnaireParams, QuestionnaireType } from '../../src/questionnaire';
 import { v4 } from 'uuid';
 import {
   Appointment,
@@ -15,6 +15,7 @@ import { CreateRedFlagParams } from '../../src/care';
 import {
   ErrorType,
   Errors,
+  EventType,
   Identifiers,
   ItemType,
   UserRole,
@@ -1758,10 +1759,20 @@ describe('Integration tests: all', () => {
   });
 
   describe('Questionnaire', () => {
+    let eventEmitterSpy: jest.SpyInstance;
+    beforeEach(() => {
+      eventEmitterSpy = jest.spyOn(handler.eventEmitter, 'emit');
+    });
+    afterEach(() => {
+      eventEmitterSpy.mockReset();
+    });
+
     it('should create, get and submit questionnaires', async () => {
       const { id: userId } = await creators.createAndValidateUser([UserRole.admin]);
       const createQuestionnaireParams: CreateQuestionnaireParams =
         generateCreateQuestionnaireParams({
+          type: QuestionnaireType.phq9, // type of form to calculate a score
+          shortName: 'PHQ-9',
           items: [
             mockGenerateQuestionnaireItem({
               type: ItemType.choice,
@@ -1769,9 +1780,11 @@ describe('Integration tests: all', () => {
               options: [
                 { label: faker.lorem.words(3), value: 0 },
                 { label: faker.lorem.words(3), value: 1 },
+                { label: faker.lorem.words(3), value: 2 },
               ],
             }),
           ],
+          notificationScoreThreshold: 2,
         });
 
       const { id: questionnaireId } = await handler
@@ -1799,16 +1812,34 @@ describe('Integration tests: all', () => {
       expect(questionnaire.id).toEqual(questionnaireId);
 
       // Submit a questionnaire response
-      const memberId = generateId();
+      const memberId = handler.patientZero.id.toString();
       let qr = await handler
         .setContextUserId(userId, '', [UserRole.nurse])
         .mutations.submitQuestionnaireResponse({
           submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
             questionnaireId,
             memberId,
-            answers: [{ code: 'q1', value: '1' }],
+            answers: [{ code: 'q1', value: '2' }],
           }),
         });
+
+      await delay(500); // wait for the last emit to complete (sending alert to slack channel)
+
+      expect(eventEmitterSpy).toHaveBeenLastCalledWith(EventType.notifySlack, {
+        channel: 'slack.escalation',
+        header: `*High Assessment Score [${handler.patientZero.org.name}]*`,
+        icon: ':warning:',
+        // eslint-disable-next-line max-len
+        message:
+          `Alerting results on ${questionnaire.shortName} for ` +
+          `${handler.adminUser.firstName} ${handler.adminUser.lastName}’s member - ` +
+          `<https://dev.harmony.lagunahealth.com/details/${handler.patientZero.id.toString()}|` +
+          `${
+            handler.patientZero.firstName[0].toUpperCase() +
+            handler.patientZero.lastName[0].toUpperCase()
+          }>` +
+          `. Scored a '2'`,
+      });
 
       expect(qr.id).toBeTruthy();
 

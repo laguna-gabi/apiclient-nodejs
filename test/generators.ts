@@ -246,10 +246,10 @@ export const generateInternalCreateMemberParams = ({
   };
 };
 
-export const mockGenerateMember = (): Member => {
+export const mockGenerateMember = (primaryUser?: User): Member => {
   const firstName = faker.name.firstName();
   const lastName = faker.name.lastName();
-  const user = mockGenerateUser();
+  const user = primaryUser || mockGenerateUser();
   return {
     id: generateId(),
     authId: v4(),
@@ -995,6 +995,7 @@ export const generateCreateQuestionnaireParams = ({
     { min: 0, max: 4, label: 'severity 1' },
     { min: 5, max: 6, label: 'severity 2' },
   ],
+  notificationScoreThreshold,
 }: Partial<CreateQuestionnaireParams> = {}): CreateQuestionnaireParams => {
   return {
     name,
@@ -1002,6 +1003,7 @@ export const generateCreateQuestionnaireParams = ({
     type,
     items,
     severityLevels,
+    notificationScoreThreshold,
   };
 };
 

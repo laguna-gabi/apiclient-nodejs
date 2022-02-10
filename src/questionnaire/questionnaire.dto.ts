@@ -30,6 +30,10 @@ export enum QuestionnaireType {
   nps = 'nps',
 }
 
+export const QuestionnaireAlerts: Map<QuestionnaireType, string> = new Map([
+  [QuestionnaireType.phq9, 'Nearly Every Day'],
+]);
+
 registerEnumType(QuestionnaireType, {
   name: 'QuestionnaireType',
   description: 'A list of questionnaire types',

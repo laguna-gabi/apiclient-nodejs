@@ -33,6 +33,9 @@ export enum EventType {
   notifyQueue = 'notifyQueue',
   notifyDispatch = 'notifyDispatch',
   notifyDeleteDispatch = 'notifyDeleteDispatch',
+
+  // questionnaire
+  onAlertForQRSubmit = 'onAlertForQRSubmit',
 }
 
 /*************************************************************************************************
@@ -92,6 +95,11 @@ export interface IEventOnUpdateUserConfig {
 export interface IEventOnNewAppointment extends IEventMember {
   userId: string;
   appointmentId: string;
+}
+
+export interface IEventOnAlertForQRSubmit extends IEventMember {
+  questionnaireName: string;
+  score: string | number;
 }
 
 export interface IEventOnUpdatedAppointment extends IEventMember {

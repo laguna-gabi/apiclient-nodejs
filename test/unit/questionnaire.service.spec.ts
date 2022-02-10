@@ -24,11 +24,14 @@ import {
   QuestionnaireType,
 } from '../../src/questionnaire';
 import * as faker from 'faker';
-import { ErrorType, Errors, ItemType, LoggerService } from '../../src/common';
+import { ErrorType, Errors, EventType, ItemType, LoggerService } from '../../src/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('QuestionnaireService', () => {
   let module: TestingModule;
   let service: QuestionnaireService;
+  let eventEmitter: EventEmitter2;
+  let spyOnEventEmitter: jest.SpyInstance;
   let questionnaireModel: Model<typeof QuestionnaireDto>;
   let questionnaireResponseModel: Model<typeof QuestionnaireResponseDto>;
   let phq9TypeTemplate: Questionnaire;
@@ -41,6 +44,8 @@ describe('QuestionnaireService', () => {
     }).compile();
 
     service = module.get<QuestionnaireService>(QuestionnaireService);
+    eventEmitter = module.get<EventEmitter2>(EventEmitter2);
+    spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
 
     questionnaireModel = model(Questionnaire.name, QuestionnaireDto);
     questionnaireResponseModel = model(QuestionnaireResponse.name, QuestionnaireResponseDto);
@@ -65,7 +70,7 @@ describe('QuestionnaireService', () => {
           {
             code: 'q2',
             type: ItemType.choice,
-            order: 1,
+            order: 2,
             label: faker.lorem.words(2),
             required: false,
             options: [
@@ -77,19 +82,21 @@ describe('QuestionnaireService', () => {
           {
             code: 'q3',
             type: ItemType.range,
-            order: 1,
+            order: 3,
             label: faker.lorem.words(2),
             required: false,
             range: {
               min: { value: 0, label: faker.lorem.words(3) },
               max: { value: 5, label: faker.lorem.words(3) },
             },
+            alertCondition: [{ type: AlertConditionType.equal, value: '5' }],
           },
         ],
         severityLevels: [
           { min: 0, max: 2, label: 'severity low' },
           { min: 3, max: 6, label: 'severity high' },
         ],
+        notificationScoreThreshold: 5,
       }),
     );
 
@@ -112,7 +119,7 @@ describe('QuestionnaireService', () => {
           {
             code: 'q2',
             type: ItemType.choice,
-            order: 1,
+            order: 2,
             label: faker.lorem.words(2),
             required: false,
             options: [
@@ -122,6 +129,7 @@ describe('QuestionnaireService', () => {
             ],
           },
         ],
+        notificationScoreThreshold: 4,
       }),
     );
 
@@ -131,6 +139,10 @@ describe('QuestionnaireService', () => {
   afterAll(async () => {
     await module.close();
     await dbDisconnect();
+  });
+
+  afterEach(() => {
+    spyOnEventEmitter.mockReset();
   });
 
   describe('createQuestionnaire', () => {
@@ -203,7 +215,26 @@ describe('QuestionnaireService', () => {
   });
 
   describe('submitQuestionnaireResponse', () => {
-    it('should submit a questionnaire response', async () => {
+    it.each([
+      [
+        'should submit a questionnaire response and issue an alert - with score label',
+        [
+          { code: 'q1', value: '2' },
+          { code: 'q2', value: '2' },
+          { code: 'q3', value: '2' }, // does not satisfy alert condition
+        ],
+        '6',
+      ],
+      [
+        'should submit a questionnaire response and issue an alert - with alert label',
+        [
+          { code: 'q1', value: '1' },
+          { code: 'q2', value: '1' },
+          { code: 'q3', value: '5' }, // satisfy alert condition
+        ],
+        'Nearly Every Day',
+      ],
+    ])(`%s`, async (_, answers, expectedScore) => {
       const createdBy = generateId();
       const memberId = generateId();
 
@@ -211,11 +242,7 @@ describe('QuestionnaireService', () => {
         questionnaireId: phq9TypeTemplate.id.toString(),
         createdBy,
         memberId,
-        answers: [
-          { code: 'q1', value: '2' },
-          { code: 'q2', value: '2' },
-          { code: 'q3', value: '1' },
-        ],
+        answers,
       });
 
       const qr = await questionnaireResponseModel.findById(id).lean();
@@ -227,11 +254,13 @@ describe('QuestionnaireService', () => {
         createdAt: expect.any(Date),
         createdBy: new Types.ObjectId(createdBy),
         memberId: new Types.ObjectId(memberId),
-        answers: [
-          { code: 'q1', value: '2' },
-          { code: 'q2', value: '2' },
-          { code: 'q3', value: '1' },
-        ],
+        answers,
+      });
+
+      expect(spyOnEventEmitter).toHaveBeenCalledWith(EventType.onAlertForQRSubmit, {
+        memberId,
+        questionnaireName: phq9TypeTemplate.shortName,
+        score: expectedScore,
       });
     });
 

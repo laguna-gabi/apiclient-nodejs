@@ -6,7 +6,8 @@
   },
   "slack": {
     "support": "#support",
-    "notifications": "#production-notifications"
+    "notifications": "#production-notifications",
+    "escalation": "#escalation-support"
   },
   "oneSignal": {
     "voipRegistrationPayload": {

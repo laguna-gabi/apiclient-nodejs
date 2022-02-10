@@ -132,7 +132,6 @@ export type PhoneType = 'landline' | 'mobile' | 'voip';
 
 export enum ItemType {
   choice = 'choice',
-  date = 'date',
   text = 'text',
   range = 'range',
   group = 'group',
