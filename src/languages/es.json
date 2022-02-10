@@ -34,7 +34,8 @@
                 "MEDS": "",
                 "APPT": "",
                 "TODO": ""
-            }
+            },
+            "assessmentSubmitAlert": ""
         },
         "honorific": {
             "mr": "Señor.",

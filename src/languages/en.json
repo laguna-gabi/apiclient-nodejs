@@ -34,7 +34,8 @@
                 "MEDS": "Your coach, {{user.firstName}}, deleted a medication. Tap here to review",
                 "APPT": "Your coach, {{user.firstName}}, deleted an appointment details. Tap here to review",
                 "TODO": "Your coach, {{user.firstName}}, deleted a to-do. Tap here to review"
-            }
+            },
+            "assessmentSubmitAlert": "High Assessment Score {{org.name}}: Alerting results on {{assessmentName}} for {{user.firstName}} {{user.lastName}}’s member - {{senderInitials}}. Scored a {{assessmentScore}}"
         },
         "honorific": {
             "mr": "Mr.",
