@@ -1,5 +1,6 @@
 import { Environments, formatEx } from '@lagunahealth/pandora';
-import { HttpService, Injectable, OnModuleInit } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { services } from 'config';
 import { LoggerService } from '../../common';
 import { CloudMapService } from '../../providers/aws';
