@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerService } from '../../src/common';
 import { dbDisconnect, defaultModules, generateCreateRedFlagParams, generateId } from '../index';
 import { CareModule, CareResolver, CareService } from '../../src/care';
+import { redFlags } from '../../src/care/redFlags.json';
 
 describe('CareResolver', () => {
   let module: TestingModule;
@@ -69,6 +70,11 @@ describe('CareResolver', () => {
 
       expect(spyOnServiceDeleteRedFlags).toBeCalledTimes(1);
       expect(spyOnServiceDeleteRedFlags).toBeCalledWith(id, userId);
+    });
+
+    it('should get all redFlagTypes', async () => {
+      const result = await resolver.getRedFlagTypes();
+      expect(result).toEqual(redFlags);
     });
   });
 });

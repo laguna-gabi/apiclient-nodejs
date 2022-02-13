@@ -1,0 +1,11 @@
+{"redFlags":[
+  { "chronicCondition": "Uncontrolled chronic condition (high A1C, high sugars, high BP)" },
+  { "appointment": "Appointment adherence (missed appts/unable to schedule appts)" },
+  { "resources": "Resource utilization (trips to ER, requesting unnecessary tests/procedures)" },
+  { "medication": "Medication adherence (missed/not taking meds, unable to order meds)" },
+  { "planOfCare": "Plan of care (POC) Adherence (not following previous plan of care/recommendations)" },
+  { "weight": "Significant weight loss/gain (+10 lbs.)" },
+  { "health": "Knowledge of health or health care status (unaware of diagnosis, test results)" },
+  { "medicalSupplies": "Medical equipment/supplies adherence (not using med. equip. as directed)" },
+  { "other": "Other (concerning statements, including emotional state)" }
+]}

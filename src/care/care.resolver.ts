@@ -3,6 +3,8 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CareService, CreateRedFlagParams, RedFlag } from '.';
 import { Client, Identifier, LoggingInterceptor, Roles, UserRole } from '../common';
 import { camelCase } from 'lodash';
+import { redFlags } from './redFlags.json';
+import { GraphQLJSONObject } from 'graphql-type-json';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()
@@ -37,5 +39,11 @@ export class CareResolver {
   @Roles(UserRole.coach, UserRole.nurse)
   async deleteRedFlag(@Client('_id') userId, @Args('id', { type: () => String }) id: string) {
     return this.careService.deleteRedFlag(id, userId);
+  }
+
+  @Query(() => [GraphQLJSONObject])
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getRedFlagTypes() {
+    return redFlags;
   }
 }

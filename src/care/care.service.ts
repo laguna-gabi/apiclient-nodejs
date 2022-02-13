@@ -50,7 +50,7 @@ export class CareService {
   }
 
   async getRedFlag(id: string): Promise<RedFlag> {
-    return this.redFlagModel.findById(new Types.ObjectId(id));
+    return this.redFlagModel.findById(id);
   }
 
   async deleteRedFlag(id: string, deletedBy: string): Promise<boolean> {
