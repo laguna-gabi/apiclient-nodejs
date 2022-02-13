@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerService } from '../../src/common';
 import { dbDisconnect, defaultModules, generateId, mockGenerateDispatch } from '../index';
 import { NotificationService, ServiceModule } from '../../src/services';
-import { HttpService } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 
 describe('NotificationService', () => {
   let module: TestingModule;
@@ -19,7 +19,7 @@ describe('NotificationService', () => {
     httpService = module.get<HttpService>(HttpService);
     service = module.get<NotificationService>(NotificationService);
     mockLogger(module.get<LoggerService>(LoggerService));
-    service.onModuleInit();
+    await service.onModuleInit();
   });
 
   afterAll(async () => {
@@ -71,7 +71,7 @@ describe('NotificationService', () => {
           return { status: 500 };
         },
       });
-      expect(
+      await expect(
         service.getDispatchesByClientSenderId(senderClientId, ['field1', 'field2']),
       ).rejects.toThrow();
 
