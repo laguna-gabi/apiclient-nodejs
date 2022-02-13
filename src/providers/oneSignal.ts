@@ -78,7 +78,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
           this.send.name,
           {
             code: result.status,
-            data,
+            data: JSON.stringify(data),
           },
         );
         throw new Error(generateCustomErrorMessage(OneSignal.name, this.send.name, result));

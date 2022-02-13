@@ -8,6 +8,7 @@ import {
   ObjectAppointmentScheduleLongReminderClass,
   ObjectAppointmentScheduleReminderClass,
   ObjectAppointmentScheduledClass,
+  ObjectAssessmentSubmitAlertClass,
   ObjectBaseClass,
   ObjectChatMessageUserClass,
   ObjectCreateTodoClass,
@@ -24,6 +25,7 @@ import {
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
+  generateAssessmentSubmitAlertMock,
   generateChatMessageUserMock,
   generateCreateTodoAPPTMock,
   generateCreateTodoMEDSMock,
@@ -795,6 +797,54 @@ describe('Notifications full flow', () => {
       dispatchId: mock.dispatchId,
       status: DispatchStatus.done,
       response: { ...object.objectFutureNotifyType },
+      pResult: providerResult,
+    });
+  });
+
+  // eslint-disable-next-line max-len
+  it(`should handle 'immediate' event of type ${InternalKey.assessmentSubmitAlert}(${NotificationType.textSms})`, async () => {
+    const mock = generateAssessmentSubmitAlertMock({
+      recipientClientId: userClient.id,
+      senderClientId: webMemberClient.id,
+      assessmentId: v4(),
+      assessmentName: lorem.word(),
+      assessmentScore: lorem.word(),
+    });
+
+    const object = new ObjectAssessmentSubmitAlertClass(mock);
+    spyOnTwilioSend.mockReturnValueOnce(providerResult);
+
+    const message: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({
+        type: InnerQueueTypes.createDispatch,
+        ...object.objectAssessmentSubmitAlertMock,
+      }),
+    };
+    await service.handleMessage(message);
+
+    const content = replaceConfigs({
+      content: translation.contents[mock.contentKey],
+      memberClient: webMemberClient,
+      userClient,
+      assessmentName: mock.assessmentName,
+      assessmentScore: mock.assessmentScore,
+      senderInitials: webMemberClient.firstName[0] + webMemberClient.lastName[0],
+    });
+
+    expect(spyOnTwilioSend).toBeCalledWith(
+      {
+        body: content,
+        orgName: undefined,
+        to: userClient.phone,
+      },
+      expect.any(String),
+    );
+
+    await compareResults({
+      dispatchId: mock.dispatchId,
+      status: DispatchStatus.done,
+      response: { ...object.objectAssessmentSubmitAlertMock },
       pResult: providerResult,
     });
   });

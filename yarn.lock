@@ -769,10 +769,10 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
-"@lagunahealth/pandora@0.9.35":
-  version "0.9.35"
-  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.9.35/2091742e44427e32891b91494d812ebcb90b60d704071d7b5029c630aaab7228#1faf9b194bbecc4825f1ae98cffac1db9612e67a"
-  integrity sha512-PDb/UmAsnsSbCMIFr+gkKtgtnd+PzYWpxVeoKsQ4lMNk4NLJZR/NBeiphchomlhlxtj36HZ1jQ3IhCQP0i8ElA==
+"@lagunahealth/pandora@0.11.0":
+  version "0.11.0"
+  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.11.0/35d916d1a604a42f63cac39d18deff83a14ef104c805eab75534760af8351fc3#6bc7a8013943fd326216d00cd0035454f5d0b1d0"
+  integrity sha512-zFLfe79qS3xkZyR2+POdId6GDon8uR1SsHBt9hVBX7Xtb8z8YV3CIXxGCUDf3cowme+USYlJuf+Oou6uQaPInw==
   dependencies:
     "@slack/types" "^2.2.0"
     "@slack/webhook" "^6.0.0"
@@ -1234,13 +1234,6 @@
   integrity sha512-uci4Esokrw9qGb9bvhhSVEjd6rkny/dk5PK/Qz4yxKiyppEI+dOPlNrZBahE3i+PoKFYyDxChVXZ/ysS/nrm1Q==
   dependencies:
     "@types/superagent" "*"
-
-"@types/twilio@^3.19.3":
-  version "3.19.3"
-  resolved "https://registry.npmjs.org/@types/twilio/-/twilio-3.19.3.tgz#dda809e4626bf187a4c5028517aea74f3c2fa8e1"
-  integrity sha512-W53Z0TDCu6clZ5CzTWHRPnpQAad+AANglx6WiQ4Mkxxw21o4BYBx5EhkfR6J4iYqY58rtWB3r8kDGJ4y1uTUGQ==
-  dependencies:
-    twilio "*"
 
 "@types/webidl-conversions@*":
   version "6.1.1"
@@ -5733,23 +5726,6 @@ tsutils@^3.21.0:
   integrity sha512-mHKK3iUXL+3UF6xL5k0PEhKRUBKPBCv/+RkEOpjRWxxx27KKRBmmA60A9pgOUvMi8GKhRMPEmjBRPzs2W7O1OA==
   dependencies:
     tslib "^1.8.1"
-
-twilio@*:
-  version "3.73.1"
-  resolved "https://registry.npmjs.org/twilio/-/twilio-3.73.1.tgz#a2044db1d82cbf03d4b1e8bdb49d7cb37c7459f1"
-  integrity sha512-y8L/lyBO6vRMi28AUjSUpSRXvJa7ZsVRZnIdH53FKMSGYKtrixrQKrRtYpCRodAhjylPZQPBc75+Ym/H/tMdEg==
-  dependencies:
-    axios "^0.21.4"
-    dayjs "^1.8.29"
-    https-proxy-agent "^5.0.0"
-    jsonwebtoken "^8.5.1"
-    lodash "^4.17.21"
-    q "2.0.x"
-    qs "^6.9.4"
-    rootpath "^0.1.2"
-    scmp "^2.1.0"
-    url-parse "^1.5.3"
-    xmlbuilder "^13.0.2"
 
 twilio@^3.71.2:
   version "3.71.2"

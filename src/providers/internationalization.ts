@@ -30,11 +30,13 @@ export class Internationalization extends BaseInternationalization implements On
     const replace =
       params.contentKey === InternalKey.appointmentScheduledUser ||
       params.contentKey === InternalKey.newChatMessageFromMember ||
+      params.contentKey === InternalKey.assessmentSubmitAlert ||
       params.contentKey === InternalKey.memberNotFeelingWellMessage;
     return this.i18n.t(`contents.${contentKey}`, {
       member: replace ? senderClient : updateRecipientClient,
       user: replace ? updateRecipientClient : senderClient,
       ...extraData,
+      org: replace ? { name: senderClient.orgName } : extraData.org,
       lng,
     });
   }

@@ -67,6 +67,12 @@ export class Dispatch {
   appointmentTime?: Date;
 
   @Prop({ isNan: true })
+  assessmentName?: string;
+
+  @Prop({ isNan: true })
+  assessmentScore?: string;
+
+  @Prop({ isNan: true })
   peerId?: string;
 
   @Prop({ isNan: true })

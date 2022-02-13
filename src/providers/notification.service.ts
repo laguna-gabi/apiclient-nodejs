@@ -125,6 +125,9 @@ export class NotificationsService {
       recipientClient,
       extraData: {
         org: { name: recipientClient.orgName },
+        assessmentName: dispatch.assessmentName,
+        assessmentScore: dispatch.assessmentScore,
+        senderInitials: senderClient && this.getClientInitials(senderClient),
         appointmentTime: this.formatAppointmentTime(recipientClient, dispatch.appointmentTime),
         dynamicLink: hosts.get('dynamicLink'),
         gapMinutes,
@@ -255,5 +258,9 @@ export class NotificationsService {
   private logAudit(payload, method: string) {
     const message = this.logger.formatAuditMessage(AuditType.message, payload, method);
     this.eventEmitter.emit(EventType.notifyQueue, { type: QueueType.audit, message });
+  }
+
+  private getClientInitials(client: ClientSettings): string {
+    return client.firstName[0].toUpperCase() + client.lastName[0].toUpperCase();
   }
 }

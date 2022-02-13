@@ -11,11 +11,14 @@ export class GetContentsParams {
 export class ExtraData {
   org?: { name: string };
   appointmentStart?: string;
+  senderInitials?: string;
   gapMinutes?: string;
   appointmentTime?: string;
   chatLink?: string;
   scheduleLink?: string;
   dynamicLink?: string;
+  assessmentName?: string;
+  assessmentScore?: string;
 }
 
 export class FailureReason {
