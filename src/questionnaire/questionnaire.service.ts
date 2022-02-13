@@ -120,6 +120,8 @@ export class QuestionnaireService extends BaseService {
             ? QuestionnaireAlerts.get(template.type)
             : out.result.score.toString(),
         questionnaireName: template.shortName,
+        questionnaireType: template.type,
+        questionnaireResponseId: qr.id.toString(),
       };
       this.eventEmitter.emit(EventType.onAlertForQRSubmit, params);
     }

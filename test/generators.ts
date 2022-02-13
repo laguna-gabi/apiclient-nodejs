@@ -163,6 +163,7 @@ export const mockGenerateUser = (): User => {
     authId: v4(),
     lastMemberAssignedAt: new Date(0),
     lastQueryAlert: faker.date.past(2),
+    inEscalationGroup: true,
   };
 };
 

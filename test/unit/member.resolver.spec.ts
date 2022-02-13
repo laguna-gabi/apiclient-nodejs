@@ -1,11 +1,13 @@
 import {
   ExternalKey,
   IEventNotifySlack,
+  InternalKey,
   NotificationType,
   Platform,
   QueueType,
   SlackChannel,
   SlackIcon,
+  generateDispatchId,
   mockLogger,
   mockProcessWarnings,
 } from '@lagunahealth/pandora';
@@ -13,6 +15,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as faker from 'faker';
 import { Types } from 'mongoose';
+import { QuestionnaireAlerts, QuestionnaireType } from '../../src/questionnaire';
 import { v4 } from 'uuid';
 import {
   ErrorType,
@@ -90,6 +93,7 @@ import {
   mockGenerateMember,
   mockGenerateMemberConfig,
   mockGenerateUser,
+  randomEnum,
 } from '../index';
 
 describe('MemberResolver', () => {
@@ -115,7 +119,6 @@ describe('MemberResolver', () => {
 
     resolver = module.get<MemberResolver>(MemberResolver);
     service = module.get<MemberService>(MemberService);
-    userService = module.get<UserService>(UserService);
     userService = module.get<UserService>(UserService);
     storage = module.get<StorageService>(StorageService);
     cognitoService = module.get<CognitoService>(CognitoService);
@@ -2311,17 +2314,20 @@ describe('MemberResolver', () => {
   });
 
   describe('handleAlertForQRSubmit', () => {
-    let spyOnServiceGetMember;
+    let spyOnServiceGetMember: jest.SpyInstance;
+    let spyOnUserServiceGetEscalationGroupUsers: jest.SpyInstance;
 
     beforeEach(() => {
       spyOnServiceGetMember = jest.spyOn(service, 'get');
+      spyOnUserServiceGetEscalationGroupUsers = jest.spyOn(userService, 'getEscalationGroupUsers');
     });
 
     afterEach(() => {
       spyOnServiceGetMember.mockReset();
+      spyOnUserServiceGetEscalationGroupUsers.mockReset();
     });
 
-    it('should handle alert for QR submit', async () => {
+    it('should handle alert for QR submit - escalation not required', async () => {
       const user = mockGenerateUser();
       const member = mockGenerateMember(user);
 
@@ -2329,8 +2335,10 @@ describe('MemberResolver', () => {
 
       const params: IEventOnAlertForQRSubmit = {
         memberId: member.id,
-        questionnaireName: 'PHQ-9',
-        score: '10',
+        questionnaireName: faker.lorem.word(),
+        score: faker.datatype.number().toString(),
+        questionnaireResponseId: generateId(),
+        questionnaireType: randomEnum(QuestionnaireType) as QuestionnaireType,
       };
 
       await resolver.handleAlertForQRSubmit(params);
@@ -2339,10 +2347,54 @@ describe('MemberResolver', () => {
         header: `*High Assessment Score [${member.org.name}]*`,
         icon: ':warning:',
         message:
-          `Alerting results on PHQ-9 for ` +
+          `Alerting results on ${params.questionnaireName} for ` +
           `${user.firstName} ${user.lastName}’s member - ` +
           `<https://dev.harmony.lagunahealth.com/details/${member.id}|` +
-          `${member.firstName[0].toUpperCase() + member.lastName[0].toUpperCase()}>. Scored a '10'`,
+          `${member.firstName[0].toUpperCase() + member.lastName[0].toUpperCase()}>. Scored a '${
+            params.score
+          }'`,
+      });
+    });
+
+    it('should handle alert for QR submit - escalation required', async () => {
+      const user = mockGenerateUser();
+      const member = mockGenerateMember(user);
+
+      spyOnServiceGetMember.mockImplementationOnce(async () => member);
+      spyOnUserServiceGetEscalationGroupUsers.mockResolvedValue([user]);
+
+      const params: IEventOnAlertForQRSubmit = {
+        memberId: member.id,
+        questionnaireName: faker.lorem.word(),
+        score: QuestionnaireAlerts.get(QuestionnaireType.phq9),
+        questionnaireResponseId: generateId(),
+        questionnaireType: QuestionnaireType.phq9,
+      };
+
+      await resolver.handleAlertForQRSubmit(params);
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifySlack, {
+        channel: 'slack.escalation',
+        header: `*High Assessment Score [${member.org.name}]*`,
+        icon: ':warning:',
+        message:
+          `Alerting results on ${params.questionnaireName} for ` +
+          `${user.firstName} ${user.lastName}’s member - ` +
+          `<https://dev.harmony.lagunahealth.com/details/${member.id}|` +
+          `${
+            member.firstName[0].toUpperCase() + member.lastName[0].toUpperCase()
+          }>. Scored a '${QuestionnaireAlerts.get(QuestionnaireType.phq9)}'`,
+      });
+
+      const contentKey = InternalKey.assessmentSubmitAlert;
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notifyDispatch, {
+        correlationId: expect.any(String),
+        dispatchId: generateDispatchId(contentKey, params.questionnaireResponseId),
+        notificationType: NotificationType.textSms,
+        recipientClientId: user.id.toString(),
+        senderClientId: member.id,
+        contentKey,
+        assessmentName: params.questionnaireName,
+        assessmentScore: params.score.toString(),
       });
     });
   });

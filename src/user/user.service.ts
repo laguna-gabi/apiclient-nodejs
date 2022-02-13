@@ -262,6 +262,10 @@ export class UserService extends BaseService {
     ]);
   }
 
+  async getEscalationGroupUsers(): Promise<User[]> {
+    return this.userModel.find({ inEscalationGroup: true });
+  }
+
   /**
    * This method takes a long time to process with a lot of users in the db.
    * As a hot fix for debugging environments(test/localhost),

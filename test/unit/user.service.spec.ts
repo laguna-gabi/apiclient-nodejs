@@ -92,6 +92,18 @@ describe('UserService', () => {
       expect(result.length).toBeGreaterThanOrEqual(2);
     });
 
+    it('should get escalation group user(s)', async () => {
+      const user = generateCreateUserParams();
+      const { id } = await service.insert(user);
+      await userModel.updateOne({ _id: Types.ObjectId(id) }, { $set: { inEscalationGroup: true } });
+
+      const result = await service.getEscalationGroupUsers();
+      compareUsers(
+        result.find((user) => user.id.toString() === id.toString()),
+        user,
+      );
+    });
+
     test.each([
       [Object.values(UserRole)],
       [[UserRole.coach, UserRole.nurse]],

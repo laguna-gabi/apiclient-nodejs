@@ -261,6 +261,8 @@ describe('QuestionnaireService', () => {
         memberId,
         questionnaireName: phq9TypeTemplate.shortName,
         score: expectedScore,
+        questionnaireType: phq9TypeTemplate.type,
+        questionnaireResponseId: id.toString(),
       });
     });
 

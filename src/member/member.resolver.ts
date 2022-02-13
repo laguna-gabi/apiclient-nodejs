@@ -106,6 +106,7 @@ import {
 } from '../providers';
 import { User, UserService } from '../user';
 import { hosts } from 'config';
+import { QuestionnaireAlerts, QuestionnaireType } from '../questionnaire';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
@@ -1104,6 +1105,27 @@ export class MemberResolver extends MemberBase {
         channel: SlackChannel.escalation,
       };
       this.eventEmitter.emit(EventType.notifySlack, notificationParams);
+
+      // if phq-9 alert raised we should notify the escalation team members in person (text message)
+      if (
+        params.questionnaireType === QuestionnaireType.phq9 &&
+        params.score === QuestionnaireAlerts.get(QuestionnaireType.phq9)
+      ) {
+        (await this.userService.getEscalationGroupUsers()).map((user) => {
+          const contentKey = InternalKey.assessmentSubmitAlert;
+          const phq9AlertEvent: IInternalDispatch = {
+            correlationId: getCorrelationId(this.logger),
+            dispatchId: generateDispatchId(contentKey, params.questionnaireResponseId),
+            notificationType: NotificationType.textSms,
+            recipientClientId: user.id,
+            senderClientId: member.id,
+            contentKey,
+            assessmentName: params.questionnaireName,
+            assessmentScore: params.score.toString(),
+          };
+          this.eventEmitter.emit(EventType.notifyDispatch, phq9AlertEvent);
+        });
+      }
     } catch (ex) {
       this.logger.error(
         params,

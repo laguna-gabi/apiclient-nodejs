@@ -107,7 +107,6 @@ export class CreateQuestionnaireParams {
   @Field(() => [SeverityLevel], { nullable: true })
   severityLevels?: SeverityLevel[];
 
-  @Prop(() => Number)
   @Field(() => Number, { nullable: true })
   notificationScoreThreshold?: number;
 

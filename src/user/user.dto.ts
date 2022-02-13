@@ -133,6 +133,10 @@ export class User extends Identifier {
   @Field(() => Date, { nullable: true })
   lastQueryAlert: Date;
 
+  @Prop({ isNaN: true })
+  @Field(() => Boolean, { nullable: true })
+  inEscalationGroup?: boolean;
+
   /**
    * we use that start of time (new Date(0)) for the default time for
    * lastMemberAssignedAt so a new user will get the next new member.

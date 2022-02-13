@@ -1,5 +1,6 @@
 import { Platform, QueueType } from '@lagunahealth/pandora';
 import { Types } from 'mongoose';
+import { QuestionnaireType } from '../questionnaire';
 import { UpdatedAppointmentAction } from '.';
 import { Appointment, AppointmentDocument, AppointmentStatus, Scores } from '../appointment';
 import { Member } from '../member';
@@ -99,6 +100,8 @@ export interface IEventOnNewAppointment extends IEventMember {
 
 export interface IEventOnAlertForQRSubmit extends IEventMember {
   questionnaireName: string;
+  questionnaireType: QuestionnaireType;
+  questionnaireResponseId: string;
   score: string | number;
 }
 

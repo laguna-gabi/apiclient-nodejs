@@ -28,6 +28,7 @@ import {
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
   generateAppointmentScheduledUserMock,
+  generateAssessmentSubmitAlertMock,
   generateChatMessageUserMock,
   generateCreateTodoAPPTMock,
   generateCreateTodoMEDSMock,
@@ -61,9 +62,17 @@ import { general, hosts, scheduler } from 'config';
 import { addDays, addSeconds, subDays, subMinutes } from 'date-fns';
 import * as faker from 'faker';
 import { internet } from 'faker';
+import {
+  AlertConditionType,
+  CreateQuestionnaireParams,
+  QuestionnaireAlerts,
+  QuestionnaireType,
+  SubmitQuestionnaireResponseParams,
+} from '../../src/questionnaire';
 import { v4 } from 'uuid';
 import { Appointment } from '../../src/appointment';
 import {
+  ItemType,
   RegisterForNotificationParams,
   UserRole,
   delay,
@@ -82,6 +91,7 @@ import { CreateTodoParams, EndAndCreateTodoParams, Label } from '../../src/todo'
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   generateCreateMemberParams,
+  generateCreateQuestionnaireParams,
   generateCreateTodoParams,
   generateDailyReport,
   generateDeleteMemberParams,
@@ -90,7 +100,9 @@ import {
   generateNotifyContentParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
+  generateSubmitQuestionnaireResponseParams,
   generateUpdateJournalTextParams,
+  mockGenerateQuestionnaireItem,
 } from '../generators';
 import * as sendbirdPayload from '../unit/mocks/webhookSendbirdNewMessagePayload.json';
 
@@ -1367,6 +1379,93 @@ describe('Integration tests: notifications', () => {
             ),
           }),
         );
+      });
+    });
+  });
+
+  describe('questionnaires', () => {
+    /**
+     * Trigger : QuestionnaireResolver.submitQuestionnaireResponse (on PHQ-9 alert)
+     * Dispatches:
+     *      1. send assessmentSubmitAlert dispatch
+     */
+    let spyOnUserServiceGetEscalationGroupUsers: jest.SpyInstance;
+
+    beforeAll(() => {
+      spyOnUserServiceGetEscalationGroupUsers = jest.spyOn(
+        handler.userService,
+        'getEscalationGroupUsers',
+      );
+    });
+
+    afterAll(() => {
+      spyOnUserServiceGetEscalationGroupUsers.mockReset();
+    });
+
+    // eslint-disable-next-line max-len
+    it(`submitQuestionnaireResponse: should send dispatch ${InternalKey.assessmentSubmitAlert}`, async () => {
+      const user = await creators.createAndValidateUser([UserRole.admin]);
+      const userId = user.id;
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: false, userId });
+      const memberId = member.id;
+      const fakeUUID = faker.datatype.uuid();
+      const alertValue = faker.datatype.number();
+      const assessmentName = faker.lorem.word();
+
+      (v4 as jest.Mock).mockImplementationOnce(() => fakeUUID);
+
+      const createQuestionnaireParams: CreateQuestionnaireParams =
+        generateCreateQuestionnaireParams({
+          type: QuestionnaireType.phq9, // type of form to calculate a score
+          shortName: assessmentName,
+          items: [
+            mockGenerateQuestionnaireItem({
+              type: ItemType.choice,
+              code: 'q1',
+              options: [
+                { label: QuestionnaireAlerts.get(QuestionnaireType.phq9), value: alertValue },
+              ],
+              alertCondition: [{ type: AlertConditionType.equal, value: alertValue.toString() }],
+            }),
+          ],
+        });
+
+      const { id: questionnaireId } = await handler
+        .setContextUserId(userId, '', [UserRole.admin])
+        .mutations.createQuestionnaire({
+          createQuestionnaireParams,
+        });
+
+      // we want to control the escalation group before we send the notifications
+      spyOnUserServiceGetEscalationGroupUsers.mockResolvedValue([{ id: userId }]);
+
+      const submitQuestionnaireResponseParams: SubmitQuestionnaireResponseParams =
+        generateSubmitQuestionnaireResponseParams({
+          questionnaireId,
+          memberId,
+          answers: [{ code: 'q1', value: alertValue.toString() }],
+        });
+
+      const { id } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.submitQuestionnaireResponse({
+          submitQuestionnaireResponseParams,
+        });
+      await delay(200);
+
+      const mock = generateAssessmentSubmitAlertMock({
+        recipientClientId: userId,
+        senderClientId: memberId,
+        assessmentName,
+        assessmentScore: QuestionnaireAlerts.get(QuestionnaireType.phq9),
+        assessmentId: id,
+        correlationId: fakeUUID,
+      });
+
+      expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(5, {
+        message: JSON.stringify(mock, Object.keys(mock).sort()),
+        type: QueueType.notifications,
       });
     });
   });
