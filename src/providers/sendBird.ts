@@ -148,7 +148,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     sendBirdChannelUrl: string,
     name: string,
     cover_url: string,
-  ): Promise<{ data }> {
+  ): Promise<{ config }> {
     const methodName = this.updateChannelName.name;
     try {
       const result = await this.httpService
