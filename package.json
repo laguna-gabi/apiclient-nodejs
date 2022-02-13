@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@lagunahealth/pandora": "0.10.0",
-    "@nestjs/axios": "^0.0.1",
+    "@nestjs/axios": "^0.0.5",
     "@nestjs/common": "^7.6.15",
     "@nestjs/core": "^7.6.15",
     "@nestjs/event-emitter": "^1.0.0",

@@ -144,7 +144,11 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
       .toPromise();
   }
 
-  async updateChannelName(sendBirdChannelUrl: string, name: string, cover_url: string) {
+  async updateChannelName(
+    sendBirdChannelUrl: string,
+    name: string,
+    cover_url: string,
+  ): Promise<{ data }> {
     const methodName = this.updateChannelName.name;
     try {
       const result = await this.httpService
@@ -217,7 +221,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     }
   }
 
-  async leave(sendBirdChannelUrl: string, userId: string) {
+  async leave(sendBirdChannelUrl: string, userId: string): Promise<{ data }> {
     const methodName = this.leave.name;
     try {
       const result = await this.httpService
