@@ -59,7 +59,8 @@
             "memberAssigned": "{{member.firstName}} was assigned to you",
             "memberNotFeelingWellMessage": "{{member.firstName}} logged status - requires your attention",
             "journalContent": "{{member.firstName}} shared a journal item with you",
-            "appointmentReviewed": "your session with {{member.firstName}} was reviewed by anther coach"
+            "appointmentReviewed": "your session with {{member.firstName}} was reviewed by anther coach",
+            "assessmentSubmitAlert": "alerting results on {{assessmentName}} for {{member.firstName}}. Scored a `{{assessmentScore}}`"
         }
     }
 }

@@ -59,7 +59,8 @@
             "memberAssigned": "",
             "memberNotFeelingWellMessage": "",
             "journalContent": "",
-            "appointmentReviewed": ""
+            "appointmentReviewed": "",
+            "assessmentSubmitAlert": ""
         }
     }
 }
