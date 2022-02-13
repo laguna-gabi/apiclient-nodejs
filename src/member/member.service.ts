@@ -79,7 +79,7 @@ export class MemberService extends BaseService {
     @InjectModel(ActionItem.name)
     private readonly actionItemModel: Model<ActionItemDocument> & ISoftDelete<ActionItemDocument>,
     @InjectModel(Journal.name)
-    private readonly journalModel: Model<JournalDocument>,
+    private readonly journalModel: Model<JournalDocument> & ISoftDelete<JournalDocument>,
     @InjectModel(MemberConfig.name)
     private readonly memberConfigModel: Model<MemberConfigDocument> &
       ISoftDelete<MemberConfigDocument>,
@@ -726,6 +726,29 @@ export class MemberService extends BaseService {
     }
 
     return result;
+  }
+
+  @OnEvent(EventType.onDeletedMember, { async: true })
+  async deleteJournals(params: IEventDeleteMember) {
+    const { memberId, hard, deletedBy } = params;
+    try {
+      const journals = await this.journalModel.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
+      if (!journals) return;
+
+      if (hard) {
+        await this.journalModel.deleteMany({ memberId: new Types.ObjectId(memberId) });
+      } else {
+        await Promise.all(
+          journals.map(async (journal) => {
+            await journal.delete(new Types.ObjectId(deletedBy));
+          }),
+        );
+      }
+    } catch (ex) {
+      this.logger.error(params, MemberService.name, this.deleteJournals.name, formatEx(ex));
+    }
   }
 
   /*************************************************************************************************

@@ -43,7 +43,6 @@ import * as mongooseDelete from 'mongoose-delete';
     CommonModule,
     MongooseModule.forFeature([
       { name: Goal.name, schema: GoalDto },
-      { name: Journal.name, schema: JournalDto },
       { name: ControlMember.name, schema: ControlMemberDto },
       { name: Caregiver.name, schema: CaregiverDto },
       { name: DismissedAlert.name, schema: DismissedAlertDto },
@@ -77,6 +76,12 @@ import * as mongooseDelete from 'mongoose-delete';
         name: Recording.name,
         useFactory: () => {
           return MemberRecordingDto.plugin(mongooseDelete, useFactoryOptions);
+        },
+      },
+      {
+        name: Journal.name,
+        useFactory: () => {
+          return JournalDto.plugin(mongooseDelete, useFactoryOptions);
         },
       },
     ]),

@@ -2,6 +2,7 @@ import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, Identifier, IsObjectId } from '../common';
+import { ISoftDelete } from '../db';
 
 export enum ImageType {
   NormalImage = '_NormalImage',
@@ -137,5 +138,5 @@ export class Journal extends Identifier {
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type JournalDocument = Journal & Document;
+export type JournalDocument = Journal & Document & ISoftDelete<Journal>;
 export const JournalDto = SchemaFactory.createForClass(Journal);

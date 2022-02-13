@@ -436,6 +436,11 @@ describe('Integration tests: all', () => {
 
       await createTodos(member.id);
 
+      const { id: journalId } = await handler.setContextUserId(member.id).mutations.createJournal();
+      await handler.setContextUserId(member.id).mutations.updateJournalText({
+        updateJournalTextParams: generateUpdateJournalTextParams({ id: journalId }),
+      });
+
       // delete member
       const deleteMemberParams = generateDeleteMemberParams({ id: member.id, hard });
       const result = await handler
@@ -474,6 +479,9 @@ describe('Integration tests: all', () => {
 
       const todos = await handler.queries.getTodos({ memberId: member.id });
       expect(todos).toEqual([]);
+
+      const journals = await handler.setContextUserId(member.id).queries.getJournals();
+      expect(journals).toEqual([]);
     });
   });
 

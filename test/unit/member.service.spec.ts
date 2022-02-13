@@ -1478,6 +1478,82 @@ describe('MemberService', () => {
     });
   });
 
+  describe('deleteJournals', () => {
+    test.each([true, false])('should %p delete member journals', async (hard) => {
+      const memberId = generateId();
+      const { id } = await service.createJournal(memberId);
+      const updateJournalTextParams = generateUpdateJournalTextParams({ id });
+
+      await service.updateJournal({ ...updateJournalTextParams, memberId });
+      const journals = await service.getJournals(memberId);
+
+      expect(journals).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: new Types.ObjectId(id),
+            memberId: new Types.ObjectId(memberId),
+            published: false,
+            text: updateJournalTextParams.text,
+            updatedAt: expect.any(Date),
+            createdAt: expect.any(Date),
+            deleted: false,
+          }),
+        ]),
+      );
+
+      await service.deleteJournals({ memberId, deletedBy: memberId, hard });
+
+      const journalsAfterDelete = await service.getJournals(memberId);
+      expect(journalsAfterDelete).toHaveLength(0);
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const deletedJournals = await modelJournal.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
+      if (hard) {
+        expect(deletedJournals).toEqual([]);
+      } else {
+        checkDelete(deletedJournals, { memberId: new Types.ObjectId(memberId) }, memberId);
+      }
+    });
+
+    it('should be able to hard delete after soft delete', async () => {
+      const memberId = generateId();
+      const { id } = await service.createJournal(memberId);
+      const updateJournalTextParams = generateUpdateJournalTextParams({ id });
+
+      await service.updateJournal({ ...updateJournalTextParams, memberId });
+      const journals = await service.getJournals(memberId);
+
+      expect(journals).toHaveLength(1);
+
+      await service.deleteJournals({ memberId, deletedBy: memberId, hard: false });
+
+      const journalsAfterDelete = await service.getJournals(memberId);
+      expect(journalsAfterDelete).toHaveLength(0);
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const deletedJournals = await modelJournal.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
+      expect(deletedJournals).toHaveLength(1);
+
+      await service.deleteJournals({ memberId, deletedBy: memberId, hard: true });
+
+      const journalsAfterHardDelete = await service.getJournals(memberId);
+      expect(journalsAfterHardDelete).toHaveLength(0);
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const deletedJournalsAfterHard = await modelJournal.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
+      expect(deletedJournalsAfterHard).toHaveLength(0);
+    });
+  });
+
   describe('caregivers', () => {
     let caregiverId;
 
