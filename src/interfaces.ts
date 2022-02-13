@@ -63,6 +63,8 @@ export interface ICreateDispatch extends IDispatch {
   scheduleLink?: string;
   journalImageDownloadLink?: string;
   journalAudioDownloadLink?: string;
+  assessmentName?: string;
+  assessmentScore?: string;
 }
 
 export type IDeleteDispatch = IDispatch;
@@ -151,6 +153,7 @@ export enum InternalKey {
   deleteTodoMEDS = 'deleteTodo.MEDS',
   deleteTodoAPPT = 'deleteTodo.APPT',
   deleteTodoTODO = 'deleteTodo.TODO',
+  assessmentSubmitAlert = 'assessmentSubmitAlert',
 }
 
 export enum CustomKey {
