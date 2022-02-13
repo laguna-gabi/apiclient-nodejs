@@ -448,7 +448,6 @@ export class MemberService extends BaseService {
         await actionItem.delete(new Types.ObjectId(deletedBy));
       }),
     );
-    // todo - add goals if necessary
   }
 
   private async hardDeleteMember(member: MemberDocument) {
@@ -464,8 +463,6 @@ export class MemberService extends BaseService {
         await this.actionItemModel.deleteOne({ _id: actionItem });
       }),
     );
-    // todo: take recording out to an event triggered method & add soft
-    await this.recordingModel.deleteMany({ memberId: new Types.ObjectId(member.id) });
   }
   /************************************************************************************************
    ******************************************** Control *******************************************

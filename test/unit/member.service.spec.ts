@@ -858,8 +858,6 @@ describe('MemberService', () => {
         createTaskParams: generateCreateTaskParams({ memberId }),
         status: TaskStatus.pending,
       });
-      const params = generateUpdateRecordingParams({ memberId });
-      await service.updateRecording(params, params.userId);
 
       const result = await service.deleteMember(
         generateDeleteMemberParams({ id: memberId, hard }),
@@ -874,18 +872,12 @@ describe('MemberService', () => {
       // @ts-ignore
       const ActionItemsDeletedResult = await modelActionItem.findWithDeleted(actionItemId);
 
-      //todo: add goals if necessary
-
       if (hard) {
-        const recordings = await modelRecording.find({ memberId: new Types.ObjectId(memberId) });
-        [
-          memberDeletedResult,
-          memberConfigDeletedResult,
-          ActionItemsDeletedResult,
-          recordings,
-        ].forEach((result) => {
-          expect(result).toEqual([]);
-        });
+        [memberDeletedResult, memberConfigDeletedResult, ActionItemsDeletedResult].forEach(
+          (result) => {
+            expect(result).toEqual([]);
+          },
+        );
       } else {
         await checkDelete(memberDeletedResult, { _id: new Types.ObjectId(memberId) }, userId);
         await checkDelete(memberConfigDeletedResult, { memberId }, userId);
