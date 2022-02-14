@@ -250,8 +250,10 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
 
   @Query(() => DischargeDocumentsLinks)
-  @Roles(UserRole.coach, UserRole.nurse)
-  async getMemberUploadDischargeDocumentsLinks(@Args('id', { type: () => String }) id: string) {
+  @MemberIdParam(MemberIdParamType.id)
+  @UseInterceptors(MemberUserRouteInterceptor)
+  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
+  async getMemberUploadDischargeDocumentsLinks(@Args('id', { type: () => String }) id?: string) {
     const member = await this.memberService.get(id);
 
     const { firstName, lastName } = member;

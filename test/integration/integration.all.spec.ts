@@ -665,25 +665,29 @@ describe('Integration tests: all', () => {
     });
   });
 
-  describe('dispatch links', () => {
-    it('should be able to get upload dispatch links of a member', async () => {
+  describe('discharge links', () => {
+    it('should be able to get upload discharge links of a member', async () => {
       const org = await creators.createAndValidateOrg();
       const { id } = await creators.createAndValidateMember({ org });
 
-      const result = await handler.queries.getMemberUploadDischargeDocumentsLinks({ id });
+      const result = await handler
+        .setContextUserId(id)
+        .queries.getMemberUploadDischargeDocumentsLinks({ id: id + '1' });
+
       expect(result).toEqual({
         dischargeNotesLink: 'https://some-url/upload',
         dischargeInstructionsLink: 'https://some-url/upload',
       });
     });
 
-    it('should be able to get download dispatch links of a member', async () => {
+    it('should be able to get download discharge links of a member', async () => {
       const org = await creators.createAndValidateOrg();
       const { id } = await creators.createAndValidateMember({ org });
 
       const result = await handler
         .setContextUserId(id)
         .queries.getMemberDownloadDischargeDocumentsLinks({ id });
+
       expect(result).toEqual({
         dischargeNotesLink: 'https://some-url/download',
         dischargeInstructionsLink: 'https://some-url/download',
