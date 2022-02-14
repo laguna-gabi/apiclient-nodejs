@@ -60,7 +60,7 @@
             "memberNotFeelingWellMessage": "",
             "journalContent": "",
             "appointmentReviewed": "",
-            "assessmentSubmitAlert": ""
+            "assessmentSubmitScoreOverThreshold": ""
         }
     }
 }
