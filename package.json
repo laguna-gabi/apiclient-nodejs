@@ -37,7 +37,8 @@
     "analytics:dump:dev": "export NODE_ENV=development && ts-node ./cmd/main.ts analytics",
     "analytics:dump:prod": "export NODE_ENV=production && ts-node ./cmd/main.ts analytics",
     "localstack": "localstack/configLocalstack.sh",
-    "migrate": "ts-node ./cmd/main.ts migration"
+    "migrate": "ts-node ./cmd/main.ts migration",
+    "setup": "./scripts/setup.sh"
   },
   "dependencies": {
     "@lagunahealth/pandora": "0.11.0",
