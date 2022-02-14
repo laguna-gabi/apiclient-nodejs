@@ -60,7 +60,8 @@
             "memberNotFeelingWellMessage": "",
             "journalContent": "",
             "appointmentReviewed": "",
-            "assessmentSubmitScoreOverThreshold": ""
+            "assessmentSubmitScoreOverThreshold": "",
+            "memberCreateTodo": ""
         }
     }
 }
