@@ -9,7 +9,7 @@ import {
   AvailabilityService,
 } from '../../src/availability';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
-import { User, UserDto } from '../../src/user';
+import { User, UserDocument, UserDto } from '../../src/user';
 import {
   checkDelete,
   dbConnect,
@@ -25,7 +25,7 @@ describe('AvailabilityService', () => {
   let module: TestingModule;
   let service: AvailabilityService;
   let availabilityModel: Model<AvailabilityDocument & defaultTimestampsDbValues>;
-  let modelUser: Model<typeof UserDto>;
+  let modelUser: Model<UserDocument>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -36,8 +36,11 @@ describe('AvailabilityService', () => {
     service = module.get<AvailabilityService>(AvailabilityService);
     mockLogger(module.get<LoggerService>(LoggerService));
 
-    availabilityModel = model(Availability.name, AvailabilityDto);
-    modelUser = model(User.name, UserDto);
+    availabilityModel = model<AvailabilityDocument & defaultTimestampsDbValues>(
+      Availability.name,
+      AvailabilityDto,
+    );
+    modelUser = model<UserDocument>(User.name, UserDto);
 
     await dbConnect();
   });
@@ -159,8 +162,10 @@ describe('AvailabilityService', () => {
 
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      const deletedResult = await availabilityModel.findWithDeleted(ids[0]);
-      checkDelete(deletedResult, { _id: ids[0] }, userId);
+      const deletedResult = await availabilityModel.findWithDeleted({
+        _id: new Types.ObjectId(ids[0]),
+      });
+      checkDelete(deletedResult, { _id: new Types.ObjectId(ids[0]) }, userId);
     });
 
     it('should throw exception when trying to delete a non existing availability', async () => {

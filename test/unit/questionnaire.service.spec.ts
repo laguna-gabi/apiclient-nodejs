@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-/* eslint-disable max-len */
 import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, Types, model } from 'mongoose';
@@ -16,9 +14,11 @@ import {
   AlertConditionType,
   CreateQuestionnaireParams,
   Questionnaire,
+  QuestionnaireDocument,
   QuestionnaireDto,
   QuestionnaireModule,
   QuestionnaireResponse,
+  QuestionnaireResponseDocument,
   QuestionnaireResponseDto,
   QuestionnaireService,
   QuestionnaireType,
@@ -32,8 +32,8 @@ describe('QuestionnaireService', () => {
   let service: QuestionnaireService;
   let eventEmitter: EventEmitter2;
   let spyOnEventEmitter: jest.SpyInstance;
-  let questionnaireModel: Model<typeof QuestionnaireDto>;
-  let questionnaireResponseModel: Model<typeof QuestionnaireResponseDto>;
+  let questionnaireModel: Model<QuestionnaireDocument>;
+  let questionnaireResponseModel: Model<QuestionnaireResponseDocument>;
   let phq9TypeTemplate: Questionnaire;
   let who5TypeTemplate: Questionnaire;
 
@@ -47,8 +47,11 @@ describe('QuestionnaireService', () => {
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
 
-    questionnaireModel = model(Questionnaire.name, QuestionnaireDto);
-    questionnaireResponseModel = model(QuestionnaireResponse.name, QuestionnaireResponseDto);
+    questionnaireModel = model<QuestionnaireDocument>(Questionnaire.name, QuestionnaireDto);
+    questionnaireResponseModel = model<QuestionnaireResponseDocument>(
+      QuestionnaireResponse.name,
+      QuestionnaireResponseDto,
+    );
     mockLogger(module.get<LoggerService>(LoggerService));
 
     phq9TypeTemplate = await service.createQuestionnaire(
@@ -182,6 +185,7 @@ describe('QuestionnaireService', () => {
 
       const allQuestionnaires = await service.getActiveQuestionnaires();
 
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       expect(allQuestionnaires.find((item) => item.id === id).toObject()).toEqual({
         ...params,
@@ -201,13 +205,16 @@ describe('QuestionnaireService', () => {
 
       const questionnaire = await service.createQuestionnaire(params);
 
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       expect((await service.getQuestionnaireById(questionnaire.id)).toObject()).toEqual({
         ...params,
         _id: new Types.ObjectId(questionnaire.id),
         active: true,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         createdAt: questionnaire.createdAt,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         updatedAt: questionnaire.updatedAt,
       });
@@ -481,11 +488,13 @@ describe('QuestionnaireService', () => {
     ])(`%s`, async (_, answers, template, error) => {
       if (error) {
         expect(() => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           service.validate(answers, template);
         }).toThrow(error);
       } else {
         expect(() => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           service.validate(answers, template);
         }).not.toThrow();
@@ -571,6 +580,7 @@ describe('QuestionnaireService', () => {
       ],
     ])(`%s`, async (_, answer, template, satisfies) => {
       expect(
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         service.isAlertConditionsSatisfied(answer, template),
       ).toEqual(satisfies);

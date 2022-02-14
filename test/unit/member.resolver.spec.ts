@@ -248,7 +248,10 @@ describe('MemberResolver', () => {
       await resolver.createMember(params);
 
       expect(spyOnServiceInsert).toBeCalledTimes(1);
-      expect(spyOnServiceInsert).toBeCalledWith({ ...params, phoneType }, Types.ObjectId(user.id));
+      expect(spyOnServiceInsert).toBeCalledWith(
+        { ...params, phoneType },
+        new Types.ObjectId(user.id),
+      );
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
       const eventNewMemberParams: IEventOnNewMember = {

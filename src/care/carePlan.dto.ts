@@ -56,7 +56,7 @@ export class UpdateCarePlanParams {
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class CarePlan extends BaseCare {
-  @Prop({ index: true, type: CarePlanType })
+  @Prop({ index: true, type: String, enum: CarePlanType })
   @Field(() => CarePlanType, { nullable: true })
   carePlanType?: CarePlanType;
 

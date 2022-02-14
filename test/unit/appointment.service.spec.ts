@@ -60,8 +60,11 @@ describe('AppointmentService', () => {
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     mockLogger(module.get<LoggerService>(LoggerService));
 
-    appointmentModel = model(Appointment.name, AppointmentDto);
-    notesModel = model(Notes.name, NotesDto);
+    appointmentModel = model<AppointmentDocument & defaultTimestampsDbValues>(
+      Appointment.name,
+      AppointmentDto,
+    );
+    notesModel = model<NotesDocument>(Notes.name, NotesDto);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
 
     await dbConnect();
@@ -399,7 +402,8 @@ describe('AppointmentService', () => {
       const appointment = await schedule(addMinutes(startDate, 30));
       await service.delete({ id: appointment.id, deletedBy: userId });
 
-      expect(await schedule(addMinutes(startDate, 30))).not.toBeFalsy();
+      const anotherAppointment = await schedule(addMinutes(startDate, 30));
+      expect(anotherAppointment).not.toBeFalsy();
     });
 
     test.each`
@@ -553,6 +557,9 @@ describe('AppointmentService', () => {
             ? params.update2.noShowReason
             : params.update1.noShowReason,
         );
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        delete result.notes?.scores?._id;
         expect(result.notes).toEqual(
           params.update1.notes === undefined && params.update2.notes === undefined
             ? undefined
@@ -725,7 +732,6 @@ describe('AppointmentService', () => {
     });
   });
 
-  /* eslint-disable @typescript-eslint/ban-ts-comment */
   describe('delete', () => {
     test.each([false, true])(
       'should successfully delete an appointment with its notes',
@@ -740,10 +746,16 @@ describe('AppointmentService', () => {
         const result = await service.get(id);
         expect(result).toBeNull();
 
+        /* eslint-disable @typescript-eslint/ban-ts-comment */
         // @ts-ignore
-        const deletedResult = await appointmentModel.findWithDeleted(id);
+        const deletedResult = await appointmentModel.findWithDeleted({
+          _id: new Types.ObjectId(id),
+        });
         // @ts-ignore
-        const deletedNotesResult = await notesModel.findWithDeleted(appointment.notes._id);
+        const deletedNotesResult = await notesModel.findWithDeleted({
+          // @ts-ignore
+          _id: appointment.notes._id,
+        });
 
         if (hard) {
           expect(deletedResult).toEqual([]);
@@ -753,6 +765,7 @@ describe('AppointmentService', () => {
           // @ts-ignore
           checkDelete(deletedNotesResult, { _id: appointment.notes._id }, params.userId);
         }
+        /* eslint-enable @typescript-eslint/ban-ts-comment */
       },
     );
 
@@ -767,6 +780,7 @@ describe('AppointmentService', () => {
       const result = await service.get(id);
       expect(result).toBeNull();
 
+      /* eslint-disable @typescript-eslint/ban-ts-comment */
       // @ts-ignore
       const deletedResult = await appointmentModel.findWithDeleted(id);
       // @ts-ignore
@@ -779,11 +793,17 @@ describe('AppointmentService', () => {
       await service.delete({ id, deletedBy: params.userId, hard: true });
 
       // @ts-ignore
-      const deletedResultHard = await appointmentModel.findWithDeleted(id);
+      const deletedResultHard = await appointmentModel.findWithDeleted({
+        _id: new Types.ObjectId(id),
+      });
       // @ts-ignore
-      const deletedNotesResultHard = await notesModel.findWithDeleted(appointment.notes._id);
+      const deletedNotesResultHard = await notesModel.findWithDeleted({
+        // @ts-ignore
+        _id: appointment.notes._id,
+      });
       expect(deletedResultHard).toEqual([]);
       expect(deletedNotesResultHard).toEqual([]);
+      /* eslint-enable @typescript-eslint/ban-ts-comment */
     });
 
     test.each([false, true])(
@@ -811,12 +831,13 @@ describe('AppointmentService', () => {
         };
         await service.deleteMemberAppointments(deleteParams);
 
+        /* eslint-disable @typescript-eslint/ban-ts-comment */
         // @ts-ignore
         const deletedResult = await appointmentModel.findWithDeleted({
           memberId: new Types.ObjectId(memberId),
         });
         // @ts-ignore
-        const deletedNotesResult = await notesModel.findWithDeleted(appointment.notes._id);
+        const deletedNotesResult = await notesModel.findWithDeleted({ _id: appointment.notes._id });
 
         if (hard) {
           expect(deletedResult).toEqual([]);
@@ -829,6 +850,7 @@ describe('AppointmentService', () => {
           checkDelete(deletedNotesResult, { _id: appointment.notes._id }, params.userId);
         }
       },
+      /* eslint-enable @typescript-eslint/ban-ts-comment */
     );
   });
 

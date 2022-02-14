@@ -421,7 +421,7 @@ describe('Commands: AnalyticsService', () => {
           dischargeDate: reformatDate(sub(now, { days: 10 }).toString(), DateFormat),
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
           primaryUser: mockPrimaryUser,
-          org: { ...mockOrg, _id: Types.ObjectId(mockOrg.id) },
+          org: { ...mockOrg, _id: new Types.ObjectId(mockOrg.id) },
         } as PopulatedMember,
         appointments: [
           {
@@ -513,7 +513,7 @@ describe('Commands: AnalyticsService', () => {
           dischargeDate: reformatDate(sub(now, { days: 10 }).toString(), DateFormat),
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
           primaryUser: mockPrimaryUser,
-          org: { ...mockOrg, _id: Types.ObjectId(mockOrg.id) },
+          org: { ...mockOrg, _id: new Types.ObjectId(mockOrg.id) },
         } as PopulatedMember,
         appointments: [
           {
@@ -598,7 +598,7 @@ describe('Commands: AnalyticsService', () => {
         memberDetails: {
           ...mockMember,
           primaryUserId: undefined,
-          org: { ...mockOrg, _id: Types.ObjectId(mockOrg.id) },
+          org: { ...mockOrg, _id: new Types.ObjectId(mockOrg.id) },
         } as PopulatedMember,
         isControlMember: true,
       } as MemberDataAggregate);
@@ -650,8 +650,8 @@ describe('Commands: AnalyticsService', () => {
       const data = await analyticsService.buildCoachData({
         _id: new Types.ObjectId(mockPrimaryUser.id),
         members: [
-          { ...graduatedMember, _id: Types.ObjectId(graduatedMember.id) },
-          { ...activeMember, _id: Types.ObjectId(activeMember.id) },
+          { ...graduatedMember, _id: new Types.ObjectId(graduatedMember.id) },
+          { ...activeMember, _id: new Types.ObjectId(activeMember.id) },
         ],
         user: mockPrimaryUser,
       });

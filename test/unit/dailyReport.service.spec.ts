@@ -67,7 +67,7 @@ describe('DailyReportCategoryService', () => {
         [], // <= no recent daily reports in db
         {
           date: '2015/01/01',
-          memberId: Types.ObjectId(memberId),
+          memberId: new Types.ObjectId(memberId),
           categories: [{ rank: 3, category: 'Pain' }],
         }, // <= expected
       ],
@@ -80,13 +80,13 @@ describe('DailyReportCategoryService', () => {
         } as DailyReportCategoriesInput, // <= new record(s)
         {
           date: '2015/01/01',
-          memberId: Types.ObjectId(memberId),
+          memberId: new Types.ObjectId(memberId),
           categories: [{ rank: 3, category: 'Pain' }],
         } as DailyReportDocument, // <= existing record in db
         [], // <= no recent daily reports in db
         {
           date: '2015/01/01',
-          memberId: Types.ObjectId(memberId),
+          memberId: new Types.ObjectId(memberId),
           categories: [
             { rank: 3, category: 'Pain' },
             { rank: 2, category: 'Mobility' },
@@ -102,13 +102,13 @@ describe('DailyReportCategoryService', () => {
         } as DailyReportCategoriesInput, // <= new record(s)
         {
           date: '2015/01/01',
-          memberId: Types.ObjectId(memberId),
+          memberId: new Types.ObjectId(memberId),
           categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
         } as DailyReportDocument, // <= existing record in db
         [], // <= no recent daily reports in db
         {
           date: '2015/01/01',
-          memberId: Types.ObjectId(memberId),
+          memberId: new Types.ObjectId(memberId),
           categories: [{ rank: 1, category: DailyReportCategoryTypes.Pain }],
         }, // <= expected
       ],
@@ -121,24 +121,24 @@ describe('DailyReportCategoryService', () => {
         } as DailyReportCategoriesInput, // <= new record(s)
         {
           date: '2015/01/05',
-          memberId: Types.ObjectId(memberId),
+          memberId: new Types.ObjectId(memberId),
           categories: [{ rank: 1, category: DailyReportCategoryTypes.Pain }],
         } as DailyReportDocument, // <= existing record in db
         [
           {
             date: '2015//04',
-            memberId: Types.ObjectId(memberId),
+            memberId: new Types.ObjectId(memberId),
             categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
           },
           {
             date: '2015//03',
-            memberId: Types.ObjectId(memberId),
+            memberId: new Types.ObjectId(memberId),
             categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
           },
         ], // <= recent daily reports in db
         {
           date: '2015/01/05',
-          memberId: Types.ObjectId(memberId),
+          memberId: new Types.ObjectId(memberId),
           categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
           statsOverThreshold: [DailyReportCategoryTypes.Pain],
         }, // <= expected
@@ -155,13 +155,13 @@ describe('DailyReportCategoryService', () => {
         } as DailyReportCategoriesInput, // <= new record(s)
         {
           date: '2015/01/01',
-          memberId: Types.ObjectId(memberId),
+          memberId: new Types.ObjectId(memberId),
           categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
         } as DailyReportDocument, // <= existing record in db
         [], // <= no recent daily reports in db
         {
           date: '2015/01/01',
-          memberId: Types.ObjectId(memberId),
+          memberId: new Types.ObjectId(memberId),
           categories: [
             { rank: 1, category: DailyReportCategoryTypes.Pain },
             { rank: 1, category: DailyReportCategoryTypes.Mobility },
@@ -343,14 +343,13 @@ describe('DailyReportCategoryService', () => {
     });
   });
 
-  /* eslint-disable @typescript-eslint/ban-ts-comment */
   describe('deleteMemberDailyReports', () => {
     test.each([true, false])(`should delete members daily report`, async (hard) => {
       const memberId = generateId();
       const deletedBy = generateId();
       const dailyReport: DailyReport = {
         date: '2015/01/01',
-        memberId: Types.ObjectId(memberId),
+        memberId: new Types.ObjectId(memberId),
         categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
       };
       await dailyReportModel.create(dailyReport);
@@ -361,6 +360,7 @@ describe('DailyReportCategoryService', () => {
         hard,
       };
       await service.deleteMemberDailyReports(params);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const deletedResult = await dailyReportModel.findWithDeleted({
         memberId: new Types.ObjectId(memberId),
@@ -378,7 +378,7 @@ describe('DailyReportCategoryService', () => {
       const deletedBy = generateId();
       const dailyReport: DailyReport = {
         date: '2015/01/01',
-        memberId: Types.ObjectId(memberId),
+        memberId: new Types.ObjectId(memberId),
         categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
       };
       await dailyReportModel.create(dailyReport);
@@ -389,6 +389,7 @@ describe('DailyReportCategoryService', () => {
         hard: false,
       };
       await service.deleteMemberDailyReports(params);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const deletedResult = await dailyReportModel.findWithDeleted({
         memberId: new Types.ObjectId(memberId),
@@ -396,6 +397,7 @@ describe('DailyReportCategoryService', () => {
       await checkDelete(deletedResult, { memberId: new Types.ObjectId(memberId) }, deletedBy);
 
       await service.deleteMemberDailyReports({ ...params, hard: true });
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const deletedResultHard = await dailyReportModel.findWithDeleted({
         memberId: new Types.ObjectId(memberId),

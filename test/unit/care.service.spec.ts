@@ -39,7 +39,7 @@ describe('CareService', () => {
 
     service = module.get<CareService>(CareService);
     mockLogger(module.get<LoggerService>(LoggerService));
-    redFlagModel = model(RedFlag.name, RedFlagDto);
+    redFlagModel = model<RedFlagDocument>(RedFlag.name, RedFlagDto);
     await dbConnect();
   });
 

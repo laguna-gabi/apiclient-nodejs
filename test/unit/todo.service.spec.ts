@@ -11,7 +11,9 @@ import {
   EndAndCreateTodoParams,
   Label,
   Todo,
+  TodoDocument,
   TodoDone,
+  TodoDoneDocument,
   TodoDoneDto,
   TodoDto,
   TodoModule,
@@ -34,8 +36,8 @@ import {
 describe('TodoService', () => {
   let module: TestingModule;
   let service: TodoService;
-  let todoModel: Model<typeof TodoDto>;
-  let todoDoneModel: Model<typeof TodoDoneDto>;
+  let todoModel: Model<TodoDocument>;
+  let todoDoneModel: Model<TodoDoneDocument>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -46,8 +48,8 @@ describe('TodoService', () => {
     service = module.get<TodoService>(TodoService);
     mockLogger(module.get<LoggerService>(LoggerService));
 
-    todoModel = model(Todo.name, TodoDto);
-    todoDoneModel = model(TodoDone.name, TodoDoneDto);
+    todoModel = model<TodoDocument>(Todo.name, TodoDto);
+    todoDoneModel = model<TodoDoneDocument>(TodoDone.name, TodoDoneDto);
 
     await dbConnect();
   });

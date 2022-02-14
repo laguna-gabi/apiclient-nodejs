@@ -8,14 +8,9 @@ import { User, UserDocument, UserDto } from '../src/user';
 
 async function main() {
   const { uri } = await new ConfigsService().createMongooseOptions();
-  await connect(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false,
-    useCreateIndex: true,
-  });
-  const memberModel: Model<MemberDocument> = model(Member.name, MemberDto);
-  const userModel: Model<UserDocument> = model(User.name, UserDto);
+  await connect(uri);
+  const memberModel: Model<MemberDocument> = model<MemberDocument>(Member.name, MemberDto);
+  const userModel: Model<UserDocument> = model<UserDocument>(User.name, UserDto);
 
   /**
    * In here we are generating authId for members if they dont have it.

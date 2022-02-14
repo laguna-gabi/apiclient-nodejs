@@ -260,7 +260,7 @@ export class MemberService extends BaseService {
         },
       },
       { $unwind: { path: '$a' } },
-      { $match: { 'a.status': AppointmentStatus.scheduled } },
+      { $match: { 'a.status': AppointmentStatus.scheduled, 'a.deleted': false } },
       {
         $lookup: {
           localField: 'a.userId',
@@ -290,7 +290,7 @@ export class MemberService extends BaseService {
     try {
       const { memberId, userId } = params;
       await this.memberModel.updateOne(
-        { _id: Types.ObjectId(memberId) },
+        { _id: new Types.ObjectId(memberId) },
         { $addToSet: { users: userId } },
       );
     } catch (ex) {
@@ -309,7 +309,7 @@ export class MemberService extends BaseService {
     try {
       const { appointmentId, memberId } = params;
       const recordingsToDeleteMedia = await this.recordingModel.find({
-        appointmentId: Types.ObjectId(appointmentId),
+        appointmentId: new Types.ObjectId(appointmentId),
         answered: true,
       });
       const recordingIds = recordingsToDeleteMedia.map((doc) => doc.id);
@@ -318,7 +318,7 @@ export class MemberService extends BaseService {
       }
       await this.recordingModel.updateMany(
         {
-          appointmentId: Types.ObjectId(appointmentId),
+          appointmentId: new Types.ObjectId(appointmentId),
           answered: true,
         },
         {
@@ -611,7 +611,7 @@ export class MemberService extends BaseService {
       { $set: { firstLoggedInAt: new Date() } },
     );
 
-    return result.ok === 1;
+    return result.modifiedCount === 1;
   }
 
   async getMemberConfig(id: string): Promise<MemberConfig> {
@@ -633,7 +633,7 @@ export class MemberService extends BaseService {
         { $set: { accessToken: params.accessToken } },
       );
 
-      return result.ok === 1;
+      return result.modifiedCount === 1;
     } catch (ex) {
       this.logger.error(
         params,
@@ -660,7 +660,7 @@ export class MemberService extends BaseService {
       { $set: setParams },
     );
 
-    if (result.nModified === 0) {
+    if (result.modifiedCount === 0) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
   }
@@ -787,7 +787,7 @@ export class MemberService extends BaseService {
       return result.value.toObject();
     } else {
       const result = await this.recordingModel.create({ ...setParams, id: v4() });
-      return result.toObject() as RecordingDocument;
+      return result.toObject();
     }
   }
 

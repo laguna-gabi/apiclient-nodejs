@@ -146,6 +146,7 @@ export class AppointmentService extends BaseService {
     const sharedQuery = {
       userId: new Types.ObjectId(params.userId),
       status: { $nin: [AppointmentStatus.done] },
+      deleted: false,
       ...(params.id ? { _id: { $ne: new Types.ObjectId(params.id) } } : {}),
     };
     const isOverlappingAppointments = await this.appointmentModel.exists({
@@ -200,7 +201,7 @@ export class AppointmentService extends BaseService {
     if (params.notes === undefined) {
       result = await this.appointmentModel
         .findOneAndUpdate({ _id: params.id }, { $set: { ...update } }, { new: true })
-        .populate('notes');
+        .populate([{ path: 'notes', strictPopulate: false }]);
     } else if (params.notes === null) {
       if (existing.notes) {
         await this.deleteNotes({ notes: existing.notes });
@@ -217,7 +218,7 @@ export class AppointmentService extends BaseService {
             { $set: params.notes },
             { upsert: true, new: true },
           )
-          .populate('notes');
+          .populate([{ path: 'notes', strictPopulate: false }]);
         notesId = result._id;
       } else {
         const { _id } = await this.notesModel.create(params.notes);
@@ -225,7 +226,7 @@ export class AppointmentService extends BaseService {
       }
       result = await this.appointmentModel
         .findOneAndUpdate({ _id: params.id }, { $set: update, notes: notesId }, { new: true })
-        .populate('notes');
+        .populate([{ path: 'notes', strictPopulate: false }]);
     }
 
     if (params.notes?.scores) {
@@ -270,7 +271,7 @@ export class AppointmentService extends BaseService {
     deletedBy?: string;
     hard?: boolean;
   }): Promise<boolean> {
-    const result = await this.appointmentModel.findOneWithDeleted(new Types.ObjectId(id));
+    const result = await this.appointmentModel.findOneWithDeleted({ _id: new Types.ObjectId(id) });
     if (!result) {
       throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
     }

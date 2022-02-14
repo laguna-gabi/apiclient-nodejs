@@ -228,7 +228,10 @@ export class CommunicationService {
   }
 
   async getByChannelUrlAndUser(sendBirdChannelUrl: string, userId: string): Promise<Communication> {
-    return this.communicationModel.findOne({ sendBirdChannelUrl, userId: Types.ObjectId(userId) });
+    return this.communicationModel.findOne({
+      sendBirdChannelUrl,
+      userId: new Types.ObjectId(userId),
+    });
   }
 
   async getMemberUserCommunication({

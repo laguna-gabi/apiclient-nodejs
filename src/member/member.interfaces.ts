@@ -58,7 +58,7 @@ export class MemberBase {
     this.logger.info(params, MemberBase.name, this.createRealMember.name);
 
     const primaryUserId = params.userId
-      ? Types.ObjectId(params.userId)
+      ? new Types.ObjectId(params.userId)
       : await this.userService.getAvailableUser();
 
     const user = await this.userService.get(primaryUserId.toString());

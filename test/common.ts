@@ -104,12 +104,7 @@ export const checkDelete = (deletedResult, paramsToTest, deletedBy: string) => {
 };
 
 export const dbConnect = async () => {
-  await connect(config.get('db.connection'), {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false,
-    useCreateIndex: true,
-  });
+  await connect(config.get('db.connection'));
 };
 
 export const dbDisconnect = async () => {

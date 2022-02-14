@@ -156,7 +156,7 @@ export class Handler extends BaseHandler {
     this.patientZero = (
       await this.memberService.insert(
         generateInternalCreateMemberParams({ authId: v4(), orgId: this.lagunaOrg.id }),
-        Types.ObjectId(this.adminUser.id),
+        new Types.ObjectId(this.adminUser.id),
       )
     ).member;
   }

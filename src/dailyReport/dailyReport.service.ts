@@ -42,7 +42,7 @@ export class DailyReportService extends BaseService {
     dailyReportCategoryEntry: DailyReportCategoriesInput,
   ): Promise<DailyReport> {
     let dbObject: DailyReport = await this.dailyReport.findOne({
-      memberId: Types.ObjectId(dailyReportCategoryEntry.memberId),
+      memberId: new Types.ObjectId(dailyReportCategoryEntry.memberId),
       date: dailyReportCategoryEntry.date,
     });
 
@@ -96,7 +96,7 @@ export class DailyReportService extends BaseService {
 
     await this.dailyReport.findOneAndUpdate(
       {
-        memberId: Types.ObjectId(dailyReportCategoryEntry.memberId),
+        memberId: new Types.ObjectId(dailyReportCategoryEntry.memberId),
         date: dailyReportCategoryEntry.date,
       },
       { ...dbObject, deleted: false },

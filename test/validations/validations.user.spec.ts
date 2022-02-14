@@ -154,7 +154,7 @@ describe('Validations - user', () => {
     const result = await request(server).get(`${urls.slots}/not-valid`).expect(400);
     expect(result).toEqual(
       expect.objectContaining({
-        text: '{"statusCode":400,"message":"Argument passed in must be a single String of 12 bytes or a string of 24 hex characters"}',
+        text: '{"statusCode":400,"message":"Argument passed in must be a string of 12 bytes or a string of 24 hex characters"}',
       }),
     );
   });

@@ -53,7 +53,7 @@ export class Task extends Identifier {
   @Field(() => String)
   title: string;
 
-  @Prop({ type: TaskStatus })
+  @Prop({ type: String, enum: TaskStatus })
   @Field(() => TaskStatus)
   status: TaskStatus;
 

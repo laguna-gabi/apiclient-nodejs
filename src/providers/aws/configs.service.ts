@@ -36,7 +36,7 @@ export class ConfigsService implements MongooseOptionsFactory {
       !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
         ? config.get('db.connection')
         : await this.getConfig(ExternalConfigs.db.connection);
-    return { uri, useFindAndModify: false, useCreateIndex: true, useUnifiedTopology: true };
+    return { uri };
   }
 
   /**

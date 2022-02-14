@@ -86,7 +86,7 @@ export class UserService extends BaseService {
 
     const [slotsObject] = await this.userModel.aggregate([
       ...(userId
-        ? [{ $match: { _id: Types.ObjectId(userId) } }]
+        ? [{ $match: { _id: new Types.ObjectId(userId) } }]
         : [
             { $unwind: { path: '$appointments' } },
             { $match: { appointments: new Types.ObjectId(appointmentId) } },
@@ -331,7 +331,7 @@ export class UserService extends BaseService {
       const { userId, accessToken } = params;
       const result = await this.userConfigModel.updateOne({ userId }, { $set: { accessToken } });
 
-      return result.ok === 1;
+      return result.modifiedCount === 1;
     } catch (ex) {
       this.logger.error(params, UserService.name, this.handleUpdateUserConfig.name, formatEx(ex));
     }
@@ -367,16 +367,18 @@ export class UserService extends BaseService {
   @OnEvent(EventType.onUpdatedUserAppointments, { async: true })
   async updateUserAppointments(params: IEventOnUpdatedUserAppointments): Promise<void> {
     this.logger.info(params, UserService.name, this.updateUserAppointments.name);
-    const appointmentIds = params.appointments.map((appointment) => Types.ObjectId(appointment.id));
+    const appointmentIds = params.appointments.map(
+      (appointment) => new Types.ObjectId(appointment.id),
+    );
 
     try {
       await this.userModel.updateOne(
-        { _id: Types.ObjectId(params.oldUserId) },
+        { _id: new Types.ObjectId(params.oldUserId) },
         { $pullAll: { appointments: appointmentIds } },
       );
 
       await this.userModel.updateOne(
-        { _id: Types.ObjectId(params.newUserId) },
+        { _id: new Types.ObjectId(params.newUserId) },
         { $addToSet: { appointments: { $each: appointmentIds } } },
         { new: true },
       );

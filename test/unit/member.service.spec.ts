@@ -10,11 +10,13 @@ import {
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
+import { add, sub } from 'date-fns';
 import * as faker from 'faker';
 import { datatype, date, internet } from 'faker';
 import { isNil, omitBy, pickBy } from 'lodash';
 import { Model, Types, model } from 'mongoose';
 import { performance } from 'perf_hooks';
+import { v4 } from 'uuid';
 import {
   Appointment,
   AppointmentDocument,
@@ -32,19 +34,23 @@ import {
 } from '../../src/common';
 import {
   ActionItem,
+  ActionItemDocument,
   ActionItemDto,
   AlertType,
   ControlMember,
   ControlMemberDocument,
   ControlMemberDto,
   DismissedAlert,
+  DismissedAlertDocument,
   DismissedAlertDto,
   ImageFormat,
   InternalCreateMemberParams,
   Journal,
+  JournalDocument,
   JournalDto,
   Member,
   MemberConfig,
+  MemberConfigDocument,
   MemberConfigDto,
   MemberDocument,
   MemberDto,
@@ -59,8 +65,9 @@ import {
   TaskStatus,
   UpdateMemberParams,
 } from '../../src/member';
-import { Org, OrgDto } from '../../src/org';
-import { User, UserDto } from '../../src/user';
+import { Org, OrgDocument, OrgDto } from '../../src/org';
+import { NotificationService } from '../../src/services';
+import { User, UserDocument, UserDto } from '../../src/user';
 import {
   checkDelete,
   compareMembers,
@@ -92,22 +99,19 @@ import {
   generateUpdateTaskStatusParams,
   mockGenerateDispatch,
 } from '../index';
-import { v4 } from 'uuid';
-import { NotificationService } from '../../src/services';
-import { add, sub } from 'date-fns';
 
 describe('MemberService', () => {
   let module: TestingModule;
   let service: MemberService;
   let memberModel: Model<MemberDocument & defaultTimestampsDbValues>;
-  let memberConfigModel: Model<typeof MemberConfigDto>;
+  let memberConfigModel: Model<MemberConfigDocument>;
   let controlMemberModel: Model<ControlMemberDocument & defaultTimestampsDbValues>;
-  let modelUser: Model<typeof UserDto>;
-  let modelOrg: Model<typeof OrgDto>;
-  let modelActionItem: Model<typeof ActionItemDto>;
-  let modelJournal: Model<typeof JournalDto>;
+  let modelUser: Model<UserDocument>;
+  let modelOrg: Model<OrgDocument>;
+  let modelActionItem: Model<ActionItemDocument>;
+  let modelJournal: Model<JournalDocument>;
   let modelAppointment: Model<AppointmentDocument>;
-  let modelDismissedAlert: Model<typeof DismissedAlertDto>;
+  let modelDismissedAlert: Model<DismissedAlertDocument>;
   let modelRecording: Model<RecordingDocument>;
 
   beforeAll(async () => {
@@ -119,16 +123,19 @@ describe('MemberService', () => {
     service = module.get<MemberService>(MemberService);
     mockLogger(module.get<LoggerService>(LoggerService));
 
-    memberModel = model(Member.name, MemberDto);
-    memberConfigModel = model(MemberConfig.name, MemberConfigDto);
-    controlMemberModel = model(ControlMember.name, ControlMemberDto);
-    modelUser = model(User.name, UserDto);
-    modelOrg = model(Org.name, OrgDto);
-    modelActionItem = model(ActionItem.name, ActionItemDto);
-    modelJournal = model(Journal.name, JournalDto);
-    modelAppointment = model(Appointment.name, AppointmentDto);
-    modelDismissedAlert = model(DismissedAlert.name, DismissedAlertDto);
-    modelRecording = model(Recording.name, MemberRecordingDto);
+    memberModel = model<MemberDocument & defaultTimestampsDbValues>(Member.name, MemberDto);
+    memberConfigModel = model<MemberConfigDocument>(MemberConfig.name, MemberConfigDto);
+    controlMemberModel = model<ControlMemberDocument & defaultTimestampsDbValues>(
+      ControlMember.name,
+      ControlMemberDto,
+    );
+    modelUser = model<UserDocument>(User.name, UserDto);
+    modelOrg = model<OrgDocument>(Org.name, OrgDto);
+    modelActionItem = model<ActionItemDocument>(ActionItem.name, ActionItemDto);
+    modelJournal = model<JournalDocument>(Journal.name, JournalDto);
+    modelAppointment = model<AppointmentDocument>(Appointment.name, AppointmentDto);
+    modelDismissedAlert = model<DismissedAlertDocument>(DismissedAlert.name, DismissedAlertDto);
+    modelRecording = model<RecordingDocument>(Recording.name, MemberRecordingDto);
     await dbConnect();
   });
 
@@ -604,7 +611,7 @@ describe('MemberService', () => {
         numberOfAppointments: 1,
       });
 
-      const result = await service.getMembersAppointments(orgId1);
+      const result = await service.getMembersAppointments(orgId1.toString());
       expect(result.length).toEqual(memberAppointmentsCount);
       expect(result).toEqual(
         expect.arrayContaining([
@@ -621,7 +628,12 @@ describe('MemberService', () => {
     });
 
     it('should sort results by start timestamp desc', async () => {
-      const primaryUserId = await generateUser();
+      const { _id: primaryUserId } = await modelUser.create(
+        generateCreateUserParams({
+          firstName: faker.name.firstName(),
+          lastName: faker.name.lastName(),
+        }),
+      );
       const orgId = await generateOrg();
 
       const member1AppointmentsCount = 3;
@@ -647,8 +659,13 @@ describe('MemberService', () => {
     });
 
     it('should include only scheduled appointments', async () => {
-      const primaryUserId = await generateUser();
       const orgId = await generateOrg();
+      const { _id: primaryUserId } = await modelUser.create(
+        generateCreateUserParams({
+          firstName: faker.name.firstName(),
+          lastName: faker.name.lastName(),
+        }),
+      );
 
       const numberOfAppointments = 1;
       const { id } = await generateMemberAndAppointment({
@@ -692,7 +709,7 @@ describe('MemberService', () => {
       const primaryUser = await modelUser.create(generateCreateUserParams());
       const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id });
+      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id.toString() });
       createMemberParams.zipCode = undefined;
       const { member } = await service.insert(createMemberParams, primaryUser._id);
 
@@ -707,7 +724,7 @@ describe('MemberService', () => {
       const org = await modelOrg.create(generateOrgParams());
 
       const createMemberParams = generateInternalCreateMemberParams({
-        orgId: org._id,
+        orgId: org._id.toString(),
         sex: Sex.female,
         email: internet.email(),
         language: Language.es,
@@ -735,7 +752,7 @@ describe('MemberService', () => {
       const primaryUser = await modelUser.create(generateCreateUserParams());
       const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id });
+      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id.toString() });
 
       NotNullableMemberKeys.forEach((key) => {
         createMemberParams[key] = null;
@@ -778,7 +795,7 @@ describe('MemberService', () => {
       const orgParams = generateOrgParams();
       const org = await modelOrg.create(orgParams);
 
-      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id });
+      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id.toString() });
       const member = await service.insertControl(createMemberParams);
       const createdMember = await controlMemberModel.findById(member.id);
       compareMembers(createdMember, createMemberParams);
@@ -797,7 +814,7 @@ describe('MemberService', () => {
     it('should remove not nullable optional params if null is passed', async () => {
       const org = await modelOrg.create(generateOrgParams());
 
-      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id });
+      const createMemberParams = generateInternalCreateMemberParams({ orgId: org._id.toString() });
 
       NotNullableMemberKeys.forEach((key) => {
         createMemberParams[key] = null;
@@ -849,7 +866,6 @@ describe('MemberService', () => {
       );
     });
 
-    /* eslint-disable @typescript-eslint/ban-ts-comment */
     test.each([true, false])('should delete member, member config & actionItems', async (hard) => {
       const memberId = await generateMember();
       const userId = generateId();
@@ -865,12 +881,16 @@ describe('MemberService', () => {
       );
       expect(result).toBeTruthy();
 
+      /* eslint-disable @typescript-eslint/ban-ts-comment */
       // @ts-ignore
-      const memberDeletedResult = await memberModel.findWithDeleted(new Types.ObjectId(memberId));
+      const memberDeletedResult = await memberModel.findWithDeleted({
+        _id: new Types.ObjectId(memberId),
+      });
       // @ts-ignore
       const memberConfigDeletedResult = await memberConfigModel.findWithDeleted({ memberId });
       // @ts-ignore
-      const ActionItemsDeletedResult = await modelActionItem.findWithDeleted(actionItemId);
+      const ActionItemsDeletedResult = await modelActionItem.findWithDeleted({ _id: actionItemId });
+      /* eslint-enable @typescript-eslint/ban-ts-comment */
 
       if (hard) {
         [memberDeletedResult, memberConfigDeletedResult, ActionItemsDeletedResult].forEach(
@@ -899,12 +919,9 @@ describe('MemberService', () => {
       },
     );
 
-    it('should be able to hard delete after sost delete', async () => {
+    it('should be able to hard delete after soft delete', async () => {
       const memberId = await generateMember();
       const userId = generateId();
-      const memberConfigDocument = await memberConfigModel.findOne({
-        memberId,
-      });
       const { id: actionItemId } = await service.insertActionItem({
         createTaskParams: generateCreateTaskParams({ memberId }),
         status: TaskStatus.pending,
@@ -916,17 +933,25 @@ describe('MemberService', () => {
       );
       expect(result).toBeTruthy();
 
+      /* eslint-disable @typescript-eslint/ban-ts-comment */
       // @ts-ignore
-      const memberDeletedResult = await memberModel.findWithDeleted(new Types.ObjectId(memberId));
+      const memberDeletedResult = await memberModel.findWithDeleted({
+        _id: new Types.ObjectId(memberId),
+      });
       // @ts-ignore
-      const memberConfigDeletedResult = await memberConfigModel.findWithDeleted(
-        memberConfigDocument._id,
-      );
+      const memberConfigDeletedResult = await memberConfigModel.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
       // @ts-ignore
-      const ActionItemsDeletedResult = await modelActionItem.findWithDeleted(actionItemId);
+      const ActionItemsDeletedResult = await modelActionItem.findWithDeleted({ _id: actionItemId });
+      /* eslint-enable @typescript-eslint/ban-ts-comment */
 
       await checkDelete(memberDeletedResult, { _id: new Types.ObjectId(memberId) }, userId);
-      await checkDelete(memberConfigDeletedResult, { memberId }, userId);
+      await checkDelete(
+        memberConfigDeletedResult,
+        { memberId: new Types.ObjectId(memberId) },
+        userId,
+      );
       await checkDelete(ActionItemsDeletedResult, { _id: actionItemId }, userId);
 
       //todo: add goals if necessary
@@ -937,16 +962,19 @@ describe('MemberService', () => {
       );
       expect(resultHard).toBeTruthy();
 
+      /* eslint-disable @typescript-eslint/ban-ts-comment */
       // @ts-ignore
-      const memberDeletedResultHard = await memberModel.findWithDeleted(
-        new Types.ObjectId(memberId),
-      );
+      const memberDeletedResultHard = await memberModel.findWithDeleted({
+        _id: new Types.ObjectId(memberId),
+      });
       // @ts-ignore
-      const memberConfigDeletedResultHard = await memberConfigModel.findWithDeleted(
-        memberConfigDocument._id,
-      );
+      const memberConfigDeletedResultHard = await memberConfigModel.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
       // @ts-ignore
-      const ActionItemsDeletedResultHard = await modelActionItem.findWithDeleted(actionItemId);
+      const ActionItemsDeletedResultHard = await modelActionItem.findWithDeleted({
+        _id: actionItemId,
+      });
       [
         memberDeletedResultHard,
         memberConfigDeletedResultHard,
@@ -954,6 +982,7 @@ describe('MemberService', () => {
       ].forEach((result) => {
         expect(result).toEqual([]);
       });
+      /* eslint-enable @typescript-eslint/ban-ts-comment */
     });
   });
 
@@ -1678,7 +1707,7 @@ describe('MemberService', () => {
         mockNotificationGetDispatchesByClientSenderId.mockResolvedValueOnce([dispatchM2]);
 
         // reset the date which will affect the `isNew` flag
-        modelUser.updateOne({ _id: new Types.ObjectId(userId) }, { $unset: 'lastQueryAlert' });
+        modelUser.updateOne({ _id: new Types.ObjectId(userId) }, { $unset: { lastQueryAlert: 1 } });
         // delete dismissed alerts which will affect the `dismissed` flag
         modelDismissedAlert.deleteMany({ userId: new Types.ObjectId(userId) });
       });
@@ -2329,6 +2358,7 @@ describe('MemberService', () => {
       };
 
       await service.deleteMemberRecordings(eventParams);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const deletedResult = await modelRecording.findWithDeleted({
         memberId: new Types.ObjectId(memberId),
@@ -2357,6 +2387,7 @@ describe('MemberService', () => {
       };
 
       await service.deleteMemberRecordings(eventParams);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const deletedResult = await modelRecording.findWithDeleted({
         memberId: new Types.ObjectId(memberId),
@@ -2366,6 +2397,7 @@ describe('MemberService', () => {
       await checkDelete(deletedResult, { memberId: new Types.ObjectId(memberId) }, deletedBy);
 
       await service.deleteMemberRecordings({ ...eventParams, hard: true });
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const deletedResultHard = await modelRecording.findWithDeleted({
         memberId: new Types.ObjectId(memberId),
@@ -2397,7 +2429,7 @@ describe('MemberService', () => {
       const newUser = await modelUser.create(generateCreateUserParams());
       const oldMember = await service.get(memberId);
 
-      const result = await service.updatePrimaryUser({ userId: newUser._id, memberId });
+      const result = await service.updatePrimaryUser({ userId: newUser._id.toString(), memberId });
 
       const updatedMember = await service.get(memberId);
       expect(updatedMember.primaryUserId).toEqual(newUser._id);
@@ -2419,12 +2451,12 @@ describe('MemberService', () => {
 
   const generateOrg = async (): Promise<string> => {
     const { _id: ordId } = await modelOrg.create(generateOrgParams());
-    return ordId;
+    return ordId.toString();
   };
 
   const generateUser = async (): Promise<string> => {
     const { _id: userId } = await modelUser.create(generateCreateUserParams());
-    return userId;
+    return userId.toString();
   };
 
   const generateAppointment = async ({
@@ -2439,6 +2471,7 @@ describe('MemberService', () => {
     status?: AppointmentStatus;
   }): Promise<AppointmentDocument> => {
     const appointment = await modelAppointment.create({
+      deleted: false,
       ...generateScheduleAppointmentParams({ memberId, userId, start }),
       status,
     });
@@ -2448,7 +2481,7 @@ describe('MemberService', () => {
       { new: true },
     );
     await memberModel.updateOne(
-      { _id: Types.ObjectId(memberId) },
+      { _id: new Types.ObjectId(memberId) },
       { $addToSet: { users: userId } },
     );
     return appointment;

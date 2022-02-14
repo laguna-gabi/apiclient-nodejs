@@ -61,7 +61,7 @@ export class BaseCare extends Identifier {
   @Field(() => Date)
   updatedAt: Date;
 
-  @Prop({ index: true, default: CareStatus.active })
+  @Prop({ index: true, type: String, enum: CareStatus, default: CareStatus.active })
   @Field(() => CareStatus)
   status: CareStatus;
 
@@ -77,7 +77,7 @@ export class BaseCare extends Identifier {
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class Barrier extends BaseCare {
-  @Prop({ index: true, type: BarrierType })
+  @Prop({ index: true, type: String, enum: BarrierType })
   @Field(() => BarrierType)
   barrierType: BarrierType;
 

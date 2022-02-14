@@ -19,6 +19,7 @@ import {
 } from '../../src/common';
 import {
   Communication,
+  CommunicationDocument,
   CommunicationDto,
   CommunicationModule,
   CommunicationService,
@@ -42,7 +43,7 @@ describe('CommunicationService', () => {
   let sendBirdMock;
   let eventEmitter: EventEmitter2;
   let spyOnEventEmitter;
-  let communicationModel: Model<typeof CommunicationDto>;
+  let communicationModel: Model<CommunicationDocument>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -55,7 +56,7 @@ describe('CommunicationService', () => {
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
     mockLogger(module.get<LoggerService>(LoggerService));
 
-    communicationModel = model(Communication.name, CommunicationDto);
+    communicationModel = model<CommunicationDocument>(Communication.name, CommunicationDto);
 
     sendBirdMock = mockProviders(module).sendBird;
 
@@ -388,7 +389,6 @@ describe('CommunicationService', () => {
       sendBirdMock.spyOnSendBirdFreeze.mockReset();
     });
 
-    /* eslint-disable @typescript-eslint/ban-ts-comment */
     test.each([true, false])('should delete member communications', async (hard) => {
       const member = mockGenerateMember();
       const user = mockGenerateUser();
@@ -415,6 +415,7 @@ describe('CommunicationService', () => {
       };
       await service.deleteMemberCommunication(params);
 
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const deletedResult = await communicationModel.findWithDeleted({
         memberId: new Types.ObjectId(member.id),
@@ -451,6 +452,7 @@ describe('CommunicationService', () => {
         hard: false,
       };
       await service.deleteMemberCommunication(params);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const deletedResult = await communicationModel.findWithDeleted({
         memberId: new Types.ObjectId(member.id),
@@ -461,6 +463,7 @@ describe('CommunicationService', () => {
       expect(sendBirdMock.spyOnSendBirdFreeze).toBeCalledWith(sendBirdChannelUrl, true);
 
       await service.deleteMemberCommunication({ ...params, hard: true });
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const deletedResultHard = await communicationModel.findWithDeleted({
         memberId: new Types.ObjectId(member.id),

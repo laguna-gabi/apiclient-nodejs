@@ -65,7 +65,7 @@ describe('UserService', () => {
     appointmentResolver = module.get<AppointmentResolver>(AppointmentResolver);
     mockLogger(module.get<LoggerService>(LoggerService));
 
-    userModel = model(User.name, UserDto);
+    userModel = model<UserDocument & defaultTimestampsDbValues>(User.name, UserDto);
     mockUserModel = module.get<Model<User>>(getModelToken(User.name));
 
     await dbConnect();
@@ -95,7 +95,10 @@ describe('UserService', () => {
     it('should get escalation group user(s)', async () => {
       const user = generateCreateUserParams();
       const { id } = await service.insert(user);
-      await userModel.updateOne({ _id: Types.ObjectId(id) }, { $set: { inEscalationGroup: true } });
+      await userModel.updateOne(
+        { _id: new Types.ObjectId(id) },
+        { $set: { inEscalationGroup: true } },
+      );
 
       const result = await service.getEscalationGroupUsers();
       compareUsers(
@@ -231,7 +234,7 @@ describe('UserService', () => {
       const adminOnlyUser = generateCreateUserParams({ roles: [UserRole.admin] });
       const insertedUser = await service.insert(adminOnlyUser);
       await userModel.updateOne(
-        { _id: Types.ObjectId(insertedUser.id) },
+        { _id: new Types.ObjectId(insertedUser.id) },
         // update so it will pop-up first on search
         { $set: { lastMemberAssignedAt: new Date(-10000) } },
       );
@@ -249,7 +252,7 @@ describe('UserService', () => {
       const adminOnlyUser = generateCreateUserParams({ roles: [UserRole.nurse] });
       const insertedUser = await service.insert(adminOnlyUser);
       await userModel.updateOne(
-        { _id: Types.ObjectId(insertedUser.id) },
+        { _id: new Types.ObjectId(insertedUser.id) },
         // update so it will pop-up first on search
         { $set: { lastMemberAssignedAt: new Date(-10000) } },
       );
@@ -303,7 +306,7 @@ describe('UserService', () => {
       // Not using service.get because it populates the appointments, and they don't really exist
       const updatedOldUser = (await userModel.findById(oldUser.id)).toObject();
       const updatedNewUser = (await userModel.findById(newUser.id)).toObject();
-      const mockAppointmentsIds = mockAppointments.map((app) => Types.ObjectId(app.id));
+      const mockAppointmentsIds = mockAppointments.map((app) => new Types.ObjectId(app.id));
 
       expect(updatedNewUser['appointments']).toEqual(mockAppointmentsIds);
       expect(updatedOldUser['appointments']).toEqual([]);

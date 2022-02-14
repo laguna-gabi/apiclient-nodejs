@@ -39,7 +39,7 @@ export class RedFlag extends Identifier {
   @Field(() => String)
   createdBy: Types.ObjectId;
 
-  @Prop({ index: true, type: RedFlagType })
+  @Prop({ index: true, type: String, enum: RedFlagType })
   @Field(() => RedFlagType)
   redFlagType: RedFlagType;
 
