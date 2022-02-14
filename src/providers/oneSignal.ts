@@ -76,10 +76,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
           { ...sendOneSignalNotification, correlationId },
           OneSignal.name,
           this.send.name,
-          {
-            code: result.status,
-            data: JSON.stringify(data),
-          },
+          { code: result.status },
         );
         throw new Error(generateCustomErrorMessage(OneSignal.name, this.send.name, result));
       }
