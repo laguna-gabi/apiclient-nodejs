@@ -32,6 +32,7 @@ import { UserModule } from '../user';
 import { ServiceModule } from '../services';
 import { useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
+import { QuestionnaireModule } from '../questionnaire';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import * as mongooseDelete from 'mongoose-delete';
     ServiceModule,
     HttpModule,
     CommonModule,
+    QuestionnaireModule,
     MongooseModule.forFeature([
       { name: Goal.name, schema: GoalDto },
       { name: ControlMember.name, schema: ControlMemberDto },

@@ -193,7 +193,7 @@ export class QuestionnaireService extends BaseService {
     });
   }
 
-  private buildResult(answers: Answer[], template: Questionnaire): QuestionnaireResponseResult {
+  buildResult(answers: Answer[], template: Questionnaire): QuestionnaireResponseResult {
     let score: number;
     let severity: string;
 

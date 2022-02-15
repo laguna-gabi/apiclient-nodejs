@@ -7,6 +7,7 @@ export enum AlertType {
   memberAssigned = 'memberAssigned',
   memberNotFeelingWellMessage = 'memberNotFeelingWellMessage',
   newChatMessageFromMember = 'newChatMessageFromMember',
+  assessmentSubmitScoreOverThreshold = 'assessmentSubmitScoreOverThreshold',
   customContent = 'customContent',
   journalContent = 'journalContent',
   appointmentReviewed = 'appointmentReviewed',

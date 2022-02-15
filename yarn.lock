@@ -573,9 +573,9 @@
     "@babel/helper-plugin-utils" "^7.16.7"
 
 "@babel/runtime@^7.12.0":
-  version "7.16.7"
-  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.16.7.tgz#03ff99f64106588c9c403c6ecb8c3bafbbdff1fa"
-  integrity sha512-9E9FJowqAsytyOY6LG+1KuueckRL+aQW+mKvXRXnuFGyRAyepJPmEo9vgMfXUA6O9u3IeEdv9MAkppFcaQwogQ==
+  version "7.17.2"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.17.2.tgz#66f68591605e59da47523c631416b18508779941"
+  integrity sha512-hzeyJyMA1YGdJTuWU0e/j4wKXrU4OMFvY2MSlaI9B7VQb0r5cxTE3EAIS2Q7Tn2RIcDkRvTA/v2JsAEhxe99uw==
   dependencies:
     regenerator-runtime "^0.13.4"
 
@@ -955,10 +955,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@lagunahealth/pandora@0.11.5":
-  version "0.11.5"
-  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.11.5/254c66d5d222488dbd052ec14e83e2ae0fbcb809905eaba8d975b7deae4b3599#2e8599e152ea2b0abbe7828d868b6d7c3edf00f6"
-  integrity sha512-ykm74xUQI+cftRSUYMQ7W9KCJIB97Vp1Z5YCo3+voa6sxw79lBaYwVMDS9oTzc8gnntu8aZTi74xHw7fCrFgug==
+"@lagunahealth/pandora@0.11.6":
+  version "0.11.6"
+  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.11.6/da9a98eb987058d0ccd273d0298a2ee5b6311a45fee715807134ed07208daf54#7a1054b9e2e3731fe4ee7e8f26e5f91986ed751f"
+  integrity sha512-Xk0Px0aBDPmkVJP5KVaiQECRWK13rmfHe63GOmOviv0bZt8oGrGZGgX2idwFW469mDaSSVMac1GQBq4Vea5GLA==
   dependencies:
     "@slack/webhook" "^6.1.0"
     faker "^5.5.3"
@@ -4159,7 +4159,7 @@ flatted@^3.1.0:
 
 follow-redirects@^1.14.0, follow-redirects@^1.14.7, follow-redirects@^1.14.8:
   version "1.14.8"
-  resolved "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.14.8.tgz#016996fb9a11a100566398b1c6839337d7bfa8fc"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.14.8.tgz#016996fb9a11a100566398b1c6839337d7bfa8fc"
   integrity sha512-1x0S9UVJHsQprFcEC/qnNzBLcIxsjAV905f/UkQxbclCsoTWlacCNOpQa/anodLl2uaEKFhfWOvM2Qg77+15zA==
 
 for-each@^0.3.3:
@@ -4675,7 +4675,7 @@ humanize-ms@^1.2.1:
 
 i18next@^21.6.11:
   version "21.6.11"
-  resolved "https://registry.npmjs.org/i18next/-/i18next-21.6.11.tgz#de6d649221e02474cc701d152606bf3e61e37bcd"
+  resolved "https://registry.yarnpkg.com/i18next/-/i18next-21.6.11.tgz#de6d649221e02474cc701d152606bf3e61e37bcd"
   integrity sha512-tJ2+o0lVO+fhi8bPkCpBAeY1SgkqmQm5NzgPWCQssBrywJw98/o+Kombhty5nxQOpHtvMmsxcOopczUiH6bJxQ==
   dependencies:
     "@babel/runtime" "^7.12.0"
@@ -8524,7 +8524,7 @@ uuid@3.3.2:
 
 uuid@8.3.2, uuid@^8.0.0, uuid@^8.3.2:
   version "8.3.2"
-  resolved "https://registry.npmjs.org/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
   integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
 
 uuid@^3.1.0:

@@ -68,6 +68,7 @@ import {
 import { Internationalization, StorageService } from '../providers';
 import { differenceInMilliseconds } from 'date-fns';
 import { ISoftDelete } from '../db';
+import { Questionnaire, QuestionnaireAlerts, QuestionnaireService } from '../questionnaire';
 
 @Injectable()
 export class MemberService extends BaseService {
@@ -96,6 +97,7 @@ export class MemberService extends BaseService {
     private readonly storageService: StorageService,
     private readonly notificationService: NotificationService,
     private readonly internationalization: Internationalization,
+    private readonly questionnaireService: QuestionnaireService,
     readonly logger: LoggerService,
   ) {
     super();
@@ -987,17 +989,10 @@ export class MemberService extends BaseService {
    ************************************************************************************************/
 
   private async entityToAlerts(member: Member): Promise<Alert[]> {
-    let alerts: Alert[];
+    let alerts: Alert[] = [];
 
-    // first alert - AlertType.memberAssigned
-    alerts = [
-      {
-        id: `${member.id}_${AlertType.memberAssigned}`,
-        memberId: member.id,
-        type: AlertType.memberAssigned,
-        date: member.createdAt,
-      } as Alert,
-    ];
+    // collect member alerts (AlertType.memberAssigned)
+    alerts = alerts.concat(await this.memberItemToAlerts(member));
 
     // collect actionItemOverdue alerts
     alerts = alerts.concat(await this.notificationDispatchToAlerts(member));
@@ -1008,11 +1003,22 @@ export class MemberService extends BaseService {
     // Collect appointment related alerts
     alerts = alerts.concat(await this.appointmentsItemsToAlerts(member));
 
-    alerts.forEach((alert: Alert) => {
-      alert.text = this.internationalization.getAlerts(alert.type, member);
-      alert.memberId = member.id;
-    });
+    // Collect assessment related alerts
+    alerts = alerts.concat(await this.questionnaireToAlerts(member));
+
     return alerts;
+  }
+
+  private async memberItemToAlerts(member: Member): Promise<Alert[]> {
+    return [
+      {
+        id: `${member.id}_${AlertType.memberAssigned}`,
+        memberId: member.id,
+        type: AlertType.memberAssigned,
+        date: member.createdAt,
+        text: this.internationalization.getAlerts(AlertType.memberAssigned, { member }),
+      } as Alert,
+    ];
   }
 
   private async notificationDispatchToAlerts(member: Member): Promise<Alert[]> {
@@ -1028,6 +1034,7 @@ export class MemberService extends BaseService {
               memberId: member.id,
               type: AlertType[dispatch.contentKey],
               date: new Date(dispatch.sentAt),
+              text: this.internationalization.getAlerts(AlertType[dispatch.contentKey], { member }),
             } as Alert),
         ) || []
     );
@@ -1050,6 +1057,10 @@ export class MemberService extends BaseService {
         id: `${recording.id}_${AlertType.appointmentReviewed}`,
         type: AlertType.appointmentReviewed,
         date: recording.review.createdAt,
+        text: this.internationalization.getAlerts(AlertType.appointmentReviewed, {
+          member,
+        }),
+        memberId: member.id,
       } as Alert;
     });
 
@@ -1067,6 +1078,10 @@ export class MemberService extends BaseService {
           id: `${appointment.id}_${AlertType.appointmentReviewOverdue}`,
           type: AlertType.appointmentReviewOverdue,
           date: add(appointment.end, { days: 1 }),
+          text: this.internationalization.getAlerts(AlertType.appointmentReviewOverdue, {
+            member,
+          }),
+          memberId: member.id,
         } as Alert;
       }
     });
@@ -1087,8 +1102,50 @@ export class MemberService extends BaseService {
             id: `${actionItem.id}_${AlertType.actionItemOverdue}`,
             type: AlertType.actionItemOverdue,
             date: actionItem.deadline,
+            text: this.internationalization.getAlerts(AlertType.actionItemOverdue, { member }),
+            memberId: member.id,
           } as Alert),
       );
+  }
+
+  private async questionnaireToAlerts(member: Member): Promise<Alert[]> {
+    const templates = new Map<string, Questionnaire>();
+    const qrs = await this.questionnaireService.getQuestionnaireResponseByMemberId(member.id);
+
+    return Promise.all(
+      qrs.map(async (qr) => {
+        const template =
+          templates.get(qr.questionnaireId.toString()) ||
+          (await this.questionnaireService.getQuestionnaireById(qr.questionnaireId.toString()));
+
+        templates.set(qr.questionnaireId.toString(), template);
+
+        const results = this.questionnaireService.buildResult(qr.answers, template);
+
+        if (
+          results.score >= template.notificationScoreThreshold ||
+          (results.alert && QuestionnaireAlerts.get(template.type))
+        ) {
+          return {
+            id: `${qr.id}_${AlertType.assessmentSubmitScoreOverThreshold}`,
+            type: AlertType.assessmentSubmitScoreOverThreshold,
+            date: qr.createdAt,
+            text: this.internationalization.getAlerts(
+              AlertType.assessmentSubmitScoreOverThreshold,
+              {
+                member,
+                assessmentName: template.shortName,
+                assessmentScore:
+                  results.alert && QuestionnaireAlerts.get(template.type)
+                    ? QuestionnaireAlerts.get(template.type)
+                    : results.score.toString(),
+              },
+            ),
+            memberId: member.id,
+          } as Alert;
+        }
+      }),
+    );
   }
 
   private async getUserDismissedAlerts(userId: string): Promise<DismissedAlert[]> {

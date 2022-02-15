@@ -8,9 +8,12 @@ export class Internationalization extends BaseInternationalization implements On
     await super.onModuleInit();
   }
 
-  getAlerts(alertType: AlertType, member: Member) {
+  getAlerts(
+    alertType: AlertType,
+    data: { member: Member; assessmentScore?: string; assessmentName?: string },
+  ) {
     return this.i18n.t(`alerts.${alertType}`, {
-      member,
+      ...data,
       lng: Language.en,
     });
   }

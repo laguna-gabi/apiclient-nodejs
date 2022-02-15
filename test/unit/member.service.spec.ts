@@ -78,6 +78,7 @@ import {
   defaultTimestampsDbValues,
   generateAddCaregiverParams,
   generateCreateMemberParams,
+  generateCreateQuestionnaireParams,
   generateCreateTaskParams,
   generateCreateUserParams,
   generateDateOnly,
@@ -90,6 +91,7 @@ import {
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
+  generateSubmitQuestionnaireResponseParams,
   generateUpdateCaregiverParams,
   generateUpdateJournalTextParams,
   generateUpdateMemberConfigParams,
@@ -98,7 +100,19 @@ import {
   generateUpdateRecordingReviewParams,
   generateUpdateTaskStatusParams,
   mockGenerateDispatch,
+  mockGenerateQuestionnaireItem,
 } from '../index';
+import {
+  AlertConditionType,
+  Questionnaire,
+  QuestionnaireDocument,
+  QuestionnaireDto,
+  QuestionnaireResponse,
+  QuestionnaireResponseDocument,
+  QuestionnaireResponseDto,
+  QuestionnaireType,
+} from '../../src/questionnaire';
+import { Internationalization } from '../../src/providers';
 
 describe('MemberService', () => {
   let module: TestingModule;
@@ -113,6 +127,9 @@ describe('MemberService', () => {
   let modelAppointment: Model<AppointmentDocument>;
   let modelDismissedAlert: Model<DismissedAlertDocument>;
   let modelRecording: Model<RecordingDocument>;
+  let modelQuestionnaire: Model<QuestionnaireDocument>;
+  let modelQuestionnaireResponse: Model<QuestionnaireResponseDocument>;
+  let i18nService: Internationalization;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -122,6 +139,9 @@ describe('MemberService', () => {
 
     service = module.get<MemberService>(MemberService);
     mockLogger(module.get<LoggerService>(LoggerService));
+
+    i18nService = module.get<Internationalization>(Internationalization);
+    await i18nService.onModuleInit();
 
     memberModel = model<MemberDocument & defaultTimestampsDbValues>(Member.name, MemberDto);
     memberConfigModel = model<MemberConfigDocument>(MemberConfig.name, MemberConfigDto);
@@ -136,6 +156,12 @@ describe('MemberService', () => {
     modelAppointment = model<AppointmentDocument>(Appointment.name, AppointmentDto);
     modelDismissedAlert = model<DismissedAlertDocument>(DismissedAlert.name, DismissedAlertDto);
     modelRecording = model<RecordingDocument>(Recording.name, MemberRecordingDto);
+    modelQuestionnaire = model<QuestionnaireDocument>(Questionnaire.name, QuestionnaireDto);
+    modelQuestionnaireResponse = model<QuestionnaireResponseDocument>(
+      QuestionnaireResponse.name,
+      QuestionnaireResponseDto,
+    );
+
     await dbConnect();
   });
 
@@ -1742,7 +1768,9 @@ describe('MemberService', () => {
             id: `${member2.id}_${AlertType.memberAssigned}`,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.memberAssigned, member1),
+            text: service.internationalization.getAlerts(AlertType.memberAssigned, {
+              member: member2,
+            }),
             isNew: true,
             memberId: member2.id.toString(),
             type: AlertType.memberAssigned,
@@ -1753,7 +1781,9 @@ describe('MemberService', () => {
             id: `${member1.id}_${AlertType.memberAssigned}`,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.memberAssigned, member1),
+            text: service.internationalization.getAlerts(AlertType.memberAssigned, {
+              member: member1,
+            }),
             isNew: true,
             memberId: member1.id.toString(),
             type: AlertType.memberAssigned,
@@ -1764,10 +1794,9 @@ describe('MemberService', () => {
             id: dispatchM1.dispatchId,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            text: service.internationalization.getAlerts(
-              AlertType.appointmentScheduledUser,
-              member1,
-            ),
+            text: service.internationalization.getAlerts(AlertType.appointmentScheduledUser, {
+              member: member1,
+            }),
             isNew: true,
             memberId: member1.id.toString(),
             type: AlertType.appointmentScheduledUser,
@@ -1778,10 +1807,9 @@ describe('MemberService', () => {
             id: dispatchM2.dispatchId,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            text: service.internationalization.getAlerts(
-              AlertType.newChatMessageFromMember,
-              member1,
-            ),
+            text: service.internationalization.getAlerts(AlertType.newChatMessageFromMember, {
+              member: member2,
+            }),
             isNew: true,
             memberId: member2.id.toString(),
             type: AlertType.newChatMessageFromMember,
@@ -1807,7 +1835,9 @@ describe('MemberService', () => {
             id: `${member2.id}_${AlertType.memberAssigned}`,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.memberAssigned, member2),
+            text: service.internationalization.getAlerts(AlertType.memberAssigned, {
+              member: member2,
+            }),
             isNew: true,
             memberId: member2.id.toString(),
             type: AlertType.memberAssigned,
@@ -1818,7 +1848,9 @@ describe('MemberService', () => {
             id: `${member1.id}_${AlertType.memberAssigned}`,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.memberAssigned, member1),
+            text: service.internationalization.getAlerts(AlertType.memberAssigned, {
+              member: member1,
+            }),
             isNew: true,
             memberId: member1.id.toString(),
             type: AlertType.memberAssigned,
@@ -1829,10 +1861,9 @@ describe('MemberService', () => {
             id: dispatchM1.dispatchId,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            text: service.internationalization.getAlerts(
-              AlertType.appointmentScheduledUser,
-              member1,
-            ),
+            text: service.internationalization.getAlerts(AlertType.appointmentScheduledUser, {
+              member: member1,
+            }),
             isNew: true,
             memberId: member1.id.toString(),
             type: AlertType.appointmentScheduledUser,
@@ -1843,10 +1874,9 @@ describe('MemberService', () => {
             id: dispatchM2.dispatchId,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            text: service.internationalization.getAlerts(
-              AlertType.newChatMessageFromMember,
-              member1,
-            ),
+            text: service.internationalization.getAlerts(AlertType.newChatMessageFromMember, {
+              member: member2,
+            }),
             isNew: false,
             memberId: member2.id.toString(),
             type: AlertType.newChatMessageFromMember,
@@ -1895,7 +1925,9 @@ describe('MemberService', () => {
             id: `${memberId}_${AlertType.memberAssigned}`,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.memberAssigned, member),
+            text: service.internationalization.getAlerts(AlertType.memberAssigned, {
+              member,
+            }),
             memberId: member.id.toString(),
             type: AlertType.memberAssigned,
             date: member.createdAt,
@@ -1906,7 +1938,9 @@ describe('MemberService', () => {
             id: `${actionItemId.id}_${AlertType.actionItemOverdue}`,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.actionItemOverdue, member),
+            text: service.internationalization.getAlerts(AlertType.actionItemOverdue, {
+              member,
+            }),
             memberId: member.id.toString(),
             type: AlertType.actionItemOverdue,
             date: createTaskParams.deadline,
@@ -1952,7 +1986,7 @@ describe('MemberService', () => {
             id: `${recording.id}_${AlertType.appointmentReviewed}`,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.appointmentReviewed, member),
+            text: service.internationalization.getAlerts(AlertType.appointmentReviewed, { member }),
             memberId: member.id.toString(),
             type: AlertType.appointmentReviewed,
             date: updatedRecording.review.createdAt,
@@ -1963,7 +1997,7 @@ describe('MemberService', () => {
             id: `${memberId}_${AlertType.memberAssigned}`,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.memberAssigned, member),
+            text: service.internationalization.getAlerts(AlertType.memberAssigned, { member }),
             memberId: member.id.toString(),
             type: AlertType.memberAssigned,
             date: member.createdAt,
@@ -2008,7 +2042,7 @@ describe('MemberService', () => {
             memberId: member.id.toString(),
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.memberAssigned, member),
+            text: service.internationalization.getAlerts(AlertType.memberAssigned, { member }),
             type: AlertType.memberAssigned,
             date: member.createdAt,
             dismissed: false,
@@ -2018,13 +2052,92 @@ describe('MemberService', () => {
             id: `${appointmentId}_${AlertType.appointmentReviewOverdue}`,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            text: service.internationalization.getAlerts(
-              AlertType.appointmentReviewOverdue,
+            text: service.internationalization.getAlerts(AlertType.appointmentReviewOverdue, {
               member,
-            ),
+            }),
             memberId: member.id.toString(),
             type: AlertType.appointmentReviewOverdue,
             date: add(endDate, { days: 1 }),
+            dismissed: false,
+            isNew: true,
+          },
+        ]);
+      });
+
+      it.each([
+        [
+          'should return score over threshold assessment alerts - total score over threshold',
+          '2',
+          '2',
+        ],
+        [
+          'should return score over threshold assessment alerts - alert triggered by answer',
+          '3',
+          'Nearly Every Day',
+        ],
+      ])('%p', async (_, answer, expectedScore) => {
+        mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
+        // create a new member
+        const memberId = await generateMember();
+        const member = await service.get(memberId);
+
+        const { id: questionnaireId } = await modelQuestionnaire.create(
+          generateCreateQuestionnaireParams({
+            type: QuestionnaireType.phq9,
+            shortName: 'PHQ-9',
+            items: [
+              mockGenerateQuestionnaireItem({
+                code: 'q1',
+                options: [
+                  { label: faker.lorem.words(3), value: 0 },
+                  { label: faker.lorem.words(3), value: 1 },
+                  { label: faker.lorem.words(3), value: 2 },
+                  { label: faker.lorem.words(3), value: 3 },
+                ],
+                alertCondition: [{ type: AlertConditionType.equal, value: '3' }],
+              }),
+            ],
+            notificationScoreThreshold: 2,
+          }),
+        );
+
+        const qr = await modelQuestionnaireResponse.create(
+          generateSubmitQuestionnaireResponseParams({
+            questionnaireId,
+            memberId,
+            answers: [{ code: 'q1', value: answer }],
+          }),
+        );
+
+        const alerts = await service.getAlerts(member.primaryUserId.toString());
+
+        expect(alerts).toEqual([
+          {
+            id: `${qr.id.toString()}_${AlertType.assessmentSubmitScoreOverThreshold}`,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            text: service.internationalization.getAlerts(
+              AlertType.assessmentSubmitScoreOverThreshold,
+              {
+                member,
+                assessmentName: 'PHQ-9',
+                assessmentScore: expectedScore,
+              },
+            ),
+            memberId: member.id.toString(),
+            type: AlertType.assessmentSubmitScoreOverThreshold,
+            date: qr.createdAt,
+            dismissed: false,
+            isNew: true,
+          },
+          {
+            id: `${memberId}_${AlertType.memberAssigned}`,
+            memberId: member.id.toString(),
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            text: service.internationalization.getAlerts(AlertType.memberAssigned, { member }),
+            type: AlertType.memberAssigned,
+            date: member.createdAt,
             dismissed: false,
             isNew: true,
           },
