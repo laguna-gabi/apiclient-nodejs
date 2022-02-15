@@ -710,15 +710,15 @@
   resolved "https://registry.npmjs.org/@josephg/resolvable/-/resolvable-1.0.1.tgz"
   integrity sha512-CtzORUwWTTOTqfVtHaKRJ0I1kNQd1bpn3sUh8I3nJDVY+5/M/Oe1DnEWzPQvqq/xPIIkzzzIP7mfCoAjFRvDhg==
 
-"@lagunahealth/pandora@0.11.0":
-  version "0.11.0"
-  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.11.0/35d916d1a604a42f63cac39d18deff83a14ef104c805eab75534760af8351fc3#6bc7a8013943fd326216d00cd0035454f5d0b1d0"
-  integrity sha512-zFLfe79qS3xkZyR2+POdId6GDon8uR1SsHBt9hVBX7Xtb8z8YV3CIXxGCUDf3cowme+USYlJuf+Oou6uQaPInw==
+"@lagunahealth/pandora@0.11.5":
+  version "0.11.5"
+  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.11.5/254c66d5d222488dbd052ec14e83e2ae0fbcb809905eaba8d975b7deae4b3599#2e8599e152ea2b0abbe7828d868b6d7c3edf00f6"
+  integrity sha512-ykm74xUQI+cftRSUYMQ7W9KCJIB97Vp1Z5YCo3+voa6sxw79lBaYwVMDS9oTzc8gnntu8aZTi74xHw7fCrFgug==
   dependencies:
-    "@slack/types" "^2.2.0"
-    "@slack/webhook" "^6.0.0"
-    i18next "^21.6.7"
-    nestjs-pino "^2.4.0"
+    "@slack/webhook" "^6.1.0"
+    faker "^5.5.3"
+    i18next "^21.6.11"
+    nestjs-pino "^2.5.0"
     uuid "^8.3.2"
     zipcode-to-timezone "^0.0.9"
 
@@ -983,19 +983,14 @@
   resolved "https://registry.yarnpkg.com/@slack/types/-/types-1.10.0.tgz#cbf7d83e1027f4cbfd13d6b429f120c7fb09127a"
   integrity sha512-tA7GG7Tj479vojfV3AoxbckalA48aK6giGjNtgH6ihpLwTyHE3fIgRrvt8TWfLwW8X8dyu7vgmAsGLRG7hWWOg==
 
-"@slack/types@^2.2.0":
-  version "2.2.0"
-  resolved "https://registry.npmjs.org/@slack/types/-/types-2.2.0.tgz#fcc3648ee20c3fb92a076b23c35bca19158d9925"
-  integrity sha512-/yHEFvgp0UY/lfFvQqbq9BocW/pM4xnGycqGAx+plRgYp96dZp1y50Whz7yzOgasEUsy5TyQfBK07cj0RwUyIg==
-
-"@slack/webhook@^6.0.0":
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/@slack/webhook/-/webhook-6.0.0.tgz#844593c1e864a966e549f60bb640586628f3c1c4"
-  integrity sha512-2fohfhLI9lkAmOSWt1R457JBsB3iFNqahu4GqdFZRtcp/bT+xeG/kPn/hQa78JS74poRjWTt5G/qJjNaWMGOEQ==
+"@slack/webhook@^6.0.0", "@slack/webhook@^6.1.0":
+  version "6.1.0"
+  resolved "https://registry.npmjs.org/@slack/webhook/-/webhook-6.1.0.tgz#ac9c8add919f0f5ab9440a24e76b2f83adcc0f2c"
+  integrity sha512-7AYNISyAjn/lA/VDwZ307K5ft5DojXgBd3DRrGoFN8XxIwIyRALdFhxBiMgAqeJH8eWoktvNwLK24R9hREEqpA==
   dependencies:
     "@slack/types" "^1.2.1"
     "@types/node" ">=12.0.0"
-    axios "^0.21.1"
+    axios "^0.21.4"
 
 "@splitsoftware/splitio@^10.16.1":
   version "10.16.1"
@@ -2103,6 +2098,13 @@ axios@^0.21.1:
   integrity sha512-dKQiRHxGD9PPRIUNIWvZhPTPpl1rf/OxTYKsqKUDjBwYylTvV7SjSHJb9ratfyzM6wCdLCOYLzs73qpg5c4iGA==
   dependencies:
     follow-redirects "^1.10.0"
+
+axios@^0.21.4:
+  version "0.21.4"
+  resolved "https://registry.npmjs.org/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
+  integrity sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==
+  dependencies:
+    follow-redirects "^1.14.0"
 
 babel-jest@^26.6.3:
   version "26.6.3"
@@ -4005,7 +4007,7 @@ follow-redirects@^1.10.0:
   resolved "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.14.1.tgz"
   integrity sha512-HWqDgT7ZEkqRzBvc2s64vSZ/hfOceEol3ac/7tKwzuvEyWx3/4UegXh5oBOIotkGsObyk3xznnSRVADBgWSQVg==
 
-follow-redirects@^1.14.4, follow-redirects@^1.14.7:
+follow-redirects@^1.14.0, follow-redirects@^1.14.4, follow-redirects@^1.14.7:
   version "1.14.8"
   resolved "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.14.8.tgz#016996fb9a11a100566398b1c6839337d7bfa8fc"
   integrity sha512-1x0S9UVJHsQprFcEC/qnNzBLcIxsjAV905f/UkQxbclCsoTWlacCNOpQa/anodLl2uaEKFhfWOvM2Qg77+15zA==
@@ -4514,10 +4516,10 @@ humanize-ms@^1.2.1:
   dependencies:
     ms "^2.0.0"
 
-i18next@^21.6.7:
-  version "21.6.10"
-  resolved "https://registry.yarnpkg.com/i18next/-/i18next-21.6.10.tgz#aa503831d42213ae2f05eaede29ca07c2d6fbb6f"
-  integrity sha512-Xw+tEGQ61BF6SXtBlFffhM/YhJKHZf2cyDrcNK/l2dE6yVbkPkSasC3VhkAsHXX30vUJ0yG04WIUtf7UvwjOxg==
+i18next@^21.6.11:
+  version "21.6.11"
+  resolved "https://registry.npmjs.org/i18next/-/i18next-21.6.11.tgz#de6d649221e02474cc701d152606bf3e61e37bcd"
+  integrity sha512-tJ2+o0lVO+fhi8bPkCpBAeY1SgkqmQm5NzgPWCQssBrywJw98/o+Kombhty5nxQOpHtvMmsxcOopczUiH6bJxQ==
   dependencies:
     "@babel/runtime" "^7.12.0"
 
@@ -6351,6 +6353,11 @@ nestjs-pino@^2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/nestjs-pino/-/nestjs-pino-2.4.0.tgz#510f6808514538b09624e2819fee32f8d8a203be"
   integrity sha512-mfpXc2ibVcWYWAvuj8YWLcvKk3UPC3kI4TebFMMVlFNVDkzA5CFL9I4LqFcX8NyhEnOWy9FQlFA2c1AjdYpTLQ==
+
+nestjs-pino@^2.5.0:
+  version "2.5.0"
+  resolved "https://registry.npmjs.org/nestjs-pino/-/nestjs-pino-2.5.0.tgz#3390237c8ec6d9a789a9480c045e4b5d39e3281d"
+  integrity sha512-Nb0fsGNQ0Qg/v3lUvxah8IzxKRjRd5fo1/+V2ZBbzciDzi4xjI6YqhwvF0rHQy2IMTAZmmrQNpzMgZk7lNeR4Q==
 
 nice-try@^1.0.4:
   version "1.0.5"
