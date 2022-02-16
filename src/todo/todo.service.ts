@@ -91,6 +91,7 @@ export class TodoService extends BaseService {
     return this.todoModel.create({
       ...params,
       memberId: new Types.ObjectId(memberId),
+      relatedTo: new Types.ObjectId(id),
       createdBy: new Types.ObjectId(endedTodo.createdBy),
       updatedBy: new Types.ObjectId(updatedBy),
     });

@@ -748,6 +748,7 @@ export const mockGenerateTodo = ({
   status = TodoStatus.active,
   createdBy = generateObjectId(),
   updatedBy = generateObjectId(),
+  createdAt = faker.date.past(2),
 }: Partial<Todo> = {}): Todo => {
   return {
     id,
@@ -760,6 +761,7 @@ export const mockGenerateTodo = ({
     status,
     createdBy,
     updatedBy,
+    createdAt,
   };
 };
 

@@ -849,8 +849,10 @@ export class Queries {
             start
             end
             status
+            relatedTo
             createdBy
             updatedBy
+            createdAt
           }
         }
       `,

@@ -1153,8 +1153,10 @@ export class Mutations {
             start
             end
             status
+            relatedTo
             createdBy
             updatedBy
+            createdAt
           }
         }
       `,

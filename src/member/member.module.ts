@@ -1,6 +1,7 @@
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import * as mongooseDelete from 'mongoose-delete';
 import {
   ActionItem,
   ActionItemDto,
@@ -27,12 +28,12 @@ import {
 import { Appointment, AppointmentDto } from '../appointment';
 import { CommonModule } from '../common';
 import { CommunicationModule } from '../communication';
-import { ConfigsService, ProvidersModule } from '../providers';
-import { UserModule } from '../user';
-import { ServiceModule } from '../services';
 import { useFactoryOptions } from '../db';
-import * as mongooseDelete from 'mongoose-delete';
+import { ConfigsService, ProvidersModule } from '../providers';
 import { QuestionnaireModule } from '../questionnaire';
+import { ServiceModule } from '../services';
+import { Todo, TodoDto } from '../todo';
+import { UserModule } from '../user';
 
 @Module({
   imports: [
@@ -84,6 +85,12 @@ import { QuestionnaireModule } from '../questionnaire';
         name: Journal.name,
         useFactory: () => {
           return JournalDto.plugin(mongooseDelete, useFactoryOptions);
+        },
+      },
+      {
+        name: Todo.name,
+        useFactory: () => {
+          return TodoDto.plugin(mongooseDelete, useFactoryOptions);
         },
       },
     ]),

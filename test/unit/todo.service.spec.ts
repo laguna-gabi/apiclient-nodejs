@@ -235,6 +235,7 @@ describe('TodoService', () => {
           status: TodoStatus.active,
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(userId),
+          relatedTo: generateObjectId(id),
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
           deleted: false,

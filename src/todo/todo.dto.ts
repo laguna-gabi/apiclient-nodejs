@@ -149,12 +149,19 @@ export class Todo extends Identifier {
   status: TodoStatus;
 
   @Prop({ type: Types.ObjectId })
+  @Field(() => String, { nullable: true })
+  relatedTo?: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId })
   @Field(() => String)
   createdBy: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId })
   @Field(() => String)
   updatedBy: Types.ObjectId;
+
+  @Field(() => Date)
+  createdAt: Date;
 }
 
 @ObjectType()

@@ -1297,6 +1297,68 @@ describe('Integration tests: all', () => {
         },
       ]);
     });
+
+    it('should get alerts with todos', async () => {
+      const org = await creators.createAndValidateOrg();
+      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const memberId = member.id;
+      const userId = member.primaryUserId.toString();
+
+      const createTodoByUserParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+      });
+      delete createTodoByUserParams.createdBy;
+      delete createTodoByUserParams.updatedBy;
+
+      const { id: todoIdByUser } = await handler
+        .setContextUserId(userId, '', [UserRole.coach])
+        .mutations.createTodo({
+          createTodoParams: createTodoByUserParams,
+        });
+
+      const createTodoByMemberParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+      });
+      delete createTodoByMemberParams.createdBy;
+      delete createTodoByMemberParams.updatedBy;
+
+      const { id: todoIdByMember } = await handler.setContextUserId(memberId).mutations.createTodo({
+        createTodoParams: createTodoByMemberParams,
+      });
+
+      const alerts = await handler
+        .setContextUserId(userId, undefined, [UserRole.coach])
+        .queries.getAlerts();
+
+      expect(alerts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: `${todoIdByMember}_${AlertType.memberCreateTodo}`,
+            type: AlertType.memberCreateTodo,
+            // @ts-ignore
+            text: handler.memberService.internationalization.getAlerts(AlertType.memberCreateTodo, {
+              member,
+              todoText: createTodoByMemberParams.text,
+            }),
+            memberId,
+            dismissed: false,
+            isNew: true,
+          }),
+          expect.not.objectContaining({
+            id: `${todoIdByUser}_${AlertType.memberCreateTodo}`,
+            type: AlertType.memberCreateTodo,
+            // @ts-ignore
+            text: handler.memberService.internationalization.getAlerts(AlertType.memberCreateTodo, {
+              member,
+              todoText: createTodoByUserParams.text,
+            }),
+            memberId,
+            dismissed: false,
+            isNew: true,
+          }),
+        ]),
+      );
+    });
     /* eslint-enable @typescript-eslint/ban-ts-comment */
   });
 
@@ -1445,6 +1507,7 @@ describe('Integration tests: all', () => {
             start: endAndCreateTodoParams.start.toISOString(),
             end: endAndCreateTodoParams.end.toISOString(),
             status: TodoStatus.active,
+            relatedTo: id,
             createdBy: userId,
             updatedBy: memberId,
           }),

@@ -3,10 +3,9 @@ import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import * as config from 'config';
-import { add, sub } from 'date-fns';
+import { add, differenceInMilliseconds, sub } from 'date-fns';
 import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
-import { NotificationService } from '../services';
 import { v4 } from 'uuid';
 import {
   ActionItem,
@@ -65,10 +64,11 @@ import {
   LoggerService,
   extractEmbeddedSetObject,
 } from '../common';
-import { Internationalization, StorageService } from '../providers';
-import { differenceInMilliseconds } from 'date-fns';
 import { ISoftDelete } from '../db';
+import { Internationalization, StorageService } from '../providers';
 import { Questionnaire, QuestionnaireAlerts, QuestionnaireService } from '../questionnaire';
+import { NotificationService } from '../services';
+import { Todo, TodoDocument, TodoStatus } from '../todo';
 
 @Injectable()
 export class MemberService extends BaseService {
@@ -94,6 +94,8 @@ export class MemberService extends BaseService {
     private readonly dismissAlertModel: Model<DismissedAlertDocument>,
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument>,
+    @InjectModel(Todo.name)
+    private readonly todoModel: Model<TodoDocument> & ISoftDelete<TodoDocument>,
     private readonly storageService: StorageService,
     private readonly notificationService: NotificationService,
     private readonly internationalization: Internationalization,
@@ -1006,9 +1008,11 @@ export class MemberService extends BaseService {
     // Collect assessment related alerts
     alerts = alerts.concat(await this.questionnaireToAlerts(member));
 
+    // Collect todo alerts
+    alerts = alerts.concat(await this.todosItemsToAlerts(member));
+
     return alerts;
   }
-
   private async memberItemToAlerts(member: Member): Promise<Alert[]> {
     return [
       {
@@ -1145,6 +1149,28 @@ export class MemberService extends BaseService {
           } as Alert;
         }
       }),
+    );
+  }
+
+  private async todosItemsToAlerts(member: Member): Promise<Alert[]> {
+    const todos = await this.todoModel.find({
+      memberId: new Types.ObjectId(member.id),
+      status: TodoStatus.active,
+      relatedTo: { $exists: false },
+      createdBy: new Types.ObjectId(member.id),
+    });
+    return todos.map(
+      (todo) =>
+        ({
+          id: `${todo.id}_${AlertType.memberCreateTodo}`,
+          type: AlertType.memberCreateTodo,
+          date: todo.createdAt,
+          text: this.internationalization.getAlerts(AlertType.memberCreateTodo, {
+            member,
+            todoText: todo.text,
+          }),
+          memberId: member.id,
+        } as Alert),
     );
   }
 

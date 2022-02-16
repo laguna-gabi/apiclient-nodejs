@@ -10,7 +10,7 @@ export class Internationalization extends BaseInternationalization implements On
 
   getAlerts(
     alertType: AlertType,
-    data: { member: Member; assessmentScore?: string; assessmentName?: string },
+    data: { member: Member; assessmentScore?: string; assessmentName?: string; todoText?: string },
   ) {
     return this.i18n.t(`alerts.${alertType}`, {
       ...data,

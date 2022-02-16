@@ -13,6 +13,7 @@ export enum AlertType {
   appointmentReviewed = 'appointmentReviewed',
   appointmentReviewOverdue = 'appointmentReviewOverdue',
   actionItemOverdue = 'actionItemOverdue',
+  memberCreateTodo = 'memberCreateTodo',
 }
 
 registerEnumType(AlertType, { name: 'AlertType' });
