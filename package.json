@@ -42,7 +42,7 @@
     "rxjs": "^7.5.4",
     "sqs-consumer": "^5.6.0",
     "swagger-ui-express": "^4.3.0",
-    "twilio": "^3.74.0",
+    "twilio": "3.67.0",
     "zipcode-to-timezone": "^0.0.9"
   },
   "devDependencies": {
