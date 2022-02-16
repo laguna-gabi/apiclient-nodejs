@@ -7,6 +7,8 @@ import {
   BarrierDto,
   CarePlan,
   CarePlanDto,
+  CarePlanType,
+  CarePlanTypeDto,
   CareResolver,
   CareService,
   RedFlag,
@@ -17,6 +19,7 @@ import { CommonModule } from '../common';
 @Module({
   imports: [
     CommonModule,
+    MongooseModule.forFeature([{ name: CarePlanType.name, schema: CarePlanTypeDto }]),
     MongooseModule.forFeatureAsync([
       {
         name: RedFlag.name,

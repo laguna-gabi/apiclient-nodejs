@@ -13,6 +13,7 @@ import { v4 } from 'uuid';
 import { Mutations, Queries } from '.';
 import {
   generateCreateUserParams,
+  generateId,
   generateInternalCreateMemberParams,
   generateOrgParams,
 } from '..';
@@ -26,6 +27,8 @@ import { Org, OrgService } from '../../src/org';
 import { WebhooksController } from '../../src/providers';
 import { User, UserService } from '../../src/user';
 import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
+import { CarePlanType, CareService } from '../../src/care';
+import { lorem } from 'faker';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -43,10 +46,12 @@ export class Handler extends BaseHandler {
   communicationService: CommunicationService;
   memberService: MemberService;
   orgService: OrgService;
+  careService: CareService;
   webhooksController: WebhooksController;
   spyOnGetCommunicationService;
   adminUser: User;
   patientZero: Member;
+  carePlanType: CarePlanType;
   lagunaOrg: Org | null;
   dailyReportService: DailyReportService;
 
@@ -99,6 +104,7 @@ export class Handler extends BaseHandler {
     this.userService = moduleFixture.get<UserService>(UserService);
     this.memberService = moduleFixture.get<MemberService>(MemberService);
     this.orgService = moduleFixture.get<OrgService>(OrgService);
+    this.careService = moduleFixture.get<CareService>(CareService);
     this.webhooksController = moduleFixture.get<WebhooksController>(WebhooksController);
     await this.buildFixtures();
   }
@@ -159,5 +165,10 @@ export class Handler extends BaseHandler {
         new Types.ObjectId(this.adminUser.id),
       )
     ).member;
+    this.carePlanType = await this.careService.createCarePlanType({
+      description: lorem.words(5),
+      createdBy: generateId(),
+      isCustom: false,
+    });
   }
 }

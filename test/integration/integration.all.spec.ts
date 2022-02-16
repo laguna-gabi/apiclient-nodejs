@@ -1752,6 +1752,21 @@ describe('Integration tests: all', () => {
       expect(redFlagsAfter.length).toEqual(1);
       expect(redFlagsAfter[0].id).toEqual(id2);
     });
+
+    it('should get care plan types', async () => {
+      const availableCarePlanTypes = await handler.queries.getCarePlanTypes();
+      const { description, createdBy, isCustom, id } = handler.carePlanType;
+      expect(availableCarePlanTypes).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            description,
+            createdBy: createdBy.toString(),
+            isCustom,
+            id,
+          }),
+        ]),
+      );
+    });
   });
 
   describe('Questionnaire', () => {

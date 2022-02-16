@@ -1,6 +1,6 @@
 import { UseInterceptors } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { CareService, CreateRedFlagParams, RedFlag } from '.';
+import { CarePlanType, CareService, CreateRedFlagParams, RedFlag } from '.';
 import { Client, Identifier, LoggingInterceptor, Roles, UserRole } from '../common';
 import { camelCase } from 'lodash';
 import { redFlags } from './redFlags.json';
@@ -45,5 +45,15 @@ export class CareResolver {
   @Roles(UserRole.coach, UserRole.nurse)
   async getRedFlagTypes() {
     return redFlags;
+  }
+
+  /**************************************************************************************************
+   ******************************************** Care Plan *******************************************
+   *************************************************************************************************/
+
+  @Query(() => [CarePlanType])
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getCarePlanTypes(): Promise<CarePlanType[]> {
+    return this.careService.getCarePlanTypes();
   }
 }

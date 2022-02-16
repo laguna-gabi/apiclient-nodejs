@@ -4,6 +4,8 @@ import { v4 } from 'uuid';
 import { Identifier, UserRole, delay } from '../src/common';
 import { UserService } from '../src/user';
 import {
+  dbConnect,
+  dbDisconnect,
   generateAvailabilityInput,
   generateCreateMemberParams,
   generateCreateTaskParams,
@@ -20,6 +22,9 @@ import { Mutations } from '../test/aux';
 import { SeedBase } from './seedBase';
 import { generateZipCode } from '@lagunahealth/pandora';
 import { UpdateJournalTextParams } from '../src/member';
+import { CarePlanType, CarePlanTypeDocument, CarePlanTypeDto } from '../src/care';
+import { seedCarePlans } from '../cmd/static/seedCare';
+import { model } from 'mongoose';
 /**
  * This is a seed file for initial local db creation.
  * The objects we're creating are:
@@ -39,6 +44,7 @@ type TaskType = 'goal' | 'actionItem';
 async function main() {
   const base = new SeedBase();
   await base.init();
+  await dbConnect();
   mutations = base.mutations;
   userService = base.userService;
 
@@ -162,7 +168,16 @@ async function main() {
   };
   await base.setContextUserId(memberId).mutations.updateJournalText({ updateJournalTextParams });
 
+  console.debug(
+    '\n----------------------------------------------------------------\n' +
+      '------------------- create care plan types ---------------------\n' +
+      '----------------------------------------------------------------',
+  );
+  const carePlanTypeModel = model<CarePlanTypeDocument>(CarePlanType.name, CarePlanTypeDto);
+  await carePlanTypeModel.insertMany(seedCarePlans);
+
   await base.cleanUp();
+  await dbDisconnect();
 }
 
 /**************************************************************************************************

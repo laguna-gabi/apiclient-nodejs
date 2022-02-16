@@ -6,6 +6,9 @@ import {
   BarrierDocument,
   CarePlan,
   CarePlanDocument,
+  CarePlanType,
+  CarePlanTypeDocument,
+  CarePlanTypeInput,
   CareStatus,
   CreateBarrierParams,
   CreateCarePlanParams,
@@ -27,6 +30,8 @@ export class CareService {
     private readonly barrierModel: Model<BarrierDocument>,
     @InjectModel(CarePlan.name)
     private readonly carePlanModel: Model<CarePlanDocument>,
+    @InjectModel(CarePlanType.name)
+    private readonly carePlanTypeModel: Model<CarePlanTypeDocument>,
   ) {}
 
   /**************************************************************************************************
@@ -119,16 +124,50 @@ export class CareService {
    *************************************************************************************************/
 
   async createCarePlan(params: CreateCarePlanParams): Promise<CarePlan> {
+    const { memberId, createdBy, type, barrierId } = params;
+    const carePlanType = await this.validateCarePlan(type, createdBy, barrierId, memberId);
+
     const createParams: Partial<CreateCarePlanParams> = omitBy(
       {
         ...params,
-        memberId: new Types.ObjectId(params.memberId),
-        createdBy: new Types.ObjectId(params.createdBy),
-        barrierId: params.barrierId ? new Types.ObjectId(params.barrierId) : undefined,
+        memberId: new Types.ObjectId(memberId),
+        createdBy: new Types.ObjectId(createdBy),
+        barrierId: barrierId ? new Types.ObjectId(barrierId) : undefined,
+        type: new Types.ObjectId(carePlanType),
       },
       isNil,
     );
     return this.carePlanModel.create(createParams);
+  }
+
+  private async validateCarePlan(
+    type: CarePlanTypeInput,
+    createdBy: string,
+    barrierId: string,
+    memberId: string,
+  ) {
+    let carePlanType;
+    if (type.custom) {
+      const { id } = await this.createCarePlanType({ description: type.custom, createdBy });
+      carePlanType = id;
+    } else {
+      // validate care plan type
+      const result = await this.getCarePlanType(type.id);
+      if (!result) {
+        throw new Error(Errors.get(ErrorType.carePlanTypeNotFound));
+      }
+      carePlanType = type.id;
+    }
+
+    // validate barrier
+    const barrier = await this.getBarrier(barrierId);
+    if (!barrier) {
+      throw new Error(Errors.get(ErrorType.barrierNotFound));
+    }
+    if (barrier.memberId.toString() != memberId) {
+      throw new Error(Errors.get(ErrorType.memberIdInconsistent));
+    }
+    return carePlanType;
   }
 
   async updateCarePlan(updateCarePlanParams: UpdateCarePlanParams): Promise<CarePlan> {
@@ -152,10 +191,36 @@ export class CareService {
   }
 
   async getMemberCarePlans(memberId: string): Promise<CarePlan[]> {
-    return this.carePlanModel.find({ memberId: new Types.ObjectId(memberId) });
+    return this.carePlanModel
+      .find({ memberId: new Types.ObjectId(memberId) })
+      .populate([{ path: 'carePlanType', strictPopulate: false }]);
   }
 
   async getCarePlan(id: string): Promise<CarePlan> {
-    return this.carePlanModel.findById(new Types.ObjectId(id));
+    return this.carePlanModel.findById(id);
+  }
+
+  async createCarePlanType({
+    description,
+    createdBy,
+    isCustom = true,
+  }: {
+    description: string;
+    createdBy: string;
+    isCustom?: boolean;
+  }): Promise<CarePlanType> {
+    return this.carePlanTypeModel.create({
+      description,
+      isCustom,
+      createdBy: new Types.ObjectId(createdBy),
+    });
+  }
+
+  async getCarePlanType(id: string): Promise<CarePlanType> {
+    return this.carePlanTypeModel.findById(id);
+  }
+
+  async getCarePlanTypes(): Promise<CarePlanType[]> {
+    return this.carePlanTypeModel.find({});
   }
 }

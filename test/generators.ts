@@ -79,6 +79,7 @@ import {
 import { CreateUserParams, GetSlotsParams, User, defaultUserParams } from '../src/user';
 import {
   BarrierType,
+  CarePlanTypeInput,
   CareStatus,
   CreateBarrierParams,
   CreateCarePlanParams,
@@ -886,21 +887,26 @@ export const generateUpdateBarrierParams = ({
   };
 };
 
+export const generateCarePlanTypeInput = ({ id, custom }: Partial<CarePlanTypeInput> = {}) => {
+  return {
+    id,
+    custom,
+  };
+};
+
 export const generateCreateCarePlanParams = ({
   memberId = generateId(),
-  carePlanType,
+  type,
   notes = faker.lorem.words(4),
-  barrierId = generateId(),
-  customValue,
+  barrierId,
   dueDate = faker.date.soon(2),
   createdBy,
 }: Partial<CreateCarePlanParams> = {}) => {
   return {
     memberId,
-    carePlanType,
+    type,
     notes,
     barrierId,
-    customValue,
     dueDate,
     createdBy,
   };
