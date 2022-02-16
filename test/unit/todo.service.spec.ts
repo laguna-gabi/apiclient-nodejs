@@ -81,7 +81,6 @@ describe('TodoService', () => {
           status: TodoStatus.active,
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(memberId),
-          createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
           deleted: false,
         }),

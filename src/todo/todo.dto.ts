@@ -159,9 +159,6 @@ export class Todo extends Identifier {
   @Prop({ type: Types.ObjectId })
   @Field(() => String)
   updatedBy: Types.ObjectId;
-
-  @Field(() => Date)
-  createdAt: Date;
 }
 
 @ObjectType()

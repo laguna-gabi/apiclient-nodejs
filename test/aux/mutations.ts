@@ -1156,7 +1156,6 @@ export class Mutations {
             relatedTo
             createdBy
             updatedBy
-            createdAt
           }
         }
       `,

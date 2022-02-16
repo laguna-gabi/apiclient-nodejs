@@ -6,6 +6,7 @@ import * as config from 'config';
 import { add, differenceInMilliseconds, sub } from 'date-fns';
 import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
+import { defaultTimestampsDbValues } from '../../test/common';
 import { v4 } from 'uuid';
 import {
   ActionItem,
@@ -95,7 +96,8 @@ export class MemberService extends BaseService {
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument>,
     @InjectModel(Todo.name)
-    private readonly todoModel: Model<TodoDocument> & ISoftDelete<TodoDocument>,
+    private readonly todoModel: Model<TodoDocument & defaultTimestampsDbValues> &
+      ISoftDelete<TodoDocument>,
     private readonly storageService: StorageService,
     private readonly notificationService: NotificationService,
     private readonly internationalization: Internationalization,

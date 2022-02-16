@@ -852,7 +852,6 @@ export class Queries {
             relatedTo
             createdBy
             updatedBy
-            createdAt
           }
         }
       `,

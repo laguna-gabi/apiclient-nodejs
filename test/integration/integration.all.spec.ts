@@ -1344,7 +1344,11 @@ describe('Integration tests: all', () => {
             dismissed: false,
             isNew: true,
           }),
-          expect.not.objectContaining({
+        ]),
+      );
+      expect(alerts).toEqual(
+        expect.not.arrayContaining([
+          expect.objectContaining({
             id: `${todoIdByUser}_${AlertType.memberCreateTodo}`,
             type: AlertType.memberCreateTodo,
             // @ts-ignore

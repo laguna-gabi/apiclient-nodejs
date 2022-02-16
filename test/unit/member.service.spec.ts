@@ -131,7 +131,7 @@ describe('MemberService', () => {
   let modelRecording: Model<RecordingDocument>;
   let modelQuestionnaire: Model<QuestionnaireDocument>;
   let modelQuestionnaireResponse: Model<QuestionnaireResponseDocument>;
-  let modelTodo: Model<TodoDocument>;
+  let modelTodo: Model<TodoDocument & defaultTimestampsDbValues>;
   let i18nService: Internationalization;
 
   beforeAll(async () => {
@@ -164,7 +164,7 @@ describe('MemberService', () => {
       QuestionnaireResponse.name,
       QuestionnaireResponseDto,
     );
-    modelTodo = model<TodoDocument>(Todo.name, TodoDto);
+    modelTodo = model<TodoDocument & defaultTimestampsDbValues>(Todo.name, TodoDto);
 
     await dbConnect();
   });
@@ -2163,7 +2163,6 @@ describe('MemberService', () => {
           updatedBy: generateObjectId(memberId),
         });
         delete mockTodo.id;
-        delete mockTodo.createdAt;
 
         const todo = await modelTodo.create(mockTodo);
 
@@ -2204,7 +2203,6 @@ describe('MemberService', () => {
       });
       mockTodo.relatedTo = generateObjectId();
       delete mockTodo.id;
-      delete mockTodo.createdAt;
 
       const todo = await modelTodo.create(mockTodo);
 
