@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, Identifier, IsObjectId, IsValidCarePlanTypeInput } from '../common';
-import { BaseCare, CareStatus } from '.';
+import { CareStatus } from '.';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -12,8 +12,8 @@ import { BaseCare, CareStatus } from '.';
  * Each CarePlan for a member has a specific type, which represents the chosen plan.
  * CarePlan can be created in 1 of 2 ways:
  * 1. Care Plan of a known type - CarePlanType, that already exists in the db (and is represented by an objectId).
- * 2. Creating a custom care plan - which has a new description, and will be inserted as a new CarePlanType.
- * When creating a CarePlan - only one of them can be used (either id of custom).
+ * 2. Creating a custom care plan - which has a new description, and will inserted as a new CarePlanType.
+ * When creating a CarePlan - only one of them can can be used (either id of custom).
  */
 @InputType()
 export class CarePlanTypeInput {
@@ -79,6 +79,36 @@ export class CarePlanType extends Identifier {
   @Prop({ type: Types.ObjectId })
   @Field(() => String, { nullable: true })
   createdBy?: Types.ObjectId;
+}
+
+@ObjectType()
+@Schema({ versionKey: false, timestamps: true })
+export class BaseCare extends Identifier {
+  @Prop({ index: true, type: Types.ObjectId })
+  @Field(() => String)
+  memberId: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId })
+  @Field(() => String)
+  createdBy: Types.ObjectId;
+
+  @Field(() => Date)
+  createdAt: Date;
+
+  @Field(() => Date)
+  updatedAt: Date;
+
+  @Prop({ index: true, type: String, enum: CareStatus, default: CareStatus.active })
+  @Field(() => CareStatus)
+  status: CareStatus;
+
+  @Prop()
+  @Field(() => String, { nullable: true })
+  notes?: string;
+
+  @Prop()
+  @Field(() => Date, { nullable: true })
+  completedAt?: Date;
 }
 
 @ObjectType()

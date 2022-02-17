@@ -13,8 +13,13 @@ import {
   generateId,
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
+  randomEnum,
 } from '../index';
 import {
+  BarrierDomain,
+  BarrierType,
+  BarrierTypeDocument,
+  BarrierTypeDto,
   CareModule,
   CareService,
   CareStatus,
@@ -29,6 +34,7 @@ describe('CareService', () => {
   let module: TestingModule;
   let service: CareService;
   let redFlagModel: Model<RedFlagDocument>;
+  let barrierTypeModel: Model<BarrierTypeDocument>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -39,6 +45,7 @@ describe('CareService', () => {
     service = module.get<CareService>(CareService);
     mockLogger(module.get<LoggerService>(LoggerService));
     redFlagModel = model<RedFlagDocument>(RedFlag.name, RedFlagDto);
+    barrierTypeModel = model<BarrierTypeDocument>(BarrierType.name, BarrierTypeDto);
     await dbConnect();
   });
 
@@ -111,18 +118,22 @@ describe('CareService', () => {
         createdBy: generateId(),
       });
       const { id: redFlagId } = await service.createRedFlag(createRedFlagParams);
-      // create barrier related to the red flag
+      // create barriers related to the red flag
+      const type = await generateBarrierType();
       const createBarrierParams = generateCreateBarrierParams({
         createdBy: generateId(),
         redFlagId,
         memberId,
+        type,
       });
       await service.createBarrier(createBarrierParams);
 
-      // create independent barrier (not related to the red flag)
+      const type2 = await generateBarrierType();
       const createBarrierParams2 = generateCreateBarrierParams({
         createdBy: generateId(),
+        redFlagId,
         memberId,
+        type: type2,
       });
       await service.createBarrier(createBarrierParams2);
 
@@ -132,7 +143,7 @@ describe('CareService', () => {
       expect(barriersBefore.length).toEqual(2);
       expect(barriersBefore).toEqual([
         expect.objectContaining({ redFlagId: new Types.ObjectId(redFlagId) }),
-        expect.not.objectContaining({ redFlagId: new Types.ObjectId(redFlagId) }),
+        expect.objectContaining({ redFlagId: new Types.ObjectId(redFlagId) }),
       ]);
 
       const deleteResult = await service.deleteRedFlag(redFlagId, generateId());
@@ -166,7 +177,15 @@ describe('CareService', () => {
 
   describe('Barrier', () => {
     it('should create a barrier', async () => {
-      const params = generateCreateBarrierParams({ createdBy: generateId() });
+      const memberId = generateId();
+      const redFlagId = await generateRedFlag(memberId);
+      const type = await generateBarrierType();
+      const params = generateCreateBarrierParams({
+        createdBy: generateId(),
+        memberId,
+        redFlagId,
+        type: type,
+      });
       const { id } = await service.createBarrier(params);
 
       const result = await service.getBarrier(id);
@@ -174,65 +193,150 @@ describe('CareService', () => {
         expect.objectContaining({
           ...params,
           status: CareStatus.active,
-          memberId: new Types.ObjectId(params.memberId),
+          memberId: new Types.ObjectId(memberId),
           createdBy: new Types.ObjectId(params.createdBy),
-          redFlagId: new Types.ObjectId(params.redFlagId),
+          redFlagId: new Types.ObjectId(redFlagId),
+          type: new Types.ObjectId(type),
         }),
+      );
+    });
+
+    it('should fail to create a barrier with a wrong barrier type', async () => {
+      const memberId = generateId();
+      const redFlagId = await generateRedFlag(memberId);
+      const params = generateCreateBarrierParams({
+        createdBy: generateId(),
+        memberId,
+        redFlagId,
+        type: generateId(),
+      });
+      await expect(service.createBarrier(params)).rejects.toThrow(
+        Error(Errors.get(ErrorType.barrierTypeNotFound)),
+      );
+    });
+
+    it('should fail to create a barrier with a wrong redFlagId', async () => {
+      const memberId = generateId();
+      const type = await generateBarrierType();
+      const params = generateCreateBarrierParams({
+        createdBy: generateId(),
+        memberId,
+        redFlagId: generateId(),
+        type: type,
+      });
+      await expect(service.createBarrier(params)).rejects.toThrow(
+        Error(Errors.get(ErrorType.redFlagNotFound)),
+      );
+    });
+
+    it('should fail to create a barrier with an inconsistent memberId', async () => {
+      const redFlagId = await generateRedFlag();
+      const type = await generateBarrierType();
+      const params = generateCreateBarrierParams({
+        createdBy: generateId(),
+        memberId: generateId(),
+        redFlagId,
+        type: type,
+      });
+      await expect(service.createBarrier(params)).rejects.toThrow(
+        Error(Errors.get(ErrorType.memberIdInconsistent)),
       );
     });
 
     it('should get multiple barriers by memberId', async () => {
       const memberId = generateId();
-      const params = generateCreateBarrierParams({ memberId, createdBy: generateId() });
+      const redFlagId = await generateRedFlag(memberId);
+      const type = await generateBarrierType();
+      const params = generateCreateBarrierParams({
+        memberId,
+        createdBy: generateId(),
+        redFlagId,
+        type,
+      });
       const { id } = await service.createBarrier(params);
-      const params2 = generateCreateBarrierParams({ memberId, createdBy: generateId() });
+      const params2 = generateCreateBarrierParams({
+        memberId,
+        createdBy: generateId(),
+        redFlagId,
+        type,
+      });
       const { id: id2 } = await service.createBarrier(params2);
 
-      const barrier = await service.getBarrier(id);
-      const barrier2 = await service.getBarrier(id2);
       const result = await service.getMemberBarriers(memberId);
-      expect(result).toEqual([barrier, barrier2]);
+      expect(result).toEqual([
+        expect.objectContaining({
+          ...params,
+          status: CareStatus.active,
+          memberId: new Types.ObjectId(memberId),
+          createdBy: new Types.ObjectId(params.createdBy),
+          redFlagId: new Types.ObjectId(redFlagId),
+          type: expect.objectContaining({ _id: new Types.ObjectId(type) }),
+          id,
+        }),
+        expect.objectContaining({
+          ...params2,
+          status: CareStatus.active,
+          memberId: new Types.ObjectId(memberId),
+          createdBy: new Types.ObjectId(params2.createdBy),
+          redFlagId: new Types.ObjectId(redFlagId),
+          type: expect.objectContaining({ _id: new Types.ObjectId(type) }),
+          id: id2,
+        }),
+      ]);
     });
 
     it('should update barriers and set completedAt', async () => {
+      const memberId = generateId();
+      const redFlagId = await generateRedFlag(memberId);
+      const type = await generateBarrierType();
       const params = generateCreateBarrierParams({
-        memberId: generateId(),
+        memberId,
         createdBy: generateId(),
+        redFlagId,
+        type,
       });
       const { id } = await service.createBarrier(params);
       const barrierBefore = await service.getBarrier(id);
       expect(barrierBefore.completedAt).toBeUndefined();
 
-      const updateParams = generateUpdateBarrierParams({ id });
+      const type2 = await generateBarrierType();
+      const updateParams = generateUpdateBarrierParams({ id, type: type2 });
 
       const result = await service.updateBarrier(updateParams);
       expect(result.status).toEqual(updateParams.status);
       expect(result.notes).toEqual(updateParams.notes);
+      expect(result.type.toString()).toEqual(updateParams.type);
       expect(result.completedAt).toEqual(expect.any(Date));
     });
 
-    test.each(['notes', 'status'])(
+    test.each(['notes', 'status', 'type'])(
       'should not override optional field %p when not set from params',
       async (param) => {
+        const memberId = generateId();
+        const redFlagId = await generateRedFlag(memberId);
+        const type = await generateBarrierType();
         const params = generateCreateBarrierParams({
-          memberId: generateId(),
+          memberId,
           createdBy: generateId(),
+          redFlagId,
+          type,
         });
         const { id } = await service.createBarrier(params);
         const barrierBefore = await service.getBarrier(id);
         expect(barrierBefore.completedAt).toBeUndefined();
 
-        const updateParams = generateUpdateBarrierParams({ id });
+        const type2 = await generateBarrierType();
+        const updateParams = generateUpdateBarrierParams({ id, type: type2 });
         delete updateParams[param];
 
         const result = await service.updateBarrier(updateParams);
         expect(result.id).toEqual(id);
         expect(result[param]).toEqual(barrierBefore[param]);
-        if (param !== 'status') {
+        if (param === 'status') {
+          expect(result.completedAt).toBeUndefined();
+        } else {
           // should update completedAt only when status is set to completed
           expect(result.completedAt).toEqual(expect.any(Date));
-        } else {
-          expect(result.completedAt).toBeUndefined();
         }
       },
     );
@@ -240,6 +344,60 @@ describe('CareService', () => {
     it('should return empty list when there are no barriers for member', async () => {
       const result = await service.getMemberBarriers(generateId());
       expect(result).toEqual([]);
+    });
+
+    it('should get all barrierTypes', async () => {
+      const carePlanType = await generateCarePlanType();
+      const carePlanType2 = await generateCarePlanType();
+      const desc = lorem.words(4);
+      const desc2 = lorem.words(4);
+      const id = await generateBarrierType(desc, BarrierDomain.behavior, [carePlanType]);
+      const id2 = await generateBarrierType(desc2, BarrierDomain.logistical, [carePlanType2]);
+      const barrierType = await service.getBarrierType(id);
+      const barrierType2 = await service.getBarrierType(id2);
+
+      const result = await service.getBarrierTypes();
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: barrierType.id,
+            description: barrierType.description,
+            domain: BarrierDomain.behavior,
+            carePlanTypes: expect.arrayContaining([
+              expect.objectContaining({ _id: new Types.ObjectId(carePlanType) }),
+            ]),
+          }),
+          expect.objectContaining({
+            id: barrierType2.id,
+            description: barrierType2.description,
+            domain: BarrierDomain.logistical,
+            carePlanTypes: expect.arrayContaining([
+              expect.objectContaining({ _id: new Types.ObjectId(carePlanType2) }),
+            ]),
+          }),
+        ]),
+      );
+    });
+
+    it('should create and get barrierType', async () => {
+      const carePlanType = await generateCarePlanType();
+      const description = lorem.words(4);
+
+      const { id } = await barrierTypeModel.create({
+        description,
+        domain: BarrierDomain.medical,
+        carePlanTypes: [carePlanType],
+      });
+      const result = await service.getBarrierType(id);
+
+      expect(result.id).toEqual(id.toString());
+      expect(result.description).toEqual(description);
+      expect(result.domain).toEqual(BarrierDomain.medical);
+      expect(result.carePlanTypes).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ _id: new Types.ObjectId(carePlanType) }),
+        ]),
+      );
     });
   });
 
@@ -492,18 +650,46 @@ describe('CareService', () => {
     });
   });
 
-  const generateCarePlanType = async (name = lorem.words(5)): Promise<string> => {
+  const generateCarePlanType = async (description = lorem.words(5)): Promise<string> => {
     const { id } = await service.createCarePlanType({
-      description: name,
+      description,
       createdBy: generateId(),
       isCustom: false,
     });
     return id;
   };
 
+  const generateBarrierType = async (
+    description = lorem.words(5),
+    domain?: BarrierDomain,
+    types?: string[],
+  ): Promise<string> => {
+    const carePlanTypes = types ? types : [await generateCarePlanType()];
+    const barrierDomain = domain ? domain : (randomEnum(BarrierDomain) as BarrierDomain);
+    const { id } = await barrierTypeModel.create({
+      description,
+      domain: barrierDomain,
+      carePlanTypes,
+    });
+    return id;
+  };
+
   const generateBarrier = async (memberId = generateId()): Promise<string> => {
-    const params = generateCreateBarrierParams({ createdBy: generateId(), memberId });
+    const redFlagId = await generateRedFlag(memberId);
+    const type = await generateBarrierType();
+    const params = generateCreateBarrierParams({
+      createdBy: generateId(),
+      memberId,
+      redFlagId,
+      type,
+    });
     const { id } = await service.createBarrier(params);
+    return id;
+  };
+
+  const generateRedFlag = async (memberId = generateId()): Promise<string> => {
+    const params = generateCreateRedFlagParams({ createdBy: generateId(), memberId });
+    const { id } = await service.createRedFlag(params);
     return id;
   };
 });

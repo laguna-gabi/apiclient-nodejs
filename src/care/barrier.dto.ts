@@ -1,4 +1,4 @@
-import { BarrierType, CareStatus } from '.';
+import { BarrierDomain, BaseCare, CarePlanType, CareStatus } from '.';
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
@@ -14,15 +14,16 @@ export class CreateBarrierParams {
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
 
-  @Field(() => BarrierType)
-  barrierType: BarrierType;
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.barrierTypeInvalid) })
+  type: string;
 
   @Field(() => String, { nullable: true })
   notes?: string;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.redFlagIdInvalid) })
-  redFlagId?: string;
+  redFlagId: string;
 
   createdBy: string;
 }
@@ -38,6 +39,10 @@ export class UpdateBarrierParams {
 
   @Field(() => CareStatus, { nullable: true })
   status?: CareStatus;
+
+  @Field(() => String, { nullable: true })
+  @IsObjectId({ message: Errors.get(ErrorType.barrierTypeInvalid) })
+  type?: string;
 }
 
 /**************************************************************************************************
@@ -46,40 +51,26 @@ export class UpdateBarrierParams {
 
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
-export class BaseCare extends Identifier {
-  @Prop({ index: true, type: Types.ObjectId })
+export class BarrierType extends Identifier {
+  @Prop()
   @Field(() => String)
-  memberId: Types.ObjectId;
-
-  @Prop({ type: Types.ObjectId })
-  @Field(() => String)
-  createdBy: Types.ObjectId;
-
-  @Field(() => Date)
-  createdAt: Date;
-
-  @Field(() => Date)
-  updatedAt: Date;
-
-  @Prop({ index: true, type: String, enum: CareStatus, default: CareStatus.active })
-  @Field(() => CareStatus)
-  status: CareStatus;
+  description: string;
 
   @Prop()
-  @Field(() => String, { nullable: true })
-  notes?: string;
+  @Field(() => BarrierDomain, { nullable: true })
+  domain: BarrierDomain;
 
-  @Prop()
-  @Field(() => Date, { nullable: true })
-  completedAt?: Date;
+  @Prop({ type: [{ type: Types.ObjectId, ref: CarePlanType.name }] })
+  @Field(() => [CarePlanType])
+  carePlanTypes: CarePlanType[];
 }
 
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class Barrier extends BaseCare {
-  @Prop({ index: true, type: String, enum: BarrierType })
+  @Prop({ type: Types.ObjectId, ref: BarrierType.name, index: true })
   @Field(() => BarrierType)
-  barrierType: BarrierType;
+  type: BarrierType;
 
   @Prop({ index: true, type: Types.ObjectId })
   @Field(() => String)
@@ -91,3 +82,6 @@ export class Barrier extends BaseCare {
  *************************************************************************************************/
 export type BarrierDocument = Barrier & Document;
 export const BarrierDto = SchemaFactory.createForClass(Barrier);
+
+export type BarrierTypeDocument = BarrierType & Document;
+export const BarrierTypeDto = SchemaFactory.createForClass(BarrierType);

@@ -1836,6 +1836,23 @@ describe('Integration tests: all', () => {
         ]),
       );
     });
+
+    it('should get barrier types', async () => {
+      const availableBarrierTypes = await handler.queries.getBarrierTypes();
+      const { description, domain, id } = handler.barrierType;
+      expect(availableBarrierTypes).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id,
+            description,
+            domain,
+            carePlanTypes: expect.arrayContaining([
+              expect.objectContaining({ id: handler.carePlanType.id }),
+            ]),
+          }),
+        ]),
+      );
+    });
   });
 
   describe('Questionnaire', () => {

@@ -77,4 +77,38 @@ describe('CareResolver', () => {
       expect(result).toEqual(redFlags);
     });
   });
+
+  describe('Barrier', () => {
+    let spyOnServiceGetBarrierTypes;
+
+    beforeEach(() => {
+      spyOnServiceGetBarrierTypes = jest.spyOn(service, 'getBarrierTypes');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetBarrierTypes.mockReset();
+    });
+
+    it('should get all redFlagTypes', async () => {
+      await resolver.getBarrierTypes();
+      expect(spyOnServiceGetBarrierTypes).toBeCalled();
+    });
+  });
+
+  describe('CarePlan', () => {
+    let spyOnServiceGetCarePlanTypes;
+
+    beforeEach(() => {
+      spyOnServiceGetCarePlanTypes = jest.spyOn(service, 'getCarePlanTypes');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetCarePlanTypes.mockReset();
+    });
+
+    it('should get all redFlagTypes', async () => {
+      await resolver.getCarePlanTypes();
+      expect(spyOnServiceGetCarePlanTypes).toBeCalled();
+    });
+  });
 });

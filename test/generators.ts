@@ -78,7 +78,6 @@ import {
 } from '../src/todo';
 import { CreateUserParams, GetSlotsParams, User, defaultUserParams } from '../src/user';
 import {
-  BarrierType,
   CarePlanTypeInput,
   CareStatus,
   CreateBarrierParams,
@@ -865,14 +864,14 @@ export const generateCreateRedFlagParams = ({
 
 export const generateCreateBarrierParams = ({
   memberId = generateId(),
-  barrierType = randomEnum(BarrierType) as BarrierType,
+  type,
   notes = faker.lorem.words(4),
-  redFlagId = generateId(),
+  redFlagId,
   createdBy,
 }: Partial<CreateBarrierParams> = {}) => {
   return {
     memberId,
-    barrierType,
+    type,
     notes,
     redFlagId,
     createdBy,
@@ -883,11 +882,13 @@ export const generateUpdateBarrierParams = ({
   id,
   notes = faker.lorem.words(4),
   status = CareStatus.completed,
+  type,
 }: Partial<UpdateBarrierParams> = {}) => {
   return {
     id,
     notes,
     status,
+    type,
   };
 };
 

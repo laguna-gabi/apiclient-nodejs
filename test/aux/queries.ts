@@ -14,7 +14,7 @@ import {
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
 import { GetSlotsParams } from '../../src/user';
 import { Dispatch } from '../../src/services';
-import { CarePlanType, RedFlag } from '../../src/care';
+import { BarrierType, CarePlanType, RedFlag } from '../../src/care';
 import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
 
 export class Queries {
@@ -1080,5 +1080,26 @@ export class Queries {
       `,
     });
     return result.data?.getCarePlanTypes;
+  };
+
+  getBarrierTypes = async (): Promise<BarrierType[]> => {
+    const result = await this.apolloClient.query({
+      query: gql`
+        query getBarrierTypes {
+          getBarrierTypes {
+            id
+            description
+            domain
+            carePlanTypes {
+              id
+              description
+              createdBy
+              isCustom
+            }
+          }
+        }
+      `,
+    });
+    return result.data?.getBarrierTypes;
   };
 }

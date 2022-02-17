@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import {
   Barrier,
   BarrierDocument,
+  BarrierType,
   CarePlan,
   CarePlanDocument,
   CarePlanType,
@@ -32,6 +33,8 @@ export class CareService {
     private readonly carePlanModel: Model<CarePlanDocument>,
     @InjectModel(CarePlanType.name)
     private readonly carePlanTypeModel: Model<CarePlanTypeDocument>,
+    @InjectModel(BarrierType.name)
+    private readonly barrierTypeModel: Model<BarrierType>,
   ) {}
 
   /**************************************************************************************************
@@ -79,29 +82,51 @@ export class CareService {
    *************************************************************************************************/
 
   async createBarrier(params: CreateBarrierParams): Promise<Barrier> {
+    const { memberId, type, redFlagId, createdBy } = params;
+    await this.validateBarrier(memberId, type, redFlagId);
+
     const createParams: Partial<CreateBarrierParams> = omitBy(
       {
         ...params,
-        memberId: new Types.ObjectId(params.memberId),
-        createdBy: new Types.ObjectId(params.createdBy),
-        redFlagId: params.redFlagId ? new Types.ObjectId(params.redFlagId) : undefined,
+        memberId: new Types.ObjectId(memberId),
+        createdBy: new Types.ObjectId(createdBy),
+        redFlagId: new Types.ObjectId(redFlagId),
+        type: new Types.ObjectId(type),
       },
       isNil,
     );
     return this.barrierModel.create(createParams);
   }
 
+  private async validateBarrier(memberId: string, type: string, redFlagId: string) {
+    // validate barrier type
+    const result = await this.getBarrierType(type);
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.barrierTypeNotFound));
+    }
+
+    // validate red flag
+    const redFlag = await this.getRedFlag(redFlagId);
+    if (!redFlag) {
+      throw new Error(Errors.get(ErrorType.redFlagNotFound));
+    }
+    if (redFlag.memberId.toString() != memberId) {
+      throw new Error(Errors.get(ErrorType.memberIdInconsistent));
+    }
+  }
+
   async updateBarrier(updateBarrierParams: UpdateBarrierParams): Promise<Barrier> {
+    const { type, id, status } = updateBarrierParams;
     const updateParams: Partial<UpdateBarrierParams> = omitBy(
       {
         ...updateBarrierParams,
-        completedAt:
-          updateBarrierParams.status === CareStatus.completed ? new Date(Date.now()) : undefined,
+        type: type ? new Types.ObjectId(type) : undefined,
+        completedAt: status === CareStatus.completed ? new Date(Date.now()) : undefined,
       },
       isNil,
     );
     const result = this.barrierModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(updateBarrierParams.id) },
+      { _id: new Types.ObjectId(id) },
       { $set: updateParams },
       { new: true },
     );
@@ -112,11 +137,25 @@ export class CareService {
   }
 
   async getMemberBarriers(memberId: string): Promise<Barrier[]> {
-    return this.barrierModel.find({ memberId: new Types.ObjectId(memberId) });
+    return this.barrierModel
+      .find({ memberId: new Types.ObjectId(memberId) })
+      .populate([{ path: 'type', strictPopulate: false }]);
   }
 
   async getBarrier(id: string): Promise<Barrier> {
     return this.barrierModel.findById(new Types.ObjectId(id));
+  }
+
+  async getBarrierType(id: string): Promise<BarrierType> {
+    return this.barrierTypeModel
+      .findById(id)
+      .populate([{ path: 'carePlanTypes', strictPopulate: false }]);
+  }
+
+  async getBarrierTypes(): Promise<BarrierType[]> {
+    return this.barrierTypeModel
+      .find({})
+      .populate([{ path: 'carePlanTypes', strictPopulate: false }]);
   }
 
   /**************************************************************************************************
@@ -132,7 +171,7 @@ export class CareService {
         ...params,
         memberId: new Types.ObjectId(memberId),
         createdBy: new Types.ObjectId(createdBy),
-        barrierId: barrierId ? new Types.ObjectId(barrierId) : undefined,
+        barrierId: new Types.ObjectId(barrierId),
         type: new Types.ObjectId(carePlanType),
       },
       isNil,
@@ -193,7 +232,7 @@ export class CareService {
   async getMemberCarePlans(memberId: string): Promise<CarePlan[]> {
     return this.carePlanModel
       .find({ memberId: new Types.ObjectId(memberId) })
-      .populate([{ path: 'carePlanType', strictPopulate: false }]);
+      .populate([{ path: 'type', strictPopulate: false }]);
   }
 
   async getCarePlan(id: string): Promise<CarePlan> {

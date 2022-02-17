@@ -28,8 +28,15 @@ import {
   buildPHQ9Questionnaire,
   buildWHO5Questionnaire,
 } from '../cmd/statics';
-import { CarePlanType, CarePlanTypeDocument, CarePlanTypeDto } from '../src/care';
-import { seedCarePlans } from '../cmd/static/seedCare';
+import {
+  BarrierType,
+  BarrierTypeDocument,
+  BarrierTypeDto,
+  CarePlanType,
+  CarePlanTypeDocument,
+  CarePlanTypeDto,
+} from '../src/care';
+import { createSeedBarriers, seedCarePlans } from '../cmd/static/seedCare';
 import { model } from 'mongoose';
 /**
  * This is a seed file for initial local db creation.
@@ -196,6 +203,16 @@ async function main() {
   );
   const carePlanTypeModel = model<CarePlanTypeDocument>(CarePlanType.name, CarePlanTypeDto);
   await carePlanTypeModel.insertMany(seedCarePlans);
+
+  console.debug(
+    '\n----------------------------------------------------------------\n' +
+      '------------------- create barrier types ---------------------\n' +
+      '----------------------------------------------------------------',
+  );
+  // has to be after the creation if care plan types!!
+
+  const barrierTypeModel = model<BarrierTypeDocument>(BarrierType.name, BarrierTypeDto);
+  await createSeedBarriers(barrierTypeModel, carePlanTypeModel);
 
   await base.cleanUp();
   await dbDisconnect();

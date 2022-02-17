@@ -7,7 +7,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { createTestClient } from 'apollo-server-testing';
 import * as config from 'config';
 import * as jwt from 'jsonwebtoken';
-import { Types } from 'mongoose';
+import { Model, Types, model } from 'mongoose';
 import { Consumer } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { Mutations, Queries } from '.';
@@ -27,7 +27,14 @@ import { Org, OrgService } from '../../src/org';
 import { WebhooksController } from '../../src/providers';
 import { User, UserService } from '../../src/user';
 import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
-import { CarePlanType, CareService } from '../../src/care';
+import {
+  BarrierDomain,
+  BarrierType,
+  BarrierTypeDocument,
+  BarrierTypeDto,
+  CarePlanType,
+  CareService,
+} from '../../src/care';
 import { lorem } from 'faker';
 
 const validatorsConfig = config.get('graphql.validators');
@@ -47,10 +54,12 @@ export class Handler extends BaseHandler {
   memberService: MemberService;
   orgService: OrgService;
   careService: CareService;
+  barrierTypeModel: Model<BarrierTypeDocument>;
   webhooksController: WebhooksController;
   spyOnGetCommunicationService;
   adminUser: User;
   patientZero: Member;
+  barrierType: BarrierType;
   carePlanType: CarePlanType;
   lagunaOrg: Org | null;
   dailyReportService: DailyReportService;
@@ -106,6 +115,8 @@ export class Handler extends BaseHandler {
     this.orgService = moduleFixture.get<OrgService>(OrgService);
     this.careService = moduleFixture.get<CareService>(CareService);
     this.webhooksController = moduleFixture.get<WebhooksController>(WebhooksController);
+    this.barrierTypeModel = model<BarrierTypeDocument>(BarrierType.name, BarrierTypeDto);
+
     await this.buildFixtures();
   }
 
@@ -169,6 +180,11 @@ export class Handler extends BaseHandler {
       description: lorem.words(5),
       createdBy: generateId(),
       isCustom: false,
+    });
+    this.barrierType = await this.barrierTypeModel.create({
+      description: lorem.words(5),
+      domain: BarrierDomain.medical,
+      carePlanTypes: [this.carePlanType.id],
     });
   }
 }

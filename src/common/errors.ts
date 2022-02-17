@@ -121,6 +121,8 @@ export enum ErrorType {
   carePlanTypeInputInvalid = 10107,
   carePlanTypeInvalid = 10108,
   carePlanTypeNotFound = 10109,
+  barrierTypeInvalid = 10110,
+  barrierTypeNotFound = 10111,
 
   // Module Questionnaire
   questionnaireItemsDuplicateCode = 10201,
@@ -328,6 +330,8 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.redFlagNotFound.valueOf(), 'red flag id was not found'],
   [ErrorType.carePlanTypeInvalid.valueOf(), 'invalid care plan type'],
   [ErrorType.carePlanTypeNotFound.valueOf(), 'care plan type was not found'],
+  [ErrorType.barrierTypeInvalid.valueOf(), 'invalid barrier type'],
+  [ErrorType.barrierTypeNotFound.valueOf(), 'barrier type was not found'],
 ]);
 
 export const DbErrors = {

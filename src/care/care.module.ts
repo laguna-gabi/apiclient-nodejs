@@ -5,6 +5,8 @@ import { useFactoryOptions } from '../db';
 import {
   Barrier,
   BarrierDto,
+  BarrierType,
+  BarrierTypeDto,
   CarePlan,
   CarePlanDto,
   CarePlanType,
@@ -19,7 +21,10 @@ import { CommonModule } from '../common';
 @Module({
   imports: [
     CommonModule,
-    MongooseModule.forFeature([{ name: CarePlanType.name, schema: CarePlanTypeDto }]),
+    MongooseModule.forFeature([
+      { name: CarePlanType.name, schema: CarePlanTypeDto },
+      { name: BarrierType.name, schema: BarrierTypeDto },
+    ]),
     MongooseModule.forFeatureAsync([
       {
         name: RedFlag.name,
