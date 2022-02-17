@@ -908,7 +908,7 @@ export class Queries {
             id
             memberId
             createdBy
-            redFlagType
+            type
             notes
             createdBy
           }

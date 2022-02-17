@@ -16,7 +16,7 @@ export class CreateRedFlagParams {
   memberId: string;
 
   @Field(() => RedFlagType)
-  redFlagType: RedFlagType;
+  type: RedFlagType;
 
   @Field(() => String, { nullable: true })
   notes?: string;
@@ -41,7 +41,7 @@ export class RedFlag extends Identifier {
 
   @Prop({ index: true, type: String, enum: RedFlagType })
   @Field(() => RedFlagType)
-  redFlagType: RedFlagType;
+  type: RedFlagType;
 
   @Field(() => Date)
   createdAt: Date;

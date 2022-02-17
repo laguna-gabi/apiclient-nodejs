@@ -850,13 +850,13 @@ export const generateCreateTodoDoneParams = ({
 
 export const generateCreateRedFlagParams = ({
   memberId = generateId(),
-  redFlagType = randomEnum(RedFlagType) as RedFlagType,
+  type = randomEnum(RedFlagType) as RedFlagType,
   notes = faker.lorem.words(4),
   createdBy,
 }: Partial<CreateRedFlagParams> = {}) => {
   return {
     memberId,
-    redFlagType,
+    type: type,
     notes,
     createdBy,
   };
