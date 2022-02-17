@@ -59,6 +59,7 @@ export const generateUpdateMemberSettingsMock = ({
     isPushNotificationsEnabled: true,
     isAppointmentsReminderEnabled: true,
     isRecommendationsEnabled: true,
+    isTodoNotificationsEnabled: true,
     externalUserId: v4(),
     firstLoggedInAt: new Date(),
   };

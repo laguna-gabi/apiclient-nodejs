@@ -31,6 +31,7 @@ export interface IUpdateClientSettings extends IInnerQueueTypes {
   isPushNotificationsEnabled?: boolean;
   isAppointmentsReminderEnabled?: boolean;
   isRecommendationsEnabled?: boolean;
+  isTodoNotificationsEnabled?: boolean;
   externalUserId?: string;
   firstLoggedInAt?: Date;
   //only user
