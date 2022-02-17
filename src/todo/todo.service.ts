@@ -21,6 +21,8 @@ import {
   EventType,
   IEventDeleteMember,
   Identifier,
+  LoggerService,
+  deleteMemberObjects,
 } from '../common';
 import { ISoftDelete } from '../db';
 
@@ -31,6 +33,7 @@ export class TodoService extends BaseService {
     private readonly todoModel: Model<TodoDocument> & ISoftDelete<TodoDocument>,
     @InjectModel(TodoDone.name)
     private readonly todoDoneModel: Model<TodoDoneDocument> & ISoftDelete<TodoDoneDocument>,
+    readonly logger: LoggerService,
   ) {
     super();
   }
@@ -205,37 +208,22 @@ export class TodoService extends BaseService {
   }
 
   @OnEvent(EventType.onDeletedMember, { async: true })
-  async deleteTodos(params: IEventDeleteMember) {
-    const { memberId, hard, deletedBy } = params;
-    const todos = await this.todoModel.findWithDeleted({ memberId: new Types.ObjectId(memberId) });
-    if (!todos) {
-      return;
-    }
-    if (hard) {
-      await this.todoModel.deleteMany({ memberId: new Types.ObjectId(memberId) });
-    } else {
-      await Promise.all(
-        todos.map(async (todo) => {
-          await todo.delete(new Types.ObjectId(deletedBy));
-        }),
-      );
-    }
+  async deleteMemberTodos(params: IEventDeleteMember) {
+    await deleteMemberObjects<Model<TodoDocument> & ISoftDelete<TodoDocument>>(
+      params,
+      this.todoModel,
+      this.logger,
+      this.deleteMemberTodos.name,
+      TodoService.name,
+    );
 
-    const doneTodos = await this.todoDoneModel.findWithDeleted({
-      memberId: new Types.ObjectId(memberId),
-    });
-    if (!doneTodos) {
-      return;
-    }
-    if (hard) {
-      await this.todoDoneModel.deleteMany({ memberId: new Types.ObjectId(memberId) });
-    } else {
-      await Promise.all(
-        doneTodos.map(async (doneTodo) => {
-          await doneTodo.delete(new Types.ObjectId(deletedBy));
-        }),
-      );
-    }
+    await deleteMemberObjects<Model<TodoDoneDocument> & ISoftDelete<TodoDoneDocument>>(
+      params,
+      this.todoDoneModel,
+      this.logger,
+      this.deleteMemberTodos.name,
+      TodoService.name,
+    );
   }
 
   /*************************************************************************************************

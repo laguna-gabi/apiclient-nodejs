@@ -746,7 +746,7 @@ describe('TodoService', () => {
       const { resTodo, resTodoDone } = await getResults();
       expect(resTodo).toHaveLength(1);
       expect(resTodoDone).toHaveLength(1);
-      await service.deleteTodos({ memberId, deletedBy: memberId, hard });
+      await service.deleteMemberTodos({ memberId, deletedBy: memberId, hard });
       const { resTodo: resTodoDeleted, resTodoDone: resTodoDoneDeleted } = await getResults();
       expect(resTodoDeleted).toHaveLength(0);
       expect(resTodoDoneDeleted).toHaveLength(0);

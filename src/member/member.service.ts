@@ -63,6 +63,7 @@ import {
   IEventUnconsentedAppointmentEnded,
   Identifier,
   LoggerService,
+  deleteMemberObjects,
   extractEmbeddedSetObject,
 } from '../common';
 import { ISoftDelete } from '../db';
@@ -90,7 +91,7 @@ export class MemberService extends BaseService {
     @InjectModel(ControlMember.name)
     private readonly controlMemberModel: Model<ControlMemberDocument>,
     @InjectModel(Caregiver.name)
-    private readonly caregiverModel: Model<CaregiverDocument>,
+    private readonly caregiverModel: Model<CaregiverDocument> & ISoftDelete<CaregiverDocument>,
     @InjectModel(DismissedAlert.name)
     private readonly dismissAlertModel: Model<DismissedAlertDocument>,
     @InjectModel(Appointment.name)
@@ -731,29 +732,6 @@ export class MemberService extends BaseService {
     return result;
   }
 
-  @OnEvent(EventType.onDeletedMember, { async: true })
-  async deleteJournals(params: IEventDeleteMember) {
-    const { memberId, hard, deletedBy } = params;
-    try {
-      const journals = await this.journalModel.findWithDeleted({
-        memberId: new Types.ObjectId(memberId),
-      });
-      if (!journals) return;
-
-      if (hard) {
-        await this.journalModel.deleteMany({ memberId: new Types.ObjectId(memberId) });
-      } else {
-        await Promise.all(
-          journals.map(async (journal) => {
-            await journal.delete(new Types.ObjectId(deletedBy));
-          }),
-        );
-      }
-    } catch (ex) {
-      this.logger.error(params, MemberService.name, this.deleteJournals.name, formatEx(ex));
-    }
-  }
-
   /*************************************************************************************************
    ******************************************** Recording ******************************************
    ************************************************************************************************/
@@ -859,28 +837,36 @@ export class MemberService extends BaseService {
 
   @OnEvent(EventType.onDeletedMember, { async: true })
   async deleteMemberRecordings(params: IEventDeleteMember) {
-    this.logger.info(params, MemberService.name, this.deleteMemberRecordings.name);
-    const { memberId, hard, deletedBy } = params;
-    try {
-      const recordings = await this.recordingModel.findWithDeleted({
-        memberId: new Types.ObjectId(memberId),
-      });
-      if (!recordings) return;
-
-      if (hard) {
-        await this.recordingModel.deleteMany({ memberId: new Types.ObjectId(memberId) });
-      } else {
-        await Promise.all(
-          recordings.map(async (recording) => {
-            await recording.delete(new Types.ObjectId(deletedBy));
-          }),
-        );
-      }
-    } catch (ex) {
-      this.logger.error(params, MemberService.name, this.deleteMemberRecordings.name, formatEx(ex));
-    }
+    await deleteMemberObjects<Model<RecordingDocument> & ISoftDelete<RecordingDocument>>(
+      params,
+      this.recordingModel,
+      this.logger,
+      this.deleteMemberRecordings.name,
+      MemberService.name,
+    );
   }
 
+  @OnEvent(EventType.onDeletedMember, { async: true })
+  async deleteMemberCaregivers(params: IEventDeleteMember) {
+    await deleteMemberObjects<Model<CaregiverDocument> & ISoftDelete<CaregiverDocument>>(
+      params,
+      this.caregiverModel,
+      this.logger,
+      this.deleteMemberCaregivers.name,
+      MemberService.name,
+    );
+  }
+
+  @OnEvent(EventType.onDeletedMember, { async: true })
+  async deleteMemberJournals(params: IEventDeleteMember) {
+    await deleteMemberObjects<Model<JournalDocument> & ISoftDelete<JournalDocument>>(
+      params,
+      this.journalModel,
+      this.logger,
+      this.deleteMemberJournals.name,
+      MemberService.name,
+    );
+  }
   /************************************************************************************************
    **************************************** Modifications *****************************************
    ************************************************************************************************/
@@ -921,8 +907,15 @@ export class MemberService extends BaseService {
     );
   }
 
-  async deleteCaregiver(id: string) {
-    return this.caregiverModel.remove({ _id: new Types.ObjectId(id) });
+  async deleteCaregiver(id: string, deletedBy: string, hard?: boolean) {
+    if (hard) {
+      return this.caregiverModel.remove({ _id: new Types.ObjectId(id) });
+    } else {
+      const caregiver = await this.caregiverModel.findOne({
+        _id: new Types.ObjectId(id),
+      });
+      await caregiver?.delete(new Types.ObjectId(deletedBy));
+    }
   }
 
   async getCaregiver(id: string): Promise<Caregiver> {

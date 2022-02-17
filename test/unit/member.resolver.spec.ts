@@ -995,10 +995,10 @@ describe('MemberResolver', () => {
       spyOnGetCaregiverServiceMethod.mockImplementationOnce(async () => {
         return { memberId };
       });
-      await resolver.deleteCaregiver(caregiverId);
+      await resolver.deleteCaregiver(caregiverId, memberId.toString());
 
       expect(spyOnDeleteCaregiverServiceMethod).toBeCalledTimes(1);
-      expect(spyOnDeleteCaregiverServiceMethod).toBeCalledWith(caregiverId);
+      expect(spyOnDeleteCaregiverServiceMethod).toBeCalledWith(caregiverId, memberId.toString());
     });
   });
 

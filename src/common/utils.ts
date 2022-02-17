@@ -4,11 +4,17 @@ import {
   ExternalKey,
   InternalKey,
   NotificationType,
+  formatEx,
 } from '@lagunahealth/pandora';
 import { format } from 'date-fns';
 import * as jwt from 'jsonwebtoken';
+import { Model, Types } from 'mongoose';
+import { ISoftDelete } from '../db';
 import { v4 } from 'uuid';
-import { LoggerService } from '.';
+import { IEventDeleteMember, LoggerService } from '.';
+import { CaregiverDocument, JournalDocument, RecordingDocument } from '../member';
+import { TodoDocument, TodoDoneDocument } from '../todo';
+import { DailyReportDocument } from '../dailyReport';
 
 export function reformatDate(date: string, stringFormat: string): string {
   const dateObject = Date.parse(date);
@@ -91,3 +97,40 @@ export const generatePath = (
       return 'settings/callpermissions';
   }
 };
+
+type Entity =
+  | CaregiverDocument
+  | RecordingDocument
+  | JournalDocument
+  | TodoDocument
+  | TodoDoneDocument
+  | DailyReportDocument;
+export async function deleteMemberObjects<T extends Model<Entity> & ISoftDelete<Entity>>(
+  params: IEventDeleteMember,
+  model: T,
+  logger: LoggerService,
+  methodName: string,
+  serviceName: string,
+) {
+  logger.info(params, serviceName, methodName);
+
+  try {
+    const { memberId, hard, deletedBy } = params;
+    const objects = await model.findWithDeleted({
+      memberId: new Types.ObjectId(memberId),
+    });
+    if (!objects) return;
+
+    if (hard) {
+      await model.deleteMany({ memberId: new Types.ObjectId(memberId) });
+    } else {
+      await Promise.all(
+        objects.map(async (object) => {
+          await object.delete(new Types.ObjectId(deletedBy));
+        }),
+      );
+    }
+  } catch (ex) {
+    logger.error(params, serviceName, methodName, formatEx(ex));
+  }
+}

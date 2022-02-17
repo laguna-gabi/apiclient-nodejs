@@ -9,8 +9,13 @@ import {
   DailyReportQueryInput,
   DailyReportsMetadata,
 } from '.';
-import { BaseService, EventType, IEventDeleteMember, LoggerService } from '../common';
-import { formatEx } from '@lagunahealth/pandora';
+import {
+  BaseService,
+  EventType,
+  IEventDeleteMember,
+  LoggerService,
+  deleteMemberObjects,
+} from '../common';
 import { ISoftDelete } from '../db';
 
 @Injectable()
@@ -134,29 +139,12 @@ export class DailyReportService extends BaseService {
 
   @OnEvent(EventType.onDeletedMember, { async: true })
   async deleteMemberDailyReports(params: IEventDeleteMember) {
-    this.logger.info(params, DailyReportService.name, this.deleteMemberDailyReports.name);
-    const { memberId, hard, deletedBy } = params;
-    try {
-      const dailyReports = await this.dailyReport.findWithDeleted({
-        memberId: new Types.ObjectId(memberId),
-      });
-      if (!dailyReports) return;
-      if (hard) {
-        await this.dailyReport.deleteMany({ memberId: new Types.ObjectId(memberId) });
-      } else {
-        await Promise.all(
-          dailyReports.map(async (dailyReport) => {
-            await dailyReport.delete(new Types.ObjectId(deletedBy));
-          }),
-        );
-      }
-    } catch (ex) {
-      this.logger.error(
-        params,
-        DailyReportService.name,
-        this.deleteMemberDailyReports.name,
-        formatEx(ex),
-      );
-    }
+    await deleteMemberObjects<Model<DailyReportDocument> & ISoftDelete<DailyReportDocument>>(
+      params,
+      this.dailyReport,
+      this.logger,
+      this.deleteMemberDailyReports.name,
+      DailyReportService.name,
+    );
   }
 }

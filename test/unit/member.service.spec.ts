@@ -38,6 +38,9 @@ import {
   ActionItemDocument,
   ActionItemDto,
   AlertType,
+  Caregiver,
+  CaregiverDocument,
+  CaregiverDto,
   ControlMember,
   ControlMemberDocument,
   ControlMemberDto,
@@ -129,6 +132,7 @@ describe('MemberService', () => {
   let modelAppointment: Model<AppointmentDocument>;
   let modelDismissedAlert: Model<DismissedAlertDocument>;
   let modelRecording: Model<RecordingDocument>;
+  let modelCaregiver: Model<CaregiverDocument>;
   let modelQuestionnaire: Model<QuestionnaireDocument>;
   let modelQuestionnaireResponse: Model<QuestionnaireResponseDocument>;
   let modelTodo: Model<TodoDocument & defaultTimestampsDbValues>;
@@ -159,6 +163,7 @@ describe('MemberService', () => {
     modelAppointment = model<AppointmentDocument>(Appointment.name, AppointmentDto);
     modelDismissedAlert = model<DismissedAlertDocument>(DismissedAlert.name, DismissedAlertDto);
     modelRecording = model<RecordingDocument>(Recording.name, MemberRecordingDto);
+    modelCaregiver = model<CaregiverDocument>(Caregiver.name, CaregiverDto);
     modelQuestionnaire = model<QuestionnaireDocument>(Questionnaire.name, QuestionnaireDto);
     modelQuestionnaireResponse = model<QuestionnaireResponseDocument>(
       QuestionnaireResponse.name,
@@ -1552,7 +1557,7 @@ describe('MemberService', () => {
         ]),
       );
 
-      await service.deleteJournals({ memberId, deletedBy: memberId, hard });
+      await service.deleteMemberJournals({ memberId, deletedBy: memberId, hard });
 
       const journalsAfterDelete = await service.getJournals(memberId);
       expect(journalsAfterDelete).toHaveLength(0);
@@ -1579,7 +1584,7 @@ describe('MemberService', () => {
 
       expect(journals).toHaveLength(1);
 
-      await service.deleteJournals({ memberId, deletedBy: memberId, hard: false });
+      await service.deleteMemberJournals({ memberId, deletedBy: memberId, hard: false });
 
       const journalsAfterDelete = await service.getJournals(memberId);
       expect(journalsAfterDelete).toHaveLength(0);
@@ -1591,7 +1596,7 @@ describe('MemberService', () => {
       });
       expect(deletedJournals).toHaveLength(1);
 
-      await service.deleteJournals({ memberId, deletedBy: memberId, hard: true });
+      await service.deleteMemberJournals({ memberId, deletedBy: memberId, hard: true });
 
       const journalsAfterHardDelete = await service.getJournals(memberId);
       expect(journalsAfterHardDelete).toHaveLength(0);
@@ -1648,13 +1653,49 @@ describe('MemberService', () => {
         );
       });
 
-      it('should delete a caregiver', async () => {
-        const status = await service.deleteCaregiver(caregiverId);
+      it('should (hard) delete a soft deleted caregiver', async () => {
+        const memberId = generateId();
+        const caregiverParams = generateAddCaregiverParams({ memberId, createdBy: memberId });
+        const { id } = await service.addCaregiver(caregiverParams);
 
-        expect(status).toBeTruthy();
+        await service.deleteCaregiver(id, memberId.toString());
+        await service.deleteCaregiver(id, memberId.toString(), true);
 
-        const caregiver = await service.getCaregiver(caregiverId);
-        expect(caregiver).toBeFalsy();
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const deletedCaregiver = await modelCaregiver.findOneWithDeleted({
+          _id: new Types.ObjectId(id),
+        });
+
+        expect(deletedCaregiver).toBeFalsy();
+      });
+
+      test.each([true, false])('should %p delete member caregivers', async (hard) => {
+        const memberId = generateId();
+        // add 2 caregivers
+        await service.addCaregiver(generateAddCaregiverParams({ memberId, createdBy: memberId }));
+        await service.addCaregiver(generateAddCaregiverParams({ memberId, createdBy: memberId }));
+
+        let caregivers = await service.getCaregiversByMemberId(memberId);
+
+        expect(caregivers).toHaveLength(2);
+
+        await service.deleteMemberCaregivers({ memberId, deletedBy: memberId, hard });
+
+        caregivers = await service.getCaregiversByMemberId(memberId);
+
+        expect(caregivers).toHaveLength(0);
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const deletedCaregivers = await modelCaregiver.findWithDeleted({
+          memberId: new Types.ObjectId(memberId),
+        });
+        if (hard) {
+          expect(deletedCaregivers).toHaveLength(0);
+        } else {
+          checkDelete(deletedCaregivers, { memberId: new Types.ObjectId(memberId) }, memberId);
+        }
       });
 
       it('should get a caregiver by member id', async () => {

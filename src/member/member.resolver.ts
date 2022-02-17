@@ -716,11 +716,14 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean)
   @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
-  async deleteCaregiver(@Args('id', { type: () => String }) id: string): Promise<boolean | never> {
+  async deleteCaregiver(
+    @Args('id', { type: () => String }) id: string,
+    @Client('_id') deletedBy: string,
+  ): Promise<boolean | never> {
     const caregiver = await this.memberService.getCaregiver(id);
 
     if (caregiver) {
-      await this.memberService.deleteCaregiver(id);
+      await this.memberService.deleteCaregiver(id, deletedBy);
     }
 
     return true;

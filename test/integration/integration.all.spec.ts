@@ -443,6 +443,10 @@ describe('Integration tests: all', () => {
         updateJournalTextParams: generateUpdateJournalTextParams({ id: journalId }),
       });
 
+      const addCaregiverParams = generateAddCaregiverParams({ createdBy: member.id });
+      delete addCaregiverParams.createdBy;
+      await handler.setContextUserId(member.id).mutations.addCaregiver({ addCaregiverParams });
+
       // delete member
       const deleteMemberParams = generateDeleteMemberParams({ id: member.id, hard });
       const result = await handler
@@ -481,6 +485,9 @@ describe('Integration tests: all', () => {
 
       const todos = await handler.queries.getTodos({ memberId: member.id });
       expect(todos).toEqual([]);
+
+      const caregivers = await handler.queries.getCaregivers({ memberId: member.id });
+      expect(caregivers).toEqual([]);
 
       const journals = await handler.setContextUserId(member.id).queries.getJournals();
       expect(journals).toEqual([]);

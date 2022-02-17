@@ -2,6 +2,7 @@ import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsOptional, IsPhoneNumber } from 'class-validator';
 import { Document, Types } from 'mongoose';
+import { ISoftDelete } from '../db';
 import { ErrorType, Errors, Identifier, IsObjectId } from '../common';
 
 /**************************************************************************************************
@@ -101,5 +102,5 @@ export class Caregiver extends Identifier {
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type CaregiverDocument = Caregiver & Document;
+export type CaregiverDocument = Caregiver & Document & ISoftDelete<Caregiver>;
 export const CaregiverDto = SchemaFactory.createForClass(Caregiver);
