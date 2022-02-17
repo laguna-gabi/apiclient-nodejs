@@ -1,13 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import * as config from 'config';
-import { format, sub } from 'date-fns';
 import { Model, Types } from 'mongoose';
 import {
   DailyReport,
   DailyReportCategoriesInput,
-  DailyReportCategoryTypes,
   DailyReportDocument,
   DailyReportQueryInput,
   DailyReportsMetadata,
@@ -41,14 +38,14 @@ export class DailyReportService extends BaseService {
   async setDailyReportCategories(
     dailyReportCategoryEntry: DailyReportCategoriesInput,
   ): Promise<DailyReport> {
-    let dbObject: DailyReport = await this.dailyReport.findOne({
+    let dailyReportRecord: DailyReport = await this.dailyReport.findOne({
       memberId: new Types.ObjectId(dailyReportCategoryEntry.memberId),
       date: dailyReportCategoryEntry.date,
     });
 
-    if (!dbObject) {
+    if (!dailyReportRecord) {
       // init object if one does not exist already in db
-      dbObject = {
+      dailyReportRecord = {
         date: dailyReportCategoryEntry.date,
         memberId: new Types.ObjectId(dailyReportCategoryEntry.memberId),
         categories: [],
@@ -57,83 +54,38 @@ export class DailyReportService extends BaseService {
 
     dailyReportCategoryEntry?.categories.forEach((categoryEntry) => {
       // Make sure to keep the internal `categories` array with unique single entry per category
-      const index = dbObject.categories?.findIndex(
+      const index = dailyReportRecord.categories?.findIndex(
         (entry) => entry.category === categoryEntry.category,
       );
 
       if (index >= 0) {
-        dbObject.categories.splice(index, 1);
+        dailyReportRecord.categories.splice(index, 1);
       }
 
-      dbObject.categories?.push({
+      dailyReportRecord.categories?.push({
         rank: categoryEntry.rank,
         category: categoryEntry.category,
       });
     });
 
-    // Description: to determine if a member is feeling well on a day (date) we check daily
-    // reports from the last 3 consecutive days
-    // step 1: get the daily reports from the last 2 days (prior to today)
-    const recentDailyReports = await this.get({
-      endDate: format(
-        sub(Date.parse(dailyReportCategoryEntry.date), { days: 1 }),
-        config.get('general.dateFormatString'),
-      ),
-      startDate: format(
-        sub(Date.parse(dailyReportCategoryEntry.date), {
-          days: config.get('dailyReport.thresholdIndicator') - 1,
-        }),
-        config.get('general.dateFormatString'),
-      ),
-      memberId: dailyReportCategoryEntry.memberId,
-    });
-
-    // step 2: add the updated record from today
-    recentDailyReports.push(dbObject);
-
-    // step 3: calculate stats over threshold
-    dbObject.statsOverThreshold = this.getStatsOverThreshold(recentDailyReports);
+    // calculate stats over threshold: any category compared to a pre-defined threshold
+    dailyReportRecord.statsOverThreshold = dailyReportRecord.categories
+      .filter((entry) => entry.rank <= DailyReportsMetadata.get(entry.category).threshold)
+      .map((entry) => entry.category);
 
     await this.dailyReport.findOneAndUpdate(
       {
         memberId: new Types.ObjectId(dailyReportCategoryEntry.memberId),
         date: dailyReportCategoryEntry.date,
       },
-      { ...dbObject, deleted: false },
+      { ...dailyReportRecord, deleted: false },
       {
         upsert: true,
         new: true,
       },
     );
 
-    return dbObject;
-  }
-
-  getStatsOverThreshold(records: DailyReport[]): DailyReportCategoryTypes[] {
-    const stats: Record<string, number> = {};
-
-    // calculate:
-    records.forEach((dailyRecord: DailyReport) => {
-      dailyRecord.categories.forEach((record) => {
-        const metadata = DailyReportsMetadata.get(record.category as DailyReportCategoryTypes);
-        if (metadata.threshold >= record.rank) {
-          stats[record.category] ? stats[record.category]++ : (stats[record.category] = 1);
-        }
-      });
-    });
-
-    const statsOverThreshold: Array<DailyReportCategoryTypes> = [];
-
-    for (const category in DailyReportCategoryTypes) {
-      if (
-        !DailyReportsMetadata.get(category as DailyReportCategoryTypes).disabled &&
-        stats[category] == config.get('dailyReport.thresholdIndicator')
-      ) {
-        statsOverThreshold.push(category as DailyReportCategoryTypes);
-      }
-    }
-
-    return statsOverThreshold.length ? statsOverThreshold : undefined;
+    return dailyReportRecord;
   }
 
   // Description: fetch date of oldest daily report record for member

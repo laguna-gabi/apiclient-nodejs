@@ -65,9 +65,6 @@
     "timezone": "UTC",
     "notificationRange": 24
   },
-  "dailyReport": {
-    "thresholdIndicator": 3
-  },
   "articlesByDrg": {
     "000": "articles/cardiac/cardiac",
     "default": "articles/default/default"

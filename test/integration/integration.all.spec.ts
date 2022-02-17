@@ -992,19 +992,19 @@ describe('Integration tests: all', () => {
           {
             categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
             date: day1,
-            statsOverThreshold: null,
+            statsOverThreshold: [DailyReportCategoryTypes.Pain],
             memberId: member.id,
           },
           {
             categories: [{ category: DailyReportCategoryTypes.Appetite, rank: 2 }],
             date: day2,
-            statsOverThreshold: null,
+            statsOverThreshold: [DailyReportCategoryTypes.Appetite],
             memberId: member.id,
           },
           {
             categories: [{ category: DailyReportCategoryTypes.Mobility, rank: 1 }],
             date: day3,
-            statsOverThreshold: null,
+            statsOverThreshold: [DailyReportCategoryTypes.Mobility],
             memberId: member.id,
           },
         ],

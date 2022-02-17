@@ -57,108 +57,80 @@ describe('DailyReportCategoryService', () => {
 
     it.each([
       [
-        'new daily record generated',
+        'new daily record - stats under threshold',
         {
           date: '2015/01/01',
-          categories: [{ category: DailyReportCategoryTypes.Pain, rank: 3 }],
+          categories: [{ rank: 4, category: DailyReportCategoryTypes.Pain }],
           memberId,
-        } as DailyReportCategoriesInput, // <= new record(s)
+        } as DailyReportCategoriesInput, // <= new record
         null, // <= no existing record in db
-        [], // <= no recent daily reports in db
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
-          categories: [{ rank: 3, category: 'Pain' }],
+          categories: [{ rank: 4, category: DailyReportCategoryTypes.Pain }],
+          statsOverThreshold: [],
         }, // <= expected
       ],
       [
-        'update daily record - adding new category',
+        'update daily record - adding new category (over threshold)',
         {
           date: '2015/01/01',
-          categories: [{ category: DailyReportCategoryTypes.Mobility, rank: 2 }],
+          categories: [
+            { rank: 2, category: DailyReportCategoryTypes.Mobility },
+            { rank: 4, category: DailyReportCategoryTypes.Pain },
+          ],
           memberId,
-        } as DailyReportCategoriesInput, // <= new record(s)
+        } as DailyReportCategoriesInput, // <= new record
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
-          categories: [{ rank: 3, category: 'Pain' }],
+          categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
         } as DailyReportDocument, // <= existing record in db
-        [], // <= no recent daily reports in db
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
           categories: [
-            { rank: 3, category: 'Pain' },
-            { rank: 2, category: 'Mobility' },
+            { rank: 2, category: DailyReportCategoryTypes.Mobility },
+            { rank: 4, category: DailyReportCategoryTypes.Pain },
           ],
+          statsOverThreshold: [DailyReportCategoryTypes.Mobility],
         }, // <= expected
       ],
       [
-        'update daily record - update rank for existing category',
+        'update daily record - update rank for existing category (resulting in an over threshold)',
         {
           date: '2015/01/01',
-          categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
+          categories: [{ rank: 1, category: DailyReportCategoryTypes.Pain }],
           memberId,
-        } as DailyReportCategoriesInput, // <= new record(s)
+        } as DailyReportCategoriesInput, // <= new record
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
-          categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
+          categories: [{ rank: 4, category: DailyReportCategoryTypes.Pain }],
         } as DailyReportDocument, // <= existing record in db
-        [], // <= no recent daily reports in db
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
           categories: [{ rank: 1, category: DailyReportCategoryTypes.Pain }],
-        }, // <= expected
-      ],
-      [
-        'history of member stats will result in a stats-over-record update',
-        {
-          date: '2015-01-05',
-          categories: [{ category: DailyReportCategoryTypes.Pain, rank: 3 }],
-          memberId,
-        } as DailyReportCategoriesInput, // <= new record(s)
-        {
-          date: '2015/01/05',
-          memberId: new Types.ObjectId(memberId),
-          categories: [{ rank: 1, category: DailyReportCategoryTypes.Pain }],
-        } as DailyReportDocument, // <= existing record in db
-        [
-          {
-            date: '2015//04',
-            memberId: new Types.ObjectId(memberId),
-            categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
-          },
-          {
-            date: '2015//03',
-            memberId: new Types.ObjectId(memberId),
-            categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
-          },
-        ], // <= recent daily reports in db
-        {
-          date: '2015/01/05',
-          memberId: new Types.ObjectId(memberId),
-          categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
           statsOverThreshold: [DailyReportCategoryTypes.Pain],
         }, // <= expected
       ],
       [
-        'update daily record - update rank for existing category and introduce a new category',
+        // eslint-disable-next-line max-len
+        'update daily record - update rank for existing category and introduce a new category (both over threshold)',
         {
           date: '2015/01/01',
           categories: [
-            { category: DailyReportCategoryTypes.Pain, rank: 1 },
-            { category: DailyReportCategoryTypes.Mobility, rank: 1 },
+            { rank: 1, category: DailyReportCategoryTypes.Pain },
+            { rank: 1, category: DailyReportCategoryTypes.Mobility },
           ],
           memberId,
-        } as DailyReportCategoriesInput, // <= new record(s)
+        } as DailyReportCategoriesInput, // <= new record
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
           categories: [{ rank: 3, category: DailyReportCategoryTypes.Pain }],
         } as DailyReportDocument, // <= existing record in db
-        [], // <= no recent daily reports in db
         {
           date: '2015/01/01',
           memberId: new Types.ObjectId(memberId),
@@ -166,112 +138,28 @@ describe('DailyReportCategoryService', () => {
             { rank: 1, category: DailyReportCategoryTypes.Pain },
             { rank: 1, category: DailyReportCategoryTypes.Mobility },
           ],
-          statsOverThreshold: undefined,
+          statsOverThreshold: [DailyReportCategoryTypes.Pain, DailyReportCategoryTypes.Mobility],
         }, // <= expected
       ],
     ])(
       `%s`,
       async (
-        message,
+        _,
         // Input to service method - new category entry to set/update
         dailyReportCategoryEntry,
         // current daily report stored in db (could be empty on first set/update)
         existingRecordInDatabase,
-        // daily reports of the last 2 days (for stats-over-threshold calculation)
-        getRecentDailyReportsReturnedValue,
         expectedDailyReport,
       ) => {
-        jest.spyOn(dailyReportModel, 'findOne').mockResolvedValue(existingRecordInDatabase);
+        jest.spyOn(dailyReportModel, 'findOne').mockResolvedValueOnce(existingRecordInDatabase);
 
         jest.spyOn(dailyReportModel, 'findOneAndUpdate').mockResolvedValue(null);
-
-        jest.spyOn(service, 'get').mockResolvedValue(getRecentDailyReportsReturnedValue);
 
         const out = await service.setDailyReportCategories(dailyReportCategoryEntry);
 
         expect(out).toEqual(expectedDailyReport);
       },
     );
-  });
-
-  describe('getStatsOverThreshold', () => {
-    it.each([
-      [
-        "member stats from the last 3 days indicate that he's not feeling well in some categories",
-        [
-          {
-            categories: [
-              { category: 'Mobility', rank: 1 },
-              { category: 'Appetite', rank: 1 },
-            ],
-            date: '2020/01/01',
-          } as DailyReport,
-          {
-            categories: [
-              { category: 'Mobility', rank: 2 },
-              { category: 'Appetite', rank: 1 },
-            ],
-            date: '2020/01/02',
-          } as DailyReport,
-          {
-            categories: [
-              { category: 'Mobility', rank: 2 },
-              { category: 'Appetite', rank: 2 },
-            ],
-            date: '2020/01/03',
-          } as DailyReport,
-        ],
-        [DailyReportCategoryTypes.Appetite, DailyReportCategoryTypes.Mobility],
-      ],
-      [
-        "member stats from the last 3 days indicate that he's feeling well in all categories",
-        [
-          {
-            categories: [
-              { category: 'Pain', rank: 3 },
-              { category: 'Mood', rank: 4 },
-            ],
-            date: '2020/01/01',
-          } as DailyReport,
-          {
-            categories: [{ category: 'Mood', rank: 1 }],
-            date: '2020/01/02',
-          } as DailyReport,
-          {
-            categories: [
-              { category: 'Pain', rank: 4 },
-              { category: 'Mood', rank: 1 },
-            ],
-            date: '2020/01/03',
-          } as DailyReport,
-        ],
-        undefined,
-      ],
-      [
-        'member stats only from the last 2 days - will yield no categories over threshold',
-        [
-          {
-            categories: [
-              { category: 'Pain', rank: 1 },
-              { category: 'Mood', rank: 1 },
-            ],
-            date: '2020/01/01',
-          } as DailyReport,
-          {
-            categories: [
-              { category: 'Pain', rank: 1 },
-              { category: 'Mood', rank: 1 },
-            ],
-            date: '2020/01/02',
-          } as DailyReport,
-        ],
-        undefined,
-      ],
-    ])(`%p`, async (message, records, expected) => {
-      expect(await service.getStatsOverThreshold(records)?.sort()).toEqual(
-        expected ? expected.sort() : undefined,
-      );
-    });
   });
 
   describe('getOldestDailyReportRecord', () => {

@@ -13,13 +13,14 @@ import {
 } from '.';
 import {
   Client,
-  ErrorType,
-  Errors,
   EventType,
   IInternalDispatch,
   LoggerService,
   LoggingInterceptor,
+  MemberIdParam,
+  MemberIdParamType,
   MemberRole,
+  MemberUserRouteInterceptor,
   Roles,
   UserRole,
   getCorrelationId,
@@ -35,10 +36,11 @@ export class DailyReportResolver {
   ) {}
 
   @Mutation(() => DailyReport)
+  @MemberIdParam(MemberIdParamType.memberId)
+  @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(MemberRole.member)
   async setDailyReportCategories(
     @Client('roles') roles,
-    @Client('_id') memberId,
     @Client('primaryUserId') primaryUserId,
     @Args(
       camelCase(DailyReportCategoriesInput.name),
@@ -47,11 +49,6 @@ export class DailyReportResolver {
     )
     dailyReportCategoriesInput: DailyReportCategoriesInput,
   ): Promise<DailyReport> {
-    if (!roles.includes(MemberRole.member)) {
-      throw new Error(Errors.get(ErrorType.memberAllowedOnly));
-    }
-    // ignoring the id from the params - replacing it with the id from the context
-    dailyReportCategoriesInput.memberId = memberId;
     const dailyReportObject = await this.dailyReportService.setDailyReportCategories(
       dailyReportCategoriesInput,
     );
@@ -85,17 +82,18 @@ export class DailyReportResolver {
       );
     }
     this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
-      dispatchId: generateDispatchId(InternalKey.logReminder, memberId),
+      dispatchId: generateDispatchId(InternalKey.logReminder, dailyReportCategoriesInput.memberId),
     });
 
     return dailyReportObject;
   }
 
   @Query(() => DailyReportResults)
+  @MemberIdParam(MemberIdParamType.memberId)
+  @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(UserRole.coach, MemberRole.member)
   async getDailyReports(
     @Client('roles') roles,
-    @Client('_id') memberId,
     @Args(
       camelCase(DailyReportQueryInput.name),
       { type: () => DailyReportQueryInput },
@@ -103,9 +101,6 @@ export class DailyReportResolver {
     )
     dailyReportQueryInput: DailyReportQueryInput,
   ): Promise<DailyReportResults> {
-    if (roles.includes(MemberRole.member)) {
-      dailyReportQueryInput.memberId = memberId;
-    }
     return {
       data: await this.dailyReportService.getDailyReports(dailyReportQueryInput),
       metadata: {

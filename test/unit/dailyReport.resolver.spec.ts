@@ -70,12 +70,12 @@ describe('DailyReportResolver', () => {
           honorific: 'Mr.',
           lastName: 'Levy',
           primaryUserId: 'U0001',
-          _id: memberId,
           roles: [MemberRole.member],
         }, // <= context
         {
           date: '',
           categories: [{ category: DailyReportCategoryTypes.Pain, rank: 0 }],
+          memberId,
         } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
         {
           contentKey: InternalKey.memberNotFeelingWellMessage,
@@ -96,12 +96,12 @@ describe('DailyReportResolver', () => {
           honorific: 'Mr.',
           lastName: 'Levy',
           primaryUserId: 'U0001',
-          _id: memberId,
           roles: [MemberRole.member],
         }, // <= context
         {
           date: '',
           categories: [{ category: DailyReportCategoryTypes.Pain, rank: 0 }],
+          memberId,
         } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
         null,
       ],
@@ -116,20 +116,20 @@ describe('DailyReportResolver', () => {
         {
           honorific: 'Mr.',
           lastName: 'Levy',
-          _id: memberId,
           roles: [MemberRole.member],
           primaryUserId: undefined,
         }, // <= context (missing primary user id)
         {
           date: '',
           categories: [{ category: DailyReportCategoryTypes.Pain, rank: 0 }],
+          memberId,
         } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
         null,
       ],
     ])(
       '%s',
       async (
-        message,
+        _,
         serviceSetDailyReportCategoryReturnedValue,
         context,
         dailyReportCategoryInput,
@@ -142,11 +142,15 @@ describe('DailyReportResolver', () => {
         eventEmitterSpy = jest.spyOn(eventEmitter, 'emit');
         await resolver.setDailyReportCategories(
           context.roles,
-          context._id,
           context.primaryUserId,
           dailyReportCategoryInput,
         );
-        const params = { dispatchId: generateDispatchId(InternalKey.logReminder, context._id) };
+        const params = {
+          dispatchId: generateDispatchId(
+            InternalKey.logReminder,
+            dailyReportCategoryInput.memberId,
+          ),
+        };
         if (emittedEventParams) {
           expect(eventEmitterSpy).toHaveBeenNthCalledWith(
             1,
@@ -237,11 +241,7 @@ describe('DailyReportResolver', () => {
       jest.spyOn(service, 'getOldestDailyReportRecord').mockResolvedValue(oldestDailyReportRecord);
       jest.spyOn(service, 'getDailyReports').mockResolvedValue(serviceGetDailyReports);
       expect(
-        await resolver.getDailyReports(
-          [MemberRole.member],
-          generateId(),
-          {} as DailyReportQueryInput,
-        ),
+        await resolver.getDailyReports([MemberRole.member], {} as DailyReportQueryInput),
       ).toEqual(expectedResult);
     });
   });
