@@ -22,6 +22,12 @@ import { Mutations } from '../test/aux';
 import { SeedBase } from './seedBase';
 import { generateZipCode } from '@lagunahealth/pandora';
 import { UpdateJournalTextParams } from '../src/member';
+import {
+  buildGAD7Questionnaire,
+  buildNPSQuestionnaire,
+  buildPHQ9Questionnaire,
+  buildWHO5Questionnaire,
+} from '../cmd/statics';
 import { CarePlanType, CarePlanTypeDocument, CarePlanTypeDto } from '../src/care';
 import { seedCarePlans } from '../cmd/static/seedCare';
 import { model } from 'mongoose';
@@ -35,6 +41,7 @@ import { model } from 'mongoose';
  * 5. member in organization above, having user(1) as his primaryCoach,
  *    and user(2), user(3) as his 2ndary users.
  * 6. appointments for member and his users.
+ * 7. load assessment templates (questionnaires)
  */
 
 let mutations: Mutations;
@@ -167,6 +174,20 @@ async function main() {
     text: faker.lorem.word(),
   };
   await base.setContextUserId(memberId).mutations.updateJournalText({ updateJournalTextParams });
+
+  console.debug(
+    '\n----------------------------------------------------------------\n' +
+      '---------- load assessment templates (questionnaires) ----------\n' +
+      '----------------------------------------------------------------',
+  );
+  // GAD-7
+  await base.questionnaireService.createQuestionnaire(buildGAD7Questionnaire());
+  // PHQ-9
+  await base.questionnaireService.createQuestionnaire(buildPHQ9Questionnaire());
+  // WHO-5
+  await base.questionnaireService.createQuestionnaire(buildWHO5Questionnaire());
+  // NPS
+  await base.questionnaireService.createQuestionnaire(buildNPSQuestionnaire());
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
