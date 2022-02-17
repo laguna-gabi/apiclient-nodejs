@@ -566,6 +566,7 @@ export class Queries {
             isPushNotificationsEnabled
             isAppointmentsReminderEnabled
             isRecommendationsEnabled
+            isTodoNotificationsEnabled
             articlesPath
             firstLoggedInAt
             language

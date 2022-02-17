@@ -136,6 +136,7 @@ export class MemberBase {
         isPushNotificationsEnabled: memberConfig?.isPushNotificationsEnabled,
         isAppointmentsReminderEnabled: memberConfig?.isAppointmentsReminderEnabled,
         isRecommendationsEnabled: memberConfig?.isRecommendationsEnabled,
+        isTodoNotificationsEnabled: memberConfig?.isTodoNotificationsEnabled,
         externalUserId: memberConfig?.externalUserId,
         firstLoggedInAt: memberConfig?.firstLoggedInAt,
       },

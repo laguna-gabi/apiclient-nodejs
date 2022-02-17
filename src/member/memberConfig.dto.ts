@@ -31,6 +31,10 @@ export class UpdateMemberConfigParams {
   @IsOptional()
   isRecommendationsEnabled?: boolean;
 
+  @Field(() => Boolean, { nullable: true })
+  @IsOptional()
+  isTodoNotificationsEnabled?: boolean;
+
   @Field(() => Language, { nullable: true })
   @IsOptional()
   language?: Language;
@@ -70,6 +74,10 @@ export class MemberConfig {
   @Prop({ type: Boolean, default: true })
   @Field(() => Boolean)
   isRecommendationsEnabled?: boolean;
+
+  @Prop({ type: Boolean, default: true })
+  @Field(() => Boolean)
+  isTodoNotificationsEnabled?: boolean;
 
   @Prop()
   @Field(() => Date, { nullable: true })

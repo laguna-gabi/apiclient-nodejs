@@ -311,6 +311,7 @@ describe('Integration tests: all', () => {
       isPushNotificationsEnabled: true,
       isAppointmentsReminderEnabled: true,
       isRecommendationsEnabled: true,
+      isTodoNotificationsEnabled: true,
       language: Language.en,
       updatedAt: expect.any(String),
     });
@@ -333,6 +334,7 @@ describe('Integration tests: all', () => {
       isPushNotificationsEnabled: updateMemberConfigParams.isPushNotificationsEnabled,
       isAppointmentsReminderEnabled: updateMemberConfigParams.isAppointmentsReminderEnabled,
       isRecommendationsEnabled: updateMemberConfigParams.isRecommendationsEnabled,
+      isTodoNotificationsEnabled: updateMemberConfigParams.isTodoNotificationsEnabled,
       language: Language.en,
       updatedAt: expect.any(String),
     });

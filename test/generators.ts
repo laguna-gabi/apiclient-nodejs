@@ -361,6 +361,7 @@ export const mockGenerateMemberConfig = ({
     platform,
     isPushNotificationsEnabled,
     isRecommendationsEnabled: true,
+    isTodoNotificationsEnabled: true,
     isAppointmentsReminderEnabled: true,
     accessToken: generateId(),
     firstLoggedInAt: faker.date.past(2),
@@ -376,6 +377,7 @@ export const generateUpdateMemberConfigParams = ({
   isPushNotificationsEnabled = false,
   isAppointmentsReminderEnabled = false,
   isRecommendationsEnabled = false,
+  isTodoNotificationsEnabled = false,
   language = Language.en,
 }: Partial<UpdateMemberConfigParams> = {}): UpdateMemberConfigParams => {
   return {
@@ -384,6 +386,7 @@ export const generateUpdateMemberConfigParams = ({
     isPushNotificationsEnabled,
     isAppointmentsReminderEnabled,
     isRecommendationsEnabled,
+    isTodoNotificationsEnabled,
     language,
   };
 };
@@ -701,6 +704,7 @@ export const generateUpdateClientSettings = ({
     isPushNotificationsEnabled: memberConfig?.isPushNotificationsEnabled,
     isAppointmentsReminderEnabled: memberConfig?.isAppointmentsReminderEnabled,
     isRecommendationsEnabled: memberConfig?.isRecommendationsEnabled,
+    isTodoNotificationsEnabled: memberConfig?.isTodoNotificationsEnabled,
     externalUserId: memberConfig?.externalUserId,
     firstLoggedInAt: memberConfig?.firstLoggedInAt,
   };

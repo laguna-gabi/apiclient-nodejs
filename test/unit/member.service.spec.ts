@@ -2239,6 +2239,7 @@ describe('MemberService', () => {
         isPushNotificationsEnabled: false,
         isAppointmentsReminderEnabled: false,
         isRecommendationsEnabled: true,
+        isTodoNotificationsEnabled: true,
         language: Language.en,
       });
 
@@ -2249,6 +2250,7 @@ describe('MemberService', () => {
       expect(configs1.isPushNotificationsEnabled).toEqual(params1.isPushNotificationsEnabled);
       expect(configs1.isAppointmentsReminderEnabled).toEqual(params1.isAppointmentsReminderEnabled);
       expect(configs1.isRecommendationsEnabled).toEqual(params1.isRecommendationsEnabled);
+      expect(configs1.isTodoNotificationsEnabled).toEqual(params1.isTodoNotificationsEnabled);
       expect(configs1.platform).toEqual(params1.platform);
       expect(configs1.language).toEqual(params1.language);
 
@@ -2258,6 +2260,7 @@ describe('MemberService', () => {
         isPushNotificationsEnabled: true,
         isAppointmentsReminderEnabled: true,
         isRecommendationsEnabled: false,
+        isTodoNotificationsEnabled: false,
         language: Language.es,
       });
       params2.memberId = id;
@@ -2270,6 +2273,7 @@ describe('MemberService', () => {
       expect(configs2.isPushNotificationsEnabled).toEqual(params2.isPushNotificationsEnabled);
       expect(configs2.isAppointmentsReminderEnabled).toEqual(params2.isAppointmentsReminderEnabled);
       expect(configs2.isRecommendationsEnabled).toEqual(params2.isRecommendationsEnabled);
+      expect(configs2.isTodoNotificationsEnabled).toEqual(params2.isTodoNotificationsEnabled);
       expect(configs2.language).toEqual(params2.language);
     });
 
@@ -2304,6 +2308,7 @@ describe('MemberService', () => {
       { isPushNotificationsEnabled: null },
       { isAppointmentsReminderEnabled: null },
       { isRecommendationsEnabled: null },
+      { isTodoNotificationsEnabled: null },
       { language: null },
     ])('should not override %p since it is not define in input', async (field) => {
       const id = await generateMember();
