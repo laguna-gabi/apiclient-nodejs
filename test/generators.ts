@@ -29,11 +29,13 @@ export const generateId = (id?): string => {
 export const generateUpdateMemberSettingsMock = ({
   id = generateId(),
   isAppointmentsReminderEnabled = true,
+  isTodoNotificationsEnabled = true,
   platform = Platform.web,
   isPushNotificationsEnabled = false,
 }: {
   id?: string;
   isAppointmentsReminderEnabled?: boolean;
+  isTodoNotificationsEnabled?: boolean;
   platform?: Platform;
   isPushNotificationsEnabled?: boolean;
 } = {}): Omit<ClientSettings, 'avatar'> => {
@@ -51,6 +53,7 @@ export const generateUpdateMemberSettingsMock = ({
     isPushNotificationsEnabled,
     isAppointmentsReminderEnabled,
     isRecommendationsEnabled: true,
+    isTodoNotificationsEnabled,
     externalUserId: v4(),
     firstLoggedInAt: new Date(),
   };

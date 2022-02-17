@@ -58,6 +58,31 @@ describe(NotificationsService.name, () => {
     },
   );
 
+  test.each([
+    InternalKey.createTodoMEDS,
+    InternalKey.createTodoAPPT,
+    InternalKey.createTodoTODO,
+    InternalKey.updateTodoMEDS,
+    InternalKey.updateTodoAPPT,
+    InternalKey.updateTodoTODO,
+    InternalKey.deleteTodoMEDS,
+    InternalKey.deleteTodoAPPT,
+    InternalKey.deleteTodoTODO,
+  ])(
+    `should not send a $contentKey notification since isTodoNotificationsEnabled is false`,
+    async (contentKey) => {
+      const dispatch = generateDispatch({ contentKey });
+      const recipientClient = generateUpdateMemberSettingsMock({
+        isTodoNotificationsEnabled: false,
+      });
+
+      const spyOnInternationalization = jest.spyOn(iService, 'getContents');
+
+      await service.send(dispatch, recipientClient, senderClient);
+      expect(spyOnInternationalization).not.toBeCalled();
+    },
+  );
+
   describe(`${InternalKey.appointmentRequest}`, () => {
     let scheduleLink: string;
     let dispatch;

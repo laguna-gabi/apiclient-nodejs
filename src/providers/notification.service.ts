@@ -1,6 +1,7 @@
 import {
   AuditType,
   ClientCategory,
+  ContentKey,
   CustomKey,
   ExternalKey,
   InternalKey,
@@ -52,6 +53,9 @@ export class NotificationsService {
       (dispatch.contentKey === InternalKey.appointmentReminder ||
         dispatch.contentKey === InternalKey.appointmentLongReminder)
     ) {
+      return;
+    }
+    if (!recipientClient.isTodoNotificationsEnabled && this.isTodoContentKey(dispatch.contentKey)) {
       return;
     }
     const correlationId = dispatch.correlationId;
@@ -262,5 +266,19 @@ export class NotificationsService {
 
   private getClientInitials(client: ClientSettings): string {
     return client.firstName[0].toUpperCase() + client.lastName[0].toUpperCase();
+  }
+
+  private isTodoContentKey(contentKey: ContentKey) {
+    return (
+      contentKey === InternalKey.createTodoMEDS ||
+      contentKey === InternalKey.createTodoAPPT ||
+      contentKey === InternalKey.createTodoTODO ||
+      contentKey === InternalKey.updateTodoMEDS ||
+      contentKey === InternalKey.updateTodoAPPT ||
+      contentKey === InternalKey.updateTodoTODO ||
+      contentKey === InternalKey.deleteTodoMEDS ||
+      contentKey === InternalKey.deleteTodoAPPT ||
+      contentKey === InternalKey.deleteTodoTODO
+    );
   }
 }

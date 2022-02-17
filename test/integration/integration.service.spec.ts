@@ -1132,6 +1132,7 @@ describe('Notifications full flow', () => {
       platform: Platform.android,
       isPushNotificationsEnabled: true,
       isAppointmentsReminderEnabled: true,
+      isTodoNotificationsEnabled: true,
     });
     const mobileMemberClientMessage: SQSMessage = {
       MessageId: v4(),

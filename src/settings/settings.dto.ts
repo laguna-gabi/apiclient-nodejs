@@ -54,6 +54,9 @@ export class ClientSettings {
   isRecommendationsEnabled?: boolean;
 
   @Prop({ isNaN: true })
+  isTodoNotificationsEnabled?: boolean;
+
+  @Prop({ isNaN: true })
   externalUserId?: string;
 
   @Prop()
