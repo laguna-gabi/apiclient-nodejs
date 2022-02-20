@@ -24,6 +24,7 @@ import {
   ObjectUpdateMemberSettingsClass,
   Platform,
   QueueType,
+  TodoInternalKey,
   generateAppointmentScheduleLongReminderMock,
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
@@ -901,7 +902,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send createTodo dispatch
      */
-    it(`createTodo: should send dispatch ${InternalKey.createTodoMEDS}`, async () => {
+    it(`createTodo: should send dispatch ${TodoInternalKey.createTodoMEDS}`, async () => {
       const user = await creators.createAndValidateUser([UserRole.coach]);
       const userId = user.id;
       const org = await creators.createAndValidateOrg();
@@ -949,7 +950,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send createTodo dispatch
      */
-    it(`createTodo: should send dispatch ${InternalKey.createTodoAPPT}`, async () => {
+    it(`createTodo: should send dispatch ${TodoInternalKey.createTodoAPPT}`, async () => {
       const user = await creators.createAndValidateUser([UserRole.coach]);
       const userId = user.id;
       const org = await creators.createAndValidateOrg();
@@ -997,7 +998,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send createTodo dispatch
      */
-    it(`createTodo: should send dispatch ${InternalKey.createTodoTODO}`, async () => {
+    it(`createTodo: should send dispatch ${TodoInternalKey.createTodoTODO}`, async () => {
       const user = await creators.createAndValidateUser([UserRole.coach]);
       const userId = user.id;
       const org = await creators.createAndValidateOrg();
@@ -1045,7 +1046,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send updateTodo dispatch
      */
-    it(`updateTodo: should send dispatch ${InternalKey.updateTodoMEDS}`, async () => {
+    it(`updateTodo: should send dispatch ${TodoInternalKey.updateTodoMEDS}`, async () => {
       const user = await creators.createAndValidateUser([UserRole.coach]);
       const userId = user.id;
       const org = await creators.createAndValidateOrg();
@@ -1106,7 +1107,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send updateTodo dispatch
      */
-    it(`updateTodo: should send dispatch ${InternalKey.updateTodoAPPT}`, async () => {
+    it(`updateTodo: should send dispatch ${TodoInternalKey.updateTodoAPPT}`, async () => {
       const user = await creators.createAndValidateUser([UserRole.coach]);
       const userId = user.id;
       const org = await creators.createAndValidateOrg();
@@ -1167,7 +1168,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send updateTodo dispatch
      */
-    it(`updateTodo: should send dispatch ${InternalKey.updateTodoTODO}`, async () => {
+    it(`updateTodo: should send dispatch ${TodoInternalKey.updateTodoTODO}`, async () => {
       const user = await creators.createAndValidateUser([UserRole.coach]);
       const userId = user.id;
       const org = await creators.createAndValidateOrg();
@@ -1228,7 +1229,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send deleteTodo dispatch
      */
-    it(`deleteTodo: should send dispatch ${InternalKey.deleteTodoMEDS}`, async () => {
+    it(`deleteTodo: should send dispatch ${TodoInternalKey.deleteTodoMEDS}`, async () => {
       const user = await creators.createAndValidateUser([UserRole.coach]);
       const userId = user.id;
       const org = await creators.createAndValidateOrg();
@@ -1281,7 +1282,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send deleteTodo dispatch
      */
-    it(`deleteTodo: should send dispatch ${InternalKey.deleteTodoAPPT}`, async () => {
+    it(`deleteTodo: should send dispatch ${TodoInternalKey.deleteTodoAPPT}`, async () => {
       const user = await creators.createAndValidateUser([UserRole.coach]);
       const userId = user.id;
       const org = await creators.createAndValidateOrg();
@@ -1334,7 +1335,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send deleteTodo dispatch
      */
-    it(`deleteTodo: should send dispatch ${InternalKey.deleteTodoTODO}`, async () => {
+    it(`deleteTodo: should send dispatch ${TodoInternalKey.deleteTodoTODO}`, async () => {
       const user = await creators.createAndValidateUser([UserRole.coach]);
       const userId = user.id;
       const org = await creators.createAndValidateOrg();

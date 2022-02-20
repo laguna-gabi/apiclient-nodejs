@@ -1,4 +1,4 @@
-import { InternalKey, NotificationType, generateDispatchId } from '@lagunahealth/pandora';
+import { NotificationType, TodoInternalKey, generateDispatchId } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -187,33 +187,33 @@ export class TodoResolver {
     }
   }
 
-  extractContentType(todoNotificationsType: TodoNotificationsType, label?: Label): InternalKey {
+  extractContentType(todoNotificationsType: TodoNotificationsType, label?: Label): TodoInternalKey {
     if (todoNotificationsType === 'createTodo') {
       switch (label) {
         case Label.APPT:
-          return InternalKey.createTodoAPPT;
+          return TodoInternalKey.createTodoAPPT;
         case Label.MEDS:
-          return InternalKey.createTodoMEDS;
+          return TodoInternalKey.createTodoMEDS;
         default:
-          return InternalKey.createTodoTODO;
+          return TodoInternalKey.createTodoTODO;
       }
     } else if (todoNotificationsType === 'updateTodo') {
       switch (label) {
         case Label.APPT:
-          return InternalKey.updateTodoAPPT;
+          return TodoInternalKey.updateTodoAPPT;
         case Label.MEDS:
-          return InternalKey.updateTodoMEDS;
+          return TodoInternalKey.updateTodoMEDS;
         default:
-          return InternalKey.updateTodoTODO;
+          return TodoInternalKey.updateTodoTODO;
       }
     } else if (todoNotificationsType === 'deleteTodo') {
       switch (label) {
         case Label.APPT:
-          return InternalKey.deleteTodoAPPT;
+          return TodoInternalKey.deleteTodoAPPT;
         case Label.MEDS:
-          return InternalKey.deleteTodoMEDS;
+          return TodoInternalKey.deleteTodoMEDS;
         default:
-          return InternalKey.deleteTodoTODO;
+          return TodoInternalKey.deleteTodoTODO;
       }
     }
   }

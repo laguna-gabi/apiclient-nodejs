@@ -1,6 +1,6 @@
 import {
-  InternalKey,
   NotificationType,
+  TodoInternalKey,
   generateDispatchId,
   mockLogger,
   mockProcessWarnings,
@@ -137,7 +137,7 @@ describe('TodoResolver', () => {
         });
         expect(result).toEqual({ id: todo.id });
 
-        const contentKey = InternalKey[`createTodo${todo.label ? todo.label : 'TODO'}`];
+        const contentKey = TodoInternalKey[`createTodo${todo.label ? todo.label : 'TODO'}`];
         expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDispatch, {
           correlationId: expect.any(String),
           dispatchId: generateDispatchId(contentKey, todo.memberId.toString(), todo.id),
@@ -283,7 +283,7 @@ describe('TodoResolver', () => {
 
         await resolver.endAndCreateTodo([UserRole.coach], userId, params);
 
-        const contentKey = InternalKey[`updateTodo${newTodo.label ? newTodo.label : 'TODO'}`];
+        const contentKey = TodoInternalKey[`updateTodo${newTodo.label ? newTodo.label : 'TODO'}`];
         expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDispatch, {
           correlationId: expect.any(String),
           dispatchId: generateDispatchId(contentKey, newTodo.memberId.toString(), newTodo.id),
@@ -381,7 +381,7 @@ describe('TodoResolver', () => {
 
         await resolver.endTodo(userId, [UserRole.coach], id);
 
-        const contentKey = InternalKey[`deleteTodo${todo.label ? todo.label : 'TODO'}`];
+        const contentKey = TodoInternalKey[`deleteTodo${todo.label ? todo.label : 'TODO'}`];
         expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDispatch, {
           correlationId: expect.any(String),
           dispatchId: generateDispatchId(contentKey, todo.memberId.toString(), todo.id),
