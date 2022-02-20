@@ -1,13 +1,13 @@
 import {
   AuditType,
   ClientCategory,
-  ContentKey,
   CustomKey,
   ExternalKey,
   InternalKey,
   NotificationType,
   Platform,
   QueueType,
+  TodoInternalKey,
 } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -268,17 +268,7 @@ export class NotificationsService {
     return client.firstName[0].toUpperCase() + client.lastName[0].toUpperCase();
   }
 
-  private isTodoContentKey(contentKey: ContentKey) {
-    return (
-      contentKey === InternalKey.createTodoMEDS ||
-      contentKey === InternalKey.createTodoAPPT ||
-      contentKey === InternalKey.createTodoTODO ||
-      contentKey === InternalKey.updateTodoMEDS ||
-      contentKey === InternalKey.updateTodoAPPT ||
-      contentKey === InternalKey.updateTodoTODO ||
-      contentKey === InternalKey.deleteTodoMEDS ||
-      contentKey === InternalKey.deleteTodoAPPT ||
-      contentKey === InternalKey.deleteTodoTODO
-    );
+  private isTodoContentKey(contentKey) {
+    return Object.values(TodoInternalKey).includes(contentKey);
   }
 }

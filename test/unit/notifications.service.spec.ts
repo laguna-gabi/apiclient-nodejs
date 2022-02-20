@@ -1,10 +1,16 @@
-import { InternalKey, Platform, mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
+import {
+  InternalKey,
+  Platform,
+  TodoInternalKey,
+  mockLogger,
+  mockProcessWarnings,
+  translation,
+} from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { hosts } from 'config';
 import { internet } from 'faker';
 import { replaceConfigs } from '../';
-import { translation } from '@lagunahealth/pandora';
 import { LoggerService } from '../../src/common';
 import { DbModule } from '../../src/db';
 import {
@@ -58,18 +64,8 @@ describe(NotificationsService.name, () => {
     },
   );
 
-  test.each([
-    InternalKey.createTodoMEDS,
-    InternalKey.createTodoAPPT,
-    InternalKey.createTodoTODO,
-    InternalKey.updateTodoMEDS,
-    InternalKey.updateTodoAPPT,
-    InternalKey.updateTodoTODO,
-    InternalKey.deleteTodoMEDS,
-    InternalKey.deleteTodoAPPT,
-    InternalKey.deleteTodoTODO,
-  ])(
-    `should not send a $contentKey notification since isTodoNotificationsEnabled is false`,
+  test.each(Object.values(TodoInternalKey))(
+    `should not send a %p notification since isTodoNotificationsEnabled is false`,
     async (contentKey) => {
       const dispatch = generateDispatch({ contentKey });
       const recipientClient = generateUpdateMemberSettingsMock({

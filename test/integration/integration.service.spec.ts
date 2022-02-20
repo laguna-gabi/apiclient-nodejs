@@ -21,6 +21,7 @@ import {
   ObjectNewMemberNudgeClass,
   ObjectRegisterMemberWithTriggeredClass,
   Platform,
+  TodoInternalKey,
   generateAppointmentScheduleLongReminderMock,
   generateAppointmentScheduleReminderMock,
   generateAppointmentScheduledMemberMock,
@@ -1027,7 +1028,7 @@ describe('Notifications full flow', () => {
     },
   );
 
-  it(`should handle 'immediate' event of type ${InternalKey.createTodoMEDS}`, async () => {
+  it(`should handle 'immediate' event of type ${TodoInternalKey.createTodoMEDS}`, async () => {
     const mock = generateCreateTodoMEDSMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
@@ -1037,7 +1038,7 @@ describe('Notifications full flow', () => {
     await compareTodos(mock);
   });
 
-  it(`should handle 'immediate' event of type ${InternalKey.createTodoAPPT}`, async () => {
+  it(`should handle 'immediate' event of type ${TodoInternalKey.createTodoAPPT}`, async () => {
     const mock = generateCreateTodoAPPTMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
@@ -1047,7 +1048,7 @@ describe('Notifications full flow', () => {
     await compareTodos(mock);
   });
 
-  it(`should handle 'immediate' event of type ${InternalKey.createTodoTODO}`, async () => {
+  it(`should handle 'immediate' event of type ${TodoInternalKey.createTodoTODO}`, async () => {
     const mock = generateCreateTodoTODOMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
@@ -1057,7 +1058,7 @@ describe('Notifications full flow', () => {
     await compareTodos(mock);
   });
 
-  it(`should handle 'immediate' event of type ${InternalKey.updateTodoMEDS}`, async () => {
+  it(`should handle 'immediate' event of type ${TodoInternalKey.updateTodoMEDS}`, async () => {
     const mock = generateUpdateTodoMEDSMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
@@ -1067,7 +1068,7 @@ describe('Notifications full flow', () => {
     await compareTodos(mock);
   });
 
-  it(`should handle 'immediate' event of type ${InternalKey.updateTodoAPPT}`, async () => {
+  it(`should handle 'immediate' event of type ${TodoInternalKey.updateTodoAPPT}`, async () => {
     const mock = generateUpdateTodoAPPTMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
@@ -1077,7 +1078,7 @@ describe('Notifications full flow', () => {
     await compareTodos(mock);
   });
 
-  it(`should handle 'immediate' event of type ${InternalKey.updateTodoTODO}`, async () => {
+  it(`should handle 'immediate' event of type ${TodoInternalKey.updateTodoTODO}`, async () => {
     const mock = generateUpdateTodoTODOMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
@@ -1087,7 +1088,7 @@ describe('Notifications full flow', () => {
     await compareTodos(mock);
   });
 
-  it(`should handle 'immediate' event of type ${InternalKey.deleteTodoMEDS}`, async () => {
+  it(`should handle 'immediate' event of type ${TodoInternalKey.deleteTodoMEDS}`, async () => {
     const mock = generateDeleteTodoMEDSMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
@@ -1097,7 +1098,7 @@ describe('Notifications full flow', () => {
     await compareTodos(mock);
   });
 
-  it(`should handle 'immediate' event of type ${InternalKey.deleteTodoAPPT}`, async () => {
+  it(`should handle 'immediate' event of type ${TodoInternalKey.deleteTodoAPPT}`, async () => {
     const mock = generateDeleteTodoAPPTMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
@@ -1107,7 +1108,7 @@ describe('Notifications full flow', () => {
     await compareTodos(mock);
   });
 
-  it(`should handle 'immediate' event of type ${InternalKey.deleteTodoTODO}`, async () => {
+  it(`should handle 'immediate' event of type ${TodoInternalKey.deleteTodoTODO}`, async () => {
     const mock = generateDeleteTodoTODOMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
