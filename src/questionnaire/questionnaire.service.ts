@@ -6,9 +6,11 @@ import {
   ErrorType,
   Errors,
   EventType,
+  IEventDeleteMember,
   IEventOnAlertForQRSubmit,
   ItemType,
   LoggerService,
+  deleteMemberObjects,
 } from '../common';
 import {
   AlertCondition,
@@ -26,7 +28,8 @@ import {
   SubmitQuestionnaireResponseParams,
 } from '.';
 import { formatEx } from '@lagunahealth/pandora';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { ISoftDelete } from '../db';
 
 @Injectable()
 export class QuestionnaireService extends BaseService {
@@ -35,7 +38,8 @@ export class QuestionnaireService extends BaseService {
     private readonly questionnaire: Model<QuestionnaireDocument>,
 
     @InjectModel(QuestionnaireResponse.name)
-    private readonly questionnaireResponse: Model<QuestionnaireResponseDocument>,
+    private readonly questionnaireResponse: Model<QuestionnaireResponseDocument> &
+      ISoftDelete<QuestionnaireResponseDocument>,
     readonly logger: LoggerService,
     readonly eventEmitter: EventEmitter2,
   ) {
@@ -143,6 +147,19 @@ export class QuestionnaireService extends BaseService {
           type: template.type,
         };
       }),
+    );
+  }
+
+  @OnEvent(EventType.onDeletedMember, { async: true })
+  async deleteMemberQuestionnaireResponses(params: IEventDeleteMember) {
+    await deleteMemberObjects<
+      Model<QuestionnaireResponseDocument> & ISoftDelete<QuestionnaireResponseDocument>
+    >(
+      params,
+      this.questionnaireResponse,
+      this.logger,
+      this.deleteMemberQuestionnaireResponses.name,
+      QuestionnaireService.name,
     );
   }
 

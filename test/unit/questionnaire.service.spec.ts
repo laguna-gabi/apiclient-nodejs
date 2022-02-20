@@ -2,6 +2,7 @@ import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, Types, model } from 'mongoose';
 import {
+  checkDelete,
   dbConnect,
   dbDisconnect,
   defaultModules,
@@ -257,6 +258,7 @@ describe('QuestionnaireService', () => {
       expect(qr).toEqual({
         _id: id,
         questionnaireId: new Types.ObjectId(phq9TypeTemplate.id.toString()),
+        deleted: false,
         updatedAt: expect.any(Date),
         createdAt: expect.any(Date),
         createdBy: new Types.ObjectId(createdBy),
@@ -333,6 +335,7 @@ describe('QuestionnaireService', () => {
         id: qr.id,
         questionnaireId: new Types.ObjectId(phq9TypeTemplate.id.toString()),
         type: QuestionnaireType.phq9,
+        deleted: false,
         updatedAt: expect.any(Date),
         createdAt: expect.any(Date),
         createdBy: new Types.ObjectId(createdBy),
@@ -379,6 +382,7 @@ describe('QuestionnaireService', () => {
         {
           id: id1,
           questionnaireId: new Types.ObjectId(phq9TypeTemplate.id.toString()),
+          deleted: false,
           type: QuestionnaireType.phq9,
           updatedAt: expect.any(Date),
           createdAt: expect.any(Date),
@@ -394,6 +398,7 @@ describe('QuestionnaireService', () => {
         {
           id: id2,
           questionnaireId: new Types.ObjectId(who5TypeTemplate.id.toString()),
+          deleted: false,
           type: QuestionnaireType.who5,
           updatedAt: expect.any(Date),
           createdAt: expect.any(Date),
@@ -406,6 +411,55 @@ describe('QuestionnaireService', () => {
           result: { alert: false, score: undefined, severity: undefined },
         },
       ]);
+    });
+  });
+
+  describe('deleteMemberQuestionnaireResponses', () => {
+    test.each([true, false])('should %p delete member questionnaire responses', async (hard) => {
+      const createdBy = generateId();
+      const memberId = generateId();
+
+      await service.submitQuestionnaireResponse({
+        questionnaireId: phq9TypeTemplate.id.toString(),
+        createdBy,
+        memberId,
+        answers: [
+          { code: 'q1', value: '2' },
+          { code: 'q2', value: '2' },
+          { code: 'q3', value: '1' },
+        ],
+      });
+
+      await service.submitQuestionnaireResponse({
+        questionnaireId: who5TypeTemplate.id.toString(),
+        createdBy,
+        memberId,
+        answers: [
+          { code: 'q1', value: '2' },
+          { code: 'q2', value: '1' },
+        ],
+      });
+
+      let qrs = await service.getQuestionnaireResponseByMemberId(memberId);
+
+      expect(qrs).toHaveLength(2);
+
+      await service.deleteMemberQuestionnaireResponses({ memberId, deletedBy: memberId, hard });
+
+      qrs = await service.getQuestionnaireResponseByMemberId(memberId);
+
+      expect(qrs).toHaveLength(0);
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const deletedQRs = await questionnaireResponseModel.findWithDeleted({
+        memberId: new Types.ObjectId(memberId),
+      });
+      if (hard) {
+        expect(deletedQRs).toHaveLength(0);
+      } else {
+        checkDelete(deletedQRs, { memberId: new Types.ObjectId(memberId) }, memberId);
+      }
     });
   });
 

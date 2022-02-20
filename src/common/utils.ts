@@ -15,6 +15,7 @@ import { IEventDeleteMember, LoggerService } from '.';
 import { CaregiverDocument, JournalDocument, RecordingDocument } from '../member';
 import { TodoDocument, TodoDoneDocument } from '../todo';
 import { DailyReportDocument } from '../dailyReport';
+import { QuestionnaireResponseDocument } from '../questionnaire';
 
 export function reformatDate(date: string, stringFormat: string): string {
   const dateObject = Date.parse(date);
@@ -104,7 +105,9 @@ type Entity =
   | JournalDocument
   | TodoDocument
   | TodoDoneDocument
-  | DailyReportDocument;
+  | DailyReportDocument
+  | QuestionnaireResponseDocument;
+
 export async function deleteMemberObjects<T extends Model<Entity> & ISoftDelete<Entity>>(
   params: IEventDeleteMember,
   model: T,

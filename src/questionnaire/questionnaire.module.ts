@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { useFactoryOptions } from '../db';
 import {
   Questionnaire,
   QuestionnaireDto,
@@ -9,12 +10,18 @@ import {
   QuestionnaireService,
 } from '.';
 import { CommonModule } from '../common';
+import * as mongooseDelete from 'mongoose-delete';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Questionnaire.name, schema: QuestionnaireDto },
-      { name: QuestionnaireResponse.name, schema: QuestionnaireResponseDto },
+    MongooseModule.forFeature([{ name: Questionnaire.name, schema: QuestionnaireDto }]),
+    MongooseModule.forFeatureAsync([
+      {
+        name: QuestionnaireResponse.name,
+        useFactory: () => {
+          return QuestionnaireResponseDto.plugin(mongooseDelete, useFactoryOptions);
+        },
+      },
     ]),
     CommonModule,
   ],

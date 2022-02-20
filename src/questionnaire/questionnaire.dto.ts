@@ -2,6 +2,7 @@ import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ArrayNotEmpty } from 'class-validator';
 import { Document, Types } from 'mongoose';
+import { ISoftDelete } from '../db';
 import {
   ErrorType,
   Errors,
@@ -339,5 +340,7 @@ export class Answer {
 export type QuestionnaireDocument = Questionnaire & Document;
 export const QuestionnaireDto = SchemaFactory.createForClass(Questionnaire);
 
-export type QuestionnaireResponseDocument = QuestionnaireResponse & Document;
+export type QuestionnaireResponseDocument = QuestionnaireResponse &
+  Document &
+  ISoftDelete<QuestionnaireResponseDocument>;
 export const QuestionnaireResponseDto = SchemaFactory.createForClass(QuestionnaireResponse);

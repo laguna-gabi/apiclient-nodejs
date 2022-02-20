@@ -447,6 +447,9 @@ describe('Integration tests: all', () => {
       delete addCaregiverParams.createdBy;
       await handler.setContextUserId(member.id).mutations.addCaregiver({ addCaregiverParams });
 
+      // submit QR for member
+      await submitQR(member.id, member.primaryUserId.toString());
+
       // delete member
       const deleteMemberParams = generateDeleteMemberParams({ id: member.id, hard });
       const result = await handler
@@ -491,6 +494,11 @@ describe('Integration tests: all', () => {
 
       const journals = await handler.setContextUserId(member.id).queries.getJournals();
       expect(journals).toEqual([]);
+
+      const qrs = await handler.queries.getMemberQuestionnaireResponses({
+        memberId: member.id,
+      });
+      expect(qrs).toEqual([]);
     });
   });
 
@@ -2018,5 +2026,42 @@ describe('Integration tests: all', () => {
       },
     });
     expect(todoDones).toHaveLength(1);
+  };
+
+  const submitQR = async (memberId: string, userId: string) => {
+    // Create a template:
+    const createQuestionnaireParams: CreateQuestionnaireParams = generateCreateQuestionnaireParams({
+      type: QuestionnaireType.phq9, // type of form to calculate a score
+      shortName: 'PHQ-9',
+      items: [
+        mockGenerateQuestionnaireItem({
+          type: ItemType.choice,
+          code: 'q1',
+          options: [
+            { label: faker.lorem.words(3), value: 0 },
+            { label: faker.lorem.words(3), value: 1 },
+            { label: faker.lorem.words(3), value: 2 },
+          ],
+        }),
+      ],
+      notificationScoreThreshold: 2,
+    });
+
+    const { id: questionnaireId } = await handler
+      .setContextUserId(userId, '', [UserRole.admin])
+      .mutations.createQuestionnaire({
+        createQuestionnaireParams,
+      });
+
+    // Submit a questionnaire response
+    await handler
+      .setContextUserId(userId, '', [UserRole.nurse])
+      .mutations.submitQuestionnaireResponse({
+        submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
+          questionnaireId,
+          memberId,
+          answers: [{ code: 'q1', value: '2' }],
+        }),
+      });
   };
 });
