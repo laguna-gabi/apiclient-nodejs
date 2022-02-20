@@ -1,9 +1,9 @@
 import {
   InnerQueueTypes,
-  InternalKey,
   NotificationType,
   ObjectBaseType,
   ServiceName,
+  TodoInternalKey,
   generateDispatchId,
 } from '../index';
 import { v4 } from 'uuid';
@@ -25,7 +25,7 @@ export const generateDeleteTodoMEDSMock = ({
   todoId: string;
   correlationId?: string;
 }): ObjectDeleteTodoType => {
-  const contentKey = InternalKey.deleteTodoMEDS;
+  const contentKey = TodoInternalKey.deleteTodoMEDS;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),
@@ -49,7 +49,7 @@ export const generateDeleteTodoAPPTMock = ({
   todoId: string;
   correlationId?: string;
 }): ObjectDeleteTodoType => {
-  const contentKey = InternalKey.deleteTodoAPPT;
+  const contentKey = TodoInternalKey.deleteTodoAPPT;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),
@@ -73,7 +73,7 @@ export const generateDeleteTodoTODOMock = ({
   todoId: string;
   correlationId?: string;
 }): ObjectDeleteTodoType => {
-  const contentKey = InternalKey.deleteTodoTODO;
+  const contentKey = TodoInternalKey.deleteTodoTODO;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),

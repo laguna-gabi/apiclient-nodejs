@@ -1,12 +1,12 @@
+import { v4 } from 'uuid';
 import {
   InnerQueueTypes,
-  InternalKey,
   NotificationType,
   ObjectBaseType,
   ServiceName,
+  TodoInternalKey,
   generateDispatchId,
 } from '../index';
-import { v4 } from 'uuid';
 
 export type ObjectUpdateTodoType = ObjectBaseType;
 
@@ -25,7 +25,7 @@ export const generateUpdateTodoMEDSMock = ({
   todoId: string;
   correlationId?: string;
 }): ObjectUpdateTodoType => {
-  const contentKey = InternalKey.updateTodoMEDS;
+  const contentKey = TodoInternalKey.updateTodoMEDS;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),
@@ -48,7 +48,7 @@ export const generateUpdateTodoAPPTMock = ({
   todoId: string;
   correlationId?: string;
 }): ObjectUpdateTodoType => {
-  const contentKey = InternalKey.updateTodoAPPT;
+  const contentKey = TodoInternalKey.updateTodoAPPT;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),
@@ -71,7 +71,7 @@ export const generateUpdateTodoTODOMock = ({
   todoId: string;
   correlationId?: string;
 }): ObjectUpdateTodoType => {
-  const contentKey = InternalKey.updateTodoTODO;
+  const contentKey = TodoInternalKey.updateTodoTODO;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),
