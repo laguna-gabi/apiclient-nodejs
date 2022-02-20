@@ -54,14 +54,14 @@
             "customContent": "",
             "newChatMessageFromMember": "",
             "actionItemOverdue": "",
-            "appointmentReviewOverdue": "",
             "appointmentScheduledUser": "",
             "memberAssigned": "",
             "memberNotFeelingWellMessage": "",
             "journalContent": "",
             "appointmentReviewed": "",
             "assessmentSubmitScoreOverThreshold": "",
-            "memberCreateTodo": ""
+            "memberCreateTodo": "",
+            "appointmentSubmitOverdue": ""
         }
     }
 }
