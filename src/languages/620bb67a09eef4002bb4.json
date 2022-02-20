@@ -1,7 +1,7 @@
 {
     "translation": {
         "contents": {
-            "newMember": "Hello {{member.honorific}} {{member.lastName}}, I'm {{user.firstName}} from Laguna Health. This is a new TEXT This is a new TEXT This is a new TEXT.\n{{dynamicLink}}",
+            "newMember": "Hello {{member.honorific}} {{member.lastName}}, I'm {{user.firstName}} from Laguna Health. You are on {{org.name}} DO SOMETHING ABOUT IT\n{{dynamicLink}}",
             "newControlMember": "",
             "newMemberNudge": "",
             "newRegisteredMember": "",
