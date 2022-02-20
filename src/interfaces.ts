@@ -145,6 +145,10 @@ export enum InternalKey {
   newChatMessageFromMember = 'newChatMessageFromMember',
   appointmentScheduledUser = 'appointmentScheduledUser',
   memberNotFeelingWellMessage = 'memberNotFeelingWellMessage',
+  assessmentSubmitAlert = 'assessmentSubmitAlert',
+}
+
+export enum TodoInternalKey {
   createTodoMEDS = 'createTodo.MEDS',
   createTodoAPPT = 'createTodo.APPT',
   createTodoTODO = 'createTodo.TODO',
@@ -154,7 +158,6 @@ export enum InternalKey {
   deleteTodoMEDS = 'deleteTodo.MEDS',
   deleteTodoAPPT = 'deleteTodo.APPT',
   deleteTodoTODO = 'deleteTodo.TODO',
-  assessmentSubmitAlert = 'assessmentSubmitAlert',
 }
 
 export enum CustomKey {
@@ -164,7 +167,7 @@ export enum CustomKey {
   journalContent = 'journalContent',
 }
 
-export type ContentKey = ExternalKey | InternalKey | CustomKey;
+export type ContentKey = ExternalKey | InternalKey | TodoInternalKey | CustomKey;
 
 export enum Language {
   en = 'en',
