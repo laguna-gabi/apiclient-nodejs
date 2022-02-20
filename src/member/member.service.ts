@@ -1040,8 +1040,6 @@ export class MemberService extends BaseService {
   }
 
   private async appointmentsItemsToAlerts(member: Member): Promise<Alert[]> {
-    const reviewedAppointments = [];
-
     // collect all member recordings
     const recordings = await this.recordingModel.find({
       memberId: new Types.ObjectId(member.id),
@@ -1050,8 +1048,6 @@ export class MemberService extends BaseService {
 
     // collect all reviewed appointments (push all reviewed appointment ids to an array)
     const reviewAppointmentAlerts = recordings.map((recording) => {
-      reviewedAppointments.push(recording.appointmentId);
-
       return {
         id: `${recording.id}_${AlertType.appointmentReviewed}`,
         type: AlertType.appointmentReviewed,
@@ -1063,29 +1059,26 @@ export class MemberService extends BaseService {
       } as Alert;
     });
 
-    // grab all `done` (status) appointments where `end` occurred more than 24hrs ago (overdue for review)
+    // grab all `scheduled` (status) appointments where `end` occurred more than 24hrs ago (overdue for submit)
     const appointments = await this.appointmentModel.find({
       memberId: new Types.ObjectId(member.id),
-      status: AppointmentStatus.done,
+      status: AppointmentStatus.scheduled,
       end: { $lte: sub(new Date(), { days: 1 }) },
     });
 
-    // if an overdue appointment is not included in the list of reviewed appointments we generate an alert
-    const reviewOverDueAlerts = appointments.map((appointment) => {
-      if (!reviewedAppointments.includes(appointment.id)) {
-        return {
-          id: `${appointment.id}_${AlertType.appointmentReviewOverdue}`,
-          type: AlertType.appointmentReviewOverdue,
-          date: add(appointment.end, { days: 1 }),
-          text: this.internationalization.getAlerts(AlertType.appointmentReviewOverdue, {
-            member,
-          }),
-          memberId: member.id,
-        } as Alert;
-      }
+    const appointmentSubmitOverdueAlerts = appointments.map((appointment) => {
+      return {
+        id: `${appointment.id}_${AlertType.appointmentSubmitOverdue}`,
+        type: AlertType.appointmentSubmitOverdue,
+        date: add(appointment.end, { days: 1 }),
+        text: this.internationalization.getAlerts(AlertType.appointmentSubmitOverdue, {
+          member,
+        }),
+        memberId: member.id,
+      } as Alert;
     });
 
-    return [reviewAppointmentAlerts, reviewOverDueAlerts].flat();
+    return [reviewAppointmentAlerts, appointmentSubmitOverdueAlerts].flat();
   }
 
   private async actionItemsToAlerts(member: Member): Promise<Alert[]> {

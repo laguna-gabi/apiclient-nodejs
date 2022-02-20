@@ -2052,18 +2052,18 @@ describe('MemberService', () => {
         ]);
       });
 
-      it('should return appointment reviewed overdue alerts', async () => {
+      it('should return appointment submit overdue alerts', async () => {
         mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
         // create a new member
         const memberId = await generateMember();
 
         const member = await service.get(memberId);
 
-        // create a `done` appointment for the member (and primary user)
+        // create a `scheduled` appointment for the member (and primary user)
         const { id: appointmentId } = await generateAppointment({
           memberId,
           userId: member.primaryUserId.toString(),
-          status: AppointmentStatus.done,
+          status: AppointmentStatus.scheduled,
         });
 
         const endDate = sub(new Date(), { days: 2 });
@@ -2071,12 +2071,6 @@ describe('MemberService', () => {
         await modelAppointment.updateOne(
           { _id: new Types.ObjectId(appointmentId) },
           { $set: { end: endDate } },
-        );
-
-        // Create a recording without a review - we are not expecting to see this review alert
-        await service.updateRecording(
-          generateUpdateRecordingParams({ memberId, appointmentId }),
-          member.primaryUserId.toString(),
         );
 
         const alerts = await service.getAlerts(member.primaryUserId.toString());
@@ -2094,14 +2088,14 @@ describe('MemberService', () => {
             isNew: true,
           },
           {
-            id: `${appointmentId}_${AlertType.appointmentReviewOverdue}`,
+            id: `${appointmentId}_${AlertType.appointmentSubmitOverdue}`,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.appointmentReviewOverdue, {
+            text: service.internationalization.getAlerts(AlertType.appointmentSubmitOverdue, {
               member,
             }),
             memberId: member.id.toString(),
-            type: AlertType.appointmentReviewOverdue,
+            type: AlertType.appointmentSubmitOverdue,
             date: add(endDate, { days: 1 }),
             dismissed: false,
             isNew: true,

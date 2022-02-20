@@ -11,7 +11,7 @@ export enum AlertType {
   customContent = 'customContent',
   journalContent = 'journalContent',
   appointmentReviewed = 'appointmentReviewed',
-  appointmentReviewOverdue = 'appointmentReviewOverdue',
+  appointmentSubmitOverdue = 'appointmentSubmitOverdue',
   actionItemOverdue = 'actionItemOverdue',
   memberCreateTodo = 'memberCreateTodo',
 }
