@@ -32,6 +32,7 @@ import {
   LoggerService,
   PhoneType,
   RecordingType,
+  defaultTimestampsDbValues,
 } from '../../src/common';
 import {
   ActionItem,
@@ -90,7 +91,6 @@ import {
   dbConnect,
   dbDisconnect,
   defaultModules,
-  defaultTimestampsDbValues,
   generateAddCaregiverParams,
   generateCreateMemberParams,
   generateCreateQuestionnaireParams,

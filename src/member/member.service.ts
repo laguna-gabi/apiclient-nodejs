@@ -6,7 +6,6 @@ import * as config from 'config';
 import { add, differenceInMilliseconds, sub } from 'date-fns';
 import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
-import { defaultTimestampsDbValues } from '../../test/common';
 import { v4 } from 'uuid';
 import {
   ActionItem,
@@ -63,6 +62,7 @@ import {
   IEventUnconsentedAppointmentEnded,
   Identifier,
   LoggerService,
+  defaultTimestampsDbValues,
   deleteMemberObjects,
   extractEmbeddedSetObject,
 } from '../common';

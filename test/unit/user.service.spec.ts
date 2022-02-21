@@ -20,6 +20,7 @@ import {
   IEventOnUpdatedUserAppointments,
   LoggerService,
   UserRole,
+  defaultTimestampsDbValues,
 } from '../../src/common';
 import {
   GetSlotsParams,
@@ -37,7 +38,6 @@ import {
   dbConnect,
   dbDisconnect,
   defaultModules,
-  defaultTimestampsDbValues,
   generateAvailabilityInput,
   generateCreateUserParams,
   generateId,

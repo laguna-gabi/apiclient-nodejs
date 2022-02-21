@@ -115,8 +115,6 @@ export const defaultModules = () => {
   return [DbModule, EventEmitterModule.forRoot()];
 };
 
-export type defaultTimestampsDbValues = { createdAt: Date; updatedAt: Date };
-
 export const mockProviders = (
   module: TestingModule,
 ): {

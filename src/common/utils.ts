@@ -137,3 +137,5 @@ export async function deleteMemberObjects<T extends Model<Entity> & ISoftDelete<
     logger.error(params, serviceName, methodName, formatEx(ex));
   }
 }
+
+export type defaultTimestampsDbValues = { createdAt: Date; updatedAt: Date };

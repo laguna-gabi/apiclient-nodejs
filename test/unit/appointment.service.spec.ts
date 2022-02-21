@@ -26,13 +26,13 @@ import {
   IEventOnUpdatedAppointmentScores,
   IEventUnconsentedAppointmentEnded,
   LoggerService,
+  defaultTimestampsDbValues,
 } from '../../src/common';
 import {
   checkDelete,
   dbConnect,
   dbDisconnect,
   defaultModules,
-  defaultTimestampsDbValues,
   generateAppointmentLink,
   generateId,
   generateNotesParams,

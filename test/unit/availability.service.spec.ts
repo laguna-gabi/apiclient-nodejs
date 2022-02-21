@@ -8,14 +8,13 @@ import {
   AvailabilityModule,
   AvailabilityService,
 } from '../../src/availability';
-import { ErrorType, Errors, LoggerService } from '../../src/common';
+import { ErrorType, Errors, LoggerService, defaultTimestampsDbValues } from '../../src/common';
 import { User, UserDocument, UserDto } from '../../src/user';
 import {
   checkDelete,
   dbConnect,
   dbDisconnect,
   defaultModules,
-  defaultTimestampsDbValues,
   generateAvailabilityInput,
   generateCreateUserParams,
   generateId,
