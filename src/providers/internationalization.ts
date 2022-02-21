@@ -14,16 +14,16 @@ export class Internationalization extends BaseInternationalization implements On
     // eslint-disable-next-line max-len
     // if getContents is applied more than once the honorific value in recipientClient may be corrupted
     const updateRecipientClient = cloneDeep(recipientClient);
-    const lng = recipientClient.language || Language.en;
 
+    const base = recipientClient.language || Language.en;
     if (recipientClient && recipientClient.honorific) {
       updateRecipientClient.honorific = this.i18n.t(`honorific.${recipientClient.honorific}`, {
-        lng,
+        lng: base,
       });
     }
     if (senderClient && senderClient.honorific) {
       senderClient.honorific = this.i18n.t(`honorific.${senderClient.honorific}`, {
-        lng,
+        lng: base,
       });
     }
 
@@ -32,12 +32,15 @@ export class Internationalization extends BaseInternationalization implements On
       params.contentKey === InternalKey.newChatMessageFromMember ||
       params.contentKey === InternalKey.assessmentSubmitAlert ||
       params.contentKey === InternalKey.memberNotFeelingWellMessage;
+
     return this.i18n.t(`contents.${contentKey}`, {
       member: replace ? senderClient : updateRecipientClient,
       user: replace ? updateRecipientClient : senderClient,
       ...extraData,
       org: replace ? { name: senderClient.orgName } : extraData.org,
-      lng,
+      lng: this.supportedOrgNameLanguages.includes(recipientClient.orgName)
+        ? recipientClient.orgName
+        : base,
     });
   }
 }
