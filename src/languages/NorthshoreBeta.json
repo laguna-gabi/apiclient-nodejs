@@ -1,7 +1,7 @@
 {
     "translation": {
         "contents": {
-            "newMember": "Hello {{member.honorific}} {{member.lastName}}, I'm {{user.firstName}} from Laguna Health. You are on {{org.name}} DO SOMETHING ABOUT IT\n{{dynamicLink}}",
+            "newMember": "Hello {{member.honorific}} {{member.lastName}}, I'm {{user.firstName}} from Laguna Health. Thank you for participating in our Beta testing. We are excited to provide you free post-hospital recovery support. Tap below to download the app and schedule the first check-in.\n{{dynamicLink}}",
             "newControlMember": "",
             "newMemberNudge": "",
             "newRegisteredMember": "",
