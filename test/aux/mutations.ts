@@ -48,7 +48,7 @@ import {
   Todo,
 } from '../../src/todo';
 import { CreateUserParams } from '../../src/user';
-import { CreateRedFlagParams } from '../../src/care';
+import { CreateCarePlanParams, CreateRedFlagParams, UpdateCarePlanParams } from '../../src/care';
 import {
   CreateQuestionnaireParams,
   QuestionnaireResponse,
@@ -1283,6 +1283,58 @@ export class Mutations {
 
     return (
       isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createRedFlag
+    );
+  };
+
+  createCarePlan = async ({
+    createCarePlanParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    createCarePlanParams: CreateCarePlanParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Identifier> => {
+    const result = await this.apolloClient.mutate({
+      variables: { createCarePlanParams },
+      mutation: gql`
+        mutation createCarePlan($createCarePlanParams: CreateCarePlanParams!) {
+          createCarePlan(createCarePlanParams: $createCarePlanParams) {
+            id
+          }
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.createCarePlan
+    );
+  };
+
+  updateCarePlan = async ({
+    updateCarePlanParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    updateCarePlanParams: UpdateCarePlanParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Identifier> => {
+    const result = await this.apolloClient.mutate({
+      variables: { updateCarePlanParams },
+      mutation: gql`
+        mutation updateCarePlan($updateCarePlanParams: UpdateCarePlanParams!) {
+          updateCarePlan(updateCarePlanParams: $updateCarePlanParams) {
+            id
+          }
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
+      result.data.updateCarePlan
     );
   };
 

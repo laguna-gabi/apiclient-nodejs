@@ -856,7 +856,7 @@ export const generateCreateRedFlagParams = ({
 }: Partial<CreateRedFlagParams> = {}) => {
   return {
     memberId,
-    type: type,
+    type,
     notes,
     createdBy,
   };

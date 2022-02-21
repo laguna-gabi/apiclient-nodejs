@@ -1,7 +1,14 @@
 import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerService } from '../../src/common';
-import { dbDisconnect, defaultModules, generateCreateRedFlagParams, generateId } from '../index';
+import {
+  dbDisconnect,
+  defaultModules,
+  generateCreateCarePlanParams,
+  generateCreateRedFlagParams,
+  generateId,
+  generateUpdateCarePlanParams,
+} from '../index';
 import { CareModule, CareResolver, CareService } from '../../src/care';
 import { redFlags } from '../../src/care/redFlags.json';
 
@@ -107,6 +114,59 @@ describe('CareResolver', () => {
     });
 
     it('should get all redFlagTypes', async () => {
+      await resolver.getCarePlanTypes();
+      expect(spyOnServiceGetCarePlanTypes).toBeCalled();
+    });
+  });
+
+  describe('CarePlan', () => {
+    let spyOnServiceCreateCarePlan;
+    let spyOnServiceGetMemberCarePlans;
+    let spyOnServiceUpdateCarePlan;
+    let spyOnServiceGetCarePlanTypes;
+
+    beforeEach(() => {
+      spyOnServiceCreateCarePlan = jest.spyOn(service, 'createCarePlan');
+      spyOnServiceGetMemberCarePlans = jest.spyOn(service, 'getMemberCarePlans');
+      spyOnServiceUpdateCarePlan = jest.spyOn(service, 'updateCarePlan');
+      spyOnServiceGetCarePlanTypes = jest.spyOn(service, 'getCarePlanTypes');
+      spyOnServiceCreateCarePlan.mockImplementationOnce(async () => undefined);
+      spyOnServiceUpdateCarePlan.mockImplementationOnce(async () => true);
+    });
+
+    afterEach(() => {
+      spyOnServiceCreateCarePlan.mockReset();
+      spyOnServiceGetMemberCarePlans.mockReset();
+      spyOnServiceUpdateCarePlan.mockReset();
+      spyOnServiceGetCarePlanTypes.mockReset();
+    });
+
+    it('should create a care plan', async () => {
+      const params = generateCreateCarePlanParams();
+      const userId = generateId();
+      await resolver.createCarePlan(userId, params);
+
+      expect(spyOnServiceCreateCarePlan).toBeCalledTimes(1);
+      expect(spyOnServiceCreateCarePlan).toBeCalledWith({ ...params, createdBy: userId });
+    });
+
+    it('should get care plans by memberId', async () => {
+      const memberId = generateId();
+      await resolver.getMemberCarePlans(memberId);
+
+      expect(spyOnServiceGetMemberCarePlans).toBeCalledTimes(1);
+      expect(spyOnServiceGetMemberCarePlans).toBeCalledWith(memberId);
+    });
+
+    it('should update a care plan', async () => {
+      const params = generateUpdateCarePlanParams();
+      await resolver.updateCarePlan(params);
+
+      expect(spyOnServiceUpdateCarePlan).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateCarePlan).toBeCalledWith(params);
+    });
+
+    it('should get all carePlanTypes', async () => {
       await resolver.getCarePlanTypes();
       expect(spyOnServiceGetCarePlanTypes).toBeCalled();
     });

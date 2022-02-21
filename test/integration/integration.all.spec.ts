@@ -1837,21 +1837,6 @@ describe('Integration tests: all', () => {
       expect(redFlagsAfter[0].id).toEqual(id2);
     });
 
-    it('should get care plan types', async () => {
-      const availableCarePlanTypes = await handler.queries.getCarePlanTypes();
-      const { description, createdBy, isCustom, id } = handler.carePlanType;
-      expect(availableCarePlanTypes).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            description,
-            createdBy: createdBy.toString(),
-            isCustom,
-            id,
-          }),
-        ]),
-      );
-    });
-
     it('should get barrier types', async () => {
       const availableBarrierTypes = await handler.queries.getBarrierTypes();
       const { description, domain, id } = handler.barrierType;
@@ -1864,6 +1849,21 @@ describe('Integration tests: all', () => {
             carePlanTypes: expect.arrayContaining([
               expect.objectContaining({ id: handler.carePlanType.id }),
             ]),
+          }),
+        ]),
+      );
+    });
+
+    it('should get care plan types', async () => {
+      const availableCarePlanTypes = await handler.queries.getCarePlanTypes();
+      const { description, createdBy, isCustom, id } = handler.carePlanType;
+      expect(availableCarePlanTypes).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            description,
+            createdBy: createdBy.toString(),
+            isCustom,
+            id,
           }),
         ]),
       );

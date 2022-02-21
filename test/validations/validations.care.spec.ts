@@ -1,8 +1,14 @@
-import { UserRole } from '../../src/common';
+import { ErrorType, Errors, UserRole } from '../../src/common';
 import { Handler } from '../aux';
-import { generateCreateRedFlagParams } from '../generators';
+import {
+  generateCarePlanTypeInput,
+  generateCreateCarePlanParams,
+  generateCreateRedFlagParams,
+  generateId,
+  generateUpdateCarePlanParams,
+} from '../generators';
 import { generateCreateUserParams } from '../index';
-import { CreateRedFlagParams } from '../../src/care';
+import { CreateCarePlanParams, CreateRedFlagParams, UpdateCarePlanParams } from '../../src/care';
 
 const stringError = `String cannot represent a non string value`;
 
@@ -28,9 +34,7 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
     `(
       `should fail to create a red flag since mandatory field $field is missing`,
       async (params) => {
-        /* eslint-enable max-len */
         const createRedFlagParams: CreateRedFlagParams = generateCreateRedFlagParams();
-        // delete createRedFlagParams.createdBy;
         delete createRedFlagParams[params.field];
         await handler.mutations.createRedFlag({
           createRedFlagParams,
@@ -61,6 +65,95 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
       ${{ memberId: 123 }} | ${{ invalidFieldsError: stringError }}
     `(`should fail to getMemberRedFlags since $field is not valid,`, async (params) => {
       await handler.queries.getMemberRedFlags({
+        ...params.input,
+        ...params.error,
+      });
+    });
+  });
+
+  describe('createCarePlan', () => {
+    /* eslint-disable max-len */
+    test.each`
+      field          | error
+      ${'memberId'}  | ${`Field "memberId" of required type "String!" was not provided.`}
+      ${'type'}      | ${`Field "type" of required type "CarePlanTypeInput!" was not provided.`}
+      ${'barrierId'} | ${`Field "barrierId" of required type "String!" was not provided.`}
+    `(
+      `should fail to create a care plan since mandatory field $field is missing`,
+      async (params) => {
+        const createCarePlanParams: CreateCarePlanParams = generateCreateCarePlanParams({
+          type: generateCarePlanTypeInput({ id: generateId() }),
+          barrierId: generateId(),
+        });
+        delete createCarePlanParams[params.field];
+        await handler.mutations.createCarePlan({
+          createCarePlanParams,
+          missingFieldError: params.error,
+        });
+      },
+    );
+
+    /* eslint-disable max-len */
+    test.each`
+      input                                 | error
+      ${{ barrierId: 123 }}                 | ${{ missingFieldError: stringError }}
+      ${{ notes: 123 }}                     | ${{ missingFieldError: stringError }}
+      ${{ dueDate: 'not-valid' }}           | ${{ missingFieldError: 'must be a Date instance' }}
+      ${{ type: 'not-valid' }}              | ${{ missingFieldError: 'Expected type "CarePlanTypeInput" to be an object' }}
+      ${{ type: { id: 123 } }}              | ${{ missingFieldError: stringError }}
+      ${{ type: { custom: 123 } }}          | ${{ missingFieldError: stringError }}
+      ${{ type: { custom: 'a', id: 'b' } }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.carePlanTypeInputInvalid)] }}
+      ${{ type: {} }}                       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.carePlanTypeInputInvalid)] }}
+    `(`should fail to create a care plan since $input is not valid`, async (params) => {
+      const createCarePlanParams: CreateCarePlanParams = generateCreateCarePlanParams({
+        type: generateCarePlanTypeInput({ id: generateId() }),
+        barrierId: generateId(),
+        ...params.input,
+      });
+      delete createCarePlanParams.createdBy;
+
+      await handler.mutations.createCarePlan({ createCarePlanParams, ...params.error });
+    });
+  });
+
+  describe('updateCarePlan', () => {
+    /* eslint-disable max-len */
+    test.each`
+      field   | error
+      ${'id'} | ${`Field "id" of required type "String!" was not provided.`}
+    `(
+      `should fail to update a care plan since mandatory field $field is missing`,
+      async (params) => {
+        const updateCarePlanParams: UpdateCarePlanParams = generateUpdateCarePlanParams();
+        delete updateCarePlanParams[params.field];
+        await handler.mutations.updateCarePlan({
+          updateCarePlanParams: updateCarePlanParams,
+          missingFieldError: params.error,
+        });
+      },
+    );
+
+    /* eslint-disable max-len */
+    test.each`
+      input                      | error
+      ${{ id: 123 }}             | ${{ missingFieldError: stringError }}
+      ${{ notes: 123 }}          | ${{ missingFieldError: stringError }}
+      ${{ status: 'not-valid' }} | ${{ missingFieldError: 'does not exist in "CareStatus" enum.' }}
+    `(`should fail to update a care plan since $input is not valid`, async (params) => {
+      const updateCarePlanParams: UpdateCarePlanParams = generateUpdateCarePlanParams({
+        id: generateId(),
+        ...params.input,
+      });
+      await handler.mutations.updateCarePlan({ updateCarePlanParams, ...params.error });
+    });
+  });
+
+  describe('getMemberCarePlans', () => {
+    test.each`
+      input                | error
+      ${{ memberId: 123 }} | ${{ invalidFieldsError: stringError }}
+    `(`should fail to getMemberCarePlans since $field is not valid,`, async (params) => {
+      await handler.queries.getMemberCarePlans({
         ...params.input,
         ...params.error,
       });

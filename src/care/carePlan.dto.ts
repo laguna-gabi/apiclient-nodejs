@@ -3,6 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, Identifier, IsObjectId, IsValidCarePlanTypeInput } from '../common';
 import { CareStatus } from '.';
+import { IsDate } from 'class-validator';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -42,6 +43,7 @@ export class CreateCarePlanParams {
   @IsObjectId({ message: Errors.get(ErrorType.barrierIdInvalid) })
   barrierId: string;
 
+  @IsDate()
   @Field(() => Date, { nullable: true })
   dueDate?: Date;
 

@@ -333,7 +333,7 @@ export function IsValidCarePlanTypeInput(options: ValidationOptions) {
       options,
       validator: {
         validate(carePlanType: string, args: ValidationArguments) {
-          return Boolean(args.object['type']['id']) == Boolean(args.object['type']['custom']);
+          return Boolean(args.object['type']['id']) !== Boolean(args.object['type']['custom']);
         },
       },
     });

@@ -14,7 +14,7 @@ import {
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
 import { GetSlotsParams } from '../../src/user';
 import { Dispatch } from '../../src/services';
-import { BarrierType, CarePlanType, RedFlag } from '../../src/care';
+import { BarrierType, CarePlan, CarePlanType, RedFlag } from '../../src/care';
 import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
 
 export class Queries {
@@ -920,6 +920,41 @@ export class Queries {
       expect(result.errors[0].message).toMatch(invalidFieldsError);
     } else {
       return result.data.getMemberRedFlags;
+    }
+  };
+
+  getMemberCarePlans = async ({
+    memberId,
+    invalidFieldsError,
+  }: {
+    memberId: string;
+    invalidFieldsError?: string;
+  }): Promise<CarePlan[]> => {
+    const result = await this.apolloClient.query({
+      variables: { memberId },
+      query: gql`
+        query getMemberCarePlans($memberId: String!) {
+          getMemberCarePlans(memberId: $memberId) {
+            id
+            memberId
+            createdBy
+            type {
+              id
+              description
+              createdBy
+              isCustom
+            }
+            notes
+            createdBy
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(result.errors[0].message).toMatch(invalidFieldsError);
+    } else {
+      return result.data.getMemberCarePlans;
     }
   };
 
