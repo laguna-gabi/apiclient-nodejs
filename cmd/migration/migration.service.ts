@@ -69,6 +69,9 @@ export class MigrationService {
 
   // Description: migrate `up` - run all pending migration files (sorted by datetime)
   async up(dryRun?: boolean, fileName?: string): Promise<void> {
+    if (fileName && path.extname(fileName) !== migration.get('extension')) {
+      throw new Error('invalid file name - invalid extension');
+    }
     const items = await this.getStatusItems();
 
     const pendingMigrations = fileName

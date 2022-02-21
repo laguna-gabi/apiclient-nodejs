@@ -21,7 +21,7 @@ describe('Commands: MigrationService', () => {
   let module: TestingModule;
   let migrationService: MigrationService;
   let changelogModel: Model<Changelog>;
-  let spyOnMockCatalogModel: jest.SpyInstance;
+  let spyOnMockChangelogModel: jest.SpyInstance;
   const migrationFiles = new Map<string, string>();
   const startDate = faker.datatype.datetime();
 
@@ -40,7 +40,7 @@ describe('Commands: MigrationService', () => {
 
     migrationService = module.get<MigrationService>(MigrationService);
     changelogModel = module.get<Model<Changelog>>(getModelToken(Changelog.name));
-    spyOnMockCatalogModel = jest.spyOn(changelogModel, 'find');
+    spyOnMockChangelogModel = jest.spyOn(changelogModel, 'find');
 
     // preparing a list of migration files for tests:
     migrationFiles.set(
@@ -80,7 +80,7 @@ describe('Commands: MigrationService', () => {
     });
 
     afterEach(() => {
-      spyOnMockCatalogModel.mockReset();
+      spyOnMockChangelogModel.mockReset();
       (readdirSync as jest.Mock).mockReset();
     });
 
@@ -114,7 +114,7 @@ describe('Commands: MigrationService', () => {
 
   describe('getStatusItems', () => {
     afterEach(() => {
-      spyOnMockCatalogModel.mockReset();
+      spyOnMockChangelogModel.mockReset();
       (readdirSync as jest.Mock).mockReset();
     });
 
@@ -156,21 +156,20 @@ describe('Commands: MigrationService', () => {
 
   describe('test `up` and `down` and `create` commands', () => {
     const testMigrationDir = new Map<string, string>();
-    // const spyOnMockCatalogModelFind;
-    let spyFindOneAndUpdateOnMockCatalogModel: jest.SpyInstance;
-    let spyDeleteOneOnMockCatalogModel: jest.SpyInstance;
+    let spyFindOneAndUpdateOnMockChangelogModel: jest.SpyInstance;
+    let spyDeleteOneOnMockChangelogModel: jest.SpyInstance;
     beforeAll(async () => {
       testMigrationDir.set('migration_1', migrationService.create(faker.system.fileName()));
       await delay(1000); // make sure files are not created with the same timestamp - sort should work
       testMigrationDir.set('migration_2', migrationService.create(faker.system.fileName()));
 
-      spyFindOneAndUpdateOnMockCatalogModel = jest.spyOn(changelogModel, 'findOneAndUpdate');
-      spyDeleteOneOnMockCatalogModel = jest.spyOn(changelogModel, 'deleteOne');
+      spyFindOneAndUpdateOnMockChangelogModel = jest.spyOn(changelogModel, 'findOneAndUpdate');
+      spyDeleteOneOnMockChangelogModel = jest.spyOn(changelogModel, 'deleteOne');
     });
 
     afterEach(() => {
-      spyFindOneAndUpdateOnMockCatalogModel.mockReset();
-      spyDeleteOneOnMockCatalogModel.mockReset();
+      spyFindOneAndUpdateOnMockChangelogModel.mockReset();
+      spyDeleteOneOnMockChangelogModel.mockReset();
     });
 
     afterAll(async () => {
@@ -186,7 +185,13 @@ describe('Commands: MigrationService', () => {
 
         await migrationService.up();
 
-        expect(spyFindOneAndUpdateOnMockCatalogModel).not.toHaveBeenCalled();
+        expect(spyFindOneAndUpdateOnMockChangelogModel).not.toHaveBeenCalled();
+      });
+
+      it('should throw if file name has an invalid extension', async () => {
+        await expect(migrationService.up(false, 'invalid')).rejects.toThrow(
+          'invalid file name - invalid extension',
+        );
       });
 
       it('should run all pending migration files', async () => {
@@ -197,7 +202,7 @@ describe('Commands: MigrationService', () => {
 
         await migrationService.up();
 
-        expect(spyFindOneAndUpdateOnMockCatalogModel).toHaveBeenNthCalledWith(
+        expect(spyFindOneAndUpdateOnMockChangelogModel).toHaveBeenNthCalledWith(
           1,
           {
             fileName: testMigrationDir.get('migration_1'),
@@ -205,7 +210,7 @@ describe('Commands: MigrationService', () => {
           expect.anything(),
           { upsert: true },
         );
-        expect(spyFindOneAndUpdateOnMockCatalogModel).toHaveBeenNthCalledWith(
+        expect(spyFindOneAndUpdateOnMockChangelogModel).toHaveBeenNthCalledWith(
           2,
           {
             fileName: testMigrationDir.get('migration_2'),
@@ -223,7 +228,7 @@ describe('Commands: MigrationService', () => {
 
         await migrationService.up(true);
 
-        expect(spyFindOneAndUpdateOnMockCatalogModel).not.toHaveBeenCalled();
+        expect(spyFindOneAndUpdateOnMockChangelogModel).not.toHaveBeenCalled();
       });
 
       it('should run all pending migration files in dry run mode (2 out of 2)', async () => {
@@ -234,7 +239,7 @@ describe('Commands: MigrationService', () => {
 
         await migrationService.up(true);
 
-        expect(spyFindOneAndUpdateOnMockCatalogModel).not.toHaveBeenCalled();
+        expect(spyFindOneAndUpdateOnMockChangelogModel).not.toHaveBeenCalled();
       });
 
       it('should run only pending migration files', async () => {
@@ -248,8 +253,8 @@ describe('Commands: MigrationService', () => {
 
         await migrationService.up();
 
-        expect(spyFindOneAndUpdateOnMockCatalogModel).toHaveBeenCalledTimes(1);
-        expect(spyFindOneAndUpdateOnMockCatalogModel).toHaveBeenCalledWith(
+        expect(spyFindOneAndUpdateOnMockChangelogModel).toHaveBeenCalledTimes(1);
+        expect(spyFindOneAndUpdateOnMockChangelogModel).toHaveBeenCalledWith(
           {
             fileName: testMigrationDir.get('migration_2'),
           },
@@ -265,7 +270,7 @@ describe('Commands: MigrationService', () => {
 
         await migrationService.down();
 
-        expect(spyDeleteOneOnMockCatalogModel).not.toHaveBeenCalled();
+        expect(spyDeleteOneOnMockChangelogModel).not.toHaveBeenCalled();
       });
 
       it('should undo latest migration only', async () => {
@@ -282,8 +287,8 @@ describe('Commands: MigrationService', () => {
 
         await migrationService.down();
 
-        expect(spyDeleteOneOnMockCatalogModel).toHaveBeenCalledTimes(1);
-        expect(spyDeleteOneOnMockCatalogModel).toHaveBeenCalledWith({
+        expect(spyDeleteOneOnMockChangelogModel).toHaveBeenCalledTimes(1);
+        expect(spyDeleteOneOnMockChangelogModel).toHaveBeenCalledWith({
           fileName: testMigrationDir.get('migration_2'),
         });
       });
@@ -302,8 +307,8 @@ describe('Commands: MigrationService', () => {
 
         await migrationService.down(false, testMigrationDir.get('migration_1'));
 
-        expect(spyDeleteOneOnMockCatalogModel).toHaveBeenCalledTimes(1);
-        expect(spyDeleteOneOnMockCatalogModel).toHaveBeenCalledWith({
+        expect(spyDeleteOneOnMockChangelogModel).toHaveBeenCalledTimes(1);
+        expect(spyDeleteOneOnMockChangelogModel).toHaveBeenCalledWith({
           fileName: testMigrationDir.get('migration_1'),
         });
       });
@@ -322,7 +327,7 @@ describe('Commands: MigrationService', () => {
 
         await migrationService.down(true);
 
-        expect(spyDeleteOneOnMockCatalogModel).not.toHaveBeenCalled();
+        expect(spyDeleteOneOnMockChangelogModel).not.toHaveBeenCalled();
       });
     });
   });
