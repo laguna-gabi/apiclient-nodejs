@@ -540,15 +540,15 @@ describe('UserService', () => {
       const appointment = await scheduleAppointmentWithDate({
         memberId: generateId(),
         userId: user.id,
-        start: add(startOfToday(), { hours: 11 }),
-        end: add(startOfToday(), { hours: 11, minutes: defaultSlotsParams.duration }),
+        start: add(startOfTomorrow(), { hours: 11 }),
+        end: add(startOfTomorrow(), { hours: 11, minutes: defaultSlotsParams.duration }),
       });
 
       await appointmentResolver.deleteAppointment(user.id, appointment.id);
 
       const result = await service.getSlots({
         userId: user.id,
-        notBefore: add(startOfToday(), { hours: 10 }),
+        notBefore: add(startOfTomorrow(), { hours: 10 }),
       });
 
       expect(result.slots[2]).toEqual(appointment.start);
