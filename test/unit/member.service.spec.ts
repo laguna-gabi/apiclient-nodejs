@@ -2114,11 +2114,13 @@ describe('MemberService', () => {
           '3',
           'Nearly Every Day',
         ],
+        ['should not return any alerts for assessments', '1', undefined],
       ])('%p', async (_, answer, expectedScore) => {
         mockNotificationGetDispatchesByClientSenderId.mockResolvedValue(undefined);
         // create a new member
         const memberId = await generateMember();
         const member = await service.get(memberId);
+        const expectedAlerts = [];
 
         const { id: questionnaireId } = await modelQuestionnaire.create(
           generateCreateQuestionnaireParams({
@@ -2150,8 +2152,8 @@ describe('MemberService', () => {
 
         const alerts = await service.getAlerts(member.primaryUserId.toString());
 
-        expect(alerts).toEqual([
-          {
+        if (expectedScore !== undefined) {
+          expectedAlerts.push({
             id: `${qr.id.toString()}_${AlertType.assessmentSubmitScoreOverThreshold}`,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
@@ -2168,19 +2170,22 @@ describe('MemberService', () => {
             date: qr.createdAt,
             dismissed: false,
             isNew: true,
-          },
-          {
-            id: `${memberId}_${AlertType.memberAssigned}`,
-            memberId: member.id.toString(),
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            text: service.internationalization.getAlerts(AlertType.memberAssigned, { member }),
-            type: AlertType.memberAssigned,
-            date: member.createdAt,
-            dismissed: false,
-            isNew: true,
-          },
-        ]);
+          });
+        }
+
+        expectedAlerts.push({
+          id: `${memberId}_${AlertType.memberAssigned}`,
+          memberId: member.id.toString(),
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          text: service.internationalization.getAlerts(AlertType.memberAssigned, { member }),
+          type: AlertType.memberAssigned,
+          date: member.createdAt,
+          dismissed: false,
+          isNew: true,
+        });
+
+        expect(alerts).toEqual(expectedAlerts);
       });
     });
 

@@ -968,14 +968,14 @@ export class MemberService extends BaseService {
       (dismissedAlerts) => dismissedAlerts.alertId,
     );
 
-    // set status fields - dismissed / isNew - for every alert
-    alerts.forEach((alert: Alert) => {
-      alert.dismissed = dismissedAlertsIds?.includes(alert.id);
-      alert.isNew = !lastQueryAlert || lastQueryAlert < alert.date;
-    });
-
     return alerts
-      .filter((alert: Alert) => alert.date > sub(new Date(), { days: 30 }))
+      .filter((alert: Alert) => alert?.date > sub(new Date(), { days: 30 }))
+      .map((alert) => {
+        alert.dismissed = dismissedAlertsIds?.includes(alert.id);
+        alert.isNew = !lastQueryAlert || lastQueryAlert < alert.date;
+
+        return alert;
+      })
       .sort((a1: Alert, a2: Alert) => {
         return differenceInMilliseconds(a2.date, a1.date);
       });
