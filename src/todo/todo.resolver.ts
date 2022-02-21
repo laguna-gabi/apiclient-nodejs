@@ -161,7 +161,9 @@ export class TodoResolver {
    ************************************************************************************************/
 
   private getTodoStatus(params: ExtraTodoParams, roles: RoleTypes): TodoStatus {
-    return (roles.includes(UserRole.coach) || roles.includes(UserRole.nurse)) &&
+    return (roles.includes(UserRole.coach) ||
+      roles.includes(UserRole.nurse) ||
+      roles.includes(UserRole.admin)) &&
       params.label === Label.MEDS
       ? TodoStatus.requested
       : TodoStatus.active;
@@ -173,7 +175,11 @@ export class TodoResolver {
     clientId: string,
     todoNotificationsType: TodoNotificationsType,
   ) {
-    if (roles.includes(UserRole.coach) || roles.includes(UserRole.nurse)) {
+    if (
+      roles.includes(UserRole.coach) ||
+      roles.includes(UserRole.nurse) ||
+      roles.includes(UserRole.admin)
+    ) {
       const contentKey = this.extractContentType(todoNotificationsType, todo.label);
       const createTodoEvent: IInternalDispatch = {
         correlationId: getCorrelationId(this.logger),

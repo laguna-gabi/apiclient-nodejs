@@ -43,20 +43,26 @@ export class MemberUserRouteInterceptor implements NestInterceptor<void> {
       // params
       if (clientRoles.includes(MemberRole.member)) {
         context.getArgByIndex(1)[memberId] = clientId.toString();
-      } else if (clientRoles.includes(UserRole.coach) || clientRoles.includes(UserRole.nurse)) {
-        if (!context.getArgByIndex(1)[memberId]) {
-          throw new Error(Errors.get(ErrorType.memberIdInvalid));
-        }
+      } else if (
+        (clientRoles.includes(UserRole.coach) ||
+          clientRoles.includes(UserRole.nurse) ||
+          clientRoles.includes(UserRole.admin)) &&
+        !context.getArgByIndex(1)[memberId]
+      ) {
+        throw new Error(Errors.get(ErrorType.memberIdInvalid));
       }
     } else {
       // DTO
       const paramsName = Object.keys(context.getArgByIndex(1))[0];
       if (clientRoles.includes(MemberRole.member)) {
         context.getArgByIndex(1)[paramsName][memberId] = clientId.toString();
-      } else if (clientRoles.includes(UserRole.coach) || clientRoles.includes(UserRole.nurse)) {
-        if (!context.getArgByIndex(1)[paramsName][memberId]) {
-          throw new Error(Errors.get(ErrorType.memberIdInvalid));
-        }
+      } else if (
+        (clientRoles.includes(UserRole.coach) ||
+          clientRoles.includes(UserRole.nurse) ||
+          clientRoles.includes(UserRole.admin)) &&
+        !context.getArgByIndex(1)[paramsName][memberId]
+      ) {
+        throw new Error(Errors.get(ErrorType.memberIdInvalid));
       }
     }
 
