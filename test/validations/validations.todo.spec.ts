@@ -56,6 +56,20 @@ describe('Validations - todo', () => {
       await handler.mutations.createTodo({ createTodoParams, ...params.error });
     });
 
+    it('should fail to create todo if text is empty string', async () => {
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId: generateId(),
+        text: '',
+      });
+      delete createTodoParams.createdBy;
+      delete createTodoParams.updatedBy;
+
+      await handler.mutations.createTodo({
+        createTodoParams,
+        missingFieldError: 'text should not be empty',
+      });
+    });
+
     it(`should fail to create a todo since start after end`, async () => {
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId: generateId(),
@@ -165,6 +179,19 @@ describe('Validations - todo', () => {
       delete endAndCreateTodoParams.updatedBy;
 
       await handler.mutations.endAndCreateTodo({ endAndCreateTodoParams, ...params.error });
+    });
+
+    it('should fail to endAndCreate todo if text is empty string', async () => {
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        memberId: generateId(),
+        text: '',
+      });
+      delete endAndCreateTodoParams.updatedBy;
+
+      await handler.mutations.endAndCreateTodo({
+        endAndCreateTodoParams,
+        missingFieldError: 'text should not be empty',
+      });
     });
 
     it(`should fail to endAndCreate a todo since start after end`, async () => {

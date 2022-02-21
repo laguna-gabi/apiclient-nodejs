@@ -1,6 +1,6 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { ArrayNotEmpty, IsOptional } from 'class-validator';
+import { ArrayNotEmpty, IsNotEmpty, IsOptional } from 'class-validator';
 import { Document, Types } from 'mongoose';
 import {
   ErrorType,
@@ -47,6 +47,7 @@ export class ExtraTodoParams {
   memberId?: string;
 
   @Field(() => String)
+  @IsNotEmpty()
   text: string;
 
   @Field(() => Label, { nullable: true })

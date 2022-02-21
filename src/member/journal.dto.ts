@@ -1,5 +1,6 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { IsNotEmpty } from 'class-validator';
 import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, Identifier, IsObjectId } from '../common';
 import { ISoftDelete } from '../db';
@@ -41,6 +42,7 @@ export class UpdateJournalTextParams {
   id: string;
 
   @Field(() => String)
+  @IsNotEmpty()
   text: string;
 }
 

@@ -768,7 +768,13 @@ describe('Validations - member', () => {
       });
     });
 
-    /* eslint-disable max-len */
+    it(`should fail update journal text since string is empty)`, async () => {
+      await handler.mutations.updateJournalText({
+        updateJournalTextParams: generateUpdateJournalTextParams({ text: '' }),
+        missingFieldError: 'text should not be empty',
+      });
+    });
+
     test.each`
       field            | error
       ${{ id: 123 }}   | ${stringError}
