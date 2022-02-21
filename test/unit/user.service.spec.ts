@@ -445,6 +445,22 @@ describe('UserService', () => {
       },
     );
 
+    it("should not return past slots for 'not before' in the past", async () => {
+      const user = await service.insert(generateCreateUserParams());
+      await availabilityResolver.createAvailabilities(user.id, [
+        generateAvailabilityInput({
+          start: add(startOfToday(), { days: -3 }),
+          end: add(startOfToday(), { days: 3 }),
+        }),
+      ]);
+      const result = await service.getSlots({
+        userId: user.id,
+        notBefore: add(startOfToday(), { days: -2 }),
+        defaultSlotsCount: 9,
+      });
+      expect(result.slots[0].getTime()).toBeGreaterThan(Date.now());
+    });
+
     it('should return 5 slots from today and the next from tomorrow', async () => {
       const result = await preformGetUserSlots();
 

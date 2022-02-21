@@ -19,6 +19,9 @@ export class SlotService {
     });
     const slots: Date[] = [];
 
+    // choose the max date between start and now
+    start = new Date(Math.max(...[start, new Date(Date.now())].map(Number)));
+
     for (let index = 0; index < maxNumOfSlots; index++) {
       start = this.findSlot(availabilities, appointments, duration, start);
       if (!end || isBefore(start, end)) {
