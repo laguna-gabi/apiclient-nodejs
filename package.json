@@ -1,6 +1,6 @@
 {
   "name": "@lagunahealth/pandora",
-  "version": "0.11.15",
+  "version": "0.11.16",
   "description": "",
   "author": "",
   "license": "UNLICENSED",
@@ -23,7 +23,7 @@
     "test:watch": "jest --config test/jest.json --watch",
     "test:cov": "jest --config test/jest.json && jest-coverage-badges",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\""
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" && tsc --noemit"
   },
   "dependencies": {
     "@slack/webhook": "^6.1.0",
