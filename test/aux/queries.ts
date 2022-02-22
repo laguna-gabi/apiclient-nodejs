@@ -205,12 +205,6 @@ export class Queries {
             zipCode
             utcDelta
             dischargeDate
-            goals {
-              id
-              title
-              status
-              deadline
-            }
             actionItems {
               id
               title
@@ -395,7 +389,6 @@ export class Queries {
             adherence
             wellbeing
             createdAt
-            goalsCount
             actionItemsCount
             primaryUser {
               id

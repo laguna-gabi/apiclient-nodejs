@@ -365,7 +365,6 @@ describe('MemberService', () => {
           adherence: 0,
           wellbeing: 0,
           createdAt: member.createdAt,
-          goalsCount: 0,
           actionItemsCount: 0,
           primaryUser: expect.any(Object),
           nextAppointment: undefined,
@@ -388,10 +387,6 @@ describe('MemberService', () => {
       );
       const memberId = createdMember.id;
 
-      await service.insertGoal({
-        createTaskParams: generateCreateTaskParams({ memberId }),
-        status: TaskStatus.pending,
-      });
       await service.insertActionItem({
         createTaskParams: generateCreateTaskParams({ memberId }),
         status: TaskStatus.pending,
@@ -416,7 +411,6 @@ describe('MemberService', () => {
           adherence: 0,
           wellbeing: 0,
           createdAt: member.createdAt,
-          goalsCount: 1,
           actionItemsCount: 2,
           primaryUser: expect.any(Object),
           nextAppointment: undefined,
@@ -989,8 +983,6 @@ describe('MemberService', () => {
       );
       await checkDelete(ActionItemsDeletedResult, { _id: actionItemId }, userId);
 
-      //todo: add goals if necessary
-
       const resultHard = await service.deleteMember(
         generateDeleteMemberParams({ id: memberId, hard: true }),
         userId,
@@ -1131,30 +1123,6 @@ describe('MemberService', () => {
       });
 
       expect(afterObject.address).toEqual({ ...beforeObject.address, city });
-    });
-  });
-
-  describe('insertGoal', () => {
-    it('should insert a goal', async () => {
-      const createTaskParams = generateCreateTaskParams();
-      const { id } = await service.insertGoal({ createTaskParams, status: TaskStatus.pending });
-
-      expect(id).toEqual(expect.any(Types.ObjectId));
-    });
-  });
-
-  describe('updateGoalStatus', () => {
-    it('should update an existing goal status', async () => {
-      const createTaskParams = generateCreateTaskParams();
-      const { id } = await service.insertGoal({ createTaskParams, status: TaskStatus.pending });
-
-      await service.updateGoalStatus({ id, status: TaskStatus.reached });
-    });
-
-    it('should not be able to update status for a non existing goal', async () => {
-      await expect(service.updateGoalStatus(generateUpdateTaskStatusParams())).rejects.toThrow(
-        Errors.get(ErrorType.memberGoalIdNotFound),
-      );
     });
   });
 

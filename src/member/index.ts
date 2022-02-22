@@ -2,7 +2,6 @@ export * from './member.common';
 export * from './member.interfaces';
 export * from './actionItem.dto';
 export * from './journal.dto';
-export * from './goal.dto';
 export * from './member.dto';
 export * from './memberConfig.dto';
 export * from './member.recording.dto';

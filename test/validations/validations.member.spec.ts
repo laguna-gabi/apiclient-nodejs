@@ -602,92 +602,74 @@ describe('Validations - member', () => {
     );
   });
 
-  describe('goal + action items', () => {
-    enum TaskType {
-      goal = 'goal',
-      actionItem = 'actionItem',
-    }
-
-    describe('createGoal + createActionItem', () => {
+  describe('action items', () => {
+    describe('createActionItem', () => {
       /* eslint-disable max-len */
       test.each`
-        field         | taskType               | error
-        ${'memberId'} | ${TaskType.goal}       | ${`Field "memberId" of required type "String!" was not provided.`}
-        ${'title'}    | ${TaskType.goal}       | ${`Field "title" of required type "String!" was not provided.`}
-        ${'deadline'} | ${TaskType.goal}       | ${`Field "deadline" of required type "DateTime!" was not provided.`}
-        ${'memberId'} | ${TaskType.actionItem} | ${`Field "memberId" of required type "String!" was not provided.`}
-        ${'title'}    | ${TaskType.actionItem} | ${`Field "title" of required type "String!" was not provided.`}
-        ${'deadline'} | ${TaskType.actionItem} | ${`Field "deadline" of required type "DateTime!" was not provided.`}
+        field         | taskType        | error
+        ${'memberId'} | ${'actionItem'} | ${`Field "memberId" of required type "String!" was not provided.`}
+        ${'title'}    | ${'actionItem'} | ${`Field "title" of required type "String!" was not provided.`}
+        ${'deadline'} | ${'actionItem'} | ${`Field "deadline" of required type "DateTime!" was not provided.`}
       `(
         /* eslint-enable max-len */
         `should fail to create $taskType since mandatory field $field is missing`,
         async (params) => {
           const createTaskParams = generateCreateTaskParams();
           delete createTaskParams[params.field];
-          const method = TaskType.goal
-            ? handler.mutations.createGoal
-            : handler.mutations.createActionItem;
-          await method({ createTaskParams, missingFieldError: params.error });
+          await handler.mutations.createActionItem({
+            createTaskParams,
+            missingFieldError: params.error,
+          });
         },
       );
 
       /* eslint-disable max-len */
       test.each`
-        input                        | taskType               | error
-        ${{ memberId: 123 }}         | ${TaskType.goal}       | ${{ missingFieldError: stringError }}
-        ${{ title: 123 }}            | ${TaskType.goal}       | ${{ missingFieldError: stringError }}
-        ${{ deadline: 'not-valid' }} | ${TaskType.goal}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberTaskDeadline)] }}
-        ${{ memberId: 123 }}         | ${TaskType.actionItem} | ${{ missingFieldError: stringError }}
-        ${{ title: 123 }}            | ${TaskType.actionItem} | ${{ missingFieldError: stringError }}
-        ${{ deadline: 'not-valid' }} | ${TaskType.actionItem} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberTaskDeadline)] }}
+        input                        | taskType        | error
+        ${{ memberId: 123 }}         | ${'actionItem'} | ${{ missingFieldError: stringError }}
+        ${{ title: 123 }}            | ${'actionItem'} | ${{ missingFieldError: stringError }}
+        ${{ deadline: 'not-valid' }} | ${'actionItem'} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberTaskDeadline)] }}
       `(
         /* eslint-enable max-len */
         `should fail to create $taskType since setting $input is not a valid type`,
         async (params) => {
           const createTaskParams = generateCreateTaskParams({ ...params.input });
-          const method = TaskType.goal
-            ? handler.mutations.createGoal
-            : handler.mutations.createActionItem;
-          await method({ createTaskParams, ...params.error });
+          await handler.mutations.createActionItem({ createTaskParams, ...params.error });
         },
       );
     });
 
-    describe('updateGoalStatus + updateActionItemStatus', () => {
+    describe('updateActionItemStatus', () => {
       /* eslint-disable max-len */
       test.each`
-        field       | taskType               | error
-        ${'id'}     | ${TaskType.goal}       | ${`Field "id" of required type "String!" was not provided.`}
-        ${'status'} | ${TaskType.goal}       | ${`Field "status" of required type "TaskStatus!" was not provided.`}
-        ${'id'}     | ${TaskType.actionItem} | ${`Field "id" of required type "String!" was not provided.`}
-        ${'status'} | ${TaskType.actionItem} | ${`Field "status" of required type "TaskStatus!" was not provided.`}
+        field       | taskType        | error
+        ${'id'}     | ${'actionItem'} | ${`Field "id" of required type "String!" was not provided.`}
+        ${'status'} | ${'actionItem'} | ${`Field "status" of required type "TaskStatus!" was not provided.`}
       `(
         /* eslint-enable max-len */
         `should fail to update $taskType since mandatory field $field is missing`,
         async (params) => {
           const updateTaskStatusParams = generateUpdateTaskStatusParams();
           delete updateTaskStatusParams[params.field];
-          const method = TaskType.goal
-            ? handler.mutations.updateGoalStatus
-            : handler.mutations.updateActionItemStatus;
-          await method({ updateTaskStatusParams, missingFieldError: params.error });
+          await handler.mutations.updateActionItemStatus({
+            updateTaskStatusParams,
+            missingFieldError: params.error,
+          });
         },
       );
 
       /* eslint-disable max-len */
       test.each`
-        input              | taskType               | error
-        ${{ id: 123 }}     | ${TaskType.goal}       | ${stringError}
-        ${{ status: 123 }} | ${TaskType.goal}       | ${'Enum "TaskStatus" cannot represent non-string value'}
-        ${{ id: 123 }}     | ${TaskType.actionItem} | ${stringError}
-        ${{ status: 123 }} | ${TaskType.actionItem} | ${'Enum "TaskStatus" cannot represent non-string value'}
+        input              | taskType        | error
+        ${{ id: 123 }}     | ${'actionItem'} | ${stringError}
+        ${{ status: 123 }} | ${'actionItem'} | ${'Enum "TaskStatus" cannot represent non-string value'}
       `(`should fail to update $taskType since $input is not a valid type`, async (params) => {
         /* eslint-enable max-len */
         const updateTaskStatusParams = generateUpdateTaskStatusParams({ ...params.input });
-        const method = TaskType.goal
-          ? handler.mutations.updateGoalStatus
-          : handler.mutations.updateActionItemStatus;
-        await method({ updateTaskStatusParams, missingFieldError: params.error });
+        await handler.mutations.updateActionItemStatus({
+          updateTaskStatusParams,
+          missingFieldError: params.error,
+        });
       });
     });
   });

@@ -97,8 +97,6 @@ describe('Integration tests: all', () => {
      * 6. Create an appointment between the primary coach and the member
      * 7. Create an appointment between the non primary coach (2nd user) and the member
      * 8. Create an appointment between the non primary coach (3rd user) and the member
-     * 9. Create goals for a member
-     * 10. Update goals for a member
      * 11. Create action items for a member
      * 12. Update action items for a member
      * 13. Fetch member and checks all related appointments
@@ -120,17 +118,6 @@ describe('Integration tests: all', () => {
       member,
       userId: resultNurse2.id,
     });
-
-    const { createTaskParams: goal1, id: idGoal1 } = await creators.createAndValidateTask(
-      member.id,
-      handler.mutations.createGoal,
-    );
-    const { createTaskParams: goal2, id: idGoal2 } = await creators.createAndValidateTask(
-      member.id,
-      handler.mutations.createGoal,
-    );
-    await updateTaskStatus(idGoal1, handler.mutations.updateGoalStatus);
-    await updateTaskStatus(idGoal2, handler.mutations.updateGoalStatus);
 
     const { createTaskParams: ai1, id: idAi1 } = await creators.createAndValidateTask(
       member.id,
@@ -160,9 +147,7 @@ describe('Integration tests: all', () => {
 
     expect(resultMember.scores).toEqual(appointmentNurse2.notes.scores);
 
-    //Goals and action items are desc sorted, so the last inserted goal is the 1st in the list
-    compareTasks(resultMember.goals[0], goal2);
-    compareTasks(resultMember.goals[1], goal1);
+    //action items are desc sorted, so the last inserted action item is the 1st in the list
     compareTasks(resultMember.actionItems[0], ai2);
     compareTasks(resultMember.actionItems[1], ai1);
   });

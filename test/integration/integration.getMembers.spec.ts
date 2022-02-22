@@ -20,7 +20,7 @@ describe('Integration tests : getMembers', () => {
     await handler.afterAll();
   });
 
-  it('should call with a default member(no: appointments, goals, ai, ..)', async () => {
+  it('should call with a default member(no: appointments, ai, ..)', async () => {
     const org = await creators.createAndValidateOrg();
     const member1: Member = await creators.createAndValidateMember({ org });
     const member2: Member = await creators.createAndValidateMember({ org });
@@ -40,7 +40,6 @@ describe('Integration tests : getMembers', () => {
           adherence: 0,
           wellbeing: 0,
           createdAt: member.createdAt,
-          goalsCount: 0,
           actionItemsCount: 0,
           primaryUser: expect.objectContaining({
             id: primaryUser.id,
@@ -66,8 +65,6 @@ describe('Integration tests : getMembers', () => {
 
     await creators.createAndValidateAppointment({ member });
     const appointment = await appointmentsActions.scheduleAppointment({ member });
-    await creators.createAndValidateTask(member.id, handler.mutations.createGoal);
-    await creators.createAndValidateTask(member.id, handler.mutations.createGoal);
     await creators.createAndValidateTask(member.id, handler.mutations.createActionItem);
 
     const memberResult = await handler
@@ -86,7 +83,6 @@ describe('Integration tests : getMembers', () => {
         adherence: memberResult.scores.adherence,
         wellbeing: memberResult.scores.wellbeing,
         createdAt: memberResult.createdAt,
-        goalsCount: 2,
         actionItemsCount: 1,
         primaryUser: expect.objectContaining({
           id: primaryUser.id,

@@ -11,8 +11,6 @@ import {
   ControlMemberDto,
   DismissedAlert,
   DismissedAlertDto,
-  Goal,
-  GoalDto,
   Journal,
   JournalDto,
   Member,
@@ -45,7 +43,6 @@ import { UserModule } from '../user';
     CommonModule,
     QuestionnaireModule,
     MongooseModule.forFeature([
-      { name: Goal.name, schema: GoalDto },
       { name: ControlMember.name, schema: ControlMemberDto },
       { name: DismissedAlert.name, schema: DismissedAlertDto },
     ]),

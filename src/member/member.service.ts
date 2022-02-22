@@ -23,8 +23,6 @@ import {
   DismissedAlert,
   DismissedAlertDocument,
   EmbeddedMemberProperties,
-  Goal,
-  GoalDocument,
   InternalCreateMemberParams,
   Journal,
   JournalDocument,
@@ -77,8 +75,6 @@ export class MemberService extends BaseService {
   constructor(
     @InjectModel(Member.name)
     private readonly memberModel: Model<MemberDocument> & ISoftDelete<MemberDocument>,
-    @InjectModel(Goal.name)
-    private readonly goalModel: Model<GoalDocument>,
     @InjectModel(ActionItem.name)
     private readonly actionItemModel: Model<ActionItemDocument> & ISoftDelete<ActionItemDocument>,
     @InjectModel(Journal.name)
@@ -227,7 +223,6 @@ export class MemberService extends BaseService {
           adherence: { $ifNull: ['$scores.adherence', 0] },
           wellbeing: { $ifNull: ['$scores.wellbeing', 0] },
           createdAt: '$createdAt',
-          goalsCount: { $size: '$goals' },
           actionItemsCount: { $size: '$actionItems' },
           primaryUserId: '$primaryUserId',
           users: '$users',
@@ -461,11 +456,6 @@ export class MemberService extends BaseService {
     await this.memberModel.deleteOne({ _id: new Types.ObjectId(member.id) });
     await this.memberConfigModel.deleteOne({ memberId: new Types.ObjectId(member.id) });
     await Promise.all(
-      member.goals.map(async (goal) => {
-        await this.goalModel.deleteOne({ _id: goal });
-      }),
-    );
-    await Promise.all(
       member.actionItems.map(async (actionItem) => {
         await this.actionItemModel.deleteOne({ _id: actionItem });
       }),
@@ -499,41 +489,8 @@ export class MemberService extends BaseService {
   }
 
   /*************************************************************************************************
-   ********************************************* Goals *********************************************
+   ********************************************* Scores *********************************************
    ************************************************************************************************/
-
-  async insertGoal({
-    createTaskParams,
-    status,
-  }: {
-    createTaskParams: CreateTaskParams;
-    status: TaskStatus;
-  }): Promise<Identifier> {
-    const { memberId } = createTaskParams;
-    delete createTaskParams.memberId;
-
-    const { _id } = await this.goalModel.create({ ...createTaskParams, status });
-
-    await this.memberModel.updateOne(
-      { _id: new Types.ObjectId(memberId) },
-      { $push: { goals: _id } },
-    );
-
-    return { id: _id };
-  }
-
-  async updateGoalStatus(updateTaskStatusParams: UpdateTaskStatusParams): Promise<void> {
-    const { id, status } = updateTaskStatusParams;
-
-    const result = await this.goalModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(id) },
-      { $set: { status } },
-    );
-
-    if (!result) {
-      throw new Error(Errors.get(ErrorType.memberGoalIdNotFound));
-    }
-  }
 
   @OnEvent(EventType.onUpdatedAppointmentScores, { async: true })
   async handleAppointmentScoreUpdated(params: IEventOnUpdatedAppointmentScores) {
@@ -1206,7 +1163,6 @@ export class MemberService extends BaseService {
     return this.memberModel
       .findOne({ _id: id })
       .populate({ path: 'org' })
-      .populate({ path: 'goals', options })
       .populate({ path: 'actionItems', options })
       .populate({ path: 'users', populate: subPopulate });
   }

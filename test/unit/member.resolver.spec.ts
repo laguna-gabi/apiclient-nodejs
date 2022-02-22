@@ -824,53 +824,6 @@ describe('MemberResolver', () => {
     });
   });
 
-  describe('createGoal', () => {
-    let spyOnServiceInsertGoal;
-    beforeEach(() => {
-      spyOnServiceInsertGoal = jest.spyOn(service, 'insertGoal');
-    });
-
-    afterEach(() => {
-      spyOnServiceInsertGoal.mockReset();
-    });
-
-    it('should create a goal', async () => {
-      spyOnServiceInsertGoal.mockImplementationOnce(async () => ({
-        id: generateId(),
-      }));
-
-      const params = generateCreateTaskParams();
-      await resolver.createGoal(params);
-
-      expect(spyOnServiceInsertGoal).toBeCalledTimes(1);
-      expect(spyOnServiceInsertGoal).toBeCalledWith({
-        createTaskParams: params,
-        status: TaskStatus.pending,
-      });
-    });
-  });
-
-  describe('updateGoalStatus', () => {
-    let spyOnServiceUpdateGoalStatus;
-    beforeEach(() => {
-      spyOnServiceUpdateGoalStatus = jest.spyOn(service, 'updateGoalStatus');
-    });
-
-    afterEach(() => {
-      spyOnServiceUpdateGoalStatus.mockReset();
-    });
-
-    it('should create a goal', async () => {
-      spyOnServiceUpdateGoalStatus.mockImplementationOnce(async () => undefined);
-
-      const updateGoalStatus = { id: generateId(), status: TaskStatus.reached };
-      await resolver.updateGoalStatus(updateGoalStatus);
-
-      expect(spyOnServiceUpdateGoalStatus).toBeCalledTimes(1);
-      expect(spyOnServiceUpdateGoalStatus).toBeCalledWith(updateGoalStatus);
-    });
-  });
-
   describe('createActionItem', () => {
     let spyOnServiceInsertActionItem;
     beforeEach(() => {

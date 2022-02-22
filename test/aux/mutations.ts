@@ -249,12 +249,6 @@ export class Mutations {
             zipCode
             utcDelta
             dischargeDate
-            goals {
-              id
-              title
-              status
-              deadline
-            }
             actionItems {
               id
               title
@@ -408,55 +402,6 @@ export class Mutations {
     );
   };
 
-  createGoal = async ({
-    createTaskParams,
-    missingFieldError,
-    invalidFieldsErrors,
-  }: {
-    createTaskParams: CreateTaskParams;
-    missingFieldError?: string;
-    invalidFieldsErrors?: string[];
-  }): Promise<string> => {
-    const result = await this.apolloClient.mutate({
-      variables: { createTaskParams: createTaskParams },
-      mutation: gql`
-        mutation CreateGoal($createTaskParams: CreateTaskParams!) {
-          createGoal(createTaskParams: $createTaskParams) {
-            id
-          }
-        }
-      `,
-    });
-
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createGoal
-    );
-  };
-
-  updateGoalStatus = async ({
-    updateTaskStatusParams,
-    missingFieldError,
-    invalidFieldsErrors,
-  }: {
-    updateTaskStatusParams: UpdateTaskStatusParams;
-    missingFieldError?: string;
-    invalidFieldsErrors?: string[];
-  }) => {
-    const result = await this.apolloClient.mutate({
-      variables: { updateTaskStatusParams: updateTaskStatusParams },
-      mutation: gql`
-        mutation UpdateGoalStatus($updateTaskStatusParams: UpdateTaskStatusParams!) {
-          updateGoalStatus(updateTaskStatusParams: $updateTaskStatusParams)
-        }
-      `,
-    });
-
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.updateGoalStatus
-    );
-  };
-
   createActionItem = async ({
     createTaskParams,
     missingFieldError,
@@ -465,7 +410,7 @@ export class Mutations {
     createTaskParams: CreateTaskParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
-  }): Promise<string> => {
+  }): Promise<Identifier> => {
     const result = await this.apolloClient.mutate({
       variables: { createTaskParams: createTaskParams },
       mutation: gql`
@@ -503,7 +448,7 @@ export class Mutations {
 
     return (
       isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.updateGoalStatus
+      result.data.updateActionItemStatus
     );
   };
 

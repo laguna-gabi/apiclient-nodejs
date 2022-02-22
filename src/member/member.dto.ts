@@ -19,7 +19,7 @@ import {
 } from 'class-validator';
 import * as config from 'config';
 import { Document, Types } from 'mongoose';
-import { ActionItem, Goal } from '.';
+import { ActionItem } from '.';
 import { Scores } from '../appointment';
 import {
   ErrorType,
@@ -523,10 +523,6 @@ export class Member extends Identifier {
   @Field(() => String, { nullable: true })
   dischargeDate?: string;
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: Goal.name }], isNaN: true })
-  @Field(() => [Goal], { nullable: true })
-  goals?: Goal[];
-
   @Prop({ type: [{ type: Types.ObjectId, ref: ActionItem.name }], isNaN: true })
   @Field(() => [ActionItem], { nullable: true })
   actionItems?: ActionItem[];
@@ -638,9 +634,6 @@ export class MemberSummary extends Identifier {
 
   @Field(() => Date)
   createdAt: Date;
-
-  @Field(() => Number)
-  goalsCount: number;
 
   @Field(() => Number)
   actionItemsCount: number;

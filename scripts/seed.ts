@@ -53,7 +53,6 @@ import { model } from 'mongoose';
 
 let mutations: Mutations;
 let userService: UserService; //used for internal method, isn't exposed on queries
-type TaskType = 'goal' | 'actionItem';
 
 async function main() {
   const base = new SeedBase();
@@ -154,13 +153,11 @@ async function main() {
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
-      '---------- Create goals and action items for a member ----------\n' +
+      '--------------- Create action items for a member ---------------\n' +
       '----------------------------------------------------------------',
   );
-  await createTask(memberId, mutations.createGoal, 'goal');
-  await createTask(memberId, mutations.createGoal, 'goal');
-  await createTask(memberId, mutations.createActionItem, 'actionItem');
-  await createTask(memberId, mutations.createActionItem, 'actionItem');
+  await createActionItem(memberId);
+  await createActionItem(memberId);
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
@@ -270,10 +267,10 @@ const setGeneralNotes = async (memberId: string) => {
   await mutations.setGeneralNotes({ setGeneralNotesParams });
 };
 
-const createTask = async (memberId: string, preformMethod, taskType: TaskType) => {
+const createActionItem = async (memberId: string) => {
   const createTaskParams = generateCreateTaskParams({ memberId });
-  const { id } = await preformMethod({ createTaskParams });
-  console.log(`${id} : created a ${taskType} '${createTaskParams.title}' for member`);
+  const { id } = await mutations.createActionItem({ createTaskParams });
+  console.log(`${id} : created an action item '${createTaskParams.title}' for member`);
 };
 
 (async () => {

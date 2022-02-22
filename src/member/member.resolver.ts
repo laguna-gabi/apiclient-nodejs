@@ -388,28 +388,6 @@ export class MemberResolver extends MemberBase {
   }
 
   /*************************************************************************************************
-   ********************************************* Goals *********************************************
-   ************************************************************************************************/
-
-  @Mutation(() => Identifier)
-  @Roles(UserRole.coach, UserRole.nurse)
-  async createGoal(
-    @Args(camelCase(CreateTaskParams.name))
-    createTaskParams: CreateTaskParams,
-  ) {
-    return this.memberService.insertGoal({ createTaskParams, status: TaskStatus.pending });
-  }
-
-  @Mutation(() => Boolean, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
-  async updateGoalStatus(
-    @Args(camelCase(UpdateTaskStatusParams.name))
-    updateTaskStatusParams: UpdateTaskStatusParams,
-  ) {
-    return this.memberService.updateGoalStatus(updateTaskStatusParams);
-  }
-
-  /*************************************************************************************************
    ****************************************** Action items *****************************************
    ************************************************************************************************/
 
