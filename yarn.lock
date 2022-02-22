@@ -1897,7 +1897,7 @@ aws-sdk@^2.1073.0:
     uuid "3.3.2"
     xml2js "0.4.19"
 
-axios@0.25.0:
+axios@0.25.0, axios@^0.25.0:
   version "0.25.0"
   resolved "https://registry.npmjs.org/axios/-/axios-0.25.0.tgz#349cfbb31331a9b4453190791760a8d35b093e0a"
   integrity sha512-cD8FOb0tRH3uuEe6+evtAbgJtfxr7ly3fQjYcMcuPlgkwVS9xboaVIpcDV+cYQe+yGykgwZCs1pzjntcGa6l5g==
@@ -1911,7 +1911,7 @@ axios@0.26.0:
   dependencies:
     follow-redirects "^1.14.8"
 
-axios@^0.21.1, axios@^0.21.4:
+axios@^0.21.4:
   version "0.21.4"
   resolved "https://registry.npmjs.org/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
   integrity sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==
@@ -6091,12 +6091,12 @@ tsutils@^3.21.0:
   dependencies:
     tslib "^1.8.1"
 
-twilio@3.67.0:
-  version "3.67.0"
-  resolved "https://registry.npmjs.org/twilio/-/twilio-3.67.0.tgz#24d5d1ca7371b99179a08b0b36c914d1b6cdd196"
-  integrity sha512-MY0qsb895IDS3GEeBVVkNThr/ONy6a+jstkxeRVLdva52PMkIsrub68PWIXX2ubpiCMJWcX3ZroxRbRmfumFBQ==
+twilio@3.74.0:
+  version "3.74.0"
+  resolved "https://registry.yarnpkg.com/twilio/-/twilio-3.74.0.tgz#df912476543b7004cd765d566449c27174289091"
+  integrity sha512-r79CWIug+x2/1uGOdAzGESvUvycxPCvVJ9rm4y1TsAocshTh+f5+ipULxyT3T5q4wJNT+k2OEiUBkKFA+cpQ/A==
   dependencies:
-    axios "^0.21.1"
+    axios "^0.25.0"
     dayjs "^1.8.29"
     https-proxy-agent "^5.0.0"
     jsonwebtoken "^8.5.1"
@@ -6105,7 +6105,7 @@ twilio@3.67.0:
     qs "^6.9.4"
     rootpath "^0.1.2"
     scmp "^2.1.0"
-    url-parse "^1.5.0"
+    url-parse "^1.5.3"
     xmlbuilder "^13.0.2"
 
 type-check@^0.4.0, type-check@~0.4.0:
@@ -6189,10 +6189,10 @@ uri-js@^4.2.2:
   dependencies:
     punycode "^2.1.0"
 
-url-parse@^1.5.0:
-  version "1.5.6"
-  resolved "https://registry.npmjs.org/url-parse/-/url-parse-1.5.6.tgz#b2a41d5a233645f3c31204cc8be60e76a15230a2"
-  integrity sha512-xj3QdUJ1DttD1LeSfvJlU1eiF1RvBSBfUu8GplFGdUzSO28y5yUtEl7wb//PI4Af6qh0o/K8545vUmucRrfWsw==
+url-parse@^1.5.3:
+  version "1.5.9"
+  resolved "https://registry.yarnpkg.com/url-parse/-/url-parse-1.5.9.tgz#05ff26484a0b5e4040ac64dcee4177223d74675e"
+  integrity sha512-HpOvhKBvre8wYez+QhHcYiVvVmeF6DVnuSOOPhe3cTum3BnqHhvKaZm8FU5yTiOu/Jut2ZpB2rA/SbBA1JIGlQ==
   dependencies:
     querystringify "^2.1.1"
     requires-port "^1.0.0"
