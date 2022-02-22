@@ -21,8 +21,8 @@ export const up = async (dryRun: boolean, db: Db) => {
     {
       _id: {
         $in: [
-          Types.ObjectId('619e6bc5d7920e74f34f774e'), // Jeff (in stage)
-          Types.ObjectId('619e6c148b34c2751b9877f6'), // Melissa (in stage)
+          new Types.ObjectId('619e6bc5d7920e74f34f774e'), // Jeff (in stage)
+          new Types.ObjectId('619e6c148b34c2751b9877f6'), // Melissa (in stage)
         ],
       },
     },
@@ -48,8 +48,8 @@ export const down = async (dryRun: boolean, db: Db) => {
     {
       _id: {
         $in: [
-          Types.ObjectId('619e6bc5d7920e74f34f774e'), // Jeff (in stage)
-          Types.ObjectId('619e6c148b34c2751b9877f6'), // Melissa (in stage)
+          new Types.ObjectId('619e6bc5d7920e74f34f774e'), // Jeff (in stage)
+          new Types.ObjectId('619e6c148b34c2751b9877f6'), // Melissa (in stage)
         ],
       },
     },
