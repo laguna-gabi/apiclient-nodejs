@@ -1,7 +1,8 @@
 import {
+  ChatInternalKey,
   ContentKey,
   InnerQueueTypes,
-  InternalKey,
+  LogInternalKey,
   NotificationType,
   ObjectBaseType,
   ServiceName,
@@ -11,8 +12,8 @@ import {
 import { v4 } from 'uuid';
 
 const allowedContentKeys = new Set<ContentKey>();
-allowedContentKeys.add(InternalKey.newChatMessageFromMember);
-allowedContentKeys.add(InternalKey.memberNotFeelingWellMessage);
+allowedContentKeys.add(ChatInternalKey.newChatMessageFromMember);
+allowedContentKeys.add(LogInternalKey.memberNotFeelingWellMessage);
 
 export const generateTextMessageUserMock = ({
   recipientClientId,

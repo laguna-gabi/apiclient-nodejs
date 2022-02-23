@@ -1,4 +1,4 @@
-import { InternalKey, generateDispatchId, generateOrgNamePrefix } from '../src';
+import { RegisterInternalKey, generateDispatchId, generateOrgNamePrefix } from '../src';
 import { lorem } from 'faker';
 
 describe('Utils', () => {
@@ -15,20 +15,22 @@ describe('Utils', () => {
 
   describe('generateDispatchId', () => {
     it('should return just contentKey on no options', () => {
-      expect(generateDispatchId(InternalKey.newMember)).toEqual(InternalKey.newMember);
+      expect(generateDispatchId(RegisterInternalKey.newMember)).toEqual(
+        RegisterInternalKey.newMember,
+      );
     });
 
     it('should return contentKey and array with 1 item as inputs', () => {
       const item = lorem.word();
-      expect(generateDispatchId(InternalKey.newMember, item)).toEqual(
-        `${InternalKey.newMember}_${item}`,
+      expect(generateDispatchId(RegisterInternalKey.newMember, item)).toEqual(
+        `${RegisterInternalKey.newMember}_${item}`,
       );
     });
 
     it('should return contentKey and sorted array with multiple items as inputs', () => {
       const items = ['b', 'a'];
-      expect(generateDispatchId(InternalKey.newMember, ...items)).toEqual(
-        `${InternalKey.newMember}_${items[1]}_${items[0]}`,
+      expect(generateDispatchId(RegisterInternalKey.newMember, ...items)).toEqual(
+        `${RegisterInternalKey.newMember}_${items[1]}_${items[0]}`,
       );
     });
   });

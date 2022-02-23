@@ -1,13 +1,13 @@
+import { v4 } from 'uuid';
 import {
+  AppointmentInternalKey,
   ICreateDispatch,
   InnerQueueTypes,
-  InternalKey,
   NotificationType,
   ObjectBaseType,
   ServiceName,
   generateDispatchId,
 } from '../index';
-import { v4 } from 'uuid';
 
 export type ObjectAppointmentScheduleLongReminderType = ObjectBaseType &
   Pick<ICreateDispatch, 'appointmentTime' | 'triggersAt'>;
@@ -33,7 +33,7 @@ export const generateAppointmentScheduleLongReminderMock = ({
   triggersAt: Date;
   correlationId?: string;
 }): ObjectAppointmentScheduleLongReminderType => {
-  const contentKey = InternalKey.appointmentLongReminder;
+  const contentKey = AppointmentInternalKey.appointmentLongReminder;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, appointmentId),

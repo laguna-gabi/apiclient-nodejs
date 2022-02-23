@@ -122,30 +122,22 @@ export interface IEventNotifySlack {
   orgName?: string;
 }
 
-export enum ExternalKey {
-  addCaregiverDetails = 'addCaregiverDetails',
-  setCallPermissions = 'setCallPermissions',
-  scheduleAppointment = 'scheduleAppointment',
-}
-
-export enum InternalKey {
+export enum RegisterInternalKey {
   newMember = 'newMember',
   newControlMember = 'newControlMember',
   newMemberNudge = 'newMemberNudge',
   newRegisteredMember = 'newRegisteredMember',
   newRegisteredMemberNudge = 'newRegisteredMemberNudge',
+}
+
+export enum AppointmentInternalKey {
   appointmentScheduledMember = 'appointmentScheduledMember',
   appointmentLongReminder = 'appointmentLongReminder',
   appointmentReminder = 'appointmentReminder',
   appointmentReminderLink = 'appointmentReminderLink',
   appointmentRequest = 'appointmentRequest',
   appointmentRequestLink = 'appointmentRequestLink',
-  newChatMessageFromUser = 'newChatMessageFromUser',
-  logReminder = 'logReminder',
-  newChatMessageFromMember = 'newChatMessageFromMember',
   appointmentScheduledUser = 'appointmentScheduledUser',
-  memberNotFeelingWellMessage = 'memberNotFeelingWellMessage',
-  assessmentSubmitAlert = 'assessmentSubmitAlert',
 }
 
 export enum TodoInternalKey {
@@ -160,14 +152,79 @@ export enum TodoInternalKey {
   deleteTodoTODO = 'deleteTodo.TODO',
 }
 
-export enum CustomKey {
+export enum AlertInternalKey {
+  assessmentSubmitAlert = 'assessmentSubmitAlert',
+}
+
+export enum LogInternalKey {
+  logReminder = 'logReminder',
+  memberNotFeelingWellMessage = 'memberNotFeelingWellMessage',
+}
+
+export enum ChatInternalKey {
+  newChatMessageFromUser = 'newChatMessageFromUser',
+  newChatMessageFromMember = 'newChatMessageFromMember',
+}
+
+export enum NotifyCustomKey {
   customContent = 'customContent',
   callOrVideo = 'callOrVideo',
   cancelNotify = 'cancelNotify',
+}
+
+export enum JournalCustomKey {
   journalContent = 'journalContent',
 }
 
-export type ContentKey = ExternalKey | InternalKey | TodoInternalKey | CustomKey;
+export enum ExternalKey {
+  addCaregiverDetails = 'addCaregiverDetails',
+  setCallPermissions = 'setCallPermissions',
+  scheduleAppointment = 'scheduleAppointment',
+}
+
+export type ContentKey =
+  | RegisterInternalKey
+  | AppointmentInternalKey
+  | TodoInternalKey
+  | AlertInternalKey
+  | LogInternalKey
+  | ChatInternalKey
+  | NotifyCustomKey
+  | JournalCustomKey
+  | ExternalKey;
+
+export enum Categories {
+  register = 'register',
+  appointment = 'appointment',
+  todo = 'todo',
+  alert = 'alert',
+  log = 'log',
+  chat = 'chat',
+  notify = 'notify',
+  journal = 'journal',
+  external = 'external',
+}
+
+const mapReducer = (arr, [keys, val]) => [
+  ...arr,
+  ...(Array.isArray(keys) ? [...keys.map((key) => [key, val])] : [[keys, val]]),
+];
+
+export const ContentCategories: Map<ContentKey, Categories> = new Map(
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  [
+    [Object.values(RegisterInternalKey), Categories.register],
+    [Object.values(AppointmentInternalKey), Categories.appointment],
+    [Object.values(TodoInternalKey), Categories.todo],
+    [Object.values(AlertInternalKey), Categories.alert],
+    [Object.values(LogInternalKey), Categories.log],
+    [Object.values(ChatInternalKey), Categories.chat],
+    [Object.values(NotifyCustomKey), Categories.notify],
+    [Object.values(JournalCustomKey), Categories.journal],
+    [Object.values(ExternalKey), Categories.external],
+  ].reduce(mapReducer, []),
+);
 
 export enum Language {
   en = 'en',

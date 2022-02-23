@@ -1,12 +1,12 @@
+import { v4 } from 'uuid';
 import {
   CancelNotificationType,
-  CustomKey,
   ICreateDispatch,
   InnerQueueTypes,
+  NotifyCustomKey,
   ServiceName,
   generateDispatchId,
 } from '../';
-import { v4 } from 'uuid';
 
 export type ObjectCancelType = Pick<
   ICreateDispatch,
@@ -33,7 +33,7 @@ export const generateObjectCancelMock = ({
   notificationType: CancelNotificationType;
   peerId: string;
 }): ObjectCancelType => {
-  const contentKey = CustomKey.cancelNotify;
+  const contentKey = NotifyCustomKey.cancelNotify;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId),
