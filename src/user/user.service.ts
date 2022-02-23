@@ -192,8 +192,10 @@ export class UserService extends BaseService {
     if (slotsObject.slots.length === 0 && !allowEmptySlotsResponse) {
       slotsObject.slots = this.generateDefaultSlots(defaultSlotsCount, notBefore);
       const params: IEventNotifySlack = {
-        header: `*No availability for user ${userId ? userId : slotsObject.appointment.userId}*`,
-        message: `There's no availability left`,
+        header: `*No availability left*`,
+        message: `For user ${slotsObject.user.firstName}(${
+          userId ? userId : slotsObject.appointment.userId
+        })`,
         icon: SlackIcon.warning,
         channel: SlackChannel.notifications,
       };
