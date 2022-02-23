@@ -1,5 +1,5 @@
 import {
-  InternalKey,
+  AppointmentInternalKey,
   Platform,
   TodoInternalKey,
   mockLogger,
@@ -49,7 +49,10 @@ describe(NotificationsService.name, () => {
     await module.close();
   });
 
-  test.each([InternalKey.appointmentReminder, InternalKey.appointmentLongReminder])(
+  test.each([
+    AppointmentInternalKey.appointmentReminder,
+    AppointmentInternalKey.appointmentLongReminder,
+  ])(
     `should not send a $contentKey notification since isAppointmentsReminderEnabled is false`,
     async (contentKey) => {
       const dispatch = generateDispatch({ contentKey });
@@ -79,7 +82,7 @@ describe(NotificationsService.name, () => {
     },
   );
 
-  describe(`${InternalKey.appointmentRequest}`, () => {
+  describe(`${AppointmentInternalKey.appointmentRequest}`, () => {
     let scheduleLink: string;
     let dispatch;
     let spyOnTwilioServiceSend: SpyInstance;
@@ -87,7 +90,7 @@ describe(NotificationsService.name, () => {
     beforeAll(async () => {
       scheduleLink = internet.url();
       dispatch = generateDispatch({
-        contentKey: InternalKey.appointmentRequest,
+        contentKey: AppointmentInternalKey.appointmentRequest,
         scheduleLink,
       });
       dispatch.content = undefined;
@@ -110,7 +113,7 @@ describe(NotificationsService.name, () => {
       await service.send(dispatch, recipientClient, senderClient);
 
       const body = replaceConfigs({
-        content: translation.contents[InternalKey.appointmentRequest],
+        content: translation.contents[AppointmentInternalKey.appointmentRequest],
         memberClient: recipientClient,
         userClient: senderClient,
       });
@@ -133,7 +136,7 @@ describe(NotificationsService.name, () => {
       recipientClient.platform = await service.send(dispatch, recipientClient, senderClient);
 
       const body = replaceConfigs({
-        content: translation.contents[InternalKey.appointmentRequest],
+        content: translation.contents[AppointmentInternalKey.appointmentRequest],
         memberClient: recipientClient,
         userClient: senderClient,
       });

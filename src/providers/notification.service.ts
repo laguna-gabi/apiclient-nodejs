@@ -1,12 +1,15 @@
 import {
+  AppointmentInternalKey,
   AuditType,
   ClientCategory,
-  CustomKey,
+  ContentCategories,
   ExternalKey,
-  InternalKey,
+  LogInternalKey,
   NotificationType,
+  NotifyCustomKey,
   Platform,
   QueueType,
+  RegisterInternalKey,
   TodoInternalKey,
 } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
@@ -50,8 +53,8 @@ export class NotificationsService {
   ): Promise<ProviderResult> {
     if (
       !recipientClient.isAppointmentsReminderEnabled &&
-      (dispatch.contentKey === InternalKey.appointmentReminder ||
-        dispatch.contentKey === InternalKey.appointmentLongReminder)
+      (dispatch.contentKey === AppointmentInternalKey.appointmentReminder ||
+        dispatch.contentKey === AppointmentInternalKey.appointmentLongReminder)
     ) {
       return;
     }
@@ -69,7 +72,7 @@ export class NotificationsService {
       this.logAudit(sendSendBirdNotification, this.send.name);
       return this.sendBird.send(sendSendBirdNotification, correlationId);
     } else if (dispatch.notificationType === NotificationType.textSms) {
-      if (dispatch.contentKey === CustomKey.customContent) {
+      if (dispatch.contentKey === NotifyCustomKey.customContent) {
         const sendSendBirdNotification = this.generateSendbirdParams(
           dispatch,
           recipientClient.orgName,
@@ -139,12 +142,12 @@ export class NotificationsService {
     });
 
     switch (dispatch.contentKey) {
-      case InternalKey.appointmentRequest:
+      case AppointmentInternalKey.appointmentRequest:
       case ExternalKey.scheduleAppointment:
         // decorate the content for appointment reminder based on client setting
         if (recipientClient.platform === Platform.web) {
           content += this.internationalization.getContents({
-            contentKey: InternalKey.appointmentRequestLink,
+            contentKey: AppointmentInternalKey.appointmentRequestLink,
             recipientClient,
             extraData: { scheduleLink: dispatch.scheduleLink },
           }); // TODO: do we need InternalKey.appointmentReminderLink in POEditor?
@@ -154,10 +157,10 @@ export class NotificationsService {
           }
         }
         break;
-      case InternalKey.appointmentReminder:
+      case AppointmentInternalKey.appointmentReminder:
         if (recipientClient.platform === Platform.web) {
           content += this.internationalization.getContents({
-            contentKey: InternalKey.appointmentReminderLink,
+            contentKey: AppointmentInternalKey.appointmentReminderLink,
             recipientClient,
             extraData: { chatLink: dispatch.chatLink },
           });
@@ -167,9 +170,9 @@ export class NotificationsService {
 
     if (
       (recipientClient.platform === Platform.web || !recipientClient.isPushNotificationsEnabled) &&
-      (dispatch.contentKey === InternalKey.newRegisteredMember ||
-        dispatch.contentKey === InternalKey.newRegisteredMemberNudge ||
-        dispatch.contentKey === InternalKey.logReminder)
+      (dispatch.contentKey === RegisterInternalKey.newRegisteredMember ||
+        dispatch.contentKey === RegisterInternalKey.newRegisteredMemberNudge ||
+        dispatch.contentKey === LogInternalKey.logReminder)
     ) {
       content += `\n${hosts.get('dynamicLink')}`;
     }
@@ -188,6 +191,7 @@ export class NotificationsService {
       message: dispatch.content || content,
       notificationType: dispatch.notificationType,
       contentKey: dispatch.contentKey,
+      contentCategory: ContentCategories.get(dispatch.contentKey),
       orgName,
       appointmentId: dispatch.appointmentId,
       journalImageDownloadLink: dispatch.journalImageDownloadLink,
@@ -232,6 +236,7 @@ export class NotificationsService {
         member: { phone: recipientClient.phone },
         type: notificationType,
         contentKey: dispatch.contentKey,
+        contentCategory: ContentCategories.get(dispatch.contentKey),
         isVideo: notificationType === NotificationType.video,
         ...pathObject,
         ...extraDataObject,

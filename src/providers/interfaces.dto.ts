@@ -1,5 +1,6 @@
 import {
   CancelNotificationType,
+  Categories,
   ContentKey,
   NotificationType,
   Platform,
@@ -20,6 +21,7 @@ export class SendOneSignalNotification extends BaseSendNotification {
     peerId?: string;
     type: NotificationType | CancelNotificationType;
     contentKey: ContentKey;
+    contentCategory: Categories;
     path?: string;
     isVideo: boolean;
     extraData?: string;
@@ -38,6 +40,7 @@ export class SendSendBirdNotification extends BaseSendNotification {
   message: string;
   notificationType: NotificationType | CancelNotificationType;
   contentKey: ContentKey;
+  contentCategory: Categories;
   appointmentId?: string;
   journalImageDownloadLink?: string;
   journalAudioDownloadLink?: string;

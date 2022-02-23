@@ -1,4 +1,4 @@
-import { CustomKey, Environments, NotificationType, mockLogger } from '@lagunahealth/pandora';
+import * as pandora from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { v4 } from 'uuid';
@@ -17,6 +17,12 @@ import {
   SendBird,
   SendSendBirdNotification,
 } from '../../src/providers';
+import {
+  Categories,
+  JournalCustomKey,
+  NotificationType,
+  NotifyCustomKey,
+} from '@lagunahealth/pandora';
 
 describe(`live: ${SendBird.name}`, () => {
   let basePath;
@@ -32,7 +38,9 @@ describe(`live: ${SendBird.name}`, () => {
 
   beforeAll(async () => {
     const secretsManager = new AWS.SecretsManager({ region: aws.region });
-    const result = await secretsManager.getSecretValue({ SecretId: Environments.test }).promise();
+    const result = await secretsManager
+      .getSecretValue({ SecretId: pandora.Environments.test })
+      .promise();
     const data = JSON.parse(result.SecretString);
 
     const appId = data[ExternalConfigs.sendbird.apiId];
@@ -44,7 +52,7 @@ describe(`live: ${SendBird.name}`, () => {
     const configService = new ConfigsService();
     const httpService = new HttpService();
     const logger = new LoggerService(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
-    mockLogger(logger);
+    pandora.mockLogger(logger);
 
     sendBird = new SendBird(configService, httpService, logger);
 
@@ -72,7 +80,8 @@ describe(`live: ${SendBird.name}`, () => {
       userId,
       sendBirdChannelUrl,
       message: faker.lorem.word(),
-      contentKey: CustomKey.customContent,
+      contentKey: NotifyCustomKey.customContent,
+      contentCategory: Categories.notify,
       notificationType: NotificationType.chat,
     };
     await checkResult('admin', params);
@@ -84,7 +93,8 @@ describe(`live: ${SendBird.name}`, () => {
       sendBirdChannelUrl,
       message: faker.lorem.word(),
       notificationType: NotificationType.chat,
-      contentKey: CustomKey.journalContent,
+      contentCategory: Categories.chat,
+      contentKey: JournalCustomKey.journalContent,
     };
     await checkResult('journalText', params);
   });
@@ -95,7 +105,8 @@ describe(`live: ${SendBird.name}`, () => {
       sendBirdChannelUrl,
       message: faker.lorem.word(),
       notificationType: NotificationType.chat,
-      contentKey: CustomKey.journalContent,
+      contentKey: JournalCustomKey.journalContent,
+      contentCategory: Categories.chat,
       journalImageDownloadLink,
     };
     await checkResult('journalImage', params);
@@ -107,7 +118,8 @@ describe(`live: ${SendBird.name}`, () => {
       sendBirdChannelUrl,
       message: faker.lorem.word(),
       notificationType: NotificationType.chat,
-      contentKey: CustomKey.journalContent,
+      contentKey: JournalCustomKey.journalContent,
+      contentCategory: Categories.chat,
       journalAudioDownloadLink,
     };
     const result = await sendBird.send(params, v4());
@@ -125,7 +137,8 @@ describe(`live: ${SendBird.name}`, () => {
       sendBirdChannelUrl,
       message: faker.lorem.word(),
       notificationType: NotificationType.chat,
-      contentKey: CustomKey.journalContent,
+      contentKey: JournalCustomKey.journalContent,
+      contentCategory: Categories.journal,
       journalAudioDownloadLink,
       journalImageDownloadLink,
     };

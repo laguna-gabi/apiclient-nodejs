@@ -1,7 +1,7 @@
 import {
   BaseOneSignal,
   CancelNotificationType,
-  InternalKey,
+  ChatInternalKey,
   NotificationType,
   Platform,
   formatEx,
@@ -50,7 +50,9 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
     const app_id = await this.getApiId(platform, data.type);
     const extraData = this.getExtraDataByPlatform(platform);
     const collapseOnClient =
-      data.contentKey === InternalKey.newChatMessageFromUser ? { collapse_id: data.user.id } : {};
+      data.contentKey === ChatInternalKey.newChatMessageFromUser
+        ? { collapse_id: data.user.id }
+        : {};
 
     const apnsPushTypeOverrideObject = this.isVoipProject(platform, data.type)
       ? { apns_push_type_override: 'voip' }

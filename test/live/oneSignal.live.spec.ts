@@ -1,7 +1,8 @@
 import {
   CancelNotificationType,
-  CustomKey,
+  Categories,
   NotificationType,
+  NotifyCustomKey,
   Platform,
   mockLogger,
 } from '@lagunahealth/pandora';
@@ -51,7 +52,8 @@ describe(`live: ${OneSignal.name}`, () => {
             },
             member: { phone: generatePhone() },
             type: NotificationType.call,
-            contentKey: CustomKey.callOrVideo,
+            contentKey: NotifyCustomKey.callOrVideo,
+            contentCategory: Categories.notify,
             peerId: v4(),
             isVideo: false,
             ...generatePath(NotificationType.call),

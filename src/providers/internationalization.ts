@@ -1,4 +1,11 @@
-import { BaseInternationalization, InternalKey, Language } from '@lagunahealth/pandora';
+import {
+  AlertInternalKey,
+  AppointmentInternalKey,
+  BaseInternationalization,
+  ChatInternalKey,
+  Language,
+  LogInternalKey,
+} from '@lagunahealth/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { cloneDeep } from 'lodash';
 import { GetContentsParams } from '../common';
@@ -28,10 +35,10 @@ export class Internationalization extends BaseInternationalization implements On
     }
 
     const replace =
-      params.contentKey === InternalKey.appointmentScheduledUser ||
-      params.contentKey === InternalKey.newChatMessageFromMember ||
-      params.contentKey === InternalKey.assessmentSubmitAlert ||
-      params.contentKey === InternalKey.memberNotFeelingWellMessage;
+      params.contentKey === AppointmentInternalKey.appointmentScheduledUser ||
+      params.contentKey === ChatInternalKey.newChatMessageFromMember ||
+      params.contentKey === AlertInternalKey.assessmentSubmitAlert ||
+      params.contentKey === LogInternalKey.memberNotFeelingWellMessage;
 
     return this.i18n.t(`contents.${contentKey}`, {
       member: replace ? senderClient : updateRecipientClient,

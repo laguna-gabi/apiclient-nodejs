@@ -1,4 +1,4 @@
-import { BaseSendBird, CustomKey, FailureReason, formatEx } from '@lagunahealth/pandora';
+import { BaseSendBird, FailureReason, JournalCustomKey, formatEx } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as FormData from 'form-data';
@@ -36,7 +36,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     const { journalImageDownloadLink, journalAudioDownloadLink, contentKey } = params;
 
     const results: ProviderResult[] = [];
-    if (contentKey === CustomKey.journalContent) {
+    if (contentKey === JournalCustomKey.journalContent) {
       if (journalImageDownloadLink) {
         const result = await this.sendJournalImage(params);
         results.push(this.formatMessageByType('journalImage', result));
@@ -65,7 +65,14 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     correlationId: string,
   ): Promise<ProviderResult> {
     this.logger.info({ ...params, correlationId }, SendBird.name, this.sendJournalText.name);
-    const { userId, sendBirdChannelUrl, message, contentKey, appointmentId } = params;
+    const {
+      userId,
+      sendBirdChannelUrl,
+      message,
+      notificationType,
+      appointmentId,
+      contentCategory,
+    } = params;
     try {
       const result = await this.httpService
         .post(
@@ -74,8 +81,8 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
             message_type: 'MESG',
             user_id: userId,
             message,
-            custom_type: contentKey,
-            data: JSON.stringify({ senderId: userId, appointmentId, message }),
+            custom_type: notificationType,
+            data: JSON.stringify({ senderId: userId, appointmentId, message, contentCategory }),
           },
           { headers: this.headers },
         )
@@ -126,7 +133,14 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     correlationId: string,
   ): Promise<ProviderResult> {
     this.logger.info({ ...params, correlationId }, SendBird.name, this.sendAdminMessage.name);
-    const { userId, sendBirdChannelUrl, message, notificationType, appointmentId } = params;
+    const {
+      userId,
+      sendBirdChannelUrl,
+      message,
+      notificationType,
+      appointmentId,
+      contentCategory,
+    } = params;
     try {
       const result = await this.httpService
         .post(
@@ -139,6 +153,7 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
             data: JSON.stringify({
               senderId: userId,
               appointmentId,
+              contentCategory,
             }), // For use of Laguna Chat
           },
           { headers: this.headers },
@@ -162,7 +177,8 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     functionName: string,
   ): Promise<ProviderResult> {
     this.logger.info(params, SendBird.name, functionName);
-    const { userId, sendBirdChannelUrl, message, contentKey, appointmentId } = params;
+    const { userId, sendBirdChannelUrl, message, contentKey, appointmentId, contentCategory } =
+      params;
 
     return new Promise(async (resolve, reject) => {
       try {
@@ -177,7 +193,10 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
           form.append('apns_bundle_id', 'com.cca.MyChatPlain');
           form.append('custom_type', contentKey); // For use of Laguna Chat
           // eslint-disable-next-line max-len
-          form.append('data', JSON.stringify({ senderId: userId, appointmentId, message })); // For use of Laguna Chat);
+          form.append(
+            'data',
+            JSON.stringify({ senderId: userId, appointmentId, message, contentCategory }),
+          ); // For use of Laguna Chat);
 
           const result = await this.httpService
             .post(

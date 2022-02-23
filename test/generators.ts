@@ -1,10 +1,10 @@
 import {
   ClientCategory,
   Honorific,
-  InternalKey,
   Language,
   NotificationType,
   Platform,
+  RegisterInternalKey,
   ServiceName,
 } from '@lagunahealth/pandora';
 import { add } from 'date-fns';
@@ -83,7 +83,7 @@ export const generateDispatch = ({
   sendBirdChannelUrl = internet.url(),
   appointmentId = v4(),
   peerId = v4(),
-  contentKey = InternalKey.newMember,
+  contentKey = RegisterInternalKey.newMember,
   content = lorem.sentence(),
   chatLink = internet.url(),
   path = `connect/${generateId()}`,

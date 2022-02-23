@@ -1,4 +1,4 @@
-import { InternalKey, translation } from '@lagunahealth/pandora';
+import { LogInternalKey, RegisterInternalKey, translation } from '@lagunahealth/pandora';
 import { hosts } from 'config';
 // eslint-disable-next-line max-len
 import { translation as nsTranslation } from '../../node_modules/@lagunahealth/pandora/dist/src/languages/NorthshoreBeta.json';
@@ -14,7 +14,7 @@ describe(`live: ${Internationalization.name}`, () => {
   });
 
   it('should use org language when sending message to a member', async () => {
-    const contentKey = InternalKey.newMember;
+    const contentKey = RegisterInternalKey.newMember;
     const recipientClient = generateUpdateMemberSettingsMock();
     recipientClient.orgName = 'NorthshoreBeta';
     const userClient = generateUpdateUserSettingsMock();
@@ -36,12 +36,12 @@ describe(`live: ${Internationalization.name}`, () => {
   });
 
   it('should use member language when sending message to a member', async () => {
-    const contentKey = InternalKey.newRegisteredMemberNudge;
+    const contentKey = RegisterInternalKey.newRegisteredMemberNudge;
 
     const memberClient = generateUpdateMemberSettingsMock();
     const userClient = generateUpdateUserSettingsMock();
     const content = internationalization.getContents({
-      contentKey: InternalKey.newRegisteredMemberNudge,
+      contentKey: RegisterInternalKey.newRegisteredMemberNudge,
       recipientClient: memberClient,
       senderClient: userClient,
       extraData: { org: { name: memberClient.orgName } },
@@ -57,7 +57,7 @@ describe(`live: ${Internationalization.name}`, () => {
   });
 
   it('should use default language when sending message to a user', async () => {
-    const contentKey = InternalKey.memberNotFeelingWellMessage;
+    const contentKey = LogInternalKey.memberNotFeelingWellMessage;
 
     const memberClient = generateUpdateMemberSettingsMock();
     const userClient = generateUpdateUserSettingsMock();
