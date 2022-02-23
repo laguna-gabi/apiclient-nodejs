@@ -1,4 +1,4 @@
-import { InternalKey, NotificationType, generateDispatchId } from '@lagunahealth/pandora';
+import { LogInternalKey, NotificationType, generateDispatchId } from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -58,7 +58,7 @@ export class DailyReportResolver {
       dailyReportObject.statsOverThreshold?.length > 0 &&
       !dailyReportObject.notificationSent
     ) {
-      const contentKey = InternalKey.memberNotFeelingWellMessage;
+      const contentKey = LogInternalKey.memberNotFeelingWellMessage;
       const memberNotFeelingWellEvent: IInternalDispatch = {
         correlationId: getCorrelationId(this.logger),
         dispatchId: generateDispatchId(
@@ -82,7 +82,10 @@ export class DailyReportResolver {
       );
     }
     this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
-      dispatchId: generateDispatchId(InternalKey.logReminder, dailyReportCategoriesInput.memberId),
+      dispatchId: generateDispatchId(
+        LogInternalKey.logReminder,
+        dailyReportCategoriesInput.memberId,
+      ),
     });
 
     return dailyReportObject;

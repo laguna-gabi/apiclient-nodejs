@@ -1,11 +1,13 @@
 import {
+  AlertInternalKey,
+  AppointmentInternalKey,
   CancelNotificationType,
+  ChatInternalKey,
   ClientCategory,
   ContentKey,
-  CustomKey,
   ExternalKey,
   InnerQueueTypes,
-  InternalKey,
+  LogInternalKey,
   NotificationType,
   ObjectAppointmentScheduledClass,
   ObjectBaseClass,
@@ -24,6 +26,7 @@ import {
   ObjectUpdateMemberSettingsClass,
   Platform,
   QueueType,
+  RegisterInternalKey,
   TodoInternalKey,
   generateAppointmentScheduleLongReminderMock,
   generateAppointmentScheduleReminderMock,
@@ -106,6 +109,7 @@ import {
   mockGenerateQuestionnaireItem,
 } from '../generators';
 import * as sendbirdPayload from '../unit/mocks/webhookSendbirdNewMessagePayload.json';
+import { JournalCustomKey, NotifyCustomKey } from '@lagunahealth/pandora';
 
 // mock uuid.v4:
 jest.mock('uuid', () => {
@@ -152,7 +156,7 @@ describe('Integration tests: notifications', () => {
      *      4. send newMemberNudge dispatch
      */
     // eslint-disable-next-line max-len
-    it(`createMember: should updateClientSettings for user and member and send dispatch of type ${InternalKey.newMember} and ${InternalKey.newMemberNudge}`, async () => {
+    it(`createMember: should updateClientSettings for user and member and send dispatch of type ${RegisterInternalKey.newMember} and ${RegisterInternalKey.newMemberNudge}`, async () => {
       const org = await creators.createAndValidateOrg();
       const user = await creators.createAndValidateUser();
       const memberParams = generateCreateMemberParams({ userId: user.id, orgId: org.id });
@@ -180,7 +184,10 @@ describe('Integration tests: notifications', () => {
         }
       });
 
-      const mock1 = generateNewMemberMock({ recipientClientId: id, senderClientId: user.id });
+      const mock1 = generateNewMemberMock({
+        recipientClientId: id,
+        senderClientId: user.id,
+      });
       const object1 = new ObjectNewMemberClass(mock1);
       Object.keys(object1.objectNewMemberMock).forEach((key) => {
         expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(
@@ -194,7 +201,10 @@ describe('Integration tests: notifications', () => {
         );
       });
 
-      const mock2 = generateNewMemberNudgeMock({ recipientClientId: id, senderClientId: user.id });
+      const mock2 = generateNewMemberNudgeMock({
+        recipientClientId: id,
+        senderClientId: user.id,
+      });
       const object2 = new ObjectNewMemberNudgeClass(mock2);
       Object.keys(object2.objectNewMemberNudgeMock).forEach((key) => {
         expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(
@@ -223,7 +233,7 @@ describe('Integration tests: notifications', () => {
      *      6. delete dispatch InternalKey.customContent
      */
     test.each([true, false])(
-      `should delete settings and ${InternalKey.newMemberNudge} dispatch`,
+      `should delete settings and ${RegisterInternalKey.newMemberNudge} dispatch`,
       async (hard) => {
         const org = await creators.createAndValidateOrg();
         const user = await creators.createAndValidateUser();
@@ -250,66 +260,74 @@ describe('Integration tests: notifications', () => {
      *      3. send newRegisteredMemberNudge dispatch (triggered in 2 days)
      *      4. send logReminder dispatch (triggered in 3 days)
      */
-    // eslint-disable-next-line max-len
-    it(`registerMemberForNotifications: should update member settings and send dispatch of type ${InternalKey.newRegisteredMember}, ${InternalKey.newRegisteredMemberNudge}, ${InternalKey.logReminder} and delete ${InternalKey.newMemberNudge}`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+    it(
+      `registerMemberForNotifications: should update member settings and send dispatch of type ` +
+        `${RegisterInternalKey.newRegisteredMember}, ` +
+        `${RegisterInternalKey.newRegisteredMemberNudge}, ` +
+        `${LogInternalKey.logReminder} and delete ` +
+        `${RegisterInternalKey.newMemberNudge}`,
+      async () => {
+        const org = await creators.createAndValidateOrg();
+        const member = await creators.createAndValidateMember({ org, useNewUser: true });
 
-      await delay(200);
-      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+        await delay(200);
+        handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
-      const params: RegisterForNotificationParams = {
-        platform: Platform.android,
-        isPushNotificationsEnabled: true,
-      };
-      await handler
-        .setContextUserId(member.id)
-        .mutations.registerMemberForNotifications({ registerForNotificationParams: params });
+        const params: RegisterForNotificationParams = {
+          platform: Platform.android,
+          isPushNotificationsEnabled: true,
+        };
+        await handler
+          .setContextUserId(member.id)
+          .mutations.registerMemberForNotifications({ registerForNotificationParams: params });
 
-      await delay(200);
+        await delay(200);
 
-      const { firstLoggedInAt } = await handler
-        .setContextUserId(member.id)
-        .queries.getMemberConfig({ id: member.id });
+        const { firstLoggedInAt } = await handler
+          .setContextUserId(member.id)
+          .queries.getMemberConfig({ id: member.id });
 
-      expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(5);
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(5);
 
-      expectStringContaining(1, 'platform', params.platform);
-      expectStringContaining(1, 'isPushNotificationsEnabled', params.isPushNotificationsEnabled);
-      expectStringContaining(1, 'firstLoggedInAt', firstLoggedInAt);
+        expectStringContaining(1, 'platform', params.platform);
+        expectStringContaining(1, 'isPushNotificationsEnabled', params.isPushNotificationsEnabled);
+        expectStringContaining(1, 'firstLoggedInAt', firstLoggedInAt);
 
-      const checkValues = (contentKey: ContentKey, amount: number) => {
-        const mock1 = generateObjectRegisterMemberWithTriggeredMock({
-          recipientClientId: member.id,
-          senderClientId: member.primaryUserId.toString(),
-          contentKey,
-          triggersAt: addDays(new Date(), amount),
-          notificationType: NotificationType.text,
-        });
-        const object1 = new ObjectRegisterMemberWithTriggeredClass(mock1);
-        Object.keys(object1.objectRegisterMemberWithTriggeredType).forEach((key) => {
-          expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
-            expect.objectContaining({
-              type: QueueType.notifications,
-              message: expect.stringContaining(
-                key === 'correlationId' || key === 'triggersAt' ? key : `"${key}":"${mock1[key]}"`,
-              ),
-            }),
-          );
-        });
-      };
+        const checkValues = (contentKey: ContentKey, amount: number) => {
+          const mock1 = generateObjectRegisterMemberWithTriggeredMock({
+            recipientClientId: member.id,
+            senderClientId: member.primaryUserId.toString(),
+            contentKey,
+            triggersAt: addDays(new Date(), amount),
+            notificationType: NotificationType.text,
+          });
+          const object1 = new ObjectRegisterMemberWithTriggeredClass(mock1);
+          Object.keys(object1.objectRegisterMemberWithTriggeredType).forEach((key) => {
+            expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+              expect.objectContaining({
+                type: QueueType.notifications,
+                message: expect.stringContaining(
+                  key === 'correlationId' || key === 'triggersAt'
+                    ? key
+                    : `"${key}":"${mock1[key]}"`,
+                ),
+              }),
+            );
+          });
+        };
 
-      checkValues(InternalKey.newRegisteredMember, 1);
-      checkValues(InternalKey.newRegisteredMemberNudge, 2);
-      checkValues(InternalKey.logReminder, 3);
+        checkValues(RegisterInternalKey.newRegisteredMember, 1);
+        checkValues(RegisterInternalKey.newRegisteredMemberNudge, 2);
+        checkValues(LogInternalKey.logReminder, 3);
 
-      expectStringContaining(5, 'type', InnerQueueTypes.deleteDispatch);
-      expectStringContaining(
-        5,
-        'dispatchId',
-        generateDispatchId(InternalKey.newMemberNudge, member.id),
-      );
-    });
+        expectStringContaining(5, 'type', InnerQueueTypes.deleteDispatch);
+        expectStringContaining(
+          5,
+          'dispatchId',
+          generateDispatchId(RegisterInternalKey.newMemberNudge, member.id),
+        );
+      },
+    );
 
     /**
      * Trigger : MemberResolver.registerMemberForNotifications
@@ -352,7 +370,7 @@ describe('Integration tests: notifications', () => {
       expectStringContaining(
         2,
         'dispatchId',
-        generateDispatchId(InternalKey.newMemberNudge, member.id),
+        generateDispatchId(RegisterInternalKey.newMemberNudge, member.id),
       );
     });
 
@@ -364,7 +382,7 @@ describe('Integration tests: notifications', () => {
      *      2. send newControlMember dispatch
      */
     // eslint-disable-next-line max-len
-    it(`createControlMember: should updateClientSettings for member and send dispatch of type ${InternalKey.newControlMember}`, async () => {
+    it(`createControlMember: should updateClientSettings for member and send dispatch of type ${RegisterInternalKey.newControlMember}`, async () => {
       handler.featureFlagService.spyOnFeatureFlagControlGroup.mockResolvedValueOnce(true);
       const org = await creators.createAndValidateOrg();
       const memberParams = generateCreateMemberParams({ orgId: org.id });
@@ -613,6 +631,7 @@ describe('Integration tests: notifications', () => {
      * Dispatch :
      *      1. send ExternalKey dispatch of types ExternalKey.scheduleAppointment
      */
+    // eslint-disable-next-line max-len
     it(`notifyContent: dispatch message of ${ExternalKey.scheduleAppointment}`, async () => {
       const org = await creators.createAndValidateOrg();
       const { id } = await creators.createAndValidateMember({ org, useNewUser: true });
@@ -713,10 +732,13 @@ describe('Integration tests: notifications', () => {
      */
     it(
       `scheduleAppointment: should send dispatches of types: ` +
-        `${InternalKey.appointmentScheduledUser}, ${InternalKey.appointmentScheduledMember}, ` +
-        `${InternalKey.appointmentReminder}, ${InternalKey.appointmentLongReminder} and ` +
-        `delete types ${InternalKey.newMemberNudge}, ${InternalKey.newRegisteredMember}, ` +
-        `${InternalKey.newRegisteredMemberNudge}`,
+        `${AppointmentInternalKey.appointmentScheduledUser}, ` +
+        `${AppointmentInternalKey.appointmentScheduledMember}, ` +
+        `${AppointmentInternalKey.appointmentReminder}, ` +
+        `${AppointmentInternalKey.appointmentLongReminder}` +
+        ` and delete types ${RegisterInternalKey.newMemberNudge}, ` +
+        `${RegisterInternalKey.newRegisteredMember}, ` +
+        `${RegisterInternalKey.newRegisteredMemberNudge}`,
       async () => {
         const appointment = await generateScheduleAppointment(addDays(new Date(), 5));
         await delay(500);
@@ -774,8 +796,9 @@ describe('Integration tests: notifications', () => {
      */
     it(
       `scheduleAppointment: should only delete dispatches of types ` +
-        `${InternalKey.newMemberNudge}, ${InternalKey.newRegisteredMember}, ` +
-        `${InternalKey.newRegisteredMemberNudge} on past appointment`,
+        `${RegisterInternalKey.newMemberNudge}, ` +
+        `${RegisterInternalKey.newRegisteredMember}, ` +
+        `${RegisterInternalKey.newRegisteredMemberNudge} on past appointment`,
       async () => {
         const appointment = await generateScheduleAppointment(subMinutes(new Date(), 1));
         await delay(1000);
@@ -793,7 +816,8 @@ describe('Integration tests: notifications', () => {
      */
     it(
       `endAppointment: should delete dispatches of types ` +
-        `${InternalKey.appointmentReminder}, ${InternalKey.appointmentLongReminder}`,
+        `${AppointmentInternalKey.appointmentReminder},` +
+        ` ${AppointmentInternalKey.appointmentLongReminder}`,
       async () => {
         const appointment = await generateScheduleAppointment();
         await delay(1000);
@@ -806,7 +830,7 @@ describe('Integration tests: notifications', () => {
         checkValues(1, {
           type: InnerQueueTypes.deleteDispatch,
           dispatchId: generateDispatchId(
-            InternalKey.appointmentReminder,
+            AppointmentInternalKey.appointmentReminder,
             appointment.memberId.toString(),
             appointment.id,
           ),
@@ -814,7 +838,7 @@ describe('Integration tests: notifications', () => {
         checkValues(2, {
           type: InnerQueueTypes.deleteDispatch,
           dispatchId: generateDispatchId(
-            InternalKey.appointmentLongReminder,
+            AppointmentInternalKey.appointmentLongReminder,
             appointment.memberId.toString(),
             appointment.id,
           ),
@@ -830,7 +854,8 @@ describe('Integration tests: notifications', () => {
      */
     it(
       `deleteAppointment: should delete dispatches of types ` +
-        `${InternalKey.appointmentReminder}, ${InternalKey.appointmentLongReminder}`,
+        `${AppointmentInternalKey.appointmentReminder}, ` +
+        `${AppointmentInternalKey.appointmentLongReminder}`,
       async () => {
         const appointment = await generateScheduleAppointment();
         await delay(1000);
@@ -843,7 +868,7 @@ describe('Integration tests: notifications', () => {
         checkValues(1, {
           type: InnerQueueTypes.deleteDispatch,
           dispatchId: generateDispatchId(
-            InternalKey.appointmentReminder,
+            AppointmentInternalKey.appointmentReminder,
             appointment.memberId.toString(),
             appointment.id,
           ),
@@ -851,7 +876,7 @@ describe('Integration tests: notifications', () => {
         checkValues(2, {
           type: InnerQueueTypes.deleteDispatch,
           dispatchId: generateDispatchId(
-            InternalKey.appointmentLongReminder,
+            AppointmentInternalKey.appointmentLongReminder,
             appointment.memberId.toString(),
             appointment.id,
           ),
@@ -865,7 +890,7 @@ describe('Integration tests: notifications', () => {
      *      1. send appointmentRequest dispatch
      */
     // eslint-disable-next-line max-len
-    it(`requestAppointment: should send dispatch of type ${InternalKey.appointmentRequest}`, async () => {
+    it(`requestAppointment: should send dispatch of type ${AppointmentInternalKey.appointmentRequest}`, async () => {
       const org = await creators.createAndValidateOrg();
       const user = await creators.createAndValidateUser();
       const member = await creators.createAndValidateMember({ org });
@@ -1404,7 +1429,7 @@ describe('Integration tests: notifications', () => {
     });
 
     // eslint-disable-next-line max-len
-    it(`submitQuestionnaireResponse: should send dispatch ${InternalKey.assessmentSubmitAlert}`, async () => {
+    it(`submitQuestionnaireResponse: should send dispatch ${AlertInternalKey.assessmentSubmitAlert}`, async () => {
       const user = await creators.createAndValidateUser([UserRole.admin]);
       const userId = user.id;
       const org = await creators.createAndValidateOrg();
@@ -1486,7 +1511,8 @@ describe('Integration tests: notifications', () => {
     ${false}  | ${true}   | ${'having content, journalImageDownloadLink'}
     ${true}   | ${false}  | ${'having content, journalAudioDownloadLink'}
   `(
-    `publishJournal: should create dispatches of types ${CustomKey.journalContent} $description`,
+    `publishJournal: should create dispatches of types ` +
+      `${JournalCustomKey.journalContent} $description`,
     async (params) => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org, useNewUser: true });
@@ -1588,7 +1614,7 @@ describe('Integration tests: notifications', () => {
      *      1. InternalKey.newChatMessageFromMember
      */
     /* eslint-disable max-len */
-    it(`sendbird: should send dispatches of type ${InternalKey.newChatMessageFromMember} when received from sendbird webhook`, async () => {
+    it(`sendbird: should send dispatches of type ${ChatInternalKey.newChatMessageFromMember} when received from sendbird webhook`, async () => {
       /* eslint-enable max-len */
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org, useNewUser: true });
@@ -1615,7 +1641,7 @@ describe('Integration tests: notifications', () => {
       const mock = generateTextMessageUserMock({
         recipientClientId: member.primaryUserId.toString(),
         senderClientId: member.id,
-        contentKey: InternalKey.newChatMessageFromMember,
+        contentKey: ChatInternalKey.newChatMessageFromMember,
       });
 
       const object = new ObjectBaseClass(mock);
@@ -1637,7 +1663,7 @@ describe('Integration tests: notifications', () => {
      *      1. InternalKey.newChatMessageFromUser
      */
     /* eslint-disable max-len */
-    it(`sendbird: should send dispatches of type ${InternalKey.newChatMessageFromUser} when received from sendbird webhook`, async () => {
+    it(`sendbird: should send dispatches of type ${ChatInternalKey.newChatMessageFromUser} when received from sendbird webhook`, async () => {
       /* eslint-enable max-len */
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org, useNewUser: true });
@@ -1680,7 +1706,7 @@ describe('Integration tests: notifications', () => {
     });
 
     // eslint-disable-next-line max-len
-    it(`twilio: should send dispatches of type ${CustomKey.customContent} and content from the sms message`, async () => {
+    it(`twilio: should send dispatches of type ${NotifyCustomKey.customContent} and content from the sms message`, async () => {
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org, useNewUser: true });
 
@@ -1721,7 +1747,7 @@ describe('Integration tests: notifications', () => {
      *      1. send memberNotFeelingWellMessage dispatch
      */
     /* eslint-disable max-len */
-    it(`setDailyReportCategories: should send dispatch ${InternalKey.memberNotFeelingWellMessage}`, async () => {
+    it(`setDailyReportCategories: should send dispatch ${LogInternalKey.memberNotFeelingWellMessage}`, async () => {
       /* eslint-enable max-len */
       const org = await creators.createAndValidateOrg();
       const member = await creators.createAndValidateMember({ org, useNewUser: true });
@@ -1748,7 +1774,7 @@ describe('Integration tests: notifications', () => {
       const mock = generateTextMessageUserMock({
         senderClientId: member.id,
         recipientClientId: member.primaryUserId.toString(),
-        contentKey: InternalKey.memberNotFeelingWellMessage,
+        contentKey: LogInternalKey.memberNotFeelingWellMessage,
       });
 
       const object = new ObjectBaseClass(mock);
@@ -1804,32 +1830,32 @@ describe('Integration tests: notifications', () => {
     checkValues(
       startFromIndex,
       generateDeleteDispatchMock({
-        dispatchId: generateDispatchId(InternalKey.newMemberNudge, memberId),
+        dispatchId: generateDispatchId(RegisterInternalKey.newMemberNudge, memberId),
       }),
     );
     checkValues(
       startFromIndex + 1,
       generateDeleteDispatchMock({
-        dispatchId: generateDispatchId(InternalKey.newRegisteredMember, memberId),
+        dispatchId: generateDispatchId(RegisterInternalKey.newRegisteredMember, memberId),
       }),
     );
     checkValues(
       startFromIndex + 2,
       generateDeleteDispatchMock({
-        dispatchId: generateDispatchId(InternalKey.newRegisteredMemberNudge, memberId),
+        dispatchId: generateDispatchId(RegisterInternalKey.newRegisteredMemberNudge, memberId),
       }),
     );
     if (withLogReminder) {
       checkValues(
         startFromIndex + 3,
         generateDeleteDispatchMock({
-          dispatchId: generateDispatchId(InternalKey.logReminder, memberId),
+          dispatchId: generateDispatchId(LogInternalKey.logReminder, memberId),
         }),
       );
       checkValues(
         startFromIndex + 4,
         generateDeleteDispatchMock({
-          dispatchId: generateDispatchId(CustomKey.customContent, memberId),
+          dispatchId: generateDispatchId(NotifyCustomKey.customContent, memberId),
         }),
       );
     }

@@ -1,5 +1,5 @@
 import {
-  InternalKey,
+  LogInternalKey,
   NotificationType,
   generateDispatchId,
   mockLogger,
@@ -78,7 +78,7 @@ describe('DailyReportResolver', () => {
           memberId,
         } as DailyReportCategoriesInput, // <= input to setDailyReportCategory method
         {
-          contentKey: InternalKey.memberNotFeelingWellMessage,
+          contentKey: LogInternalKey.memberNotFeelingWellMessage,
           notificationType: NotificationType.textSms,
           recipientClientId: 'U0001',
           senderClientId: memberId,
@@ -147,7 +147,7 @@ describe('DailyReportResolver', () => {
         );
         const params = {
           dispatchId: generateDispatchId(
-            InternalKey.logReminder,
+            LogInternalKey.logReminder,
             dailyReportCategoryInput.memberId,
           ),
         };

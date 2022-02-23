@@ -1,15 +1,19 @@
 import {
+  AlertInternalKey,
+  ChatInternalKey,
   ContentKey,
-  CustomKey,
   ExternalKey,
   IDeleteClientSettings,
   IDeleteDispatch,
   IEventNotifySlack,
   InnerQueueTypes,
-  InternalKey,
+  JournalCustomKey,
+  LogInternalKey,
   NotificationType,
+  NotifyCustomKey,
   Platform,
   QueueType,
+  RegisterInternalKey,
   ServiceName,
   SlackChannel,
   SlackIcon,
@@ -631,11 +635,15 @@ export class MemberResolver extends MemberBase {
 
     const dispatch: IInternalDispatch = {
       correlationId: getCorrelationId(this.logger),
-      dispatchId: generateDispatchId(CustomKey.journalContent, memberId, Date.now().toString()),
+      dispatchId: generateDispatchId(
+        JournalCustomKey.journalContent,
+        memberId,
+        Date.now().toString(),
+      ),
       recipientClientId: member.primaryUserId.toString(),
       senderClientId: member.id,
       notificationType: NotificationType.chat,
-      contentKey: CustomKey.journalContent,
+      contentKey: JournalCustomKey.journalContent,
       sendBirdChannelUrl,
       content: text,
       journalImageDownloadLink,
@@ -799,7 +807,7 @@ export class MemberResolver extends MemberBase {
           member,
           memberConfig.firstLoggedInAt,
           correlationId,
-          InternalKey.newRegisteredMember,
+          RegisterInternalKey.newRegisteredMember,
           1,
         ),
       );
@@ -808,7 +816,7 @@ export class MemberResolver extends MemberBase {
           member,
           memberConfig.firstLoggedInAt,
           correlationId,
-          InternalKey.newRegisteredMemberNudge,
+          RegisterInternalKey.newRegisteredMemberNudge,
           2,
         ),
       );
@@ -817,14 +825,14 @@ export class MemberResolver extends MemberBase {
           member,
           memberConfig.firstLoggedInAt,
           correlationId,
-          InternalKey.logReminder,
+          LogInternalKey.logReminder,
           3,
         ),
       );
     }
 
     await this.notifyDeleteDispatch({
-      dispatchId: generateDispatchId(InternalKey.newMemberNudge, member.id),
+      dispatchId: generateDispatchId(RegisterInternalKey.newMemberNudge, member.id),
     });
   }
 
@@ -858,8 +866,8 @@ export class MemberResolver extends MemberBase {
 
     const contentKey =
       type === NotificationType.video || type === NotificationType.call
-        ? CustomKey.callOrVideo
-        : CustomKey.customContent;
+        ? NotifyCustomKey.callOrVideo
+        : NotifyCustomKey.customContent;
 
     const sendBirdChannelUrl = await this.getSendBirdChannelUrl({
       memberId: member.id,
@@ -919,7 +927,7 @@ export class MemberResolver extends MemberBase {
   ) {
     const { memberId, type, metadata } = cancelNotifyParams;
 
-    const contentKey = CustomKey.cancelNotify;
+    const contentKey = NotifyCustomKey.cancelNotify;
     const dispatch: IInternalDispatch = {
       correlationId: getCorrelationId(this.logger),
       dispatchId: generateDispatchId(contentKey, memberId, Date.now().toString()),
@@ -965,7 +973,7 @@ export class MemberResolver extends MemberBase {
       }
 
       if (origin === ChatMessageOrigin.fromUser) {
-        const contentKey = InternalKey.newChatMessageFromUser;
+        const contentKey = ChatInternalKey.newChatMessageFromUser;
         const dispatch: IInternalDispatch = {
           correlationId: getCorrelationId(this.logger),
           dispatchId: generateDispatchId(contentKey, Date.now().toString()),
@@ -983,7 +991,7 @@ export class MemberResolver extends MemberBase {
         await this.notifyCreateDispatch(dispatch);
       } else {
         // send text to the member's primary user
-        const contentKey = InternalKey.newChatMessageFromMember;
+        const contentKey = ChatInternalKey.newChatMessageFromMember;
         const dispatch: IInternalDispatch = {
           correlationId: getCorrelationId(this.logger),
           dispatchId: generateDispatchId(contentKey, Date.now().toString()),
@@ -1048,7 +1056,7 @@ export class MemberResolver extends MemberBase {
       const dispatch: IInternalDispatch = {
         correlationId: getCorrelationId(this.logger),
         dispatchId: generateDispatchId(
-          CustomKey.customContent,
+          NotifyCustomKey.customContent,
           member.primaryUserId.toString(),
           Date.now().toString(),
         ),
@@ -1056,7 +1064,7 @@ export class MemberResolver extends MemberBase {
         recipientClientId: member.primaryUserId.toString(),
         senderClientId: member.id,
         sendBirdChannelUrl,
-        contentKey: CustomKey.customContent,
+        contentKey: NotifyCustomKey.customContent,
         content: params.message,
       };
       return this.notifyCreateDispatch(dispatch);
@@ -1095,7 +1103,7 @@ export class MemberResolver extends MemberBase {
         params.score === QuestionnaireAlerts.get(QuestionnaireType.phq9)
       ) {
         (await this.userService.getEscalationGroupUsers()).map((user) => {
-          const contentKey = InternalKey.assessmentSubmitAlert;
+          const contentKey = AlertInternalKey.assessmentSubmitAlert;
           const phq9AlertEvent: IInternalDispatch = {
             correlationId: getCorrelationId(this.logger),
             dispatchId: generateDispatchId(contentKey, params.questionnaireResponseId),
@@ -1121,19 +1129,22 @@ export class MemberResolver extends MemberBase {
   private async deleteSchedules(params: IEventMember) {
     try {
       await this.notifyDeleteDispatch({
-        dispatchId: generateDispatchId(InternalKey.newMemberNudge, params.memberId),
+        dispatchId: generateDispatchId(RegisterInternalKey.newMemberNudge, params.memberId),
       });
       await this.notifyDeleteDispatch({
-        dispatchId: generateDispatchId(InternalKey.newRegisteredMember, params.memberId),
+        dispatchId: generateDispatchId(RegisterInternalKey.newRegisteredMember, params.memberId),
       });
       await this.notifyDeleteDispatch({
-        dispatchId: generateDispatchId(InternalKey.newRegisteredMemberNudge, params.memberId),
+        dispatchId: generateDispatchId(
+          RegisterInternalKey.newRegisteredMemberNudge,
+          params.memberId,
+        ),
       });
       await this.notifyDeleteDispatch({
-        dispatchId: generateDispatchId(InternalKey.logReminder, params.memberId),
+        dispatchId: generateDispatchId(LogInternalKey.logReminder, params.memberId),
       });
       await this.notifyDeleteDispatch({
-        dispatchId: generateDispatchId(CustomKey.customContent, params.memberId),
+        dispatchId: generateDispatchId(NotifyCustomKey.customContent, params.memberId),
       });
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, formatEx(ex));

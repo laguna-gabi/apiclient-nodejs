@@ -1,7 +1,7 @@
 import {
+  AlertInternalKey,
   ExternalKey,
   IEventNotifySlack,
-  InternalKey,
   NotificationType,
   Platform,
   QueueType,
@@ -2341,7 +2341,7 @@ describe('MemberResolver', () => {
           }>. Scored a '${QuestionnaireAlerts.get(QuestionnaireType.phq9)}'`,
       });
 
-      const contentKey = InternalKey.assessmentSubmitAlert;
+      const contentKey = AlertInternalKey.assessmentSubmitAlert;
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notifyDispatch, {
         correlationId: expect.any(String),
         dispatchId: generateDispatchId(contentKey, params.questionnaireResponseId),

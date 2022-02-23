@@ -1,6 +1,7 @@
 import {
+  AppointmentInternalKey,
+  ChatInternalKey,
   Honorific,
-  InternalKey,
   Language,
   Platform,
   generatePhone,
@@ -1730,12 +1731,12 @@ describe('MemberService', () => {
 
         dispatchM1 = mockGenerateDispatch({
           senderClientId: member1.id,
-          contentKey: InternalKey.appointmentScheduledUser,
+          contentKey: AppointmentInternalKey.appointmentScheduledUser,
           sentAt: sub(now, { days: 10 }),
         });
         dispatchM2 = mockGenerateDispatch({
           senderClientId: member2.id,
-          contentKey: InternalKey.newChatMessageFromMember,
+          contentKey: ChatInternalKey.newChatMessageFromMember,
           sentAt: sub(now, { days: 20 }),
         });
       });

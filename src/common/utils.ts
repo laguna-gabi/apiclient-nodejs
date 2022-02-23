@@ -1,8 +1,9 @@
 import {
+  AppointmentInternalKey,
   CancelNotificationType,
+  ChatInternalKey,
   ContentKey,
   ExternalKey,
-  InternalKey,
   NotificationType,
   formatEx,
 } from '@lagunahealth/pandora';
@@ -89,8 +90,8 @@ export const generatePath = (
   }
 
   switch (contentKey) {
-    case InternalKey.appointmentRequest:
-    case InternalKey.newChatMessageFromUser:
+    case AppointmentInternalKey.appointmentRequest:
+    case ChatInternalKey.newChatMessageFromUser:
       return `connect/${params.join('/')}`;
     case ExternalKey.addCaregiverDetails:
       return 'settings/carecircle';

@@ -1,5 +1,6 @@
 import {
-  InternalKey,
+  AppointmentInternalKey,
+  RegisterInternalKey,
   generateDispatchId,
   mockLogger,
   mockProcessWarnings,
@@ -177,13 +178,19 @@ describe('AppointmentResolver', () => {
         expect.anything(),
       );
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(3, EventType.notifyDeleteDispatch, {
-        dispatchId: generateDispatchId(InternalKey.newMemberNudge, appointment.memberId),
+        dispatchId: generateDispatchId(RegisterInternalKey.newMemberNudge, appointment.memberId),
       });
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(4, EventType.notifyDeleteDispatch, {
-        dispatchId: generateDispatchId(InternalKey.newRegisteredMember, appointment.memberId),
+        dispatchId: generateDispatchId(
+          RegisterInternalKey.newRegisteredMember,
+          appointment.memberId,
+        ),
       });
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(5, EventType.notifyDeleteDispatch, {
-        dispatchId: generateDispatchId(InternalKey.newRegisteredMemberNudge, appointment.memberId),
+        dispatchId: generateDispatchId(
+          RegisterInternalKey.newRegisteredMemberNudge,
+          appointment.memberId,
+        ),
       });
     });
 
@@ -340,14 +347,14 @@ describe('AppointmentResolver', () => {
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdatedAppointment, expect.anything());
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDeleteDispatch, {
         dispatchId: generateDispatchId(
-          InternalKey.appointmentReminder,
+          AppointmentInternalKey.appointmentReminder,
           appointment.id,
           appointment.memberId,
         ),
       });
       expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDeleteDispatch, {
         dispatchId: generateDispatchId(
-          InternalKey.appointmentLongReminder,
+          AppointmentInternalKey.appointmentLongReminder,
           appointment.id,
           appointment.memberId,
         ),

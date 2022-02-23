@@ -1,4 +1,4 @@
-import { InternalKey, Language, Platform } from '@lagunahealth/pandora';
+import { AppointmentInternalKey, Language, LogInternalKey, Platform } from '@lagunahealth/pandora';
 import * as config from 'config';
 import { general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
@@ -1080,18 +1080,18 @@ describe('Integration tests: all', () => {
 
       notification1 = mockGenerateDispatch({
         senderClientId: member1.id,
-        contentKey: InternalKey.appointmentScheduledUser,
+        contentKey: AppointmentInternalKey.appointmentScheduledUser,
       });
       notification2 = mockGenerateDispatch({
         sentAt: sub(notification1.sentAt, { hours: 1 }),
         senderClientId: member2.id,
-        contentKey: InternalKey.memberNotFeelingWellMessage,
+        contentKey: LogInternalKey.memberNotFeelingWellMessage,
       });
       // should be ignored.. over 30 days
       notification3 = mockGenerateDispatch({
         sentAt: sub(new Date(), { days: 30 }),
         senderClientId: member2.id,
-        contentKey: InternalKey.memberNotFeelingWellMessage,
+        contentKey: LogInternalKey.memberNotFeelingWellMessage,
       });
     });
 

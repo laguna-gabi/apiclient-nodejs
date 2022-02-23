@@ -3,9 +3,9 @@ import {
   IEventNotifySlack,
   IUpdateClientSettings,
   InnerQueueTypes,
-  InternalKey,
   NotificationType,
   QueueType,
+  RegisterInternalKey,
   SlackChannel,
   SlackIcon,
   generateDispatchId,
@@ -91,7 +91,7 @@ export class MemberBase {
     const controlMember = await this.memberService.insertControl(params);
     this.notifyUpdatedMemberConfig({ member: controlMember });
 
-    const contentKey = InternalKey.newControlMember;
+    const contentKey = RegisterInternalKey.newControlMember;
     const newControlMemberEvent: IInternalDispatch = {
       correlationId: getCorrelationId(this.logger),
       dispatchId: generateDispatchId(contentKey, controlMember.id),

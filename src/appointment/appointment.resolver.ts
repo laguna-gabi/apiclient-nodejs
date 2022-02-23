@@ -1,4 +1,10 @@
-import { InternalKey, NotificationType, formatEx, generateDispatchId } from '@lagunahealth/pandora';
+import {
+  AppointmentInternalKey,
+  NotificationType,
+  RegisterInternalKey,
+  formatEx,
+  generateDispatchId,
+} from '@lagunahealth/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -203,7 +209,7 @@ export class AppointmentResolver extends AppointmentBase {
    ************************************************************************************************/
 
   private notifyRequestAppointment(appointment: Appointment) {
-    const contentKey = InternalKey.appointmentRequest;
+    const contentKey = AppointmentInternalKey.appointmentRequest;
     const notificationType = NotificationType.text;
 
     const appointmentRequest: IInternalDispatch = {
@@ -234,7 +240,7 @@ export class AppointmentResolver extends AppointmentBase {
       correlationId: getCorrelationId(this.logger),
     };
 
-    const contentKeyNewMember = InternalKey.newMember;
+    const contentKeyNewMember = RegisterInternalKey.newMember;
     const newMemberEvent: IInternalDispatch = {
       ...baseEvent,
       dispatchId: generateDispatchId(contentKeyNewMember, member.id),
@@ -245,7 +251,7 @@ export class AppointmentResolver extends AppointmentBase {
     };
     this.eventEmitter.emit(EventType.notifyDispatch, newMemberEvent);
 
-    const contentKeyNewMemberNudge = InternalKey.newMemberNudge;
+    const contentKeyNewMemberNudge = RegisterInternalKey.newMemberNudge;
     const newMemberNudgeEvent: IInternalDispatch = {
       ...baseEvent,
       dispatchId: generateDispatchId(contentKeyNewMemberNudge, member.id),
@@ -261,14 +267,14 @@ export class AppointmentResolver extends AppointmentBase {
   private deleteAppointmentReminders(appointment: Appointment) {
     this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
       dispatchId: generateDispatchId(
-        InternalKey.appointmentReminder,
+        AppointmentInternalKey.appointmentReminder,
         appointment.memberId.toString(),
         appointment.id,
       ),
     });
     this.eventEmitter.emit(EventType.notifyDeleteDispatch, {
       dispatchId: generateDispatchId(
-        InternalKey.appointmentLongReminder,
+        AppointmentInternalKey.appointmentLongReminder,
         appointment.memberId.toString(),
         appointment.id,
       ),
