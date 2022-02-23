@@ -1,7 +1,7 @@
 import {
+  AlertInternalKey,
   ICreateDispatch,
   InnerQueueTypes,
-  InternalKey,
   NotificationType,
   ObjectBaseType,
   ServiceName,
@@ -31,7 +31,7 @@ export const generateAssessmentSubmitAlertMock = ({
   assessmentId: string;
   correlationId?: string;
 }): ObjectAssessmentSubmitAlertType => {
-  const contentKey = InternalKey.assessmentSubmitAlert;
+  const contentKey = AlertInternalKey.assessmentSubmitAlert;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, assessmentId),

@@ -1,8 +1,8 @@
 import { v4 } from 'uuid';
 import {
-  CustomKey,
   ICreateDispatch,
   InnerQueueTypes,
+  JournalCustomKey,
   NotificationType,
   ObjectBaseType,
   ServiceName,
@@ -34,7 +34,7 @@ export const generateObjectJournalContentMock = ({
   journalAudioDownloadLink?: string;
   sendBirdChannelUrl: string;
 }): ObjectJournalContentType => {
-  const contentKey = CustomKey.journalContent;
+  const contentKey = JournalCustomKey.journalContent;
 
   const journalImageDownloadLinkObject = journalImageDownloadLink
     ? { journalImageDownloadLink }
@@ -45,11 +45,7 @@ export const generateObjectJournalContentMock = ({
 
   return {
     type: InnerQueueTypes.createDispatch,
-    dispatchId: generateDispatchId(
-      CustomKey.journalContent,
-      recipientClientId,
-      Date.now().toString(),
-    ),
+    dispatchId: generateDispatchId(contentKey, recipientClientId, Date.now().toString()),
     correlationId: v4(),
     serviceName: ServiceName.hepius,
     notificationType: NotificationType.chat,

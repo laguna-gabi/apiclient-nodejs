@@ -1,7 +1,7 @@
 import {
+  AppointmentInternalKey,
   ICreateDispatch,
   InnerQueueTypes,
-  InternalKey,
   NotificationType,
   ObjectBaseType,
   ServiceName,
@@ -35,7 +35,7 @@ export const generateAppointmentScheduleReminderMock = ({
   chatLink: string;
   correlationId?: string;
 }): ObjectAppointmentScheduleReminderType => {
-  const contentKey = InternalKey.appointmentReminder;
+  const contentKey = AppointmentInternalKey.appointmentReminder;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, appointmentId),

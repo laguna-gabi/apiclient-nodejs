@@ -1,14 +1,14 @@
+import { v4 } from 'uuid';
 import {
-  CustomKey,
   ICreateDispatch,
   InnerQueueTypes,
   NotificationType,
+  NotifyCustomKey,
   ObjectBaseType,
   ServiceName,
   generateDispatchId,
   validateNotificationTypeText,
 } from '../';
-import { v4 } from 'uuid';
 
 export type ObjectFutureNotifyType = ObjectBaseType &
   Pick<ICreateDispatch, 'notificationType' | 'triggersAt' | 'sendBirdChannelUrl' | 'content'>;
@@ -33,7 +33,7 @@ export const generateObjectFutureNotifyMock = ({
   content: string;
 }): ObjectFutureNotifyType => {
   validateNotificationTypeText(notificationType);
-  const contentKey = CustomKey.customContent;
+  const contentKey = NotifyCustomKey.customContent;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId),

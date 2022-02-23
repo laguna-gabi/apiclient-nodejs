@@ -1,9 +1,9 @@
 import { v4 } from 'uuid';
 import {
-  CustomKey,
   ICreateDispatch,
   InnerQueueTypes,
   NotificationType,
+  NotifyCustomKey,
   ObjectBaseType,
   ServiceName,
   generateDispatchId,
@@ -31,7 +31,7 @@ export const generateObjectCustomContentMock = ({
   sendBirdChannelUrl: string;
 }): ObjectCustomContentType => {
   validateNotificationTypeText(notificationType);
-  const contentKey = CustomKey.customContent;
+  const contentKey = NotifyCustomKey.customContent;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, Date.now().toString()),

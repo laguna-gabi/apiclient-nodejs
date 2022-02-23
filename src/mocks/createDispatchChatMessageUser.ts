@@ -1,8 +1,8 @@
 import {
-  CustomKey,
   ICreateDispatch,
   InnerQueueTypes,
   NotificationType,
+  NotifyCustomKey,
   ObjectBaseType,
   ServiceName,
   generateDispatchId,
@@ -27,20 +27,17 @@ export const generateChatMessageUserMock = ({
   content: string;
   sendBirdChannelUrl: string;
 }): ObjectChatMessageUserType => {
+  const contentKey = NotifyCustomKey.customContent;
   return {
     type: InnerQueueTypes.createDispatch,
-    dispatchId: generateDispatchId(
-      CustomKey.customContent,
-      recipientClientId,
-      Date.now().toString(),
-    ),
+    dispatchId: generateDispatchId(contentKey, recipientClientId, Date.now().toString()),
     correlationId: v4(),
     serviceName: ServiceName.hepius,
     notificationType: NotificationType.chat,
     recipientClientId,
     senderClientId,
     content,
-    contentKey: CustomKey.customContent,
+    contentKey,
     sendBirdChannelUrl,
   };
 };

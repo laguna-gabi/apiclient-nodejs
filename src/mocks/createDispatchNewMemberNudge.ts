@@ -1,9 +1,9 @@
 import {
   ICreateDispatch,
   InnerQueueTypes,
-  InternalKey,
   NotificationType,
   ObjectBaseType,
+  RegisterInternalKey,
   ServiceName,
   generateDispatchId,
 } from '../';
@@ -23,7 +23,7 @@ export const generateNewMemberNudgeMock = ({
   recipientClientId: string;
   senderClientId: string;
 }): ObjectNewMemberNudgeType => {
-  const contentKey = InternalKey.newMemberNudge;
+  const contentKey = RegisterInternalKey.newMemberNudge;
   const triggersAt = new Date();
   triggersAt.setHours(triggersAt.getHours() + 48);
 
