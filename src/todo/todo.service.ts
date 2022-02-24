@@ -80,7 +80,7 @@ export class TodoService extends BaseService {
       throw new Error(Errors.get(ErrorType.todoNotFound));
     }
 
-    if (endedTodo.end?.getTime() < new Date().getTime() || endedTodo.status === TodoStatus.ended) {
+    if (endedTodo.status === TodoStatus.ended) {
       throw new Error(Errors.get(ErrorType.todoEndEndedTodo));
     }
 
@@ -107,7 +107,7 @@ export class TodoService extends BaseService {
       throw new Error(Errors.get(ErrorType.todoNotFound));
     }
 
-    if (endedTodo.end?.getTime() < new Date().getTime() || endedTodo.status === TodoStatus.ended) {
+    if (endedTodo.status === TodoStatus.ended) {
       throw new Error(Errors.get(ErrorType.todoEndEndedTodo));
     }
 

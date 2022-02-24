@@ -1,7 +1,6 @@
 import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { add } from 'date-fns';
-import * as faker from 'faker';
 import { cloneDeep } from 'lodash';
 import { Model, Types, model } from 'mongoose';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
@@ -254,17 +253,19 @@ describe('TodoService', () => {
       );
     });
 
-    it('should throw an error if todo end is in the past', async () => {
+    it('should throw an error if todo status is ended', async () => {
       const memberId = generateId();
-
       const params: CreateTodoParams = generateCreateTodoParams({
         memberId,
         createdBy: memberId,
         updatedBy: memberId,
-        end: faker.date.recent(2),
       });
 
       const { id } = await service.createTodo(params);
+      await todoModel.findOneAndUpdate(
+        { _id: new Types.ObjectId(id) },
+        { $set: { status: TodoStatus.ended } },
+      );
 
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         id,
@@ -312,23 +313,6 @@ describe('TodoService', () => {
     it('should throw an error if todo does not exists', async () => {
       await expect(service.endTodo(generateId(), generateId())).rejects.toThrow(
         Errors.get(ErrorType.todoNotFound),
-      );
-    });
-
-    it('should throw an error if todo end is in the past', async () => {
-      const memberId = generateId();
-
-      const params: CreateTodoParams = generateCreateTodoParams({
-        memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
-        end: faker.date.recent(2),
-      });
-
-      const { id } = await service.createTodo(params);
-
-      await expect(service.endTodo(id, memberId)).rejects.toThrow(
-        Errors.get(ErrorType.todoEndEndedTodo),
       );
     });
 
