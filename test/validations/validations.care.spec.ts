@@ -5,10 +5,16 @@ import {
   generateCreateCarePlanParams,
   generateCreateRedFlagParams,
   generateId,
+  generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
 } from '../generators';
 import { generateCreateUserParams } from '../index';
-import { CreateCarePlanParams, CreateRedFlagParams, UpdateCarePlanParams } from '../../src/care';
+import {
+  CreateCarePlanParams,
+  CreateRedFlagParams,
+  UpdateBarrierParams,
+  UpdateCarePlanParams,
+} from '../../src/care';
 
 const stringError = `String cannot represent a non string value`;
 
@@ -65,6 +71,48 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
       ${{ memberId: 123 }} | ${{ invalidFieldsError: stringError }}
     `(`should fail to getMemberRedFlags since $field is not valid,`, async (params) => {
       await handler.queries.getMemberRedFlags({
+        ...params.input,
+        ...params.error,
+      });
+    });
+  });
+
+  describe('updateBarrier', () => {
+    /* eslint-disable max-len */
+    test.each`
+      field   | error
+      ${'id'} | ${`Field "id" of required type "String!" was not provided.`}
+    `(`should fail to update a barrier since mandatory field $field is missing`, async (params) => {
+      const updateBarrierParams: UpdateBarrierParams = generateUpdateBarrierParams();
+      delete updateBarrierParams[params.field];
+      await handler.mutations.updateBarrier({
+        updateBarrierParams: updateBarrierParams,
+        missingFieldError: params.error,
+      });
+    });
+
+    /* eslint-disable max-len */
+    test.each`
+      input                      | error
+      ${{ id: 123 }}             | ${{ missingFieldError: stringError }}
+      ${{ type: 123 }}           | ${{ missingFieldError: stringError }}
+      ${{ notes: 123 }}          | ${{ missingFieldError: stringError }}
+      ${{ status: 'not-valid' }} | ${{ missingFieldError: 'does not exist in "CareStatus" enum.' }}
+    `(`should fail to update a barrier since $input is not valid`, async (params) => {
+      const updateBarrierParams: UpdateBarrierParams = generateUpdateBarrierParams({
+        id: generateId(),
+        ...params.input,
+      });
+      await handler.mutations.updateBarrier({ updateBarrierParams, ...params.error });
+    });
+  });
+
+  describe('getMemberBarriers', () => {
+    test.each`
+      input                | error
+      ${{ memberId: 123 }} | ${{ invalidFieldsError: stringError }}
+    `(`should fail to getMemberBarriers since $field is not valid,`, async (params) => {
+      await handler.queries.getMemberBarriers({
         ...params.input,
         ...params.error,
       });

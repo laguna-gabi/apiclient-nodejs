@@ -48,7 +48,12 @@ import {
   Todo,
 } from '../../src/todo';
 import { CreateUserParams } from '../../src/user';
-import { CreateCarePlanParams, CreateRedFlagParams, UpdateCarePlanParams } from '../../src/care';
+import {
+  CreateCarePlanParams,
+  CreateRedFlagParams,
+  UpdateBarrierParams,
+  UpdateCarePlanParams,
+} from '../../src/care';
 import {
   CreateQuestionnaireParams,
   QuestionnaireResponse,
@@ -1355,5 +1360,30 @@ export class Mutations {
     });
 
     return isResultValid({ result, invalidFieldsErrors }) && result.data.deleteRedFlag;
+  };
+
+  updateBarrier = async ({
+    updateBarrierParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    updateBarrierParams: UpdateBarrierParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<Identifier> => {
+    const result = await this.apolloClient.mutate({
+      variables: { updateBarrierParams },
+      mutation: gql`
+        mutation updateBarrier($updateBarrierParams: UpdateBarrierParams!) {
+          updateBarrier(updateBarrierParams: $updateBarrierParams) {
+            id
+          }
+        }
+      `,
+    });
+
+    return (
+      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.updateBarrier
+    );
   };
 }

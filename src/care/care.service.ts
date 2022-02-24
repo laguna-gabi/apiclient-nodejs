@@ -90,7 +90,7 @@ export class CareService {
         ...params,
         memberId: new Types.ObjectId(memberId),
         createdBy: new Types.ObjectId(createdBy),
-        redFlagId: new Types.ObjectId(redFlagId),
+        redFlagId: redFlagId ? new Types.ObjectId(redFlagId) : undefined,
         type: new Types.ObjectId(type),
       },
       isNil,

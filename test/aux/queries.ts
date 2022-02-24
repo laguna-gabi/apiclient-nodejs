@@ -14,7 +14,7 @@ import {
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
 import { GetSlotsParams } from '../../src/user';
 import { Dispatch } from '../../src/services';
-import { BarrierType, CarePlan, CarePlanType, RedFlag } from '../../src/care';
+import { Barrier, BarrierType, CarePlan, CarePlanType, RedFlag } from '../../src/care';
 import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
 
 export class Queries {
@@ -1129,5 +1129,39 @@ export class Queries {
       `,
     });
     return result.data?.getBarrierTypes;
+  };
+
+  getMemberBarriers = async ({
+    memberId,
+    invalidFieldsError,
+  }: {
+    memberId: string;
+    invalidFieldsError?: string;
+  }): Promise<Barrier[]> => {
+    const result = await this.apolloClient.query({
+      variables: { memberId },
+      query: gql`
+        query getMemberBarriers($memberId: String!) {
+          getMemberBarriers(memberId: $memberId) {
+            id
+            memberId
+            createdBy
+            type {
+              id
+              description
+              domain
+            }
+            notes
+            createdBy
+          }
+        }
+      `,
+    });
+
+    if (invalidFieldsError) {
+      expect(result.errors[0].message).toMatch(invalidFieldsError);
+    } else {
+      return result.data.getMemberBarriers;
+    }
   };
 }

@@ -7,6 +7,7 @@ import {
   generateCreateCarePlanParams,
   generateCreateRedFlagParams,
   generateId,
+  generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
 } from '../index';
 import { CareModule, CareResolver, CareService } from '../../src/care';
@@ -86,17 +87,40 @@ describe('CareResolver', () => {
   });
 
   describe('Barrier', () => {
+    let spyOnServiceGetMemberBarriers;
+    let spyOnServiceUpdateBarrier;
     let spyOnServiceGetBarrierTypes;
 
     beforeEach(() => {
+      spyOnServiceGetMemberBarriers = jest.spyOn(service, 'getMemberBarriers');
+      spyOnServiceUpdateBarrier = jest.spyOn(service, 'updateBarrier');
       spyOnServiceGetBarrierTypes = jest.spyOn(service, 'getBarrierTypes');
+      spyOnServiceUpdateBarrier.mockImplementationOnce(async () => true);
     });
 
     afterEach(() => {
+      spyOnServiceGetMemberBarriers.mockReset();
+      spyOnServiceUpdateBarrier.mockReset();
       spyOnServiceGetBarrierTypes.mockReset();
     });
 
-    it('should get all redFlagTypes', async () => {
+    it('should get barriers by memberId', async () => {
+      const memberId = generateId();
+      await resolver.getMemberBarriers(memberId);
+
+      expect(spyOnServiceGetMemberBarriers).toBeCalledTimes(1);
+      expect(spyOnServiceGetMemberBarriers).toBeCalledWith(memberId);
+    });
+
+    it('should update a barrier', async () => {
+      const params = generateUpdateBarrierParams();
+      await resolver.updateBarrier(params);
+
+      expect(spyOnServiceUpdateBarrier).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateBarrier).toBeCalledWith(params);
+    });
+
+    it('should get all barrierTypes', async () => {
       await resolver.getBarrierTypes();
       expect(spyOnServiceGetBarrierTypes).toBeCalled();
     });

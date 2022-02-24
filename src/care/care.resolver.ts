@@ -1,6 +1,7 @@
 import { UseInterceptors } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
+  Barrier,
   BarrierType,
   CarePlan,
   CarePlanType,
@@ -8,9 +9,10 @@ import {
   CreateCarePlanParams,
   CreateRedFlagParams,
   RedFlag,
+  UpdateBarrierParams,
   UpdateCarePlanParams,
 } from '.';
-import { Client, Identifier, LoggingInterceptor, Roles, UserRole } from '../common';
+import { Client, LoggingInterceptor, Roles, UserRole } from '../common';
 import { camelCase } from 'lodash';
 import { redFlags } from './redFlags.json';
 import { GraphQLJSONObject } from 'graphql-type-json';
@@ -24,12 +26,12 @@ export class CareResolver {
    ******************************************** Red Flag ********************************************
    *************************************************************************************************/
 
-  @Mutation(() => Identifier)
+  @Mutation(() => RedFlag)
   @Roles(UserRole.coach, UserRole.nurse)
   async createRedFlag(
     @Client('_id') userId,
     @Args(camelCase(CreateRedFlagParams.name)) createRedFlagParams: CreateRedFlagParams,
-  ): Promise<Identifier> {
+  ): Promise<RedFlag> {
     return this.careService.createRedFlag({
       ...createRedFlagParams,
       createdBy: userId,
@@ -66,6 +68,22 @@ export class CareResolver {
     return this.careService.getBarrierTypes();
   }
 
+  @Mutation(() => Barrier)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async updateBarrier(
+    @Args(camelCase(UpdateBarrierParams.name)) updateBarrierParams: UpdateBarrierParams,
+  ): Promise<Barrier> {
+    return this.careService.updateBarrier(updateBarrierParams);
+  }
+
+  @Query(() => [Barrier])
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getMemberBarriers(
+    @Args('memberId', { type: () => String }) memberId: string,
+  ): Promise<Barrier[]> {
+    return this.careService.getMemberBarriers(memberId);
+  }
+
   /**************************************************************************************************
    ******************************************** Care Plan *******************************************
    *************************************************************************************************/
@@ -76,23 +94,23 @@ export class CareResolver {
     return this.careService.getCarePlanTypes();
   }
 
-  @Mutation(() => Identifier)
+  @Mutation(() => CarePlan)
   @Roles(UserRole.coach, UserRole.nurse)
   async createCarePlan(
     @Client('_id') userId,
     @Args(camelCase(CreateCarePlanParams.name)) createCarePlanParams: CreateCarePlanParams,
-  ): Promise<Identifier> {
+  ): Promise<CarePlan> {
     return this.careService.createCarePlan({
       ...createCarePlanParams,
       createdBy: userId,
     });
   }
 
-  @Mutation(() => Identifier)
+  @Mutation(() => CarePlan)
   @Roles(UserRole.coach, UserRole.nurse)
   async updateCarePlan(
     @Args(camelCase(UpdateCarePlanParams.name)) updateCarePlanParams: UpdateCarePlanParams,
-  ): Promise<Identifier> {
+  ): Promise<CarePlan> {
     return this.careService.updateCarePlan(updateCarePlanParams);
   }
 
