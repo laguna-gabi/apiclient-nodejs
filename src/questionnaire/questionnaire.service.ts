@@ -214,7 +214,11 @@ export class QuestionnaireService extends BaseService {
     let score: number;
     let severity: string;
 
-    if (template.type === QuestionnaireType.gad7 || template.type === QuestionnaireType.phq9) {
+    if (
+      template.type === QuestionnaireType.gad7 ||
+      template.type === QuestionnaireType.phq9 ||
+      template.type === QuestionnaireType.nps
+    ) {
       score = answers
         .map((answer) => parseInt(answer.value))
         .reduce((valueA, valueB) => {

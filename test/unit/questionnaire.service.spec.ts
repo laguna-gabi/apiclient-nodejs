@@ -37,6 +37,7 @@ describe('QuestionnaireService', () => {
   let questionnaireResponseModel: Model<QuestionnaireResponseDocument>;
   let phq9TypeTemplate: Questionnaire;
   let who5TypeTemplate: Questionnaire;
+  let npsTypeTemplate: Questionnaire;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -134,6 +135,36 @@ describe('QuestionnaireService', () => {
           },
         ],
         notificationScoreThreshold: 4,
+      }),
+    );
+
+    npsTypeTemplate = await service.createQuestionnaire(
+      generateCreateQuestionnaireParams({
+        type: QuestionnaireType.nps,
+        items: [
+          {
+            code: 'q1',
+            type: ItemType.range,
+            order: 0,
+            label: faker.lorem.words(2),
+            required: true,
+            range: {
+              min: {
+                value: 0,
+                label: 'not likely',
+              },
+              max: {
+                value: 10,
+                label: 'very likely',
+              },
+            },
+          },
+        ],
+        severityLevels: [
+          { min: 0, max: 6, label: 'Detractor' },
+          { min: 7, max: 8, label: 'Passive' },
+          { min: 9, max: 10, label: 'Promoter' },
+        ],
       }),
     );
 
@@ -376,6 +407,13 @@ describe('QuestionnaireService', () => {
         ],
       });
 
+      const { id: id3 } = await service.submitQuestionnaireResponse({
+        questionnaireId: npsTypeTemplate.id.toString(),
+        createdBy,
+        memberId,
+        answers: [{ code: 'q1', value: '2' }],
+      });
+
       const qrs = await service.getQuestionnaireResponseByMemberId(memberId);
 
       expect(qrs).toEqual([
@@ -409,6 +447,18 @@ describe('QuestionnaireService', () => {
             { code: 'q2', value: '1' },
           ],
           result: { alert: false, score: undefined, severity: undefined },
+        },
+        {
+          id: id3,
+          questionnaireId: new Types.ObjectId(npsTypeTemplate.id.toString()),
+          deleted: false,
+          type: QuestionnaireType.nps,
+          updatedAt: expect.any(Date),
+          createdAt: expect.any(Date),
+          createdBy: new Types.ObjectId(createdBy),
+          memberId: new Types.ObjectId(memberId),
+          answers: [{ code: 'q1', value: '2' }],
+          result: { alert: false, score: 2, severity: 'Detractor' },
         },
       ]);
     });
