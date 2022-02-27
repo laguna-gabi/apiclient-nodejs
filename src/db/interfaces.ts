@@ -5,3 +5,7 @@ export class ISoftDelete<T> {
   findOneWithDeleted: (args) => Promise<T>;
   delete: (clientId: Types.ObjectId) => Promise<T>;
 }
+export interface Audit {
+  createdBy: Types.ObjectId;
+  updatedBy: Types.ObjectId;
+}

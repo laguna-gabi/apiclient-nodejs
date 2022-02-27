@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthService } from '.';
+import { AppRequestContext, RequestContext } from '../common';
 
 // Description: Authentication strategy - placeholder for real token validation.
 //              since we are behind an API GW we will use a custom strategy to simply
@@ -15,6 +16,14 @@ export class CustomStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(req: Request) {
-    return this.authService.validateUser(req);
+    const client: { _id?: string } = await this.authService.validateUser(req);
+
+    // load client to context (async local storage)
+    const ctx: AppRequestContext = RequestContext.get();
+    if (ctx) {
+      ctx.client = client?._id;
+    }
+
+    return client;
   }
 }

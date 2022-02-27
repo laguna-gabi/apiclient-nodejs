@@ -111,7 +111,6 @@ import {
 import { User, UserService } from '../user';
 import { hosts } from 'config';
 import { QuestionnaireAlerts, QuestionnaireType } from '../questionnaire';
-
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
 export class MemberResolver extends MemberBase {
@@ -693,11 +692,10 @@ export class MemberResolver extends MemberBase {
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   async addCaregiver(
-    @Client('_id') createdBy,
     @Args(camelCase(AddCaregiverParams.name), { type: () => AddCaregiverParams })
     addCaregiverParams: AddCaregiverParams,
   ): Promise<Caregiver> {
-    return this.memberService.addCaregiver({ ...addCaregiverParams, createdBy });
+    return this.memberService.addCaregiver(addCaregiverParams);
   }
 
   @Mutation(() => Boolean)

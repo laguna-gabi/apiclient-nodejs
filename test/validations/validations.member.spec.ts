@@ -1049,9 +1049,6 @@ describe('Validations - member', () => {
             ...params.input,
           });
 
-          //TODO: remove when adding the auto 'createdBy'
-          delete addCaregiverParams.createdBy;
-
           await handler.mutations.addCaregiver({
             addCaregiverParams,
             ...params.error,

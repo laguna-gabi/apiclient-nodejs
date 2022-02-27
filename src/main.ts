@@ -5,6 +5,8 @@ import { AppModule } from './app.module';
 import { GlobalAuthGuard, RolesGuard } from './auth';
 import { AllExceptionsFilter, LoggerService, internalLogs } from './common';
 import { general } from 'config';
+import { AppRequestContext } from './common';
+import { requestContextMiddleware } from './common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: ['log'], bodyParser: false });
@@ -19,6 +21,8 @@ async function bootstrap() {
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new GlobalAuthGuard());
   app.useGlobalGuards(new RolesGuard(reflector));
+
+  app.use(requestContextMiddleware(AppRequestContext));
 
   process.env.TZ = general.get('timezone');
 

@@ -27,10 +27,21 @@ import {
   CarePlanType,
   CareService,
 } from '../../src/care';
-import { LoggerService, UserRole } from '../../src/common';
+import {
+  AppRequestContext,
+  LoggerService,
+  UserRole,
+  requestContextMiddleware,
+} from '../../src/common';
 import { CommunicationService } from '../../src/communication';
 import { DailyReportService } from '../../src/dailyReport';
-import { Member, MemberService } from '../../src/member';
+import {
+  Caregiver,
+  CaregiverDocument,
+  CaregiverDto,
+  Member,
+  MemberService,
+} from '../../src/member';
 import { Org, OrgService } from '../../src/org';
 import { WebhooksController } from '../../src/providers';
 import { UserService } from '../../src/user';
@@ -54,6 +65,7 @@ export class Handler extends BaseHandler {
   orgService: OrgService;
   careService: CareService;
   barrierTypeModel: Model<BarrierTypeDocument>;
+  caregiverModel: Model<CaregiverDocument>;
   webhooksController: WebhooksController;
   spyOnGetCommunicationService;
   patientZero: Member;
@@ -80,6 +92,7 @@ export class Handler extends BaseHandler {
     const reflector = this.app.get(Reflector);
     this.app.useGlobalGuards(new GlobalAuthGuard());
     this.app.useGlobalGuards(new RolesGuard(reflector));
+    this.app.use(requestContextMiddleware(AppRequestContext));
 
     this.app.useLogger(false);
     mockLogger(moduleFixture.get<LoggerService>(LoggerService));
@@ -111,6 +124,7 @@ export class Handler extends BaseHandler {
     this.careService = moduleFixture.get<CareService>(CareService);
     this.webhooksController = moduleFixture.get<WebhooksController>(WebhooksController);
     this.barrierTypeModel = model<BarrierTypeDocument>(BarrierType.name, BarrierTypeDto);
+    this.caregiverModel = model<CaregiverDocument>(Caregiver.name, CaregiverDto);
 
     await this.buildFixtures();
     await this.app.listen(datatype.number({ min: 4000, max: 9000 }));

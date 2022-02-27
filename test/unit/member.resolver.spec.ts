@@ -511,7 +511,7 @@ describe('MemberResolver', () => {
       ${false} | ${false}
     `(`should delete a member with deviceId: $deviceId, hard: $hard`, async (params) => {
       const member = mockGenerateMember();
-      if (!params.devideId) {
+      if (!params.deviceId) {
         delete member.deviceId;
       }
       const memberConfig = generateMemberConfig({ memberId: generateObjectId(member.id) });
@@ -917,12 +917,9 @@ describe('MemberResolver', () => {
     it('should add a caregiver', async () => {
       const memberId = generateId();
       const addCaregiverParams = generateAddCaregiverParams({ memberId });
-      await resolver.addCaregiver(memberId, addCaregiverParams);
+      await resolver.addCaregiver(addCaregiverParams);
       expect(spyOnAddCaregiverServiceMethod).toBeCalledTimes(1);
-      expect(spyOnAddCaregiverServiceMethod).toBeCalledWith({
-        ...addCaregiverParams,
-        createdBy: memberId,
-      });
+      expect(spyOnAddCaregiverServiceMethod).toBeCalledWith(addCaregiverParams);
     });
 
     it('should update a caregiver with the inferred memberId', async () => {

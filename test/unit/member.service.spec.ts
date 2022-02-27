@@ -115,10 +115,12 @@ import {
   generateUpdateRecordingParams,
   generateUpdateRecordingReviewParams,
   generateUpdateTaskStatusParams,
+  loadSessionClient,
   mockGenerateDispatch,
   mockGenerateQuestionnaireItem,
   mockGenerateTodo,
 } from '../index';
+import { Audit } from '../../src/db';
 
 describe('MemberService', () => {
   let module: TestingModule;
@@ -1585,7 +1587,11 @@ describe('MemberService', () => {
     describe('addCaregiver and getCaregiver', () => {
       it('should add a caregiver', async () => {
         const memberId = generateId();
-        const caregiverParams = generateAddCaregiverParams({ memberId, createdBy: memberId });
+
+        // start a session and set member id as client in store
+        loadSessionClient(memberId);
+
+        const caregiverParams = generateAddCaregiverParams({ memberId });
         const { id } = await service.addCaregiver(caregiverParams);
         caregiverId = id;
         const caregiver = await service.getCaregiver(id);
@@ -1598,6 +1604,7 @@ describe('MemberService', () => {
             ),
             memberId: new Types.ObjectId(memberId),
             createdBy: new Types.ObjectId(memberId),
+            updatedBy: new Types.ObjectId(memberId),
             _id: new Types.ObjectId(id),
           }),
         );
@@ -1610,13 +1617,20 @@ describe('MemberService', () => {
           memberId,
         });
 
-        const { id } = await service.updateCaregiver(updateCaregiverParams);
+        // start a session and set member id as client in store
+        loadSessionClient(memberId);
+
+        const { id, createdBy } = (await service.updateCaregiver(
+          updateCaregiverParams,
+        )) as Caregiver & Audit;
 
         const caregiver = await service.getCaregiver(id);
         expect(caregiver).toEqual(
           expect.objectContaining({
             ...pickBy(updateCaregiverParams, (value, key) => key !== 'id' && key !== 'memberId'),
             memberId: new Types.ObjectId(memberId),
+            updatedBy: new Types.ObjectId(memberId),
+            createdBy,
             _id: new Types.ObjectId(id),
           }),
         );
@@ -1624,7 +1638,7 @@ describe('MemberService', () => {
 
       it('should (hard) delete a soft deleted caregiver', async () => {
         const memberId = generateId();
-        const caregiverParams = generateAddCaregiverParams({ memberId, createdBy: memberId });
+        const caregiverParams = generateAddCaregiverParams({ memberId });
         const { id } = await service.addCaregiver(caregiverParams);
 
         await service.deleteCaregiver(id, memberId.toString());
@@ -1642,8 +1656,8 @@ describe('MemberService', () => {
       test.each([true, false])('should %p delete member caregivers', async (hard) => {
         const memberId = generateId();
         // add 2 caregivers
-        await service.addCaregiver(generateAddCaregiverParams({ memberId, createdBy: memberId }));
-        await service.addCaregiver(generateAddCaregiverParams({ memberId, createdBy: memberId }));
+        await service.addCaregiver(generateAddCaregiverParams({ memberId }));
+        await service.addCaregiver(generateAddCaregiverParams({ memberId }));
 
         let caregivers = await service.getCaregiversByMemberId(memberId);
 

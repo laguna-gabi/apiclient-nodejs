@@ -447,8 +447,7 @@ describe('Integration tests: all', () => {
         updateJournalTextParams: generateUpdateJournalTextParams({ id: journalId }),
       });
 
-      const addCaregiverParams = generateAddCaregiverParams({ createdBy: member.id });
-      delete addCaregiverParams.createdBy;
+      const addCaregiverParams = generateAddCaregiverParams({ memberId: member.id });
       await handler.mutations.addCaregiver({ addCaregiverParams, requestHeaders });
 
       // submit QR for member
@@ -1396,7 +1395,6 @@ describe('Integration tests: all', () => {
 
       // Add:
       const addCaregiverParams = generateAddCaregiverParams({ memberId: member.id });
-      delete addCaregiverParams.createdBy;
 
       const caregiver = await handler.mutations.addCaregiver({
         addCaregiverParams,

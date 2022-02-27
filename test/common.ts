@@ -3,10 +3,10 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TestingModule } from '@nestjs/testing';
 import * as config from 'config';
-import { Types, connect, disconnect } from 'mongoose';
+import { Document, Model, Types, connect, disconnect } from 'mongoose';
 import { v4 } from 'uuid';
 import { apiPrefix, webhooks } from '../src/common';
-import { DbModule } from '../src/db';
+import { Audit, DbModule } from '../src/db';
 import { Member, defaultMemberParams } from '../src/member';
 import {
   CognitoService,
@@ -22,6 +22,7 @@ import { NotificationService } from '../src/services';
 import { User, UserService } from '../src/user';
 import { Mutations, Queries } from './aux';
 import { generateId } from './generators';
+import { AppRequestContext, RequestContext } from '../src/common/context.dto';
 
 export class BaseHandler {
   app: INestApplication;
@@ -223,6 +224,29 @@ export const mockProviders = (
   };
 };
 
+export const loadSessionClient = (clientId: string) => {
+  let ctx: AppRequestContext = RequestContext.get();
+
+  if (!ctx) {
+    RequestContext.start(AppRequestContext);
+    ctx = RequestContext.get();
+  }
+
+  ctx.client = clientId;
+};
+
+export async function checkAuditValues<TDoc extends Document>(
+  id: string,
+  model: Model<TDoc>,
+  expectedCreatedBy: string,
+  expectedUpdatedBy: string,
+): Promise<boolean> {
+  const doc: Audit = await model.findOne({ _id: new Types.ObjectId(id) });
+
+  return (
+    doc.createdBy.toString() === expectedCreatedBy && doc.updatedBy.toString() === expectedUpdatedBy
+  );
+}
 export const isResultValid = ({
   errors,
   invalidFieldsErrors,

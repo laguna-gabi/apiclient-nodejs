@@ -2,8 +2,9 @@ import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsOptional, IsPhoneNumber } from 'class-validator';
 import { Document, Types } from 'mongoose';
-import { ISoftDelete } from '../db';
+import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import { ErrorType, Errors, Identifier, IsObjectId } from '../common';
+import * as mongooseDelete from 'mongoose-delete';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -53,9 +54,7 @@ export class BaseCaregiverMutationParams {
 }
 
 @InputType()
-export class AddCaregiverParams extends BaseCaregiverMutationParams {
-  createdBy: string;
-}
+export class AddCaregiverParams extends BaseCaregiverMutationParams {}
 
 @InputType()
 export class UpdateCaregiverParams extends BaseCaregiverMutationParams {
@@ -94,13 +93,12 @@ export class Caregiver extends Identifier {
   @Prop()
   @Field(() => Relationship)
   relationship: Relationship;
-
-  @Prop({ type: Types.ObjectId })
-  createdBy: Types.ObjectId;
 }
 
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 export type CaregiverDocument = Caregiver & Document & ISoftDelete<Caregiver>;
-export const CaregiverDto = SchemaFactory.createForClass(Caregiver);
+export const CaregiverDto = audit(
+  SchemaFactory.createForClass(Caregiver).plugin(mongooseDelete, useFactoryOptions),
+);

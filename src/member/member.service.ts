@@ -859,7 +859,6 @@ export class MemberService extends BaseService {
       await this.caregiverModel.create({
         ...addCaregiverParams,
         memberId: new Types.ObjectId(addCaregiverParams.memberId),
-        createdBy: new Types.ObjectId(addCaregiverParams.createdBy),
       }),
     );
   }
