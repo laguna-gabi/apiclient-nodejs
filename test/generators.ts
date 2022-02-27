@@ -96,6 +96,8 @@ import {
   QuestionnaireType,
   SubmitQuestionnaireResponseParams,
 } from '../src/questionnaire';
+import * as jwt from 'jsonwebtoken';
+
 export const generateCreateUserParams = ({
   authId = v4(),
   roles = [UserRole.coach],
@@ -1040,6 +1042,10 @@ export const generateSubmitQuestionnaireResponseParams = ({
     memberId,
     answers,
   };
+};
+
+export const generateRequestHeaders = (authId: string) => {
+  return { Authorization: jwt.sign({ sub: authId }, 'secret') };
 };
 
 /*************************************************************************************************

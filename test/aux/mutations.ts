@@ -1,5 +1,4 @@
-import { ApolloServerTestClient } from 'apollo-server-testing';
-import { GraphQLResponse } from 'graphql-extensions';
+import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
 import { camelCase } from 'lodash';
 import {
@@ -12,11 +11,12 @@ import {
 } from '../../src/appointment';
 import { AvailabilityInput } from '../../src/availability';
 import {
-  Identifier,
-  Identifiers,
-  RegisterForNotificationParams,
-  isGQLResultValid as isResultValid,
-} from '../../src/common';
+  CreateCarePlanParams,
+  CreateRedFlagParams,
+  UpdateBarrierParams,
+  UpdateCarePlanParams,
+} from '../../src/care';
+import { Identifier, Identifiers, RegisterForNotificationParams } from '../../src/common';
 import { DailyReportCategoriesInput } from '../../src/dailyReport';
 import {
   AddCaregiverParams,
@@ -42,23 +42,18 @@ import {
 } from '../../src/member';
 import { CreateOrgParams } from '../../src/org';
 import {
+  CreateQuestionnaireParams,
+  QuestionnaireResponse,
+  SubmitQuestionnaireResponseParams,
+} from '../../src/questionnaire';
+import {
   CreateTodoDoneParams,
   CreateTodoParams,
   EndAndCreateTodoParams,
   Todo,
 } from '../../src/todo';
 import { CreateUserParams } from '../../src/user';
-import {
-  CreateCarePlanParams,
-  CreateRedFlagParams,
-  UpdateBarrierParams,
-  UpdateCarePlanParams,
-} from '../../src/care';
-import {
-  CreateQuestionnaireParams,
-  QuestionnaireResponse,
-  SubmitQuestionnaireResponseParams,
-} from '../../src/questionnaire';
+import { isResultValid } from '..';
 
 const FRAGMENT_APPOINTMENT = gql`
   fragment appointmentFragment on Appointment {
@@ -91,86 +86,117 @@ const FRAGMENT_APPOINTMENT = gql`
 `;
 
 export class Mutations {
-  constructor(private readonly apolloClient: ApolloServerTestClient) {}
+  constructor(
+    private readonly client: GraphQLClient,
+    private readonly defaultUserRequestHeaders,
+    private readonly defaultAdminRequestHeaders,
+  ) {}
 
   createUser = async ({
     userParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     userParams: CreateUserParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Identifier> => {
-    const result = await this.apolloClient.mutate({
-      variables: {
-        createUserParams: {
-          ...userParams,
-          roles: userParams.roles?.map((role) => camelCase(role)),
-        },
-      },
-      mutation: gql`
-        mutation CreateUser($createUserParams: CreateUserParams!) {
-          createUser(createUserParams: $createUserParams) {
-            id
+    const { createUser } = await this.client
+      .request(
+        gql`
+          mutation CreateUser($createUserParams: CreateUserParams!) {
+            createUser(createUserParams: $createUserParams) {
+              id
+            }
           }
-        }
-      `,
-    });
+        `,
+        {
+          createUserParams: {
+            ...userParams,
+            roles: userParams.roles?.map((role) => camelCase(role)),
+          },
+        },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createUser
-    );
+    return createUser;
   };
 
   createOrg = async ({
     orgParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     orgParams: CreateOrgParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Identifier> => {
-    const result = await this.apolloClient.mutate({
-      variables: { createOrgParams: orgParams },
-      mutation: gql`
-        mutation CreateOrg($createOrgParams: CreateOrgParams!) {
-          createOrg(createOrgParams: $createOrgParams) {
-            id
+    const { createOrg } = await this.client
+      .request(
+        gql`
+          mutation CreateOrg($createOrgParams: CreateOrgParams!) {
+            createOrg(createOrgParams: $createOrgParams) {
+              id
+            }
           }
-        }
-      `,
-    });
+        `,
+        { createOrgParams: orgParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createOrg
-    );
+    return createOrg;
   };
 
   createMember = async ({
     memberParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     memberParams: CreateMemberParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Identifier> => {
-    const result = await this.apolloClient.mutate({
-      variables: { createMemberParams: memberParams },
-      mutation: gql`
-        mutation CreateMember($createMemberParams: CreateMemberParams!) {
-          createMember(createMemberParams: $createMemberParams) {
-            id
+    const { createMember } = await this.client
+      .request(
+        gql`
+          mutation CreateMember($createMemberParams: CreateMemberParams!) {
+            createMember(createMemberParams: $createMemberParams) {
+              id
+            }
           }
-        }
-      `,
-    });
+        `,
+        { createMemberParams: memberParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createMember
-    );
+    return createMember;
   };
 
   updateMember = async ({
@@ -182,196 +208,237 @@ export class Mutations {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   }): Promise<Member> => {
-    const result = await this.apolloClient.mutate({
-      variables: { updateMemberParams: updateMemberParams },
-      mutation: gql`
-        mutation UpdateMember($updateMemberParams: UpdateMemberParams!) {
-          updateMember(updateMemberParams: $updateMemberParams) {
-            id
-            phone
-            deviceId
-            firstName
-            lastName
-            dateOfBirth
-            address {
-              street
-              city
-              state
-            }
-            scores {
-              adherence
-              adherenceText
-              wellbeing
-              wellbeingText
-            }
-            org {
+    const { updateMember } = await this.client
+      .request(
+        gql`
+          mutation UpdateMember($updateMemberParams: UpdateMemberParams!) {
+            updateMember(updateMemberParams: $updateMemberParams) {
               id
-              name
-              type
-              trialDuration
-              zipCode
-            }
-            primaryUserId
-            users {
-              id
+              phone
+              deviceId
               firstName
               lastName
-              email
-              roles
-              avatar
-              description
-              createdAt
-              phone
-              title
-              maxCustomers
-              languages
-              appointments {
+              dateOfBirth
+              address {
+                street
+                city
+                state
+              }
+              scores {
+                adherence
+                adherenceText
+                wellbeing
+                wellbeingText
+              }
+              org {
                 id
-                notBefore
-                method
-                status
-                start
-                end
-                link
-                noShow
-                noShowReason
-                notes {
-                  recap
-                  strengths
-                  userActionItem
-                  memberActionItem
-                  scores {
-                    adherence
-                    adherenceText
-                    wellbeing
-                    wellbeingText
+                name
+                type
+                trialDuration
+                zipCode
+              }
+              primaryUserId
+              users {
+                id
+                firstName
+                lastName
+                email
+                roles
+                avatar
+                description
+                createdAt
+                phone
+                title
+                maxCustomers
+                languages
+                appointments {
+                  id
+                  notBefore
+                  method
+                  status
+                  start
+                  end
+                  link
+                  noShow
+                  noShowReason
+                  notes {
+                    recap
+                    strengths
+                    userActionItem
+                    memberActionItem
+                    scores {
+                      adherence
+                      adherenceText
+                      wellbeing
+                      wellbeingText
+                    }
                   }
                 }
               }
-            }
-            sex
-            email
-            zipCode
-            utcDelta
-            dischargeDate
-            actionItems {
-              id
-              title
-              status
-              deadline
-            }
-            fellowName
-            drgDesc
-            phoneSecondary
-            generalNotes
-            admitDate
-            createdAt
-            honorific
-            readmissionRisk
-            readmissionRiskHistory {
+              sex
+              email
+              zipCode
+              utcDelta
+              dischargeDate
+              actionItems {
+                id
+                title
+                status
+                deadline
+              }
+              fellowName
+              drgDesc
+              phoneSecondary
+              generalNotes
+              admitDate
+              createdAt
+              honorific
               readmissionRisk
-              date
+              readmissionRiskHistory {
+                readmissionRisk
+                date
+              }
             }
           }
-        }
-      `,
-    });
+        `,
+        { updateMemberParams },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.updateMember
-    );
+    return updateMember;
   };
 
   requestAppointment = async ({
     appointmentParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     appointmentParams: RequestAppointmentParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Appointment> => {
-    const result = await this.apolloClient.mutate({
-      variables: { requestAppointmentParams: appointmentParams },
-      mutation: gql`
-        mutation RequestAppointment($requestAppointmentParams: RequestAppointmentParams!) {
-          requestAppointment(requestAppointmentParams: $requestAppointmentParams) {
-            ...appointmentFragment
+    const { requestAppointment } = await this.client
+      .request(
+        gql`
+          mutation RequestAppointment($requestAppointmentParams: RequestAppointmentParams!) {
+            requestAppointment(requestAppointmentParams: $requestAppointmentParams) {
+              ...appointmentFragment
+            }
           }
-        }
-        ${FRAGMENT_APPOINTMENT}
-      `,
-    });
+          ${FRAGMENT_APPOINTMENT}
+        `,
+        { requestAppointmentParams: appointmentParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.requestAppointment
-    );
+    return requestAppointment;
   };
 
   scheduleAppointment = async ({
     appointmentParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     appointmentParams: ScheduleAppointmentParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Appointment> => {
-    const result = await this.apolloClient.mutate({
-      variables: { scheduleAppointmentParams: appointmentParams },
-      mutation: gql`
-        mutation ScheduleAppointment($scheduleAppointmentParams: ScheduleAppointmentParams!) {
-          scheduleAppointment(scheduleAppointmentParams: $scheduleAppointmentParams) {
-            ...appointmentFragment
+    const { scheduleAppointment } = await this.client
+      .request(
+        gql`
+          mutation ScheduleAppointment($scheduleAppointmentParams: ScheduleAppointmentParams!) {
+            scheduleAppointment(scheduleAppointmentParams: $scheduleAppointmentParams) {
+              ...appointmentFragment
+            }
           }
-        }
-        ${FRAGMENT_APPOINTMENT}
-      `,
-    });
+          ${FRAGMENT_APPOINTMENT}
+        `,
+        { scheduleAppointmentParams: appointmentParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.scheduleAppointment
-    );
+    return scheduleAppointment;
   };
 
   endAppointment = async ({
     endAppointmentParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     endAppointmentParams: EndAppointmentParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Appointment> => {
-    const result = await this.apolloClient.mutate({
-      variables: { endAppointmentParams },
-      mutation: gql`
-        mutation EndAppointment($endAppointmentParams: EndAppointmentParams!) {
-          endAppointment(endAppointmentParams: $endAppointmentParams) {
-            ...appointmentFragment
+    const { endAppointment } = await this.client
+      .request(
+        gql`
+          mutation EndAppointment($endAppointmentParams: EndAppointmentParams!) {
+            endAppointment(endAppointmentParams: $endAppointmentParams) {
+              ...appointmentFragment
+            }
           }
-        }
-        ${FRAGMENT_APPOINTMENT}
-      `,
-    });
+          ${FRAGMENT_APPOINTMENT}
+        `,
+        { endAppointmentParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.endAppointment
-    );
+    return endAppointment;
   };
 
-  deleteAppointment = async ({ id }: { id: string }): Promise<GraphQLResponse> =>
-    await this.apolloClient.mutate({
-      variables: { id: id },
-      mutation: gql`
+  deleteAppointment = async ({
+    id,
+    requestHeaders = this.defaultUserRequestHeaders,
+  }: {
+    id: string;
+    requestHeaders?;
+  }): Promise<boolean> => {
+    const { deleteAppointment } = await this.client.request(
+      gql`
         mutation deleteAppointment($id: String!) {
           deleteAppointment(id: $id)
         }
       `,
-    });
+      { id },
+      requestHeaders,
+    );
+
+    return deleteAppointment;
+  };
 
   updateNotes = async ({
     updateNotesParams,
@@ -382,105 +449,136 @@ export class Mutations {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   }): Promise<Notes> => {
-    const result = await this.apolloClient.mutate({
-      variables: { updateNotesParams },
-      mutation: gql`
-        mutation updateNotes($updateNotesParams: UpdateNotesParams!) {
-          updateNotes(updateNotesParams: $updateNotesParams) {
-            recap
-            strengths
-            userActionItem
-            memberActionItem
-            scores {
-              adherence
-              adherenceText
-              wellbeing
-              wellbeingText
+    const { updateNotes } = await this.client
+      .request(
+        gql`
+          mutation updateNotes($updateNotesParams: UpdateNotesParams!) {
+            updateNotes(updateNotesParams: $updateNotesParams) {
+              recap
+              strengths
+              userActionItem
+              memberActionItem
+              scores {
+                adherence
+                adherenceText
+                wellbeing
+                wellbeingText
+              }
             }
           }
-        }
-      `,
-    });
+        `,
+        { updateNotesParams },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.updateNotes
-    );
+    return updateNotes;
   };
 
   createActionItem = async ({
     createTaskParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     createTaskParams: CreateTaskParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Identifier> => {
-    const result = await this.apolloClient.mutate({
-      variables: { createTaskParams: createTaskParams },
-      mutation: gql`
-        mutation CreateActionItem($createTaskParams: CreateTaskParams!) {
-          createActionItem(createTaskParams: $createTaskParams) {
-            id
+    const { createActionItem } = await this.client
+      .request(
+        gql`
+          mutation CreateActionItem($createTaskParams: CreateTaskParams!) {
+            createActionItem(createTaskParams: $createTaskParams) {
+              id
+            }
           }
-        }
-      `,
-    });
+        `,
+        { createTaskParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.createActionItem
-    );
+    return createActionItem;
   };
 
   updateActionItemStatus = async ({
     updateTaskStatusParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     updateTaskStatusParams: UpdateTaskStatusParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }) => {
-    const result = await this.apolloClient.mutate({
-      variables: { updateTaskStatusParams: updateTaskStatusParams },
-      mutation: gql`
-        mutation UpdateActionItemStatus($updateTaskStatusParams: UpdateTaskStatusParams!) {
-          updateActionItemStatus(updateTaskStatusParams: $updateTaskStatusParams)
-        }
-      `,
-    });
+    const { updateActionItemStatus } = await this.client
+      .request(
+        gql`
+          mutation UpdateActionItemStatus($updateTaskStatusParams: UpdateTaskStatusParams!) {
+            updateActionItemStatus(updateTaskStatusParams: $updateTaskStatusParams)
+          }
+        `,
+        { updateTaskStatusParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.updateActionItemStatus
-    );
+    return updateActionItemStatus;
   };
 
   createAvailabilities = async ({
     availabilities,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     availabilities: AvailabilityInput[];
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Identifiers> => {
-    const result = await this.apolloClient.mutate({
-      variables: { availabilities: availabilities },
-      mutation: gql`
-        mutation createAvailabilities($availabilities: [AvailabilityInput!]!) {
-          createAvailabilities(availabilities: $availabilities) {
-            ids
+    const { createAvailabilities } = await this.client
+      .request(
+        gql`
+          mutation createAvailabilities($availabilities: [AvailabilityInput!]!) {
+            createAvailabilities(availabilities: $availabilities) {
+              ids
+            }
           }
-        }
-      `,
-    });
+        `,
+        { availabilities },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.createAvailabilities
-    );
+    return createAvailabilities;
   };
 
   deleteAvailability = async ({
@@ -490,16 +588,24 @@ export class Mutations {
     id: string;
     invalidFieldsErrors?: string[];
   }): Promise<Identifiers> => {
-    const result = await this.apolloClient.mutate({
-      variables: { id: id },
-      mutation: gql`
-        mutation deleteAvailability($id: String!) {
-          deleteAvailability(id: $id)
-        }
-      `,
-    });
+    const { deleteAvailability } = await this.client
+      .request(
+        gql`
+          mutation deleteAvailability($id: String!) {
+            deleteAvailability(id: $id)
+          }
+        `,
+        { id },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          invalidFieldsErrors,
+        });
+      });
 
-    return isResultValid({ result, invalidFieldsErrors }) && result.data.deleteAvailability;
+    return deleteAvailability;
   };
 
   setGeneralNotes = async ({
@@ -511,210 +617,275 @@ export class Mutations {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   }): Promise<void> => {
-    const result = await this.apolloClient.mutate({
-      variables: { setGeneralNotesParams: setGeneralNotesParams },
-      mutation: gql`
-        mutation setGeneralNotes($setGeneralNotesParams: SetGeneralNotesParams!) {
-          setGeneralNotes(setGeneralNotesParams: $setGeneralNotesParams)
-        }
-      `,
-    });
+    const { setGeneralNotes } = await this.client
+      .request(
+        gql`
+          mutation setGeneralNotes($setGeneralNotesParams: SetGeneralNotesParams!) {
+            setGeneralNotes(setGeneralNotesParams: $setGeneralNotesParams)
+          }
+        `,
+        { setGeneralNotesParams },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.setGeneralNotes
-    );
+    return setGeneralNotes;
   };
 
-  createJournal = async (): Promise<Journal> => {
-    const result = await this.apolloClient.mutate({
-      mutation: gql`
+  createJournal = async ({ requestHeaders }: { requestHeaders }): Promise<Journal> => {
+    const { createJournal } = await this.client.request(
+      gql`
         mutation createJournal {
           createJournal {
             id
           }
         }
       `,
-    });
+      undefined,
+      requestHeaders,
+    );
 
-    return result.data.createJournal;
+    return createJournal;
   };
 
   updateJournalText = async ({
     updateJournalTextParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders,
   }: {
     updateJournalTextParams: UpdateJournalTextParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders;
   }): Promise<Journal> => {
-    const result = await this.apolloClient.mutate({
-      variables: { updateJournalTextParams },
-      mutation: gql`
-        mutation updateJournalText($updateJournalTextParams: UpdateJournalTextParams!) {
-          updateJournalText(updateJournalTextParams: $updateJournalTextParams) {
-            id
-            memberId
-            text
-            published
-            updatedAt
+    const { updateJournalText } = await this.client
+      .request(
+        gql`
+          mutation updateJournalText($updateJournalTextParams: UpdateJournalTextParams!) {
+            updateJournalText(updateJournalTextParams: $updateJournalTextParams) {
+              id
+              memberId
+              text
+              published
+              updatedAt
+            }
           }
-        }
-      `,
-    });
+        `,
+        { updateJournalTextParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.updateJournalText
-    );
+    return updateJournalText;
   };
 
   deleteJournal = async ({
     id,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders,
   }: {
     id;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders;
   }): Promise<Journal> => {
-    const result = await this.apolloClient.mutate({
-      variables: { id },
-      mutation: gql`
-        mutation deleteJournal($id: String!) {
-          deleteJournal(id: $id)
-        }
-      `,
-    });
+    const { deleteJournal } = await this.client
+      .request(
+        gql`
+          mutation deleteJournal($id: String!) {
+            deleteJournal(id: $id)
+          }
+        `,
+        { id },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.deleteJournal
-    );
+    return deleteJournal;
   };
 
   deleteJournalImage = async ({
     id,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders,
   }: {
     id;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders;
   }): Promise<Journal> => {
-    const result = await this.apolloClient.mutate({
-      variables: { id },
-      mutation: gql`
-        mutation deleteJournalImage($id: String!) {
-          deleteJournalImage(id: $id)
-        }
-      `,
-    });
+    const { deleteJournalImage } = await this.client
+      .request(
+        gql`
+          mutation deleteJournalImage($id: String!) {
+            deleteJournalImage(id: $id)
+          }
+        `,
+        { id },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.deleteJournalImage
-    );
+    return deleteJournalImage;
   };
 
   deleteJournalAudio = async ({
     id,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders,
   }: {
     id;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders;
   }): Promise<Journal> => {
-    const result = await this.apolloClient.mutate({
-      variables: { id },
-      mutation: gql`
-        mutation deleteJournalAudio($id: String!) {
-          deleteJournalAudio(id: $id)
-        }
-      `,
-    });
+    const { deleteJournalAudio } = await this.client
+      .request(
+        gql`
+          mutation deleteJournalAudio($id: String!) {
+            deleteJournalAudio(id: $id)
+          }
+        `,
+        { id },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.deleteJournalAudio
-    );
+    return deleteJournalAudio;
   };
 
   publishJournal = async ({
     id,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders,
   }: {
     id;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders;
   }): Promise<Journal> => {
-    const result = await this.apolloClient.mutate({
-      variables: { id },
-      mutation: gql`
-        mutation publishJournal($id: String!) {
-          publishJournal(id: $id)
-        }
-      `,
-    });
+    const { publishJournal } = await this.client
+      .request(
+        gql`
+          mutation publishJournal($id: String!) {
+            publishJournal(id: $id)
+          }
+        `,
+        { id },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.publishJournal
-    );
+    return publishJournal;
   };
 
   updateMemberConfig = async ({
     updateMemberConfigParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     updateMemberConfigParams: UpdateMemberConfigParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<void> => {
-    const result = await this.apolloClient.mutate({
-      variables: { updateMemberConfigParams: updateMemberConfigParams },
-      mutation: gql`
-        mutation updateMemberConfig($updateMemberConfigParams: UpdateMemberConfigParams!) {
-          updateMemberConfig(updateMemberConfigParams: $updateMemberConfigParams)
-        }
-      `,
-    });
+    const { updateMemberConfig } = await this.client
+      .request(
+        gql`
+          mutation updateMemberConfig($updateMemberConfigParams: UpdateMemberConfigParams!) {
+            updateMemberConfig(updateMemberConfigParams: $updateMemberConfigParams)
+          }
+        `,
+        { updateMemberConfigParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.updateMemberConfig
-    );
+    return updateMemberConfig;
   };
 
   registerMemberForNotifications = async ({
     registerForNotificationParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders,
   }: {
     registerForNotificationParams: RegisterForNotificationParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders;
   }): Promise<void> => {
-    const result = await this.apolloClient.mutate({
-      variables: { registerForNotificationParams: registerForNotificationParams },
-      mutation: gql`
-        mutation registerMemberForNotifications(
-          $registerForNotificationParams: RegisterForNotificationParams!
-        ) {
-          registerMemberForNotifications(
-            registerForNotificationParams: $registerForNotificationParams
-          )
-        }
-      `,
-    });
+    const { registerMemberForNotifications } = await this.client
+      .request(
+        gql`
+          mutation registerMemberForNotifications(
+            $registerForNotificationParams: RegisterForNotificationParams!
+          ) {
+            registerMemberForNotifications(
+              registerForNotificationParams: $registerForNotificationParams
+            )
+          }
+        `,
+        { registerForNotificationParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.registerMemberForNotifications
-    );
+    return registerMemberForNotifications;
   };
 
   deleteMember = async ({
@@ -726,18 +897,25 @@ export class Mutations {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   }): Promise<void> => {
-    const result = await this.apolloClient.mutate({
-      variables: { deleteMemberParams: deleteMemberParams },
-      mutation: gql`
-        mutation deleteMember($deleteMemberParams: DeleteMemberParams!) {
-          deleteMember(deleteMemberParams: $deleteMemberParams)
-        }
-      `,
-    });
+    const { deleteMember } = await this.client
+      .request(
+        gql`
+          mutation deleteMember($deleteMemberParams: DeleteMemberParams!) {
+            deleteMember(deleteMemberParams: $deleteMemberParams)
+          }
+        `,
+        { deleteMemberParams },
+        this.defaultAdminRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.deleteMember
-    );
+    return deleteMember;
   };
 
   notify = async ({
@@ -749,16 +927,25 @@ export class Mutations {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   }): Promise<void> => {
-    const result = await this.apolloClient.mutate({
-      variables: { notifyParams: notifyParams },
-      mutation: gql`
-        mutation notify($notifyParams: NotifyParams!) {
-          notify(notifyParams: $notifyParams)
-        }
-      `,
-    });
+    const { notify } = await this.client
+      .request(
+        gql`
+          mutation notify($notifyParams: NotifyParams!) {
+            notify(notifyParams: $notifyParams)
+          }
+        `,
+        { notifyParams },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.notify;
+    return notify;
   };
 
   notifyContent = async ({
@@ -770,18 +957,25 @@ export class Mutations {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   }): Promise<void> => {
-    const result = await this.apolloClient.mutate({
-      variables: { notifyContentParams: notifyContentParams },
-      mutation: gql`
-        mutation notifyContent($notifyContentParams: NotifyContentParams!) {
-          notifyContent(notifyContentParams: $notifyContentParams)
-        }
-      `,
-    });
+    const { notifyContent } = await this.client
+      .request(
+        gql`
+          mutation notifyContent($notifyContentParams: NotifyContentParams!) {
+            notifyContent(notifyContentParams: $notifyContentParams)
+          }
+        `,
+        { notifyContentParams },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.notifyContent
-    );
+    return notifyContent;
   };
 
   cancel = async ({
@@ -793,68 +987,84 @@ export class Mutations {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   }): Promise<void> => {
-    const result = await this.apolloClient.mutate({
-      variables: { cancelNotifyParams: cancelNotifyParams },
-      mutation: gql`
-        mutation cancelNotify($cancelNotifyParams: CancelNotifyParams!) {
-          cancelNotify(cancelNotifyParams: $cancelNotifyParams)
-        }
-      `,
-    });
+    const { cancelNotify } = await this.client
+      .request(
+        gql`
+          mutation cancelNotify($cancelNotifyParams: CancelNotifyParams!) {
+            cancelNotify(cancelNotifyParams: $cancelNotifyParams)
+          }
+        `,
+        { cancelNotifyParams },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.cancelNotify
-    );
+    return cancelNotify;
   };
 
   updateRecording = async ({
     updateRecordingParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     updateRecordingParams?: UpdateRecordingParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Recording> => {
-    const result = await this.apolloClient.mutate({
-      variables: { updateRecordingParams: updateRecordingParams },
-      mutation: gql`
-        mutation updateRecording($updateRecordingParams: UpdateRecordingParams!) {
-          updateRecording(updateRecordingParams: $updateRecordingParams) {
-            id
-            userId
-            memberId
-            start
-            end
-            answered
-            phone
-            recordingType
-            deletedMedia
-            review {
+    const { updateRecording } = await this.client
+      .request(
+        gql`
+          mutation updateRecording($updateRecordingParams: UpdateRecordingParams!) {
+            updateRecording(updateRecordingParams: $updateRecordingParams) {
+              id
               userId
-              content
-              createdAt
-              updatedAt
+              memberId
+              start
+              end
+              answered
+              phone
+              recordingType
+              deletedMedia
+              review {
+                userId
+                content
+                createdAt
+                updatedAt
+              }
             }
           }
-        }
-      `,
-    });
+        `,
+        { updateRecordingParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.updateRecording
-    );
+    return updateRecording;
   };
 
   setDailyReportCategories = async ({
     dailyReportCategoriesInput,
+    requestHeaders,
   }: {
     dailyReportCategoriesInput: DailyReportCategoriesInput;
+    requestHeaders;
   }) => {
-    const result = await this.apolloClient.mutate({
-      variables: { dailyReportCategoriesInput },
-      mutation: gql`
+    const { setDailyReportCategories } = await this.client.request(
+      gql`
         mutation setDailyReportCategories(
           $dailyReportCategoriesInput: DailyReportCategoriesInput!
         ) {
@@ -869,10 +1079,11 @@ export class Mutations {
           }
         }
       `,
-    });
+      { dailyReportCategoriesInput },
+      requestHeaders,
+    );
 
-    const { errors, data } = result || {};
-    return { errors, updatedDailyReport: data?.setDailyReportCategories };
+    return setDailyReportCategories;
   };
 
   replaceUserForMember = async ({
@@ -884,150 +1095,199 @@ export class Mutations {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   }) => {
-    const result = await this.apolloClient.mutate({
-      variables: { replaceUserForMemberParams: replaceUserForMemberParams },
-      mutation: gql`
-        mutation replaceUserForMember($replaceUserForMemberParams: ReplaceUserForMemberParams!) {
-          replaceUserForMember(replaceUserForMemberParams: $replaceUserForMemberParams)
-        }
-      `,
-    });
+    const { replaceUserForMember } = await this.client
+      .request(
+        gql`
+          mutation replaceUserForMember($replaceUserForMemberParams: ReplaceUserForMemberParams!) {
+            replaceUserForMember(replaceUserForMemberParams: $replaceUserForMemberParams)
+          }
+        `,
+        { replaceUserForMemberParams },
+        this.defaultAdminRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.replaceUserForMemberParams
-    );
+    return replaceUserForMember;
   };
 
   addCaregiver = async ({
     addCaregiverParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     addCaregiverParams: AddCaregiverParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Caregiver> => {
-    const result = await this.apolloClient.mutate({
-      variables: { addCaregiverParams: addCaregiverParams },
-      mutation: gql`
-        mutation addCaregiver($addCaregiverParams: AddCaregiverParams!) {
-          addCaregiver(addCaregiverParams: $addCaregiverParams) {
-            id
-            email
-            firstName
-            lastName
-            relationship
-            phone
-            memberId
+    const { addCaregiver } = await this.client
+      .request(
+        gql`
+          mutation addCaregiver($addCaregiverParams: AddCaregiverParams!) {
+            addCaregiver(addCaregiverParams: $addCaregiverParams) {
+              id
+              email
+              firstName
+              lastName
+              relationship
+              phone
+              memberId
+            }
           }
-        }
-      `,
-    });
+        `,
+        { addCaregiverParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, invalidFieldsErrors, missingFieldError }) && result.data.addCaregiver
-    );
+    return addCaregiver;
   };
 
   dismissAlert = async ({
     alertId,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders,
   }: {
     alertId: string;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders;
   }): Promise<boolean> => {
-    const result = await this.apolloClient.mutate({
-      variables: { alertId },
-      mutation: gql`
-        mutation dismissAlert($alertId: String!) {
-          dismissAlert(alertId: $alertId)
-        }
-      `,
-    });
+    const { dismissAlert } = await this.client
+      .request(
+        gql`
+          mutation dismissAlert($alertId: String!) {
+            dismissAlert(alertId: $alertId)
+          }
+        `,
+        { alertId },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, invalidFieldsErrors, missingFieldError }) && result.data.dismissAlert
-    );
+    return dismissAlert;
   };
 
   setLastQueryAlert = async ({
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders,
   }: {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders;
   }): Promise<boolean> => {
-    const result = await this.apolloClient.mutate({
-      mutation: gql`
-        mutation setLastQueryAlert {
-          setLastQueryAlert
-        }
-      `,
-    });
+    const { setLastQueryAlert } = await this.client
+      .request(
+        gql`
+          mutation setLastQueryAlert {
+            setLastQueryAlert
+          }
+        `,
+        undefined,
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
-      result.data.setLastQueryAlert
-    );
+    return setLastQueryAlert;
   };
 
   updateCaregiver = async ({
     updateCaregiverParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders,
   }: {
     updateCaregiverParams: UpdateCaregiverParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders;
   }): Promise<Caregiver> => {
-    const result = await this.apolloClient.mutate({
-      variables: { updateCaregiverParams: updateCaregiverParams },
-      mutation: gql`
-        mutation updateCaregiver($updateCaregiverParams: UpdateCaregiverParams!) {
-          updateCaregiver(updateCaregiverParams: $updateCaregiverParams) {
-            id
-            email
-            firstName
-            lastName
-            relationship
-            phone
-            memberId
+    const { updateCaregiver } = await this.client
+      .request(
+        gql`
+          mutation updateCaregiver($updateCaregiverParams: UpdateCaregiverParams!) {
+            updateCaregiver(updateCaregiverParams: $updateCaregiverParams) {
+              id
+              email
+              firstName
+              lastName
+              relationship
+              phone
+              memberId
+            }
           }
-        }
-      `,
-    });
+        `,
+        { updateCaregiverParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
-      result.data.updateCaregiver
-    );
+    return updateCaregiver;
   };
 
   deleteCaregiver = async ({
     id,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders,
   }: {
     id: string;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders;
   }): Promise<boolean> => {
-    const result = await this.apolloClient.mutate({
-      variables: { id: id },
-      mutation: gql`
-        mutation deleteCaregiver($id: String!) {
-          deleteCaregiver(id: $id)
-        }
-      `,
-    });
+    const { deleteCaregiver } = await this.client
+      .request(
+        gql`
+          mutation deleteCaregiver($id: String!) {
+            deleteCaregiver(id: $id)
+          }
+        `,
+        { id },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
-      result.data.deleteCaregiver
-    );
+    return deleteCaregiver;
   };
 
   completeMultipartUpload = async ({
@@ -1039,253 +1299,337 @@ export class Mutations {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   }): Promise<string> => {
-    const result = await this.apolloClient.mutate({
-      variables: { completeMultipartUploadParams },
-      mutation: gql`
-        mutation completeMultipartUpload(
-          $completeMultipartUploadParams: CompleteMultipartUploadParams!
-        ) {
-          completeMultipartUpload(completeMultipartUploadParams: $completeMultipartUploadParams)
-        }
-      `,
-    });
+    const { completeMultipartUpload } = await this.client
+      .request(
+        gql`
+          mutation completeMultipartUpload(
+            $completeMultipartUploadParams: CompleteMultipartUploadParams!
+          ) {
+            completeMultipartUpload(completeMultipartUploadParams: $completeMultipartUploadParams)
+          }
+        `,
+        { completeMultipartUploadParams },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          invalidFieldsErrors,
+          missingFieldError,
+        });
+      });
 
-    return (
-      isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
-      result.data.deleteCaregiver
-    );
+    return completeMultipartUpload;
   };
 
   createTodo = async ({
     createTodoParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     createTodoParams: CreateTodoParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Identifier> => {
-    const result = await this.apolloClient.mutate({
-      variables: { createTodoParams },
-      mutation: gql`
-        mutation createTodo($createTodoParams: CreateTodoParams!) {
-          createTodo(createTodoParams: $createTodoParams) {
-            id
+    const { createTodo } = await this.client
+      .request(
+        gql`
+          mutation createTodo($createTodoParams: CreateTodoParams!) {
+            createTodo(createTodoParams: $createTodoParams) {
+              id
+            }
           }
-        }
-      `,
-    });
+        `,
+        { createTodoParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createTodo
-    );
+    return createTodo;
   };
 
   endAndCreateTodo = async ({
     endAndCreateTodoParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     endAndCreateTodoParams: EndAndCreateTodoParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Todo> => {
-    const result = await this.apolloClient.mutate({
-      variables: { endAndCreateTodoParams },
-      mutation: gql`
-        mutation endAndCreateTodo($endAndCreateTodoParams: EndAndCreateTodoParams!) {
-          endAndCreateTodo(endAndCreateTodoParams: $endAndCreateTodoParams) {
-            id
-            memberId
-            text
-            label
-            cronExpressions
-            start
-            end
-            status
-            relatedTo
-            createdBy
-            updatedBy
+    const { endAndCreateTodo } = await this.client
+      .request(
+        gql`
+          mutation endAndCreateTodo($endAndCreateTodoParams: EndAndCreateTodoParams!) {
+            endAndCreateTodo(endAndCreateTodoParams: $endAndCreateTodoParams) {
+              id
+              memberId
+              text
+              label
+              cronExpressions
+              start
+              end
+              status
+              relatedTo
+              createdBy
+              updatedBy
+            }
           }
-        }
-      `,
-    });
+        `,
+        { endAndCreateTodoParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.endAndCreateTodo
-    );
+    return endAndCreateTodo;
   };
 
   endTodo = async ({
     id,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders,
   }: {
     id;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders;
   }): Promise<boolean> => {
-    const result = await this.apolloClient.mutate({
-      variables: { id },
-      mutation: gql`
-        mutation endTodo($id: String!) {
-          endTodo(id: $id)
-        }
-      `,
-    });
+    const { endTodo } = await this.client
+      .request(
+        gql`
+          mutation endTodo($id: String!) {
+            endTodo(id: $id)
+          }
+        `,
+        { id },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.endTodo;
+    return endTodo;
   };
 
   approveTodo = async ({
     id,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders,
   }: {
     id;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders;
   }): Promise<boolean> => {
-    const result = await this.apolloClient.mutate({
-      variables: { id },
-      mutation: gql`
-        mutation approveTodo($id: String!) {
-          approveTodo(id: $id)
-        }
-      `,
-    });
+    const { approveTodo } = await this.client
+      .request(
+        gql`
+          mutation approveTodo($id: String!) {
+            approveTodo(id: $id)
+          }
+        `,
+        { id },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.approveTodo
-    );
+    return approveTodo;
   };
 
   createTodoDone = async ({
     createTodoDoneParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     createTodoDoneParams: CreateTodoDoneParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Identifier> => {
-    const result = await this.apolloClient.mutate({
-      variables: { createTodoDoneParams },
-      mutation: gql`
-        mutation createTodoDone($createTodoDoneParams: CreateTodoDoneParams!) {
-          createTodoDone(createTodoDoneParams: $createTodoDoneParams) {
-            id
+    const { createTodoDone } = await this.client
+      .request(
+        gql`
+          mutation createTodoDone($createTodoDoneParams: CreateTodoDoneParams!) {
+            createTodoDone(createTodoDoneParams: $createTodoDoneParams) {
+              id
+            }
           }
-        }
-      `,
-    });
+        `,
+        { createTodoDoneParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.createTodoDone
-    );
+    return createTodoDone;
   };
 
   deleteTodoDone = async ({
     id,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders,
   }: {
     id;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders;
   }): Promise<boolean> => {
-    const result = await this.apolloClient.mutate({
-      variables: { id },
-      mutation: gql`
-        mutation deleteTodoDone($id: String!) {
-          deleteTodoDone(id: $id)
-        }
-      `,
-    });
+    const { deleteTodoDone } = await this.client
+      .request(
+        gql`
+          mutation deleteTodoDone($id: String!) {
+            deleteTodoDone(id: $id)
+          }
+        `,
+        { id },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.deleteTodoDone
-    );
+    return deleteTodoDone;
   };
 
   createRedFlag = async ({
     createRedFlagParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     createRedFlagParams: CreateRedFlagParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Identifier> => {
-    const result = await this.apolloClient.mutate({
-      variables: { createRedFlagParams },
-      mutation: gql`
-        mutation createRedFlag($createRedFlagParams: CreateRedFlagParams!) {
-          createRedFlag(createRedFlagParams: $createRedFlagParams) {
-            id
+    const { createRedFlag } = await this.client
+      .request(
+        gql`
+          mutation createRedFlag($createRedFlagParams: CreateRedFlagParams!) {
+            createRedFlag(createRedFlagParams: $createRedFlagParams) {
+              id
+            }
           }
-        }
-      `,
-    });
+        `,
+        { createRedFlagParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.createRedFlag
-    );
+    return createRedFlag;
   };
 
   createCarePlan = async ({
     createCarePlanParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     createCarePlanParams: CreateCarePlanParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Identifier> => {
-    const result = await this.apolloClient.mutate({
-      variables: { createCarePlanParams },
-      mutation: gql`
-        mutation createCarePlan($createCarePlanParams: CreateCarePlanParams!) {
-          createCarePlan(createCarePlanParams: $createCarePlanParams) {
-            id
+    const { createCarePlan } = await this.client
+      .request(
+        gql`
+          mutation createCarePlan($createCarePlanParams: CreateCarePlanParams!) {
+            createCarePlan(createCarePlanParams: $createCarePlanParams) {
+              id
+            }
           }
-        }
-      `,
-    });
+        `,
+        { createCarePlanParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.createCarePlan
-    );
+    return createCarePlan;
   };
 
   updateCarePlan = async ({
     updateCarePlanParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     updateCarePlanParams: UpdateCarePlanParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Identifier> => {
-    const result = await this.apolloClient.mutate({
-      variables: { updateCarePlanParams },
-      mutation: gql`
-        mutation updateCarePlan($updateCarePlanParams: UpdateCarePlanParams!) {
-          updateCarePlan(updateCarePlanParams: $updateCarePlanParams) {
-            id
+    const { updateCarePlan } = await this.client
+      .request(
+        gql`
+          mutation updateCarePlan($updateCarePlanParams: UpdateCarePlanParams!) {
+            updateCarePlan(updateCarePlanParams: $updateCarePlanParams) {
+              id
+            }
           }
-        }
-      `,
-    });
+        `,
+        { updateCarePlanParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.updateCarePlan
-    );
+    return updateCarePlan;
   };
 
   createQuestionnaire = async ({
@@ -1297,69 +1641,94 @@ export class Mutations {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   }): Promise<Identifier> => {
-    const result = await this.apolloClient.mutate({
-      variables: { createQuestionnaireParams },
-      mutation: gql`
-        mutation createQuestionnaire($createQuestionnaireParams: CreateQuestionnaireParams!) {
-          createQuestionnaire(createQuestionnaireParams: $createQuestionnaireParams) {
-            id
+    const { createQuestionnaire } = await this.client
+      .request(
+        gql`
+          mutation createQuestionnaire($createQuestionnaireParams: CreateQuestionnaireParams!) {
+            createQuestionnaire(createQuestionnaireParams: $createQuestionnaireParams) {
+              id
+            }
           }
-        }
-      `,
-    });
+        `,
+        { createQuestionnaireParams },
+        this.defaultAdminRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.createQuestionnaire
-    );
+    return createQuestionnaire;
   };
 
   submitQuestionnaireResponse = async ({
     submitQuestionnaireResponseParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     submitQuestionnaireResponseParams: SubmitQuestionnaireResponseParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<QuestionnaireResponse> => {
-    const result = await this.apolloClient.mutate({
-      variables: { submitQuestionnaireResponseParams },
-      mutation: gql`
-        mutation submitQuestionnaireResponse(
-          $submitQuestionnaireResponseParams: SubmitQuestionnaireResponseParams!
-        ) {
-          submitQuestionnaireResponse(
-            submitQuestionnaireResponseParams: $submitQuestionnaireResponseParams
+    const { submitQuestionnaireResponse } = await this.client
+      .request(
+        gql`
+          mutation submitQuestionnaireResponse(
+            $submitQuestionnaireResponseParams: SubmitQuestionnaireResponseParams!
           ) {
-            id
+            submitQuestionnaireResponse(
+              submitQuestionnaireResponseParams: $submitQuestionnaireResponseParams
+            ) {
+              id
+            }
           }
-        }
-      `,
-    });
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.submitQuestionnaireResponse
-    );
+        `,
+        { submitQuestionnaireResponseParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
+
+    return submitQuestionnaireResponse;
   };
 
   deleteRedFlag = async ({
     id,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     id: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<boolean> => {
-    const result = await this.apolloClient.mutate({
-      variables: { id },
-      mutation: gql`
-        mutation deleteRedFlag($id: String!) {
-          deleteRedFlag(id: $id)
-        }
-      `,
-    });
+    const { deleteRedFlag } = await this.client
+      .request(
+        gql`
+          mutation deleteRedFlag($id: String!) {
+            deleteRedFlag(id: $id)
+          }
+        `,
+        { id },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          invalidFieldsErrors,
+        });
+      });
 
-    return isResultValid({ result, invalidFieldsErrors }) && result.data.deleteRedFlag;
+    return deleteRedFlag;
   };
 
   updateBarrier = async ({
@@ -1371,19 +1740,26 @@ export class Mutations {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   }): Promise<Identifier> => {
-    const result = await this.apolloClient.mutate({
-      variables: { updateBarrierParams },
-      mutation: gql`
-        mutation updateBarrier($updateBarrierParams: UpdateBarrierParams!) {
-          updateBarrier(updateBarrierParams: $updateBarrierParams) {
-            id
+    const { updateBarrier } = await this.client
+      .request(
+        gql`
+          mutation updateBarrier($updateBarrierParams: UpdateBarrierParams!) {
+            updateBarrier(updateBarrierParams: $updateBarrierParams) {
+              id
+            }
           }
-        }
-      `,
-    });
+        `,
+        { updateBarrierParams },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) && result.data.updateBarrier
-    );
+    return updateBarrier;
   };
 }

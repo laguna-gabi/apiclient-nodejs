@@ -37,6 +37,7 @@ import {
   generateOrgParams,
   generateRandomName,
   generateReplaceUserForMemberParams,
+  generateRequestHeaders,
   generateSetGeneralNotesParams,
   generateUniqueUrl,
   generateUpdateJournalTextParams,
@@ -48,7 +49,7 @@ import {
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
-const BoolenError = `Boolean cannot represent a non boolean value`;
+const BooleanError = `Boolean cannot represent a non boolean value`;
 
 describe('Validations - member', () => {
   const handler: Handler = new Handler();
@@ -121,7 +122,10 @@ describe('Validations - member', () => {
       const { id } = await handler.mutations.createMember({ memberParams });
       expect(id).not.toBeUndefined();
 
-      const member = await handler.setContextUserId(id).queries.getMember({ id });
+      const member = await handler.queries.getMember({
+        id,
+        requestHeaders: generateRequestHeaders(memberParams.authId),
+      });
       expect(member[params.field]).toEqual(params.defaultValue);
     });
 
@@ -139,7 +143,10 @@ describe('Validations - member', () => {
       const { id } = await handler.mutations.createMember({ memberParams });
       expect(id).not.toBeUndefined();
 
-      const member = await handler.setContextUserId(id).queries.getMember({ id });
+      const member = await handler.queries.getMember({
+        id,
+        requestHeaders: generateRequestHeaders(memberParams.authId),
+      });
       expect(member[params.field]).toEqual(params.value);
     });
 
@@ -152,7 +159,10 @@ describe('Validations - member', () => {
       const { id } = await handler.mutations.createMember({ memberParams });
       expect(id).not.toBeUndefined();
 
-      const member = await handler.setContextUserId(id).queries.getMember({ id });
+      const member = await handler.queries.getMember({
+        id,
+        requestHeaders: generateRequestHeaders(memberParams.authId),
+      });
       expect(generateDateOnly(new Date(member.dischargeDate))).toEqual(memberParams.dischargeDate);
     });
 
@@ -221,14 +231,14 @@ describe('Validations - member', () => {
     );
 
     it('should throw error on non existing member from web', async () => {
-      await handler.setContextUserId(generateId()).queries.getMember({
+      await handler.queries.getMember({
         id: generateId(),
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
     });
 
     it('should throw error on non existing member from mobile', async () => {
-      await handler.setContextUserId(generateId()).queries.getMember({
+      await handler.queries.getMember({
         id: generateId(),
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
@@ -249,7 +259,7 @@ describe('Validations - member', () => {
   describe('getMemberUploadDischargeDocumentsLinks', () => {
     it('should fail to get upload links since mandatory field id is missing', async () => {
       await handler.queries.getMemberUploadDischargeDocumentsLinks({
-        missingFieldError: 'Expected non-nullable type "String!" not to be null.',
+        missingFieldError: `Variable \"$id\" of required type \"String!\" was not provided.`,
       });
     });
 
@@ -263,12 +273,10 @@ describe('Validations - member', () => {
 
   describe('getMemberDownloadDischargeDocumentsLinks', () => {
     it('should throw error on non existing member', async () => {
-      await handler
-        .setContextUserId(generateId())
-        .queries.getMemberDownloadDischargeDocumentsLinks({
-          id: generateId(),
-          invalidFieldsError: Errors.get(ErrorType.memberNotFound),
-        });
+      await handler.queries.getMemberDownloadDischargeDocumentsLinks({
+        id: generateId(),
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+      });
     });
   });
 
@@ -311,7 +319,7 @@ describe('Validations - member', () => {
 
   describe('getMemberConfig', () => {
     it('should throw error on non existing member', async () => {
-      await handler.setContextUserId(generateId()).queries.getMemberConfig({
+      await handler.queries.getMemberConfig({
         id: generateId(),
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
       });
@@ -336,7 +344,8 @@ describe('Validations - member', () => {
         error: Errors.get(ErrorType.memberIdInvalid),
       },
     ])('should not be able to register due to invalid fields %p', async (params) => {
-      await handler.setContextUserId(generateId()).mutations.registerMemberForNotifications({
+      await handler.mutations.registerMemberForNotifications({
+        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
         registerForNotificationParams: {
           platform: Platform.ios,
           token: params.token,
@@ -425,7 +434,10 @@ describe('Validations - member', () => {
         const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
         const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
         const { id } = await handler.mutations.createMember({ memberParams });
-        const member = await handler.setContextUserId(id).queries.getMember({ id });
+        const member = await handler.queries.getMember({
+          id,
+          requestHeaders: generateRequestHeaders(memberParams.authId),
+        });
 
         const notifyParams: NotifyParams = generateNotifyParams({
           memberId: member.id,
@@ -746,6 +758,7 @@ describe('Validations - member', () => {
       delete updateJournalTextParams[params.field];
       await handler.mutations.updateJournalText({
         updateJournalTextParams,
+        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
         missingFieldError: params.error,
       });
     });
@@ -753,32 +766,35 @@ describe('Validations - member', () => {
     it(`should fail update journal text since string is empty)`, async () => {
       await handler.mutations.updateJournalText({
         updateJournalTextParams: generateUpdateJournalTextParams({ text: '' }),
+        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
         missingFieldError: 'text should not be empty',
       });
     });
 
     test.each`
-      field            | error
+      input            | error
       ${{ id: 123 }}   | ${stringError}
       ${{ text: 123 }} | ${stringError}
     `(
-      `should fail to update journal since $input is not a valid type (indicated as missing )`,
+      `should fail to update journal since $input is not a valid type (indicated as missing)`,
       async (params) => {
-        const updateJournalTextParams = generateUpdateJournalTextParams({ ...params.field });
+        const updateJournalTextParams = generateUpdateJournalTextParams({ ...params.input });
         await handler.mutations.updateJournalText({
           updateJournalTextParams,
+          requestHeaders: generateRequestHeaders(handler.patientZero.authId),
           missingFieldError: params.error,
         });
       },
     );
 
     test.each`
-      field            | invalid
+      input            | invalid
       ${{ id: '123' }} | ${[Errors.get(ErrorType.memberJournalIdInvalid)]}
     `(`should fail to update journal since $input is not a valid type`, async (params) => {
-      const updateJournalTextParams = generateUpdateJournalTextParams({ ...params.field });
+      const updateJournalTextParams = generateUpdateJournalTextParams({ ...params.input });
       await handler.mutations.updateJournalText({
         updateJournalTextParams,
+        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
         invalidFieldsErrors: params.invalid,
       });
     });
@@ -788,6 +804,7 @@ describe('Validations - member', () => {
     it('should throw an error for invalid id', async () => {
       await handler.queries.getJournal({
         id: 123,
+        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
         invalidFieldsError: stringError,
       });
     });
@@ -797,6 +814,7 @@ describe('Validations - member', () => {
     it('should throw an error for invalid id', async () => {
       await handler.mutations.deleteJournal({
         id: 123,
+        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
         missingFieldError: stringError,
       });
     });
@@ -815,6 +833,7 @@ describe('Validations - member', () => {
         delete getMemberUploadJournalImageLinkParams[params.field];
         await handler.queries.getMemberUploadJournalImageLink({
           getMemberUploadJournalImageLinkParams,
+          requestHeaders: generateRequestHeaders(handler.patientZero.authId),
           missingFieldError: params.error,
         });
       },
@@ -822,7 +841,7 @@ describe('Validations - member', () => {
 
     /* eslint-disable max-len */
     test.each`
-      field                   | error
+      input                   | error
       ${{ id: 123 }}          | ${stringError}
       ${{ imageFormat: 123 }} | ${`Enum "ImageFormat" cannot represent non-string value`}
     `(
@@ -830,29 +849,31 @@ describe('Validations - member', () => {
       async (params) => {
         const getMemberUploadJournalImageLinkParams = generateGetMemberUploadJournalImageLinkParams(
           {
-            ...params.field,
+            ...params.input,
           },
         );
         await handler.queries.getMemberUploadJournalImageLink({
           getMemberUploadJournalImageLinkParams,
+          requestHeaders: generateRequestHeaders(handler.patientZero.authId),
           missingFieldError: params.error,
         });
       },
     );
 
     test.each`
-      field            | invalid
+      input            | invalid
       ${{ id: '123' }} | ${[Errors.get(ErrorType.memberJournalIdInvalid)]}
     `(
       `should fail to get journal upload image link since $input is not a valid type`,
       async (params) => {
         const getMemberUploadJournalImageLinkParams = generateGetMemberUploadJournalImageLinkParams(
           {
-            ...params.field,
+            ...params.input,
           },
         );
         await handler.queries.getMemberUploadJournalImageLink({
           getMemberUploadJournalImageLinkParams,
+          requestHeaders: generateRequestHeaders(handler.patientZero.authId),
           invalidFieldsErrors: params.invalid,
         });
       },
@@ -872,6 +893,7 @@ describe('Validations - member', () => {
         delete getMemberUploadJournalAudioLinkParams[params.field];
         await handler.queries.getMemberUploadJournalAudioLink({
           getMemberUploadJournalAudioLinkParams,
+          requestHeaders: generateRequestHeaders(handler.patientZero.authId),
           invalidFieldsError: params.error,
         });
       },
@@ -891,6 +913,7 @@ describe('Validations - member', () => {
         );
         await handler.queries.getMemberUploadJournalAudioLink({
           getMemberUploadJournalAudioLinkParams,
+          requestHeaders: generateRequestHeaders(handler.patientZero.authId),
           invalidFieldsError: params.error,
         });
       },
@@ -901,6 +924,7 @@ describe('Validations - member', () => {
     it('should throw an error for invalid id', async () => {
       await handler.mutations.deleteJournalImage({
         id: 123,
+        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
         missingFieldError: stringError,
       });
     });
@@ -910,6 +934,7 @@ describe('Validations - member', () => {
     it('should throw an error for invalid id', async () => {
       await handler.mutations.deleteJournalAudio({
         id: 123,
+        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
         missingFieldError: stringError,
       });
     });
@@ -919,6 +944,7 @@ describe('Validations - member', () => {
     it('should throw an error for invalid id', async () => {
       await handler.mutations.publishJournal({
         id: 123,
+        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
         missingFieldError: stringError,
       });
     });
@@ -1019,13 +1045,14 @@ describe('Validations - member', () => {
         `should fail to add a caregiver due to invalid $input field`,
         async (params) => {
           const addCaregiverParams: AddCaregiverParams = generateAddCaregiverParams({
+            memberId: generateId(),
             ...params.input,
           });
 
           //TODO: remove when adding the auto 'createdBy'
           delete addCaregiverParams.createdBy;
 
-          await handler.setContextUserId(handler.patientZero.id).mutations.addCaregiver({
+          await handler.mutations.addCaregiver({
             addCaregiverParams,
             ...params.error,
           });
@@ -1038,10 +1065,10 @@ describe('Validations - member', () => {
     test.each`
       input            | error
       ${{ id: 123 }}   | ${stringError}
-      ${{ hard: 123 }} | ${BoolenError}
+      ${{ hard: 123 }} | ${BooleanError}
     `(`should fail to set new user to member since $input is not a valid type`, async (params) => {
       const deleteMemberParams = generateDeleteMemberParams({ ...params.input });
-      await handler.setContextUserId(generateId()).mutations.deleteMember({
+      await handler.mutations.deleteMember({
         deleteMemberParams,
         missingFieldError: params.error,
       });
@@ -1049,7 +1076,7 @@ describe('Validations - member', () => {
 
     it('should throw error on non existing member', async () => {
       const deleteMemberParams = generateDeleteMemberParams();
-      await handler.setContextUserId(generateId()).mutations.deleteMember({
+      await handler.mutations.deleteMember({
         deleteMemberParams,
         invalidFieldsErrors: [Errors.get(ErrorType.memberNotFound)],
       });

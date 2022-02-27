@@ -14,6 +14,7 @@ import {
   generateNotesParams,
   generateOrgParams,
   generateRequestAppointmentParams,
+  generateRequestHeaders,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
   generateUpdateMemberParams,
@@ -96,9 +97,11 @@ async function main() {
   const { id: memberId } = await mutations.createMember({
     memberParams,
   });
-  const { primaryUserId } = await base
-    .setContextUserId(memberId)
-    .queries.getMember({ id: memberId });
+  const requestHeaders = generateRequestHeaders(memberParams.authId);
+  const { primaryUserId } = await base.queries.getMember({
+    id: memberId,
+    requestHeaders,
+  });
   const updateMemberParams = generateUpdateMemberParams({ ...memberParams, id: memberId });
   const member = await mutations.updateMember({ updateMemberParams });
 
@@ -134,9 +137,7 @@ async function main() {
     generateAvailabilityInput(),
     generateAvailabilityInput(),
   ];
-  await base
-    .setContextUserId(member.primaryUserId.toString())
-    .mutations.createAvailabilities({ availabilities });
+  await base.mutations.createAvailabilities({ availabilities });
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
@@ -171,13 +172,13 @@ async function main() {
       '------------------- create member journal ----------------------\n' +
       '----------------------------------------------------------------',
   );
-  const { id: journalId } = await base.setContextUserId(memberId).mutations.createJournal();
+  const { id: journalId } = await base.mutations.createJournal({ requestHeaders });
 
   const updateJournalTextParams: UpdateJournalTextParams = {
     id: journalId,
     text: faker.lorem.word(),
   };
-  await base.setContextUserId(memberId).mutations.updateJournalText({ updateJournalTextParams });
+  await base.mutations.updateJournalText({ requestHeaders, updateJournalTextParams });
 
   console.debug(
     '\n----------------------------------------------------------------\n' +

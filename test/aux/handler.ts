@@ -4,29 +4,21 @@ import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { Test, TestingModule } from '@nestjs/testing';
-import { createTestClient } from 'apollo-server-testing';
 import * as config from 'config';
+import { datatype, lorem } from 'faker';
+import { GraphQLClient } from 'graphql-request';
 import * as jwt from 'jsonwebtoken';
-import { Model, Types, model } from 'mongoose';
+import { Model, model } from 'mongoose';
 import { Consumer } from 'sqs-consumer';
-import { v4 } from 'uuid';
 import { Mutations, Queries } from '.';
 import {
+  generateCreateMemberParams,
   generateCreateUserParams,
   generateId,
-  generateInternalCreateMemberParams,
   generateOrgParams,
 } from '..';
 import { AppModule } from '../../src/app.module';
 import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
-import { LoggerService, bearerToken } from '../../src/common';
-import { CommunicationService } from '../../src/communication';
-import { DailyReportService } from '../../src/dailyReport';
-import { Member, MemberService } from '../../src/member';
-import { Org, OrgService } from '../../src/org';
-import { WebhooksController } from '../../src/providers';
-import { User, UserService } from '../../src/user';
-import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
 import {
   BarrierDomain,
   BarrierType,
@@ -35,7 +27,14 @@ import {
   CarePlanType,
   CareService,
 } from '../../src/care';
-import { lorem } from 'faker';
+import { LoggerService, UserRole } from '../../src/common';
+import { CommunicationService } from '../../src/communication';
+import { DailyReportService } from '../../src/dailyReport';
+import { Member, MemberService } from '../../src/member';
+import { Org, OrgService } from '../../src/org';
+import { WebhooksController } from '../../src/providers';
+import { UserService } from '../../src/user';
+import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -57,17 +56,19 @@ export class Handler extends BaseHandler {
   barrierTypeModel: Model<BarrierTypeDocument>;
   webhooksController: WebhooksController;
   spyOnGetCommunicationService;
-  adminUser: User;
   patientZero: Member;
   barrierType: BarrierType;
   carePlanType: CarePlanType;
   lagunaOrg: Org | null;
   dailyReportService: DailyReportService;
+  client: GraphQLClient;
+  defaultUserRequestHeaders;
+  defaultAdminRequestHeaders;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
 
-  async beforeAll(withGuards = false) {
+  async beforeAll() {
     mockProcessWarnings(); // to hide pino prettyPrint warning
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -76,11 +77,9 @@ export class Handler extends BaseHandler {
     this.app = moduleFixture.createNestApplication();
     this.app.useGlobalPipes(new ValidationPipe());
 
-    if (withGuards) {
-      const reflector = this.app.get(Reflector);
-      this.app.useGlobalGuards(new GlobalAuthGuard());
-      this.app.useGlobalGuards(new RolesGuard(reflector));
-    }
+    const reflector = this.app.get(Reflector);
+    this.app.useGlobalGuards(new GlobalAuthGuard());
+    this.app.useGlobalGuards(new RolesGuard(reflector));
 
     this.app.useLogger(false);
     mockLogger(moduleFixture.get<LoggerService>(LoggerService));
@@ -103,10 +102,6 @@ export class Handler extends BaseHandler {
     this.queueService = providers.queueService;
     this.cognitoService = providers.cognitoService;
     this.notificationService = providers.notificationService;
-    const apolloServer = createTestClient(this.module.apolloServer);
-    this.mutations = new Mutations(apolloServer);
-
-    this.queries = new Queries(apolloServer);
 
     await dbConnect();
     this.communicationService = moduleFixture.get<CommunicationService>(CommunicationService);
@@ -118,6 +113,21 @@ export class Handler extends BaseHandler {
     this.barrierTypeModel = model<BarrierTypeDocument>(BarrierType.name, BarrierTypeDto);
 
     await this.buildFixtures();
+    await this.app.listen(datatype.number({ min: 4000, max: 9000 }));
+    this.client = new GraphQLClient(`${await this.app.getUrl()}/graphql`);
+
+    this.mutations = new Mutations(
+      this.client,
+      this.defaultUserRequestHeaders,
+      this.defaultAdminRequestHeaders,
+    );
+    this.queries = new Queries(this.client, this.defaultUserRequestHeaders);
+
+    const { id: orgId } = await this.mutations.createOrg({ orgParams: generateOrgParams() });
+    const user = await this.mutations.createUser({ userParams: generateCreateUserParams() });
+    const memberParams = generateCreateMemberParams({ userId: user.id, orgId });
+    const { id } = await this.mutations.createMember({ memberParams });
+    this.patientZero = await this.queries.getMember({ id });
   }
 
   async afterAll() {
@@ -149,33 +159,14 @@ export class Handler extends BaseHandler {
     await dbDisconnect();
   }
 
-  setContextUser = (deviceId?: string, sub?: string): Handler => {
-    this.module.apolloServer['context'] = () => ({
-      req: {
-        headers: {
-          authorization: bearerToken + jwt.sign({ username: deviceId, sub }, 'shhh'),
-        },
-      },
-    });
-
-    return this;
-  };
-
   // Description: Generate a set of pre-defined fixtures
   async buildFixtures() {
     // Admin User - generated with the user service (circumventing the guards)
-    this.adminUser = await this.userService.insert(generateCreateUserParams({ authId: v4() }));
     this.lagunaOrg = await this.orgService.get(
       (
         await this.orgService.insert(generateOrgParams())
       ).id,
     );
-    this.patientZero = (
-      await this.memberService.insert(
-        generateInternalCreateMemberParams({ authId: v4(), orgId: this.lagunaOrg.id }),
-        new Types.ObjectId(this.adminUser.id),
-      )
-    ).member;
     this.carePlanType = await this.careService.createCarePlanType({
       description: lorem.words(5),
       createdBy: generateId(),
@@ -186,5 +177,27 @@ export class Handler extends BaseHandler {
       domain: BarrierDomain.medical,
       carePlanTypes: [this.carePlanType.id],
     });
+
+    this.defaultUserRequestHeaders = await initClients(this.userService, [
+      UserRole.nurse,
+      UserRole.coach,
+    ]);
+    this.defaultAdminRequestHeaders = await initClients(this.userService, [UserRole.admin]);
   }
 }
+
+export const initClients = async (userService: UserService, roles: UserRole[]) => {
+  const users = await userService.getUsers(roles);
+  let sub;
+  if (users.length === 0) {
+    const createUserParams = generateCreateUserParams({ roles });
+    await userService.insert(createUserParams);
+    sub = createUserParams.authId;
+  } else {
+    sub = users[0].authId;
+  }
+
+  return {
+    Authorization: jwt.sign({ sub }, 'secret'),
+  };
+};

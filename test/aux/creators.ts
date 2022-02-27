@@ -1,8 +1,6 @@
+import * as jwt from 'jsonwebtoken';
 import { camelCase, omit } from 'lodash';
-import { Appointment, AppointmentStatus, EndAppointmentParams } from '../../src/appointment';
-import { CreateTaskParams, Member, defaultMemberParams } from '../../src/member';
-import { Org } from '../../src/org';
-import { CreateUserParams, User } from '../../src/user';
+import { AppointmentsIntegrationActions, Handler } from '.';
 import {
   generateAppointmentLink,
   generateCreateMemberParams,
@@ -11,8 +9,12 @@ import {
   generateEndAppointmentParams,
   generateOrgParams,
 } from '..';
-import { AppointmentsIntegrationActions, Handler } from '.';
+import { Appointment, AppointmentStatus, EndAppointmentParams } from '../../src/appointment';
 import { UserRole } from '../../src/common';
+import { CreateTaskParams, Member, defaultMemberParams } from '../../src/member';
+import { Org } from '../../src/org';
+import { CreateUserParams, User } from '../../src/user';
+import { generateRequestHeaders } from '../index';
 
 export class Creators {
   constructor(
@@ -20,17 +22,12 @@ export class Creators {
     private readonly appointmentsActions: AppointmentsIntegrationActions,
   ) {}
 
-  createFirstUserInDbfNecessary = async () => {
-    const users = await this.handler.queries.getUsers();
-    if (users.length === 0) {
-      await this.createAndValidateUser();
-    }
-  };
-
   createAndValidateUser = async (roles?: UserRole[]): Promise<User> => {
     const userParams: CreateUserParams = generateCreateUserParams({ roles });
     const { id: primaryUserId } = await this.handler.mutations.createUser({ userParams });
-    const result = await this.handler.setContextUserId(primaryUserId).queries.getUser();
+    const result = await this.handler.queries.getUser({
+      requestHeaders: generateRequestHeaders(userParams.authId),
+    });
 
     const expectedUser = { ...userParams, id: primaryUserId, appointments: [] };
 
@@ -44,9 +41,11 @@ export class Creators {
     return result;
   };
 
-  createAndValidateOrg = async (): Promise<Org> => {
+  createAndValidateOrg = async ({
+    requestHeaders = this.handler.defaultUserRequestHeaders,
+  }: { requestHeaders? } = {}): Promise<Org> => {
     const orgParams = generateOrgParams();
-    const { id } = await this.handler.mutations.createOrg({ orgParams });
+    const { id } = await this.handler.mutations.createOrg({ orgParams, requestHeaders });
 
     expect(id).not.toBeUndefined();
 
@@ -62,23 +61,28 @@ export class Creators {
     org,
     useNewUser = false,
     userId, // support the case where we want to assign the member to an existing user
+    requestHeaders = this.handler.defaultUserRequestHeaders,
   }: {
     org: Org;
     useNewUser?: boolean;
     userId?: string;
-  }): Promise<Member> => {
+    requestHeaders?;
+  }): Promise<{ member: Member; user?: User }> => {
     const userParams = generateCreateUserParams();
+    let user: User;
 
     if (useNewUser) {
       const { id } = await this.handler.mutations.createUser({ userParams });
       userId = id;
+
+      const requestHeaders = { Authorization: jwt.sign({ sub: userParams.authId }, 'my-secret') };
+      user = await this.handler.queries.getUser({ requestHeaders });
     }
 
     const memberParams = generateCreateMemberParams({ orgId: org.id, userId });
-    const { id } = await this.handler.mutations.createMember({ memberParams });
+    const { id } = await this.handler.mutations.createMember({ memberParams, requestHeaders });
 
-    const member = await this.handler.setContextUserId(id).queries.getMember({ id });
-
+    const member = await this.handler.queries.getMember({ id, requestHeaders });
     expect(member.phone).toEqual(memberParams.phone);
     expect(member.phoneType).toEqual('mobile');
     expect(member.firstName).toEqual(memberParams.firstName);
@@ -93,7 +97,7 @@ export class Creators {
     expect(member.dischargeDate).toBeNull();
     expect(new Date(member.createdAt)).toEqual(expect.any(Date));
 
-    return member;
+    return { member, user };
   };
 
   /**
@@ -108,11 +112,14 @@ export class Creators {
   createAndValidateAppointment = async ({
     userId,
     member,
+    requestHeaders = this.handler.defaultUserRequestHeaders,
   }: {
     userId?: string;
     member: Member;
+    requestHeaders?;
   }): Promise<Appointment> => {
     const requestAppointmentResult = await this.appointmentsActions.requestAppointment({
+      requestHeaders,
       userId: userId || member.primaryUserId.toString(),
       member,
     });
@@ -128,7 +135,10 @@ export class Creators {
       const endAppointmentParams: EndAppointmentParams = generateEndAppointmentParams({
         id: appointment.id,
       });
-      const result = await this.handler.mutations.endAppointment({ endAppointmentParams });
+      const result = await this.handler.mutations.endAppointment({
+        endAppointmentParams,
+        requestHeaders,
+      });
       expect(result).toEqual(
         expect.objectContaining({
           status: AppointmentStatus.done,

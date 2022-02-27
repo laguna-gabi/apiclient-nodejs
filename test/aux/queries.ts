@@ -1,6 +1,6 @@
-import { ApolloServerTestClient } from 'apollo-server-testing';
+import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
-import { isGQLResultValid as isResultValid } from '../../src/common';
+import { Barrier, BarrierType, CarePlan, CarePlanType, RedFlag } from '../../src/care';
 import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
 import {
@@ -11,18 +11,20 @@ import {
   MultipartUploadRecordingLinkParams,
   RecordingLinkParams,
 } from '../../src/member';
+import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
+import { Dispatch } from '../../src/services';
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
 import { GetSlotsParams } from '../../src/user';
-import { Dispatch } from '../../src/services';
-import { Barrier, BarrierType, CarePlan, CarePlanType, RedFlag } from '../../src/care';
-import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
+import { isResultValid } from '..';
 
 export class Queries {
-  constructor(private readonly apolloClient: ApolloServerTestClient) {}
+  constructor(private readonly client: GraphQLClient, private readonly defaultUserRequestHeaders) {}
 
-  getUser = async () => {
-    const resultGetUser = await this.apolloClient.query({
-      query: gql`
+  getUser = async ({
+    requestHeaders = this.defaultUserRequestHeaders,
+  }: { requestHeaders? } = {}) => {
+    const { getUser } = await this.client.request(
+      gql`
         query getUser {
           getUser {
             id
@@ -50,14 +52,16 @@ export class Queries {
           }
         }
       `,
-    });
+      undefined,
+      requestHeaders,
+    );
 
-    return resultGetUser.data.getUser;
+    return getUser;
   };
 
-  getUsers = async () => {
-    const resultGetUsers = await this.apolloClient.query({
-      query: gql`
+  getUsers = async ({ requestHeaders = this.defaultUserRequestHeaders }: { requestHeaders? }) => {
+    const { getUsers } = await this.client.request(
+      gql`
         query getUsers {
           getUsers {
             id
@@ -84,157 +88,166 @@ export class Queries {
           }
         }
       `,
-    });
+      undefined,
+      requestHeaders,
+    );
 
-    return resultGetUsers.data.getUsers;
+    return getUsers;
   };
 
   getUserSlots = async (getSlotsParams: GetSlotsParams, invalidFieldsError?: string) => {
-    const resultGetUserSlots = await this.apolloClient.query({
-      variables: { getSlotsParams },
-      query: gql`
-        query getUserSlots($getSlotsParams: GetSlotsParams!) {
-          getUserSlots(getSlotsParams: $getSlotsParams) {
-            slots
-            user {
-              id
-              firstName
-              roles
-              avatar
-              description
-            }
-            member {
-              id
-              firstName
-            }
-            appointment {
-              id
-              start
-              method
-              duration
+    const result = await this.client
+      .request(
+        gql`
+          query getUserSlots($getSlotsParams: GetSlotsParams!) {
+            getUserSlots(getSlotsParams: $getSlotsParams) {
+              slots
+              user {
+                id
+                firstName
+                roles
+                avatar
+                description
+              }
+              member {
+                id
+                firstName
+              }
+              appointment {
+                id
+                start
+                method
+                duration
+              }
             }
           }
+        `,
+        { getSlotsParams },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        if (invalidFieldsError) {
+          expect(ex.response.errors[0]?.message || ex.response.errors[0][0]?.message).toContain(
+            invalidFieldsError,
+          );
+          return;
         }
-      `,
-    });
+      });
 
-    if (invalidFieldsError) {
-      expect(
-        resultGetUserSlots.errors[0]?.message || resultGetUserSlots.errors[0][0]?.message,
-      ).toContain(invalidFieldsError);
-      return;
-    }
-
-    return resultGetUserSlots.data.getUserSlots;
+    return result?.getUserSlots;
   };
 
   getMember = async ({
     id,
+    requestHeaders = this.defaultUserRequestHeaders,
     invalidFieldsError,
-  }: { id?: string; invalidFieldsError?: string } = {}) => {
-    const resultGetMember = await this.apolloClient.query({
-      variables: { id },
-      query: gql`
-        query getMember($id: String) {
-          getMember(id: $id) {
-            id
-            phone
-            phoneType
-            deviceId
-            firstName
-            lastName
-            dateOfBirth
-            address {
-              street
-              city
-              state
-            }
-            scores {
-              adherence
-              adherenceText
-              wellbeing
-              wellbeingText
-            }
-            org {
+  }: { id?: string; requestHeaders?; invalidFieldsError? } = {}) => {
+    const result = await this.client
+      .request(
+        gql`
+          query getMember($id: String) {
+            getMember(id: $id) {
               id
-              name
-              type
-              trialDuration
-              zipCode
-            }
-            primaryUserId
-            users {
-              id
+              authId
+              phone
+              phoneType
+              deviceId
               firstName
               lastName
-              email
-              roles
-              avatar
-              description
-              createdAt
-              phone
-              title
-              maxCustomers
-              languages
-              appointments {
+              dateOfBirth
+              address {
+                street
+                city
+                state
+              }
+              scores {
+                adherence
+                adherenceText
+                wellbeing
+                wellbeingText
+              }
+              org {
                 id
-                notBefore
-                method
-                status
-                start
-                end
-                link
-                noShow
-                noShowReason
-                notes {
-                  recap
-                  strengths
-                  userActionItem
-                  memberActionItem
-                  scores {
-                    adherence
-                    adherenceText
-                    wellbeing
-                    wellbeingText
+                name
+                type
+                trialDuration
+                zipCode
+              }
+              primaryUserId
+              users {
+                id
+                firstName
+                lastName
+                email
+                roles
+                avatar
+                description
+                createdAt
+                phone
+                title
+                maxCustomers
+                languages
+                appointments {
+                  id
+                  notBefore
+                  method
+                  status
+                  start
+                  end
+                  link
+                  noShow
+                  noShowReason
+                  notes {
+                    recap
+                    strengths
+                    userActionItem
+                    memberActionItem
+                    scores {
+                      adherence
+                      adherenceText
+                      wellbeing
+                      wellbeingText
+                    }
                   }
                 }
               }
-            }
-            sex
-            email
-            zipCode
-            utcDelta
-            dischargeDate
-            actionItems {
-              id
-              title
-              status
-              deadline
-            }
-            fellowName
-            drgDesc
-
-            phoneSecondary
-            phoneSecondaryType
-            generalNotes
-            nurseNotes
-            admitDate
-            createdAt
-            honorific
-            readmissionRisk
-            readmissionRiskHistory {
+              sex
+              email
+              zipCode
+              utcDelta
+              dischargeDate
+              actionItems {
+                id
+                title
+                status
+                deadline
+              }
+              fellowName
+              drgDesc
+              phoneSecondary
+              phoneSecondaryType
+              generalNotes
+              nurseNotes
+              admitDate
+              createdAt
+              honorific
               readmissionRisk
-              date
+              readmissionRiskHistory {
+                readmissionRisk
+                date
+              }
             }
           }
-        }
-      `,
-    });
+        `,
+        { id },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        expect(invalidFieldsError).toEqual(ex.response.errors[0].message);
+        return;
+      });
 
-    invalidFieldsError && expect(invalidFieldsError).toEqual(resultGetMember.errors[0].message);
-    const { errors, data } = resultGetMember || {};
-
-    return { ...data?.getMember, errors };
+    return result?.getMember;
   };
 
   getMemberUploadDischargeDocumentsLinks = async ({
@@ -246,25 +259,29 @@ export class Queries {
     invalidFieldsError?: string;
     missingFieldError?: string;
   } = {}): Promise<DischargeDocumentsLinks> => {
-    const result = await this.apolloClient.query({
-      variables: { id },
-      query: gql`
-        query getMemberUploadDischargeDocumentsLinks($id: String!) {
-          getMemberUploadDischargeDocumentsLinks(id: $id) {
-            dischargeNotesLink
-            dischargeInstructionsLink
+    const result = await this.client
+      .request(
+        gql`
+          query getMemberUploadDischargeDocumentsLinks($id: String!) {
+            getMemberUploadDischargeDocumentsLinks(id: $id) {
+              dischargeNotesLink
+              dischargeInstructionsLink
+            }
           }
+        `,
+        { id },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        if (invalidFieldsError) {
+          expect(invalidFieldsError).toEqual(ex.response.errors[0].message);
+        } else if (missingFieldError) {
+          expect(ex.response.errors[0].message).toMatch(missingFieldError);
         }
-      `,
-    });
+        return;
+      });
 
-    if (invalidFieldsError) {
-      expect(invalidFieldsError).toEqual(result.errors[0].message);
-    } else if (missingFieldError) {
-      expect(result.errors[0].message).toMatch(missingFieldError);
-    } else {
-      return result.data.getMemberUploadDischargeDocumentsLinks;
-    }
+    return result?.getMemberUploadDischargeDocumentsLinks;
   };
 
   getMemberDownloadDischargeDocumentsLinks = async ({
@@ -276,25 +293,28 @@ export class Queries {
     invalidFieldsError?: string;
     missingFieldError?: string;
   } = {}): Promise<DischargeDocumentsLinks> => {
-    const result = await this.apolloClient.query({
-      variables: { id },
-      query: gql`
-        query getMemberDownloadDischargeDocumentsLinks($id: String) {
-          getMemberDownloadDischargeDocumentsLinks(id: $id) {
-            dischargeNotesLink
-            dischargeInstructionsLink
+    const result = await this.client
+      .request(
+        gql`
+          query getMemberDownloadDischargeDocumentsLinks($id: String) {
+            getMemberDownloadDischargeDocumentsLinks(id: $id) {
+              dischargeNotesLink
+              dischargeInstructionsLink
+            }
           }
+        `,
+        { id },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        if (invalidFieldsError) {
+          expect(invalidFieldsError).toEqual(ex.response.errors[0].message);
+        } else if (missingFieldError) {
+          expect(ex.response.errors[0].message).toMatch(missingFieldError);
         }
-      `,
-    });
+      });
 
-    if (invalidFieldsError) {
-      expect(invalidFieldsError).toEqual(result.errors[0].message);
-    } else if (missingFieldError) {
-      expect(result.errors[0].message).toMatch(missingFieldError);
-    } else {
-      return result.data.getMemberDownloadDischargeDocumentsLinks;
-    }
+    return result?.getMemberDownloadDischargeDocumentsLinks;
   };
 
   getMemberUploadRecordingLink = async ({
@@ -306,19 +326,25 @@ export class Queries {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   } = {}): Promise<string> => {
-    const result = await this.apolloClient.query({
-      variables: { recordingLinkParams },
-      query: gql`
-        query getMemberUploadRecordingLink($recordingLinkParams: RecordingLinkParams!) {
-          getMemberUploadRecordingLink(recordingLinkParams: $recordingLinkParams)
-        }
-      `,
-    });
+    const { getMemberUploadRecordingLink } = await this.client
+      .request(
+        gql`
+          query getMemberUploadRecordingLink($recordingLinkParams: RecordingLinkParams!) {
+            getMemberUploadRecordingLink(recordingLinkParams: $recordingLinkParams)
+          }
+        `,
+        { recordingLinkParams },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
-      result.data.getMemberUploadRecordingLink
-    );
+    return getMemberUploadRecordingLink;
   };
   getMemberMultipartUploadRecordingLink = async ({
     multipartUploadRecordingLinkParams,
@@ -329,26 +355,32 @@ export class Queries {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   } = {}): Promise<string> => {
-    const result = await this.apolloClient.query({
-      variables: { multipartUploadRecordingLinkParams },
-      query: gql`
-        query getMemberMultipartUploadRecordingLink(
-          $multipartUploadRecordingLinkParams: MultipartUploadRecordingLinkParams!
-        ) {
-          getMemberMultipartUploadRecordingLink(
-            multipartUploadRecordingLinkParams: $multipartUploadRecordingLinkParams
+    const { getMemberMultipartUploadRecordingLink } = await this.client
+      .request(
+        gql`
+          query getMemberMultipartUploadRecordingLink(
+            $multipartUploadRecordingLinkParams: MultipartUploadRecordingLinkParams!
           ) {
-            url
-            uploadId
+            getMemberMultipartUploadRecordingLink(
+              multipartUploadRecordingLinkParams: $multipartUploadRecordingLinkParams
+            ) {
+              url
+              uploadId
+            }
           }
-        }
-      `,
-    });
+        `,
+        { multipartUploadRecordingLinkParams },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
-      result.data.getMemberUploadRecordingLink
-    );
+    return getMemberMultipartUploadRecordingLink;
   };
 
   getMemberDownloadRecordingLink = async ({
@@ -360,57 +392,75 @@ export class Queries {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
   } = {}): Promise<string> => {
-    const result = await this.apolloClient.query({
-      variables: { recordingLinkParams },
-      query: gql`
-        query getMemberDownloadRecordingLink($recordingLinkParams: RecordingLinkParams!) {
-          getMemberDownloadRecordingLink(recordingLinkParams: $recordingLinkParams)
-        }
-      `,
-    });
+    const { getMemberDownloadRecordingLink } = await this.client
+      .request(
+        gql`
+          query getMemberDownloadRecordingLink($recordingLinkParams: RecordingLinkParams!) {
+            getMemberDownloadRecordingLink(recordingLinkParams: $recordingLinkParams)
+          }
+        `,
+        { recordingLinkParams },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, invalidFieldsErrors, missingFieldError }) &&
-      result.data.getMemberDownloadRecordingLink
-    );
+    return getMemberDownloadRecordingLink;
   };
 
-  getMembers = async (orgId?: string) => {
-    const resultGetMembers = await this.apolloClient.query({
-      variables: { orgId },
-      query: gql`
-        query getMembers($orgId: String) {
-          getMembers(orgId: $orgId) {
-            id
-            name
-            phone
-            phoneType
-            dischargeDate
-            adherence
-            wellbeing
-            createdAt
-            actionItemsCount
-            primaryUser {
+  getMembers = async ({
+    orgId,
+    requestHeaders = this.defaultUserRequestHeaders,
+  }: {
+    orgId?: string;
+    requestHeaders?;
+  }): Promise<{ errors?; members? }> => {
+    let errorsObject = {};
+    const result = await this.client
+      .request(
+        gql`
+          query getMembers($orgId: String) {
+            getMembers(orgId: $orgId) {
               id
-              firstName
-              lastName
-              avatar
+              name
+              phone
+              phoneType
+              dischargeDate
+              adherence
+              wellbeing
               createdAt
+              actionItemsCount
+              primaryUser {
+                id
+                firstName
+                lastName
+                avatar
+                createdAt
+              }
+              nextAppointment
+              appointmentsCount
             }
-            nextAppointment
-            appointmentsCount
           }
-        }
-      `,
-    });
-    const { errors, data } = resultGetMembers || {};
-    return { errors, members: data?.getMembers };
+        `,
+        { orgId },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        errorsObject = { errors: ex.response.errors };
+      });
+
+    const resultObject = result ? { members: result.getMembers } : {};
+    return { ...resultObject, ...errorsObject };
   };
 
   getMembersAppointments = async (orgId?: string) => {
-    const result = await this.apolloClient.query({
-      variables: { orgId },
-      query: gql`
+    const { getMembersAppointments } = await this.client.request(
+      gql`
         query getMembersAppointments($orgId: String) {
           getMembersAppointments(orgId: $orgId) {
             memberId
@@ -422,15 +472,22 @@ export class Queries {
           }
         }
       `,
-    });
+      { orgId },
+      this.defaultUserRequestHeaders,
+    );
 
-    return result.data.getMembersAppointments;
+    return getMembersAppointments;
   };
 
-  getAppointment = async (id: string) => {
-    const result = await this.apolloClient.query({
-      variables: { id },
-      query: gql`
+  getAppointment = async ({
+    id,
+    requestHeaders = this.defaultUserRequestHeaders,
+  }: {
+    id: string;
+    requestHeaders?;
+  }) => {
+    const { getAppointment } = await this.client.request(
+      gql`
         query getAppointment($id: String!) {
           getAppointment(id: $id) {
             id
@@ -460,13 +517,15 @@ export class Queries {
           }
         }
       `,
-    });
-    return result.data.getAppointment;
+      { id },
+      requestHeaders,
+    );
+    return getAppointment;
   };
 
-  getAvailabilities = async () => {
-    const result = await this.apolloClient.query({
-      query: gql`
+  getAvailabilities = async ({ requestHeaders }: { requestHeaders }) => {
+    const { getAvailabilities } = await this.client.request(
+      gql`
         query getAvailabilities {
           getAvailabilities {
             id
@@ -477,103 +536,89 @@ export class Queries {
           }
         }
       `,
-    });
+      undefined,
+      requestHeaders,
+    );
 
-    return result.data.getAvailabilities;
+    return getAvailabilities;
   };
 
   getCommunication = async ({
     getCommunicationParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     getCommunicationParams: GetCommunicationParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }) => {
-    const result = await this.apolloClient.query({
-      variables: { getCommunicationParams },
-      query: gql`
-        query getCommunication($getCommunicationParams: GetCommunicationParams!) {
-          getCommunication(getCommunicationParams: $getCommunicationParams) {
-            memberId
-            userId
-            chat {
-              memberLink
-              userLink
+    const { getCommunication } = await this.client
+      .request(
+        gql`
+          query getCommunication($getCommunicationParams: GetCommunicationParams!) {
+            getCommunication(getCommunicationParams: $getCommunicationParams) {
+              memberId
+              userId
+              chat {
+                memberLink
+                userLink
+              }
             }
           }
-        }
-      `,
-    });
+        `,
+        { getCommunicationParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.getCommunication
-    );
-  };
-
-  getMemberUnreadMessagesCount = async () => {
-    const result = await this.apolloClient.query({
-      query: gql`
-        query getMemberUnreadMessagesCount {
-          getMemberUnreadMessagesCount {
-            memberId
-            userId
-            count
-          }
-        }
-      `,
-    });
-
-    return result.data.getMemberUnreadMessagesCount;
-  };
-
-  getTwilioAccessToken = async () => {
-    const result = await this.apolloClient.query({
-      query: gql`
-        query getTwilioAccessToken {
-          getTwilioAccessToken
-        }
-      `,
-    });
-
-    return result.data.getTwilioAccessToken;
+    return getCommunication;
   };
 
   getMemberConfig = async ({
     id,
     invalidFieldsError,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     id?: string;
     invalidFieldsError?: string;
+    requestHeaders?;
   }) => {
-    const result = await this.apolloClient.query({
-      variables: { id },
-      query: gql`
-        query getMemberConfig($id: String) {
-          getMemberConfig(id: $id) {
-            memberId
-            externalUserId
-            platform
-            isPushNotificationsEnabled
-            isAppointmentsReminderEnabled
-            isRecommendationsEnabled
-            isTodoNotificationsEnabled
-            articlesPath
-            firstLoggedInAt
-            language
-            updatedAt
+    const result = await this.client
+      .request(
+        gql`
+          query getMemberConfig($id: String) {
+            getMemberConfig(id: $id) {
+              memberId
+              externalUserId
+              platform
+              isPushNotificationsEnabled
+              isAppointmentsReminderEnabled
+              isRecommendationsEnabled
+              isTodoNotificationsEnabled
+              articlesPath
+              firstLoggedInAt
+              language
+              updatedAt
+            }
           }
-        }
-      `,
-    });
+        `,
+        { id },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        expect(invalidFieldsError).toEqual(ex.response.errors[0].message);
+        return;
+      });
 
-    if (invalidFieldsError) {
-      expect(invalidFieldsError).toEqual(result.errors[0].message);
-    } else {
-      return result.data.getMemberConfig;
-    }
+    return result?.getMemberConfig;
   };
 
   getUserConfig = async ({
@@ -583,29 +628,29 @@ export class Queries {
     id: string;
     invalidFieldsError?: string;
   }) => {
-    const result = await this.apolloClient.query({
-      variables: { id },
-      query: gql`
-        query getUserConfig($id: String!) {
-          getUserConfig(id: $id) {
-            userId
-            accessToken
+    const result = await this.client
+      .request(
+        gql`
+          query getUserConfig($id: String!) {
+            getUserConfig(id: $id) {
+              userId
+              accessToken
+            }
           }
-        }
-      `,
-    });
+        `,
+        { id },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toContain(invalidFieldsError);
+      });
 
-    if (invalidFieldsError) {
-      expect(result.errors[0].message).toContain(invalidFieldsError);
-    } else {
-      return result.data.getUserConfig;
-    }
+    return result?.getUserConfig;
   };
 
   getOrg = async ({ id }: { id: string }) => {
-    const result = await this.apolloClient.query({
-      variables: { id },
-      query: gql`
+    const { getOrg } = await this.client.request(
+      gql`
         query getOrg($id: String!) {
           getOrg(id: $id) {
             id
@@ -616,15 +661,16 @@ export class Queries {
           }
         }
       `,
-    });
+      { id },
+      this.defaultUserRequestHeaders,
+    );
 
-    return result.data.getOrg;
+    return getOrg;
   };
 
   getRecordings = async ({ memberId }: { memberId: string }) => {
-    const result = await this.apolloClient.query({
-      variables: { memberId },
-      query: gql`
+    const { getRecordings } = await this.client.request(
+      gql`
         query getRecordings($memberId: String!) {
           getRecordings(memberId: $memberId) {
             id
@@ -637,109 +683,137 @@ export class Queries {
           }
         }
       `,
-    });
+      { memberId },
+      this.defaultUserRequestHeaders,
+    );
 
-    return result.data.getRecordings;
+    return getRecordings;
   };
 
-  getJournal = async ({ id, invalidFieldsError }: { id; invalidFieldsError?: string }) => {
-    const result = await this.apolloClient.query({
-      variables: { id },
-      query: gql`
-        query getJournal($id: String!) {
-          getJournal(id: $id) {
-            id
-            memberId
-            text
-            published
-            updatedAt
+  getJournal = async ({
+    id,
+    invalidFieldsError,
+    requestHeaders,
+  }: {
+    id;
+    invalidFieldsError?: string;
+    requestHeaders;
+  }) => {
+    const result = await this.client
+      .request(
+        gql`
+          query getJournal($id: String!) {
+            getJournal(id: $id) {
+              id
+              memberId
+              text
+              published
+              updatedAt
+            }
           }
-        }
-      `,
-    });
+        `,
+        { id },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        return;
+      });
 
-    if (invalidFieldsError) {
-      expect(result.errors[0].message).toMatch(invalidFieldsError);
-    } else {
-      return result.data.getJournal;
-    }
+    return result?.getJournal;
   };
 
-  getJournals = async () => {
-    const result = await this.apolloClient.query({
-      query: gql`
-        query getJournals {
-          getJournals {
-            id
-            memberId
-            text
-            published
-            updatedAt
+  getJournals = async ({ requestHeaders }: { requestHeaders }) => {
+    const result = await this.client
+      .request(
+        gql`
+          query getJournals {
+            getJournals {
+              id
+              memberId
+              text
+              published
+              updatedAt
+            }
           }
-        }
-      `,
-    });
+        `,
+        undefined,
+        requestHeaders,
+      )
+      .catch();
 
-    return result.data.getJournals;
+    return result?.getJournals;
   };
 
   getMemberUploadJournalImageLink = async ({
     getMemberUploadJournalImageLinkParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders,
   }: {
     getMemberUploadJournalImageLinkParams: GetMemberUploadJournalImageLinkParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders;
   }) => {
-    const result = await this.apolloClient.query({
-      variables: { getMemberUploadJournalImageLinkParams },
-      query: gql`
-        query getMemberUploadJournalImageLink(
-          $getMemberUploadJournalImageLinkParams: GetMemberUploadJournalImageLinkParams!
-        ) {
-          getMemberUploadJournalImageLink(
-            getMemberUploadJournalImageLinkParams: $getMemberUploadJournalImageLinkParams
+    const result = await this.client
+      .request(
+        gql`
+          query getMemberUploadJournalImageLink(
+            $getMemberUploadJournalImageLinkParams: GetMemberUploadJournalImageLinkParams!
           ) {
-            normalImageLink
+            getMemberUploadJournalImageLink(
+              getMemberUploadJournalImageLinkParams: $getMemberUploadJournalImageLinkParams
+            ) {
+              normalImageLink
+            }
           }
-        }
-      `,
-    });
+        `,
+        { getMemberUploadJournalImageLinkParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
 
-    return (
-      isResultValid({ result, missingFieldError, invalidFieldsErrors }) &&
-      result.data.getMemberUploadJournalImageLink
-    );
+    return result?.getMemberUploadJournalImageLink;
   };
 
   getMemberUploadJournalAudioLink = async ({
     getMemberUploadJournalAudioLinkParams,
     invalidFieldsError,
+    requestHeaders,
   }: {
     getMemberUploadJournalAudioLinkParams: GetMemberUploadJournalAudioLinkParams;
     invalidFieldsError?: string;
+    requestHeaders;
   }) => {
-    const result = await this.apolloClient.query({
-      variables: { getMemberUploadJournalAudioLinkParams },
-      query: gql`
-        query getMemberUploadJournalAudioLink(
-          $getMemberUploadJournalAudioLinkParams: GetMemberUploadJournalAudioLinkParams!
-        ) {
-          getMemberUploadJournalAudioLink(
-            getMemberUploadJournalAudioLinkParams: $getMemberUploadJournalAudioLinkParams
+    const result = await this.client
+      .request(
+        gql`
+          query getMemberUploadJournalAudioLink(
+            $getMemberUploadJournalAudioLinkParams: GetMemberUploadJournalAudioLinkParams!
           ) {
-            audioLink
+            getMemberUploadJournalAudioLink(
+              getMemberUploadJournalAudioLinkParams: $getMemberUploadJournalAudioLinkParams
+            ) {
+              audioLink
+            }
           }
-        }
-      `,
-    });
+        `,
+        { getMemberUploadJournalAudioLinkParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        return;
+      });
 
-    if (invalidFieldsError) {
-      expect(result.errors[0].message).toMatch(invalidFieldsError);
-    } else {
-      return result.data.getMemberUploadJournalAudioLink;
-    }
+    return result?.getMemberUploadJournalAudioLink;
   };
 
   getDailyReports = async ({
@@ -747,9 +821,8 @@ export class Queries {
   }: {
     dailyReportQueryInput: DailyReportQueryInput;
   }) => {
-    const result = await this.apolloClient.query({
-      variables: { dailyReportQueryInput },
-      query: gql`
+    const { getDailyReports } = await this.client.request(
+      gql`
         query getDailyReports($dailyReportQueryInput: DailyReportQueryInput!) {
           getDailyReports(dailyReportQueryInput: $dailyReportQueryInput) {
             data {
@@ -767,46 +840,51 @@ export class Queries {
           }
         }
       `,
-    });
+      { dailyReportQueryInput },
+      this.defaultUserRequestHeaders,
+    );
 
-    const { errors, data } = result || {};
-    return { errors, dailyReports: data?.getDailyReports };
+    return getDailyReports;
   };
 
   getCaregivers = async ({
     memberId,
     invalidFieldsError,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     memberId: string;
     invalidFieldsError?: string;
+    requestHeaders?;
   }): Promise<Caregiver[]> => {
-    const result = await this.apolloClient.query({
-      variables: { memberId },
-      query: gql`
-        query getCaregivers($memberId: String) {
-          getCaregivers(memberId: $memberId) {
-            id
-            email
-            firstName
-            lastName
-            relationship
-            phone
-            memberId
+    const result = await this.client
+      .request(
+        gql`
+          query getCaregivers($memberId: String) {
+            getCaregivers(memberId: $memberId) {
+              id
+              email
+              firstName
+              lastName
+              relationship
+              phone
+              memberId
+            }
           }
-        }
-      `,
-    });
+        `,
+        { memberId },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0][0].message).toMatch(invalidFieldsError);
+        return;
+      });
 
-    if (invalidFieldsError) {
-      expect(result.errors[0][0].message).toMatch(invalidFieldsError);
-    } else {
-      return result.data.getCaregivers;
-    }
+    return result?.getCaregivers;
   };
 
-  getAlerts = async (): Promise<Dispatch[]> => {
-    const result = await this.apolloClient.query({
-      query: gql`
+  getAlerts = async ({ requestHeaders }: { requestHeaders }): Promise<Dispatch[]> => {
+    const { getAlerts } = await this.client.request(
+      gql`
         query getAlerts {
           getAlerts {
             id
@@ -819,71 +897,83 @@ export class Queries {
           }
         }
       `,
-    });
-    return result.data?.getAlerts;
+      undefined,
+      requestHeaders,
+    );
+    return getAlerts;
   };
 
   getTodos = async ({
     memberId,
     invalidFieldsError,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     memberId?;
     invalidFieldsError?: string;
+    requestHeaders?;
   } = {}): Promise<Todo[]> => {
-    const result = await this.apolloClient.query({
-      variables: { memberId },
-      query: gql`
-        query getTodos($memberId: String) {
-          getTodos(memberId: $memberId) {
-            id
-            memberId
-            text
-            label
-            cronExpressions
-            start
-            end
-            status
-            relatedTo
-            createdBy
-            updatedBy
+    const result = await this.client
+      .request(
+        gql`
+          query getTodos($memberId: String) {
+            getTodos(memberId: $memberId) {
+              id
+              memberId
+              text
+              label
+              cronExpressions
+              start
+              end
+              status
+              relatedTo
+              createdBy
+              updatedBy
+            }
           }
-        }
-      `,
-    });
+        `,
+        { memberId },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        return;
+      });
 
-    if (invalidFieldsError) {
-      expect(result.errors[0].message).toMatch(invalidFieldsError);
-    } else {
-      return result.data.getTodos;
-    }
+    return result?.getTodos;
   };
 
   getTodoDones = async ({
     getTodoDonesParams,
     invalidFieldsError,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     getTodoDonesParams?: GetTodoDonesParams;
     invalidFieldsError?: string;
+    requestHeaders?;
   } = {}): Promise<TodoDone[]> => {
-    const result = await this.apolloClient.query({
-      variables: { getTodoDonesParams },
-      query: gql`
-        query getTodoDones($getTodoDonesParams: GetTodoDonesParams!) {
-          getTodoDones(getTodoDonesParams: $getTodoDonesParams) {
-            id
-            memberId
-            todoId
-            done
+    const result = await this.client
+      .request(
+        gql`
+          query getTodoDones($getTodoDonesParams: GetTodoDonesParams!) {
+            getTodoDones(getTodoDonesParams: $getTodoDonesParams) {
+              id
+              memberId
+              todoId
+              done
+            }
           }
-        }
-      `,
-    });
+        `,
+        { getTodoDonesParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message || ex.response.errors[0][0].message).toMatch(
+          invalidFieldsError,
+        );
+        return;
+      });
 
-    if (invalidFieldsError) {
-      expect(result.errors[0].message || result.errors[0][0].message).toMatch(invalidFieldsError);
-    } else {
-      return result.data.getTodoDones;
-    }
+    return result?.getTodoDones;
   };
 
   getMemberRedFlags = async ({
@@ -893,27 +983,29 @@ export class Queries {
     memberId: string;
     invalidFieldsError?: string;
   }): Promise<RedFlag[]> => {
-    const result = await this.apolloClient.query({
-      variables: { memberId },
-      query: gql`
-        query getMemberRedFlags($memberId: String!) {
-          getMemberRedFlags(memberId: $memberId) {
-            id
-            memberId
-            createdBy
-            type
-            notes
-            createdBy
+    const result = await this.client
+      .request(
+        gql`
+          query getMemberRedFlags($memberId: String!) {
+            getMemberRedFlags(memberId: $memberId) {
+              id
+              memberId
+              createdBy
+              type
+              notes
+              createdBy
+            }
           }
-        }
-      `,
-    });
+        `,
+        { memberId },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        return;
+      });
 
-    if (invalidFieldsError) {
-      expect(result.errors[0].message).toMatch(invalidFieldsError);
-    } else {
-      return result.data.getMemberRedFlags;
-    }
+    return result?.getMemberRedFlags;
   };
 
   getMemberCarePlans = async ({
@@ -923,37 +1015,39 @@ export class Queries {
     memberId: string;
     invalidFieldsError?: string;
   }): Promise<CarePlan[]> => {
-    const result = await this.apolloClient.query({
-      variables: { memberId },
-      query: gql`
-        query getMemberCarePlans($memberId: String!) {
-          getMemberCarePlans(memberId: $memberId) {
-            id
-            memberId
-            createdBy
-            type {
+    const result = await this.client
+      .request(
+        gql`
+          query getMemberCarePlans($memberId: String!) {
+            getMemberCarePlans(memberId: $memberId) {
               id
-              description
+              memberId
               createdBy
-              isCustom
+              type {
+                id
+                description
+                createdBy
+                isCustom
+              }
+              notes
+              createdBy
             }
-            notes
-            createdBy
           }
-        }
-      `,
-    });
+        `,
+        { memberId },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        return;
+      });
 
-    if (invalidFieldsError) {
-      expect(result.errors[0].message).toMatch(invalidFieldsError);
-    } else {
-      return result.data.getMemberCarePlans;
-    }
+    return result?.getMemberCarePlans;
   };
 
   getActiveQuestionnaires = async (): Promise<Questionnaire[]> => {
-    const result = await this.apolloClient.query({
-      query: gql`
+    const { getActiveQuestionnaires } = await this.client.request(
+      gql`
         query getActiveQuestionnaires {
           getActiveQuestionnaires {
             id
@@ -983,9 +1077,11 @@ export class Queries {
           }
         }
       `,
-    });
+      undefined,
+      this.defaultUserRequestHeaders,
+    );
 
-    return result.data.getActiveQuestionnaires;
+    return getActiveQuestionnaires;
   };
 
   getQuestionnaire = async ({
@@ -995,36 +1091,38 @@ export class Queries {
     id;
     invalidFieldsError?: string;
   }): Promise<Questionnaire> => {
-    const result = await this.apolloClient.query({
-      variables: { id },
-      query: gql`
-        query getQuestionnaire($id: String!) {
-          getQuestionnaire(id: $id) {
-            id
-            shortName
-            items {
-              code
-              label
+    const result = await this.client
+      .request(
+        gql`
+          query getQuestionnaire($id: String!) {
+            getQuestionnaire(id: $id) {
+              id
+              shortName
               items {
                 code
                 label
+                items {
+                  code
+                  label
+                }
+              }
+              severityLevels {
+                label
+                min
+                max
               }
             }
-            severityLevels {
-              label
-              min
-              max
-            }
           }
-        }
-      `,
-    });
+        `,
+        { id },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        return;
+      });
 
-    if (invalidFieldsError) {
-      expect(result.errors[0].message).toMatch(invalidFieldsError);
-    } else {
-      return result.data.getQuestionnaire;
-    }
+    return result?.getQuestionnaire;
   };
 
   getQuestionnaireResponse = async ({
@@ -1034,28 +1132,30 @@ export class Queries {
     id;
     invalidFieldsError?: string;
   }): Promise<QuestionnaireResponse> => {
-    const result = await this.apolloClient.query({
-      variables: { id },
-      query: gql`
-        query getQuestionnaireResponse($id: String!) {
-          getQuestionnaireResponse(id: $id) {
-            id
-            type
-            result {
-              severity
-              score
-              alert
+    const result = await this.client
+      .request(
+        gql`
+          query getQuestionnaireResponse($id: String!) {
+            getQuestionnaireResponse(id: $id) {
+              id
+              type
+              result {
+                severity
+                score
+                alert
+              }
             }
           }
-        }
-      `,
-    });
+        `,
+        { id },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        return;
+      });
 
-    if (invalidFieldsError) {
-      expect(result.errors[0].message).toMatch(invalidFieldsError);
-    } else {
-      return result.data.getQuestionnaireResponse;
-    }
+    return result?.getQuestionnaireResponse;
   };
 
   getMemberQuestionnaireResponses = async ({
@@ -1065,38 +1165,40 @@ export class Queries {
     memberId;
     invalidFieldsError?: string;
   }): Promise<QuestionnaireResponse[]> => {
-    const result = await this.apolloClient.query({
-      variables: { memberId },
-      query: gql`
-        query getMemberQuestionnaireResponses($memberId: String!) {
-          getMemberQuestionnaireResponses(memberId: $memberId) {
-            id
-            type
-            answers {
-              code
-              value
-            }
-            createdBy
-            createdAt
-            result {
-              score
-              severity
+    const result = await this.client
+      .request(
+        gql`
+          query getMemberQuestionnaireResponses($memberId: String!) {
+            getMemberQuestionnaireResponses(memberId: $memberId) {
+              id
+              type
+              answers {
+                code
+                value
+              }
+              createdBy
+              createdAt
+              result {
+                score
+                severity
+              }
             }
           }
-        }
-      `,
-    });
+        `,
+        { memberId },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        return;
+      });
 
-    if (invalidFieldsError) {
-      expect(result.errors[0].message).toMatch(invalidFieldsError);
-    } else {
-      return result.data.getMemberQuestionnaireResponses;
-    }
+    return result?.getMemberQuestionnaireResponses;
   };
 
   getCarePlanTypes = async (): Promise<CarePlanType[]> => {
-    const result = await this.apolloClient.query({
-      query: gql`
+    const { getCarePlanTypes } = await this.client.request(
+      gql`
         query getCarePlanTypes {
           getCarePlanTypes {
             id
@@ -1106,13 +1208,16 @@ export class Queries {
           }
         }
       `,
-    });
-    return result.data?.getCarePlanTypes;
+      undefined,
+      this.defaultUserRequestHeaders,
+    );
+
+    return getCarePlanTypes;
   };
 
   getBarrierTypes = async (): Promise<BarrierType[]> => {
-    const result = await this.apolloClient.query({
-      query: gql`
+    const { getBarrierTypes } = await this.client.request(
+      gql`
         query getBarrierTypes {
           getBarrierTypes {
             id
@@ -1127,8 +1232,11 @@ export class Queries {
           }
         }
       `,
-    });
-    return result.data?.getBarrierTypes;
+      undefined,
+      this.defaultUserRequestHeaders,
+    );
+
+    return getBarrierTypes;
   };
 
   getMemberBarriers = async ({
@@ -1138,30 +1246,32 @@ export class Queries {
     memberId: string;
     invalidFieldsError?: string;
   }): Promise<Barrier[]> => {
-    const result = await this.apolloClient.query({
-      variables: { memberId },
-      query: gql`
-        query getMemberBarriers($memberId: String!) {
-          getMemberBarriers(memberId: $memberId) {
-            id
-            memberId
-            createdBy
-            type {
+    const result = await this.client
+      .request(
+        gql`
+          query getMemberBarriers($memberId: String!) {
+            getMemberBarriers(memberId: $memberId) {
               id
-              description
-              domain
+              memberId
+              createdBy
+              type {
+                id
+                description
+                domain
+              }
+              notes
+              createdBy
             }
-            notes
-            createdBy
           }
-        }
-      `,
-    });
+        `,
+        { memberId },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        return;
+      });
 
-    if (invalidFieldsError) {
-      expect(result.errors[0].message).toMatch(invalidFieldsError);
-    } else {
-      return result.data.getMemberBarriers;
-    }
+    return result?.getMemberBarriers;
   };
 }

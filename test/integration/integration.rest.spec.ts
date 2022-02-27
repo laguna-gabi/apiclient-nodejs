@@ -9,6 +9,7 @@ import {
   generateCreateMemberParams,
   generateScheduleAppointmentParams,
 } from '../generators';
+import { generateRequestHeaders } from '../index';
 
 describe('Integration tests: rest', () => {
   const handler: Handler = new Handler();
@@ -18,10 +19,12 @@ describe('Integration tests: rest', () => {
 
   beforeAll(async () => {
     await handler.beforeAll();
-    appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
+    appointmentsActions = new AppointmentsIntegrationActions(
+      handler.mutations,
+      handler.defaultUserRequestHeaders,
+    );
     creators = new Creators(handler, appointmentsActions);
     server = handler.app.getHttpServer();
-    await creators.createFirstUserInDbfNecessary();
   });
 
   afterAll(async () => {
@@ -30,14 +33,13 @@ describe('Integration tests: rest', () => {
 
   it('getSlots', async () => {
     const org = await creators.createAndValidateOrg();
-    const resultMember = await creators.createAndValidateMember({ org, useNewUser: true });
-    const user = await handler
-      .setContextUserId(resultMember.primaryUserId.toString())
-      .queries.getUser();
+    const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+    const requestHeaders = generateRequestHeaders(user.authId);
 
-    const appointment = await creators.createAndValidateAppointment({ member: resultMember });
+    const appointment = await creators.createAndValidateAppointment({ member, requestHeaders });
 
-    await handler.setContextUserId(user.id).mutations.createAvailabilities({
+    await handler.mutations.createAvailabilities({
+      requestHeaders,
       availabilities: [
         generateAvailabilityInput({
           start: add(startOfToday(), { hours: 10 }),
@@ -54,16 +56,13 @@ describe('Integration tests: rest', () => {
     expect(body).toEqual(
       expect.objectContaining({
         user: {
-          id: resultMember.primaryUserId,
-          firstName: resultMember.users[0].firstName,
+          id: member.primaryUserId,
+          firstName: member.users[0].firstName,
           roles: expect.any(Array),
-          avatar: resultMember.users[0].avatar,
-          description: resultMember.users[0].description,
+          avatar: member.users[0].avatar,
+          description: member.users[0].description,
         },
-        member: {
-          id: resultMember.id,
-          firstName: resultMember.firstName,
-        },
+        member: { id: member.id, firstName: member.firstName },
         appointment: expect.objectContaining({
           id: appointment.id,
           start: expect.any(String),
@@ -77,11 +76,11 @@ describe('Integration tests: rest', () => {
 
   it('scheduleAppointment', async () => {
     const org = await creators.createAndValidateOrg();
-    const resultMember = await creators.createAndValidateMember({ org, useNewUser: true });
+    const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
 
     const appointmentsParams = generateScheduleAppointmentParams({
-      userId: resultMember.primaryUserId.toString(),
-      memberId: resultMember.id,
+      userId: user.id,
+      memberId: member.id,
     });
 
     const { body } = await request(server)
@@ -92,8 +91,8 @@ describe('Integration tests: rest', () => {
     expect(body).toEqual(
       expect.objectContaining({
         id: expect.any(String),
-        memberId: resultMember.id,
-        userId: resultMember.primaryUserId,
+        memberId: member.id,
+        userId: user.id,
         method: appointmentsParams.method,
         status: AppointmentStatus.scheduled,
         createdAt: expect.any(String),
@@ -108,32 +107,25 @@ describe('Integration tests: rest', () => {
 
   it('createMember', async () => {
     const org = await creators.createAndValidateOrg();
-    const memberParams = generateCreateMemberParams({
-      orgId: org.id,
-    });
+    const memberParams = generateCreateMemberParams({ orgId: org.id });
 
     const {
       body: { id: memberId },
     } = await request(server).post(urls.members).send(memberParams).expect(201);
     // test member created
-    const member = await handler.setContextUserId(memberId).queries.getMember({ id: memberId });
+    const requestHeaders = generateRequestHeaders(memberParams.authId);
+
+    const member = await handler.queries.getMember({ id: memberId, requestHeaders });
     compareMembers(member, memberParams);
     // test member config created
-    const memberConfig = await handler
-      .setContextUserId(memberId)
-      .queries.getMemberConfig({ id: memberId });
+    const memberConfig = await handler.queries.getMemberConfig({ id: memberId, requestHeaders });
     expect(memberConfig.memberId).toEqual(memberId);
-
-    const user = await handler.setContextUserId(member.primaryUserId).queries.getUser();
-    expect(user.id).toEqual(member.primaryUserId);
   });
 
   it('createControlMember', async () => {
     handler.featureFlagService.spyOnFeatureFlagControlGroup.mockResolvedValueOnce(true);
     const org = await creators.createAndValidateOrg();
-    const memberParams = generateCreateMemberParams({
-      orgId: org.id,
-    });
+    const memberParams = generateCreateMemberParams({ orgId: org.id });
 
     const {
       body: { id: memberId },

@@ -1,3 +1,4 @@
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { RouteInfo } from '@nestjs/common/interfaces';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -42,7 +43,8 @@ const badRequestException = 'Bad Request Exception';
     CareModule,
     QuestionnaireModule,
     EventEmitterModule.forRoot(),
-    GraphQLModule.forRoot({
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
       autoSchemaFile: 'schema.gql',
       cors: true,
       formatError: (error: GraphQLError) => {
@@ -57,7 +59,9 @@ const badRequestException = 'Bad Request Exception';
 
         return error?.message && error?.message !== badRequestException
           ? handleErrorMessage(error?.message)
-          : error?.extensions.exception.response?.message.map((error) => handleErrorMessage(error));
+          : // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            error.extensions.response.message.map((error) => handleErrorMessage(error));
       },
     }),
   ],

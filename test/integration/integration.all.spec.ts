@@ -2,8 +2,7 @@ import { AppointmentInternalKey, Language, LogInternalKey, Platform } from '@lag
 import * as config from 'config';
 import { general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
-import * as faker from 'faker';
-import { CreateQuestionnaireParams, QuestionnaireType } from '../../src/questionnaire';
+import { date, lorem } from 'faker';
 import { v4 } from 'uuid';
 import {
   Appointment,
@@ -34,6 +33,8 @@ import {
   TaskStatus,
   UpdateJournalTextParams,
 } from '../../src/member';
+import { Internationalization } from '../../src/providers';
+import { CreateQuestionnaireParams, QuestionnaireType } from '../../src/questionnaire';
 import {
   CreateTodoDoneParams,
   CreateTodoParams,
@@ -57,6 +58,7 @@ import {
   generateId,
   generateOrgParams,
   generateRequestAppointmentParams,
+  generateRequestHeaders,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
   generateSubmitQuestionnaireResponseParams,
@@ -77,9 +79,11 @@ describe('Integration tests: all', () => {
 
   beforeAll(async () => {
     await handler.beforeAll();
-    appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
+    appointmentsActions = new AppointmentsIntegrationActions(
+      handler.mutations,
+      handler.defaultUserRequestHeaders,
+    );
     creators = new Creators(handler, appointmentsActions);
-    await creators.createFirstUserInDbfNecessary();
   });
 
   afterAll(async () => {
@@ -105,7 +109,7 @@ describe('Integration tests: all', () => {
     const resultNurse2 = await creators.createAndValidateUser([UserRole.nurse]);
 
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org, useNewUser: true });
+    const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
 
     const appointmentPrimaryUser = await creators.createAndValidateAppointment({ member });
 
@@ -130,9 +134,10 @@ describe('Integration tests: all', () => {
     await updateTaskStatus(idAi1, handler.mutations.updateActionItemStatus);
     await updateTaskStatus(idAi2, handler.mutations.updateActionItemStatus);
 
-    const resultMember = await handler
-      .setContextUserId(member.id)
-      .queries.getMember({ id: member.id });
+    const resultMember = await handler.queries.getMember({
+      id: member.id,
+      requestHeaders: generateRequestHeaders(member.authId),
+    });
 
     const compareAppointmentsOfUsers = (receivedAppointment: Appointment, users: User[]) => {
       const all = users.reduce((prev, next) => prev.concat(next.appointments), []);
@@ -163,22 +168,24 @@ describe('Integration tests: all', () => {
    */
   it('get should return just the member appointment of a user', async () => {
     const org = await creators.createAndValidateOrg();
-    const member1 = await creators.createAndValidateMember({ org, useNewUser: true });
-    const member2 = await creators.createAndValidateMember({ org, useNewUser: true });
+    const { member: member1 } = await creators.createAndValidateMember({ org, useNewUser: true });
+    const { member: member2 } = await creators.createAndValidateMember({ org, useNewUser: true });
 
     const appointmentMember1 = await creators.createAndValidateAppointment({ member: member1 });
     const appointmentMember2 = await creators.createAndValidateAppointment({ member: member2 });
 
-    const memberResult1 = await handler
-      .setContextUserId(member1.id)
-      .queries.getMember({ id: member1.id });
+    const memberResult1 = await handler.queries.getMember({
+      id: member1.id,
+      requestHeaders: generateRequestHeaders(member1.authId),
+    });
     expect(appointmentMember1).toEqual(
       expect.objectContaining(memberResult1.users[0].appointments[0]),
     );
 
-    const memberResult2 = await handler
-      .setContextUserId(member2.id)
-      .queries.getMember({ id: member2.id });
+    const memberResult2 = await handler.queries.getMember({
+      id: member2.id,
+      requestHeaders: generateRequestHeaders(member2.authId),
+    });
     expect(appointmentMember2).toEqual(
       expect.objectContaining(memberResult2.users[0].appointments[0]),
     );
@@ -194,9 +201,9 @@ describe('Integration tests: all', () => {
 
   it('should return members appointment filtered by orgId', async () => {
     const org = await creators.createAndValidateOrg();
-    const member1 = await creators.createAndValidateMember({ org, useNewUser: true });
+    const { member: member1 } = await creators.createAndValidateMember({ org, useNewUser: true });
     const primaryUser1 = member1.users[0];
-    const member2 = await creators.createAndValidateMember({ org, useNewUser: true });
+    const { member: member2 } = await creators.createAndValidateMember({ org, useNewUser: true });
     const primaryUser2 = member1.users[0];
 
     const params1a = generateScheduleAppointmentParams({
@@ -225,12 +232,14 @@ describe('Integration tests: all', () => {
     await creators.handler.mutations.requestAppointment({ appointmentParams: params2b });
 
     const result = await creators.handler.queries.getMembersAppointments(org.id);
-    const resultMember1 = await creators.handler
-      .setContextUserId(member1.id)
-      .queries.getMember({ id: member1.id });
-    const resultMember2 = await creators.handler
-      .setContextUserId(member2.id)
-      .queries.getMember({ id: member2.id });
+    const resultMember1 = await creators.handler.queries.getMember({
+      id: member1.id,
+      requestHeaders: generateRequestHeaders(member1.authId),
+    });
+    const resultMember2 = await creators.handler.queries.getMember({
+      id: member2.id,
+      requestHeaders: generateRequestHeaders(member2.authId),
+    });
 
     expect(result.length).toEqual(3);
 
@@ -266,13 +275,14 @@ describe('Integration tests: all', () => {
 
   it('should validate that getMember attach chat app link to each appointment', async () => {
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org, useNewUser: true });
+    const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
 
     const appointmentMember = await creators.createAndValidateAppointment({ member });
 
-    const memberResult = await handler
-      .setContextUserId(member.id)
-      .queries.getMember({ id: member.id });
+    const memberResult = await handler.queries.getMember({
+      id: member.id,
+      requestHeaders: generateRequestHeaders(member.authId),
+    });
     expect(appointmentMember).toEqual(
       expect.objectContaining({
         link: generateAppointmentLink(memberResult.users[0].appointments[0].id),
@@ -282,11 +292,13 @@ describe('Integration tests: all', () => {
 
   it('should update and get member configs', async () => {
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org });
+    const { member } = await creators.createAndValidateMember({ org });
+    const requestHeaders = generateRequestHeaders(member.authId);
 
-    const memberConfigBefore = await handler
-      .setContextUserId(member.id)
-      .queries.getMemberConfig({ id: member.id });
+    const memberConfigBefore = await handler.queries.getMemberConfig({
+      id: member.id,
+      requestHeaders,
+    });
     expect(memberConfigBefore).toEqual({
       memberId: member.id,
       articlesPath: config.get('articlesByDrg.default'),
@@ -303,12 +315,11 @@ describe('Integration tests: all', () => {
 
     const updateMemberConfigParams = generateUpdateMemberConfigParams();
     delete updateMemberConfigParams.memberId;
-    await handler
-      .setContextUserId(member.id)
-      .mutations.updateMemberConfig({ updateMemberConfigParams });
-    const memberConfigAfter = await handler
-      .setContextUserId(member.id)
-      .queries.getMemberConfig({ id: member.id });
+    await handler.mutations.updateMemberConfig({ updateMemberConfigParams, requestHeaders });
+    const memberConfigAfter = await handler.queries.getMemberConfig({
+      id: member.id,
+      requestHeaders,
+    });
 
     expect(memberConfigAfter).toEqual({
       memberId: member.id,
@@ -344,11 +355,10 @@ describe('Integration tests: all', () => {
   `(`should add a not existed user to member users list on $title`, async (params) => {
     /* eslint-enable max-len */
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org, useNewUser: true });
+    const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+    const requestHeaders = generateRequestHeaders(member.authId);
 
-    const initialMember = await handler
-      .setContextUserId(member.id)
-      .queries.getMember({ id: member.id });
+    const initialMember = await handler.queries.getMember({ id: member.id, requestHeaders });
     expect(initialMember.users.length).toEqual(1);
     expect(initialMember.users[0].id).toEqual(member.primaryUserId);
 
@@ -363,9 +373,7 @@ describe('Integration tests: all', () => {
       start,
     });
 
-    const { users } = await handler
-      .setContextUserId(member.id)
-      .queries.getMember({ id: member.id });
+    const { users } = await handler.queries.getMember({ id: member.id, requestHeaders });
 
     const ids = users.map((user) => user.id);
     expect(ids.length).toEqual(2);
@@ -377,7 +385,7 @@ describe('Integration tests: all', () => {
     it('should delete timeout for member if an appointment is scheduled', async () => {
       const primaryUser = await creators.createAndValidateUser();
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
       const appointmentParams: RequestAppointmentParams = generateRequestAppointmentParams({
         memberId: member.id,
         userId: primaryUser.id,
@@ -399,7 +407,7 @@ describe('Integration tests: all', () => {
     test.each([true, false])('should delete a member ', async (hard) => {
       // setup
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
       const appointment = await creators.createAndValidateAppointment({ member });
       const recording = generateUpdateRecordingParams({
         memberId: member.id,
@@ -408,47 +416,47 @@ describe('Integration tests: all', () => {
       });
       await handler.mutations.updateRecording({ updateRecordingParams: recording });
 
-      const startDate = faker.date.past();
+      const startDate = date.past();
       const day1 = reformatDate(startDate.toString(), general.get('dateFormatString'));
       const day2 = reformatDate(
         add(startDate, { days: 2 }).toString(),
         general.get('dateFormatString'),
       );
-      await handler.setContextUserId(member.id).mutations.setDailyReportCategories({
+      await handler.mutations.setDailyReportCategories({
+        requestHeaders: generateRequestHeaders(member.authId),
         dailyReportCategoriesInput: {
           date: day1,
           categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
         },
       });
 
-      await createTodos(member.id);
+      const requestHeaders = generateRequestHeaders(member.authId);
+      await createTodos(member.id, requestHeaders);
 
-      const { id: journalId } = await handler.setContextUserId(member.id).mutations.createJournal();
-      await handler.setContextUserId(member.id).mutations.updateJournalText({
+      const { id: journalId } = await handler.mutations.createJournal({ requestHeaders });
+      await handler.mutations.updateJournalText({
+        requestHeaders,
         updateJournalTextParams: generateUpdateJournalTextParams({ id: journalId }),
       });
 
       const addCaregiverParams = generateAddCaregiverParams({ createdBy: member.id });
       delete addCaregiverParams.createdBy;
-      await handler.setContextUserId(member.id).mutations.addCaregiver({ addCaregiverParams });
+      await handler.mutations.addCaregiver({ addCaregiverParams, requestHeaders });
 
       // submit QR for member
-      await submitQR(member.id, member.primaryUserId.toString());
+      await submitQR(member.id);
 
       // delete member
       const deleteMemberParams = generateDeleteMemberParams({ id: member.id, hard });
-      const result = await handler
-        .setContextUserId(generateId())
-        .mutations.deleteMember({ deleteMemberParams });
+      const result = await handler.mutations.deleteMember({ deleteMemberParams });
       expect(result).toBeTruthy();
       await delay(500);
 
       // test that everything was deleted
-      const memberResult = await handler
-        .setContextUserId(member.id)
-        .queries.getMember({ id: member.id });
-      await expect(memberResult).toEqual({
-        errors: [{ code: ErrorType.memberNotFound, message: Errors.get(ErrorType.memberNotFound) }],
+      await handler.queries.getMember({
+        id: member.id,
+        invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+        requestHeaders: handler.defaultAdminRequestHeaders,
       });
 
       const communication = await handler.queries.getCommunication({
@@ -466,9 +474,9 @@ describe('Integration tests: all', () => {
           endDate: day2,
         },
       });
-      expect(dailyReports.dailyReports.data).toEqual([]);
+      expect(dailyReports.data).toEqual([]);
 
-      const appointmentResult = await handler.queries.getAppointment(appointment.id);
+      const appointmentResult = await handler.queries.getAppointment({ id: appointment.id });
       expect(appointmentResult).toBeNull();
 
       const todos = await handler.queries.getTodos({ memberId: member.id });
@@ -477,7 +485,9 @@ describe('Integration tests: all', () => {
       const caregivers = await handler.queries.getCaregivers({ memberId: member.id });
       expect(caregivers).toEqual([]);
 
-      const journals = await handler.setContextUserId(member.id).queries.getJournals();
+      const journals = await handler.queries.getJournals({
+        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
+      });
       expect(journals).toEqual([]);
 
       const qrs = await handler.queries.getMemberQuestionnaireResponses({
@@ -490,17 +500,21 @@ describe('Integration tests: all', () => {
   describe('replaceUserForMember', () => {
     it('should set new user for a given member', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
       const oldUserId = member.primaryUserId.toString();
       const newUser = await creators.createAndValidateUser();
-      delete newUser.authId;
+      const requestHeadersOldUser = generateRequestHeaders(user.authId);
+      const requestHeadersNewUser = generateRequestHeaders(newUser.authId);
 
       // Schedule an appointment
       const appointmentParams = generateScheduleAppointmentParams({
         userId: oldUserId,
         memberId: member.id,
       });
-      const appointment = await handler.mutations.scheduleAppointment({ appointmentParams });
+      const appointment = await handler.mutations.scheduleAppointment({
+        appointmentParams,
+        requestHeaders: requestHeadersOldUser,
+      });
 
       // replaceUserForMember
       const replaceUserForMemberParams: ReplaceUserForMemberParams = {
@@ -511,9 +525,7 @@ describe('Integration tests: all', () => {
       await delay(2000); // wait for event to finish
 
       // Check that the member's primary user changed
-      const updatedMember = await handler
-        .setContextUserId(member.id)
-        .queries.getMember({ id: member.id });
+      const updatedMember = await handler.queries.getMember({ id: member.id });
       expect(updatedMember.primaryUserId).toEqual(newUser.id);
       expect(updatedMember.users[updatedMember.users.length - 1].id).toEqual(newUser.id);
       expect(updatedMember.users.length).toEqual(2);
@@ -521,21 +533,21 @@ describe('Integration tests: all', () => {
       await delay(500);
 
       // Check that the appointment moved from the old user to the new
-      const { appointments: newUserAppointments } = await handler
-        .setContextUserId(newUser.id)
-        .queries.getUser();
-      const { appointments: oldUserAppointments } = await handler
-        .setContextUserId(oldUserId)
-        .queries.getUser();
+      const { appointments: newUserAppointments } = await handler.queries.getUser({
+        requestHeaders: requestHeadersNewUser,
+      });
+      const { appointments: oldUserAppointments } = await handler.queries.getUser({
+        requestHeaders: requestHeadersOldUser,
+      });
       const newUserAppointmentsIds = newUserAppointments.map((app) => app.id);
       const oldUserAppointmentsIds = oldUserAppointments.map((app) => app.id);
       expect(newUserAppointmentsIds).toContain(appointment.id);
       expect(oldUserAppointmentsIds).not.toContain(appointment.id);
     });
 
-    it("should throw an error when the new user doesn't exist", async () => {
+    it(`should throw an error when the new user doesn't exist`, async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
+      const { member } = await creators.createAndValidateMember({ org });
 
       const replaceUserForMemberParams: ReplaceUserForMemberParams = {
         memberId: member.id,
@@ -561,7 +573,7 @@ describe('Integration tests: all', () => {
 
     it('should throw an error if the new user equals the old user', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
+      const { member } = await creators.createAndValidateMember({ org });
       const replaceUserForMemberParams: ReplaceUserForMemberParams = {
         memberId: member.id,
         userId: member.primaryUserId.toString(),
@@ -591,9 +603,8 @@ describe('Integration tests: all', () => {
       ${{ defaultSlotsCount: 20 }}         | ${20}                | ${'should get specific default slots count if defaultSlotsCount'}
     `('$testTitle', async ({ additionalGetSlotsParams, expectedDefaultSlots }) => {
       /* eslint-enable max-len */
-      const user = await creators.createAndValidateUser();
       const org = await creators.createAndValidateOrg();
-      const member: Member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
 
       const appointmentParams = generateScheduleAppointmentParams({
         memberId: member.id,
@@ -601,7 +612,10 @@ describe('Integration tests: all', () => {
         start: add(startOfToday(), { hours: 9 }),
         end: add(startOfToday(), { hours: 9, minutes: defaultSlotsParams.duration }),
       });
-      const appointment = await handler.mutations.scheduleAppointment({ appointmentParams });
+      const appointment = await handler.mutations.scheduleAppointment({
+        appointmentParams,
+        requestHeaders: generateRequestHeaders(user.authId),
+      });
 
       const result = await handler.queries.getUserSlots({
         appointmentId: appointment.id,
@@ -615,9 +629,10 @@ describe('Integration tests: all', () => {
     it('should get user slots', async () => {
       const user = await creators.createAndValidateUser();
       const org = await creators.createAndValidateOrg();
-      const member: Member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
 
-      await handler.setContextUserId(user.id).mutations.createAvailabilities({
+      await handler.mutations.createAvailabilities({
+        requestHeaders: generateRequestHeaders(user.authId),
         availabilities: [
           generateAvailabilityInput({
             start: add(startOfToday(), { hours: 10 }),
@@ -670,11 +685,11 @@ describe('Integration tests: all', () => {
   describe('discharge links', () => {
     it('should be able to get upload discharge links of a member', async () => {
       const org = await creators.createAndValidateOrg();
-      const { id } = await creators.createAndValidateMember({ org });
+      const { member } = await creators.createAndValidateMember({ org });
 
-      const result = await handler
-        .setContextUserId(id)
-        .queries.getMemberUploadDischargeDocumentsLinks({ id: id + '1' });
+      const result = await handler.queries.getMemberUploadDischargeDocumentsLinks({
+        id: member.id,
+      });
 
       expect(result).toEqual({
         dischargeNotesLink: 'https://some-url/upload',
@@ -684,11 +699,11 @@ describe('Integration tests: all', () => {
 
     it('should be able to get download discharge links of a member', async () => {
       const org = await creators.createAndValidateOrg();
-      const { id } = await creators.createAndValidateMember({ org });
+      const { member } = await creators.createAndValidateMember({ org });
 
-      const result = await handler
-        .setContextUserId(id)
-        .queries.getMemberDownloadDischargeDocumentsLinks({ id });
+      const result = await handler.queries.getMemberDownloadDischargeDocumentsLinks({
+        id: member.id,
+      });
 
       expect(result).toEqual({
         dischargeNotesLink: 'https://some-url/download',
@@ -700,7 +715,7 @@ describe('Integration tests: all', () => {
   describe('notes', () => {
     it('should create update and delete appointment notes', async () => {
       const org = await creators.createAndValidateOrg();
-      const member: Member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
       const scheduledAppointment = generateScheduleAppointmentParams({
         memberId: member.id,
         userId: member.primaryUserId.toString(),
@@ -709,46 +724,47 @@ describe('Integration tests: all', () => {
       const { id: appointmentId } = await creators.handler.mutations.scheduleAppointment({
         appointmentParams: scheduledAppointment,
       });
-      let appointment = await creators.handler.queries.getAppointment(appointmentId);
+      let appointment = await creators.handler.queries.getAppointment({ id: appointmentId });
 
       expect(appointment.notes).toBeNull();
 
       let updateNotesParams = generateUpdateNotesParams({ appointmentId: appointment.id });
       await handler.mutations.updateNotes({ updateNotesParams });
-      appointment = await creators.handler.queries.getAppointment(appointment.id);
+      appointment = await creators.handler.queries.getAppointment({ id: appointment.id });
 
       expect(appointment.notes).toMatchObject(updateNotesParams.notes);
 
       updateNotesParams = generateUpdateNotesParams({ appointmentId: appointment.id });
       await handler.mutations.updateNotes({ updateNotesParams });
-      appointment = await creators.handler.queries.getAppointment(appointment.id);
+      appointment = await creators.handler.queries.getAppointment({ id: appointment.id });
 
       expect(appointment.notes).toMatchObject(updateNotesParams.notes);
 
       updateNotesParams = generateUpdateNotesParams({ appointmentId: appointment.id, notes: null });
       await handler.mutations.updateNotes({ updateNotesParams });
-      appointment = await creators.handler.queries.getAppointment(appointment.id);
+      appointment = await creators.handler.queries.getAppointment({ id: appointment.id });
 
       expect(appointment.notes).toBeNull();
     });
 
     it('should be able to set note for and nurseNotes for a member', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
+      const { member } = await creators.createAndValidateMember({ org });
 
       const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId: member.id });
       await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams });
 
-      const memberResult = await handler
-        .setContextUserId(member.id)
-        .queries.getMember({ id: member.id });
+      const memberResult = await handler.queries.getMember({
+        id: member.id,
+        requestHeaders: generateRequestHeaders(member.authId),
+      });
       expect(memberResult.generalNotes).toEqual(setGeneralNotesParams.note);
       expect(memberResult.nurseNotes).toEqual(setGeneralNotesParams.nurseNotes);
     });
 
     it('should accept empty note or nurseNotes for a member', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
+      const { member } = await creators.createAndValidateMember({ org });
 
       const params1 = generateSetGeneralNotesParams({
         memberId: member.id,
@@ -756,9 +772,8 @@ describe('Integration tests: all', () => {
       });
       await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams: params1 });
 
-      const result1 = await handler
-        .setContextUserId(member.id)
-        .queries.getMember({ id: member.id });
+      const requestHeaders = generateRequestHeaders(member.authId);
+      const result1 = await handler.queries.getMember({ id: member.id, requestHeaders });
       expect(result1.generalNotes).toEqual(params1.note);
       expect(result1.nurseNotes).toEqual(params1.nurseNotes);
 
@@ -768,9 +783,7 @@ describe('Integration tests: all', () => {
       });
       await creators.handler.mutations.setGeneralNotes({ setGeneralNotesParams: params2 });
 
-      const result2 = await handler
-        .setContextUserId(member.id)
-        .queries.getMember({ id: member.id });
+      const result2 = await handler.queries.getMember({ id: member.id, requestHeaders });
       expect(result2.generalNotes).toEqual(params2.note);
       expect(result2.nurseNotes).toEqual(params2.nurseNotes);
     });
@@ -779,37 +792,40 @@ describe('Integration tests: all', () => {
   describe('drg', () => {
     it('should return the default path for a non existing drg on getMemberConfig', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
+      const { member } = await creators.createAndValidateMember({ org });
 
-      const memberConfig = await handler
-        .setContextUserId(member.id)
-        .queries.getMemberConfig({ id: member.id });
+      const memberConfig = await handler.queries.getMemberConfig({
+        id: member.id,
+        requestHeaders: generateRequestHeaders(member.authId),
+      });
       expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.default'));
     });
 
     it('should return the configured path for a configured drg on getMemberConfig', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
+      const { member } = await creators.createAndValidateMember({ org });
 
       const updateMemberParams = generateUpdateMemberParams({ id: member.id, drg: '123' });
       await handler.mutations.updateMember({ updateMemberParams });
 
-      const memberConfig = await handler
-        .setContextUserId(member.id)
-        .queries.getMemberConfig({ id: member.id });
+      const memberConfig = await handler.queries.getMemberConfig({
+        id: member.id,
+        requestHeaders: generateRequestHeaders(updateMemberParams.authId),
+      });
       expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.123'));
     });
 
     it('should set phoneType and phoneSecondaryType', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
+      const { member } = await creators.createAndValidateMember({ org });
 
       const updateMemberParams = generateUpdateMemberParams({ id: member.id, drg: '123' });
       await handler.mutations.updateMember({ updateMemberParams });
 
-      const memberResult = await handler
-        .setContextUserId(member.id)
-        .queries.getMember({ id: member.id });
+      const memberResult = await handler.queries.getMember({
+        id: member.id,
+        requestHeaders: generateRequestHeaders(updateMemberParams.authId),
+      });
       expect(memberResult.phoneType).toEqual('mobile');
       expect(memberResult.phoneSecondaryType).toEqual('mobile');
     });
@@ -818,12 +834,12 @@ describe('Integration tests: all', () => {
   describe('recordings', () => {
     it('should be able to get upload recordings of a member', async () => {
       const org = await creators.createAndValidateOrg();
-      const { id } = await creators.createAndValidateMember({ org });
+      const { member } = await creators.createAndValidateMember({ org });
 
       const result = await handler.queries.getMemberUploadRecordingLink({
         recordingLinkParams: {
-          memberId: id,
-          id: `${faker.lorem.word()}.mp4`,
+          memberId: member.id,
+          id: `${lorem.word()}.mp4`,
         },
       });
       expect(result).toEqual('https://some-url/upload');
@@ -831,12 +847,12 @@ describe('Integration tests: all', () => {
 
     it('should be able to get download recordings of a member', async () => {
       const org = await creators.createAndValidateOrg();
-      const { id } = await creators.createAndValidateMember({ org });
+      const { member } = await creators.createAndValidateMember({ org });
 
       const result = await handler.queries.getMemberDownloadRecordingLink({
         recordingLinkParams: {
-          memberId: id,
-          id: `${faker.lorem.word()}.mp4`,
+          memberId: member.id,
+          id: `${lorem.word()}.mp4`,
         },
       });
       expect(result).toEqual('https://some-url/download');
@@ -853,33 +869,47 @@ describe('Integration tests: all', () => {
       };
 
       const org = await creators.createAndValidateOrg();
-      const member1 = await creators.createAndValidateMember({ org });
-      const member2 = await creators.createAndValidateMember({ org });
+      const { member: member1, user: user1 } = await creators.createAndValidateMember({
+        org,
+        useNewUser: true,
+      });
+      const { member: member2, user: user2 } = await creators.createAndValidateMember({
+        org,
+        useNewUser: true,
+      });
 
+      const requestHeadersUser1 = generateRequestHeaders(user1.authId);
+      const requestHeadersUser2 = generateRequestHeaders(user2.authId);
       const params1a = generateUpdateRecordingParams({ memberId: member1.id });
-      const rec1a = await handler
-        .setContextUserId(member1.primaryUserId.toString())
-        .mutations.updateRecording({ updateRecordingParams: params1a });
+      const rec1a = await handler.mutations.updateRecording({
+        updateRecordingParams: params1a,
+        requestHeaders: requestHeadersUser1,
+      });
       let result1 = await handler.queries.getRecordings({ memberId: member1.id });
       compareRecording(result1[0], rec1a, member1.primaryUserId.toString());
 
       //overriding existing recording with different params
       const params1b = generateUpdateRecordingParams({ memberId: member1.id, id: rec1a.id });
-      const rec1b = await handler
-        .setContextUserId(member1.primaryUserId.toString())
-        .mutations.updateRecording({ updateRecordingParams: params1b });
-      result1 = await handler.queries.getRecordings({ memberId: member1.id });
+      const rec1b = await handler.mutations.updateRecording({
+        updateRecordingParams: params1b,
+        requestHeaders: requestHeadersUser1,
+      });
+      result1 = await handler.queries.getRecordings({
+        memberId: member1.id,
+      });
       compareRecording(result1[0], rec1b, member1.primaryUserId.toString());
 
       const params1c = generateUpdateRecordingParams({ memberId: member1.id });
-      const rec1c = await handler
-        .setContextUserId(member1.primaryUserId.toString())
-        .mutations.updateRecording({ updateRecordingParams: params1c });
+      const rec1c = await handler.mutations.updateRecording({
+        updateRecordingParams: params1c,
+        requestHeaders: requestHeadersUser1,
+      });
 
       const params2 = generateUpdateRecordingParams({ memberId: member2.id, id: v4() });
-      const rec2 = await handler
-        .setContextUserId(member2.primaryUserId.toString())
-        .mutations.updateRecording({ updateRecordingParams: params2 });
+      const rec2 = await handler.mutations.updateRecording({
+        updateRecordingParams: params2,
+        requestHeaders: requestHeadersUser2,
+      });
 
       result1 = await handler.queries.getRecordings({ memberId: member1.id });
       expect(result1.length).toEqual(2);
@@ -892,7 +922,7 @@ describe('Integration tests: all', () => {
 
     it('should delete recordings and media files on unconsented appointment end', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
       const appointmentParams = generateScheduleAppointmentParams({
         memberId: member.id,
         userId: member.users[0].id,
@@ -943,10 +973,11 @@ describe('Integration tests: all', () => {
   describe('Daily Reports', () => {
     it('set/get a dailyReport sorted by date', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const requestHeaders = generateRequestHeaders(member.authId);
 
       // start randomly and collect 3 dates:
-      const startDate = faker.date.past();
+      const startDate = date.past();
       const day1 = reformatDate(startDate.toString(), general.get('dateFormatString'));
       const day2 = reformatDate(
         add(startDate, { days: 2 }).toString(),
@@ -973,14 +1004,15 @@ describe('Integration tests: all', () => {
             categories: [{ category: DailyReportCategoryTypes.Appetite, rank: 2 }],
           },
         ].map(async (report) =>
-          handler.setContextUserId(member.id).mutations.setDailyReportCategories({
+          handler.mutations.setDailyReportCategories({
+            requestHeaders,
             dailyReportCategoriesInput: report,
           }),
         ),
       );
 
       // fetch daily reports for the member
-      const { dailyReports } = await handler.setContextUserId(member.id).queries.getDailyReports({
+      const dailyReports = await handler.queries.getDailyReports({
         dailyReportQueryInput: {
           startDate: day1,
           endDate: day3,
@@ -1018,11 +1050,13 @@ describe('Integration tests: all', () => {
   describe('Journal', () => {
     it('should create get update and delete member journal', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
-      const { id: journalId } = await handler.setContextUserId(member.id).mutations.createJournal();
-      const journalBeforeUpdate = await handler
-        .setContextUserId(member.id)
-        .queries.getJournal({ id: journalId });
+      const { member } = await creators.createAndValidateMember({ org });
+      const requestHeaders = generateRequestHeaders(member.authId);
+      const { id: journalId } = await handler.mutations.createJournal({ requestHeaders });
+      const journalBeforeUpdate = await handler.queries.getJournal({
+        id: journalId,
+        requestHeaders,
+      });
 
       expect(journalBeforeUpdate).toMatchObject({
         id: journalId,
@@ -1034,11 +1068,10 @@ describe('Integration tests: all', () => {
       const updateJournalTextParams: UpdateJournalTextParams = generateUpdateJournalTextParams({
         id: journalId,
       });
-      const journalAfterUpdate = await handler
-        .setContextUserId(member.id)
-        .mutations.updateJournalText({
-          updateJournalTextParams,
-        });
+      const journalAfterUpdate = await handler.mutations.updateJournalText({
+        requestHeaders,
+        updateJournalTextParams,
+      });
 
       expect(journalAfterUpdate).toMatchObject({
         id: journalId,
@@ -1047,7 +1080,7 @@ describe('Integration tests: all', () => {
         text: updateJournalTextParams.text,
       });
 
-      const journals = await handler.setContextUserId(member.id).queries.getJournals();
+      const journals = await handler.queries.getJournals({ requestHeaders });
 
       expect(journals[0]).toMatchObject({
         id: journalId,
@@ -1056,8 +1089,9 @@ describe('Integration tests: all', () => {
         text: updateJournalTextParams.text,
       });
 
-      await handler.setContextUserId(member.id).mutations.deleteJournal({ id: journalId });
-      await handler.setContextUserId(member.id).queries.getJournal({
+      await handler.mutations.deleteJournal({ id: journalId, requestHeaders });
+      await handler.queries.getJournal({
+        requestHeaders,
         id: journalId,
         invalidFieldsError: Errors.get(ErrorType.memberJournalNotFound),
       });
@@ -1065,18 +1099,29 @@ describe('Integration tests: all', () => {
   });
 
   describe('Alerts', () => {
-    let member1, member2, notification1, notification2, notification3, primaryUser;
+    let member1: Member,
+      member2: Member,
+      notification1,
+      notification2,
+      notification3,
+      primaryUser: string,
+      requestHeadersUser,
+      internationalization: Internationalization;
+
     beforeAll(async () => {
       // Fixtures: generate 2 members with the same primary user
       const org = await creators.createAndValidateOrg();
 
-      member1 = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      member1 = member;
       primaryUser = member1.primaryUserId.toString();
-      member2 = await creators.createAndValidateMember({
+      const result = await creators.createAndValidateMember({
         org,
         useNewUser: false,
         userId: primaryUser,
       });
+      member2 = result.member;
+      requestHeadersUser = generateRequestHeaders(user.authId);
 
       notification1 = mockGenerateDispatch({
         senderClientId: member1.id,
@@ -1093,6 +1138,9 @@ describe('Integration tests: all', () => {
         senderClientId: member2.id,
         contentKey: LogInternalKey.memberNotFeelingWellMessage,
       });
+
+      internationalization = new Internationalization();
+      await internationalization.onModuleInit();
     });
 
     beforeEach(() => {
@@ -1108,11 +1156,8 @@ describe('Integration tests: all', () => {
       );
     });
 
-    /* eslint-disable @typescript-eslint/ban-ts-comment */
     it('should get alerts', async () => {
-      const alerts = await handler
-        .setContextUserId(primaryUser, undefined, [UserRole.coach])
-        .queries.getAlerts();
+      const alerts = await handler.queries.getAlerts({ requestHeaders: requestHeadersUser });
 
       expect(alerts).toEqual([
         {
@@ -1120,10 +1165,7 @@ describe('Integration tests: all', () => {
           dismissed: false,
           id: `${member2.id}_${AlertType.memberAssigned}`,
           isNew: true,
-          // @ts-ignore
-          text: handler.memberService.internationalization.getAlerts(AlertType.memberAssigned, {
-            member: member2,
-          }),
+          text: internationalization.getAlerts(AlertType.memberAssigned, { member: member2 }),
           memberId: member2.id.toString(),
           type: AlertType.memberAssigned,
         },
@@ -1132,10 +1174,7 @@ describe('Integration tests: all', () => {
           dismissed: false,
           id: `${member1.id}_${AlertType.memberAssigned}`,
           isNew: true,
-          // @ts-ignore
-          text: handler.memberService.internationalization.getAlerts(AlertType.memberAssigned, {
-            member: member1,
-          }),
+          text: internationalization.getAlerts(AlertType.memberAssigned, { member: member1 }),
           memberId: member1.id.toString(),
           type: AlertType.memberAssigned,
         },
@@ -1144,11 +1183,9 @@ describe('Integration tests: all', () => {
           dismissed: false,
           id: notification1.dispatchId,
           isNew: true,
-          // @ts-ignore
-          text: handler.memberService.internationalization.getAlerts(
-            AlertType.appointmentScheduledUser,
-            { member: member1 },
-          ),
+          text: internationalization.getAlerts(AlertType.appointmentScheduledUser, {
+            member: member1,
+          }),
           memberId: member1.id.toString(),
           type: AlertType.appointmentScheduledUser,
         },
@@ -1157,11 +1194,9 @@ describe('Integration tests: all', () => {
           dismissed: false,
           id: notification2.dispatchId,
           isNew: true,
-          // @ts-ignore
-          text: handler.memberService.internationalization.getAlerts(
-            AlertType.memberNotFeelingWellMessage,
-            { member: member2 },
-          ),
+          text: internationalization.getAlerts(AlertType.memberNotFeelingWellMessage, {
+            member: member2,
+          }),
           memberId: member2.id.toString(),
           type: AlertType.memberNotFeelingWellMessage,
         },
@@ -1170,13 +1205,12 @@ describe('Integration tests: all', () => {
 
     it('should get alerts with dismissed indication', async () => {
       // User will dismiss one alert - we should expect to see the alert as dismissed
-      await handler
-        .setContextUserId(primaryUser, undefined, [UserRole.coach])
-        .mutations.dismissAlert({ alertId: notification1.dispatchId });
+      await handler.mutations.dismissAlert({
+        alertId: notification1.dispatchId,
+        requestHeaders: requestHeadersUser,
+      });
 
-      const alerts = await handler
-        .setContextUserId(primaryUser, undefined, [UserRole.coach])
-        .queries.getAlerts();
+      const alerts = await handler.queries.getAlerts({ requestHeaders: requestHeadersUser });
 
       expect(alerts).toEqual([
         {
@@ -1184,8 +1218,7 @@ describe('Integration tests: all', () => {
           dismissed: false,
           id: `${member2.id}_${AlertType.memberAssigned}`,
           isNew: true,
-          // @ts-ignore
-          text: handler.memberService.internationalization.getAlerts(AlertType.memberAssigned, {
+          text: internationalization.getAlerts(AlertType.memberAssigned, {
             member: member2,
           }),
           memberId: member2.id.toString(),
@@ -1196,8 +1229,7 @@ describe('Integration tests: all', () => {
           dismissed: false,
           id: `${member1.id}_${AlertType.memberAssigned}`,
           isNew: true,
-          // @ts-ignore
-          text: handler.memberService.internationalization.getAlerts(AlertType.memberAssigned, {
+          text: internationalization.getAlerts(AlertType.memberAssigned, {
             member: member1,
           }),
           memberId: member1.id.toString(),
@@ -1208,11 +1240,9 @@ describe('Integration tests: all', () => {
           dismissed: true,
           id: notification1.dispatchId,
           isNew: true,
-          // @ts-ignore
-          text: handler.memberService.internationalization.getAlerts(
-            AlertType.appointmentScheduledUser,
-            { member: member1 },
-          ),
+          text: internationalization.getAlerts(AlertType.appointmentScheduledUser, {
+            member: member1,
+          }),
           memberId: member1.id.toString(),
           type: AlertType.appointmentScheduledUser,
         },
@@ -1221,11 +1251,9 @@ describe('Integration tests: all', () => {
           dismissed: false,
           id: notification2.dispatchId,
           isNew: true,
-          // @ts-ignore
-          text: handler.memberService.internationalization.getAlerts(
-            AlertType.memberNotFeelingWellMessage,
-            { member: member2 },
-          ),
+          text: internationalization.getAlerts(AlertType.memberNotFeelingWellMessage, {
+            member: member2,
+          }),
           memberId: member2.id.toString(),
           type: AlertType.memberNotFeelingWellMessage,
         },
@@ -1234,17 +1262,11 @@ describe('Integration tests: all', () => {
 
     it('should get alerts with isNew set to false after setLastQueryAlert', async () => {
       // User setLastQueryAlert to now
-      await handler
-        .setContextUserId(primaryUser, undefined, [UserRole.coach])
-        .mutations.setLastQueryAlert({});
+      await handler.mutations.setLastQueryAlert({ requestHeaders: requestHeadersUser });
+      await handler.queries.getUser({ requestHeaders: requestHeadersUser });
 
-      const { lastQueryAlert } = await handler
-        .setContextUserId(primaryUser, undefined, [UserRole.coach])
-        .queries.getUser();
-
-      const alerts = await handler
-        .setContextUserId(primaryUser, undefined, [UserRole.coach], lastQueryAlert)
-        .queries.getAlerts();
+      const alerts = await handler.queries // .setContextUserId(primaryUser, undefined, [UserRole.coach], lastQueryAlert)
+        .getAlerts({ requestHeaders: requestHeadersUser });
 
       expect(alerts).toEqual([
         {
@@ -1252,8 +1274,7 @@ describe('Integration tests: all', () => {
           dismissed: false,
           id: `${member2.id}_${AlertType.memberAssigned}`,
           isNew: false,
-          // @ts-ignore
-          text: handler.memberService.internationalization.getAlerts(AlertType.memberAssigned, {
+          text: internationalization.getAlerts(AlertType.memberAssigned, {
             member: member2,
           }),
           memberId: member2.id.toString(),
@@ -1264,8 +1285,7 @@ describe('Integration tests: all', () => {
           dismissed: false,
           id: `${member1.id}_${AlertType.memberAssigned}`,
           isNew: false,
-          // @ts-ignore
-          text: handler.memberService.internationalization.getAlerts(AlertType.memberAssigned, {
+          text: internationalization.getAlerts(AlertType.memberAssigned, {
             member: member1,
           }),
           memberId: member1.id.toString(),
@@ -1276,11 +1296,9 @@ describe('Integration tests: all', () => {
           dismissed: true,
           id: notification1.dispatchId,
           isNew: false,
-          // @ts-ignore
-          text: handler.memberService.internationalization.getAlerts(
-            AlertType.appointmentScheduledUser,
-            { member: member1 },
-          ),
+          text: internationalization.getAlerts(AlertType.appointmentScheduledUser, {
+            member: member1,
+          }),
           memberId: member1.id.toString(),
           type: AlertType.appointmentScheduledUser,
         },
@@ -1289,11 +1307,9 @@ describe('Integration tests: all', () => {
           dismissed: false,
           id: notification2.dispatchId,
           isNew: false,
-          // @ts-ignore
-          text: handler.memberService.internationalization.getAlerts(
-            AlertType.memberNotFeelingWellMessage,
-            { member: member2 },
-          ),
+          text: internationalization.getAlerts(AlertType.memberNotFeelingWellMessage, {
+            member: member2,
+          }),
           memberId: member2.id.toString(),
           type: AlertType.memberNotFeelingWellMessage,
         },
@@ -1302,9 +1318,8 @@ describe('Integration tests: all', () => {
 
     it('should get alerts with todos', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
       const memberId = member.id;
-      const userId = member.primaryUserId.toString();
 
       const createTodoByUserParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
@@ -1312,11 +1327,10 @@ describe('Integration tests: all', () => {
       delete createTodoByUserParams.createdBy;
       delete createTodoByUserParams.updatedBy;
 
-      const { id: todoIdByUser } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.createTodo({
-          createTodoParams: createTodoByUserParams,
-        });
+      const { id: todoIdByUser } = await handler.mutations.createTodo({
+        requestHeaders: generateRequestHeaders(user.authId),
+        createTodoParams: createTodoByUserParams,
+      });
 
       const createTodoByMemberParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
@@ -1324,21 +1338,21 @@ describe('Integration tests: all', () => {
       delete createTodoByMemberParams.createdBy;
       delete createTodoByMemberParams.updatedBy;
 
-      const { id: todoIdByMember } = await handler.setContextUserId(memberId).mutations.createTodo({
+      const { id: todoIdByMember } = await handler.mutations.createTodo({
+        requestHeaders: generateRequestHeaders(member.authId),
         createTodoParams: createTodoByMemberParams,
       });
 
-      const alerts = await handler
-        .setContextUserId(userId, undefined, [UserRole.coach])
-        .queries.getAlerts();
+      const alerts = await handler.queries.getAlerts({
+        requestHeaders: generateRequestHeaders(user.authId),
+      });
 
       expect(alerts).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             id: `${todoIdByMember}_${AlertType.memberCreateTodo}`,
             type: AlertType.memberCreateTodo,
-            // @ts-ignore
-            text: handler.memberService.internationalization.getAlerts(AlertType.memberCreateTodo, {
+            text: internationalization.getAlerts(AlertType.memberCreateTodo, {
               member,
               todoText: createTodoByMemberParams.text,
             }),
@@ -1353,8 +1367,7 @@ describe('Integration tests: all', () => {
           expect.objectContaining({
             id: `${todoIdByUser}_${AlertType.memberCreateTodo}`,
             type: AlertType.memberCreateTodo,
-            // @ts-ignore
-            text: handler.memberService.internationalization.getAlerts(AlertType.memberCreateTodo, {
+            text: internationalization.getAlerts(AlertType.memberCreateTodo, {
               member,
               todoText: createTodoByUserParams.text,
             }),
@@ -1365,25 +1378,28 @@ describe('Integration tests: all', () => {
         ]),
       );
     });
-    /* eslint-enable @typescript-eslint/ban-ts-comment */
   });
 
   describe('Caregiver', () => {
     it('should add, get, update and delete a member caregiver', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org });
+      const { member } = await creators.createAndValidateMember({ org });
+      const requestHeaders = generateRequestHeaders(member.authId);
+
       // Add:
       const addCaregiverParams = generateAddCaregiverParams({ memberId: member.id });
       delete addCaregiverParams.createdBy;
 
-      const caregiver = await handler
-        .setContextUserId(member.id)
-        .mutations.addCaregiver({ addCaregiverParams });
+      const caregiver = await handler.mutations.addCaregiver({
+        addCaregiverParams,
+        requestHeaders,
+      });
 
       expect(caregiver).toMatchObject(addCaregiverParams);
 
       // Get:
-      let persistedCaregivers = await handler.setContextUserId(member.id).queries.getCaregivers({
+      let persistedCaregivers = await handler.queries.getCaregivers({
+        requestHeaders,
         memberId: member.id,
       });
 
@@ -1395,21 +1411,23 @@ describe('Integration tests: all', () => {
         memberId: member.id,
       });
 
-      const updatedCaregiver = await handler.setContextUserId(member.id).mutations.updateCaregiver({
+      const updatedCaregiver = await handler.mutations.updateCaregiver({
+        requestHeaders,
         updateCaregiverParams: updateCaregiverParams,
       });
 
       expect(updatedCaregiver).toMatchObject(updateCaregiverParams);
 
       // Delete:
-      const status = await handler.setContextUserId(member.id).mutations.deleteCaregiver({
+      const status = await handler.mutations.deleteCaregiver({
+        requestHeaders,
         id: updatedCaregiver.id,
       });
 
       expect(status).toBeTruthy();
 
       // Get (confirm record was deleted):
-      persistedCaregivers = await handler.setContextUserId(member.id).queries.getCaregivers({
+      persistedCaregivers = await handler.queries.getCaregivers({
         memberId: member.id,
       });
 
@@ -1423,9 +1441,8 @@ describe('Integration tests: all', () => {
 
   describe('Appointments', () => {
     it('should delete a scheduled appointment', async () => {
-      const user = await creators.createAndValidateUser([UserRole.coach]);
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
 
       const appointment = await appointmentsActions.requestAppointment({
         userId: user.id,
@@ -1434,7 +1451,7 @@ describe('Integration tests: all', () => {
 
       await handler.mutations.deleteAppointment({ id: appointment.id });
 
-      expect(await handler.queries.getAppointment(appointment.id)).toBeFalsy();
+      expect(await handler.queries.getAppointment({ id: appointment.id })).toBeFalsy();
     }, 10000);
   });
 
@@ -1447,11 +1464,12 @@ describe('Integration tests: all', () => {
        * 4. delete TodoDone
        * 5. User ends the todo
        */
-      const user = await creators.createAndValidateUser([UserRole.coach]);
-      const userId = user.id;
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
       const memberId = member.id;
+
+      const requestHeadersUser = generateRequestHeaders(user.authId);
+      const requestHeadersMember = generateRequestHeaders(member.authId);
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
@@ -1459,15 +1477,15 @@ describe('Integration tests: all', () => {
       delete createTodoParams.createdBy;
       delete createTodoParams.updatedBy;
 
-      const { id } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.createTodo({
-          createTodoParams,
-        });
+      const { id } = await handler.mutations.createTodo({
+        requestHeaders: requestHeadersUser,
+        createTodoParams,
+      });
 
-      const todos = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .queries.getTodos({ memberId });
+      const todos = await handler.queries.getTodos({
+        memberId,
+        requestHeaders: requestHeadersMember,
+      });
 
       expect(todos.length).toEqual(1);
       expect(todos).toEqual(
@@ -1478,21 +1496,23 @@ describe('Integration tests: all', () => {
             start: createTodoParams.start.toISOString(),
             end: createTodoParams.end.toISOString(),
             status: TodoStatus.active,
-            createdBy: userId,
-            updatedBy: userId,
+            createdBy: user.id,
+            updatedBy: user.id,
           }),
         ]),
       );
 
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({ id });
       delete endAndCreateTodoParams.updatedBy;
-      const newCreatedTodo = await handler
-        .setContextUserId(memberId)
-        .mutations.endAndCreateTodo({ endAndCreateTodoParams });
+      const newCreatedTodo = await handler.mutations.endAndCreateTodo({
+        endAndCreateTodoParams,
+        requestHeaders: requestHeadersMember,
+      });
 
-      const todosAfterEndAndCreate = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .queries.getTodos({ memberId });
+      const todosAfterEndAndCreate = await handler.queries.getTodos({
+        memberId,
+        requestHeaders: requestHeadersUser,
+      });
 
       expect(todosAfterEndAndCreate.length).toEqual(2);
       expect(todosAfterEndAndCreate).toEqual(
@@ -1503,7 +1523,7 @@ describe('Integration tests: all', () => {
             start: createTodoParams.start.toISOString(),
             end: createTodoParams.end.toISOString(),
             status: TodoStatus.ended,
-            createdBy: userId,
+            createdBy: user.id,
             updatedBy: memberId,
           }),
           expect.objectContaining({
@@ -1514,7 +1534,7 @@ describe('Integration tests: all', () => {
             end: endAndCreateTodoParams.end.toISOString(),
             status: TodoStatus.active,
             relatedTo: id,
-            createdBy: userId,
+            createdBy: user.id,
             updatedBy: memberId,
           }),
         ]),
@@ -1529,21 +1549,24 @@ describe('Integration tests: all', () => {
       delete createTodoDoneParams1.memberId;
       delete createTodoDoneParams2.memberId;
 
-      const { id: todoDoneId1 } = await handler
-        .setContextUserId(memberId)
-        .mutations.createTodoDone({ createTodoDoneParams: createTodoDoneParams1 });
-      const { id: todoDoneId2 } = await handler
-        .setContextUserId(memberId)
-        .mutations.createTodoDone({ createTodoDoneParams: createTodoDoneParams2 });
+      const { id: todoDoneId1 } = await handler.mutations.createTodoDone({
+        createTodoDoneParams: createTodoDoneParams1,
+        requestHeaders: requestHeadersMember,
+      });
+      const { id: todoDoneId2 } = await handler.mutations.createTodoDone({
+        createTodoDoneParams: createTodoDoneParams2,
+        requestHeaders: requestHeadersMember,
+      });
 
       expect(todoDoneId1).not.toBeUndefined();
       expect(todoDoneId2).not.toBeUndefined();
 
       const getTodoDonesParams = generateGetTodoDonesParams({ memberId });
 
-      const TodoDones = await handler
-        .setContextUserId(memberId)
-        .queries.getTodoDones({ getTodoDonesParams });
+      const TodoDones = await handler.queries.getTodoDones({
+        getTodoDonesParams,
+        requestHeaders: requestHeadersMember,
+      });
 
       expect(TodoDones.length).toEqual(2);
       expect(TodoDones).toEqual(
@@ -1563,11 +1586,15 @@ describe('Integration tests: all', () => {
         ]),
       );
 
-      await handler.setContextUserId(memberId).mutations.deleteTodoDone({ id: todoDoneId1 });
+      await handler.mutations.deleteTodoDone({
+        id: todoDoneId1,
+        requestHeaders: requestHeadersMember,
+      });
 
-      const TodoDonesAfterDelete = await handler
-        .setContextUserId(memberId)
-        .queries.getTodoDones({ getTodoDonesParams });
+      const TodoDonesAfterDelete = await handler.queries.getTodoDones({
+        getTodoDonesParams,
+        requestHeaders: requestHeadersMember,
+      });
 
       expect(TodoDonesAfterDelete.length).toEqual(1);
       expect(TodoDonesAfterDelete).toEqual(
@@ -1581,15 +1608,17 @@ describe('Integration tests: all', () => {
         ]),
       );
 
-      const endTodo = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.endTodo({ id: newCreatedTodo.id });
+      const endTodo = await handler.mutations.endTodo({
+        id: newCreatedTodo.id,
+        requestHeaders: requestHeadersUser,
+      });
 
       expect(endTodo).toBeTruthy();
 
-      const todosAfterEnd = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .queries.getTodos({ memberId });
+      const todosAfterEnd = await handler.queries.getTodos({
+        memberId,
+        requestHeaders: requestHeadersUser,
+      });
 
       expect(todosAfterEnd.length).toEqual(2);
       expect(todosAfterEnd).toEqual(
@@ -1600,7 +1629,7 @@ describe('Integration tests: all', () => {
             start: createTodoParams.start.toISOString(),
             end: createTodoParams.end.toISOString(),
             status: TodoStatus.ended,
-            createdBy: userId,
+            createdBy: user.id,
             updatedBy: memberId,
           }),
           expect.objectContaining({
@@ -1610,8 +1639,8 @@ describe('Integration tests: all', () => {
             start: endAndCreateTodoParams.start.toISOString(),
             end: endAndCreateTodoParams.end.toISOString(),
             status: TodoStatus.ended,
-            createdBy: userId,
-            updatedBy: userId,
+            createdBy: user.id,
+            updatedBy: user.id,
           }),
         ]),
       );
@@ -1619,8 +1648,9 @@ describe('Integration tests: all', () => {
 
     it('should create and end an scheduled todo', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
       const memberId = member.id;
+      const requestHeaders = generateRequestHeaders(member.authId);
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
@@ -1631,11 +1661,9 @@ describe('Integration tests: all', () => {
       delete createTodoParams.createdBy;
       delete createTodoParams.updatedBy;
 
-      const { id } = await handler.setContextUserId(memberId).mutations.createTodo({
-        createTodoParams,
-      });
+      const { id } = await handler.mutations.createTodo({ requestHeaders, createTodoParams });
 
-      const todos = await handler.setContextUserId(memberId).queries.getTodos({ memberId });
+      const todos = await handler.queries.getTodos({ requestHeaders, memberId });
 
       expect(todos.length).toEqual(1);
       expect(todos).toEqual(
@@ -1655,13 +1683,9 @@ describe('Integration tests: all', () => {
       });
       delete createTodoDoneParams.memberId;
 
-      await handler
-        .setContextUserId(memberId)
-        .mutations.createTodoDone({ createTodoDoneParams: createTodoDoneParams });
+      await handler.mutations.createTodoDone({ requestHeaders, createTodoDoneParams });
 
-      const todosAfterDone = await handler
-        .setContextUserId(memberId)
-        .queries.getTodos({ memberId });
+      const todosAfterDone = await handler.queries.getTodos({ requestHeaders, memberId });
 
       expect(todosAfterDone.length).toEqual(1);
       expect(todosAfterDone).toEqual(
@@ -1678,11 +1702,10 @@ describe('Integration tests: all', () => {
     });
 
     it('should create requested todo and approve it', async () => {
-      const user = await creators.createAndValidateUser([UserRole.coach]);
-      const userId = user.id;
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
       const memberId = member.id;
+      const requestHeaders = generateRequestHeaders(member.authId);
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
@@ -1691,13 +1714,12 @@ describe('Integration tests: all', () => {
       delete createTodoParams.createdBy;
       delete createTodoParams.updatedBy;
 
-      const { id } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.createTodo({
-          createTodoParams,
-        });
+      const { id } = await handler.mutations.createTodo({
+        requestHeaders: generateRequestHeaders(user.authId),
+        createTodoParams,
+      });
 
-      const todos = await handler.setContextUserId(memberId).queries.getTodos({ memberId });
+      const todos = await handler.queries.getTodos({ requestHeaders, memberId });
       expect(todos.length).toEqual(1);
       expect(todos).toEqual(
         expect.arrayContaining([
@@ -1707,17 +1729,15 @@ describe('Integration tests: all', () => {
             start: createTodoParams.start.toISOString(),
             end: createTodoParams.end.toISOString(),
             status: TodoStatus.requested,
-            createdBy: userId,
-            updatedBy: userId,
+            createdBy: user.id,
+            updatedBy: user.id,
           }),
         ]),
       );
 
-      await handler.setContextUserId(memberId).mutations.approveTodo({ id });
+      await handler.mutations.approveTodo({ requestHeaders, id });
 
-      const todosAfterApproving = await handler
-        .setContextUserId(memberId)
-        .queries.getTodos({ memberId });
+      const todosAfterApproving = await handler.queries.getTodos({ requestHeaders, memberId });
       expect(todosAfterApproving).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -1726,8 +1746,8 @@ describe('Integration tests: all', () => {
             start: createTodoParams.start.toISOString(),
             end: createTodoParams.end.toISOString(),
             status: TodoStatus.active,
-            createdBy: userId,
-            updatedBy: userId,
+            createdBy: user.id,
+            updatedBy: user.id,
           }),
         ]),
       );
@@ -1735,18 +1755,17 @@ describe('Integration tests: all', () => {
 
     it('should fail to delete TodoDone of another member', async () => {
       const org = await creators.createAndValidateOrg();
-      const member1 = await creators.createAndValidateMember({ org, useNewUser: true });
-      const memberId1 = member1.id;
-      const member2 = await creators.createAndValidateMember({ org, useNewUser: true });
-      const memberId2 = member2.id;
+      const { member: member1 } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member: member2 } = await creators.createAndValidateMember({ org, useNewUser: true });
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
-        memberId: memberId1,
+        memberId: member1.id,
       });
       delete createTodoParams.createdBy;
       delete createTodoParams.updatedBy;
 
-      const { id } = await handler.setContextUserId(memberId1).mutations.createTodo({
+      const { id } = await handler.mutations.createTodo({
+        requestHeaders: generateRequestHeaders(member1.authId),
         createTodoParams,
       });
 
@@ -1755,11 +1774,13 @@ describe('Integration tests: all', () => {
       });
       delete createTodoDoneParams.memberId;
 
-      const { id: todoDoneId } = await handler
-        .setContextUserId(memberId1)
-        .mutations.createTodoDone({ createTodoDoneParams: createTodoDoneParams });
+      const { id: todoDoneId } = await handler.mutations.createTodoDone({
+        requestHeaders: generateRequestHeaders(member1.authId),
+        createTodoDoneParams,
+      });
 
-      await handler.setContextUserId(memberId2).mutations.deleteTodoDone({
+      await handler.mutations.deleteTodoDone({
+        requestHeaders: generateRequestHeaders(member2.authId),
         id: todoDoneId,
         invalidFieldsErrors: [Errors.get(ErrorType.todoDoneNotFound)],
       });
@@ -1769,55 +1790,46 @@ describe('Integration tests: all', () => {
   describe('Care', () => {
     it('should create, get and delete red flags', async () => {
       const org = await creators.createAndValidateOrg();
-      const { id: memberId } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const requestHeaders = generateRequestHeaders(user.authId);
 
-      // create first red flag
-      const { id: userId } = await creators.createAndValidateUser([UserRole.coach]);
       const createRedFlagParams: CreateRedFlagParams = generateCreateRedFlagParams({
-        memberId,
+        memberId: member.id,
       });
       delete createRedFlagParams.createdBy;
 
-      const { id } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.createRedFlag({
-          createRedFlagParams,
-        });
+      const { id } = await handler.mutations.createRedFlag({
+        requestHeaders,
+        createRedFlagParams,
+      });
 
       // create second red flag
-      const { id: userId2 } = await creators.createAndValidateUser([UserRole.coach]);
+      const user2 = await creators.createAndValidateUser([UserRole.coach]);
       const createRedFlagParams2: CreateRedFlagParams = generateCreateRedFlagParams({
-        memberId,
+        memberId: member.id,
       });
       delete createRedFlagParams2.createdBy;
 
-      const { id: id2 } = await handler
-        .setContextUserId(userId2, '', [UserRole.coach])
-        .mutations.createRedFlag({
-          createRedFlagParams: createRedFlagParams2,
-        });
+      const { id: id2 } = await handler.mutations.createRedFlag({
+        requestHeaders: generateRequestHeaders(user2.authId),
+        createRedFlagParams: createRedFlagParams2,
+      });
 
       // get red flags
-      const redFlags = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .queries.getMemberRedFlags({ memberId });
+      const redFlags = await handler.queries.getMemberRedFlags({ memberId: member.id });
 
       expect(redFlags.length).toEqual(2);
       expect(redFlags).toEqual([
-        expect.objectContaining({ ...createRedFlagParams, id, createdBy: userId }),
-        expect.objectContaining({ ...createRedFlagParams2, id: id2, createdBy: userId2 }),
+        expect.objectContaining({ ...createRedFlagParams, id, createdBy: user.id }),
+        expect.objectContaining({ ...createRedFlagParams2, id: id2, createdBy: user2.id }),
       ]);
 
       // delete red flag
-      const result = await handler
-        .setContextUserId(userId2, '', [UserRole.coach])
-        .mutations.deleteRedFlag({ id });
+      const result = await handler.mutations.deleteRedFlag({ requestHeaders, id });
       expect(result).toBeTruthy();
 
       // Get again (confirm record was deleted)
-      const redFlagsAfter = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .queries.getMemberRedFlags({ memberId });
+      const redFlagsAfter = await handler.queries.getMemberRedFlags({ memberId: member.id });
       expect(redFlagsAfter.length).toEqual(1);
       expect(redFlagsAfter[0].id).toEqual(id2);
     });
@@ -1857,6 +1869,7 @@ describe('Integration tests: all', () => {
 
   describe('Questionnaire', () => {
     let eventEmitterSpy: jest.SpyInstance;
+
     beforeEach(() => {
       eventEmitterSpy = jest.spyOn(handler.eventEmitter, 'emit');
     });
@@ -1865,7 +1878,9 @@ describe('Integration tests: all', () => {
     });
 
     it('should create, get and submit questionnaires', async () => {
-      const { id: userId } = await creators.createAndValidateUser([UserRole.admin]);
+      const org = await creators.createAndValidateOrg();
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+
       const createQuestionnaireParams: CreateQuestionnaireParams =
         generateCreateQuestionnaireParams({
           type: QuestionnaireType.phq9, // type of form to calculate a score
@@ -1875,25 +1890,21 @@ describe('Integration tests: all', () => {
               type: ItemType.choice,
               code: 'q1',
               options: [
-                { label: faker.lorem.words(3), value: 0 },
-                { label: faker.lorem.words(3), value: 1 },
-                { label: faker.lorem.words(3), value: 2 },
+                { label: lorem.words(3), value: 0 },
+                { label: lorem.words(3), value: 1 },
+                { label: lorem.words(3), value: 2 },
               ],
             }),
           ],
           notificationScoreThreshold: 2,
         });
 
-      const { id: questionnaireId } = await handler
-        .setContextUserId(userId, '', [UserRole.admin])
-        .mutations.createQuestionnaire({
-          createQuestionnaireParams,
-        });
+      const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
+        createQuestionnaireParams,
+      });
 
       // Get All Active Questionnaires
-      const questionnaires = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .queries.getActiveQuestionnaires();
+      const questionnaires = await handler.queries.getActiveQuestionnaires();
 
       expect(questionnaires.length).toBeGreaterThanOrEqual(1);
       expect(
@@ -1901,56 +1912,45 @@ describe('Integration tests: all', () => {
       ).toBeTruthy();
 
       // Get a questionnaire by id
-      const questionnaire = await handler
-        .setContextUserId(userId, '', [UserRole.nurse])
-        .queries.getQuestionnaire({ id: questionnaireId });
+      const questionnaire = await handler.queries.getQuestionnaire({ id: questionnaireId });
 
       expect(questionnaire).toBeTruthy();
       expect(questionnaire.id).toEqual(questionnaireId);
 
       // Submit a questionnaire response
-      const memberId = handler.patientZero.id.toString();
-      let qr = await handler
-        .setContextUserId(userId, '', [UserRole.nurse])
-        .mutations.submitQuestionnaireResponse({
-          submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
-            questionnaireId,
-            memberId,
-            answers: [{ code: 'q1', value: '2' }],
-          }),
-        });
+      let qr = await handler.mutations.submitQuestionnaireResponse({
+        requestHeaders: generateRequestHeaders(user.authId),
+        submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
+          questionnaireId,
+          memberId: member.id,
+          answers: [{ code: 'q1', value: '2' }],
+        }),
+      });
 
       await delay(500); // wait for the last emit to complete (sending alert to slack channel)
 
       expect(eventEmitterSpy).toHaveBeenLastCalledWith(EventType.notifySlack, {
         channel: 'slack.escalation',
-        header: `*High Assessment Score [${handler.patientZero.org.name}]*`,
+        header: `*High Assessment Score [${org.name}]*`,
         icon: ':warning:',
         // eslint-disable-next-line max-len
         message:
           `Alerting results on ${questionnaire.shortName} for ` +
-          `${handler.adminUser.firstName} ${handler.adminUser.lastName}’s member - ` +
-          `<https://dev.harmony.lagunahealth.com/details/${handler.patientZero.id.toString()}|` +
-          `${
-            handler.patientZero.firstName[0].toUpperCase() +
-            handler.patientZero.lastName[0].toUpperCase()
-          }>` +
+          `${user.firstName} ${user.lastName}’s member - ` +
+          `<https://dev.harmony.lagunahealth.com/details/${member.id.toString()}|` +
+          `${member.firstName[0].toUpperCase() + member.lastName[0].toUpperCase()}>` +
           `. Scored a '2'`,
       });
 
       expect(qr.id).toBeTruthy();
 
       // Get a questionnaire response (by id)
-      qr = await handler
-        .setContextUserId(userId, '', [UserRole.nurse])
-        .queries.getQuestionnaireResponse({ id: qr.id });
+      qr = await handler.queries.getQuestionnaireResponse({ id: qr.id });
 
       expect(qr.id).toBeTruthy();
 
       // Get questionnaire responses (by member id)
-      const qrs = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .queries.getMemberQuestionnaireResponses({ memberId });
+      const qrs = await handler.queries.getMemberQuestionnaireResponses({ memberId: member.id });
 
       expect(qrs.length).toEqual(1);
       expect(qrs.find((qrItem) => qrItem.id === qr.id)).toBeTruthy();
@@ -1973,19 +1973,20 @@ describe('Integration tests: all', () => {
   };
 
   const createAndValidateAvailabilities = async (count: number): Promise<Identifiers> => {
-    const { id: userId } = await creators.createAndValidateUser();
-
+    const user = await creators.createAndValidateUser();
     const availabilities = Array.from(Array(count)).map(() => generateAvailabilityInput());
+    const requestHeaders = generateRequestHeaders(user.authId);
 
-    const { ids } = await handler.setContextUserId(userId).mutations.createAvailabilities({
+    const { ids } = await handler.mutations.createAvailabilities({
+      requestHeaders,
       availabilities,
     });
 
     expect(ids.length).toEqual(availabilities.length);
 
-    const availabilitiesResult = await handler.queries.getAvailabilities();
+    const availabilitiesResult = await handler.queries.getAvailabilities({ requestHeaders });
     const resultFiltered = availabilitiesResult.filter(
-      (availability) => availability.userId === userId,
+      (availability) => availability.userId === user.id,
     );
 
     expect(resultFiltered.length).toEqual(availabilities.length);
@@ -1993,17 +1994,18 @@ describe('Integration tests: all', () => {
     return { ids };
   };
 
-  const createTodos = async (memberId: string) => {
+  const createTodos = async (memberId: string, requestHeaders) => {
     const createTodoParams = generateCreateTodoParams({ memberId });
     delete createTodoParams.createdBy;
     delete createTodoParams.updatedBy;
-    const { id: todoId } = await handler.mutations.createTodo({ createTodoParams });
+    const { id: todoId } = await handler.mutations.createTodo({ createTodoParams, requestHeaders });
     const createTodoDoneParams = generateCreateTodoDoneParams({ todoId, done: new Date() });
     delete createTodoDoneParams.memberId;
-    await handler.mutations.createTodoDone({ createTodoDoneParams });
-    const todos = await handler.queries.getTodos({ memberId });
+    await handler.mutations.createTodoDone({ createTodoDoneParams, requestHeaders });
+    const todos = await handler.queries.getTodos({ memberId, requestHeaders });
     expect(todos).toHaveLength(1);
     const todoDones = await handler.queries.getTodoDones({
+      requestHeaders,
       getTodoDonesParams: {
         memberId,
         start: createTodoParams.start,
@@ -2013,7 +2015,7 @@ describe('Integration tests: all', () => {
     expect(todoDones).toHaveLength(1);
   };
 
-  const submitQR = async (memberId: string, userId: string) => {
+  const submitQR = async (memberId: string) => {
     // Create a template:
     const createQuestionnaireParams: CreateQuestionnaireParams = generateCreateQuestionnaireParams({
       type: QuestionnaireType.phq9, // type of form to calculate a score
@@ -2023,25 +2025,23 @@ describe('Integration tests: all', () => {
           type: ItemType.choice,
           code: 'q1',
           options: [
-            { label: faker.lorem.words(3), value: 0 },
-            { label: faker.lorem.words(3), value: 1 },
-            { label: faker.lorem.words(3), value: 2 },
+            { label: lorem.words(3), value: 0 },
+            { label: lorem.words(3), value: 1 },
+            { label: lorem.words(3), value: 2 },
           ],
         }),
       ],
       notificationScoreThreshold: 2,
     });
 
-    const { id: questionnaireId } = await handler
-      .setContextUserId(userId, '', [UserRole.admin])
-      .mutations.createQuestionnaire({
+    const { id: questionnaireId } = await handler.mutations // .setContextUserId(userId, '', [UserRole.admin])
+      .createQuestionnaire({
         createQuestionnaireParams,
       });
 
     // Submit a questionnaire response
-    await handler
-      .setContextUserId(userId, '', [UserRole.nurse])
-      .mutations.submitQuestionnaireResponse({
+    await handler.mutations // .setContextUserId(userId, '', [UserRole.nurse])
+      .submitQuestionnaireResponse({
         submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
           questionnaireId,
           memberId,

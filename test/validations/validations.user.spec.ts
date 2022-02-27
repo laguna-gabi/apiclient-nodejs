@@ -6,7 +6,12 @@ import { ErrorType, Errors } from '../../src/common';
 import { CreateUserParams, GetSlotsParams, defaultUserParams } from '../../src/user';
 import { Handler } from '../aux';
 import { generateGetSlotsParams, generateId } from '../generators';
-import { generateCreateUserParams, generateRandomName, urls } from '../index';
+import {
+  generateCreateUserParams,
+  generateRandomName,
+  generateRequestHeaders,
+  urls,
+} from '../index';
 
 const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
@@ -61,19 +66,22 @@ describe('Validations - user', () => {
 
   /* eslint-disable max-len */
   test.each`
-    field               | input                                                        | errors
-    ${'email'}          | ${{ email: faker.lorem.word() }}                             | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat)] }}
-    ${'avatar'}         | ${{ avatar: faker.lorem.word() }}                            | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userAvatarFormat)] }}
-    ${'email & avatar'} | ${{ email: faker.lorem.word(), avatar: faker.lorem.word() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat), Errors.get(ErrorType.userAvatarFormat)] }}
-    ${'description'}    | ${{ description: 222 }}                                      | ${{ missingFieldError: stringError }}
-    ${'firstName'}      | ${{ firstName: 222 }}                                        | ${{ missingFieldError: stringError }}
-    ${'lastName'}       | ${{ lastName: 222 }}                                         | ${{ missingFieldError: stringError }}
-    ${'roles'}          | ${{ roles: [222] }}                                          | ${{ missingFieldError: 'does not exist in "UserRole" enum.' }}
-    ${'phone'}          | ${{ phone: 222 }}                                            | ${{ missingFieldError: stringError }}
-    ${'phone'}          | ${{ phone: '+410' }}                                         | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userPhone)] }}
-    ${'title'}          | ${{ title: 222 }}                                            | ${{ missingFieldError: stringError }}
-    ${'maxCustomers'}   | ${{ maxCustomers: faker.lorem.word() }}                      | ${{ missingFieldError: 'Float cannot represent non numeric value' }}
-    ${'languages'}      | ${{ languages: faker.lorem.word() }}                         | ${{ missingFieldError: 'does not exist in "Language" enum.' }}
+    field             | input                                   | errors
+    ${'email'}        | ${{ email: faker.lorem.word() }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat)] }}
+    ${'avatar'}       | ${{ avatar: faker.lorem.word() }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userAvatarFormat)] }}
+    ${'email & avatar'} | ${{
+  email: faker.lorem.word(),
+  avatar: faker.lorem.word(),
+}} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat), Errors.get(ErrorType.userAvatarFormat)] }}
+    ${'description'}  | ${{ description: 222 }}                 | ${{ missingFieldError: stringError }}
+    ${'firstName'}    | ${{ firstName: 222 }}                   | ${{ missingFieldError: stringError }}
+    ${'lastName'}     | ${{ lastName: 222 }}                    | ${{ missingFieldError: stringError }}
+    ${'roles'}        | ${{ roles: [222] }}                     | ${{ missingFieldError: 'does not exist in "UserRole" enum.' }}
+    ${'phone'}        | ${{ phone: 222 }}                       | ${{ missingFieldError: stringError }}
+    ${'phone'}        | ${{ phone: '+410' }}                    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userPhone)] }}
+    ${'title'}        | ${{ title: 222 }}                       | ${{ missingFieldError: stringError }}
+    ${'maxCustomers'} | ${{ maxCustomers: faker.lorem.word() }} | ${{ missingFieldError: 'Float cannot represent non numeric value' }}
+    ${'languages'}    | ${{ languages: faker.lorem.word() }}    | ${{ missingFieldError: 'does not exist in "Language" enum.' }}
   `(
     /* eslint-enable max-len */
     `should fail to create a user since $field is not valid`,
@@ -97,23 +105,31 @@ describe('Validations - user', () => {
     const userParams: CreateUserParams = generateCreateUserParams();
     delete userParams[params.field];
 
-    const { id } = await handler.mutations.createUser({ userParams });
+    await handler.mutations.createUser({ userParams });
 
-    const user = await handler.setContextUserId(id).queries.getUser();
+    const user = await handler.queries.getUser({
+      requestHeaders: generateRequestHeaders(userParams.authId),
+    });
     expect(user[params.field]).not.toBeUndefined();
     expect(user[params.field]).toEqual(params.defaultValue);
   });
 
   /* eslint-disable max-len */
   test.each`
-    field              | input                                                    | errors
-    ${'appointmentId'} | ${{ appointmentId: 123 }}                                | ${stringError}
-    ${'appointmentId'} | ${{ appointmentId: '123' }}                              | ${Errors.get(ErrorType.appointmentIdInvalid)}
-    ${'userId'}        | ${{ userId: 123 }}                                       | ${stringError}
-    ${'userId'}        | ${{ userId: '123' }}                                     | ${Errors.get(ErrorType.userIdInvalid)}
-    ${'notBefore'}     | ${{ notBefore: 'asd', userId: generateId() }}            | ${'must be a Date instance'}
-    ${'both ID'}       | ${{ appointmentId: generateId(), userId: generateId() }} | ${Errors.get(ErrorType.slotsParams)}
-    ${'no ID'}         | ${{}}                                                    | ${Errors.get(ErrorType.slotsParams)}
+    field              | input                       | errors
+    ${'appointmentId'} | ${{ appointmentId: 123 }}   | ${stringError}
+    ${'appointmentId'} | ${{ appointmentId: '123' }} | ${Errors.get(ErrorType.appointmentIdInvalid)}
+    ${'userId'}        | ${{ userId: 123 }}          | ${stringError}
+    ${'userId'}        | ${{ userId: '123' }}        | ${Errors.get(ErrorType.userIdInvalid)}
+    ${'notBefore'} | ${{
+  notBefore: 'asd',
+  userId: generateId(),
+}} | ${'must be a Date instance'}
+    ${'both ID'} | ${{
+  appointmentId: generateId(),
+  userId: generateId(),
+}} | ${Errors.get(ErrorType.slotsParams)}
+    ${'no ID'}         | ${{}}                       | ${Errors.get(ErrorType.slotsParams)}
   `(`should fail to request slots since $field is not valid`, async (params) => {
     const getSlotsParams: GetSlotsParams = generateGetSlotsParams(params.input);
 

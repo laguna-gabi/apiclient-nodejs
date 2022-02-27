@@ -1,14 +1,15 @@
 import * as faker from 'faker';
-import { ErrorType, Errors, UserRole } from '../../src/common';
+import { ErrorType, Errors } from '../../src/common';
 import { CreateTodoDoneParams, CreateTodoParams, EndAndCreateTodoParams } from '../../src/todo';
 import { Handler } from '../aux/handler';
 import {
   generateCreateTodoDoneParams,
+  generateCreateTodoParams,
   generateEndAndCreateTodoParams,
   generateGetTodoDonesParams,
   generateId,
-} from '../generators';
-import { generateCreateTodoParams, generateCreateUserParams } from '../index';
+  generateRequestHeaders,
+} from '../index';
 
 const stringError = `String cannot represent a non string value`;
 
@@ -17,8 +18,6 @@ describe('Validations - todo', () => {
 
   beforeAll(async () => {
     await handler.beforeAll();
-    const { id } = await handler.mutations.createUser({ userParams: generateCreateUserParams() });
-    handler.setContextUserId(id, '', [UserRole.coach]);
   });
 
   afterAll(async () => {
@@ -259,13 +258,21 @@ describe('Validations - todo', () => {
 
   describe('endTodo', () => {
     it('should fail to end a todo since id is not a valid', async () => {
-      await handler.mutations.endTodo({ id: 123, missingFieldError: stringError });
+      await handler.mutations.endTodo({
+        id: 123,
+        missingFieldError: stringError,
+        requestHeaders: handler.defaultUserRequestHeaders,
+      });
     });
   });
 
   describe('approveTodo', () => {
     it('should fail to approve Todo since id is not a valid', async () => {
-      await handler.mutations.approveTodo({ id: 123, missingFieldError: stringError });
+      await handler.mutations.approveTodo({
+        id: 123,
+        missingFieldError: stringError,
+        requestHeaders: handler.defaultUserRequestHeaders,
+      });
     });
   });
 
@@ -335,7 +342,11 @@ describe('Validations - todo', () => {
 
   describe('deleteTodoDone', () => {
     it('should fail to delete TodoDone since id is not a valid', async () => {
-      await handler.mutations.deleteTodoDone({ id: 123, missingFieldError: stringError });
+      await handler.mutations.deleteTodoDone({
+        id: 123,
+        missingFieldError: stringError,
+        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
+      });
     });
   });
 });

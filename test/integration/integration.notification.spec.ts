@@ -7,9 +7,12 @@ import {
   ContentKey,
   ExternalKey,
   InnerQueueTypes,
+  JournalCustomKey,
   LogInternalKey,
   NotificationType,
+  NotifyCustomKey,
   ObjectAppointmentScheduledClass,
+  ObjectAssessmentSubmitAlertClass,
   ObjectBaseClass,
   ObjectCallOrVideoClass,
   ObjectCancelClass,
@@ -66,19 +69,11 @@ import { general, hosts, scheduler } from 'config';
 import { addDays, addSeconds, subDays, subMinutes } from 'date-fns';
 import * as faker from 'faker';
 import { internet } from 'faker';
-import {
-  AlertConditionType,
-  CreateQuestionnaireParams,
-  QuestionnaireAlerts,
-  QuestionnaireType,
-  SubmitQuestionnaireResponseParams,
-} from '../../src/questionnaire';
 import { v4 } from 'uuid';
 import { Appointment } from '../../src/appointment';
 import {
   ItemType,
   RegisterForNotificationParams,
-  UserRole,
   delay,
   generatePath,
   reformatDate,
@@ -91,6 +86,13 @@ import {
   NotifyParams,
   UpdateJournalTextParams,
 } from '../../src/member';
+import {
+  AlertConditionType,
+  CreateQuestionnaireParams,
+  QuestionnaireAlerts,
+  QuestionnaireType,
+  SubmitQuestionnaireResponseParams,
+} from '../../src/questionnaire';
 import { CreateTodoParams, EndAndCreateTodoParams, Label } from '../../src/todo';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
@@ -100,7 +102,6 @@ import {
   generateDailyReport,
   generateDeleteMemberParams,
   generateEndAndCreateTodoParams,
-  generateId,
   generateNotifyContentParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
@@ -109,7 +110,7 @@ import {
   mockGenerateQuestionnaireItem,
 } from '../generators';
 import * as sendbirdPayload from '../unit/mocks/webhookSendbirdNewMessagePayload.json';
-import { JournalCustomKey, NotifyCustomKey } from '@lagunahealth/pandora';
+import { generateRequestHeaders } from '../index';
 
 // mock uuid.v4:
 jest.mock('uuid', () => {
@@ -128,9 +129,12 @@ describe('Integration tests: notifications', () => {
 
   beforeAll(async () => {
     await handler.beforeAll();
-    appointmentsActions = new AppointmentsIntegrationActions(handler.mutations);
+    appointmentsActions = new AppointmentsIntegrationActions(
+      handler.mutations,
+      handler.defaultUserRequestHeaders,
+    );
     creators = new Creators(handler, appointmentsActions);
-    await creators.createFirstUserInDbfNecessary();
+    handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
   });
 
   afterEach(() => {
@@ -161,11 +165,10 @@ describe('Integration tests: notifications', () => {
       const user = await creators.createAndValidateUser();
       const memberParams = generateCreateMemberParams({ userId: user.id, orgId: org.id });
       const { id } = await handler.mutations.createMember({ memberParams });
-
       await delay(200);
 
       //send event to queue on update user config (create)
-      const mockUser = generateUpdateUserSettingsMock({ id, ...user });
+      const mockUser = generateUpdateUserSettingsMock(user);
       const objectUser = new ObjectUpdateMemberSettingsClass(mockUser);
       Object.keys(objectUser.objectUpdateMemberSettings).forEach((key) => {
         expectStringContaining(1, key, mockUser[key]);
@@ -242,7 +245,7 @@ describe('Integration tests: notifications', () => {
         await delay(200);
         handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
         const deleteMemberParams = generateDeleteMemberParams({ id, hard });
-        await handler.setContextUserId(generateId()).mutations.deleteMember({ deleteMemberParams });
+        await handler.mutations.deleteMember({ deleteMemberParams });
         await delay(200);
 
         expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(6);
@@ -268,7 +271,8 @@ describe('Integration tests: notifications', () => {
         `${RegisterInternalKey.newMemberNudge}`,
       async () => {
         const org = await creators.createAndValidateOrg();
-        const member = await creators.createAndValidateMember({ org, useNewUser: true });
+        const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+        const requestHeaders = generateRequestHeaders(member.authId);
 
         await delay(200);
         handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
@@ -277,15 +281,17 @@ describe('Integration tests: notifications', () => {
           platform: Platform.android,
           isPushNotificationsEnabled: true,
         };
-        await handler
-          .setContextUserId(member.id)
-          .mutations.registerMemberForNotifications({ registerForNotificationParams: params });
+        await handler.mutations.registerMemberForNotifications({
+          requestHeaders,
+          registerForNotificationParams: params,
+        });
 
         await delay(200);
 
-        const { firstLoggedInAt } = await handler
-          .setContextUserId(member.id)
-          .queries.getMemberConfig({ id: member.id });
+        const { firstLoggedInAt } = await handler.queries.getMemberConfig({
+          id: member.id,
+          requestHeaders,
+        });
 
         expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(5);
 
@@ -337,7 +343,8 @@ describe('Integration tests: notifications', () => {
     // eslint-disable-next-line max-len
     it('registerMemberForNotifications: should not re-send dispatches if member already logged in', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const requestHeaders = generateRequestHeaders(member.authId);
 
       await delay(200);
 
@@ -345,9 +352,10 @@ describe('Integration tests: notifications', () => {
         platform: Platform.android,
         isPushNotificationsEnabled: true,
       };
-      await handler
-        .setContextUserId(member.id)
-        .mutations.registerMemberForNotifications({ registerForNotificationParams: params });
+      await handler.mutations.registerMemberForNotifications({
+        requestHeaders,
+        registerForNotificationParams: params,
+      });
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
@@ -357,7 +365,8 @@ describe('Integration tests: notifications', () => {
         platform: Platform.ios,
         isPushNotificationsEnabled: false,
       };
-      await handler.setContextUserId(member.id).mutations.registerMemberForNotifications({
+      await handler.mutations.registerMemberForNotifications({
+        requestHeaders,
         registerForNotificationParams: newParams,
       });
       await delay(200);
@@ -385,6 +394,8 @@ describe('Integration tests: notifications', () => {
     it(`createControlMember: should updateClientSettings for member and send dispatch of type ${RegisterInternalKey.newControlMember}`, async () => {
       handler.featureFlagService.spyOnFeatureFlagControlGroup.mockResolvedValueOnce(true);
       const org = await creators.createAndValidateOrg();
+
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
       const memberParams = generateCreateMemberParams({ orgId: org.id });
       const { id } = await handler.mutations.createMember({ memberParams });
 
@@ -428,7 +439,7 @@ describe('Integration tests: notifications', () => {
      */
     it('notify: should register for future notify', async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
@@ -478,7 +489,7 @@ describe('Integration tests: notifications', () => {
      */
     it(`notify: dispatch message of type ${NotificationType.textSms}`, async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
@@ -526,15 +537,17 @@ describe('Integration tests: notifications', () => {
       `notify: dispatch message of type %p`,
       async (type) => {
         const org = await creators.createAndValidateOrg();
-        const member = await creators.createAndValidateMember({ org, useNewUser: true });
+        const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+        const requestHeaders = generateRequestHeaders(member.authId);
 
         const params: RegisterForNotificationParams = {
           platform: Platform.android,
           isPushNotificationsEnabled: true,
         };
-        await handler
-          .setContextUserId(member.id)
-          .mutations.registerMemberForNotifications({ registerForNotificationParams: params });
+        await handler.mutations.registerMemberForNotifications({
+          requestHeaders,
+          registerForNotificationParams: params,
+        });
 
         await delay(500);
         handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
@@ -584,15 +597,17 @@ describe('Integration tests: notifications', () => {
       `notifyContent: dispatch message of %p`,
       async (contentKey) => {
         const org = await creators.createAndValidateOrg();
-        const member = await creators.createAndValidateMember({ org, useNewUser: true });
+        const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+        const requestHeaders = generateRequestHeaders(member.authId);
 
         const params: RegisterForNotificationParams = {
           platform: Platform.android,
           isPushNotificationsEnabled: true,
         };
-        await handler
-          .setContextUserId(member.id)
-          .mutations.registerMemberForNotifications({ registerForNotificationParams: params });
+        await handler.mutations.registerMemberForNotifications({
+          requestHeaders,
+          registerForNotificationParams: params,
+        });
 
         await delay(500);
         handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
@@ -631,12 +646,10 @@ describe('Integration tests: notifications', () => {
      * Dispatch :
      *      1. send ExternalKey dispatch of types ExternalKey.scheduleAppointment
      */
-    // eslint-disable-next-line max-len
     it(`notifyContent: dispatch message of ${ExternalKey.scheduleAppointment}`, async () => {
       const org = await creators.createAndValidateOrg();
-      const { id } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
 
-      const member = await handler.queries.getMember({ id });
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
       const notifyContentParams = generateNotifyContentParams({
@@ -677,15 +690,17 @@ describe('Integration tests: notifications', () => {
       CancelNotificationType.cancelVideo,
     ])(`notify: dispatch message of type %p`, async (type) => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const requestHeaders = generateRequestHeaders(member.authId);
 
       const params: RegisterForNotificationParams = {
         platform: Platform.android,
         isPushNotificationsEnabled: true,
       };
-      await handler
-        .setContextUserId(member.id)
-        .mutations.registerMemberForNotifications({ registerForNotificationParams: params });
+      await handler.mutations.registerMemberForNotifications({
+        requestHeaders,
+        registerForNotificationParams: params,
+      });
 
       await delay(500);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
@@ -893,7 +908,7 @@ describe('Integration tests: notifications', () => {
     it(`requestAppointment: should send dispatch of type ${AppointmentInternalKey.appointmentRequest}`, async () => {
       const org = await creators.createAndValidateOrg();
       const user = await creators.createAndValidateUser();
-      const member = await creators.createAndValidateMember({ org });
+      const { member } = await creators.createAndValidateMember({ org });
       const fakeUUID = faker.datatype.uuid();
       const appointmentParams = generateRequestAppointmentParams({
         userId: user.id,
@@ -928,10 +943,8 @@ describe('Integration tests: notifications', () => {
      *      1. send createTodo dispatch
      */
     it(`createTodo: should send dispatch ${TodoInternalKey.createTodoMEDS}`, async () => {
-      const user = await creators.createAndValidateUser([UserRole.coach]);
-      const userId = user.id;
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
       const memberId = member.id;
 
       await delay(200);
@@ -944,16 +957,15 @@ describe('Integration tests: notifications', () => {
       delete createTodoParams.createdBy;
       delete createTodoParams.updatedBy;
 
-      const { id } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.createTodo({
-          createTodoParams,
-        });
+      const { id } = await handler.mutations.createTodo({
+        requestHeaders: generateRequestHeaders(user.authId),
+        createTodoParams,
+      });
       await delay(200);
 
       const mock = generateCreateTodoMEDSMock({
         recipientClientId: memberId,
-        senderClientId: userId,
+        senderClientId: user.id,
         todoId: id,
       });
 
@@ -976,32 +988,28 @@ describe('Integration tests: notifications', () => {
      *      1. send createTodo dispatch
      */
     it(`createTodo: should send dispatch ${TodoInternalKey.createTodoAPPT}`, async () => {
-      const user = await creators.createAndValidateUser([UserRole.coach]);
-      const userId = user.id;
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
-      const memberId = member.id;
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
-        memberId,
+        memberId: member.id,
         label: Label.APPT,
       });
       delete createTodoParams.createdBy;
       delete createTodoParams.updatedBy;
 
-      const { id } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.createTodo({
-          createTodoParams,
-        });
+      const { id } = await handler.mutations.createTodo({
+        requestHeaders: generateRequestHeaders(user.authId),
+        createTodoParams,
+      });
       await delay(200);
 
       const mock = generateCreateTodoAPPTMock({
-        recipientClientId: memberId,
-        senderClientId: userId,
+        recipientClientId: member.id,
+        senderClientId: user.id,
         todoId: id,
       });
 
@@ -1024,32 +1032,28 @@ describe('Integration tests: notifications', () => {
      *      1. send createTodo dispatch
      */
     it(`createTodo: should send dispatch ${TodoInternalKey.createTodoTODO}`, async () => {
-      const user = await creators.createAndValidateUser([UserRole.coach]);
-      const userId = user.id;
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
-      const memberId = member.id;
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
-        memberId,
+        memberId: member.id,
       });
       delete createTodoParams.createdBy;
       delete createTodoParams.updatedBy;
       delete createTodoParams.label;
 
-      const { id } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.createTodo({
-          createTodoParams,
-        });
+      const { id } = await handler.mutations.createTodo({
+        requestHeaders: generateRequestHeaders(user.authId),
+        createTodoParams,
+      });
       await delay(200);
 
       const mock = generateCreateTodoTODOMock({
-        recipientClientId: memberId,
-        senderClientId: userId,
+        recipientClientId: member.id,
+        senderClientId: user.id,
         todoId: id,
       });
 
@@ -1072,45 +1076,43 @@ describe('Integration tests: notifications', () => {
      *      1. send updateTodo dispatch
      */
     it(`updateTodo: should send dispatch ${TodoInternalKey.updateTodoMEDS}`, async () => {
-      const user = await creators.createAndValidateUser([UserRole.coach]);
-      const userId = user.id;
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
-      const memberId = member.id;
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const requestHeaders = generateRequestHeaders(user.authId);
 
       await delay(200);
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
-        memberId,
+        memberId: member.id,
       });
       delete createTodoParams.createdBy;
       delete createTodoParams.updatedBy;
 
-      const { id: oldTodoId } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.createTodo({
-          createTodoParams,
-        });
+      const { id: oldTodoId } = await handler.mutations.createTodo({
+        requestHeaders,
+        createTodoParams,
+      });
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         id: oldTodoId,
-        memberId,
+        memberId: member.id,
         label: Label.MEDS,
       });
       delete endAndCreateTodoParams.updatedBy;
 
-      const { id } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.endAndCreateTodo({ endAndCreateTodoParams });
+      const { id } = await handler.mutations.endAndCreateTodo({
+        requestHeaders,
+        endAndCreateTodoParams,
+      });
 
       await delay(200);
 
       const mock = generateUpdateTodoMEDSMock({
-        recipientClientId: memberId,
-        senderClientId: userId,
+        recipientClientId: member.id,
+        senderClientId: user.id,
         todoId: id,
       });
 
@@ -1133,45 +1135,43 @@ describe('Integration tests: notifications', () => {
      *      1. send updateTodo dispatch
      */
     it(`updateTodo: should send dispatch ${TodoInternalKey.updateTodoAPPT}`, async () => {
-      const user = await creators.createAndValidateUser([UserRole.coach]);
-      const userId = user.id;
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
-      const memberId = member.id;
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const requestHeaders = generateRequestHeaders(user.authId);
 
       await delay(200);
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
-        memberId,
+        memberId: member.id,
       });
       delete createTodoParams.createdBy;
       delete createTodoParams.updatedBy;
 
-      const { id: oldTodoId } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.createTodo({
-          createTodoParams,
-        });
+      const { id: oldTodoId } = await handler.mutations.createTodo({
+        requestHeaders,
+        createTodoParams,
+      });
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         id: oldTodoId,
-        memberId,
+        memberId: member.id,
         label: Label.APPT,
       });
       delete endAndCreateTodoParams.updatedBy;
 
-      const { id } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.endAndCreateTodo({ endAndCreateTodoParams });
+      const { id } = await handler.mutations.endAndCreateTodo({
+        requestHeaders,
+        endAndCreateTodoParams,
+      });
 
       await delay(200);
 
       const mock = generateUpdateTodoAPPTMock({
-        recipientClientId: memberId,
-        senderClientId: userId,
+        recipientClientId: member.id,
+        senderClientId: user.id,
         todoId: id,
       });
 
@@ -1194,45 +1194,43 @@ describe('Integration tests: notifications', () => {
      *      1. send updateTodo dispatch
      */
     it(`updateTodo: should send dispatch ${TodoInternalKey.updateTodoTODO}`, async () => {
-      const user = await creators.createAndValidateUser([UserRole.coach]);
-      const userId = user.id;
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
-      const memberId = member.id;
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const requestHeaders = generateRequestHeaders(user.authId);
 
       await delay(200);
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
-        memberId,
+        memberId: member.id,
       });
       delete createTodoParams.createdBy;
       delete createTodoParams.updatedBy;
 
-      const { id: oldTodoId } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.createTodo({
-          createTodoParams,
-        });
+      const { id: oldTodoId } = await handler.mutations.createTodo({
+        requestHeaders,
+        createTodoParams,
+      });
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         id: oldTodoId,
-        memberId,
+        memberId: member.id,
       });
       delete endAndCreateTodoParams.updatedBy;
       delete endAndCreateTodoParams.label;
 
-      const { id } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.endAndCreateTodo({ endAndCreateTodoParams });
+      const { id } = await handler.mutations.endAndCreateTodo({
+        endAndCreateTodoParams,
+        requestHeaders,
+      });
 
       await delay(200);
 
       const mock = generateUpdateTodoTODOMock({
-        recipientClientId: memberId,
-        senderClientId: userId,
+        recipientClientId: member.id,
+        senderClientId: user.id,
         todoId: id,
       });
 
@@ -1255,37 +1253,37 @@ describe('Integration tests: notifications', () => {
      *      1. send deleteTodo dispatch
      */
     it(`deleteTodo: should send dispatch ${TodoInternalKey.deleteTodoMEDS}`, async () => {
-      const user = await creators.createAndValidateUser([UserRole.coach]);
-      const userId = user.id;
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
-      const memberId = member.id;
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const requestHeaders = generateRequestHeaders(user.authId);
 
       await delay(200);
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
-        memberId,
+        memberId: member.id,
         label: Label.MEDS,
       });
       delete createTodoParams.createdBy;
       delete createTodoParams.updatedBy;
 
-      const { id } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.createTodo({
-          createTodoParams,
-        });
+      const { id } = await handler.mutations.createTodo({
+        requestHeaders,
+        createTodoParams,
+      });
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
-      await handler.setContextUserId(userId, '', [UserRole.coach]).mutations.endTodo({ id });
+      await handler.mutations.endTodo({
+        id,
+        requestHeaders,
+      });
 
       await delay(200);
 
       const mock = generateDeleteTodoMEDSMock({
-        recipientClientId: memberId,
-        senderClientId: userId,
+        recipientClientId: member.id,
+        senderClientId: user.id,
         todoId: id,
       });
 
@@ -1308,37 +1306,34 @@ describe('Integration tests: notifications', () => {
      *      1. send deleteTodo dispatch
      */
     it(`deleteTodo: should send dispatch ${TodoInternalKey.deleteTodoAPPT}`, async () => {
-      const user = await creators.createAndValidateUser([UserRole.coach]);
-      const userId = user.id;
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
-      const memberId = member.id;
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const requestHeaders = generateRequestHeaders(user.authId);
 
       await delay(200);
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
-        memberId,
+        memberId: member.id,
         label: Label.APPT,
       });
       delete createTodoParams.createdBy;
       delete createTodoParams.updatedBy;
 
-      const { id } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.createTodo({
-          createTodoParams,
-        });
+      const { id } = await handler.mutations.createTodo({
+        requestHeaders,
+        createTodoParams,
+      });
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
-      await handler.setContextUserId(userId, '', [UserRole.coach]).mutations.endTodo({ id });
+      await handler.mutations.endTodo({ id, requestHeaders });
 
       await delay(200);
 
       const mock = generateDeleteTodoAPPTMock({
-        recipientClientId: memberId,
-        senderClientId: userId,
+        recipientClientId: member.id,
+        senderClientId: user.id,
         todoId: id,
       });
 
@@ -1361,37 +1356,34 @@ describe('Integration tests: notifications', () => {
      *      1. send deleteTodo dispatch
      */
     it(`deleteTodo: should send dispatch ${TodoInternalKey.deleteTodoTODO}`, async () => {
-      const user = await creators.createAndValidateUser([UserRole.coach]);
-      const userId = user.id;
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
-      const memberId = member.id;
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const requestHeaders = generateRequestHeaders(user.authId);
 
       await delay(200);
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
-        memberId,
+        memberId: member.id,
       });
       delete createTodoParams.createdBy;
       delete createTodoParams.updatedBy;
       delete createTodoParams.label;
 
-      const { id } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.createTodo({
-          createTodoParams,
-        });
+      const { id } = await handler.mutations.createTodo({
+        requestHeaders,
+        createTodoParams,
+      });
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
-      await handler.setContextUserId(userId, '', [UserRole.coach]).mutations.endTodo({ id });
+      await handler.mutations.endTodo({ id, requestHeaders });
 
       await delay(200);
 
       const mock = generateDeleteTodoTODOMock({
-        recipientClientId: memberId,
-        senderClientId: userId,
+        recipientClientId: member.id,
+        senderClientId: user.id,
         todoId: id,
       });
 
@@ -1430,16 +1422,12 @@ describe('Integration tests: notifications', () => {
 
     // eslint-disable-next-line max-len
     it(`submitQuestionnaireResponse: should send dispatch ${AlertInternalKey.assessmentSubmitAlert}`, async () => {
-      const user = await creators.createAndValidateUser([UserRole.admin]);
-      const userId = user.id;
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: false, userId });
-      const memberId = member.id;
-      const fakeUUID = faker.datatype.uuid();
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
       const alertValue = faker.datatype.number();
       const assessmentName = faker.lorem.word();
 
-      (v4 as jest.Mock).mockImplementationOnce(() => fakeUUID);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
       const createQuestionnaireParams: CreateQuestionnaireParams =
         generateCreateQuestionnaireParams({
@@ -1457,41 +1445,44 @@ describe('Integration tests: notifications', () => {
           ],
         });
 
-      const { id: questionnaireId } = await handler
-        .setContextUserId(userId, '', [UserRole.admin])
-        .mutations.createQuestionnaire({
-          createQuestionnaireParams,
-        });
+      const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
+        createQuestionnaireParams,
+      });
 
       // we want to control the escalation group before we send the notifications
-      spyOnUserServiceGetEscalationGroupUsers.mockResolvedValue([{ id: userId }]);
+      spyOnUserServiceGetEscalationGroupUsers.mockResolvedValue([{ id: user.id }]);
 
       const submitQuestionnaireResponseParams: SubmitQuestionnaireResponseParams =
         generateSubmitQuestionnaireResponseParams({
           questionnaireId,
-          memberId,
+          memberId: member.id,
           answers: [{ code: 'q1', value: alertValue.toString() }],
         });
 
-      const { id } = await handler
-        .setContextUserId(userId, '', [UserRole.coach])
-        .mutations.submitQuestionnaireResponse({
-          submitQuestionnaireResponseParams,
-        });
+      const { id } = await handler.mutations.submitQuestionnaireResponse({
+        requestHeaders: generateRequestHeaders(user.authId),
+        submitQuestionnaireResponseParams,
+      });
       await delay(200);
 
       const mock = generateAssessmentSubmitAlertMock({
-        recipientClientId: userId,
-        senderClientId: memberId,
+        recipientClientId: user.id,
+        senderClientId: member.id,
         assessmentName,
         assessmentScore: QuestionnaireAlerts.get(QuestionnaireType.phq9),
         assessmentId: id,
-        correlationId: fakeUUID,
       });
 
-      expect(handler.queueService.spyOnQueueServiceSendMessage).toHaveBeenNthCalledWith(5, {
-        message: JSON.stringify(mock, Object.keys(mock).sort()),
-        type: QueueType.notifications,
+      const object = new ObjectAssessmentSubmitAlertClass(mock);
+      Object.keys(object.objectAssessmentSubmitAlertMock).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
       });
     });
   });
@@ -1515,27 +1506,29 @@ describe('Integration tests: notifications', () => {
       `${JournalCustomKey.journalContent} $description`,
     async (params) => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const requestHeaders = generateRequestHeaders(member.authId);
 
       await delay(200);
 
-      const { id: journalId } = await handler.setContextUserId(member.id).mutations.createJournal();
+      const { id: journalId } = await handler.mutations.createJournal({ requestHeaders });
       const updateJournalTextParams: UpdateJournalTextParams = generateUpdateJournalTextParams({
         id: journalId,
       });
-      const journal = await handler.setContextUserId(member.id).mutations.updateJournalText({
+      const journal = await handler.mutations.updateJournalText({
+        requestHeaders,
         updateJournalTextParams,
       });
 
       const { journalAudioDownloadLink, journalImageDownloadLink } = await generateLinksMocks({
         params,
         journalId,
-        memberId: member.id,
+        requestHeaders,
       });
 
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
-      await handler.setContextUserId(member.id).mutations.publishJournal({ id: journalId });
+      await handler.mutations.publishJournal({ id: journalId, requestHeaders });
 
       await delay(500);
 
@@ -1569,7 +1562,7 @@ describe('Integration tests: notifications', () => {
   const generateLinksMocks = async ({
     params,
     journalId,
-    memberId,
+    requestHeaders,
   }): Promise<{ journalAudioDownloadLink; journalImageDownloadLink }> => {
     let journalImageDownloadLink, journalAudioDownloadLink;
 
@@ -1578,14 +1571,13 @@ describe('Integration tests: notifications', () => {
       handler.storage.spyOnStorageUpload.mockReturnValueOnce(link);
       handler.storage.spyOnStorageDownload.mockReturnValueOnce(link);
 
-      const { normalImageLink } = await handler
-        .setContextUserId(memberId)
-        .queries.getMemberUploadJournalImageLink({
-          getMemberUploadJournalImageLinkParams: {
-            id: journalId,
-            imageFormat: ImageFormat.jpg,
-          },
-        });
+      const { normalImageLink } = await handler.queries.getMemberUploadJournalImageLink({
+        requestHeaders,
+        getMemberUploadJournalImageLinkParams: {
+          id: journalId,
+          imageFormat: ImageFormat.jpg,
+        },
+      });
       journalImageDownloadLink = normalImageLink;
     }
     if (params.audioLink) {
@@ -1593,14 +1585,13 @@ describe('Integration tests: notifications', () => {
       handler.storage.spyOnStorageUpload.mockReturnValueOnce(link);
       handler.storage.spyOnStorageDownload.mockReturnValueOnce(link);
 
-      const { audioLink } = await handler
-        .setContextUserId(memberId)
-        .queries.getMemberUploadJournalAudioLink({
-          getMemberUploadJournalAudioLinkParams: {
-            id: journalId,
-            audioFormat: AudioFormat.mp3,
-          },
-        });
+      const { audioLink } = await handler.queries.getMemberUploadJournalAudioLink({
+        requestHeaders,
+        getMemberUploadJournalAudioLinkParams: {
+          id: journalId,
+          audioFormat: AudioFormat.mp3,
+        },
+      });
       journalAudioDownloadLink = audioLink;
     }
 
@@ -1617,7 +1608,7 @@ describe('Integration tests: notifications', () => {
     it(`sendbird: should send dispatches of type ${ChatInternalKey.newChatMessageFromMember} when received from sendbird webhook`, async () => {
       /* eslint-enable max-len */
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
 
       const communication = await handler.communicationService.get({
         memberId: member.id,
@@ -1666,7 +1657,7 @@ describe('Integration tests: notifications', () => {
     it(`sendbird: should send dispatches of type ${ChatInternalKey.newChatMessageFromUser} when received from sendbird webhook`, async () => {
       /* eslint-enable max-len */
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
 
       const communication = await handler.communicationService.get({
         memberId: member.id,
@@ -1708,7 +1699,7 @@ describe('Integration tests: notifications', () => {
     // eslint-disable-next-line max-len
     it(`twilio: should send dispatches of type ${NotifyCustomKey.customContent} and content from the sms message`, async () => {
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
@@ -1750,7 +1741,7 @@ describe('Integration tests: notifications', () => {
     it(`setDailyReportCategories: should send dispatch ${LogInternalKey.memberNotFeelingWellMessage}`, async () => {
       /* eslint-enable max-len */
       const org = await creators.createAndValidateOrg();
-      const member = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
@@ -1761,9 +1752,9 @@ describe('Integration tests: notifications', () => {
           generateDailyReport({ statsOverThreshold: [DailyReportCategoryTypes.Pain] }),
         );
 
-      await handler
-        .setContextUserId(member.id, member.primaryUserId.toString())
-        .mutations.setDailyReportCategories({
+      await handler.mutations // .setContextUserId(member.id, member.primaryUserId.toString())
+        .setDailyReportCategories({
+          requestHeaders: generateRequestHeaders(member.authId),
           dailyReportCategoriesInput: {
             date: reformatDate(faker.date.recent().toString(), general.get('dateFormatString')),
             categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
@@ -1796,7 +1787,7 @@ describe('Integration tests: notifications', () => {
    ************************************************************************************************/
   const generateScheduleAppointment = async (start?: Date): Promise<Appointment> => {
     const org = await creators.createAndValidateOrg();
-    const member = await creators.createAndValidateMember({ org, useNewUser: true });
+    const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
 
     await delay(200);
     handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events

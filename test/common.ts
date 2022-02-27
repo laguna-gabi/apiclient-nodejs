@@ -4,9 +4,8 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import { Types, connect, disconnect } from 'mongoose';
-import { NotificationService } from '../src/services';
 import { v4 } from 'uuid';
-import { MemberRole, RoleTypes, apiPrefix, webhooks } from '../src/common';
+import { apiPrefix, webhooks } from '../src/common';
 import { DbModule } from '../src/db';
 import { Member, defaultMemberParams } from '../src/member';
 import {
@@ -19,6 +18,7 @@ import {
   StorageService,
   TwilioService,
 } from '../src/providers';
+import { NotificationService } from '../src/services';
 import { User, UserService } from '../src/user';
 import { Mutations, Queries } from './aux';
 import { generateId } from './generators';
@@ -29,26 +29,6 @@ export class BaseHandler {
   queries: Queries;
   module: GraphQLModule;
   userService: UserService;
-
-  setContextUserId = (
-    userId: string,
-    primaryUserId = '',
-    roles: RoleTypes[] = [MemberRole.member],
-    lastQueryAlert: Date = undefined,
-  ) => {
-    this.module.apolloServer['context'] = () => ({
-      req: {
-        user: {
-          _id: userId,
-          roles,
-          primaryUserId,
-          lastQueryAlert,
-        },
-      },
-    });
-
-    return this;
-  };
 }
 
 export const urls = {
@@ -241,4 +221,24 @@ export const mockProviders = (
     queueService: { spyOnQueueServiceSendMessage },
     notificationService: { spyOnNotificationServiceGetDispatchesByClientSenderId },
   };
+};
+
+export const isResultValid = ({
+  errors,
+  invalidFieldsErrors,
+  missingFieldError = undefined,
+}): boolean => {
+  if (invalidFieldsErrors) {
+    for (let i = 0; i < invalidFieldsErrors.length; i++) {
+      expect(invalidFieldsErrors[i]).toEqual(errors[0][i]?.message || errors[0]?.message);
+      expect(errors[0][i]?.code || errors[0]?.code).not.toEqual(-1);
+    }
+  } else if (missingFieldError) {
+    expect(errors[0].message || errors[0][0].message).toMatch(missingFieldError);
+    expect(errors[0].code || errors[0][0].code).toEqual(-1);
+  } else {
+    return true;
+  }
+
+  return false;
 };

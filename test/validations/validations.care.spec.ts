@@ -1,4 +1,4 @@
-import { ErrorType, Errors, UserRole } from '../../src/common';
+import { ErrorType, Errors } from '../../src/common';
 import { Handler } from '../aux';
 import {
   generateCarePlanTypeInput,
@@ -8,7 +8,6 @@ import {
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
 } from '../generators';
-import { generateCreateUserParams } from '../index';
 import {
   CreateCarePlanParams,
   CreateRedFlagParams,
@@ -23,8 +22,6 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
 
   beforeAll(async () => {
     await handler.beforeAll();
-    const { id } = await handler.mutations.createUser({ userParams: generateCreateUserParams() });
-    handler.setContextUserId(id, '', [UserRole.coach]);
   });
 
   afterAll(async () => {
@@ -55,7 +52,7 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
       ${{ memberId: 123 }}     | ${{ missingFieldError: stringError }}
       ${{ notes: 123 }}        | ${{ missingFieldError: stringError }}
       ${{ type: 'not-valid' }} | ${{ missingFieldError: 'does not exist in "RedFlagType" enum.' }}
-    `(`should fail to create a red flag  since $input is not a valid`, async (params) => {
+    `(`should fail to create a red flag since $input is not a valid`, async (params) => {
       const createRedFlagParams: CreateRedFlagParams = generateCreateRedFlagParams({
         ...params.input,
       });
@@ -69,7 +66,7 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
     test.each`
       input                | error
       ${{ memberId: 123 }} | ${{ invalidFieldsError: stringError }}
-    `(`should fail to getMemberRedFlags since $field is not valid,`, async (params) => {
+    `(`should fail to getMemberRedFlags since $input is not valid,`, async (params) => {
       await handler.queries.getMemberRedFlags({
         ...params.input,
         ...params.error,

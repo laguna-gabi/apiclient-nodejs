@@ -1,9 +1,9 @@
 /* eslint-disable max-len */
+import { ErrorType, Errors, ItemType } from '../../src/common';
 import {
   CreateQuestionnaireParams,
   SubmitQuestionnaireResponseParams,
 } from '../../src/questionnaire';
-import { ErrorType, Errors, ItemType, UserRole } from '../../src/common';
 import { Handler } from '../aux/handler';
 import {
   generateCreateQuestionnaireParams,
@@ -11,7 +11,6 @@ import {
   generateSubmitQuestionnaireResponseParams,
   mockGenerateQuestionnaireItem,
 } from '../generators';
-import { generateCreateUserParams } from '../index';
 
 const stringError = `String cannot represent a non string value`;
 
@@ -20,8 +19,6 @@ describe('Validations - questionnaire', () => {
 
   beforeAll(async () => {
     await handler.beforeAll();
-    const { id } = await handler.mutations.createUser({ userParams: generateCreateUserParams() });
-    handler.setContextUserId(id, '', [UserRole.admin]);
   });
 
   afterAll(async () => {

@@ -55,28 +55,6 @@ export const delay = async (milliseconds: number) => {
   await new Promise((resolve) => setTimeout(resolve, milliseconds));
 };
 
-export const isGQLResultValid = ({
-  result,
-  invalidFieldsErrors,
-  missingFieldError = undefined,
-}): boolean => {
-  if (invalidFieldsErrors) {
-    for (let i = 0; i < invalidFieldsErrors.length; i++) {
-      expect(invalidFieldsErrors[i]).toEqual(
-        result.errors[0][i]?.message || result.errors[0]?.message,
-      );
-      expect(result.errors[0][i]?.code || result.errors[0]?.code).not.toEqual(-1);
-    }
-  } else if (missingFieldError) {
-    expect(result.errors[0].message || result.errors[0][0].message).toMatch(missingFieldError);
-    expect(result.errors[0].code || result.errors[0][0].code).toEqual(-1);
-  } else {
-    return true;
-  }
-
-  return false;
-};
-
 export const getCorrelationId = (logger: LoggerService) =>
   logger?.logger?.bindings?.().reqId || v4();
 

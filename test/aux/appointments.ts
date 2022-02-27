@@ -9,14 +9,16 @@ import {
 import { Mutations } from '.';
 
 export class AppointmentsIntegrationActions {
-  constructor(private readonly mutations: Mutations) {}
+  constructor(private readonly mutations: Mutations, private readonly defaultUserRequestHeaders) {}
 
   requestAppointment = async ({
     userId,
     member,
+    requestHeaders,
   }: {
     userId?: string;
     member: Member;
+    requestHeaders?;
   }): Promise<Appointment> => {
     const appointmentParams = generateRequestAppointmentParams({
       memberId: member.id,
@@ -24,6 +26,7 @@ export class AppointmentsIntegrationActions {
     });
     const appointmentResult = await this.mutations.requestAppointment({
       appointmentParams,
+      requestHeaders,
     });
 
     expect(appointmentResult.userId).toEqual(appointmentParams.userId);
@@ -48,6 +51,7 @@ export class AppointmentsIntegrationActions {
     });
     const appointmentResult = await this.mutations.scheduleAppointment({
       appointmentParams: scheduleAppointment,
+      requestHeaders: this.defaultUserRequestHeaders,
     });
 
     expect(appointmentResult.status).toEqual(AppointmentStatus.scheduled);
@@ -63,6 +67,9 @@ export class AppointmentsIntegrationActions {
 
   endAppointment = async (id: string): Promise<Appointment> => {
     const endAppointmentParams = generateEndAppointmentParams({ id });
-    return this.mutations.endAppointment({ endAppointmentParams });
+    return this.mutations.endAppointment({
+      endAppointmentParams,
+      requestHeaders: this.defaultUserRequestHeaders,
+    });
   };
 }

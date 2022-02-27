@@ -127,15 +127,15 @@ describe('Validations - appointment', () => {
 
     /* eslint-disable max-len */
     test.each`
-      field         | input                      | error
-      ${'memberId'} | ${{ memberId: 123 }}       | ${{ missingFieldError: stringError }}
-      ${'userId'}   | ${{ userId: 123 }}         | ${{ missingFieldError: stringError }}
-      ${'id'}       | ${{ id: 123 }}             | ${{ missingFieldError: stringError }}
-      ${'memberId'} | ${{ memberId: '123' }}     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)] }}
-      ${'userId'}   | ${{ userId: '123' }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userIdInvalid)] }}
-      ${'method'}   | ${{ method: 'not-valid' }} | ${{ missingFieldError: 'Variable "$scheduleAppointmentParams" got invalid value "not-valid" at "scheduleAppointmentParams.method"; Value "not-valid" does not exist in "AppointmentMethod" enum.' }}
-      ${'start'}    | ${{ start: 'not-valid' }}  | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentStartDate)] }}
-      ${'end'}      | ${{ end: 'not-valid' }}    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentEndDate)] }}
+      field         | input                                      | error
+      ${'memberId'} | ${{ memberId: 123 }}                       | ${{ missingFieldError: stringError }}
+      ${'userId'}   | ${{ userId: 123 }}                         | ${{ missingFieldError: stringError }}
+      ${'id'}       | ${{ id: 123 }}                             | ${{ missingFieldError: stringError }}
+      ${'memberId'} | ${{ memberId: '123' }}                     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)] }}
+      ${'userId'}   | ${{ userId: '123' }}                       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userIdInvalid)] }}
+      ${'method'}   | ${{ method: 'not-valid' }}                 | ${{ missingFieldError: 'Variable "$scheduleAppointmentParams" got invalid value "not-valid" at "scheduleAppointmentParams.method"; Value "not-valid" does not exist in "AppointmentMethod" enum.' }}
+      ${'start'}    | ${{ start: 'not-valid', end: new Date() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentStartDate)] }}
+      ${'end'}      | ${{ end: 'not-valid' }}                    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentEndDate)] }}
     `(
       /* eslint-enable max-len */
       `graphql: should fail to schedule an appointment since $field is not a valid type`,
