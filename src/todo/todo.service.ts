@@ -91,6 +91,18 @@ export class TodoService extends BaseService {
       },
     });
 
+    if (params.cronExpressions && !params.start) {
+      const [lastTodoDone] = await this.todoDoneModel
+        .find({ todoId: new Types.ObjectId(id) })
+        .sort({ done: -1 })
+        .limit(1);
+      if (lastTodoDone) {
+        params.start = lastTodoDone.done;
+      } else {
+        params.start = endedTodo.start;
+      }
+    }
+
     return this.todoModel.create({
       ...params,
       memberId: new Types.ObjectId(memberId),

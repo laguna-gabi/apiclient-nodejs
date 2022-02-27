@@ -8,8 +8,10 @@ import {
   Identifier,
   IsCronExpression,
   IsDateAfter,
+  IsFutureDate,
   IsObjectId,
-  IsUnscheduledTodo,
+  isTodoDateParamsValidCreate,
+  isTodoDateParamsValidUpdate,
 } from '../common';
 import { ISoftDelete } from '../db';
 
@@ -60,12 +62,11 @@ export class ExtraTodoParams {
   cronExpressions?: string[];
 
   @Field(() => Date, { nullable: true })
-  @IsUnscheduledTodo({ message: Errors.get(ErrorType.todoUnscheduled) })
-  start?: Date;
-
-  @Field(() => Date, { nullable: true })
   @IsDateAfter('start', {
     message: Errors.get(ErrorType.todoEndAfterStart),
+  })
+  @IsFutureDate({
+    message: Errors.get(ErrorType.todoEndDateInThePast),
   })
   end?: Date;
 
@@ -76,11 +77,22 @@ export class ExtraTodoParams {
 
 @InputType()
 export class CreateTodoParams extends ExtraTodoParams {
+  @Field(() => Date, { nullable: true })
+  @isTodoDateParamsValidCreate({ message: Errors.get(ErrorType.todoUnscheduled) })
+  start?: Date;
+
   createdBy: string;
 }
 
 @InputType()
 export class EndAndCreateTodoParams extends ExtraTodoParams {
+  @Field(() => Date, { nullable: true })
+  @isTodoDateParamsValidUpdate({ message: Errors.get(ErrorType.todoUnscheduledEndAndCreate) })
+  @IsFutureDate({
+    message: Errors.get(ErrorType.todoStartDateInThePast),
+  })
+  start?: Date;
+
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.todoIdInvalid) })
   id: string;

@@ -823,7 +823,7 @@ export const generateEndAndCreateTodoParams = ({
   text = faker.lorem.words(5),
   label = Label.MEDS,
   cronExpressions = ['0 10,17,21,23 * * *'],
-  start = new Date(),
+  start = faker.date.soon(1),
   end = faker.date.soon(3),
   updatedBy,
 }: Partial<EndAndCreateTodoParams> = {}) => {

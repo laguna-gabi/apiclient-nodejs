@@ -207,6 +207,33 @@ describe('Validations - todo', () => {
       });
     });
 
+    it(`should fail to endAndCreate a todo since end in the past`, async () => {
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        memberId: generateId(),
+        end: faker.date.recent(1),
+      });
+      delete endAndCreateTodoParams.start;
+      delete endAndCreateTodoParams.updatedBy;
+
+      await handler.mutations.endAndCreateTodo({
+        endAndCreateTodoParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.todoEndDateInThePast)],
+      });
+    });
+
+    it(`should fail to endAndCreate a todo since end in the past`, async () => {
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        memberId: generateId(),
+        start: faker.date.recent(1),
+      });
+      delete endAndCreateTodoParams.updatedBy;
+
+      await handler.mutations.endAndCreateTodo({
+        endAndCreateTodoParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.todoStartDateInThePast)],
+      });
+    });
+
     it(`should fail to endAndCreate a todo since cron array is empty`, async () => {
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         memberId: generateId(),
@@ -235,11 +262,9 @@ describe('Validations - todo', () => {
 
     test.each`
       input
-      ${['start']}
       ${['cronExpressions']}
-      ${['start', 'cronExpressions']}
+      ${['cronExpressions', 'start']}
       ${['cronExpressions', 'end']}
-      ${['start', 'end']}
     `(`should fail to create unscheduled/scheduled todo since invalid params`, async (params) => {
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         memberId: generateId(),
@@ -251,7 +276,7 @@ describe('Validations - todo', () => {
 
       await handler.mutations.endAndCreateTodo({
         endAndCreateTodoParams,
-        invalidFieldsErrors: [Errors.get(ErrorType.todoUnscheduled)],
+        invalidFieldsErrors: [Errors.get(ErrorType.todoUnscheduledEndAndCreate)],
       });
     });
   });

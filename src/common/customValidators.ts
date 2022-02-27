@@ -44,7 +44,7 @@ export function IsFutureDate(options?: ValidationOptions) {
       options,
       validator: {
         validate(date?: Date) {
-          return date?.getTime() > new Date().getTime();
+          return date ? date?.getTime() > new Date().getTime() : true;
         },
       },
     });
@@ -301,7 +301,7 @@ export function IsCronExpression(options: ValidationOptions) {
   };
 }
 
-export function IsUnscheduledTodo(options: ValidationOptions) {
+export function isTodoDateParamsValidCreate(options: ValidationOptions) {
   return (object, propertyName: string) => {
     registerDecorator({
       target: object.constructor,
@@ -315,6 +315,30 @@ export function IsUnscheduledTodo(options: ValidationOptions) {
           if (!cronExpressions && !start && !end) {
             return true;
           } else if (cronExpressions && start) {
+            return true;
+          } else {
+            return false;
+          }
+        },
+      },
+    });
+  };
+}
+
+export function isTodoDateParamsValidUpdate(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(value, args: ValidationArguments) {
+          const cronExpressions = args.object['cronExpressions'];
+          const start = args.object['start'];
+          const end = args.object['end'];
+          if (!cronExpressions && !start && !end) {
+            return true;
+          } else if (!!cronExpressions) {
             return true;
           } else {
             return false;

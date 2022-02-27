@@ -241,6 +241,61 @@ describe('TodoService', () => {
       );
     });
 
+    // eslint-disable-next-line max-len
+    it('should create new todo with start like the ended todo if start was not provided and there is no todoDone', async () => {
+      const memberId = generateId();
+      const userId = generateId();
+
+      const createParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+        createdBy: memberId,
+        updatedBy: memberId,
+      });
+
+      const { id } = await service.createTodo(createParams);
+
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        id,
+        memberId,
+        updatedBy: userId,
+      });
+      delete endAndCreateTodoParams.start;
+
+      const createdTodo = await service.endAndCreateTodo(endAndCreateTodoParams);
+      expect(createdTodo.start).toEqual(createParams.start);
+    });
+
+    // eslint-disable-next-line max-len
+    it('should create new todo with start like the latest todoDone if start was not provided and there is todoDone', async () => {
+      const memberId = generateId();
+      const userId = generateId();
+
+      const createParams: CreateTodoParams = generateCreateTodoParams({
+        memberId,
+        createdBy: memberId,
+        updatedBy: memberId,
+      });
+
+      const { id } = await service.createTodo(createParams);
+
+      const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        todoId: id,
+        memberId,
+      });
+
+      await service.createTodoDone(createTodoDoneParams);
+
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        id,
+        memberId,
+        updatedBy: userId,
+      });
+      delete endAndCreateTodoParams.start;
+
+      const createdTodo = await service.endAndCreateTodo(endAndCreateTodoParams);
+      expect(createdTodo.start).toEqual(createTodoDoneParams.done);
+    });
+
     it('should throw an error if todo does not exists', async () => {
       const params: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         id: generateId(),
