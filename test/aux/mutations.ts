@@ -54,6 +54,7 @@ import {
 } from '../../src/todo';
 import { CreateUserParams } from '../../src/user';
 import { isResultValid } from '..';
+import { SubmitCareWizardParams } from '../../src/care/wizard.dto';
 
 const FRAGMENT_APPOINTMENT = gql`
   fragment appointmentFragment on Appointment {
@@ -1731,14 +1732,50 @@ export class Mutations {
     return deleteRedFlag;
   };
 
+  submitCareWizardResult = async ({
+    submitCareWizardParams,
+    missingFieldError,
+    invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
+  }: {
+    submitCareWizardParams: SubmitCareWizardParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+    requestHeaders?;
+  }): Promise<Identifiers> => {
+    const { submitCareWizardResult } = await this.client
+      .request(
+        gql`
+          mutation submitCareWizardResult($submitCareWizardParams: SubmitCareWizardParams!) {
+            submitCareWizardResult(submitCareWizardParams: $submitCareWizardParams) {
+              ids
+            }
+          }
+        `,
+        { submitCareWizardParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
+
+    return submitCareWizardResult;
+  };
+
   updateBarrier = async ({
     updateBarrierParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     updateBarrierParams: UpdateBarrierParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Identifier> => {
     const { updateBarrier } = await this.client
       .request(
@@ -1750,7 +1787,7 @@ export class Mutations {
           }
         `,
         { updateBarrierParams },
-        this.defaultUserRequestHeaders,
+        requestHeaders,
       )
       .catch((ex) => {
         return isResultValid({

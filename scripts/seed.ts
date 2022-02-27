@@ -7,7 +7,10 @@ import {
   dbConnect,
   dbDisconnect,
   generateAvailabilityInput,
+  generateCreateBarrierParamsWizard,
+  generateCreateCarePlanParamsWizard,
   generateCreateMemberParams,
+  generateCreateRedFlagParamsWizard,
   generateCreateTaskParams,
   generateCreateUserParams,
   generateDateOnly,
@@ -17,6 +20,7 @@ import {
   generateRequestHeaders,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
+  generateSubmitCareWizardResult,
   generateUpdateMemberParams,
 } from '../test';
 import { Mutations } from '../test/aux';
@@ -211,6 +215,31 @@ async function main() {
 
   const barrierTypeModel = model<BarrierTypeDocument>(BarrierType.name, BarrierTypeDto);
   await createSeedBarriers(barrierTypeModel, carePlanTypeModel);
+
+  console.debug(
+    '\n----------------------------------------------------------------\n' +
+      '----------- create red flag, barrier and care plan ---------------\n' +
+      '----------------------------------------------------------------',
+  );
+
+  const CarePlanTypes = await base.queries.getCarePlanTypes();
+  const BarrierTypes = await base.queries.getBarrierTypes();
+  const randomCarePlanType = CarePlanTypes[Math.floor(Math.random() * CarePlanTypes.length)];
+  const randomBarrierType = BarrierTypes[Math.floor(Math.random() * BarrierTypes.length)];
+
+  const carePlan = generateCreateCarePlanParamsWizard({ type: { id: randomCarePlanType.id } });
+  delete carePlan.createdBy;
+  const barrier = generateCreateBarrierParamsWizard({
+    type: randomBarrierType.id,
+    carePlans: [carePlan],
+  });
+  delete barrier.createdBy;
+  const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier] });
+  delete redFlag.createdBy;
+  const wizardResult = generateSubmitCareWizardResult({ redFlag, memberId });
+  await base.mutations.submitCareWizardResult({
+    submitCareWizardParams: wizardResult,
+  });
 
   await base.cleanUp();
   await dbDisconnect();

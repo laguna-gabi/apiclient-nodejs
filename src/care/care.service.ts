@@ -19,7 +19,7 @@ import {
   UpdateBarrierParams,
   UpdateCarePlanParams,
 } from '.';
-import { ErrorType, Errors } from '../common';
+import { ErrorType, Errors, LoggerService } from '../common';
 import { isNil, omitBy } from 'lodash';
 
 @Injectable()
@@ -35,6 +35,7 @@ export class CareService {
     private readonly carePlanTypeModel: Model<CarePlanTypeDocument>,
     @InjectModel(BarrierType.name)
     private readonly barrierTypeModel: Model<BarrierType>,
+    readonly logger: LoggerService,
   ) {}
 
   /**************************************************************************************************
@@ -42,6 +43,7 @@ export class CareService {
    *************************************************************************************************/
 
   async createRedFlag(params: CreateRedFlagParams): Promise<RedFlag> {
+    this.logger.info(params, CareService.name, this.createRedFlag.name);
     const createParams: Partial<CreateRedFlagParams> = omitBy(
       {
         ...params,
@@ -82,6 +84,7 @@ export class CareService {
    *************************************************************************************************/
 
   async createBarrier(params: CreateBarrierParams): Promise<Barrier> {
+    this.logger.info(params, CareService.name, this.createBarrier.name);
     const { memberId, type, redFlagId, createdBy } = params;
     await this.validateBarrier(memberId, type, redFlagId);
 
@@ -163,6 +166,7 @@ export class CareService {
    *************************************************************************************************/
 
   async createCarePlan(params: CreateCarePlanParams): Promise<CarePlan> {
+    this.logger.info(params, CareService.name, this.createCarePlan.name);
     const { memberId, createdBy, type, barrierId } = params;
     const carePlanType = await this.validateCarePlan(type, createdBy, barrierId, memberId);
 

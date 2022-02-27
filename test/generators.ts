@@ -79,6 +79,7 @@ import {
 } from '../src/todo';
 import { CreateUserParams, GetSlotsParams, User, defaultUserParams } from '../src/user';
 import {
+  BaseCarePlanParams,
   CarePlanTypeInput,
   CareStatus,
   CreateBarrierParams,
@@ -96,6 +97,11 @@ import {
   QuestionnaireType,
   SubmitQuestionnaireResponseParams,
 } from '../src/questionnaire';
+import {
+  CreateBarrierParamsWizard,
+  CreateRedFlagParamsWizard,
+  SubmitCareWizardParams,
+} from '../src/care/wizard.dto';
 import * as jwt from 'jsonwebtoken';
 
 export const generateCreateUserParams = ({
@@ -929,6 +935,58 @@ export const generateUpdateCarePlanParams = ({
     id,
     notes,
     status,
+  };
+};
+
+export const generateSubmitCareWizardResult = ({
+  redFlag,
+  memberId = generateId(),
+}: Partial<SubmitCareWizardParams> = {}) => {
+  return {
+    redFlag,
+    memberId,
+  };
+};
+
+export const generateCreateRedFlagParamsWizard = ({
+  barriers,
+  type = randomEnum(RedFlagType) as RedFlagType,
+  notes = faker.lorem.words(4),
+  createdBy,
+}: Partial<CreateRedFlagParamsWizard> = {}) => {
+  return {
+    barriers,
+    type,
+    notes,
+    createdBy,
+  };
+};
+
+export const generateCreateBarrierParamsWizard = ({
+  carePlans,
+  type = generateId(),
+  notes = faker.lorem.words(4),
+  createdBy,
+}: Partial<CreateBarrierParamsWizard> = {}) => {
+  return {
+    carePlans,
+    type,
+    notes,
+    createdBy,
+  };
+};
+
+export const generateCreateCarePlanParamsWizard = ({
+  type = generateCarePlanTypeInput({ id: generateId() }),
+  notes = faker.lorem.words(4),
+  dueDate = faker.date.soon(2),
+  createdBy,
+}: Partial<BaseCarePlanParams> = {}) => {
+  return {
+    type,
+    notes,
+    dueDate,
+    createdBy,
   };
 };
 

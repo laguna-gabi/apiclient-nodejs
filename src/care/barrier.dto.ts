@@ -9,11 +9,7 @@ import { ErrorType, Errors, Identifier, IsObjectId } from '../common';
  *************************************************************************************************/
 
 @InputType()
-export class CreateBarrierParams {
-  @Field(() => String)
-  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
-  memberId: string;
-
+export class BaseBarrierParams {
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.barrierTypeInvalid) })
   type: string;
@@ -21,11 +17,18 @@ export class CreateBarrierParams {
   @Field(() => String, { nullable: true })
   notes?: string;
 
+  createdBy: string;
+}
+
+@InputType()
+export class CreateBarrierParams extends BaseBarrierParams {
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.redFlagIdInvalid) })
   redFlagId: string;
 
-  createdBy: string;
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
 }
 
 @InputType()

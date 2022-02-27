@@ -979,9 +979,11 @@ export class Queries {
   getMemberRedFlags = async ({
     memberId,
     invalidFieldsError,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     memberId: string;
     invalidFieldsError?: string;
+    requestHeaders?;
   }): Promise<RedFlag[]> => {
     const result = await this.client
       .request(
@@ -998,7 +1000,7 @@ export class Queries {
           }
         `,
         { memberId },
-        this.defaultUserRequestHeaders,
+        requestHeaders,
       )
       .catch((ex) => {
         expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
@@ -1011,9 +1013,11 @@ export class Queries {
   getMemberCarePlans = async ({
     memberId,
     invalidFieldsError,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     memberId: string;
     invalidFieldsError?: string;
+    requestHeaders?;
   }): Promise<CarePlan[]> => {
     const result = await this.client
       .request(
@@ -1023,6 +1027,8 @@ export class Queries {
               id
               memberId
               createdBy
+              barrierId
+              status
               type {
                 id
                 description
@@ -1031,11 +1037,12 @@ export class Queries {
               }
               notes
               createdBy
+              dueDate
             }
           }
         `,
         { memberId },
-        this.defaultUserRequestHeaders,
+        requestHeaders,
       )
       .catch((ex) => {
         expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
@@ -1242,9 +1249,11 @@ export class Queries {
   getMemberBarriers = async ({
     memberId,
     invalidFieldsError,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     memberId: string;
     invalidFieldsError?: string;
+    requestHeaders?;
   }): Promise<Barrier[]> => {
     const result = await this.client
       .request(
@@ -1254,6 +1263,8 @@ export class Queries {
               id
               memberId
               createdBy
+              redFlagId
+              status
               type {
                 id
                 description
@@ -1265,7 +1276,7 @@ export class Queries {
           }
         `,
         { memberId },
-        this.defaultUserRequestHeaders,
+        requestHeaders,
       )
       .catch((ex) => {
         expect(ex.response.errors[0].message).toMatch(invalidFieldsError);

@@ -12,10 +12,11 @@ import {
   UpdateBarrierParams,
   UpdateCarePlanParams,
 } from '.';
-import { Client, LoggingInterceptor, Roles, UserRole } from '../common';
+import { Client, Identifiers, LoggingInterceptor, Roles, UserRole } from '../common';
 import { camelCase } from 'lodash';
 import { redFlags } from './redFlags.json';
 import { GraphQLJSONObject } from 'graphql-type-json';
+import { SubmitCareWizardParams } from './wizard.dto';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()
@@ -120,5 +121,44 @@ export class CareResolver {
     @Args('memberId', { type: () => String }) memberId: string,
   ): Promise<CarePlan[]> {
     return this.careService.getMemberCarePlans(memberId);
+  }
+
+  @Mutation(() => Identifiers)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async submitCareWizardResult(
+    @Client('_id') userId,
+    @Args(camelCase(SubmitCareWizardParams.name)) submitCareWizardParams: SubmitCareWizardParams,
+  ): Promise<Identifiers> {
+    const { memberId, redFlag } = submitCareWizardParams;
+    const { barriers, ...redFlagParams } = redFlag;
+    const { id: redFlagId } = await this.careService.createRedFlag({
+      ...redFlagParams,
+      memberId,
+      createdBy: userId,
+    });
+    const submittedCarePlans = [];
+    await Promise.all(
+      barriers.map(async (barrier) => {
+        const { carePlans, ...barrierParams } = barrier;
+        const { id: barrierId } = await this.careService.createBarrier({
+          ...barrierParams,
+          memberId,
+          createdBy: userId,
+          redFlagId,
+        });
+        await Promise.all(
+          carePlans.map(async (carePlan) => {
+            const { id: carePlanId } = await this.careService.createCarePlan({
+              ...carePlan,
+              memberId,
+              createdBy: userId,
+              barrierId,
+            });
+            submittedCarePlans.push(carePlanId);
+          }),
+        );
+      }),
+    );
+    return { ids: submittedCarePlans };
   }
 }

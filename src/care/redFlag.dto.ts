@@ -10,11 +10,7 @@ import { ISoftDelete } from '../db';
  *************************************************************************************************/
 
 @InputType()
-export class CreateRedFlagParams {
-  @Field(() => String)
-  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
-  memberId: string;
-
+export class BaseRedFlagParams {
   @Field(() => RedFlagType)
   type: RedFlagType;
 
@@ -22,6 +18,13 @@ export class CreateRedFlagParams {
   notes?: string;
 
   createdBy: string;
+}
+
+@InputType()
+export class CreateRedFlagParams extends BaseRedFlagParams {
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
 }
 
 /**************************************************************************************************

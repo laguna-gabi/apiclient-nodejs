@@ -2,9 +2,13 @@ import { ErrorType, Errors } from '../../src/common';
 import { Handler } from '../aux';
 import {
   generateCarePlanTypeInput,
+  generateCreateBarrierParamsWizard,
   generateCreateCarePlanParams,
+  generateCreateCarePlanParamsWizard,
   generateCreateRedFlagParams,
+  generateCreateRedFlagParamsWizard,
   generateId,
+  generateSubmitCareWizardResult,
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
 } from '../generators';
@@ -202,6 +206,88 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
         ...params.input,
         ...params.error,
       });
+    });
+  });
+
+  describe('submitCareWizardResult', () => {
+    /* eslint-disable max-len */
+    test.each`
+      level         | field          | error
+      ${'submit'}   | ${'memberId'}  | ${`Field "memberId" of required type "String!" was not provided.`}
+      ${'submit'}   | ${'redFlag'}   | ${`Field "redFlag" of required type "CreateRedFlagParamsWizard!" was not provided.`}
+      ${'redFlag'}  | ${'type'}      | ${`Field "type" of required type "RedFlagType!" was not provided.`}
+      ${'redFlag'}  | ${'barriers'}  | ${`Field "barriers" of required type "[CreateBarrierParamsWizard!]!" was not provided.`}
+      ${'barrier'}  | ${'type'}      | ${`Field "type" of required type "String!" was not provided.`}
+      ${'barrier'}  | ${'carePlans'} | ${`Field "carePlans" of required type "[BaseCarePlanParams!]!" was not provided.`}
+      ${'carePlan'} | ${'type'}      | ${`Field "type" of required type "CarePlanTypeInput!" was not provided.`}
+    `(
+      `should fail to submit care wizard result since mandatory field $field is missing`,
+      async (params) => {
+        const carePlan = generateCreateCarePlanParamsWizard();
+        delete carePlan.createdBy;
+        const barrier = generateCreateBarrierParamsWizard({ carePlans: [carePlan] });
+        delete barrier.createdBy;
+        const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier] });
+        delete redFlag.createdBy;
+        const wizardResult = generateSubmitCareWizardResult({ redFlag });
+
+        switch (params.level) {
+          case 'submit':
+            delete wizardResult[params.field];
+            break;
+          case 'redFlag':
+            delete wizardResult.redFlag[params.field];
+            break;
+          case 'barrier':
+            delete wizardResult.redFlag.barriers[0][params.field];
+            break;
+          case 'carePlan':
+            delete wizardResult.redFlag.barriers[0].carePlans[0][params.field];
+            break;
+        }
+        delete wizardResult[params.field];
+        await handler.mutations.submitCareWizardResult({
+          submitCareWizardParams: wizardResult,
+          missingFieldError: params.error,
+        });
+      },
+    );
+  });
+
+  test.each`
+    level         | input                                 | error
+    ${'submit'}   | ${{ memberId: 123 }}                  | ${{ missingFieldError: stringError }}
+    ${'submit'}   | ${{ redFlag: 'not-valid' }}           | ${{ missingFieldError: 'Expected type "CreateRedFlagParamsWizard" to be an object.' }}
+    ${'redFlag'}  | ${{ notes: 123 }}                     | ${{ missingFieldError: stringError }}
+    ${'redFlag'}  | ${{ type: 'not-valid' }}              | ${{ missingFieldError: 'does not exist in "RedFlagType" enum.' }}
+    ${'redFlag'}  | ${{ barriers: 'not-valid' }}          | ${{ missingFieldError: 'Expected type "CreateBarrierParamsWizard" to be an object.' }}
+    ${'barrier'}  | ${{ notes: 123 }}                     | ${{ missingFieldError: stringError }}
+    ${'barrier'}  | ${{ type: 123 }}                      | ${{ missingFieldError: stringError }}
+    ${'barrier'}  | ${{ carePlans: 'not-valid' }}         | ${{ missingFieldError: 'Expected type "BaseCarePlanParams" to be an object.' }}
+    ${'carePlan'} | ${{ notes: 123 }}                     | ${{ missingFieldError: stringError }}
+    ${'carePlan'} | ${{ dueDate: 'not-valid' }}           | ${{ missingFieldError: 'must be a Date instance' }}
+    ${'carePlan'} | ${{ type: 'not-valid' }}              | ${{ missingFieldError: 'Expected type "CarePlanTypeInput" to be an object' }}
+    ${'carePlan'} | ${{ type: { id: 123 } }}              | ${{ missingFieldError: stringError }}
+    ${'carePlan'} | ${{ type: { custom: 123 } }}          | ${{ missingFieldError: stringError }}
+    ${'carePlan'} | ${{ type: { custom: 'a', id: 'b' } }} | ${{ missingFieldError: Errors.get(ErrorType.carePlanTypeInputInvalid) }}
+    ${'carePlan'} | ${{ type: {} }}                       | ${{ missingFieldError: Errors.get(ErrorType.carePlanTypeInputInvalid) }}
+  `(`should fail to submit care wizard result since field $input is not valid`, async (params) => {
+    let extra;
+    extra = params.level === 'carePlan' ? params.input : {};
+    const carePlan = generateCreateCarePlanParamsWizard({ ...extra });
+    delete carePlan.createdBy;
+    extra = params.level === 'barrier' ? params.input : {};
+    const barrier = generateCreateBarrierParamsWizard({ carePlans: [carePlan], ...extra });
+    delete barrier.createdBy;
+    extra = params.level === 'redFlag' ? params.input : {};
+    const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier], ...extra });
+    delete redFlag.createdBy;
+    extra = params.level === 'submit' ? params.input : {};
+    const wizardResult = generateSubmitCareWizardResult({ redFlag, ...extra });
+
+    await handler.mutations.submitCareWizardResult({
+      submitCareWizardParams: wizardResult,
+      ...params.error,
     });
   });
 });

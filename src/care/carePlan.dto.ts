@@ -3,7 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, Identifier, IsObjectId, IsValidCarePlanTypeInput } from '../common';
 import { CareStatus } from '.';
-import { IsDate } from 'class-validator';
+import { IsDate, IsOptional } from 'class-validator';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -27,11 +27,7 @@ export class CarePlanTypeInput {
 }
 
 @InputType()
-export class CreateCarePlanParams {
-  @Field(() => String)
-  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
-  memberId: string;
-
+export class BaseCarePlanParams {
   @Field(() => CarePlanTypeInput)
   @IsValidCarePlanTypeInput({ message: Errors.get(ErrorType.carePlanTypeInputInvalid) })
   type: CarePlanTypeInput;
@@ -39,15 +35,23 @@ export class CreateCarePlanParams {
   @Field(() => String, { nullable: true })
   notes?: string;
 
-  @Field(() => String)
-  @IsObjectId({ message: Errors.get(ErrorType.barrierIdInvalid) })
-  barrierId: string;
-
+  @IsOptional()
   @IsDate()
   @Field(() => Date, { nullable: true })
   dueDate?: Date;
 
   createdBy: string;
+}
+
+@InputType()
+export class CreateCarePlanParams extends BaseCarePlanParams {
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.barrierIdInvalid) })
+  barrierId: string;
+
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
 }
 
 @InputType()

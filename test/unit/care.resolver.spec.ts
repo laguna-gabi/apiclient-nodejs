@@ -4,9 +4,13 @@ import { LoggerService } from '../../src/common';
 import {
   dbDisconnect,
   defaultModules,
+  generateCreateBarrierParamsWizard,
   generateCreateCarePlanParams,
+  generateCreateCarePlanParamsWizard,
   generateCreateRedFlagParams,
+  generateCreateRedFlagParamsWizard,
   generateId,
+  generateSubmitCareWizardResult,
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
 } from '../index';
@@ -127,23 +131,6 @@ describe('CareResolver', () => {
   });
 
   describe('CarePlan', () => {
-    let spyOnServiceGetCarePlanTypes;
-
-    beforeEach(() => {
-      spyOnServiceGetCarePlanTypes = jest.spyOn(service, 'getCarePlanTypes');
-    });
-
-    afterEach(() => {
-      spyOnServiceGetCarePlanTypes.mockReset();
-    });
-
-    it('should get all redFlagTypes', async () => {
-      await resolver.getCarePlanTypes();
-      expect(spyOnServiceGetCarePlanTypes).toBeCalled();
-    });
-  });
-
-  describe('CarePlan', () => {
     let spyOnServiceCreateCarePlan;
     let spyOnServiceGetMemberCarePlans;
     let spyOnServiceUpdateCarePlan;
@@ -193,6 +180,83 @@ describe('CareResolver', () => {
     it('should get all carePlanTypes', async () => {
       await resolver.getCarePlanTypes();
       expect(spyOnServiceGetCarePlanTypes).toBeCalled();
+    });
+  });
+
+  describe('submitCareWizardResult', () => {
+    let spyOnServiceCreateCarePlan;
+    let spyOnServiceCreateBarrier;
+    let spyOnServiceCreateRedFlag;
+
+    beforeEach(() => {
+      spyOnServiceCreateCarePlan = jest.spyOn(service, 'createCarePlan');
+      spyOnServiceCreateRedFlag = jest.spyOn(service, 'createRedFlag');
+      spyOnServiceCreateBarrier = jest.spyOn(service, 'createBarrier');
+      spyOnServiceCreateRedFlag.mockImplementation(async () => {
+        return { id: generateId() };
+      });
+      spyOnServiceCreateCarePlan.mockImplementation(async () => {
+        return { id: generateId() };
+      });
+      spyOnServiceCreateBarrier.mockImplementation(async () => {
+        return { id: generateId() };
+      });
+    });
+
+    afterEach(() => {
+      spyOnServiceCreateCarePlan.mockReset();
+      spyOnServiceCreateBarrier.mockReset();
+      spyOnServiceCreateRedFlag.mockReset();
+    });
+
+    it('should get create all relevant entities from the wizard result', async () => {
+      // setup wizard result
+      const memberId = generateId();
+      const createdBy = generateId();
+      const carePlan1 = generateCreateCarePlanParamsWizard({ createdBy });
+      const carePlan2 = generateCreateCarePlanParamsWizard({ createdBy });
+      const carePlan3 = generateCreateCarePlanParamsWizard({ createdBy });
+      const barrier1 = generateCreateBarrierParamsWizard({
+        carePlans: [carePlan1, carePlan2],
+        createdBy,
+      });
+      const barrier2 = generateCreateBarrierParamsWizard({ carePlans: [carePlan3], createdBy });
+      const redFlag = generateCreateRedFlagParamsWizard({
+        barriers: [barrier1, barrier2],
+        createdBy,
+      });
+      const wizardResult = generateSubmitCareWizardResult({ redFlag, memberId });
+
+      const result = await resolver.submitCareWizardResult(createdBy, wizardResult);
+      expect(result.ids.length).toEqual(3);
+
+      // test red flags
+      delete redFlag.barriers;
+      expect(spyOnServiceCreateRedFlag).toHaveBeenCalledTimes(1);
+      expect(spyOnServiceCreateRedFlag).toBeCalledWith({ ...redFlag, memberId, createdBy });
+
+      // test barriers
+      expect(spyOnServiceCreateBarrier).toHaveBeenCalledTimes(2);
+      for (const barrier of [barrier1, barrier2]) {
+        delete barrier.carePlans;
+        expect(spyOnServiceCreateBarrier).toHaveBeenCalledWith({
+          ...barrier,
+          memberId,
+          createdBy,
+          redFlagId: expect.any(String),
+        });
+      }
+
+      // test care plans
+      expect(spyOnServiceCreateCarePlan).toHaveBeenCalledTimes(3);
+      for (const carePlan of [carePlan1, carePlan2, carePlan3]) {
+        expect(spyOnServiceCreateCarePlan).toHaveBeenCalledWith({
+          ...carePlan,
+          memberId,
+          createdBy,
+          barrierId: expect.any(String),
+        });
+      }
     });
   });
 });
