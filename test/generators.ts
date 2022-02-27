@@ -824,7 +824,7 @@ export const generateEndAndCreateTodoParams = ({
   label = Label.MEDS,
   cronExpressions = ['0 10,17,21,23 * * *'],
   start = faker.date.soon(1),
-  end = faker.date.soon(3),
+  end = add(faker.date.soon(3), { days: 1 }),
   updatedBy,
 }: Partial<EndAndCreateTodoParams> = {}) => {
   return {
