@@ -49,8 +49,6 @@ describe('Validations - todo', () => {
         memberId: generateId(),
         ...params.input,
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       await handler.mutations.createTodo({ createTodoParams, ...params.error });
     });
@@ -60,8 +58,6 @@ describe('Validations - todo', () => {
         memberId: generateId(),
         text: '',
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       await handler.mutations.createTodo({
         createTodoParams,
@@ -75,8 +71,6 @@ describe('Validations - todo', () => {
         end: new Date(),
         start: faker.date.soon(2),
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       await handler.mutations.createTodo({
         createTodoParams,
@@ -89,8 +83,6 @@ describe('Validations - todo', () => {
         memberId: generateId(),
         cronExpressions: [],
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       await handler.mutations.createTodo({
         createTodoParams,
@@ -103,8 +95,6 @@ describe('Validations - todo', () => {
         memberId: generateId(),
         cronExpressions: ['not-valid'],
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       await handler.mutations.createTodo({
         createTodoParams,
@@ -126,8 +116,6 @@ describe('Validations - todo', () => {
       params.input.forEach((element) => {
         delete createTodoParams[element];
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       await handler.mutations.createTodo({
         createTodoParams,
@@ -175,7 +163,6 @@ describe('Validations - todo', () => {
         memberId: generateId(),
         ...params.input,
       });
-      delete endAndCreateTodoParams.updatedBy;
 
       await handler.mutations.endAndCreateTodo({ endAndCreateTodoParams, ...params.error });
     });
@@ -185,7 +172,6 @@ describe('Validations - todo', () => {
         memberId: generateId(),
         text: '',
       });
-      delete endAndCreateTodoParams.updatedBy;
 
       await handler.mutations.endAndCreateTodo({
         endAndCreateTodoParams,
@@ -199,7 +185,6 @@ describe('Validations - todo', () => {
         end: new Date(),
         start: faker.date.soon(2),
       });
-      delete endAndCreateTodoParams.updatedBy;
 
       await handler.mutations.endAndCreateTodo({
         endAndCreateTodoParams,
@@ -213,7 +198,6 @@ describe('Validations - todo', () => {
         end: faker.date.recent(1),
       });
       delete endAndCreateTodoParams.start;
-      delete endAndCreateTodoParams.updatedBy;
 
       await handler.mutations.endAndCreateTodo({
         endAndCreateTodoParams,
@@ -226,7 +210,6 @@ describe('Validations - todo', () => {
         memberId: generateId(),
         start: faker.date.recent(1),
       });
-      delete endAndCreateTodoParams.updatedBy;
 
       await handler.mutations.endAndCreateTodo({
         endAndCreateTodoParams,
@@ -239,7 +222,6 @@ describe('Validations - todo', () => {
         memberId: generateId(),
         cronExpressions: [],
       });
-      delete endAndCreateTodoParams.updatedBy;
 
       await handler.mutations.endAndCreateTodo({
         endAndCreateTodoParams,
@@ -252,7 +234,6 @@ describe('Validations - todo', () => {
         memberId: generateId(),
         cronExpressions: ['not-valid'],
       });
-      delete endAndCreateTodoParams.updatedBy;
 
       await handler.mutations.endAndCreateTodo({
         endAndCreateTodoParams,
@@ -272,7 +253,6 @@ describe('Validations - todo', () => {
       params.input.forEach((element) => {
         delete endAndCreateTodoParams[element];
       });
-      delete endAndCreateTodoParams.updatedBy;
 
       await handler.mutations.endAndCreateTodo({
         endAndCreateTodoParams,

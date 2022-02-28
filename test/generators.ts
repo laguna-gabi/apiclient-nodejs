@@ -796,8 +796,6 @@ export const generateCreateTodoParams = ({
   cronExpressions = ['0 10 * * 6'],
   start = new Date(),
   end = faker.date.soon(2),
-  createdBy,
-  updatedBy,
 }: Partial<CreateTodoParams> = {}) => {
   return {
     memberId,
@@ -806,8 +804,6 @@ export const generateCreateTodoParams = ({
     cronExpressions,
     start,
     end,
-    createdBy,
-    updatedBy,
   };
 };
 
@@ -831,7 +827,6 @@ export const generateEndAndCreateTodoParams = ({
   cronExpressions = ['0 10,17,21,23 * * *'],
   start = faker.date.soon(1),
   end = add(faker.date.soon(3), { days: 1 }),
-  updatedBy,
 }: Partial<EndAndCreateTodoParams> = {}) => {
   return {
     id,
@@ -841,7 +836,6 @@ export const generateEndAndCreateTodoParams = ({
     cronExpressions,
     start,
     end,
-    updatedBy,
   };
 };
 

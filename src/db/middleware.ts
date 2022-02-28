@@ -28,6 +28,16 @@ export function audit<TDocument extends Document>(schema: Schema<TDocument>) {
     }
   });
 
+  schema.pre('updateOne', { document: false, query: true }, async function () {
+    // get client id from local storage
+    const clientId = getRequestClientId();
+
+    if (clientId) {
+      // set `updatedBy` field
+      this.set('updatedBy', new Types.ObjectId(clientId));
+    }
+  });
+
   schema.pre('save', async function () {
     // get client id from local storage
     const clientId = getRequestClientId();

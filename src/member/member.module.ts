@@ -46,6 +46,7 @@ import { UserModule } from '../user';
       { name: ControlMember.name, schema: ControlMemberDto },
       { name: DismissedAlert.name, schema: DismissedAlertDto },
       { name: Caregiver.name, schema: CaregiverDto },
+      { name: Todo.name, schema: TodoDto },
     ]),
     MongooseModule.forFeatureAsync([
       {
@@ -82,12 +83,6 @@ import { UserModule } from '../user';
         name: Journal.name,
         useFactory: () => {
           return JournalDto.plugin(mongooseDelete, useFactoryOptions);
-        },
-      },
-      {
-        name: Todo.name,
-        useFactory: () => {
-          return TodoDto.plugin(mongooseDelete, useFactoryOptions);
         },
       },
     ]),

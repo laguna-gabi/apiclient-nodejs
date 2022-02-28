@@ -89,9 +89,6 @@ describe('TodoResolver', () => {
 
       const result = await resolver.createTodo([MemberRole.member], memberId, params);
 
-      params.createdBy = memberId;
-      params.updatedBy = memberId;
-
       expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({ ...params, status: TodoStatus.active });
       expect(result).toEqual({ id: todo.id });
     });
@@ -105,9 +102,6 @@ describe('TodoResolver', () => {
       delete params.label;
 
       const result = await resolver.createTodo([role], userId, params);
-
-      params.createdBy = userId;
-      params.updatedBy = userId;
 
       expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({
         ...params,
@@ -128,9 +122,6 @@ describe('TodoResolver', () => {
           delete params.label;
 
           const result = await resolver.createTodo([role], userId, params);
-
-          params.createdBy = userId;
-          params.updatedBy = userId;
 
           expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({
             ...params,
@@ -163,8 +154,6 @@ describe('TodoResolver', () => {
 
         const result = await resolver.createTodo([role], userId, params);
 
-        params.createdBy = userId;
-        params.updatedBy = userId;
         expect(spyOnServiceCreateTodo).toHaveBeenCalledWith({
           ...params,
           status: TodoStatus.requested,
@@ -234,8 +223,6 @@ describe('TodoResolver', () => {
 
       const result = await resolver.endAndCreateTodo([MemberRole.member], memberId, params);
 
-      params.updatedBy = memberId;
-
       expect(spyOnServiceEndAndCreateTodo).toHaveBeenCalledWith({
         ...params,
         status: TodoStatus.active,
@@ -258,8 +245,6 @@ describe('TodoResolver', () => {
         delete params.label;
 
         const result = await resolver.endAndCreateTodo([role], userId, params);
-
-        params.updatedBy = userId;
 
         expect(spyOnServiceEndAndCreateTodo).toHaveBeenCalledWith({
           ...params,
@@ -306,8 +291,6 @@ describe('TodoResolver', () => {
         const userId = generateId();
         const newTodo = mockGenerateTodo({
           memberId: generateObjectId(memberId),
-          createdBy: generateObjectId(memberId),
-          updatedBy: generateObjectId(memberId),
         });
         spyOnServiceEndAndCreateTodo.mockImplementationOnce(async () => newTodo);
         const params: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
@@ -317,7 +300,6 @@ describe('TodoResolver', () => {
 
         const result = await resolver.endAndCreateTodo([role], userId, params);
 
-        params.updatedBy = userId;
         expect(spyOnServiceEndAndCreateTodo).toHaveBeenCalledWith({
           ...params,
           status: TodoStatus.requested,

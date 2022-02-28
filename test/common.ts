@@ -22,7 +22,7 @@ import { NotificationService } from '../src/services';
 import { User, UserService } from '../src/user';
 import { Mutations, Queries } from './aux';
 import { generateId } from './generators';
-import { AppRequestContext, RequestContext } from '../src/common/context.dto';
+import { AppRequestContext, RequestContext } from '../src/common';
 
 export class BaseHandler {
   app: INestApplication;

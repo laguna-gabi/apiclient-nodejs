@@ -1332,8 +1332,6 @@ describe('Integration tests: all', () => {
       const createTodoByUserParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
       });
-      delete createTodoByUserParams.createdBy;
-      delete createTodoByUserParams.updatedBy;
 
       const { id: todoIdByUser } = await handler.mutations.createTodo({
         requestHeaders: generateRequestHeaders(user.authId),
@@ -1343,8 +1341,6 @@ describe('Integration tests: all', () => {
       const createTodoByMemberParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
       });
-      delete createTodoByMemberParams.createdBy;
-      delete createTodoByMemberParams.updatedBy;
 
       const { id: todoIdByMember } = await handler.mutations.createTodo({
         requestHeaders: generateRequestHeaders(member.authId),
@@ -1481,8 +1477,6 @@ describe('Integration tests: all', () => {
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       const { id } = await handler.mutations.createTodo({
         requestHeaders: requestHeadersUser,
@@ -1510,7 +1504,6 @@ describe('Integration tests: all', () => {
       );
 
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({ id });
-      delete endAndCreateTodoParams.updatedBy;
       const newCreatedTodo = await handler.mutations.endAndCreateTodo({
         endAndCreateTodoParams,
         requestHeaders: requestHeadersMember,
@@ -1665,8 +1658,6 @@ describe('Integration tests: all', () => {
       delete createTodoParams.cronExpressions;
       delete createTodoParams.start;
       delete createTodoParams.end;
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       const { id } = await handler.mutations.createTodo({ requestHeaders, createTodoParams });
 
@@ -1718,8 +1709,6 @@ describe('Integration tests: all', () => {
         memberId,
         label: Label.MEDS,
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       const { id } = await handler.mutations.createTodo({
         requestHeaders: generateRequestHeaders(user.authId),
@@ -1754,7 +1743,7 @@ describe('Integration tests: all', () => {
             end: createTodoParams.end.toISOString(),
             status: TodoStatus.active,
             createdBy: user.id,
-            updatedBy: user.id,
+            updatedBy: memberId,
           }),
         ]),
       );
@@ -1768,8 +1757,6 @@ describe('Integration tests: all', () => {
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId: member1.id,
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       const { id } = await handler.mutations.createTodo({
         requestHeaders: generateRequestHeaders(member1.authId),
@@ -2298,8 +2285,6 @@ describe('Integration tests: all', () => {
 
   const createTodos = async (memberId: string, requestHeaders) => {
     const createTodoParams = generateCreateTodoParams({ memberId });
-    delete createTodoParams.createdBy;
-    delete createTodoParams.updatedBy;
     const { id: todoId } = await handler.mutations.createTodo({ createTodoParams, requestHeaders });
     const createTodoDoneParams = generateCreateTodoDoneParams({ todoId, done: new Date() });
     delete createTodoDoneParams.memberId;

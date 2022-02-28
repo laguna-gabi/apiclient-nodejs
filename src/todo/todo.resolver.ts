@@ -57,8 +57,6 @@ export class TodoResolver {
     const todo = await this.todoService.createTodo({
       ...createTodoParams,
       status,
-      createdBy: clientId,
-      updatedBy: clientId,
     });
     this.todoSendNotification(todo, roles, clientId, 'createTodo');
     return { id: todo.id };
@@ -85,7 +83,6 @@ export class TodoResolver {
     const todo = await this.todoService.endAndCreateTodo({
       ...endAndCreateTodoParams,
       status,
-      updatedBy: clientId,
     });
     this.todoSendNotification(todo, roles, clientId, 'updateTodo');
     return todo;

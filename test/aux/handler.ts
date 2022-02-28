@@ -10,6 +10,14 @@ import { GraphQLClient } from 'graphql-request';
 import * as jwt from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import { Consumer } from 'sqs-consumer';
+import {
+  Todo,
+  TodoDocument,
+  TodoDone,
+  TodoDoneDocument,
+  TodoDoneDto,
+  TodoDto,
+} from '../../src/todo';
 import { Mutations, Queries } from '.';
 import {
   generateCreateMemberParams,
@@ -66,6 +74,8 @@ export class Handler extends BaseHandler {
   careService: CareService;
   barrierTypeModel: Model<BarrierTypeDocument>;
   caregiverModel: Model<CaregiverDocument>;
+  todoModel: Model<TodoDocument>;
+  todoDoneModel: Model<TodoDoneDocument>;
   webhooksController: WebhooksController;
   spyOnGetCommunicationService;
   patientZero: Member;
@@ -125,6 +135,8 @@ export class Handler extends BaseHandler {
     this.webhooksController = moduleFixture.get<WebhooksController>(WebhooksController);
     this.barrierTypeModel = model<BarrierTypeDocument>(BarrierType.name, BarrierTypeDto);
     this.caregiverModel = model<CaregiverDocument>(Caregiver.name, CaregiverDto);
+    this.todoModel = model<TodoDocument>(Todo.name, TodoDto);
+    this.todoDoneModel = model<TodoDoneDocument>(TodoDone.name, TodoDoneDto);
 
     await this.buildFixtures();
     await this.app.listen(datatype.number({ min: 4000, max: 9000 }));

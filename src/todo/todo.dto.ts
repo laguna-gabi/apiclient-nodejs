@@ -13,7 +13,8 @@ import {
   isTodoDateParamsValidCreate,
   isTodoDateParamsValidUpdate,
 } from '../common';
-import { ISoftDelete } from '../db';
+import { ISoftDelete, audit, useFactoryOptions } from '../db';
+import * as mongooseDelete from 'mongoose-delete';
 
 export const NotNullableTodoKeys = ['label', 'cronExpressions', 'start', 'end'];
 
@@ -71,8 +72,6 @@ export class ExtraTodoParams {
   end?: Date;
 
   status?: TodoStatus;
-
-  updatedBy: string;
 }
 
 @InputType()
@@ -80,8 +79,6 @@ export class CreateTodoParams extends ExtraTodoParams {
   @Field(() => Date, { nullable: true })
   @isTodoDateParamsValidCreate({ message: Errors.get(ErrorType.todoUnscheduled) })
   start?: Date;
-
-  createdBy: string;
 }
 
 @InputType()
@@ -194,7 +191,11 @@ export class TodoDone extends Identifier {
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 export type TodoDocument = Todo & Document & ISoftDelete<Todo>;
-export const TodoDto = SchemaFactory.createForClass(Todo);
+export const TodoDto = audit(
+  SchemaFactory.createForClass(Todo).plugin(mongooseDelete, useFactoryOptions),
+);
 
 export type TodoDoneDocument = TodoDone & Document & ISoftDelete<TodoDone>;
-export const TodoDoneDto = SchemaFactory.createForClass(TodoDone);
+export const TodoDoneDto = audit(
+  SchemaFactory.createForClass(TodoDone).plugin(mongooseDelete, useFactoryOptions),
+);

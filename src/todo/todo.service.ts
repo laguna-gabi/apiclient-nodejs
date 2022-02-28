@@ -40,13 +40,11 @@ export class TodoService extends BaseService {
 
   async createTodo(createTodoParams: CreateTodoParams): Promise<Todo> {
     this.removeNotNullable(createTodoParams, NotNullableTodoKeys);
-    const { memberId, createdBy, updatedBy } = createTodoParams;
+    const { memberId } = createTodoParams;
 
     return this.todoModel.create({
       ...createTodoParams,
       memberId: new Types.ObjectId(memberId),
-      createdBy: new Types.ObjectId(createdBy),
-      updatedBy: new Types.ObjectId(updatedBy),
     });
   }
 
@@ -69,7 +67,7 @@ export class TodoService extends BaseService {
 
   async endAndCreateTodo(endAndCreateTodoParams: EndAndCreateTodoParams): Promise<Todo> {
     this.removeNotNullable(endAndCreateTodoParams, NotNullableTodoKeys);
-    const { memberId, id, updatedBy, ...params } = endAndCreateTodoParams;
+    const { memberId, id, ...params } = endAndCreateTodoParams;
 
     const endedTodo = await this.todoModel.findOne({
       _id: new Types.ObjectId(id),
@@ -87,7 +85,6 @@ export class TodoService extends BaseService {
     await endedTodo.updateOne({
       $set: {
         status: TodoStatus.ended,
-        updatedBy: new Types.ObjectId(updatedBy),
       },
     });
 
@@ -108,7 +105,6 @@ export class TodoService extends BaseService {
       memberId: new Types.ObjectId(memberId),
       relatedTo: new Types.ObjectId(id),
       createdBy: new Types.ObjectId(endedTodo.createdBy),
-      updatedBy: new Types.ObjectId(updatedBy),
     });
   }
 

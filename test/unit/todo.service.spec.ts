@@ -30,6 +30,7 @@ import {
   generateGetTodoDonesParams,
   generateId,
   generateObjectId,
+  loadSessionClient,
 } from '../index';
 
 describe('TodoService', () => {
@@ -62,10 +63,10 @@ describe('TodoService', () => {
     it('should create todo', async () => {
       const memberId = generateId();
 
+      loadSessionClient(memberId);
+
       const params: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
 
       const todo = await service.createTodo(params);
@@ -94,17 +95,16 @@ describe('TodoService', () => {
 
       const params1: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
 
       const params2: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: userId,
-        updatedBy: userId,
       });
 
+      loadSessionClient(memberId);
       const { id: id1 } = await service.createTodo(params1);
+
+      loadSessionClient(userId);
       const { id: id2 } = await service.createTodo(params2);
 
       const createdTodos = await service.getTodos(memberId);
@@ -157,8 +157,6 @@ describe('TodoService', () => {
 
       const params: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
 
       const { id } = await service.createTodo(params);
@@ -190,20 +188,19 @@ describe('TodoService', () => {
 
       const createParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
 
+      loadSessionClient(memberId);
       const { id } = await service.createTodo(createParams);
 
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         id,
         memberId,
-        updatedBy: userId,
       });
       const endAndCreateTodoParamsWithNoId = cloneDeep(endAndCreateTodoParams);
       delete endAndCreateTodoParamsWithNoId.id;
 
+      loadSessionClient(userId);
       const createdTodo = await service.endAndCreateTodo(endAndCreateTodoParams);
       const endedTodo = await todoModel.findById(id).lean();
       delete createParams.end;
@@ -244,12 +241,9 @@ describe('TodoService', () => {
     // eslint-disable-next-line max-len
     it('should create new todo with start like the ended todo if start was not provided and there is no todoDone', async () => {
       const memberId = generateId();
-      const userId = generateId();
 
       const createParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
 
       const { id } = await service.createTodo(createParams);
@@ -257,7 +251,6 @@ describe('TodoService', () => {
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         id,
         memberId,
-        updatedBy: userId,
       });
       delete endAndCreateTodoParams.start;
 
@@ -268,12 +261,9 @@ describe('TodoService', () => {
     // eslint-disable-next-line max-len
     it('should create new todo with start like the latest todoDone if start was not provided and there is todoDone', async () => {
       const memberId = generateId();
-      const userId = generateId();
 
       const createParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
 
       const { id } = await service.createTodo(createParams);
@@ -288,7 +278,6 @@ describe('TodoService', () => {
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         id,
         memberId,
-        updatedBy: userId,
       });
       delete endAndCreateTodoParams.start;
 
@@ -300,7 +289,6 @@ describe('TodoService', () => {
       const params: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         id: generateId(),
         memberId: generateId(),
-        updatedBy: generateId(),
       });
 
       await expect(service.endAndCreateTodo(params)).rejects.toThrow(
@@ -312,8 +300,6 @@ describe('TodoService', () => {
       const memberId = generateId();
       const params: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
 
       const { id } = await service.createTodo(params);
@@ -325,7 +311,6 @@ describe('TodoService', () => {
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         id,
         memberId,
-        updatedBy: memberId,
       });
 
       await expect(service.endAndCreateTodo(endAndCreateTodoParams)).rejects.toThrow(
@@ -339,14 +324,15 @@ describe('TodoService', () => {
       const memberId = generateId();
       const userId = generateId();
 
+      loadSessionClient(memberId);
+
       const createParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
 
       const { id } = await service.createTodo(createParams);
 
+      loadSessionClient(userId);
       await service.endTodo(id, userId);
 
       const endedTodo = await todoModel.findById(id).lean();
@@ -376,8 +362,6 @@ describe('TodoService', () => {
 
       const params: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
 
       const { id } = await service.createTodo(params);
@@ -395,11 +379,12 @@ describe('TodoService', () => {
   describe('approveTodo', () => {
     it('should approve todo', async () => {
       const memberId = generateId();
+
+      loadSessionClient(memberId);
+
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
         label: Label.MEDS,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
       createTodoParams.status = TodoStatus.requested;
 
@@ -449,8 +434,6 @@ describe('TodoService', () => {
       const memberId = generateId();
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
 
       const { id: todoId } = await service.createTodo(createTodoParams);
@@ -466,8 +449,6 @@ describe('TodoService', () => {
       const memberId = generateId();
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
 
       const { id: todoId } = await service.createTodo(createTodoParams);
@@ -506,8 +487,6 @@ describe('TodoService', () => {
         const memberId = generateId();
         const createTodoParams: CreateTodoParams = generateCreateTodoParams({
           memberId,
-          createdBy: memberId,
-          updatedBy: memberId,
         });
 
         const { id: todoId } = await service.createTodo(createTodoParams);
@@ -526,10 +505,11 @@ describe('TodoService', () => {
 
     it(`if unscheduled todo should change status to ${TodoStatus.ended}`, async () => {
       const memberId = generateId();
+
+      loadSessionClient(memberId);
+
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
       delete createTodoParams.cronExpressions;
       delete createTodoParams.start;
@@ -567,8 +547,6 @@ describe('TodoService', () => {
       const memberId = generateId();
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
 
       const { id: todoId } = await service.createTodo(createTodoParams);
@@ -645,8 +623,6 @@ describe('TodoService', () => {
       const memberId = generateId();
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
 
       const { id: todoId } = await service.createTodo(createTodoParams);
@@ -677,8 +653,6 @@ describe('TodoService', () => {
       const memberId = generateId();
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
 
       const { id: todoId } = await service.createTodo(createTodoParams);
@@ -699,10 +673,10 @@ describe('TodoService', () => {
 
     it(`if todo unscheduled should update status to ${TodoStatus.active}`, async () => {
       const memberId = generateId();
+
+      loadSessionClient(memberId);
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
       delete createTodoParams.cronExpressions;
       delete createTodoParams.start;
@@ -758,8 +732,6 @@ describe('TodoService', () => {
       const memberId = generateId();
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        createdBy: memberId,
-        updatedBy: memberId,
       });
 
       const { id: todoId } = await service.createTodo(createTodoParams);

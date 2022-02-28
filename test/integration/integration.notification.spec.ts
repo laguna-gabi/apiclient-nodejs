@@ -954,8 +954,6 @@ describe('Integration tests: notifications', () => {
         memberId,
         label: Label.MEDS,
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       const { id } = await handler.mutations.createTodo({
         requestHeaders: generateRequestHeaders(user.authId),
@@ -998,8 +996,6 @@ describe('Integration tests: notifications', () => {
         memberId: member.id,
         label: Label.APPT,
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       const { id } = await handler.mutations.createTodo({
         requestHeaders: generateRequestHeaders(user.authId),
@@ -1041,8 +1037,6 @@ describe('Integration tests: notifications', () => {
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId: member.id,
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
       delete createTodoParams.label;
 
       const { id } = await handler.mutations.createTodo({
@@ -1085,8 +1079,6 @@ describe('Integration tests: notifications', () => {
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId: member.id,
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       const { id: oldTodoId } = await handler.mutations.createTodo({
         requestHeaders,
@@ -1101,7 +1093,6 @@ describe('Integration tests: notifications', () => {
         memberId: member.id,
         label: Label.MEDS,
       });
-      delete endAndCreateTodoParams.updatedBy;
 
       const { id } = await handler.mutations.endAndCreateTodo({
         requestHeaders,
@@ -1144,8 +1135,6 @@ describe('Integration tests: notifications', () => {
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId: member.id,
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       const { id: oldTodoId } = await handler.mutations.createTodo({
         requestHeaders,
@@ -1160,7 +1149,6 @@ describe('Integration tests: notifications', () => {
         memberId: member.id,
         label: Label.APPT,
       });
-      delete endAndCreateTodoParams.updatedBy;
 
       const { id } = await handler.mutations.endAndCreateTodo({
         requestHeaders,
@@ -1203,8 +1191,6 @@ describe('Integration tests: notifications', () => {
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId: member.id,
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       const { id: oldTodoId } = await handler.mutations.createTodo({
         requestHeaders,
@@ -1218,7 +1204,6 @@ describe('Integration tests: notifications', () => {
         id: oldTodoId,
         memberId: member.id,
       });
-      delete endAndCreateTodoParams.updatedBy;
       delete endAndCreateTodoParams.label;
 
       const { id } = await handler.mutations.endAndCreateTodo({
@@ -1263,8 +1248,6 @@ describe('Integration tests: notifications', () => {
         memberId: member.id,
         label: Label.MEDS,
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       const { id } = await handler.mutations.createTodo({
         requestHeaders,
@@ -1316,8 +1299,6 @@ describe('Integration tests: notifications', () => {
         memberId: member.id,
         label: Label.APPT,
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
 
       const { id } = await handler.mutations.createTodo({
         requestHeaders,
@@ -1365,8 +1346,6 @@ describe('Integration tests: notifications', () => {
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId: member.id,
       });
-      delete createTodoParams.createdBy;
-      delete createTodoParams.updatedBy;
       delete createTodoParams.label;
 
       const { id } = await handler.mutations.createTodo({

@@ -1,11 +1,23 @@
 import {
   checkAuditValues,
   generateAddCaregiverParams,
+  generateCreateTodoDoneParams,
+  generateCreateTodoParams,
+  generateCreateUserParams,
+  generateEndAndCreateTodoParams,
   generateRequestHeaders,
   generateUpdateCaregiverParams,
 } from '../index';
 import { Handler } from '../aux';
 import { CaregiverDocument } from '../../src/member';
+import {
+  CreateTodoDoneParams,
+  CreateTodoParams,
+  EndAndCreateTodoParams,
+  TodoDocument,
+  TodoDoneDocument,
+} from '../../src/todo';
+import { User } from '../../src/user';
 
 describe('Integration tests : Audit', () => {
   const handler: Handler = new Handler();
@@ -20,6 +32,13 @@ describe('Integration tests : Audit', () => {
 
   describe('Caregiver', () => {
     it('should update createdAt and updatedAt fields', async () => {
+      /**
+       * 1. Add Caregiver for PatientZero and by PatientZero
+       * 2. Update Caregiver for PatientZero and by PatientZero's primary user
+       *
+       * Note: confirm `save` and `findOneAndUpdate` hooks
+       */
+
       // Add Caregiver for PatientZero and by PatientZero:
       const addCaregiverParams = generateAddCaregiverParams({
         memberId: handler.patientZero.id.toString(),
@@ -67,4 +86,152 @@ describe('Integration tests : Audit', () => {
       ).toBeTruthy();
     });
   });
+
+  describe('Todo', () => {
+    it('should update createdAt and updatedAt fields', async () => {
+      /**
+       * 1. User creates a todo for member
+       * 1.1 confirm `createdAt` === `updatedAt` === User.id for Todo
+       * 2. Member end and create todo
+       * 2.1 confirm `createdAt` === User.id && `updatedAt` === Member.id for Todo
+       * 3. create TodoDone (by member)
+       * 3.1 confirm `createdAt` === `updatedAt` === Member.id for TodoDone
+       *
+       * Note: confirm `updateOne` (used by the `endAndCreateTodo` service method)
+       */
+
+      // Get primary user authId and id for token in request header and validation
+      const { id: userId, authId: userAuthId } = await handler.userService.get(
+        handler.patientZero.primaryUserId.toString(),
+      );
+
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+        memberId: handler.patientZero.id.toString(),
+      });
+
+      const { id } = await handler.mutations.createTodo({
+        requestHeaders: generateRequestHeaders(userAuthId),
+        createTodoParams,
+      });
+
+      // confirm that `createdBy` and `updatedBy` are set correctly (only `updatedBy` should change)
+      expect(
+        await checkAuditValues<TodoDocument>(id, handler.todoModel, userId, userId),
+      ).toBeTruthy();
+
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({ id });
+      const { id: newCreatedTodoId } = await handler.mutations.endAndCreateTodo({
+        endAndCreateTodoParams,
+        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
+      });
+
+      // confirm that `createdBy` and `updatedBy` are set correctly (only `updatedBy` should change)
+      expect(
+        await checkAuditValues<TodoDocument>(
+          newCreatedTodoId,
+          handler.todoModel,
+          userId,
+          handler.patientZero.id.toString(),
+        ),
+      ).toBeTruthy();
+
+      const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
+        todoId: newCreatedTodoId,
+      });
+
+      delete createTodoDoneParams.memberId;
+
+      const { id: todoDoneId } = await handler.mutations.createTodoDone({
+        createTodoDoneParams: createTodoDoneParams,
+        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
+      });
+
+      expect(
+        await checkAuditValues<TodoDoneDocument>(
+          todoDoneId,
+          handler.todoDoneModel,
+          handler.patientZero.id.toString(),
+          handler.patientZero.id.toString(),
+        ),
+      ).toBeTruthy();
+    });
+
+    it('[stress] should update createdAt and updatedAt fields', async () => {
+      /**
+       * 0. pick a random user (out of 5 users) - user1
+       * 1. user1 creates a todo for member
+       * 1.1 confirm `createdAt` === `updatedAt` === user1.id for Todo
+       * 2. pick a random user (out of 5 users) - user2
+       * 2. user2 end and create todo for patient zero
+       * 3.1 confirm newly created todo - `createdAt` === user1.id && `updatedAt` === user2 for Todo
+       */
+
+      // create 5 users:
+      const users = [];
+
+      for (let i = 0; i < 5; i++) {
+        const { id } = await handler.mutations.createUser({
+          userParams: generateCreateUserParams(),
+        });
+        users.push(await handler.userService.get(id));
+      }
+
+      // run 100 tests to create and update todo's
+      const tests = [];
+      for (let i = 0; i < 100; i++) {
+        tests.push(testRunner(users, handler));
+      }
+
+      await Promise.all(tests);
+    });
+  });
 });
+
+/**************************************************************************************************
+ **************************************** Service methods *****************************************
+ *************************************************************************************************/
+
+async function testRunner(users: User[], handler: Handler) {
+  const user1 = getRandomUser(users);
+  const createTodoParams: CreateTodoParams = generateCreateTodoParams({
+    memberId: handler.patientZero.id,
+  });
+
+  const { id } = await handler.mutations.createTodo({
+    requestHeaders: generateRequestHeaders(user1.authId),
+    createTodoParams,
+  });
+
+  // confirm that `createdBy` and `updatedBy` are set correctly (only `updatedBy` should change)
+  expect(
+    await checkAuditValues<TodoDocument>(
+      id,
+      handler.todoModel,
+      user1.id.toString(),
+      user1.id.toString(),
+    ),
+  ).toBeTruthy();
+
+  const user2 = getRandomUser(users);
+  const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+    memberId: handler.patientZero.id,
+    id,
+  });
+  const { id: newCreatedTodoId } = await handler.mutations.endAndCreateTodo({
+    endAndCreateTodoParams,
+    requestHeaders: generateRequestHeaders(user2.authId),
+  });
+
+  // confirm that `createdBy` and `updatedBy` are set correctly (only `updatedBy` should change)
+  expect(
+    await checkAuditValues<TodoDocument>(
+      newCreatedTodoId,
+      handler.todoModel,
+      user1.id.toString(),
+      user2.id.toString(),
+    ),
+  ).toBeTruthy();
+}
+function getRandomUser(users: User[]): User {
+  return users[Math.floor(Math.random() * users.length)];
+}
