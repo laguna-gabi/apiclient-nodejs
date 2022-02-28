@@ -2069,7 +2069,6 @@ describe('Integration tests: all', () => {
           }),
         ]),
       );
-      const [memberBarrier1, memberBarrier2] = memberBarriers;
 
       // test the new custom care plan
       const carePlanTypes = await handler.queries.getCarePlanTypes();
@@ -2089,25 +2088,35 @@ describe('Integration tests: all', () => {
             ...carePlan1,
             dueDate: carePlan1.dueDate.toISOString(),
             memberId,
-            barrierId: memberBarrier1.id,
             type: expect.objectContaining({ id: handler.carePlanType.id }),
           }),
           expect.objectContaining({
             ...carePlan2,
             dueDate: carePlan2.dueDate.toISOString(),
             memberId,
-            barrierId: memberBarrier1.id,
             type: expect.objectContaining({ id: createdCarePlanType }),
           }),
           expect.objectContaining({
             ...carePlan3,
             dueDate: carePlan3.dueDate.toISOString(),
             memberId,
-            barrierId: memberBarrier2.id,
             type: expect.objectContaining({ id: handler.carePlanType.id }),
           }),
         ]),
       );
+
+      // test matching the right plans of care to the right barriers
+      const memberCarePlan1 = memberCarePlans.find((i) => i.notes === carePlan1.notes);
+      const memberCarePlan2 = memberCarePlans.find((i) => i.notes === carePlan2.notes);
+      const memberCarePlan3 = memberCarePlans.find((i) => i.notes === carePlan3.notes);
+      expect(memberCarePlan1.barrierId).toEqual(memberCarePlan2.barrierId);
+      expect(memberBarriers).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: memberCarePlan1.barrierId }),
+          expect.objectContaining({ id: memberCarePlan3.barrierId }),
+        ]),
+      );
+
       expect(result.ids.sort()).toEqual(
         memberCarePlans.map((carePlan) => carePlan.id.toString()).sort(),
       );
