@@ -3,6 +3,7 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
 import {
   CreateQuestionnaireParams,
+  HealthPersona,
   Questionnaire,
   QuestionnaireResponse,
   QuestionnaireService,
@@ -69,5 +70,13 @@ export class QuestionnaireResolver {
       ...submitQuestionnaireResponseParams,
       createdBy: userId,
     });
+  }
+
+  @Query(() => String, { nullable: true })
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getHealthPersona(
+    @Args('memberId', { type: () => String }) memberId: string,
+  ): Promise<HealthPersona | undefined> {
+    return this.questionnaireService.getHealthPersona({ memberId });
   }
 }

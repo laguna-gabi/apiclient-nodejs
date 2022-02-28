@@ -29,6 +29,7 @@ import { generateZipCode } from '@lagunahealth/pandora';
 import { UpdateJournalTextParams } from '../src/member';
 import {
   buildGAD7Questionnaire,
+  buildLHPQuestionnaire,
   buildNPSQuestionnaire,
   buildPHQ9Questionnaire,
   buildWHO5Questionnaire,
@@ -197,6 +198,7 @@ async function main() {
   await base.questionnaireService.createQuestionnaire(buildWHO5Questionnaire());
   // NPS
   await base.questionnaireService.createQuestionnaire(buildNPSQuestionnaire());
+  await base.questionnaireService.createQuestionnaire(buildLHPQuestionnaire());
 
   console.debug(
     '\n----------------------------------------------------------------\n' +

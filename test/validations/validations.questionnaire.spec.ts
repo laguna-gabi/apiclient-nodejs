@@ -224,4 +224,13 @@ describe('Validations - questionnaire', () => {
       });
     });
   });
+
+  describe('getHealthPersona', () => {
+    it('should fail to get health persona since mandatory memberId is missing', async () => {
+      await handler.queries.getHealthPersona({
+        memberId: undefined,
+        invalidFieldsError: `Variable \"$memberId\" of required type \"String!\" was not provided.`,
+      });
+    });
+  });
 });

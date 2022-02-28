@@ -1,19 +1,15 @@
 import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import * as faker from 'faker';
 import { Model, Types, model } from 'mongoose';
-import {
-  checkDelete,
-  dbConnect,
-  dbDisconnect,
-  defaultModules,
-  generateCreateQuestionnaireParams,
-  generateId,
-  mockGenerateQuestionnaire,
-  mockGenerateQuestionnaireItem,
-} from '../../test';
+import { buildLHPQuestionnaire } from '../../cmd/statics';
+import { ErrorType, Errors, EventType, ItemType, LoggerService } from '../../src/common';
 import {
   AlertConditionType,
   CreateQuestionnaireParams,
+  HealthPersona,
+  PersonasOptions,
   Questionnaire,
   QuestionnaireDocument,
   QuestionnaireDto,
@@ -24,9 +20,17 @@ import {
   QuestionnaireService,
   QuestionnaireType,
 } from '../../src/questionnaire';
-import * as faker from 'faker';
-import { ErrorType, Errors, EventType, ItemType, LoggerService } from '../../src/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import {
+  checkDelete,
+  dbConnect,
+  dbDisconnect,
+  defaultModules,
+  generateCreateQuestionnaireParams,
+  generateId,
+  generateObjectId,
+  mockGenerateQuestionnaire,
+  mockGenerateQuestionnaireItem,
+} from '../../test';
 
 describe('QuestionnaireService', () => {
   let module: TestingModule;
@@ -38,6 +42,7 @@ describe('QuestionnaireService', () => {
   let phq9TypeTemplate: Questionnaire;
   let who5TypeTemplate: Questionnaire;
   let npsTypeTemplate: Questionnaire;
+  let lhpTypeTemplate: Questionnaire;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -168,6 +173,7 @@ describe('QuestionnaireService', () => {
       }),
     );
 
+    lhpTypeTemplate = await service.createQuestionnaire(buildLHPQuestionnaire());
     await dbConnect();
   });
 
@@ -689,5 +695,87 @@ describe('QuestionnaireService', () => {
         service.isAlertConditionsSatisfied(answer, template),
       ).toEqual(satisfies);
     });
+  });
+
+  describe('getLatestQuestionnaireResponse', () => {
+    let submitQuestionnaireResponse;
+    const options = new PersonasOptions();
+
+    beforeAll(async () => {
+      submitQuestionnaireResponse = {
+        questionnaireId: lhpTypeTemplate.id.toString(),
+        createdBy: generateObjectId(),
+        memberId: generateObjectId(),
+        answers: [
+          { code: 'q1', value: '3' },
+          { code: 'q2', value: '1' },
+        ],
+      };
+
+      await service.submitQuestionnaireResponse(submitQuestionnaireResponse);
+    });
+
+    it('should return undefined for a non existing member', async () => {
+      const result = await service.getHealthPersona({ memberId: generateId() });
+      expect(result).toBeUndefined();
+    });
+
+    // eslint-disable-next-line max-len
+    it(`should return undefined for a non existing ${QuestionnaireType.lhp} questionnaire`, async () => {
+      const submitResponse = {
+        questionnaireId: npsTypeTemplate.id.toString(),
+        createdBy: generateId(),
+        memberId: generateId(),
+        answers: [{ code: 'q1', value: '2' }],
+      };
+      await service.submitQuestionnaireResponse(submitResponse);
+
+      const result = await service.getHealthPersona({ memberId: submitResponse.memberId });
+      expect(result).toBeUndefined();
+    });
+
+    it(`should get the latest ${QuestionnaireType.lhp} questionnaire response`, async () => {
+      const duplicatedQuestionnaireResponse = { ...submitQuestionnaireResponse };
+      duplicatedQuestionnaireResponse.answers = [
+        { code: 'q1', value: '2' },
+        { code: 'q2', value: '4' },
+      ];
+      await service.submitQuestionnaireResponse(duplicatedQuestionnaireResponse);
+
+      const healthPersona = await service.getHealthPersona({
+        memberId: submitQuestionnaireResponse.memberId,
+      });
+
+      expect(healthPersona).toEqual(HealthPersona.highEffort);
+    });
+
+    const params = Object.values(HealthPersona).flatMap((healthPersona: HealthPersona) => {
+      const personas = options.get().get(healthPersona);
+      return personas.q1.flatMap((q1Item) =>
+        personas.q2.map((q2Item) => ({
+          healthPersona,
+          answers: [
+            { code: 'q1', value: q1Item },
+            { code: 'q2', value: q2Item },
+          ],
+        })),
+      );
+    });
+
+    test.each(params)(
+      'should return %p health persona on specific response',
+      async ({ healthPersona, answers }) => {
+        const submitResponse = {
+          questionnaireId: lhpTypeTemplate.id.toString(),
+          createdBy: generateId(),
+          memberId: generateId(),
+          answers,
+        };
+        await service.submitQuestionnaireResponse(submitResponse);
+
+        const result = await service.getHealthPersona({ memberId: submitResponse.memberId });
+        expect(result).toEqual(healthPersona);
+      },
+    );
   });
 });

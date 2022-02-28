@@ -1,6 +1,25 @@
+import { formatEx } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import {
+  AlertCondition,
+  AlertConditionType,
+  Answer,
+  CreateQuestionnaireParams,
+  HealthPersona,
+  Item,
+  PersonasOptions,
+  Questionnaire,
+  QuestionnaireAlerts,
+  QuestionnaireDocument,
+  QuestionnaireResponse,
+  QuestionnaireResponseDocument,
+  QuestionnaireResponseResult,
+  QuestionnaireType,
+  SubmitQuestionnaireResponseParams,
+} from '.';
 import {
   BaseService,
   ErrorType,
@@ -12,31 +31,15 @@ import {
   LoggerService,
   deleteMemberObjects,
 } from '../common';
-import {
-  AlertCondition,
-  AlertConditionType,
-  Answer,
-  CreateQuestionnaireParams,
-  Item,
-  Questionnaire,
-  QuestionnaireAlerts,
-  QuestionnaireDocument,
-  QuestionnaireResponse,
-  QuestionnaireResponseDocument,
-  QuestionnaireResponseResult,
-  QuestionnaireType,
-  SubmitQuestionnaireResponseParams,
-} from '.';
-import { formatEx } from '@lagunahealth/pandora';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { ISoftDelete } from '../db';
 
 @Injectable()
 export class QuestionnaireService extends BaseService {
+  private personasOptions = new PersonasOptions();
+
   constructor(
     @InjectModel(Questionnaire.name)
     private readonly questionnaire: Model<QuestionnaireDocument>,
-
     @InjectModel(QuestionnaireResponse.name)
     private readonly questionnaireResponse: Model<QuestionnaireResponseDocument> &
       ISoftDelete<QuestionnaireResponseDocument>,
@@ -178,6 +181,17 @@ export class QuestionnaireService extends BaseService {
     }
   }
 
+  async getHealthPersona({ memberId }: { memberId: string }): Promise<HealthPersona | undefined> {
+    const result: QuestionnaireResponse = await this.getLatestQuestionnaireResponse({
+      memberId,
+      type: QuestionnaireType.lhp,
+    });
+
+    if (result) {
+      return this.calculateHealthPersona(result.answers);
+    }
+  }
+
   private validate(answers: Answer[], template: Questionnaire) {
     answers.forEach((answer) => {
       const answerValue = parseInt(answer.value);
@@ -230,6 +244,10 @@ export class QuestionnaireService extends BaseService {
       )?.label;
     }
 
+    if (template.type === QuestionnaireType.lhp) {
+      severity = this.calculateHealthPersona(answers);
+    }
+
     return {
       score,
       severity,
@@ -267,5 +285,39 @@ export class QuestionnaireService extends BaseService {
         return this.findItemByCode(item.items, code);
       }
     }
+  }
+
+  private async getLatestQuestionnaireResponse({
+    memberId,
+    type,
+  }: {
+    memberId: string;
+    type: QuestionnaireType;
+  }): Promise<QuestionnaireResponse | undefined> {
+    const result = await this.questionnaireResponse.aggregate([
+      { $match: { memberId: new Types.ObjectId(memberId) } },
+      { $sort: { updatedAt: -1 } },
+      {
+        $lookup: {
+          localField: 'questionnaireId',
+          from: 'questionnaires',
+          foreignField: '_id',
+          as: 'q',
+        },
+      },
+      { $unwind: { path: '$q' } },
+      { $match: { 'q.type': type } },
+    ]);
+
+    return result.length > 0 ? result[0] : null;
+  }
+
+  private calculateHealthPersona(answers: Answer[]): HealthPersona {
+    const skills = answers[0].value;
+    const motivation = answers[1].value;
+
+    return [...this.personasOptions.get()].find(
+      ([key, value]) => key && value.q1.includes(skills) && value.q2.includes(motivation),
+    )?.[0];
   }
 }

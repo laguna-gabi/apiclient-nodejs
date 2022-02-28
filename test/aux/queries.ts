@@ -11,7 +11,7 @@ import {
   MultipartUploadRecordingLinkParams,
   RecordingLinkParams,
 } from '../../src/member';
-import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
+import { HealthPersona, Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
 import { Dispatch } from '../../src/services';
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
 import { GetSlotsParams } from '../../src/user';
@@ -1284,5 +1284,32 @@ export class Queries {
       });
 
     return result?.getMemberBarriers;
+  };
+
+  getHealthPersona = async ({
+    memberId,
+    invalidFieldsError,
+    requestHeaders = this.defaultUserRequestHeaders,
+  }: {
+    memberId: string;
+    invalidFieldsError?: string;
+    requestHeaders?;
+  }): Promise<HealthPersona> => {
+    const result = await this.client
+      .request(
+        gql`
+          query getHealthPersona($memberId: String!) {
+            getHealthPersona(memberId: $memberId)
+          }
+        `,
+        { memberId },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        return;
+      });
+
+    return result?.getHealthPersona;
   };
 }

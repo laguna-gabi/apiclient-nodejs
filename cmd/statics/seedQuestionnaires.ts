@@ -5,6 +5,7 @@ import {
   Item,
   QuestionnaireType,
 } from '../../src/questionnaire';
+import { upperCase } from 'lodash';
 
 export const buildGAD7Questionnaire = (): CreateQuestionnaireParams => {
   const groupTitle =
@@ -195,5 +196,54 @@ export const buildNPSQuestionnaire = (): CreateQuestionnaireParams => {
       { min: 7, max: 8, label: 'Passive' },
       { min: 9, max: 10, label: 'Promoter' },
     ],
+  };
+};
+
+export const buildLHPQuestionnaire = (): CreateQuestionnaireParams => {
+  /* eslint-disable max-len */
+  const question1 =
+    'Skills - How confident are you that you can identify when it is necessary for you to get medical care?';
+  const question2 =
+    'Motivation – How often do you bring a (written or mental) list of questions you want to cover with you to your doctor visits';
+  /* eslint-enable max-len */
+
+  const options1: OptionInterface[] = [
+    { label: 'Very confident', value: 4 },
+    { label: 'Confident', value: 3 },
+    { label: 'Somewhat confident', value: 2 },
+    { label: 'Not at all confident', value: 1 },
+  ];
+
+  const options2: OptionInterface[] = [
+    { label: 'Always', value: 4 },
+    { label: 'Usually', value: 3 },
+    { label: 'Sometimes', value: 2 },
+    { label: 'Never', value: 1 },
+  ];
+
+  const groupItems: Item[] = [
+    {
+      code: `q1`,
+      label: question1,
+      type: ItemType.choice,
+      order: 1,
+      required: true,
+      options: options1,
+    },
+    {
+      code: `q2`,
+      label: question2,
+      type: ItemType.choice,
+      order: 2,
+      required: true,
+      options: options2,
+    },
+  ];
+
+  return {
+    name: `Member Persona`,
+    shortName: upperCase(QuestionnaireType.lhp),
+    type: QuestionnaireType.lhp,
+    items: groupItems,
   };
 };

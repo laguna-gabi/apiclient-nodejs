@@ -29,6 +29,7 @@ export enum QuestionnaireType {
   gad7 = 'gad7',
   who5 = 'who5',
   nps = 'nps',
+  lhp = 'lhp',
 }
 
 export const QuestionnaireAlerts: Map<QuestionnaireType, string> = new Map([
@@ -43,6 +44,7 @@ registerEnumType(QuestionnaireType, {
     gad7: { description: 'Generalized Anxiety Disorder 7' },
     who5: { description: 'World Health Organization 5 (well being index)' },
     nps: { description: 'Net Promoter Score' },
+    lhp: { description: 'Healthcare Persona' },
   },
 });
 
@@ -77,6 +79,15 @@ registerEnumType(ItemType, {
     group: { description: 'group of questions (no answer is expected for group items)' },
   },
 });
+
+export enum HealthPersona {
+  active = 'Active',
+  passive = 'Passive',
+  highEffort = 'High effort',
+  complacent = 'Complacent',
+}
+
+registerEnumType(HealthPersona, { name: 'HealthPersona' });
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************

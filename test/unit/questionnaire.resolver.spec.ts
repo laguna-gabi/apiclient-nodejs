@@ -1,18 +1,19 @@
 import { mockProcessWarnings } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
+  CreateQuestionnaireParams,
+  HealthPersona,
+  QuestionnaireModule,
+  QuestionnaireResolver,
+  QuestionnaireService,
+} from '../../src/questionnaire';
+import {
   dbDisconnect,
   defaultModules,
   generateCreateQuestionnaireParams,
   generateId,
   generateSubmitQuestionnaireResponseParams,
 } from '../../test';
-import {
-  CreateQuestionnaireParams,
-  QuestionnaireModule,
-  QuestionnaireResolver,
-  QuestionnaireService,
-} from '../../src/questionnaire';
 
 describe('QuestionnaireResolver', () => {
   let module: TestingModule;
@@ -152,6 +153,26 @@ describe('QuestionnaireResolver', () => {
       await resolver.submitQuestionnaireResponse(createdBy, qrSubmitParams);
 
       expect(spyOnServiceSubmitQR).toHaveBeenCalledWith({ ...qrSubmitParams, createdBy });
+    });
+  });
+
+  describe('getHealthPersona', () => {
+    let spyOnServiceGetHealthPersona: jest.SpyInstance;
+
+    beforeAll(() => {
+      spyOnServiceGetHealthPersona = jest.spyOn(service, 'getHealthPersona');
+    });
+
+    afterAll(() => {
+      spyOnServiceGetHealthPersona.mockReset();
+    });
+
+    it('should call service health persona', async () => {
+      spyOnServiceGetHealthPersona.mockResolvedValueOnce(HealthPersona.highEffort);
+
+      const memberId = generateId();
+      await resolver.getHealthPersona(memberId);
+      expect(spyOnServiceGetHealthPersona).toHaveBeenCalledWith({ memberId });
     });
   });
 });

@@ -4,6 +4,7 @@ import { general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
 import { date, lorem } from 'faker';
 import { v4 } from 'uuid';
+import { buildLHPQuestionnaire } from '../../cmd/statics';
 import {
   Appointment,
   AppointmentMethod,
@@ -34,7 +35,11 @@ import {
   UpdateJournalTextParams,
 } from '../../src/member';
 import { Internationalization } from '../../src/providers';
-import { CreateQuestionnaireParams, QuestionnaireType } from '../../src/questionnaire';
+import {
+  CreateQuestionnaireParams,
+  HealthPersona,
+  QuestionnaireType,
+} from '../../src/questionnaire';
 import {
   CreateTodoDoneParams,
   CreateTodoParams,
@@ -2196,6 +2201,34 @@ describe('Integration tests: all', () => {
 
       expect(qrs.length).toEqual(1);
       expect(qrs.find((qrItem) => qrItem.id === qr.id)).toBeTruthy();
+    });
+
+    // eslint-disable-next-line max-len
+    it(`should create, get, submit and get health persona from a ${QuestionnaireType.lhp} questionnaire`, async () => {
+      const org = await creators.createAndValidateOrg();
+      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
+        createQuestionnaireParams: buildLHPQuestionnaire(),
+      });
+
+      await handler.mutations.submitQuestionnaireResponse({
+        requestHeaders: generateRequestHeaders(user.authId),
+        submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
+          questionnaireId,
+          memberId: member.id,
+          answers: [
+            { code: 'q1', value: '2' },
+            { code: 'q2', value: '4' },
+          ],
+        }),
+      });
+
+      const healthPersona = await handler.queries.getHealthPersona({ memberId: member.id });
+      expect(healthPersona).toEqual(HealthPersona.highEffort);
+
+      const qrs = await handler.queries.getMemberQuestionnaireResponses({ memberId: member.id });
+      const res = qrs.find((qr) => qr.type === QuestionnaireType.lhp);
+      expect(res.result.severity).toEqual(HealthPersona.highEffort);
     });
   });
 
