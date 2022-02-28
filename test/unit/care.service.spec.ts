@@ -2,6 +2,7 @@ import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
 import {
+  checkDelete,
   dbConnect,
   dbDisconnect,
   defaultModules,
@@ -16,13 +17,20 @@ import {
   randomEnum,
 } from '../index';
 import {
+  Barrier,
+  BarrierDocument,
   BarrierDomain,
   BarrierType,
   BarrierTypeDocument,
   BarrierTypeDto,
   CareModule,
+  CarePlan,
+  CarePlanDocument,
   CareService,
   CareStatus,
+  RedFlag,
+  RedFlagDocument,
+  RedFlagDto,
 } from '../../src/care';
 import { Model, Types, model } from 'mongoose';
 import { lorem } from 'faker';
@@ -30,6 +38,9 @@ import { lorem } from 'faker';
 describe('CareService', () => {
   let module: TestingModule;
   let service: CareService;
+  let redFlagModel: Model<RedFlagDocument>;
+  let barrierModel: Model<BarrierDocument>;
+  let carePlanModel: Model<CarePlanDocument>;
   let barrierTypeModel: Model<BarrierTypeDocument>;
 
   beforeAll(async () => {
@@ -40,6 +51,9 @@ describe('CareService', () => {
 
     service = module.get<CareService>(CareService);
     mockLogger(module.get<LoggerService>(LoggerService));
+    redFlagModel = model<RedFlagDocument>(RedFlag.name, RedFlagDto);
+    barrierModel = model<BarrierDocument>(Barrier.name, RedFlagDto);
+    carePlanModel = model<CarePlanDocument>(CarePlan.name, RedFlagDto);
     barrierTypeModel = model<BarrierTypeDocument>(BarrierType.name, BarrierTypeDto);
     await dbConnect();
   });
@@ -565,6 +579,114 @@ describe('CareService', () => {
 
       expect(result.id).toEqual(id.toString());
       expect(result.description).toEqual(carePlanTypeName);
+    });
+  });
+
+  describe('Delete', () => {
+    test.each([true, false])(
+      'should %p delete member care process (Red flags, barriers and care plans)',
+      async (hard) => {
+        const memberId = generateId();
+        const redFlagParams = generateCreateRedFlagParams({ createdBy: generateId(), memberId });
+        const { id: redFlagId } = await service.createRedFlag(redFlagParams);
+        const barrierType = await generateBarrierType();
+        const params = generateCreateBarrierParams({
+          createdBy: generateId(),
+          memberId,
+          redFlagId,
+          type: barrierType,
+        });
+        const { id: barrierId } = await service.createBarrier(params);
+
+        const carePlanTypeId = await generateCarePlanType();
+        const carePlanTypeInput = generateCarePlanTypeInput({ id: carePlanTypeId });
+        const carePlanParams = generateCreateCarePlanParams({
+          createdBy: generateId(),
+          type: carePlanTypeInput,
+          barrierId,
+          memberId,
+        });
+        const { id: carePlanId } = await service.createCarePlan(carePlanParams);
+        const redFlag = await service.getRedFlag(redFlagId);
+        const barrier = await service.getBarrier(barrierId);
+        const carePlan = await service.getCarePlan(carePlanId);
+        expect([redFlag, barrier, carePlan].filter((i) => i != null).length).toEqual(3);
+
+        await service.deleteMemberCareProcess({ memberId, deletedBy: memberId, hard });
+        /* eslint-disable @typescript-eslint/ban-ts-comment*/
+        // @ts-ignore
+        const redFlagAfter = await redFlagModel.findWithDeleted({
+          _id: new Types.ObjectId(redFlagId),
+        });
+        // @ts-ignore
+        const barrierAfter = await barrierModel.findWithDeleted({
+          _id: new Types.ObjectId(barrierId),
+        });
+        // @ts-ignore
+        const carePlanAfter = await carePlanModel.findWithDeleted({
+          _id: new Types.ObjectId(carePlanId),
+        });
+
+        if (hard) {
+          expect(
+            [...redFlagAfter, ...barrierAfter, ...carePlanAfter].filter((i) => i != null).length,
+          ).toEqual(0);
+        } else {
+          checkDelete(redFlagAfter, { _id: new Types.ObjectId(redFlagId) }, memberId);
+          checkDelete(barrierAfter, { _id: new Types.ObjectId(barrierId) }, memberId);
+          checkDelete(carePlanAfter, { _id: new Types.ObjectId(carePlanId) }, memberId);
+        }
+      },
+    );
+
+    /* eslint-disable max-len */
+    it('should hard delete after soft delete - member care process (Red flags, barriers and care plans)', async () => {
+      const memberId = generateId();
+      const redFlagParams = generateCreateRedFlagParams({ createdBy: generateId(), memberId });
+      const { id: redFlagId } = await service.createRedFlag(redFlagParams);
+      const barrierType = await generateBarrierType();
+      const params = generateCreateBarrierParams({
+        createdBy: generateId(),
+        memberId,
+        redFlagId,
+        type: barrierType,
+      });
+      const { id: barrierId } = await service.createBarrier(params);
+
+      const carePlanTypeId = await generateCarePlanType();
+      const carePlanTypeInput = generateCarePlanTypeInput({ id: carePlanTypeId });
+      const carePlanParams = generateCreateCarePlanParams({
+        createdBy: generateId(),
+        type: carePlanTypeInput,
+        barrierId,
+        memberId,
+      });
+      const { id: carePlanId } = await service.createCarePlan(carePlanParams);
+      const redFlag = await service.getRedFlag(redFlagId);
+      const barrier = await service.getBarrier(barrierId);
+      const carePlan = await service.getCarePlan(carePlanId);
+      expect([redFlag, barrier, carePlan].filter((i) => i != null).length).toEqual(3);
+
+      await service.deleteMemberCareProcess({ memberId, deletedBy: memberId, hard: false });
+      await service.deleteMemberCareProcess({ memberId, deletedBy: memberId, hard: true });
+
+      /* eslint-disable @typescript-eslint/ban-ts-comment*/
+      // @ts-ignore
+      const redFlagAfter = await redFlagModel.findWithDeleted({
+        _id: new Types.ObjectId(redFlagId),
+      });
+      // @ts-ignore
+      const barrierAfter = await barrierModel.findWithDeleted({
+        _id: new Types.ObjectId(barrierId),
+      });
+      // @ts-ignore
+      const carePlanAfter = await carePlanModel.findWithDeleted({
+        _id: new Types.ObjectId(carePlanId),
+      });
+
+      expect(
+        [...redFlagAfter, ...barrierAfter, ...carePlanAfter].filter((i) => i != null).length,
+      ).toEqual(0);
     });
   });
 

@@ -3,6 +3,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, Identifier, IsObjectId } from '../common';
+import { ISoftDelete } from '../db';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -83,7 +84,7 @@ export class Barrier extends BaseCare {
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type BarrierDocument = Barrier & Document;
+export type BarrierDocument = Barrier & Document & ISoftDelete<BarrierType>;
 export const BarrierDto = SchemaFactory.createForClass(Barrier);
 
 export type BarrierTypeDocument = BarrierType & Document;

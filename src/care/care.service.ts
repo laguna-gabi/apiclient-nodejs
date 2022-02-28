@@ -20,18 +20,27 @@ import {
   UpdateCarePlanParams,
   UpdateRedFlagParams,
 } from '.';
-import { BaseService, ErrorType, Errors, LoggerService } from '../common';
+import {
+ BaseService, ErrorType,
+  Errors,
+  EventType,
+  IEventDeleteMember,
+  LoggerService,
+  deleteMemberObjects,
+} from '../common';
 import { isNil, omitBy } from 'lodash';
+import { OnEvent } from '@nestjs/event-emitter';
+import { ISoftDelete } from '../db';
 
 @Injectable()
 export class CareService extends BaseService {
   constructor(
     @InjectModel(RedFlag.name)
-    private readonly redFlagModel: Model<RedFlagDocument>,
+    private readonly redFlagModel: Model<RedFlagDocument> & ISoftDelete<RedFlagDocument>,
     @InjectModel(Barrier.name)
-    private readonly barrierModel: Model<BarrierDocument>,
+    private readonly barrierModel: Model<BarrierDocument> & ISoftDelete<BarrierDocument>,
     @InjectModel(CarePlan.name)
-    private readonly carePlanModel: Model<CarePlanDocument>,
+    private readonly carePlanModel: Model<CarePlanDocument> & ISoftDelete<CarePlanDocument>,
     @InjectModel(CarePlanType.name)
     private readonly carePlanTypeModel: Model<CarePlanTypeDocument>,
     @InjectModel(BarrierType.name)
@@ -265,5 +274,30 @@ export class CareService extends BaseService {
 
   async getCarePlanTypes(): Promise<CarePlanType[]> {
     return this.carePlanTypeModel.find({});
+  }
+
+  @OnEvent(EventType.onDeletedMember, { async: true })
+  async deleteMemberCareProcess(params: IEventDeleteMember) {
+    await deleteMemberObjects<Model<RedFlagDocument> & ISoftDelete<RedFlagDocument>>(
+      params,
+      this.redFlagModel,
+      this.logger,
+      this.deleteMemberCareProcess.name,
+      CareService.name,
+    );
+    await deleteMemberObjects<Model<BarrierDocument> & ISoftDelete<BarrierDocument>>(
+      params,
+      this.barrierModel,
+      this.logger,
+      this.deleteMemberCareProcess.name,
+      CareService.name,
+    );
+    await deleteMemberObjects<Model<CarePlanDocument> & ISoftDelete<CarePlanDocument>>(
+      params,
+      this.carePlanModel,
+      this.logger,
+      this.deleteMemberCareProcess.name,
+      CareService.name,
+    );
   }
 }

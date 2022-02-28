@@ -4,6 +4,7 @@ import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, Identifier, IsObjectId, IsValidCarePlanTypeInput } from '../common';
 import { CareStatus } from '.';
 import { IsDate, IsOptional } from 'class-validator';
+import { ISoftDelete } from '../db';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -137,7 +138,7 @@ export class CarePlan extends BaseCare {
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 
-export type CarePlanDocument = CarePlan & Document;
+export type CarePlanDocument = CarePlan & Document & ISoftDelete<CarePlan>;
 export const CarePlanDto = SchemaFactory.createForClass(CarePlan);
 
 export type CarePlanTypeDocument = CarePlanType & Document;

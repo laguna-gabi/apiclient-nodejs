@@ -455,6 +455,8 @@ describe('Integration tests: all', () => {
       const addCaregiverParams = generateAddCaregiverParams({ memberId: member.id });
       await handler.mutations.addCaregiver({ addCaregiverParams, requestHeaders });
 
+      await submitCareWizardResult(handler, member.id);
+
       // submit QR for member
       await submitQR(member.id);
 
@@ -477,7 +479,7 @@ describe('Integration tests: all', () => {
       expect(communication).toBeNull();
 
       const recordings = await handler.queries.getRecordings({ memberId: member.id });
-      expect(recordings).toEqual([]);
+      expect(recordings.length).toEqual(0);
 
       const dailyReports = await handler.queries.getDailyReports({
         dailyReportQueryInput: {
@@ -486,26 +488,42 @@ describe('Integration tests: all', () => {
           endDate: day2,
         },
       });
-      expect(dailyReports.data).toEqual([]);
+      expect(dailyReports.data.length).toEqual(0);
 
       const appointmentResult = await handler.queries.getAppointment({ id: appointment.id });
       expect(appointmentResult).toBeNull();
 
       const todos = await handler.queries.getTodos({ memberId: member.id });
-      expect(todos).toEqual([]);
+      expect(todos.length).toEqual(0);
 
       const caregivers = await handler.queries.getCaregivers({ memberId: member.id });
-      expect(caregivers).toEqual([]);
+      expect(caregivers.length).toEqual(0);
 
       const journals = await handler.queries.getJournals({
         requestHeaders: generateRequestHeaders(handler.patientZero.authId),
       });
-      expect(journals).toEqual([]);
+      expect(journals.length).toEqual(0);
 
       const qrs = await handler.queries.getMemberQuestionnaireResponses({
         memberId: member.id,
       });
-      expect(qrs).toEqual([]);
+      expect(qrs.length).toEqual(0);
+
+      // get all member's red flags, barriers and care plans
+      const memberRedFlags = await handler.queries.getMemberRedFlags({
+        memberId: member.id,
+      });
+      expect(memberRedFlags.length).toEqual(0);
+
+      const memberBarriers = await handler.queries.getMemberBarriers({
+        memberId: member.id,
+      });
+      expect(memberBarriers.length).toEqual(0);
+
+      const memberCarePlans = await handler.queries.getMemberCarePlans({
+        memberId: member.id,
+      });
+      expect(memberCarePlans.length).toEqual(0);
     });
   });
 
