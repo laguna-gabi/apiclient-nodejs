@@ -76,6 +76,7 @@ import {
   generateUpdateMemberParams,
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
+  generateUpdateRedFlagParams,
   mockGenerateDispatch,
   mockGenerateQuestionnaireItem,
 } from '../index';
@@ -1867,6 +1868,43 @@ describe('Integration tests: all', () => {
             createdBy: createdBy.toString(),
             isCustom,
             id,
+          }),
+        ]),
+      );
+    });
+
+    it('should update a red flag', async () => {
+      const org = await creators.createAndValidateOrg();
+      const {
+        member: { id: memberId },
+      } = await creators.createAndValidateMember({ org, useNewUser: true });
+      await submitCareWizardResult(handler, memberId);
+      const memberRedFlags = await handler.queries.getMemberRedFlags({
+        memberId,
+      });
+      expect(memberRedFlags.length).toEqual(1);
+      const redFlagId = memberRedFlags[0].id;
+
+      const updateRedFlagParams = generateUpdateRedFlagParams({
+        id: redFlagId,
+        notes: 'new notes',
+      });
+      const result = await handler.mutations.updateRedFlag({
+        updateRedFlagParams,
+      });
+      expect(result).toBeTruthy();
+
+      // get again to verify the update
+      const updatedMemberRedFlags = await handler.queries.getMemberRedFlags({
+        memberId,
+      });
+      expect(memberRedFlags.length).toEqual(1);
+
+      expect(updatedMemberRedFlags).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...memberRedFlags[0],
+            notes: 'new notes',
           }),
         ]),
       );

@@ -18,12 +18,13 @@ import {
   RedFlagDocument,
   UpdateBarrierParams,
   UpdateCarePlanParams,
+  UpdateRedFlagParams,
 } from '.';
-import { ErrorType, Errors, LoggerService } from '../common';
+import { BaseService, ErrorType, Errors, LoggerService } from '../common';
 import { isNil, omitBy } from 'lodash';
 
 @Injectable()
-export class CareService {
+export class CareService extends BaseService {
   constructor(
     @InjectModel(RedFlag.name)
     private readonly redFlagModel: Model<RedFlagDocument>,
@@ -36,7 +37,9 @@ export class CareService {
     @InjectModel(BarrierType.name)
     private readonly barrierTypeModel: Model<BarrierType>,
     readonly logger: LoggerService,
-  ) {}
+  ) {
+    super();
+  }
 
   /**************************************************************************************************
    ******************************************** Red Flag ********************************************
@@ -77,6 +80,19 @@ export class CareService {
     );
 
     return true;
+  }
+
+  async updateRedFlag(updateRedFlagParams: UpdateRedFlagParams): Promise<RedFlag> {
+    this.removeNotNullable(updateRedFlagParams, Object.keys(updateRedFlagParams));
+    const result = await this.redFlagModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(updateRedFlagParams.id) },
+      { $set: updateRedFlagParams },
+      { new: true },
+    );
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.redFlagNotFound));
+    }
+    return result;
   }
 
   /**************************************************************************************************
@@ -128,7 +144,7 @@ export class CareService {
       },
       isNil,
     );
-    const result = this.barrierModel.findOneAndUpdate(
+    const result = await this.barrierModel.findOneAndUpdate(
       { _id: new Types.ObjectId(id) },
       { $set: updateParams },
       { new: true },

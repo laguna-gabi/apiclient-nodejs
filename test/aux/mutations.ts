@@ -13,8 +13,10 @@ import { AvailabilityInput } from '../../src/availability';
 import {
   CreateCarePlanParams,
   CreateRedFlagParams,
+  RedFlag,
   UpdateBarrierParams,
   UpdateCarePlanParams,
+  UpdateRedFlagParams,
 } from '../../src/care';
 import { Identifier, Identifiers, RegisterForNotificationParams } from '../../src/common';
 import { DailyReportCategoriesInput } from '../../src/dailyReport';
@@ -1798,5 +1800,39 @@ export class Mutations {
       });
 
     return updateBarrier;
+  };
+
+  updateRedFlag = async ({
+    updateRedFlagParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    updateRedFlagParams: UpdateRedFlagParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<RedFlag> => {
+    const { updateRedFlag } = await this.client
+      .request(
+        gql`
+          mutation updateRedFlag($updateRedFlagParams: UpdateRedFlagParams!) {
+            updateRedFlag(updateRedFlagParams: $updateRedFlagParams) {
+              id
+              notes
+              type
+            }
+          }
+        `,
+        { updateRedFlagParams },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
+
+    return updateRedFlag;
   };
 }

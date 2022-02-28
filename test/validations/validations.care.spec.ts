@@ -11,12 +11,14 @@ import {
   generateSubmitCareWizardResult,
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
+  generateUpdateRedFlagParams,
 } from '../generators';
 import {
   CreateCarePlanParams,
   CreateRedFlagParams,
   UpdateBarrierParams,
   UpdateCarePlanParams,
+  UpdateRedFlagParams,
 } from '../../src/care';
 
 const stringError = `String cannot represent a non string value`;
@@ -63,6 +65,37 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
       delete createRedFlagParams.createdBy;
 
       await handler.mutations.createRedFlag({ createRedFlagParams, ...params.error });
+    });
+  });
+
+  describe('updateRedFlag', () => {
+    /* eslint-disable max-len */
+    test.each`
+      field   | error
+      ${'id'} | ${`Field "id" of required type "String!" was not provided.`}
+    `(
+      `should fail to update a red flag since mandatory field $field is missing`,
+      async (params) => {
+        const updateRedFlagParams: UpdateRedFlagParams = generateUpdateRedFlagParams();
+        delete updateRedFlagParams[params.field];
+        await handler.mutations.updateRedFlag({
+          updateRedFlagParams: updateRedFlagParams,
+          missingFieldError: params.error,
+        });
+      },
+    );
+
+    /* eslint-disable max-len */
+    test.each`
+      input             | error
+      ${{ id: 123 }}    | ${{ missingFieldError: stringError }}
+      ${{ notes: 123 }} | ${{ missingFieldError: stringError }}
+    `(`should fail to update a red flag since $input is not valid`, async (params) => {
+      const updateRedFlagParams: UpdateRedFlagParams = generateUpdateRedFlagParams({
+        id: generateId(),
+        ...params.input,
+      });
+      await handler.mutations.updateRedFlag({ updateRedFlagParams, ...params.error });
     });
   });
 

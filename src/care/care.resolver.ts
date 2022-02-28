@@ -11,6 +11,7 @@ import {
   RedFlag,
   UpdateBarrierParams,
   UpdateCarePlanParams,
+  UpdateRedFlagParams,
 } from '.';
 import { Client, Identifiers, LoggingInterceptor, Roles, UserRole } from '../common';
 import { camelCase } from 'lodash';
@@ -57,6 +58,14 @@ export class CareResolver {
   @Roles(UserRole.coach, UserRole.nurse)
   async getRedFlagTypes() {
     return redFlags;
+  }
+
+  @Mutation(() => RedFlag)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async updateRedFlag(
+    @Args(camelCase(UpdateRedFlagParams.name)) updateRedFlagParams: UpdateRedFlagParams,
+  ): Promise<RedFlag> {
+    return this.careService.updateRedFlag(updateRedFlagParams);
   }
 
   /**************************************************************************************************

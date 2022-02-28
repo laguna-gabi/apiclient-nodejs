@@ -88,6 +88,7 @@ import {
   RedFlagType,
   UpdateBarrierParams,
   UpdateCarePlanParams,
+  UpdateRedFlagParams,
 } from '../src/care';
 import {
   Answer,
@@ -897,6 +898,16 @@ export const generateUpdateBarrierParams = ({
     notes,
     status,
     type,
+  };
+};
+
+export const generateUpdateRedFlagParams = ({
+  id,
+  notes = faker.lorem.words(4),
+}: Partial<UpdateRedFlagParams> = {}) => {
+  return {
+    id,
+    notes,
   };
 };
 

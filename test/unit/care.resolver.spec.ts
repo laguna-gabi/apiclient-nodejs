@@ -13,6 +13,7 @@ import {
   generateSubmitCareWizardResult,
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
+  generateUpdateRedFlagParams,
 } from '../index';
 import { CareModule, CareResolver, CareService } from '../../src/care';
 import { redFlags } from '../../src/care/redFlags.json';
@@ -42,19 +43,23 @@ describe('CareResolver', () => {
     let spyOnServiceCreateRedFlag;
     let spyOnServiceGetMemberRedFlags;
     let spyOnServiceDeleteRedFlags;
+    let spyOnServiceUpdateRedFlag;
 
     beforeEach(() => {
       spyOnServiceCreateRedFlag = jest.spyOn(service, 'createRedFlag');
       spyOnServiceGetMemberRedFlags = jest.spyOn(service, 'getMemberRedFlags');
       spyOnServiceDeleteRedFlags = jest.spyOn(service, 'deleteRedFlag');
+      spyOnServiceUpdateRedFlag = jest.spyOn(service, 'updateRedFlag');
       spyOnServiceCreateRedFlag.mockImplementationOnce(async () => undefined);
       spyOnServiceDeleteRedFlags.mockImplementationOnce(async () => true);
+      spyOnServiceUpdateRedFlag.mockImplementationOnce(async () => undefined);
     });
 
     afterEach(() => {
       spyOnServiceCreateRedFlag.mockReset();
       spyOnServiceGetMemberRedFlags.mockReset();
       spyOnServiceDeleteRedFlags.mockReset();
+      spyOnServiceUpdateRedFlag.mockReset();
     });
 
     it('should create a red flag', async () => {
@@ -72,6 +77,14 @@ describe('CareResolver', () => {
 
       expect(spyOnServiceGetMemberRedFlags).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberRedFlags).toBeCalledWith(memberId);
+    });
+
+    it('should update a red flag', async () => {
+      const params = generateUpdateRedFlagParams();
+      await resolver.updateRedFlag(params);
+
+      expect(spyOnServiceUpdateRedFlag).toBeCalledTimes(1);
+      expect(spyOnServiceUpdateRedFlag).toBeCalledWith(params);
     });
 
     it('should delete a red flag', async () => {

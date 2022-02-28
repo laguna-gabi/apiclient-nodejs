@@ -13,6 +13,7 @@ import {
   generateId,
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
+  generateUpdateRedFlagParams,
   randomEnum,
 } from '../index';
 import {
@@ -172,6 +173,16 @@ describe('CareService', () => {
       const redFlag = await service.getRedFlag(id);
       const result = await service.getMemberRedFlags(memberId);
       expect(result).toEqual([redFlag]);
+    });
+
+    it('should update a red flag', async () => {
+      const memberId = generateId();
+      const params = generateCreateRedFlagParams({ memberId, createdBy: generateId() });
+      const { id } = await service.createRedFlag(params);
+
+      const updateParams = generateUpdateRedFlagParams({ id });
+      const result = await service.updateRedFlag(updateParams);
+      expect(result.notes).toEqual(updateParams.notes);
     });
   });
 

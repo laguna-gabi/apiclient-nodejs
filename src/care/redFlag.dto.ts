@@ -27,6 +27,16 @@ export class CreateRedFlagParams extends BaseRedFlagParams {
   memberId: string;
 }
 
+@InputType()
+export class UpdateRedFlagParams {
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.redFlagNotFound) })
+  id: string;
+
+  @Field(() => String, { nullable: true })
+  notes?: string;
+}
+
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
