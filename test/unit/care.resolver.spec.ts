@@ -7,7 +7,6 @@ import {
   generateCreateBarrierParamsWizard,
   generateCreateCarePlanParams,
   generateCreateCarePlanParamsWizard,
-  generateCreateRedFlagParams,
   generateCreateRedFlagParamsWizard,
   generateId,
   generateSubmitCareWizardResult,
@@ -40,35 +39,18 @@ describe('CareResolver', () => {
   });
 
   describe('RedFlag', () => {
-    let spyOnServiceCreateRedFlag;
     let spyOnServiceGetMemberRedFlags;
-    let spyOnServiceDeleteRedFlags;
     let spyOnServiceUpdateRedFlag;
 
     beforeEach(() => {
-      spyOnServiceCreateRedFlag = jest.spyOn(service, 'createRedFlag');
       spyOnServiceGetMemberRedFlags = jest.spyOn(service, 'getMemberRedFlags');
-      spyOnServiceDeleteRedFlags = jest.spyOn(service, 'deleteRedFlag');
       spyOnServiceUpdateRedFlag = jest.spyOn(service, 'updateRedFlag');
-      spyOnServiceCreateRedFlag.mockImplementationOnce(async () => undefined);
-      spyOnServiceDeleteRedFlags.mockImplementationOnce(async () => true);
       spyOnServiceUpdateRedFlag.mockImplementationOnce(async () => undefined);
     });
 
     afterEach(() => {
-      spyOnServiceCreateRedFlag.mockReset();
       spyOnServiceGetMemberRedFlags.mockReset();
-      spyOnServiceDeleteRedFlags.mockReset();
       spyOnServiceUpdateRedFlag.mockReset();
-    });
-
-    it('should create a red flag', async () => {
-      const params = generateCreateRedFlagParams();
-      const userId = generateId();
-      await resolver.createRedFlag(userId, params);
-
-      expect(spyOnServiceCreateRedFlag).toBeCalledTimes(1);
-      expect(spyOnServiceCreateRedFlag).toBeCalledWith({ ...params, createdBy: userId });
     });
 
     it('should get red flags by memberId', async () => {
@@ -85,16 +67,6 @@ describe('CareResolver', () => {
 
       expect(spyOnServiceUpdateRedFlag).toBeCalledTimes(1);
       expect(spyOnServiceUpdateRedFlag).toBeCalledWith(params);
-    });
-
-    it('should delete a red flag', async () => {
-      const userId = generateId();
-      const id = generateId();
-      const result = await resolver.deleteRedFlag(userId, id);
-      expect(result).toBeTruthy();
-
-      expect(spyOnServiceDeleteRedFlags).toBeCalledTimes(1);
-      expect(spyOnServiceDeleteRedFlags).toBeCalledWith(id, userId);
     });
 
     it('should get all redFlagTypes', async () => {

@@ -10,7 +10,7 @@ import {
   RequestAppointmentParams,
   ScheduleAppointmentParams,
 } from '../../src/appointment';
-import { CareStatus, CreateCarePlanParams, CreateRedFlagParams } from '../../src/care';
+import { CareStatus, CreateCarePlanParams } from '../../src/care';
 import {
   ErrorType,
   Errors,
@@ -53,7 +53,6 @@ import {
   generateCreateCarePlanParams,
   generateCreateCarePlanParamsWizard,
   generateCreateQuestionnaireParams,
-  generateCreateRedFlagParams,
   generateCreateRedFlagParamsWizard,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
@@ -1782,52 +1781,6 @@ describe('Integration tests: all', () => {
   });
 
   describe('Care', () => {
-    it('should create, get and delete red flags', async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
-      const requestHeaders = generateRequestHeaders(user.authId);
-
-      const createRedFlagParams: CreateRedFlagParams = generateCreateRedFlagParams({
-        memberId: member.id,
-      });
-      delete createRedFlagParams.createdBy;
-
-      const { id } = await handler.mutations.createRedFlag({
-        requestHeaders,
-        createRedFlagParams,
-      });
-
-      // create second red flag
-      const user2 = await creators.createAndValidateUser([UserRole.coach]);
-      const createRedFlagParams2: CreateRedFlagParams = generateCreateRedFlagParams({
-        memberId: member.id,
-      });
-      delete createRedFlagParams2.createdBy;
-
-      const { id: id2 } = await handler.mutations.createRedFlag({
-        requestHeaders: generateRequestHeaders(user2.authId),
-        createRedFlagParams: createRedFlagParams2,
-      });
-
-      // get red flags
-      const redFlags = await handler.queries.getMemberRedFlags({ memberId: member.id });
-
-      expect(redFlags.length).toEqual(2);
-      expect(redFlags).toEqual([
-        expect.objectContaining({ ...createRedFlagParams, id, createdBy: user.id }),
-        expect.objectContaining({ ...createRedFlagParams2, id: id2, createdBy: user2.id }),
-      ]);
-
-      // delete red flag
-      const result = await handler.mutations.deleteRedFlag({ requestHeaders, id });
-      expect(result).toBeTruthy();
-
-      // Get again (confirm record was deleted)
-      const redFlagsAfter = await handler.queries.getMemberRedFlags({ memberId: member.id });
-      expect(redFlagsAfter.length).toEqual(1);
-      expect(redFlagsAfter[0].id).toEqual(id2);
-    });
-
     it('should get barrier types', async () => {
       const availableBarrierTypes = await handler.queries.getBarrierTypes();
       const { description, domain, id } = handler.barrierType;

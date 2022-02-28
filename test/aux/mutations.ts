@@ -12,7 +12,6 @@ import {
 import { AvailabilityInput } from '../../src/availability';
 import {
   CreateCarePlanParams,
-  CreateRedFlagParams,
   RedFlag,
   UpdateBarrierParams,
   UpdateCarePlanParams,
@@ -1533,40 +1532,6 @@ export class Mutations {
     return deleteTodoDone;
   };
 
-  createRedFlag = async ({
-    createRedFlagParams,
-    missingFieldError,
-    invalidFieldsErrors,
-    requestHeaders = this.defaultUserRequestHeaders,
-  }: {
-    createRedFlagParams: CreateRedFlagParams;
-    missingFieldError?: string;
-    invalidFieldsErrors?: string[];
-    requestHeaders?;
-  }): Promise<Identifier> => {
-    const { createRedFlag } = await this.client
-      .request(
-        gql`
-          mutation createRedFlag($createRedFlagParams: CreateRedFlagParams!) {
-            createRedFlag(createRedFlagParams: $createRedFlagParams) {
-              id
-            }
-          }
-        `,
-        { createRedFlagParams },
-        requestHeaders,
-      )
-      .catch((ex) => {
-        return isResultValid({
-          errors: ex.response.errors,
-          missingFieldError,
-          invalidFieldsErrors,
-        });
-      });
-
-    return createRedFlag;
-  };
-
   createCarePlan = async ({
     createCarePlanParams,
     missingFieldError,
@@ -1703,35 +1668,6 @@ export class Mutations {
       });
 
     return submitQuestionnaireResponse;
-  };
-
-  deleteRedFlag = async ({
-    id,
-    invalidFieldsErrors,
-    requestHeaders = this.defaultUserRequestHeaders,
-  }: {
-    id: string;
-    invalidFieldsErrors?: string[];
-    requestHeaders?;
-  }): Promise<boolean> => {
-    const { deleteRedFlag } = await this.client
-      .request(
-        gql`
-          mutation deleteRedFlag($id: String!) {
-            deleteRedFlag(id: $id)
-          }
-        `,
-        { id },
-        requestHeaders,
-      )
-      .catch((ex) => {
-        return isResultValid({
-          errors: ex.response.errors,
-          invalidFieldsErrors,
-        });
-      });
-
-    return deleteRedFlag;
   };
 
   submitCareWizardResult = async ({

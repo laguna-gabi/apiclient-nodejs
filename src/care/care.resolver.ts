@@ -7,7 +7,6 @@ import {
   CarePlanType,
   CareService,
   CreateCarePlanParams,
-  CreateRedFlagParams,
   RedFlag,
   UpdateBarrierParams,
   UpdateCarePlanParams,
@@ -28,30 +27,12 @@ export class CareResolver {
    ******************************************** Red Flag ********************************************
    *************************************************************************************************/
 
-  @Mutation(() => RedFlag)
-  @Roles(UserRole.coach, UserRole.nurse)
-  async createRedFlag(
-    @Client('_id') userId,
-    @Args(camelCase(CreateRedFlagParams.name)) createRedFlagParams: CreateRedFlagParams,
-  ): Promise<RedFlag> {
-    return this.careService.createRedFlag({
-      ...createRedFlagParams,
-      createdBy: userId,
-    });
-  }
-
   @Query(() => [RedFlag])
   @Roles(UserRole.coach, UserRole.nurse)
   async getMemberRedFlags(
     @Args('memberId', { type: () => String }) memberId: string,
   ): Promise<RedFlag[]> {
     return this.careService.getMemberRedFlags(memberId);
-  }
-
-  @Mutation(() => Boolean)
-  @Roles(UserRole.coach, UserRole.nurse)
-  async deleteRedFlag(@Client('_id') userId, @Args('id', { type: () => String }) id: string) {
-    return this.careService.deleteRedFlag(id, userId);
   }
 
   @Query(() => [GraphQLJSONObject])
