@@ -1,6 +1,8 @@
 import { addDays } from 'date-fns';
 import { lorem } from 'faker';
+import { buildNPSQuestionnaire } from '../../cmd/statics';
 import { ActionItem, ActionItemDocument, CaregiverDocument, TaskStatus } from '../../src/member';
+import { QuestionnaireResponseDocument } from '../../src/questionnaire';
 import {
   CreateTodoDoneParams,
   CreateTodoParams,
@@ -23,9 +25,18 @@ import {
 
 describe('Integration tests : Audit', () => {
   const handler: Handler = new Handler();
+  let user1: Partial<User>;
+  let user2: Partial<User>;
 
   beforeAll(async () => {
     await handler.beforeAll();
+
+    const userParams = [generateCreateUserParams(), generateCreateUserParams()];
+    const [{ id: userId1 }, { id: userId2 }] = await Promise.all(
+      userParams.map((userParams) => handler.mutations.createUser({ userParams })),
+    );
+    user1 = { id: userId1, ...userParams[0] };
+    user2 = { id: userId2, ...userParams[1] };
   }, 10000);
 
   afterAll(async () => {
@@ -189,32 +200,53 @@ describe('Integration tests : Audit', () => {
   });
 
   describe(ActionItem.name, () => {
-    it('should update createdAt and updatedAt fields for action item api', async () => {
-      const userParams = [generateCreateUserParams(), generateCreateUserParams()];
-      const [{ id: userId1 }, { id: userId2 }] = await Promise.all(
-        userParams.map((userParams) => handler.mutations.createUser({ userParams })),
-      );
-
+    it('should update createdBy and updatedBy fields for action item api', async () => {
       const { id } = await handler.mutations.createActionItem({
         createTaskParams: {
           memberId: handler.patientZero.id,
           title: lorem.sentence(),
           deadline: addDays(new Date(), 1),
         },
-        requestHeaders: generateRequestHeaders(userParams[0].authId),
+        requestHeaders: generateRequestHeaders(user1.authId),
       });
 
       expect(
-        await checkAuditValues<ActionItemDocument>(id, handler.actionItemModel, userId1, userId1),
+        await checkAuditValues<ActionItemDocument>(id, handler.actionItemModel, user1.id, user1.id),
       ).toBeTruthy();
 
       await handler.mutations.updateActionItemStatus({
         updateTaskStatusParams: { id, status: TaskStatus.reached },
-        requestHeaders: generateRequestHeaders(userParams[1].authId),
+        requestHeaders: generateRequestHeaders(user2.authId),
       });
 
       expect(
-        await checkAuditValues<ActionItemDocument>(id, handler.actionItemModel, userId1, userId2),
+        await checkAuditValues<ActionItemDocument>(id, handler.actionItemModel, user1.id, user2.id),
+      ).toBeTruthy();
+    });
+  });
+
+  describe('Questionnaire', () => {
+    it('should create a questionnaire response with createdBy and updatedBy', async () => {
+      const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
+        createQuestionnaireParams: buildNPSQuestionnaire(),
+      });
+
+      const { id } = await handler.mutations.submitQuestionnaireResponse({
+        submitQuestionnaireResponseParams: {
+          questionnaireId,
+          memberId: handler.patientZero.id,
+          answers: [{ code: 'q1', value: '1' }],
+        },
+        requestHeaders: generateRequestHeaders(user1.authId),
+      });
+
+      expect(
+        await checkAuditValues<QuestionnaireResponseDocument>(
+          id,
+          handler.questionnaireResponseModel,
+          user1.id,
+          user1.id,
+        ),
       ).toBeTruthy();
     });
   });

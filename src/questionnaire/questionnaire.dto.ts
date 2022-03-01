@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ArrayNotEmpty } from 'class-validator';
 import { Document, Types } from 'mongoose';
-import { ISoftDelete } from '../db';
+import * as mongooseDelete from 'mongoose-delete';
 import {
   ErrorType,
   Errors,
@@ -19,6 +19,7 @@ import {
   RangeInterface,
   SeverityLevelInterface,
 } from '../common';
+import { ISoftDelete, audit, useFactoryOptions } from '../db';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -354,4 +355,6 @@ export const QuestionnaireDto = SchemaFactory.createForClass(Questionnaire);
 export type QuestionnaireResponseDocument = QuestionnaireResponse &
   Document &
   ISoftDelete<QuestionnaireResponseDocument>;
-export const QuestionnaireResponseDto = SchemaFactory.createForClass(QuestionnaireResponse);
+export const QuestionnaireResponseDto = audit(
+  SchemaFactory.createForClass(QuestionnaireResponse).plugin(mongooseDelete, useFactoryOptions),
+);

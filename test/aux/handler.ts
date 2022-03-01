@@ -48,6 +48,11 @@ import {
 import { Org, OrgService } from '../../src/org';
 import { WebhooksController } from '../../src/providers';
 import {
+  QuestionnaireResponse,
+  QuestionnaireResponseDocument,
+  QuestionnaireResponseDto,
+} from '../../src/questionnaire';
+import {
   Todo,
   TodoDocument,
   TodoDone,
@@ -91,6 +96,7 @@ export class Handler extends BaseHandler {
   todoModel: Model<TodoDocument>;
   todoDoneModel: Model<TodoDoneDocument>;
   actionItemModel: Model<ActionItemDocument>;
+  questionnaireResponseModel: Model<QuestionnaireResponseDocument>;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -219,6 +225,10 @@ export class Handler extends BaseHandler {
     this.todoModel = model<TodoDocument>(Todo.name, TodoDto);
     this.todoDoneModel = model<TodoDoneDocument>(TodoDone.name, TodoDoneDto);
     this.actionItemModel = model<ActionItemDocument>(ActionItem.name, ActionItemDto);
+    this.questionnaireResponseModel = model<QuestionnaireResponseDocument>(
+      QuestionnaireResponse.name,
+      QuestionnaireResponseDto,
+    );
   }
 }
 
