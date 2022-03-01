@@ -28,7 +28,7 @@ describe('Validations - appointment', () => {
 
   afterAll(async () => {
     await handler.afterAll();
-  });
+  }, 10000);
 
   describe('request', () => {
     test.each`

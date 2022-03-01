@@ -17,7 +17,7 @@ describe('Integration tests : getMembers', () => {
       handler.defaultUserRequestHeaders,
     );
     creators = new Creators(handler, appointmentsActions);
-  });
+  }, 10000);
 
   afterAll(async () => {
     await handler.afterAll();

@@ -26,7 +26,7 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
 
   beforeAll(async () => {
     await handler.beforeAll();
-  });
+  }, 10000);
 
   afterAll(async () => {
     await handler.afterAll();

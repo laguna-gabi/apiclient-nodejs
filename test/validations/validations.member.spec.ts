@@ -62,7 +62,7 @@ describe('Validations - member', () => {
     await handler.beforeAll();
     await handler.mutations.createUser({ userParams: generateCreateUserParams() });
     server = handler.app.getHttpServer();
-  });
+  }, 10000);
 
   afterAll(async () => {
     await handler.afterAll();

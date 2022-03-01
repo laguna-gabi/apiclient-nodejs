@@ -135,7 +135,7 @@ describe('Integration tests: notifications', () => {
     );
     creators = new Creators(handler, appointmentsActions);
     handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
-  });
+  }, 10000);
 
   afterEach(() => {
     handler.queueService.spyOnQueueServiceSendMessage.mockReset();

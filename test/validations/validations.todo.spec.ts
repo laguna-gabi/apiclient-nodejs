@@ -18,7 +18,7 @@ describe('Validations - todo', () => {
 
   beforeAll(async () => {
     await handler.beforeAll();
-  });
+  }, 10000);
 
   afterAll(async () => {
     await handler.afterAll();

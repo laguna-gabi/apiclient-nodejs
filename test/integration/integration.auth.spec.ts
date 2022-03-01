@@ -8,7 +8,7 @@ describe('Integration tests : RBAC', () => {
   beforeAll(async () => {
     await handler.beforeAll();
     requestHeaders = generateRequestHeaders(handler.patientZero.authId);
-  });
+  }, 10000);
 
   afterAll(async () => {
     await handler.afterAll();

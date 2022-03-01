@@ -25,7 +25,7 @@ describe('Integration tests: rest', () => {
     );
     creators = new Creators(handler, appointmentsActions);
     server = handler.app.getHttpServer();
-  });
+  }, 10000);
 
   afterAll(async () => {
     await handler.afterAll();
