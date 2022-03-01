@@ -1,8 +1,9 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
+import { Document, Types } from 'mongoose';
+import * as mongooseDelete from 'mongoose-delete';
 import { Identifier } from '../common';
-import { ISoftDelete } from '../db';
+import { ISoftDelete, audit, useFactoryOptions } from '../db';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -54,4 +55,6 @@ export class AvailabilitySlot extends Identifier {
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 export type AvailabilityDocument = Availability & Document & ISoftDelete<Availability>;
-export const AvailabilityDto = SchemaFactory.createForClass(Availability);
+export const AvailabilityDto = audit(
+  SchemaFactory.createForClass(Availability).plugin(mongooseDelete, useFactoryOptions),
+);

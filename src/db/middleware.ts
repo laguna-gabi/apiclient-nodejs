@@ -53,5 +53,20 @@ export function audit<TDocument extends Document>(schema: Schema<TDocument>) {
     }
   });
 
+  schema.pre('insertMany', async function (next, docs) {
+    // get client id from local storage
+    const clientId = getRequestClientId();
+
+    if (clientId) {
+      docs.map(async function (doc) {
+        // set 'createdBy' and `updatedBy` fields
+        doc.createdBy = new Types.ObjectId(clientId);
+        doc.updatedBy = new Types.ObjectId(clientId);
+      });
+
+      next();
+    }
+  });
+
   return schema;
 }

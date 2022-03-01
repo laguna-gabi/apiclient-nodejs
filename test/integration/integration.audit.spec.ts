@@ -1,5 +1,6 @@
 import { addDays } from 'date-fns';
 import { lorem } from 'faker';
+import { AvailabilityDocument } from '../../src/availability';
 import { buildNPSQuestionnaire } from '../../cmd/statics';
 import { ActionItem, ActionItemDocument, CaregiverDocument, TaskStatus } from '../../src/member';
 import { QuestionnaireResponseDocument } from '../../src/questionnaire';
@@ -15,6 +16,7 @@ import { Handler } from '../aux';
 import {
   checkAuditValues,
   generateAddCaregiverParams,
+  generateAvailabilityInput,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateCreateUserParams,
@@ -196,6 +198,30 @@ describe('Integration tests : Audit', () => {
       }
 
       await Promise.all(tests);
+    });
+  });
+
+  describe('Availability', () => {
+    it('should create availabilities', async () => {
+      const availabilities = Array.from(Array(3)).map(() => generateAvailabilityInput());
+      const requestHeaders = generateRequestHeaders(user1.authId);
+
+      const { ids } = await handler.mutations.createAvailabilities({
+        requestHeaders,
+        availabilities,
+      });
+
+      ids.map(async (id) => {
+        // confirm that `createdBy` and `updatedBy` are set correctly (only `updatedBy` should change)
+        expect(
+          await checkAuditValues<AvailabilityDocument>(
+            id,
+            handler.availabilityModel,
+            user1.id,
+            user1.id,
+          ),
+        ).toBeTruthy();
+      });
     });
   });
 

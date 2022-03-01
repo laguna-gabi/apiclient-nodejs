@@ -19,6 +19,7 @@ import {
 } from '..';
 import { AppModule } from '../../src/app.module';
 import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
+import { Availability, AvailabilityDocument, AvailabilityDto } from '../../src/availability';
 import {
   BarrierDomain,
   BarrierType,
@@ -97,6 +98,7 @@ export class Handler extends BaseHandler {
   todoDoneModel: Model<TodoDoneDocument>;
   actionItemModel: Model<ActionItemDocument>;
   questionnaireResponseModel: Model<QuestionnaireResponseDocument>;
+  availabilityModel: Model<AvailabilityDocument>;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -229,6 +231,7 @@ export class Handler extends BaseHandler {
       QuestionnaireResponse.name,
       QuestionnaireResponseDto,
     );
+    this.availabilityModel = model<AvailabilityDocument>(Availability.name, AvailabilityDto);
   }
 }
 
