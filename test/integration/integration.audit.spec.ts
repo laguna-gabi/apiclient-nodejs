@@ -1,3 +1,15 @@
+import { addDays } from 'date-fns';
+import { lorem } from 'faker';
+import { ActionItem, ActionItemDocument, CaregiverDocument, TaskStatus } from '../../src/member';
+import {
+  CreateTodoDoneParams,
+  CreateTodoParams,
+  EndAndCreateTodoParams,
+  TodoDocument,
+  TodoDoneDocument,
+} from '../../src/todo';
+import { User } from '../../src/user';
+import { Handler } from '../aux';
 import {
   checkAuditValues,
   generateAddCaregiverParams,
@@ -8,16 +20,6 @@ import {
   generateRequestHeaders,
   generateUpdateCaregiverParams,
 } from '../index';
-import { Handler } from '../aux';
-import { CaregiverDocument } from '../../src/member';
-import {
-  CreateTodoDoneParams,
-  CreateTodoParams,
-  EndAndCreateTodoParams,
-  TodoDocument,
-  TodoDoneDocument,
-} from '../../src/todo';
-import { User } from '../../src/user';
 
 describe('Integration tests : Audit', () => {
   const handler: Handler = new Handler();
@@ -185,6 +187,37 @@ describe('Integration tests : Audit', () => {
       await Promise.all(tests);
     });
   });
+
+  describe(ActionItem.name, () => {
+    it('should update createdAt and updatedAt fields for action item api', async () => {
+      const userParams = [generateCreateUserParams(), generateCreateUserParams()];
+      const [{ id: userId1 }, { id: userId2 }] = await Promise.all(
+        userParams.map((userParams) => handler.mutations.createUser({ userParams })),
+      );
+
+      const { id } = await handler.mutations.createActionItem({
+        createTaskParams: {
+          memberId: handler.patientZero.id,
+          title: lorem.sentence(),
+          deadline: addDays(new Date(), 1),
+        },
+        requestHeaders: generateRequestHeaders(userParams[0].authId),
+      });
+
+      expect(
+        await checkAuditValues<ActionItemDocument>(id, handler.actionItemModel, userId1, userId1),
+      ).toBeTruthy();
+
+      await handler.mutations.updateActionItemStatus({
+        updateTaskStatusParams: { id, status: TaskStatus.reached },
+        requestHeaders: generateRequestHeaders(userParams[1].authId),
+      });
+
+      expect(
+        await checkAuditValues<ActionItemDocument>(id, handler.actionItemModel, userId1, userId2),
+      ).toBeTruthy();
+    });
+  });
 });
 
 /**************************************************************************************************
@@ -232,6 +265,7 @@ async function testRunner(users: User[], handler: Handler) {
     ),
   ).toBeTruthy();
 }
+
 function getRandomUser(users: User[]): User {
   return users[Math.floor(Math.random() * users.length)];
 }

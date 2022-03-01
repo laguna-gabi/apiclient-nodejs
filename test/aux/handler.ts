@@ -10,14 +10,6 @@ import { GraphQLClient } from 'graphql-request';
 import * as jwt from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import { Consumer } from 'sqs-consumer';
-import {
-  Todo,
-  TodoDocument,
-  TodoDone,
-  TodoDoneDocument,
-  TodoDoneDto,
-  TodoDto,
-} from '../../src/todo';
 import { Mutations, Queries } from '.';
 import {
   generateCreateMemberParams,
@@ -44,6 +36,9 @@ import {
 import { CommunicationService } from '../../src/communication';
 import { DailyReportService } from '../../src/dailyReport';
 import {
+  ActionItem,
+  ActionItemDocument,
+  ActionItemDto,
   Caregiver,
   CaregiverDocument,
   CaregiverDto,
@@ -52,6 +47,14 @@ import {
 } from '../../src/member';
 import { Org, OrgService } from '../../src/org';
 import { WebhooksController } from '../../src/providers';
+import {
+  Todo,
+  TodoDocument,
+  TodoDone,
+  TodoDoneDocument,
+  TodoDoneDto,
+  TodoDto,
+} from '../../src/todo';
 import { UserService } from '../../src/user';
 import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
 
@@ -72,10 +75,6 @@ export class Handler extends BaseHandler {
   memberService: MemberService;
   orgService: OrgService;
   careService: CareService;
-  barrierTypeModel: Model<BarrierTypeDocument>;
-  caregiverModel: Model<CaregiverDocument>;
-  todoModel: Model<TodoDocument>;
-  todoDoneModel: Model<TodoDoneDocument>;
   webhooksController: WebhooksController;
   spyOnGetCommunicationService;
   patientZero: Member;
@@ -86,6 +85,12 @@ export class Handler extends BaseHandler {
   client: GraphQLClient;
   defaultUserRequestHeaders;
   defaultAdminRequestHeaders;
+
+  barrierTypeModel: Model<BarrierTypeDocument>;
+  caregiverModel: Model<CaregiverDocument>;
+  todoModel: Model<TodoDocument>;
+  todoDoneModel: Model<TodoDoneDocument>;
+  actionItemModel: Model<ActionItemDocument>;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -133,11 +138,8 @@ export class Handler extends BaseHandler {
     this.orgService = moduleFixture.get<OrgService>(OrgService);
     this.careService = moduleFixture.get<CareService>(CareService);
     this.webhooksController = moduleFixture.get<WebhooksController>(WebhooksController);
-    this.barrierTypeModel = model<BarrierTypeDocument>(BarrierType.name, BarrierTypeDto);
-    this.caregiverModel = model<CaregiverDocument>(Caregiver.name, CaregiverDto);
-    this.todoModel = model<TodoDocument>(Todo.name, TodoDto);
-    this.todoDoneModel = model<TodoDoneDocument>(TodoDone.name, TodoDoneDto);
 
+    this.initModels();
     await this.buildFixtures();
     await this.app.listen(datatype.number({ min: 4000, max: 9000 }));
     this.client = new GraphQLClient(`${await this.app.getUrl()}/graphql`);
@@ -209,6 +211,14 @@ export class Handler extends BaseHandler {
       UserRole.coach,
     ]);
     this.defaultAdminRequestHeaders = await initClients(this.userService, [UserRole.admin]);
+  }
+
+  initModels() {
+    this.barrierTypeModel = model<BarrierTypeDocument>(BarrierType.name, BarrierTypeDto);
+    this.caregiverModel = model<CaregiverDocument>(Caregiver.name, CaregiverDto);
+    this.todoModel = model<TodoDocument>(Todo.name, TodoDto);
+    this.todoDoneModel = model<TodoDoneDocument>(TodoDone.name, TodoDoneDto);
+    this.actionItemModel = model<ActionItemDocument>(ActionItem.name, ActionItemDto);
   }
 }
 
