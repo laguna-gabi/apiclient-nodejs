@@ -9,7 +9,7 @@ import {
   generateCreateCarePlanParamsWizard,
   generateCreateRedFlagParamsWizard,
   generateId,
-  generateSubmitCareWizardResult,
+  generateSubmitCareWizardParams,
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
   generateUpdateRedFlagParams,
@@ -168,7 +168,7 @@ describe('CareResolver', () => {
     });
   });
 
-  describe('submitCareWizardResult', () => {
+  describe('submitCareWizard', () => {
     let spyOnServiceCreateCarePlan;
     let spyOnServiceCreateBarrier;
     let spyOnServiceCreateRedFlag;
@@ -210,9 +210,9 @@ describe('CareResolver', () => {
         barriers: [barrier1, barrier2],
         createdBy,
       });
-      const wizardResult = generateSubmitCareWizardResult({ redFlag, memberId });
+      const wizardParams = generateSubmitCareWizardParams({ redFlag, memberId });
 
-      const result = await resolver.submitCareWizardResult(createdBy, wizardResult);
+      const result = await resolver.submitCareWizard(createdBy, wizardParams);
       expect(result.ids.length).toEqual(3);
 
       // test red flags

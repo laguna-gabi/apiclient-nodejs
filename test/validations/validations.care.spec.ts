@@ -7,7 +7,7 @@ import {
   generateCreateCarePlanParamsWizard,
   generateCreateRedFlagParamsWizard,
   generateId,
-  generateSubmitCareWizardResult,
+  generateSubmitCareWizardParams,
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
   generateUpdateRedFlagParams,
@@ -206,7 +206,7 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
     });
   });
 
-  describe('submitCareWizardResult', () => {
+  describe('submitCareWizard', () => {
     /* eslint-disable max-len */
     test.each`
       level         | field          | error
@@ -226,25 +226,25 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
         delete barrier.createdBy;
         const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier] });
         delete redFlag.createdBy;
-        const wizardResult = generateSubmitCareWizardResult({ redFlag });
+        const wizardParams = generateSubmitCareWizardParams({ redFlag });
 
         switch (params.level) {
           case 'submit':
-            delete wizardResult[params.field];
+            delete wizardParams[params.field];
             break;
           case 'redFlag':
-            delete wizardResult.redFlag[params.field];
+            delete wizardParams.redFlag[params.field];
             break;
           case 'barrier':
-            delete wizardResult.redFlag.barriers[0][params.field];
+            delete wizardParams.redFlag.barriers[0][params.field];
             break;
           case 'carePlan':
-            delete wizardResult.redFlag.barriers[0].carePlans[0][params.field];
+            delete wizardParams.redFlag.barriers[0].carePlans[0][params.field];
             break;
         }
-        delete wizardResult[params.field];
-        await handler.mutations.submitCareWizardResult({
-          submitCareWizardParams: wizardResult,
+        delete wizardParams[params.field];
+        await handler.mutations.submitCareWizard({
+          submitCareWizardParams: wizardParams,
           missingFieldError: params.error,
         });
       },
@@ -280,10 +280,10 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
     const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier], ...extra });
     delete redFlag.createdBy;
     extra = params.level === 'submit' ? params.input : {};
-    const wizardResult = generateSubmitCareWizardResult({ redFlag, ...extra });
+    const wizardParams = generateSubmitCareWizardParams({ redFlag, ...extra });
 
-    await handler.mutations.submitCareWizardResult({
-      submitCareWizardParams: wizardResult,
+    await handler.mutations.submitCareWizard({
+      submitCareWizardParams: wizardParams,
       ...params.error,
     });
   });

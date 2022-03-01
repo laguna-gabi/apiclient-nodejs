@@ -115,7 +115,7 @@ export class CareResolver {
 
   @Mutation(() => Identifiers)
   @Roles(UserRole.coach, UserRole.nurse)
-  async submitCareWizardResult(
+  async submitCareWizard(
     @Client('_id') userId,
     @Args(camelCase(SubmitCareWizardParams.name)) submitCareWizardParams: SubmitCareWizardParams,
   ): Promise<Identifiers> {

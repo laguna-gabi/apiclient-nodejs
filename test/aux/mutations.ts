@@ -1670,7 +1670,7 @@ export class Mutations {
     return submitQuestionnaireResponse;
   };
 
-  submitCareWizardResult = async ({
+  submitCareWizard = async ({
     submitCareWizardParams,
     missingFieldError,
     invalidFieldsErrors,
@@ -1681,11 +1681,11 @@ export class Mutations {
     invalidFieldsErrors?: string[];
     requestHeaders?;
   }): Promise<Identifiers> => {
-    const { submitCareWizardResult } = await this.client
+    const { submitCareWizard } = await this.client
       .request(
         gql`
-          mutation submitCareWizardResult($submitCareWizardParams: SubmitCareWizardParams!) {
-            submitCareWizardResult(submitCareWizardParams: $submitCareWizardParams) {
+          mutation submitCareWizard($submitCareWizardParams: SubmitCareWizardParams!) {
+            submitCareWizard(submitCareWizardParams: $submitCareWizardParams) {
               ids
             }
           }
@@ -1701,7 +1701,7 @@ export class Mutations {
         });
       });
 
-    return submitCareWizardResult;
+    return submitCareWizard;
   };
 
   updateBarrier = async ({

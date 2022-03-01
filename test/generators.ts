@@ -942,7 +942,7 @@ export const generateUpdateCarePlanParams = ({
   };
 };
 
-export const generateSubmitCareWizardResult = ({
+export const generateSubmitCareWizardParams = ({
   redFlag,
   memberId = generateId(),
 }: Partial<SubmitCareWizardParams> = {}) => {

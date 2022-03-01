@@ -70,7 +70,7 @@ import {
   generateRequestHeaders,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
-  generateSubmitCareWizardResult,
+  generateSubmitCareWizardParams,
   generateSubmitQuestionnaireResponseParams,
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
@@ -455,7 +455,7 @@ describe('Integration tests: all', () => {
       const addCaregiverParams = generateAddCaregiverParams({ memberId: member.id });
       await handler.mutations.addCaregiver({ addCaregiverParams, requestHeaders });
 
-      await submitCareWizardResult(handler, member.id);
+      await submitCareWizard(handler, member.id);
 
       // submit QR for member
       await submitQR(member.id);
@@ -1841,7 +1841,7 @@ describe('Integration tests: all', () => {
       const {
         member: { id: memberId },
       } = await creators.createAndValidateMember({ org, useNewUser: true });
-      await submitCareWizardResult(handler, memberId);
+      await submitCareWizard(handler, memberId);
       const memberRedFlags = await handler.queries.getMemberRedFlags({
         memberId,
       });
@@ -1879,7 +1879,7 @@ describe('Integration tests: all', () => {
         member: { id: memberId },
         user: { authId },
       } = await creators.createAndValidateMember({ org, useNewUser: true });
-      await submitCareWizardResult(handler, memberId);
+      await submitCareWizard(handler, memberId);
       const memberBarriers = await handler.queries.getMemberBarriers({
         memberId,
         requestHeaders: generateRequestHeaders(authId),
@@ -1922,7 +1922,7 @@ describe('Integration tests: all', () => {
         member: { id: memberId },
         user: { authId },
       } = await creators.createAndValidateMember({ org, useNewUser: true });
-      await submitCareWizardResult(handler, memberId);
+      await submitCareWizard(handler, memberId);
 
       const memberCarePlans = await handler.queries.getMemberCarePlans({
         memberId,
@@ -1966,7 +1966,7 @@ describe('Integration tests: all', () => {
         member: { id: memberId },
         user: { authId },
       } = await creators.createAndValidateMember({ org, useNewUser: true });
-      await submitCareWizardResult(handler, memberId);
+      await submitCareWizard(handler, memberId);
 
       const memberBarriers = await handler.queries.getMemberBarriers({
         memberId,
@@ -2036,9 +2036,9 @@ describe('Integration tests: all', () => {
       delete barrier2.createdBy;
       const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier1, barrier2] });
       delete redFlag.createdBy;
-      const wizardResult = generateSubmitCareWizardResult({ redFlag, memberId });
-      const result = await handler.mutations.submitCareWizardResult({
-        submitCareWizardParams: wizardResult,
+      const wizardParams = generateSubmitCareWizardParams({ redFlag, memberId });
+      const result = await handler.mutations.submitCareWizard({
+        submitCareWizardParams: wizardParams,
         requestHeaders: generateRequestHeaders(authId),
       });
       expect(result.ids.length).toEqual(3);
@@ -2350,7 +2350,7 @@ describe('Integration tests: all', () => {
       });
   };
 
-  const submitCareWizardResult = async (handler: Handler, memberId: string) => {
+  const submitCareWizard = async (handler: Handler, memberId: string) => {
     const carePlanTypeInput1 = generateCarePlanTypeInput({ id: handler.carePlanType.id });
     const carePlan = generateCreateCarePlanParamsWizard({ type: carePlanTypeInput1 });
     delete carePlan.createdBy;
@@ -2361,9 +2361,9 @@ describe('Integration tests: all', () => {
     delete barrier.createdBy;
     const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier] });
     delete redFlag.createdBy;
-    const wizardResult = generateSubmitCareWizardResult({ redFlag, memberId });
-    const result = await handler.mutations.submitCareWizardResult({
-      submitCareWizardParams: wizardResult,
+    const wizardParams = generateSubmitCareWizardParams({ redFlag, memberId });
+    const result = await handler.mutations.submitCareWizard({
+      submitCareWizardParams: wizardParams,
     });
     expect(result).toBeTruthy();
   };

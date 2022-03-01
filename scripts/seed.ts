@@ -20,7 +20,7 @@ import {
   generateRequestHeaders,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
-  generateSubmitCareWizardResult,
+  generateSubmitCareWizardParams,
   generateUpdateMemberParams,
 } from '../test';
 import { Mutations } from '../test/aux';
@@ -238,9 +238,9 @@ async function main() {
   delete barrier.createdBy;
   const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier] });
   delete redFlag.createdBy;
-  const wizardResult = generateSubmitCareWizardResult({ redFlag, memberId });
-  await base.mutations.submitCareWizardResult({
-    submitCareWizardParams: wizardResult,
+  const wizardParams = generateSubmitCareWizardParams({ redFlag, memberId });
+  await base.mutations.submitCareWizard({
+    submitCareWizardParams: wizardParams,
   });
 
   await base.cleanUp();
