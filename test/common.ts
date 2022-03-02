@@ -5,7 +5,7 @@ import { TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import { Document, Model, Types, connect, disconnect } from 'mongoose';
 import { v4 } from 'uuid';
-import { apiPrefix, webhooks } from '../src/common';
+import { AppRequestContext, RequestContext, apiPrefix, webhooks } from '../src/common';
 import { Audit, DbModule } from '../src/db';
 import { Member, defaultMemberParams } from '../src/member';
 import {
@@ -22,7 +22,6 @@ import { NotificationService } from '../src/services';
 import { User, UserService } from '../src/user';
 import { Mutations, Queries } from './aux';
 import { generateId } from './generators';
-import { AppRequestContext, RequestContext } from '../src/common';
 
 export class BaseHandler {
   app: INestApplication;

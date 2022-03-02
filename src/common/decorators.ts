@@ -1,5 +1,4 @@
-import { SetMetadata } from '@nestjs/common';
-import { ExecutionContext, createParamDecorator } from '@nestjs/common';
+import { ExecutionContext, SetMetadata, createParamDecorator } from '@nestjs/common';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
 import { MemberIdParamType } from '.';
 

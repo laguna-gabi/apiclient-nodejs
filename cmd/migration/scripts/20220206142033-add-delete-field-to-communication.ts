@@ -1,6 +1,5 @@
-import { Command } from '../.';
+import { Command, InfoColoring } from '../.';
 import * as path from 'path';
-import { InfoColoring } from '../.';
 import { Db } from 'mongodb';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../../../src/app.module';

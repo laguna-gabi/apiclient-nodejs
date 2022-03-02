@@ -3,10 +3,14 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import * as packageJson from '../package.json';
 import { AppModule } from './app.module';
 import { GlobalAuthGuard, RolesGuard } from './auth';
-import { AllExceptionsFilter, LoggerService, internalLogs } from './common';
+import {
+  AllExceptionsFilter,
+  AppRequestContext,
+  LoggerService,
+  internalLogs,
+  requestContextMiddleware,
+} from './common';
 import { general } from 'config';
-import { AppRequestContext } from './common';
-import { requestContextMiddleware } from './common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: ['log'], bodyParser: false });

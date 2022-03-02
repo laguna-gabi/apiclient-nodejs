@@ -1,4 +1,4 @@
-import { QueueType, ServiceName } from '@lagunahealth/pandora';
+import { Environments, QueueType, ServiceName, formatEx } from '@lagunahealth/pandora';
 import { Injectable, NotImplementedException, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import * as AWS from 'aws-sdk';
@@ -7,7 +7,6 @@ import { Consumer, SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { ConfigsService, ExternalConfigs, StorageService } from '.';
 import { EventType, IEventNotifyQueue, LoggerService, StorageType } from '../../common';
-import { Environments, formatEx } from '@lagunahealth/pandora';
 
 @Injectable()
 export class QueueService implements OnModuleInit {

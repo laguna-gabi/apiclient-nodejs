@@ -1,9 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Command } from '../.';
+import { Command, InfoColoring } from '../.';
 import * as path from 'path';
-import { InfoColoring } from '../.';
 import { Db } from 'mongodb';
 import { AppModule } from '../../../src/app.module';
 import { Journal } from '../../../src/member';

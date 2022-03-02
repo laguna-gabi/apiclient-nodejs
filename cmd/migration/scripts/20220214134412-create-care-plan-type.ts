@@ -1,7 +1,6 @@
 /* eslint-disable max-len */
-import { Command } from '../.';
+import { Command, InfoColoring } from '../.';
 import * as path from 'path';
-import { InfoColoring } from '../.';
 import { Db } from 'mongodb';
 import { seedCarePlans } from '../../static/seedCare';
 // ------------------------------------------------------------------------------------------------

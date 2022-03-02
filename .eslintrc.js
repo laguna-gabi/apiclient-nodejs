@@ -30,6 +30,7 @@ module.exports = {
     'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0 }],
     'prefer-const': 'error',
     'no-unexpected-multiline': 'error',
+    'no-duplicate-imports': 'error',
     'sort-imports': [
       'error',
       {

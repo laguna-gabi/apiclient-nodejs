@@ -1,7 +1,5 @@
 import { Member, MemberSummary } from '../../src/member';
-import { AppointmentsIntegrationActions } from '../aux';
-import { Creators } from '../aux';
-import { Handler } from '../aux';
+import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import { User } from '../../src/user';
 import { generateRequestHeaders } from '../index';
 
