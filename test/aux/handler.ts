@@ -49,6 +49,9 @@ import {
   Caregiver,
   CaregiverDocument,
   CaregiverDto,
+  ControlMember,
+  ControlMemberDocument,
+  ControlMemberDto,
   Member,
   MemberService,
 } from '../../src/member';
@@ -98,6 +101,7 @@ export class Handler extends BaseHandler {
   defaultUserRequestHeaders;
   defaultAdminRequestHeaders;
 
+  controlMemberModel: Model<ControlMemberDocument>;
   barrierTypeModel: Model<BarrierTypeDocument>;
   caregiverModel: Model<CaregiverDocument>;
   todoModel: Model<TodoDocument>;
@@ -229,6 +233,7 @@ export class Handler extends BaseHandler {
   }
 
   initModels() {
+    this.controlMemberModel = model<ControlMemberDocument>(ControlMember.name, ControlMemberDto);
     this.barrierTypeModel = model<BarrierTypeDocument>(BarrierType.name, BarrierTypeDto);
     this.caregiverModel = model<CaregiverDocument>(Caregiver.name, CaregiverDto);
     this.todoModel = model<TodoDocument>(Todo.name, TodoDto);

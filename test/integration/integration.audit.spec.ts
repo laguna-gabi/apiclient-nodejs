@@ -7,7 +7,13 @@ import { buildNPSQuestionnaire } from '../../cmd/statics';
 import { AvailabilityDocument } from '../../src/availability';
 import { reformatDate } from '../../src/common';
 import { DailyReportCategoryTypes } from '../../src/dailyReport';
-import { ActionItem, ActionItemDocument, CaregiverDocument, TaskStatus } from '../../src/member';
+import {
+  ActionItem,
+  ActionItemDocument,
+  CaregiverDocument,
+  ControlMemberDocument,
+  TaskStatus,
+} from '../../src/member';
 import { QuestionnaireResponseDocument } from '../../src/questionnaire';
 import {
   CreateTodoDoneParams,
@@ -22,10 +28,12 @@ import {
   checkAuditValues,
   generateAddCaregiverParams,
   generateAvailabilityInput,
+  generateCreateMemberParams,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateCreateUserParams,
   generateEndAndCreateTodoParams,
+  generateOrgParams,
   generateRequestHeaders,
   generateUpdateCaregiverParams,
 } from '../index';
@@ -308,6 +316,29 @@ describe('Integration tests : Audit', () => {
       });
       expect(dailyReport.createdBy.toString()).toEqual(member.id);
       expect(dailyReport.updatedBy.toString()).toEqual(member.id);
+    });
+  });
+
+  describe('controlMember', () => {
+    it('should create controlMember', async () => {
+      handler.featureFlagService.spyOnFeatureFlagControlGroup.mockImplementationOnce(
+        async () => true,
+      );
+      const requestHeaders = generateRequestHeaders(user1.authId);
+
+      const orgParams = generateOrgParams();
+      const { id: orgId } = await handler.mutations.createOrg({ orgParams, requestHeaders });
+      const memberParams = generateCreateMemberParams({ orgId });
+      const { id } = await handler.mutations.createMember({ memberParams, requestHeaders });
+
+      expect(
+        await checkAuditValues<ControlMemberDocument>(
+          id,
+          handler.controlMemberModel,
+          user1.id,
+          user1.id,
+        ),
+      ).toBeTruthy();
     });
   });
 });

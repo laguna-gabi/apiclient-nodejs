@@ -37,7 +37,7 @@ import {
 } from '../common';
 import { Org } from '../org';
 import { User } from '../user';
-import { ISoftDelete } from '../db';
+import { ISoftDelete, audit } from '../db';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -709,4 +709,4 @@ export class ControlMember extends Member {}
 export type MemberDocument = Member & Document & ISoftDelete<Member>;
 export const MemberDto = SchemaFactory.createForClass(Member);
 export type ControlMemberDocument = ControlMember & Document;
-export const ControlMemberDto = SchemaFactory.createForClass(ControlMember);
+export const ControlMemberDto = audit(SchemaFactory.createForClass(ControlMember));
