@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
+import { Document, Types } from 'mongoose';
+import { audit } from '../db';
 
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
@@ -22,4 +23,4 @@ export class UserConfig {
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 export type UserConfigDocument = UserConfig & Document;
-export const UserConfigDto = SchemaFactory.createForClass(UserConfig);
+export const UserConfigDto = audit(SchemaFactory.createForClass(UserConfig));

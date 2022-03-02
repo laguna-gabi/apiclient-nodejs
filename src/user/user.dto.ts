@@ -1,12 +1,12 @@
+import { Language } from '@lagunahealth/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsOptional, IsPhoneNumber, IsUrl, Length } from 'class-validator';
 import * as config from 'config';
 import { Document, Types } from 'mongoose';
-import { UserRole } from '../common';
 import { Appointment, AppointmentData } from '../appointment';
-import { ErrorType, Errors, Identifier, validPhoneExamples } from '../common';
-import { Language } from '@lagunahealth/pandora';
+import { ErrorType, Errors, Identifier, UserRole, validPhoneExamples } from '../common';
+import { audit } from '../db';
 
 registerEnumType(UserRole, { name: 'UserRole' });
 
@@ -149,4 +149,4 @@ export class User extends Identifier {
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 export type UserDocument = User & Document;
-export const UserDto = SchemaFactory.createForClass(User);
+export const UserDto = audit(SchemaFactory.createForClass(User));

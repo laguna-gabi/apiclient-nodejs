@@ -73,7 +73,15 @@ import {
   TodoDoneDto,
   TodoDto,
 } from '../../src/todo';
-import { UserService } from '../../src/user';
+import {
+  User,
+  UserConfig,
+  UserConfigDocument,
+  UserConfigDto,
+  UserDocument,
+  UserDto,
+  UserService,
+} from '../../src/user';
 import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
 
 const validatorsConfig = config.get('graphql.validators');
@@ -114,6 +122,8 @@ export class Handler extends BaseHandler {
   dailyReportModel: Model<DailyReportDocument & defaultAuditDbValues>;
   availabilityModel: Model<AvailabilityDocument>;
   journalModel: Model<JournalDocument>;
+  userModel: Model<UserDocument>;
+  userConfigModel: Model<UserConfigDocument>;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -253,6 +263,8 @@ export class Handler extends BaseHandler {
     );
     this.availabilityModel = model<AvailabilityDocument>(Availability.name, AvailabilityDto);
     this.journalModel = model<JournalDocument>(Journal.name, JournalDto);
+    this.userModel = model<UserDocument>(User.name, UserDto);
+    this.userConfigModel = model<UserConfigDocument>(UserConfig.name, UserConfigDto);
   }
 }
 

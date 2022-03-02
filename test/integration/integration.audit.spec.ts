@@ -1,7 +1,6 @@
 import { general } from 'config';
 import { addDays } from 'date-fns';
 import * as faker from 'faker';
-import { lorem } from 'faker';
 import { Types } from 'mongoose';
 import { buildNPSQuestionnaire } from '../../cmd/statics';
 import { AvailabilityDocument } from '../../src/availability';
@@ -23,7 +22,7 @@ import {
   TodoDocument,
   TodoDoneDocument,
 } from '../../src/todo';
-import { User } from '../../src/user';
+import { User, UserConfigDocument, UserDocument } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   checkAuditValues,
@@ -36,6 +35,7 @@ import {
   generateEndAndCreateTodoParams,
   generateOrgParams,
   generateRequestHeaders,
+  generateScheduleAppointmentParams,
   generateUpdateCaregiverParams,
 } from '../index';
 
@@ -251,7 +251,7 @@ describe('Integration tests : Audit', () => {
       const { id } = await handler.mutations.createActionItem({
         createTaskParams: {
           memberId: handler.patientZero.id,
-          title: lorem.sentence(),
+          title: faker.lorem.sentence(),
           deadline: addDays(new Date(), 1),
         },
         requestHeaders: generateRequestHeaders(user1.authId),
@@ -356,6 +356,46 @@ describe('Integration tests : Audit', () => {
           handler.patientZero.id,
           handler.patientZero.id,
         ),
+      ).toBeTruthy();
+    });
+  });
+
+  describe('User', () => {
+    it('should create a user + config with createdBy and updatedBy fields', async () => {
+      const { id } = await handler.mutations.createUser({
+        userParams: generateCreateUserParams(),
+        requestHeaders: generateRequestHeaders(user1.authId),
+      });
+      expect(
+        await checkAuditValues<UserDocument>(id, handler.userModel, user1.id, user1.id),
+      ).toBeTruthy();
+
+      const { _id } = await handler.userConfigModel.findOne({ userId: new Types.ObjectId(id) });
+      expect(
+        await checkAuditValues<UserConfigDocument>(
+          _id,
+          handler.userConfigModel,
+          user1.id,
+          user1.id,
+        ),
+      ).toBeTruthy();
+    });
+
+    it('should update on addAppointmentToUser', async () => {
+      const { id } = await handler.mutations.createUser({
+        userParams: generateCreateUserParams(),
+        requestHeaders: generateRequestHeaders(user1.authId),
+      });
+      await handler.mutations.scheduleAppointment({
+        appointmentParams: generateScheduleAppointmentParams({
+          memberId: handler.patientZero.id,
+          userId: id,
+        }),
+        requestHeaders: generateRequestHeaders(user2.authId),
+      });
+
+      expect(
+        await checkAuditValues<UserDocument>(id, handler.userModel, user1.id, user2.id),
       ).toBeTruthy();
     });
   });
