@@ -77,6 +77,9 @@ import {
 import { Org, OrgService } from '../../src/org';
 import { WebhooksController } from '../../src/providers';
 import {
+  Questionnaire,
+  QuestionnaireDocument,
+  QuestionnaireDto,
   QuestionnaireResponse,
   QuestionnaireResponseDocument,
   QuestionnaireResponseDto,
@@ -136,6 +139,7 @@ export class Handler extends BaseHandler {
   actionItemModel: Model<ActionItemDocument>;
   questionnaireResponseModel: Model<QuestionnaireResponseDocument>;
   dailyReportModel: Model<DailyReportDocument & defaultAuditDbValues>;
+  questionnaireModel: Model<QuestionnaireDocument>;
   availabilityModel: Model<AvailabilityDocument>;
   memberModel: Model<MemberDocument>;
   journalModel: Model<JournalDocument>;
@@ -292,6 +296,7 @@ export class Handler extends BaseHandler {
     this.journalModel = model<JournalDocument>(Journal.name, JournalDto);
     this.userModel = model<UserDocument>(User.name, UserDto);
     this.userConfigModel = model<UserConfigDocument>(UserConfig.name, UserConfigDto);
+    this.questionnaireModel = model<QuestionnaireDocument>(Questionnaire.name, QuestionnaireDto);
     this.appointmentModel = model<AppointmentDocument>(Appointment.name, AppointmentDto);
     this.notesModel = model<NotesDocument>(Notes.name, NotesDto);
   }

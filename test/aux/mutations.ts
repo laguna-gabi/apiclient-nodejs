@@ -1612,10 +1612,12 @@ export class Mutations {
     createQuestionnaireParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultAdminRequestHeaders,
   }: {
     createQuestionnaireParams: CreateQuestionnaireParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Identifier> => {
     const { createQuestionnaire } = await this.client
       .request(
@@ -1627,7 +1629,7 @@ export class Mutations {
           }
         `,
         { createQuestionnaireParams },
-        this.defaultAdminRequestHeaders,
+        requestHeaders,
       )
       .catch((ex) => {
         return isResultValid({

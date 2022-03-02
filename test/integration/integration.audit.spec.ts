@@ -7,6 +7,7 @@ import * as request from 'supertest';
 import { buildNPSQuestionnaire } from '../../cmd/statics';
 import { Appointment, AppointmentDocument } from '../../src/appointment';
 import { Availability, AvailabilityDocument } from '../../src/availability';
+import { DailyReport, DailyReportCategoryTypes } from '../../src/dailyReport';
 import {
   BarrierDocument,
   CarePlanDocument,
@@ -15,20 +16,26 @@ import {
   RedFlagDocument,
 } from '../../src/care';
 import { UserRole, delay, reformatDate } from '../../src/common';
-import { DailyReportCategoryTypes } from '../../src/dailyReport';
 import {
   ActionItem,
   ActionItemDocument,
   Caregiver,
   CaregiverDocument,
+  ControlMember,
   ControlMemberDocument,
+  Journal,
   JournalDocument,
   Member,
   MemberDocument,
   ReplaceUserForMemberParams,
   TaskStatus,
 } from '../../src/member';
-import { Questionnaire, QuestionnaireResponseDocument } from '../../src/questionnaire';
+import {
+  Questionnaire,
+  QuestionnaireDocument,
+  QuestionnaireResponse,
+  QuestionnaireResponseDocument,
+} from '../../src/questionnaire';
 import {
   CreateTodoDoneParams,
   CreateTodoParams,
@@ -72,7 +79,8 @@ describe('Integration tests : Audit', () => {
   let appointmentsActions: AppointmentsIntegrationActions;
   let user1: Partial<User>;
   let user2: Partial<User>;
-  let adminUser: Partial<User>;
+  let adminUser1: Partial<User>;
+  let adminUser2: Partial<User>;
   let server;
 
   beforeAll(async () => {
@@ -87,14 +95,17 @@ describe('Integration tests : Audit', () => {
       generateCreateUserParams(),
       generateCreateUserParams(),
       generateCreateUserParams({ roles: [UserRole.admin] }),
+      generateCreateUserParams({ roles: [UserRole.admin] }),
     ];
 
-    const [{ id: userId1 }, { id: userId2 }, { id: adminUserId }] = await Promise.all(
-      userParams.map((userParams) => handler.mutations.createUser({ userParams })),
-    );
+    const [{ id: userId1 }, { id: userId2 }, { id: adminUser1Id }, { id: adminUser2Id }] =
+      await Promise.all(
+        userParams.map((userParams) => handler.mutations.createUser({ userParams })),
+      );
     user1 = { id: userId1, ...userParams[0] };
     user2 = { id: userId2, ...userParams[1] };
-    adminUser = { id: adminUserId, ...userParams[2] };
+    adminUser1 = { id: adminUser1Id, ...userParams[2] };
+    adminUser2 = { id: adminUser2Id, ...userParams[3] };
   }, 10000);
 
   afterAll(async () => {
@@ -307,11 +318,21 @@ describe('Integration tests : Audit', () => {
     });
   });
 
-  describe(Questionnaire.name, () => {
+  describe(`${QuestionnaireResponse.name} and ${Questionnaire.name}`, () => {
     it('should create a questionnaire response with createdBy and updatedBy', async () => {
       const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
         createQuestionnaireParams: buildNPSQuestionnaire(),
+        requestHeaders: generateRequestHeaders(adminUser1.authId),
       });
+
+      expect(
+        await checkAuditValues<QuestionnaireDocument>(
+          questionnaireId,
+          handler.questionnaireModel,
+          adminUser1.id,
+          adminUser1.id,
+        ),
+      ).toBeTruthy();
 
       const { id } = await handler.mutations.submitQuestionnaireResponse({
         submitQuestionnaireResponseParams: {
@@ -328,6 +349,21 @@ describe('Integration tests : Audit', () => {
           handler.questionnaireResponseModel,
           user1.id,
           user1.id,
+        ),
+      ).toBeTruthy();
+
+      // re-create an NPS (same type) assessment questionnaire - this will update previous template (de-activate)
+      await handler.mutations.createQuestionnaire({
+        createQuestionnaireParams: buildNPSQuestionnaire(),
+        requestHeaders: generateRequestHeaders(adminUser2.authId),
+      });
+
+      expect(
+        await checkAuditValues<QuestionnaireDocument>(
+          questionnaireId,
+          handler.questionnaireModel,
+          adminUser1.id,
+          adminUser2.id,
         ),
       ).toBeTruthy();
     });
@@ -373,7 +409,7 @@ describe('Integration tests : Audit', () => {
 
       await handler.mutations.replaceUserForMember({
         replaceUserForMemberParams,
-        requestHeaders: generateRequestHeaders(adminUser.authId),
+        requestHeaders: generateRequestHeaders(adminUser1.authId),
       });
 
       expect(
@@ -381,7 +417,7 @@ describe('Integration tests : Audit', () => {
           memberId,
           handler.memberModel,
           undefined,
-          adminUser.id,
+          adminUser1.id,
         ),
       ).toBeTruthy();
 
@@ -429,7 +465,7 @@ describe('Integration tests : Audit', () => {
     });
   });
 
-  describe('dailyReports', () => {
+  describe(DailyReport.name, () => {
     it('should create a dailyReport', async () => {
       const org = await creators.createAndValidateOrg();
       const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
@@ -451,7 +487,7 @@ describe('Integration tests : Audit', () => {
     });
   });
 
-  describe('controlMember', () => {
+  describe(ControlMember.name, () => {
     it('should create controlMember', async () => {
       handler.featureFlagService.spyOnFeatureFlagControlGroup.mockImplementationOnce(
         async () => true,
@@ -474,7 +510,7 @@ describe('Integration tests : Audit', () => {
     });
   });
 
-  describe('journal', () => {
+  describe(Journal.name, () => {
     it('should create journal', async () => {
       const { id } = await handler.mutations.createJournal({
         requestHeaders: generateRequestHeaders(handler.patientZero.authId),
@@ -491,7 +527,7 @@ describe('Integration tests : Audit', () => {
     });
   });
 
-  describe('User', () => {
+  describe(User.name, () => {
     it('should create a user + config with createdBy and updatedBy fields', async () => {
       const { id } = await handler.mutations.createUser({
         userParams: generateCreateUserParams(),

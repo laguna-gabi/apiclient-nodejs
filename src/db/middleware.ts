@@ -19,7 +19,7 @@ export function audit<TDocument extends Document>(schema: Schema<TDocument>) {
 
     if (clientId) {
       // do not set the `createdBy` field if the record already exists
-      if (!preUpdate && clientId) {
+      if (!preUpdate) {
         this.set('createdBy', new Types.ObjectId(clientId));
       }
 
@@ -82,6 +82,23 @@ export function audit<TDocument extends Document>(schema: Schema<TDocument>) {
       });
 
       next();
+    }
+  });
+
+  schema.pre('updateMany', { document: false, query: true }, async function () {
+    // get client id from local storage
+    const clientId = getRequestClientId();
+
+    const preUpdate = await this.model.find(this.getQuery());
+
+    if (clientId) {
+      // do not set the `createdBy` field if the records already exists
+      if (!preUpdate) {
+        this.set('createdBy', new Types.ObjectId(clientId));
+      }
+
+      // set `updatedBy` field
+      this.set('updatedBy', new Types.ObjectId(clientId));
     }
   });
 

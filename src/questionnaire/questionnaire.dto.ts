@@ -350,7 +350,7 @@ export class Answer {
  *************************************************************************************************/
 
 export type QuestionnaireDocument = Questionnaire & Document;
-export const QuestionnaireDto = SchemaFactory.createForClass(Questionnaire);
+export const QuestionnaireDto = audit(SchemaFactory.createForClass(Questionnaire));
 
 export type QuestionnaireResponseDocument = QuestionnaireResponse &
   Document &
