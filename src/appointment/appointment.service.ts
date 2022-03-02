@@ -1,7 +1,9 @@
+import { formatEx } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import * as config from 'config';
+import { isUndefined, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
 import {
   Appointment,
@@ -26,9 +28,7 @@ import {
   IEventUnconsentedAppointmentEnded,
   LoggerService,
 } from '../common';
-import { isUndefined, omitBy } from 'lodash';
 import { ISoftDelete } from '../db';
-import { formatEx } from '@lagunahealth/pandora';
 
 @Injectable()
 export class AppointmentService extends BaseService {
@@ -171,15 +171,6 @@ export class AppointmentService extends BaseService {
     }
   }
 
-  async show(params): Promise<Appointment> {
-    return this.updateAppointment(params.id, {
-      noShow: {
-        noShow: params.noShow,
-        reason: params.reason,
-      },
-    });
-  }
-
   async end(params: EndAppointmentParams): Promise<Appointment> {
     const existing = await this.appointmentModel.findById(new Types.ObjectId(params.id));
     if (!existing) {
@@ -246,20 +237,6 @@ export class AppointmentService extends BaseService {
     }
 
     return this.replaceId(result.toObject() as AppointmentDocument);
-  }
-
-  async updateAppointment(id, setParams): Promise<Appointment> {
-    const object = await this.appointmentModel.findByIdAndUpdate(
-      new Types.ObjectId(id),
-      { $set: setParams },
-      { upsert: false, new: true },
-    );
-
-    if (!object) {
-      throw new Error(Errors.get(ErrorType.appointmentIdNotFound));
-    }
-
-    return this.replaceId(object.toObject());
   }
 
   async delete({
