@@ -16,7 +16,19 @@ import {
 } from '@lagunahealth/pandora';
 import * as config from 'config';
 import { add, format, sub } from 'date-fns';
-import * as faker from 'faker';
+import {
+  company,
+  datatype,
+  address as fakerAddress,
+  date as fakerDate,
+  image,
+  internet,
+  lorem,
+  name,
+  random,
+  system,
+} from 'faker';
+import * as jwt from 'jsonwebtoken';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import {
@@ -29,6 +41,23 @@ import {
   UpdateNotesParams,
 } from '../src/appointment';
 import { AvailabilityInput } from '../src/availability';
+import {
+  BaseCarePlanParams,
+  CarePlanTypeInput,
+  CareStatus,
+  CreateBarrierParams,
+  CreateCarePlanParams,
+  CreateRedFlagParams,
+  RedFlagType,
+  UpdateBarrierParams,
+  UpdateCarePlanParams,
+  UpdateRedFlagParams,
+} from '../src/care';
+import {
+  CreateBarrierParamsWizard,
+  CreateRedFlagParamsWizard,
+  SubmitCareWizardParams,
+} from '../src/care/wizard.dto';
 import { ItemType, MemberRole, RoleTypes, UserRole, reformatDate } from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import { DailyReport } from '../src/dailyReport';
@@ -66,6 +95,14 @@ import {
   defaultMemberParams,
 } from '../src/member';
 import { CreateOrgParams, Org, OrgType } from '../src/org';
+import {
+  Answer,
+  CreateQuestionnaireParams,
+  Item,
+  Questionnaire,
+  QuestionnaireType,
+  SubmitQuestionnaireResponseParams,
+} from '../src/questionnaire';
 import { Dispatch } from '../src/services';
 import {
   CreateTodoDoneParams,
@@ -78,43 +115,17 @@ import {
   TodoStatus,
 } from '../src/todo';
 import { CreateUserParams, GetSlotsParams, User, defaultUserParams } from '../src/user';
-import {
-  BaseCarePlanParams,
-  CarePlanTypeInput,
-  CareStatus,
-  CreateBarrierParams,
-  CreateCarePlanParams,
-  CreateRedFlagParams,
-  RedFlagType,
-  UpdateBarrierParams,
-  UpdateCarePlanParams,
-  UpdateRedFlagParams,
-} from '../src/care';
-import {
-  Answer,
-  CreateQuestionnaireParams,
-  Item,
-  Questionnaire,
-  QuestionnaireType,
-  SubmitQuestionnaireResponseParams,
-} from '../src/questionnaire';
-import {
-  CreateBarrierParamsWizard,
-  CreateRedFlagParamsWizard,
-  SubmitCareWizardParams,
-} from '../src/care/wizard.dto';
-import * as jwt from 'jsonwebtoken';
 
 export const generateCreateUserParams = ({
   authId = v4(),
   roles = [UserRole.coach],
-  firstName = faker.name.firstName(21),
-  lastName = faker.name.lastName(21),
+  firstName = name.firstName(21),
+  lastName = name.lastName(21),
   email = generateEmail(),
-  avatar = faker.image.imageUrl(),
-  description = faker.lorem.sentence(),
+  avatar = image.imageUrl(),
+  description = lorem.sentence(),
   phone = generatePhone(),
-  title = faker.name.title(),
+  title = name.title(),
   maxCustomers = defaultUserParams.maxCustomers,
   languages = [Language.en, Language.es],
 }: Partial<CreateUserParams> = {}): CreateUserParams => {
@@ -139,10 +150,10 @@ export const generateMemberConfig = ({
   platform = Platform.ios,
   isPushNotificationsEnabled = true,
   accessToken = generateId(),
-  firstLoggedInAt = faker.date.past(2),
-  articlesPath = faker.system.directoryPath(),
+  firstLoggedInAt = fakerDate.past(2),
+  articlesPath = system.directoryPath(),
   language = defaultMemberParams.language,
-  updatedAt = faker.date.past(2),
+  updatedAt = fakerDate.past(2),
 }: Partial<MemberConfig> = {}): MemberConfig => {
   return {
     memberId,
@@ -158,21 +169,21 @@ export const generateMemberConfig = ({
 };
 
 export const mockGenerateUser = (): User => {
-  const firstName = faker.name.firstName();
-  const lastName = faker.name.lastName();
+  const firstName = name.firstName();
+  const lastName = name.lastName();
   return {
     id: generateId(),
     firstName,
     lastName,
     email: generateEmail(),
     roles: [UserRole.coach],
-    avatar: faker.image.imageUrl(),
-    description: faker.lorem.sentence(),
-    createdAt: faker.date.past(1),
+    avatar: image.imageUrl(),
+    description: lorem.sentence(),
+    createdAt: fakerDate.past(1),
     phone: generatePhone(),
     authId: v4(),
     lastMemberAssignedAt: new Date(0),
-    lastQueryAlert: faker.date.past(2),
+    lastQueryAlert: fakerDate.past(2),
     inEscalationGroup: true,
   };
 };
@@ -192,9 +203,9 @@ export const generateGetSlotsParams = ({
 export const generateCreateMemberParams = ({
   authId = v4(),
   phone = generatePhone(),
-  firstName = faker.name.firstName(),
-  lastName = faker.name.lastName(),
-  dateOfBirth = generateDateOnly(faker.date.past()),
+  firstName = name.firstName(),
+  lastName = name.lastName(),
+  dateOfBirth = generateDateOnly(fakerDate.past()),
   orgId,
   sex,
   email,
@@ -225,9 +236,9 @@ export const generateInternalCreateMemberParams = ({
   authId = v4(),
   phone = generatePhone(),
   phoneType = 'mobile',
-  firstName = faker.name.firstName(),
-  lastName = faker.name.lastName(),
-  dateOfBirth = generateDateOnly(faker.date.past()),
+  firstName = name.firstName(),
+  lastName = name.lastName(),
+  dateOfBirth = generateDateOnly(fakerDate.past()),
   orgId,
   sex,
   email,
@@ -258,8 +269,8 @@ export const generateInternalCreateMemberParams = ({
 };
 
 export const mockGenerateMember = (primaryUser?: User): Member => {
-  const firstName = faker.name.firstName();
-  const lastName = faker.name.lastName();
+  const firstName = name.firstName();
+  const lastName = name.lastName();
   const user = primaryUser || mockGenerateUser();
   return {
     id: generateId(),
@@ -267,39 +278,39 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
     primaryUserId: generateObjectId(user.id),
     phone: generatePhone(),
     phoneType: 'mobile',
-    deviceId: faker.datatype.uuid(),
+    deviceId: datatype.uuid(),
     firstName,
     lastName,
-    dateOfBirth: generateDateOnly(faker.date.past()),
+    dateOfBirth: generateDateOnly(fakerDate.past()),
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     org: { _id: generateId(), ...generateOrgParams() },
     users: [user],
     sex: defaultMemberParams.sex,
-    createdAt: faker.date.past(1),
-    updatedAt: faker.date.past(1),
+    createdAt: fakerDate.past(1),
+    updatedAt: fakerDate.past(1),
     honorific: defaultMemberParams.honorific,
     roles: [MemberRole.member],
     race: defaultMemberParams.race,
     ethnicity: defaultMemberParams.ethnicity,
     zipCode: generateZipCode(),
-    fellowName: `${faker.name.firstName()} ${faker.name.lastName()}`,
+    fellowName: `${name.firstName()} ${name.lastName()}`,
     address: {
-      street: faker.address.streetName(),
-      city: faker.address.city(),
-      state: faker.address.state(),
+      street: fakerAddress.streetName(),
+      city: fakerAddress.city(),
+      state: fakerAddress.state(),
     },
-    nurse_notes: faker.lorem.sentence(),
-    general_notes: faker.lorem.sentence(),
+    nurse_notes: lorem.sentence(),
+    general_notes: lorem.sentence(),
   };
 };
 
 export const mockGenerateOrg = ({
   id = generateId(),
   type = OrgType.hospital,
-  name = faker.company.companyName(),
-  trialDuration = faker.datatype.number(),
-  zipCode = faker.address.zipCode(),
+  name = company.companyName(),
+  trialDuration = datatype.number(),
+  zipCode = fakerAddress.zipCode(),
 }: Partial<Org> = {}): Org => {
   return {
     id,
@@ -313,28 +324,28 @@ export const mockGenerateOrg = ({
 export const generateUpdateMemberParams = ({
   id = generateId(),
   authId = v4(),
-  firstName = faker.name.firstName(),
-  lastName = faker.name.lastName(),
+  firstName = name.firstName(),
+  lastName = name.lastName(),
   sex = Sex.female,
   email = generateEmail(),
   zipCode = generateZipCode(),
-  dischargeDate = generateDateOnly(faker.date.soon(10)),
-  fellowName = faker.name.firstName(),
-  drgDesc = faker.name.firstName(),
-  drg = faker.datatype.number({ min: 1, max: 1000 }).toString(),
+  dischargeDate = generateDateOnly(fakerDate.soon(10)),
+  fellowName = name.firstName(),
+  drgDesc = name.firstName(),
+  drg = datatype.number({ min: 1, max: 1000 }).toString(),
   phoneSecondary = generatePhone(),
-  admitDate = generateDateOnly(faker.date.soon(1)),
-  dateOfBirth = generateDateOnly(faker.date.past()),
+  admitDate = generateDateOnly(fakerDate.soon(1)),
+  dateOfBirth = generateDateOnly(fakerDate.past()),
   address = {
-    street: faker.address.streetName(),
-    city: faker.address.city(),
-    state: faker.address.state(),
+    street: fakerAddress.streetName(),
+    city: fakerAddress.city(),
+    state: fakerAddress.state(),
   },
   honorific = Honorific.mr,
-  deviceId = faker.datatype.uuid(),
+  deviceId = datatype.uuid(),
   readmissionRisk = ReadmissionRisk.medium,
-  healthPlan = faker.datatype.string(10),
-  preferredGenderPronoun = faker.datatype.string(10),
+  healthPlan = datatype.string(10),
+  preferredGenderPronoun = datatype.string(10),
 }: Partial<UpdateMemberParams> = {}): UpdateMemberParams => {
   return {
     id,
@@ -373,10 +384,10 @@ export const mockGenerateMemberConfig = ({
     isTodoNotificationsEnabled: true,
     isAppointmentsReminderEnabled: true,
     accessToken: generateId(),
-    firstLoggedInAt: faker.date.past(2),
-    articlesPath: faker.system.directoryPath(),
+    firstLoggedInAt: fakerDate.past(2),
+    articlesPath: system.directoryPath(),
     language: defaultMemberParams.language,
-    updatedAt: faker.date.past(1),
+    updatedAt: fakerDate.past(1),
   };
 };
 
@@ -402,8 +413,8 @@ export const generateUpdateMemberConfigParams = ({
 
 export const generateCreateTaskParams = ({
   memberId = generateId(),
-  title = faker.lorem.words(2),
-  deadline = faker.date.soon(3),
+  title = lorem.words(2),
+  deadline = fakerDate.soon(3),
 }: Partial<CreateTaskParams> = {}): CreateTaskParams => {
   return { memberId, title, deadline };
 };
@@ -418,7 +429,7 @@ export const generateUpdateTaskStatusParams = ({
 export const generateRequestAppointmentParams = ({
   userId = generateId(),
   memberId = generateId(),
-  notBefore = faker.date.soon(3),
+  notBefore = fakerDate.soon(3),
 }: Partial<RequestAppointmentParams> = {}): RequestAppointmentParams => {
   return { userId, memberId, notBefore };
 };
@@ -428,7 +439,7 @@ export const generateScheduleAppointmentParams = ({
   userId = generateId(),
   memberId = generateId(),
   method = AppointmentMethod.chat,
-  start = faker.date.soon(4),
+  start = fakerDate.soon(4),
   end,
 }: Partial<ScheduleAppointmentParams> = {}): ScheduleAppointmentParams => {
   const endNew = new Date(start);
@@ -439,7 +450,7 @@ export const generateScheduleAppointmentParams = ({
 export const generateEndAppointmentParams = ({
   id = generateId(),
   noShow = true,
-  noShowReason = faker.lorem.sentence(),
+  noShowReason = lorem.sentence(),
   notes = generateNotesParams(),
   recordingConsent = true,
 }: Partial<EndAppointmentParams> = {}): EndAppointmentParams => {
@@ -447,14 +458,14 @@ export const generateEndAppointmentParams = ({
 };
 
 export const generateNotesParams = ({
-  recap = faker.lorem.sentence(),
-  strengths = faker.lorem.sentence(),
-  userActionItem = faker.lorem.sentence(),
-  memberActionItem = faker.lorem.sentence(),
-  adherence = faker.datatype.number({ min: 1, max: 10 }),
-  adherenceText = faker.lorem.sentence(),
-  wellbeing = faker.datatype.number({ min: 1, max: 10 }),
-  wellbeingText = faker.lorem.sentence(),
+  recap = lorem.sentence(),
+  strengths = lorem.sentence(),
+  userActionItem = lorem.sentence(),
+  memberActionItem = lorem.sentence(),
+  adherence = datatype.number({ min: 1, max: 10 }),
+  adherenceText = lorem.sentence(),
+  wellbeing = datatype.number({ min: 1, max: 10 }),
+  wellbeingText = lorem.sentence(),
 }: Partial<Notes & Scores> = {}): Notes => {
   return {
     recap,
@@ -473,10 +484,10 @@ export const generateNotesParams = ({
 export const mockGenerateAlert = ({
   memberId = generateId(),
   type = randomEnum(AlertType) as AlertType,
-  date = faker.date.past(),
+  date = fakerDate.past(),
   isNew = false,
   dismissed = false,
-  text = faker.lorem.sentence(),
+  text = lorem.sentence(),
 }: Partial<Alert> = {}): Alert => {
   return {
     id: `${generateId()}_${type}`,
@@ -495,8 +506,8 @@ export const mockGenerateDispatch = ({
   recipientClientId = generateId(),
   senderClientId = generateId(),
   contentKey = randomEnum(RegisterInternalKey) as ContentKey,
-  sentAt = faker.date.recent(20),
-  triggersAt = faker.date.recent(20),
+  sentAt = fakerDate.recent(20),
+  triggersAt = fakerDate.recent(20),
   correlationId = generateId(),
   serviceName = ServiceName.hepius,
   type = InnerQueueTypes.createDispatch,
@@ -524,34 +535,34 @@ export const generateUpdateNotesParams = ({
 
 export const generateOrgParams = ({
   type = OrgType.hospital,
-  name = `${faker.lorem.word()}.${v4()}`,
-  trialDuration = faker.datatype.number({ min: 1, max: 100 }),
+  name = `${lorem.word()}.${v4()}`,
+  trialDuration = datatype.number({ min: 1, max: 100 }),
   zipCode = generateZipCode(),
 }: Partial<CreateOrgParams> = {}): CreateOrgParams => {
   return { type, name, trialDuration: trialDuration, zipCode };
 };
 
 export const generateAppointmentComposeParams = (): AppointmentCompose => {
-  const start = faker.date.soon(5);
+  const start = fakerDate.soon(5);
   const end = new Date(start);
   end.setHours(end.getHours() + 2);
 
   return {
     memberId: generateId(),
-    memberName: `${faker.name.firstName()} ${faker.name.lastName()}`,
+    memberName: `${name.firstName()} ${name.lastName()}`,
     userId: generateId(),
-    userName: `${faker.name.firstName()} ${faker.name.lastName()}`,
+    userName: `${name.firstName()} ${name.lastName()}`,
     start,
     end,
   };
 };
 
 export const generateRandomName = (length: number): string => {
-  return faker.lorem.words(length).substr(0, length);
+  return lorem.words(length).substr(0, length);
 };
 
 export const generateAvailabilityInput = ({
-  start = faker.date.soon(),
+  start = fakerDate.soon(),
   end,
 }: Partial<AvailabilityInput> = {}): AvailabilityInput => {
   const endNew = new Date(start);
@@ -569,7 +580,7 @@ export const generateGetCommunicationParams = ({
 export const generateCommunication = ({
   userId = v4(),
   memberId = v4(),
-  sendBirdChannelUrl = faker.datatype.uuid(),
+  sendBirdChannelUrl = datatype.uuid(),
 }: Partial<Communication> = {}): Communication => {
   return { memberId, userId, sendBirdChannelUrl };
 };
@@ -595,15 +606,15 @@ export const generateId = (id?): string => {
 
 export const generateSetGeneralNotesParams = ({
   memberId = generateId(),
-  note = faker.lorem.sentence(),
-  nurseNotes = faker.lorem.sentence(),
+  note = lorem.sentence(),
+  nurseNotes = lorem.sentence(),
 }: Partial<SetGeneralNotesParams> = {}): SetGeneralNotesParams => {
   return { memberId, note, nurseNotes };
 };
 
 export const generateUpdateJournalTextParams = ({
   id = generateId(),
-  text = faker.lorem.sentence(),
+  text = lorem.sentence(),
 }: Partial<UpdateJournalTextParams> = {}): UpdateJournalTextParams => {
   return { id, text };
 };
@@ -652,19 +663,19 @@ export const generateCancelNotifyParams = ({
 };
 
 const generateEmail = () => {
-  return `${new Date().getMilliseconds()}.${faker.internet.email()}`;
+  return `${new Date().getMilliseconds()}.${internet.email()}`;
 };
 
 export const generateUniqueUrl = () => {
-  return `${v4()}.${faker.internet.url()}`;
+  return `${v4()}.${internet.url()}`;
 };
 
 export const generateUpdateRecordingParams = ({
   id,
   memberId = generateId(),
   userId = generateId(),
-  start = faker.date.soon(1),
-  end = faker.date.soon(2),
+  start = fakerDate.soon(1),
+  end = fakerDate.soon(2),
   answered = true,
   phone = generatePhone(),
   appointmentId,
@@ -676,14 +687,14 @@ export const generateUpdateRecordingParams = ({
 
 export const generateUpdateRecordingReviewParams = ({
   recordingId = generateId(),
-  content = faker.random.words(5),
+  content = random.words(5),
 }: Partial<UpdateRecordingReviewParams> = {}): UpdateRecordingReviewParams => {
   return { recordingId, content };
 };
 
 export const generateDailyReport = ({
   memberId = generateObjectId(),
-  date = reformatDate(faker.date.recent().toString(), config.get('general.dateFormatString')),
+  date = reformatDate(fakerDate.recent().toString(), config.get('general.dateFormatString')),
   categories = [],
   statsOverThreshold = [],
   notificationSent = false,
@@ -727,9 +738,9 @@ export const generateContextUserId = (
 };
 
 export const generateAddCaregiverParams = ({
-  firstName = faker.name.firstName(),
-  lastName = faker.name.lastName(),
-  email = faker.internet.email(),
+  firstName = name.firstName(),
+  lastName = name.lastName(),
+  email = internet.email(),
   relationship = Relationship.neighbour,
   phone = '+12133734253',
   memberId,
@@ -739,9 +750,9 @@ export const generateAddCaregiverParams = ({
 
 export const generateUpdateCaregiverParams = ({
   id = generateId(),
-  firstName = faker.name.firstName(),
-  lastName = faker.name.lastName(),
-  email = faker.internet.email(),
+  firstName = name.firstName(),
+  lastName = name.lastName(),
+  email = internet.email(),
   relationship = Relationship.neighbour,
   phone = '+12133734253',
   memberId,
@@ -752,11 +763,11 @@ export const generateUpdateCaregiverParams = ({
 export const mockGenerateTodo = ({
   id = generateId(),
   memberId = generateObjectId(),
-  text = faker.lorem.words(5),
+  text = lorem.words(5),
   label = Label.APPT,
   cronExpressions = ['0 10 * * 6'],
   start = new Date(),
-  end = faker.date.soon(2),
+  end = fakerDate.soon(2),
   status = TodoStatus.active,
   createdBy = generateObjectId(),
   updatedBy = generateObjectId(),
@@ -791,11 +802,11 @@ export const mockGenerateTodoDone = ({
 
 export const generateCreateTodoParams = ({
   memberId,
-  text = faker.lorem.words(5),
+  text = lorem.words(5),
   label = Label.APPT,
   cronExpressions = ['0 10 * * 6'],
   start = new Date(),
-  end = faker.date.soon(2),
+  end = fakerDate.soon(2),
 }: Partial<CreateTodoParams> = {}) => {
   return {
     memberId,
@@ -822,11 +833,11 @@ export const generateGetTodoDonesParams = ({
 export const generateEndAndCreateTodoParams = ({
   id = generateId(),
   memberId,
-  text = faker.lorem.words(5),
+  text = lorem.words(5),
   label = Label.MEDS,
   cronExpressions = ['0 10,17,21,23 * * *'],
-  start = faker.date.soon(1),
-  end = add(faker.date.soon(3), { days: 1 }),
+  start = fakerDate.soon(1),
+  end = add(fakerDate.soon(3), { days: 1 }),
 }: Partial<EndAndCreateTodoParams> = {}) => {
   return {
     id,
@@ -854,7 +865,7 @@ export const generateCreateTodoDoneParams = ({
 export const generateCreateRedFlagParams = ({
   memberId = generateId(),
   type = randomEnum(RedFlagType) as RedFlagType,
-  notes = faker.lorem.words(4),
+  notes = lorem.words(4),
   createdBy,
 }: Partial<CreateRedFlagParams> = {}) => {
   return {
@@ -868,7 +879,7 @@ export const generateCreateRedFlagParams = ({
 export const generateCreateBarrierParams = ({
   memberId = generateId(),
   type,
-  notes = faker.lorem.words(4),
+  notes = lorem.words(4),
   redFlagId,
   createdBy,
 }: Partial<CreateBarrierParams> = {}) => {
@@ -883,7 +894,7 @@ export const generateCreateBarrierParams = ({
 
 export const generateUpdateBarrierParams = ({
   id,
-  notes = faker.lorem.words(4),
+  notes = lorem.words(4),
   status = CareStatus.completed,
   type,
 }: Partial<UpdateBarrierParams> = {}) => {
@@ -897,7 +908,7 @@ export const generateUpdateBarrierParams = ({
 
 export const generateUpdateRedFlagParams = ({
   id,
-  notes = faker.lorem.words(4),
+  notes = lorem.words(4),
 }: Partial<UpdateRedFlagParams> = {}) => {
   return {
     id,
@@ -915,9 +926,9 @@ export const generateCarePlanTypeInput = ({ id, custom }: Partial<CarePlanTypeIn
 export const generateCreateCarePlanParams = ({
   memberId = generateId(),
   type,
-  notes = faker.lorem.words(4),
+  notes = lorem.words(4),
   barrierId,
-  dueDate = faker.date.soon(2),
+  dueDate = fakerDate.soon(2),
   createdBy,
 }: Partial<CreateCarePlanParams> = {}) => {
   return {
@@ -932,7 +943,7 @@ export const generateCreateCarePlanParams = ({
 
 export const generateUpdateCarePlanParams = ({
   id,
-  notes = faker.lorem.words(4),
+  notes = lorem.words(4),
   status = CareStatus.completed,
 }: Partial<UpdateCarePlanParams> = {}) => {
   return {
@@ -955,7 +966,7 @@ export const generateSubmitCareWizardParams = ({
 export const generateCreateRedFlagParamsWizard = ({
   barriers,
   type = randomEnum(RedFlagType) as RedFlagType,
-  notes = faker.lorem.words(4),
+  notes = lorem.words(4),
   createdBy,
 }: Partial<CreateRedFlagParamsWizard> = {}) => {
   return {
@@ -969,7 +980,7 @@ export const generateCreateRedFlagParamsWizard = ({
 export const generateCreateBarrierParamsWizard = ({
   carePlans,
   type = generateId(),
-  notes = faker.lorem.words(4),
+  notes = lorem.words(4),
   createdBy,
 }: Partial<CreateBarrierParamsWizard> = {}) => {
   return {
@@ -982,8 +993,8 @@ export const generateCreateBarrierParamsWizard = ({
 
 export const generateCreateCarePlanParamsWizard = ({
   type = generateCarePlanTypeInput({ id: generateId() }),
-  notes = faker.lorem.words(4),
-  dueDate = faker.date.soon(2),
+  notes = lorem.words(4),
+  dueDate = fakerDate.soon(2),
   createdBy,
 }: Partial<BaseCarePlanParams> = {}) => {
   return {
@@ -995,15 +1006,15 @@ export const generateCreateCarePlanParamsWizard = ({
 };
 
 export const mockGenerateQuestionnaireItem = ({
-  code = faker.lorem.word(),
-  label = faker.lorem.words(5),
+  code = lorem.word(),
+  label = lorem.words(5),
   type = ItemType[randomEnum(ItemType)],
   order = 1,
   required = true,
   options = type === ItemType.choice
     ? [
-        { label: faker.lorem.words(3), value: 0 },
-        { label: faker.lorem.words(3), value: 1 },
+        { label: lorem.words(3), value: 0 },
+        { label: lorem.words(3), value: 1 },
       ]
     : null,
   items = type === ItemType.group
@@ -1011,8 +1022,8 @@ export const mockGenerateQuestionnaireItem = ({
     : null,
   range = type === ItemType.range
     ? {
-        min: { value: 0, label: faker.lorem.words(3) },
-        max: { value: faker.datatype.number({ min: 1, max: 10 }), label: faker.lorem.words(3) },
+        min: { value: 0, label: lorem.words(3) },
+        max: { value: datatype.number({ min: 1, max: 10 }), label: lorem.words(3) },
       }
     : null,
   alertCondition,
@@ -1029,8 +1040,8 @@ export const mockGenerateQuestionnaireItem = ({
 });
 
 export const mockGenerateQuestionnaireAnswer = ({
-  code = faker.lorem.word(),
-  value = faker.datatype.number({ min: 0, max: 3 }).toString(),
+  code = lorem.word(),
+  value = datatype.number({ min: 0, max: 3 }).toString(),
 }: Partial<Answer> = {}): Answer => {
   return {
     code,
@@ -1040,8 +1051,8 @@ export const mockGenerateQuestionnaireAnswer = ({
 
 export const mockGenerateQuestionnaire = ({
   id = generateId(),
-  name = faker.lorem.words(3),
-  shortName = faker.lorem.word(3),
+  name = lorem.words(3),
+  shortName = lorem.word(3),
   type = QuestionnaireType[randomEnum(QuestionnaireType)],
   active = true,
   items = [1, 2].map((order) => mockGenerateQuestionnaireItem({ order })),
@@ -1064,8 +1075,8 @@ export const mockGenerateQuestionnaire = ({
 };
 
 export const generateCreateQuestionnaireParams = ({
-  name = faker.lorem.words(3),
-  shortName = faker.lorem.word(3),
+  name = lorem.words(3),
+  shortName = lorem.word(3),
   type = QuestionnaireType[randomEnum(QuestionnaireType)],
   items = [1, 2].map((order) => mockGenerateQuestionnaireItem({ order })),
   severityLevels = [

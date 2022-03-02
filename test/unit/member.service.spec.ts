@@ -12,12 +12,10 @@ import {
 import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
 import { add, sub } from 'date-fns';
-import * as faker from 'faker';
-import { datatype, date, internet } from 'faker';
+import { address, datatype, date, internet, lorem, name } from 'faker';
 import { isNil, omitBy, pickBy } from 'lodash';
 import { Model, Types, model } from 'mongoose';
 import { performance } from 'perf_hooks';
-import { Todo, TodoDocument, TodoDto } from '../../src/todo';
 import { v4 } from 'uuid';
 import {
   Appointment,
@@ -35,6 +33,7 @@ import {
   RecordingType,
   defaultTimestampsDbValues,
 } from '../../src/common';
+import { Audit } from '../../src/db';
 import {
   ActionItem,
   ActionItemDocument,
@@ -84,6 +83,7 @@ import {
   QuestionnaireType,
 } from '../../src/questionnaire';
 import { NotificationService } from '../../src/services';
+import { Todo, TodoDocument, TodoDto } from '../../src/todo';
 import { User, UserDocument, UserDto } from '../../src/user';
 import {
   checkDelete,
@@ -120,7 +120,6 @@ import {
   mockGenerateQuestionnaireItem,
   mockGenerateTodo,
 } from '../index';
-import { Audit } from '../../src/db';
 
 describe('MemberService', () => {
   let module: TestingModule;
@@ -575,8 +574,8 @@ describe('MemberService', () => {
 
     it('should return members with by orgId and appointments for each', async () => {
       const primaryUserParams = {
-        firstName: faker.name.firstName(),
-        lastName: faker.name.lastName(),
+        firstName: name.firstName(),
+        lastName: name.lastName(),
       };
       const { _id: primaryUserId } = await modelUser.create(
         generateCreateUserParams({ ...primaryUserParams }),
@@ -622,8 +621,8 @@ describe('MemberService', () => {
 
     it('should exclude non org members from results', async () => {
       const primaryUserParams = {
-        firstName: faker.name.firstName(),
-        lastName: faker.name.lastName(),
+        firstName: name.firstName(),
+        lastName: name.lastName(),
       };
       const { _id: primaryUserId } = await modelUser.create(
         generateCreateUserParams({ ...primaryUserParams }),
@@ -662,8 +661,8 @@ describe('MemberService', () => {
     it('should sort results by start timestamp desc', async () => {
       const { _id: primaryUserId } = await modelUser.create(
         generateCreateUserParams({
-          firstName: faker.name.firstName(),
-          lastName: faker.name.lastName(),
+          firstName: name.firstName(),
+          lastName: name.lastName(),
         }),
       );
       const orgId = await generateOrg();
@@ -694,8 +693,8 @@ describe('MemberService', () => {
       const orgId = await generateOrg();
       const { _id: primaryUserId } = await modelUser.create(
         generateCreateUserParams({
-          firstName: faker.name.firstName(),
-          lastName: faker.name.lastName(),
+          firstName: name.firstName(),
+          lastName: name.lastName(),
         }),
       );
 
@@ -720,7 +719,7 @@ describe('MemberService', () => {
     }, 2000);
 
     const generateMemberAndAppointment = async ({ primaryUserId, orgId, numberOfAppointments }) => {
-      const params = { firstName: faker.name.firstName(), lastName: faker.name.lastName() };
+      const params = { firstName: name.firstName(), lastName: name.lastName() };
       const { member } = await service.insert(
         generateInternalCreateMemberParams({ orgId, ...params }),
         primaryUserId,
@@ -790,9 +789,9 @@ describe('MemberService', () => {
         createMemberParams[key] = null;
       });
 
-      createMemberParams.firstName = faker.name.firstName();
-      createMemberParams.lastName = faker.name.lastName();
-      createMemberParams.dateOfBirth = generateDateOnly(faker.date.past());
+      createMemberParams.firstName = name.firstName();
+      createMemberParams.lastName = name.lastName();
+      createMemberParams.dateOfBirth = generateDateOnly(date.past());
 
       const { member } = await service.insert(createMemberParams, primaryUser._id);
       const createdObject = await memberModel.findById(member.id);
@@ -852,9 +851,9 @@ describe('MemberService', () => {
         createMemberParams[key] = null;
       });
 
-      createMemberParams.firstName = faker.name.firstName();
-      createMemberParams.lastName = faker.name.lastName();
-      createMemberParams.dateOfBirth = generateDateOnly(faker.date.past());
+      createMemberParams.firstName = name.firstName();
+      createMemberParams.lastName = name.lastName();
+      createMemberParams.dateOfBirth = generateDateOnly(date.past());
 
       const { id } = await service.insertControl(createMemberParams);
       const createdObject = await controlMemberModel.findById(id);
@@ -1025,7 +1024,7 @@ describe('MemberService', () => {
 
     it('should be able to update partial fields', async () => {
       await updateMember({
-        fellowName: faker.name.firstName(),
+        fellowName: name.firstName(),
         readmissionRisk: ReadmissionRisk.high,
       });
     });
@@ -1116,7 +1115,7 @@ describe('MemberService', () => {
       // member is created with an empty address so we update to initial address value:
       const beforeObject = await service.update({ ...generateUpdateMemberParams(), id });
 
-      const city = faker.address.city();
+      const city = address.city();
 
       const afterObject = await service.update({
         ...generateUpdateMemberParams({
@@ -1211,7 +1210,7 @@ describe('MemberService', () => {
       await service.setGeneralNotes(notes1);
 
       const notes2 = generateSetGeneralNotesParams({ memberId });
-      notes2.note = faker.lorem.sentence();
+      notes2.note = lorem.sentence();
       delete notes2.nurseNotes;
       await service.setGeneralNotes(notes2);
 
@@ -1228,7 +1227,7 @@ describe('MemberService', () => {
       await service.setGeneralNotes(notes1);
 
       const notes2 = generateSetGeneralNotesParams({ memberId });
-      notes2.nurseNotes = faker.lorem.sentence();
+      notes2.nurseNotes = lorem.sentence();
       delete notes2.note;
       await service.setGeneralNotes(notes2);
 
@@ -2113,10 +2112,10 @@ describe('MemberService', () => {
               mockGenerateQuestionnaireItem({
                 code: 'q1',
                 options: [
-                  { label: faker.lorem.words(3), value: 0 },
-                  { label: faker.lorem.words(3), value: 1 },
-                  { label: faker.lorem.words(3), value: 2 },
-                  { label: faker.lorem.words(3), value: 3 },
+                  { label: lorem.words(3), value: 0 },
+                  { label: lorem.words(3), value: 1 },
+                  { label: lorem.words(3), value: 2 },
+                  { label: lorem.words(3), value: 3 },
                 ],
                 alertCondition: [{ type: AlertConditionType.equal, value: '3' }],
               }),
@@ -2686,7 +2685,7 @@ describe('MemberService', () => {
   const generateAppointment = async ({
     memberId,
     userId,
-    start = faker.date.soon(4),
+    start = date.soon(4),
     status = AppointmentStatus.scheduled,
   }: {
     memberId: string;

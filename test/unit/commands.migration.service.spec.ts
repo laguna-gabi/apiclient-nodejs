@@ -1,15 +1,15 @@
+import { mockProcessWarnings } from '@lagunahealth/pandora';
+import { getModelToken } from '@nestjs/mongoose';
+import { Test, TestingModule } from '@nestjs/testing';
+import { migration } from 'config';
+import { add } from 'date-fns';
+import { datatype, date, lorem, system } from 'faker';
+import { readdirSync, unlinkSync } from 'fs';
+import { Model } from 'mongoose';
+import * as path from 'path';
 import { dbDisconnect, defaultModules } from '../.';
 import { Changelog, ChangelogDocument, MigrationModule, MigrationService } from '../../cmd';
-import { Test, TestingModule } from '@nestjs/testing';
-import { getModelToken } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { migration } from 'config';
-import { readdirSync, unlinkSync } from 'fs';
-import * as faker from 'faker';
-import { add } from 'date-fns';
-import * as path from 'path';
 import { delay } from '../../src/common';
-import { mockProcessWarnings } from '@lagunahealth/pandora';
 
 jest.mock('fs', () => {
   const actualFS = jest.requireActual('fs');
@@ -23,7 +23,7 @@ describe('Commands: MigrationService', () => {
   let changelogModel: Model<Changelog>;
   let spyOnMockChangelogModel: jest.SpyInstance;
   const migrationFiles = new Map<string, string>();
-  const startDate = faker.datatype.datetime();
+  const startDate = datatype.datetime();
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -45,24 +45,24 @@ describe('Commands: MigrationService', () => {
     // preparing a list of migration files for tests:
     migrationFiles.set(
       'migration_1',
-      startDate.getTime() + faker.lorem.slug() + migration.get('extension'),
+      startDate.getTime() + lorem.slug() + migration.get('extension'),
     );
     migrationFiles.set(
       'migration_2',
-      add(startDate, { hours: 1 }).getTime() + faker.lorem.slug() + migration.get('extension'),
+      add(startDate, { hours: 1 }).getTime() + lorem.slug() + migration.get('extension'),
     );
     migrationFiles.set(
       'migration_3',
-      add(startDate, { hours: 2 }).getTime() + faker.lorem.slug() + migration.get('extension'),
+      add(startDate, { hours: 2 }).getTime() + lorem.slug() + migration.get('extension'),
     );
     migrationFiles.set(
       'migration_4',
-      add(startDate, { hours: 3 }).getTime() + faker.lorem.slug() + migration.get('extension'),
+      add(startDate, { hours: 3 }).getTime() + lorem.slug() + migration.get('extension'),
     );
     migrationFiles.set('sample', migration.get('sample') + migration.get('extension'));
     migrationFiles.set(
       'migration_5_js_ext',
-      add(startDate, { hours: 4 }).getTime() + faker.lorem.slug() + '.js',
+      add(startDate, { hours: 4 }).getTime() + lorem.slug() + '.js',
     );
 
     jest.spyOn(console, 'info').mockImplementation(); // suppress log messages during test
@@ -159,9 +159,9 @@ describe('Commands: MigrationService', () => {
     let spyFindOneAndUpdateOnMockChangelogModel: jest.SpyInstance;
     let spyDeleteOneOnMockChangelogModel: jest.SpyInstance;
     beforeAll(async () => {
-      testMigrationDir.set('migration_1', migrationService.create(faker.system.fileName()));
+      testMigrationDir.set('migration_1', migrationService.create(system.fileName()));
       await delay(1000); // make sure files are not created with the same timestamp - sort should work
-      testMigrationDir.set('migration_2', migrationService.create(faker.system.fileName()));
+      testMigrationDir.set('migration_2', migrationService.create(system.fileName()));
 
       spyFindOneAndUpdateOnMockChangelogModel = jest.spyOn(changelogModel, 'findOneAndUpdate');
       spyDeleteOneOnMockChangelogModel = jest.spyOn(changelogModel, 'deleteOne');
@@ -246,7 +246,7 @@ describe('Commands: MigrationService', () => {
         jest.spyOn(migrationService, 'getStatusItems').mockResolvedValueOnce([
           {
             fileName: testMigrationDir.get('migration_1'),
-            appliedAt: faker.date.past().toString(),
+            appliedAt: date.past().toString(),
           },
           { fileName: testMigrationDir.get('migration_2'), appliedAt: 'PENDING' },
         ]);
@@ -277,11 +277,11 @@ describe('Commands: MigrationService', () => {
         jest.spyOn(migrationService, 'getStatusItems').mockResolvedValueOnce([
           {
             fileName: testMigrationDir.get('migration_1'),
-            appliedAt: faker.date.past().toString(),
+            appliedAt: date.past().toString(),
           },
           {
             fileName: testMigrationDir.get('migration_2'),
-            appliedAt: faker.date.past().toString(),
+            appliedAt: date.past().toString(),
           },
         ]);
 
@@ -297,11 +297,11 @@ describe('Commands: MigrationService', () => {
         jest.spyOn(migrationService, 'getStatusItems').mockResolvedValueOnce([
           {
             fileName: testMigrationDir.get('migration_1'),
-            appliedAt: faker.date.past().toString(),
+            appliedAt: date.past().toString(),
           },
           {
             fileName: testMigrationDir.get('migration_2'),
-            appliedAt: faker.date.past().toString(),
+            appliedAt: date.past().toString(),
           },
         ]);
 
@@ -317,11 +317,11 @@ describe('Commands: MigrationService', () => {
         jest.spyOn(migrationService, 'getStatusItems').mockResolvedValueOnce([
           {
             fileName: testMigrationDir.get('migration_1'),
-            appliedAt: faker.date.past().toString(),
+            appliedAt: date.past().toString(),
           },
           {
             fileName: testMigrationDir.get('migration_2'),
-            appliedAt: faker.date.past().toString(),
+            appliedAt: date.past().toString(),
           },
         ]);
 

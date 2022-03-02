@@ -1,4 +1,6 @@
-import * as faker from 'faker';
+import { general } from 'config';
+import { addMilliseconds } from 'date-fns';
+import { date, lorem } from 'faker';
 import * as request from 'supertest';
 import { EndAppointmentParams, RequestAppointmentParams } from '../../src/appointment';
 import { ErrorType, Errors } from '../../src/common';
@@ -11,8 +13,6 @@ import {
   generateUpdateNotesParams,
   urls,
 } from '../index';
-import { general } from 'config';
-import { addMilliseconds } from 'date-fns';
 
 const stringError = `String cannot represent a non string value`;
 const floatError = `Float cannot represent non numeric value`;
@@ -50,12 +50,12 @@ describe('Validations - appointment', () => {
 
     /* eslint-disable max-len */
     test.each`
-      field          | input                                | error
-      ${'memberId'}  | ${{ memberId: 123 }}                 | ${{ missingFieldError: stringError }}
-      ${'memberId'}  | ${{ memberId: '123' }}               | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)] }}
-      ${'userId'}    | ${{ userId: 123 }}                   | ${{ missingFieldError: stringError }}
-      ${'userId'}    | ${{ userId: '123' }}                 | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userIdInvalid)] }}
-      ${'notBefore'} | ${{ notBefore: faker.lorem.word() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentNotBeforeDate)] }}
+      field          | input                          | error
+      ${'memberId'}  | ${{ memberId: 123 }}           | ${{ missingFieldError: stringError }}
+      ${'memberId'}  | ${{ memberId: '123' }}         | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberIdInvalid)] }}
+      ${'userId'}    | ${{ userId: 123 }}             | ${{ missingFieldError: stringError }}
+      ${'userId'}    | ${{ userId: '123' }}           | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userIdInvalid)] }}
+      ${'notBefore'} | ${{ notBefore: lorem.word() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.appointmentNotBeforeDate)] }}
     `(
       /* eslint-enable max-len */
       `should fail to create an appointment since $field is not a valid type`,
@@ -169,7 +169,7 @@ describe('Validations - appointment', () => {
     );
 
     it('should validate that an error is thrown if end date is before start date', async () => {
-      const end = faker.date.soon(3);
+      const end = date.soon(3);
       const start = new Date(end);
       start.setMinutes(start.getMinutes() + 1);
       const appointmentParams = generateScheduleAppointmentParams({
@@ -238,7 +238,7 @@ describe('Validations - appointment', () => {
       const endAppointmentParams = {
         id: generateId(),
         noShow: false,
-        noShowReason: faker.lorem.sentence(),
+        noShowReason: lorem.sentence(),
       };
 
       await handler.mutations.endAppointment({

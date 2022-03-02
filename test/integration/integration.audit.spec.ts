@@ -1,7 +1,7 @@
 import { general } from 'config';
 import { addDays } from 'date-fns';
-import * as faker from 'faker';
 import { Types } from 'mongoose';
+import { date as fakerDate, lorem } from 'faker';
 import { buildNPSQuestionnaire } from '../../cmd/statics';
 import { Availability, AvailabilityDocument } from '../../src/availability';
 import { reformatDate } from '../../src/common';
@@ -270,7 +270,7 @@ describe('Integration tests : Audit', () => {
       const { id } = await handler.mutations.createActionItem({
         createTaskParams: {
           memberId: handler.patientZero.id,
-          title: faker.lorem.sentence(),
+          title: lorem.sentence(),
           deadline: addDays(new Date(), 1),
         },
         requestHeaders: generateRequestHeaders(user1.authId),
@@ -417,7 +417,7 @@ describe('Integration tests : Audit', () => {
     it('should create a dailyReport', async () => {
       const org = await creators.createAndValidateOrg();
       const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
-      const startDate = faker.date.past();
+      const startDate = fakerDate.past();
       const date = reformatDate(startDate.toString(), general.get('dateFormatString'));
       await handler.mutations.setDailyReportCategories({
         requestHeaders: generateRequestHeaders(member.authId),

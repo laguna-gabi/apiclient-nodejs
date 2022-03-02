@@ -1,5 +1,5 @@
 import * as config from 'config';
-import * as faker from 'faker';
+import { lorem } from 'faker';
 import * as request from 'supertest';
 import { v4 } from 'uuid';
 import { ErrorType, Errors } from '../../src/common';
@@ -66,22 +66,22 @@ describe('Validations - user', () => {
 
   /* eslint-disable max-len */
   test.each`
-    field             | input                                   | errors
-    ${'email'}        | ${{ email: faker.lorem.word() }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat)] }}
-    ${'avatar'}       | ${{ avatar: faker.lorem.word() }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userAvatarFormat)] }}
+    field             | input                             | errors
+    ${'email'}        | ${{ email: lorem.word() }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat)] }}
+    ${'avatar'}       | ${{ avatar: lorem.word() }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userAvatarFormat)] }}
     ${'email & avatar'} | ${{
-  email: faker.lorem.word(),
-  avatar: faker.lorem.word(),
+  email: lorem.word(),
+  avatar: lorem.word(),
 }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat), Errors.get(ErrorType.userAvatarFormat)] }}
-    ${'description'}  | ${{ description: 222 }}                 | ${{ missingFieldError: stringError }}
-    ${'firstName'}    | ${{ firstName: 222 }}                   | ${{ missingFieldError: stringError }}
-    ${'lastName'}     | ${{ lastName: 222 }}                    | ${{ missingFieldError: stringError }}
-    ${'roles'}        | ${{ roles: [222] }}                     | ${{ missingFieldError: 'does not exist in "UserRole" enum.' }}
-    ${'phone'}        | ${{ phone: 222 }}                       | ${{ missingFieldError: stringError }}
-    ${'phone'}        | ${{ phone: '+410' }}                    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userPhone)] }}
-    ${'title'}        | ${{ title: 222 }}                       | ${{ missingFieldError: stringError }}
-    ${'maxCustomers'} | ${{ maxCustomers: faker.lorem.word() }} | ${{ missingFieldError: 'Float cannot represent non numeric value' }}
-    ${'languages'}    | ${{ languages: faker.lorem.word() }}    | ${{ missingFieldError: 'does not exist in "Language" enum.' }}
+    ${'description'}  | ${{ description: 222 }}           | ${{ missingFieldError: stringError }}
+    ${'firstName'}    | ${{ firstName: 222 }}             | ${{ missingFieldError: stringError }}
+    ${'lastName'}     | ${{ lastName: 222 }}              | ${{ missingFieldError: stringError }}
+    ${'roles'}        | ${{ roles: [222] }}               | ${{ missingFieldError: 'does not exist in "UserRole" enum.' }}
+    ${'phone'}        | ${{ phone: 222 }}                 | ${{ missingFieldError: stringError }}
+    ${'phone'}        | ${{ phone: '+410' }}              | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userPhone)] }}
+    ${'title'}        | ${{ title: 222 }}                 | ${{ missingFieldError: stringError }}
+    ${'maxCustomers'} | ${{ maxCustomers: lorem.word() }} | ${{ missingFieldError: 'Float cannot represent non numeric value' }}
+    ${'languages'}    | ${{ languages: lorem.word() }}    | ${{ missingFieldError: 'does not exist in "Language" enum.' }}
   `(
     /* eslint-enable max-len */
     `should fail to create a user since $field is not valid`,

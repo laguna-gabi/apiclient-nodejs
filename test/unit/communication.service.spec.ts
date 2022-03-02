@@ -1,9 +1,8 @@
 import { Platform, mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as faker from 'faker';
+import { date, internet } from 'faker';
 import { Model, Types, model } from 'mongoose';
-import { ServiceModule } from '../../src/services';
 import { v4 } from 'uuid';
 import { AppointmentStatus } from '../../src/appointment';
 import {
@@ -24,6 +23,7 @@ import {
   CommunicationModule,
   CommunicationService,
 } from '../../src/communication';
+import { ServiceModule } from '../../src/services';
 import {
   checkDelete,
   dbConnect,
@@ -198,7 +198,7 @@ describe('CommunicationService', () => {
     it('should handle updated appointment according to the action - edit', async () => {
       const member = mockGenerateMember();
       const user = mockGenerateUser();
-      const sendBirdChannelUrl = faker.internet.url();
+      const sendBirdChannelUrl = internet.url();
       const mockServiceGet = jest.spyOn(service, 'get');
       mockServiceGet.mockImplementationOnce(async () => ({
         memberId: member.id,
@@ -212,7 +212,7 @@ describe('CommunicationService', () => {
         key: generateId(),
         value: {
           status: AppointmentStatus.scheduled,
-          start: faker.date.future(),
+          start: date.future(),
         },
         updatedAppointmentAction: UpdatedAppointmentAction.edit,
       };
@@ -229,7 +229,7 @@ describe('CommunicationService', () => {
     it('should handle updated appointment according to the action - delete', async () => {
       const member = mockGenerateMember();
       const user = mockGenerateUser();
-      const sendBirdChannelUrl = faker.internet.url();
+      const sendBirdChannelUrl = internet.url();
       const mockServiceGet = jest.spyOn(service, 'get');
       mockServiceGet.mockImplementationOnce(async () => ({
         memberId: member.id,
@@ -296,7 +296,7 @@ describe('CommunicationService', () => {
         memberId: communication.memberId.toString(),
         userId: generateId(),
         key: generateId(),
-        value: { status: AppointmentStatus.scheduled, start: faker.date.future() },
+        value: { status: AppointmentStatus.scheduled, start: date.future() },
         updatedAppointmentAction: UpdatedAppointmentAction.edit,
       };
       sendBirdMock.spyOnSendBirdInvite.mockReturnValue(
@@ -330,7 +330,7 @@ describe('CommunicationService', () => {
       const oldUserId = generateId();
       const newUser = mockGenerateUser();
       const member = mockGenerateMember();
-      const sendBirdChannelUrl = faker.internet.url();
+      const sendBirdChannelUrl = internet.url();
 
       const params = {
         oldUserId,

@@ -8,7 +8,7 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { addMinutes } from 'date-fns';
-import * as faker from 'faker';
+import { datatype } from 'faker';
 import { v4 } from 'uuid';
 import {
   Appointment,
@@ -55,7 +55,7 @@ describe('AppointmentResolver', () => {
   let service: AppointmentService;
   let eventEmitter: EventEmitter2;
   let spyOnEventEmitter;
-  const fakeUUID = faker.datatype.uuid();
+  const fakeUUID = datatype.uuid();
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning

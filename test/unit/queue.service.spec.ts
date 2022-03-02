@@ -7,7 +7,6 @@ import {
 } from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as faker from 'faker';
 import { internet, lorem } from 'faker';
 import { Consumer } from 'sqs-consumer';
 import { LoggerService } from '../../src/common';
@@ -105,7 +104,7 @@ describe(QueueService.name, () => {
     });
 
     it('should send to a message to notification queue', async () => {
-      const param = { type: QueueType.notifications, message: faker.lorem.sentence() };
+      const param = { type: QueueType.notifications, message: lorem.sentence() };
       await service.sendMessage(param);
 
       expect(sendMessage).toBeCalledTimes(1);
@@ -116,7 +115,7 @@ describe(QueueService.name, () => {
 
     it('should send to a message to audit queue on production environment', async () => {
       process.env.NODE_ENV = Environments.production;
-      const param = { type: QueueType.audit, message: faker.lorem.sentence() };
+      const param = { type: QueueType.audit, message: lorem.sentence() };
       await service.sendMessage(param);
 
       expect(sendMessage).toBeCalledTimes(1);
@@ -132,7 +131,7 @@ describe(QueueService.name, () => {
     });
 
     it('should not send a message to audit queue on non production environment', async () => {
-      const param = { type: QueueType.audit, message: faker.lorem.sentence() };
+      const param = { type: QueueType.audit, message: lorem.sentence() };
       await service.sendMessage(param);
 
       expect(sendMessage).not.toBeCalled();

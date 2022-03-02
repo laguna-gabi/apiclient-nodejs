@@ -2,7 +2,7 @@ import { mockLogger } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import axios from 'axios';
-import * as faker from 'faker';
+import { date, image, name } from 'faker';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { v4 } from 'uuid';
 import { AppointmentStatus } from '../../src/appointment';
@@ -42,8 +42,8 @@ describe('live: sendbird actions', () => {
   it('should do sendbird flow', async () => {
     const user = {
       user_id: v4(),
-      nickname: faker.name.firstName(),
-      profile_url: faker.image.avatar(),
+      nickname: name.firstName(),
+      profile_url: image.avatar(),
       issue_access_token: true,
       metadata: { role: UserRole.coach.toLowerCase() },
     };
@@ -53,7 +53,7 @@ describe('live: sendbird actions', () => {
     // 2. Create a member
     const member = {
       user_id: generateId(),
-      nickname: faker.name.firstName(),
+      nickname: name.firstName(),
       profile_url: '',
       issue_access_token: true,
       metadata: {},
@@ -87,13 +87,13 @@ describe('live: sendbird actions', () => {
 
     // 7. Update metadata for appointment1
     const appointmentId1 = generateId();
-    const value1 = { status: AppointmentStatus.scheduled, start: faker.date.future() };
+    const value1 = { status: AppointmentStatus.scheduled, start: date.future() };
     await sendBird.updateGroupChannelMetadata(params.channel_url, appointmentId1, value1);
     await validateGroupChannel(params.channel_url, [appointmentId1], [value1]);
 
     // 8. Update metadata for appointment2 (check that we have 2 appointments in the metadata now)
     const appointmentId2 = generateId();
-    const value2 = { status: AppointmentStatus.scheduled, start: faker.date.future() };
+    const value2 = { status: AppointmentStatus.scheduled, start: date.future() };
     await sendBird.updateGroupChannelMetadata(params.channel_url, appointmentId2, value2);
     await validateGroupChannel(
       params.channel_url,
@@ -108,8 +108,8 @@ describe('live: sendbird actions', () => {
     // 10. Create another user (coach)
     const newUser = {
       user_id: v4(),
-      nickname: faker.name.firstName(),
-      profile_url: faker.image.avatar(),
+      nickname: name.firstName(),
+      profile_url: image.avatar(),
       issue_access_token: true,
       metadata: { role: UserRole.coach.toLowerCase() },
     };

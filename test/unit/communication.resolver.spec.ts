@@ -2,7 +2,7 @@ import { Platform, mockLogger, mockProcessWarnings } from '@lagunahealth/pandora
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as config from 'config';
-import * as faker from 'faker';
+import { datatype, lorem } from 'faker';
 import { v4 } from 'uuid';
 import {
   ErrorType,
@@ -124,7 +124,7 @@ describe('CommunicationResolver', () => {
       const params = {
         memberId: generateId(),
         userId: v4(),
-        key: faker.lorem.word(),
+        key: lorem.word(),
         updatedAppointmentAction: UpdatedAppointmentAction.delete,
       };
       await resolver.handleUpdatedAppointment(params);
@@ -182,8 +182,8 @@ describe('CommunicationResolver', () => {
         userId: v4(),
         memberId: generateId(),
         sendBirdChannelUrl: generateUniqueUrl(),
-        userToken: faker.datatype.uuid(),
-        memberToken: faker.datatype.uuid(),
+        userToken: datatype.uuid(),
+        memberToken: datatype.uuid(),
       };
       spyOnServiceGet.mockImplementationOnce(() => payload);
 

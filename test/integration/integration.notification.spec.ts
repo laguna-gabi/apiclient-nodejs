@@ -67,8 +67,7 @@ import {
 } from '@lagunahealth/pandora';
 import { general, hosts, scheduler } from 'config';
 import { addDays, addSeconds, subDays, subMinutes } from 'date-fns';
-import * as faker from 'faker';
-import { internet } from 'faker';
+import { datatype, date as fakerDate, internet, lorem } from 'faker';
 import { v4 } from 'uuid';
 import { Appointment } from '../../src/appointment';
 import {
@@ -109,8 +108,8 @@ import {
   generateUpdateJournalTextParams,
   mockGenerateQuestionnaireItem,
 } from '../generators';
-import * as sendbirdPayload from '../unit/mocks/webhookSendbirdNewMessagePayload.json';
 import { generateRequestHeaders } from '../index';
+import * as sendbirdPayload from '../unit/mocks/webhookSendbirdNewMessagePayload.json';
 
 // mock uuid.v4:
 jest.mock('uuid', () => {
@@ -449,7 +448,7 @@ describe('Integration tests: notifications', () => {
         memberId: member.id,
         userId: member.primaryUserId.toString(),
         type: NotificationType.text,
-        metadata: { content: faker.lorem.word(), when },
+        metadata: { content: lorem.word(), when },
       };
       await handler.mutations.notify({ notifyParams });
 
@@ -498,7 +497,7 @@ describe('Integration tests: notifications', () => {
         memberId: member.id,
         userId: member.primaryUserId.toString(),
         type: NotificationType.textSms,
-        metadata: { content: faker.lorem.word() },
+        metadata: { content: lorem.word() },
       };
       await handler.mutations.notify({ notifyParams });
 
@@ -556,7 +555,7 @@ describe('Integration tests: notifications', () => {
           memberId: member.id,
           userId: member.primaryUserId.toString(),
           type,
-          metadata: { peerId: faker.datatype.uuid() },
+          metadata: { peerId: datatype.uuid() },
         };
         await handler.mutations.notify({ notifyParams });
 
@@ -708,7 +707,7 @@ describe('Integration tests: notifications', () => {
       const cancelNotifyParams: CancelNotifyParams = {
         memberId: member.id,
         type,
-        metadata: { peerId: faker.datatype.uuid() },
+        metadata: { peerId: datatype.uuid() },
       };
       await handler.mutations.cancel({ cancelNotifyParams });
 
@@ -909,7 +908,7 @@ describe('Integration tests: notifications', () => {
       const org = await creators.createAndValidateOrg();
       const user = await creators.createAndValidateUser();
       const { member } = await creators.createAndValidateMember({ org });
-      const fakeUUID = faker.datatype.uuid();
+      const fakeUUID = datatype.uuid();
       const appointmentParams = generateRequestAppointmentParams({
         userId: user.id,
         memberId: member.id,
@@ -1403,8 +1402,8 @@ describe('Integration tests: notifications', () => {
     it(`submitQuestionnaireResponse: should send dispatch ${AlertInternalKey.assessmentSubmitAlert}`, async () => {
       const org = await creators.createAndValidateOrg();
       const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
-      const alertValue = faker.datatype.number();
-      const assessmentName = faker.lorem.word();
+      const alertValue = datatype.number();
+      const assessmentName = lorem.word();
 
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
@@ -1683,7 +1682,7 @@ describe('Integration tests: notifications', () => {
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
-      const payload = { Body: faker.lorem.word(), From: member.phone, Token: 'token' };
+      const payload = { Body: lorem.word(), From: member.phone, Token: 'token' };
       await handler.webhooksController.incomingSms(payload);
       await delay(200);
 
@@ -1735,7 +1734,7 @@ describe('Integration tests: notifications', () => {
         .setDailyReportCategories({
           requestHeaders: generateRequestHeaders(member.authId),
           dailyReportCategoriesInput: {
-            date: reformatDate(faker.date.recent().toString(), general.get('dateFormatString')),
+            date: reformatDate(fakerDate.recent().toString(), general.get('dateFormatString')),
             categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
           } as DailyReportCategoriesInput,
         });

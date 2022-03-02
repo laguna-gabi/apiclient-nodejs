@@ -7,7 +7,7 @@ import {
 } from '@lagunahealth/pandora';
 import * as config from 'config';
 import { subSeconds } from 'date-fns';
-import * as faker from 'faker';
+import { date, internet, lorem } from 'faker';
 import * as request from 'supertest';
 import { v4 } from 'uuid';
 import { ErrorType, Errors } from '../../src/common';
@@ -132,7 +132,7 @@ describe('Validations - member', () => {
     test.each`
       field          | value
       ${'sex'}       | ${Sex.female}
-      ${'email'}     | ${faker.internet.email()}
+      ${'email'}     | ${internet.email()}
       ${'zipCode'}   | ${generateZipCode()}
       ${'honorific'} | ${Honorific.dr}
     `(`should be able to set value for optional field $field`, async (params) => {
@@ -154,7 +154,7 @@ describe('Validations - member', () => {
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
       const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
 
-      memberParams.dischargeDate = generateDateOnly(faker.date.soon(3));
+      memberParams.dischargeDate = generateDateOnly(date.soon(3));
 
       const { id } = await handler.mutations.createMember({ memberParams });
       expect(id).not.toBeUndefined();
@@ -215,9 +215,9 @@ describe('Validations - member', () => {
 
     /* eslint-disable max-len */
     test.each`
-      field            | input                                  | errors
-      ${'phone'}       | ${{ phone: '+410' }}                   | ${[Errors.get(ErrorType.memberPhone)]}
-      ${'dateOfBirth'} | ${{ dateOfBirth: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDateOfBirth)]}
+      field            | input                            | errors
+      ${'phone'}       | ${{ phone: '+410' }}             | ${[Errors.get(ErrorType.memberPhone)]}
+      ${'dateOfBirth'} | ${{ dateOfBirth: lorem.word() }} | ${[Errors.get(ErrorType.memberDateOfBirth)]}
     `(
       /* eslint-enable max-len */
       `should fail to create a member since $field is not valid`,
@@ -458,7 +458,7 @@ describe('Validations - member', () => {
       async (type) => {
         const notifyParams: NotifyParams = generateNotifyParams({
           type,
-          metadata: { when: faker.date.soon(1) },
+          metadata: { when: date.soon(1) },
         });
         await handler.mutations.notify({
           notifyParams,
@@ -590,15 +590,15 @@ describe('Validations - member', () => {
 
     /* eslint-disable max-len */
     test.each`
-      field               | input                                    | errors
-      ${'phoneSecondary'} | ${{ phoneSecondary: '+410' }}            | ${[Errors.get(ErrorType.memberPhone)]}
-      ${'dischargeDate'}  | ${{ dischargeDate: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
-      ${'admitDate'}      | ${{ admitDate: faker.lorem.word() }}     | ${[Errors.get(ErrorType.memberAdmitDate)]}
-      ${'admitDate'}      | ${{ admitDate: '2021/13/1' }}            | ${[Errors.get(ErrorType.memberAdmitDate)]}
-      ${'dischargeDate'}  | ${{ dischargeDate: faker.lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
-      ${'dischargeDate'}  | ${{ dischargeDate: '2021/13/1' }}        | ${[Errors.get(ErrorType.memberDischargeDate)]}
-      ${'dateOfBirth'}    | ${{ dateOfBirth: faker.lorem.word() }}   | ${[Errors.get(ErrorType.memberDateOfBirth)]}
-      ${'dateOfBirth'}    | ${{ dateOfBirth: '2021/13/1' }}          | ${[Errors.get(ErrorType.memberDateOfBirth)]}
+      field               | input                              | errors
+      ${'phoneSecondary'} | ${{ phoneSecondary: '+410' }}      | ${[Errors.get(ErrorType.memberPhone)]}
+      ${'dischargeDate'}  | ${{ dischargeDate: lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
+      ${'admitDate'}      | ${{ admitDate: lorem.word() }}     | ${[Errors.get(ErrorType.memberAdmitDate)]}
+      ${'admitDate'}      | ${{ admitDate: '2021/13/1' }}      | ${[Errors.get(ErrorType.memberAdmitDate)]}
+      ${'dischargeDate'}  | ${{ dischargeDate: lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
+      ${'dischargeDate'}  | ${{ dischargeDate: '2021/13/1' }}  | ${[Errors.get(ErrorType.memberDischargeDate)]}
+      ${'dateOfBirth'}    | ${{ dateOfBirth: lorem.word() }}   | ${[Errors.get(ErrorType.memberDateOfBirth)]}
+      ${'dateOfBirth'}    | ${{ dateOfBirth: '2021/13/1' }}    | ${[Errors.get(ErrorType.memberDateOfBirth)]}
     `(
       /* eslint-enable max-len */
       `should fail to update a member since $field is not valid`,

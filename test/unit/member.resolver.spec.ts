@@ -13,9 +13,8 @@ import {
 } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as faker from 'faker';
+import { datatype, date, lorem, system } from 'faker';
 import { Types } from 'mongoose';
-import { QuestionnaireAlerts, QuestionnaireType } from '../../src/questionnaire';
 import { v4 } from 'uuid';
 import {
   ErrorType,
@@ -61,6 +60,7 @@ import {
   StorageService,
   TwilioService,
 } from '../../src/providers';
+import { QuestionnaireAlerts, QuestionnaireType } from '../../src/questionnaire';
 import { UserService } from '../../src/user';
 import {
   dbDisconnect,
@@ -971,7 +971,7 @@ describe('MemberResolver', () => {
     const generateMockJournalParams = ({
       id = generateId(),
       memberId = new Types.ObjectId(generateId()),
-      text = faker.lorem.sentence(),
+      text = lorem.sentence(),
       published = false,
       updatedAt = new Date(),
       imageFormat = ImageFormat.png,
@@ -1685,7 +1685,7 @@ describe('MemberResolver', () => {
       const updateFields = {
         platform: Platform.ios,
         isPushNotificationsEnabled: currentMemberConfig.isPushNotificationsEnabled,
-        token: faker.lorem.word(),
+        token: lorem.word(),
       };
       const params: RegisterForNotificationParams = { ...updateFields };
       const memberConfig = generateMemberConfig({
@@ -1985,7 +1985,7 @@ describe('MemberResolver', () => {
 
       const notifyParams = generateNotifyParams({
         type: NotificationType.textSms,
-        metadata: { peerId: v4(), content: `    ${faker.lorem.sentence()}     ` },
+        metadata: { peerId: v4(), content: `    ${lorem.sentence()}     ` },
       });
 
       await resolver.notify(notifyParams);
@@ -2160,10 +2160,10 @@ describe('MemberResolver', () => {
         platform: Platform.android,
         isPushNotificationsEnabled: true,
         accessToken: '123-abc',
-        firstLoggedInAt: faker.date.past(1),
-        articlesPath: faker.system.directoryPath(),
+        firstLoggedInAt: date.past(1),
+        articlesPath: system.directoryPath(),
         language: defaultMemberParams.language,
-        updatedAt: faker.date.past(1),
+        updatedAt: date.past(1),
       };
       const communication: Communication = {
         memberId: new Types.ObjectId(member.id),
@@ -2253,7 +2253,7 @@ describe('MemberResolver', () => {
 
     it('should call getAlerts', async () => {
       const userId = generateId();
-      const lastQueryAlert = faker.date.past(1);
+      const lastQueryAlert = date.past(1);
       const alert = mockGenerateAlert();
 
       spyOnServiceGetAlerts.mockResolvedValue([alert]);
@@ -2288,8 +2288,8 @@ describe('MemberResolver', () => {
 
       const params: IEventOnAlertForQRSubmit = {
         memberId: member.id,
-        questionnaireName: faker.lorem.word(),
-        score: faker.datatype.number().toString(),
+        questionnaireName: lorem.word(),
+        score: datatype.number().toString(),
         questionnaireResponseId: generateId(),
         questionnaireType: randomEnum(QuestionnaireType) as QuestionnaireType,
       };
@@ -2318,7 +2318,7 @@ describe('MemberResolver', () => {
 
       const params: IEventOnAlertForQRSubmit = {
         memberId: member.id,
-        questionnaireName: faker.lorem.word(),
+        questionnaireName: lorem.word(),
         score: QuestionnaireAlerts.get(QuestionnaireType.phq9),
         questionnaireResponseId: generateId(),
         questionnaireType: QuestionnaireType.phq9,

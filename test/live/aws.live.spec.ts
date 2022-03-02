@@ -1,15 +1,15 @@
 import { Environments, Platform, mockLogger } from '@lagunahealth/pandora';
 import axios from 'axios';
 import * as config from 'config';
+import { services } from 'config';
 import { EventEmitter2 } from 'eventemitter2';
-import * as faker from 'faker';
+import { lorem } from 'faker';
 import { readFileSync } from 'fs';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { LoggerService, StorageType } from '../../src/common';
 import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../src/member';
 import { CloudMapService, ConfigsService, StorageService } from '../../src/providers';
 import { generateId, mockGenerateMember, mockGenerateUser } from '../generators';
-import { services } from 'config';
 
 describe('live: aws', () => {
   describe('storage', () => {
@@ -64,10 +64,10 @@ describe('live: aws', () => {
         expect(uploadUrl).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
         expect(uploadUrl).toMatch(`Amz-Expires=1800`); //expiration: 30 minutes
 
-        const { status: uploadStatus } = await axios.put(uploadUrl, faker.lorem.sentence());
+        const { status: uploadStatus } = await axios.put(uploadUrl, lorem.sentence());
         expect(uploadStatus).toEqual(200);
       };
-      const files = [`${faker.lorem.word()}1.mp4`, `${faker.lorem.word()}2.mp4`];
+      const files = [`${lorem.word()}1.mp4`, `${lorem.word()}2.mp4`];
       await Promise.all(files.map(uploadFile));
       const existingUrls = await Promise.all(
         files.map((file) => storageService.getDownloadUrl(getParams(file))),
@@ -177,7 +177,7 @@ describe('live: aws', () => {
       expect(uploadUrl).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
       expect(uploadUrl).toMatch(`Amz-Expires=1800`); //expiration: 30 minutes
 
-      const { status: uploadStatus } = await axios.put(uploadUrl, faker.lorem.sentence());
+      const { status: uploadStatus } = await axios.put(uploadUrl, lorem.sentence());
       expect(uploadStatus).toEqual(200);
 
       const url = await storageService.getDownloadUrl({
@@ -211,7 +211,7 @@ describe('live: aws', () => {
           return;
         }
 
-        const params = { memberId: member.id, storageType, id: `${faker.lorem.word()}.mp4` };
+        const params = { memberId: member.id, storageType, id: `${lorem.word()}.mp4` };
         const uploadUrl = await storageService.getUploadUrl(params);
 
         expect(uploadUrl).toMatch(
@@ -223,7 +223,7 @@ describe('live: aws', () => {
         expect(uploadUrl).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
         expect(uploadUrl).toMatch(`Amz-Expires=1800`); //expiration: 30 minutes
 
-        const { status: uploadStatus } = await axios.put(uploadUrl, faker.lorem.sentence());
+        const { status: uploadStatus } = await axios.put(uploadUrl, lorem.sentence());
         expect(uploadStatus).toEqual(200);
 
         const url = await storageService.getDownloadUrl({
@@ -281,11 +281,11 @@ describe('live: aws', () => {
         return uploadId;
       };
 
-      const fileName = `${faker.lorem.word()}.mp4`;
+      const fileName = `${lorem.word()}.mp4`;
       const buffer = readFileSync('./test/live/mocks/tempFile.ogg');
 
       const uploadID = await uploadPart(fileName, 0, buffer.toString('hex'));
-      await uploadPart(fileName, 1, faker.lorem.sentence(), uploadID);
+      await uploadPart(fileName, 1, lorem.sentence(), uploadID);
 
       await storageService.completeMultipartUpload({
         uploadId: uploadID,

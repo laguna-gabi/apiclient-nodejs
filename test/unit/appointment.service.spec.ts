@@ -2,7 +2,7 @@ import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { addDays, addMinutes, subDays } from 'date-fns';
-import * as faker from 'faker';
+import { lorem } from 'faker';
 import { Model, Types, model } from 'mongoose';
 import {
   Appointment,
@@ -506,14 +506,14 @@ describe('AppointmentService', () => {
       );
     });
 
-    const noShowReason = faker.lorem.sentence();
+    const noShowReason = lorem.sentence();
 
     /* eslint-disable max-len */
     test.each`
       update1                               | update2
       ${{ noShow: true, noShowReason }} | ${{
   noShow: true,
-  noShowReason: faker.lorem.sentence(),
+  noShowReason: lorem.sentence(),
   notes: generateNotesParams(),
 }}
       ${{ noShow: true, noShowReason }}     | ${{ noShow: false, noShowReason: null }}

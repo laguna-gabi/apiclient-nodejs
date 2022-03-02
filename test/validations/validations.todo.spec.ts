@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import { date } from 'faker';
 import { ErrorType, Errors } from '../../src/common';
 import { CreateTodoDoneParams, CreateTodoParams, EndAndCreateTodoParams } from '../../src/todo';
 import { Handler } from '../aux/handler';
@@ -69,7 +69,7 @@ describe('Validations - todo', () => {
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId: generateId(),
         end: new Date(),
-        start: faker.date.soon(2),
+        start: date.soon(2),
       });
 
       await handler.mutations.createTodo({
@@ -183,7 +183,7 @@ describe('Validations - todo', () => {
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         memberId: generateId(),
         end: new Date(),
-        start: faker.date.soon(2),
+        start: date.soon(2),
       });
 
       await handler.mutations.endAndCreateTodo({
@@ -195,7 +195,7 @@ describe('Validations - todo', () => {
     it(`should fail to endAndCreate a todo since end in the past`, async () => {
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         memberId: generateId(),
-        end: faker.date.recent(1),
+        end: date.recent(1),
       });
       delete endAndCreateTodoParams.start;
 
@@ -208,7 +208,7 @@ describe('Validations - todo', () => {
     it(`should fail to endAndCreate a todo since end in the past`, async () => {
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         memberId: generateId(),
-        start: faker.date.recent(1),
+        start: date.recent(1),
       });
 
       await handler.mutations.endAndCreateTodo({
@@ -334,7 +334,7 @@ describe('Validations - todo', () => {
     it(`should fail to get todoDones since start after end`, async () => {
       const getTodoDonesParams = generateGetTodoDonesParams({
         memberId: generateId(),
-        start: faker.date.soon(2),
+        start: date.soon(2),
         end: new Date(),
       });
 

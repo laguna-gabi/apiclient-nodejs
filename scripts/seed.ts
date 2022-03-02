@@ -1,7 +1,26 @@
-import * as faker from 'faker';
+import { generateZipCode } from '@lagunahealth/pandora';
+import { date, internet, lorem } from 'faker';
 import * as jwt from 'jsonwebtoken';
+import { model } from 'mongoose';
 import { v4 } from 'uuid';
+import { createSeedBarriers, seedCarePlans } from '../cmd/static/seedCare';
+import {
+  buildGAD7Questionnaire,
+  buildLHPQuestionnaire,
+  buildNPSQuestionnaire,
+  buildPHQ9Questionnaire,
+  buildWHO5Questionnaire,
+} from '../cmd/statics';
+import {
+  BarrierType,
+  BarrierTypeDocument,
+  BarrierTypeDto,
+  CarePlanType,
+  CarePlanTypeDocument,
+  CarePlanTypeDto,
+} from '../src/care';
 import { Identifier, UserRole, delay } from '../src/common';
+import { UpdateJournalTextParams } from '../src/member';
 import { UserService } from '../src/user';
 import {
   dbConnect,
@@ -25,25 +44,6 @@ import {
 } from '../test';
 import { Mutations } from '../test/aux';
 import { SeedBase } from './seedBase';
-import { generateZipCode } from '@lagunahealth/pandora';
-import { UpdateJournalTextParams } from '../src/member';
-import {
-  buildGAD7Questionnaire,
-  buildLHPQuestionnaire,
-  buildNPSQuestionnaire,
-  buildPHQ9Questionnaire,
-  buildWHO5Questionnaire,
-} from '../cmd/statics';
-import {
-  BarrierType,
-  BarrierTypeDocument,
-  BarrierTypeDto,
-  CarePlanType,
-  CarePlanTypeDocument,
-  CarePlanTypeDto,
-} from '../src/care';
-import { createSeedBarriers, seedCarePlans } from '../cmd/static/seedCare';
-import { model } from 'mongoose';
 /**
  * This is a seed file for initial local db creation.
  * The objects we're creating are:
@@ -93,9 +93,9 @@ async function main() {
   const userId = await userService.getAvailableUser();
   const memberParams = generateCreateMemberParams({
     orgId: org.id,
-    email: faker.internet.email(),
+    email: internet.email(),
     zipCode: generateZipCode(),
-    dischargeDate: generateDateOnly(faker.date.future(1)),
+    dischargeDate: generateDateOnly(date.future(1)),
     userId: userId.toString(),
   });
 
@@ -181,7 +181,7 @@ async function main() {
 
   const updateJournalTextParams: UpdateJournalTextParams = {
     id: journalId,
-    text: faker.lorem.word(),
+    text: lorem.word(),
   };
   await base.mutations.updateJournalText({ requestHeaders, updateJournalTextParams });
 

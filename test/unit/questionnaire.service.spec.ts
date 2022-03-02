@@ -1,7 +1,7 @@
 import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as faker from 'faker';
+import { lorem } from 'faker';
 import { Model, Types, model } from 'mongoose';
 import { buildLHPQuestionnaire } from '../../cmd/statics';
 import { ErrorType, Errors, EventType, ItemType, LoggerService } from '../../src/common';
@@ -69,35 +69,35 @@ describe('QuestionnaireService', () => {
             code: 'q1',
             type: ItemType.choice,
             order: 1,
-            label: faker.lorem.words(2),
+            label: lorem.words(2),
             required: false,
             options: [
-              { label: faker.lorem.words(2), value: 0 },
-              { label: faker.lorem.words(2), value: 1 },
-              { label: faker.lorem.words(2), value: 2 },
+              { label: lorem.words(2), value: 0 },
+              { label: lorem.words(2), value: 1 },
+              { label: lorem.words(2), value: 2 },
             ],
           },
           {
             code: 'q2',
             type: ItemType.choice,
             order: 2,
-            label: faker.lorem.words(2),
+            label: lorem.words(2),
             required: false,
             options: [
-              { label: faker.lorem.words(2), value: 0 },
-              { label: faker.lorem.words(2), value: 1 },
-              { label: faker.lorem.words(2), value: 2 },
+              { label: lorem.words(2), value: 0 },
+              { label: lorem.words(2), value: 1 },
+              { label: lorem.words(2), value: 2 },
             ],
           },
           {
             code: 'q3',
             type: ItemType.range,
             order: 3,
-            label: faker.lorem.words(2),
+            label: lorem.words(2),
             required: false,
             range: {
-              min: { value: 0, label: faker.lorem.words(3) },
-              max: { value: 5, label: faker.lorem.words(3) },
+              min: { value: 0, label: lorem.words(3) },
+              max: { value: 5, label: lorem.words(3) },
             },
             alertCondition: [{ type: AlertConditionType.equal, value: '5' }],
           },
@@ -118,24 +118,24 @@ describe('QuestionnaireService', () => {
             code: 'q1',
             type: ItemType.choice,
             order: 1,
-            label: faker.lorem.words(2),
+            label: lorem.words(2),
             required: false,
             options: [
-              { label: faker.lorem.words(2), value: 0 },
-              { label: faker.lorem.words(2), value: 1 },
-              { label: faker.lorem.words(2), value: 2 },
+              { label: lorem.words(2), value: 0 },
+              { label: lorem.words(2), value: 1 },
+              { label: lorem.words(2), value: 2 },
             ],
           },
           {
             code: 'q2',
             type: ItemType.choice,
             order: 2,
-            label: faker.lorem.words(2),
+            label: lorem.words(2),
             required: false,
             options: [
-              { label: faker.lorem.words(2), value: 0 },
-              { label: faker.lorem.words(2), value: 1 },
-              { label: faker.lorem.words(2), value: 2 },
+              { label: lorem.words(2), value: 0 },
+              { label: lorem.words(2), value: 1 },
+              { label: lorem.words(2), value: 2 },
             ],
           },
         ],
@@ -151,7 +151,7 @@ describe('QuestionnaireService', () => {
             code: 'q1',
             type: ItemType.range,
             order: 0,
-            label: faker.lorem.words(2),
+            label: lorem.words(2),
             required: true,
             range: {
               min: {
@@ -215,7 +215,7 @@ describe('QuestionnaireService', () => {
       await service.createQuestionnaire(params);
 
       // perform an update to questionnaire name..
-      const updatedQuestionnaireName = faker.lorem.words(3);
+      const updatedQuestionnaireName = lorem.words(3);
       const { id } = await service.createQuestionnaire({
         ...params,
         name: updatedQuestionnaireName,
@@ -570,8 +570,8 @@ describe('QuestionnaireService', () => {
               type: ItemType.choice,
               code: 'q1',
               options: [
-                { label: faker.lorem.words(3), value: 3 },
-                { label: faker.lorem.words(3), value: 4 },
+                { label: lorem.words(3), value: 3 },
+                { label: lorem.words(3), value: 4 },
               ],
             }),
           ],
@@ -587,8 +587,8 @@ describe('QuestionnaireService', () => {
               type: ItemType.range,
               code: 'q1',
               range: {
-                min: { value: 0, label: faker.lorem.words(3) },
-                max: { value: 4, label: faker.lorem.words(3) },
+                min: { value: 0, label: lorem.words(3) },
+                max: { value: 4, label: lorem.words(3) },
               },
             }),
           ],
