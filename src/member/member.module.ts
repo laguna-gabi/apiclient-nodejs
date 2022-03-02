@@ -46,6 +46,7 @@ import { UserModule } from '../user';
       { name: ControlMember.name, schema: ControlMemberDto },
       { name: DismissedAlert.name, schema: DismissedAlertDto },
       { name: Caregiver.name, schema: CaregiverDto },
+      { name: Journal.name, schema: JournalDto },
       { name: Todo.name, schema: TodoDto },
       { name: ActionItem.name, schema: ActionItemDto },
     ]),
@@ -72,12 +73,6 @@ import { UserModule } from '../user';
         name: Recording.name,
         useFactory: () => {
           return MemberRecordingDto.plugin(mongooseDelete, useFactoryOptions);
-        },
-      },
-      {
-        name: Journal.name,
-        useFactory: () => {
-          return JournalDto.plugin(mongooseDelete, useFactoryOptions);
         },
       },
     ]),

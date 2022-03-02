@@ -12,6 +12,7 @@ import {
   ActionItemDocument,
   CaregiverDocument,
   ControlMemberDocument,
+  JournalDocument,
   TaskStatus,
 } from '../../src/member';
 import { QuestionnaireResponseDocument } from '../../src/questionnaire';
@@ -337,6 +338,23 @@ describe('Integration tests : Audit', () => {
           handler.controlMemberModel,
           user1.id,
           user1.id,
+        ),
+      ).toBeTruthy();
+    });
+  });
+
+  describe('journal', () => {
+    it('should create journal', async () => {
+      const { id } = await handler.mutations.createJournal({
+        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
+      });
+
+      expect(
+        await checkAuditValues<JournalDocument>(
+          id,
+          handler.journalModel,
+          handler.patientZero.id,
+          handler.patientZero.id,
         ),
       ).toBeTruthy();
     });

@@ -52,6 +52,9 @@ import {
   ControlMember,
   ControlMemberDocument,
   ControlMemberDto,
+  Journal,
+  JournalDocument,
+  JournalDto,
   Member,
   MemberService,
 } from '../../src/member';
@@ -110,6 +113,7 @@ export class Handler extends BaseHandler {
   questionnaireResponseModel: Model<QuestionnaireResponseDocument>;
   dailyReportModel: Model<DailyReportDocument & defaultAuditDbValues>;
   availabilityModel: Model<AvailabilityDocument>;
+  journalModel: Model<JournalDocument>;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -248,6 +252,7 @@ export class Handler extends BaseHandler {
       DailyReportDto,
     );
     this.availabilityModel = model<AvailabilityDocument>(Availability.name, AvailabilityDto);
+    this.journalModel = model<JournalDocument>(Journal.name, JournalDto);
   }
 }
 

@@ -2,8 +2,11 @@ import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsNotEmpty } from 'class-validator';
 import { Document, Types } from 'mongoose';
+import * as mongooseDelete from 'mongoose-delete';
 import { ErrorType, Errors, Identifier, IsObjectId } from '../common';
 import { ISoftDelete } from '../db';
+import { audit } from '../db/middleware';
+import { useFactoryOptions } from '../db/utils';
 
 export enum ImageType {
   NormalImage = '_NormalImage',
@@ -141,4 +144,6 @@ export class Journal extends Identifier {
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 export type JournalDocument = Journal & Document & ISoftDelete<Journal>;
-export const JournalDto = SchemaFactory.createForClass(Journal);
+export const JournalDto = audit(
+  SchemaFactory.createForClass(Journal).plugin(mongooseDelete, useFactoryOptions),
+);
