@@ -205,10 +205,12 @@ export class Mutations {
     updateMemberParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     updateMemberParams: UpdateMemberParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Member> => {
     const { updateMember } = await this.client
       .request(
@@ -304,7 +306,7 @@ export class Mutations {
           }
         `,
         { updateMemberParams },
-        this.defaultUserRequestHeaders,
+        requestHeaders,
       )
       .catch((ex) => {
         return isResultValid({
@@ -614,10 +616,12 @@ export class Mutations {
     setGeneralNotesParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     setGeneralNotesParams: SetGeneralNotesParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<void> => {
     const { setGeneralNotes } = await this.client
       .request(
@@ -627,7 +631,7 @@ export class Mutations {
           }
         `,
         { setGeneralNotesParams },
-        this.defaultUserRequestHeaders,
+        requestHeaders,
       )
       .catch((ex) => {
         return isResultValid({
@@ -1092,10 +1096,12 @@ export class Mutations {
     replaceUserForMemberParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultAdminRequestHeaders,
   }: {
     replaceUserForMemberParams: ReplaceUserForMemberParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }) => {
     const { replaceUserForMember } = await this.client
       .request(
@@ -1105,7 +1111,7 @@ export class Mutations {
           }
         `,
         { replaceUserForMemberParams },
-        this.defaultAdminRequestHeaders,
+        requestHeaders,
       )
       .catch((ex) => {
         return isResultValid({

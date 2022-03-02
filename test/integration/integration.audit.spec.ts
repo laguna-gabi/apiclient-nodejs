@@ -3,22 +3,27 @@ import { addDays } from 'date-fns';
 import * as faker from 'faker';
 import { Types } from 'mongoose';
 import { buildNPSQuestionnaire } from '../../cmd/statics';
-import { AvailabilityDocument } from '../../src/availability';
+import { Availability, AvailabilityDocument } from '../../src/availability';
 import { reformatDate } from '../../src/common';
 import { DailyReportCategoryTypes } from '../../src/dailyReport';
 import {
   ActionItem,
   ActionItemDocument,
+  Caregiver,
   CaregiverDocument,
   ControlMemberDocument,
   JournalDocument,
+  Member,
+  MemberDocument,
+  ReplaceUserForMemberParams,
   TaskStatus,
 } from '../../src/member';
-import { QuestionnaireResponseDocument } from '../../src/questionnaire';
+import { Questionnaire, QuestionnaireResponseDocument } from '../../src/questionnaire';
 import {
   CreateTodoDoneParams,
   CreateTodoParams,
   EndAndCreateTodoParams,
+  Todo,
   TodoDocument,
   TodoDoneDocument,
 } from '../../src/todo';
@@ -29,6 +34,7 @@ import {
   generateAddCaregiverParams,
   generateAvailabilityInput,
   generateCreateMemberParams,
+  generateCreateTaskParams,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateCreateUserParams,
@@ -36,8 +42,13 @@ import {
   generateOrgParams,
   generateRequestHeaders,
   generateScheduleAppointmentParams,
+  generateSetGeneralNotesParams,
   generateUpdateCaregiverParams,
+  generateUpdateMemberParams,
+  urls,
 } from '../index';
+import * as request from 'supertest';
+import { UserRole, delay } from '../../src/common';
 
 describe('Integration tests : Audit', () => {
   const handler: Handler = new Handler();
@@ -45,28 +56,36 @@ describe('Integration tests : Audit', () => {
   let appointmentsActions: AppointmentsIntegrationActions;
   let user1: Partial<User>;
   let user2: Partial<User>;
+  let adminUser: Partial<User>;
+  let server;
 
   beforeAll(async () => {
     await handler.beforeAll();
+    server = handler.app.getHttpServer();
     appointmentsActions = new AppointmentsIntegrationActions(
       handler.mutations,
       handler.defaultUserRequestHeaders,
     );
     creators = new Creators(handler, appointmentsActions);
+    const userParams = [
+      generateCreateUserParams(),
+      generateCreateUserParams(),
+      generateCreateUserParams({ roles: [UserRole.admin] }),
+    ];
 
-    const userParams = [generateCreateUserParams(), generateCreateUserParams()];
-    const [{ id: userId1 }, { id: userId2 }] = await Promise.all(
+    const [{ id: userId1 }, { id: userId2 }, { id: adminUserId }] = await Promise.all(
       userParams.map((userParams) => handler.mutations.createUser({ userParams })),
     );
     user1 = { id: userId1, ...userParams[0] };
     user2 = { id: userId2, ...userParams[1] };
+    adminUser = { id: adminUserId, ...userParams[2] };
   }, 10000);
 
   afterAll(async () => {
     await handler.afterAll();
   });
 
-  describe('Caregiver', () => {
+  describe(Caregiver.name, () => {
     it('should update createdAt and updatedAt fields', async () => {
       /**
        * 1. Add Caregiver for PatientZero and by PatientZero
@@ -123,7 +142,7 @@ describe('Integration tests : Audit', () => {
     });
   });
 
-  describe('Todo', () => {
+  describe(Todo.name, () => {
     it('should update createdAt and updatedAt fields', async () => {
       /**
        * 1. User creates a todo for member
@@ -222,7 +241,7 @@ describe('Integration tests : Audit', () => {
     }, 10000);
   });
 
-  describe('Availability', () => {
+  describe(Availability.name, () => {
     it('should create availabilities', async () => {
       const availabilities = Array.from(Array(3)).map(() => generateAvailabilityInput());
       const requestHeaders = generateRequestHeaders(user1.authId);
@@ -272,7 +291,7 @@ describe('Integration tests : Audit', () => {
     });
   });
 
-  describe('Questionnaire', () => {
+  describe(Questionnaire.name, () => {
     it('should create a questionnaire response with createdBy and updatedBy', async () => {
       const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
         createQuestionnaireParams: buildNPSQuestionnaire(),
@@ -294,6 +313,102 @@ describe('Integration tests : Audit', () => {
           user1.id,
           user1.id,
         ),
+      ).toBeTruthy();
+    });
+  });
+
+  describe(Member.name, () => {
+    it('should create a new member without `audit` for anonymous requests (REST)', async () => {
+      /**
+       * 0. create a member via REST endpoint (anonymous)
+       * 1. update member record (updateMember)
+       * 2. replace User for Member (replaceUserForMember)
+       * 3. create Action Item for Member (createActionItem)
+       * 4. set notes (general/nurse) for member (setGeneralNotes)
+       */
+      const org = await creators.createAndValidateOrg();
+      const memberParams = generateCreateMemberParams({ orgId: org.id });
+
+      // Create Member (anonymous/REST)
+      const {
+        body: { id: memberId },
+      } = await request(server).post(urls.members).send(memberParams).expect(201);
+
+      expect(
+        await checkAuditValues<MemberDocument>(memberId, handler.memberModel, undefined, undefined),
+      ).toBeTruthy();
+
+      // Update Member (user1)
+      const updateMemberParams = generateUpdateMemberParams({ id: memberId });
+      await handler.mutations.updateMember({
+        updateMemberParams,
+        requestHeaders: generateRequestHeaders(user1.authId),
+      });
+
+      expect(
+        await checkAuditValues<MemberDocument>(memberId, handler.memberModel, undefined, user1.id),
+      ).toBeTruthy();
+
+      // Replace User for Member (admin)
+      const replaceUserForMemberParams: ReplaceUserForMemberParams = {
+        memberId,
+        userId: user2.id,
+      };
+
+      await handler.mutations.replaceUserForMember({
+        replaceUserForMemberParams,
+        requestHeaders: generateRequestHeaders(adminUser.authId),
+      });
+
+      expect(
+        await checkAuditValues<MemberDocument>(
+          memberId,
+          handler.memberModel,
+          undefined,
+          adminUser.id,
+        ),
+      ).toBeTruthy();
+
+      await delay(2000); // wait for event to finish
+
+      // Create Action Item for Member (user2) - this will update the list of actions items
+      const createTaskParams = generateCreateTaskParams({ memberId });
+      await handler.mutations.createActionItem({
+        createTaskParams,
+        requestHeaders: generateRequestHeaders(user2.authId),
+      });
+
+      expect(
+        await checkAuditValues<MemberDocument>(memberId, handler.memberModel, undefined, user2.id),
+      ).toBeTruthy();
+
+      // Set general notes for Member (user1) - this will update the general notes / nurse notes fields
+      const setGeneralNotesParams = generateSetGeneralNotesParams({ memberId });
+      await handler.mutations.setGeneralNotes({
+        setGeneralNotesParams,
+        requestHeaders: generateRequestHeaders(user1.authId),
+      });
+
+      expect(
+        await checkAuditValues<MemberDocument>(memberId, handler.memberModel, undefined, user1.id),
+      ).toBeTruthy();
+    });
+
+    it('should create a new member with correct `audit` values (GQL)', async () => {
+      const org = await creators.createAndValidateOrg();
+      const memberParams = generateCreateMemberParams({ orgId: org.id });
+
+      handler.featureFlagService.spyOnFeatureFlagControlGroup.mockImplementationOnce(
+        async () => false,
+      );
+
+      const { id } = await handler.mutations.createMember({
+        memberParams,
+        requestHeaders: generateRequestHeaders(user1.authId),
+      });
+
+      expect(
+        await checkAuditValues<MemberDocument>(id, handler.memberModel, user1.id, user1.id),
       ).toBeTruthy();
     });
   });

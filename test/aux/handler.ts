@@ -56,6 +56,8 @@ import {
   JournalDocument,
   JournalDto,
   Member,
+  MemberDocument,
+  MemberDto,
   MemberService,
 } from '../../src/member';
 import { Org, OrgService } from '../../src/org';
@@ -121,6 +123,7 @@ export class Handler extends BaseHandler {
   questionnaireResponseModel: Model<QuestionnaireResponseDocument>;
   dailyReportModel: Model<DailyReportDocument & defaultAuditDbValues>;
   availabilityModel: Model<AvailabilityDocument>;
+  memberModel: Model<MemberDocument>;
   journalModel: Model<JournalDocument>;
   userModel: Model<UserDocument>;
   userConfigModel: Model<UserConfigDocument>;
@@ -262,6 +265,7 @@ export class Handler extends BaseHandler {
       DailyReportDto,
     );
     this.availabilityModel = model<AvailabilityDocument>(Availability.name, AvailabilityDto);
+    this.memberModel = model<MemberDocument>(Member.name, MemberDto);
     this.journalModel = model<JournalDocument>(Journal.name, JournalDto);
     this.userModel = model<UserDocument>(User.name, UserDto);
     this.userConfigModel = model<UserConfigDocument>(UserConfig.name, UserConfigDto);

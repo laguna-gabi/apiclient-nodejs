@@ -49,18 +49,13 @@ import { UserModule } from '../user';
       { name: Journal.name, schema: JournalDto },
       { name: Todo.name, schema: TodoDto },
       { name: ActionItem.name, schema: ActionItemDto },
+      { name: Member.name, schema: MemberDto },
     ]),
     MongooseModule.forFeatureAsync([
       {
         name: Appointment.name,
         useFactory: () => {
           return AppointmentDto.plugin(mongooseDelete, useFactoryOptions);
-        },
-      },
-      {
-        name: Member.name,
-        useFactory: () => {
-          return MemberDto.plugin(mongooseDelete, useFactoryOptions);
         },
       },
       {

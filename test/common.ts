@@ -243,7 +243,8 @@ export async function checkAuditValues<TDoc extends Document>(
   const doc: Audit = await model.findOne({ _id: new Types.ObjectId(id) });
 
   return (
-    doc.createdBy.toString() === expectedCreatedBy && doc.updatedBy.toString() === expectedUpdatedBy
+    doc.createdBy?.toString() === expectedCreatedBy &&
+    doc.updatedBy?.toString() === expectedUpdatedBy
   );
 }
 export const isResultValid = ({

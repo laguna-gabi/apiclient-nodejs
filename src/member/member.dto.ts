@@ -37,7 +37,8 @@ import {
 } from '../common';
 import { Org } from '../org';
 import { User } from '../user';
-import { ISoftDelete, audit } from '../db';
+import { ISoftDelete, audit, useFactoryOptions } from '../db';
+import * as mongooseDelete from 'mongoose-delete';
 
 const validatorsConfig = config.get('graphql.validators');
 
@@ -707,6 +708,8 @@ export class ControlMember extends Member {}
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 export type MemberDocument = Member & Document & ISoftDelete<Member>;
-export const MemberDto = SchemaFactory.createForClass(Member);
+export const MemberDto = audit(
+  SchemaFactory.createForClass(Member).plugin(mongooseDelete, useFactoryOptions),
+);
 export type ControlMemberDocument = ControlMember & Document;
 export const ControlMemberDto = audit(SchemaFactory.createForClass(ControlMember));
