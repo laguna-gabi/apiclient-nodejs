@@ -22,14 +22,15 @@ import { ISoftDelete } from '../db';
 export class DailyReportService extends BaseService {
   constructor(
     @InjectModel(DailyReport.name)
-    private readonly dailyReport: Model<DailyReportDocument> & ISoftDelete<DailyReportDocument>,
+    private readonly dailyReportModel: Model<DailyReportDocument> &
+      ISoftDelete<DailyReportDocument>,
     private readonly logger: LoggerService,
   ) {
     super();
   }
 
   async get(dailyReportCategoryQueryInput: DailyReportQueryInput): Promise<DailyReport[]> {
-    return this.dailyReport
+    return this.dailyReportModel
       .find({
         memberId: new Types.ObjectId(dailyReportCategoryQueryInput.memberId),
         date: {
@@ -43,7 +44,7 @@ export class DailyReportService extends BaseService {
   async setDailyReportCategories(
     dailyReportCategoryEntry: DailyReportCategoriesInput,
   ): Promise<DailyReport> {
-    let dailyReportRecord: DailyReport = await this.dailyReport.findOne({
+    let dailyReportRecord: DailyReport = await this.dailyReportModel.findOne({
       memberId: new Types.ObjectId(dailyReportCategoryEntry.memberId),
       date: dailyReportCategoryEntry.date,
     });
@@ -78,7 +79,7 @@ export class DailyReportService extends BaseService {
       .filter((entry) => entry.rank <= DailyReportsMetadata.get(entry.category).threshold)
       .map((entry) => entry.category);
 
-    await this.dailyReport.findOneAndUpdate(
+    await this.dailyReportModel.findOneAndUpdate(
       {
         memberId: new Types.ObjectId(dailyReportCategoryEntry.memberId),
         date: dailyReportCategoryEntry.date,
@@ -95,7 +96,7 @@ export class DailyReportService extends BaseService {
 
   // Description: fetch date of oldest daily report record for member
   async getOldestDailyReportRecord(memberId: string): Promise<string> {
-    const oldestRecord: DailyReport[] = await this.dailyReport.aggregate([
+    const oldestRecord: DailyReport[] = await this.dailyReportModel.aggregate([
       { $match: { memberId: new Types.ObjectId(memberId) } },
       { $sort: { date: 1 } },
       { $limit: 1 },
@@ -120,7 +121,7 @@ export class DailyReportService extends BaseService {
   // Description: to indicate that a notification was sent to primary user due to
   //              indications that the member (with memberId) is not feeling well
   async setNotificationIndication(memberId: string, date: string) {
-    return this.dailyReport.updateOne(
+    return this.dailyReportModel.updateOne(
       {
         memberId: new Types.ObjectId(memberId),
         date,
@@ -141,7 +142,7 @@ export class DailyReportService extends BaseService {
   async deleteMemberDailyReports(params: IEventDeleteMember) {
     await deleteMemberObjects<Model<DailyReportDocument> & ISoftDelete<DailyReportDocument>>(
       params,
-      this.dailyReport,
+      this.dailyReportModel,
       this.logger,
       this.deleteMemberDailyReports.name,
       DailyReportService.name,

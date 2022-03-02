@@ -32,10 +32,16 @@ import {
   AppRequestContext,
   LoggerService,
   UserRole,
+  defaultAuditDbValues,
   requestContextMiddleware,
 } from '../../src/common';
 import { CommunicationService } from '../../src/communication';
-import { DailyReportService } from '../../src/dailyReport';
+import {
+  DailyReport,
+  DailyReportDocument,
+  DailyReportDto,
+  DailyReportService,
+} from '../../src/dailyReport';
 import {
   ActionItem,
   ActionItemDocument,
@@ -98,6 +104,7 @@ export class Handler extends BaseHandler {
   todoDoneModel: Model<TodoDoneDocument>;
   actionItemModel: Model<ActionItemDocument>;
   questionnaireResponseModel: Model<QuestionnaireResponseDocument>;
+  dailyReportModel: Model<DailyReportDocument & defaultAuditDbValues>;
   availabilityModel: Model<AvailabilityDocument>;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
@@ -230,6 +237,10 @@ export class Handler extends BaseHandler {
     this.questionnaireResponseModel = model<QuestionnaireResponseDocument>(
       QuestionnaireResponse.name,
       QuestionnaireResponseDto,
+    );
+    this.dailyReportModel = model<DailyReportDocument & defaultAuditDbValues>(
+      DailyReport.name,
+      DailyReportDto,
     );
     this.availabilityModel = model<AvailabilityDocument>(Availability.name, AvailabilityDto);
   }

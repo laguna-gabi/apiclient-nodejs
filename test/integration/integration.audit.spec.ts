@@ -1,7 +1,12 @@
+import { general } from 'config';
 import { addDays } from 'date-fns';
+import * as faker from 'faker';
 import { lorem } from 'faker';
-import { AvailabilityDocument } from '../../src/availability';
+import { Types } from 'mongoose';
 import { buildNPSQuestionnaire } from '../../cmd/statics';
+import { AvailabilityDocument } from '../../src/availability';
+import { reformatDate } from '../../src/common';
+import { DailyReportCategoryTypes } from '../../src/dailyReport';
 import { ActionItem, ActionItemDocument, CaregiverDocument, TaskStatus } from '../../src/member';
 import { QuestionnaireResponseDocument } from '../../src/questionnaire';
 import {
@@ -12,7 +17,7 @@ import {
   TodoDoneDocument,
 } from '../../src/todo';
 import { User } from '../../src/user';
-import { Handler } from '../aux';
+import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   checkAuditValues,
   generateAddCaregiverParams,
@@ -27,11 +32,18 @@ import {
 
 describe('Integration tests : Audit', () => {
   const handler: Handler = new Handler();
+  let creators: Creators;
+  let appointmentsActions: AppointmentsIntegrationActions;
   let user1: Partial<User>;
   let user2: Partial<User>;
 
   beforeAll(async () => {
     await handler.beforeAll();
+    appointmentsActions = new AppointmentsIntegrationActions(
+      handler.mutations,
+      handler.defaultUserRequestHeaders,
+    );
+    creators = new Creators(handler, appointmentsActions);
 
     const userParams = [generateCreateUserParams(), generateCreateUserParams()];
     const [{ id: userId1 }, { id: userId2 }] = await Promise.all(
@@ -274,6 +286,28 @@ describe('Integration tests : Audit', () => {
           user1.id,
         ),
       ).toBeTruthy();
+    });
+  });
+
+  describe('dailyReports', () => {
+    it('should create a dailyReport', async () => {
+      const org = await creators.createAndValidateOrg();
+      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const startDate = faker.date.past();
+      const date = reformatDate(startDate.toString(), general.get('dateFormatString'));
+      await handler.mutations.setDailyReportCategories({
+        requestHeaders: generateRequestHeaders(member.authId),
+        dailyReportCategoriesInput: {
+          date,
+          categories: [{ category: DailyReportCategoryTypes.Pain, rank: 1 }],
+        },
+      });
+
+      const dailyReport = await handler.dailyReportModel.findOne({
+        memberId: new Types.ObjectId(member.id),
+      });
+      expect(dailyReport.createdBy.toString()).toEqual(member.id);
+      expect(dailyReport.updatedBy.toString()).toEqual(member.id);
     });
   });
 });

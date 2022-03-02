@@ -1,9 +1,10 @@
 import { Field, InputType, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
-import { ErrorType, Errors, IsObjectId, IsStringDate } from '../common';
 import { IsOptional } from 'class-validator';
-import { ISoftDelete } from '../db';
+import { Document, Types } from 'mongoose';
+import * as mongooseDelete from 'mongoose-delete';
+import { ErrorType, Errors, IsObjectId, IsStringDate } from '../common';
+import { ISoftDelete, audit, useFactoryOptions } from '../db';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -111,7 +112,8 @@ export class DailyReportResults {
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 export type DailyReportDocument = DailyReport & Document & ISoftDelete<DailyReport>;
-export const DailyReportDto = SchemaFactory.createForClass(DailyReport).index(
-  { memberId: 1, date: 1 },
-  { unique: true },
+export const DailyReportDto = audit(
+  SchemaFactory.createForClass(DailyReport)
+    .index({ memberId: 1, date: 1 }, { unique: true })
+    .plugin(mongooseDelete, useFactoryOptions),
 );

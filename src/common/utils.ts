@@ -122,3 +122,5 @@ export async function deleteMemberObjects<T extends Model<Entity> & ISoftDelete<
 }
 
 export type defaultTimestampsDbValues = { createdAt: Date; updatedAt: Date };
+
+export type defaultAuditDbValues = { createdBy: Types.ObjectId; updatedBy: Types.ObjectId };
