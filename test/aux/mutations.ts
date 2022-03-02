@@ -1748,10 +1748,12 @@ export class Mutations {
     updateRedFlagParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     updateRedFlagParams: UpdateRedFlagParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<RedFlag> => {
     const { updateRedFlag } = await this.client
       .request(
@@ -1765,7 +1767,7 @@ export class Mutations {
           }
         `,
         { updateRedFlagParams },
-        this.defaultUserRequestHeaders,
+        requestHeaders,
       )
       .catch((ex) => {
         return isResultValid({

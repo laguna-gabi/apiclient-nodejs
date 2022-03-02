@@ -4,7 +4,8 @@ import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, Identifier, IsObjectId, IsValidCarePlanTypeInput } from '../common';
 import { CareStatus } from '.';
 import { IsDate, IsOptional } from 'class-validator';
-import { ISoftDelete } from '../db';
+import * as mongooseDelete from 'mongoose-delete';
+import { ISoftDelete, audit, useFactoryOptions } from '../db';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -40,8 +41,6 @@ export class BaseCarePlanParams {
   @IsDate()
   @Field(() => Date, { nullable: true })
   dueDate?: Date;
-
-  createdBy: string;
 }
 
 @InputType()
@@ -82,10 +81,6 @@ export class CarePlanType extends Identifier {
   @Prop()
   @Field(() => Boolean)
   isCustom: boolean;
-
-  @Prop({ type: Types.ObjectId })
-  @Field(() => String, { nullable: true })
-  createdBy?: Types.ObjectId;
 }
 
 @ObjectType()
@@ -139,7 +134,11 @@ export class CarePlan extends BaseCare {
  *************************************************************************************************/
 
 export type CarePlanDocument = CarePlan & Document & ISoftDelete<CarePlan>;
-export const CarePlanDto = SchemaFactory.createForClass(CarePlan);
+export const CarePlanDto = audit(
+  SchemaFactory.createForClass(CarePlan).plugin(mongooseDelete, useFactoryOptions),
+);
 
 export type CarePlanTypeDocument = CarePlanType & Document;
-export const CarePlanTypeDto = SchemaFactory.createForClass(CarePlanType);
+export const CarePlanTypeDto = audit(
+  SchemaFactory.createForClass(CarePlanType).plugin(mongooseDelete, useFactoryOptions),
+);

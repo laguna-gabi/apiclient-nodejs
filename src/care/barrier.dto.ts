@@ -3,7 +3,8 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, Identifier, IsObjectId } from '../common';
-import { ISoftDelete } from '../db';
+import * as mongooseDelete from 'mongoose-delete';
+import { ISoftDelete, audit, useFactoryOptions } from '../db';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -17,8 +18,6 @@ export class BaseBarrierParams {
 
   @Field(() => String, { nullable: true })
   notes?: string;
-
-  createdBy: string;
 }
 
 @InputType()
@@ -85,7 +84,11 @@ export class Barrier extends BaseCare {
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 export type BarrierDocument = Barrier & Document & ISoftDelete<BarrierType>;
-export const BarrierDto = SchemaFactory.createForClass(Barrier);
+export const BarrierDto = audit(
+  SchemaFactory.createForClass(Barrier).plugin(mongooseDelete, useFactoryOptions),
+);
 
 export type BarrierTypeDocument = BarrierType & Document;
-export const BarrierTypeDto = SchemaFactory.createForClass(BarrierType);
+export const BarrierTypeDto = audit(
+  SchemaFactory.createForClass(BarrierType).plugin(mongooseDelete, useFactoryOptions),
+);

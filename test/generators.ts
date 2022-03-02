@@ -866,13 +866,11 @@ export const generateCreateRedFlagParams = ({
   memberId = generateId(),
   type = randomEnum(RedFlagType) as RedFlagType,
   notes = lorem.words(4),
-  createdBy,
 }: Partial<CreateRedFlagParams> = {}) => {
   return {
     memberId,
     type,
     notes,
-    createdBy,
   };
 };
 
@@ -881,14 +879,12 @@ export const generateCreateBarrierParams = ({
   type,
   notes = lorem.words(4),
   redFlagId,
-  createdBy,
 }: Partial<CreateBarrierParams> = {}) => {
   return {
     memberId,
     type,
     notes,
     redFlagId,
-    createdBy,
   };
 };
 
@@ -929,7 +925,6 @@ export const generateCreateCarePlanParams = ({
   notes = lorem.words(4),
   barrierId,
   dueDate = fakerDate.soon(2),
-  createdBy,
 }: Partial<CreateCarePlanParams> = {}) => {
   return {
     memberId,
@@ -937,7 +932,6 @@ export const generateCreateCarePlanParams = ({
     notes,
     barrierId,
     dueDate,
-    createdBy,
   };
 };
 
@@ -967,13 +961,11 @@ export const generateCreateRedFlagParamsWizard = ({
   barriers,
   type = randomEnum(RedFlagType) as RedFlagType,
   notes = lorem.words(4),
-  createdBy,
 }: Partial<CreateRedFlagParamsWizard> = {}) => {
   return {
     barriers,
     type,
     notes,
-    createdBy,
   };
 };
 
@@ -981,13 +973,11 @@ export const generateCreateBarrierParamsWizard = ({
   carePlans,
   type = generateId(),
   notes = lorem.words(4),
-  createdBy,
 }: Partial<CreateBarrierParamsWizard> = {}) => {
   return {
     carePlans,
     type,
     notes,
-    createdBy,
   };
 };
 
@@ -995,13 +985,11 @@ export const generateCreateCarePlanParamsWizard = ({
   type = generateCarePlanTypeInput({ id: generateId() }),
   notes = lorem.words(4),
   dueDate = fakerDate.soon(2),
-  createdBy,
 }: Partial<BaseCarePlanParams> = {}) => {
   return {
     type,
     notes,
     dueDate,
-    createdBy,
   };
 };
 

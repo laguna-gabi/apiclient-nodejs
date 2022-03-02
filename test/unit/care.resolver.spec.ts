@@ -139,11 +139,10 @@ describe('CareResolver', () => {
 
     it('should create a care plan', async () => {
       const params = generateCreateCarePlanParams();
-      const userId = generateId();
-      await resolver.createCarePlan(userId, params);
+      await resolver.createCarePlan(params);
 
       expect(spyOnServiceCreateCarePlan).toBeCalledTimes(1);
-      expect(spyOnServiceCreateCarePlan).toBeCalledWith({ ...params, createdBy: userId });
+      expect(spyOnServiceCreateCarePlan).toBeCalledWith({ ...params });
     });
 
     it('should get care plans by memberId', async () => {
@@ -197,28 +196,25 @@ describe('CareResolver', () => {
     it('should get create all relevant entities from the wizard result', async () => {
       // setup wizard result
       const memberId = generateId();
-      const createdBy = generateId();
-      const carePlan1 = generateCreateCarePlanParamsWizard({ createdBy });
-      const carePlan2 = generateCreateCarePlanParamsWizard({ createdBy });
-      const carePlan3 = generateCreateCarePlanParamsWizard({ createdBy });
+      const carePlan1 = generateCreateCarePlanParamsWizard();
+      const carePlan2 = generateCreateCarePlanParamsWizard();
+      const carePlan3 = generateCreateCarePlanParamsWizard();
       const barrier1 = generateCreateBarrierParamsWizard({
         carePlans: [carePlan1, carePlan2],
-        createdBy,
       });
-      const barrier2 = generateCreateBarrierParamsWizard({ carePlans: [carePlan3], createdBy });
+      const barrier2 = generateCreateBarrierParamsWizard({ carePlans: [carePlan3] });
       const redFlag = generateCreateRedFlagParamsWizard({
         barriers: [barrier1, barrier2],
-        createdBy,
       });
       const wizardParams = generateSubmitCareWizardParams({ redFlag, memberId });
 
-      const result = await resolver.submitCareWizard(createdBy, wizardParams);
+      const result = await resolver.submitCareWizard(wizardParams);
       expect(result.ids.length).toEqual(3);
 
       // test red flags
       delete redFlag.barriers;
       expect(spyOnServiceCreateRedFlag).toHaveBeenCalledTimes(1);
-      expect(spyOnServiceCreateRedFlag).toBeCalledWith({ ...redFlag, memberId, createdBy });
+      expect(spyOnServiceCreateRedFlag).toBeCalledWith({ ...redFlag, memberId });
 
       // test barriers
       expect(spyOnServiceCreateBarrier).toHaveBeenCalledTimes(2);
@@ -227,7 +223,6 @@ describe('CareResolver', () => {
         expect(spyOnServiceCreateBarrier).toHaveBeenCalledWith({
           ...barrier,
           memberId,
-          createdBy,
           redFlagId: expect.any(String),
         });
       }
@@ -238,7 +233,6 @@ describe('CareResolver', () => {
         expect(spyOnServiceCreateCarePlan).toHaveBeenCalledWith({
           ...carePlan,
           memberId,
-          createdBy,
           barrierId: expect.any(String),
         });
       }

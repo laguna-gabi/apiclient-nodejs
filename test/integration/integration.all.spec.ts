@@ -83,6 +83,7 @@ import {
   generateUpdateRedFlagParams,
   mockGenerateDispatch,
   mockGenerateQuestionnaireItem,
+  submitMockCareWizard,
 } from '../index';
 
 describe('Integration tests: all', () => {
@@ -455,7 +456,7 @@ describe('Integration tests: all', () => {
       const addCaregiverParams = generateAddCaregiverParams({ memberId: member.id });
       await handler.mutations.addCaregiver({ addCaregiverParams, requestHeaders });
 
-      await submitCareWizard(handler, member.id);
+      await submitMockCareWizard(handler, member.id);
 
       // submit QR for member
       await submitQR(member.id);
@@ -1823,12 +1824,11 @@ describe('Integration tests: all', () => {
 
     it('should get care plan types', async () => {
       const availableCarePlanTypes = await handler.queries.getCarePlanTypes();
-      const { description, createdBy, isCustom, id } = handler.carePlanType;
+      const { description, isCustom, id } = handler.carePlanType;
       expect(availableCarePlanTypes).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             description,
-            createdBy: createdBy.toString(),
             isCustom,
             id,
           }),
@@ -1841,7 +1841,7 @@ describe('Integration tests: all', () => {
       const {
         member: { id: memberId },
       } = await creators.createAndValidateMember({ org, useNewUser: true });
-      await submitCareWizard(handler, memberId);
+      await submitMockCareWizard(handler, memberId);
       const memberRedFlags = await handler.queries.getMemberRedFlags({
         memberId,
       });
@@ -1879,7 +1879,7 @@ describe('Integration tests: all', () => {
         member: { id: memberId },
         user: { authId },
       } = await creators.createAndValidateMember({ org, useNewUser: true });
-      await submitCareWizard(handler, memberId);
+      await submitMockCareWizard(handler, memberId);
       const memberBarriers = await handler.queries.getMemberBarriers({
         memberId,
         requestHeaders: generateRequestHeaders(authId),
@@ -1922,7 +1922,7 @@ describe('Integration tests: all', () => {
         member: { id: memberId },
         user: { authId },
       } = await creators.createAndValidateMember({ org, useNewUser: true });
-      await submitCareWizard(handler, memberId);
+      await submitMockCareWizard(handler, memberId);
 
       const memberCarePlans = await handler.queries.getMemberCarePlans({
         memberId,
@@ -1966,7 +1966,7 @@ describe('Integration tests: all', () => {
         member: { id: memberId },
         user: { authId },
       } = await creators.createAndValidateMember({ org, useNewUser: true });
-      await submitCareWizard(handler, memberId);
+      await submitMockCareWizard(handler, memberId);
 
       const memberBarriers = await handler.queries.getMemberBarriers({
         memberId,
@@ -1980,7 +1980,6 @@ describe('Integration tests: all', () => {
         barrierId,
         type: generateCarePlanTypeInput({ id: handler.carePlanType.id }),
       });
-      delete createCarePlanParams.createdBy;
 
       const { id } = await handler.mutations.createCarePlan({
         createCarePlanParams,
@@ -2014,28 +2013,23 @@ describe('Integration tests: all', () => {
       const org = await creators.createAndValidateOrg();
       const {
         member: { id: memberId },
-        user: { authId, id: userId },
+        user: { authId },
       } = await creators.createAndValidateMember({ org, useNewUser: true });
       const carePlanTypeInput1 = generateCarePlanTypeInput({ id: handler.carePlanType.id });
-      const carePlanTypeInput2 = generateCarePlanTypeInput({ custom: 'custom-text' });
+      const customDescription = lorem.words(4);
+      const carePlanTypeInput2 = generateCarePlanTypeInput({ custom: customDescription });
       const carePlan1 = generateCreateCarePlanParamsWizard({ type: carePlanTypeInput1 });
-      delete carePlan1.createdBy;
       const carePlan2 = generateCreateCarePlanParamsWizard({ type: carePlanTypeInput2 });
-      delete carePlan2.createdBy;
       const carePlan3 = generateCreateCarePlanParamsWizard({ type: carePlanTypeInput1 });
-      delete carePlan3.createdBy;
       const barrier1 = generateCreateBarrierParamsWizard({
         type: handler.barrierType.id,
         carePlans: [carePlan1, carePlan2],
       });
-      delete barrier1.createdBy;
       const barrier2 = generateCreateBarrierParamsWizard({
         type: handler.barrierType.id,
         carePlans: [carePlan3],
       });
-      delete barrier2.createdBy;
       const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier1, barrier2] });
-      delete redFlag.createdBy;
       const wizardParams = generateSubmitCareWizardParams({ redFlag, memberId });
       const result = await handler.mutations.submitCareWizard({
         submitCareWizardParams: wizardParams,
@@ -2091,12 +2085,10 @@ describe('Integration tests: all', () => {
       // test the new custom care plan
       const carePlanTypes = await handler.queries.getCarePlanTypes();
       expect(carePlanTypes).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ description: 'custom-text', createdBy: userId }),
-        ]),
+        expect.arrayContaining([expect.objectContaining({ description: customDescription })]),
       );
       const { id: createdCarePlanType } = carePlanTypes.find(
-        (i) => i.createdBy.toString() === userId,
+        (i) => i.description === customDescription,
       );
 
       // test care plans
@@ -2348,23 +2340,5 @@ describe('Integration tests: all', () => {
           answers: [{ code: 'q1', value: '2' }],
         }),
       });
-  };
-
-  const submitCareWizard = async (handler: Handler, memberId: string) => {
-    const carePlanTypeInput1 = generateCarePlanTypeInput({ id: handler.carePlanType.id });
-    const carePlan = generateCreateCarePlanParamsWizard({ type: carePlanTypeInput1 });
-    delete carePlan.createdBy;
-    const barrier = generateCreateBarrierParamsWizard({
-      type: handler.barrierType.id,
-      carePlans: [carePlan],
-    });
-    delete barrier.createdBy;
-    const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier] });
-    delete redFlag.createdBy;
-    const wizardParams = generateSubmitCareWizardParams({ redFlag, memberId });
-    const result = await handler.mutations.submitCareWizard({
-      submitCareWizardParams: wizardParams,
-    });
-    expect(result).toBeTruthy();
   };
 });

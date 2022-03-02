@@ -11,22 +11,28 @@ import * as jwt from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import { Consumer } from 'sqs-consumer';
 import { Mutations, Queries } from '.';
-import {
-  generateCreateMemberParams,
-  generateCreateUserParams,
-  generateId,
-  generateOrgParams,
-} from '..';
+import { generateCreateMemberParams, generateCreateUserParams, generateOrgParams } from '..';
 import { AppModule } from '../../src/app.module';
 import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
 import { Availability, AvailabilityDocument, AvailabilityDto } from '../../src/availability';
 import {
+  Barrier,
+  BarrierDocument,
   BarrierDomain,
+  BarrierDto,
   BarrierType,
   BarrierTypeDocument,
   BarrierTypeDto,
+  CarePlan,
+  CarePlanDocument,
+  CarePlanDto,
   CarePlanType,
+  CarePlanTypeDocument,
+  CarePlanTypeDto,
   CareService,
+  RedFlag,
+  RedFlagDocument,
+  RedFlagDto,
 } from '../../src/care';
 import {
   AppRequestContext,
@@ -127,6 +133,10 @@ export class Handler extends BaseHandler {
   journalModel: Model<JournalDocument>;
   userModel: Model<UserDocument>;
   userConfigModel: Model<UserConfigDocument>;
+  redFlagModel: Model<RedFlagDocument>;
+  barrierModel: Model<BarrierDocument>;
+  carePlanModel: Model<CarePlanDocument>;
+  carePlanTypeModel: Model<CarePlanTypeDocument>;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -233,10 +243,9 @@ export class Handler extends BaseHandler {
     );
     this.carePlanType = await this.careService.createCarePlanType({
       description: lorem.words(5),
-      createdBy: generateId(),
       isCustom: false,
     });
-    this.barrierType = await this.barrierTypeModel.create({
+    this.barrierType = await this.careService.createBarrierType({
       description: lorem.words(5),
       domain: BarrierDomain.medical,
       carePlanTypes: [this.carePlanType.id],
@@ -260,6 +269,10 @@ export class Handler extends BaseHandler {
       QuestionnaireResponse.name,
       QuestionnaireResponseDto,
     );
+    this.redFlagModel = model<RedFlagDocument>(RedFlag.name, RedFlagDto);
+    this.barrierModel = model<BarrierDocument>(Barrier.name, BarrierDto);
+    this.carePlanModel = model<CarePlanDocument>(CarePlan.name, CarePlanDto);
+    this.carePlanTypeModel = model<CarePlanTypeDocument>(CarePlanType.name, CarePlanTypeDto);
     this.dailyReportModel = model<DailyReportDocument & defaultAuditDbValues>(
       DailyReport.name,
       DailyReportDto,

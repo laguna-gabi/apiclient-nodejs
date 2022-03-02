@@ -14,15 +14,13 @@ import {
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
   generateUpdateRedFlagParams,
+  loadSessionClient,
   randomEnum,
 } from '../index';
 import {
   Barrier,
   BarrierDocument,
   BarrierDomain,
-  BarrierType,
-  BarrierTypeDocument,
-  BarrierTypeDto,
   CareModule,
   CarePlan,
   CarePlanDocument,
@@ -41,7 +39,6 @@ describe('CareService', () => {
   let redFlagModel: Model<RedFlagDocument>;
   let barrierModel: Model<BarrierDocument>;
   let carePlanModel: Model<CarePlanDocument>;
-  let barrierTypeModel: Model<BarrierTypeDocument>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -54,7 +51,6 @@ describe('CareService', () => {
     redFlagModel = model<RedFlagDocument>(RedFlag.name, RedFlagDto);
     barrierModel = model<BarrierDocument>(Barrier.name, RedFlagDto);
     carePlanModel = model<CarePlanDocument>(CarePlan.name, RedFlagDto);
-    barrierTypeModel = model<BarrierTypeDocument>(BarrierType.name, BarrierTypeDto);
     await dbConnect();
   });
 
@@ -65,7 +61,7 @@ describe('CareService', () => {
 
   describe('RedFlag', () => {
     it('should create a red flag', async () => {
-      const params = generateCreateRedFlagParams({ createdBy: generateId() });
+      const params = generateCreateRedFlagParams({});
       const { id } = await service.createRedFlag(params);
 
       const result = await service.getRedFlag(id);
@@ -73,16 +69,15 @@ describe('CareService', () => {
         expect.objectContaining({
           ...params,
           memberId: new Types.ObjectId(params.memberId),
-          createdBy: new Types.ObjectId(params.createdBy),
         }),
       );
     });
 
     it('should get multiple red flags by memberId', async () => {
       const memberId = generateId();
-      const params = generateCreateRedFlagParams({ memberId, createdBy: generateId() });
+      const params = generateCreateRedFlagParams({ memberId });
       const { id } = await service.createRedFlag(params);
-      const params2 = generateCreateRedFlagParams({ memberId, createdBy: generateId() });
+      const params2 = generateCreateRedFlagParams({ memberId });
       const { id: id2 } = await service.createRedFlag(params2);
 
       const redFlag = await service.getRedFlag(id);
@@ -98,7 +93,7 @@ describe('CareService', () => {
 
     it('should update a red flag', async () => {
       const memberId = generateId();
-      const params = generateCreateRedFlagParams({ memberId, createdBy: generateId() });
+      const params = generateCreateRedFlagParams({ memberId });
       const { id } = await service.createRedFlag(params);
 
       const updateParams = generateUpdateRedFlagParams({ id });
@@ -113,7 +108,6 @@ describe('CareService', () => {
       const redFlagId = await generateRedFlag(memberId);
       const type = await generateBarrierType();
       const params = generateCreateBarrierParams({
-        createdBy: generateId(),
         memberId,
         redFlagId,
         type: type,
@@ -126,7 +120,6 @@ describe('CareService', () => {
           ...params,
           status: CareStatus.active,
           memberId: new Types.ObjectId(memberId),
-          createdBy: new Types.ObjectId(params.createdBy),
           redFlagId: new Types.ObjectId(redFlagId),
           type: new Types.ObjectId(type),
         }),
@@ -137,7 +130,6 @@ describe('CareService', () => {
       const memberId = generateId();
       const redFlagId = await generateRedFlag(memberId);
       const params = generateCreateBarrierParams({
-        createdBy: generateId(),
         memberId,
         redFlagId,
         type: generateId(),
@@ -151,7 +143,6 @@ describe('CareService', () => {
       const memberId = generateId();
       const type = await generateBarrierType();
       const params = generateCreateBarrierParams({
-        createdBy: generateId(),
         memberId,
         redFlagId: generateId(),
         type: type,
@@ -165,7 +156,6 @@ describe('CareService', () => {
       const redFlagId = await generateRedFlag();
       const type = await generateBarrierType();
       const params = generateCreateBarrierParams({
-        createdBy: generateId(),
         memberId: generateId(),
         redFlagId,
         type: type,
@@ -181,14 +171,14 @@ describe('CareService', () => {
       const type = await generateBarrierType();
       const params = generateCreateBarrierParams({
         memberId,
-        createdBy: generateId(),
+
         redFlagId,
         type,
       });
       const { id } = await service.createBarrier(params);
       const params2 = generateCreateBarrierParams({
         memberId,
-        createdBy: generateId(),
+
         redFlagId,
         type,
       });
@@ -200,7 +190,7 @@ describe('CareService', () => {
           ...params,
           status: CareStatus.active,
           memberId: new Types.ObjectId(memberId),
-          createdBy: new Types.ObjectId(params.createdBy),
+
           redFlagId: new Types.ObjectId(redFlagId),
           type: expect.objectContaining({ _id: new Types.ObjectId(type) }),
           id,
@@ -209,7 +199,6 @@ describe('CareService', () => {
           ...params2,
           status: CareStatus.active,
           memberId: new Types.ObjectId(memberId),
-          createdBy: new Types.ObjectId(params2.createdBy),
           redFlagId: new Types.ObjectId(redFlagId),
           type: expect.objectContaining({ _id: new Types.ObjectId(type) }),
           id: id2,
@@ -223,7 +212,7 @@ describe('CareService', () => {
       const type = await generateBarrierType();
       const params = generateCreateBarrierParams({
         memberId,
-        createdBy: generateId(),
+
         redFlagId,
         type,
       });
@@ -249,7 +238,7 @@ describe('CareService', () => {
         const type = await generateBarrierType();
         const params = generateCreateBarrierParams({
           memberId,
-          createdBy: generateId(),
+
           redFlagId,
           type,
         });
@@ -314,21 +303,28 @@ describe('CareService', () => {
     it('should create and get barrierType', async () => {
       const carePlanType = await generateCarePlanType();
       const description = lorem.words(4);
+      // start a session and set userId id as client in store
+      const userId = generateId();
+      loadSessionClient(userId);
 
-      const { id } = await barrierTypeModel.create({
+      const { id } = await service.createBarrierType({
         description,
         domain: BarrierDomain.medical,
         carePlanTypes: [carePlanType],
       });
       const result = await service.getBarrierType(id);
 
-      expect(result.id).toEqual(id.toString());
-      expect(result.description).toEqual(description);
-      expect(result.domain).toEqual(BarrierDomain.medical);
-      expect(result.carePlanTypes).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ _id: new Types.ObjectId(carePlanType) }),
-        ]),
+      expect(result).toEqual(
+        expect.objectContaining({
+          _id: new Types.ObjectId(id),
+          description: description,
+          domain: BarrierDomain.medical,
+          carePlanTypes: expect.arrayContaining([
+            expect.objectContaining({ _id: new Types.ObjectId(carePlanType) }),
+          ]),
+          createdBy: new Types.ObjectId(userId),
+          updatedBy: new Types.ObjectId(userId),
+        }),
       );
     });
   });
@@ -340,7 +336,6 @@ describe('CareService', () => {
       const custom = lorem.words(4);
       const carePlanTypeInput = generateCarePlanTypeInput({ custom });
       const params = generateCreateCarePlanParams({
-        createdBy: generateId(),
         type: carePlanTypeInput,
         barrierId,
         memberId,
@@ -351,7 +346,6 @@ describe('CareService', () => {
       const carePlanType = await service.getCarePlanType(result.type.toString());
       expect(carePlanType).toEqual(
         expect.objectContaining({
-          createdBy: new Types.ObjectId(params.createdBy),
           description: custom,
           isCustom: true,
         }),
@@ -363,7 +357,6 @@ describe('CareService', () => {
           ...params,
           status: CareStatus.active,
           memberId: new Types.ObjectId(params.memberId),
-          createdBy: new Types.ObjectId(params.createdBy),
           barrierId: new Types.ObjectId(params.barrierId),
         }),
       );
@@ -375,7 +368,6 @@ describe('CareService', () => {
       const carePlanTypeId = await generateCarePlanType();
       const carePlanTypeInput = generateCarePlanTypeInput({ id: carePlanTypeId });
       const params = generateCreateCarePlanParams({
-        createdBy: generateId(),
         type: carePlanTypeInput,
         barrierId,
         memberId,
@@ -389,7 +381,7 @@ describe('CareService', () => {
           ...params,
           status: CareStatus.active,
           memberId: new Types.ObjectId(params.memberId),
-          createdBy: new Types.ObjectId(params.createdBy),
+
           barrierId: new Types.ObjectId(params.barrierId),
           type: new Types.ObjectId(carePlanTypeId),
         }),
@@ -401,7 +393,6 @@ describe('CareService', () => {
       const barrierId = await generateBarrier(memberId);
 
       const params = generateCreateCarePlanParams({
-        createdBy: generateId(),
         barrierId,
         memberId,
         type: generateCarePlanTypeInput({ id: generateId() }),
@@ -416,7 +407,6 @@ describe('CareService', () => {
       const carePlanTypeId = await generateCarePlanType();
       const carePlanTypeInput = generateCarePlanTypeInput({ id: carePlanTypeId });
       const params = generateCreateCarePlanParams({
-        createdBy: generateId(),
         barrierId: generateId(),
         type: carePlanTypeInput,
       });
@@ -431,7 +421,6 @@ describe('CareService', () => {
       const carePlanTypeId = await generateCarePlanType();
       const carePlanTypeInput = generateCarePlanTypeInput({ id: carePlanTypeId });
       const params = generateCreateCarePlanParams({
-        createdBy: generateId(),
         barrierId,
         type: carePlanTypeInput,
       });
@@ -448,14 +437,14 @@ describe('CareService', () => {
       const barrierId = await generateBarrier(memberId);
       const params = generateCreateCarePlanParams({
         memberId,
-        createdBy: generateId(),
+
         type: carePlanTypeInput,
         barrierId,
       });
       const { id } = await service.createCarePlan(params);
       const params2 = generateCreateCarePlanParams({
         memberId,
-        createdBy: generateId(),
+
         type: carePlanTypeInput,
         barrierId,
       });
@@ -469,7 +458,7 @@ describe('CareService', () => {
           ...params,
           memberId: new Types.ObjectId(params.memberId),
           barrierId: new Types.ObjectId(params.barrierId),
-          createdBy: new Types.ObjectId(params.createdBy),
+
           type: expect.objectContaining({ _id: new Types.ObjectId(carePlanTypeId) }),
           id,
         }),
@@ -477,7 +466,6 @@ describe('CareService', () => {
           ...params2,
           memberId: new Types.ObjectId(params2.memberId),
           barrierId: new Types.ObjectId(params2.barrierId),
-          createdBy: new Types.ObjectId(params2.createdBy),
           type: expect.objectContaining({ _id: new Types.ObjectId(carePlanTypeId) }),
           id: id2,
         }),
@@ -491,7 +479,7 @@ describe('CareService', () => {
       const carePlanTypeInput = generateCarePlanTypeInput({ id: carePlanTypeId });
       const params = generateCreateCarePlanParams({
         memberId,
-        createdBy: generateId(),
+
         type: carePlanTypeInput,
         barrierId,
       });
@@ -515,7 +503,6 @@ describe('CareService', () => {
         const carePlanTypeInput = generateCarePlanTypeInput({ id: carePlanTypeId });
         const params = generateCreateCarePlanParams({
           memberId,
-          createdBy: generateId(),
           type: carePlanTypeInput,
           barrierId,
         });
@@ -555,13 +542,11 @@ describe('CareService', () => {
           expect.objectContaining({
             id: carePlanType1.id,
             description: carePlanType1.description,
-            createdBy: expect.any(Types.ObjectId),
             isCustom: false,
           }),
           expect.objectContaining({
             id: carePlanType2.id,
             description: carePlanType2.description,
-            createdBy: expect.any(Types.ObjectId),
             isCustom: false,
           }),
         ]),
@@ -572,7 +557,6 @@ describe('CareService', () => {
       const carePlanTypeName = lorem.words(5);
       const { id } = await service.createCarePlanType({
         description: carePlanTypeName,
-        createdBy: generateId(),
         isCustom: true,
       });
       const result = await service.getCarePlanType(id);
@@ -587,11 +571,10 @@ describe('CareService', () => {
       'should %p delete member care process (Red flags, barriers and care plans)',
       async (hard) => {
         const memberId = generateId();
-        const redFlagParams = generateCreateRedFlagParams({ createdBy: generateId(), memberId });
+        const redFlagParams = generateCreateRedFlagParams({ memberId });
         const { id: redFlagId } = await service.createRedFlag(redFlagParams);
         const barrierType = await generateBarrierType();
         const params = generateCreateBarrierParams({
-          createdBy: generateId(),
           memberId,
           redFlagId,
           type: barrierType,
@@ -601,7 +584,6 @@ describe('CareService', () => {
         const carePlanTypeId = await generateCarePlanType();
         const carePlanTypeInput = generateCarePlanTypeInput({ id: carePlanTypeId });
         const carePlanParams = generateCreateCarePlanParams({
-          createdBy: generateId(),
           type: carePlanTypeInput,
           barrierId,
           memberId,
@@ -642,11 +624,10 @@ describe('CareService', () => {
     /* eslint-disable max-len */
     it('should hard delete after soft delete - member care process (Red flags, barriers and care plans)', async () => {
       const memberId = generateId();
-      const redFlagParams = generateCreateRedFlagParams({ createdBy: generateId(), memberId });
+      const redFlagParams = generateCreateRedFlagParams({ memberId });
       const { id: redFlagId } = await service.createRedFlag(redFlagParams);
       const barrierType = await generateBarrierType();
       const params = generateCreateBarrierParams({
-        createdBy: generateId(),
         memberId,
         redFlagId,
         type: barrierType,
@@ -656,7 +637,6 @@ describe('CareService', () => {
       const carePlanTypeId = await generateCarePlanType();
       const carePlanTypeInput = generateCarePlanTypeInput({ id: carePlanTypeId });
       const carePlanParams = generateCreateCarePlanParams({
-        createdBy: generateId(),
         type: carePlanTypeInput,
         barrierId,
         memberId,
@@ -693,7 +673,7 @@ describe('CareService', () => {
   const generateCarePlanType = async (description = lorem.words(5)): Promise<string> => {
     const { id } = await service.createCarePlanType({
       description,
-      createdBy: generateId(),
+
       isCustom: false,
     });
     return id;
@@ -706,7 +686,7 @@ describe('CareService', () => {
   ): Promise<string> => {
     const carePlanTypes = types ? types : [await generateCarePlanType()];
     const barrierDomain = domain ? domain : (randomEnum(BarrierDomain) as BarrierDomain);
-    const { id } = await barrierTypeModel.create({
+    const { id } = await service.createBarrierType({
       description,
       domain: barrierDomain,
       carePlanTypes,
@@ -718,7 +698,6 @@ describe('CareService', () => {
     const redFlagId = await generateRedFlag(memberId);
     const type = await generateBarrierType();
     const params = generateCreateBarrierParams({
-      createdBy: generateId(),
       memberId,
       redFlagId,
       type,
@@ -728,7 +707,7 @@ describe('CareService', () => {
   };
 
   const generateRedFlag = async (memberId = generateId()): Promise<string> => {
-    const params = generateCreateRedFlagParams({ createdBy: generateId(), memberId });
+    const params = generateCreateRedFlagParams({ memberId });
     const { id } = await service.createRedFlag(params);
     return id;
   };

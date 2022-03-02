@@ -20,8 +20,15 @@ import {
 } from '../src/providers';
 import { NotificationService } from '../src/services';
 import { User, UserService } from '../src/user';
-import { Mutations, Queries } from './aux';
-import { generateId } from './generators';
+import { Handler, Mutations, Queries } from './aux';
+import {
+  generateCarePlanTypeInput,
+  generateCreateBarrierParamsWizard,
+  generateCreateCarePlanParamsWizard,
+  generateCreateRedFlagParamsWizard,
+  generateId,
+  generateSubmitCareWizardParams,
+} from './generators';
 
 export class BaseHandler {
   app: INestApplication;
@@ -81,6 +88,22 @@ export const checkDelete = (deletedResult, paramsToTest, deletedBy: string) => {
       }),
     ]),
   );
+};
+
+export const submitMockCareWizard = async (handler: Handler, memberId: string, requestHeaders?) => {
+  const carePlanTypeInput1 = generateCarePlanTypeInput({ id: handler.carePlanType.id });
+  const carePlan = generateCreateCarePlanParamsWizard({ type: carePlanTypeInput1 });
+  const barrier = generateCreateBarrierParamsWizard({
+    type: handler.barrierType.id,
+    carePlans: [carePlan],
+  });
+  const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier] });
+  const wizardParams = generateSubmitCareWizardParams({ redFlag, memberId });
+  const result = await handler.mutations.submitCareWizard({
+    submitCareWizardParams: wizardParams,
+    requestHeaders,
+  });
+  expect(result).toBeTruthy();
 };
 
 export const dbConnect = async () => {
@@ -241,7 +264,6 @@ export async function checkAuditValues<TDoc extends Document>(
   expectedUpdatedBy: string,
 ): Promise<boolean> {
   const doc: Audit = await model.findOne({ _id: new Types.ObjectId(id) });
-
   return (
     doc.createdBy?.toString() === expectedCreatedBy &&
     doc.updatedBy?.toString() === expectedUpdatedBy

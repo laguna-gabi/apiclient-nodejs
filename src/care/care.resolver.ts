@@ -12,7 +12,7 @@ import {
   UpdateCarePlanParams,
   UpdateRedFlagParams,
 } from '.';
-import { Client, Identifiers, LoggingInterceptor, Roles, UserRole } from '../common';
+import { Identifiers, LoggingInterceptor, Roles, UserRole } from '../common';
 import { camelCase } from 'lodash';
 import { redFlags } from './redFlags.json';
 import { GraphQLJSONObject } from 'graphql-type-json';
@@ -88,12 +88,10 @@ export class CareResolver {
   @Mutation(() => CarePlan)
   @Roles(UserRole.coach, UserRole.nurse)
   async createCarePlan(
-    @Client('_id') userId,
     @Args(camelCase(CreateCarePlanParams.name)) createCarePlanParams: CreateCarePlanParams,
   ): Promise<CarePlan> {
     return this.careService.createCarePlan({
       ...createCarePlanParams,
-      createdBy: userId,
     });
   }
 
@@ -116,7 +114,6 @@ export class CareResolver {
   @Mutation(() => Identifiers)
   @Roles(UserRole.coach, UserRole.nurse)
   async submitCareWizard(
-    @Client('_id') userId,
     @Args(camelCase(SubmitCareWizardParams.name)) submitCareWizardParams: SubmitCareWizardParams,
   ): Promise<Identifiers> {
     const { memberId, redFlag } = submitCareWizardParams;
@@ -124,7 +121,6 @@ export class CareResolver {
     const { id: redFlagId } = await this.careService.createRedFlag({
       ...redFlagParams,
       memberId,
-      createdBy: userId,
     });
     const submittedCarePlans = [];
     await Promise.all(
@@ -133,7 +129,6 @@ export class CareResolver {
         const { id: barrierId } = await this.careService.createBarrier({
           ...barrierParams,
           memberId,
-          createdBy: userId,
           redFlagId,
         });
         await Promise.all(
@@ -141,7 +136,6 @@ export class CareResolver {
             const { id: carePlanId } = await this.careService.createCarePlan({
               ...carePlan,
               memberId,
-              createdBy: userId,
               barrierId,
             });
             submittedCarePlans.push(carePlanId);

@@ -156,7 +156,6 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
         barrierId: generateId(),
         ...params.input,
       });
-      delete createCarePlanParams.createdBy;
 
       await handler.mutations.createCarePlan({ createCarePlanParams, ...params.error });
     });
@@ -221,11 +220,8 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
       `should fail to submit care wizard result since mandatory field $field is missing`,
       async (params) => {
         const carePlan = generateCreateCarePlanParamsWizard();
-        delete carePlan.createdBy;
         const barrier = generateCreateBarrierParamsWizard({ carePlans: [carePlan] });
-        delete barrier.createdBy;
         const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier] });
-        delete redFlag.createdBy;
         const wizardParams = generateSubmitCareWizardParams({ redFlag });
 
         switch (params.level) {
@@ -272,13 +268,10 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
     let extra;
     extra = params.level === 'carePlan' ? params.input : {};
     const carePlan = generateCreateCarePlanParamsWizard({ ...extra });
-    delete carePlan.createdBy;
     extra = params.level === 'barrier' ? params.input : {};
     const barrier = generateCreateBarrierParamsWizard({ carePlans: [carePlan], ...extra });
-    delete barrier.createdBy;
     extra = params.level === 'redFlag' ? params.input : {};
     const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier], ...extra });
-    delete redFlag.createdBy;
     extra = params.level === 'submit' ? params.input : {};
     const wizardParams = generateSubmitCareWizardParams({ redFlag, ...extra });
 

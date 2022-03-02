@@ -1032,7 +1032,6 @@ export class Queries {
               type {
                 id
                 description
-                createdBy
                 isCustom
               }
               notes
@@ -1210,7 +1209,6 @@ export class Queries {
           getCarePlanTypes {
             id
             description
-            createdBy
             isCustom
           }
         }
@@ -1233,7 +1231,6 @@ export class Queries {
             carePlanTypes {
               id
               description
-              createdBy
               isCustom
             }
           }

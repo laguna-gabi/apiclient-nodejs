@@ -4,7 +4,6 @@ import { Types } from 'mongoose';
 import { date as fakerDate, lorem } from 'faker';
 import { buildNPSQuestionnaire } from '../../cmd/statics';
 import { Availability, AvailabilityDocument } from '../../src/availability';
-import { reformatDate } from '../../src/common';
 import { DailyReportCategoryTypes } from '../../src/dailyReport';
 import {
   ActionItem,
@@ -30,9 +29,18 @@ import {
 import { User, UserConfigDocument, UserDocument } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
+  BarrierDocument,
+  CarePlanDocument,
+  CarePlanTypeDocument,
+  CreateCarePlanParams,
+  RedFlagDocument,
+} from '../../src/care';
+import {
   checkAuditValues,
   generateAddCaregiverParams,
   generateAvailabilityInput,
+  generateCarePlanTypeInput,
+  generateCreateCarePlanParams,
   generateCreateMemberParams,
   generateCreateTaskParams,
   generateCreateTodoDoneParams,
@@ -43,12 +51,17 @@ import {
   generateRequestHeaders,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
+  generateUpdateBarrierParams,
+  generateUpdateCarePlanParams,
   generateUpdateCaregiverParams,
   generateUpdateMemberParams,
+  generateUpdateRedFlagParams,
+  submitMockCareWizard,
   urls,
 } from '../index';
 import * as request from 'supertest';
-import { UserRole, delay } from '../../src/common';
+import { UserRole, delay, reformatDate } from '../../src/common';
+import * as faker from 'faker';
 
 describe('Integration tests : Audit', () => {
   const handler: Handler = new Handler();
@@ -511,6 +524,181 @@ describe('Integration tests : Audit', () => {
 
       expect(
         await checkAuditValues<UserDocument>(id, handler.userModel, user1.id, user2.id),
+      ).toBeTruthy();
+    });
+  });
+
+  describe('Care', () => {
+    it('should update createdAt and updatedAt fields - red flag', async () => {
+      /**
+       * 1. Submit care wizard result for PatientZero and user1
+       * 2. Update red flag for PatientZero and by user2
+       *
+       * Note: confirm `save` and `findOneAndUpdate` hooks
+       */
+
+      const memberId = handler.patientZero.id.toString();
+      await submitMockCareWizard(handler, memberId, generateRequestHeaders(user1.authId));
+
+      // get all member's red flags, barriers and care plans
+      const memberRedFlags = await handler.queries.getMemberRedFlags({ memberId });
+
+      // confirm that `createdBy` and `updatedBy` are set correctly (of PatientZero)
+      expect(
+        await checkAuditValues<RedFlagDocument>(
+          memberRedFlags[0].id,
+          handler.redFlagModel,
+          user1.id,
+          user1.id,
+        ),
+      ).toBeTruthy();
+
+      // Update red flag for PatientZero and by an additional user:
+      const updateRedFlagParams = generateUpdateRedFlagParams({ id: memberRedFlags[0].id });
+      await handler.mutations.updateRedFlag({
+        updateRedFlagParams,
+        requestHeaders: generateRequestHeaders(user2.authId),
+      });
+
+      // confirm that `createdBy` and `updatedBy` are set correctly (only `updatedBy` should change)
+      expect(
+        await checkAuditValues<RedFlagDocument>(
+          memberRedFlags[0].id,
+          handler.redFlagModel,
+          user1.id,
+          user2.id,
+        ),
+      ).toBeTruthy();
+    });
+
+    it('should update createdAt and updatedAt fields - barrier', async () => {
+      /**
+       * 1. Submit care wizard result for PatientZero and user1
+       * 2. Update barrier for PatientZero and by user2
+       *
+       * Note: confirm `save` and `findOneAndUpdate` hooks
+       */
+
+      const memberId = handler.patientZero.id.toString();
+      await submitMockCareWizard(handler, memberId, generateRequestHeaders(user1.authId));
+
+      // get all member's barriers
+      const memberBarriers = await handler.queries.getMemberBarriers({ memberId });
+
+      // confirm that `createdBy` and `updatedBy` are set correctly (of PatientZero)
+      expect(
+        await checkAuditValues<BarrierDocument>(
+          memberBarriers[0].id,
+          handler.barrierModel,
+          user1.id,
+          user1.id,
+        ),
+      ).toBeTruthy();
+
+      // Update barrier for PatientZero and by an additional user:
+      const updateBarrierParams = generateUpdateBarrierParams({
+        id: memberBarriers[0].id,
+      });
+      await handler.mutations.updateBarrier({
+        updateBarrierParams,
+        requestHeaders: generateRequestHeaders(user2.authId),
+      });
+
+      // confirm that `createdBy` and `updatedBy` are set correctly (only `updatedBy` should change)
+      expect(
+        await checkAuditValues<BarrierDocument>(
+          memberBarriers[0].id,
+          handler.barrierModel,
+          user1.id,
+          user2.id,
+        ),
+      ).toBeTruthy();
+    });
+
+    it('should update createdAt and updatedAt fields - care plan', async () => {
+      /**
+       * 1. Submit care wizard result for PatientZero and user1
+       * 2. Update care plan for PatientZero and by user2
+       *
+       * Note: confirm `save` and `findOneAndUpdate` hooks
+       */
+
+      const memberId = handler.patientZero.id.toString();
+      // Submit care wizard for PatientZero and by PatientZero:
+      await submitMockCareWizard(handler, memberId, generateRequestHeaders(user1.authId));
+
+      // get all member's care plans
+      const memberCarePlans = await handler.queries.getMemberCarePlans({ memberId });
+
+      // confirm that `createdBy` and `updatedBy` are set correctly (of PatientZero)
+      expect(
+        await checkAuditValues<CarePlanDocument>(
+          memberCarePlans[0].id,
+          handler.carePlanModel,
+          user1.id,
+          user1.id,
+        ),
+      ).toBeTruthy();
+
+      // Update care plan for PatientZero and by an additional user:
+      const updateCarePlanParams = generateUpdateCarePlanParams({ id: memberCarePlans[0].id });
+      await handler.mutations.updateCarePlan({
+        updateCarePlanParams,
+        requestHeaders: generateRequestHeaders(user2.authId),
+      });
+
+      // confirm that `createdBy` and `updatedBy` are set correctly (only `updatedBy` should change)
+      expect(
+        await checkAuditValues<CarePlanDocument>(
+          memberCarePlans[0].id,
+          handler.carePlanModel,
+          user1.id,
+          user2.id,
+        ),
+      ).toBeTruthy();
+    });
+
+    it('should update createdAt and updatedAt fields - care plan type', async () => {
+      /**
+       * 1. Submit care wizard result for PatientZero and user1
+       *
+       * Note: confirm `save` and `findOneAndUpdate` hooks
+       */
+
+      const memberId = handler.patientZero.id.toString();
+      await submitMockCareWizard(handler, memberId, generateRequestHeaders(user1.authId));
+
+      // create a custom care plan
+      const memberBarriers = await handler.queries.getMemberBarriers({
+        memberId,
+        requestHeaders: generateRequestHeaders(user1.authId),
+      });
+      const barrierId = memberBarriers[0].id;
+
+      const customDescription = faker.lorem.words(4);
+      const createCarePlanParams: CreateCarePlanParams = generateCreateCarePlanParams({
+        memberId,
+        barrierId,
+        type: generateCarePlanTypeInput({ custom: customDescription }),
+      });
+
+      await handler.mutations.createCarePlan({
+        createCarePlanParams,
+        requestHeaders: generateRequestHeaders(user1.authId),
+      });
+
+      const carePlanTypes = await handler.queries.getCarePlanTypes();
+      const { id: createdCarePlanType } = carePlanTypes.find(
+        (i) => i.description === customDescription,
+      );
+      // confirm that `createdBy` and `updatedBy` are set correctly (of PatientZero)
+      expect(
+        await checkAuditValues<CarePlanTypeDocument>(
+          createdCarePlanType,
+          handler.carePlanTypeModel,
+          user1.id,
+          user1.id,
+        ),
       ).toBeTruthy();
     });
   });

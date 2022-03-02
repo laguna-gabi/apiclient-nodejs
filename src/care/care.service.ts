@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import {
   Barrier,
   BarrierDocument,
+  BarrierDomain,
   BarrierType,
   CarePlan,
   CarePlanDocument,
@@ -21,7 +22,8 @@ import {
   UpdateRedFlagParams,
 } from '.';
 import {
- BaseService, ErrorType,
+  BaseService,
+  ErrorType,
   Errors,
   EventType,
   IEventDeleteMember,
@@ -60,7 +62,6 @@ export class CareService extends BaseService {
       {
         ...params,
         memberId: new Types.ObjectId(params.memberId),
-        createdBy: new Types.ObjectId(params.createdBy),
       },
       isNil,
     );
@@ -94,14 +95,13 @@ export class CareService extends BaseService {
 
   async createBarrier(params: CreateBarrierParams): Promise<Barrier> {
     this.logger.info(params, CareService.name, this.createBarrier.name);
-    const { memberId, type, redFlagId, createdBy } = params;
+    const { memberId, type, redFlagId } = params;
     await this.validateBarrier(memberId, type, redFlagId);
 
     const createParams: Partial<CreateBarrierParams> = omitBy(
       {
         ...params,
         memberId: new Types.ObjectId(memberId),
-        createdBy: new Types.ObjectId(createdBy),
         redFlagId: redFlagId ? new Types.ObjectId(redFlagId) : undefined,
         type: new Types.ObjectId(type),
       },
@@ -158,6 +158,22 @@ export class CareService extends BaseService {
     return this.barrierModel.findById(new Types.ObjectId(id));
   }
 
+  async createBarrierType({
+    description,
+    domain,
+    carePlanTypes,
+  }: {
+    description: string;
+    domain: BarrierDomain;
+    carePlanTypes: string[];
+  }): Promise<BarrierType> {
+    return this.barrierTypeModel.create({
+      description,
+      domain,
+      carePlanTypes: carePlanTypes.map((carePlanType) => new Types.ObjectId(carePlanType)),
+    });
+  }
+
   async getBarrierType(id: string): Promise<BarrierType> {
     return this.barrierTypeModel
       .findById(id)
@@ -176,14 +192,13 @@ export class CareService extends BaseService {
 
   async createCarePlan(params: CreateCarePlanParams): Promise<CarePlan> {
     this.logger.info(params, CareService.name, this.createCarePlan.name);
-    const { memberId, createdBy, type, barrierId } = params;
-    const carePlanType = await this.validateCarePlan(type, createdBy, barrierId, memberId);
+    const { memberId, type, barrierId } = params;
+    const carePlanType = await this.validateCarePlan(type, barrierId, memberId);
 
     const createParams: Partial<CreateCarePlanParams> = omitBy(
       {
         ...params,
         memberId: new Types.ObjectId(memberId),
-        createdBy: new Types.ObjectId(createdBy),
         barrierId: new Types.ObjectId(barrierId),
         type: new Types.ObjectId(carePlanType),
       },
@@ -192,15 +207,10 @@ export class CareService extends BaseService {
     return this.carePlanModel.create(createParams);
   }
 
-  private async validateCarePlan(
-    type: CarePlanTypeInput,
-    createdBy: string,
-    barrierId: string,
-    memberId: string,
-  ) {
+  private async validateCarePlan(type: CarePlanTypeInput, barrierId: string, memberId: string) {
     let carePlanType;
     if (type.custom) {
-      const { id } = await this.createCarePlanType({ description: type.custom, createdBy });
+      const { id } = await this.createCarePlanType({ description: type.custom });
       carePlanType = id;
     } else {
       // validate care plan type
@@ -254,17 +264,14 @@ export class CareService extends BaseService {
 
   async createCarePlanType({
     description,
-    createdBy,
     isCustom = true,
   }: {
     description: string;
-    createdBy: string;
     isCustom?: boolean;
   }): Promise<CarePlanType> {
     return this.carePlanTypeModel.create({
       description,
       isCustom,
-      createdBy: new Types.ObjectId(createdBy),
     });
   }
 

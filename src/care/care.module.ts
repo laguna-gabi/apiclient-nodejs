@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import * as mongooseDelete from 'mongoose-delete';
-import { useFactoryOptions } from '../db';
 import {
   Barrier,
   BarrierDto,
@@ -24,26 +22,9 @@ import { CommonModule } from '../common';
     MongooseModule.forFeature([
       { name: CarePlanType.name, schema: CarePlanTypeDto },
       { name: BarrierType.name, schema: BarrierTypeDto },
-    ]),
-    MongooseModule.forFeatureAsync([
-      {
-        name: RedFlag.name,
-        useFactory: () => {
-          return RedFlagDto.plugin(mongooseDelete, useFactoryOptions);
-        },
-      },
-      {
-        name: Barrier.name,
-        useFactory: () => {
-          return BarrierDto.plugin(mongooseDelete, useFactoryOptions);
-        },
-      },
-      {
-        name: CarePlan.name,
-        useFactory: () => {
-          return CarePlanDto.plugin(mongooseDelete, useFactoryOptions);
-        },
-      },
+      { name: RedFlag.name, schema: RedFlagDto },
+      { name: Barrier.name, schema: BarrierDto },
+      { name: CarePlan.name, schema: CarePlanDto },
     ]),
   ],
   providers: [CareService, CareResolver],

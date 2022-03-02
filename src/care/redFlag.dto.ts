@@ -3,7 +3,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, Identifier, IsObjectId } from '../common';
 import { RedFlagType } from '.';
-import { ISoftDelete } from '../db';
+import { ISoftDelete, audit, useFactoryOptions } from '../db';
+import * as mongooseDelete from 'mongoose-delete';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -16,8 +17,6 @@ export class BaseRedFlagParams {
 
   @Field(() => String, { nullable: true })
   notes?: string;
-
-  createdBy: string;
 }
 
 @InputType()
@@ -71,4 +70,6 @@ export class RedFlag extends Identifier {
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 export type RedFlagDocument = RedFlag & Document & ISoftDelete<RedFlag>;
-export const RedFlagDto = SchemaFactory.createForClass(RedFlag);
+export const RedFlagDto = audit(
+  SchemaFactory.createForClass(RedFlag).plugin(mongooseDelete, useFactoryOptions),
+);

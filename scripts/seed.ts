@@ -230,14 +230,11 @@ async function main() {
   const randomBarrierType = BarrierTypes[Math.floor(Math.random() * BarrierTypes.length)];
 
   const carePlan = generateCreateCarePlanParamsWizard({ type: { id: randomCarePlanType.id } });
-  delete carePlan.createdBy;
   const barrier = generateCreateBarrierParamsWizard({
     type: randomBarrierType.id,
     carePlans: [carePlan],
   });
-  delete barrier.createdBy;
   const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier] });
-  delete redFlag.createdBy;
   const wizardParams = generateSubmitCareWizardParams({ redFlag, memberId });
   await base.mutations.submitCareWizard({
     submitCareWizardParams: wizardParams,
