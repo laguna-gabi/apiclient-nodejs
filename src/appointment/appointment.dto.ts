@@ -13,7 +13,8 @@ import {
   IsObjectId,
 } from '../common';
 import { Notes } from '.';
-import { ISoftDelete } from '../db';
+import { ISoftDelete, audit, useFactoryOptions } from '../db';
+import * as mongooseDelete from 'mongoose-delete';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -170,4 +171,6 @@ export class AppointmentData extends OmitType(Appointment, ['userId', 'memberId'
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 export type AppointmentDocument = Appointment & Document & ISoftDelete<Appointment>;
-export const AppointmentDto = SchemaFactory.createForClass(Appointment);
+export const AppointmentDto = audit(
+  SchemaFactory.createForClass(Appointment).plugin(mongooseDelete, useFactoryOptions),
+);

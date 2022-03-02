@@ -1,9 +1,20 @@
 import { general } from 'config';
 import { addDays } from 'date-fns';
-import { Types } from 'mongoose';
+import * as faker from 'faker';
 import { date as fakerDate, lorem } from 'faker';
+import { Types } from 'mongoose';
+import * as request from 'supertest';
 import { buildNPSQuestionnaire } from '../../cmd/statics';
+import { Appointment, AppointmentDocument } from '../../src/appointment';
 import { Availability, AvailabilityDocument } from '../../src/availability';
+import {
+  BarrierDocument,
+  CarePlanDocument,
+  CarePlanTypeDocument,
+  CreateCarePlanParams,
+  RedFlagDocument,
+} from '../../src/care';
+import { UserRole, delay, reformatDate } from '../../src/common';
 import { DailyReportCategoryTypes } from '../../src/dailyReport';
 import {
   ActionItem,
@@ -29,13 +40,6 @@ import {
 import { User, UserConfigDocument, UserDocument } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
-  BarrierDocument,
-  CarePlanDocument,
-  CarePlanTypeDocument,
-  CreateCarePlanParams,
-  RedFlagDocument,
-} from '../../src/care';
-import {
   checkAuditValues,
   generateAddCaregiverParams,
   generateAvailabilityInput,
@@ -47,7 +51,9 @@ import {
   generateCreateTodoParams,
   generateCreateUserParams,
   generateEndAndCreateTodoParams,
+  generateEndAppointmentParams,
   generateOrgParams,
+  generateRequestAppointmentParams,
   generateRequestHeaders,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
@@ -59,9 +65,6 @@ import {
   submitMockCareWizard,
   urls,
 } from '../index';
-import * as request from 'supertest';
-import { UserRole, delay, reformatDate } from '../../src/common';
-import * as faker from 'faker';
 
 describe('Integration tests : Audit', () => {
   const handler: Handler = new Handler();
@@ -698,6 +701,99 @@ describe('Integration tests : Audit', () => {
           handler.carePlanTypeModel,
           user1.id,
           user1.id,
+        ),
+      ).toBeTruthy();
+    });
+  });
+
+  describe(Appointment.name, () => {
+    it('should set createdBy and updatedBy on requestAppointment', async () => {
+      const { id } = await handler.mutations.requestAppointment({
+        appointmentParams: generateRequestAppointmentParams({
+          userId: user1.id,
+          memberId: handler.patientZero.id,
+          notBefore: addDays(new Date(), 1),
+        }),
+        requestHeaders: generateRequestHeaders(user1.authId),
+      });
+
+      expect(
+        await checkAuditValues<AppointmentDocument>(
+          id,
+          handler.appointmentModel,
+          user1.id,
+          user1.id,
+        ),
+      ).toBeTruthy();
+    });
+
+    it('should set createdBy and updatedBy on scheduleAppointment', async () => {
+      const { id } = await handler.mutations.scheduleAppointment({
+        appointmentParams: generateScheduleAppointmentParams({
+          userId: user1.id,
+          memberId: handler.patientZero.id,
+        }),
+        requestHeaders: generateRequestHeaders(user1.authId),
+      });
+
+      expect(
+        await checkAuditValues<AppointmentDocument>(
+          id,
+          handler.appointmentModel,
+          user1.id,
+          user1.id,
+        ),
+      ).toBeTruthy();
+    });
+
+    it('should update createdBy and updatedBy on scheduleAppointment', async () => {
+      const { id } = await handler.mutations.scheduleAppointment({
+        appointmentParams: generateScheduleAppointmentParams({
+          userId: user1.id,
+          memberId: handler.patientZero.id,
+        }),
+        requestHeaders: generateRequestHeaders(user1.authId),
+      });
+
+      await handler.mutations.scheduleAppointment({
+        appointmentParams: generateScheduleAppointmentParams({
+          id,
+          userId: user2.id,
+          memberId: handler.patientZero.id,
+        }),
+        requestHeaders: generateRequestHeaders(user2.authId),
+      });
+
+      expect(
+        await checkAuditValues<AppointmentDocument>(
+          id,
+          handler.appointmentModel,
+          user1.id,
+          user2.id,
+        ),
+      ).toBeTruthy();
+    });
+
+    it('should update createdBy and updatedBy on endAppointment', async () => {
+      const { id } = await handler.mutations.scheduleAppointment({
+        appointmentParams: generateScheduleAppointmentParams({
+          userId: user1.id,
+          memberId: handler.patientZero.id,
+        }),
+        requestHeaders: generateRequestHeaders(user1.authId),
+      });
+
+      await handler.mutations.endAppointment({
+        endAppointmentParams: generateEndAppointmentParams({ id }),
+        requestHeaders: generateRequestHeaders(user2.authId),
+      });
+
+      expect(
+        await checkAuditValues<AppointmentDocument>(
+          id,
+          handler.appointmentModel,
+          user1.id,
+          user2.id,
         ),
       ).toBeTruthy();
     });

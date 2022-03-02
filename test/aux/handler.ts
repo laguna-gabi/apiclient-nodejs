@@ -13,6 +13,14 @@ import { Consumer } from 'sqs-consumer';
 import { Mutations, Queries } from '.';
 import { generateCreateMemberParams, generateCreateUserParams, generateOrgParams } from '..';
 import { AppModule } from '../../src/app.module';
+import {
+  Appointment,
+  AppointmentDocument,
+  AppointmentDto,
+  Notes,
+  NotesDocument,
+  NotesDto,
+} from '../../src/appointment';
 import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
 import { Availability, AvailabilityDocument, AvailabilityDto } from '../../src/availability';
 import {
@@ -137,6 +145,8 @@ export class Handler extends BaseHandler {
   barrierModel: Model<BarrierDocument>;
   carePlanModel: Model<CarePlanDocument>;
   carePlanTypeModel: Model<CarePlanTypeDocument>;
+  appointmentModel: Model<AppointmentDocument>;
+  notesModel: Model<NotesDocument>;
 
   readonly minLength = validatorsConfig.get('name.minLength') as number;
   readonly maxLength = validatorsConfig.get('name.maxLength') as number;
@@ -282,6 +292,8 @@ export class Handler extends BaseHandler {
     this.journalModel = model<JournalDocument>(Journal.name, JournalDto);
     this.userModel = model<UserDocument>(User.name, UserDto);
     this.userConfigModel = model<UserConfigDocument>(UserConfig.name, UserConfigDto);
+    this.appointmentModel = model<AppointmentDocument>(Appointment.name, AppointmentDto);
+    this.notesModel = model<NotesDocument>(Notes.name, NotesDto);
   }
 }
 

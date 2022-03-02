@@ -448,10 +448,12 @@ export class Mutations {
     updateNotesParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     updateNotesParams: UpdateNotesParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
+    requestHeaders?;
   }): Promise<Notes> => {
     const { updateNotes } = await this.client
       .request(
@@ -472,7 +474,7 @@ export class Mutations {
           }
         `,
         { updateNotesParams },
-        this.defaultUserRequestHeaders,
+        requestHeaders,
       )
       .catch((ex) => {
         return isResultValid({
