@@ -210,7 +210,7 @@ describe('Integration tests : Audit', () => {
       }
 
       await Promise.all(tests);
-    });
+    }, 10000);
   });
 
   describe('Availability', () => {

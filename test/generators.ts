@@ -1006,7 +1006,9 @@ export const mockGenerateQuestionnaireItem = ({
         { label: faker.lorem.words(3), value: 1 },
       ]
     : null,
-  items = type === ItemType.group ? mockGenerateQuestionnaireItem() : null,
+  items = type === ItemType.group
+    ? [1, 2].map((order) => mockGenerateQuestionnaireItem({ order }))
+    : null,
   range = type === ItemType.range
     ? {
         min: { value: 0, label: faker.lorem.words(3) },
@@ -1014,19 +1016,17 @@ export const mockGenerateQuestionnaireItem = ({
       }
     : null,
   alertCondition,
-}: Partial<Item> = {}): Item => {
-  return {
-    code,
-    label,
-    type,
-    order,
-    required,
-    options,
-    range,
-    items,
-    alertCondition,
-  };
-};
+}: Partial<Item> = {}): Item => ({
+  code,
+  label,
+  type,
+  order,
+  required,
+  options,
+  range,
+  items,
+  alertCondition,
+});
 
 export const mockGenerateQuestionnaireAnswer = ({
   code = faker.lorem.word(),
@@ -1044,7 +1044,7 @@ export const mockGenerateQuestionnaire = ({
   shortName = faker.lorem.word(3),
   type = QuestionnaireType[randomEnum(QuestionnaireType)],
   active = true,
-  items = mockGenerateQuestionnaireItem(),
+  items = [1, 2].map((order) => mockGenerateQuestionnaireItem({ order })),
   severityLevels = [
     { min: 0, max: 4, label: 'severity 1' },
     { min: 5, max: 6, label: 'severity 2' },
@@ -1067,7 +1067,7 @@ export const generateCreateQuestionnaireParams = ({
   name = faker.lorem.words(3),
   shortName = faker.lorem.word(3),
   type = QuestionnaireType[randomEnum(QuestionnaireType)],
-  items = [mockGenerateQuestionnaireItem()],
+  items = [1, 2].map((order) => mockGenerateQuestionnaireItem({ order })),
   severityLevels = [
     { min: 0, max: 4, label: 'severity 1' },
     { min: 5, max: 6, label: 'severity 2' },
