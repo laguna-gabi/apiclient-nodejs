@@ -4,7 +4,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { v4 } from 'uuid';
 import * as AWS from 'aws-sdk';
 import { aws } from 'config';
-import * as faker from 'faker';
+import { lorem } from 'faker';
 import { existsSync, unlinkSync } from 'fs';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { LoggerService } from '../../src/common';
@@ -79,7 +79,7 @@ describe(`live: ${SendBird.name}`, () => {
     const params: SendSendBirdNotification = {
       userId,
       sendBirdChannelUrl,
-      message: faker.lorem.word(),
+      message: lorem.word(),
       contentKey: NotifyCustomKey.customContent,
       contentCategory: Categories.notify,
       notificationType: NotificationType.chat,
@@ -91,7 +91,7 @@ describe(`live: ${SendBird.name}`, () => {
     const params: SendSendBirdNotification = {
       userId,
       sendBirdChannelUrl,
-      message: faker.lorem.word(),
+      message: lorem.word(),
       notificationType: NotificationType.chat,
       contentCategory: Categories.chat,
       contentKey: JournalCustomKey.journalContent,
@@ -103,7 +103,7 @@ describe(`live: ${SendBird.name}`, () => {
     const params: SendSendBirdNotification = {
       userId,
       sendBirdChannelUrl,
-      message: faker.lorem.word(),
+      message: lorem.word(),
       notificationType: NotificationType.chat,
       contentKey: JournalCustomKey.journalContent,
       contentCategory: Categories.chat,
@@ -116,7 +116,7 @@ describe(`live: ${SendBird.name}`, () => {
     const params: SendSendBirdNotification = {
       userId,
       sendBirdChannelUrl,
-      message: faker.lorem.word(),
+      message: lorem.word(),
       notificationType: NotificationType.chat,
       contentKey: JournalCustomKey.journalContent,
       contentCategory: Categories.chat,
@@ -135,7 +135,7 @@ describe(`live: ${SendBird.name}`, () => {
     const params: SendSendBirdNotification = {
       userId,
       sendBirdChannelUrl,
-      message: faker.lorem.word(),
+      message: lorem.word(),
       notificationType: NotificationType.chat,
       contentKey: JournalCustomKey.journalContent,
       contentCategory: Categories.journal,

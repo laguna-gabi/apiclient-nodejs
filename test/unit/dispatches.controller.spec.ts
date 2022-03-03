@@ -7,7 +7,7 @@ import { AppModule } from '../../src/app.module';
 import { LoggerService } from '../../src/common';
 import { Dispatch, DispatchStatus, DispatchesController } from '../../src/conductor';
 import { getModelToken } from '@nestjs/mongoose';
-import * as faker from 'faker';
+import { datatype } from 'faker';
 
 describe('Dispatches Controller', () => {
   let controller: DispatchesController;
@@ -45,7 +45,7 @@ describe('Dispatches Controller', () => {
   test.each([
     [
       'non-empty projection',
-      faker.datatype.string(24),
+      datatype.string(24),
       DispatchStatus.done,
       ['field1', `filed2`],
       { status: DispatchStatus.done },
@@ -53,7 +53,7 @@ describe('Dispatches Controller', () => {
     ],
     [
       'empty projection',
-      faker.datatype.string(24),
+      datatype.string(24),
       DispatchStatus.acquired,
       undefined,
       { status: DispatchStatus.acquired },
@@ -61,7 +61,7 @@ describe('Dispatches Controller', () => {
     ],
     [
       'empty status and projection',
-      faker.datatype.string(24),
+      datatype.string(24),
       undefined,
       undefined,
       { status: DispatchStatus.done },

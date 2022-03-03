@@ -8,7 +8,7 @@ import {
 } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import * as faker from 'faker';
+import { datatype, image, lorem, name } from 'faker';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { v4 } from 'uuid';
 import { LoggerService } from '../../src/common';
@@ -33,7 +33,7 @@ describe(`live: ${OneSignal.name}`, () => {
    */
   it('should send video notification and cancel it', async () => {
     const params = {
-      token: faker.lorem.word(),
+      token: lorem.word(),
       externalUserId: v4(),
       platform: Platform.ios,
       isPushNotificationsEnabled: true,
@@ -46,9 +46,9 @@ describe(`live: ${OneSignal.name}`, () => {
           externalUserId: params.externalUserId,
           data: {
             user: {
-              id: faker.datatype.uuid(),
-              firstName: faker.name.firstName(),
-              avatar: faker.image.avatar(),
+              id: datatype.uuid(),
+              firstName: name.firstName(),
+              avatar: image.avatar(),
             },
             member: { phone: generatePhone() },
             type: NotificationType.call,
@@ -70,7 +70,7 @@ describe(`live: ${OneSignal.name}`, () => {
         data: {
           peerId: v4(),
           type: CancelNotificationType.cancelVideo,
-          notificationId: faker.datatype.uuid(),
+          notificationId: datatype.uuid(),
         },
       }),
     ).rejects.toThrowError();
