@@ -77,10 +77,9 @@ export class CareService extends BaseService {
   }
 
   async updateRedFlag(updateRedFlagParams: UpdateRedFlagParams): Promise<RedFlag> {
-    this.removeNotNullable(updateRedFlagParams, Object.keys(updateRedFlagParams));
     const result = await this.redFlagModel.findOneAndUpdate(
       { _id: new Types.ObjectId(updateRedFlagParams.id) },
-      { $set: updateRedFlagParams },
+      { $set: omitBy(updateRedFlagParams, isNil) },
       { new: true },
     );
     if (!result) {

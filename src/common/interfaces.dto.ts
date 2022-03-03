@@ -10,6 +10,7 @@ import { Schema } from '@nestjs/mongoose';
 import { IsAlphanumeric, IsOptional } from 'class-validator';
 import { Types } from 'mongoose';
 import { ErrorType, Errors, IsNotPlatformWeb, IsObjectId } from '.';
+import { isNil, omitBy } from 'lodash';
 
 /**************************************************************************************************
  *************************** Enum registration for external gql methods ***************************
@@ -76,11 +77,7 @@ export abstract class BaseService {
   }
 
   removeNotNullable(object, keys: string[]) {
-    keys.forEach((key) => {
-      if (object[key] === null) {
-        delete object[key];
-      }
-    });
+    return omitBy(object, (val, key: string) => keys.includes(key) && isNil(val));
   }
 }
 

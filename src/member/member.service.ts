@@ -109,8 +109,7 @@ export class MemberService extends BaseService {
     primaryUserId: Types.ObjectId,
   ): Promise<{ member: Member; memberConfig: MemberConfig }> {
     try {
-      this.removeNotNullable(params, NotNullableMemberKeys);
-      const { language, ...memberParams } = params;
+      const { language, ...memberParams } = this.removeNotNullable(params, NotNullableMemberKeys);
       const primitiveValues = cloneDeep(memberParams);
       delete primitiveValues.orgId;
       delete primitiveValues.userId;
@@ -142,8 +141,9 @@ export class MemberService extends BaseService {
   }
 
   async update(updateMemberParams: UpdateMemberParams): Promise<Member> {
-    this.removeNotNullable(updateMemberParams, NotNullableMemberKeys);
+    updateMemberParams = this.removeNotNullable(updateMemberParams, NotNullableMemberKeys);
     const { id, readmissionRisk } = updateMemberParams;
+
     delete updateMemberParams.id;
 
     // support patch for embedded objects:
@@ -467,8 +467,7 @@ export class MemberService extends BaseService {
 
   async insertControl(params: InternalCreateMemberParams): Promise<Member> {
     try {
-      this.removeNotNullable(params, NotNullableMemberKeys);
-      const primitiveValues = cloneDeep(params);
+      const primitiveValues = cloneDeep(this.removeNotNullable(params, NotNullableMemberKeys));
       delete primitiveValues.orgId;
 
       const member = await this.controlMemberModel.create({
@@ -555,11 +554,10 @@ export class MemberService extends BaseService {
     updateMemberConfigParams: UpdateMemberConfigParams,
   ): Promise<MemberConfig> {
     const { memberId, ...setParams } = updateMemberConfigParams;
-    this.removeNotNullable(setParams, Object.keys(setParams));
 
     const memberConfig = await this.memberConfigModel.findOneAndUpdate(
       { memberId: new Types.ObjectId(memberId) },
-      { $set: setParams },
+      { $set: omitBy(setParams, isNil) },
       { new: true },
     );
     if (!memberConfig) {

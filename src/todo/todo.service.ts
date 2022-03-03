@@ -39,12 +39,9 @@ export class TodoService extends BaseService {
   }
 
   async createTodo(createTodoParams: CreateTodoParams): Promise<Todo> {
-    this.removeNotNullable(createTodoParams, NotNullableTodoKeys);
-    const { memberId } = createTodoParams;
-
     return this.todoModel.create({
-      ...createTodoParams,
-      memberId: new Types.ObjectId(memberId),
+      ...this.removeNotNullable(createTodoParams, NotNullableTodoKeys),
+      memberId: new Types.ObjectId(createTodoParams.memberId),
     });
   }
 
@@ -66,8 +63,10 @@ export class TodoService extends BaseService {
   }
 
   async endAndCreateTodo(endAndCreateTodoParams: EndAndCreateTodoParams): Promise<Todo> {
-    this.removeNotNullable(endAndCreateTodoParams, NotNullableTodoKeys);
-    const { memberId, id, ...params } = endAndCreateTodoParams;
+    const { memberId, id, ...params } = this.removeNotNullable(
+      endAndCreateTodoParams,
+      NotNullableTodoKeys,
+    );
 
     const endedTodo = await this.todoModel.findOne({
       _id: new Types.ObjectId(id),

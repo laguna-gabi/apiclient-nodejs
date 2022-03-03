@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { add, differenceInDays, getHours, startOfDay } from 'date-fns';
-import { cloneDeep } from 'lodash';
 import { Model, Types } from 'mongoose';
 import {
   CreateUserParams,
@@ -62,8 +61,7 @@ export class UserService extends BaseService {
 
   async insert(createUserParams: CreateUserParams): Promise<User> {
     try {
-      this.removeNotNullable(createUserParams, NotNullableUserKeys);
-      const newObject = cloneDeep(createUserParams);
+      const newObject = this.removeNotNullable(createUserParams, NotNullableUserKeys);
 
       const object = await this.userModel.create({ ...newObject });
 
@@ -80,9 +78,8 @@ export class UserService extends BaseService {
   }
 
   async getSlots(getSlotsParams: GetSlotsParams): Promise<Slots> {
-    this.removeNotNullable(getSlotsParams, NotNullableSlotsKeys);
     const { appointmentId, userId, defaultSlotsCount, allowEmptySlotsResponse, maxSlots } =
-      getSlotsParams;
+      this.removeNotNullable(getSlotsParams, NotNullableSlotsKeys);
 
     const [slotsObject] = await this.userModel.aggregate([
       ...(userId
