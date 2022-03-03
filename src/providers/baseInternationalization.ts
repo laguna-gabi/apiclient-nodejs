@@ -16,6 +16,7 @@ export class BaseInternationalization implements OnModuleInit {
       fallbackLng: Language.en,
       resources: { en, es, NorthshoreBeta },
       interpolation: { escapeValue: false },
+      returnEmptyString: false,
     });
   }
 }
