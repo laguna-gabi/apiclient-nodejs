@@ -17,7 +17,7 @@ import {
   Length,
   ValidateIf,
 } from 'class-validator';
-import * as config from 'config';
+import { twilio } from 'config';
 import { Document, Types } from 'mongoose';
 import { ActionItem } from '.';
 import { Scores } from '../appointment';
@@ -33,14 +33,14 @@ import {
   IsValidZipCode,
   MemberRole,
   PhoneType,
+  maxLength,
+  minLength,
   validPhoneExamples,
 } from '../common';
 import { Org } from '../org';
 import { User } from '../user';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
-
-const validatorsConfig = config.get('graphql.validators');
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -177,7 +177,7 @@ export class ExtraMemberParams {
 @InputType()
 export class CreateMemberParams extends ExtraMemberParams {
   @Field(() => String, { description: validPhoneExamples })
-  @ValidateIf((params) => params.phone !== config.get('twilio.iosExcludeRegistrationNumber'))
+  @ValidateIf((params) => params.phone !== twilio.iosExcludeRegistrationNumber)
   @IsPhoneNumber(undefined, { message: Errors.get(ErrorType.memberPhone) })
   @IsNotEmpty() /* for rest api */
   @IsString() /* for rest api */
@@ -194,17 +194,13 @@ export class CreateMemberParams extends ExtraMemberParams {
   userId?: string;
 
   @Field(() => String)
-  @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
-    message: Errors.get(ErrorType.memberMinMaxLength),
-  })
+  @Length(minLength, maxLength, { message: Errors.get(ErrorType.memberMinMaxLength) })
   @IsNotEmpty() /* for rest api */
   @IsString() /* for rest api */
   firstName: string;
 
   @Field(() => String)
-  @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
-    message: Errors.get(ErrorType.memberMinMaxLength),
-  })
+  @Length(minLength, maxLength, { message: Errors.get(ErrorType.memberMinMaxLength) })
   @IsNotEmpty() /* for rest api */
   @IsString() /* for rest api */
   lastName: string;
@@ -242,16 +238,12 @@ export class UpdateMemberParams extends ExtraMemberParams {
   authId?: string;
 
   @Field(() => String, { nullable: true })
-  @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
-    message: Errors.get(ErrorType.memberMinMaxLength),
-  })
+  @Length(minLength, maxLength, { message: Errors.get(ErrorType.memberMinMaxLength) })
   @IsOptional()
   firstName?: string;
 
   @Field(() => String, { nullable: true })
-  @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
-    message: Errors.get(ErrorType.memberMinMaxLength),
-  })
+  @Length(minLength, maxLength, { message: Errors.get(ErrorType.memberMinMaxLength) })
   @IsOptional()
   lastName?: string;
 

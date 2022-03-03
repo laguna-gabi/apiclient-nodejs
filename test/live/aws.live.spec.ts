@@ -1,7 +1,6 @@
 import { Environments, Platform, mockLogger } from '@lagunahealth/pandora';
 import axios from 'axios';
-import * as config from 'config';
-import { services } from 'config';
+import { hosts, services } from 'config';
 import { EventEmitter2 } from 'eventemitter2';
 import { lorem } from 'faker';
 import { readFileSync } from 'fs';
@@ -72,18 +71,13 @@ describe('live: aws', () => {
       const existingUrls = await Promise.all(
         files.map((file) => storageService.getDownloadUrl(getParams(file))),
       );
-      expect(existingUrls[0]).toMatch(
-        // eslint-disable-next-line max-len
-        `${config.get('hosts.localstack')}/${bucketName}/public/${StorageType.recordings}/${
-          member.id
-        }/${files[0]}`,
-      );
-      expect(existingUrls[1]).toMatch(
-        // eslint-disable-next-line max-len
-        `${config.get('hosts.localstack')}/${bucketName}/public/${StorageType.recordings}/${
-          member.id
-        }/${files[1]}`,
-      );
+
+      for (let i = 0; i < 2; i++) {
+        expect(existingUrls[i]).toMatch(
+          // eslint-disable-next-line max-len
+          `${hosts.localstack}/${bucketName}/public/${StorageType.recordings}/${member.id}/${files[i]}`,
+        );
+      }
       await storageService.deleteRecordings(member.id, files);
       const nonExistingUrls = await Promise.all(
         files.map((file) => storageService.getDownloadUrl(getParams(file))),
@@ -134,15 +128,11 @@ describe('live: aws', () => {
 
       expect(normalImageDownloadUrl).toMatch(
         // eslint-disable-next-line max-len
-        `${config.get('hosts.localstack')}/${bucketName}/public/${StorageType.journals}/${
-          member.id
-        }/${id}${ImageType.NormalImage}.${ImageFormat.png}`,
+        `${hosts.localstack}/${bucketName}/public/${StorageType.journals}/${member.id}/${id}${ImageType.NormalImage}.${ImageFormat.png}`,
       );
       expect(smallImageDownloadUrl).toMatch(
         // eslint-disable-next-line max-len
-        `${config.get('hosts.localstack')}/${bucketName}/public/${StorageType.journals}/${
-          member.id
-        }/${id}${ImageType.SmallImage}.${ImageFormat.png}`,
+        `${hosts.localstack}/${bucketName}/public/${StorageType.journals}/${member.id}/${id}${ImageType.SmallImage}.${ImageFormat.png}`,
       );
       await storageService.deleteJournalImages(id, member.id, ImageFormat.png);
       const nonExistingNormalImageDownloadUrl = await storageService.getDownloadUrl(
@@ -170,9 +160,7 @@ describe('live: aws', () => {
 
       expect(uploadUrl).toMatch(
         // eslint-disable-next-line max-len
-        `${config.get('hosts.localstack')}/${bucketName}/public/${StorageType.journals}/${
-          params.memberId
-        }/${params.id}`,
+        `${hosts.localstack}/${bucketName}/public/${StorageType.journals}/${params.memberId}/${params.id}`,
       );
       expect(uploadUrl).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
       expect(uploadUrl).toMatch(`Amz-Expires=1800`); //expiration: 30 minutes
@@ -188,9 +176,7 @@ describe('live: aws', () => {
 
       expect(url).toMatch(
         // eslint-disable-next-line max-len
-        `${config.get('hosts.localstack')}/${bucketName}/public/${StorageType.journals}/${
-          member.id
-        }/${journalId}${AudioType}.${AudioFormat.mp3}`,
+        `${hosts.localstack}/${bucketName}/public/${StorageType.journals}/${member.id}/${journalId}${AudioType}.${AudioFormat.mp3}`,
       );
       await storageService.deleteJournalAudio(journalId, member.id, AudioFormat.mp3);
 
@@ -216,9 +202,7 @@ describe('live: aws', () => {
 
         expect(uploadUrl).toMatch(
           // eslint-disable-next-line max-len
-          `${config.get('hosts.localstack')}/${bucketName}/public/${storageType}/${
-            params.memberId
-          }/${params.id}`,
+          `${hosts.localstack}/${bucketName}/public/${storageType}/${params.memberId}/${params.id}`,
         );
         expect(uploadUrl).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
         expect(uploadUrl).toMatch(`Amz-Expires=1800`); //expiration: 30 minutes
@@ -233,9 +217,7 @@ describe('live: aws', () => {
         });
 
         expect(url).toMatch(
-          `${config.get('hosts.localstack')}/${bucketName}/public/${storageType}/${member.id}/${
-            params.id
-          }`,
+          `${hosts.localstack}/${bucketName}/public/${storageType}/${member.id}/${params.id}`,
         );
         expect(url).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
         expect(url).toMatch(`Amz-Expires=10800`); //expiration: 3 hours
@@ -267,9 +249,7 @@ describe('live: aws', () => {
         const { url: uploadUrl, uploadId } = await storageService.getMultipartUploadUrl(params);
         expect(uploadUrl).toMatch(
           // eslint-disable-next-line max-len
-          `${config.get('hosts.localstack')}/${bucketName}/public/${storageType}/${
-            params.memberId
-          }/${params.id}`,
+          `${hosts.localstack}/${bucketName}/public/${storageType}/${params.memberId}/${params.id}`,
         );
         expect(uploadUrl).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
         expect(uploadUrl).toMatch(`Amz-Expires=1800`); //expiration: 30 minutes
@@ -301,9 +281,7 @@ describe('live: aws', () => {
       });
 
       expect(url).toMatch(
-        `${config.get('hosts.localstack')}/${bucketName}/public/${storageType}/${
-          member.id
-        }/${fileName}`,
+        `${hosts.localstack}/${bucketName}/public/${storageType}/${member.id}/${fileName}`,
       );
       expect(url).toMatch(`X-Amz-Algorithm=AWS4-HMAC-SHA256`); //v4 signature
       expect(url).toMatch(`Amz-Expires=10800`); //expiration: 3 hours

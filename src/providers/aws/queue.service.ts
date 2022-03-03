@@ -2,7 +2,7 @@ import { Environments, QueueType, ServiceName, formatEx } from '@lagunahealth/pa
 import { Injectable, NotImplementedException, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import * as AWS from 'aws-sdk';
-import * as config from 'config';
+import { aws, hosts } from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { ConfigsService, ExternalConfigs, StorageService } from '.';
@@ -11,12 +11,10 @@ import { EventType, IEventNotifyQueue, LoggerService, StorageType } from '../../
 @Injectable()
 export class QueueService implements OnModuleInit {
   private readonly sqs = new AWS.SQS({
-    region: config.get('aws.region'),
+    region: aws.region,
     apiVersion: '2012-11-05',
     ...(!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-      ? {
-          endpoint: config.get('hosts.localstack'),
-        }
+      ? { endpoint: hosts.localstack }
       : {}),
   });
   private auditQueueUrl;
@@ -41,7 +39,7 @@ export class QueueService implements OnModuleInit {
 
     const notificationsName =
       !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? config.get('aws.queue.notification')
+        ? aws.queue.notification
         : await this.configsService.getConfig(queueNameNotifications);
     const { QueueUrl: notificationsQueueUrl } = await this.sqs
       .getQueueUrl({ QueueName: notificationsName })
@@ -50,7 +48,7 @@ export class QueueService implements OnModuleInit {
 
     const imageName =
       !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? config.get('aws.queue.image')
+        ? aws.queue.image
         : await this.configsService.getConfig(queueNameImage);
     const { QueueUrl: imageQueueUrl } = await this.sqs
       .getQueueUrl({ QueueName: imageName })
@@ -59,7 +57,7 @@ export class QueueService implements OnModuleInit {
 
     // register and start consumer for ImageQ
     this.consumer = Consumer.create({
-      region: config.get('aws.region'),
+      region: aws.region,
       queueUrl: this.imageQueueUrl,
       handleMessage: async (message) => {
         /**

@@ -5,12 +5,11 @@ import {
   Platform,
   generateZipCode,
 } from '@lagunahealth/pandora';
-import * as config from 'config';
 import { subSeconds } from 'date-fns';
 import { date, internet, lorem } from 'faker';
 import * as request from 'supertest';
 import { v4 } from 'uuid';
-import { ErrorType, Errors } from '../../src/common';
+import { ErrorType, Errors, maxLength, minLength } from '../../src/common';
 import {
   AddCaregiverParams,
   CancelNotifyParams,
@@ -47,16 +46,12 @@ import {
   urls,
 } from '../index';
 
-const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
 const BooleanError = `Boolean cannot represent a non boolean value`;
 
 describe('Validations - member', () => {
   const handler: Handler = new Handler();
   let server;
-
-  const minLength = validatorsConfig.get('name.minLength') as number;
-  const maxLength = validatorsConfig.get('name.maxLength') as number;
 
   beforeAll(async () => {
     await handler.beforeAll();

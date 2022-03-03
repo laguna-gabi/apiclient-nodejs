@@ -2,7 +2,7 @@ import { BaseOneSignal, Platform, formatEx } from '@lagunahealth/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import * as config from 'config';
+import { oneSignal } from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
 import { LoggerService } from '../common';
 import { MemberConfig } from '../member';
@@ -46,7 +46,7 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
         identifier: token,
         external_user_id: externalUserId,
         device_type: 0, //ios
-        ...config.get('oneSignal.voipRegistrationPayload'),
+        ...oneSignal.voipRegistrationPayload,
       };
       const result = await this.httpService.post(this.playersUrl, data).toPromise();
       return this.validateRegisterResult(externalUserId, result);

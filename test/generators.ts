@@ -14,7 +14,7 @@ import {
   generatePhone,
   generateZipCode,
 } from '@lagunahealth/pandora';
-import * as config from 'config';
+import { general, hosts } from 'config';
 import { add, format, sub } from 'date-fns';
 import {
   company,
@@ -593,7 +593,7 @@ export const generateReplaceUserForMemberParams = ({
 };
 
 export const generateAppointmentLink = (appointmentId: string) => {
-  return `${config.get('hosts.app')}/${appointmentId}`;
+  return `${hosts.app}/${appointmentId}`;
 };
 
 export const generateObjectId = (id?): Types.ObjectId => {
@@ -694,7 +694,7 @@ export const generateUpdateRecordingReviewParams = ({
 
 export const generateDailyReport = ({
   memberId = generateObjectId(),
-  date = reformatDate(fakerDate.recent().toString(), config.get('general.dateFormatString')),
+  date = reformatDate(fakerDate.recent().toString(), general.dateFormatString),
   categories = [],
   statsOverThreshold = [],
   notificationSent = false,

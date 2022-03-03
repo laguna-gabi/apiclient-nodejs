@@ -4,7 +4,7 @@ import { SplitFactory } from '@splitsoftware/splitio';
 import SplitIO from '@splitsoftware/splitio/types/splitio';
 import { ConfigsService, ExternalConfigs } from '.';
 import { v4 } from 'uuid';
-import * as config from 'config';
+import { split } from 'config';
 
 enum Treatment {
   on = 'on',
@@ -25,7 +25,7 @@ export class FeatureFlagService implements OnModuleInit {
 
   private async getApiKey(): Promise<string> {
     return !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-      ? config.get('split.apiKey')
+      ? split.apiKey
       : await this.configsService.getConfig(ExternalConfigs.split.apiKey);
   }
 

@@ -1,7 +1,6 @@
-import * as config from 'config';
 import { lorem } from 'faker';
 import * as request from 'supertest';
-import { ErrorType, Errors } from '../../src/common';
+import { ErrorType, Errors, maxLength, minLength } from '../../src/common';
 import { CreateUserParams, GetSlotsParams, defaultUserParams } from '../../src/user';
 import { Handler } from '../aux';
 import { generateGetSlotsParams, generateId } from '../generators';
@@ -12,15 +11,11 @@ import {
   urls,
 } from '../index';
 
-const validatorsConfig = config.get('graphql.validators');
 const stringError = `String cannot represent a non string value`;
 
 describe('Validations - user', () => {
   const handler: Handler = new Handler();
   let server;
-
-  const minLength = validatorsConfig.get('name.minLength') as number;
-  const maxLength = validatorsConfig.get('name.maxLength') as number;
 
   beforeAll(async () => {
     await handler.beforeAll();

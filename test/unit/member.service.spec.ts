@@ -10,7 +10,7 @@ import {
   mockProcessWarnings,
 } from '@lagunahealth/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as config from 'config';
+import { articlesByDrg } from 'config';
 import { add, sub } from 'date-fns';
 import { address, datatype, date, internet, lorem, name } from 'faker';
 import { isNil, omitBy, pickBy } from 'lodash';
@@ -2383,7 +2383,7 @@ describe('MemberService', () => {
       const id = await generateMember();
       const memberConfig = await service.getMemberConfig(id);
 
-      expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.default'));
+      expect(memberConfig.articlesPath).toEqual(articlesByDrg.default);
     });
 
     it('should return the configured path for a configured drg', async () => {
@@ -2393,7 +2393,7 @@ describe('MemberService', () => {
 
       const memberConfig = await service.getMemberConfig(id);
 
-      expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.123'));
+      expect(memberConfig.articlesPath).toEqual(articlesByDrg['123']);
     });
   });
 

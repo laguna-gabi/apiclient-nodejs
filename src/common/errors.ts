@@ -1,7 +1,4 @@
-/* eslint-disable max-len */
-import * as config from 'config';
-
-const graphqlConfig = config.get('graphql.validators.name');
+import { general, graphql } from 'config';
 
 export const validPhoneExamples =
   'examples for a valid phone number: +41 311111111, +41 (0)31 633 60 01, +49 9072 1111, etc..';
@@ -147,9 +144,9 @@ export enum ErrorType {
   orgIdInvalid = 10401,
 }
 
-const nameFormat = `name must be between ${graphqlConfig.get('minLength')} and ${graphqlConfig.get(
-  'maxLength',
-)} characters`;
+const nameFormat =
+  `name must be between ${graphql.validators.name.minLength} and ` +
+  `${graphql.validators.name.maxLength} characters`;
 const dateInstanceFormat = 'must be a Date instance';
 const emailFormat =
   'email must be in an email format - having a @ and an extension, for example: test@gmail.com';
@@ -231,6 +228,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [
     ErrorType.notificationNotAllowedNoRequestedAppointment.valueOf(),
+    // eslint-disable-next-line max-len
     `scheduleAppointment notification can not be preformed since you do not have a requested appointment with this member`,
   ],
   [ErrorType.appointmentIdNotFound.valueOf(), 'appointment id was not found'],
@@ -240,11 +238,11 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.appointmentEndDate.valueOf(), `end ${dateInstanceFormat}`],
   [
     ErrorType.appointmentStartDateOutOfRange.valueOf(),
-    `appointment start date must not be over ${config.general.notificationRange} days in the future`,
+    `appointment start date must not be over ${general.notificationRange} days in the future`,
   ],
   [
     ErrorType.appointmentNotBeforeDateOutOfRange.valueOf(),
-    `appointment notBefore date must not be over ${config.general.notificationRange} days in the future`,
+    `appointment notBefore date must not be over ${general.notificationRange} days in the future`,
   ],
   [ErrorType.appointmentEndAfterStart.valueOf(), 'end date must be after start date'],
   [ErrorType.appointmentOverlaps.valueOf(), 'Appointment overlaps another appointment'],

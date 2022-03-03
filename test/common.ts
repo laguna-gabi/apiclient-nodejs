@@ -2,7 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TestingModule } from '@nestjs/testing';
-import * as config from 'config';
+import { db } from 'config';
 import { Document, Model, Types, connect, disconnect } from 'mongoose';
 import { v4 } from 'uuid';
 import { AppRequestContext, RequestContext, apiPrefix, webhooks } from '../src/common';
@@ -107,7 +107,7 @@ export const submitMockCareWizard = async (handler: Handler, memberId: string, r
 };
 
 export const dbConnect = async () => {
-  await connect(config.get('db.connection'));
+  await connect(db.connection);
 };
 
 export const dbDisconnect = async () => {

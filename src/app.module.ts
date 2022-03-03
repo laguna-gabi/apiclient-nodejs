@@ -4,7 +4,7 @@ import { RouteInfo } from '@nestjs/common/interfaces';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TerminusModule } from '@nestjs/terminus';
-import * as config from 'config';
+import { skipBodyParseRouteList } from 'config';
 import { GraphQLError } from 'graphql';
 import { AppointmentModule } from './appointment';
 import { AuthModule, AuthService } from './auth';
@@ -70,15 +70,15 @@ const badRequestException = 'Bad Request Exception';
 })
 export class AppModule implements NestModule {
   public configure(consumer: MiddlewareConsumer): void {
-    const skipBodyParseRouteList: RouteInfo[] = [];
+    const routeInfo: RouteInfo[] = [];
 
-    config.get('skipBodyParseRouteList').forEach((routeListEntry) => {
-      skipBodyParseRouteList.push({ path: routeListEntry.path, method: routeListEntry.method });
+    skipBodyParseRouteList.forEach((routeListEntry) => {
+      routeInfo.push({ path: routeListEntry.path, method: routeListEntry.method });
     });
 
     consumer
       .apply(RawBodyMiddleware)
-      .forRoutes(...skipBodyParseRouteList)
+      .forRoutes(...routeInfo)
       .apply(JsonBodyMiddleware)
       .forRoutes('*');
   }

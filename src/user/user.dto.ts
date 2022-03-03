@@ -2,15 +2,20 @@ import { Language } from '@lagunahealth/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsOptional, IsPhoneNumber, IsUrl, Length } from 'class-validator';
-import * as config from 'config';
 import { Document, Types } from 'mongoose';
 import { Appointment, AppointmentData } from '../appointment';
-import { ErrorType, Errors, Identifier, UserRole, validPhoneExamples } from '../common';
+import {
+  ErrorType,
+  Errors,
+  Identifier,
+  UserRole,
+  maxLength,
+  minLength,
+  validPhoneExamples,
+} from '../common';
 import { audit } from '../db';
 
 registerEnumType(UserRole, { name: 'UserRole' });
-
-const validatorsConfig = config.get('graphql.validators');
 
 export const defaultUserParams = {
   maxCustomers: 7,
@@ -30,15 +35,11 @@ export class CreateUserParams {
   authId: string;
 
   @Field()
-  @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
-    message: Errors.get(ErrorType.userMinMaxLength),
-  })
+  @Length(minLength, maxLength, { message: Errors.get(ErrorType.userMinMaxLength) })
   firstName: string;
 
   @Field()
-  @Length(validatorsConfig.get('name.minLength'), validatorsConfig.get('name.maxLength'), {
-    message: Errors.get(ErrorType.userMinMaxLength),
-  })
+  @Length(minLength, maxLength, { message: Errors.get(ErrorType.userMinMaxLength) })
   lastName: string;
 
   @Field()

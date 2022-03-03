@@ -1,7 +1,7 @@
 import { Inject, UseInterceptors, forwardRef } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Query, Resolver } from '@nestjs/graphql';
-import * as config from 'config';
+import { hosts } from 'config';
 import { camelCase } from 'lodash';
 import {
   CommunicationInfo,
@@ -210,7 +210,7 @@ export class CommunicationResolver {
   }
 
   private static buildUrl({ uid, mid, token }): string {
-    return `${config.get('hosts.chat')}/?uid=${uid}&mid=${mid}&token=${token}`;
+    return `${hosts.chat}/?uid=${uid}&mid=${mid}&token=${token}`;
   }
 
   @OnEvent(EventType.onReplacedUserForMember, { async: true })

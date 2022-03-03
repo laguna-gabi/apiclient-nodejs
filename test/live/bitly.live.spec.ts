@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import * as config from 'config';
+import { hosts } from 'config';
 import { Bitly, ConfigsService } from '../../src/providers';
 
 /**
@@ -18,7 +18,7 @@ describe.skip('live: bitly actions', () => {
 
   it('should shorten a link', async () => {
     //when running this, remove process.env.NODE_ENV === environments.test in shortenLink method.
-    const link = await bitly.shortenLink(config.get('hosts.chat'));
+    const link = await bitly.shortenLink(hosts.chat);
     expect(link).toMatch('https://bit.ly');
   });
 });

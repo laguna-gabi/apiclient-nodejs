@@ -2,7 +2,7 @@ import { formatEx } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import * as config from 'config';
+import { articlesByDrg } from 'config';
 import { add, differenceInMilliseconds, sub } from 'date-fns';
 import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
@@ -1166,6 +1166,6 @@ export class MemberService extends BaseService {
 
   private async getArticlesPath(id: string) {
     const { drg } = await this.get(id);
-    return config.get('articlesByDrg')[drg] || config.get('articlesByDrg.default');
+    return articlesByDrg[drg] || articlesByDrg.default;
   }
 }

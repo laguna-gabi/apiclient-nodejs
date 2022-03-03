@@ -2,7 +2,7 @@ import { formatEx } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import * as config from 'config';
+import { hosts } from 'config';
 import { isUndefined, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
 import {
@@ -32,8 +32,6 @@ import { ISoftDelete } from '../db';
 
 @Injectable()
 export class AppointmentService extends BaseService {
-  private readonly APP_URL = config.get('hosts.app');
-
   constructor(
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<AppointmentDocument> &
@@ -296,7 +294,7 @@ export class AppointmentService extends BaseService {
     const eventParams: IEventOnNewAppointment = { memberId, userId, appointmentId };
     this.eventEmitter.emit(EventType.onNewAppointment, eventParams);
 
-    const link = `${this.APP_URL}/${appointmentId.toString()}`;
+    const link = `${hosts.app}/${appointmentId.toString()}`;
 
     const result = await this.appointmentModel
       .findOneAndUpdate(

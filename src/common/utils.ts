@@ -19,6 +19,7 @@ import { TodoDocument, TodoDoneDocument } from '../todo';
 import { DailyReportDocument } from '../dailyReport';
 import { QuestionnaireResponseDocument } from '../questionnaire';
 import { BarrierDocument, CarePlanDocument, RedFlagDocument } from '../care';
+import { graphql } from 'config';
 
 export function reformatDate(date: string, stringFormat: string): string {
   const dateObject = Date.parse(date);
@@ -129,3 +130,6 @@ export async function deleteMemberObjects<T extends Model<Entity> & ISoftDelete<
 export type defaultTimestampsDbValues = { createdAt: Date; updatedAt: Date };
 
 export type defaultAuditDbValues = { createdBy: Types.ObjectId; updatedBy: Types.ObjectId };
+
+export const minLength = graphql.validators.name.minLength as number;
+export const maxLength = graphql.validators.name.maxLength as number;

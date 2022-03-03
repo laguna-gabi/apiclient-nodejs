@@ -2,7 +2,7 @@ import { BaseExternalConfigs, Environments } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 import { MongooseModuleOptions, MongooseOptionsFactory } from '@nestjs/mongoose';
 import * as AWS from 'aws-sdk';
-import * as config from 'config';
+import { aws, db } from 'config';
 
 export const ExternalConfigs = {
   ...BaseExternalConfigs,
@@ -34,7 +34,7 @@ export class ConfigsService implements MongooseOptionsFactory {
   async createMongooseOptions(): Promise<MongooseModuleOptions> {
     const uri =
       !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? config.get('db.connection')
+        ? db.connection
         : await this.getConfig(ExternalConfigs.db.connection);
     return { uri };
   }
@@ -46,7 +46,7 @@ export class ConfigsService implements MongooseOptionsFactory {
    */
   async getConfig(configs: string): Promise<string> {
     if (!this.data) {
-      const secretsManager = new AWS.SecretsManager({ region: config.get('aws.region') });
+      const secretsManager = new AWS.SecretsManager({ region: aws.region });
       const result = await secretsManager
         .getSecretValue({
           SecretId:

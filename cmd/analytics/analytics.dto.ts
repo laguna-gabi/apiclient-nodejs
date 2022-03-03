@@ -12,7 +12,7 @@ import {
   Sex,
 } from '../../src/member';
 import { Honorific, Language, Platform } from '@lagunahealth/pandora';
-import * as config from 'config';
+import { hosts } from 'config';
 
 export const DateFormat = 'yyyy-MM-dd';
 export const TimeFormat = 'HH:mm:ss';
@@ -20,7 +20,7 @@ export const DateTimeFormat = 'yyyy-MM-dd HH:mm';
 export const DayOfWeekFormat = 'EEEE';
 export const HourFormat = 'H';
 export const DefaultOutputDir = './outputs';
-export const HarmonyLink = config.get('hosts.harmony');
+export const HarmonyLink = hosts.harmony;
 export const InstructionsFileSuffix = 'Instructions';
 export const SummaryFileSuffix = 'Summary';
 export const GraduationPeriod = 90;

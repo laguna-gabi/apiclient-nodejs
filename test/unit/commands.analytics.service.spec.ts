@@ -27,7 +27,7 @@ import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProvidersModule } from '../../src/providers';
 import { Language, mockProcessWarnings } from '@lagunahealth/pandora';
-import * as config from 'config';
+import { hosts } from 'config';
 import { Model, Types } from 'mongoose';
 import { User, UserDocument, UserModule } from '../../src/user';
 import { getModelToken } from '@nestjs/mongoose';
@@ -344,7 +344,7 @@ describe('Commands: AnalyticsService', () => {
           graduation_date: '2021-02-03',
           is_video_call: false,
           is_phone_call: true,
-          harmony_link: config.get('hosts.harmony') + `/details/${mockMember.id}`,
+          harmony_link: generateHarmonyLink(mockMember.id),
           coach_name: `${mockPrimaryUser.firstName} ${mockPrimaryUser.lastName}`,
           coach_id: mockPrimaryUser.id,
         },
@@ -368,7 +368,7 @@ describe('Commands: AnalyticsService', () => {
           graduation_date: '2021-02-03',
           is_video_call: false,
           is_phone_call: false,
-          harmony_link: config.get('hosts.harmony') + `/details/${mockMember.id}`,
+          harmony_link: generateHarmonyLink(mockMember.id),
           coach_name: `${mockFellowUser.firstName} ${mockFellowUser.lastName}`,
           coach_id: mockFellowUser.id,
           wellbeing_score: app3Notes.scores.wellbeing,
@@ -396,7 +396,7 @@ describe('Commands: AnalyticsService', () => {
           graduation_date: '2021-02-03',
           is_video_call: true,
           is_phone_call: false,
-          harmony_link: config.get('hosts.harmony') + `/details/${mockMember.id}`,
+          harmony_link: generateHarmonyLink(mockMember.id),
           coach_name: `${mockPrimaryUser.firstName} ${mockPrimaryUser.lastName}`,
           coach_id: mockPrimaryUser.id,
         },
@@ -478,7 +478,7 @@ describe('Commands: AnalyticsService', () => {
         first_wellbeing_score: 2,
         last_wellbeing_score: 5,
         fellow: mockMember.fellowName,
-        harmony_link: config.get('hosts.harmony') + `/details/${mockMember.id}`,
+        harmony_link: generateHarmonyLink(mockMember.id),
         coach_name: `${mockPrimaryUser.firstName} ${mockPrimaryUser.lastName}`,
         dob: mockMember.dateOfBirth,
         first_name: mockMember.firstName,
@@ -570,7 +570,7 @@ describe('Commands: AnalyticsService', () => {
         first_wellbeing_score: 2,
         last_wellbeing_score: 5,
         fellow: mockMember.fellowName,
-        harmony_link: config.get('hosts.harmony') + `/details/${mockMember.id}`,
+        harmony_link: generateHarmonyLink(mockMember.id),
         coach_name: `${mockPrimaryUser.firstName} ${mockPrimaryUser.lastName}`,
         dob: mockMember.dateOfBirth,
         first_name: mockMember.firstName,
@@ -632,6 +632,10 @@ describe('Commands: AnalyticsService', () => {
       });
     });
   });
+
+  const generateHarmonyLink = (memberId: string) => {
+    return `${hosts.harmony}/details/${memberId}`;
+  };
 
   describe('buildCoachData', () => {
     const graduatedMember = mockGenerateMember();

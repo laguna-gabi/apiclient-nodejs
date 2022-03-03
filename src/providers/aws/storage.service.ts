@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import * as AWS from 'aws-sdk';
-import * as config from 'config';
+import { aws, hosts } from 'config';
 import * as sharp from 'sharp';
 import { ConfigsService, ExternalConfigs } from '.';
 import {
@@ -21,10 +21,10 @@ export class StorageService implements OnModuleInit {
   private readonly s3 = new AWS.S3({
     signatureVersion: 'v4',
     apiVersion: '2006-03-01',
-    region: config.get('aws.region'),
+    region: aws.region,
     ...(!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
       ? {
-          endpoint: config.get('hosts.localstack'),
+          endpoint: hosts.localstack,
           s3ForcePathStyle: true,
         }
       : {}),
@@ -36,7 +36,7 @@ export class StorageService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     this.bucket =
       !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? config.get('aws.storage.bucket')
+        ? aws.storage.bucket
         : await this.configsService.getConfig(ExternalConfigs.aws.memberBucketName);
   }
 
@@ -253,9 +253,7 @@ export class StorageService implements OnModuleInit {
       const originalImage = await this.s3.getObject(downloadParams).promise();
 
       // Use the sharp module to resize the image and save in a buffer.
-      const buffer = await sharp(originalImage.Body)
-        .resize(config.get('aws.storage.thumbnailSize'))
-        .toBuffer();
+      const buffer = await sharp(originalImage.Body).resize(aws.storage.thumbnailSize).toBuffer();
 
       const uploadParams = {
         Bucket: this.bucket,

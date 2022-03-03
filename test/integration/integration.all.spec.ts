@@ -1,6 +1,5 @@
 import { AppointmentInternalKey, Language, LogInternalKey, Platform } from '@lagunahealth/pandora';
-import * as config from 'config';
-import { general } from 'config';
+import { articlesByDrg, general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
 import { date, lorem } from 'faker';
 import { v4 } from 'uuid';
@@ -332,7 +331,7 @@ describe('Integration tests: all', () => {
     });
     expect(memberConfigBefore).toEqual({
       memberId: member.id,
-      articlesPath: config.get('articlesByDrg.default'),
+      articlesPath: articlesByDrg.default,
       externalUserId: expect.any(String),
       firstLoggedInAt: null,
       platform: Platform.web,
@@ -846,7 +845,7 @@ describe('Integration tests: all', () => {
         id: member.id,
         requestHeaders: generateRequestHeaders(member.authId),
       });
-      expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.default'));
+      expect(memberConfig.articlesPath).toEqual(articlesByDrg.default);
     });
 
     it('should return the configured path for a configured drg on getMemberConfig', async () => {
@@ -860,7 +859,7 @@ describe('Integration tests: all', () => {
         id: member.id,
         requestHeaders: generateRequestHeaders(updateMemberParams.authId),
       });
-      expect(memberConfig.articlesPath).toEqual(config.get('articlesByDrg.123'));
+      expect(memberConfig.articlesPath).toEqual(articlesByDrg['123']);
     });
 
     it('should set phoneType and phoneSecondaryType', async () => {

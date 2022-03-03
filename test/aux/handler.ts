@@ -4,7 +4,6 @@ import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as config from 'config';
 import { datatype, lorem } from 'faker';
 import { GraphQLClient } from 'graphql-request';
 import * as jwt from 'jsonwebtoken';
@@ -108,8 +107,6 @@ import {
 } from '../../src/user';
 import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
 
-const validatorsConfig = config.get('graphql.validators');
-
 export class Handler extends BaseHandler {
   sendBird;
   oneSignal;
@@ -157,9 +154,6 @@ export class Handler extends BaseHandler {
   carePlanTypeModel: Model<CarePlanTypeDocument>;
   appointmentModel: Model<AppointmentDocument>;
   notesModel: Model<NotesDocument>;
-
-  readonly minLength = validatorsConfig.get('name.minLength') as number;
-  readonly maxLength = validatorsConfig.get('name.maxLength') as number;
 
   async beforeAll() {
     mockProcessWarnings(); // to hide pino prettyPrint warning

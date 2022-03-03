@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
-import * as config from 'config';
+import { aws } from 'config';
 import { LoggerService } from '../../common';
 import { formatEx } from '@lagunahealth/pandora';
 
 @Injectable()
 export class CognitoService {
   private readonly cognito = new AWS.CognitoIdentityServiceProvider({
-    region: config.get('aws.region'),
+    region: aws.region,
     apiVersion: '2016-04-18',
   });
 
@@ -17,7 +17,7 @@ export class CognitoService {
     this.logger.info({ deviceId }, CognitoService.name, this.disableMember.name);
     try {
       await this.cognito
-        .adminDisableUser({ UserPoolId: config.get('aws.cognito.userPoolId'), Username: deviceId })
+        .adminDisableUser({ UserPoolId: aws.cognito.userPoolId, Username: deviceId })
         .promise();
     } catch (ex) {
       if (ex?.code !== 'UserNotFoundException') {
@@ -30,7 +30,7 @@ export class CognitoService {
     this.logger.info({ deviceId }, CognitoService.name, this.deleteMember.name);
     try {
       await this.cognito
-        .adminDeleteUser({ UserPoolId: config.get('aws.cognito.userPoolId'), Username: deviceId })
+        .adminDeleteUser({ UserPoolId: aws.cognito.userPoolId, Username: deviceId })
         .promise();
     } catch (ex) {
       if (ex?.code !== 'UserNotFoundException') {

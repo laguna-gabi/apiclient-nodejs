@@ -1,7 +1,7 @@
 import { Platform, mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as config from 'config';
+import { hosts } from 'config';
 import { datatype, lorem } from 'faker';
 import { v4 } from 'uuid';
 import {
@@ -191,9 +191,7 @@ describe('CommunicationResolver', () => {
       const result = await resolver.getCommunication(params);
 
       const link = (id, token) => {
-        return `${config.get('hosts.chat')}/?uid=${id}&mid=${
-          payload.sendBirdChannelUrl
-        }&token=${token}`;
+        return `${hosts.chat}/?uid=${id}&mid=${payload.sendBirdChannelUrl}&token=${token}`;
       };
 
       expect(result).toEqual({
