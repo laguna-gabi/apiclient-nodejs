@@ -1,7 +1,12 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { Dispatch, DispatchDto, DispatchStatus, DispatchesService } from '.';
+import {
+  Dispatch,
+  DispatchDto,
+  DispatchStatus,
+  DispatchesService,
+  ParseDispatchProjectionArray,
+} from '.';
 import { ApiQuery } from '@nestjs/swagger';
-import { ParseDispatchProjectionArray } from '.';
 
 @Controller('dispatches')
 export class DispatchesController {

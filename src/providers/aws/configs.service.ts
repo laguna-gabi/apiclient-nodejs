@@ -2,8 +2,7 @@ import { BaseExternalConfigs, Environments } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 import { MongooseModuleOptions, MongooseOptionsFactory } from '@nestjs/mongoose';
 import * as AWS from 'aws-sdk';
-import { aws } from 'config';
-import { db } from 'config';
+import { aws, db } from 'config';
 
 export const ExternalConfigs = {
   ...BaseExternalConfigs,
