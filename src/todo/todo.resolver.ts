@@ -33,6 +33,7 @@ import {
   RoleTypes,
   Roles,
   UserRole,
+  generatePath,
   getCorrelationId,
 } from '../common';
 
@@ -200,6 +201,7 @@ export class TodoResolver {
         recipientClientId: todo.memberId.toString(),
         senderClientId: clientId,
         contentKey,
+        path: generatePath(NotificationType.text, contentKey),
       };
       this.eventEmitter.emit(EventType.notifyDispatch, createTodoEvent);
     }

@@ -137,6 +137,7 @@ describe('TodoResolver', () => {
             recipientClientId: todo.memberId.toString(),
             senderClientId: userId,
             contentKey,
+            path: 'todo',
           });
         },
       );
@@ -279,6 +280,7 @@ describe('TodoResolver', () => {
             recipientClientId: newTodo.memberId.toString(),
             senderClientId: userId,
             contentKey,
+            path: 'todo',
           });
         },
       );
@@ -376,6 +378,7 @@ describe('TodoResolver', () => {
             recipientClientId: todo.memberId.toString(),
             senderClientId: userId,
             contentKey,
+            path: 'todo',
           });
         },
       );

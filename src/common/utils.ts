@@ -5,6 +5,7 @@ import {
   ContentKey,
   ExternalKey,
   NotificationType,
+  TodoInternalKey,
   formatEx,
 } from '@lagunahealth/pandora';
 import { format } from 'date-fns';
@@ -76,6 +77,10 @@ export const generatePath = (
       return 'settings/carecircle';
     case ExternalKey.setCallPermissions:
       return 'settings/callpermissions';
+  }
+
+  if (Object.values(TodoInternalKey).find((key) => key === contentKey)) {
+    return 'todo';
   }
 };
 
