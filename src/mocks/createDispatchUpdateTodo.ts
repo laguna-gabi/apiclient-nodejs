@@ -1,5 +1,6 @@
 import { v4 } from 'uuid';
 import {
+  ICreateDispatch,
   InnerQueueTypes,
   NotificationType,
   ObjectBaseType,
@@ -8,7 +9,7 @@ import {
   generateDispatchId,
 } from '../index';
 
-export type ObjectUpdateTodoType = ObjectBaseType;
+export type ObjectUpdateTodoType = ObjectBaseType & Pick<ICreateDispatch, 'path'>;
 
 export class ObjectUpdateTodoClass {
   constructor(readonly objectUpdateTodoMock: ObjectUpdateTodoType) {}
@@ -35,6 +36,7 @@ export const generateUpdateTodoMEDSMock = ({
     recipientClientId,
     senderClientId,
     contentKey,
+    path: 'todo',
   };
 };
 export const generateUpdateTodoAPPTMock = ({
@@ -58,6 +60,7 @@ export const generateUpdateTodoAPPTMock = ({
     recipientClientId,
     senderClientId,
     contentKey,
+    path: 'todo',
   };
 };
 export const generateUpdateTodoTODOMock = ({
@@ -81,5 +84,6 @@ export const generateUpdateTodoTODOMock = ({
     recipientClientId,
     senderClientId,
     contentKey,
+    path: 'todo',
   };
 };
