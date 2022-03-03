@@ -14,7 +14,7 @@ import { Injectable, NotImplementedException, OnModuleDestroy, OnModuleInit } fr
 import { OnEvent } from '@nestjs/event-emitter';
 import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
 import * as AWS from 'aws-sdk';
-import * as config from 'config';
+import { aws } from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { ConfigsService, ExternalConfigs } from '../providers';
 import { EventType, LoggerService } from '../common';
@@ -24,7 +24,7 @@ import { v4 } from 'uuid';
 @Injectable()
 export class QueueService extends HealthIndicator implements OnModuleInit, OnModuleDestroy {
   private readonly sqs = new AWS.SQS({
-    region: config.get('aws.region'),
+    region: aws.region,
     apiVersion: '2012-11-05',
     ...(!process.env.NODE_ENV ||
     process.env.NODE_ENV === Environments.test ||
@@ -69,7 +69,7 @@ export class QueueService extends HealthIndicator implements OnModuleInit, OnMod
       !process.env.NODE_ENV ||
       process.env.NODE_ENV === Environments.test ||
       process.env.NODE_ENV === Environments.localhost
-        ? config.get('aws.queue.notification')
+        ? aws.queue.notification
         : await this.configsService.getConfig(queueNameNotifications);
     const { QueueUrl: queueUrl } = await this.sqs.getQueueUrl({ QueueName: queueName }).promise();
     this.notificationsQueueUrl = queueUrl;
@@ -78,7 +78,7 @@ export class QueueService extends HealthIndicator implements OnModuleInit, OnMod
       !process.env.NODE_ENV ||
       process.env.NODE_ENV === Environments.test ||
       process.env.NODE_ENV === Environments.localhost
-        ? config.get('aws.queue.notificationDLQ')
+        ? aws.queue.notificationDLQ
         : await this.configsService.getConfig(queueNameNotificationsDLQ);
     const { QueueUrl: dlQueueUrl } = await this.sqs
       .getQueueUrl({ QueueName: dlQueueName })
@@ -87,7 +87,7 @@ export class QueueService extends HealthIndicator implements OnModuleInit, OnMod
 
     // register and start consumer for NotificationQ
     this.consumer = Consumer.create({
-      region: config.get('aws.region'),
+      region: aws.region,
       queueUrl,
       handleMessage: async (message) => {
         /**

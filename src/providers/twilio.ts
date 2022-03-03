@@ -6,7 +6,6 @@ import {
   formatEx,
 } from '@lagunahealth/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import * as config from 'config';
 import { twilio } from 'config';
 import { hoursToMilliseconds } from 'date-fns';
 import { parsePhoneNumber } from 'libphonenumber-js';
@@ -31,7 +30,7 @@ export class Twilio implements OnModuleInit {
     private readonly slack: Slack,
     private readonly logger: LoggerService,
   ) {
-    this.source = config.get('twilio.source');
+    this.source = twilio.source;
   }
 
   async onModuleInit(): Promise<void> {
