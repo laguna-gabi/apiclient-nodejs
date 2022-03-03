@@ -1275,6 +1275,7 @@ describe('Notifications full flow', () => {
           contentKey: mock.contentKey,
           contentCategory: Categories.todo,
           isVideo: false,
+          path: 'todo',
         },
         content,
         orgName: mobileMemberClient.orgName,
