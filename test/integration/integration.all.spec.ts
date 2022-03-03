@@ -287,6 +287,23 @@ describe('Integration tests: all', () => {
     );
   });
 
+  it('should return members appointment without supplying optional orgId', async () => {
+    const org = await creators.createAndValidateOrg();
+    const { member: member } = await creators.createAndValidateMember({ org, useNewUser: true });
+    const primaryUser = member.users[0];
+
+    await creators.handler.mutations.scheduleAppointment({
+      appointmentParams: generateScheduleAppointmentParams({
+        memberId: member.id,
+        userId: primaryUser.id,
+      }),
+    });
+
+    const result = await creators.handler.queries.getMembersAppointments();
+
+    expect(result.length).toBeGreaterThan(0);
+  });
+
   it('should validate that getMember attach chat app link to each appointment', async () => {
     const org = await creators.createAndValidateOrg();
     const { member } = await creators.createAndValidateMember({ org, useNewUser: true });

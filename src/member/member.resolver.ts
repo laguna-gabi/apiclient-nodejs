@@ -148,7 +148,7 @@ export class MemberResolver extends MemberBase {
     @Args(
       'id',
       { type: () => String, nullable: true },
-      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid), { nullable: true }),
     )
     id?: string,
   ): Promise<Member> {
@@ -178,7 +178,7 @@ export class MemberResolver extends MemberBase {
     @Args(
       'orgId',
       { type: () => String, nullable: true },
-      new IsValidObjectId(Errors.get(ErrorType.memberOrgIdInvalid)),
+      new IsValidObjectId(Errors.get(ErrorType.memberOrgIdInvalid), { nullable: true }),
     )
     orgId?: string,
   ): Promise<MemberSummary[]> {
@@ -191,7 +191,7 @@ export class MemberResolver extends MemberBase {
     @Args(
       'orgId',
       { type: () => String, nullable: true },
-      new IsValidObjectId(Errors.get(ErrorType.memberOrgIdInvalid)),
+      new IsValidObjectId(Errors.get(ErrorType.memberOrgIdInvalid), { nullable: true }),
     )
     orgId?: string,
   ): Promise<AppointmentCompose[]> {
@@ -305,7 +305,7 @@ export class MemberResolver extends MemberBase {
     @Args(
       'id',
       { type: () => String, nullable: true },
-      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid), { nullable: true }),
     )
     id?: string,
   ) {
@@ -783,7 +783,7 @@ export class MemberResolver extends MemberBase {
     @Args(
       'memberId',
       { type: () => String, nullable: true },
-      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid), { nullable: true }),
     )
     memberId?: string,
   ): Promise<Caregiver[]> {
@@ -1221,7 +1221,7 @@ export class MemberResolver extends MemberBase {
     @Args(
       'id',
       { type: () => String, nullable: true },
-      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid), { nullable: true }),
     )
     id?: string,
   ) {

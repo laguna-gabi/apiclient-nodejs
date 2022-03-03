@@ -72,7 +72,7 @@ export class TodoResolver {
     @Args(
       'memberId',
       { type: () => String, nullable: true },
-      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid), { nullable: true }),
     )
     memberId?: string,
   ) {

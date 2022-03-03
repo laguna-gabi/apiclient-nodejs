@@ -4,13 +4,15 @@ import { Types } from 'mongoose';
 @Injectable()
 export class IsValidObjectId implements PipeTransform {
   private message: string;
+  private options: { nullable: boolean };
 
-  constructor(message: string) {
+  constructor(message: string, options?: { nullable: boolean }) {
     this.message = message;
+    this.options = options;
   }
 
   transform(value: string) {
-    if (!Types.ObjectId.isValid(value)) {
+    if ((value && !Types.ObjectId.isValid(value)) || (!value && !this.options.nullable)) {
       throw new Error(this.message);
     }
 
