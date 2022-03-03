@@ -20,7 +20,7 @@
     "test:cov": "jest --config test/jest.json && jest-coverage-badges"
   },
   "dependencies": {
-    "@lagunahealth/pandora": "0.11.20",
+    "@lagunahealth/pandora": "0.11.21",
     "@nestjs/axios": "^0.0.5",
     "@nestjs/common": "^8.3.1",
     "@nestjs/core": "^8.3.1",

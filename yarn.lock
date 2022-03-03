@@ -1004,10 +1004,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@lagunahealth/pandora@0.11.20":
-  version "0.11.20"
-  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.11.20/30e10c1a4303e571e57e100ad49f8bdab25056b92c52fe17da9d18f9ab935a7d#154f309f3c1e657f7f65068faf208d0a76516167"
-  integrity sha512-dd+pAdcFYJ+xHnhVIrYdGwSLOgzvOVpQj6aI5CqxU3tpbF3xlSDezwVjgdkGW2TFo9c7eqGYMRN06tam7Qz6sA==
+"@lagunahealth/pandora@0.11.21":
+  version "0.11.21"
+  resolved "https://npm.pkg.github.com/download/@lagunahealth/pandora/0.11.21/5a7bd6b64c148436fcc49ba6a2108f4a95af82059574383750adbdae554dd7a2#84cf090b5f250d8b1c9af4e42a44cc9dcd1d96a9"
+  integrity sha512-Ixu2F81pEA6UHz9rQVvCo2ycchSPXf3t2RKAg1au3L+cwyJ6Z229dF1IsnXxkOQPLTHNw7SUYDNxIDGA9pfPKA==
   dependencies:
     "@slack/webhook" "^6.1.0"
     faker "^5.5.3"
