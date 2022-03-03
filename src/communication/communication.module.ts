@@ -5,8 +5,6 @@ import { UserModule } from '../user';
 import { Communication, CommunicationDto, CommunicationResolver, CommunicationService } from '.';
 import { CommonModule } from '../common';
 import { ProvidersModule } from '../providers';
-import { useFactoryOptions } from '../db';
-import * as mongooseDelete from 'mongoose-delete';
 
 @Module({
   imports: [
@@ -14,12 +12,10 @@ import * as mongooseDelete from 'mongoose-delete';
     forwardRef(() => UserModule),
     HttpModule,
     CommonModule,
-    MongooseModule.forFeatureAsync([
+    MongooseModule.forFeature([
       {
         name: Communication.name,
-        useFactory: () => {
-          return CommunicationDto.plugin(mongooseDelete, useFactoryOptions);
-        },
+        schema: CommunicationDto,
       },
     ]),
   ],

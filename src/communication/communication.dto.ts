@@ -2,7 +2,8 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, IsObjectId, UserRole } from '../common';
-import { ISoftDelete } from '../db';
+import { ISoftDelete, audit, useFactoryOptions } from '../db';
+import * as mongooseDelete from 'mongoose-delete';
 
 /**************************************************************************************************
  **************************************** Internal params *****************************************
@@ -116,4 +117,6 @@ export class MemberCommunicationInfo {
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
 export type CommunicationDocument = Communication & Document & ISoftDelete<Communication>;
-export const CommunicationDto = SchemaFactory.createForClass(Communication);
+export const CommunicationDto = audit(
+  SchemaFactory.createForClass(Communication).plugin(mongooseDelete, useFactoryOptions),
+);

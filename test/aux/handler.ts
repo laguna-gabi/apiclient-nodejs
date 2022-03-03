@@ -49,7 +49,12 @@ import {
   defaultAuditDbValues,
   requestContextMiddleware,
 } from '../../src/common';
-import { CommunicationService } from '../../src/communication';
+import {
+  Communication,
+  CommunicationDocument,
+  CommunicationDto,
+  CommunicationService,
+} from '../../src/communication';
 import {
   DailyReport,
   DailyReportDocument,
@@ -145,6 +150,7 @@ export class Handler extends BaseHandler {
   journalModel: Model<JournalDocument>;
   userModel: Model<UserDocument>;
   userConfigModel: Model<UserConfigDocument>;
+  communicationModel: Model<CommunicationDocument>;
   redFlagModel: Model<RedFlagDocument>;
   barrierModel: Model<BarrierDocument>;
   carePlanModel: Model<CarePlanDocument>;
@@ -296,6 +302,7 @@ export class Handler extends BaseHandler {
     this.journalModel = model<JournalDocument>(Journal.name, JournalDto);
     this.userModel = model<UserDocument>(User.name, UserDto);
     this.userConfigModel = model<UserConfigDocument>(UserConfig.name, UserConfigDto);
+    this.communicationModel = model<CommunicationDocument>(Communication.name, CommunicationDto);
     this.questionnaireModel = model<QuestionnaireDocument>(Questionnaire.name, QuestionnaireDto);
     this.appointmentModel = model<AppointmentDocument>(Appointment.name, AppointmentDto);
     this.notesModel = model<NotesDocument>(Notes.name, NotesDto);

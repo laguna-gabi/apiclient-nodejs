@@ -72,6 +72,7 @@ import {
   submitMockCareWizard,
   urls,
 } from '../index';
+import { Communication, CommunicationDocument } from '../../src/communication';
 
 describe('Integration tests : Audit', () => {
   const handler: Handler = new Handler();
@@ -379,7 +380,10 @@ describe('Integration tests : Audit', () => {
        * 4. set notes (general/nurse) for member (setGeneralNotes)
        */
       const org = await creators.createAndValidateOrg();
-      const memberParams = generateCreateMemberParams({ orgId: org.id });
+      const memberParams = generateCreateMemberParams({
+        orgId: org.id,
+        userId: user1.id, // we want to make sure we get a valid user with user config
+      });
 
       // Create Member (anonymous/REST)
       const {
@@ -388,6 +392,19 @@ describe('Integration tests : Audit', () => {
 
       expect(
         await checkAuditValues<MemberDocument>(memberId, handler.memberModel, undefined, undefined),
+      ).toBeTruthy();
+
+      const { id: c1id } = await handler.communicationModel.findOne({
+        memberId: new Types.ObjectId(memberId),
+      });
+
+      expect(
+        await checkAuditValues<CommunicationDocument>(
+          c1id,
+          handler.communicationModel,
+          undefined,
+          undefined,
+        ),
       ).toBeTruthy();
 
       // Update Member (user1)
@@ -411,6 +428,22 @@ describe('Integration tests : Audit', () => {
         replaceUserForMemberParams,
         requestHeaders: generateRequestHeaders(adminUser1.authId),
       });
+
+      await delay(2000); // wait for event to finish
+
+      // `findOneAndUpdate` is triggered on the communication
+      const { id: c2id } = await handler.communicationModel.findOne({
+        memberId: new Types.ObjectId(memberId),
+      });
+
+      expect(
+        await checkAuditValues<CommunicationDocument>(
+          c2id,
+          handler.communicationModel,
+          undefined,
+          adminUser1.id,
+        ),
+      ).toBeTruthy();
 
       expect(
         await checkAuditValues<MemberDocument>(
@@ -461,6 +494,19 @@ describe('Integration tests : Audit', () => {
 
       expect(
         await checkAuditValues<MemberDocument>(id, handler.memberModel, user1.id, user1.id),
+      ).toBeTruthy();
+
+      const { id: cid } = await handler.communicationModel.findOne({
+        memberId: new Types.ObjectId(id),
+      });
+
+      expect(
+        await checkAuditValues<CommunicationDocument>(
+          cid,
+          handler.communicationModel,
+          user1.id,
+          user1.id,
+        ),
       ).toBeTruthy();
     });
   });
@@ -740,6 +786,43 @@ describe('Integration tests : Audit', () => {
         ),
       ).toBeTruthy();
     });
+  });
+
+  describe(Communication.name, () => {
+    it(
+      'should set createdBy and updatedBy on communication ' +
+        'when scheduleAppointment is invoked',
+      async () => {
+        const { id: userId } = await handler.mutations.createUser({
+          userParams: generateCreateUserParams(),
+        });
+
+        await handler.mutations.scheduleAppointment({
+          appointmentParams: generateScheduleAppointmentParams({
+            userId,
+            memberId: handler.patientZero.id,
+          }),
+          requestHeaders: generateRequestHeaders(user1.authId),
+        });
+
+        await delay(2000); // wait for event to finish
+
+        // we expect a newly created communication between the new user and the member to get created
+        const { id } = await handler.communicationModel.findOne({
+          memberId: new Types.ObjectId(handler.patientZero.id),
+          userId: new Types.ObjectId(userId.toString()),
+        });
+
+        expect(
+          await checkAuditValues<CommunicationDocument>(
+            id,
+            handler.communicationModel,
+            user1.id,
+            user1.id,
+          ),
+        ).toBeTruthy();
+      },
+    );
   });
 
   describe(Appointment.name, () => {
