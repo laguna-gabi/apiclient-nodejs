@@ -589,12 +589,12 @@ export class Mutations {
 
   deleteAvailability = async ({
     id,
-    invalidFieldsErrors,
+    invalidFieldsError,
   }: {
     id: string;
-    invalidFieldsErrors?: string[];
+    invalidFieldsError?: string;
   }): Promise<Identifiers> => {
-    const { deleteAvailability } = await this.client
+    const result = await this.client
       .request(
         gql`
           mutation deleteAvailability($id: String!) {
@@ -605,13 +605,15 @@ export class Mutations {
         this.defaultUserRequestHeaders,
       )
       .catch((ex) => {
-        return isResultValid({
-          errors: ex.response.errors,
-          invalidFieldsErrors,
-        });
+        if (invalidFieldsError) {
+          expect(ex.response.errors[0]?.message || ex.response.errors[0][0]?.message).toContain(
+            invalidFieldsError,
+          );
+          return;
+        }
       });
 
-    return deleteAvailability;
+    return result?.deleteAvailability;
   };
 
   setGeneralNotes = async ({

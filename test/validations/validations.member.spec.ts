@@ -254,6 +254,39 @@ describe('Validations - member', () => {
       });
       await request(server).post(urls.members).send(newMemberParams).expect(400);
     });
+
+    test.each`
+      field    | error
+      ${'123'} | ${Errors.get(ErrorType.memberIdInvalid)}
+      ${123}   | ${stringError}
+    `(`should fail to get member by id - value $field is invalid`, async (params) => {
+      await handler.queries.getMember({
+        id: params.field,
+        invalidFieldsError: params.error,
+      });
+    });
+
+    test.each`
+      field    | error
+      ${'123'} | ${Errors.get(ErrorType.memberOrgIdInvalid)}
+      ${123}   | ${stringError}
+    `(`should fail to get member by id - value $field is invalid`, async (params) => {
+      const { errors } = await handler.queries.getMembers({
+        orgId: params.field,
+      });
+
+      expect(errors[0].message).toContain(params.error);
+    });
+  });
+
+  describe('getMembersAppointments', () => {
+    test.each`
+      field    | error
+      ${'123'} | ${Errors.get(ErrorType.memberOrgIdInvalid)}
+      ${123}   | ${stringError}
+    `(`should fail to get member appointments by id - value $field is invalid`, async (params) => {
+      await handler.queries.getMembersAppointments(params.field, params.error);
+    });
   });
 
   describe('getMemberUploadDischargeDocumentsLinks', () => {
@@ -267,6 +300,33 @@ describe('Validations - member', () => {
       await handler.queries.getMemberUploadDischargeDocumentsLinks({
         id: generateId(),
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+      });
+    });
+
+    test.each`
+      field    | error
+      ${'123'} | ${Errors.get(ErrorType.memberIdInvalid)}
+      ${123}   | ${stringError}
+    `(
+      `should fail to get member upload discharge doc by id - value $field is invalid`,
+      async (params) => {
+        await handler.queries.getMemberUploadDischargeDocumentsLinks({
+          id: params.field,
+          invalidFieldsError: params.error,
+        });
+      },
+    );
+  });
+
+  describe('getRecordings', () => {
+    test.each`
+      field    | error
+      ${'123'} | ${Errors.get(ErrorType.memberIdInvalid)}
+      ${123}   | ${stringError}
+    `(`should fail to get recordings by member id - value $field is invalid`, async (params) => {
+      await handler.queries.getRecordings({
+        memberId: params.field,
+        invalidFieldsError: params.error,
       });
     });
   });
@@ -818,6 +878,17 @@ describe('Validations - member', () => {
         missingFieldError: stringError,
       });
     });
+
+    test.each`
+      field    | error
+      ${'123'} | ${Errors.get(ErrorType.memberJournalIdInvalid)}
+    `(`should fail to get recordings by member id - value $field is invalid`, async (params) => {
+      await handler.mutations.deleteJournal({
+        id: params.field,
+        invalidFieldsErrors: [params.error],
+        requestHeaders: generateRequestHeaders(handler.patientZero.authId),
+      });
+    });
   });
 
   describe('getMemberUploadJournalImageLinks', () => {
@@ -1055,6 +1126,33 @@ describe('Validations - member', () => {
           });
         },
       );
+    });
+
+    describe('deleteCaregiver', () => {
+      test.each`
+        input    | error
+        ${'123'} | ${[Errors.get(ErrorType.caregiverIdInvalid)]}
+      `(`should fail to delete caregiver by id $input is not a valid type`, async (params) => {
+        await handler.mutations.deleteCaregiver({
+          id: params.input,
+          invalidFieldsErrors: [params.error],
+          requestHeaders: generateRequestHeaders(handler.patientZero.authId),
+        });
+      });
+    });
+
+    describe('getCaregivers', () => {
+      test.each`
+        input    | error
+        ${'123'} | ${[Errors.get(ErrorType.memberIdInvalid)]}
+        ${123}   | ${stringError}
+      `(`should fail to get caregivers by member id $input is not a valid type`, async (params) => {
+        await handler.queries.getCaregivers({
+          memberId: params.input,
+          invalidFieldsError: params.error,
+          requestHeaders: generateRequestHeaders(handler.patientZero.authId),
+        });
+      });
     });
   });
 

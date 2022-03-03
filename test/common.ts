@@ -276,7 +276,7 @@ export const isResultValid = ({
 }): boolean => {
   if (invalidFieldsErrors) {
     for (let i = 0; i < invalidFieldsErrors.length; i++) {
-      expect(invalidFieldsErrors[i]).toEqual(errors[0][i]?.message || errors[0]?.message);
+      expect(errors[0][i]?.message || errors[0]?.message).toContain(invalidFieldsErrors[i]);
       expect(errors[0][i]?.code || errors[0]?.code).not.toEqual(-1);
     }
   } else if (missingFieldError) {

@@ -23,6 +23,8 @@ import {
 } from '.';
 import {
   Client,
+  ErrorType,
+  Errors,
   EventType,
   IEventDeleteMember,
   IEventOnNewMember,
@@ -30,6 +32,7 @@ import {
   IEventOnUpdatedUserAppointments,
   IEventOnUpdatedUserCommunication,
   IInternalDispatch,
+  IsValidObjectId,
   LoggerService,
   LoggingInterceptor,
   Roles,
@@ -70,7 +73,14 @@ export class AppointmentResolver extends AppointmentBase {
 
   @Query(() => Appointment, { nullable: true })
   @Roles(UserRole.coach, UserRole.nurse)
-  async getAppointment(@Args('id', { type: () => String }) id: string) {
+  async getAppointment(
+    @Args(
+      'id',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.appointmentIdInvalid)),
+    )
+    id: string,
+  ) {
     return this.appointmentService.get(id);
   }
 
@@ -85,7 +95,15 @@ export class AppointmentResolver extends AppointmentBase {
 
   @Mutation(() => Boolean)
   @Roles(UserRole.coach, UserRole.nurse)
-  async deleteAppointment(@Client('_id') userId, @Args('id', { type: () => String }) id: string) {
+  async deleteAppointment(
+    @Client('_id') userId,
+    @Args(
+      'id',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.appointmentIdInvalid)),
+    )
+    id: string,
+  ) {
     await this.appointmentService.validateUpdateAppointment(id);
 
     const appointment = await this.appointmentService.get(id);

@@ -11,6 +11,7 @@ import {
   IEventNotifyQueue,
   IEventOnNewUser,
   Identifier,
+  IsValidObjectId,
   LoggingInterceptor,
   Roles,
   UserRole,
@@ -75,7 +76,10 @@ export class UserResolver {
 
   @Query(() => UserConfig)
   @Roles(UserRole.coach, UserRole.nurse)
-  async getUserConfig(@Args('id', { type: () => String }) id: string): Promise<UserConfig> {
+  async getUserConfig(
+    @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.userIdInvalid)))
+    id: string,
+  ): Promise<UserConfig> {
     return this.userService.getUserConfig(id);
   }
 

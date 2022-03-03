@@ -23,6 +23,7 @@ import {
   EventType,
   IInternalDispatch,
   Identifier,
+  IsValidObjectId,
   LoggerService,
   LoggingInterceptor,
   MemberIdParam,
@@ -66,7 +67,14 @@ export class TodoResolver {
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(UserRole.coach, UserRole.nurse, MemberRole.member)
-  async getTodos(@Args('memberId', { type: () => String, nullable: true }) memberId?: string) {
+  async getTodos(
+    @Args(
+      'memberId',
+      { type: () => String, nullable: true },
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+    )
+    memberId?: string,
+  ) {
     return this.todoService.getTodos(memberId);
   }
 
@@ -93,7 +101,8 @@ export class TodoResolver {
   async endTodo(
     @Client('_id') clientId,
     @Client('roles') roles,
-    @Args('id', { type: () => String }) id: string,
+    @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.todoIdInvalid)))
+    id: string,
   ) {
     if (roles.includes(MemberRole.member)) {
       await this.todoService.getTodo(id, clientId);
@@ -108,7 +117,8 @@ export class TodoResolver {
   async approveTodo(
     @Client('roles') roles,
     @Client('_id') memberId,
-    @Args('id', { type: () => String }) id: string,
+    @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.todoIdInvalid)))
+    id: string,
   ) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
@@ -145,7 +155,12 @@ export class TodoResolver {
   async deleteTodoDone(
     @Client('roles') roles,
     @Client('_id') memberId,
-    @Args('id', { type: () => String }) id: string,
+    @Args(
+      'id',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.todoDoneIdInvalid)),
+    )
+    id: string,
   ) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));

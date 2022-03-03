@@ -296,4 +296,21 @@ describe('Validations - appointment', () => {
       },
     );
   });
+
+  describe('get', () => {
+    test.each`
+      field        | error
+      ${'123'}     | ${Errors.get(ErrorType.appointmentIdInvalid)}
+      ${123}       | ${stringError}
+      ${undefined} | ${`Variable \"$id\" of required type \"String!\" was not provided.`}
+    `(
+      `should fail to create an appointment since id filed with value $field is invalid`,
+      async (params) => {
+        await handler.queries.getAppointment({
+          id: params.field,
+          invalidFieldsError: params.error,
+        });
+      },
+    );
+  });
 });

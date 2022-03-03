@@ -9,7 +9,15 @@ import {
   QuestionnaireService,
   SubmitQuestionnaireResponseParams,
 } from '.';
-import { Client, LoggingInterceptor, Roles, UserRole } from '../common';
+import {
+  Client,
+  ErrorType,
+  Errors,
+  IsValidObjectId,
+  LoggingInterceptor,
+  Roles,
+  UserRole,
+} from '../common';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()
@@ -37,14 +45,26 @@ export class QuestionnaireResolver {
 
   @Query(() => Questionnaire, { nullable: true })
   @Roles(UserRole.coach, UserRole.nurse)
-  async getQuestionnaire(@Args('id', { type: () => String }) id: string): Promise<Questionnaire> {
+  async getQuestionnaire(
+    @Args(
+      'id',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.questionnaireInvalidIdCode)),
+    )
+    id: string,
+  ): Promise<Questionnaire> {
     return this.questionnaireService.getQuestionnaireById(id);
   }
 
   @Query(() => [QuestionnaireResponse])
   @Roles(UserRole.coach, UserRole.nurse)
   async getMemberQuestionnaireResponses(
-    @Args('memberId', { type: () => String }) memberId: string,
+    @Args(
+      'memberId',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+    )
+    memberId: string,
   ): Promise<QuestionnaireResponse[]> {
     return this.questionnaireService.getQuestionnaireResponseByMemberId(memberId);
   }
@@ -52,7 +72,12 @@ export class QuestionnaireResolver {
   @Query(() => QuestionnaireResponse, { nullable: true })
   @Roles(UserRole.coach, UserRole.nurse)
   async getQuestionnaireResponse(
-    @Args('id', { type: () => String }) id: string,
+    @Args(
+      'id',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.questionnaireResponseInvalidIdCode)),
+    )
+    id: string,
   ): Promise<QuestionnaireResponse> {
     return this.questionnaireService.getQuestionnaireResponseById(id);
   }
@@ -75,7 +100,12 @@ export class QuestionnaireResolver {
   @Query(() => String, { nullable: true })
   @Roles(UserRole.coach, UserRole.nurse)
   async getHealthPersona(
-    @Args('memberId', { type: () => String }) memberId: string,
+    @Args(
+      'memberId',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+    )
+    memberId: string,
   ): Promise<HealthPersona | undefined> {
     return this.questionnaireService.getHealthPersona({ memberId });
   }

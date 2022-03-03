@@ -1,7 +1,6 @@
 import * as config from 'config';
 import { lorem } from 'faker';
 import * as request from 'supertest';
-import { v4 } from 'uuid';
 import { ErrorType, Errors } from '../../src/common';
 import { CreateUserParams, GetSlotsParams, defaultUserParams } from '../../src/user';
 import { Handler } from '../aux';
@@ -138,7 +137,7 @@ describe('Validations - user', () => {
 
   it('should throw error on non existing userConfig', async () => {
     await handler.queries.getUserConfig({
-      id: v4(),
+      id: generateId(),
       invalidFieldsError: Errors.get(ErrorType.userNotFound),
     });
   });

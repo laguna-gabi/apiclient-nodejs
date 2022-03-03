@@ -2,7 +2,15 @@ import { UseInterceptors } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
 import { CreateOrgParams, Org, OrgService } from '.';
-import { Identifier, LoggingInterceptor, Roles, UserRole } from '../common';
+import {
+  ErrorType,
+  Errors,
+  Identifier,
+  IsValidObjectId,
+  LoggingInterceptor,
+  Roles,
+  UserRole,
+} from '../common';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Org)
@@ -20,7 +28,14 @@ export class OrgResolver {
 
   @Query(() => Org, { nullable: true })
   @Roles(UserRole.coach, UserRole.nurse)
-  async getOrg(@Args('id', { type: () => String }) id: string): Promise<Org | null> {
+  async getOrg(
+    @Args(
+      'id',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.memberOrgIdInvalid)),
+    )
+    id: string,
+  ): Promise<Org | null> {
     return this.orgService.get(id);
   }
 }

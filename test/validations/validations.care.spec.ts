@@ -65,12 +65,13 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
 
   describe('getMemberRedFlags', () => {
     test.each`
-      input                | error
-      ${{ memberId: 123 }} | ${{ invalidFieldsError: stringError }}
-    `(`should fail to getMemberRedFlags since $input is not valid,`, async (params) => {
+      field    | error
+      ${'123'} | ${Errors.get(ErrorType.memberIdInvalid)}
+      ${123}   | ${stringError}
+    `(`should fail to get member red flags by id - value $field is invalid`, async (params) => {
       await handler.queries.getMemberRedFlags({
-        ...params.input,
-        ...params.error,
+        memberId: params.field,
+        invalidFieldsError: params.error,
       });
     });
   });
@@ -107,8 +108,10 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
 
   describe('getMemberBarriers', () => {
     test.each`
-      input                | error
-      ${{ memberId: 123 }} | ${{ invalidFieldsError: stringError }}
+      input                      | error
+      ${{ memberId: 123 }}       | ${{ invalidFieldsError: stringError }}
+      ${{ memberId: '123' }}     | ${{ invalidFieldsError: Errors.get(ErrorType.memberIdInvalid) }}
+      ${{ memberId: undefined }} | ${{ invalidFieldsError: `Variable \"$memberId\" of required type \"String!\" was not provided.` }}
     `(`should fail to getMemberBarriers since $field is not valid,`, async (params) => {
       await handler.queries.getMemberBarriers({
         ...params.input,

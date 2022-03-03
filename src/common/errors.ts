@@ -80,6 +80,7 @@ export enum ErrorType {
 
   // Module availability errors
   availabilityNotFound = 9501,
+  availabilityIdInvalid = 9502,
 
   // Module communication errors
   communicationMemberUserNotFound = 9601,
@@ -112,6 +113,7 @@ export enum ErrorType {
   todoUnscheduledEndAndCreate = 10011,
   todoStartDateInThePast = 10012,
   todoEndDateInThePast = 10013,
+  todoDoneIdInvalid = 10014,
 
   // Module Care
   redFlagIdInvalid = 10101,
@@ -135,6 +137,14 @@ export enum ErrorType {
   questionnaireResponseInvalidQuestionnaireIdNotFound = 10206,
   questionnaireResponseInvalidQuestionnaireId = 10207,
   questionnaireResponseInvalidResponseEmptyAnswerList = 10208,
+  questionnaireInvalidIdCode = 10209,
+  questionnaireResponseInvalidIdCode = 10210,
+
+  // Module Alert
+  alertIdInvalid = 10301,
+
+  // Module Org
+  orgIdInvalid = 10401,
 }
 
 const nameFormat = `name must be between ${graphqlConfig.get('minLength')} and ${graphqlConfig.get(
@@ -251,6 +261,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.orgAlreadyExists.valueOf(), 'organization already exists'],
   [ErrorType.orgTrialDurationOutOfRange.valueOf(), 'trialDuration must not be less than 1'],
   [ErrorType.availabilityNotFound.valueOf(), 'availability id was not found'],
+  [ErrorType.availabilityIdInvalid.valueOf(), `availability id ${objectIdFormat}`],
   [ErrorType.communicationMemberUserNotFound.valueOf(), 'member-user communication was not found'],
   [ErrorType.dailyReportQueryDateInvalid.valueOf(), 'daily report query - invalid date format'],
   [ErrorType.dailyReportMutationDateInvalid.valueOf(), 'daily report query - invalid date format'],
@@ -271,6 +282,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [ErrorType.todoNotFound.valueOf(), 'todo id was not found'],
   [ErrorType.todoIdInvalid.valueOf(), `todo id ${objectIdFormat}`],
+  [ErrorType.todoDoneIdInvalid.valueOf(), `todoDone id ${objectIdFormat}`],
   [ErrorType.todoInvalidCronExpression.valueOf(), 'invalid cron expression'],
   [ErrorType.todoEndAfterStart.valueOf(), 'end date must be after start date'],
   [ErrorType.todoDoneNotFound.valueOf(), 'todoDone id was not found'],
@@ -335,11 +347,18 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.questionnaireResponseInvalidResponseEmptyAnswerList.valueOf(),
     'invalid questionnaire response - empty answer list',
   ],
+  [ErrorType.questionnaireInvalidIdCode.valueOf(), `questionnaire id ${objectIdFormat}`],
+  [
+    ErrorType.questionnaireResponseInvalidIdCode.valueOf(),
+    `questionnaire response id ${objectIdFormat}`,
+  ],
   [ErrorType.redFlagNotFound.valueOf(), 'red flag id was not found'],
   [ErrorType.carePlanTypeInvalid.valueOf(), 'invalid care plan type'],
   [ErrorType.carePlanTypeNotFound.valueOf(), 'care plan type was not found'],
   [ErrorType.barrierTypeInvalid.valueOf(), 'invalid barrier type'],
   [ErrorType.barrierTypeNotFound.valueOf(), 'barrier type was not found'],
+  [ErrorType.alertIdInvalid.valueOf(), `alertId ${objectIdFormat}`],
+  [ErrorType.orgIdInvalid.valueOf(), `alertId ${objectIdFormat}`],
 ]);
 
 export const DbErrors = {

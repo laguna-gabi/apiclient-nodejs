@@ -12,7 +12,15 @@ import {
   UpdateCarePlanParams,
   UpdateRedFlagParams,
 } from '.';
-import { Identifiers, LoggingInterceptor, Roles, UserRole } from '../common';
+import {
+  ErrorType,
+  Errors,
+  Identifiers,
+  IsValidObjectId,
+  LoggingInterceptor,
+  Roles,
+  UserRole,
+} from '../common';
 import { camelCase } from 'lodash';
 import { redFlags } from './redFlags.json';
 import { GraphQLJSONObject } from 'graphql-type-json';
@@ -30,7 +38,12 @@ export class CareResolver {
   @Query(() => [RedFlag])
   @Roles(UserRole.coach, UserRole.nurse)
   async getMemberRedFlags(
-    @Args('memberId', { type: () => String }) memberId: string,
+    @Args(
+      'memberId',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+    )
+    memberId: string,
   ): Promise<RedFlag[]> {
     return this.careService.getMemberRedFlags(memberId);
   }
@@ -70,7 +83,12 @@ export class CareResolver {
   @Query(() => [Barrier])
   @Roles(UserRole.coach, UserRole.nurse)
   async getMemberBarriers(
-    @Args('memberId', { type: () => String }) memberId: string,
+    @Args(
+      'memberId',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+    )
+    memberId: string,
   ): Promise<Barrier[]> {
     return this.careService.getMemberBarriers(memberId);
   }
@@ -106,7 +124,12 @@ export class CareResolver {
   @Query(() => [CarePlan])
   @Roles(UserRole.coach, UserRole.nurse)
   async getMemberCarePlans(
-    @Args('memberId', { type: () => String }) memberId: string,
+    @Args(
+      'memberId',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+    )
+    memberId: string,
   ): Promise<CarePlan[]> {
     return this.careService.getMemberCarePlans(memberId);
   }

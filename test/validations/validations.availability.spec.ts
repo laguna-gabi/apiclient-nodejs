@@ -1,6 +1,9 @@
+import { ErrorType, Errors } from '../../src/common';
 import { AvailabilityInput } from '../../src/availability';
 import { Handler } from '../aux';
 import { generateAvailabilityInput } from '../generators';
+
+const stringError = `String cannot represent a non string value`;
 
 describe('Validations - availability', () => {
   const handler: Handler = new Handler();
@@ -42,6 +45,21 @@ describe('Validations - availability', () => {
       await handler.mutations.createAvailabilities({
         availabilities: [availability],
         missingFieldError: params.errors,
+      });
+    },
+  );
+
+  test.each`
+    field        | error
+    ${'123'}     | ${Errors.get(ErrorType.availabilityIdInvalid)}
+    ${123}       | ${stringError}
+    ${undefined} | ${`Variable \"$id\" of required type \"String!\" was not provided.`}
+  `(
+    `should fail to create an appointment since id filed with value $field is invalid`,
+    async (params) => {
+      await handler.mutations.deleteAvailability({
+        id: params.field,
+        invalidFieldsError: params.error,
       });
     },
   );

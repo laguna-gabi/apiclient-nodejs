@@ -243,7 +243,7 @@ export class Queries {
         requestHeaders,
       )
       .catch((ex) => {
-        expect(invalidFieldsError).toEqual(ex.response.errors[0].message);
+        expect(ex.response.errors[0].message).toContain(invalidFieldsError);
         return;
       });
 
@@ -274,7 +274,7 @@ export class Queries {
       )
       .catch((ex) => {
         if (invalidFieldsError) {
-          expect(invalidFieldsError).toEqual(ex.response.errors[0].message);
+          expect(ex.response.errors[0].message).toContain(invalidFieldsError);
         } else if (missingFieldError) {
           expect(ex.response.errors[0].message).toMatch(missingFieldError);
         }
@@ -458,69 +458,80 @@ export class Queries {
     return { ...resultObject, ...errorsObject };
   };
 
-  getMembersAppointments = async (orgId?: string) => {
-    const { getMembersAppointments } = await this.client.request(
-      gql`
-        query getMembersAppointments($orgId: String) {
-          getMembersAppointments(orgId: $orgId) {
-            memberId
-            memberName
-            userId
-            userName
-            start
-            end
+  getMembersAppointments = async (orgId?: string, invalidFieldsError?: string) => {
+    const result = await this.client
+      .request(
+        gql`
+          query getMembersAppointments($orgId: String) {
+            getMembersAppointments(orgId: $orgId) {
+              memberId
+              memberName
+              userId
+              userName
+              start
+              end
+            }
           }
-        }
-      `,
-      { orgId },
-      this.defaultUserRequestHeaders,
-    );
-
-    return getMembersAppointments;
+        `,
+        { orgId },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toContain(invalidFieldsError);
+        return;
+      });
+    return result?.getMembersAppointments;
   };
 
   getAppointment = async ({
     id,
+    invalidFieldsError,
     requestHeaders = this.defaultUserRequestHeaders,
   }: {
     id: string;
+    invalidFieldsError?: string;
     requestHeaders?;
   }) => {
-    const { getAppointment } = await this.client.request(
-      gql`
-        query getAppointment($id: String!) {
-          getAppointment(id: $id) {
-            id
-            memberId
-            userId
-            notBefore
-            method
-            status
-            start
-            end
-            link
-            updatedAt
-            noShow
-            noShowReason
-            notes {
-              recap
-              strengths
-              userActionItem
-              memberActionItem
-              scores {
-                adherence
-                adherenceText
-                wellbeing
-                wellbeingText
+    const result = await this.client
+      .request(
+        gql`
+          query getAppointment($id: String!) {
+            getAppointment(id: $id) {
+              id
+              memberId
+              userId
+              notBefore
+              method
+              status
+              start
+              end
+              link
+              updatedAt
+              noShow
+              noShowReason
+              notes {
+                recap
+                strengths
+                userActionItem
+                memberActionItem
+                scores {
+                  adherence
+                  adherenceText
+                  wellbeing
+                  wellbeingText
+                }
               }
             }
           }
-        }
-      `,
-      { id },
-      requestHeaders,
-    );
-    return getAppointment;
+        `,
+        { id },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toContain(invalidFieldsError);
+        return;
+      });
+    return result?.getAppointment;
   };
 
   getAvailabilities = async ({ requestHeaders }: { requestHeaders }) => {
@@ -668,26 +679,37 @@ export class Queries {
     return getOrg;
   };
 
-  getRecordings = async ({ memberId }: { memberId: string }) => {
-    const { getRecordings } = await this.client.request(
-      gql`
-        query getRecordings($memberId: String!) {
-          getRecordings(memberId: $memberId) {
-            id
-            userId
-            start
-            end
-            answered
-            phone
-            deletedMedia
+  getRecordings = async ({
+    memberId,
+    invalidFieldsError,
+  }: {
+    memberId: string;
+    invalidFieldsError?: string;
+  }) => {
+    const result = await this.client
+      .request(
+        gql`
+          query getRecordings($memberId: String!) {
+            getRecordings(memberId: $memberId) {
+              id
+              userId
+              start
+              end
+              answered
+              phone
+              deletedMedia
+            }
           }
-        }
-      `,
-      { memberId },
-      this.defaultUserRequestHeaders,
-    );
+        `,
+        { memberId },
+        this.defaultUserRequestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        return;
+      });
 
-    return getRecordings;
+    return result?.getRecordings;
   };
 
   getJournal = async ({
@@ -875,7 +897,7 @@ export class Queries {
         requestHeaders,
       )
       .catch((ex) => {
-        expect(ex.response.errors[0][0].message).toMatch(invalidFieldsError);
+        expect(ex.response.errors[0].message).toContain(invalidFieldsError);
         return;
       });
 
@@ -1276,7 +1298,7 @@ export class Queries {
         requestHeaders,
       )
       .catch((ex) => {
-        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        expect(ex.response.errors[0].message).toContain(invalidFieldsError);
         return;
       });
 

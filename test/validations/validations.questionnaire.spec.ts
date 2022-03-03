@@ -31,21 +31,36 @@ describe('Validations - questionnaire', () => {
     });
   });
 
-  describe('getMemberQuestionnaireResponses', () => {
-    it('should fail to get questionnaire response for member - invalid member id', async () => {
-      await handler.queries.getMemberQuestionnaireResponses({
-        memberId: 123,
-        invalidFieldsError: stringError,
-      });
+  test.each`
+    value    | error
+    ${'123'} | ${Errors.get(ErrorType.questionnaireInvalidIdCode)}
+    ${123}   | ${stringError}
+  `(`should fail to getQuestionnaire - invalid id $value`, async (params) => {
+    await handler.queries.getQuestionnaire({
+      id: params.value,
+      invalidFieldsError: params.error,
     });
   });
 
-  describe('getQuestionnaireResponse', () => {
-    it('should fail to get questionnaire response - invalid id', async () => {
-      await handler.queries.getQuestionnaireResponse({
-        id: 123,
-        invalidFieldsError: stringError,
-      });
+  test.each`
+    value    | error
+    ${'123'} | ${Errors.get(ErrorType.memberIdInvalid)}
+    ${123}   | ${stringError}
+  `(`should fail to getQuestionnaire - invalid id $value`, async (params) => {
+    await handler.queries.getMemberQuestionnaireResponses({
+      memberId: params.value,
+      invalidFieldsError: params.error,
+    });
+  });
+
+  test.each`
+    value    | error
+    ${'123'} | ${Errors.get(ErrorType.questionnaireResponseInvalidIdCode)}
+    ${123}   | ${stringError}
+  `(`should fail to getQuestionnaireResponse - invalid id $value`, async (params) => {
+    await handler.queries.getQuestionnaireResponse({
+      id: params.value,
+      invalidFieldsError: params.error,
     });
   });
 
@@ -226,10 +241,15 @@ describe('Validations - questionnaire', () => {
   });
 
   describe('getHealthPersona', () => {
-    it('should fail to get health persona since mandatory memberId is missing', async () => {
+    test.each`
+      value        | error
+      ${'123'}     | ${Errors.get(ErrorType.memberIdInvalid)}
+      ${123}       | ${stringError}
+      ${undefined} | ${`Variable \"$memberId\" of required type \"String!\" was not provided.`}
+    `(`should fail to getHealthPersona - invalid id $value`, async (params) => {
       await handler.queries.getHealthPersona({
-        memberId: undefined,
-        invalidFieldsError: `Variable \"$memberId\" of required type \"String!\" was not provided.`,
+        memberId: params.value,
+        invalidFieldsError: params.error,
       });
     });
   });

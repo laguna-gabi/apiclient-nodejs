@@ -86,6 +86,7 @@ import {
   IEventOnUpdatedMemberPlatform,
   IInternalDispatch,
   Identifier,
+  IsValidObjectId,
   LoggerService,
   LoggingInterceptor,
   MemberIdParam,
@@ -144,7 +145,12 @@ export class MemberResolver extends MemberBase {
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
   async getMember(
-    @Args('id', { type: () => String, nullable: true }) id?: string,
+    @Args(
+      'id',
+      { type: () => String, nullable: true },
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+    )
+    id?: string,
   ): Promise<Member> {
     const member = await this.memberService.get(id);
     member.zipCode = member.zipCode || member.org.zipCode;
@@ -169,7 +175,12 @@ export class MemberResolver extends MemberBase {
   @Query(() => [MemberSummary])
   @Roles(UserRole.coach, UserRole.nurse)
   async getMembers(
-    @Args('orgId', { type: () => String, nullable: true }) orgId?: string,
+    @Args(
+      'orgId',
+      { type: () => String, nullable: true },
+      new IsValidObjectId(Errors.get(ErrorType.memberOrgIdInvalid)),
+    )
+    orgId?: string,
   ): Promise<MemberSummary[]> {
     return this.memberService.getByOrg(orgId);
   }
@@ -177,7 +188,12 @@ export class MemberResolver extends MemberBase {
   @Query(() => [AppointmentCompose])
   @Roles(UserRole.coach, UserRole.nurse)
   async getMembersAppointments(
-    @Args('orgId', { type: () => String, nullable: true }) orgId?: string,
+    @Args(
+      'orgId',
+      { type: () => String, nullable: true },
+      new IsValidObjectId(Errors.get(ErrorType.memberOrgIdInvalid)),
+    )
+    orgId?: string,
   ): Promise<AppointmentCompose[]> {
     return this.memberService.getMembersAppointments(orgId);
   }
@@ -256,7 +272,10 @@ export class MemberResolver extends MemberBase {
   @MemberIdParam(MemberIdParamType.id)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
-  async getMemberUploadDischargeDocumentsLinks(@Args('id', { type: () => String }) id?: string) {
+  async getMemberUploadDischargeDocumentsLinks(
+    @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)))
+    id?: string,
+  ) {
     const member = await this.memberService.get(id);
 
     const { firstName, lastName } = member;
@@ -283,7 +302,12 @@ export class MemberResolver extends MemberBase {
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
   async getMemberDownloadDischargeDocumentsLinks(
-    @Args('id', { type: () => String, nullable: true }) id?: string,
+    @Args(
+      'id',
+      { type: () => String, nullable: true },
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+    )
+    id?: string,
   ) {
     const member = await this.memberService.get(id);
     const { firstName, lastName } = member;
@@ -386,7 +410,14 @@ export class MemberResolver extends MemberBase {
 
   @Query(() => [RecordingOutput])
   @Roles(UserRole.coach, UserRole.nurse)
-  async getRecordings(@Args('memberId', { type: () => String }) memberId: string) {
+  async getRecordings(
+    @Args(
+      'memberId',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+    )
+    memberId: string,
+  ) {
     return this.memberService.getRecordings(memberId);
   }
 
@@ -494,7 +525,12 @@ export class MemberResolver extends MemberBase {
   async deleteJournal(
     @Client('roles') roles,
     @Client('_id') memberId,
-    @Args('id', { type: () => String }) id: string,
+    @Args(
+      'id',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.memberJournalIdInvalid)),
+    )
+    id: string,
   ) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
@@ -559,7 +595,12 @@ export class MemberResolver extends MemberBase {
   async deleteJournalImage(
     @Client('roles') roles,
     @Client('_id') memberId,
-    @Args('id', { type: () => String }) id: string,
+    @Args(
+      'id',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.memberJournalIdInvalid)),
+    )
+    id: string,
   ) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
@@ -579,7 +620,12 @@ export class MemberResolver extends MemberBase {
   async deleteJournalAudio(
     @Client('roles') roles,
     @Client('_id') memberId,
-    @Args('id', { type: () => String }) id: string,
+    @Args(
+      'id',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.memberJournalIdInvalid)),
+    )
+    id: string,
   ) {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
@@ -701,7 +747,12 @@ export class MemberResolver extends MemberBase {
   @Mutation(() => Boolean)
   @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
   async deleteCaregiver(
-    @Args('id', { type: () => String }) id: string,
+    @Args(
+      'id',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.caregiverIdInvalid)),
+    )
+    id: string,
     @Client('_id') deletedBy: string,
   ): Promise<boolean | never> {
     const caregiver = await this.memberService.getCaregiver(id);
@@ -729,7 +780,12 @@ export class MemberResolver extends MemberBase {
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
   async getCaregivers(
-    @Args('memberId', { type: () => String, nullable: true }) memberId?: string,
+    @Args(
+      'memberId',
+      { type: () => String, nullable: true },
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+    )
+    memberId?: string,
   ): Promise<Caregiver[]> {
     return this.memberService.getCaregiversByMemberId(memberId);
   }
@@ -741,7 +797,12 @@ export class MemberResolver extends MemberBase {
   @Roles(UserRole.coach, UserRole.nurse)
   async dismissAlert(
     @Client('_id') userId: string,
-    @Args('alertId', { type: () => String }) alertId: string,
+    @Args(
+      'alertId',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.alertIdInvalid)),
+    )
+    alertId: string,
   ): Promise<boolean> {
     await this.memberService.dismissAlert(userId, alertId);
     return true;
@@ -1156,7 +1217,14 @@ export class MemberResolver extends MemberBase {
   @MemberIdParam(MemberIdParamType.id)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
-  async getMemberConfig(@Args('id', { type: () => String, nullable: true }) id?: string) {
+  async getMemberConfig(
+    @Args(
+      'id',
+      { type: () => String, nullable: true },
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+    )
+    id?: string,
+  ) {
     return this.memberService.getMemberConfig(id);
   }
 
