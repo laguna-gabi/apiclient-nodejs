@@ -122,8 +122,6 @@ export class CreateQuestionnaireParams {
 
   @Field(() => Number, { nullable: true })
   notificationScoreThreshold?: number;
-
-  createdBy?: string;
 }
 
 @InputType()
@@ -141,8 +139,6 @@ export class SubmitQuestionnaireResponseParams {
   })
   @Field(() => [Answer])
   answers: Answer[];
-
-  createdBy?: string;
 }
 
 /**************************************************************************************************
@@ -232,7 +228,6 @@ export class Questionnaire extends Identifier {
   @Field(() => Number, { nullable: true })
   notificationScoreThreshold?: number;
 
-  @Prop()
   @Field(() => String, { nullable: true })
   createdBy?: Types.ObjectId;
 }
@@ -267,18 +262,17 @@ export class QuestionnaireResponse extends Identifier {
   @Field(() => [Answer])
   answers: Answer[];
 
-  @Prop()
-  @Field(() => String)
-  createdBy: Types.ObjectId;
-
-  @Field(() => Date)
-  createdAt: Date;
-
   @Field(() => QuestionnaireResponseResult, { nullable: true })
   result?: QuestionnaireResponseResult;
 
   @Field(() => QuestionnaireType)
   type?: QuestionnaireType;
+
+  @Field(() => Date)
+  createdAt: Date;
+
+  @Field(() => String)
+  createdBy: Types.ObjectId;
 }
 
 @InputType('ItemInput')

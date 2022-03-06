@@ -61,9 +61,6 @@ export class QuestionnaireService extends BaseService {
     return this.questionnaire.create({
       ...createQuestionnaireParams,
       active: true,
-      createdBy: createQuestionnaireParams.createdBy
-        ? new Types.ObjectId(createQuestionnaireParams.createdBy)
-        : undefined,
     });
   }
 
@@ -104,7 +101,6 @@ export class QuestionnaireService extends BaseService {
       ...submitQuestionnaireResponseParams,
       questionnaireId: new Types.ObjectId(submitQuestionnaireResponseParams.questionnaireId),
       memberId: new Types.ObjectId(submitQuestionnaireResponseParams.memberId),
-      createdBy: new Types.ObjectId(submitQuestionnaireResponseParams.createdBy),
     });
 
     // 3. upload on-the-fly calculated information

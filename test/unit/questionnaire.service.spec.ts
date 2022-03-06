@@ -188,11 +188,9 @@ describe('QuestionnaireService', () => {
 
   describe('createQuestionnaire', () => {
     it('should create a questionnaire', async () => {
-      const createdBy = generateId();
-
       const params: CreateQuestionnaireParams = generateCreateQuestionnaireParams();
 
-      const { id } = await service.createQuestionnaire({ ...params, createdBy });
+      const { id } = await service.createQuestionnaire({ ...params });
       expect(id).not.toBeUndefined();
 
       const createdQuestionnaire = await questionnaireModel.findById(id).lean();
@@ -202,7 +200,6 @@ describe('QuestionnaireService', () => {
         active: true,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
-        createdBy: new Types.ObjectId(createdBy),
       });
     });
   });
@@ -232,7 +229,6 @@ describe('QuestionnaireService', () => {
         active: true,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
-        createdBy: params.createdBy,
       });
     });
   });
@@ -280,12 +276,10 @@ describe('QuestionnaireService', () => {
         'Nearly Every Day',
       ],
     ])(`%s`, async (_, answers, expectedScore) => {
-      const createdBy = generateId();
       const memberId = generateId();
 
       const { id } = await service.submitQuestionnaireResponse({
         questionnaireId: phq9TypeTemplate.id.toString(),
-        createdBy,
         memberId,
         answers,
       });
@@ -298,7 +292,6 @@ describe('QuestionnaireService', () => {
         deleted: false,
         updatedAt: expect.any(Date),
         createdAt: expect.any(Date),
-        createdBy: new Types.ObjectId(createdBy),
         memberId: new Types.ObjectId(memberId),
         answers,
       });
@@ -313,13 +306,11 @@ describe('QuestionnaireService', () => {
     });
 
     it('should fail to submit a questionnaire response - invalid questionnaire id', async () => {
-      const createdBy = generateId();
       const memberId = generateId();
 
       await expect(
         service.submitQuestionnaireResponse({
           questionnaireId: generateId(),
-          createdBy,
           memberId,
           answers: [
             { code: 'q1', value: '2' },
@@ -333,13 +324,11 @@ describe('QuestionnaireService', () => {
     });
 
     it('should fail to submit a questionnaire response - invalid response', async () => {
-      const createdBy = generateId();
       const memberId = generateId();
 
       await expect(
         service.submitQuestionnaireResponse({
           questionnaireId: phq9TypeTemplate.id,
-          createdBy,
           memberId,
           answers: [
             { code: 'q1', value: '6' },
@@ -352,12 +341,10 @@ describe('QuestionnaireService', () => {
 
   describe('getQuestionnaireResponseById', () => {
     it('should get questionnaire response by id', async () => {
-      const createdBy = generateId();
       const memberId = generateId();
 
       const { id } = await service.submitQuestionnaireResponse({
         questionnaireId: phq9TypeTemplate.id.toString(),
-        createdBy,
         memberId,
         answers: [
           { code: 'q1', value: '2' },
@@ -375,7 +362,6 @@ describe('QuestionnaireService', () => {
         deleted: false,
         updatedAt: expect.any(Date),
         createdAt: expect.any(Date),
-        createdBy: new Types.ObjectId(createdBy),
         memberId: new Types.ObjectId(memberId),
         answers: [
           { code: 'q1', value: '2' },
@@ -389,12 +375,10 @@ describe('QuestionnaireService', () => {
 
   describe('getQuestionnaireResponseByMemberId', () => {
     it('should get questionnaire responses by member id', async () => {
-      const createdBy = generateId();
       const memberId = generateId();
 
       const { id: id1 } = await service.submitQuestionnaireResponse({
         questionnaireId: phq9TypeTemplate.id.toString(),
-        createdBy,
         memberId,
         answers: [
           { code: 'q1', value: '2' },
@@ -405,7 +389,6 @@ describe('QuestionnaireService', () => {
 
       const { id: id2 } = await service.submitQuestionnaireResponse({
         questionnaireId: who5TypeTemplate.id.toString(),
-        createdBy,
         memberId,
         answers: [
           { code: 'q1', value: '2' },
@@ -415,7 +398,6 @@ describe('QuestionnaireService', () => {
 
       const { id: id3 } = await service.submitQuestionnaireResponse({
         questionnaireId: npsTypeTemplate.id.toString(),
-        createdBy,
         memberId,
         answers: [{ code: 'q1', value: '2' }],
       });
@@ -430,7 +412,6 @@ describe('QuestionnaireService', () => {
           type: QuestionnaireType.phq9,
           updatedAt: expect.any(Date),
           createdAt: expect.any(Date),
-          createdBy: new Types.ObjectId(createdBy),
           memberId: new Types.ObjectId(memberId),
           answers: [
             { code: 'q1', value: '2' },
@@ -446,7 +427,6 @@ describe('QuestionnaireService', () => {
           type: QuestionnaireType.who5,
           updatedAt: expect.any(Date),
           createdAt: expect.any(Date),
-          createdBy: new Types.ObjectId(createdBy),
           memberId: new Types.ObjectId(memberId),
           answers: [
             { code: 'q1', value: '2' },
@@ -461,7 +441,6 @@ describe('QuestionnaireService', () => {
           type: QuestionnaireType.nps,
           updatedAt: expect.any(Date),
           createdAt: expect.any(Date),
-          createdBy: new Types.ObjectId(createdBy),
           memberId: new Types.ObjectId(memberId),
           answers: [{ code: 'q1', value: '2' }],
           result: { alert: false, score: 2, severity: 'Detractor' },
@@ -472,12 +451,10 @@ describe('QuestionnaireService', () => {
 
   describe('deleteMemberQuestionnaireResponses', () => {
     test.each([true, false])('should %p delete member questionnaire responses', async (hard) => {
-      const createdBy = generateId();
       const memberId = generateId();
 
       await service.submitQuestionnaireResponse({
         questionnaireId: phq9TypeTemplate.id.toString(),
-        createdBy,
         memberId,
         answers: [
           { code: 'q1', value: '2' },
@@ -488,7 +465,6 @@ describe('QuestionnaireService', () => {
 
       await service.submitQuestionnaireResponse({
         questionnaireId: who5TypeTemplate.id.toString(),
-        createdBy,
         memberId,
         answers: [
           { code: 'q1', value: '2' },
@@ -704,7 +680,6 @@ describe('QuestionnaireService', () => {
     beforeAll(async () => {
       submitQuestionnaireResponse = {
         questionnaireId: lhpTypeTemplate.id.toString(),
-        createdBy: generateObjectId(),
         memberId: generateObjectId(),
         answers: [
           { code: 'q1', value: '3' },
@@ -724,7 +699,6 @@ describe('QuestionnaireService', () => {
     it(`should return undefined for a non existing ${QuestionnaireType.lhp} questionnaire`, async () => {
       const submitResponse = {
         questionnaireId: npsTypeTemplate.id.toString(),
-        createdBy: generateId(),
         memberId: generateId(),
         answers: [{ code: 'q1', value: '2' }],
       };
@@ -767,7 +741,6 @@ describe('QuestionnaireService', () => {
       async ({ healthPersona, answers }) => {
         const submitResponse = {
           questionnaireId: lhpTypeTemplate.id.toString(),
-          createdBy: generateId(),
           memberId: generateId(),
           answers,
         };

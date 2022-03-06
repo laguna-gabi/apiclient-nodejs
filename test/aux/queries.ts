@@ -1102,6 +1102,7 @@ export class Queries {
                 }
               }
             }
+            createdBy
           }
         }
       `,
@@ -1139,6 +1140,7 @@ export class Queries {
                 min
                 max
               }
+              createdBy
             }
           }
         `,
@@ -1167,11 +1169,17 @@ export class Queries {
             getQuestionnaireResponse(id: $id) {
               id
               type
-              result {
-                severity
-                score
-                alert
+              answers {
+                code
+                value
               }
+              result {
+                alert
+                score
+                severity
+              }
+              createdAt
+              createdBy
             }
           }
         `,
@@ -1204,12 +1212,13 @@ export class Queries {
                 code
                 value
               }
-              createdBy
-              createdAt
               result {
+                alert
                 score
                 severity
               }
+              createdAt
+              createdBy
             }
           }
         `,

@@ -9,15 +9,7 @@ import {
   QuestionnaireService,
   SubmitQuestionnaireResponseParams,
 } from '.';
-import {
-  Client,
-  ErrorType,
-  Errors,
-  IsValidObjectId,
-  LoggingInterceptor,
-  Roles,
-  UserRole,
-} from '../common';
+import { ErrorType, Errors, IsValidObjectId, LoggingInterceptor, Roles, UserRole } from '../common';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()
@@ -27,13 +19,11 @@ export class QuestionnaireResolver {
   @Mutation(() => Questionnaire)
   @Roles(UserRole.admin)
   async createQuestionnaire(
-    @Client('_id') userId: string,
     @Args(camelCase(CreateQuestionnaireParams.name), { type: () => CreateQuestionnaireParams })
     createQuestionnaireParams: CreateQuestionnaireParams,
   ): Promise<Questionnaire> {
     return this.questionnaireService.createQuestionnaire({
       ...createQuestionnaireParams,
-      createdBy: userId,
     });
   }
 
@@ -85,7 +75,6 @@ export class QuestionnaireResolver {
   @Mutation(() => QuestionnaireResponse)
   @Roles(UserRole.coach, UserRole.nurse)
   async submitQuestionnaireResponse(
-    @Client('_id') userId: string,
     @Args(camelCase(SubmitQuestionnaireResponseParams.name), {
       type: () => SubmitQuestionnaireResponseParams,
     })
@@ -93,7 +82,6 @@ export class QuestionnaireResolver {
   ): Promise<QuestionnaireResponse> {
     return this.questionnaireService.submitQuestionnaireResponse({
       ...submitQuestionnaireResponseParams,
-      createdBy: userId,
     });
   }
 

@@ -49,10 +49,9 @@ describe('QuestionnaireResolver', () => {
 
     it('should create a Questionnaire (template)', async () => {
       const params: CreateQuestionnaireParams = generateCreateQuestionnaireParams();
-      const createdBy = generateId();
-      await resolver.createQuestionnaire(createdBy, params);
+      await resolver.createQuestionnaire(params);
 
-      expect(spyOnServiceCreate).toHaveBeenCalledWith({ ...params, createdBy });
+      expect(spyOnServiceCreate).toHaveBeenCalledWith({ ...params });
     });
   });
 
@@ -149,10 +148,9 @@ describe('QuestionnaireResolver', () => {
 
     it('should submit a Questionnaire Response', async () => {
       const qrSubmitParams = generateSubmitQuestionnaireResponseParams();
-      const createdBy = generateId();
-      await resolver.submitQuestionnaireResponse(createdBy, qrSubmitParams);
+      await resolver.submitQuestionnaireResponse(qrSubmitParams);
 
-      expect(spyOnServiceSubmitQR).toHaveBeenCalledWith({ ...qrSubmitParams, createdBy });
+      expect(spyOnServiceSubmitQR).toHaveBeenCalledWith({ ...qrSubmitParams });
     });
   });
 
