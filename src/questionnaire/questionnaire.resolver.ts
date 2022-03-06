@@ -1,20 +1,33 @@
 import { UseInterceptors } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
 import {
   CreateQuestionnaireParams,
-  HealthPersona,
   Questionnaire,
   QuestionnaireResponse,
   QuestionnaireService,
+  QuestionnaireType,
   SubmitQuestionnaireResponseParams,
 } from '.';
-import { ErrorType, Errors, IsValidObjectId, LoggingInterceptor, Roles, UserRole } from '../common';
+import {
+  ErrorType,
+  Errors,
+  EventType,
+  IEventUpdateHealthPersona,
+  IsValidObjectId,
+  LoggingInterceptor,
+  Roles,
+  UserRole,
+} from '../common';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver()
 export class QuestionnaireResolver {
-  constructor(private readonly questionnaireService: QuestionnaireService) {}
+  constructor(
+    private readonly questionnaireService: QuestionnaireService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   @Mutation(() => Questionnaire)
   @Roles(UserRole.admin)
@@ -22,9 +35,7 @@ export class QuestionnaireResolver {
     @Args(camelCase(CreateQuestionnaireParams.name), { type: () => CreateQuestionnaireParams })
     createQuestionnaireParams: CreateQuestionnaireParams,
   ): Promise<Questionnaire> {
-    return this.questionnaireService.createQuestionnaire({
-      ...createQuestionnaireParams,
-    });
+    return this.questionnaireService.createQuestionnaire({ ...createQuestionnaireParams });
   }
 
   @Query(() => [Questionnaire])
@@ -80,21 +91,17 @@ export class QuestionnaireResolver {
     })
     submitQuestionnaireResponseParams: SubmitQuestionnaireResponseParams,
   ): Promise<QuestionnaireResponse> {
-    return this.questionnaireService.submitQuestionnaireResponse({
+    const result = await this.questionnaireService.submitQuestionnaireResponse({
       ...submitQuestionnaireResponseParams,
     });
-  }
 
-  @Query(() => String, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
-  async getHealthPersona(
-    @Args(
-      'memberId',
-      { type: () => String },
-      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
-    )
-    memberId: string,
-  ): Promise<HealthPersona | undefined> {
-    return this.questionnaireService.getHealthPersona({ memberId });
+    if (result.type === QuestionnaireType.lhp) {
+      const { memberId } = submitQuestionnaireResponseParams;
+      const healthPersona = await this.questionnaireService.getHealthPersona({ memberId });
+      const eventUpdateHealthPersonaParams: IEventUpdateHealthPersona = { memberId, healthPersona };
+      this.eventEmitter.emit(EventType.onUpdateHealthPersona, eventUpdateHealthPersonaParams);
+    }
+
+    return result;
   }
 }

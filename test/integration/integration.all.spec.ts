@@ -2150,15 +2150,6 @@ describe('Integration tests: all', () => {
   });
 
   describe('Questionnaire', () => {
-    let eventEmitterSpy: jest.SpyInstance;
-
-    beforeEach(() => {
-      eventEmitterSpy = jest.spyOn(handler.eventEmitter, 'emit');
-    });
-    afterEach(() => {
-      eventEmitterSpy.mockReset();
-    });
-
     it('should create, get and submit questionnaires', async () => {
       const org = await creators.createAndValidateOrg();
       const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
@@ -2199,6 +2190,8 @@ describe('Integration tests: all', () => {
       expect(questionnaire).toBeTruthy();
       expect(questionnaire.id).toEqual(questionnaireId);
 
+      const spyOnEventEmitter = jest.spyOn(handler.eventEmitter, 'emit');
+
       // Submit a questionnaire response
       let qr = await handler.mutations.submitQuestionnaireResponse({
         requestHeaders: generateRequestHeaders(user.authId),
@@ -2211,7 +2204,7 @@ describe('Integration tests: all', () => {
 
       await delay(500); // wait for the last emit to complete (sending alert to slack channel)
 
-      expect(eventEmitterSpy).toHaveBeenLastCalledWith(EventType.notifySlack, {
+      expect(spyOnEventEmitter).toHaveBeenLastCalledWith(EventType.notifySlack, {
         channel: 'slack.escalation',
         header: `*High Assessment Score [${org.name}]*`,
         icon: ':warning:',
@@ -2258,8 +2251,12 @@ describe('Integration tests: all', () => {
         }),
       });
 
-      const healthPersona = await handler.queries.getHealthPersona({ memberId: member.id });
-      expect(healthPersona).toEqual(HealthPersona.highEffort);
+      await delay(200);
+
+      const result = await handler.queries.getMember({ id: member.id });
+      expect(result.healthPersona).toEqual(
+        Object.keys(HealthPersona).find((key) => HealthPersona[key] === HealthPersona.highEffort),
+      );
 
       const qrs = await handler.queries.getMemberQuestionnaireResponses({ memberId: member.id });
       const res = qrs.find((qr) => qr.type === QuestionnaireType.lhp);

@@ -1,6 +1,6 @@
 import { Platform, QueueType } from '@lagunahealth/pandora';
 import { Types } from 'mongoose';
-import { QuestionnaireType } from '../questionnaire';
+import { HealthPersona, QuestionnaireType } from '../questionnaire';
 import { UpdatedAppointmentAction } from '.';
 import { Appointment, AppointmentDocument, AppointmentStatus, Scores } from '../appointment';
 import { Member } from '../member';
@@ -37,6 +37,7 @@ export enum EventType {
 
   // questionnaire
   onAlertForQRSubmit = 'onAlertForQRSubmit',
+  onUpdateHealthPersona = 'onUpdateHealthPersona',
 }
 
 /*************************************************************************************************
@@ -145,4 +146,9 @@ export interface IEventOnReceivedTextMessage {
 export interface IEventNotifyQueue {
   type: QueueType;
   message: string;
+}
+
+export interface IEventUpdateHealthPersona {
+  memberId: string;
+  healthPersona: HealthPersona;
 }

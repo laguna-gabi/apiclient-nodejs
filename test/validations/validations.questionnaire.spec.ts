@@ -239,18 +239,4 @@ describe('Validations - questionnaire', () => {
       });
     });
   });
-
-  describe('getHealthPersona', () => {
-    test.each`
-      value        | error
-      ${'123'}     | ${Errors.get(ErrorType.memberIdInvalid)}
-      ${123}       | ${stringError}
-      ${undefined} | ${`Variable \"$memberId\" of required type \"String!\" was not provided.`}
-    `(`should fail to getHealthPersona - invalid id $value`, async (params) => {
-      await handler.queries.getHealthPersona({
-        memberId: params.value,
-        invalidFieldsError: params.error,
-      });
-    });
-  });
 });

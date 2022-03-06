@@ -58,6 +58,7 @@ import {
   IEventOnNewMemberCommunication,
   IEventOnUpdatedAppointmentScores,
   IEventUnconsentedAppointmentEnded,
+  IEventUpdateHealthPersona,
   Identifier,
   LoggerService,
   defaultTimestampsDbValues,
@@ -335,6 +336,13 @@ export class MemberService extends BaseService {
         formatEx(ex),
       );
     }
+  }
+
+  @OnEvent(EventType.onUpdateHealthPersona, { async: true })
+  async handleUpdateHealthPersona(params: IEventUpdateHealthPersona) {
+    await this.memberModel.findByIdAndUpdate(new Types.ObjectId(params.memberId), {
+      $set: { healthPersona: params.healthPersona },
+    });
   }
 
   /*************************************************************************************************

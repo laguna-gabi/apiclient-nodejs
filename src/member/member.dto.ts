@@ -38,6 +38,7 @@ import {
   validPhoneExamples,
 } from '../common';
 import { Org } from '../org';
+import { HealthPersona } from '../questionnaire';
 import { User } from '../user';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
@@ -603,6 +604,10 @@ export class Member extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   preferredGenderPronoun?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => HealthPersona, { nullable: true })
+  healthPersona?: HealthPersona;
 }
 
 @ObjectType()

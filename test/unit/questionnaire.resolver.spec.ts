@@ -1,11 +1,14 @@
 import { mockProcessWarnings } from '@lagunahealth/pandora';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import { EventType, IEventUpdateHealthPersona } from '../../src/common';
 import {
   CreateQuestionnaireParams,
   HealthPersona,
   QuestionnaireModule,
   QuestionnaireResolver,
   QuestionnaireService,
+  QuestionnaireType,
 } from '../../src/questionnaire';
 import {
   dbDisconnect,
@@ -19,6 +22,7 @@ describe('QuestionnaireResolver', () => {
   let module: TestingModule;
   let resolver: QuestionnaireResolver;
   let service: QuestionnaireService;
+  let eventEmitter: EventEmitter2;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -28,6 +32,7 @@ describe('QuestionnaireResolver', () => {
 
     resolver = module.get<QuestionnaireResolver>(QuestionnaireResolver);
     service = module.get<QuestionnaireService>(QuestionnaireService);
+    eventEmitter = module.get<EventEmitter2>(EventEmitter2);
   });
 
   afterAll(async () => {
@@ -136,41 +141,37 @@ describe('QuestionnaireResolver', () => {
 
   describe('submitQuestionnaireResponse', () => {
     let spyOnServiceSubmitQR: jest.SpyInstance;
+    let spyOnServiceGetHealthPersona: jest.SpyInstance;
 
     beforeEach(() => {
       spyOnServiceSubmitQR = jest.spyOn(service, 'submitQuestionnaireResponse');
-      spyOnServiceSubmitQR.mockImplementation(() => undefined);
+      spyOnServiceGetHealthPersona = jest.spyOn(service, 'getHealthPersona');
     });
 
     afterEach(() => {
       spyOnServiceSubmitQR.mockReset();
+      spyOnServiceGetHealthPersona.mockReset();
     });
 
     it('should submit a Questionnaire Response', async () => {
       const qrSubmitParams = generateSubmitQuestionnaireResponseParams();
+      spyOnServiceSubmitQR.mockResolvedValueOnce({ type: QuestionnaireType.phq9 });
       await resolver.submitQuestionnaireResponse(qrSubmitParams);
 
       expect(spyOnServiceSubmitQR).toHaveBeenCalledWith({ ...qrSubmitParams });
     });
-  });
 
-  describe('getHealthPersona', () => {
-    let spyOnServiceGetHealthPersona: jest.SpyInstance;
+    it(`should submit an ${QuestionnaireType.lhp} response and update health persona`, async () => {
+      const healthPersona: HealthPersona = HealthPersona.active;
+      spyOnServiceGetHealthPersona.mockResolvedValueOnce(healthPersona);
+      const spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
 
-    beforeAll(() => {
-      spyOnServiceGetHealthPersona = jest.spyOn(service, 'getHealthPersona');
-    });
+      const qrSubmitParams = generateSubmitQuestionnaireResponseParams();
+      spyOnServiceSubmitQR.mockResolvedValueOnce({ type: QuestionnaireType.lhp });
+      await resolver.submitQuestionnaireResponse(qrSubmitParams);
 
-    afterAll(() => {
-      spyOnServiceGetHealthPersona.mockReset();
-    });
-
-    it('should call service health persona', async () => {
-      spyOnServiceGetHealthPersona.mockResolvedValueOnce(HealthPersona.highEffort);
-
-      const memberId = generateId();
-      await resolver.getHealthPersona(memberId);
-      expect(spyOnServiceGetHealthPersona).toHaveBeenCalledWith({ memberId });
+      const event: IEventUpdateHealthPersona = { memberId: qrSubmitParams.memberId, healthPersona };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdateHealthPersona, event);
     });
   });
 });
