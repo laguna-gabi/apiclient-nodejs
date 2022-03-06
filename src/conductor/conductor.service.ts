@@ -4,6 +4,7 @@ import {
   IDeleteClientSettings,
   IDeleteDispatch,
   IUpdateClientSettings,
+  IUpdateSenderClientId,
   formatEx,
 } from '@lagunahealth/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
@@ -44,6 +45,20 @@ export class ConductorService implements OnModuleInit {
         .filter((dispatch) => dispatch.triggeredId)
         .map((dispatch) => dispatch.dispatchId),
     );
+  }
+
+  async handleUpdateSenderClientId(input: IUpdateSenderClientId): Promise<void> {
+    this.logger.info(input, ConductorService.name, this.handleUpdateSenderClientId.name);
+
+    const senderClientExists = await this.settingsService.get(input.senderClientId);
+    if (senderClientExists) {
+      await this.dispatchesService.bulkUpdateFutureDispatches({
+        recipientClientId: input.recipientClientId,
+        senderClientId: input.senderClientId,
+      });
+    } else {
+      this.logger.error(input, ConductorService.name, this.handleUpdateSenderClientId.name);
+    }
   }
 
   async handleCreateDispatch(input: ICreateDispatch): Promise<void> {

@@ -5,6 +5,7 @@ import {
   IDeleteDispatch,
   IInnerQueueTypes,
   IUpdateClientSettings,
+  IUpdateSenderClientId,
   InnerQueueTypes,
   QueueType,
   ServiceName,
@@ -16,10 +17,10 @@ import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
 import * as AWS from 'aws-sdk';
 import { aws } from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
-import { ConfigsService, ExternalConfigs } from '../providers';
-import { EventType, LoggerService } from '../common';
-import { ConductorService } from '.';
 import { v4 } from 'uuid';
+import { ConductorService } from '.';
+import { EventType, LoggerService } from '../common';
+import { ConfigsService, ExternalConfigs } from '../providers';
 
 @Injectable()
 export class QueueService extends HealthIndicator implements OnModuleInit, OnModuleDestroy {
@@ -132,6 +133,8 @@ export class QueueService extends HealthIndicator implements OnModuleInit, OnMod
         return this.conductorService.handleUpdateClientSettings(object as IUpdateClientSettings);
       case InnerQueueTypes.deleteClientSettings:
         return this.conductorService.handleDeleteClientSettings(object as IDeleteClientSettings);
+      case InnerQueueTypes.updateSenderClientId:
+        return this.conductorService.handleUpdateSenderClientId(object as IUpdateSenderClientId);
       case InnerQueueTypes.createDispatch:
         return this.conductorService.handleCreateDispatch(object as ICreateDispatch);
       case InnerQueueTypes.deleteDispatch:

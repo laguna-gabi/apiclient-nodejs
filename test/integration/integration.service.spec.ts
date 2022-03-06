@@ -25,6 +25,7 @@ import {
   ObjectNewMemberClass,
   ObjectNewMemberNudgeClass,
   ObjectRegisterMemberWithTriggeredClass,
+  ObjectUpdateSenderClientIdClass,
   Platform,
   RegisterInternalKey,
   TodoInternalKey,
@@ -53,6 +54,7 @@ import {
   generateObjectRegisterMemberWithTriggeredMock,
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
+  generateUpdateSenderClientIdMock,
   generateUpdateTodoAPPTMock,
   generateUpdateTodoMEDSMock,
   generateUpdateTodoTODOMock,
@@ -60,17 +62,19 @@ import {
   mockProcessWarnings,
   translation,
 } from '@lagunahealth/pandora';
+import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapMinutes, hosts } from 'config';
-import { addDays, subMinutes } from 'date-fns';
+import { addDays, addHours, subMinutes } from 'date-fns';
 import { internet, lorem } from 'faker';
-import { Types } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
-import { replaceConfigs } from '../';
+import { generateDispatch, replaceConfigs } from '../';
 import { AppModule } from '../../src/app.module';
 import { LoggerService } from '../../src/common';
 import {
+  Dispatch,
   DispatchStatus,
   DispatchesService,
   QueueService,
@@ -109,6 +113,7 @@ describe('Notifications full flow', () => {
   let webMemberClient: ClientSettings;
   let mobileMemberClient: ClientSettings;
   let userClient: ClientSettings;
+  let dispatchesModel: Model<Dispatch>;
 
   const providerResult: ProviderResult = {
     provider: Provider.twilio,
@@ -123,6 +128,7 @@ describe('Notifications full flow', () => {
     service = module.get<QueueService>(QueueService);
     dispatchesService = module.get<DispatchesService>(DispatchesService);
     triggersService = module.get<TriggersService>(TriggersService);
+    dispatchesModel = module.get<Model<Dispatch>>(getModelToken(Dispatch.name));
 
     const twilio = module.get<Twilio>(Twilio);
     spyOnTwilioSend = jest.spyOn(twilio, 'send');
@@ -206,6 +212,59 @@ describe('Notifications full flow', () => {
     expect(triggerAppointment).toBeNull();
   });
 
+  it('should update sender client id', async () => {
+    //creating new sender and recipient client
+    const senderClient = generateUpdateUserSettingsMock();
+    const messageSenderClient: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({ type: InnerQueueTypes.updateClientSettings, ...senderClient }),
+    };
+    await service.handleMessage(messageSenderClient);
+
+    const recipientClient = generateUpdateMemberSettingsMock({ platform: Platform.web });
+    const messageRecipientClient: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({ type: InnerQueueTypes.updateClientSettings, ...recipientClient }),
+    };
+    await service.handleMessage(messageRecipientClient);
+
+    //generating a future dispatch
+    await dispatchesService.update(
+      generateDispatch({
+        recipientClientId: recipientClient.id,
+        senderClientId: senderClient.id,
+        triggersAt: addHours(new Date(), 1),
+        status: DispatchStatus.received,
+      }),
+    );
+
+    //updating senderClientId to existing dispatch
+    const newSenderClient = generateUpdateUserSettingsMock();
+    const messageNewSenderClient: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({ type: InnerQueueTypes.updateClientSettings, ...newSenderClient }),
+    };
+    await service.handleMessage(messageNewSenderClient);
+
+    const updateMock = generateUpdateSenderClientIdMock({
+      recipientClientId: recipientClient.id,
+      senderClientId: newSenderClient.id,
+    });
+    const objectSenderClientIdObject = new ObjectUpdateSenderClientIdClass(updateMock);
+    const updateMessage: SQSMessage = {
+      MessageId: v4(),
+      Body: JSON.stringify({
+        type: InnerQueueTypes.updateSenderClientId,
+        ...objectSenderClientIdObject.updateSenderClientIdType,
+      }),
+    };
+    await service.handleMessage(updateMessage);
+
+    //check sender was changed
+    const results = await dispatchesModel.find({ recipientClientId: recipientClient.id });
+    expect(results[0].senderClientId).toEqual(newSenderClient.id);
+  });
+
   it(`should handle 'immediate' event of type ${RegisterInternalKey.newMember}`, async () => {
     const object = await generateNewMemberRequest(webMemberClient.id);
 
@@ -234,9 +293,7 @@ describe('Notifications full flow', () => {
   // eslint-disable-next-line max-len
   it(`should handle 'immediate' event of type ${RegisterInternalKey.newControlMember}`, async () => {
     const object = new ObjectBaseClass(
-      generateNewControlMemberMock({
-        recipientClientId: webMemberClient.id,
-      }),
+      generateNewControlMemberMock({ recipientClientId: webMemberClient.id }),
     );
     spyOnTwilioSend.mockReturnValueOnce(providerResult);
 

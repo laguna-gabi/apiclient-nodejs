@@ -1,4 +1,9 @@
-import { InnerQueueTypes, mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
+import {
+  IUpdateSenderClientId,
+  InnerQueueTypes,
+  mockLogger,
+  mockProcessWarnings,
+} from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapTriggersAt } from 'config';
@@ -27,6 +32,7 @@ import {
   generateUpdateMemberSettingsMock,
   generateUpdateUserSettingsMock,
 } from '../generators';
+import { v4 } from 'uuid';
 import SpyInstance = jest.SpyInstance;
 
 describe(ConductorService.name, () => {
@@ -118,6 +124,57 @@ describe(ConductorService.name, () => {
       expect(spyOnSettingsServiceDelete).toBeCalledWith(params.id);
       expect(spyOnDispatchServiceDelete).toBeCalledWith(params.id);
       expect(spyOnTriggersServiceDelete).toBeCalledWith([deletedItems[0].dispatchId]);
+    });
+  });
+
+  describe('handleUpdateSenderClientId', () => {
+    let spyOnSettingsServiceGet: SpyInstance;
+    let spyOnDispatchServiceBulkUpdate: SpyInstance;
+
+    beforeAll(() => {
+      spyOnSettingsServiceGet = jest.spyOn(settingsService, 'get');
+      spyOnDispatchServiceBulkUpdate = jest.spyOn(dispatchesService, 'bulkUpdateFutureDispatches');
+    });
+    afterEach(async () => {
+      spyOnSettingsServiceGet.mockReset();
+      spyOnDispatchServiceBulkUpdate.mockReset();
+    });
+    afterAll(async () => {
+      spyOnSettingsServiceGet.mockRestore();
+      spyOnDispatchServiceBulkUpdate.mockRestore();
+    });
+
+    it('should call handleUpdateClientSettings', async () => {
+      const settings = generateUpdateUserSettingsMock();
+      spyOnSettingsServiceGet.mockResolvedValueOnce(settings);
+      spyOnDispatchServiceBulkUpdate.mockResolvedValueOnce(null);
+
+      const input: IUpdateSenderClientId = {
+        recipientClientId: generateId(),
+        senderClientId: settings.id,
+        type: InnerQueueTypes.updateSenderClientId,
+        correlationId: v4(),
+      };
+      await service.handleUpdateSenderClientId(input);
+      expect(spyOnSettingsServiceGet).toBeCalledWith(settings.id);
+      expect(spyOnDispatchServiceBulkUpdate).toBeCalledWith({
+        recipientClientId: input.recipientClientId,
+        senderClientId: input.senderClientId,
+      });
+    });
+
+    it('should not call handleUpdateClientSettings since client does not exist', async () => {
+      spyOnSettingsServiceGet.mockResolvedValueOnce(null);
+
+      const senderClientId = generateId();
+      await service.handleUpdateSenderClientId({
+        recipientClientId: generateId(),
+        senderClientId,
+        type: InnerQueueTypes.updateSenderClientId,
+        correlationId: v4(),
+      });
+      expect(spyOnSettingsServiceGet).toBeCalledWith(senderClientId);
+      expect(spyOnDispatchServiceBulkUpdate).not.toBeCalled();
     });
   });
 

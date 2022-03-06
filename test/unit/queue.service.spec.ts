@@ -171,6 +171,22 @@ describe(QueueService.name, () => {
       spyOnDeleteClientSettings.mockReset();
     });
 
+    // eslint-disable-next-line max-len
+    it(`should handle message of type ${InnerQueueTypes.updateSenderClientId}`, async () => {
+      const params = { id: generateId(), type: InnerQueueTypes.updateSenderClientId };
+      const message: SQSMessage = { MessageId: v4(), Body: JSON.stringify(params) };
+      const spyOnUpdateSenderClientIdToRecipientClientId = jest.spyOn(
+        conductorService,
+        'handleUpdateSenderClientId',
+      );
+      spyOnUpdateSenderClientIdToRecipientClientId.mockResolvedValue(null);
+
+      await service.handleMessage(message);
+
+      expect(spyOnUpdateSenderClientIdToRecipientClientId).toBeCalledWith(params);
+      spyOnUpdateSenderClientIdToRecipientClientId.mockReset();
+    });
+
     it(`should handle message of type ${InnerQueueTypes.createDispatch}`, async () => {
       const params = { ...generateDispatch(), type: InnerQueueTypes.createDispatch };
       const message: SQSMessage = { MessageId: v4(), Body: JSON.stringify(params) };

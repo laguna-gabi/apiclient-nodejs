@@ -48,6 +48,24 @@ export class DispatchesService {
     );
   }
 
+  async bulkUpdateFutureDispatches({
+    recipientClientId,
+    senderClientId,
+  }: {
+    recipientClientId: string;
+    senderClientId: string;
+  }): Promise<void> {
+    await this.dispatchesModel.updateMany(
+      {
+        recipientClientId,
+        status: DispatchStatus.received,
+        senderClientId: { $ne: null },
+        triggersAt: { $gte: new Date() },
+      },
+      { $set: { senderClientId } },
+    );
+  }
+
   async get(dispatchId: string): Promise<Dispatch | null> {
     return this.dispatchesModel.findOne({ dispatchId }, this.returnResults.projection, {
       lean: true,

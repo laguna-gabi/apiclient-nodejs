@@ -1,6 +1,7 @@
 import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import { addHours, subMinutes } from 'date-fns';
 import { v4 } from 'uuid';
 import { CommonModule, LoggerService } from '../../src/common';
 import {
@@ -289,5 +290,122 @@ describe(DispatchesService.name, () => {
   it('should be able to call delete dispatch, even if client does not exist', async () => {
     const result = await service.delete(generateId());
     expect(result).toHaveLength(0);
+  });
+
+  describe('bulkUpdateFutureDispatches', () => {
+    it(`should update all future dispatches having status=${DispatchStatus.received}`, async () => {
+      const recipientClientId = v4();
+      const senderClientId = v4();
+      const data1 = generateDispatch({
+        status: DispatchStatus.received,
+        recipientClientId,
+        senderClientId,
+        triggersAt: addHours(new Date(), 1),
+      });
+      const dispatch1 = await service.update(data1);
+
+      const data2 = generateDispatch({
+        status: DispatchStatus.received,
+        recipientClientId,
+        senderClientId,
+        triggersAt: subMinutes(new Date(), 1),
+      });
+      const dispatch2 = await service.update(data2);
+
+      const data3 = generateDispatch({
+        status: DispatchStatus.acquired,
+        recipientClientId,
+        senderClientId,
+        triggersAt: subMinutes(new Date(), 1),
+      });
+      const dispatch3 = await service.update(data3);
+
+      const data4 = generateDispatch({
+        status: DispatchStatus.received,
+        recipientClientId: generateId(), //checking that other recipients aren't changing
+        senderClientId,
+        triggersAt: addHours(new Date(), 1),
+      });
+      const dispatch4 = await service.update(data4);
+
+      const newSenderClientId = generateId();
+      await service.bulkUpdateFutureDispatches({
+        recipientClientId,
+        senderClientId: newSenderClientId,
+      });
+
+      const result1 = await service.get(dispatch1.dispatchId);
+      expect(result1.senderClientId).toEqual(newSenderClientId);
+      const result2 = await service.get(dispatch2.dispatchId);
+      expect(result2.senderClientId).toEqual(senderClientId);
+      const result3 = await service.get(dispatch3.dispatchId);
+      expect(result3.senderClientId).toEqual(senderClientId);
+      const result4 = await service.get(dispatch4.dispatchId);
+      expect(result4.senderClientId).toEqual(senderClientId);
+    });
+
+    it(`should not update since status!=${DispatchStatus.received}`, async () => {
+      const data = generateDispatch({
+        status: DispatchStatus.error,
+        triggersAt: subMinutes(new Date(), 1),
+      });
+      const dispatch = await service.update(data);
+
+      await service.bulkUpdateFutureDispatches({
+        recipientClientId: data.recipientClientId,
+        senderClientId: generateId(),
+      });
+
+      const result = await service.get(dispatch.dispatchId);
+      expect(result.senderClientId).toEqual(dispatch.senderClientId);
+    });
+
+    it('should not update since there is no sender to begin with', async () => {
+      const data = generateDispatch({
+        status: DispatchStatus.received,
+        triggersAt: addHours(new Date(), 1),
+      });
+      data.senderClientId = undefined;
+      const dispatch = await service.update(data);
+
+      await service.bulkUpdateFutureDispatches({
+        recipientClientId: data.recipientClientId,
+        senderClientId: generateId(),
+      });
+
+      const result = await service.get(dispatch.dispatchId);
+      expect(result.senderClientId).toEqual(undefined);
+    });
+
+    it('should not update anything in case there are no future dispatches', async () => {
+      const data = generateDispatch({
+        status: DispatchStatus.received,
+        triggersAt: subMinutes(new Date(), 1),
+      });
+      const dispatch = await service.update(data);
+
+      await service.bulkUpdateFutureDispatches({
+        recipientClientId: data.recipientClientId,
+        senderClientId: generateId(),
+      });
+
+      const result = await service.get(dispatch.dispatchId);
+      expect(result.senderClientId).toEqual(dispatch.senderClientId);
+    });
+
+    it('should not update a record without triggersAt field', async () => {
+      const data = generateDispatch({ status: DispatchStatus.received });
+      delete data.triggersAt;
+
+      const dispatch = await service.update(data);
+
+      await service.bulkUpdateFutureDispatches({
+        recipientClientId: data.recipientClientId,
+        senderClientId: generateId(),
+      });
+
+      const result = await service.get(dispatch.dispatchId);
+      expect(result.senderClientId).toEqual(dispatch.senderClientId);
+    });
   });
 });
