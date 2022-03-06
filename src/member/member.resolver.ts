@@ -6,6 +6,7 @@ import {
   IDeleteClientSettings,
   IDeleteDispatch,
   IEventNotifySlack,
+  IUpdateSenderClientId,
   InnerQueueTypes,
   JournalCustomKey,
   LogInternalKey,
@@ -259,8 +260,20 @@ export class MemberResolver extends MemberBase {
       member,
       platform,
     };
-
     this.eventEmitter.emit(EventType.onReplacedUserForMember, updateUserInCommunicationParams);
+
+    const updateSenderClientId: IUpdateSenderClientId = {
+      type: InnerQueueTypes.updateSenderClientId,
+      recipientClientId: member.id,
+      senderClientId: newUser.id,
+      correlationId: getCorrelationId(this.logger),
+    };
+    const eventParams: IEventNotifyQueue = {
+      type: QueueType.notifications,
+      message: JSON.stringify(updateSenderClientId),
+    };
+    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
+
     return true;
   }
 

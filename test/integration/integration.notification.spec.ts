@@ -27,6 +27,7 @@ import {
   ObjectNewMemberNudgeClass,
   ObjectRegisterMemberWithTriggeredClass,
   ObjectUpdateMemberSettingsClass,
+  ObjectUpdateSenderClientIdClass,
   Platform,
   QueueType,
   RegisterInternalKey,
@@ -60,6 +61,7 @@ import {
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
   generateUpdateMemberSettingsMock,
+  generateUpdateSenderClientIdMock,
   generateUpdateTodoAPPTMock,
   generateUpdateTodoMEDSMock,
   generateUpdateTodoTODOMock,
@@ -102,6 +104,7 @@ import {
   generateDeleteMemberParams,
   generateEndAndCreateTodoParams,
   generateNotifyContentParams,
+  generateReplaceUserForMemberParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSubmitQuestionnaireResponseParams,
@@ -725,6 +728,49 @@ describe('Integration tests: notifications', () => {
             type: QueueType.notifications,
             message: expect.stringContaining(
               key === 'correlationId' || key === 'dispatchId' ? key : `"${key}":"${mock[key]}"`,
+            ),
+          }),
+        );
+      });
+    });
+
+    /**
+     * Trigger : MemberResolver.replaceUserForMember
+     * Settings :
+     *      1. create a member(only for the infra of the test)
+     *      2. replace primary user for the member
+     * Dispatches:
+     *      3. send event for replace clients on messages
+     */
+    // eslint-disable-next-line max-len
+    it(`replaceUserForMember: should updateSenderClientIdToRecipientClientId for member dispatches`, async () => {
+      const org = await creators.createAndValidateOrg();
+      const user = await creators.createAndValidateUser();
+      const replacedUser = await creators.createAndValidateUser();
+      const memberParams = generateCreateMemberParams({ userId: user.id, orgId: org.id });
+      const { id } = await handler.mutations.createMember({ memberParams });
+
+      await delay(500);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      await handler.mutations.replaceUserForMember({
+        replaceUserForMemberParams: generateReplaceUserForMemberParams({
+          memberId: id,
+          userId: replacedUser.id,
+        }),
+      });
+
+      const mock = generateUpdateSenderClientIdMock({
+        recipientClientId: id,
+        senderClientId: replacedUser.id,
+      });
+      const object = new ObjectUpdateSenderClientIdClass(mock);
+      Object.keys(object.updateSenderClientIdType).forEach((key) => {
+        expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledWith(
+          expect.objectContaining({
+            type: QueueType.notifications,
+            message: expect.stringContaining(
+              key === 'correlationId' ? key : `"${key}":"${mock[key]}"`,
             ),
           }),
         );
