@@ -114,6 +114,9 @@ export class CreateQuestionnaireParams {
   @Field(() => [Item])
   items: Item[];
 
+  @Field(() => Boolean)
+  isAssignableToMember: boolean;
+
   @IsOverlappingRangeInSeverityLevelEntries({
     message: Errors.get(ErrorType.questionnaireSeverityLevelInvalidCode),
   })
@@ -219,6 +222,10 @@ export class Questionnaire extends Identifier {
   @Prop()
   @Field(() => [Item])
   items: Item[];
+
+  @Prop()
+  @Field(() => Boolean)
+  isAssignableToMember: boolean;
 
   @Prop()
   @Field(() => [SeverityLevel], { nullable: true })

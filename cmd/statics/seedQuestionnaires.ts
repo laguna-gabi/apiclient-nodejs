@@ -52,6 +52,7 @@ export const buildGAD7Questionnaire = (): CreateQuestionnaireParams => {
         items: groupItems,
       },
     ],
+    isAssignableToMember: true,
     severityLevels: [
       { min: 0, max: 4, label: 'Minimal Anxiety' },
       { min: 5, max: 9, label: 'Mild Anxiety' },
@@ -115,6 +116,7 @@ export const buildPHQ9Questionnaire = (): CreateQuestionnaireParams => {
         items: groupItems,
       },
     ],
+    isAssignableToMember: true,
     severityLevels: [
       { min: 0, max: 0, label: 'No Depression' },
       { min: 1, max: 4, label: 'Minimal Depression' },
@@ -173,6 +175,7 @@ export const buildWHO5Questionnaire = (): CreateQuestionnaireParams => {
         items: groupItems,
       },
     ],
+    isAssignableToMember: true,
   };
 };
 
@@ -191,6 +194,7 @@ export const buildNPSQuestionnaire = (): CreateQuestionnaireParams => {
         range: { min: { value: 0, label: 'not likely' }, max: { value: 10, label: 'very likely' } },
       },
     ],
+    isAssignableToMember: false,
     severityLevels: [
       { min: 0, max: 6, label: 'Detractor' },
       { min: 7, max: 8, label: 'Passive' },
@@ -245,5 +249,6 @@ export const buildLHPQuestionnaire = (): CreateQuestionnaireParams => {
     shortName: upperCase(QuestionnaireType.lhp),
     type: QuestionnaireType.lhp,
     items: groupItems,
+    isAssignableToMember: false,
   };
 };

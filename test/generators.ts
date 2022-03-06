@@ -1050,6 +1050,7 @@ export const mockGenerateQuestionnaire = ({
   ],
   createdBy = generateObjectId(),
 }: Partial<Questionnaire> = {}): Questionnaire => {
+  const isAssignableToMember = getIsAssignableToMember(type);
   return {
     id,
     name,
@@ -1057,6 +1058,7 @@ export const mockGenerateQuestionnaire = ({
     type,
     active,
     items,
+    isAssignableToMember,
     severityLevels,
     createdBy,
   };
@@ -1073,11 +1075,13 @@ export const generateCreateQuestionnaireParams = ({
   ],
   notificationScoreThreshold,
 }: Partial<CreateQuestionnaireParams> = {}): CreateQuestionnaireParams => {
+  const isAssignableToMember = getIsAssignableToMember(type);
   return {
     name,
     shortName,
     type,
     items,
+    isAssignableToMember,
     severityLevels,
     notificationScoreThreshold,
   };
@@ -1116,4 +1120,12 @@ export function randomEnum<T>(enumType: T): string {
   const enumValues = Object.keys(enumType);
   const randomIndex = Math.floor(Math.random() * enumValues.length);
   return enumValues[randomIndex];
+}
+
+export function getIsAssignableToMember(questionnaireType: QuestionnaireType): boolean {
+  return (
+    questionnaireType === QuestionnaireType.phq9 ||
+    questionnaireType === QuestionnaireType.gad7 ||
+    questionnaireType === QuestionnaireType.who5
+  );
 }

@@ -66,12 +66,13 @@ describe('Validations - questionnaire', () => {
 
   describe('createQuestionnaire', () => {
     test.each`
-      field      | error
-      ${'name'}  | ${`Field "name" of required type "String!" was not provided.`}
-      ${'type'}  | ${`Field "type" of required type "QuestionnaireType!" was not provided.`}
-      ${'items'} | ${`Field "items" of required type "[ItemInput!]!" was not provided.`}
+      field                     | error
+      ${'name'}                 | ${`Field "name" of required type "String!" was not provided.`}
+      ${'type'}                 | ${`Field "type" of required type "QuestionnaireType!" was not provided.`}
+      ${'items'}                | ${`Field "items" of required type "[ItemInput!]!" was not provided.`}
+      ${'isAssignableToMember'} | ${`Field "isAssignableToMember" of required type "Boolean!" was not provided.`}
     `(
-      `should fail to endAndCreate a todo since mandatory field $field is missing`,
+      `should fail to create Questionnaire since mandatory field $field is missing`,
       async (params) => {
         /* eslint-enable max-len */
         const createQuestionnaireParams: CreateQuestionnaireParams =
@@ -178,7 +179,7 @@ describe('Validations - questionnaire', () => {
       ${'memberId'}        | ${`Field "memberId" of required type "String!" was not provided.`}
       ${'answers'}         | ${`Field "answers" of required type "[AnswerInput!]!" was not provided.`}
     `(
-      `should fail to endAndCreate a todo since mandatory field $field is missing`,
+      `should fail submit QuestionnaireResponse since mandatory field $field is missing`,
       async (params) => {
         /* eslint-enable max-len */
         const submitQuestionnaireResponseParams: SubmitQuestionnaireResponseParams =

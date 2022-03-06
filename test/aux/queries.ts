@@ -1103,6 +1103,7 @@ export class Queries {
                 }
               }
             }
+            isAssignableToMember
             createdBy
           }
         }
@@ -1141,6 +1142,7 @@ export class Queries {
                 min
                 max
               }
+              isAssignableToMember
               createdBy
             }
           }
