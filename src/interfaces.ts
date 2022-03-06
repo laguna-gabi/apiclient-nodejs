@@ -10,6 +10,7 @@ export enum InnerQueueTypes {
   deleteClientSettings = 'deleteClientSettings',
   createDispatch = 'createDispatch',
   deleteDispatch = 'deleteDispatch',
+  updateSenderClientId = 'updateSenderClientId',
 }
 
 export interface IInnerQueueTypes {
@@ -69,6 +70,12 @@ export interface ICreateDispatch extends IDispatch {
 }
 
 export type IDeleteDispatch = IDispatch;
+
+export interface IUpdateSenderClientId extends IInnerQueueTypes {
+  recipientClientId: string;
+  senderClientId: string;
+  correlationId: string;
+}
 
 export const BaseExternalConfigs = {
   aws: {
