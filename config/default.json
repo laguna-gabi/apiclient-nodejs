@@ -1,8 +1,8 @@
 {
   "hosts": {
-    "chat": "https://dev.chat.lagunahealth.com",
-    "app": "https://dev.app.lagunahealth.com",
-    "harmony": "https://dev.harmony.lagunahealth.com",
+    "chat": "https://video-chat-develop.lagunahealth.com",
+    "app": "https://scheduler-develop.lagunahealth.com",
+    "harmony": "https://harmony-develop.lagunahealth.com",
     "localstack": "http://localhost:4566"
   },
   "db": {

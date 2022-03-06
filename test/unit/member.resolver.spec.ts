@@ -2302,7 +2302,7 @@ describe('MemberResolver', () => {
         message:
           `Alerting results on ${params.questionnaireName} for ` +
           `${user.firstName} ${user.lastName}’s member - ` +
-          `<https://dev.harmony.lagunahealth.com/details/${member.id}|` +
+          `<https://harmony-develop.lagunahealth.com/details/${member.id}|` +
           `${member.firstName[0].toUpperCase() + member.lastName[0].toUpperCase()}>. Scored a '${
             params.score
           }'`,
@@ -2332,7 +2332,7 @@ describe('MemberResolver', () => {
         message:
           `Alerting results on ${params.questionnaireName} for ` +
           `${user.firstName} ${user.lastName}’s member - ` +
-          `<https://dev.harmony.lagunahealth.com/details/${member.id}|` +
+          `<https://harmony-develop.lagunahealth.com/details/${member.id}|` +
           `${
             member.firstName[0].toUpperCase() + member.lastName[0].toUpperCase()
           }>. Scored a '${QuestionnaireAlerts.get(QuestionnaireType.phq9)}'`,
