@@ -1,11 +1,39 @@
-{"redFlags":[
-  { "chronicCondition": "Uncontrolled chronic condition (high A1C, high sugars, high BP)" },
-  { "appointment": "Appointment adherence (missed appts/unable to schedule appts)" },
-  { "resources": "Resource utilization (trips to ER, requesting unnecessary tests/procedures)" },
-  { "medication": "Medication adherence (missed/not taking meds, unable to order meds)" },
-  { "planOfCare": "Plan of care (POC) Adherence (not following previous plan of care/recommendations)" },
-  { "weight": "Significant weight loss/gain (+10 lbs.)" },
-  { "health": "Knowledge of health or health care status (unaware of diagnosis, test results)" },
-  { "medicalSupplies": "Medical equipment/supplies adherence (not using med. equip. as directed)" },
-  { "other": "Other (concerning statements, including emotional state)" }
-]}
+{
+  "redFlags": [
+    {
+      "id": "chronicCondition",
+      "description": "Uncontrolled chronic condition (high A1C, high sugars, high BP)"
+    },
+    {
+      "id": "appointment",
+      "description": "Appointment adherence (missed appts/unable to schedule appts)"
+    },
+    {
+      "id": "resources",
+      "description": "Resource utilization (trips to ER, requesting unnecessary tests/procedures)"
+    },
+    {
+      "id": "medication",
+      "description": "Medication adherence (missed/not taking meds, unable to order meds)"
+    },
+    {
+      "id": "planOfCare",
+      "description": "Plan of care (POC) Adherence (not following previous plan of care/recommendations)"
+    },
+    {
+      "id": "weight",
+      "description": "Significant weight loss/gain (+10 lbs.)"
+    },
+    {
+      "id": "health",
+      "description": "Knowledge of health or health care status (unaware of diagnosis, test results)"
+    },
+    {
+      "id": "medicalSupplies",
+      "description": "Medical equipment/supplies adherence (not using med. equip. as directed)"
+    },
+    {
+      "id": "other",
+      "description": "Other (concerning statements, including emotional state)"
+    }
+  ]}
