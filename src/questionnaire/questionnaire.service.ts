@@ -69,23 +69,27 @@ export class QuestionnaireService extends BaseService {
   }
 
   async getQuestionnaireById(id: string): Promise<Questionnaire> {
-    return this.questionnaire.findOne({ _id: new Types.ObjectId(id) });
+    const questionnaire = await this.questionnaire.findOne({ _id: new Types.ObjectId(id) });
+    if (!questionnaire) {
+      throw new Error(Errors.get(ErrorType.questionnaireNotFound));
+    }
+    return questionnaire;
   }
 
   async submitQuestionnaireResponse(
     submitQuestionnaireResponseParams: SubmitQuestionnaireResponseParams,
   ): Promise<QuestionnaireResponse> {
-    // 1. validate answers against the template
-    const template = await this.questionnaire.findOne({
+    // 1. validate answers against the questionnaire
+    const questionnaire = await this.questionnaire.findOne({
       _id: new Types.ObjectId(submitQuestionnaireResponseParams.questionnaireId),
     });
 
-    if (!template) {
-      throw new Error(Errors.get(ErrorType.questionnaireResponseInvalidQuestionnaireIdNotFound));
+    if (!questionnaire) {
+      throw new Error(Errors.get(ErrorType.questionnaireNotFound));
     }
 
     try {
-      this.validate(submitQuestionnaireResponseParams.answers, template);
+      this.validate(submitQuestionnaireResponseParams.answers, questionnaire);
     } catch (ex) {
       this.logger.error(
         submitQuestionnaireResponseParams,
@@ -106,24 +110,24 @@ export class QuestionnaireService extends BaseService {
     // 3. upload on-the-fly calculated information
     const out: QuestionnaireResponse = {
       ...this.replaceId(qr.toObject()),
-      type: template.type,
-      result: this.buildResult(submitQuestionnaireResponseParams.answers, template),
+      type: questionnaire.type,
+      result: this.buildResult(submitQuestionnaireResponseParams.answers, questionnaire),
     };
 
     // 4. notify #escalation-support (if needed)
     if (
       out.result.alert ||
-      (template.notificationScoreThreshold &&
-        out.result.score >= template.notificationScoreThreshold)
+      (questionnaire.notificationScoreThreshold &&
+        out.result.score >= questionnaire.notificationScoreThreshold)
     ) {
       const params: IEventOnAlertForQRSubmit = {
         memberId: submitQuestionnaireResponseParams.memberId,
         score:
-          out.result.alert && QuestionnaireAlerts.get(template.type)
-            ? QuestionnaireAlerts.get(template.type)
+          out.result.alert && QuestionnaireAlerts.get(questionnaire.type)
+            ? QuestionnaireAlerts.get(questionnaire.type)
             : out.result.score.toString(),
-        questionnaireName: template.shortName,
-        questionnaireType: template.type,
+        questionnaireName: questionnaire.shortName,
+        questionnaireType: questionnaire.type,
         questionnaireResponseId: qr.id.toString(),
       };
       this.eventEmitter.emit(EventType.onAlertForQRSubmit, params);
@@ -138,12 +142,12 @@ export class QuestionnaireService extends BaseService {
     // pre-populating results - calculated on-the-fly
     return Promise.all(
       qrs.map(async (qr) => {
-        const template = await this.questionnaire.findById(qr.questionnaireId);
+        const questionnaire = await this.questionnaire.findById(qr.questionnaireId);
 
         return {
           ...this.replaceId(qr.toObject()),
-          result: this.buildResult(qr.answers, template),
-          type: template.type,
+          result: this.buildResult(qr.answers, questionnaire),
+          type: questionnaire.type,
         };
       }),
     );
@@ -167,12 +171,12 @@ export class QuestionnaireService extends BaseService {
 
     if (qr) {
       // pre-populating results - calculated on-the-fly
-      const template = await this.questionnaire.findById(qr.questionnaireId);
+      const questionnaire = await this.questionnaire.findById(qr.questionnaireId);
 
       return {
         ...this.replaceId(qr.toObject()),
-        result: this.buildResult(qr.answers, template),
-        type: template.type,
+        result: this.buildResult(qr.answers, questionnaire),
+        type: questionnaire.type,
       };
     }
   }
@@ -188,14 +192,14 @@ export class QuestionnaireService extends BaseService {
     }
   }
 
-  private validate(answers: Answer[], template: Questionnaire) {
+  private validate(answers: Answer[], questionnaire: Questionnaire) {
     answers.forEach((answer) => {
       const answerValue = parseInt(answer.value);
-      // validate that the answer code exists in template
-      const item = this.findItemByCode(template.items, answer.code);
+      // validate that the answer code exists in questionnaire
+      const item = this.findItemByCode(questionnaire.items, answer.code);
 
       if (!item) {
-        throw new Error(`answer with invalid code ${answer.code} - not in template`);
+        throw new Error(`answer with invalid code ${answer.code} - not in questionnaire`);
       }
 
       // validate that the answer value is consistent with question type and options/range
@@ -220,14 +224,14 @@ export class QuestionnaireService extends BaseService {
     });
   }
 
-  buildResult(answers: Answer[], template: Questionnaire): QuestionnaireResponseResult {
+  buildResult(answers: Answer[], questionnaire: Questionnaire): QuestionnaireResponseResult {
     let score: number;
     let severity: string;
 
     if (
-      template.type === QuestionnaireType.gad7 ||
-      template.type === QuestionnaireType.phq9 ||
-      template.type === QuestionnaireType.nps
+      questionnaire.type === QuestionnaireType.gad7 ||
+      questionnaire.type === QuestionnaireType.phq9 ||
+      questionnaire.type === QuestionnaireType.nps
     ) {
       score = answers
         .map((answer) => parseInt(answer.value))
@@ -235,26 +239,26 @@ export class QuestionnaireService extends BaseService {
           return valueA + valueB;
         });
 
-      severity = template?.severityLevels.find(
+      severity = questionnaire?.severityLevels.find(
         (severity) => severity.min <= score && severity.max >= score,
       )?.label;
     }
 
-    if (template.type === QuestionnaireType.lhp) {
+    if (questionnaire.type === QuestionnaireType.lhp) {
       severity = this.calculateHealthPersona(answers);
     }
 
     return {
       score,
       severity,
-      alert: answers.find((answer) => this.isAlertConditionsSatisfied(answer, template))
+      alert: answers.find((answer) => this.isAlertConditionsSatisfied(answer, questionnaire))
         ? true
         : false,
     };
   }
 
-  private isAlertConditionsSatisfied(answer: Answer, template: Questionnaire): boolean {
-    const item = this.findItemByCode(template.items, answer.code);
+  private isAlertConditionsSatisfied(answer: Answer, questionnaire: Questionnaire): boolean {
+    const item = this.findItemByCode(questionnaire.items, answer.code);
 
     const isSatisfied = (condition: AlertCondition): boolean => {
       switch (condition.type) {

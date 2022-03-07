@@ -134,8 +134,8 @@ export class SubmitQuestionnaireResponseParams {
   questionnaireId: string;
 
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
-  @Field(() => String)
-  memberId: string;
+  @Field(() => String, { nullable: true })
+  memberId?: string;
 
   @ArrayNotEmpty({
     message: Errors.get(ErrorType.questionnaireResponseInvalidResponseEmptyAnswerList),

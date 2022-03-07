@@ -131,11 +131,12 @@ export enum ErrorType {
   questionnaireItemMissingRangeCode = 10203,
   questionnaireSeverityLevelInvalidCode = 10204,
   questionnaireResponseInvalidResponse = 10205,
-  questionnaireResponseInvalidQuestionnaireIdNotFound = 10206,
+  questionnaireNotFound = 10206,
   questionnaireResponseInvalidQuestionnaireId = 10207,
   questionnaireResponseInvalidResponseEmptyAnswerList = 10208,
   questionnaireInvalidIdCode = 10209,
   questionnaireResponseInvalidIdCode = 10210,
+  questionnaireNotAssignableToMember = 10211,
 
   // Module Alert
   alertIdInvalid = 10301,
@@ -333,10 +334,7 @@ export const Errors: Map<ErrorType, string> = new Map([
     'invalid questionnaire severity level list',
   ],
   [ErrorType.questionnaireResponseInvalidResponse.valueOf(), 'invalid questionnaire response'],
-  [
-    ErrorType.questionnaireResponseInvalidQuestionnaireIdNotFound.valueOf(),
-    'invalid questionnaire response - questionnaire not found',
-  ],
+  [ErrorType.questionnaireNotFound.valueOf(), 'questionnaire not found'],
   [
     ErrorType.questionnaireResponseInvalidQuestionnaireId.valueOf(),
     `questionnaireId ${objectIdFormat}`,
@@ -349,6 +347,10 @@ export const Errors: Map<ErrorType, string> = new Map([
   [
     ErrorType.questionnaireResponseInvalidIdCode.valueOf(),
     `questionnaire response id ${objectIdFormat}`,
+  ],
+  [
+    ErrorType.questionnaireNotAssignableToMember.valueOf(),
+    'questionnaire not assignable to member',
   ],
   [ErrorType.redFlagNotFound.valueOf(), 'red flag id was not found'],
   [ErrorType.carePlanTypeInvalid.valueOf(), 'invalid care plan type'],

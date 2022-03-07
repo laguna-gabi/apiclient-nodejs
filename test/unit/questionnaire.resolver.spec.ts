@@ -1,7 +1,14 @@
 import { mockProcessWarnings } from '@lagunahealth/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { EventType, IEventUpdateHealthPersona } from '../../src/common';
+import {
+  ErrorType,
+  Errors,
+  EventType,
+  IEventUpdateHealthPersona,
+  MemberRole,
+  UserRole,
+} from '../../src/common';
 import {
   CreateQuestionnaireParams,
   HealthPersona,
@@ -16,6 +23,7 @@ import {
   generateCreateQuestionnaireParams,
   generateId,
   generateSubmitQuestionnaireResponseParams,
+  mockGenerateQuestionnaire,
 } from '../../test';
 
 describe('QuestionnaireResolver', () => {
@@ -93,9 +101,20 @@ describe('QuestionnaireResolver', () => {
 
     it('should get a Questionnaire', async () => {
       const qId = generateId();
-      await resolver.getQuestionnaire(qId);
+      await resolver.getQuestionnaire(UserRole.coach, qId);
 
       expect(spyOnServiceGetById).toHaveBeenCalledWith(qId);
+    });
+
+    // eslint-disable-next-line max-len
+    it('should fail to get Questionnaire by member since type not assignable to member', async () => {
+      const questionnaire = mockGenerateQuestionnaire();
+      questionnaire.isAssignableToMember = false;
+      spyOnServiceGetById.mockImplementationOnce(() => questionnaire);
+
+      await expect(resolver.getQuestionnaire(MemberRole.member, questionnaire.id)).rejects.toThrow(
+        Errors.get(ErrorType.questionnaireNotAssignableToMember),
+      );
     });
   });
 
@@ -142,21 +161,24 @@ describe('QuestionnaireResolver', () => {
   describe('submitQuestionnaireResponse', () => {
     let spyOnServiceSubmitQR: jest.SpyInstance;
     let spyOnServiceGetHealthPersona: jest.SpyInstance;
+    let spyOnServiceGetById: jest.SpyInstance;
 
     beforeEach(() => {
       spyOnServiceSubmitQR = jest.spyOn(service, 'submitQuestionnaireResponse');
       spyOnServiceGetHealthPersona = jest.spyOn(service, 'getHealthPersona');
+      spyOnServiceGetById = jest.spyOn(service, 'getQuestionnaireById');
     });
 
     afterEach(() => {
       spyOnServiceSubmitQR.mockReset();
       spyOnServiceGetHealthPersona.mockReset();
+      spyOnServiceGetById.mockReset();
     });
 
     it('should submit a Questionnaire Response', async () => {
       const qrSubmitParams = generateSubmitQuestionnaireResponseParams();
       spyOnServiceSubmitQR.mockResolvedValueOnce({ type: QuestionnaireType.phq9 });
-      await resolver.submitQuestionnaireResponse(qrSubmitParams);
+      await resolver.submitQuestionnaireResponse(UserRole.coach, qrSubmitParams);
 
       expect(spyOnServiceSubmitQR).toHaveBeenCalledWith({ ...qrSubmitParams });
     });
@@ -168,10 +190,25 @@ describe('QuestionnaireResolver', () => {
 
       const qrSubmitParams = generateSubmitQuestionnaireResponseParams();
       spyOnServiceSubmitQR.mockResolvedValueOnce({ type: QuestionnaireType.lhp });
-      await resolver.submitQuestionnaireResponse(qrSubmitParams);
+      await resolver.submitQuestionnaireResponse(UserRole.coach, qrSubmitParams);
 
       const event: IEventUpdateHealthPersona = { memberId: qrSubmitParams.memberId, healthPersona };
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onUpdateHealthPersona, event);
+    });
+
+    // eslint-disable-next-line max-len
+    it('should fail to submit a Questionnaire Response by member since type not assignable to member', async () => {
+      const questionnaire = mockGenerateQuestionnaire();
+      questionnaire.isAssignableToMember = false;
+      spyOnServiceGetById.mockImplementationOnce(() => questionnaire);
+
+      const qrSubmitParams = generateSubmitQuestionnaireResponseParams({
+        questionnaireId: questionnaire.id,
+      });
+
+      await expect(
+        resolver.submitQuestionnaireResponse(MemberRole.member, qrSubmitParams),
+      ).rejects.toThrow(Errors.get(ErrorType.questionnaireNotAssignableToMember));
     });
   });
 });

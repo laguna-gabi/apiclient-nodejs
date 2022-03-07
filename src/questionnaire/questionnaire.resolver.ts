@@ -11,12 +11,17 @@ import {
   SubmitQuestionnaireResponseParams,
 } from '.';
 import {
+  Client,
   ErrorType,
   Errors,
   EventType,
   IEventUpdateHealthPersona,
   IsValidObjectId,
   LoggingInterceptor,
+  MemberIdParam,
+  MemberIdParamType,
+  MemberRole,
+  MemberUserRouteInterceptor,
   Roles,
   UserRole,
 } from '../common';
@@ -44,9 +49,10 @@ export class QuestionnaireResolver {
     return this.questionnaireService.getActiveQuestionnaires();
   }
 
-  @Query(() => Questionnaire, { nullable: true })
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Query(() => Questionnaire)
+  @Roles(UserRole.coach, UserRole.nurse, MemberRole.member)
   async getQuestionnaire(
+    @Client('roles') roles,
     @Args(
       'id',
       { type: () => String },
@@ -54,7 +60,11 @@ export class QuestionnaireResolver {
     )
     id: string,
   ): Promise<Questionnaire> {
-    return this.questionnaireService.getQuestionnaireById(id);
+    const questionnaire = await this.questionnaireService.getQuestionnaireById(id);
+    if (roles.includes(MemberRole.member) && !questionnaire.isAssignableToMember) {
+      throw new Error(Errors.get(ErrorType.questionnaireNotAssignableToMember));
+    }
+    return questionnaire;
   }
 
   @Query(() => [QuestionnaireResponse])
@@ -84,16 +94,27 @@ export class QuestionnaireResolver {
   }
 
   @Mutation(() => QuestionnaireResponse)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @Roles(UserRole.coach, UserRole.nurse, MemberRole.member)
+  @MemberIdParam(MemberIdParamType.memberId)
+  @UseInterceptors(MemberUserRouteInterceptor)
   async submitQuestionnaireResponse(
+    @Client('roles') roles,
     @Args(camelCase(SubmitQuestionnaireResponseParams.name), {
       type: () => SubmitQuestionnaireResponseParams,
     })
     submitQuestionnaireResponseParams: SubmitQuestionnaireResponseParams,
   ): Promise<QuestionnaireResponse> {
-    const result = await this.questionnaireService.submitQuestionnaireResponse({
-      ...submitQuestionnaireResponseParams,
-    });
+    const questionnaire = await this.questionnaireService.getQuestionnaireById(
+      submitQuestionnaireResponseParams.questionnaireId,
+    );
+
+    if (roles.includes(MemberRole.member) && !questionnaire.isAssignableToMember) {
+      throw new Error(Errors.get(ErrorType.questionnaireNotAssignableToMember));
+    }
+
+    const result = await this.questionnaireService.submitQuestionnaireResponse(
+      submitQuestionnaireResponseParams,
+    );
 
     if (result.type === QuestionnaireType.lhp) {
       const { memberId } = submitQuestionnaireResponseParams;

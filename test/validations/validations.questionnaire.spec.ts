@@ -176,7 +176,6 @@ describe('Validations - questionnaire', () => {
     test.each`
       field                | error
       ${'questionnaireId'} | ${`Field "questionnaireId" of required type "String!" was not provided.`}
-      ${'memberId'}        | ${`Field "memberId" of required type "String!" was not provided.`}
       ${'answers'}         | ${`Field "answers" of required type "[AnswerInput!]!" was not provided.`}
     `(
       `should fail submit QuestionnaireResponse since mandatory field $field is missing`,
@@ -216,9 +215,7 @@ describe('Validations - questionnaire', () => {
         submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
           questionnaireId: generateId(),
         }),
-        invalidFieldsErrors: [
-          Errors.get(ErrorType.questionnaireResponseInvalidQuestionnaireIdNotFound),
-        ],
+        invalidFieldsErrors: [Errors.get(ErrorType.questionnaireNotFound)],
       });
     });
 

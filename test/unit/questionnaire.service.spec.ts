@@ -253,6 +253,12 @@ describe('QuestionnaireService', () => {
         updatedAt: questionnaire.updatedAt,
       });
     });
+
+    it('should fail to get non existing questionnaire', async () => {
+      await expect(service.getQuestionnaireById(generateId())).rejects.toThrow(
+        Errors.get(ErrorType.questionnaireNotFound),
+      );
+    });
   });
 
   describe('submitQuestionnaireResponse', () => {
@@ -318,9 +324,7 @@ describe('QuestionnaireService', () => {
             { code: 'q3', value: '1' },
           ],
         }),
-      ).rejects.toThrow(
-        Error(Errors.get(ErrorType.questionnaireResponseInvalidQuestionnaireIdNotFound)),
-      );
+      ).rejects.toThrow(Error(Errors.get(ErrorType.questionnaireNotFound)));
     });
 
     it('should fail to submit a questionnaire response - invalid response', async () => {
@@ -532,10 +536,10 @@ describe('QuestionnaireService', () => {
   describe('validate', () => {
     it.each([
       [
-        'invalid answer - code not in template',
+        'invalid answer - code not in questionnaire',
         [{ code: 'q1', value: '2' }],
         mockGenerateQuestionnaire({ items: [] }),
-        'answer with invalid code q1 - not in template',
+        'answer with invalid code q1 - not in questionnaire',
       ],
       [
         'invalid type choice answer - not in option list',
