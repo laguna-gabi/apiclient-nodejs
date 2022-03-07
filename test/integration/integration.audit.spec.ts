@@ -1,5 +1,5 @@
 import { general } from 'config';
-import { addDays } from 'date-fns';
+import { addDays, addHours } from 'date-fns';
 import * as faker from 'faker';
 import { date as fakerDate, lorem } from 'faker';
 import { Types } from 'mongoose';
@@ -7,7 +7,6 @@ import * as request from 'supertest';
 import { buildNPSQuestionnaire } from '../../cmd/statics';
 import { Appointment, AppointmentDocument } from '../../src/appointment';
 import { Availability, AvailabilityDocument } from '../../src/availability';
-import { DailyReport, DailyReportCategoryTypes } from '../../src/dailyReport';
 import {
   BarrierDocument,
   CarePlanDocument,
@@ -16,6 +15,8 @@ import {
   RedFlagDocument,
 } from '../../src/care';
 import { UserRole, delay, reformatDate } from '../../src/common';
+import { Communication, CommunicationDocument } from '../../src/communication';
+import { DailyReport, DailyReportCategoryTypes } from '../../src/dailyReport';
 import {
   ActionItem,
   ActionItemDocument,
@@ -72,7 +73,6 @@ import {
   submitMockCareWizard,
   urls,
 } from '../index';
-import { Communication, CommunicationDocument } from '../../src/communication';
 
 describe('Integration tests : Audit', () => {
   const handler: Handler = new Handler();
@@ -827,9 +827,10 @@ describe('Integration tests : Audit', () => {
 
   describe(Appointment.name, () => {
     it('should set createdBy and updatedBy on requestAppointment', async () => {
+      const { id: userId } = await creators.createAndValidateUser();
       const { id } = await handler.mutations.requestAppointment({
         appointmentParams: generateRequestAppointmentParams({
-          userId: user1.id,
+          userId,
           memberId: handler.patientZero.id,
           notBefore: addDays(new Date(), 1),
         }),
@@ -847,9 +848,10 @@ describe('Integration tests : Audit', () => {
     });
 
     it('should set createdBy and updatedBy on scheduleAppointment', async () => {
+      const { id: userId } = await creators.createAndValidateUser();
       const { id } = await handler.mutations.scheduleAppointment({
         appointmentParams: generateScheduleAppointmentParams({
-          userId: user1.id,
+          userId,
           memberId: handler.patientZero.id,
         }),
         requestHeaders: generateRequestHeaders(user1.authId),
@@ -866,19 +868,22 @@ describe('Integration tests : Audit', () => {
     });
 
     it('should update createdBy and updatedBy on scheduleAppointment', async () => {
+      const { id: userId } = await creators.createAndValidateUser();
+      const appointmentParams = generateScheduleAppointmentParams({
+        userId,
+        memberId: handler.patientZero.id,
+      });
       const { id } = await handler.mutations.scheduleAppointment({
-        appointmentParams: generateScheduleAppointmentParams({
-          userId: user1.id,
-          memberId: handler.patientZero.id,
-        }),
+        appointmentParams,
         requestHeaders: generateRequestHeaders(user1.authId),
       });
 
       await handler.mutations.scheduleAppointment({
         appointmentParams: generateScheduleAppointmentParams({
           id,
-          userId: user2.id,
+          userId,
           memberId: handler.patientZero.id,
+          start: addHours(new Date(appointmentParams.end), 1),
         }),
         requestHeaders: generateRequestHeaders(user2.authId),
       });
@@ -894,9 +899,10 @@ describe('Integration tests : Audit', () => {
     });
 
     it('should update createdBy and updatedBy on endAppointment', async () => {
+      const { id: userId } = await creators.createAndValidateUser();
       const { id } = await handler.mutations.scheduleAppointment({
         appointmentParams: generateScheduleAppointmentParams({
-          userId: user1.id,
+          userId,
           memberId: handler.patientZero.id,
         }),
         requestHeaders: generateRequestHeaders(user1.authId),
