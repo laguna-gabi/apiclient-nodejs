@@ -34,7 +34,7 @@ export const buildGAD7Questionnaire = (): CreateQuestionnaireParams => {
     label: question,
     type: ItemType.choice,
     order: count,
-    required: true,
+    required: false,
     options,
   }));
 
@@ -48,7 +48,7 @@ export const buildGAD7Questionnaire = (): CreateQuestionnaireParams => {
         label: groupTitle,
         type: ItemType.group,
         order: 0,
-        required: true,
+        required: false,
         items: groupItems,
       },
     ],

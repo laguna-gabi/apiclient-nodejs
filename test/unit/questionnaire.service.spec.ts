@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { lorem } from 'faker';
 import { Model, Types, model } from 'mongoose';
-import { buildLHPQuestionnaire } from '../../cmd/statics';
+import { buildGAD7Questionnaire, buildLHPQuestionnaire } from '../../cmd/statics';
 import { ErrorType, Errors, EventType, ItemType, LoggerService } from '../../src/common';
 import {
   AlertConditionType,
@@ -614,6 +614,18 @@ describe('QuestionnaireService', () => {
         );
       },
     );
+
+    it('should allow submit of an empty QR for GAD-7 - no required fields', async () => {
+      const { id } = await service.createQuestionnaire(buildGAD7Questionnaire());
+
+      await expect(
+        service.submitQuestionnaireResponse({
+          questionnaireId: id,
+          memberId: generateId(),
+          answers: [],
+        }),
+      ).resolves.not.toThrow();
+    });
   });
 
   describe('isAlertConditionsSatisfied', () => {

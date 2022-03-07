@@ -245,11 +245,13 @@ export class QuestionnaireService extends BaseService {
       questionnaire.type === QuestionnaireType.phq9 ||
       questionnaire.type === QuestionnaireType.nps
     ) {
-      score = answers
-        .map((answer) => parseInt(answer.value))
-        .reduce((valueA, valueB) => {
-          return valueA + valueB;
-        });
+      score = answers.length
+        ? answers
+            .map((answer) => parseInt(answer.value))
+            .reduce((valueA, valueB) => {
+              return valueA + valueB;
+            })
+        : 0;
 
       severity = questionnaire?.severityLevels.find(
         (severity) => severity.min <= score && severity.max >= score,
