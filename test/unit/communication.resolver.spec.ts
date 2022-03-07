@@ -264,7 +264,7 @@ describe('CommunicationResolver', () => {
 
       expect(communicationInfo).toEqual({
         memberLink:
-          `https://video-chat-develop.lagunahealth.com/?uid=${communication.memberId}` +
+          `https://dev.chat.lagunahealth.com/?uid=${communication.memberId}` +
           `&mid=${communication.sendBirdChannelUrl}&token=undefined`,
         user: {
           avatar: user.avatar,

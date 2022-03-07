@@ -2160,7 +2160,7 @@ describe('Integration tests: all', () => {
         message:
           `Alerting results on ${questionnaire.shortName} for ` +
           `${user.firstName} ${user.lastName}’s member - ` +
-          `<https://harmony-develop.lagunahealth.com/details/${member.id.toString()}|` +
+          `<https://dev.harmony.lagunahealth.com/details/${member.id.toString()}|` +
           `${member.firstName[0].toUpperCase() + member.lastName[0].toUpperCase()}>` +
           `. Scored a '2'`,
       });
