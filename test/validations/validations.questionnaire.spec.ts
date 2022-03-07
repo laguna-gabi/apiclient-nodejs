@@ -218,23 +218,5 @@ describe('Validations - questionnaire', () => {
         invalidFieldsErrors: [Errors.get(ErrorType.questionnaireNotFound)],
       });
     });
-
-    it(`should fail to submit a response due to invalid response`, async () => {
-      const createQuestionnaireParams: CreateQuestionnaireParams =
-        generateCreateQuestionnaireParams({
-          items: [],
-        });
-
-      const { id: questionnaireId } = await handler.mutations.createQuestionnaire({
-        createQuestionnaireParams,
-      });
-
-      await handler.mutations.submitQuestionnaireResponse({
-        submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
-          questionnaireId,
-        }),
-        invalidFieldsErrors: [Errors.get(ErrorType.questionnaireResponseInvalidResponse)],
-      });
-    });
   });
 });

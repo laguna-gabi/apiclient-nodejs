@@ -339,7 +339,11 @@ describe('QuestionnaireService', () => {
             { code: 'q2', value: '2' },
           ],
         }),
-      ).rejects.toThrow(Error(Errors.get(ErrorType.questionnaireResponseInvalidResponse)));
+      ).rejects.toThrowError(
+        `${Errors.get(
+          ErrorType.questionnaireResponseInvalidResponse,
+        )}: answer for 'choice' type question with invalid value code: 'q1', value: '6'`,
+      );
     });
   });
 
@@ -590,6 +594,26 @@ describe('QuestionnaireService', () => {
         }).not.toThrow();
       }
     });
+
+    it.each([
+      [{ answers: [{ code: 'q1', value: '1' }], errors: 'q2' }],
+      [{ answers: [], errors: 'q1,q2' }],
+    ])(
+      'should fail to submit a questionnaire response - missing required question %s',
+      async (params) => {
+        await expect(
+          service.submitQuestionnaireResponse({
+            questionnaireId: lhpTypeTemplate.id,
+            memberId: generateId(),
+            answers: params.answers,
+          }),
+        ).rejects.toThrowError(
+          `${Errors.get(
+            ErrorType.questionnaireResponseInvalidResponse,
+          )}: missing required answer codes: ${params.errors}`,
+        );
+      },
+    );
   });
 
   describe('isAlertConditionsSatisfied', () => {

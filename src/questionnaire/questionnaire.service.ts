@@ -1,7 +1,7 @@
-import { formatEx } from '@lagunahealth/pandora';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
+import { differenceWith } from 'lodash';
 import { Model, Types } from 'mongoose';
 import {
   AlertCondition,
@@ -88,17 +88,7 @@ export class QuestionnaireService extends BaseService {
       throw new Error(Errors.get(ErrorType.questionnaireNotFound));
     }
 
-    try {
-      this.validate(submitQuestionnaireResponseParams.answers, questionnaire);
-    } catch (ex) {
-      this.logger.error(
-        submitQuestionnaireResponseParams,
-        QuestionnaireService.name,
-        this.submitQuestionnaireResponse.name,
-        formatEx(ex),
-      );
-      throw new Error(Errors.get(ErrorType.questionnaireResponseInvalidResponse));
-    }
+    this.validate(submitQuestionnaireResponseParams.answers, questionnaire);
 
     // 2. save
     const qr = await this.questionnaireResponse.create({
@@ -193,13 +183,31 @@ export class QuestionnaireService extends BaseService {
   }
 
   private validate(answers: Answer[], questionnaire: Questionnaire) {
+    const formatError = (error: string) => {
+      return `${Errors.get(ErrorType.questionnaireResponseInvalidResponse)}: ${error}`;
+    };
+
+    const requiredAnswerCodes = questionnaire.items
+      .filter((item) => item.required)
+      .map((item) => item.code);
+    const diffResult = differenceWith(
+      requiredAnswerCodes,
+      answers,
+      (code, answer) => code === answer.code,
+    );
+    if (diffResult.length >= 1) {
+      throw new Error(formatError(`missing required answer codes: ${diffResult.join()}`));
+    }
+
     answers.forEach((answer) => {
       const answerValue = parseInt(answer.value);
       // validate that the answer code exists in questionnaire
       const item = this.findItemByCode(questionnaire.items, answer.code);
 
       if (!item) {
-        throw new Error(`answer with invalid code ${answer.code} - not in questionnaire`);
+        throw new Error(
+          formatError(`answer with invalid code ${answer.code} - not in questionnaire`),
+        );
       }
 
       // validate that the answer value is consistent with question type and options/range
@@ -207,16 +215,20 @@ export class QuestionnaireService extends BaseService {
         case ItemType.choice:
           if (!item.options.find((option) => option.value === answerValue)) {
             throw new Error(
-              // eslint-disable-next-line max-len
-              `answer for 'choice' type question with invalid value code: '${answer.code}', value: '${answer.value}'`,
+              formatError(
+                `answer for 'choice' type question with invalid value code: ` +
+                  `'${answer.code}', value: '${answer.value}'`,
+              ),
             );
           }
           break;
         case ItemType.range:
           if (answerValue > item.range.max.value || answerValue < item.range.min.value) {
             throw new Error(
-              // eslint-disable-next-line max-len
-              `answer for 'range' type question with value out of range: '${answer.code}', value: '${answer.value}'`,
+              formatError(
+                `answer for 'range' type question with value out of range: ` +
+                  `'${answer.code}', value: '${answer.value}'`,
+              ),
             );
           }
           break;
