@@ -35,7 +35,8 @@
                 "APPT": "",
                 "TODO": ""
             },
-            "assessmentSubmitAlert": ""
+            "assessmentSubmitAlert": "",
+            "answerQuestionnaire": ""
         },
         "honorific": {
             "mr": "Señor.",
