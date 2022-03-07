@@ -52,34 +52,22 @@ export class Creators {
     return { id, ...orgParams };
   };
 
-  /**
-   * @param org
-   * @param useNewUser : true if you call scheduleAppointment, in order to avoid error of collision
-   * in appointment: ErrorType.appointmentOverlaps : Appointment overlaps another appointment
-   */
-  createAndValidateMember = async ({
-    org,
-    useNewUser = false,
-    userId, // support the case where we want to assign the member to an existing user
-    requestHeaders = this.handler.defaultUserRequestHeaders,
+  createMemberUserAndOptionalOrg = async ({
+    orgId,
   }: {
-    org: Org;
-    useNewUser?: boolean;
-    userId?: string;
-    requestHeaders?;
-  }): Promise<{ member: Member; user?: User }> => {
+    orgId?: string;
+  } = {}): Promise<{ member: Member; user: User; org: Org }> => {
+    const org = orgId
+      ? await this.handler.queries.getOrg({ id: orgId })
+      : await this.createAndValidateOrg();
     const userParams = generateCreateUserParams();
-    let user: User;
+    await this.handler.mutations.createUser({ userParams });
+    const user: User = await this.handler.queries.getUser({
+      requestHeaders: { Authorization: jwt.sign({ sub: userParams.authId }, 'my-secret') },
+    });
 
-    if (useNewUser) {
-      const { id } = await this.handler.mutations.createUser({ userParams });
-      userId = id;
-
-      const requestHeaders = { Authorization: jwt.sign({ sub: userParams.authId }, 'my-secret') };
-      user = await this.handler.queries.getUser({ requestHeaders });
-    }
-
-    const memberParams = generateCreateMemberParams({ orgId: org.id, userId });
+    const requestHeaders = this.handler.defaultUserRequestHeaders;
+    const memberParams = generateCreateMemberParams({ orgId: org.id, userId: user.id });
     const { id } = await this.handler.mutations.createMember({ memberParams, requestHeaders });
 
     const member = await this.handler.queries.getMember({ id, requestHeaders });
@@ -97,7 +85,7 @@ export class Creators {
     expect(member.dischargeDate).toBeNull();
     expect(new Date(member.createdAt)).toEqual(expect.any(Date));
 
-    return { member, user };
+    return { member, user, org };
   };
 
   /**

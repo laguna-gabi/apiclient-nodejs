@@ -22,9 +22,8 @@ describe('Integration tests : getMembers', () => {
   });
 
   it('should call with a default member(no: appointments, ai, ..)', async () => {
-    const org = await creators.createAndValidateOrg();
-    const { member: member1 } = await creators.createAndValidateMember({ org });
-    const { member: member2 } = await creators.createAndValidateMember({ org });
+    const { member: member1, org } = await creators.createMemberUserAndOptionalOrg();
+    const { member: member2 } = await creators.createMemberUserAndOptionalOrg({ orgId: org.id });
     const primaryUser1 = member1.users[0];
     const primaryUser2 = member2.users[0];
 
@@ -60,8 +59,7 @@ describe('Integration tests : getMembers', () => {
   });
 
   it('should call with a all member parameters', async () => {
-    const org = await creators.createAndValidateOrg();
-    const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+    const { member, org } = await creators.createMemberUserAndOptionalOrg();
     const primaryUser = member.users[0];
 
     await creators.createAndValidateAppointment({ member });

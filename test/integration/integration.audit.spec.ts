@@ -513,8 +513,7 @@ describe('Integration tests : Audit', () => {
 
   describe(DailyReport.name, () => {
     it('should create a dailyReport', async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createMemberUserAndOptionalOrg();
       const startDate = fakerDate.past();
       const date = reformatDate(startDate.toString(), general.get('dateFormatString'));
       await handler.mutations.setDailyReportCategories({

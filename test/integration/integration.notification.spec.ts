@@ -163,10 +163,7 @@ describe('Integration tests: notifications', () => {
      */
     // eslint-disable-next-line max-len
     it(`createMember: should updateClientSettings for user and member and send dispatch of type ${RegisterInternalKey.newMember} and ${RegisterInternalKey.newMemberNudge}`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const user = await creators.createAndValidateUser();
-      const memberParams = generateCreateMemberParams({ userId: user.id, orgId: org.id });
-      const { id } = await handler.mutations.createMember({ memberParams });
+      const { member, user, org } = await creators.createMemberUserAndOptionalOrg();
       await delay(200);
 
       //send event to queue on update user config (create)
@@ -178,8 +175,7 @@ describe('Integration tests: notifications', () => {
 
       //send event to queue on update member config (create)
       const mockMember = generateUpdateMemberSettingsMock({
-        id,
-        ...memberParams,
+        ...member,
         orgName: org.name,
       });
       const objectMember = new ObjectUpdateMemberSettingsClass(mockMember);
@@ -190,7 +186,7 @@ describe('Integration tests: notifications', () => {
       });
 
       const mock1 = generateNewMemberMock({
-        recipientClientId: id,
+        recipientClientId: member.id,
         senderClientId: user.id,
       });
       const object1 = new ObjectNewMemberClass(mock1);
@@ -207,7 +203,7 @@ describe('Integration tests: notifications', () => {
       });
 
       const mock2 = generateNewMemberNudgeMock({
-        recipientClientId: id,
+        recipientClientId: member.id,
         senderClientId: user.id,
       });
       const object2 = new ObjectNewMemberNudgeClass(mock2);
@@ -240,19 +236,16 @@ describe('Integration tests: notifications', () => {
     test.each([true, false])(
       `should delete settings and ${RegisterInternalKey.newMemberNudge} dispatch`,
       async (hard) => {
-        const org = await creators.createAndValidateOrg();
-        const user = await creators.createAndValidateUser();
-        const memberParams = generateCreateMemberParams({ userId: user.id, orgId: org.id });
-        const { id } = await handler.mutations.createMember({ memberParams });
+        const { member } = await creators.createMemberUserAndOptionalOrg();
         await delay(200);
         handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
-        const deleteMemberParams = generateDeleteMemberParams({ id, hard });
+        const deleteMemberParams = generateDeleteMemberParams({ id: member.id, hard });
         await handler.mutations.deleteMember({ deleteMemberParams });
         await delay(200);
 
         expect(handler.queueService.spyOnQueueServiceSendMessage).toBeCalledTimes(6);
-        checkDeleteDispatches(id, true, 1);
-        checkValues(6, { type: InnerQueueTypes.deleteClientSettings, id });
+        checkDeleteDispatches(member.id, true, 1);
+        checkValues(6, { type: InnerQueueTypes.deleteClientSettings, id: member.id });
       },
     );
 
@@ -272,8 +265,7 @@ describe('Integration tests: notifications', () => {
         `${LogInternalKey.logReminder} and delete ` +
         `${RegisterInternalKey.newMemberNudge}`,
       async () => {
-        const org = await creators.createAndValidateOrg();
-        const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+        const { member } = await creators.createMemberUserAndOptionalOrg();
         const requestHeaders = generateRequestHeaders(member.authId);
 
         await delay(200);
@@ -344,8 +336,7 @@ describe('Integration tests: notifications', () => {
      */
     // eslint-disable-next-line max-len
     it('registerMemberForNotifications: should not re-send dispatches if member already logged in', async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(member.authId);
 
       await delay(200);
@@ -440,8 +431,7 @@ describe('Integration tests: notifications', () => {
      *      1. user sends member a custom dispatch to be triggered on specific time
      */
     it('notify: should register for future notify', async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createMemberUserAndOptionalOrg();
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
@@ -490,8 +480,7 @@ describe('Integration tests: notifications', () => {
      *      1. send customContent dispatch
      */
     it(`notify: dispatch message of type ${NotificationType.textSms}`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createMemberUserAndOptionalOrg();
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
@@ -538,8 +527,7 @@ describe('Integration tests: notifications', () => {
     test.each([NotificationType.video, NotificationType.call])(
       `notify: dispatch message of type %p`,
       async (type) => {
-        const org = await creators.createAndValidateOrg();
-        const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+        const { member } = await creators.createMemberUserAndOptionalOrg();
         const requestHeaders = generateRequestHeaders(member.authId);
 
         const params: RegisterForNotificationParams = {
@@ -598,8 +586,7 @@ describe('Integration tests: notifications', () => {
     test.each([ExternalKey.addCaregiverDetails, ExternalKey.setCallPermissions])(
       `notifyContent: dispatch message of %p`,
       async (contentKey) => {
-        const org = await creators.createAndValidateOrg();
-        const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+        const { member } = await creators.createMemberUserAndOptionalOrg();
         const requestHeaders = generateRequestHeaders(member.authId);
 
         const params: RegisterForNotificationParams = {
@@ -649,8 +636,7 @@ describe('Integration tests: notifications', () => {
      *      1. send ExternalKey dispatch of types ExternalKey.scheduleAppointment
      */
     it(`notifyContent: dispatch message of ${ExternalKey.scheduleAppointment}`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createMemberUserAndOptionalOrg();
 
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
@@ -691,8 +677,7 @@ describe('Integration tests: notifications', () => {
       CancelNotificationType.cancelText,
       CancelNotificationType.cancelVideo,
     ])(`notify: dispatch message of type %p`, async (type) => {
-      const org = await creators.createAndValidateOrg();
-      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(member.authId);
 
       const params: RegisterForNotificationParams = {
@@ -744,24 +729,21 @@ describe('Integration tests: notifications', () => {
      */
     // eslint-disable-next-line max-len
     it(`replaceUserForMember: should updateSenderClientIdToRecipientClientId for member dispatches`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const user = await creators.createAndValidateUser();
+      const { member } = await creators.createMemberUserAndOptionalOrg();
       const replacedUser = await creators.createAndValidateUser();
-      const memberParams = generateCreateMemberParams({ userId: user.id, orgId: org.id });
-      const { id } = await handler.mutations.createMember({ memberParams });
 
       await delay(500);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
       await handler.mutations.replaceUserForMember({
         replaceUserForMemberParams: generateReplaceUserForMemberParams({
-          memberId: id,
+          memberId: member.id,
           userId: replacedUser.id,
         }),
       });
 
       const mock = generateUpdateSenderClientIdMock({
-        recipientClientId: id,
+        recipientClientId: member.id,
         senderClientId: replacedUser.id,
       });
       const object = new ObjectUpdateSenderClientIdClass(mock);
@@ -951,12 +933,10 @@ describe('Integration tests: notifications', () => {
      */
     // eslint-disable-next-line max-len
     it(`requestAppointment: should send dispatch of type ${AppointmentInternalKey.appointmentRequest}`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const user = await creators.createAndValidateUser();
-      const { member } = await creators.createAndValidateMember({ org });
+      const { member } = await creators.createMemberUserAndOptionalOrg();
       const fakeUUID = datatype.uuid();
       const appointmentParams = generateRequestAppointmentParams({
-        userId: user.id,
+        userId: member.primaryUserId.toString(),
         memberId: member.id,
       });
       (v4 as jest.Mock).mockImplementationOnce(() => fakeUUID);
@@ -968,7 +948,7 @@ describe('Integration tests: notifications', () => {
 
       const mock = generateRequestAppointmentMock({
         recipientClientId: member.id,
-        senderClientId: user.id,
+        senderClientId: member.primaryUserId.toString(),
         appointmentId,
         correlationId: fakeUUID,
         scheduleLink: `${hosts.get('app')}/${appointmentId}`,
@@ -988,8 +968,7 @@ describe('Integration tests: notifications', () => {
      *      1. send createTodo dispatch
      */
     it(`createTodo: should send dispatch ${TodoInternalKey.createTodoMEDS}`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const memberId = member.id;
 
       await delay(200);
@@ -1031,8 +1010,7 @@ describe('Integration tests: notifications', () => {
      *      1. send createTodo dispatch
      */
     it(`createTodo: should send dispatch ${TodoInternalKey.createTodoAPPT}`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
@@ -1073,8 +1051,7 @@ describe('Integration tests: notifications', () => {
      *      1. send createTodo dispatch
      */
     it(`createTodo: should send dispatch ${TodoInternalKey.createTodoTODO}`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
@@ -1115,8 +1092,7 @@ describe('Integration tests: notifications', () => {
      *      1. send updateTodo dispatch
      */
     it(`updateTodo: should send dispatch ${TodoInternalKey.updateTodoMEDS}`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(user.authId);
 
       await delay(200);
@@ -1171,8 +1147,7 @@ describe('Integration tests: notifications', () => {
      *      1. send updateTodo dispatch
      */
     it(`updateTodo: should send dispatch ${TodoInternalKey.updateTodoAPPT}`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(user.authId);
 
       await delay(200);
@@ -1227,8 +1202,7 @@ describe('Integration tests: notifications', () => {
      *      1. send updateTodo dispatch
      */
     it(`updateTodo: should send dispatch ${TodoInternalKey.updateTodoTODO}`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(user.authId);
 
       await delay(200);
@@ -1283,8 +1257,7 @@ describe('Integration tests: notifications', () => {
      *      1. send deleteTodo dispatch
      */
     it(`deleteTodo: should send dispatch ${TodoInternalKey.deleteTodoMEDS}`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(user.authId);
 
       await delay(200);
@@ -1334,8 +1307,7 @@ describe('Integration tests: notifications', () => {
      *      1. send deleteTodo dispatch
      */
     it(`deleteTodo: should send dispatch ${TodoInternalKey.deleteTodoAPPT}`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(user.authId);
 
       await delay(200);
@@ -1382,8 +1354,7 @@ describe('Integration tests: notifications', () => {
      *      1. send deleteTodo dispatch
      */
     it(`deleteTodo: should send dispatch ${TodoInternalKey.deleteTodoTODO}`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(user.authId);
 
       await delay(200);
@@ -1446,8 +1417,7 @@ describe('Integration tests: notifications', () => {
 
     // eslint-disable-next-line max-len
     it(`submitQuestionnaireResponse: should send dispatch ${AlertInternalKey.assessmentSubmitAlert}`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const alertValue = datatype.number();
       const assessmentName = lorem.word();
 
@@ -1529,8 +1499,7 @@ describe('Integration tests: notifications', () => {
     `publishJournal: should create dispatches of types ` +
       `${JournalCustomKey.journalContent} $description`,
     async (params) => {
-      const org = await creators.createAndValidateOrg();
-      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(member.authId);
 
       await delay(200);
@@ -1631,8 +1600,7 @@ describe('Integration tests: notifications', () => {
     /* eslint-disable max-len */
     it(`sendbird: should send dispatches of type ${ChatInternalKey.newChatMessageFromMember} when received from sendbird webhook`, async () => {
       /* eslint-enable max-len */
-      const org = await creators.createAndValidateOrg();
-      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createMemberUserAndOptionalOrg();
 
       const communication = await handler.communicationService.get({
         memberId: member.id,
@@ -1680,8 +1648,7 @@ describe('Integration tests: notifications', () => {
     /* eslint-disable max-len */
     it(`sendbird: should send dispatches of type ${ChatInternalKey.newChatMessageFromUser} when received from sendbird webhook`, async () => {
       /* eslint-enable max-len */
-      const org = await creators.createAndValidateOrg();
-      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createMemberUserAndOptionalOrg();
 
       const communication = await handler.communicationService.get({
         memberId: member.id,
@@ -1722,8 +1689,7 @@ describe('Integration tests: notifications', () => {
 
     // eslint-disable-next-line max-len
     it(`twilio: should send dispatches of type ${NotifyCustomKey.customContent} and content from the sms message`, async () => {
-      const org = await creators.createAndValidateOrg();
-      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createMemberUserAndOptionalOrg();
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
@@ -1764,8 +1730,7 @@ describe('Integration tests: notifications', () => {
     /* eslint-disable max-len */
     it(`setDailyReportCategories: should send dispatch ${LogInternalKey.memberNotFeelingWellMessage}`, async () => {
       /* eslint-enable max-len */
-      const org = await creators.createAndValidateOrg();
-      const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+      const { member } = await creators.createMemberUserAndOptionalOrg();
 
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
@@ -1810,8 +1775,7 @@ describe('Integration tests: notifications', () => {
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
   const generateScheduleAppointment = async (start?: Date): Promise<Appointment> => {
-    const org = await creators.createAndValidateOrg();
-    const { member } = await creators.createAndValidateMember({ org, useNewUser: true });
+    const { member } = await creators.createMemberUserAndOptionalOrg();
 
     await delay(200);
     handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events

@@ -32,8 +32,7 @@ describe('Integration tests: rest', () => {
   });
 
   it('getSlots', async () => {
-    const org = await creators.createAndValidateOrg();
-    const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+    const { member, user } = await creators.createMemberUserAndOptionalOrg();
     const requestHeaders = generateRequestHeaders(user.authId);
 
     const appointment = await creators.createAndValidateAppointment({ member, requestHeaders });
@@ -75,8 +74,7 @@ describe('Integration tests: rest', () => {
   });
 
   it('scheduleAppointment', async () => {
-    const org = await creators.createAndValidateOrg();
-    const { member, user } = await creators.createAndValidateMember({ org, useNewUser: true });
+    const { member, user } = await creators.createMemberUserAndOptionalOrg();
 
     const appointmentsParams = generateScheduleAppointmentParams({
       userId: user.id,
