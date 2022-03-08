@@ -56,6 +56,7 @@ export enum ErrorType {
   notificationNotAllowedForWebMember = 9277,
   notificationNotAllowedForMobileMember = 9278,
   notificationNotAllowedNoRequestedAppointment = 9279,
+  notifyContentMetadataInvalid = 9280,
 
   // Module appointment errors
   appointmentIdNotFound = 9301,
@@ -132,7 +133,7 @@ export enum ErrorType {
   questionnaireSeverityLevelInvalidCode = 10204,
   questionnaireResponseInvalidResponse = 10205,
   questionnaireNotFound = 10206,
-  questionnaireResponseInvalidQuestionnaireId = 10207,
+  questionnaireIdInvalid = 10207,
   questionnaireResponseInvalidResponseEmptyAnswerList = 10208,
   questionnaireInvalidIdCode = 10209,
   questionnaireResponseInvalidIdCode = 10210,
@@ -231,6 +232,11 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.notificationNotAllowedNoRequestedAppointment.valueOf(),
     // eslint-disable-next-line max-len
     `scheduleAppointment notification can not be preformed since you do not have a requested appointment with this member`,
+  ],
+  [
+    ErrorType.notifyContentMetadataInvalid.valueOf(),
+    // eslint-disable-next-line max-len
+    `when calling notify content with contentType answerQuestionnaire questionnaireId must be provided in metadata`,
   ],
   [ErrorType.appointmentIdNotFound.valueOf(), 'appointment id was not found'],
   [ErrorType.appointmentNotBeforeDate.valueOf(), `notBefore ${dateInstanceFormat}`],
@@ -335,10 +341,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [ErrorType.questionnaireResponseInvalidResponse.valueOf(), 'invalid questionnaire response'],
   [ErrorType.questionnaireNotFound.valueOf(), 'questionnaire not found'],
-  [
-    ErrorType.questionnaireResponseInvalidQuestionnaireId.valueOf(),
-    `questionnaireId ${objectIdFormat}`,
-  ],
+  [ErrorType.questionnaireIdInvalid.valueOf(), `questionnaireId ${objectIdFormat}`],
   [
     ErrorType.questionnaireResponseInvalidResponseEmptyAnswerList.valueOf(),
     'invalid questionnaire response - empty answer list',

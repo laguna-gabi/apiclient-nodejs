@@ -1,4 +1,9 @@
-import { CancelNotificationType, NotificationType, Platform } from '@lagunahealth/pandora';
+import {
+  CancelNotificationType,
+  ExternalKey,
+  NotificationType,
+  Platform,
+} from '@lagunahealth/pandora';
 import { ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
 import { general } from 'config';
 import { isValidCron } from 'cron-validator';
@@ -216,6 +221,25 @@ export function IsTypeMetadataProvided(options: ValidationOptions) {
             case CancelNotificationType.cancelText: {
               return whenNotInMetadata;
             }
+          }
+        },
+      },
+    });
+  };
+}
+
+export function IsContentMetadataProvided(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(content: ExternalKey, args: ValidationArguments) {
+          if (content === ExternalKey.answerQuestionnaire) {
+            return args.object['metadata'] && args.object['metadata']['questionnaireId'];
+          } else {
+            return true;
           }
         },
       },

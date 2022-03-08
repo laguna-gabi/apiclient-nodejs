@@ -129,7 +129,7 @@ export class CreateQuestionnaireParams {
 
 @InputType()
 export class SubmitQuestionnaireResponseParams {
-  @IsObjectId({ message: Errors.get(ErrorType.questionnaireResponseInvalidQuestionnaireId) })
+  @IsObjectId({ message: Errors.get(ErrorType.questionnaireIdInvalid) })
   @Field(() => String)
   questionnaireId: string;
 

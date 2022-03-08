@@ -55,6 +55,7 @@ import {
   MemberSummary,
   MultipartUploadInfo,
   MultipartUploadRecordingLinkParams,
+  NotifyContentMetadata,
   NotifyContentParams,
   NotifyParams,
   Recording,
@@ -969,7 +970,7 @@ export class MemberResolver extends MemberBase {
     @Args(camelCase(NotifyContentParams.name))
     notifyContentParams: NotifyContentParams,
   ) {
-    const { memberId, userId, contentKey } = notifyContentParams;
+    const { memberId, userId, contentKey, metadata } = notifyContentParams;
     const { member, memberConfig } = await this.extractDataOfMemberAndUser(memberId, userId);
 
     const { notificationType, baseParams } = this.extractNotificationTypeAndBaseParams({
@@ -977,6 +978,7 @@ export class MemberResolver extends MemberBase {
       memberConfig,
       userId,
       contentKey,
+      metadata,
     });
 
     const dispatch: IInternalDispatch = {
@@ -1333,22 +1335,39 @@ export class MemberResolver extends MemberBase {
     memberConfig,
     userId,
     contentKey,
+    metadata,
   }: {
     member: Member;
     memberConfig: MemberConfig;
     userId: string;
     contentKey: ContentKey;
+    metadata: NotifyContentMetadata;
   }): { notificationType: NotificationType; baseParams } {
+    let notificationType;
     switch (contentKey) {
       case ExternalKey.setCallPermissions:
       case ExternalKey.addCaregiverDetails:
         if (memberConfig.platform === Platform.web || !memberConfig.isPushNotificationsEnabled) {
           throw new Error(Errors.get(ErrorType.notificationNotAllowedForWebMember));
         }
-        const notificationType = NotificationType.text;
+        notificationType = NotificationType.text;
         return {
           notificationType,
-          baseParams: { path: generatePath(notificationType, contentKey) },
+          baseParams: {
+            path: generatePath(notificationType, contentKey),
+          },
+        };
+      case ExternalKey.answerQuestionnaire:
+        const { questionnaireId } = metadata;
+        if (memberConfig.platform === Platform.web || !memberConfig.isPushNotificationsEnabled) {
+          throw new Error(Errors.get(ErrorType.notificationNotAllowedForWebMember));
+        }
+        notificationType = NotificationType.text;
+        return {
+          notificationType,
+          baseParams: {
+            path: generatePath(notificationType, contentKey, questionnaireId),
+          },
         };
       case ExternalKey.scheduleAppointment:
         if (memberConfig.platform !== Platform.web) {
@@ -1362,8 +1381,9 @@ export class MemberResolver extends MemberBase {
         if (appointments.length === 0) {
           throw new Error(Errors.get(ErrorType.notificationNotAllowedNoRequestedAppointment));
         }
+        notificationType = NotificationType.textSms;
         return {
-          notificationType: NotificationType.textSms,
+          notificationType,
           baseParams: { scheduleLink: appointments[0].link },
         };
     }

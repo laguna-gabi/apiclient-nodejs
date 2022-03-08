@@ -25,6 +25,7 @@ import {
   ErrorType,
   Errors,
   Identifier,
+  IsContentMetadataProvided,
   IsNotChat,
   IsNoteOrNurseNoteProvided,
   IsObjectId,
@@ -405,6 +406,13 @@ export class NotifyParams {
 }
 
 @InputType()
+export class NotifyContentMetadata {
+  @Field(() => String, { nullable: true })
+  @IsObjectId({ message: Errors.get(ErrorType.questionnaireIdInvalid) })
+  questionnaireId?: string;
+}
+
+@InputType()
 export class NotifyContentParams {
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
@@ -415,7 +423,11 @@ export class NotifyContentParams {
   userId: string;
 
   @Field(() => ExternalKey)
+  @IsContentMetadataProvided({ message: Errors.get(ErrorType.notifyContentMetadataInvalid) })
   contentKey: ExternalKey;
+
+  @Field(() => NotifyContentMetadata, { nullable: true })
+  metadata?: NotifyContentMetadata;
 }
 
 @InputType()

@@ -1,5 +1,6 @@
 import {
   CancelNotificationType,
+  ExternalKey,
   Honorific,
   NotificationType,
   Platform,
@@ -601,17 +602,26 @@ describe('Validations - member', () => {
       ${'memberId'}   | ${`Field "memberId" of required type "String!" was not provided.`}
       ${'userId'}     | ${`Field "userId" of required type "String!" was not provided.`}
       ${'contentKey'} | ${`Field "contentKey" of required type "ExternalKey!" was not provided.`}
-    `(
-      `should fail to cancel a notification since mandatory field $field is missing`,
-      async (params) => {
-        const notifyContentParams = generateNotifyContentParams();
-        delete notifyContentParams[params.field];
-        await handler.mutations.notifyContent({
-          notifyContentParams,
-          missingFieldError: params.error,
-        });
-      },
-    );
+    `(`should fail to notify content since mandatory field $field is missing`, async (params) => {
+      const notifyContentParams = generateNotifyContentParams();
+      delete notifyContentParams[params.field];
+      await handler.mutations.notifyContent({
+        notifyContentParams,
+        missingFieldError: params.error,
+      });
+    });
+
+    // eslint-disable-next-line max-len
+    it(`should fail to notify content since content = ${ExternalKey.answerQuestionnaire} and metadata is not provided`, async () => {
+      const notifyContentParams = generateNotifyContentParams({
+        contentKey: ExternalKey.answerQuestionnaire,
+      });
+      delete notifyContentParams.metadata;
+      await handler.mutations.notifyContent({
+        notifyContentParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.notifyContentMetadataInvalid)],
+      });
+    });
   });
 
   describe('updateMember', () => {

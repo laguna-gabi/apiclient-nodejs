@@ -206,7 +206,7 @@ describe('Validations - questionnaire', () => {
         submitQuestionnaireResponseParams: generateSubmitQuestionnaireResponseParams({
           questionnaireId: '123',
         }),
-        invalidFieldsErrors: [Errors.get(ErrorType.questionnaireResponseInvalidQuestionnaireId)],
+        invalidFieldsErrors: [Errors.get(ErrorType.questionnaireIdInvalid)],
       });
     });
 

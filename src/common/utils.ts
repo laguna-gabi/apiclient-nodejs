@@ -78,6 +78,8 @@ export const generatePath = (
       return 'settings/carecircle';
     case ExternalKey.setCallPermissions:
       return 'settings/callpermissions';
+    case ExternalKey.answerQuestionnaire:
+      return `questionnaire/${params.join('/')}`;
   }
 
   if (Object.values(TodoInternalKey).find((key) => key === contentKey)) {

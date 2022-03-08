@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "@apollo/gateway": "^0.48.1",
-    "@lagunahealth/pandora": "0.11.23",
+    "@lagunahealth/pandora": "0.11.24-71e05c5ece73357fa2bcdbbf8d2fd736c3fa8cbf",
     "@nestjs/apollo": "^10.0.4",
     "@nestjs/axios": "^0.0.5",
     "@nestjs/common": "^8.3.0",

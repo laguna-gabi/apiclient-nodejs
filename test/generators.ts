@@ -650,8 +650,9 @@ export const generateNotifyContentParams = ({
   userId = generateId(),
   memberId = generateId(),
   contentKey = ExternalKey.setCallPermissions,
+  metadata = { questionnaireId: generateId() },
 }: Partial<NotifyContentParams> = {}): NotifyContentParams => {
-  return { userId, memberId, contentKey };
+  return { userId, memberId, contentKey, metadata };
 };
 
 export const generateCancelNotifyParams = ({

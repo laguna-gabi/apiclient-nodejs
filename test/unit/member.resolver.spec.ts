@@ -2064,10 +2064,13 @@ describe('MemberResolver', () => {
       memberConfig                                                         | contentKey                         | error
       ${{ platform: Platform.web }}                                        | ${ExternalKey.addCaregiverDetails} | ${ErrorType.notificationNotAllowedForWebMember}
       ${{ platform: Platform.web }}                                        | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ platform: Platform.web }}                                        | ${ExternalKey.answerQuestionnaire} | ${ErrorType.notificationNotAllowedForWebMember}
       ${{ isPushNotificationsEnabled: false }}                             | ${ExternalKey.addCaregiverDetails} | ${ErrorType.notificationNotAllowedForWebMember}
       ${{ isPushNotificationsEnabled: false }}                             | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ isPushNotificationsEnabled: false }}                             | ${ExternalKey.answerQuestionnaire} | ${ErrorType.notificationNotAllowedForWebMember}
       ${{ platform: Platform.web, isPushNotificationsEnabled: true }}      | ${ExternalKey.addCaregiverDetails} | ${ErrorType.notificationNotAllowedForWebMember}
       ${{ platform: Platform.web, isPushNotificationsEnabled: true }}      | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ platform: Platform.web, isPushNotificationsEnabled: true }}      | ${ExternalKey.answerQuestionnaire} | ${ErrorType.notificationNotAllowedForWebMember}
       ${{ platform: Platform.android, isPushNotificationsEnabled: false }} | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
       ${{ platform: Platform.ios, isPushNotificationsEnabled: false }}     | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
       ${{ platform: Platform.android, isPushNotificationsEnabled: false }} | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
