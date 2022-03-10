@@ -187,6 +187,7 @@ export enum ExternalKey {
   addCaregiverDetails = 'addCaregiverDetails',
   setCallPermissions = 'setCallPermissions',
   scheduleAppointment = 'scheduleAppointment',
+  answerQuestionnaire = 'answerQuestionnaire',
 }
 
 export type ContentKey =
