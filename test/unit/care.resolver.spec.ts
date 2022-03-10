@@ -15,7 +15,7 @@ import {
   generateUpdateRedFlagParams,
 } from '../index';
 import { CareModule, CareResolver, CareService } from '../../src/care';
-import { redFlags } from '../../src/care/redFlags.json';
+import { redFlags } from '../../src/care/redFlags';
 
 describe('CareResolver', () => {
   let module: TestingModule;

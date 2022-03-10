@@ -33,6 +33,7 @@ import {
 import { isNil, omitBy } from 'lodash';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ISoftDelete } from '../db';
+import { redFlags } from './redFlags';
 
 @Injectable()
 export class CareService extends BaseService {
@@ -69,7 +70,12 @@ export class CareService extends BaseService {
   }
 
   async getMemberRedFlags(memberId: string): Promise<RedFlag[]> {
-    return this.redFlagModel.find({ memberId: new Types.ObjectId(memberId) });
+    const memberRedFlags = await this.redFlagModel.find({ memberId: new Types.ObjectId(memberId) });
+    return memberRedFlags.map((redFlag) => {
+      // populating red flag type from the static red flags object
+      const redFlagType = redFlags.find((type) => type.id === redFlag.type);
+      return { ...this.replaceId(redFlag.toObject()), type: redFlagType };
+    });
   }
 
   async getRedFlag(id: string): Promise<RedFlag> {
@@ -77,15 +83,17 @@ export class CareService extends BaseService {
   }
 
   async updateRedFlag(updateRedFlagParams: UpdateRedFlagParams): Promise<RedFlag> {
-    const result = await this.redFlagModel.findOneAndUpdate(
+    const redFlag = await this.redFlagModel.findOneAndUpdate(
       { _id: new Types.ObjectId(updateRedFlagParams.id) },
       { $set: omitBy(updateRedFlagParams, isNil) },
       { new: true },
     );
-    if (!result) {
+    if (!redFlag) {
       throw new Error(Errors.get(ErrorType.redFlagNotFound));
     }
-    return result;
+    // populating red flag type from the static red flags object
+    const redFlagType = redFlags.find((type) => type.id === redFlag.type);
+    return { ...this.replaceId(redFlag.toObject()), type: redFlagType };
   }
 
   /**************************************************************************************************

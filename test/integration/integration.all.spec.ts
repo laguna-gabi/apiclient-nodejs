@@ -10,7 +10,7 @@ import {
   RequestAppointmentParams,
   ScheduleAppointmentParams,
 } from '../../src/appointment';
-import { CareStatus, CreateCarePlanParams } from '../../src/care';
+import { CareStatus, CreateCarePlanParams, redFlags } from '../../src/care';
 import {
   ErrorType,
   Errors,
@@ -2024,7 +2024,13 @@ describe('Integration tests: all', () => {
       // *test the result and the relations between the entities*
       // test red flag
       delete redFlag.barriers;
-      expect(memberRedFlags).toEqual([expect.objectContaining({ ...redFlag, memberId })]);
+      expect(memberRedFlags).toEqual([
+        expect.objectContaining({
+          ...redFlag,
+          type: redFlags.find((type) => type.id === redFlag.type),
+          memberId,
+        }),
+      ]);
       const memberRedFlag = memberRedFlags[0];
 
       // test barriers

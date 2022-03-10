@@ -32,6 +32,7 @@ import {
 } from '../../src/care';
 import { Model, Types, model } from 'mongoose';
 import { lorem } from 'faker';
+import { redFlags } from '../../src/care/redFlags';
 
 describe('CareService', () => {
   let module: TestingModule;
@@ -83,7 +84,20 @@ describe('CareService', () => {
       const redFlag = await service.getRedFlag(id);
       const redFlag2 = await service.getRedFlag(id2);
       const result = await service.getMemberRedFlags(memberId);
-      expect(result).toEqual([redFlag, redFlag2]);
+      expect(result).toEqual([
+        expect.objectContaining({
+          ...params,
+          memberId: new Types.ObjectId(memberId),
+          type: redFlags.find((type) => type.id === redFlag.type),
+          id: new Types.ObjectId(id),
+        }),
+        expect.objectContaining({
+          ...params2,
+          memberId: new Types.ObjectId(memberId),
+          type: redFlags.find((type) => type.id === redFlag2.type),
+          id: new Types.ObjectId(id2),
+        }),
+      ]);
     });
 
     it('should return empty list when there are no red flags for member', async () => {

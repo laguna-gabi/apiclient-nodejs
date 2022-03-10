@@ -22,7 +22,7 @@ import {
   UserRole,
 } from '../common';
 import { camelCase } from 'lodash';
-import { redFlags } from './redFlags.json';
+import { redFlags } from './redFlags';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { SubmitCareWizardParams } from './wizard.dto';
 

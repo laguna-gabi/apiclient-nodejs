@@ -1016,7 +1016,10 @@ export class Queries {
               id
               memberId
               createdBy
-              type
+              type {
+                id
+                description
+              }
               notes
               createdBy
             }

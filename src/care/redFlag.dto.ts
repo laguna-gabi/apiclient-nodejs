@@ -41,6 +41,15 @@ export class UpdateRedFlagParams {
  *************************************************************************************************/
 
 @ObjectType()
+export class RedFlagTypeDetailed {
+  @Field(() => String)
+  description: string;
+
+  @Field(() => RedFlagType)
+  id: RedFlagType;
+}
+
+@ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class RedFlag extends Identifier {
   @Prop({ index: true, type: Types.ObjectId })
@@ -52,7 +61,7 @@ export class RedFlag extends Identifier {
   createdBy: Types.ObjectId;
 
   @Prop({ index: true, type: String, enum: RedFlagType })
-  @Field(() => RedFlagType)
+  @Field(() => RedFlagTypeDetailed)
   type: RedFlagType;
 
   @Field(() => Date)

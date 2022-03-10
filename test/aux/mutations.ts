@@ -1768,7 +1768,10 @@ export class Mutations {
             updateRedFlag(updateRedFlagParams: $updateRedFlagParams) {
               id
               notes
-              type
+              type {
+                id
+                description
+              }
             }
           }
         `,
