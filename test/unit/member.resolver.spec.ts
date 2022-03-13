@@ -491,6 +491,12 @@ describe('MemberResolver', () => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       spyOnDeleteSchedules = jest.spyOn(resolver, 'deleteSchedules');
+      spyOnServiceDeleteMember.mockImplementation(async () => undefined);
+      spyOnOneSignalUnregister.mockImplementation(async () => undefined);
+      spyOnCognitoServiceDeleteMember.mockImplementation(async () => undefined);
+      spyOnStorageServiceDeleteMember.mockImplementation(async () => undefined);
+      spyOnDeleteSchedules.mockImplementation(async () => undefined);
+      spyOnNotifyDeletedMemberConfig.mockImplementation(async () => undefined);
     });
 
     afterEach(() => {
