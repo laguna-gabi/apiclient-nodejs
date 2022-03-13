@@ -811,11 +811,7 @@ export class MemberResolver extends MemberBase {
   @Roles(UserRole.coach, UserRole.nurse)
   async dismissAlert(
     @Client('_id') userId: string,
-    @Args(
-      'alertId',
-      { type: () => String },
-      new IsValidObjectId(Errors.get(ErrorType.alertIdInvalid)),
-    )
+    @Args('alertId', { type: () => String })
     alertId: string,
   ): Promise<boolean> {
     await this.memberService.dismissAlert(userId, alertId);

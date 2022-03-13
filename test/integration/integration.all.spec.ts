@@ -1150,6 +1150,7 @@ describe('Integration tests: all', () => {
       requestHeadersUser = generateRequestHeaders(user.authId);
 
       notification1 = mockGenerateDispatch({
+        dispatchId: v4(),
         senderClientId: member1.id,
         contentKey: AppointmentInternalKey.appointmentScheduledUser,
       });
