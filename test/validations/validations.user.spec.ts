@@ -33,6 +33,7 @@ describe('Validations - user', () => {
     ${'lastName'}  | ${`Field "lastName" of required type "String!" was not provided.`}
     ${'phone'}     | ${`Field "phone" of required type "String!" was not provided.`}
     ${'authId'}    | ${`Field "authId" of required type "String!" was not provided.`}
+    ${'orgs'}      | ${`Field "orgs" of required type "[String!]!" was not provided.`}
   `(`should fail to create a user since mandatory field $field is missing`, async (params) => {
     const userParams: CreateUserParams = generateCreateUserParams();
     delete userParams[params.field];
@@ -76,6 +77,7 @@ describe('Validations - user', () => {
     ${'title'}        | ${{ title: 222 }}                 | ${{ missingFieldError: stringError }}
     ${'maxCustomers'} | ${{ maxCustomers: lorem.word() }} | ${{ missingFieldError: 'Float cannot represent non numeric value' }}
     ${'languages'}    | ${{ languages: lorem.word() }}    | ${{ missingFieldError: 'does not exist in "Language" enum.' }}
+    ${'orgs'}         | ${{ orgs: ['not-valid'] }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.orgIdInvalid)] }}
   `(
     /* eslint-enable max-len */
     `should fail to create a user since $field is not valid`,

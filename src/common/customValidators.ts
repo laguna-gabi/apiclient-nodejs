@@ -9,7 +9,7 @@ import { general } from 'config';
 import { isValidCron } from 'cron-validator';
 import { differenceInMilliseconds } from 'date-fns';
 import { isNil } from 'lodash';
-import { Types as MongooseTypes } from 'mongoose';
+import { Types } from 'mongoose';
 import { lookup } from 'zipcode-to-timezone';
 import { ItemInterface, ItemType, SeverityLevelInterface } from '.';
 
@@ -286,7 +286,23 @@ export function IsObjectId(options?: ValidationOptions) {
       options,
       validator: {
         validate(value) {
-          return MongooseTypes.ObjectId.isValid(value) || value == undefined;
+          return Types.ObjectId.isValid(value) || value == undefined;
+        },
+      },
+    });
+  };
+}
+
+export function IsObjectIds(options?: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      name: 'isObjectIds',
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(values: string[]) {
+          return values.every((value) => Types.ObjectId.isValid(value) || value == undefined);
         },
       },
     });

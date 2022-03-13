@@ -8,6 +8,7 @@ import {
   ErrorType,
   Errors,
   Identifier,
+  IsObjectIds,
   UserRole,
   maxLength,
   minLength,
@@ -69,6 +70,10 @@ export class CreateUserParams {
 
   @Field(() => [Language], { nullable: true })
   languages?: Language[];
+
+  @IsObjectIds({ message: Errors.get(ErrorType.orgIdInvalid) })
+  @Field(() => [String])
+  orgs: string[];
 }
 
 /**************************************************************************************************
@@ -137,6 +142,10 @@ export class User extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => Boolean, { nullable: true })
   inEscalationGroup?: boolean;
+
+  @Prop({ type: [{ type: Types.ObjectId }] })
+  @Field(() => [String])
+  orgs: string[];
 
   /**
    * we use that start of time (new Date(0)) for the default time for

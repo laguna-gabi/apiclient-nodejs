@@ -128,6 +128,7 @@ export const generateCreateUserParams = ({
   title = name.title(),
   maxCustomers = defaultUserParams.maxCustomers,
   languages = [Language.en, Language.es],
+  orgs = [generateId(), generateId()],
 }: Partial<CreateUserParams> = {}): CreateUserParams => {
   return {
     authId,
@@ -141,6 +142,7 @@ export const generateCreateUserParams = ({
     title,
     maxCustomers,
     languages,
+    orgs,
   };
 };
 
@@ -185,6 +187,7 @@ export const mockGenerateUser = (): User => {
     lastMemberAssignedAt: new Date(0),
     lastQueryAlert: fakerDate.past(2),
     inEscalationGroup: true,
+    orgs: [generateId(), generateId()],
   };
 };
 

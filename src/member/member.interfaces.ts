@@ -59,7 +59,7 @@ export class MemberBase {
 
     const primaryUserId = params.userId
       ? new Types.ObjectId(params.userId)
-      : await this.userService.getAvailableUser();
+      : await this.userService.getAvailableUser(params.orgId);
 
     const user = await this.userService.get(primaryUserId.toString());
 

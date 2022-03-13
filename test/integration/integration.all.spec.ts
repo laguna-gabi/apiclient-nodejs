@@ -119,8 +119,10 @@ describe('Integration tests: all', () => {
      * 12. Update action items for a member
      * 13. Fetch member and checks all related appointments
      */
-    const resultNurse1 = await creators.createAndValidateUser([UserRole.nurse, UserRole.coach]);
-    const resultNurse2 = await creators.createAndValidateUser([UserRole.nurse]);
+    const resultNurse1 = await creators.createAndValidateUser({
+      roles: [UserRole.nurse, UserRole.coach],
+    });
+    const resultNurse2 = await creators.createAndValidateUser({ roles: [UserRole.nurse] });
 
     const { member } = await creators.createMemberUserAndOptionalOrg();
 
@@ -359,6 +361,22 @@ describe('Integration tests: all', () => {
       language: Language.en,
       updatedAt: expect.any(String),
     });
+  });
+
+  it('should assign user from the same org to member', async () => {
+    const org = await creators.createAndValidateOrg();
+    const { id: userId } = await creators.createAndValidateUser({ orgId: org.id });
+    const memberParams = generateCreateMemberParams({ orgId: org.id });
+    handler.featureFlagService.spyOnFeatureFlagControlGroup.mockImplementationOnce(
+      async () => false,
+    );
+
+    const { id } = await handler.mutations.createMember({
+      memberParams,
+    });
+
+    const { primaryUserId } = await handler.queries.getMember({ id });
+    expect(primaryUserId).toEqual(userId);
   });
 
   /* eslint-disable max-len */

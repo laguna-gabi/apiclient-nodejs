@@ -105,6 +105,7 @@ describe('Integration tests: rest', () => {
 
   it('createMember', async () => {
     const org = await creators.createAndValidateOrg();
+    await creators.createAndValidateUser({ orgId: org.id });
     const memberParams = generateCreateMemberParams({ orgId: org.id });
 
     const {

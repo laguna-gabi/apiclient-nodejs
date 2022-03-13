@@ -22,8 +22,14 @@ export class Creators {
     private readonly appointmentsActions: AppointmentsIntegrationActions,
   ) {}
 
-  createAndValidateUser = async (roles?: UserRole[]): Promise<User> => {
-    const userParams: CreateUserParams = generateCreateUserParams({ roles });
+  createAndValidateUser = async ({
+    roles,
+    orgId,
+  }: { roles?: UserRole[]; orgId?: string } = {}): Promise<User> => {
+    const userParams: CreateUserParams = generateCreateUserParams({
+      roles,
+      ...(orgId ? { orgs: [orgId] } : {}),
+    });
     const { id: primaryUserId } = await this.handler.mutations.createUser({ userParams });
     const result = await this.handler.queries.getUser({
       requestHeaders: generateRequestHeaders(userParams.authId),

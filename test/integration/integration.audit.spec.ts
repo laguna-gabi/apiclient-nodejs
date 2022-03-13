@@ -481,6 +481,7 @@ describe('Integration tests : Audit', () => {
 
     it('should create a new member with correct `audit` values (GQL)', async () => {
       const org = await creators.createAndValidateOrg();
+      await creators.createAndValidateUser({ orgId: org.id });
       const memberParams = generateCreateMemberParams({ orgId: org.id });
 
       handler.featureFlagService.spyOnFeatureFlagControlGroup.mockImplementationOnce(

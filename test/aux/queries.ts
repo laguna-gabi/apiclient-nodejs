@@ -41,6 +41,7 @@ export class Queries {
             maxCustomers
             languages
             lastQueryAlert
+            orgs
             appointments {
               id
               notBefore
@@ -77,6 +78,7 @@ export class Queries {
             title
             maxCustomers
             languages
+            orgs
             appointments {
               id
               notBefore

@@ -9,6 +9,7 @@ import {
 import { subSeconds } from 'date-fns';
 import { date, internet, lorem } from 'faker';
 import * as request from 'supertest';
+import { AppointmentsIntegrationActions, Creators } from '../aux';
 import { v4 } from 'uuid';
 import { ErrorType, Errors, maxLength, minLength } from '../../src/common';
 import {
@@ -52,10 +53,17 @@ const BooleanError = `Boolean cannot represent a non boolean value`;
 
 describe('Validations - member', () => {
   const handler: Handler = new Handler();
+  let creators: Creators;
+  let appointmentsActions: AppointmentsIntegrationActions;
   let server;
 
   beforeAll(async () => {
     await handler.beforeAll();
+    appointmentsActions = new AppointmentsIntegrationActions(
+      handler.mutations,
+      handler.defaultUserRequestHeaders,
+    );
+    creators = new Creators(handler, appointmentsActions);
     await handler.mutations.createUser({ userParams: generateCreateUserParams() });
     server = handler.app.getHttpServer();
   }, 10000);
@@ -112,6 +120,7 @@ describe('Validations - member', () => {
     `(`should set default value if exists for optional field $field`, async (params) => {
       /* eslint-enable max-len */
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
+      await creators.createAndValidateUser({ orgId });
       const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
       delete memberParams[params.field];
 
@@ -133,6 +142,7 @@ describe('Validations - member', () => {
       ${'honorific'} | ${Honorific.dr}
     `(`should be able to set value for optional field $field`, async (params) => {
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
+      await creators.createAndValidateUser({ orgId });
       const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
       memberParams[params.field] = params.value;
 
@@ -148,6 +158,7 @@ describe('Validations - member', () => {
 
     it('should set value for optional field dischargeDate', async () => {
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
+      await creators.createAndValidateUser({ orgId });
       const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
 
       memberParams.dischargeDate = generateDateOnly(date.soon(3));
@@ -488,6 +499,7 @@ describe('Validations - member', () => {
       'should fail on sending metadata.when in the past for type %p',
       async (type) => {
         const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
+        await creators.createAndValidateUser({ orgId });
         const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId });
         const { id } = await handler.mutations.createMember({ memberParams });
         const member = await handler.queries.getMember({

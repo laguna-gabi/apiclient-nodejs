@@ -361,7 +361,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.barrierTypeInvalid.valueOf(), 'invalid barrier type'],
   [ErrorType.barrierTypeNotFound.valueOf(), 'barrier type was not found'],
   [ErrorType.alertIdInvalid.valueOf(), `alertId ${objectIdFormat}`],
-  [ErrorType.orgIdInvalid.valueOf(), `alertId ${objectIdFormat}`],
+  [ErrorType.orgIdInvalid.valueOf(), `orgId ${objectIdFormat}`],
 ]);
 
 export const DbErrors = {
