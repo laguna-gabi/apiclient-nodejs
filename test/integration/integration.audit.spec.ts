@@ -4,7 +4,7 @@ import * as faker from 'faker';
 import { date as fakerDate, lorem } from 'faker';
 import { Types } from 'mongoose';
 import * as request from 'supertest';
-import { buildNPSQuestionnaire } from '../../cmd/statics';
+import { buildNPSQuestionnaire } from '../../cmd/static';
 import { Appointment, AppointmentDocument } from '../../src/appointment';
 import { Availability, AvailabilityDocument } from '../../src/availability';
 import {

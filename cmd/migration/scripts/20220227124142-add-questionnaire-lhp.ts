@@ -6,7 +6,7 @@ import * as path from 'path';
 import { Command, InfoColoring } from '../.';
 import { AppModule } from '../../../src/app.module';
 import { Questionnaire, QuestionnaireService, QuestionnaireType } from '../../../src/questionnaire';
-import { buildLHPQuestionnaire } from '../../statics';
+import { buildLHPQuestionnaire } from '../../static';
 
 // ------------------------------------------------------------------------------------------------
 // Description: migrate `up`

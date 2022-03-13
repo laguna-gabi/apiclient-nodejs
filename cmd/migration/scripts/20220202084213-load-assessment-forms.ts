@@ -10,7 +10,7 @@ import {
   buildNPSQuestionnaire,
   buildPHQ9Questionnaire,
   buildWHO5Questionnaire,
-} from '../../../cmd/statics';
+} from '../../static';
 // ------------------------------------------------------------------------------------------------
 // Description: migrate `up`
 // ------------------------------------------------------------------------------------------------

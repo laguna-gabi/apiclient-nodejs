@@ -3,7 +3,7 @@ import { articlesByDrg, general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
 import { date, lorem } from 'faker';
 import { v4 } from 'uuid';
-import { buildLHPQuestionnaire } from '../../cmd/statics';
+import { buildLHPQuestionnaire } from '../../cmd/static';
 import {
   Appointment,
   AppointmentMethod,

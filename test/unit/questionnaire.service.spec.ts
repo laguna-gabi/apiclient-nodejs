@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { lorem } from 'faker';
 import { Model, Types, model } from 'mongoose';
-import { buildGAD7Questionnaire, buildLHPQuestionnaire } from '../../cmd/statics';
+import { buildGAD7Questionnaire, buildLHPQuestionnaire } from '../../cmd/static';
 import { ErrorType, Errors, EventType, ItemType, LoggerService } from '../../src/common';
 import {
   AlertConditionType,
