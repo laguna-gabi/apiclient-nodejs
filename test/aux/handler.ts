@@ -40,6 +40,7 @@ import {
   RedFlag,
   RedFlagDocument,
   RedFlagDto,
+  RedFlagType,
 } from '../../src/care';
 import {
   AppRequestContext,
@@ -126,6 +127,7 @@ export class Handler extends BaseHandler {
   spyOnGetCommunicationService;
   patientZero: Member;
   barrierType: BarrierType;
+  redFlagType: RedFlagType;
   carePlanType: CarePlanType;
   lagunaOrg: Org | null;
   dailyReportService: DailyReportService;
@@ -264,6 +266,7 @@ export class Handler extends BaseHandler {
       domain: BarrierDomain.medical,
       carePlanTypes: [this.carePlanType.id],
     });
+    this.redFlagType = await this.careService.createRedFlagType(lorem.words(5));
 
     this.defaultUserRequestHeaders = await initClients(this.userService, [
       UserRole.nurse,

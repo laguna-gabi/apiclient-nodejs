@@ -32,7 +32,6 @@ import {
 } from '../../src/care';
 import { Model, Types, model } from 'mongoose';
 import { lorem } from 'faker';
-import { redFlags } from '../../src/care/redFlags';
 
 describe('CareService', () => {
   let module: TestingModule;
@@ -62,7 +61,8 @@ describe('CareService', () => {
 
   describe('RedFlag', () => {
     it('should create a red flag', async () => {
-      const params = generateCreateRedFlagParams({});
+      const type = await generateRedFlagType();
+      const params = generateCreateRedFlagParams({ type });
       const { id } = await service.createRedFlag(params);
 
       const result = await service.getRedFlag(id);
@@ -70,32 +70,32 @@ describe('CareService', () => {
         expect.objectContaining({
           ...params,
           memberId: new Types.ObjectId(params.memberId),
+          type: new Types.ObjectId(type),
         }),
       );
     });
 
     it('should get multiple red flags by memberId', async () => {
       const memberId = generateId();
-      const params = generateCreateRedFlagParams({ memberId });
+      const type = await generateRedFlagType();
+      const params = generateCreateRedFlagParams({ memberId, type });
       const { id } = await service.createRedFlag(params);
-      const params2 = generateCreateRedFlagParams({ memberId });
+      const params2 = generateCreateRedFlagParams({ memberId, type });
       const { id: id2 } = await service.createRedFlag(params2);
 
-      const redFlag = await service.getRedFlag(id);
-      const redFlag2 = await service.getRedFlag(id2);
       const result = await service.getMemberRedFlags(memberId);
       expect(result).toEqual([
         expect.objectContaining({
           ...params,
           memberId: new Types.ObjectId(memberId),
-          type: redFlags.find((type) => type.id === redFlag.type),
-          id: new Types.ObjectId(id),
+          type: expect.objectContaining({ _id: new Types.ObjectId(type) }),
+          id,
         }),
         expect.objectContaining({
           ...params2,
           memberId: new Types.ObjectId(memberId),
-          type: redFlags.find((type) => type.id === redFlag2.type),
-          id: new Types.ObjectId(id2),
+          type: expect.objectContaining({ _id: new Types.ObjectId(type) }),
+          id: id2,
         }),
       ]);
     });
@@ -106,13 +106,62 @@ describe('CareService', () => {
     });
 
     it('should update a red flag', async () => {
+      const type = await generateRedFlagType();
       const memberId = generateId();
-      const params = generateCreateRedFlagParams({ memberId });
+      const params = generateCreateRedFlagParams({ memberId, type });
       const { id } = await service.createRedFlag(params);
 
       const updateParams = generateUpdateRedFlagParams({ id });
       const result = await service.updateRedFlag(updateParams);
       expect(result.notes).toEqual(updateParams.notes);
+    });
+
+    it('should get all barrierTypes', async () => {
+      const desc = lorem.words(4);
+      const desc2 = lorem.words(4);
+      const id = await generateRedFlagType(desc);
+      const id2 = await generateRedFlagType(desc2);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const redFlagType = await service.getRedFlagType(id);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const redFlagType2 = await service.getRedFlagType(id2);
+
+      const result = await service.getRedFlagTypes();
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: redFlagType.id,
+            description: redFlagType.description,
+          }),
+          expect.objectContaining({
+            id: redFlagType2.id,
+            description: redFlagType2.description,
+          }),
+        ]),
+      );
+    });
+
+    it('should create and get redFlagType', async () => {
+      const description = lorem.words(4);
+      // start a session and set userId id as client in store
+      const userId = generateId();
+      loadSessionClient(userId);
+
+      const { id } = await service.createRedFlagType(description);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const result = await service.getRedFlagType(id);
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          _id: new Types.ObjectId(id),
+          description: description,
+          createdBy: new Types.ObjectId(userId),
+          updatedBy: new Types.ObjectId(userId),
+        }),
+      );
     });
   });
 
@@ -584,8 +633,9 @@ describe('CareService', () => {
     test.each([true, false])(
       'should %p delete member care process (Red flags, barriers and care plans)',
       async (hard) => {
+        const redFlagType = await generateRedFlagType();
         const memberId = generateId();
-        const redFlagParams = generateCreateRedFlagParams({ memberId });
+        const redFlagParams = generateCreateRedFlagParams({ memberId, type: redFlagType });
         const { id: redFlagId } = await service.createRedFlag(redFlagParams);
         const barrierType = await generateBarrierType();
         const params = generateCreateBarrierParams({
@@ -637,8 +687,9 @@ describe('CareService', () => {
 
     /* eslint-disable max-len */
     it('should hard delete after soft delete - member care process (Red flags, barriers and care plans)', async () => {
+      const redFlagType = await generateRedFlagType();
       const memberId = generateId();
-      const redFlagParams = generateCreateRedFlagParams({ memberId });
+      const redFlagParams = generateCreateRedFlagParams({ memberId, type: redFlagType });
       const { id: redFlagId } = await service.createRedFlag(redFlagParams);
       const barrierType = await generateBarrierType();
       const params = generateCreateBarrierParams({
@@ -687,7 +738,6 @@ describe('CareService', () => {
   const generateCarePlanType = async (description = lorem.words(5)): Promise<string> => {
     const { id } = await service.createCarePlanType({
       description,
-
       isCustom: false,
     });
     return id;
@@ -721,8 +771,14 @@ describe('CareService', () => {
   };
 
   const generateRedFlag = async (memberId = generateId()): Promise<string> => {
-    const params = generateCreateRedFlagParams({ memberId });
+    const type = await generateRedFlagType();
+    const params = generateCreateRedFlagParams({ memberId, type });
     const { id } = await service.createRedFlag(params);
+    return id;
+  };
+
+  const generateRedFlagType = async (description = lorem.words(5)): Promise<string> => {
+    const { id } = await service.createRedFlagType(description);
     return id;
   };
 });

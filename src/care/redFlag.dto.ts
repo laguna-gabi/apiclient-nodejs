@@ -2,7 +2,6 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ErrorType, Errors, Identifier, IsObjectId } from '../common';
-import { RedFlagType } from '.';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
 
@@ -12,8 +11,9 @@ import * as mongooseDelete from 'mongoose-delete';
 
 @InputType()
 export class BaseRedFlagParams {
-  @Field(() => RedFlagType)
-  type: RedFlagType;
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.redFlagTypeInvalid) })
+  type: string;
 
   @Field(() => String, { nullable: true })
   notes?: string;
@@ -41,12 +41,11 @@ export class UpdateRedFlagParams {
  *************************************************************************************************/
 
 @ObjectType()
-export class RedFlagTypeDetailed {
+@Schema({ versionKey: false, timestamps: true })
+export class RedFlagType extends Identifier {
+  @Prop()
   @Field(() => String)
   description: string;
-
-  @Field(() => RedFlagType)
-  id: RedFlagType;
 }
 
 @ObjectType()
@@ -60,8 +59,8 @@ export class RedFlag extends Identifier {
   @Field(() => String)
   createdBy: Types.ObjectId;
 
-  @Prop({ index: true, type: String, enum: RedFlagType })
-  @Field(() => RedFlagTypeDetailed)
+  @Prop({ type: Types.ObjectId, ref: RedFlagType.name, index: true })
+  @Field(() => RedFlagType)
   type: RedFlagType;
 
   @Field(() => Date)
@@ -81,4 +80,9 @@ export class RedFlag extends Identifier {
 export type RedFlagDocument = RedFlag & Document & ISoftDelete<RedFlag>;
 export const RedFlagDto = audit(
   SchemaFactory.createForClass(RedFlag).plugin(mongooseDelete, useFactoryOptions),
+);
+
+export type RedFlagTypeDocument = RedFlagType & Document;
+export const RedFlagTypeDto = audit(
+  SchemaFactory.createForClass(RedFlagType).plugin(mongooseDelete, useFactoryOptions),
 );

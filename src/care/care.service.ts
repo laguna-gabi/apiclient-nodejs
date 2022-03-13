@@ -17,6 +17,8 @@ import {
   CreateRedFlagParams,
   RedFlag,
   RedFlagDocument,
+  RedFlagType,
+  RedFlagTypeDocument,
   UpdateBarrierParams,
   UpdateCarePlanParams,
   UpdateRedFlagParams,
@@ -33,7 +35,6 @@ import {
 import { isNil, omitBy } from 'lodash';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ISoftDelete } from '../db';
-import { redFlags } from './redFlags';
 
 @Injectable()
 export class CareService extends BaseService {
@@ -48,6 +49,8 @@ export class CareService extends BaseService {
     private readonly carePlanTypeModel: Model<CarePlanTypeDocument>,
     @InjectModel(BarrierType.name)
     private readonly barrierTypeModel: Model<BarrierType>,
+    @InjectModel(RedFlagType.name)
+    private readonly redFlagTypeModel: Model<RedFlagTypeDocument>,
     readonly logger: LoggerService,
   ) {
     super();
@@ -59,10 +62,17 @@ export class CareService extends BaseService {
 
   async createRedFlag(params: CreateRedFlagParams): Promise<RedFlag> {
     this.logger.info(params, CareService.name, this.createRedFlag.name);
+    // validate red flag type
+    const result = await this.getRedFlagType(params.type);
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.redFlagTypeNotFound));
+    }
+
     const createParams: Partial<CreateRedFlagParams> = omitBy(
       {
         ...params,
         memberId: new Types.ObjectId(params.memberId),
+        type: new Types.ObjectId(params.type),
       },
       isNil,
     );
@@ -70,12 +80,9 @@ export class CareService extends BaseService {
   }
 
   async getMemberRedFlags(memberId: string): Promise<RedFlag[]> {
-    const memberRedFlags = await this.redFlagModel.find({ memberId: new Types.ObjectId(memberId) });
-    return memberRedFlags.map((redFlag) => {
-      // populating red flag type from the static red flags object
-      const redFlagType = redFlags.find((type) => type.id === redFlag.type);
-      return { ...this.replaceId(redFlag.toObject()), type: redFlagType };
-    });
+    return this.redFlagModel
+      .find({ memberId: new Types.ObjectId(memberId) })
+      .populate([{ path: 'type', strictPopulate: false }]);
   }
 
   async getRedFlag(id: string): Promise<RedFlag> {
@@ -91,9 +98,19 @@ export class CareService extends BaseService {
     if (!redFlag) {
       throw new Error(Errors.get(ErrorType.redFlagNotFound));
     }
-    // populating red flag type from the static red flags object
-    const redFlagType = redFlags.find((type) => type.id === redFlag.type);
-    return { ...this.replaceId(redFlag.toObject()), type: redFlagType };
+    return redFlag;
+  }
+
+  async getRedFlagTypes(): Promise<RedFlagType[]> {
+    return this.redFlagTypeModel.find();
+  }
+
+  async createRedFlagType(description: string): Promise<RedFlagType> {
+    return this.redFlagTypeModel.create({ description });
+  }
+
+  private async getRedFlagType(id: string): Promise<RedFlagType> {
+    return this.redFlagTypeModel.findById(id);
   }
 
   /**************************************************************************************************

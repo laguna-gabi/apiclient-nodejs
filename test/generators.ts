@@ -48,7 +48,6 @@ import {
   CreateBarrierParams,
   CreateCarePlanParams,
   CreateRedFlagParams,
-  RedFlagType,
   UpdateBarrierParams,
   UpdateCarePlanParams,
   UpdateRedFlagParams,
@@ -868,7 +867,7 @@ export const generateCreateTodoDoneParams = ({
 
 export const generateCreateRedFlagParams = ({
   memberId = generateId(),
-  type = randomEnum(RedFlagType) as RedFlagType,
+  type = generateId(),
   notes = lorem.words(4),
 }: Partial<CreateRedFlagParams> = {}) => {
   return {
@@ -963,7 +962,7 @@ export const generateSubmitCareWizardParams = ({
 
 export const generateCreateRedFlagParamsWizard = ({
   barriers,
-  type = randomEnum(RedFlagType) as RedFlagType,
+  type = generateId(),
   notes = lorem.words(4),
 }: Partial<CreateRedFlagParamsWizard> = {}) => {
   return {

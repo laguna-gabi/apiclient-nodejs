@@ -490,6 +490,37 @@ export const seedBarriers = [
   },
 ];
 
+export const seedRedFlags = [
+  {
+    description: 'Uncontrolled chronic condition (high A1C, high sugars, high BP)',
+  },
+  {
+    description: 'Appointment adherence (missed appts/unable to schedule appts)',
+  },
+  {
+    description: 'Resource utilization (trips to ER, requesting unnecessary tests/procedures)',
+  },
+  {
+    description: 'Medication adherence (missed/not taking meds, unable to order meds)',
+  },
+  {
+    description:
+      'Plan of care (POC) Adherence (not following previous plan of care/recommendations)',
+  },
+  {
+    description: 'Significant weight loss/gain (+10 lbs.)',
+  },
+  {
+    description: 'Knowledge of health or health care status (unaware of diagnosis, test results)',
+  },
+  {
+    description: 'Medical equipment/supplies adherence (not using med. equip. as directed)',
+  },
+  {
+    description: 'Other (concerning statements, including emotional state)',
+  },
+];
+
 /**
  * Each barrierType contains a list of related care plans (ids)- "CarePlanTypes"
  * This function will query to get the care plans ids by the care plan description,

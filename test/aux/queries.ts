@@ -1,6 +1,6 @@
 import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
-import { Barrier, BarrierType, CarePlan, CarePlanType, RedFlag } from '../../src/care';
+import { Barrier, BarrierType, CarePlan, CarePlanType, RedFlag, RedFlagType } from '../../src/care';
 import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
 import {
@@ -1320,5 +1320,22 @@ export class Queries {
       });
 
     return result?.getMemberBarriers;
+  };
+
+  getRedFlagTypes = async (): Promise<RedFlagType[]> => {
+    const { getRedFlagTypes } = await this.client.request(
+      gql`
+        query getRedFlagTypes {
+          getRedFlagTypes {
+            id
+            description
+          }
+        }
+      `,
+      undefined,
+      this.defaultUserRequestHeaders,
+    );
+
+    return getRedFlagTypes;
   };
 }

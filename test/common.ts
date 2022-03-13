@@ -97,7 +97,10 @@ export const submitMockCareWizard = async (handler: Handler, memberId: string, r
     type: handler.barrierType.id,
     carePlans: [carePlan],
   });
-  const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier] });
+  const redFlag = generateCreateRedFlagParamsWizard({
+    barriers: [barrier],
+    type: handler.redFlagType.id,
+  });
   const wizardParams = generateSubmitCareWizardParams({ redFlag, memberId });
   const result = await handler.mutations.submitCareWizard({
     submitCareWizardParams: wizardParams,

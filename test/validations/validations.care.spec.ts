@@ -214,7 +214,7 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
       level         | field          | error
       ${'submit'}   | ${'memberId'}  | ${`Field "memberId" of required type "String!" was not provided.`}
       ${'submit'}   | ${'redFlag'}   | ${`Field "redFlag" of required type "CreateRedFlagParamsWizard!" was not provided.`}
-      ${'redFlag'}  | ${'type'}      | ${`Field "type" of required type "RedFlagType!" was not provided.`}
+      ${'redFlag'}  | ${'type'}      | ${`Field "type" of required type "String!" was not provided.`}
       ${'redFlag'}  | ${'barriers'}  | ${`Field "barriers" of required type "[CreateBarrierParamsWizard!]!" was not provided.`}
       ${'barrier'}  | ${'type'}      | ${`Field "type" of required type "String!" was not provided.`}
       ${'barrier'}  | ${'carePlans'} | ${`Field "carePlans" of required type "[BaseCarePlanParams!]!" was not provided.`}
@@ -255,7 +255,7 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
     ${'submit'}   | ${{ memberId: 123 }}                  | ${{ missingFieldError: stringError }}
     ${'submit'}   | ${{ redFlag: 'not-valid' }}           | ${{ missingFieldError: 'Expected type "CreateRedFlagParamsWizard" to be an object.' }}
     ${'redFlag'}  | ${{ notes: 123 }}                     | ${{ missingFieldError: stringError }}
-    ${'redFlag'}  | ${{ type: 'not-valid' }}              | ${{ missingFieldError: 'does not exist in "RedFlagType" enum.' }}
+    ${'redFlag'}  | ${{ type: 123 }}                      | ${{ missingFieldError: stringError }}
     ${'redFlag'}  | ${{ barriers: 'not-valid' }}          | ${{ missingFieldError: 'Expected type "CreateBarrierParamsWizard" to be an object.' }}
     ${'barrier'}  | ${{ notes: 123 }}                     | ${{ missingFieldError: stringError }}
     ${'barrier'}  | ${{ type: 123 }}                      | ${{ missingFieldError: stringError }}

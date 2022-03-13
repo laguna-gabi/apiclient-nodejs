@@ -3,7 +3,7 @@ import { date, internet, lorem } from 'faker';
 import * as jwt from 'jsonwebtoken';
 import { model } from 'mongoose';
 import { v4 } from 'uuid';
-import { createSeedBarriers, seedCarePlans } from '../cmd/static/seedCare';
+import { createSeedBarriers, seedCarePlans, seedRedFlags } from '../cmd/static/seedCare';
 import {
   buildGAD7Questionnaire,
   buildLHPQuestionnaire,
@@ -18,6 +18,9 @@ import {
   CarePlanType,
   CarePlanTypeDocument,
   CarePlanTypeDto,
+  RedFlagType,
+  RedFlagTypeDocument,
+  RedFlagTypeDto,
 } from '../src/care';
 import { Identifier, UserRole, delay } from '../src/common';
 import { UpdateJournalTextParams } from '../src/member';
@@ -220,21 +223,34 @@ async function main() {
 
   console.debug(
     '\n----------------------------------------------------------------\n' +
+      '------------------- create red flag types ---------------------\n' +
+      '----------------------------------------------------------------',
+  );
+  const redFlagTypeModel = model<RedFlagTypeDocument>(RedFlagType.name, RedFlagTypeDto);
+  await redFlagTypeModel.insertMany(seedRedFlags);
+
+  console.debug(
+    '\n----------------------------------------------------------------\n' +
       '----------- create red flag, barrier and care plan ---------------\n' +
       '----------------------------------------------------------------',
   );
 
-  const CarePlanTypes = await base.queries.getCarePlanTypes();
-  const BarrierTypes = await base.queries.getBarrierTypes();
-  const randomCarePlanType = CarePlanTypes[Math.floor(Math.random() * CarePlanTypes.length)];
-  const randomBarrierType = BarrierTypes[Math.floor(Math.random() * BarrierTypes.length)];
+  const carePlanTypes = await base.queries.getCarePlanTypes();
+  const barrierTypes = await base.queries.getBarrierTypes();
+  const redFlagTypes = await base.queries.getRedFlagTypes();
+  const randomCarePlanType = carePlanTypes[Math.floor(Math.random() * carePlanTypes.length)];
+  const randomBarrierType = barrierTypes[Math.floor(Math.random() * barrierTypes.length)];
+  const randomRedFlagType = redFlagTypes[Math.floor(Math.random() * redFlagTypes.length)];
 
   const carePlan = generateCreateCarePlanParamsWizard({ type: { id: randomCarePlanType.id } });
   const barrier = generateCreateBarrierParamsWizard({
     type: randomBarrierType.id,
     carePlans: [carePlan],
   });
-  const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier] });
+  const redFlag = generateCreateRedFlagParamsWizard({
+    barriers: [barrier],
+    type: randomRedFlagType.id,
+  });
   const wizardParams = generateSubmitCareWizardParams({ redFlag, memberId });
   await base.mutations.submitCareWizard({
     submitCareWizardParams: wizardParams,

@@ -8,6 +8,7 @@ import {
   CareService,
   CreateCarePlanParams,
   RedFlag,
+  RedFlagType,
   UpdateBarrierParams,
   UpdateCarePlanParams,
   UpdateRedFlagParams,
@@ -22,8 +23,6 @@ import {
   UserRole,
 } from '../common';
 import { camelCase } from 'lodash';
-import { redFlags } from './redFlags';
-import { GraphQLJSONObject } from 'graphql-type-json';
 import { SubmitCareWizardParams } from './wizard.dto';
 
 @UseInterceptors(LoggingInterceptor)
@@ -48,10 +47,10 @@ export class CareResolver {
     return this.careService.getMemberRedFlags(memberId);
   }
 
-  @Query(() => [GraphQLJSONObject])
+  @Query(() => [RedFlagType])
   @Roles(UserRole.coach, UserRole.nurse)
-  async getRedFlagTypes() {
-    return redFlags;
+  async getRedFlagTypes(): Promise<RedFlagType[]> {
+    return this.careService.getRedFlagTypes();
   }
 
   @Mutation(() => RedFlag)

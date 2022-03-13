@@ -13,6 +13,8 @@ import {
   CareService,
   RedFlag,
   RedFlagDto,
+  RedFlagType,
+  RedFlagTypeDto,
 } from '.';
 import { CommonModule } from '../common';
 
@@ -23,6 +25,7 @@ import { CommonModule } from '../common';
       { name: CarePlanType.name, schema: CarePlanTypeDto },
       { name: BarrierType.name, schema: BarrierTypeDto },
       { name: RedFlag.name, schema: RedFlagDto },
+      { name: RedFlagType.name, schema: RedFlagTypeDto },
       { name: Barrier.name, schema: BarrierDto },
       { name: CarePlan.name, schema: CarePlanDto },
     ]),

@@ -10,7 +10,7 @@ import {
   RequestAppointmentParams,
   ScheduleAppointmentParams,
 } from '../../src/appointment';
-import { CareStatus, CreateCarePlanParams, redFlags } from '../../src/care';
+import { CareStatus, CreateCarePlanParams } from '../../src/care';
 import {
   ErrorType,
   Errors,
@@ -1793,6 +1793,19 @@ describe('Integration tests: all', () => {
   });
 
   describe('Care', () => {
+    it('should get red flag types', async () => {
+      const availableRedFlagTypes = await handler.queries.getRedFlagTypes();
+      const { description, id } = handler.redFlagType;
+      expect(availableRedFlagTypes).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id,
+            description,
+          }),
+        ]),
+      );
+    });
+
     it('should get barrier types', async () => {
       const availableBarrierTypes = await handler.queries.getBarrierTypes();
       const { description, domain, id } = handler.barrierType;
@@ -2012,7 +2025,10 @@ describe('Integration tests: all', () => {
         type: handler.barrierType.id,
         carePlans: [carePlan3],
       });
-      const redFlag = generateCreateRedFlagParamsWizard({ barriers: [barrier1, barrier2] });
+      const redFlag = generateCreateRedFlagParamsWizard({
+        barriers: [barrier1, barrier2],
+        type: handler.redFlagType.id,
+      });
       const wizardParams = generateSubmitCareWizardParams({ redFlag, memberId });
       const result = await handler.mutations.submitCareWizard({
         submitCareWizardParams: wizardParams,
@@ -2045,7 +2061,7 @@ describe('Integration tests: all', () => {
       expect(memberRedFlags).toEqual([
         expect.objectContaining({
           ...redFlag,
-          type: redFlags.find((type) => type.id === redFlag.type),
+          type: expect.objectContaining({ id: handler.redFlagType.id }),
           memberId,
         }),
       ]);

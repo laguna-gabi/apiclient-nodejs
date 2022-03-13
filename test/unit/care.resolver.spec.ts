@@ -15,7 +15,6 @@ import {
   generateUpdateRedFlagParams,
 } from '../index';
 import { CareModule, CareResolver, CareService } from '../../src/care';
-import { redFlags } from '../../src/care/redFlags';
 
 describe('CareResolver', () => {
   let module: TestingModule;
@@ -41,16 +40,19 @@ describe('CareResolver', () => {
   describe('RedFlag', () => {
     let spyOnServiceGetMemberRedFlags;
     let spyOnServiceUpdateRedFlag;
+    let spyOnServiceGetRedFlagTypes;
 
     beforeEach(() => {
       spyOnServiceGetMemberRedFlags = jest.spyOn(service, 'getMemberRedFlags');
       spyOnServiceUpdateRedFlag = jest.spyOn(service, 'updateRedFlag');
+      spyOnServiceGetRedFlagTypes = jest.spyOn(service, 'getRedFlagTypes');
       spyOnServiceUpdateRedFlag.mockImplementationOnce(async () => undefined);
     });
 
     afterEach(() => {
       spyOnServiceGetMemberRedFlags.mockReset();
       spyOnServiceUpdateRedFlag.mockReset();
+      spyOnServiceGetRedFlagTypes.mockReset();
     });
 
     it('should get red flags by memberId', async () => {
@@ -70,8 +72,8 @@ describe('CareResolver', () => {
     });
 
     it('should get all redFlagTypes', async () => {
-      const result = await resolver.getRedFlagTypes();
-      expect(result).toEqual(redFlags);
+      await resolver.getRedFlagTypes();
+      expect(spyOnServiceGetRedFlagTypes).toBeCalled();
     });
   });
 
