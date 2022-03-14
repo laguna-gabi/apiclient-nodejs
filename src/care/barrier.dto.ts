@@ -60,7 +60,7 @@ export class BarrierType extends Identifier {
   description: string;
 
   @Prop()
-  @Field(() => BarrierDomain, { nullable: true })
+  @Field(() => BarrierDomain)
   domain: BarrierDomain;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: CarePlanType.name }] })
