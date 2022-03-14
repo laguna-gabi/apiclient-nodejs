@@ -6,7 +6,7 @@ import { datatype } from 'faker';
 import { GraphQLClient } from 'graphql-request';
 import { AppModule } from '../src/app.module';
 import { GlobalAuthGuard, RolesGuard } from '../src/auth';
-import { UserRole } from '../src/common';
+import { AppRequestContext, UserRole, requestContextMiddleware } from '../src/common';
 import { QueueService } from '../src/providers';
 import { QuestionnaireService } from '../src/questionnaire';
 import { UserService } from '../src/user';
@@ -30,6 +30,7 @@ export class SeedBase extends BaseHandler {
     const reflector = this.app.get(Reflector);
     this.app.useGlobalGuards(new GlobalAuthGuard());
     this.app.useGlobalGuards(new RolesGuard(reflector));
+    this.app.use(requestContextMiddleware(AppRequestContext));
 
     await this.app.init();
 
