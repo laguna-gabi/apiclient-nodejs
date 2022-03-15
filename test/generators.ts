@@ -70,12 +70,14 @@ import {
   CreateMemberParams,
   CreateTaskParams,
   DeleteMemberParams,
+  DischargeDocumentType,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
   ImageFormat,
   InternalCreateMemberParams,
   Member,
   MemberConfig,
+  MoveMemberDischargeDocumentToDeletedParams,
   NotifyContentParams,
   NotifyParams,
   ReadmissionRisk,
@@ -592,6 +594,14 @@ export const generateReplaceUserForMemberParams = ({
   memberId = generateId(),
 }: Partial<ReplaceUserForMemberParams> = {}): ReplaceUserForMemberParams => {
   return { userId, memberId };
+};
+
+export const generateMoveMemberDischargeDocumentToDeletedParams = ({
+  memberId = generateId(),
+  dischargeDocumentType = DischargeDocumentType.Instructions,
+}: // eslint-disable-next-line max-len
+Partial<MoveMemberDischargeDocumentToDeletedParams> = {}): MoveMemberDischargeDocumentToDeletedParams => {
+  return { memberId, dischargeDocumentType };
 };
 
 export const generateAppointmentLink = (appointmentId: string) => {

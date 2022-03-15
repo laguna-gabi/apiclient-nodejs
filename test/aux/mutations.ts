@@ -29,6 +29,7 @@ import {
   DeleteMemberParams,
   Journal,
   Member,
+  MoveMemberDischargeDocumentToDeletedParams,
   NotifyContentParams,
   NotifyParams,
   Recording,
@@ -1126,6 +1127,43 @@ export class Mutations {
       });
 
     return replaceUserForMember;
+  };
+
+  moveMemberDischargeDocumentToDeleted = async ({
+    moveMemberDischargeDocumentToDeletedParams,
+    missingFieldError,
+    invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
+  }: {
+    moveMemberDischargeDocumentToDeletedParams: MoveMemberDischargeDocumentToDeletedParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+    requestHeaders?;
+  }): Promise<boolean> => {
+    const result = await this.client
+      .request(
+        /* eslint-disable max-len */
+        gql`
+          mutation moveMemberDischargeDocumentToDeleted(
+            $moveMemberDischargeDocumentToDeletedParams: MoveMemberDischargeDocumentToDeletedParams!
+          ) {
+            moveMemberDischargeDocumentToDeleted(
+              moveMemberDischargeDocumentToDeletedParams: $moveMemberDischargeDocumentToDeletedParams
+            )
+          }
+        `,
+        { moveMemberDischargeDocumentToDeletedParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
+
+    return result;
   };
 
   addCaregiver = async ({

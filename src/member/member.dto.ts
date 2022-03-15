@@ -86,6 +86,13 @@ export enum ReadmissionRisk {
 
 registerEnumType(ReadmissionRisk, { name: 'ReadmissionRisk' });
 
+export enum DischargeDocumentType {
+  Summary = 'Summary',
+  Instructions = 'Instructions',
+}
+
+registerEnumType(DischargeDocumentType, { name: 'DischargeDocumentType' });
+
 export const defaultMemberParams = {
   sex: Sex.male,
   language: Language.en,
@@ -357,6 +364,16 @@ export class CompleteMultipartUploadParams {
 
   @Field(() => String)
   uploadId: string;
+}
+
+@InputType()
+export class MoveMemberDischargeDocumentToDeletedParams {
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
+
+  @Field(() => DischargeDocumentType)
+  dischargeDocumentType: DischargeDocumentType;
 }
 
 /************************************************************************************************

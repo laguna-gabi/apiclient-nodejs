@@ -349,6 +349,7 @@ export class Queries {
 
     return getMemberUploadRecordingLink;
   };
+
   getMemberMultipartUploadRecordingLink = async ({
     multipartUploadRecordingLinkParams,
     missingFieldError,

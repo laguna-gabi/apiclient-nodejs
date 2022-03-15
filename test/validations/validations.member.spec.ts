@@ -33,6 +33,7 @@ import {
   generateGetMemberUploadJournalAudioLinkParams,
   generateGetMemberUploadJournalImageLinkParams,
   generateId,
+  generateMoveMemberDischargeDocumentToDeletedParams,
   generateNotifyContentParams,
   generateNotifyParams,
   generateOrgParams,
@@ -343,6 +344,37 @@ describe('Validations - member', () => {
       await handler.queries.getMemberDownloadDischargeDocumentsLinks({
         id: generateId(),
         invalidFieldsError: Errors.get(ErrorType.memberNotFound),
+      });
+    });
+  });
+
+  describe('moveMemberDischargeDocumentToDeleted', () => {
+    /* eslint-disable max-len */
+    test.each`
+      field                      | missing
+      ${'memberId'}              | ${`Field "memberId" of required type "String!" was not provided.`}
+      ${'dischargeDocumentType'} | ${`Field "dischargeDocumentType" of required type "DischargeDocumentType!" was not provided.`}
+    `(`should fail move discharge document to deleted if $field is missing`, async (params) => {
+      const moveMemberDischargeDocumentToDeletedParams =
+        generateMoveMemberDischargeDocumentToDeletedParams();
+      delete moveMemberDischargeDocumentToDeletedParams[params.field];
+      await handler.mutations.moveMemberDischargeDocumentToDeleted({
+        moveMemberDischargeDocumentToDeletedParams,
+        missingFieldError: params.missing,
+      });
+    });
+
+    /* eslint-disable max-len */
+    test.each`
+      input                             | missing
+      ${{ memberId: 123 }}              | ${stringError}
+      ${{ dischargeDocumentType: 123 }} | ${'cannot represent non-string value'}
+    `(`should fail move discharge document to deleted if $input is invalid`, async (params) => {
+      const moveMemberDischargeDocumentToDeletedParams =
+        generateMoveMemberDischargeDocumentToDeletedParams({ ...params.input });
+      await handler.mutations.moveMemberDischargeDocumentToDeleted({
+        moveMemberDischargeDocumentToDeletedParams,
+        missingFieldError: params.missing,
       });
     });
   });

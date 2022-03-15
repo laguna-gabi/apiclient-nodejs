@@ -25,6 +25,7 @@ import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { isEmpty } from 'class-validator';
+import { hosts } from 'config';
 import { addDays, isAfter, millisecondsInHour } from 'date-fns';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { camelCase } from 'lodash';
@@ -53,6 +54,7 @@ import {
   MemberConfig,
   MemberService,
   MemberSummary,
+  MoveMemberDischargeDocumentToDeletedParams,
   MultipartUploadInfo,
   MultipartUploadRecordingLinkParams,
   NotifyContentMetadata,
@@ -111,9 +113,9 @@ import {
   StorageService,
   TwilioService,
 } from '../providers';
-import { User, UserService } from '../user';
-import { hosts } from 'config';
 import { QuestionnaireAlerts, QuestionnaireType } from '../questionnaire';
+import { User, UserService } from '../user';
+
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)
 export class MemberResolver extends MemberBase {
@@ -341,6 +343,24 @@ export class MemberResolver extends MemberBase {
     ]);
 
     return { dischargeNotesLink, dischargeInstructionsLink };
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async moveMemberDischargeDocumentToDeleted(
+    @Args(camelCase(MoveMemberDischargeDocumentToDeletedParams.name))
+    moveMemberDischargeDocumentToDeletedParams: MoveMemberDischargeDocumentToDeletedParams,
+  ) {
+    const { memberId, dischargeDocumentType } = moveMemberDischargeDocumentToDeletedParams;
+    const { firstName, lastName } = await this.memberService.get(memberId);
+
+    await this.storageService.moveToDeleted({
+      storageType: StorageType.documents,
+      memberId,
+      id: `${firstName}_${lastName}_${dischargeDocumentType}.pdf`,
+    });
+
+    return true;
   }
 
   /*************************************************************************************************

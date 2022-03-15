@@ -289,6 +289,49 @@ describe('live: aws', () => {
       const { status: statusDownload } = await axios.get(url);
       expect(statusDownload).toEqual(200);
     });
+
+    it('should move file to deleted folder', async () => {
+      //not running on production as this test is too risky for that (we're emptyDir in afterAll)
+      if (process.env.NODE_ENV === Environments.production) {
+        return;
+      }
+
+      const storageType = StorageType.documents;
+      const params = {
+        memberId: member.id,
+        storageType,
+        id: `${lorem.word()}.pdf`,
+      };
+      const uploadUrl = await storageService.getUploadUrl(params);
+
+      expect(uploadUrl).toMatch(
+        // eslint-disable-next-line max-len
+        `${hosts.localstack}/${bucketName}/public/${storageType}/${params.memberId}/${params.id}`,
+      );
+
+      const { status: uploadStatus } = await axios.put(uploadUrl, lorem.sentence());
+      expect(uploadStatus).toEqual(200);
+
+      const existingFile = await storageService.getDownloadUrl({
+        storageType,
+        memberId: member.id,
+        id: params.id,
+      });
+      expect(existingFile).not.toBeUndefined();
+
+      await storageService.moveToDeleted({
+        storageType,
+        memberId: member.id,
+        id: params.id,
+      });
+
+      const nonExistingFile = await storageService.getDownloadUrl({
+        storageType,
+        memberId: member.id,
+        id: params.id,
+      });
+      expect(nonExistingFile).toBeUndefined();
+    });
   });
 
   describe('cloudMap', () => {

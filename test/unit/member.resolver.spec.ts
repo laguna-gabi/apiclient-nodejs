@@ -42,6 +42,7 @@ import {
 import {
   AudioFormat,
   AudioType,
+  DischargeDocumentType,
   ImageFormat,
   ImageType,
   Journal,
@@ -587,25 +588,6 @@ describe('MemberResolver', () => {
     });
   });
 
-  const checkDocumentsCall = (member: Member, spyOnServiceGet, spyOnStorage) => {
-    const prefix = `${member.firstName}_${member.lastName}`;
-    const storageType = StorageType.documents;
-
-    expect(spyOnServiceGet).toBeCalledTimes(1);
-    expect(spyOnServiceGet).toBeCalledWith(member.id);
-    expect(spyOnStorage).toBeCalledTimes(2);
-    expect(spyOnStorage).toHaveBeenNthCalledWith(1, {
-      storageType,
-      memberId: member.id,
-      id: `${prefix}_Summary.pdf`,
-    });
-    expect(spyOnStorage).toHaveBeenNthCalledWith(2, {
-      storageType,
-      memberId: member.id,
-      id: `${prefix}_Instructions.pdf`,
-    });
-  };
-
   describe('getMemberDownloadDischargeDocumentsLinks', () => {
     let spyOnServiceGet;
     let spyOnStorage;
@@ -637,6 +619,44 @@ describe('MemberResolver', () => {
         Errors.get(ErrorType.memberNotFound),
       );
     });
+  });
+
+  describe('moveMemberDischargeDocumentToDeleted', () => {
+    let spyOnServiceGet;
+    let spyOnStorage;
+
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'get');
+      spyOnStorage = jest.spyOn(storage, 'moveToDeleted');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+      spyOnStorage.mockReset();
+    });
+
+    test.each([DischargeDocumentType.Summary, DischargeDocumentType.Instructions])(
+      'should move discharge document of type %p to deleted',
+      async (dischargeDocumentType) => {
+        const member = mockGenerateMember();
+        spyOnServiceGet.mockImplementationOnce(async () => member);
+        spyOnStorage.mockImplementation(async () => true);
+
+        await resolver.moveMemberDischargeDocumentToDeleted({
+          memberId: member.id,
+          dischargeDocumentType,
+        });
+
+        expect(spyOnServiceGet).toBeCalledTimes(1);
+        expect(spyOnServiceGet).toBeCalledWith(member.id);
+        expect(spyOnStorage).toBeCalledTimes(1);
+        expect(spyOnStorage).toHaveBeenCalledWith({
+          storageType: StorageType.documents,
+          memberId: member.id,
+          id: `${member.firstName}_${member.lastName}_${dischargeDocumentType}.pdf`,
+        });
+      },
+    );
   });
 
   describe('getMemberUploadRecordingLink', () => {
@@ -2360,4 +2380,27 @@ describe('MemberResolver', () => {
       });
     });
   });
+
+  /**************************************************************************************************
+   ******************************************** Helpers *********************************************
+   *************************************************************************************************/
+
+  const checkDocumentsCall = (member: Member, spyOnServiceGet, spyOnStorage) => {
+    const prefix = `${member.firstName}_${member.lastName}`;
+    const storageType = StorageType.documents;
+
+    expect(spyOnServiceGet).toBeCalledTimes(1);
+    expect(spyOnServiceGet).toBeCalledWith(member.id);
+    expect(spyOnStorage).toBeCalledTimes(2);
+    expect(spyOnStorage).toHaveBeenNthCalledWith(1, {
+      storageType,
+      memberId: member.id,
+      id: `${prefix}_Summary.pdf`,
+    });
+    expect(spyOnStorage).toHaveBeenNthCalledWith(2, {
+      storageType,
+      memberId: member.id,
+      id: `${prefix}_Instructions.pdf`,
+    });
+  };
 });

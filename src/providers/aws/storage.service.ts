@@ -272,6 +272,29 @@ export class StorageService implements OnModuleInit {
     }
   }
 
+  async moveToDeleted(urlParams: StorageUrlParams) {
+    this.logger.info(urlParams, StorageService.name, this.moveToDeleted.name);
+    const { storageType, memberId, id } = urlParams;
+    try {
+      await this.s3
+        .copyObject({
+          Bucket: this.bucket,
+          CopySource: `${this.bucket}/public/${storageType}/${memberId}/${id}`,
+          Key: `public/${storageType}/${memberId}/deleted/${new Date().getTime()}_${id}`,
+        })
+        .promise();
+
+      await this.s3
+        .deleteObject({
+          Bucket: this.bucket,
+          Key: `public/${storageType}/${memberId}/${id}`,
+        })
+        .promise();
+    } catch (ex) {
+      this.logger.error(urlParams, StorageService.name, this.moveToDeleted.name, formatEx(ex));
+    }
+  }
+
   private async emptyDirectory(dir) {
     const listParams = {
       Bucket: this.bucket,
