@@ -26,10 +26,10 @@ import {
   CompleteMultipartUploadParams,
   CreateMemberParams,
   CreateTaskParams,
+  DeleteDischargeDocumentParams,
   DeleteMemberParams,
   Journal,
   Member,
-  MoveMemberDischargeDocumentToDeletedParams,
   NotifyContentParams,
   NotifyParams,
   Recording,
@@ -1129,13 +1129,13 @@ export class Mutations {
     return replaceUserForMember;
   };
 
-  moveMemberDischargeDocumentToDeleted = async ({
-    moveMemberDischargeDocumentToDeletedParams,
+  deleteDischargeDocument = async ({
+    deleteDischargeDocumentParams,
     missingFieldError,
     invalidFieldsErrors,
     requestHeaders = this.defaultUserRequestHeaders,
   }: {
-    moveMemberDischargeDocumentToDeletedParams: MoveMemberDischargeDocumentToDeletedParams;
+    deleteDischargeDocumentParams: DeleteDischargeDocumentParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
     requestHeaders?;
@@ -1144,15 +1144,13 @@ export class Mutations {
       .request(
         /* eslint-disable max-len */
         gql`
-          mutation moveMemberDischargeDocumentToDeleted(
-            $moveMemberDischargeDocumentToDeletedParams: MoveMemberDischargeDocumentToDeletedParams!
+          mutation deleteDischargeDocument(
+            $deleteDischargeDocumentParams: DeleteDischargeDocumentParams!
           ) {
-            moveMemberDischargeDocumentToDeleted(
-              moveMemberDischargeDocumentToDeletedParams: $moveMemberDischargeDocumentToDeletedParams
-            )
+            deleteDischargeDocument(deleteDischargeDocumentParams: $deleteDischargeDocumentParams)
           }
         `,
-        { moveMemberDischargeDocumentToDeletedParams },
+        { deleteDischargeDocumentParams },
         requestHeaders,
       )
       .catch((ex) => {

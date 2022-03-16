@@ -69,6 +69,7 @@ import {
   CancelNotifyParams,
   CreateMemberParams,
   CreateTaskParams,
+  DeleteDischargeDocumentParams,
   DeleteMemberParams,
   DischargeDocumentType,
   GetMemberUploadJournalAudioLinkParams,
@@ -77,7 +78,6 @@ import {
   InternalCreateMemberParams,
   Member,
   MemberConfig,
-  MoveMemberDischargeDocumentToDeletedParams,
   NotifyContentParams,
   NotifyParams,
   ReadmissionRisk,
@@ -596,11 +596,11 @@ export const generateReplaceUserForMemberParams = ({
   return { userId, memberId };
 };
 
-export const generateMoveMemberDischargeDocumentToDeletedParams = ({
+export const generateDeleteDischargeDocumentParams = ({
   memberId = generateId(),
   dischargeDocumentType = DischargeDocumentType.Instructions,
 }: // eslint-disable-next-line max-len
-Partial<MoveMemberDischargeDocumentToDeletedParams> = {}): MoveMemberDischargeDocumentToDeletedParams => {
+Partial<DeleteDischargeDocumentParams> = {}): DeleteDischargeDocumentParams => {
   return { memberId, dischargeDocumentType };
 };
 

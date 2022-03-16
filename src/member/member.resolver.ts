@@ -41,6 +41,7 @@ import {
   CompleteMultipartUploadParams,
   CreateMemberParams,
   CreateTaskParams,
+  DeleteDischargeDocumentParams,
   DeleteMemberParams,
   DischargeDocumentsLinks,
   GetMemberUploadJournalAudioLinkParams,
@@ -54,7 +55,6 @@ import {
   MemberConfig,
   MemberService,
   MemberSummary,
-  MoveMemberDischargeDocumentToDeletedParams,
   MultipartUploadInfo,
   MultipartUploadRecordingLinkParams,
   NotifyContentMetadata,
@@ -347,11 +347,11 @@ export class MemberResolver extends MemberBase {
 
   @Mutation(() => Boolean)
   @Roles(UserRole.coach, UserRole.nurse)
-  async moveMemberDischargeDocumentToDeleted(
-    @Args(camelCase(MoveMemberDischargeDocumentToDeletedParams.name))
-    moveMemberDischargeDocumentToDeletedParams: MoveMemberDischargeDocumentToDeletedParams,
+  async deleteDischargeDocument(
+    @Args(camelCase(DeleteDischargeDocumentParams.name))
+    deleteDischargeDocumentParams: DeleteDischargeDocumentParams,
   ) {
-    const { memberId, dischargeDocumentType } = moveMemberDischargeDocumentToDeletedParams;
+    const { memberId, dischargeDocumentType } = deleteDischargeDocumentParams;
     const { firstName, lastName } = await this.memberService.get(memberId);
 
     await this.storageService.moveToDeleted({

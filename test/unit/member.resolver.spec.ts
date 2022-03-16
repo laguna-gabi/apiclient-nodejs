@@ -621,7 +621,7 @@ describe('MemberResolver', () => {
     });
   });
 
-  describe('moveMemberDischargeDocumentToDeleted', () => {
+  describe('deleteDischargeDocument', () => {
     let spyOnServiceGet;
     let spyOnStorage;
 
@@ -636,13 +636,13 @@ describe('MemberResolver', () => {
     });
 
     test.each([DischargeDocumentType.Summary, DischargeDocumentType.Instructions])(
-      'should move discharge document of type %p to deleted',
+      'should delete discharge document of type %p',
       async (dischargeDocumentType) => {
         const member = mockGenerateMember();
         spyOnServiceGet.mockImplementationOnce(async () => member);
         spyOnStorage.mockImplementation(async () => true);
 
-        await resolver.moveMemberDischargeDocumentToDeleted({
+        await resolver.deleteDischargeDocument({
           memberId: member.id,
           dischargeDocumentType,
         });

@@ -367,7 +367,7 @@ export class CompleteMultipartUploadParams {
 }
 
 @InputType()
-export class MoveMemberDischargeDocumentToDeletedParams {
+export class DeleteDischargeDocumentParams {
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
