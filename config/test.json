@@ -1,0 +1,9 @@
+{
+  "db": {
+    "connection": "mongodb://localhost:27018/test"
+  },
+  "articlesByDrg": {
+    "123": "articles/cardiac/cardiac",
+    "default": "articles/default/default"
+  }
+}

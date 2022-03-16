@@ -1,0 +1,85 @@
+{
+  "hosts": {
+    "chat": "https://dev.chat.lagunahealth.com",
+    "app": "https://dev.app.lagunahealth.com",
+    "harmony": "https://dev.harmony.lagunahealth.com",
+    "localstack": "http://localhost:4566"
+  },
+  "db": {
+    "connection": "mongodb://localhost:27017/laguna"
+  },
+  "graphql": {
+    "validators": {
+      "name": {
+        "minLength": 2,
+        "maxLength": 50
+      }
+    }
+  },
+  "aws": {
+    "region": "us-east-1",
+    "cognito": {
+      "userPoolId": "us-east-1_EZc3XRt6s"
+    },
+    "storage": {
+      "thumbnailSize": 200,
+      "bucket": "laguna-docs-bucket-local"
+    },
+    "queue": {
+      "notification": "NotificationsQ-local",
+      "image": "ImageQ-local"
+    },
+    "cloudMap": {
+      "namespace": "LagunaCloudMap-develop"
+    }
+  },
+  "services": {
+    "notification": {
+      "port": 3001,
+      "taskName": "iris"
+    },
+    "timeout": 2000,
+    "retries": 3
+  },
+  "twilio": {
+    "source": "+12058511112",
+    "iosExcludeRegistrationNumber": "+10011223344",
+    "identity": "the_user_id"
+  },
+  "slack": {
+    "support": "#support-dev",
+    "testingSms": "#testing-sms",
+    "notifications": "#development-notifications",
+    "escalation": "#development-escalation-support"
+  },
+  "oneSignal": {
+    "voipRegistrationPayload": {
+      "test_type": 1
+    }
+  },
+  "scheduler": {
+    "alertBeforeInMin": 15
+  },
+  "general": {
+    "dateFormatString": "yyyy/MM/dd",
+    "timezone": "UTC",
+    "notificationRange": 24
+  },
+  "articlesByDrg": {
+    "000": "articles/cardiac/cardiac",
+    "default": "articles/default/default"
+  },
+  "skipBodyParseRouteList": [{ "path": "/api/webhooks/sendbird", "method": 1 }],
+  "org": {
+    "mayo": "6113d0fa7cb99c0858c470b5",
+    "northshore": "6113d0fb7cb99c0858c470e1"
+  },
+  "split": {
+    "apiKey": "localhost"
+  },
+  "migration": {
+    "sample": "sample",
+    "extension": ".ts",
+    "migrationDir": "/cmd/migration/scripts"
+  }
+}

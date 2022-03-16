@@ -1,0 +1,28 @@
+{
+  "hosts": {
+    "chat": "https://staging.chat.lagunahealth.com",
+    "app": "https://staging.app.lagunahealth.com",
+    "harmony": "https://staging.harmony.lagunahealth.com"
+  },
+  "slack": {
+    "support": "#support",
+    "notifications": "#production-notifications",
+    "escalation": "#escalation-support"
+  },
+  "oneSignal": {
+    "voipRegistrationPayload": {
+      "test_type": null
+    }
+  },
+  "twilio": {
+    "source": "+18475030530"
+  },
+  "aws": {
+    "cognito": {
+      "userPoolId": "us-east-1_kMLRLqG3r"
+    },
+    "cloudMap": {
+      "namespace": "LagunaCloudMap-staging"
+    }
+  }
+}
