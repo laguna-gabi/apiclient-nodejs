@@ -1,4 +1,4 @@
-import { mockProcessWarnings } from '@lagunahealth/pandora';
+import { mockProcessWarnings } from '@argus/pandora';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { migration } from 'config';

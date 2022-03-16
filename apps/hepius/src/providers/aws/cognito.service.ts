@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
 import { aws } from 'config';
 import { LoggerService } from '../../common';
-import { formatEx } from '@lagunahealth/pandora';
+import { formatEx } from '@argus/pandora';
 
 @Injectable()
 export class CognitoService {

@@ -20,7 +20,7 @@ import {
   SlackIcon,
   formatEx,
   generateDispatchId,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';

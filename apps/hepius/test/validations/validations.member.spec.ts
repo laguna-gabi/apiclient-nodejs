@@ -5,7 +5,7 @@ import {
   NotificationType,
   Platform,
   generateZipCode,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { subSeconds } from 'date-fns';
 import { date, internet, lorem } from 'faker';
 import * as request from 'supertest';

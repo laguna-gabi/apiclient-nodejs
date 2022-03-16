@@ -4,7 +4,7 @@ import {
   generateDispatchId,
   mockLogger,
   mockProcessWarnings,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Types } from 'mongoose';

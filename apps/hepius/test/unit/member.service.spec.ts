@@ -8,7 +8,7 @@ import {
   generateZipCode,
   mockLogger,
   mockProcessWarnings,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { articlesByDrg } from 'config';
 import { add, sub } from 'date-fns';

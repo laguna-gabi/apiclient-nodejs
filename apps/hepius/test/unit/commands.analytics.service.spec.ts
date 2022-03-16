@@ -26,7 +26,7 @@ import { MemberModule } from '../../src/member';
 import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProvidersModule } from '../../src/providers';
-import { Language, mockProcessWarnings } from '@lagunahealth/pandora';
+import { Language, mockProcessWarnings } from '@argus/pandora';
 import { hosts } from 'config';
 import { Model, Types } from 'mongoose';
 import { User, UserDocument, UserModule } from '../../src/user';

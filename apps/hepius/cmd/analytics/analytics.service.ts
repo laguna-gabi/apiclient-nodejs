@@ -1,4 +1,4 @@
-import { Language, Platform } from '@lagunahealth/pandora';
+import { Language, Platform } from '@argus/pandora';
 import { RecordingType, StorageType, reformatDate } from '../../src/common';
 import {
   AnalyticsData,

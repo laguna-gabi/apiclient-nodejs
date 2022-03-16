@@ -29,13 +29,7 @@ import {
   LoggerService,
   UserRole,
 } from '../common';
-import {
-  Environments,
-  IEventNotifySlack,
-  SlackChannel,
-  SlackIcon,
-  formatEx,
-} from '@lagunahealth/pandora';
+import { Environments, IEventNotifySlack, SlackChannel, SlackIcon, formatEx } from '@argus/pandora';
 
 @Injectable()
 export class UserService extends BaseService {

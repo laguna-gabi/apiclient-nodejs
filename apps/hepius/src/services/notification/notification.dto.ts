@@ -1,4 +1,4 @@
-import { ICreateDispatch } from '@lagunahealth/pandora';
+import { ICreateDispatch } from '@argus/pandora';
 
 export interface Dispatch extends ICreateDispatch {
   sentAt?: Date;

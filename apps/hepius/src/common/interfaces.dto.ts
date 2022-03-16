@@ -4,7 +4,7 @@ import {
   Language,
   NotificationType,
   Platform,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Schema } from '@nestjs/mongoose';
 import { IsAlphanumeric, IsOptional } from 'class-validator';

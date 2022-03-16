@@ -10,7 +10,7 @@ import {
   generateDispatchId,
   mockLogger,
   mockProcessWarnings,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { datatype, date, lorem, system } from 'faker';

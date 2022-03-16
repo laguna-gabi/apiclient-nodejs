@@ -5,7 +5,7 @@ import { UserSecurityService } from '../../src/auth';
 import { Member } from '../../src/member';
 import { User } from '../../src/user';
 import { dbDisconnect } from '../index';
-import { mockProcessWarnings } from '@lagunahealth/pandora';
+import { mockProcessWarnings } from '@argus/pandora';
 
 describe('UserSecurityService', () => {
   let service: UserSecurityService;

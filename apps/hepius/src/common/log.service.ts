@@ -5,7 +5,7 @@ import {
   ServiceName,
   SlackChannel,
   SlackIcon,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';

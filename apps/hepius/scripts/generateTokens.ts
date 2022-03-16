@@ -1,4 +1,4 @@
-import { Environments } from '@lagunahealth/pandora';
+import { Environments } from '@argus/pandora';
 import * as jwt from 'jsonwebtoken';
 import { Model, connect, disconnect, model } from 'mongoose';
 import { v4 } from 'uuid';

@@ -66,7 +66,7 @@ import {
   generateUpdateTodoMEDSMock,
   generateUpdateTodoTODOMock,
   generateUpdateUserSettingsMock,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { general, hosts, scheduler } from 'config';
 import { addDays, addSeconds, subDays, subMinutes } from 'date-fns';
 import { datatype, date as fakerDate, internet, lorem } from 'faker';

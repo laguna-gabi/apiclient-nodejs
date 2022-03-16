@@ -13,7 +13,7 @@ import {
   ServiceName,
   generatePhone,
   generateZipCode,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { general, hosts } from 'config';
 import { add, format, sub } from 'date-fns';
 import {

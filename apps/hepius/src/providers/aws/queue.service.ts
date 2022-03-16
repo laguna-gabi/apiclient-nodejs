@@ -1,4 +1,4 @@
-import { Environments, QueueType, ServiceName, formatEx } from '@lagunahealth/pandora';
+import { Environments, QueueType, ServiceName, formatEx } from '@argus/pandora';
 import { Injectable, NotImplementedException, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import * as AWS from 'aws-sdk';

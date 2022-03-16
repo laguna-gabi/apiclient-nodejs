@@ -1,4 +1,4 @@
-import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
+import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { add } from 'date-fns';
 import { cloneDeep } from 'lodash';

@@ -1,4 +1,4 @@
-import { BaseOneSignal, Platform, formatEx } from '@lagunahealth/pandora';
+import { BaseOneSignal, Platform, formatEx } from '@argus/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';

@@ -1,4 +1,4 @@
-import { BaseInternationalization, Language } from '@lagunahealth/pandora';
+import { BaseInternationalization, Language } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { AlertType, Member } from '../../src/member';
 

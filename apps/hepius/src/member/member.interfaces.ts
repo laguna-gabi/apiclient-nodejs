@@ -9,7 +9,7 @@ import {
   SlackChannel,
   SlackIcon,
   generateDispatchId,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { isUndefined, omitBy } from 'lodash';
 import { Types } from 'mongoose';

@@ -1,4 +1,4 @@
-import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
+import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerService } from '../../src/common';
 import { OrgModule, OrgResolver, OrgService } from '../../src/org';

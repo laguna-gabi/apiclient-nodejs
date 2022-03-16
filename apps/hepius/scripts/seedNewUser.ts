@@ -4,7 +4,7 @@ import { Mutations } from '../test/aux';
 import { delay } from '../src/common';
 import { CreateUserParams } from '../src/user';
 import { aws } from 'config';
-import { Environments } from '@lagunahealth/pandora';
+import { Environments } from '@argus/pandora';
 
 /**************************************************************************************************
  ********************************************** Init **********************************************

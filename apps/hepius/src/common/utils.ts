@@ -7,7 +7,7 @@ import {
   NotificationType,
   TodoInternalKey,
   formatEx,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { format } from 'date-fns';
 import * as jwt from 'jsonwebtoken';
 import { Model, Types } from 'mongoose';

@@ -25,7 +25,7 @@ import {
 import { Member } from '../member';
 import { SendBird, TwilioService } from '../providers';
 import { User } from '../user';
-import { Platform, formatEx } from '@lagunahealth/pandora';
+import { Platform, formatEx } from '@argus/pandora';
 import { ISoftDelete } from '../db';
 
 @Injectable()

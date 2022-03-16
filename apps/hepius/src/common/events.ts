@@ -1,4 +1,4 @@
-import { Platform, QueueType } from '@lagunahealth/pandora';
+import { Platform, QueueType } from '@argus/pandora';
 import { Types } from 'mongoose';
 import { HealthPersona, QuestionnaireType } from '../questionnaire';
 import { UpdatedAppointmentAction } from '.';

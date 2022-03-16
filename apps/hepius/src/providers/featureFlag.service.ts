@@ -1,4 +1,4 @@
-import { Environments } from '@lagunahealth/pandora';
+import { Environments } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { SplitFactory } from '@splitsoftware/splitio';
 import SplitIO from '@splitsoftware/splitio/types/splitio';

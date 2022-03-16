@@ -4,7 +4,7 @@ import {
   ServiceName,
   mockLogger,
   mockProcessWarnings,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { internet, lorem } from 'faker';

@@ -1,4 +1,4 @@
-import { Environments, formatEx } from '@lagunahealth/pandora';
+import { Environments, formatEx } from '@argus/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { services } from 'config';

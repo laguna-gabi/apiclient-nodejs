@@ -1,4 +1,4 @@
-import { BaseSendBird, formatEx } from '@lagunahealth/pandora';
+import { BaseSendBird, formatEx } from '@argus/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigsService, ExternalConfigs } from '.';

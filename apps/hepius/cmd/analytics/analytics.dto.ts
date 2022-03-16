@@ -11,7 +11,7 @@ import {
   Recording,
   Sex,
 } from '../../src/member';
-import { Honorific, Language, Platform } from '@lagunahealth/pandora';
+import { Honorific, Language, Platform } from '@argus/pandora';
 import { hosts } from 'config';
 
 export const DateFormat = 'yyyy-MM-dd';

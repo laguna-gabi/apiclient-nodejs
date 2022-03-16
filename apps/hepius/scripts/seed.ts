@@ -1,4 +1,4 @@
-import { generateZipCode } from '@lagunahealth/pandora';
+import { generateZipCode } from '@argus/pandora';
 import { date, internet, lorem } from 'faker';
 import * as jwt from 'jsonwebtoken';
 import { model } from 'mongoose';

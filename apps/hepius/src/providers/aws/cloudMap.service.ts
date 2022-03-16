@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
 import { LoggerService } from '../../common';
-import { formatEx } from '@lagunahealth/pandora';
+import { formatEx } from '@argus/pandora';
 import { aws } from 'config';
 
 @Injectable()

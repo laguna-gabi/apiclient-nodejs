@@ -1,4 +1,4 @@
-import { Environments, Platform, mockLogger } from '@lagunahealth/pandora';
+import { Environments, Platform, mockLogger } from '@argus/pandora';
 import axios from 'axios';
 import { hosts, services } from 'config';
 import { EventEmitter2 } from 'eventemitter2';

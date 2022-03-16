@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { IsOptional } from 'class-validator';
-import { Language, Platform } from '@lagunahealth/pandora';
+import { Language, Platform } from '@argus/pandora';
 import { ErrorType, Errors, IsObjectId } from '../common';
 import { defaultMemberParams } from './member.dto';
 import { ISoftDelete } from '../db';

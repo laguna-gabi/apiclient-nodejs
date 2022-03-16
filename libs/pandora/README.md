@@ -78,7 +78,7 @@ you can find the snapshot version that was created in the _Pull Request_ page as
   .
   },
   "dependencies": {
-    "@lagunahealth/pandora": "[the version commented on the PR]",
+    "@argus/pandora": "[the version commented on the PR]",
   .
   .
 ```

@@ -1,4 +1,4 @@
-import { Platform, mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
+import { Platform, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { hosts } from 'config';

@@ -14,7 +14,7 @@ import {
   StorageUrlParams,
 } from '../../common';
 import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../member/journal.dto';
-import { Environments, formatEx } from '@lagunahealth/pandora';
+import { Environments, formatEx } from '@argus/pandora';
 
 @Injectable()
 export class StorageService implements OnModuleInit {

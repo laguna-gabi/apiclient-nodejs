@@ -20,7 +20,7 @@ import {
   apiPrefix,
   webhooks,
 } from '../common';
-import { IEventNotifySlack, SlackChannel, SlackIcon } from '@lagunahealth/pandora';
+import { IEventNotifySlack, SlackChannel, SlackIcon } from '@argus/pandora';
 
 /**
  * Go to '../../test/unit/mocks/webhookSendbirdNewMessagePayload.json' for a payload example

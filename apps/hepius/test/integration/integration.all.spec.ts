@@ -1,4 +1,4 @@
-import { AppointmentInternalKey, Language, LogInternalKey, Platform } from '@lagunahealth/pandora';
+import { AppointmentInternalKey, Language, LogInternalKey, Platform } from '@argus/pandora';
 import { articlesByDrg, general } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
 import { date, lorem } from 'faker';

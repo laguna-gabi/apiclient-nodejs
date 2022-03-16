@@ -29,7 +29,7 @@ import {
   UserRole,
 } from '../common';
 import { UserService } from '../user';
-import { formatEx } from '@lagunahealth/pandora';
+import { formatEx } from '@argus/pandora';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => CommunicationInfo)

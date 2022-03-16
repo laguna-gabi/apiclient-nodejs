@@ -1,4 +1,4 @@
-import { formatEx } from '@lagunahealth/pandora';
+import { formatEx } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { twilio } from 'config';
 import { Twilio, jwt } from 'twilio';

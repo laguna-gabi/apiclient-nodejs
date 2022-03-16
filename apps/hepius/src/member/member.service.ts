@@ -1,4 +1,4 @@
-import { formatEx } from '@lagunahealth/pandora';
+import { formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';

@@ -16,12 +16,7 @@ import {
   Roles,
   UserRole,
 } from '../common';
-import {
-  ClientCategory,
-  IUpdateClientSettings,
-  InnerQueueTypes,
-  QueueType,
-} from '@lagunahealth/pandora';
+import { ClientCategory, IUpdateClientSettings, InnerQueueTypes, QueueType } from '@argus/pandora';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => User)

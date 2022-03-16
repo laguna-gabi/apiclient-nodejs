@@ -3,7 +3,7 @@ import {
   NotificationType,
   RegisterInternalKey,
   generateDispatchId,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { scheduler } from 'config';
 import { addDays, addMinutes, isBefore, subDays, subMinutes } from 'date-fns';

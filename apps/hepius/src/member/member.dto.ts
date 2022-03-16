@@ -4,7 +4,7 @@ import {
   Honorific,
   Language,
   NotificationType,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
