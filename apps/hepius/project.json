@@ -9,8 +9,7 @@
       "options": {
         "outputPath": "dist/apps/hepius",
         "main": "apps/hepius/src/main.ts",
-        "tsConfig": "apps/hepius/tsconfig.app.json",
-        "assets": ["apps/hepius/src/assets"]
+        "tsConfig": "apps/hepius/tsconfig.app.json"
       },
       "configurations": {
         "production": {
