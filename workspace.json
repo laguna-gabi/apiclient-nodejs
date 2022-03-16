@@ -1,6 +1,8 @@
 {
   "version": 2,
   "projects": {
-    "hepius": "apps/hepius"
+    "hepius": "apps/hepius",
+    "iris": "apps/iris",
+    "pandora": "libs/pandora"
   }
 }
