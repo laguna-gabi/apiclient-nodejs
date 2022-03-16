@@ -1,0 +1,68 @@
+{
+    "translation": {
+        "contents": {
+            "newMember": "Hello {{member.honorific}} {{member.lastName}}, thank you for participating in the Laguna Health beta program. We are excited to provide you with free post-hospital recovery support. Tap below to download the app and schedule your first check-in.\n{{dynamicLink}}",
+            "newControlMember": "",
+            "newMemberNudge": "",
+            "newRegisteredMember": "",
+            "newRegisteredMemberNudge": "",
+            "appointmentScheduledMember": "",
+            "appointmentLongReminder": "",
+            "appointmentReminder": "",
+            "appointmentReminderLink": "",
+            "appointmentRequest": "",
+            "appointmentRequestLink": "",
+            "newChatMessageFromUser": "",
+            "logReminder": "",
+            "newChatMessageFromMember": "",
+            "appointmentScheduledUser": "",
+            "memberNotFeelingWellMessage": "",
+            "addCaregiverDetails": "",
+            "setCallPermissions": "",
+            "scheduleAppointment": "",
+            "createTodo": {
+                "MEDS": "",
+                "APPT": "",
+                "TODO": ""
+            },
+            "updateTodo": {
+                "MEDS": "",
+                "APPT": "",
+                "TODO": ""
+            },
+            "deleteTodo": {
+                "MEDS": "",
+                "APPT": "",
+                "TODO": ""
+            },
+            "assessmentSubmitAlert": "",
+            "answerQuestionnaire": ""
+        },
+        "honorific": {
+            "mr": "",
+            "mrs": "",
+            "ms": "",
+            "miss": "",
+            "mx": "",
+            "dr": "",
+            "reverend": "",
+            "professor": "",
+            "captain": "",
+            "coach": "",
+            "father": ""
+        },
+        "alerts": {
+            "customContent": "",
+            "newChatMessageFromMember": "",
+            "actionItemOverdue": "",
+            "appointmentScheduledUser": "",
+            "memberAssigned": "",
+            "memberNotFeelingWellMessage": "",
+            "journalContent": "",
+            "appointmentReviewed": "",
+            "assessmentSubmitScoreOverThreshold": "",
+            "memberCreateTodo": "",
+            "appointmentSubmitOverdue": ""
+        }
+    }
+}
