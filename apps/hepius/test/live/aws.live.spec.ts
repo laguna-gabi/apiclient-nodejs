@@ -91,7 +91,7 @@ describe('live: aws', () => {
         return;
       }
       const id = generateId();
-      const fileContent = readFileSync('./test/live/mocks/lagunaIcon.png');
+      const fileContent = readFileSync('./apps/hepius/test/live/mocks/lagunaIcon.png');
       const normalImageUploadParams = {
         Bucket: bucketName,
         // eslint-disable-next-line max-len
