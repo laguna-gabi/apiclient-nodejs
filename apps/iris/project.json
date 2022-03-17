@@ -42,10 +42,37 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/apps/iris"],
       "options": {
-        "jestConfig": "apps/iris/jest.config.js",
+        "jestConfig": "apps/iris/test/unit/jest.config.js",
         "passWithNoTests": true
+      }
+    },
+    "test:integration": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "apps/iris/test/integration/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "test:live": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "apps/iris/test/live/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "test:cov": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/apps/hepius"],
+      "options": {
+        "jestConfig": "apps/iris/test/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "cov-badges": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "jest-coverage-badges input coverage/apps/iris/coverage-summary.json output coverage/apps/iris"
       }
     }
   },
