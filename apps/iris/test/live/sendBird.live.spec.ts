@@ -123,7 +123,7 @@ describe(`live: ${SendBird.name}`, () => {
       content: `journalText: ${params.message}, journalAudio: ${params.message}`,
       id: expect.stringContaining(`journalTextId`) && expect.stringContaining(`journalAudioId`),
     });
-  }, 10000);
+  }, 20000);
 
   it('should send journal image message with audio', async () => {
     const params: SendSendBirdNotification = {
@@ -143,7 +143,7 @@ describe(`live: ${SendBird.name}`, () => {
       content: `journalImage: ${params.message}, journalAudio: ${params.message}`,
       id: expect.stringContaining(`journalImageId`) && expect.stringContaining(`journalAudioId`),
     });
-  }, 10000);
+  }, 20000);
 
   async function checkResult(requestType: RequestType, params: SendSendBirdNotification) {
     const result: ProviderResult = await sendBird.send(params, v4());
