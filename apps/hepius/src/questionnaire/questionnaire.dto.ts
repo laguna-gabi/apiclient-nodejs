@@ -211,7 +211,7 @@ export class Questionnaire extends Identifier {
   @Field(() => String)
   shortName: string;
 
-  @Prop()
+  @Prop({ type: String, enum: QuestionnaireType })
   @Field(() => QuestionnaireType)
   type: QuestionnaireType;
 
@@ -293,7 +293,7 @@ export class Item implements ItemInterface {
   @Field(() => String)
   label: string;
 
-  @Prop()
+  @Prop({ type: String, enum: ItemType })
   @Field(() => ItemType)
   type: ItemType;
 
@@ -325,7 +325,7 @@ export class Item implements ItemInterface {
 @InputType('AlertConditionInput')
 @ObjectType()
 export class AlertCondition {
-  @Prop()
+  @Prop({ type: String, enum: AlertConditionType })
   @Field(() => AlertConditionType)
   type: AlertConditionType;
 

@@ -411,7 +411,7 @@ export class NotifyParams {
   @IsObjectId({ message: Errors.get(ErrorType.userIdInvalid) })
   userId: string;
 
-  @Prop()
+  @Prop({ type: String, enum: NotificationType })
   @IsNotChat({ message: Errors.get(ErrorType.notificationChatNotSupported) })
   @IsTypeMetadataProvided({ message: Errors.get(ErrorType.notificationMetadataInvalid) })
   @Field(() => NotificationType)
@@ -498,7 +498,7 @@ export class Member extends Identifier {
   @Field(() => String)
   phone: string;
 
-  @Prop()
+  @Prop({ type: String })
   @Field(() => String, { nullable: true })
   phoneType: PhoneType;
 
@@ -530,7 +530,7 @@ export class Member extends Identifier {
   @Field(() => [User], { description: 'users reference object' })
   users: User[];
 
-  @Prop({ default: defaultMemberParams.sex })
+  @Prop({ type: String, enum: Sex, default: defaultMemberParams.sex })
   @Field(() => Sex)
   sex: Sex;
 
@@ -576,7 +576,7 @@ export class Member extends Identifier {
   })
   phoneSecondary?: string;
 
-  @Prop({ isNaN: true })
+  @Prop({ type: String, isNaN: true })
   @Field(() => String, { nullable: true })
   phoneSecondaryType?: PhoneType;
 
@@ -606,15 +606,15 @@ export class Member extends Identifier {
   @Field(() => String, { nullable: true })
   admitDate?: string;
 
-  @Prop({ default: defaultMemberParams.honorific })
+  @Prop({ type: String, enum: Honorific, default: defaultMemberParams.honorific })
   @Field(() => Honorific)
   honorific: Honorific;
 
-  @Prop({ isNaN: true })
+  @Prop({ type: String, enum: Race, isNaN: true })
   @Field(() => Race, { nullable: true })
   race?: Race;
 
-  @Prop({ isNaN: true })
+  @Prop({ type: String, enum: Ethnicity, isNaN: true })
   @Field(() => Ethnicity, { nullable: true })
   ethnicity?: Ethnicity;
 
@@ -622,7 +622,7 @@ export class Member extends Identifier {
   @Field(() => ReadmissionRisk, { nullable: true })
   readmissionRisk?: ReadmissionRisk;
 
-  @Prop({ isNaN: true })
+  @Prop({ type: String, enum: ReadmissionRisk, isNaN: true })
   @Field(() => [ReadmissionRiskHistory], { nullable: true })
   readmissionRiskHistory?: ReadmissionRiskHistory[];
 
@@ -634,7 +634,7 @@ export class Member extends Identifier {
   @Field(() => String, { nullable: true })
   preferredGenderPronoun?: string;
 
-  @Prop({ isNaN: true })
+  @Prop({ type: String, enum: HealthPersona, isNaN: true })
   @Field(() => HealthPersona, { nullable: true })
   healthPersona?: HealthPersona;
 }

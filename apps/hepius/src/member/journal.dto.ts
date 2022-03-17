@@ -125,11 +125,11 @@ export class Journal extends Identifier {
   @Field(() => Boolean)
   published: boolean;
 
-  @Prop()
+  @Prop({ type: String, enum: ImageFormat })
   @Field(() => ImageFormat, { nullable: true })
   imageFormat?: ImageFormat;
 
-  @Prop()
+  @Prop({ type: String, enum: AudioFormat })
   @Field(() => AudioFormat, { nullable: true })
   audioFormat?: AudioFormat;
 

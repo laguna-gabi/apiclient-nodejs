@@ -3,20 +3,26 @@
   "compilerOptions": {
     "rootDir": ".",
     "sourceMap": true,
-    "declaration": false,
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "target": "es2015",
-    "module": "esnext",
     "lib": ["es2017", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "baseUrl": ".",
+    "baseUrl": "./",
     "paths": {
       "@argus/pandora": ["libs/pandora/src/index.ts"]
-    }
+    },
+    "target": "es2019",
+    "module": "commonjs",
+    "outDir": "../../dist/out-tsc",
+    "types": ["jest", "node"],
+    "removeComments": true,
+    "declaration": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "incremental": true
   },
   "exclude": ["node_modules", "tmp"]
 }

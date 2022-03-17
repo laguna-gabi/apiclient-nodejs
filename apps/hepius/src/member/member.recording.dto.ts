@@ -100,7 +100,7 @@ export class Recording {
   @Field(() => String, { nullable: true })
   phone?: string;
 
-  @Prop()
+  @Prop({ type: String, enum: RecordingType })
   @Field(() => RecordingType, { nullable: true })
   recordingType?: RecordingType;
 

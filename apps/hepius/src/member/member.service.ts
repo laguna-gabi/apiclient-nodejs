@@ -45,7 +45,7 @@ import {
   UpdateRecordingParams,
   UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
-} from '.';
+} from './index';
 import { Appointment, AppointmentDocument, AppointmentStatus } from '../appointment';
 import {
   BaseService,

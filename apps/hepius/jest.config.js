@@ -3,7 +3,7 @@ module.exports = {
   preset: '../../jest.preset.js',
   globals: {
     'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
+      tsconfig: '<rootDir>/tsconfig.json',
     },
   },
   testEnvironment: 'node',
@@ -12,4 +12,6 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/apps/hepius',
+  maxWorkers: 1,
+  globalSetup: './test/global-setup.ts',
 };

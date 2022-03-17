@@ -138,7 +138,7 @@ export class Todo extends Identifier {
   @Field(() => String)
   text: string;
 
-  @Prop()
+  @Prop({ type: String, enum: Label })
   @Field(() => Label, { nullable: true })
   label?: Label;
 
@@ -154,7 +154,7 @@ export class Todo extends Identifier {
   @Field(() => Date, { nullable: true })
   end?: Date;
 
-  @Prop({ default: TodoStatus.active })
+  @Prop({ type: String, enum: TodoStatus, default: TodoStatus.active })
   @Field(() => TodoStatus)
   status: TodoStatus;
 

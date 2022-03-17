@@ -90,7 +90,7 @@ export class Caregiver extends Identifier {
   @Field(() => String, { nullable: true })
   email?: string;
 
-  @Prop()
+  @Prop({ type: String, enum: Relationship })
   @Field(() => Relationship)
   relationship: Relationship;
 }

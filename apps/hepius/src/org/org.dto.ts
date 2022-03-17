@@ -39,7 +39,7 @@ export class CreateOrgParams {
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class Org extends Identifier {
-  @Prop()
+  @Prop({ type: String, enum: OrgType })
   @Field(() => OrgType)
   type: OrgType;
 

@@ -9,7 +9,8 @@
       "options": {
         "outputPath": "dist/apps/hepius",
         "main": "apps/hepius/src/main.ts",
-        "tsConfig": "apps/hepius/tsconfig.app.json"
+        "tsConfig": "apps/hepius/tsconfig.json",
+        "webpackConfig": "./webpackConfig.js"
       },
       "configurations": {
         "production": {
@@ -44,6 +45,12 @@
       "options": {
         "jestConfig": "apps/hepius/jest.config.js",
         "passWithNoTests": true
+      }
+    },
+    "test:cov": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "jest --config apps/hepius/test/jest.json --logHeapUsage && jest-coverage-badges"
       }
     }
   },

@@ -73,7 +73,7 @@ import {
   UpdateRecordingParams,
   UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
-} from '.';
+} from './index';
 import { AppointmentStatus } from '../appointment';
 import {
   Client,

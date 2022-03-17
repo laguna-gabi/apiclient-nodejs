@@ -59,7 +59,7 @@ export class BarrierType extends Identifier {
   @Field(() => String)
   description: string;
 
-  @Prop()
+  @Prop({ type: String, enum: BarrierDomain })
   @Field(() => BarrierDomain)
   domain: BarrierDomain;
 

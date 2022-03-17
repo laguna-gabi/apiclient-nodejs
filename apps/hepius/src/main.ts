@@ -1,6 +1,5 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
-import * as packageJson from '../package.json';
 import { AppModule } from './app.module';
 import { GlobalAuthGuard, RolesGuard } from './auth';
 import {
@@ -32,11 +31,6 @@ async function bootstrap() {
 
   await app.listen(3000);
 
-  logger.info(
-    { hepiusVersion: internalLogs.hepiusVersion.replace('@version@', packageJson.version) },
-    'Main',
-    bootstrap.name,
-  );
   logger.info(
     { lastCommit: internalLogs.lastCommit.replace('@hash@', process.env.COMMIT_SHA) },
     'Main',

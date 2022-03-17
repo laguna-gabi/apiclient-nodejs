@@ -121,11 +121,11 @@ export class Appointment extends Identifier {
   @Field(() => Date, { nullable: true })
   notBefore: Date;
 
-  @Prop()
+  @Prop({ type: String, enum: AppointmentStatus })
   @Field(() => AppointmentStatus)
   status: AppointmentStatus;
 
-  @Prop()
+  @Prop({ type: String, enum: AppointmentMethod })
   @Field(() => AppointmentMethod, { nullable: true })
   method?: AppointmentMethod;
 

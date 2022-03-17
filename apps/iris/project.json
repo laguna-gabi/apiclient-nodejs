@@ -9,7 +9,7 @@
       "options": {
         "outputPath": "dist/apps/iris",
         "main": "apps/iris/src/main.ts",
-        "tsConfig": "apps/iris/tsconfig.app.json",
+        "tsConfig": "apps/iris/tsconfig.json",
         "assets": ["apps/iris/src/assets"]
       },
       "configurations": {

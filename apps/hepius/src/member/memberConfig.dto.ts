@@ -55,7 +55,7 @@ export class MemberConfig {
   @Field(() => String)
   externalUserId: string;
 
-  @Prop({ default: Platform.web })
+  @Prop({ type: String, enum: Platform, default: Platform.web })
   @Field(() => Platform, { nullable: true })
   platform: Platform;
 
@@ -83,7 +83,7 @@ export class MemberConfig {
   @Field(() => Date, { nullable: true })
   firstLoggedInAt: Date;
 
-  @Prop({ default: defaultMemberParams.language })
+  @Prop({ type: String, enum: Language, default: defaultMemberParams.language })
   @Field(() => Language)
   language: Language;
 
