@@ -10,7 +10,8 @@
         "outputPath": "dist/apps/iris",
         "main": "apps/iris/src/main.ts",
         "tsConfig": "apps/iris/tsconfig.app.json",
-        "webpackConfig": "./webpackConfig.js"
+        "webpackConfig": "./webpackConfig.js",
+        "generatePackageJson": true
       },
       "configurations": {
         "production": {

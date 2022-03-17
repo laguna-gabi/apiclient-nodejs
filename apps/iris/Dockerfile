@@ -1,15 +1,12 @@
-# builder image step
-FROM node:16 as builder
+FROM node:16.13-bullseye-slim as builder
+COPY config ./iris/config
 WORKDIR /iris
-COPY . /iris
-
-# install packages
-ARG NPM_TOKEN
-RUN echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN" > ~/.npmrc
+COPY ./dist/apps/iris .
+COPY config ./iris/config
 RUN yarn
 
 # lean output image
-FROM node:16.8-alpine3.14
+FROM node:16.13-bullseye-slim
 ARG GIT_COMMIT=unspecified
 ARG GIT_BRANCH=unspecified
 ARG NODE_ENV
@@ -23,4 +20,4 @@ ENV NO_COLOR=true
 ENV COMMIT_SHA=${GIT_COMMIT}
 ENV BRANCH=${GIT_BRANCH}
 ENV NODE_ENV=$NODE_ENV
-CMD "yarn" "start"
+CMD node ./main.js
