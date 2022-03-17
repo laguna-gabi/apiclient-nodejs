@@ -9,7 +9,7 @@
       "options": {
         "outputPath": "dist/apps/hepius",
         "main": "apps/hepius/src/main.ts",
-        "tsConfig": "apps/hepius/tsconfig.json",
+        "tsConfig": "apps/hepius/tsconfig.app.json",
         "webpackConfig": "./webpackConfig.js"
       },
       "configurations": {

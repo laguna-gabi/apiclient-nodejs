@@ -68,3 +68,4 @@ migrations/migrate-mongo-config.js
 # Console Commands
 outputs/*
 !.vscode/extensions.json
+!.vscode/extensions.json
