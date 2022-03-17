@@ -1,13 +1,8 @@
-# builder image step
-FROM node:16 as builder
+FROM node:16.13-bullseye-slim as builder
+COPY config ./hepius/config
 WORKDIR /hepius
-COPY . /hepius
-
-# install packages
-ARG NPM_TOKEN
-RUN echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN" > ~/.npmrc
-RUN echo "arch=x64" >> ~/.npmrc
-RUN echo "platform=linux" >> ~/.npmrc
+COPY ./dist/apps/hepius .
+COPY config ./hepius/config
 RUN yarn
 
 # lean output image
@@ -25,4 +20,4 @@ ENV NO_COLOR=true
 ENV COMMIT_SHA=${GIT_COMMIT}
 ENV BRANCH=${GIT_BRANCH}
 ENV NODE_ENV=$NODE_ENV
-CMD "yarn" "start"
+CMD node ./main.js

@@ -10,7 +10,8 @@
         "outputPath": "dist/apps/hepius",
         "main": "apps/hepius/src/main.ts",
         "tsConfig": "apps/hepius/tsconfig.app.json",
-        "webpackConfig": "./webpackConfig.js"
+        "webpackConfig": "./webpackConfig.js",
+        "generatePackageJson": true
       },
       "configurations": {
         "production": {
