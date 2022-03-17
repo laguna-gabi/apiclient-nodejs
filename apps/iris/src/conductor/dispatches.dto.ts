@@ -40,10 +40,10 @@ export class Dispatch {
   @Prop()
   correlationId: string;
 
-  @Prop()
+  @Prop({ type: String, enum: ServiceName })
   serviceName: ServiceName;
 
-  @Prop()
+  @Prop({ type: String, enum: NotificationType })
   notificationType: NotificationType | CancelNotificationType;
 
   @Prop()
@@ -70,7 +70,7 @@ export class Dispatch {
   @Prop({ isNan: true })
   peerId?: string;
 
-  @Prop({ isNan: true })
+  @Prop({ isNan: true, type: String })
   contentKey?: ContentKey;
 
   @Prop({ isNan: true })
@@ -106,7 +106,7 @@ export class Dispatch {
   /**
    * Internal Iris fields for dispatching a message
    */
-  @Prop({ default: defaultDispatchParams.status })
+  @Prop({ type: String, enum: DispatchStatus, default: defaultDispatchParams.status })
   status?: DispatchStatus;
 
   @Prop({ isNaN: true })

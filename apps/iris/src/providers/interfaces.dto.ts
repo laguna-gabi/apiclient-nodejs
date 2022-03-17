@@ -65,7 +65,7 @@ export enum Provider {
 
 @Schema({ versionKey: false, _id: false })
 export class ProviderResult {
-  @Prop()
+  @Prop({ type: String, enum: Provider })
   provider: Provider;
 
   @Prop()

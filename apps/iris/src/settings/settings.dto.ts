@@ -14,7 +14,7 @@ export class ClientSettings {
   @Prop({ index: true })
   id: string;
 
-  @Prop()
+  @Prop({ type: String, enum: ClientCategory })
   clientCategory: ClientCategory;
 
   @Prop({ isNaN: true })
@@ -32,16 +32,16 @@ export class ClientSettings {
   @Prop({ isNaN: true })
   orgName?: string;
 
-  @Prop()
+  @Prop({ type: String, enum: Honorific })
   honorific?: Honorific;
 
   @Prop()
   zipCode?: string;
 
-  @Prop()
+  @Prop({ type: String, enum: Language })
   language?: Language;
 
-  @Prop({ isNaN: true })
+  @Prop({ isNaN: true, type: String, enum: Platform })
   platform?: Platform;
 
   @Prop({ isNaN: true })
