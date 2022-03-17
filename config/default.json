@@ -3,10 +3,12 @@
     "chat": "https://dev.chat.lagunahealth.com",
     "app": "https://dev.app.lagunahealth.com",
     "harmony": "https://dev.harmony.lagunahealth.com",
-    "localstack": "http://localhost:4566"
+    "localstack": "http://localhost:4566",
+    "dynamicLink": "https://links.lagunahealth.com/app"
   },
   "db": {
-    "connection": "mongodb://localhost:27017/laguna"
+    "connection": "mongodb://localhost:27017/laguna",
+    "name": "iris-localhost"
   },
   "graphql": {
     "validators": {
@@ -27,7 +29,8 @@
     },
     "queue": {
       "notification": "NotificationsQ-local",
-      "image": "ImageQ-local"
+      "image": "ImageQ-local",
+      "notificationDLQ": "NotificationsDLQ-local"
     },
     "cloudMap": {
       "namespace": "LagunaCloudMap-develop"
@@ -44,7 +47,9 @@
   "twilio": {
     "source": "+12058511112",
     "iosExcludeRegistrationNumber": "+10011223344",
-    "identity": "the_user_id"
+    "identity": "the_user_id",
+    "validPhoneTypes": ["FIXED_LINE_OR_MOBILE", "MOBILE"],
+    "traversalServiceTokenTtl": 3
   },
   "slack": {
     "support": "#support-dev",
@@ -55,7 +60,8 @@
   "oneSignal": {
     "voipRegistrationPayload": {
       "test_type": 1
-    }
+    },
+    "androidChannelId": "00349af6-be67-4729-9d48-9057a5507b14"
   },
   "scheduler": {
     "alertBeforeInMin": 15
@@ -81,5 +87,9 @@
     "sample": "sample",
     "extension": ".ts",
     "migrationDir": "/cmd/migration/scripts"
-  }
+  },
+  "retryMax": 2,
+  "gapTriggersAt": 5,
+  "gapMinutes": 15,
+  "maxAlertGapInMin": 35791
 }

@@ -6,5 +6,8 @@
     "cloudMap": {
       "namespace": "LagunaCloudMap-develop"
     }
+  },
+  "db": {
+    "name": "iris"
   }
 }
