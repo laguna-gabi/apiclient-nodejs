@@ -262,7 +262,7 @@ describe('live: aws', () => {
       };
 
       const fileName = `${lorem.word()}.mp4`;
-      const buffer = readFileSync('./test/live/mocks/tempFile.ogg');
+      const buffer = readFileSync('./apps/hepius/test/live/mocks/tempFile.ogg');
 
       const uploadID = await uploadPart(fileName, 0, buffer.toString('hex'));
       await uploadPart(fileName, 1, lorem.sentence(), uploadID);
