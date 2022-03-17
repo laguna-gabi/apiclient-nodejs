@@ -622,7 +622,7 @@ export class Member extends Identifier {
   @Field(() => ReadmissionRisk, { nullable: true })
   readmissionRisk?: ReadmissionRisk;
 
-  @Prop({ type: String, enum: ReadmissionRisk, isNaN: true })
+  @Prop({ isNaN: true })
   @Field(() => [ReadmissionRiskHistory], { nullable: true })
   readmissionRiskHistory?: ReadmissionRiskHistory[];
 

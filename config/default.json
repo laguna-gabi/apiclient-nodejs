@@ -86,7 +86,7 @@
   "migration": {
     "sample": "sample",
     "extension": ".ts",
-    "migrationDir": "/cmd/migration/scripts"
+    "migrationDir": "apps/hepius/cmd/migration/scripts"
   },
   "retryMax": 2,
   "gapTriggersAt": 5,
