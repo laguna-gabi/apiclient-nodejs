@@ -1,4 +1,4 @@
-import { BaseSendBird, FailureReason, JournalCustomKey, formatEx } from '@lagunahealth/pandora';
+import { BaseSendBird, FailureReason, JournalCustomKey, formatEx } from '@argus/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as FormData from 'form-data';

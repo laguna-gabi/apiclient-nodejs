@@ -4,7 +4,7 @@ import {
   SlackIcon,
   mockLogger,
   mockProcessWarnings,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { twilio } from 'config';
 import { lorem } from 'faker';

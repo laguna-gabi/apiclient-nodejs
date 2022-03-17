@@ -1,4 +1,4 @@
-import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
+import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model } from 'mongoose';

@@ -6,7 +6,7 @@ import {
   IUpdateClientSettings,
   IUpdateSenderClientId,
   formatEx,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { gapTriggersAt, retryMax } from 'config';
 import { differenceInSeconds } from 'date-fns';

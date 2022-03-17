@@ -5,7 +5,7 @@ import { generateId, generateTriggers } from '../';
 import { DbModule } from '../../src/db';
 import { ConductorModule, Trigger, TriggersService } from '../../src/conductor';
 import { LoggerService } from '../../src/common';
-import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
+import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 
 describe(TriggersService.name, () => {
   let module: TestingModule;

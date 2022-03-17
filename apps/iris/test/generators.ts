@@ -6,7 +6,7 @@ import {
   Platform,
   RegisterInternalKey,
   ServiceName,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { add } from 'date-fns';
 import { internet, lorem, name } from 'faker';
 import { Types } from 'mongoose';

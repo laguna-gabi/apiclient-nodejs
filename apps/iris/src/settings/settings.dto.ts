@@ -1,4 +1,4 @@
-import { ClientCategory, Honorific, Language, Platform } from '@lagunahealth/pandora';
+import { ClientCategory, Honorific, Language, Platform } from '@argus/pandora';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ISoftDelete } from '../db';
 

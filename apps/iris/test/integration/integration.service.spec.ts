@@ -61,7 +61,7 @@ import {
   mockLogger,
   mockProcessWarnings,
   translation,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapMinutes, hosts } from 'config';

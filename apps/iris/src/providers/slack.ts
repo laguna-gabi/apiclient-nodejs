@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { IncomingWebhook } from '@slack/webhook';
 import { ConfigsService, ExternalConfigs } from '.';
-import { BaseSlack, IEventNotifySlack } from '@lagunahealth/pandora';
+import { BaseSlack, IEventNotifySlack } from '@argus/pandora';
 import * as config from 'config';
 import { EventType, LoggerService } from '../common';
 

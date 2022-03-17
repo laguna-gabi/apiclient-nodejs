@@ -4,7 +4,7 @@ import {
   ContentKey,
   NotificationType,
   Platform,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { Prop, Schema } from '@nestjs/mongoose';
 import { SenderClient } from '../conductor';
 

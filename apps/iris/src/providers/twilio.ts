@@ -1,10 +1,4 @@
-import {
-  Environments,
-  IEventNotifySlack,
-  SlackChannel,
-  SlackIcon,
-  formatEx,
-} from '@lagunahealth/pandora';
+import { Environments, IEventNotifySlack, SlackChannel, SlackIcon, formatEx } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { twilio } from 'config';
 import { hoursToMilliseconds } from 'date-fns';

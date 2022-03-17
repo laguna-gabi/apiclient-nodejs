@@ -5,7 +5,7 @@ import {
   NotifyCustomKey,
   Platform,
   mockLogger,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { HttpService } from '@nestjs/axios';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { datatype, image, lorem, name } from 'faker';

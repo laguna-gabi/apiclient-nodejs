@@ -5,7 +5,7 @@ import {
   mockLogger,
   mockProcessWarnings,
   translation,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { hosts } from 'config';

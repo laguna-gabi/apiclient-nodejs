@@ -10,7 +10,7 @@ import {
   QueueType,
   ServiceName,
   formatEx,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { Injectable, NotImplementedException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';

@@ -1,4 +1,4 @@
-import { ContentKey } from '@lagunahealth/pandora';
+import { ContentKey } from '@argus/pandora';
 import { ClientSettings } from '../settings';
 
 export class GetContentsParams {

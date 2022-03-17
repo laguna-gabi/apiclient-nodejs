@@ -1,4 +1,4 @@
-import { BaseExternalConfigs, Environments } from '@lagunahealth/pandora';
+import { BaseExternalConfigs, Environments } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { MongooseModuleOptions, MongooseOptionsFactory } from '@nestjs/mongoose';
 import * as AWS from 'aws-sdk';

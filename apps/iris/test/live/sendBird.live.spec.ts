@@ -1,4 +1,4 @@
-import * as pandora from '@lagunahealth/pandora';
+import * as pandora from '@argus/pandora';
 import { HttpService } from '@nestjs/axios';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { v4 } from 'uuid';
@@ -17,12 +17,7 @@ import {
   SendBird,
   SendSendBirdNotification,
 } from '../../src/providers';
-import {
-  Categories,
-  JournalCustomKey,
-  NotificationType,
-  NotifyCustomKey,
-} from '@lagunahealth/pandora';
+import { Categories, JournalCustomKey, NotificationType, NotifyCustomKey } from '@argus/pandora';
 
 describe(`live: ${SendBird.name}`, () => {
   let basePath;

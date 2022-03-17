@@ -11,7 +11,7 @@ import {
   QueueType,
   RegisterInternalKey,
   TodoInternalKey,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { gapMinutes, hosts } from 'config';

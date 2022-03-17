@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
 import { LoggerService } from '.';
-import { PinoHttpConfig } from '@lagunahealth/pandora';
+import { PinoHttpConfig } from '@argus/pandora';
 
 @Module({
   providers: [LoggerService],

@@ -10,7 +10,7 @@ import {
 } from '../../src/conductor';
 import { generateDispatch, generateId } from '../.';
 import { disconnect } from 'mongoose';
-import { mockLogger, mockProcessWarnings } from '@lagunahealth/pandora';
+import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { LoggerService } from '../../src/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ProvidersModule } from '../../src/providers';

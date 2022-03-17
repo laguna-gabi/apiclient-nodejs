@@ -5,7 +5,7 @@ import {
   NotificationType,
   Platform,
   formatEx,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { oneSignal } from 'config';

@@ -1,9 +1,4 @@
-import {
-  CancelNotificationType,
-  ContentKey,
-  NotificationType,
-  ServiceName,
-} from '@lagunahealth/pandora';
+import { CancelNotificationType, ContentKey, NotificationType, ServiceName } from '@argus/pandora';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { FailureReason } from '../common';
 import { ISoftDelete } from '../db';

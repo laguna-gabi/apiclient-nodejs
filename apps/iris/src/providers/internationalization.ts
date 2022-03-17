@@ -5,7 +5,7 @@ import {
   ChatInternalKey,
   Language,
   LogInternalKey,
-} from '@lagunahealth/pandora';
+} from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { cloneDeep } from 'lodash';
 import { GetContentsParams } from '../common';
