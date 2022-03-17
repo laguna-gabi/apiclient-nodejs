@@ -1,7 +1,7 @@
 import { LogInternalKey, RegisterInternalKey, translation } from '@argus/pandora';
 import { hosts } from 'config';
 // eslint-disable-next-line max-len
-import { translation as nsTranslation } from '../../node_modules/@argus/pandora/dist/src/languages/NorthshoreBeta.json';
+import { translation as nsTranslation } from '../../../../libs/pandora/src/languages/NorthshoreBeta.json';
 import { Internationalization } from '../../src/providers';
 import { replaceConfigs } from '../common';
 import { generateUpdateMemberSettingsMock, generateUpdateUserSettingsMock } from '../generators';
