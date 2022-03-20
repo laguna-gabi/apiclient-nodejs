@@ -1,4 +1,11 @@
-import { BaseLogger, FailureReason, ServiceName, SlackChannel, SlackIcon } from '@argus/pandora';
+import {
+  BaseLogger,
+  FailureReason,
+  ServiceName,
+  SlackChannel,
+  SlackIcon,
+  internalLogs,
+} from '@argus/pandora';
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
@@ -37,6 +44,8 @@ export class LoggerService extends BaseLogger {
     'id',
     'externalUserId',
     'userId',
+    // internal
+    ...Object.keys(internalLogs),
   ]);
 
   constructor(

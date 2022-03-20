@@ -1,7 +1,9 @@
+import { internalLogs } from '@argus/pandora';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { general } from 'config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { general } from 'config';
+import { AppModule } from './app.module';
+import { LoggerService } from './common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,6 +18,14 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
+  const logger = app.get(LoggerService);
+
   await app.listen(3001);
+
+  logger.info(
+    { lastCommit: internalLogs.lastCommit.replace('@hash@', process.env.COMMIT_SHA) },
+    'Main',
+    bootstrap.name,
+  );
 }
 bootstrap();

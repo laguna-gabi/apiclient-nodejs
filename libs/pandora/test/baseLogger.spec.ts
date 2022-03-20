@@ -1,7 +1,7 @@
-import { BaseLogger, Client, FailureReason, ServiceName } from '../src';
 import { datatype, lorem } from 'faker';
 import { PARAMS_PROVIDER_TOKEN, Params, PinoLogger } from 'nestjs-pino';
 import { v4 } from 'uuid';
+import { BaseLogger, Client, FailureReason, ServiceName } from '../src';
 
 const VALID_KEYS = new Set([
   'fieldWithString',

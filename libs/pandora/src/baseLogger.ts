@@ -1,7 +1,10 @@
+import { Inject } from '@nestjs/common';
 import { PARAMS_PROVIDER_TOKEN, Params, PinoLogger } from 'nestjs-pino';
 import { AuditType, Client, FailureReason, LogType, ServiceName, generateOrgNamePrefix } from '.';
-import { Inject } from '@nestjs/common';
 
+export const internalLogs = {
+  lastCommit: 'Last commit hash on this branch is: @hash@',
+};
 export class BaseLogger extends PinoLogger {
   constructor(
     @Inject(PARAMS_PROVIDER_TOKEN) params: Params,

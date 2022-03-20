@@ -5,16 +5,12 @@ import {
   ServiceName,
   SlackChannel,
   SlackIcon,
+  internalLogs,
 } from '@argus/pandora';
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { EventType } from '.';
-
-export const internalLogs = {
-  hepiusVersion: `Starting ${ServiceName.hepius}  application version: @version@`,
-  lastCommit: 'Last commit hash on this branch is: @hash@',
-};
 
 @Injectable()
 export class LoggerService extends BaseLogger {
@@ -93,6 +89,7 @@ export class LoggerService extends BaseLogger {
     'dueDate',
     'redFlagId',
     'barrierId',
+    // internal
     ...Object.keys(internalLogs),
   ]);
 

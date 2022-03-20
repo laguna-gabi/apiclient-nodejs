@@ -1,15 +1,15 @@
+import { internalLogs } from '@argus/pandora';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
+import { general } from 'config';
 import { AppModule } from './app.module';
 import { GlobalAuthGuard, RolesGuard } from './auth';
 import {
   AllExceptionsFilter,
   AppRequestContext,
   LoggerService,
-  internalLogs,
   requestContextMiddleware,
 } from './common';
-import { general } from 'config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: ['log'], bodyParser: false });
