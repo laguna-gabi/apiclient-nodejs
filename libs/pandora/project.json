@@ -10,12 +10,18 @@
         "lintFilePatterns": ["libs/pandora/**/*.ts"]
       }
     },
-    "test": {
+    "test:cov": {
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/libs/pandora"],
       "options": {
-        "jestConfig": "libs/pandora/jest.config.js",
+        "jestConfig": "libs/pandora/test/jest.config.js",
         "passWithNoTests": true
+      }
+    },
+    "cov-badges": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "jest-coverage-badges input coverage/libs/pandora/coverage-summary.json output coverage/libs/pandora"
       }
     }
   },
