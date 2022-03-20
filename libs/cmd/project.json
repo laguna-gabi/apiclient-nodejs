@@ -1,0 +1,14 @@
+{
+  "root": "libs/cmd",
+  "sourceRoot": "libs/cmd",
+  "projectType": "library",
+  "targets": {
+    "localstack": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "libs/cmd/localstack/configLocalstack.sh"
+      }
+    }
+  },
+  "tags": []
+}

@@ -3,6 +3,7 @@
   "projects": {
     "hepius": "apps/hepius",
     "iris": "apps/iris",
-    "pandora": "libs/pandora"
+    "pandora": "libs/pandora",
+    "cmd": "libs/cmd"
   }
 }
