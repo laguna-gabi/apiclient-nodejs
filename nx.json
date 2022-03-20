@@ -17,7 +17,16 @@
     "default": {
       "runner": "@nrwl/workspace/tasks-runners/default",
       "options": {
-        "cacheableOperations": ["build", "lint", "test", "e2e"]
+        "cacheableOperations": [
+          "build",
+          "lint",
+          "test",
+          "test:validation",
+          "test:integration",
+          "test:live",
+          "test:cov",
+          "cov-badges"
+        ]
       }
     }
   },
