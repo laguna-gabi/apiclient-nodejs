@@ -265,7 +265,7 @@ const deploy = async () => {
     !process.env.GITHUB_SHA ||
     !process.env.ECR_REGISTRY ||
     !process.env.GITHUB_RUN_ID ||
-    process.env.GITHUB_REF_NAME
+    !process.env.GITHUB_REF_NAME
   ) {
     logAndThrow(`failed to deploy ${appName} - missing mandatory environment parameters`);
   }
