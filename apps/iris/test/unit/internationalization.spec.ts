@@ -1,6 +1,5 @@
-import { LogInternalKey, RegisterInternalKey, translation } from '@argus/pandora';
+import { LogInternalKey, RegisterInternalKey, TranslationNs, translation } from '@argus/pandora';
 import { hosts } from 'config';
-import { TranslationNs } from '@argus/pandora';
 import { Internationalization } from '../../src/providers';
 import { replaceConfigs } from '../common';
 import { generateUpdateMemberSettingsMock, generateUpdateUserSettingsMock } from '../generators';

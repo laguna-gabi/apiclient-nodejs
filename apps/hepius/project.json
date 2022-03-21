@@ -85,7 +85,7 @@
     "deploy": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "nx run cmd:deploy --application=hepius --slackChannel={args.slackChannel}"
+        "command": "ts-node -P ./tsconfig.base.json ./ci/deploy.ts hepius {args.slackChannel}"
       }
     }
   },

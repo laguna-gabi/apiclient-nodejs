@@ -12,17 +12,17 @@ on:
           - iris
       run_test:
         type: boolean
-        description: Should run `Test` job?
+        description: enable `Test`?
         required: false
         default: true
       run_lint:
         type: boolean
-        description: Should run `Lint` job?
+        description: enable `Lint`?
         required: false
         default: true
       run_deploy:
         type: boolean
-        description: Should run `Deploy` job (only applied when `Test` and `Lint` are selected)?
+        description: enable `Deploy`? (only applied when `Test` and `Lint` are selected)?
         required: false
         default: false
 
@@ -30,7 +30,7 @@ jobs:
   lint:
     name: Lint
     runs-on: self-hosted
-    if: ${{github.event.inputs.run_lint}}
+    if: github.event.inputs.run_lint == 'true'
     steps:
       - name: Get branch name
         id: branch-name
@@ -52,7 +52,7 @@ jobs:
   test:
     name: Test
     runs-on: self-hosted
-    if: ${{github.event.inputs.run_test}}
+    if: github.event.inputs.run_test == 'true'
     steps:
       - name: Get branch name
         id: branch-name
@@ -80,7 +80,7 @@ jobs:
           sleep 10
       - name: Configure localstack
         run: npx nx localstack
-      - name: Test all projects
+      - name: Test
         run: npx nx test:cov ${{github.event.inputs.project_name}}
 
   deploy:
@@ -88,7 +88,7 @@ jobs:
     runs-on: self-hosted
     needs: [test, lint]
     timeout-minutes: 25
-    if:  github.event.inputs.run_deploy && github.event.inputs.project_name != 'pandora' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging')
+    if: github.event.inputs.run_deploy == 'true' && github.event.inputs.project_name != 'pandora' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging')
     steps:
       - name: Get branch name
         id: branch-name
@@ -110,12 +110,12 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - name: Build all projects
+      - name: Build
         run: npx nx build ${{github.event.inputs.project_name}}
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-      - name: Deploy affected
+      - name: Deploy
         run: npx nx deploy ${{github.event.inputs.project_name}} --slackChannel=${{secrets.SLACK_URL_MESSAGES}}
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
