@@ -245,7 +245,7 @@ const sendSlackNotification = async (appName: string, slackChannelUrl: string) =
             text: {
               type: 'mrkdwn',
               // eslint-disable-next-line max-len
-              text: `*\`${appName}\` was deployed successfully to \`${process.env.CURRENT_BRANCH}\`.*\n*Last commit hash \`${process.env.GITHUB_SHA}\`*\nhttps://github.com/LagunaHealth/mono-be/actions/runs/${process.env.GITHUB_RUN_ID}`,
+              text: `*\`${appName}\` was deployed successfully to \`${process.env.CURRENT_BRANCH}\`.*\n*Last commit hash \`${process.env.GITHUB_SHA}\`*\nhttps://github.com/LagunaHealth/argus/actions/runs/${process.env.GITHUB_RUN_ID}`,
             },
           },
         ],
