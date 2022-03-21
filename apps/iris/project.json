@@ -78,7 +78,7 @@
     "deploy": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "nx run cmd:deploy --application=iris --slackChannel={args.slackChannel}"
+        "command": "ts-node -P ./tsconfig.base.json ./ci/deploy.ts iris {args.slackChannel}"
       }
     }
   },
