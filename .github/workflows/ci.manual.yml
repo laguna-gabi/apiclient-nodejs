@@ -88,7 +88,7 @@ jobs:
     runs-on: self-hosted
     needs: [test, lint]
     timeout-minutes: 25
-    if: github.event.inputs.run_deploy == 'true' && github.event.inputs.project_name != 'pandora' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging')
+    if: github.event.inputs.run_deploy == 'true' && github.event.inputs.project_name != 'pandora' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master')
     steps:
       - name: Get branch name
         id: branch-name
