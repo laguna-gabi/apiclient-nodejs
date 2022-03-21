@@ -1,0 +1,122 @@
+name: Manual Test & Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_name:
+        type: choice
+        description: Select a `Project` to run
+        required: true
+        options:
+          - hepius
+          - iris
+      run_test:
+        type: boolean
+        description: Should run `Test` job?
+        required: false
+        default: true
+      run_lint:
+        type: boolean
+        description: Should run `Lint` job?
+        required: false
+        default: true
+      run_deploy:
+        type: boolean
+        description: Should run `Deploy` job (only applied when `Test` and `Lint` are selected)?
+        required: false
+        default: false
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: self-hosted
+    if: ${{github.event.inputs.run_lint}}
+    steps:
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v5
+      - name: Checkout Git repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.branch-name.outputs.current_branch }}
+      - name: Install node v16
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - name: Install packages
+        run: yarn install
+      - name: Lint
+        run: npx nx lint ${{github.event.inputs.project_name}}
+
+  test:
+    name: Test
+    runs-on: self-hosted
+    if: ${{github.event.inputs.run_test}}
+    steps:
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v5
+      - name: Checkout Git repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.branch-name.outputs.current_branch }}
+      - name: Install node v16
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - name: Install packages
+        run: yarn install
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Start docker image with mongodb to localhost and test db
+        run: |
+          docker-compose -f docker-compose.yml up -d
+          sleep 10
+      - name: Configure localstack
+        run: npx nx localstack
+      - name: Test all projects
+        run: npx nx test:cov ${{github.event.inputs.project_name}}
+
+  deploy:
+    name: Deploy
+    runs-on: self-hosted
+    needs: [test, lint]
+    timeout-minutes: 25
+    if:  github.event.inputs.run_deploy && github.event.inputs.project_name != 'pandora' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging')
+    steps:
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v5
+      - name: Checkout Git repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.branch-name.outputs.current_branch }}
+      - name: Install node v16
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - name: Install packages
+        run: yarn install
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Build all projects
+        run: npx nx build ${{github.event.inputs.project_name}}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Deploy affected
+        run: npx nx deploy ${{github.event.inputs.project_name}} --slackChannel=${{secrets.SLACK_URL_MESSAGES}}
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          CURRENT_BRANCH: ${{ steps.branch-name.outputs.current_branch }}

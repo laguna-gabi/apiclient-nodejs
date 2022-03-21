@@ -81,6 +81,12 @@
       "options": {
         "command": "jest-coverage-badges input coverage/apps/hepius/coverage-summary.json output coverage/apps/hepius"
       }
+    },
+    "deploy": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "nx run cmd:deploy --application=hepius --slackChannel={args.slackChannel}"
+      }
     }
   },
   "tags": []

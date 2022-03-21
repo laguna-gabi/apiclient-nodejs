@@ -8,6 +8,12 @@
       "options": {
         "command": "libs/cmd/localstack/configLocalstack.sh"
       }
+    },
+    "deploy": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "ts-node -P ./tsconfig.base.json ./ci/deploy.ts {args.application} {args.slackChannel}"
+      }
     }
   },
   "tags": []

@@ -74,6 +74,12 @@
       "options": {
         "command": "jest-coverage-badges input coverage/apps/iris/coverage-summary.json output coverage/apps/iris"
       }
+    },
+    "deploy": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "nx run cmd:deploy --application=iris --slackChannel={args.slackChannel}"
+      }
     }
   },
   "tags": []
