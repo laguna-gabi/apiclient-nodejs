@@ -282,7 +282,6 @@ const deploy = async () => {
   const serviceName = `${appName}-${process.env.GITHUB_REF_NAME}-service`;
   const taskDefinitionName = `fargate-task-${appName}-${process.env.GITHUB_REF_NAME}`;
   const clusterName = `cluster-${DEFAULT_CLUSTER}-${process.env.GITHUB_REF_NAME}`;
-  core.info(`\u001b[38;5;6mThis foreground will be cyan`);
 
   try {
     core.info(
