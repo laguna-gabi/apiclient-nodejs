@@ -175,7 +175,13 @@ export class CareService extends BaseService {
   async getMemberBarriers(memberId: string): Promise<Barrier[]> {
     return this.barrierModel
       .find({ memberId: new Types.ObjectId(memberId) })
-      .populate([{ path: 'type', strictPopulate: false }]);
+      .populate([
+        {
+          path: 'type',
+          strictPopulate: false,
+          populate: { path: 'carePlanTypes', strictPopulate: false },
+        },
+      ]);
   }
 
   async getBarrier(id: string): Promise<Barrier> {

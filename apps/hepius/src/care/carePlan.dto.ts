@@ -75,7 +75,7 @@ export class UpdateCarePlanParams {
 @Schema({ versionKey: false, timestamps: true })
 export class CarePlanType extends Identifier {
   @Prop()
-  @Field(() => String, { nullable: true })
+  @Field(() => String)
   description: string;
 
   @Prop()
