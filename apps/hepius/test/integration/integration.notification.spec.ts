@@ -109,6 +109,8 @@ import {
   generateScheduleAppointmentParams,
   generateSubmitQuestionnaireResponseParams,
   generateUpdateJournalTextParams,
+  generateUpdateMemberConfigParams,
+  generateUpdateMemberParams,
   mockGenerateQuestionnaireItem,
 } from '../generators';
 import { generateRequestHeaders } from '../index';
@@ -219,6 +221,56 @@ describe('Integration tests: notifications', () => {
             ),
           }),
         );
+      });
+    });
+
+    /**
+     * Trigger : MemberResolver.updateMember
+     * Settings :
+     *      1. update member settings : send event to queue on update member settings
+     */
+    it(`updateMember: should updateClientSettings for member`, async () => {
+      const { member, org } = await creators.createMemberUserAndOptionalOrg();
+
+      const updateMemberParams = generateUpdateMemberParams({ id: member.id });
+      await handler.mutations.updateMember({ updateMemberParams });
+
+      //send event to queue on update member
+      const mockMember = generateUpdateMemberSettingsMock({
+        ...updateMemberParams,
+        phone: member.phone,
+        orgName: org.name,
+      });
+      const objectMember = new ObjectUpdateMemberSettingsClass(mockMember);
+      Object.keys(objectMember.objectUpdateMemberSettings).forEach((key) => {
+        if (key !== 'firstLoggedInAt') {
+          expectStringContaining(5, key, mockMember[key]);
+        }
+      });
+    });
+
+    /**
+     * Trigger : MemberResolver.updateMemberConfig
+     * Settings :
+     *      1. update member settings : send event to queue on update member settings
+     */
+    it(`updateMemberConfig: should updateClientSettings for member`, async () => {
+      const { member } = await creators.createMemberUserAndOptionalOrg();
+      const requestHeaders = generateRequestHeaders(member.authId);
+
+      const updateMemberConfigParams = generateUpdateMemberConfigParams();
+      delete updateMemberConfigParams.memberId;
+      await handler.mutations.updateMemberConfig({ updateMemberConfigParams, requestHeaders });
+
+      //send event to queue on update member config
+      const mockMember = generateUpdateMemberSettingsMock({
+        ...updateMemberConfigParams,
+      });
+      const objectMember = new ObjectUpdateMemberSettingsClass(mockMember);
+      Object.keys(objectMember.objectUpdateMemberSettings).forEach((key) => {
+        if (key !== 'firstLoggedInAt') {
+          expectStringContaining(5, key, mockMember[key]);
+        }
       });
     });
 

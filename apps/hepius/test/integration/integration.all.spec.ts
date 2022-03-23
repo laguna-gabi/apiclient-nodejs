@@ -318,6 +318,16 @@ describe('Integration tests: all', () => {
     );
   });
 
+  it('should update and get member', async () => {
+    const { member } = await creators.createMemberUserAndOptionalOrg();
+
+    const updateMemberParams = generateUpdateMemberParams({ id: member.id });
+    await handler.mutations.updateMember({ updateMemberParams });
+
+    const memberAfter = await handler.queries.getMember({ id: member.id });
+    expect(memberAfter).toEqual(expect.objectContaining({ ...updateMemberParams }));
+  });
+
   it('should update and get member configs', async () => {
     const { member } = await creators.createMemberUserAndOptionalOrg();
     const requestHeaders = generateRequestHeaders(member.authId);

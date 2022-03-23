@@ -326,13 +326,19 @@ describe('MemberResolver', () => {
         spyOnServiceUpdate.mockImplementationOnce(async () => ({ ...updateMemberParams }));
         spyOnTwilioGetPhoneType.mockResolvedValueOnce(phoneSecondaryType);
 
-        await resolver.updateMember(updateMemberParams);
+        const member = await resolver.updateMember(updateMemberParams);
 
         expect(spyOnServiceUpdate).toBeCalledTimes(1);
         expect(spyOnServiceUpdate).toBeCalledWith({
           ...updateMemberParams,
           phoneSecondaryType,
         });
+
+        const eventParams: IEventNotifyQueue = {
+          type: QueueType.notifications,
+          message: JSON.stringify(generateUpdateClientSettings({ member })),
+        };
+        expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyQueue, eventParams);
       },
     );
 

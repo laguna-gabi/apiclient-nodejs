@@ -173,6 +173,7 @@ export class MemberResolver extends MemberBase {
     const member = await this.memberService.update({ ...params, ...objMobile });
     member.zipCode = member.zipCode || member.org.zipCode;
     member.utcDelta = MemberResolver.getTimezoneDeltaFromZipcode(member.zipCode);
+    this.notifyUpdatedMemberConfig({ member });
     return member;
   }
 

@@ -6,10 +6,10 @@ import {
   Language,
   Platform,
   generatePhone,
-  generateZipCode,
 } from '../index';
 import { v4 } from 'uuid';
 import { internet, name } from 'faker';
+import { isUndefined, omitBy } from 'lodash';
 
 export type UpdateMemberSettingsType = Omit<IUpdateClientSettings, 'avatar'>;
 export type UpdateUserSettingsType = Pick<
@@ -26,14 +26,21 @@ export class ObjectUpdateUserSettingsClass {
 }
 
 export const generateUpdateMemberSettingsMock = ({
-  id = v4(),
-  phone = generatePhone(),
-  firstName = name.firstName(),
-  lastName = name.lastName(),
-  orgName = name.firstName(),
-  honorific = Honorific.reverend,
-  zipCode = generateZipCode(),
-  language = Language.en,
+  id,
+  phone,
+  firstName,
+  lastName,
+  orgName,
+  honorific,
+  zipCode,
+  language,
+  platform,
+  isPushNotificationsEnabled,
+  isAppointmentsReminderEnabled,
+  isRecommendationsEnabled,
+  isTodoNotificationsEnabled,
+  externalUserId,
+  firstLoggedInAt,
 }: {
   id?: string;
   phone?: string;
@@ -43,26 +50,36 @@ export const generateUpdateMemberSettingsMock = ({
   honorific?: Honorific;
   zipCode?: string;
   language?: Language;
+  platform?: Platform;
+  isPushNotificationsEnabled?: boolean;
+  isAppointmentsReminderEnabled?: boolean;
+  isRecommendationsEnabled?: boolean;
+  isTodoNotificationsEnabled?: boolean;
+  externalUserId?: string;
+  firstLoggedInAt?: Date;
 } = {}): UpdateMemberSettingsType => {
-  return {
-    type: InnerQueueTypes.updateClientSettings,
-    id,
-    clientCategory: ClientCategory.member,
-    phone,
-    firstName,
-    lastName,
-    orgName,
-    honorific,
-    zipCode,
-    language,
-    platform: Platform.web,
-    isPushNotificationsEnabled: true,
-    isAppointmentsReminderEnabled: true,
-    isRecommendationsEnabled: true,
-    isTodoNotificationsEnabled: true,
-    externalUserId: v4(),
-    firstLoggedInAt: new Date(),
-  };
+  return omitBy(
+    {
+      type: InnerQueueTypes.updateClientSettings,
+      id,
+      clientCategory: ClientCategory.member,
+      phone,
+      firstName,
+      lastName,
+      orgName,
+      honorific,
+      zipCode,
+      language,
+      platform,
+      isPushNotificationsEnabled,
+      isAppointmentsReminderEnabled,
+      isRecommendationsEnabled,
+      isTodoNotificationsEnabled,
+      externalUserId,
+      firstLoggedInAt,
+    },
+    isUndefined,
+  );
 };
 
 export const generateUpdateUserSettingsMock = ({

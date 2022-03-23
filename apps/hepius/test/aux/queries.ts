@@ -225,6 +225,10 @@ export class Queries {
                 deadline
               }
               fellowName
+              drg
+              authId
+              healthPlan
+              preferredGenderPronoun
               drgDesc
               phoneSecondary
               phoneSecondaryType
