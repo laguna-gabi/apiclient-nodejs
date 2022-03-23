@@ -65,6 +65,11 @@ export class UpdateCarePlanParams {
 
   @Field(() => CareStatus, { nullable: true })
   status?: CareStatus;
+
+  @IsOptional()
+  @IsDate()
+  @Field(() => Date, { nullable: true })
+  dueDate?: Date;
 }
 
 /**************************************************************************************************
