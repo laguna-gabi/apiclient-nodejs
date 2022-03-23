@@ -1,8 +1,14 @@
 import { date } from 'faker';
 import { ErrorType, Errors } from '../../src/common';
-import { CreateTodoDoneParams, CreateTodoParams, EndAndCreateTodoParams } from '../../src/todo';
+import {
+  CreateActionTodoParams,
+  CreateTodoDoneParams,
+  CreateTodoParams,
+  EndAndCreateTodoParams,
+} from '../../src/todo';
 import { Handler } from '../aux/handler';
 import {
+  generateCreateActionTodoParams,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateEndAndCreateTodoParams,
@@ -121,6 +127,55 @@ describe('Validations - todo', () => {
         createTodoParams,
         invalidFieldsErrors: [Errors.get(ErrorType.todoUnscheduled)],
       });
+    });
+  });
+
+  describe.only('createActionTodo', () => {
+    test.each`
+      field         | error
+      ${'memberId'} | ${`Field "memberId" of required type "String!" was not provided.`}
+      ${'label'}    | ${`Field "label" of required type "ActionTodoLabel!" was not provided.`}
+    `(
+      `should fail to create action todo since mandatory field $field is missing`,
+      async (params) => {
+        const createActionTodoParams: CreateActionTodoParams = generateCreateActionTodoParams({
+          memberId: generateId(),
+        });
+        delete createActionTodoParams[params.field];
+        await handler.mutations.createActionTodo({
+          createActionTodoParams,
+          missingFieldError: params.error,
+        });
+      },
+    );
+
+    it('should fail to create action todo since mandatory resource.id missing', async () => {
+      const createActionTodoParams: CreateActionTodoParams = generateCreateActionTodoParams({
+        memberId: generateId(),
+      });
+      delete createActionTodoParams.resource.id;
+      await handler.mutations.createActionTodo({
+        createActionTodoParams,
+        missingFieldError: `Field "id" of required type "String!" was not provided.`,
+      });
+    });
+
+    /* eslint-disable max-len */
+    test.each`
+      input                                                    | error
+      ${{ memberId: 123 }}                                     | ${{ missingFieldError: stringError }}
+      ${{ label: 'not-valid' }}                                | ${{ missingFieldError: 'does not exist in "ActionTodoLabel" enum.' }}
+      ${{ resource: { id: 123 } }}                             | ${{ missingFieldError: stringError }}
+      ${{ resource: { id: generateId(), name: 123 } }}         | ${{ missingFieldError: stringError }}
+      ${{ resource: { id: generateId(), type: 'not-valid' } }} | ${{ missingFieldError: 'does not exist in "ResourceType" enum.' }}
+    `(`should fail to create action todo since $input is not a valid`, async (params) => {
+      /* eslint-enable max-len */
+      const createActionTodoParams: CreateActionTodoParams = generateCreateActionTodoParams({
+        memberId: generateId(),
+        ...params.input,
+      });
+
+      await handler.mutations.createActionTodo({ createActionTodoParams, ...params.error });
     });
   });
 

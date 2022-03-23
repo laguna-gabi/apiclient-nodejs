@@ -32,12 +32,47 @@ export enum TodoStatus {
 
 registerEnumType(TodoStatus, { name: 'TodoStatus' });
 
-export enum Label {
+export enum TodoLabel {
   MEDS = 'MEDS',
   APPT = 'APPT',
 }
 
-registerEnumType(Label, { name: 'Label' });
+registerEnumType(TodoLabel, { name: 'Label' });
+
+export enum ActionTodoLabel {
+  Questionnaire = 'Questionnaire',
+  Explore = 'Explore',
+  Scanner = 'Scanner',
+  Journal = 'Journal',
+}
+
+registerEnumType(ActionTodoLabel, { name: 'ActionTodoLabel' });
+
+export type Label = TodoLabel | ActionTodoLabel;
+
+export enum ResourceType {
+  article = 'article',
+  video = 'video',
+  audio = 'audio',
+}
+
+registerEnumType(ResourceType, { name: 'ResourceType' });
+
+@InputType('ResourceInput')
+@ObjectType()
+export class Resource {
+  @Prop()
+  @Field(() => String)
+  id: string;
+
+  @Prop()
+  @Field(() => String, { nullable: true })
+  name?: string;
+
+  @Prop({ type: String, enum: ResourceType })
+  @Field(() => ResourceType, { nullable: true })
+  type?: ResourceType;
+}
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -53,8 +88,8 @@ export class ExtraTodoParams {
   @IsNotEmpty()
   text: string;
 
-  @Field(() => Label, { nullable: true })
-  label?: Label;
+  @Field(() => TodoLabel, { nullable: true })
+  label?: TodoLabel;
 
   @Field(() => [String], { nullable: true })
   @IsCronExpression({ message: Errors.get(ErrorType.todoInvalidCronExpression) })
@@ -79,6 +114,19 @@ export class CreateTodoParams extends ExtraTodoParams {
   @Field(() => Date, { nullable: true })
   @isTodoDateParamsValidCreate({ message: Errors.get(ErrorType.todoUnscheduled) })
   start?: Date;
+}
+
+@InputType()
+export class CreateActionTodoParams {
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
+
+  @Field(() => ActionTodoLabel)
+  label: ActionTodoLabel;
+
+  @Field(() => Resource, { nullable: true })
+  resource?: Resource;
 }
 
 @InputType()
@@ -135,11 +183,11 @@ export class Todo extends Identifier {
   memberId: Types.ObjectId;
 
   @Prop()
-  @Field(() => String)
-  text: string;
+  @Field(() => String, { nullable: true })
+  text?: string;
 
-  @Prop({ type: String, enum: Label })
-  @Field(() => Label, { nullable: true })
+  @Prop()
+  @Field({ nullable: true })
   label?: Label;
 
   @Prop({ default: undefined })
@@ -157,6 +205,10 @@ export class Todo extends Identifier {
   @Prop({ type: String, enum: TodoStatus, default: TodoStatus.active })
   @Field(() => TodoStatus)
   status: TodoStatus;
+
+  @Prop()
+  @Field(() => Resource, { nullable: true })
+  resource?: Resource;
 
   @Prop({ type: Types.ObjectId })
   @Field(() => String, { nullable: true })

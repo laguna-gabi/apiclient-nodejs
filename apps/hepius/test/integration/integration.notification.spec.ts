@@ -94,7 +94,7 @@ import {
   QuestionnaireType,
   SubmitQuestionnaireResponseParams,
 } from '../../src/questionnaire';
-import { CreateTodoParams, EndAndCreateTodoParams, Label } from '../../src/todo';
+import { CreateTodoParams, EndAndCreateTodoParams, TodoLabel } from '../../src/todo';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   generateCreateMemberParams,
@@ -1028,7 +1028,7 @@ describe('Integration tests: notifications', () => {
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        label: Label.MEDS,
+        label: TodoLabel.MEDS,
       });
 
       const { id } = await handler.mutations.createTodo({
@@ -1069,7 +1069,7 @@ describe('Integration tests: notifications', () => {
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId: member.id,
-        label: Label.APPT,
+        label: TodoLabel.APPT,
       });
 
       const { id } = await handler.mutations.createTodo({
@@ -1164,7 +1164,7 @@ describe('Integration tests: notifications', () => {
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         id: oldTodoId,
         memberId: member.id,
-        label: Label.MEDS,
+        label: TodoLabel.MEDS,
       });
 
       const { id } = await handler.mutations.endAndCreateTodo({
@@ -1219,7 +1219,7 @@ describe('Integration tests: notifications', () => {
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         id: oldTodoId,
         memberId: member.id,
-        label: Label.APPT,
+        label: TodoLabel.APPT,
       });
 
       const { id } = await handler.mutations.endAndCreateTodo({
@@ -1316,7 +1316,7 @@ describe('Integration tests: notifications', () => {
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId: member.id,
-        label: Label.MEDS,
+        label: TodoLabel.MEDS,
       });
 
       const { id } = await handler.mutations.createTodo({
@@ -1366,7 +1366,7 @@ describe('Integration tests: notifications', () => {
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId: member.id,
-        label: Label.APPT,
+        label: TodoLabel.APPT,
       });
 
       const { id } = await handler.mutations.createTodo({

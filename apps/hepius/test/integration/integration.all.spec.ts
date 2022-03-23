@@ -43,7 +43,7 @@ import {
   CreateTodoDoneParams,
   CreateTodoParams,
   EndAndCreateTodoParams,
-  Label,
+  TodoLabel,
   TodoStatus,
 } from '../../src/todo';
 import { User, defaultSlotsParams } from '../../src/user';
@@ -1730,7 +1730,7 @@ describe('Integration tests: all', () => {
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        label: Label.MEDS,
+        label: TodoLabel.MEDS,
       });
 
       const { id } = await handler.mutations.createTodo({
