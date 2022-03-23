@@ -1,14 +1,10 @@
 <p align="center">
   <a href="https://en.wikipedia.org/wiki/Iris_(mythology)" target="blank">
-     <img src="https://upload.wikimedia.org/wikipedia/commons/a/aa/Winged_goddess_Cdm_Paris_392.jpg" height="250" alt="Iris" />
+     <img src="https://upload.wikimedia.org/wikipedia/commons/a/aa/Winged_goddess_Cdm_Paris_392.jpg" 
+     height="250" 
+     alt="Iris" />
   </a><br/>
-  <a href="https://github.com/LagunaHealth/iris/actions?query=branch%3Adevelop">
-    <img src="https://github.com/LagunaHealth/iris/workflows/Iris/badge.svg" alt="Develop ci/cd status." />
-  </a>
-  <a href="https://github.com/LagunaHealth/iris/contributors" alt="Contributors">
-    <img src="https://img.shields.io/github/contributors/badges/shields" />
-  </a>
-  <br/><b>Total coverage:</b>
+  <b>Total coverage:</b>
   <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="lines">
     <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-lines.svg?branch=develop" />
   </a>
@@ -18,7 +14,7 @@
   </a>
   <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="statements">
     <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-statements.svg?branch=develop" />
-  </a><br/>
+  </a>
 </p>
 
 # 📨 Iris
@@ -29,16 +25,8 @@ Laguna health messages component.
 - [📨 Iris](#-iris)
   - [💡 Project introduction](#-project-introduction)
     - [entities](#entities)
-  - [📋 Prerequisites](#-prerequisites)
-    - [Installation](#installation)
-    - [Aws](#aws)
-    - [Shared code settings](#shared-code-settings)
   - [🚀 Running the app](#-running-the-app)
   - [API](#api)
-  - [🧪 Testing the app](#-testing-the-app)
-  - [🎻 Troubleshooting](#-troubleshooting)
-    - [How to view the db locally](#how-to-view-the-db-locally)
-    - [Error at connection to mongo locally](#error-at-connection-to-mongo-locally)
 
 ## 💡 Project introduction
 
@@ -52,32 +40,6 @@ This project handles all the messages' logic for laguna-health.
 
 The main entities in our system:
 
-## 📋 Prerequisites
-
-### Installation
-
-install all dependencies in [package.json](./package.json) file by running the following command:
-
-```bash
-$ yarn
-```
-
-### Aws
-
-In order to work locally with aws cli and `package.json` dependencies, install
-
-1. install [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-mac.html) (will be easy for working with aws on terminal)
-2. [set up](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html) credentials on your local computer (make sure to set region to `us-east-1`)
-   > **_Don't skip aws setup:_** This step is critical to develop locally on this project.
-   > We're loading configurations(api keys and tokens for external providers such as
-   > [sendbird](https://sendbird.com), [onesignal](https://onesignal.com), [twilio](https://www.twilio.com), etc...)
-   > from [aws secrets manager](https://aws.amazon.com/secrets-manager/).
-
-### Shared code settings
-
-1. Set up your ide to run with `.prettierrc` file which exists on the main root of the project.
-2. Set up your ide to run with `.eslintrc.js` file which exists on the main root of the project.
-
 ## 🚀 Running the app
 
 In order to work with _iris_:
@@ -86,33 +48,10 @@ In order to work with _iris_:
 2. start the server by using one of the following methods:
    run `yarn start:watch` if you just want to use _iris_ locally
 
-## API 
+## API
+
 `Iris` is exposing an internal API (service.2.service) and Swagger documentation is attached.. try it out in:
+
 ```
 ${hostname}:3001/api
 ```
-
-
-## 🧪 Testing the app
-
-```bash
-# unit tests
-$ yarn test
-```
-
-## 🎻 Troubleshooting
-
-### How to view the db locally
-
-1. Download and install [robomongo](https://robomongo.org/download) or any other mongodb visualizer you like
-2. Set up local connection to : `mongodb://localhost:27020,localhost:27021`, as defined on [db.module.ts](./src/db/db.module.ts)
-   ! there's no need for authentication when connecting locally to mongodb
-
-### Error at connection to mongo locally
-
-```text
-[MongooseModule] Unable to connect to the database. Retrying (1)
-connect ECONNREFUSED 127.0.0.1:27020
-```
-
-An instance of mongo is not running locally, go over [docker section](#docker) again.

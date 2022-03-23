@@ -1,4 +1,4 @@
-name: Argus Auto Test & Deploy
+name: Laguna Auto
 
 on:
   push:

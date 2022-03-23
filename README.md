@@ -1,22 +1,32 @@
 <p align="center">
   <a href="https://en.wikipedia.org/wiki/Argus_Panoptes" target="blank">
-      <img src="https://media.gettyimages.com/photos/mercury-argus-and-io-14921494-found-in-the-collection-of-appartamenti-picture-id1195082483?s=2048x2048" 
-       height="200" 
-       alt="Hepius" />
+    <img src="https://media.gettyimages.com/photos/mercury-argus-and-io-14921494-found-in-the-collection-of-appartamenti-picture-id1195082483?s=2048x2048" 
+      height="200" 
+      alt="Argus" />
+  </a><br/>
+    <a href="https://github.com/LagunaHealth/argus/actions">
+    <img src="https://github.com/LagunaHealth/argus/workflows/Laguna%20Auto/badge.svg" alt="Develop ci/cd status." />
+  </a>
+  <a href="https://github.com/LagunaHealth/argus/contributors" alt="Contributors">
+    <img src="https://img.shields.io/github/contributors/badges/shields" />
   </a>
 </p>
 
 # 👁 Argus
 
-Laguna health backend monorepo, powered by [nx](https://nx.dev/getting-started/intro).
+Laguna health's backend monorepo.
 
 This Monorepo contains the following:
 
-|               Name                | Type |                                                                                                          Coverage                                                                                                           |
-| :-------------------------------: | :--: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-|  [Hepius](apps/hepius/README.md)  | app  | <a href="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/lcov-report/index.html" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/badge-lines.svg?branch=develop" /></a> |
-|    [Iris](apps/iris/README.md)    | app  |   <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-lines.svg?branch=develop" /></a>   |
-| [Pandora](libs/pandora/README.md) | lib  | <a href="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/lcov-report/index.html" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/badge-lines.svg?branch=master" /></a>  |
+<center>
+
+|          Name           | Type |                                                                                                          Coverage                                                                                                           |
+| :---------------------: | :--: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|  [Hepius](apps/hepius)  | app  | <a href="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/lcov-report/index.html" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/badge-lines.svg?branch=develop" /></a> |
+|    [Iris](apps/iris)    | app  |   <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-lines.svg?branch=develop" /></a>   |
+| [Pandora](libs/pandora) | lib  | <a href="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/lcov-report/index.html" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/badge-lines.svg?branch=master" /></a>  |
+
+</center>
 
 ---
 
@@ -30,6 +40,7 @@ This Monorepo contains the following:
     - [Aws](#aws)
     - [Shared code settings](#shared-code-settings)
   - [🐬 NX](#-nx)
+    - [Running commands](#running-commands)
 
 ---
 
@@ -74,6 +85,12 @@ we are using docker to work locally with `mongodb` our database and `localstack`
    > **_Troubleshooting_**: if the docker fails to start you could check the logs running: `docker-compose logs -f`.<br/>
    > Its possible that all the docker volumes are full you could run the following to clear all the volumes: `docker-compose down && docker volume rm $(docker volume ls -q)`.
 
+**_How to view the db locally?_**
+
+> 1. Download and install [mongodb compass](https://www.mongodb.com/try/download/compass)/[robomongo](https://robomongo.org/download) or any other mongodb visualizer you like
+> 2. Set up local connection to: `mongodb://localhost:27017/laguna` for localhost and `mongodb://localhost:27018/test`.<br/>
+>    there's no need for authentication when connecting locally to mongodb
+
 ### Aws
 
 In order to work locally with AWS you need AWS cli.
@@ -99,3 +116,34 @@ Your IDE probably has extensions to help you with those tools
 ---
 
 ## 🐬 NX
+
+This monorepo is built on top of [nx](https://nx.dev/) a smart, fast and extensible build system tool.
+
+### Running commands
+
+```bash
+# command structure
+nx [command] [projectName]
+
+# example of running a command
+$ nx test:cov hepius
+```
+
+**_Affected_**
+
+[Affected](https://nx.dev/using-nx/affected) is a powerful tool that helps us determine what projects were affected by any changes in the commit.
+
+```bash
+# runnign affected
+nx affected --target=test:cov --base=develop --parallel=3
+```
+
+This command will do the following: it will run the command `test:cov` for every affected project,<br/>
+the affected will be calculated by comparing the current branch to `develop` branch and the tests will run in parallel with `3` runners.
+
+Affected does not only check the files changed but also the dependencies, if a library was changed the apps that depend on that library will also be affected.
+
+**_caching_**
+
+Nx also provides smart caching, there is a list of cashable commands can be seen in [nx.json](./nx.json) under `cacheableOperations`.<br/>
+when those commands are run they are cached with the current git commit, if you run the same command with no changes in the repo the results will be taken from the cache

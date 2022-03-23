@@ -1,4 +1,4 @@
-name: Manual Test & Deploy
+name: Laguna Manual
 
 on:
   workflow_dispatch:
