@@ -254,7 +254,7 @@ describe('Integration tests: notifications', () => {
      * Settings :
      *      1. update member settings : send event to queue on update member settings
      */
-    it(`updateMember: should updateClientSettings for member`, async () => {
+    it(`updateMemberConfig: should updateClientSettings for member`, async () => {
       const { member } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(member.authId);
 
