@@ -24,7 +24,7 @@ describe('Validations - appointment', () => {
   beforeAll(async () => {
     await handler.beforeAll();
     server = handler.app.getHttpServer();
-  });
+  }, 10000);
 
   afterAll(async () => {
     await handler.afterAll();
