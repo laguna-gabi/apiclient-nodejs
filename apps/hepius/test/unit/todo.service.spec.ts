@@ -5,16 +5,17 @@ import { cloneDeep } from 'lodash';
 import { Model, Types, model } from 'mongoose';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
 import {
+  CreateActionTodoParams,
   CreateTodoDoneParams,
   CreateTodoParams,
   EndAndCreateTodoParams,
-  Label,
   Todo,
   TodoDocument,
   TodoDone,
   TodoDoneDocument,
   TodoDoneDto,
   TodoDto,
+  TodoLabel,
   TodoModule,
   TodoService,
   TodoStatus,
@@ -24,6 +25,7 @@ import {
   dbConnect,
   dbDisconnect,
   defaultModules,
+  generateCreateActionTodoParams,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateEndAndCreateTodoParams,
@@ -317,6 +319,24 @@ describe('TodoService', () => {
         Errors.get(ErrorType.todoEndEndedTodo),
       );
     });
+
+    it('should throw an error if action todo', async () => {
+      const memberId = generateId();
+      const params: CreateActionTodoParams = generateCreateActionTodoParams({
+        memberId,
+      });
+
+      const { id } = await service.createActionTodo(params);
+
+      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        id,
+        memberId,
+      });
+
+      await expect(service.endAndCreateTodo(endAndCreateTodoParams)).rejects.toThrow(
+        Errors.get(ErrorType.todoEndAndCreateActionTodo),
+      );
+    });
   });
 
   describe('endTodo', () => {
@@ -384,7 +404,7 @@ describe('TodoService', () => {
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        label: Label.MEDS,
+        label: TodoLabel.MEDS,
       });
       createTodoParams.status = TodoStatus.requested;
 

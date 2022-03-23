@@ -106,13 +106,16 @@ import {
 } from '../src/questionnaire';
 import { Dispatch } from '../src/services';
 import {
+  ActionTodoLabel,
+  CreateActionTodoParams,
   CreateTodoDoneParams,
   CreateTodoParams,
   EndAndCreateTodoParams,
   GetTodoDonesParams,
-  Label,
+  ResourceType,
   Todo,
   TodoDone,
+  TodoLabel,
   TodoStatus,
 } from '../src/todo';
 import { CreateUserParams, GetSlotsParams, User, defaultUserParams } from '../src/user';
@@ -777,7 +780,7 @@ export const mockGenerateTodo = ({
   id = generateId(),
   memberId = generateObjectId(),
   text = lorem.words(5),
-  label = Label.APPT,
+  label = TodoLabel.APPT,
   cronExpressions = ['0 10 * * 6'],
   start = new Date(),
   end = fakerDate.soon(2),
@@ -793,6 +796,30 @@ export const mockGenerateTodo = ({
     cronExpressions,
     start,
     end,
+    status,
+    createdBy,
+    updatedBy,
+  };
+};
+
+export const mockGenerateActionTodo = ({
+  id = generateId(),
+  memberId = generateObjectId(),
+  label = ActionTodoLabel.Explore,
+  resource = {
+    id: generateId(),
+    name: lorem.words(2),
+    type: ResourceType.article,
+  },
+  status = TodoStatus.active,
+  createdBy = generateObjectId(),
+  updatedBy = generateObjectId(),
+}: Partial<Todo> = {}): Todo => {
+  return {
+    id,
+    memberId,
+    label,
+    resource,
     status,
     createdBy,
     updatedBy,
@@ -816,7 +843,7 @@ export const mockGenerateTodoDone = ({
 export const generateCreateTodoParams = ({
   memberId,
   text = lorem.words(5),
-  label = Label.APPT,
+  label = TodoLabel.APPT,
   cronExpressions = ['0 10 * * 6'],
   start = new Date(),
   end = fakerDate.soon(2),
@@ -828,6 +855,22 @@ export const generateCreateTodoParams = ({
     cronExpressions,
     start,
     end,
+  };
+};
+
+export const generateCreateActionTodoParams = ({
+  memberId,
+  label = ActionTodoLabel.Explore,
+  resource = {
+    id: generateId(),
+    name: lorem.words(2),
+    type: ResourceType.article,
+  },
+}: Partial<CreateActionTodoParams> = {}) => {
+  return {
+    memberId,
+    label,
+    resource,
   };
 };
 
@@ -847,7 +890,7 @@ export const generateEndAndCreateTodoParams = ({
   id = generateId(),
   memberId,
   text = lorem.words(5),
-  label = Label.MEDS,
+  label = TodoLabel.MEDS,
   cronExpressions = ['0 10,17,21,23 * * *'],
   start = fakerDate.soon(1),
   end = add(fakerDate.soon(3), { days: 1 }),

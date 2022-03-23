@@ -19,7 +19,7 @@ import {
   CreateTodoDoneParams,
   CreateTodoParams,
   EndAndCreateTodoParams,
-  Label,
+  TodoLabel,
   TodoModule,
   TodoResolver,
   TodoService,
@@ -34,6 +34,7 @@ import {
   generateGetTodoDonesParams,
   generateId,
   generateObjectId,
+  mockGenerateActionTodo,
   mockGenerateMember,
   mockGenerateTodo,
   mockGenerateTodoDone,
@@ -111,7 +112,7 @@ describe('TodoResolver', () => {
     });
 
     [UserRole.coach, UserRole.nurse, UserRole.admin].forEach((role) => {
-      test.each([Label.MEDS, Label.APPT, undefined])(
+      test.each([TodoLabel.MEDS, TodoLabel.APPT, undefined])(
         `should create a Todo by ${role} and send notification to member`,
         async (label) => {
           const memberId = generateId();
@@ -144,14 +145,17 @@ describe('TodoResolver', () => {
     });
 
     test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
-      `should create a Todo by user in status requested if label ${Label.MEDS}`,
+      `should create a Todo by user in status requested if label ${TodoLabel.MEDS}`,
       async (role) => {
         const memberId = generateId();
         const userId = generateId();
         const todo = mockGenerateTodo({ memberId: generateObjectId(memberId) });
         spyOnServiceCreateTodo.mockImplementationOnce(async () => todo);
-        const params: CreateTodoParams = generateCreateTodoParams({ memberId, label: Label.MEDS });
-        params.label = Label.MEDS;
+        const params: CreateTodoParams = generateCreateTodoParams({
+          memberId,
+          label: TodoLabel.MEDS,
+        });
+        params.label = TodoLabel.MEDS;
 
         const result = await resolver.createTodo([role], userId, params);
 
@@ -256,7 +260,7 @@ describe('TodoResolver', () => {
     );
 
     [UserRole.coach, UserRole.nurse, UserRole.admin].forEach((role) => {
-      test.each([Label.MEDS, Label.APPT, undefined])(
+      test.each([TodoLabel.MEDS, TodoLabel.APPT, undefined])(
         `should end and create a Todo by ${role} and send notification to member with label = %p`,
         async (label) => {
           const memberId = generateId();
@@ -287,7 +291,7 @@ describe('TodoResolver', () => {
     });
 
     test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
-      `should end and create Todo by user in status requested if label ${Label.MEDS}`,
+      `should end and create Todo by user in status requested if label ${TodoLabel.MEDS}`,
       async (role) => {
         const memberId = generateId();
         const userId = generateId();
@@ -297,7 +301,7 @@ describe('TodoResolver', () => {
         spyOnServiceEndAndCreateTodo.mockImplementationOnce(async () => newTodo);
         const params: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
           memberId,
-          label: Label.MEDS,
+          label: TodoLabel.MEDS,
         });
 
         const result = await resolver.endAndCreateTodo([role], userId, params);
@@ -357,8 +361,21 @@ describe('TodoResolver', () => {
       expect(result).toBeTruthy();
     });
 
-    [UserRole.coach, UserRole.nurse, UserRole.admin].forEach((role) => {
-      test.each([Label.MEDS, Label.APPT, undefined])(
+    it('should fail to end todo by member if action todo', async () => {
+      const memberId = generateId();
+      const id = generateId();
+      const actionTodo = mockGenerateActionTodo({ id, memberId: generateObjectId(memberId) });
+
+      spyOnServiceGetTodo.mockImplementationOnce(async () => actionTodo);
+      spyOnServiceEndTodo.mockImplementationOnce(async () => actionTodo);
+
+      await expect(resolver.endTodo(memberId, [MemberRole.member], id)).rejects.toThrow(
+        Errors.get(ErrorType.todoEndActionTodo),
+      );
+    });
+
+    [(UserRole.coach, UserRole.nurse, UserRole.admin)].forEach((role) => {
+      test.each([TodoLabel.MEDS, TodoLabel.APPT, undefined])(
         `should end a Todo by ${role} and send notification to member with label = %p`,
         async (label) => {
           const userId = generateId();

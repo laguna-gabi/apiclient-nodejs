@@ -4,6 +4,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase } from 'lodash';
 import {
+  CreateActionTodoParams,
   CreateTodoDoneParams,
   CreateTodoParams,
   EndAndCreateTodoParams,
@@ -12,6 +13,7 @@ import {
   Label,
   Todo,
   TodoDone,
+  TodoLabel,
   TodoNotificationsType,
   TodoService,
   TodoStatus,
@@ -64,6 +66,14 @@ export class TodoResolver {
     return { id: todo.id };
   }
 
+  @Mutation(() => Identifier)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async createActionTodo(
+    @Args(camelCase(CreateActionTodoParams.name)) createActionTodoParams: CreateActionTodoParams,
+  ) {
+    return this.todoService.createActionTodo(createActionTodoParams);
+  }
+
   @Query(() => [Todo])
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
@@ -106,7 +116,10 @@ export class TodoResolver {
     id: string,
   ) {
     if (roles.includes(MemberRole.member)) {
-      await this.todoService.getTodo(id, clientId);
+      const todo = await this.todoService.getTodo(id, clientId);
+      if (this.todoService.isActionTodo(todo)) {
+        throw new Error(Errors.get(ErrorType.todoEndActionTodo));
+      }
     }
     const todo = await this.todoService.endTodo(id, clientId);
     this.todoSendNotification(todo, roles, clientId, 'deleteTodo');
@@ -177,7 +190,7 @@ export class TodoResolver {
     return (roles.includes(UserRole.coach) ||
       roles.includes(UserRole.nurse) ||
       roles.includes(UserRole.admin)) &&
-      params.label === Label.MEDS
+      params.label === TodoLabel.MEDS
       ? TodoStatus.requested
       : TodoStatus.active;
   }
@@ -210,27 +223,27 @@ export class TodoResolver {
   extractContentType(todoNotificationsType: TodoNotificationsType, label?: Label): TodoInternalKey {
     if (todoNotificationsType === 'createTodo') {
       switch (label) {
-        case Label.APPT:
+        case TodoLabel.APPT:
           return TodoInternalKey.createTodoAPPT;
-        case Label.MEDS:
+        case TodoLabel.MEDS:
           return TodoInternalKey.createTodoMEDS;
         default:
           return TodoInternalKey.createTodoTODO;
       }
     } else if (todoNotificationsType === 'updateTodo') {
       switch (label) {
-        case Label.APPT:
+        case TodoLabel.APPT:
           return TodoInternalKey.updateTodoAPPT;
-        case Label.MEDS:
+        case TodoLabel.MEDS:
           return TodoInternalKey.updateTodoMEDS;
         default:
           return TodoInternalKey.updateTodoTODO;
       }
     } else if (todoNotificationsType === 'deleteTodo') {
       switch (label) {
-        case Label.APPT:
+        case TodoLabel.APPT:
           return TodoInternalKey.deleteTodoAPPT;
-        case Label.MEDS:
+        case TodoLabel.MEDS:
           return TodoInternalKey.deleteTodoMEDS;
         default:
           return TodoInternalKey.deleteTodoTODO;

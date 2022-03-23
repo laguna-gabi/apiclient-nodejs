@@ -3,6 +3,8 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
+  ActionTodoLabel,
+  CreateActionTodoParams,
   CreateTodoDoneParams,
   CreateTodoParams,
   EndAndCreateTodoParams,
@@ -45,6 +47,13 @@ export class TodoService extends BaseService {
     });
   }
 
+  async createActionTodo(createActionTodoParams: CreateActionTodoParams): Promise<Todo> {
+    return this.todoModel.create({
+      ...createActionTodoParams,
+      memberId: new Types.ObjectId(createActionTodoParams.memberId),
+    });
+  }
+
   async getTodos(memberId: string): Promise<Todo[]> {
     return this.todoModel.find({ memberId: new Types.ObjectId(memberId) });
   }
@@ -79,6 +88,10 @@ export class TodoService extends BaseService {
 
     if (endedTodo.status === TodoStatus.ended) {
       throw new Error(Errors.get(ErrorType.todoEndEndedTodo));
+    }
+
+    if (this.isActionTodo(endedTodo)) {
+      throw new Error(Errors.get(ErrorType.todoEndAndCreateActionTodo));
     }
 
     await endedTodo.updateOne({
@@ -236,6 +249,10 @@ export class TodoService extends BaseService {
   /*************************************************************************************************
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
+
+  isActionTodo(todo: Todo): boolean {
+    return Object.keys(ActionTodoLabel).includes(todo.label);
+  }
 
   private isUnscheduled(todo: Todo): boolean {
     return !todo.cronExpressions && !todo.start && !todo.end;

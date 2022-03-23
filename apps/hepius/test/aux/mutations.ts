@@ -49,6 +49,7 @@ import {
   SubmitQuestionnaireResponseParams,
 } from '../../src/questionnaire';
 import {
+  CreateActionTodoParams,
   CreateTodoDoneParams,
   CreateTodoParams,
   EndAndCreateTodoParams,
@@ -1402,6 +1403,40 @@ export class Mutations {
       });
 
     return createTodo;
+  };
+
+  createActionTodo = async ({
+    createActionTodoParams,
+    missingFieldError,
+    invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
+  }: {
+    createActionTodoParams: CreateActionTodoParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+    requestHeaders?;
+  }): Promise<Identifier> => {
+    const { createActionTodo } = await this.client
+      .request(
+        gql`
+          mutation createActionTodo($createActionTodoParams: CreateActionTodoParams!) {
+            createActionTodo(createActionTodoParams: $createActionTodoParams) {
+              id
+            }
+          }
+        `,
+        { createActionTodoParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
+
+    return createActionTodo;
   };
 
   endAndCreateTodo = async ({
