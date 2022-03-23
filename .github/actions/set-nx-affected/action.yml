@@ -1,0 +1,31 @@
+name: Set Nx BASE and HEAD
+
+description: Set Nx BASE and HEAD for `affected` calculation
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get branch name
+      id: branch-name
+      uses: tj-actions/branch-names@v5
+    - name: Set main branch name
+      id: main-branch-name
+      shell: bash
+      run: |
+        if [ "${{ github.event_name == 'pull_request' }}" = "true" ]; then
+          echo "::set-output name=main_branch_name::${{ github.event.pull_request.base.ref }}"
+        else
+          echo "::set-output name=main_branch_name::${{ steps.branch-name.outputs.current_branch }}"
+        fi
+    - name: Derive SHAs for BASE and HEAD (support Nx Affected Commands)
+      uses: nrwl/nx-set-shas@v2
+      with:
+        main-branch-name: ${{ steps.main-branch-name.outputs.main_branch_name }}
+    - name: update NX BASE and HEAD
+      if: github.event_name == 'pull_request'
+      shell: bash
+      run: |
+          NX_BASE=origin/${{ github.event.pull_request.base.ref }}
+          NX_HEAD=HEAD
+          echo "setting NX_BASE to $NX_BASE"
+          echo "setting NX_HEAD to $NX_HEAD"
