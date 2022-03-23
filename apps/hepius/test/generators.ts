@@ -995,11 +995,13 @@ export const generateUpdateCarePlanParams = ({
   id,
   notes = lorem.words(4),
   status = CareStatus.completed,
+  dueDate = fakerDate.soon(3),
 }: Partial<UpdateCarePlanParams> = {}) => {
   return {
     id,
     notes,
     status,
+    dueDate,
   };
 };
 

@@ -554,6 +554,7 @@ describe('CareService', () => {
       const result = await service.updateCarePlan(updateParams);
       expect(result.status).toEqual(updateParams.status);
       expect(result.notes).toEqual(updateParams.notes);
+      expect(result.dueDate).toEqual(updateParams.dueDate);
       expect(result.completedAt).toEqual(expect.any(Date));
     });
 

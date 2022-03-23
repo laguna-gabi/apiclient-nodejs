@@ -1952,8 +1952,9 @@ describe('Integration tests: all', () => {
         expect.arrayContaining([
           expect.objectContaining({
             ...memberCarePlans[0],
-            notes: 'new notes',
-            status: CareStatus.completed,
+            notes: updateCarePlanParams.notes,
+            status: updateCarePlanParams.status,
+            dueDate: updateCarePlanParams.dueDate.toISOString(),
           }),
         ]),
       );
