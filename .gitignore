@@ -36,3 +36,4 @@ yarn-error.log*
 
 # Graphql
 schema.gql
+/gql

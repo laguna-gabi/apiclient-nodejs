@@ -8,6 +8,12 @@
       "options": {
         "command": "libs/cmd/localstack/configLocalstack.sh"
       }
+    },
+    "generate:gql": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "gql-generator -i schema.gql -o gql"
+      }
     }
   },
   "tags": []
