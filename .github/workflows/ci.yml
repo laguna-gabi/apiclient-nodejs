@@ -111,7 +111,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
       - name: Deploy affected
-        run: npx nx affected --target=deploy --base=$NX_BASE --head=$NX_HEAD --parallel=3
+        run: npx nx affected --target=deploy --base=$NX_BASE --head=$NX_HEAD --parallel=3 --slackChannel=${{secrets.SLACK_URL_MESSAGES}}
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           CURRENT_BRANCH: ${{ steps.branch-name.outputs.current_branch }}
