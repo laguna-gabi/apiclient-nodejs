@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { migration } from 'config';
 import { add } from 'date-fns';
 import { datatype, date, lorem, system } from 'faker';
-import { readdirSync, unlinkSync } from 'fs';
+import { appendFileSync, readdirSync, unlinkSync } from 'fs';
 import { Model } from 'mongoose';
 import * as path from 'path';
 import { dbDisconnect, defaultModules } from '../.';
@@ -14,7 +14,8 @@ import { delay } from '../../src/common';
 jest.mock('fs', () => {
   const actualFS = jest.requireActual('fs');
   const mockReaddirSync = jest.fn(actualFS.readdirSync);
-  return { ...actualFS, readdirSync: mockReaddirSync };
+  const mockAppendFileSync = jest.fn(actualFS.appendFileSync);
+  return { ...actualFS, readdirSync: mockReaddirSync, appendFileSync: mockAppendFileSync };
 });
 
 describe('Commands: MigrationService', () => {
@@ -41,6 +42,9 @@ describe('Commands: MigrationService', () => {
     migrationService = module.get<MigrationService>(MigrationService);
     changelogModel = module.get<Model<Changelog>>(getModelToken(Changelog.name));
     spyOnMockChangelogModel = jest.spyOn(changelogModel, 'find');
+
+    // block the actual change made to the index file when creating a new migration file
+    (appendFileSync as jest.Mock).mockImplementation(() => []);
 
     // preparing a list of migration files for tests:
     migrationFiles.set(
@@ -158,6 +162,8 @@ describe('Commands: MigrationService', () => {
     const testMigrationDir = new Map<string, string>();
     let spyFindOneAndUpdateOnMockChangelogModel: jest.SpyInstance;
     let spyDeleteOneOnMockChangelogModel: jest.SpyInstance;
+    let spyGetMigrationRunner: jest.SpyInstance;
+
     beforeAll(async () => {
       testMigrationDir.set('migration_1', migrationService.create(system.fileName()));
       await delay(1000); // make sure files are not created with the same timestamp - sort should work
@@ -165,11 +171,17 @@ describe('Commands: MigrationService', () => {
 
       spyFindOneAndUpdateOnMockChangelogModel = jest.spyOn(changelogModel, 'findOneAndUpdate');
       spyDeleteOneOnMockChangelogModel = jest.spyOn(changelogModel, 'deleteOne');
+      spyGetMigrationRunner = jest.spyOn(migrationService, 'getMigrationRunner');
+    });
+
+    beforeEach(() => {
+      spyGetMigrationRunner.mockReturnValue({ up: jest.fn, down: jest.fn });
     });
 
     afterEach(() => {
       spyFindOneAndUpdateOnMockChangelogModel.mockReset();
       spyDeleteOneOnMockChangelogModel.mockReset();
+      spyGetMigrationRunner.mockReset();
     });
 
     afterAll(async () => {

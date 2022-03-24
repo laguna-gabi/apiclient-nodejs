@@ -115,3 +115,42 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           CURRENT_BRANCH: ${{ steps.branch-name.outputs.current_branch }}
+
+  migrate:
+    name: Migrate
+    runs-on: self-hosted
+    needs: deploy
+    timeout-minutes: 5
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master'
+    steps:
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v5
+      - name: Checkout Git repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Install node v16
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - name: Install packages
+        run: yarn install
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Accumulate NODE_ENV
+        id: branch_check
+        run: |
+          if [ "${{ steps.branch-name.outputs.current_branch }}" = "staging" ]; then
+            echo "::set-output name=env_name::production"
+          elif [ "${{ steps.branch-name.outputs.current_branch }}" = "develop" ]; then
+            echo "::set-output name=env_name::development"
+          fi
+      - name: Migrate Db
+        env:
+          NODE_ENV: ${{ steps.branch_check.outputs.env_name }}
+        run: npx nx affected --target=migration --cmd=up --base=$NX_BASE --head=$NX_HEAD --parallel=3

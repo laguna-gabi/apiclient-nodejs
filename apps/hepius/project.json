@@ -87,6 +87,28 @@
       "options": {
         "command": "ts-node -P ./tsconfig.base.json ./ci/deploy.ts hepius {args.slackChannel}"
       }
+    },
+    "command-build": {
+      "executor": "@nrwl/node:webpack",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/hepius/cmd",
+        "main": "apps/hepius/cmd/main.ts",
+        "tsConfig": "apps/hepius/tsconfig.app.json",
+        "webpackConfig": "./webpackConfig.js"
+      }
+    },
+    "migration": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "ts-node -P ./tsconfig.base.json ./dist/apps/hepius/cmd/main.js migration {args.cmd} {args.option}"
+      },
+      "dependsOn": [
+        {
+          "target": "command-build",
+          "projects": "self"
+        }
+      ]
     }
   },
   "tags": []

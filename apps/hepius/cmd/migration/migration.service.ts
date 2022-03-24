@@ -8,6 +8,7 @@ import { Changelog, ChangelogDocument, Command, InfoColoring, Item } from '.';
 import { Connection, Model } from 'mongoose';
 import { migration } from 'config';
 import { format } from 'date-fns';
+import * as migrationFiles from './scripts';
 
 @Injectable()
 export class MigrationService {
@@ -16,6 +17,19 @@ export class MigrationService {
     private readonly changelogModel: Model<ChangelogDocument>,
     @InjectConnection() private connection: Connection,
   ) {}
+
+  getMigrationRunner(pendingMigrationFileName: string) {
+    const timestampMatch = pendingMigrationFileName.match('^(\\d+)');
+    if (timestampMatch.length < 1) {
+      throw new Error('invalid file name - missing timestamp unique prefix');
+    }
+    const fileKey = `m${timestampMatch[0]}`;
+    if (migrationFiles[fileKey] === undefined) {
+      throw new Error(`pending migration file ${pendingMigrationFileName} is not listed`);
+    }
+
+    return migrationFiles[fileKey];
+  }
 
   async getMigrationFiles() {
     const files = fs.readdirSync(path.join(process.cwd(), migration.get('migrationDir')));
@@ -59,11 +73,18 @@ export class MigrationService {
       migration.get('migrationDir'),
       migration.get('sample') + migration.get('extension'),
     );
-    const filename = `${format(now(), 'yyyyMMddHHmmss')}-${description
-      .split(' ')
-      .join('_')}${migration.get('extension')}`;
+
+    const timestamp = format(now(), 'yyyyMMddHHmmss');
+    const suffix = description.split(' ').join('_');
+
+    const filename = `${timestamp}-${suffix}${migration.get('extension')}`;
     const destination = path.join(process.cwd(), migration.get('migrationDir'), filename);
     fs.copyFileSync(source, destination);
+
+    // export new migration in index file:
+    const index = path.join(process.cwd(), migration.get('migrationDir'), 'index.ts');
+    fs.appendFileSync(index, `export * as m${timestamp} from './${timestamp}-${suffix}';\n`);
+
     return filename;
   }
 
@@ -87,11 +108,22 @@ export class MigrationService {
     }
 
     for (const pendingMigration of pendingMigrations) {
-      const { up } = await import(
-        path.join(process.cwd(), migration.get('migrationDir'), pendingMigration)
-      );
+      let runner;
 
-      await up(dryRun, this.connection);
+      try {
+        runner = this.getMigrationRunner(pendingMigration);
+      } catch (ex) {
+        throw new Error(
+          `failed to get a valid runner for migration file: ${pendingMigration}. got: ${ex}`,
+        );
+      }
+
+      // running `up` callback method
+      console.info(
+        InfoColoring,
+        `(${pendingMigration}) migrating ${Command.up} ${dryRun ? 'in dry run mode' : ''}`,
+      );
+      await runner.up(dryRun, this.connection.db);
 
       if (!dryRun) {
         await this.changelogModel.findOneAndUpdate(
@@ -123,13 +155,22 @@ export class MigrationService {
       return;
     }
 
-    const { down } = await import(
-      path.join(process.cwd(), migration.get('migrationDir'), latestMigrationApplied)
-    );
+    let runner;
 
-    await down(dryRun, this.connection).catch((e: Error) => {
-      throw e;
-    });
+    try {
+      runner = this.getMigrationRunner(latestMigrationApplied);
+    } catch (ex) {
+      throw new Error(
+        `failed to get a valid runner for migration file: ${latestMigrationApplied}. got: ${ex}`,
+      );
+    }
+
+    // running `down` callback method
+    console.info(
+      InfoColoring,
+      `(${latestMigrationApplied}) migrating ${Command.down} ${dryRun ? 'in dry run mode' : ''}`,
+    );
+    await runner.down(dryRun, this.connection.db);
 
     if (!dryRun) {
       await this.changelogModel.deleteOne({ fileName: latestMigrationApplied });

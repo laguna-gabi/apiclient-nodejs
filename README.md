@@ -18,7 +18,7 @@ Laguna health's backend monorepo.
 
 This Monorepo contains the following:
 
-<center>
+<div align=“center”>
 
 |          Name           | Type |                                                                                                          Coverage                                                                                                           |
 | :---------------------: | :--: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -26,19 +26,21 @@ This Monorepo contains the following:
 |    [Iris](apps/iris)    | app  |   <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-lines.svg?branch=develop" /></a>   |
 | [Pandora](libs/pandora) | lib  | <a href="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/lcov-report/index.html" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/badge-lines.svg?branch=master" /></a>  |
 
-</center>
+</div>
 
 ---
 
 ## table of contents
 
 - [👁 Argus](#-argus)
+  - [table of contents](#table-of-contents)
   - [💡 Project introduction](#-project-introduction)
   - [📋 Prerequisites](#-prerequisites)
     - [Node](#node)
     - [Docker](#docker)
     - [Aws](#aws)
     - [Shared code settings](#shared-code-settings)
+  - [ci/cd](#cicd)
   - [🐬 NX](#-nx)
     - [Running commands](#running-commands)
 
@@ -114,6 +116,12 @@ Your IDE probably has extensions to help you with those tools
 > WebStorm - [prettier](https://plugins.jetbrains.com/plugin/10456-prettier), [eslint](https://plugins.jetbrains.com/plugin/7494-eslint), [editorconfig](https://plugins.jetbrains.com/plugin/7294-editorconfig)
 
 ---
+
+## ci/cd
+`Argus` supports a manual workflow by which developers can trigger a manual flow.
+The flow can be triggered for any branch however, only `develop` and `master` branches will allow deployment and migration phase to run under the restriction that `test` and `lint` where enabled.
+
+Simply go to the Github Actions page in `Argus` and select the `Laguna Manual` - [link](https://github.com/LagunaHealth/argus/actions/workflows/ci.manual.yml).
 
 ## 🐬 NX
 

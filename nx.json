@@ -25,7 +25,8 @@
           "test:integration",
           "test:live",
           "test:cov",
-          "cov-badges"
+          "cov-badges",
+          "command-build"
         ]
       }
     }

@@ -124,14 +124,16 @@ yarn generate:tokens:production
 
 ---
 
-Changes to the application may require db changes (adding new mandatory fields, adding per-calculated fields, updating field values, etc...).
-It is important to include those required/applied changes as part of our code base to allow for code reviews and to be able to roll back changes if needed.
+Changes to the application may require db changes (adding new mandatory fields, adding pre-calculated fields, updating field values, etc...).
+It is important to include those required/applied changes as part of our code base to achieve transparency during code reviews and to be able to roll back changes if needed.
 
-The current support is now a proprietary [Nest commander](https://docs.nestjs.com/recipes/nest-commander) based TS internal Hepius package.
+The current support is now a proprietary TS based [Nest commander](https://docs.nestjs.com/recipes/nest-commander) inside our `Hepius` package.
 
-The migration status is persisted to our mongo db - `changelog` collection. **Manipulating of that collection may affect the migration status** and as a result the applied migration scripts when running the migration `up` and `down` commands.
+The migration status is persisted to our mongo db - `changelog` collection. **Manipulating of that collection may affect the migration status** and as a result the applied migration scripts when running the migration's `up` and `down` commands.
 
-The migration is applied automatically in our ci-cd when merging our code to `develop` or `stage` branches - migration will run after the test/coverage job.
+The migration is applied automatically in our ci-cd when merging our code to `develop` or `stage` branches - migration job depends on a successful `deploy` job.
+
+Migration is supported via `Argus` ci/cd manual flow under the same restrictions mention above.
 
 ---
 
@@ -140,7 +142,6 @@ The migration is applied automatically in our ci-cd when merging our code to `de
 - Proprietary fully customizable (.ts) migration CLI and service support (now supporting only `.ts` extension files)
 - Force `up` and `down` for specific migration files (out-of-order and force for non `PENDING` migration files)
 - Dry Run flag for `up` and `down` commands - **note**: dry run mode will not update `changelog` collection
-- Removed the `init` command - not needed anymore..
 
 ---
 
@@ -151,7 +152,7 @@ The migration is applied automatically in our ci-cd when merging our code to `de
 - **Step 1**: create a new migration script (template):
 
   ```
-  yarn migrate create <script-description>
+  nx migration hepius --cmd=create <script-description>
   ```
 
   A new migration script is created in the [migrations](./cmd/migration/scripts) directory with the following format:
@@ -162,7 +163,11 @@ The migration is applied automatically in our ci-cd when merging our code to `de
 
   Example: `20220102085546-my-first-migration.ts`
 
+  The migration `index.ts` file inside the `scripts` directory will get updated to include the new file along with a unique (timestamp based) descriptor.
+
   **! DO NOT RENAME THE FILE !**
+
+  **! MAKE SURE TO STAGE ALL CHANGES INCLUDING INDEX FILE !**
 
   ***
 
@@ -216,7 +221,7 @@ The migration is applied automatically in our ci-cd when merging our code to `de
 - **Step 3.1**: test the code on your local mongo db - first you check the status in your local db - the results is a list of migrations applied on your local db and pending migrations which should get applied - migration is not applied in `status` command - DRY-RUN mode:
 
   ```
-  yarn migrate status
+  nx migration hepius --cmd=status
   ```
 
   | Filename                               | Applied At               |
@@ -226,18 +231,18 @@ The migration is applied automatically in our ci-cd when merging our code to `de
 
 - **Step 3.1**: test the code on your local mongo db - apply your new migration script:
   ```
-  yarn migrate up [name] [-d for optional dry run mode ]
+  nx migration hepius --cmd=up [--option='-d' for optional dry run mode ]
   ```
   Note: name field is optional and you can add a specific migration file to migrate `up` (could be out of order and not necessarily `PENDING`)
 - **Step 3.2**: undo changes - test your `down` code on your local mongo db:
 
   ```
-  yarn migrate down [name] [-d for optional dry run mode ]
+  nx migration hepius --cmd=down [--option='<file-name> -d' optional file name and dry run mode]
   ```
 
   ***
 
-- **Step 4**: commit your changes - you only need to commit your newly created migration script.
+- **Step 4**: commit your changes - you need to commit your newly created migration script and auto changes made to the index file.
 
 # ✂️ Appendix
 

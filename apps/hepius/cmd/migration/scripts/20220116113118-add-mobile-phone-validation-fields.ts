@@ -1,18 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NestFactory } from '@nestjs/core';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import * as path from 'path';
-import { Command, InfoColoring } from '../.';
 import { AppModule } from '../../../src/app.module';
 import { Member } from '../../../src/member';
 import { TwilioService } from '../../../src/providers';
 
 export const up = async (dryRun: boolean) => {
-  console.info(
-    InfoColoring,
-    `(${path.basename(__filename)}) migrating ${Command.up} ${dryRun ? 'in dry run mode' : ''}`,
-  );
-
   const app = await NestFactory.createApplicationContext(AppModule);
   const memberModel = app.get<Model<Member>>(getModelToken(Member.name));
   const twilioService = app.get<TwilioService>(TwilioService);
@@ -33,11 +27,6 @@ export const up = async (dryRun: boolean) => {
 };
 
 export const down = async (dryRun: boolean) => {
-  console.info(
-    InfoColoring,
-    `(${path.basename(__filename)}) migrating ${Command.down} ${dryRun ? 'in dry run mode' : ''}`,
-  );
-
   const app = await NestFactory.createApplicationContext(AppModule);
   const memberModel = app.get<Model<Member>>(getModelToken(Member.name));
 
