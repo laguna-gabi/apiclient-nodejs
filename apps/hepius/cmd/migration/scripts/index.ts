@@ -22,3 +22,4 @@ export * as m20220306132039 from './20220306132039-add-isExposedToMember-to-ques
 export * as m20220307160930 from './20220307160930-set-all-items-to-optional-for-gad7';
 export * as m20220310112641 from './20220310112641-add-orgs-to-user';
 export * as m20220313123619 from './20220313123619-create-red-flag-type';
+export * as m20220324120022 from './20220324120022-updateTodoLabels';

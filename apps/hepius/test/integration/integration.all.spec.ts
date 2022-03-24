@@ -1730,7 +1730,7 @@ describe('Integration tests: all', () => {
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        label: TodoLabel.MEDS,
+        label: TodoLabel.Meds,
       });
 
       const { id } = await handler.mutations.createTodo({

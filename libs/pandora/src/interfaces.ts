@@ -148,15 +148,15 @@ export enum AppointmentInternalKey {
 }
 
 export enum TodoInternalKey {
-  createTodoMEDS = 'createTodo.MEDS',
-  createTodoAPPT = 'createTodo.APPT',
-  createTodoTODO = 'createTodo.TODO',
-  updateTodoMEDS = 'updateTodo.MEDS',
-  updateTodoAPPT = 'updateTodo.APPT',
-  updateTodoTODO = 'updateTodo.TODO',
-  deleteTodoMEDS = 'deleteTodo.MEDS',
-  deleteTodoAPPT = 'deleteTodo.APPT',
-  deleteTodoTODO = 'deleteTodo.TODO',
+  createTodoMeds = 'createTodo.Meds',
+  createTodoAppointment = 'createTodo.Appointment',
+  createTodoTodo = 'createTodo.Todo',
+  updateTodoMeds = 'updateTodo.Meds',
+  updateTodoAppointment = 'updateTodo.Appointment',
+  updateTodoTodo = 'updateTodo.Todo',
+  deleteTodoMeds = 'deleteTodo.Meds',
+  deleteTodoAppointment = 'deleteTodo.Appointment',
+  deleteTodoTodo = 'deleteTodo.Todo',
 }
 
 export enum AlertInternalKey {

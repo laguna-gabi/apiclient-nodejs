@@ -20,23 +20,23 @@
             "addCaregiverDetails": "",
             "setCallPermissions": "",
             "scheduleAppointment": "",
+            "assessmentSubmitAlert": "",
+            "answerQuestionnaire": "",
             "createTodo": {
-                "MEDS": "",
-                "APPT": "",
-                "TODO": ""
+                "Meds": "",
+                "Appointment": "",
+                "Todo": ""
             },
             "updateTodo": {
-                "MEDS": "",
-                "APPT": "",
-                "TODO": ""
+                "Meds": "",
+                "Appointment": "",
+                "Todo": ""
             },
             "deleteTodo": {
-                "MEDS": "",
-                "APPT": "",
-                "TODO": ""
-            },
-            "assessmentSubmitAlert": "",
-            "answerQuestionnaire": ""
+                "Meds": "",
+                "Appointment": "",
+                "Todo": ""
+            }
         },
         "honorific": {
             "mr": "",

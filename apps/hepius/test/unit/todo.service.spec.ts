@@ -404,7 +404,7 @@ describe('TodoService', () => {
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        label: TodoLabel.MEDS,
+        label: TodoLabel.Meds,
       });
       createTodoParams.status = TodoStatus.requested;
 

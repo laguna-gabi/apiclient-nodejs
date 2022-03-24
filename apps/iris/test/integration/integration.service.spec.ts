@@ -35,12 +35,12 @@ import {
   generateAppointmentScheduledUserMock,
   generateAssessmentSubmitAlertMock,
   generateChatMessageUserMock,
-  generateCreateTodoAPPTMock,
-  generateCreateTodoMEDSMock,
-  generateCreateTodoTODOMock,
-  generateDeleteTodoAPPTMock,
-  generateDeleteTodoMEDSMock,
-  generateDeleteTodoTODOMock,
+  generateCreateTodoAppointmentMock,
+  generateCreateTodoMedsMock,
+  generateCreateTodoTodoMock,
+  generateDeleteTodoAppointmentMock,
+  generateDeleteTodoMedsMock,
+  generateDeleteTodoTodoMock,
   generateExternalContentMobileMock,
   generateExternalContentWebScheduleAppointmentMock,
   generateNewChatMessageToMemberMock,
@@ -55,9 +55,9 @@ import {
   generateRequestAppointmentMock,
   generateTextMessageUserMock,
   generateUpdateSenderClientIdMock,
-  generateUpdateTodoAPPTMock,
-  generateUpdateTodoMEDSMock,
-  generateUpdateTodoTODOMock,
+  generateUpdateTodoAppointmentMock,
+  generateUpdateTodoMedsMock,
+  generateUpdateTodoTodoMock,
   mockLogger,
   mockProcessWarnings,
   translation,
@@ -1101,8 +1101,8 @@ describe('Notifications full flow', () => {
     },
   );
 
-  it(`should handle 'immediate' event of type ${TodoInternalKey.createTodoMEDS}`, async () => {
-    const mock = generateCreateTodoMEDSMock({
+  it(`should handle 'immediate' event of type ${TodoInternalKey.createTodoMeds}`, async () => {
+    const mock = generateCreateTodoMedsMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
       todoId: generateId(),
@@ -1111,8 +1111,9 @@ describe('Notifications full flow', () => {
     await compareTodos(mock);
   });
 
-  it(`should handle 'immediate' event of type ${TodoInternalKey.createTodoAPPT}`, async () => {
-    const mock = generateCreateTodoAPPTMock({
+  // eslint-disable-next-line max-len
+  it(`should handle 'immediate' event of type ${TodoInternalKey.createTodoAppointment}`, async () => {
+    const mock = generateCreateTodoAppointmentMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
       todoId: generateId(),
@@ -1121,8 +1122,8 @@ describe('Notifications full flow', () => {
     await compareTodos(mock);
   });
 
-  it(`should handle 'immediate' event of type ${TodoInternalKey.createTodoTODO}`, async () => {
-    const mock = generateCreateTodoTODOMock({
+  it(`should handle 'immediate' event of type ${TodoInternalKey.createTodoTodo}`, async () => {
+    const mock = generateCreateTodoTodoMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
       todoId: generateId(),
@@ -1131,8 +1132,8 @@ describe('Notifications full flow', () => {
     await compareTodos(mock);
   });
 
-  it(`should handle 'immediate' event of type ${TodoInternalKey.updateTodoMEDS}`, async () => {
-    const mock = generateUpdateTodoMEDSMock({
+  it(`should handle 'immediate' event of type ${TodoInternalKey.updateTodoMeds}`, async () => {
+    const mock = generateUpdateTodoMedsMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
       todoId: generateId(),
@@ -1141,8 +1142,9 @@ describe('Notifications full flow', () => {
     await compareTodos(mock);
   });
 
-  it(`should handle 'immediate' event of type ${TodoInternalKey.updateTodoAPPT}`, async () => {
-    const mock = generateUpdateTodoAPPTMock({
+  // eslint-disable-next-line max-len
+  it(`should handle 'immediate' event of type ${TodoInternalKey.updateTodoAppointment}`, async () => {
+    const mock = generateUpdateTodoAppointmentMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
       todoId: generateId(),
@@ -1151,8 +1153,8 @@ describe('Notifications full flow', () => {
     await compareTodos(mock);
   });
 
-  it(`should handle 'immediate' event of type ${TodoInternalKey.updateTodoTODO}`, async () => {
-    const mock = generateUpdateTodoTODOMock({
+  it(`should handle 'immediate' event of type ${TodoInternalKey.updateTodoTodo}`, async () => {
+    const mock = generateUpdateTodoTodoMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
       todoId: generateId(),
@@ -1161,8 +1163,8 @@ describe('Notifications full flow', () => {
     await compareTodos(mock);
   });
 
-  it(`should handle 'immediate' event of type ${TodoInternalKey.deleteTodoMEDS}`, async () => {
-    const mock = generateDeleteTodoMEDSMock({
+  it(`should handle 'immediate' event of type ${TodoInternalKey.deleteTodoMeds}`, async () => {
+    const mock = generateDeleteTodoMedsMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
       todoId: generateId(),
@@ -1171,8 +1173,9 @@ describe('Notifications full flow', () => {
     await compareTodos(mock);
   });
 
-  it(`should handle 'immediate' event of type ${TodoInternalKey.deleteTodoAPPT}`, async () => {
-    const mock = generateDeleteTodoAPPTMock({
+  // eslint-disable-next-line max-len
+  it(`should handle 'immediate' event of type ${TodoInternalKey.deleteTodoAppointment}`, async () => {
+    const mock = generateDeleteTodoAppointmentMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
       todoId: generateId(),
@@ -1181,8 +1184,8 @@ describe('Notifications full flow', () => {
     await compareTodos(mock);
   });
 
-  it(`should handle 'immediate' event of type ${TodoInternalKey.deleteTodoTODO}`, async () => {
-    const mock = generateDeleteTodoTODOMock({
+  it(`should handle 'immediate' event of type ${TodoInternalKey.deleteTodoTodo}`, async () => {
+    const mock = generateDeleteTodoTodoMock({
       recipientClientId: mobileMemberClient.id,
       senderClientId: userClient.id,
       todoId: generateId(),

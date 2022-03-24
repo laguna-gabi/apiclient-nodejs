@@ -38,13 +38,13 @@ import {
   generateAppointmentScheduledUserMock,
   generateAssessmentSubmitAlertMock,
   generateChatMessageUserMock,
-  generateCreateTodoAPPTMock,
-  generateCreateTodoMEDSMock,
-  generateCreateTodoTODOMock,
+  generateCreateTodoAppointmentMock,
+  generateCreateTodoMedsMock,
+  generateCreateTodoTodoMock,
   generateDeleteDispatchMock,
-  generateDeleteTodoAPPTMock,
-  generateDeleteTodoMEDSMock,
-  generateDeleteTodoTODOMock,
+  generateDeleteTodoAppointmentMock,
+  generateDeleteTodoMedsMock,
+  generateDeleteTodoTodoMock,
   generateDispatchId,
   generateExternalContentMobileMock,
   generateExternalContentWebScheduleAppointmentMock,
@@ -62,9 +62,9 @@ import {
   generateTextMessageUserMock,
   generateUpdateMemberSettingsMock,
   generateUpdateSenderClientIdMock,
-  generateUpdateTodoAPPTMock,
-  generateUpdateTodoMEDSMock,
-  generateUpdateTodoTODOMock,
+  generateUpdateTodoAppointmentMock,
+  generateUpdateTodoMedsMock,
+  generateUpdateTodoTodoMock,
   generateUpdateUserSettingsMock,
 } from '@argus/pandora';
 import { general, hosts, scheduler } from 'config';
@@ -1019,7 +1019,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send createTodo dispatch
      */
-    it(`createTodo: should send dispatch ${TodoInternalKey.createTodoMEDS}`, async () => {
+    it(`createTodo: should send dispatch ${TodoInternalKey.createTodoMeds}`, async () => {
       const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const memberId = member.id;
 
@@ -1028,7 +1028,7 @@ describe('Integration tests: notifications', () => {
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
-        label: TodoLabel.MEDS,
+        label: TodoLabel.Meds,
       });
 
       const { id } = await handler.mutations.createTodo({
@@ -1037,7 +1037,7 @@ describe('Integration tests: notifications', () => {
       });
       await delay(200);
 
-      const mock = generateCreateTodoMEDSMock({
+      const mock = generateCreateTodoMedsMock({
         recipientClientId: memberId,
         senderClientId: user.id,
         todoId: id,
@@ -1061,7 +1061,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send createTodo dispatch
      */
-    it(`createTodo: should send dispatch ${TodoInternalKey.createTodoAPPT}`, async () => {
+    it(`createTodo: should send dispatch ${TodoInternalKey.createTodoAppointment}`, async () => {
       const { member, user } = await creators.createMemberUserAndOptionalOrg();
 
       await delay(200);
@@ -1069,7 +1069,7 @@ describe('Integration tests: notifications', () => {
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId: member.id,
-        label: TodoLabel.APPT,
+        label: TodoLabel.Appointment,
       });
 
       const { id } = await handler.mutations.createTodo({
@@ -1078,7 +1078,7 @@ describe('Integration tests: notifications', () => {
       });
       await delay(200);
 
-      const mock = generateCreateTodoAPPTMock({
+      const mock = generateCreateTodoAppointmentMock({
         recipientClientId: member.id,
         senderClientId: user.id,
         todoId: id,
@@ -1102,7 +1102,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send createTodo dispatch
      */
-    it(`createTodo: should send dispatch ${TodoInternalKey.createTodoTODO}`, async () => {
+    it(`createTodo: should send dispatch ${TodoInternalKey.createTodoTodo}`, async () => {
       const { member, user } = await creators.createMemberUserAndOptionalOrg();
 
       await delay(200);
@@ -1119,7 +1119,7 @@ describe('Integration tests: notifications', () => {
       });
       await delay(200);
 
-      const mock = generateCreateTodoTODOMock({
+      const mock = generateCreateTodoTodoMock({
         recipientClientId: member.id,
         senderClientId: user.id,
         todoId: id,
@@ -1143,7 +1143,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send updateTodo dispatch
      */
-    it(`updateTodo: should send dispatch ${TodoInternalKey.updateTodoMEDS}`, async () => {
+    it(`updateTodo: should send dispatch ${TodoInternalKey.updateTodoMeds}`, async () => {
       const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(user.authId);
 
@@ -1164,7 +1164,7 @@ describe('Integration tests: notifications', () => {
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         id: oldTodoId,
         memberId: member.id,
-        label: TodoLabel.MEDS,
+        label: TodoLabel.Meds,
       });
 
       const { id } = await handler.mutations.endAndCreateTodo({
@@ -1174,7 +1174,7 @@ describe('Integration tests: notifications', () => {
 
       await delay(200);
 
-      const mock = generateUpdateTodoMEDSMock({
+      const mock = generateUpdateTodoMedsMock({
         recipientClientId: member.id,
         senderClientId: user.id,
         todoId: id,
@@ -1198,7 +1198,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send updateTodo dispatch
      */
-    it(`updateTodo: should send dispatch ${TodoInternalKey.updateTodoAPPT}`, async () => {
+    it(`updateTodo: should send dispatch ${TodoInternalKey.updateTodoAppointment}`, async () => {
       const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(user.authId);
 
@@ -1219,7 +1219,7 @@ describe('Integration tests: notifications', () => {
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         id: oldTodoId,
         memberId: member.id,
-        label: TodoLabel.APPT,
+        label: TodoLabel.Appointment,
       });
 
       const { id } = await handler.mutations.endAndCreateTodo({
@@ -1229,7 +1229,7 @@ describe('Integration tests: notifications', () => {
 
       await delay(200);
 
-      const mock = generateUpdateTodoAPPTMock({
+      const mock = generateUpdateTodoAppointmentMock({
         recipientClientId: member.id,
         senderClientId: user.id,
         todoId: id,
@@ -1253,7 +1253,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send updateTodo dispatch
      */
-    it(`updateTodo: should send dispatch ${TodoInternalKey.updateTodoTODO}`, async () => {
+    it(`updateTodo: should send dispatch ${TodoInternalKey.updateTodoTodo}`, async () => {
       const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(user.authId);
 
@@ -1284,7 +1284,7 @@ describe('Integration tests: notifications', () => {
 
       await delay(200);
 
-      const mock = generateUpdateTodoTODOMock({
+      const mock = generateUpdateTodoTodoMock({
         recipientClientId: member.id,
         senderClientId: user.id,
         todoId: id,
@@ -1308,7 +1308,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send deleteTodo dispatch
      */
-    it(`deleteTodo: should send dispatch ${TodoInternalKey.deleteTodoMEDS}`, async () => {
+    it(`deleteTodo: should send dispatch ${TodoInternalKey.deleteTodoMeds}`, async () => {
       const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(user.authId);
 
@@ -1316,7 +1316,7 @@ describe('Integration tests: notifications', () => {
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId: member.id,
-        label: TodoLabel.MEDS,
+        label: TodoLabel.Meds,
       });
 
       const { id } = await handler.mutations.createTodo({
@@ -1334,7 +1334,7 @@ describe('Integration tests: notifications', () => {
 
       await delay(200);
 
-      const mock = generateDeleteTodoMEDSMock({
+      const mock = generateDeleteTodoMedsMock({
         recipientClientId: member.id,
         senderClientId: user.id,
         todoId: id,
@@ -1358,7 +1358,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send deleteTodo dispatch
      */
-    it(`deleteTodo: should send dispatch ${TodoInternalKey.deleteTodoAPPT}`, async () => {
+    it(`deleteTodo: should send dispatch ${TodoInternalKey.deleteTodoAppointment}`, async () => {
       const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(user.authId);
 
@@ -1366,7 +1366,7 @@ describe('Integration tests: notifications', () => {
 
       const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId: member.id,
-        label: TodoLabel.APPT,
+        label: TodoLabel.Appointment,
       });
 
       const { id } = await handler.mutations.createTodo({
@@ -1381,7 +1381,7 @@ describe('Integration tests: notifications', () => {
 
       await delay(200);
 
-      const mock = generateDeleteTodoAPPTMock({
+      const mock = generateDeleteTodoAppointmentMock({
         recipientClientId: member.id,
         senderClientId: user.id,
         todoId: id,
@@ -1405,7 +1405,7 @@ describe('Integration tests: notifications', () => {
      * Dispatches:
      *      1. send deleteTodo dispatch
      */
-    it(`deleteTodo: should send dispatch ${TodoInternalKey.deleteTodoTODO}`, async () => {
+    it(`deleteTodo: should send dispatch ${TodoInternalKey.deleteTodoTodo}`, async () => {
       const { member, user } = await creators.createMemberUserAndOptionalOrg();
       const requestHeaders = generateRequestHeaders(user.authId);
 
@@ -1428,7 +1428,7 @@ describe('Integration tests: notifications', () => {
 
       await delay(200);
 
-      const mock = generateDeleteTodoTODOMock({
+      const mock = generateDeleteTodoTodoMock({
         recipientClientId: member.id,
         senderClientId: user.id,
         todoId: id,

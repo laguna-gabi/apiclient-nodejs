@@ -190,7 +190,7 @@ export class TodoResolver {
     return (roles.includes(UserRole.coach) ||
       roles.includes(UserRole.nurse) ||
       roles.includes(UserRole.admin)) &&
-      params.label === TodoLabel.MEDS
+      params.label === TodoLabel.Meds
       ? TodoStatus.requested
       : TodoStatus.active;
   }
@@ -223,30 +223,30 @@ export class TodoResolver {
   extractContentType(todoNotificationsType: TodoNotificationsType, label?: Label): TodoInternalKey {
     if (todoNotificationsType === 'createTodo') {
       switch (label) {
-        case TodoLabel.APPT:
-          return TodoInternalKey.createTodoAPPT;
-        case TodoLabel.MEDS:
-          return TodoInternalKey.createTodoMEDS;
+        case TodoLabel.Appointment:
+          return TodoInternalKey.createTodoAppointment;
+        case TodoLabel.Meds:
+          return TodoInternalKey.createTodoMeds;
         default:
-          return TodoInternalKey.createTodoTODO;
+          return TodoInternalKey.createTodoTodo;
       }
     } else if (todoNotificationsType === 'updateTodo') {
       switch (label) {
-        case TodoLabel.APPT:
-          return TodoInternalKey.updateTodoAPPT;
-        case TodoLabel.MEDS:
-          return TodoInternalKey.updateTodoMEDS;
+        case TodoLabel.Appointment:
+          return TodoInternalKey.updateTodoAppointment;
+        case TodoLabel.Meds:
+          return TodoInternalKey.updateTodoMeds;
         default:
-          return TodoInternalKey.updateTodoTODO;
+          return TodoInternalKey.updateTodoTodo;
       }
     } else if (todoNotificationsType === 'deleteTodo') {
       switch (label) {
-        case TodoLabel.APPT:
-          return TodoInternalKey.deleteTodoAPPT;
-        case TodoLabel.MEDS:
-          return TodoInternalKey.deleteTodoMEDS;
+        case TodoLabel.Appointment:
+          return TodoInternalKey.deleteTodoAppointment;
+        case TodoLabel.Meds:
+          return TodoInternalKey.deleteTodoMeds;
         default:
-          return TodoInternalKey.deleteTodoTODO;
+          return TodoInternalKey.deleteTodoTodo;
       }
     }
   }

@@ -15,7 +15,7 @@ export class ObjectCreateTodoClass {
   constructor(readonly objectCreateTodoMock: ObjectCreateTodoType) {}
 }
 
-export const generateCreateTodoMEDSMock = ({
+export const generateCreateTodoMedsMock = ({
   recipientClientId,
   senderClientId,
   todoId,
@@ -26,7 +26,7 @@ export const generateCreateTodoMEDSMock = ({
   todoId: string;
   correlationId?: string;
 }): ObjectCreateTodoType => {
-  const contentKey = TodoInternalKey.createTodoMEDS;
+  const contentKey = TodoInternalKey.createTodoMeds;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),
@@ -40,7 +40,7 @@ export const generateCreateTodoMEDSMock = ({
   };
 };
 
-export const generateCreateTodoAPPTMock = ({
+export const generateCreateTodoAppointmentMock = ({
   recipientClientId,
   senderClientId,
   todoId,
@@ -51,7 +51,7 @@ export const generateCreateTodoAPPTMock = ({
   todoId: string;
   correlationId?: string;
 }): ObjectCreateTodoType => {
-  const contentKey = TodoInternalKey.createTodoAPPT;
+  const contentKey = TodoInternalKey.createTodoAppointment;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),
@@ -65,7 +65,7 @@ export const generateCreateTodoAPPTMock = ({
   };
 };
 
-export const generateCreateTodoTODOMock = ({
+export const generateCreateTodoTodoMock = ({
   recipientClientId,
   senderClientId,
   todoId,
@@ -76,7 +76,7 @@ export const generateCreateTodoTODOMock = ({
   todoId: string;
   correlationId?: string;
 }): ObjectCreateTodoType => {
-  const contentKey = TodoInternalKey.createTodoTODO;
+  const contentKey = TodoInternalKey.createTodoTodo;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),

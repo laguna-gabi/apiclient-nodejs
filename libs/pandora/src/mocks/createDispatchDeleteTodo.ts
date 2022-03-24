@@ -15,7 +15,7 @@ export class ObjectDeleteTodoClass {
   constructor(readonly objectDeleteTodoMock: ObjectDeleteTodoType) {}
 }
 
-export const generateDeleteTodoMEDSMock = ({
+export const generateDeleteTodoMedsMock = ({
   recipientClientId,
   senderClientId,
   todoId,
@@ -26,7 +26,7 @@ export const generateDeleteTodoMEDSMock = ({
   todoId: string;
   correlationId?: string;
 }): ObjectDeleteTodoType => {
-  const contentKey = TodoInternalKey.deleteTodoMEDS;
+  const contentKey = TodoInternalKey.deleteTodoMeds;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),
@@ -40,7 +40,7 @@ export const generateDeleteTodoMEDSMock = ({
   };
 };
 
-export const generateDeleteTodoAPPTMock = ({
+export const generateDeleteTodoAppointmentMock = ({
   recipientClientId,
   senderClientId,
   todoId,
@@ -51,7 +51,7 @@ export const generateDeleteTodoAPPTMock = ({
   todoId: string;
   correlationId?: string;
 }): ObjectDeleteTodoType => {
-  const contentKey = TodoInternalKey.deleteTodoAPPT;
+  const contentKey = TodoInternalKey.deleteTodoAppointment;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),
@@ -65,7 +65,7 @@ export const generateDeleteTodoAPPTMock = ({
   };
 };
 
-export const generateDeleteTodoTODOMock = ({
+export const generateDeleteTodoTodoMock = ({
   recipientClientId,
   senderClientId,
   todoId,
@@ -76,7 +76,7 @@ export const generateDeleteTodoTODOMock = ({
   todoId: string;
   correlationId?: string;
 }): ObjectDeleteTodoType => {
-  const contentKey = TodoInternalKey.deleteTodoTODO;
+  const contentKey = TodoInternalKey.deleteTodoTodo;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),

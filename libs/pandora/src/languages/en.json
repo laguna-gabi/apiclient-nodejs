@@ -20,23 +20,23 @@
             "addCaregiverDetails": "Tap to add caregiver details",
             "setCallPermissions": "Tap to set your call permissions",
             "scheduleAppointment": "Hello {{member.honorific}} {{member.lastName}}, please tap the link below to schedule the first check-in",
+            "assessmentSubmitAlert": "High Assessment Score [{{org.name}}]: Alerting results on {{assessmentName}} for {{user.firstName}} {{user.lastName}}’s member - {{senderInitials}}. Scored a `{{assessmentScore}}`",
+            "answerQuestionnaire": "Your coach, {{user.firstName}}, sent you a questionnaire. Tap here to fill it",
             "createTodo": {
-                "MEDS": "Your coach, {{user.firstName}}, added a new medication for you. Tap here to review",
-                "APPT": "Your coach, {{user.firstName}}, added a new appointment for you. Tap here to review",
-                "TODO": "Your coach, {{user.firstName}}, added a new to-do for you. Tap here to review"
+                "Meds": "Your coach, {{user.firstName}}, added a new medication for you. Tap here to review",
+                "Appointment": "Your coach, {{user.firstName}}, added a new appointment for you. Tap here to review",
+                "Todo": "Your coach, {{user.firstName}}, added a new to-do for you. Tap here to review"
             },
             "updateTodo": {
-                "MEDS": "Your coach, {{user.firstName}}, changed your medications. Tap here to review",
-                "APPT": "Your coach, {{user.firstName}}, changed an appointment details. Tap here to review",
-                "TODO": "Your coach, {{user.firstName}}, changed a to-do. Tap here to review"
+                "Meds": "Your coach, {{user.firstName}}, changed your medications. Tap here to review",
+                "Appointment": "Your coach, {{user.firstName}}, changed an appointment details. Tap here to review",
+                "Todo": "Your coach, {{user.firstName}}, changed a to-do. Tap here to review"
             },
             "deleteTodo": {
-                "MEDS": "Your coach, {{user.firstName}}, deleted a medication. Tap here to review",
-                "APPT": "Your coach, {{user.firstName}}, deleted an appointment details. Tap here to review",
-                "TODO": "Your coach, {{user.firstName}}, deleted a to-do. Tap here to review"
-            },
-            "assessmentSubmitAlert": "High Assessment Score [{{org.name}}]: Alerting results on {{assessmentName}} for {{user.firstName}} {{user.lastName}}’s member - {{senderInitials}}. Scored a `{{assessmentScore}}`",
-            "answerQuestionnaire": "Your coach, {{user.firstName}}, sent you a questionnaire. Tap here to fill it"
+                "Meds": "Your coach, {{user.firstName}}, deleted a medication. Tap here to review",
+                "Appointment": "Your coach, {{user.firstName}}, deleted an appointment details. Tap here to review",
+                "Todo": "Your coach, {{user.firstName}}, deleted a to-do. Tap here to review"
+            }
         },
         "honorific": {
             "mr": "Mr.",

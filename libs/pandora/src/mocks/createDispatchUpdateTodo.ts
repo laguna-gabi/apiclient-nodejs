@@ -15,7 +15,7 @@ export class ObjectUpdateTodoClass {
   constructor(readonly objectUpdateTodoMock: ObjectUpdateTodoType) {}
 }
 
-export const generateUpdateTodoMEDSMock = ({
+export const generateUpdateTodoMedsMock = ({
   recipientClientId,
   senderClientId,
   todoId,
@@ -26,7 +26,7 @@ export const generateUpdateTodoMEDSMock = ({
   todoId: string;
   correlationId?: string;
 }): ObjectUpdateTodoType => {
-  const contentKey = TodoInternalKey.updateTodoMEDS;
+  const contentKey = TodoInternalKey.updateTodoMeds;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),
@@ -39,7 +39,7 @@ export const generateUpdateTodoMEDSMock = ({
     path: 'todo',
   };
 };
-export const generateUpdateTodoAPPTMock = ({
+export const generateUpdateTodoAppointmentMock = ({
   recipientClientId,
   senderClientId,
   todoId,
@@ -50,7 +50,7 @@ export const generateUpdateTodoAPPTMock = ({
   todoId: string;
   correlationId?: string;
 }): ObjectUpdateTodoType => {
-  const contentKey = TodoInternalKey.updateTodoAPPT;
+  const contentKey = TodoInternalKey.updateTodoAppointment;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),
@@ -63,7 +63,7 @@ export const generateUpdateTodoAPPTMock = ({
     path: 'todo',
   };
 };
-export const generateUpdateTodoTODOMock = ({
+export const generateUpdateTodoTodoMock = ({
   recipientClientId,
   senderClientId,
   todoId,
@@ -74,7 +74,7 @@ export const generateUpdateTodoTODOMock = ({
   todoId: string;
   correlationId?: string;
 }): ObjectUpdateTodoType => {
-  const contentKey = TodoInternalKey.updateTodoTODO;
+  const contentKey = TodoInternalKey.updateTodoTodo;
   return {
     type: InnerQueueTypes.createDispatch,
     dispatchId: generateDispatchId(contentKey, recipientClientId, todoId),

@@ -34,8 +34,8 @@ export enum TodoStatus {
 registerEnumType(TodoStatus, { name: 'TodoStatus' });
 
 export enum TodoLabel {
-  MEDS = 'MEDS',
-  APPT = 'APPT',
+  Meds = 'Meds',
+  Appointment = 'Appointment',
 }
 
 registerEnumType(TodoLabel, { name: 'Label' });

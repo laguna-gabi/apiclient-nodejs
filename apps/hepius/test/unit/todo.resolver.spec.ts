@@ -112,7 +112,7 @@ describe('TodoResolver', () => {
     });
 
     [UserRole.coach, UserRole.nurse, UserRole.admin].forEach((role) => {
-      test.each([TodoLabel.MEDS, TodoLabel.APPT, undefined])(
+      test.each([TodoLabel.Meds, TodoLabel.Appointment, undefined])(
         `should create a Todo by ${role} and send notification to member`,
         async (label) => {
           const memberId = generateId();
@@ -130,7 +130,7 @@ describe('TodoResolver', () => {
           });
           expect(result).toEqual({ id: todo.id });
 
-          const contentKey = TodoInternalKey[`createTodo${todo.label ? todo.label : 'TODO'}`];
+          const contentKey = TodoInternalKey[`createTodo${todo.label ? todo.label : 'Todo'}`];
           expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDispatch, {
             correlationId: expect.any(String),
             dispatchId: generateDispatchId(contentKey, todo.memberId.toString(), todo.id),
@@ -145,7 +145,7 @@ describe('TodoResolver', () => {
     });
 
     test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
-      `should create a Todo by user in status requested if label ${TodoLabel.MEDS}`,
+      `should create a Todo by user in status requested if label ${TodoLabel.Meds}`,
       async (role) => {
         const memberId = generateId();
         const userId = generateId();
@@ -153,9 +153,9 @@ describe('TodoResolver', () => {
         spyOnServiceCreateTodo.mockImplementationOnce(async () => todo);
         const params: CreateTodoParams = generateCreateTodoParams({
           memberId,
-          label: TodoLabel.MEDS,
+          label: TodoLabel.Meds,
         });
-        params.label = TodoLabel.MEDS;
+        params.label = TodoLabel.Meds;
 
         const result = await resolver.createTodo([role], userId, params);
 
@@ -260,7 +260,7 @@ describe('TodoResolver', () => {
     );
 
     [UserRole.coach, UserRole.nurse, UserRole.admin].forEach((role) => {
-      test.each([TodoLabel.MEDS, TodoLabel.APPT, undefined])(
+      test.each([TodoLabel.Meds, TodoLabel.Appointment, undefined])(
         `should end and create a Todo by ${role} and send notification to member with label = %p`,
         async (label) => {
           const memberId = generateId();
@@ -276,7 +276,7 @@ describe('TodoResolver', () => {
 
           await resolver.endAndCreateTodo([role], userId, params);
 
-          const contentKey = TodoInternalKey[`updateTodo${newTodo.label ? newTodo.label : 'TODO'}`];
+          const contentKey = TodoInternalKey[`updateTodo${newTodo.label ? newTodo.label : 'Todo'}`];
           expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDispatch, {
             correlationId: expect.any(String),
             dispatchId: generateDispatchId(contentKey, newTodo.memberId.toString(), newTodo.id),
@@ -291,7 +291,7 @@ describe('TodoResolver', () => {
     });
 
     test.each([UserRole.coach, UserRole.nurse, UserRole.admin])(
-      `should end and create Todo by user in status requested if label ${TodoLabel.MEDS}`,
+      `should end and create Todo by user in status requested if label ${TodoLabel.Meds}`,
       async (role) => {
         const memberId = generateId();
         const userId = generateId();
@@ -301,7 +301,7 @@ describe('TodoResolver', () => {
         spyOnServiceEndAndCreateTodo.mockImplementationOnce(async () => newTodo);
         const params: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
           memberId,
-          label: TodoLabel.MEDS,
+          label: TodoLabel.Meds,
         });
 
         const result = await resolver.endAndCreateTodo([role], userId, params);
@@ -375,7 +375,7 @@ describe('TodoResolver', () => {
     });
 
     [(UserRole.coach, UserRole.nurse, UserRole.admin)].forEach((role) => {
-      test.each([TodoLabel.MEDS, TodoLabel.APPT, undefined])(
+      test.each([TodoLabel.Meds, TodoLabel.Appointment, undefined])(
         `should end a Todo by ${role} and send notification to member with label = %p`,
         async (label) => {
           const userId = generateId();
@@ -387,7 +387,7 @@ describe('TodoResolver', () => {
 
           await resolver.endTodo(userId, [role], id);
 
-          const contentKey = TodoInternalKey[`deleteTodo${todo.label ? todo.label : 'TODO'}`];
+          const contentKey = TodoInternalKey[`deleteTodo${todo.label ? todo.label : 'Todo'}`];
           expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyDispatch, {
             correlationId: expect.any(String),
             dispatchId: generateDispatchId(contentKey, todo.memberId.toString(), todo.id),
