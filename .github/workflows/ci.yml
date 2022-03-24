@@ -150,6 +150,8 @@ jobs:
           elif [ "${{ steps.branch-name.outputs.current_branch }}" = "develop" ]; then
             echo "::set-output name=env_name::development"
           fi
+      - name: Init Nx BASE and HEAD
+        uses: ./.github/actions/set-nx-affected
       - name: Migrate Db
         env:
           NODE_ENV: ${{ steps.branch_check.outputs.env_name }}
