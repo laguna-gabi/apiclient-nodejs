@@ -152,7 +152,7 @@ Migration is supported via `Argus` ci/cd manual flow under the same restrictions
 - **Step 1**: create a new migration script (template):
 
   ```
-  nx migration hepius --cmd=create <script-description>
+  nx migration hepius --cmd=create --option=<script-description>
   ```
 
   A new migration script is created in the [migrations](./cmd/migration/scripts) directory with the following format:
