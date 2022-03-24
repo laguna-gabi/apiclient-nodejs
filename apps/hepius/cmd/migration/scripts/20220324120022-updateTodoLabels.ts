@@ -13,8 +13,8 @@ export const up = async (dryRun: boolean, db: Db) => {
   // Note! if dry-run mode is applied the changelog will NOT get updated.
   const app = await NestFactory.createApplicationContext(AppModule);
   const todoModel = app.get<Model<Todo>>(getModelToken(Todo.name));
-  await todoModel.updateMany({ label: 'MEDS' }, { label: 'Meds' });
-  await todoModel.updateMany({ label: 'APPT' }, { label: 'Appointment' });
+  await todoModel.updateMany({ label: 'MEDS' }, { $set: { label: 'Meds' } });
+  await todoModel.updateMany({ label: 'APPT' }, { $set: { label: 'Appointment' } });
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -24,6 +24,6 @@ export const down = async (dryRun: boolean, db: Db) => {
   // Note! if dry-run mode is applied the changelog will NOT get updated.
   const app = await NestFactory.createApplicationContext(AppModule);
   const todoModel = app.get<Model<Todo>>(getModelToken(Todo.name));
-  await todoModel.updateMany({ label: 'Meds' }, { label: 'MEDS' });
-  await todoModel.updateMany({ label: 'Appointment' }, { label: 'APPT' });
+  await todoModel.updateMany({ label: 'Meds' }, { $set: { label: 'MEDS' } });
+  await todoModel.updateMany({ label: 'Appointment' }, { $set: { label: 'APPT' } });
 };
