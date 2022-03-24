@@ -26,6 +26,7 @@ export type TodoNotificationsType = 'createTodo' | 'updateTodo' | 'deleteTodo';
 
 export enum TodoStatus {
   active = 'active',
+  updated = 'updated',
   ended = 'ended',
   requested = 'requested',
 }

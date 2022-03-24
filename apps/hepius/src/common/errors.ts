@@ -103,7 +103,7 @@ export enum ErrorType {
   todoInvalidCronExpression = 10003,
   todoEndAfterStart = 10004,
   todoDoneNotFound = 10005,
-  todoEndEndedTodo = 10006,
+  todoEndOrUpdateEndedOrUpdatedTodo = 10006,
   todoUnscheduled = 10007,
   todoCreateDoneStatus = 10008,
   todoDeleteDoneStatus = 10009,
@@ -297,7 +297,10 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.todoInvalidCronExpression.valueOf(), 'invalid cron expression'],
   [ErrorType.todoEndAfterStart.valueOf(), 'end date must be after start date'],
   [ErrorType.todoDoneNotFound.valueOf(), 'todoDone id was not found'],
-  [ErrorType.todoEndEndedTodo.valueOf(), 'can not end an already ended todo'],
+  [
+    ErrorType.todoEndOrUpdateEndedOrUpdatedTodo.valueOf(),
+    'can not end or update an already ended or updated todo',
+  ],
   [
     ErrorType.todoUnscheduled.valueOf(),
     'scheduled todo must have cron expression and start, end is optional, ' +

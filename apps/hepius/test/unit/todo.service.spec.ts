@@ -212,7 +212,7 @@ describe('TodoService', () => {
           ...createParams,
           _id: generateObjectId(id),
           memberId: generateObjectId(memberId),
-          status: TodoStatus.ended,
+          status: TodoStatus.updated,
           createdBy: generateObjectId(memberId),
           updatedBy: generateObjectId(userId),
           createdAt: expect.any(Date),
@@ -298,27 +298,27 @@ describe('TodoService', () => {
       );
     });
 
-    it('should throw an error if todo status is ended', async () => {
-      const memberId = generateId();
-      const params: CreateTodoParams = generateCreateTodoParams({
-        memberId,
-      });
+    test.each([TodoStatus.ended, TodoStatus.updated])(
+      'should throw an error if todo status=%p',
+      async (status) => {
+        const memberId = generateId();
+        const params: CreateTodoParams = generateCreateTodoParams({
+          memberId,
+        });
 
-      const { id } = await service.createTodo(params);
-      await todoModel.findOneAndUpdate(
-        { _id: new Types.ObjectId(id) },
-        { $set: { status: TodoStatus.ended } },
-      );
+        const { id } = await service.createTodo(params);
+        await todoModel.findOneAndUpdate({ _id: new Types.ObjectId(id) }, { $set: { status } });
 
-      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
-        id,
-        memberId,
-      });
+        const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+          id,
+          memberId,
+        });
 
-      await expect(service.endAndCreateTodo(endAndCreateTodoParams)).rejects.toThrow(
-        Errors.get(ErrorType.todoEndEndedTodo),
-      );
-    });
+        await expect(service.endAndCreateTodo(endAndCreateTodoParams)).rejects.toThrow(
+          Errors.get(ErrorType.todoEndOrUpdateEndedOrUpdatedTodo),
+        );
+      },
+    );
 
     it('should throw an error if action todo', async () => {
       const memberId = generateId();
@@ -377,23 +377,23 @@ describe('TodoService', () => {
       );
     });
 
-    it('should throw an error if todo status is ended', async () => {
-      const memberId = generateId();
+    test.each([TodoStatus.ended, TodoStatus.updated])(
+      'should throw an error if todo status=%p',
+      async (status) => {
+        const memberId = generateId();
 
-      const params: CreateTodoParams = generateCreateTodoParams({
-        memberId,
-      });
+        const params: CreateTodoParams = generateCreateTodoParams({
+          memberId,
+        });
 
-      const { id } = await service.createTodo(params);
-      await todoModel.findOneAndUpdate(
-        { _id: new Types.ObjectId(id) },
-        { $set: { status: TodoStatus.ended } },
-      );
+        const { id } = await service.createTodo(params);
+        await todoModel.findOneAndUpdate({ _id: new Types.ObjectId(id) }, { $set: { status } });
 
-      await expect(service.endTodo(id, memberId)).rejects.toThrow(
-        Errors.get(ErrorType.todoEndEndedTodo),
-      );
-    });
+        await expect(service.endTodo(id, memberId)).rejects.toThrow(
+          Errors.get(ErrorType.todoEndOrUpdateEndedOrUpdatedTodo),
+        );
+      },
+    );
   });
 
   describe('approveTodo', () => {

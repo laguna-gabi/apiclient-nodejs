@@ -86,8 +86,8 @@ export class TodoService extends BaseService {
       throw new Error(Errors.get(ErrorType.todoNotFound));
     }
 
-    if (endedTodo.status === TodoStatus.ended) {
-      throw new Error(Errors.get(ErrorType.todoEndEndedTodo));
+    if (endedTodo.status === TodoStatus.ended || endedTodo.status === TodoStatus.updated) {
+      throw new Error(Errors.get(ErrorType.todoEndOrUpdateEndedOrUpdatedTodo));
     }
 
     if (this.isActionTodo(endedTodo)) {
@@ -96,7 +96,7 @@ export class TodoService extends BaseService {
 
     await endedTodo.updateOne({
       $set: {
-        status: TodoStatus.ended,
+        status: TodoStatus.updated,
       },
     });
 
@@ -127,8 +127,8 @@ export class TodoService extends BaseService {
       throw new Error(Errors.get(ErrorType.todoNotFound));
     }
 
-    if (endedTodo.status === TodoStatus.ended) {
-      throw new Error(Errors.get(ErrorType.todoEndEndedTodo));
+    if (endedTodo.status === TodoStatus.ended || endedTodo.status === TodoStatus.updated) {
+      throw new Error(Errors.get(ErrorType.todoEndOrUpdateEndedOrUpdatedTodo));
     }
 
     await endedTodo.updateOne({
