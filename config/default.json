@@ -85,6 +85,7 @@
   },
   "migration": {
     "sample": "sample",
+    "index": "index",
     "extension": ".ts",
     "migrationDir": "apps/hepius/cmd/migration/scripts"
   },

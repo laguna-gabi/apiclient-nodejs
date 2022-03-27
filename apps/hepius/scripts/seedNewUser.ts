@@ -27,7 +27,7 @@ const users = [];
 /**
  * Insert a user object on users field above
  */
-async function main() {
+export async function newUser() {
   base = new SeedBase();
   await base.init();
   mutations = base.mutations;
@@ -75,7 +75,3 @@ const generateUser = async (user: Partial<CreateUserParams>) => {
   await delay(5000);
   await base.cleanUp();
 };
-
-(async () => {
-  await main();
-})();

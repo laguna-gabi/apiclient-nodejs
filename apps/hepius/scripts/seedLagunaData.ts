@@ -30,7 +30,7 @@ const lagunaClientsOrganizations = [
   { name: 'Northshore', id: '6113d0fb7cb99c0858c470e1', zipCode: '55902', trialDuration: 30 },
 ];
 
-async function main() {
+export async function seedLaguna() {
   const base = new SeedBase();
   await base.init();
   await dbConnect();
@@ -92,7 +92,3 @@ async function main() {
   await dbDisconnect();
   await base.cleanUp();
 }
-
-(async () => {
-  await main();
-})();

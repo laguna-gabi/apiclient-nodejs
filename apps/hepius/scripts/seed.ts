@@ -63,7 +63,7 @@ import { SeedBase } from './seedBase';
 let mutations: Mutations;
 let userService: UserService; //used for internal method, isn't exposed on queries
 
-async function main() {
+export async function seed() {
   const base = new SeedBase();
   await base.init();
   await dbConnect();
@@ -317,7 +317,3 @@ const createActionItem = async (memberId: string) => {
   const { id } = await mutations.createActionItem({ createTaskParams });
   console.log(`${id} : created an action item '${createTaskParams.title}' for member`);
 };
-
-(async () => {
-  await main();
-})();

@@ -40,7 +40,7 @@ This Monorepo contains the following:
     - [Docker](#docker)
     - [Aws](#aws)
     - [Shared code settings](#shared-code-settings)
-  - [ci/cd](#cicd)
+  - [🔄 ci/cd](#-cicd)
   - [🐬 NX](#-nx)
     - [Running commands](#running-commands)
 
@@ -117,7 +117,7 @@ Your IDE probably has extensions to help you with those tools
 
 ---
 
-## ci/cd
+## 🔄 ci/cd
 `Argus` supports a manual workflow by which developers can trigger a manual flow.
 The flow can be triggered for any branch however, only `develop` and `master` branches will allow deployment and migration phase to run under the restriction that `test` and `lint` where enabled.
 

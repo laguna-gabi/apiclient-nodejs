@@ -6,7 +6,7 @@ import { Member, MemberDocument, MemberDto } from '../src/member';
 import { ConfigsService } from '../src/providers';
 import { User, UserDocument, UserDto } from '../src/user';
 
-async function main() {
+export async function generateToken() {
   const { uri } = await new ConfigsService().createMongooseOptions();
   await connect(uri);
   const memberModel: Model<MemberDocument> = model<MemberDocument>(Member.name, MemberDto);
@@ -66,7 +66,3 @@ async function main() {
 
   await disconnect();
 }
-
-(async () => {
-  await main();
-})();

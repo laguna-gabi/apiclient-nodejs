@@ -30,6 +30,12 @@ Laguna health backend infrastructure.
     - [GraphQL](#graphql)
   - [🚫 Role Based Access Control: RBAC](#-role-based-access-control-rbac)
   - [🔑 Token Generating](#-token-generating)
+  - [⛽️ Utility Scripts/Commands](#️-utility-scriptscommands)
+    - [Application Seed:](#application-seed)
+    - [Create user:](#create-user)
+    - [Create Token:](#create-token)
+    - [Laguna Seed:](#laguna-seed)
+  - [🏗️ Analytics](#️-analytics)
   - [🏗️ Migration](#️-migration)
     - [Overview](#overview)
     - [What's new in our latest release?](#whats-new-in-our-latest-release)
@@ -118,6 +124,32 @@ yarn generate:tokens:dev
 yarn generate:tokens:production
 ```
 
+## ⛽️ Utility Scripts/Commands
+Seed and other support scripts will run via the `command` target of `hepius`
+
+### Application Seed: 
+```
+nx command hepius --cmd=general --options='-t seed'
+```
+### Create user: 
+```
+nx command hepius --cmd=general --options='-t createUser'
+```
+### Create Token: 
+```
+nx command hepius --cmd=general --options='-t createToken'
+```
+### Laguna Seed: 
+```
+nx command hepius --cmd=general --options='-t lagunaSeed'
+```
+
+## 🏗️ Analytics
+Running analytics will generate output csv files for analytics team - here's how to generate all csv files (members, coach and appointments data)
+```
+nx command hepius --cmd=analytics --options='-s all'
+```
+
 ## 🏗️ Migration
 
 ### Overview
@@ -148,7 +180,11 @@ Migration is supported via `Argus` ci/cd manual flow under the same restrictions
 ### Migration Support: guide
 
 ---
-
+- **Step 0**: get help...
+  ```
+  nx command hepius --cmd=migration --options='-h'
+  ```
+  
 - **Step 1**: create a new migration script (template):
 
   ```
@@ -231,13 +267,14 @@ Migration is supported via `Argus` ci/cd manual flow under the same restrictions
 
 - **Step 3.1**: test the code on your local mongo db - apply your new migration script:
   ```
-  nx migration hepius --cmd=up [--option='-d' for optional dry run mode ]
+  nx command hepius --cmd=migration --option='up [<file-name>] [-d]'
   ```
+  (file name and -d for dry run are optional)
   Note: name field is optional and you can add a specific migration file to migrate `up` (could be out of order and not necessarily `PENDING`)
 - **Step 3.2**: undo changes - test your `down` code on your local mongo db:
 
   ```
-  nx command hepius --cmd=migration --options='down <file-name> -d'
+  nx command hepius --cmd=migration --options='down <file-name> [-d]'
   ```
 
   ***

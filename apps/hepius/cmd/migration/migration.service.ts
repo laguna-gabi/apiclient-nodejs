@@ -38,7 +38,8 @@ export class MigrationService {
       .filter(
         (file) =>
           path.extname(file) === migration.get('extension') &&
-          path.basename(file) !== migration.get('sample') + migration.get('extension'),
+          path.basename(file) !== migration.get('sample') + migration.get('extension') &&
+          path.basename(file) !== migration.get('index') + migration.get('extension'),
       )
       .sort();
   }
