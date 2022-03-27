@@ -38,4 +38,10 @@ export class OrgResolver {
   ): Promise<Org | null> {
     return this.orgService.get(id);
   }
+
+  @Query(() => [Org])
+  @Roles(UserRole.admin)
+  async getOrgs(): Promise<Org[]> {
+    return this.orgService.getOrgs();
+  }
 }

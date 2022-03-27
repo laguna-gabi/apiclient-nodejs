@@ -61,4 +61,11 @@ describe('Validations - org', () => {
     });
     expect(result).toBeNull();
   });
+
+  it('should fail to get orgs if role not admin', async () => {
+    await handler.queries.getOrgs({
+      requestHeaders: handler.defaultUserRequestHeaders,
+      invalidFieldsError: 'Forbidden resource',
+    });
+  });
 });

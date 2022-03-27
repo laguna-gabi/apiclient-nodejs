@@ -687,6 +687,37 @@ export class Queries {
     return getOrg;
   };
 
+  getOrgs = async ({
+    invalidFieldsError,
+    requestHeaders,
+  }: {
+    invalidFieldsError?: string;
+    requestHeaders;
+  }) => {
+    const result = await this.client
+      .request(
+        gql`
+          query getOrgs {
+            getOrgs {
+              id
+              name
+              type
+              zipCode
+              trialDuration
+            }
+          }
+        `,
+        {},
+        requestHeaders,
+      )
+      .catch((ex) => {
+        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        return;
+      });
+
+    return result?.getOrgs;
+  };
+
   getRecordings = async ({
     memberId,
     invalidFieldsError,

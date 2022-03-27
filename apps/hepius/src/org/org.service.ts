@@ -28,4 +28,8 @@ export class OrgService extends BaseService {
     const org = await this.orgModel.findById(id);
     return this.replaceId(org);
   }
+
+  async getOrgs(): Promise<Org[]> {
+    return this.orgModel.find();
+  }
 }

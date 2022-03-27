@@ -209,8 +209,12 @@ describe('Integration tests: all', () => {
     const orgParams = generateOrgParams();
     const { id } = await handler.mutations.createOrg({ orgParams });
     const createdOrg = await handler.queries.getOrg({ id });
+    const orgs = await handler.queries.getOrgs({
+      requestHeaders: handler.defaultAdminRequestHeaders,
+    });
 
     expect(createdOrg).toEqual(expect.objectContaining({ ...orgParams, id }));
+    expect(orgs).toEqual(expect.arrayContaining([expect.objectContaining({ ...orgParams, id })]));
   });
 
   it('should return members appointment filtered by orgId', async () => {

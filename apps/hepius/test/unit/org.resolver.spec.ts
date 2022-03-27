@@ -2,7 +2,13 @@ import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerService } from '../../src/common';
 import { OrgModule, OrgResolver, OrgService } from '../../src/org';
-import { dbDisconnect, defaultModules, generateId, generateOrgParams } from '../index';
+import {
+  dbDisconnect,
+  defaultModules,
+  generateId,
+  generateOrgParams,
+  mockGenerateOrg,
+} from '../index';
 
 describe('OrgResolver', () => {
   let module: TestingModule;
@@ -68,6 +74,27 @@ describe('OrgResolver', () => {
       expect(spyOnServiceGet).toBeCalledTimes(1);
       expect(spyOnServiceGet).toBeCalledWith(id);
       expect(result).toEqual(generatedOrgParams);
+    });
+  });
+
+  describe('getOrgs', () => {
+    let spyOnServiceGetOrgs;
+    beforeEach(() => {
+      spyOnServiceGetOrgs = jest.spyOn(service, 'getOrgs');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetOrgs.mockReset();
+    });
+
+    it('should successfully get org by id', async () => {
+      const orgs = [mockGenerateOrg(), mockGenerateOrg(), mockGenerateOrg()];
+      spyOnServiceGetOrgs.mockImplementationOnce(() => orgs);
+
+      const result = await resolver.getOrgs();
+
+      expect(spyOnServiceGetOrgs).toBeCalledTimes(1);
+      expect(result).toEqual(orgs);
     });
   });
 });
