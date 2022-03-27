@@ -98,10 +98,10 @@
         "webpackConfig": "./webpackConfig.js"
       }
     },
-    "migration": {
+    "command": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "ts-node -P ./tsconfig.base.json ./dist/apps/hepius/cmd/main.js migration {args.cmd} {args.option}"
+        "command": "ts-node -P ./tsconfig.base.json ./dist/apps/hepius/cmd/main.js {args.cmd} {args.options}"
       },
       "dependsOn": [
         {

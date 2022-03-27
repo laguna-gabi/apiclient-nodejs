@@ -152,7 +152,7 @@ Migration is supported via `Argus` ci/cd manual flow under the same restrictions
 - **Step 1**: create a new migration script (template):
 
   ```
-  nx migration hepius --cmd=create --option=<script-description>
+  nx command hepius --cmd=migration --options='create <script-description>'
   ```
 
   A new migration script is created in the [migrations](./cmd/migration/scripts) directory with the following format:
@@ -221,7 +221,7 @@ Migration is supported via `Argus` ci/cd manual flow under the same restrictions
 - **Step 3.1**: test the code on your local mongo db - first you check the status in your local db - the results is a list of migrations applied on your local db and pending migrations which should get applied - migration is not applied in `status` command - DRY-RUN mode:
 
   ```
-  nx migration hepius --cmd=status
+  nx command hepius --cmd=migration --options='status'
   ```
 
   | Filename                               | Applied At               |
@@ -237,7 +237,7 @@ Migration is supported via `Argus` ci/cd manual flow under the same restrictions
 - **Step 3.2**: undo changes - test your `down` code on your local mongo db:
 
   ```
-  nx migration hepius --cmd=down [--option='<file-name> -d' optional file name and dry run mode]
+  nx command hepius --cmd=migration --options='down <file-name> -d'
   ```
 
   ***

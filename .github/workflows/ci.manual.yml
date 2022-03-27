@@ -166,4 +166,4 @@ jobs:
       - name: Migrate Db
         env:
           NODE_ENV: ${{ steps.branch_check.outputs.env_name }}
-        run: npx nx migration hepius --cmd=up
+        run: npx nx command hepius --cmd=migration --options=up

@@ -155,4 +155,4 @@ jobs:
       - name: Migrate Db
         env:
           NODE_ENV: ${{ steps.branch_check.outputs.env_name }}
-        run: npx nx affected --target=migration --cmd=up --base=$NX_BASE --head=$NX_HEAD --parallel=3
+        run: npx nx affected --target=command --cmd=migration --options=up --base=$NX_BASE --head=$NX_HEAD --parallel=3
