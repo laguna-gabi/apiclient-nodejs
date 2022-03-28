@@ -131,8 +131,8 @@ export const buildPHQ9Questionnaire = (): CreateQuestionnaireParams => {
 
 export const buildWHO5Questionnaire = (): CreateQuestionnaireParams => {
   const groupTitle =
-    'Please respond to each item by marking one box per row, ' +
-    'regarding how you felt in the last two weeks.';
+    'Please respond to each item by selecting one answer ' +
+    'per row regarding how you felt in the last two weeks.';
 
   const options: OptionInterface[] = [
     { label: 'All the time', value: 5 },
