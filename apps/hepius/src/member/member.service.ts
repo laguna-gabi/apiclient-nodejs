@@ -35,6 +35,7 @@ import {
   Recording,
   RecordingDocument,
   RecordingOutput,
+  ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
   TaskStatus,
@@ -853,6 +854,22 @@ export class MemberService extends BaseService {
       throw new Error(Errors.get(ErrorType.memberReplaceUserAlreadyExists));
     }
     // return the old member (with the old primaryUserId)
+    return this.replaceId(member);
+  }
+
+  async replaceMemberOrg(replaceMemberOrgParams: ReplaceMemberOrgParams): Promise<Member> {
+    const { memberId, orgId } = replaceMemberOrgParams;
+
+    await this.memberModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(memberId) },
+      { org: new Types.ObjectId(orgId) },
+    );
+
+    const member = await this.getById(memberId);
+    if (!member) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
+
     return this.replaceId(member);
   }
 

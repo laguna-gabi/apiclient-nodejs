@@ -104,6 +104,7 @@ import {
   generateDeleteMemberParams,
   generateEndAndCreateTodoParams,
   generateNotifyContentParams,
+  generateOrgParams,
   generateReplaceUserForMemberParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
@@ -808,6 +809,34 @@ describe('Integration tests: notifications', () => {
             ),
           }),
         );
+      });
+    });
+
+    // eslint-disable-next-line max-len
+    it('replaceMemberOrg: should update client settings', async () => {
+      const orgParams1 = generateOrgParams();
+      const { id: orgId1 } = await handler.mutations.createOrg({ orgParams: orgParams1 });
+      const orgParams2 = generateOrgParams();
+      const { id: orgId2 } = await handler.mutations.createOrg({ orgParams: orgParams2 });
+
+      const { member } = await creators.createMemberUserAndOptionalOrg({ orgId: orgId1 });
+
+      await delay(500);
+      handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
+
+      await handler.mutations.replaceMemberOrg({
+        replaceMemberOrgParams: { memberId: member.id, orgId: orgId2 },
+      });
+
+      const updatedMember = await handler.queries.getMember({ id: member.id });
+      const mockMember = generateUpdateMemberSettingsMock({
+        ...updatedMember,
+      });
+      const objectMember = new ObjectUpdateMemberSettingsClass(mockMember);
+      Object.keys(objectMember.objectUpdateMemberSettings).forEach((key) => {
+        if (key !== 'firstLoggedInAt') {
+          expectStringContaining(1, key, mockMember[key]);
+        }
       });
     });
   });

@@ -314,6 +314,17 @@ export class ReplaceUserForMemberParams {
 }
 
 @InputType()
+export class ReplaceMemberOrgParams {
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
+  memberId: string;
+
+  @Field(() => String)
+  @IsObjectId({ message: Errors.get(ErrorType.orgIdInvalid) })
+  orgId: string;
+}
+
+@InputType()
 export class SetGeneralNotesParams {
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })

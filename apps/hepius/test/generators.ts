@@ -82,6 +82,7 @@ import {
   NotifyParams,
   ReadmissionRisk,
   Relationship,
+  ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
   Sex,
@@ -597,6 +598,13 @@ export const generateReplaceUserForMemberParams = ({
   memberId = generateId(),
 }: Partial<ReplaceUserForMemberParams> = {}): ReplaceUserForMemberParams => {
   return { userId, memberId };
+};
+
+export const generateReplaceMemberOrgParams = ({
+  memberId = generateId(),
+  orgId = generateId(),
+}: Partial<ReplaceMemberOrgParams> = {}): ReplaceMemberOrgParams => {
+  return { memberId, orgId };
 };
 
 export const generateDeleteDischargeDocumentParams = ({

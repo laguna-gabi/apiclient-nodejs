@@ -80,6 +80,7 @@ import {
   generateNotifyContentParams,
   generateNotifyParams,
   generateObjectId,
+  generateReplaceMemberOrgParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
   generateUniqueUrl,
@@ -93,6 +94,7 @@ import {
   mockGenerateAlert,
   mockGenerateMember,
   mockGenerateMemberConfig,
+  mockGenerateOrg,
   mockGenerateUser,
   randomEnum,
 } from '../index';
@@ -1910,6 +1912,38 @@ describe('MemberResolver', () => {
         expect(spyOnEventEmitter).not.toHaveBeenCalled();
       },
     );
+  });
+
+  describe('replaceMemberOrg', () => {
+    let spyOnServiceReplaceMemberOrg;
+
+    beforeEach(() => {
+      spyOnServiceReplaceMemberOrg = jest.spyOn(service, 'replaceMemberOrg');
+    });
+
+    afterEach(() => {
+      spyOnServiceReplaceMemberOrg.mockReset();
+      spyOnEventEmitter.mockReset();
+    });
+
+    it('should replace member org', async () => {
+      const member = mockGenerateMember();
+      const org = mockGenerateOrg();
+      spyOnServiceReplaceMemberOrg.mockImplementationOnce(async () => member);
+      const replaceMemberOrgParams = generateReplaceMemberOrgParams({
+        memberId: member.id,
+        orgId: org.id,
+      });
+
+      await resolver.replaceMemberOrg(replaceMemberOrgParams);
+
+      expect(spyOnServiceReplaceMemberOrg).toBeCalledWith(replaceMemberOrgParams);
+      const eventParams: IEventNotifyQueue = {
+        type: QueueType.notifications,
+        message: JSON.stringify(generateUpdateClientSettings({ member })),
+      };
+      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyQueue, eventParams);
+    });
   });
 
   describe('notify', () => {

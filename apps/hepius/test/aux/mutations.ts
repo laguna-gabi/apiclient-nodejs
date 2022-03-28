@@ -33,6 +33,7 @@ import {
   NotifyContentParams,
   NotifyParams,
   Recording,
+  ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
   UpdateCaregiverParams,
@@ -1128,6 +1129,38 @@ export class Mutations {
       });
 
     return replaceUserForMember;
+  };
+
+  replaceMemberOrg = async ({
+    replaceMemberOrgParams,
+    missingFieldError,
+    invalidFieldsErrors,
+    requestHeaders = this.defaultAdminRequestHeaders,
+  }: {
+    replaceMemberOrgParams: ReplaceMemberOrgParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+    requestHeaders?;
+  }) => {
+    const { replaceMemberOrg } = await this.client
+      .request(
+        gql`
+          mutation replaceMemberOrg($replaceMemberOrgParams: ReplaceMemberOrgParams!) {
+            replaceMemberOrg(replaceMemberOrgParams: $replaceMemberOrgParams)
+          }
+        `,
+        { replaceMemberOrgParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
+
+    return replaceMemberOrg;
   };
 
   deleteDischargeDocument = async ({

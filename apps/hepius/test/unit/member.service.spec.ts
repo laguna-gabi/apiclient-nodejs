@@ -104,6 +104,7 @@ import {
   generateInternalCreateMemberParams,
   generateObjectId,
   generateOrgParams,
+  generateReplaceMemberOrgParams,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
@@ -2658,6 +2659,31 @@ describe('MemberService', () => {
       expect(updatedMember.primaryUserId).toEqual(newUser._id);
       expect(result.primaryUserId).toEqual(oldMember.primaryUserId);
       compareUsers(updatedMember.users[updatedMember.users.length - 1], newUser);
+    });
+  });
+
+  describe('replaceMemberOrg', () => {
+    it('should update member org', async () => {
+      const orgId = await generateOrg();
+      const memberId = await generateMember(orgId);
+      const member = await service.get(memberId);
+
+      /* eslint-disable @typescript-eslint/ban-ts-comment */
+      // @ts-ignore
+      expect(member.org._id.toString()).toEqual(orgId);
+
+      const NewOrgId = await generateOrg();
+      const updatedMember = await service.replaceMemberOrg({ memberId, orgId: NewOrgId });
+
+      /* eslint-disable @typescript-eslint/ban-ts-comment */
+      // @ts-ignore
+      expect(updatedMember.org._id.toString()).toEqual(NewOrgId);
+    });
+
+    it('should fail to replace member org if member does not exist', async () => {
+      await expect(service.replaceMemberOrg(generateReplaceMemberOrgParams())).rejects.toThrow(
+        Errors.get(ErrorType.memberNotFound),
+      );
     });
   });
 

@@ -38,6 +38,7 @@ import {
   generateNotifyParams,
   generateOrgParams,
   generateRandomName,
+  generateReplaceMemberOrgParams,
   generateReplaceUserForMemberParams,
   generateRequestHeaders,
   generateSetGeneralNotesParams,
@@ -1134,6 +1135,53 @@ describe('Validations - member', () => {
       await handler.mutations.replaceUserForMember({
         replaceUserForMemberParams,
         invalidFieldsErrors: params.invalid,
+      });
+    });
+  });
+
+  describe('replaceMemberOrg', () => {
+    test.each`
+      field         | error
+      ${'memberId'} | ${`Field "memberId" of required type "String!" was not provided.`}
+      ${'orgId'}    | ${`Field "orgId" of required type "String!" was not provided.`}
+    `(`should fail to replace member org since missing $field`, async (params) => {
+      const replaceMemberOrgParams = generateReplaceMemberOrgParams();
+      delete replaceMemberOrgParams[params.field];
+      await handler.mutations.replaceMemberOrg({
+        replaceMemberOrgParams,
+        missingFieldError: params.error,
+      });
+    });
+
+    test.each`
+      input                | error
+      ${{ memberId: 123 }} | ${stringError}
+      ${{ orgId: 123 }}    | ${stringError}
+    `(`should fail to replace member org since $input is not a valid`, async (params) => {
+      const replaceMemberOrgParams = generateReplaceMemberOrgParams({ ...params.input });
+      await handler.mutations.replaceMemberOrg({
+        replaceMemberOrgParams,
+        missingFieldError: params.error,
+      });
+    });
+
+    test.each`
+      input                  | invalid
+      ${{ memberId: '123' }} | ${[Errors.get(ErrorType.memberIdInvalid)]}
+      ${{ orgId: '123' }}    | ${[Errors.get(ErrorType.orgIdInvalid)]}
+    `(`should fail to replace member org since $input is not a valid`, async (params) => {
+      const replaceMemberOrgParams = generateReplaceMemberOrgParams({ ...params.input });
+      await handler.mutations.replaceMemberOrg({
+        replaceMemberOrgParams,
+        invalidFieldsErrors: params.invalid,
+      });
+    });
+
+    it('should fail to replace member org if role not admin', async () => {
+      await handler.mutations.replaceMemberOrg({
+        replaceMemberOrgParams: generateReplaceMemberOrgParams(),
+        requestHeaders: handler.defaultUserRequestHeaders,
+        missingFieldError: 'Forbidden resource',
       });
     });
   });

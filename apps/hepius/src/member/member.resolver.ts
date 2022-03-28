@@ -63,6 +63,7 @@ import {
   Recording,
   RecordingLinkParams,
   RecordingOutput,
+  ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,
   TaskStatus,
@@ -278,6 +279,17 @@ export class MemberResolver extends MemberBase {
     };
     this.eventEmitter.emit(EventType.notifyQueue, eventParams);
 
+    return true;
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  @Roles(UserRole.admin)
+  async replaceMemberOrg(
+    @Args(camelCase(ReplaceMemberOrgParams.name))
+    replaceMemberOrgParams: ReplaceMemberOrgParams,
+  ) {
+    const member = await this.memberService.replaceMemberOrg(replaceMemberOrgParams);
+    this.notifyUpdatedMemberConfig({ member });
     return true;
   }
 

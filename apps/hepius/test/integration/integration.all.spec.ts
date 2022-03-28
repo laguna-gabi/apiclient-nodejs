@@ -217,6 +217,23 @@ describe('Integration tests: all', () => {
     expect(orgs).toEqual(expect.arrayContaining([expect.objectContaining({ ...orgParams, id })]));
   });
 
+  it('should change member org', async () => {
+    const orgParams1 = generateOrgParams();
+    const { id: orgId1 } = await handler.mutations.createOrg({ orgParams: orgParams1 });
+    const orgParams2 = generateOrgParams();
+    const { id: orgId2 } = await handler.mutations.createOrg({ orgParams: orgParams2 });
+
+    const { member } = await creators.createMemberUserAndOptionalOrg({ orgId: orgId1 });
+    expect(member.org.id).toEqual(orgId1);
+
+    await handler.mutations.replaceMemberOrg({
+      replaceMemberOrgParams: { memberId: member.id, orgId: orgId2 },
+    });
+
+    const updatedMember = await handler.queries.getMember({ id: member.id });
+    expect(updatedMember.org.id).toEqual(orgId2);
+  });
+
   it('should return members appointment filtered by orgId', async () => {
     const { member: member1, org } = await creators.createMemberUserAndOptionalOrg();
     const primaryUser1 = member1.users[0];

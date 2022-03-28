@@ -79,6 +79,7 @@ export class LoggerService extends BaseLogger {
     'triggersAt',
     'path',
     'roles',
+    'orgName',
     //alerts
     'serviceName',
     'serviceNamespace',
