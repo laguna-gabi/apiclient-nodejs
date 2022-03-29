@@ -101,7 +101,7 @@
     "command": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "ts-node -P ./tsconfig.base.json ./dist/apps/hepius/cmd/main.js {args.cmd} {args.options}"
+        "command": "node ./dist/apps/hepius/cmd/main.js {args.cmd} {args.options}"
       },
       "dependsOn": [
         {
