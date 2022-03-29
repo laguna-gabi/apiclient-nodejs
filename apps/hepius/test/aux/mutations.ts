@@ -98,12 +98,12 @@ export class Mutations {
   ) {}
 
   createUser = async ({
-    userParams,
+    createUserParams,
     missingFieldError,
     invalidFieldsErrors,
     requestHeaders = this.defaultUserRequestHeaders,
   }: {
-    userParams: CreateUserParams;
+    createUserParams: CreateUserParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
     requestHeaders?;
@@ -119,8 +119,8 @@ export class Mutations {
         `,
         {
           createUserParams: {
-            ...userParams,
-            roles: userParams.roles?.map((role) => camelCase(role)),
+            ...createUserParams,
+            roles: createUserParams.roles?.map((role) => camelCase(role)),
           },
         },
         requestHeaders,

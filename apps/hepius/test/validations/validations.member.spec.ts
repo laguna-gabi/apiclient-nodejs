@@ -66,7 +66,7 @@ describe('Validations - member', () => {
       handler.defaultUserRequestHeaders,
     );
     creators = new Creators(handler, appointmentsActions);
-    await handler.mutations.createUser({ userParams: generateCreateUserParams() });
+    await handler.mutations.createUser({ createUserParams: generateCreateUserParams() });
     server = handler.app.getHttpServer();
   }, 10000);
 

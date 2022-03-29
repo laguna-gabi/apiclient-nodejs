@@ -40,7 +40,7 @@ export async function seedLaguna() {
 
   const createLagunaEmployeeUser = async (name: string, authId: string): Promise<Identifier> => {
     const user = await mutations.createUser({
-      userParams: generateCreateUserParams({ firstName: name, authId }),
+      createUserParams: generateCreateUserParams({ firstName: name, authId }),
     });
     console.log(`created a user for ${name} with id: ${user.id}`);
     return { id: user.id };

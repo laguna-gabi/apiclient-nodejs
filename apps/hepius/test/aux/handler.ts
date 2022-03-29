@@ -44,6 +44,8 @@ import {
 } from '../../src/care';
 import {
   AppRequestContext,
+  EventType,
+  IEventOnNewUser,
   LoggerService,
   UserRole,
   defaultAuditDbValues,
@@ -104,6 +106,7 @@ import {
   UserConfigDto,
   UserDocument,
   UserDto,
+  UserResolver,
   UserService,
 } from '../../src/user';
 import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
@@ -118,7 +121,6 @@ export class Handler extends BaseHandler {
   featureFlagService;
   queueService;
   notificationService;
-  eventEmitter: EventEmitter2;
   communicationService: CommunicationService;
   memberService: MemberService;
   orgService: OrgService;
@@ -196,6 +198,7 @@ export class Handler extends BaseHandler {
     await dbConnect();
     this.communicationService = moduleFixture.get<CommunicationService>(CommunicationService);
     this.userService = moduleFixture.get<UserService>(UserService);
+    this.userResolver = moduleFixture.get<UserResolver>(UserResolver);
     this.memberService = moduleFixture.get<MemberService>(MemberService);
     this.orgService = moduleFixture.get<OrgService>(OrgService);
     this.careService = moduleFixture.get<CareService>(CareService);
@@ -214,7 +217,7 @@ export class Handler extends BaseHandler {
     this.queries = new Queries(this.client, this.defaultUserRequestHeaders);
 
     const { id: orgId } = await this.mutations.createOrg({ orgParams: generateOrgParams() });
-    const user = await this.mutations.createUser({ userParams: generateCreateUserParams() });
+    const user = await this.mutations.createUser({ createUserParams: generateCreateUserParams() });
     const memberParams = generateCreateMemberParams({ userId: user.id, orgId });
     const { id } = await this.mutations.createMember({ memberParams });
     this.patientZero = await this.queries.getMember({ id });
@@ -268,11 +271,18 @@ export class Handler extends BaseHandler {
     });
     this.redFlagType = await this.careService.createRedFlagType(lorem.words(5));
 
-    this.defaultUserRequestHeaders = await initClients(this.userService, [
-      UserRole.nurse,
-      UserRole.coach,
-    ]);
-    this.defaultAdminRequestHeaders = await initClients(this.userService, [UserRole.admin]);
+    this.defaultUserRequestHeaders = await initClients(
+      this.userService,
+      this.userResolver,
+      this.eventEmitter,
+      [UserRole.nurse, UserRole.coach],
+    );
+    this.defaultAdminRequestHeaders = await initClients(
+      this.userService,
+      this.userResolver,
+      this.eventEmitter,
+      [UserRole.admin],
+    );
   }
 
   initModels() {
@@ -306,12 +316,22 @@ export class Handler extends BaseHandler {
   }
 }
 
-export const initClients = async (userService: UserService, roles: UserRole[]) => {
+export const initClients = async (
+  userService: UserService,
+  userResolver: UserResolver,
+  eventEmitter: EventEmitter2,
+  roles: UserRole[],
+) => {
   const users = await userService.getUsers(roles);
   let sub;
   if (users.length === 0) {
     const createUserParams = generateCreateUserParams({ roles });
-    await userService.insert(createUserParams);
+    const user = await userService.insert(createUserParams);
+    const eventParams: IEventOnNewUser = { user };
+    eventEmitter.emit(EventType.onNewUser, eventParams);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    userResolver.notifyUpdatedUserConfig(user);
     sub = createUserParams.authId;
   } else {
     sub = users[0].authId;

@@ -92,7 +92,7 @@ describe('Integration tests : Audit', () => {
       handler.defaultUserRequestHeaders,
     );
     creators = new Creators(handler, appointmentsActions);
-    const userParams = [
+    const createUserParams = [
       generateCreateUserParams(),
       generateCreateUserParams(),
       generateCreateUserParams({ roles: [UserRole.admin] }),
@@ -101,12 +101,14 @@ describe('Integration tests : Audit', () => {
 
     const [{ id: userId1 }, { id: userId2 }, { id: adminUser1Id }, { id: adminUser2Id }] =
       await Promise.all(
-        userParams.map((userParams) => handler.mutations.createUser({ userParams })),
+        createUserParams.map((createUserParams) =>
+          handler.mutations.createUser({ createUserParams }),
+        ),
       );
-    user1 = { id: userId1, ...userParams[0] };
-    user2 = { id: userId2, ...userParams[1] };
-    adminUser1 = { id: adminUser1Id, ...userParams[2] };
-    adminUser2 = { id: adminUser2Id, ...userParams[3] };
+    user1 = { id: userId1, ...createUserParams[0] };
+    user2 = { id: userId2, ...createUserParams[1] };
+    adminUser1 = { id: adminUser1Id, ...createUserParams[2] };
+    adminUser2 = { id: adminUser2Id, ...createUserParams[3] };
   }, 10000);
 
   afterAll(async () => {
@@ -254,7 +256,7 @@ describe('Integration tests : Audit', () => {
 
       for (let i = 0; i < 5; i++) {
         const { id } = await handler.mutations.createUser({
-          userParams: generateCreateUserParams(),
+          createUserParams: generateCreateUserParams(),
         });
         users.push(await handler.userService.get(id));
       }
@@ -576,7 +578,7 @@ describe('Integration tests : Audit', () => {
   describe(User.name, () => {
     it('should create a user + config with createdBy and updatedBy fields', async () => {
       const { id } = await handler.mutations.createUser({
-        userParams: generateCreateUserParams(),
+        createUserParams: generateCreateUserParams(),
         requestHeaders: generateRequestHeaders(user1.authId),
       });
       expect(
@@ -596,7 +598,7 @@ describe('Integration tests : Audit', () => {
 
     it('should update on addAppointmentToUser', async () => {
       const { id } = await handler.mutations.createUser({
-        userParams: generateCreateUserParams(),
+        createUserParams: generateCreateUserParams(),
         requestHeaders: generateRequestHeaders(user1.authId),
       });
       await handler.mutations.scheduleAppointment({
@@ -794,7 +796,7 @@ describe('Integration tests : Audit', () => {
         'when scheduleAppointment is invoked',
       async () => {
         const { id: userId } = await handler.mutations.createUser({
-          userParams: generateCreateUserParams(),
+          createUserParams: generateCreateUserParams(),
         });
 
         await handler.mutations.scheduleAppointment({

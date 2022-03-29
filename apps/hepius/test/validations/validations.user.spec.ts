@@ -35,10 +35,10 @@ describe('Validations - user', () => {
     ${'authId'}    | ${`Field "authId" of required type "String!" was not provided.`}
     ${'orgs'}      | ${`Field "orgs" of required type "[String!]!" was not provided.`}
   `(`should fail to create a user since mandatory field $field is missing`, async (params) => {
-    const userParams: CreateUserParams = generateCreateUserParams();
-    delete userParams[params.field];
+    const createUserParams: CreateUserParams = generateCreateUserParams();
+    delete createUserParams[params.field];
     await handler.mutations.createUser({
-      userParams,
+      createUserParams,
       missingFieldError: params.error,
     });
   });
@@ -50,11 +50,11 @@ describe('Validations - user', () => {
     ${minLength - 1} | ${'short'}  | ${'lastName'}
     ${maxLength + 1} | ${'long'}   | ${'lastName'}
   `(`should fail to create a user since $field is too $errorString`, async (params) => {
-    const userParams: CreateUserParams = generateCreateUserParams();
-    userParams[params.field] = generateRandomName(params.length);
+    const createUserParams: CreateUserParams = generateCreateUserParams();
+    createUserParams[params.field] = generateRandomName(params.length);
 
     await handler.mutations.createUser({
-      userParams,
+      createUserParams,
       invalidFieldsErrors: [Errors.get(ErrorType.userMinMaxLength)],
     });
   });
@@ -82,9 +82,9 @@ describe('Validations - user', () => {
     /* eslint-enable max-len */
     `should fail to create a user since $field is not valid`,
     async (params) => {
-      const userParams: CreateUserParams = generateCreateUserParams(params.input);
+      const createUserParams: CreateUserParams = generateCreateUserParams(params.input);
       await handler.mutations.createUser({
-        userParams,
+        createUserParams,
         ...params.errors,
       });
     },
@@ -98,13 +98,13 @@ describe('Validations - user', () => {
     ${'roles'}        | ${defaultUserParams.roles}
   `(`should set default value if exists for optional field $field`, async (params) => {
     /* eslint-enable max-len */
-    const userParams: CreateUserParams = generateCreateUserParams();
-    delete userParams[params.field];
+    const createUserParams: CreateUserParams = generateCreateUserParams();
+    delete createUserParams[params.field];
 
-    await handler.mutations.createUser({ userParams });
+    await handler.mutations.createUser({ createUserParams });
 
     const user = await handler.queries.getUser({
-      requestHeaders: generateRequestHeaders(userParams.authId),
+      requestHeaders: generateRequestHeaders(createUserParams.authId),
     });
     expect(user[params.field]).not.toBeUndefined();
     expect(user[params.field]).toEqual(params.defaultValue);

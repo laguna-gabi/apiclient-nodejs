@@ -67,10 +67,10 @@ const generateUser = async (user: Partial<CreateUserParams>) => {
       .promise();
   }
 
-  const userParams = { authId: Value, ...user };
+  const createUserParams = { authId: Value, ...user };
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  await mutations.createUser({ userParams });
+  await mutations.createUser({ createUserParams });
 
   await delay(5000);
   await base.cleanUp();

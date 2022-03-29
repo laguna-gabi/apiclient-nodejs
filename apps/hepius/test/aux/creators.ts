@@ -26,16 +26,16 @@ export class Creators {
     roles,
     orgId,
   }: { roles?: UserRole[]; orgId?: string } = {}): Promise<User> => {
-    const userParams: CreateUserParams = generateCreateUserParams({
+    const createUserParams: CreateUserParams = generateCreateUserParams({
       roles,
       ...(orgId ? { orgs: [orgId] } : {}),
     });
-    const { id: primaryUserId } = await this.handler.mutations.createUser({ userParams });
+    const { id: primaryUserId } = await this.handler.mutations.createUser({ createUserParams });
     const result = await this.handler.queries.getUser({
-      requestHeaders: generateRequestHeaders(userParams.authId),
+      requestHeaders: generateRequestHeaders(createUserParams.authId),
     });
 
-    const expectedUser = { ...userParams, id: primaryUserId, appointments: [] };
+    const expectedUser = { ...createUserParams, id: primaryUserId, appointments: [] };
 
     const resultUserNew = omit(result, 'roles');
     const expectedUserNew = omit(expectedUser, 'roles');
@@ -66,10 +66,10 @@ export class Creators {
     const org = orgId
       ? await this.handler.queries.getOrg({ id: orgId })
       : await this.createAndValidateOrg();
-    const userParams = generateCreateUserParams();
-    await this.handler.mutations.createUser({ userParams });
+    const createUserParams = generateCreateUserParams();
+    await this.handler.mutations.createUser({ createUserParams });
     const user: User = await this.handler.queries.getUser({
-      requestHeaders: { Authorization: jwt.sign({ sub: userParams.authId }, 'my-secret') },
+      requestHeaders: { Authorization: jwt.sign({ sub: createUserParams.authId }, 'my-secret') },
     });
 
     const requestHeaders = this.handler.defaultUserRequestHeaders;

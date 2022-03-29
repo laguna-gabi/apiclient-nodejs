@@ -1,5 +1,6 @@
 import { Injectable, ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { Test, TestingModule } from '@nestjs/testing';
 import { datatype } from 'faker';
@@ -9,7 +10,7 @@ import { GlobalAuthGuard, RolesGuard } from '../src/auth';
 import { AppRequestContext, UserRole, requestContextMiddleware } from '../src/common';
 import { QueueService } from '../src/providers';
 import { QuestionnaireService } from '../src/questionnaire';
-import { UserService } from '../src/user';
+import { UserResolver, UserService } from '../src/user';
 import { BaseHandler } from '../test';
 import { Mutations, Queries, initClients } from '../test/aux';
 
@@ -35,18 +36,27 @@ export class SeedBase extends BaseHandler {
     await this.app.init();
 
     this.module = moduleFixture.get<GraphQLModule>(GraphQLModule);
+    this.eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
     this.queueService = moduleFixture.get<QueueService>(QueueService);
     this.userService = moduleFixture.get<UserService>(UserService);
+    this.userResolver = moduleFixture.get<UserResolver>(UserResolver);
     this.questionnaireService = moduleFixture.get<QuestionnaireService>(QuestionnaireService);
 
     await this.app.listen(datatype.number({ min: 4000, max: 9000 }));
     this.client = new GraphQLClient(`${await this.app.getUrl()}/graphql`);
 
-    const defaultUserRequestHeaders = await initClients(this.userService, [
-      UserRole.nurse,
-      UserRole.coach,
-    ]);
-    const defaultAdminRequestHeaders = await initClients(this.userService, [UserRole.admin]);
+    const defaultUserRequestHeaders = await initClients(
+      this.userService,
+      this.userResolver,
+      this.eventEmitter,
+      [UserRole.nurse, UserRole.coach],
+    );
+    const defaultAdminRequestHeaders = await initClients(
+      this.userService,
+      this.userResolver,
+      this.eventEmitter,
+      [UserRole.admin],
+    );
 
     this.mutations = new Mutations(
       this.client,

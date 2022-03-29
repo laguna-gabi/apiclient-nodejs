@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import { EventEmitterModule } from '@nestjs/event-emitter';
+import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TestingModule } from '@nestjs/testing';
 import { db } from 'config';
@@ -19,7 +19,7 @@ import {
   TwilioService,
 } from '../src/providers';
 import { NotificationService } from '../src/services';
-import { User, UserService } from '../src/user';
+import { User, UserResolver, UserService } from '../src/user';
 import { Handler, Mutations, Queries } from './aux';
 import {
   generateCarePlanTypeInput,
@@ -36,6 +36,8 @@ export class BaseHandler {
   queries: Queries;
   module: GraphQLModule;
   userService: UserService;
+  userResolver: UserResolver;
+  eventEmitter: EventEmitter2;
 }
 
 export const urls = {

@@ -267,7 +267,7 @@ export async function seed() {
 const createUser = async (roles: UserRole[], userText: string): Promise<Identifier> => {
   const authId = v4();
   const { id } = await mutations.createUser({
-    userParams: generateCreateUserParams({
+    createUserParams: generateCreateUserParams({
       authId,
       roles,
     }),
