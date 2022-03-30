@@ -216,6 +216,15 @@ export class MemberService extends BaseService {
     let result = await this.memberModel.aggregate([
       { $match: filter },
       {
+        $lookup: {
+          from: 'memberconfigs',
+          localField: '_id',
+          foreignField: 'memberId',
+          as: 'memberconfig',
+        },
+      },
+      { $unwind: { path: '$memberconfig' } },
+      {
         $project: {
           id: '$_id',
           name: { $concat: ['$firstName', ' ', '$lastName'] },
@@ -228,12 +237,15 @@ export class MemberService extends BaseService {
           actionItemsCount: { $size: '$actionItems' },
           primaryUserId: '$primaryUserId',
           users: '$users',
+          org: '$org',
+          firstLoggedInAt: '$memberconfig.firstLoggedInAt',
         },
       },
     ]);
 
     result = await this.memberModel.populate(result, [
       { path: 'users', options: { populate: 'appointments' } },
+      { path: 'org' },
     ]);
 
     return result.map((item) => {

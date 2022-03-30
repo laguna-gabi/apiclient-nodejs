@@ -684,6 +684,12 @@ export class MemberSummary extends Identifier {
 
   @Field(() => Number)
   appointmentsCount: number;
+
+  @Field(() => Org)
+  org: Org;
+
+  @Field(() => Date, { nullable: true })
+  firstLoggedInAt?: Date;
 }
 
 @ObjectType()
