@@ -38,7 +38,7 @@ export class ConductorService implements OnModuleInit {
   async handleDeleteClientSettings(input: IDeleteClientSettings): Promise<void> {
     this.logger.info(input, ConductorService.name, this.handleDeleteClientSettings.name);
     const settings = this.cleanObject(input);
-    await this.settingsService.delete(settings.id);
+    await this.settingsService.delete(settings.id, settings.hard);
     const deletedItems = await this.dispatchesService.delete(settings.id);
     await this.triggersService.delete(
       deletedItems

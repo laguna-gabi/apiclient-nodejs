@@ -1,5 +1,7 @@
-import { hosts } from 'config';
 import { translation } from '@argus/pandora';
+import { db, hosts } from 'config';
+import { connect, disconnect } from 'mongoose';
+import { ConfigsService, ExternalConfigs } from '../src/providers';
 import { ClientSettings } from '../src/settings';
 
 export const replaceConfigs = ({
@@ -31,4 +33,13 @@ export const replaceConfigs = ({
     .replace('{{assessmentName}}', assessmentName)
     .replace('{{senderInitials}}', senderInitials)
     .replace('{{dynamicLink}}', `${hosts.dynamicLink}`);
+};
+
+export const dbConnect = async () => {
+  const config = new ConfigsService();
+  await connect(`${await config.getConfig(ExternalConfigs.db.connection)}/${db.name}`);
+};
+
+export const dbDisconnect = async () => {
+  await disconnect();
 };

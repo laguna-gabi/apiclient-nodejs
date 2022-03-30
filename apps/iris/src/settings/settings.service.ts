@@ -29,10 +29,14 @@ export class SettingsService {
   /**
    * @param id dispatchId (and not _id)
    */
-  async delete(id: string): Promise<void> {
+  async delete(id: string, hard: boolean): Promise<void> {
     const result = await this.clientSettingsModel.find({ id });
     if (result?.length >= 1) {
-      await result[0].delete();
+      if (hard) {
+        await result[0].deleteOne();
+      } else {
+        await result[0].delete();
+      }
     }
   }
 }

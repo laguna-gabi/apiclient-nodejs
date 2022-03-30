@@ -1,14 +1,22 @@
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Model, model } from 'mongoose';
+import { dbConnect, dbDisconnect, generateId, generateUpdateMemberSettingsMock } from '../';
 import { LoggerService } from '../../src/common';
-import { generateId, generateUpdateMemberSettingsMock } from '../';
 import { DbModule } from '../../src/db';
-import { ClientSettings, SettingsModule, SettingsService } from '../../src/settings';
+import {
+  ClientSettings,
+  ClientSettingsDocument,
+  ClientSettingsDto,
+  SettingsModule,
+  SettingsService,
+} from '../../src/settings';
 
 describe(SettingsService.name, () => {
   let module: TestingModule;
   let service: SettingsService;
+  let clientSettingsModel: Model<ClientSettingsDocument>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -18,10 +26,14 @@ describe(SettingsService.name, () => {
 
     service = module.get<SettingsService>(SettingsService);
     mockLogger(module.get<LoggerService>(LoggerService));
+    clientSettingsModel = model<ClientSettingsDocument>(ClientSettings.name, ClientSettingsDto);
+
+    await dbConnect();
   });
 
   afterAll(async () => {
     await module.close();
+    await dbDisconnect();
   });
 
   it('should update for a new client', async () => {
@@ -69,21 +81,38 @@ describe(SettingsService.name, () => {
     expect(clientSettings).toBeNull();
   });
 
-  it('should update, get and delete a client settings object', async () => {
-    const settings: ClientSettings = generateUpdateMemberSettingsMock();
-    await service.update(settings);
+  test.each([true, false])(
+    'should update, get and delete a client settings object',
+    async (hard) => {
+      const settings: ClientSettings = generateUpdateMemberSettingsMock();
+      await service.update(settings);
 
-    let clientSettings = await service.get(settings.id);
-    expect(clientSettings).toEqual(expect.objectContaining(settings));
+      const clientSettings = await service.get(settings.id);
+      expect(clientSettings).toEqual(expect.objectContaining(settings));
 
-    await service.delete(settings.id);
+      await service.delete(settings.id, hard);
 
-    clientSettings = await service.get(settings.id);
-    expect(clientSettings).toBeNull();
-  });
+      if (hard) {
+        /* eslint-disable @typescript-eslint/ban-ts-comment */
+        // @ts-ignore
+        const clientSettings = await clientSettingsModel.findWithDeleted({ id: settings.id });
+        expect(clientSettings.length).toEqual(0);
+      } else {
+        /* eslint-disable @typescript-eslint/ban-ts-comment */
+        // @ts-ignore
+        const clientSettings = await clientSettingsModel.findWithDeleted({ id: settings.id });
+        expect(clientSettings).toEqual(
+          expect.arrayContaining([expect.objectContaining({ ...settings, deleted: true })]),
+        );
+      }
+    },
+  );
 
-  it('should be able to delete without error, if id does not exist', async () => {
-    const result = await service.delete(generateId());
-    expect(result).toBeUndefined();
-  });
+  test.each([true, false])(
+    'should be able to delete without error, if id does not exist',
+    async (hard) => {
+      const result = await service.delete(generateId(), hard);
+      expect(result).toBeUndefined();
+    },
+  );
 });

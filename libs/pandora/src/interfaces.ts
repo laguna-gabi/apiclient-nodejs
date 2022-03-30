@@ -41,6 +41,7 @@ export interface IUpdateClientSettings extends IInnerQueueTypes {
 
 export interface IDeleteClientSettings extends IInnerQueueTypes {
   id: string;
+  hard: boolean;
 }
 
 interface IDispatch extends IInnerQueueTypes {

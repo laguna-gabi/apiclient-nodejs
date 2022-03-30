@@ -119,9 +119,9 @@ describe(ConductorService.name, () => {
       spyOnDispatchServiceDelete.mockResolvedValueOnce(deletedItems);
       spyOnTriggersServiceDelete.mockResolvedValueOnce(undefined);
 
-      const params = { id: generateId(), type: InnerQueueTypes.deleteClientSettings };
+      const params = { id: generateId(), type: InnerQueueTypes.deleteClientSettings, hard: true };
       await service.handleDeleteClientSettings(params);
-      expect(spyOnSettingsServiceDelete).toBeCalledWith(params.id);
+      expect(spyOnSettingsServiceDelete).toBeCalledWith(params.id, true);
       expect(spyOnDispatchServiceDelete).toBeCalledWith(params.id);
       expect(spyOnTriggersServiceDelete).toBeCalledWith([deletedItems[0].dispatchId]);
     });

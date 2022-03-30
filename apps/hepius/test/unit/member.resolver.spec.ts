@@ -554,7 +554,7 @@ describe('MemberResolver', () => {
       };
       expect(spyOnDeleteSchedules).toBeCalledWith(eventParams);
       expect(spyOnServiceDeleteMember).toBeCalledWith(deleteMemberParams, userId);
-      expect(spyOnNotifyDeletedMemberConfig).toBeCalledWith(member.id);
+      expect(spyOnNotifyDeletedMemberConfig).toBeCalledWith(member.id, params.hard);
       expect(spyOnEventEmitter).toHaveBeenCalledWith(EventType.onDeletedMember, eventParams);
       if (params.hard) {
         expect(spyOnStorageServiceDeleteMember).toBeCalledWith(member.id);

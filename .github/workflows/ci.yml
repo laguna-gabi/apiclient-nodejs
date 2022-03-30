@@ -75,7 +75,7 @@ jobs:
       - name: Init Nx BASE and HEAD
         uses: ./.github/actions/set-nx-affected
       - name: Test affected
-        run: npx nx affected --target=test:cov --base=$NX_BASE --head=$NX_HEAD --parallel=3
+        run: npx nx affected --target=test:cov --base=$NX_BASE --head=$NX_HEAD --parallel=1
 
   deploy:
     name: Deploy

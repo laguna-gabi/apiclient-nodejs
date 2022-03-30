@@ -226,7 +226,7 @@ export class MemberResolver extends MemberBase {
       hard,
     };
     await this.deleteSchedules(eventParams);
-    this.notifyDeletedMemberConfig(id);
+    this.notifyDeletedMemberConfig(id, hard);
     this.eventEmitter.emit(EventType.onDeletedMember, eventParams);
     await this.deleteMemberFromServices(member, memberConfig, hard);
     return true;
@@ -1331,8 +1331,12 @@ export class MemberResolver extends MemberBase {
     }
   }
 
-  private notifyDeletedMemberConfig(id: string) {
-    const settings: IDeleteClientSettings = { type: InnerQueueTypes.deleteClientSettings, id };
+  private notifyDeletedMemberConfig(id: string, hard: boolean) {
+    const settings: IDeleteClientSettings = {
+      type: InnerQueueTypes.deleteClientSettings,
+      id,
+      hard,
+    };
 
     const eventNotifyQueueParams: IEventNotifyQueue = {
       type: QueueType.notifications,
