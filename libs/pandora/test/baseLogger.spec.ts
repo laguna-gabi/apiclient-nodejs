@@ -57,8 +57,6 @@ describe(BaseLogger.name, () => {
 
     it('should log params for info level', () => {
       logger.info(params, BaseLogger.name, methodName, client);
-      console.log(params);
-      console.log(JSON.stringify(params));
 
       expect(spyOnPinoLoggerInfo).toHaveBeenCalledWith({
         params,
