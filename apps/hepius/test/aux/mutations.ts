@@ -53,8 +53,8 @@ import {
   CreateActionTodoParams,
   CreateTodoDoneParams,
   CreateTodoParams,
-  EndAndCreateTodoParams,
   Todo,
+  UpdateTodoParams,
 } from '../../src/todo';
 import { CreateUserParams } from '../../src/user';
 import { isResultValid } from '..';
@@ -1472,22 +1472,22 @@ export class Mutations {
     return createActionTodo;
   };
 
-  endAndCreateTodo = async ({
-    endAndCreateTodoParams,
+  updateTodo = async ({
+    updateTodoParams,
     missingFieldError,
     invalidFieldsErrors,
     requestHeaders = this.defaultUserRequestHeaders,
   }: {
-    endAndCreateTodoParams: EndAndCreateTodoParams;
+    updateTodoParams: UpdateTodoParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
     requestHeaders?;
   }): Promise<Todo> => {
-    const { endAndCreateTodo } = await this.client
+    const { updateTodo } = await this.client
       .request(
         gql`
-          mutation endAndCreateTodo($endAndCreateTodoParams: EndAndCreateTodoParams!) {
-            endAndCreateTodo(endAndCreateTodoParams: $endAndCreateTodoParams) {
+          mutation updateTodo($updateTodoParams: UpdateTodoParams!) {
+            updateTodo(updateTodoParams: $updateTodoParams) {
               id
               memberId
               text
@@ -1502,7 +1502,7 @@ export class Mutations {
             }
           }
         `,
-        { endAndCreateTodoParams },
+        { updateTodoParams },
         requestHeaders,
       )
       .catch((ex) => {
@@ -1513,7 +1513,7 @@ export class Mutations {
         });
       });
 
-    return endAndCreateTodo;
+    return updateTodo;
   };
 
   endTodo = async ({

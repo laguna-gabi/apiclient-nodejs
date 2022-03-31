@@ -7,7 +7,6 @@ import {
   CreateActionTodoParams,
   CreateTodoDoneParams,
   CreateTodoParams,
-  EndAndCreateTodoParams,
   ExtraTodoParams,
   GetTodoDonesParams,
   Label,
@@ -17,6 +16,7 @@ import {
   TodoNotificationsType,
   TodoService,
   TodoStatus,
+  UpdateTodoParams,
 } from '.';
 import {
   Client,
@@ -93,14 +93,14 @@ export class TodoResolver {
   @MemberIdParam(MemberIdParamType.memberId)
   @UseInterceptors(MemberUserRouteInterceptor)
   @Roles(UserRole.coach, UserRole.nurse, MemberRole.member)
-  async endAndCreateTodo(
+  async updateTodo(
     @Client('roles') roles,
     @Client('_id') clientId,
-    @Args(camelCase(EndAndCreateTodoParams.name)) endAndCreateTodoParams: EndAndCreateTodoParams,
+    @Args(camelCase(UpdateTodoParams.name)) updateTodoParams: UpdateTodoParams,
   ) {
-    const status = this.getTodoStatus(endAndCreateTodoParams, roles);
-    const todo = await this.todoService.endAndCreateTodo({
-      ...endAndCreateTodoParams,
+    const status = this.getTodoStatus(updateTodoParams, roles);
+    const todo = await this.todoService.updateTodo({
+      ...updateTodoParams,
       status,
     });
     this.todoSendNotification(todo, roles, clientId, 'updateTodo');

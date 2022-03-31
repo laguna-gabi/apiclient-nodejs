@@ -111,13 +111,13 @@ import {
   CreateActionTodoParams,
   CreateTodoDoneParams,
   CreateTodoParams,
-  EndAndCreateTodoParams,
   GetTodoDonesParams,
   ResourceType,
   Todo,
   TodoDone,
   TodoLabel,
   TodoStatus,
+  UpdateTodoParams,
 } from '../src/todo';
 import { CreateUserParams, GetSlotsParams, User, defaultUserParams } from '../src/user';
 
@@ -894,7 +894,7 @@ export const generateGetTodoDonesParams = ({
   };
 };
 
-export const generateEndAndCreateTodoParams = ({
+export const generateUpdateTodoParams = ({
   id = generateId(),
   memberId,
   text = lorem.words(5),
@@ -902,7 +902,7 @@ export const generateEndAndCreateTodoParams = ({
   cronExpressions = ['0 10,17,21,23 * * *'],
   start = fakerDate.soon(1),
   end = add(fakerDate.soon(3), { days: 1 }),
-}: Partial<EndAndCreateTodoParams> = {}) => {
+}: Partial<UpdateTodoParams> = {}) => {
   return {
     id,
     memberId,

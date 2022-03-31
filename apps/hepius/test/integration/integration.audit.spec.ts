@@ -40,10 +40,10 @@ import {
 import {
   CreateTodoDoneParams,
   CreateTodoParams,
-  EndAndCreateTodoParams,
   Todo,
   TodoDocument,
   TodoDoneDocument,
+  UpdateTodoParams,
 } from '../../src/todo';
 import { User, UserConfigDocument, UserDocument } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
@@ -58,7 +58,6 @@ import {
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateCreateUserParams,
-  generateEndAndCreateTodoParams,
   generateEndAppointmentParams,
   generateOrgParams,
   generateRequestAppointmentParams,
@@ -70,6 +69,7 @@ import {
   generateUpdateCaregiverParams,
   generateUpdateMemberParams,
   generateUpdateRedFlagParams,
+  generateUpdateTodoParams,
   submitMockCareWizard,
   urls,
 } from '../index';
@@ -177,12 +177,12 @@ describe('Integration tests : Audit', () => {
       /**
        * 1. User creates a todo for member
        * 1.1 confirm `createdAt` === `updatedAt` === User.id for Todo
-       * 2. Member end and create todo
+       * 2. Member update todo
        * 2.1 confirm `createdAt` === User.id && `updatedAt` === Member.id for Todo
        * 3. create TodoDone (by member)
        * 3.1 confirm `createdAt` === `updatedAt` === Member.id for TodoDone
        *
-       * Note: confirm `updateOne` (used by the `endAndCreateTodo` service method)
+       * Note: confirm `updateOne` (used by the `updateTodo` service method)
        */
 
       // Get primary user authId and id for token in request header and validation
@@ -204,9 +204,9 @@ describe('Integration tests : Audit', () => {
         await checkAuditValues<TodoDocument>(id, handler.todoModel, userId, userId),
       ).toBeTruthy();
 
-      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({ id });
-      const { id: newCreatedTodoId } = await handler.mutations.endAndCreateTodo({
-        endAndCreateTodoParams,
+      const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({ id });
+      const { id: newCreatedTodoId } = await handler.mutations.updateTodo({
+        updateTodoParams,
         requestHeaders: generateRequestHeaders(handler.patientZero.authId),
       });
 
@@ -247,7 +247,7 @@ describe('Integration tests : Audit', () => {
        * 1. user1 creates a todo for member
        * 1.1 confirm `createdAt` === `updatedAt` === user1.id for Todo
        * 2. pick a random user (out of 5 users) - user2
-       * 2. user2 end and create todo for patient zero
+       * 2. user2 update todo for patient zero
        * 3.1 confirm newly created todo - `createdAt` === user1.id && `updatedAt` === user2 for Todo
        */
 
@@ -953,12 +953,12 @@ async function testRunner(users: User[], handler: Handler) {
   ).toBeTruthy();
 
   const user2 = getRandomUser(users);
-  const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+  const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({
     memberId: handler.patientZero.id,
     id,
   });
-  const { id: newCreatedTodoId } = await handler.mutations.endAndCreateTodo({
-    endAndCreateTodoParams,
+  const { id: newCreatedTodoId } = await handler.mutations.updateTodo({
+    updateTodoParams,
     requestHeaders: generateRequestHeaders(user2.authId),
   });
 

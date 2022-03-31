@@ -7,7 +7,6 @@ import {
   CreateActionTodoParams,
   CreateTodoDoneParams,
   CreateTodoParams,
-  EndAndCreateTodoParams,
   GetTodoDonesParams,
   NotNullableTodoKeys,
   Todo,
@@ -15,6 +14,7 @@ import {
   TodoDone,
   TodoDoneDocument,
   TodoStatus,
+  UpdateTodoParams,
 } from '.';
 import {
   BaseService,
@@ -71,27 +71,27 @@ export class TodoService extends BaseService {
     return result;
   }
 
-  async endAndCreateTodo(endAndCreateTodoParams: EndAndCreateTodoParams): Promise<Todo> {
+  async updateTodo(updateTodoParams: UpdateTodoParams): Promise<Todo> {
     const { memberId, id, ...params } = this.removeNotNullable(
-      endAndCreateTodoParams,
+      updateTodoParams,
       NotNullableTodoKeys,
     );
 
-    const endedTodo = await this.todoModel.findOne({
+    const updatedTodo = await this.todoModel.findOne({
       _id: new Types.ObjectId(id),
       memberId: new Types.ObjectId(memberId),
     });
 
-    if (!endedTodo) {
+    if (!updatedTodo) {
       throw new Error(Errors.get(ErrorType.todoNotFound));
     }
 
-    if (endedTodo.status === TodoStatus.ended || endedTodo.status === TodoStatus.updated) {
+    if (updatedTodo.status === TodoStatus.ended || updatedTodo.status === TodoStatus.updated) {
       throw new Error(Errors.get(ErrorType.todoEndOrUpdateEndedOrUpdatedTodo));
     }
 
-    if (this.isActionTodo(endedTodo)) {
-      throw new Error(Errors.get(ErrorType.todoEndAndCreateActionTodo));
+    if (this.isActionTodo(updatedTodo)) {
+      throw new Error(Errors.get(ErrorType.todoUpdateActionTodo));
     }
 
     if (params.cronExpressions && !params.start) {
@@ -102,13 +102,13 @@ export class TodoService extends BaseService {
       if (lastTodoDone) {
         params.start = lastTodoDone.done;
       } else {
-        params.start = endedTodo.start;
+        params.start = updatedTodo.start;
       }
     }
 
-    await endedTodo.updateOne({
+    await updatedTodo.updateOne({
       $set: {
-        ...(this.isUnscheduled(endedTodo)
+        ...(this.isUnscheduled(updatedTodo)
           ? { status: TodoStatus.ended }
           : { status: TodoStatus.updated, end: params.start }),
       },
@@ -118,7 +118,7 @@ export class TodoService extends BaseService {
       ...params,
       memberId: new Types.ObjectId(memberId),
       relatedTo: new Types.ObjectId(id),
-      createdBy: new Types.ObjectId(endedTodo.createdBy),
+      createdBy: new Types.ObjectId(updatedTodo.createdBy),
     });
   }
 

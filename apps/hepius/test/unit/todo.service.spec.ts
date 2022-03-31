@@ -8,7 +8,6 @@ import {
   CreateActionTodoParams,
   CreateTodoDoneParams,
   CreateTodoParams,
-  EndAndCreateTodoParams,
   Todo,
   TodoDocument,
   TodoDone,
@@ -19,6 +18,7 @@ import {
   TodoModule,
   TodoService,
   TodoStatus,
+  UpdateTodoParams,
 } from '../../src/todo';
 import {
   checkDelete,
@@ -28,10 +28,10 @@ import {
   generateCreateActionTodoParams,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
-  generateEndAndCreateTodoParams,
   generateGetTodoDonesParams,
   generateId,
   generateObjectId,
+  generateUpdateTodoParams,
   loadSessionClient,
 } from '../index';
 
@@ -183,7 +183,7 @@ describe('TodoService', () => {
     });
   });
 
-  describe('endAndCreateTodo', () => {
+  describe('updateTodo', () => {
     it('should update Todo', async () => {
       const memberId = generateId();
       const userId = generateId();
@@ -195,19 +195,19 @@ describe('TodoService', () => {
       loadSessionClient(memberId);
       const { id } = await service.createTodo(createParams);
 
-      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+      const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({
         id,
         memberId,
       });
-      const endAndCreateTodoParamsWithNoId = cloneDeep(endAndCreateTodoParams);
-      delete endAndCreateTodoParamsWithNoId.id;
+      const updateTodoParamsWithNoId = cloneDeep(updateTodoParams);
+      delete updateTodoParamsWithNoId.id;
 
       loadSessionClient(userId);
-      const createdTodo = await service.endAndCreateTodo(endAndCreateTodoParams);
-      const endedTodo = await todoModel.findById(id).lean();
+      const createdTodo = await service.updateTodo(updateTodoParams);
+      const updatedTodo = await todoModel.findById(id).lean();
       delete createParams.end;
 
-      expect(endedTodo).toEqual(
+      expect(updatedTodo).toEqual(
         expect.objectContaining({
           ...createParams,
           _id: generateObjectId(id),
@@ -223,11 +223,11 @@ describe('TodoService', () => {
 
       expect(createdTodo).toEqual(
         expect.objectContaining({
-          ...endAndCreateTodoParamsWithNoId,
+          ...updateTodoParamsWithNoId,
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           _id: createdTodo._id,
-          cronExpressions: expect.arrayContaining([...endAndCreateTodoParams.cronExpressions]),
+          cronExpressions: expect.arrayContaining([...updateTodoParams.cronExpressions]),
           memberId: generateObjectId(memberId),
           status: TodoStatus.active,
           createdBy: generateObjectId(memberId),
@@ -253,13 +253,13 @@ describe('TodoService', () => {
 
         const { id } = await service.createTodo(createParams);
 
-        const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({
           id,
           memberId,
         });
-        delete endAndCreateTodoParams.start;
+        delete updateTodoParams.start;
 
-        const createdTodo = await service.endAndCreateTodo(endAndCreateTodoParams);
+        const createdTodo = await service.updateTodo(updateTodoParams);
         expect(createdTodo.start).toEqual(createParams.start);
         const updatedTodo = await todoModel.findById(id);
         expect(updatedTodo.end).toEqual(createParams.start);
@@ -286,13 +286,13 @@ describe('TodoService', () => {
 
         await service.createTodoDone(createTodoDoneParams);
 
-        const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({
           id,
           memberId,
         });
-        delete endAndCreateTodoParams.start;
+        delete updateTodoParams.start;
 
-        const createdTodo = await service.endAndCreateTodo(endAndCreateTodoParams);
+        const createdTodo = await service.updateTodo(updateTodoParams);
         expect(createdTodo.start).toEqual(createTodoDoneParams.done);
         const updatedTodo = await todoModel.findById(id);
         expect(updatedTodo.end).toEqual(createTodoDoneParams.done);
@@ -311,27 +311,25 @@ describe('TodoService', () => {
 
       const { id } = await service.createTodo(createTodoParams);
 
-      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+      const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({
         id,
         memberId,
       });
-      delete endAndCreateTodoParams.start;
+      delete updateTodoParams.start;
 
-      await service.endAndCreateTodo(endAndCreateTodoParams);
+      await service.updateTodo(updateTodoParams);
 
       const updatedTodo = await todoModel.findById(id);
       expect(updatedTodo.status).toEqual(TodoStatus.ended);
     });
 
     it('should throw an error if todo does not exists', async () => {
-      const params: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+      const params: UpdateTodoParams = generateUpdateTodoParams({
         id: generateId(),
         memberId: generateId(),
       });
 
-      await expect(service.endAndCreateTodo(params)).rejects.toThrow(
-        Errors.get(ErrorType.todoNotFound),
-      );
+      await expect(service.updateTodo(params)).rejects.toThrow(Errors.get(ErrorType.todoNotFound));
     });
 
     test.each([TodoStatus.ended, TodoStatus.updated])(
@@ -345,12 +343,12 @@ describe('TodoService', () => {
         const { id } = await service.createTodo(params);
         await todoModel.findOneAndUpdate({ _id: new Types.ObjectId(id) }, { $set: { status } });
 
-        const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+        const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({
           id,
           memberId,
         });
 
-        await expect(service.endAndCreateTodo(endAndCreateTodoParams)).rejects.toThrow(
+        await expect(service.updateTodo(updateTodoParams)).rejects.toThrow(
           Errors.get(ErrorType.todoEndOrUpdateEndedOrUpdatedTodo),
         );
       },
@@ -364,13 +362,13 @@ describe('TodoService', () => {
 
       const { id } = await service.createActionTodo(params);
 
-      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+      const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({
         id,
         memberId,
       });
 
-      await expect(service.endAndCreateTodo(endAndCreateTodoParams)).rejects.toThrow(
-        Errors.get(ErrorType.todoEndAndCreateActionTodo),
+      await expect(service.updateTodo(updateTodoParams)).rejects.toThrow(
+        Errors.get(ErrorType.todoUpdateActionTodo),
       );
     });
   });

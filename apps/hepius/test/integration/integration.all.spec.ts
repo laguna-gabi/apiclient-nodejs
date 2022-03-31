@@ -42,9 +42,9 @@ import {
 import {
   CreateTodoDoneParams,
   CreateTodoParams,
-  EndAndCreateTodoParams,
   TodoLabel,
   TodoStatus,
+  UpdateTodoParams,
 } from '../../src/todo';
 import { User, defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
@@ -62,7 +62,6 @@ import {
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
   generateDeleteMemberParams,
-  generateEndAndCreateTodoParams,
   generateGetTodoDonesParams,
   generateId,
   generateOrgParams,
@@ -81,6 +80,7 @@ import {
   generateUpdateNotesParams,
   generateUpdateRecordingParams,
   generateUpdateRedFlagParams,
+  generateUpdateTodoParams,
   mockGenerateDispatch,
   mockGenerateQuestionnaireItem,
   submitMockCareWizard,
@@ -1509,7 +1509,7 @@ describe('Integration tests: all', () => {
     it('should create end and delete Todo', async () => {
       /**
        * 1. User creates a todo for member
-       * 2. Member end and create todo
+       * 2. Member update todo
        * 3. create TodoDone
        * 4. delete TodoDone
        * 5. User ends the todo
@@ -1549,35 +1549,35 @@ describe('Integration tests: all', () => {
         ]),
       );
 
-      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({ id });
-      const newCreatedTodo = await handler.mutations.endAndCreateTodo({
-        endAndCreateTodoParams,
+      const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({ id });
+      const newCreatedTodo = await handler.mutations.updateTodo({
+        updateTodoParams,
         requestHeaders: requestHeadersMember,
       });
 
-      const todosAfterEndAndCreate = await handler.queries.getTodos({
+      const todosAfterUpdate = await handler.queries.getTodos({
         memberId,
         requestHeaders: requestHeadersUser,
       });
 
-      expect(todosAfterEndAndCreate.length).toEqual(2);
-      expect(todosAfterEndAndCreate).toEqual(
+      expect(todosAfterUpdate.length).toEqual(2);
+      expect(todosAfterUpdate).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             ...createTodoParams,
             id,
             start: createTodoParams.start.toISOString(),
-            end: endAndCreateTodoParams.start.toISOString(),
+            end: updateTodoParams.start.toISOString(),
             status: TodoStatus.updated,
             createdBy: user.id,
             updatedBy: memberId,
           }),
           expect.objectContaining({
-            ...endAndCreateTodoParams,
+            ...updateTodoParams,
             id: newCreatedTodo.id,
             memberId,
-            start: endAndCreateTodoParams.start.toISOString(),
-            end: endAndCreateTodoParams.end.toISOString(),
+            start: updateTodoParams.start.toISOString(),
+            end: updateTodoParams.end.toISOString(),
             status: TodoStatus.active,
             relatedTo: id,
             createdBy: user.id,
@@ -1673,17 +1673,17 @@ describe('Integration tests: all', () => {
             ...createTodoParams,
             id,
             start: createTodoParams.start.toISOString(),
-            end: endAndCreateTodoParams.start.toISOString(),
+            end: updateTodoParams.start.toISOString(),
             status: TodoStatus.updated,
             createdBy: user.id,
             updatedBy: memberId,
           }),
           expect.objectContaining({
-            ...endAndCreateTodoParams,
+            ...updateTodoParams,
             id: newCreatedTodo.id,
             memberId,
-            start: endAndCreateTodoParams.start.toISOString(),
-            end: endAndCreateTodoParams.end.toISOString(),
+            start: updateTodoParams.start.toISOString(),
+            end: updateTodoParams.end.toISOString(),
             status: TodoStatus.ended,
             createdBy: user.id,
             updatedBy: user.id,

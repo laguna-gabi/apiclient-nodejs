@@ -108,11 +108,11 @@ export enum ErrorType {
   todoCreateDoneStatus = 10008,
   todoDeleteDoneStatus = 10009,
   todoNotFoundOrApproveNotRequested = 10010,
-  todoUnscheduledEndAndCreate = 10011,
+  todoUnscheduledUpdate = 10011,
   todoStartDateInThePast = 10012,
   todoEndDateInThePast = 10013,
   todoDoneIdInvalid = 10014,
-  todoEndAndCreateActionTodo = 10015,
+  todoUpdateActionTodo = 10015,
   todoEndActionTodo = 10016,
 
   // Module Care
@@ -292,7 +292,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.todoNotFound.valueOf(), 'todo id was not found'],
   [ErrorType.todoIdInvalid.valueOf(), `todo id ${objectIdFormat}`],
   [ErrorType.todoDoneIdInvalid.valueOf(), `todoDone id ${objectIdFormat}`],
-  [ErrorType.todoEndAndCreateActionTodo.valueOf(), `can not end and create action todo`],
+  [ErrorType.todoUpdateActionTodo.valueOf(), `can not update action todo`],
   [ErrorType.todoEndActionTodo.valueOf(), `member can not end action todo`],
   [ErrorType.todoInvalidCronExpression.valueOf(), 'invalid cron expression'],
   [ErrorType.todoEndAfterStart.valueOf(), 'end date must be after start date'],
@@ -316,7 +316,7 @@ export const Errors: Map<ErrorType, string> = new Map([
     'todo not found or todo status not requested',
   ],
   [
-    ErrorType.todoUnscheduledEndAndCreate.valueOf(),
+    ErrorType.todoUnscheduledUpdate.valueOf(),
     'scheduled todo must have cron expression, start and end are optional, ' +
       'unscheduled todo can not have cron expression start and end',
   ],

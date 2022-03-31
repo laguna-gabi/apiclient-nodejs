@@ -131,9 +131,9 @@ export class CreateActionTodoParams {
 }
 
 @InputType()
-export class EndAndCreateTodoParams extends ExtraTodoParams {
+export class UpdateTodoParams extends ExtraTodoParams {
   @Field(() => Date, { nullable: true })
-  @isTodoDateParamsValidUpdate({ message: Errors.get(ErrorType.todoUnscheduledEndAndCreate) })
+  @isTodoDateParamsValidUpdate({ message: Errors.get(ErrorType.todoUnscheduledUpdate) })
   @IsFutureDate({
     message: Errors.get(ErrorType.todoStartDateInThePast),
   })

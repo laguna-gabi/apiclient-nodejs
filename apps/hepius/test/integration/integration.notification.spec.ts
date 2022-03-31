@@ -94,7 +94,7 @@ import {
   QuestionnaireType,
   SubmitQuestionnaireResponseParams,
 } from '../../src/questionnaire';
-import { CreateTodoParams, EndAndCreateTodoParams, TodoLabel } from '../../src/todo';
+import { CreateTodoParams, TodoLabel, UpdateTodoParams } from '../../src/todo';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
   generateCreateMemberParams,
@@ -102,7 +102,6 @@ import {
   generateCreateTodoParams,
   generateDailyReport,
   generateDeleteMemberParams,
-  generateEndAndCreateTodoParams,
   generateNotifyContentParams,
   generateOrgParams,
   generateReplaceUserForMemberParams,
@@ -112,6 +111,7 @@ import {
   generateUpdateJournalTextParams,
   generateUpdateMemberConfigParams,
   generateUpdateMemberParams,
+  generateUpdateTodoParams,
   mockGenerateQuestionnaireItem,
 } from '../generators';
 import { generateRequestHeaders } from '../index';
@@ -1190,15 +1190,15 @@ describe('Integration tests: notifications', () => {
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
-      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+      const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({
         id: oldTodoId,
         memberId: member.id,
         label: TodoLabel.Meds,
       });
 
-      const { id } = await handler.mutations.endAndCreateTodo({
+      const { id } = await handler.mutations.updateTodo({
         requestHeaders,
-        endAndCreateTodoParams,
+        updateTodoParams,
       });
 
       await delay(200);
@@ -1245,15 +1245,15 @@ describe('Integration tests: notifications', () => {
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
-      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+      const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({
         id: oldTodoId,
         memberId: member.id,
         label: TodoLabel.Appointment,
       });
 
-      const { id } = await handler.mutations.endAndCreateTodo({
+      const { id } = await handler.mutations.updateTodo({
         requestHeaders,
-        endAndCreateTodoParams,
+        updateTodoParams,
       });
 
       await delay(200);
@@ -1300,14 +1300,14 @@ describe('Integration tests: notifications', () => {
       await delay(200);
       handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
 
-      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+      const updateTodoParams: UpdateTodoParams = generateUpdateTodoParams({
         id: oldTodoId,
         memberId: member.id,
       });
-      delete endAndCreateTodoParams.label;
+      delete updateTodoParams.label;
 
-      const { id } = await handler.mutations.endAndCreateTodo({
-        endAndCreateTodoParams,
+      const { id } = await handler.mutations.updateTodo({
+        updateTodoParams,
         requestHeaders,
       });
 
