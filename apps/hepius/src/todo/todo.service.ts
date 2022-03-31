@@ -94,12 +94,6 @@ export class TodoService extends BaseService {
       throw new Error(Errors.get(ErrorType.todoEndAndCreateActionTodo));
     }
 
-    await endedTodo.updateOne({
-      $set: {
-        status: TodoStatus.updated,
-      },
-    });
-
     if (params.cronExpressions && !params.start) {
       const [lastTodoDone] = await this.todoDoneModel
         .find({ todoId: new Types.ObjectId(id) })
@@ -111,6 +105,14 @@ export class TodoService extends BaseService {
         params.start = endedTodo.start;
       }
     }
+
+    await endedTodo.updateOne({
+      $set: {
+        ...(this.isUnscheduled(endedTodo)
+          ? { status: TodoStatus.ended }
+          : { status: TodoStatus.updated, end: params.start }),
+      },
+    });
 
     return this.todoModel.create({
       ...params,

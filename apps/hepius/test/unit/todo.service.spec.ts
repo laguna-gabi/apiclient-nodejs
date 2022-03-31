@@ -240,15 +240,76 @@ describe('TodoService', () => {
       );
     });
 
-    // eslint-disable-next-line max-len
-    it('should create new todo with start like the ended todo if start was not provided and there is no todoDone', async () => {
+    it(
+      'should create new todo with start like the ended todo ' +
+        'and the updated todo to have end to be its start ' +
+        'if start was not provided and there is no todoDone',
+      async () => {
+        const memberId = generateId();
+
+        const createParams: CreateTodoParams = generateCreateTodoParams({
+          memberId,
+        });
+
+        const { id } = await service.createTodo(createParams);
+
+        const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+          id,
+          memberId,
+        });
+        delete endAndCreateTodoParams.start;
+
+        const createdTodo = await service.endAndCreateTodo(endAndCreateTodoParams);
+        expect(createdTodo.start).toEqual(createParams.start);
+        const updatedTodo = await todoModel.findById(id);
+        expect(updatedTodo.end).toEqual(createParams.start);
+      },
+    );
+
+    it(
+      'should create new todo with start like the latest todoDone ' +
+        'and the updated todo to have the end like the start of the latest todoDone ' +
+        'if start was not provided and there is todoDone',
+      async () => {
+        const memberId = generateId();
+
+        const createParams: CreateTodoParams = generateCreateTodoParams({
+          memberId,
+        });
+
+        const { id } = await service.createTodo(createParams);
+
+        const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
+          todoId: id,
+          memberId,
+        });
+
+        await service.createTodoDone(createTodoDoneParams);
+
+        const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
+          id,
+          memberId,
+        });
+        delete endAndCreateTodoParams.start;
+
+        const createdTodo = await service.endAndCreateTodo(endAndCreateTodoParams);
+        expect(createdTodo.start).toEqual(createTodoDoneParams.done);
+        const updatedTodo = await todoModel.findById(id);
+        expect(updatedTodo.end).toEqual(createTodoDoneParams.done);
+      },
+    );
+
+    it('should set status to ended if updating an unscheduled todo', async () => {
       const memberId = generateId();
 
-      const createParams: CreateTodoParams = generateCreateTodoParams({
+      const createTodoParams: CreateTodoParams = generateCreateTodoParams({
         memberId,
       });
+      delete createTodoParams.cronExpressions;
+      delete createTodoParams.start;
+      delete createTodoParams.end;
 
-      const { id } = await service.createTodo(createParams);
+      const { id } = await service.createTodo(createTodoParams);
 
       const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
         id,
@@ -256,35 +317,10 @@ describe('TodoService', () => {
       });
       delete endAndCreateTodoParams.start;
 
-      const createdTodo = await service.endAndCreateTodo(endAndCreateTodoParams);
-      expect(createdTodo.start).toEqual(createParams.start);
-    });
+      await service.endAndCreateTodo(endAndCreateTodoParams);
 
-    // eslint-disable-next-line max-len
-    it('should create new todo with start like the latest todoDone if start was not provided and there is todoDone', async () => {
-      const memberId = generateId();
-
-      const createParams: CreateTodoParams = generateCreateTodoParams({
-        memberId,
-      });
-
-      const { id } = await service.createTodo(createParams);
-
-      const createTodoDoneParams: CreateTodoDoneParams = generateCreateTodoDoneParams({
-        todoId: id,
-        memberId,
-      });
-
-      await service.createTodoDone(createTodoDoneParams);
-
-      const endAndCreateTodoParams: EndAndCreateTodoParams = generateEndAndCreateTodoParams({
-        id,
-        memberId,
-      });
-      delete endAndCreateTodoParams.start;
-
-      const createdTodo = await service.endAndCreateTodo(endAndCreateTodoParams);
-      expect(createdTodo.start).toEqual(createTodoDoneParams.done);
+      const updatedTodo = await todoModel.findById(id);
+      expect(updatedTodo.status).toEqual(TodoStatus.ended);
     });
 
     it('should throw an error if todo does not exists', async () => {
