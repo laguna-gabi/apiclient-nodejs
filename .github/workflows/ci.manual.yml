@@ -93,7 +93,7 @@ jobs:
     runs-on: self-hosted
     needs: [test, lint]
     timeout-minutes: 25
-    if: github.event.inputs.run_deploy == 'true' && github.event.inputs.project_name != 'pandora' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master')
+    if: github.event.inputs.run_deploy == 'true' && github.event.inputs.project_name != 'pandora' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/master')
     steps:
       - name: Get branch name
         id: branch-name
@@ -130,7 +130,7 @@ jobs:
     name: Migrate
     runs-on: self-hosted
     timeout-minutes: 5
-    if: github.event.inputs.run_migrate == 'true' && github.event.inputs.project_name == 'hepius' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master')
+    if: github.event.inputs.run_migrate == 'true' && github.event.inputs.project_name == 'hepius' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/master')
     steps:
       - name: Get branch name
         id: branch-name
@@ -157,6 +157,8 @@ jobs:
         run: |
           if [ "${{ steps.branch-name.outputs.current_branch }}" = "master" ]; then
             echo "::set-output name=env_name::production"
+          elif [ "${{ steps.branch-name.outputs.current_branch }}" = "staging" ]; then
+            echo "::set-output name=env_name::staging"
           elif [ "${{ steps.branch-name.outputs.current_branch }}" = "develop" ]; then
             echo "::set-output name=env_name::development"
           fi
