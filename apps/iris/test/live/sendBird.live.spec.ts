@@ -25,9 +25,10 @@ describe(`live: ${SendBird.name}`, () => {
   let sendBird: SendBird;
   const sendBirdChannelUrl =
     'sendbird_group_channel_141220520_b400c9d50c2e959d882690886bdc9c2d5758adba';
-  const journalAudioDownloadLink = 'https://filesamples.com/samples/audio/mp3/sample1.mp3';
+  const journalAudioDownloadLink =
+    'https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3';
   const journalImageDownloadLink =
-    'https://filesamples.com/samples/image/png/sample_640%C3%97426.png';
+    'https://file-examples.com/wp-content/uploads/2017/10/file_example_PNG_500kB.png';
   const userId = 'test1';
 
   beforeAll(async () => {
@@ -123,7 +124,7 @@ describe(`live: ${SendBird.name}`, () => {
       content: `journalText: ${params.message}, journalAudio: ${params.message}`,
       id: expect.stringContaining(`journalTextId`) && expect.stringContaining(`journalAudioId`),
     });
-  }, 20000);
+  });
 
   it('should send journal image message with audio', async () => {
     const params: SendSendBirdNotification = {
@@ -143,7 +144,7 @@ describe(`live: ${SendBird.name}`, () => {
       content: `journalImage: ${params.message}, journalAudio: ${params.message}`,
       id: expect.stringContaining(`journalImageId`) && expect.stringContaining(`journalAudioId`),
     });
-  }, 20000);
+  });
 
   async function checkResult(requestType: RequestType, params: SendSendBirdNotification) {
     const result: ProviderResult = await sendBird.send(params, v4());
