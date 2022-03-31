@@ -346,7 +346,7 @@ describe('MemberService', () => {
           expect.objectContaining({ id: memberId2 }),
         ]),
       );
-    });
+    }, 8000);
 
     it('should handle member with default values', async () => {
       const primaryUserId = await generateUser();
@@ -376,7 +376,7 @@ describe('MemberService', () => {
       );
       expect(primaryUser['title']).toEqual(result[0].primaryUser.title);
       expect(primaryUser._id).toEqual(result[0].primaryUser['_id']);
-    });
+    }, 8000);
 
     it('should handle member with all values', async () => {
       const primaryUserId = await generateUser();
