@@ -1,7 +1,7 @@
 import { ErrorType, Errors } from '../../src/common';
 import { CreateOrgParams } from '../../src/org';
 import { Handler } from '../aux';
-import { generateId, generateOrgParams } from '../index';
+import { BEFORE_ALL_TIMEOUT, generateId, generateOrgParams } from '../index';
 
 const stringError = `String cannot represent a non string value`;
 
@@ -10,7 +10,7 @@ describe('Validations - org', () => {
 
   beforeAll(async () => {
     await handler.beforeAll();
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();

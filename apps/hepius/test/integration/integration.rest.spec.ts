@@ -3,7 +3,7 @@ import * as request from 'supertest';
 import { AppointmentStatus } from '../../src/appointment';
 import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
-import { compareMembers, urls } from '../common';
+import { BEFORE_ALL_TIMEOUT, compareMembers, urls } from '../common';
 import {
   generateAvailabilityInput,
   generateCreateMemberParams,
@@ -25,7 +25,7 @@ describe('Integration tests: rest', () => {
     );
     creators = new Creators(handler, appointmentsActions);
     server = handler.app.getHttpServer();
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();

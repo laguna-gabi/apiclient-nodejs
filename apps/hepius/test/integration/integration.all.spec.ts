@@ -49,6 +49,7 @@ import {
 import { User, defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
+  BEFORE_ALL_TIMEOUT,
   generateAddCaregiverParams,
   generateAppointmentLink,
   generateAvailabilityInput,
@@ -98,7 +99,7 @@ describe('Integration tests: all', () => {
       handler.defaultUserRequestHeaders,
     );
     creators = new Creators(handler, appointmentsActions);
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();

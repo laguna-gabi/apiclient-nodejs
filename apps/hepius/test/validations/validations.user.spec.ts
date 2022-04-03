@@ -5,6 +5,7 @@ import { CreateUserParams, GetSlotsParams, defaultUserParams } from '../../src/u
 import { Handler } from '../aux';
 import { generateGetSlotsParams, generateId } from '../generators';
 import {
+  BEFORE_ALL_TIMEOUT,
   generateCreateUserParams,
   generateRandomName,
   generateRequestHeaders,
@@ -20,7 +21,7 @@ describe('Validations - user', () => {
   beforeAll(async () => {
     await handler.beforeAll();
     server = handler.app.getHttpServer();
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();

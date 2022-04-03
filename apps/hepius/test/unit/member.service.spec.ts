@@ -346,7 +346,7 @@ describe('MemberService', () => {
           expect.objectContaining({ id: memberId2 }),
         ]),
       );
-    }, 8000);
+    }, 10000);
 
     it('should handle member with default values', async () => {
       const primaryUserId = await generateUser();
@@ -423,7 +423,7 @@ describe('MemberService', () => {
 
       expect(primaryUser['title']).toEqual(result[0].primaryUser.title);
       expect(primaryUser._id).toEqual(result[0].primaryUser['_id']);
-    });
+    }, 10000);
 
     it('should return no nextAppointment on no scheduled appointments', async () => {
       const userId = await generateUser();
@@ -714,10 +714,6 @@ describe('MemberService', () => {
       expect(result.length).toEqual(numberOfAppointments);
       expect(result[0]).toEqual(expect.objectContaining({ memberId: id, userId: primaryUserId }));
     });
-
-    it('should not take longer than 2 seconds to query with no filter orgId', async () => {
-      await service.getMembersAppointments();
-    }, 2000);
 
     const generateMemberAndAppointment = async ({ primaryUserId, orgId, numberOfAppointments }) => {
       const params = { firstName: name.firstName(), lastName: name.lastName() };

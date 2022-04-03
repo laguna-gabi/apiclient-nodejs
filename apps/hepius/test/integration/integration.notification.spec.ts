@@ -114,7 +114,7 @@ import {
   generateUpdateTodoParams,
   mockGenerateQuestionnaireItem,
 } from '../generators';
-import { generateRequestHeaders } from '../index';
+import { BEFORE_ALL_TIMEOUT, generateRequestHeaders } from '../index';
 import * as sendbirdPayload from '../unit/mocks/webhookSendbirdNewMessagePayload.json';
 
 // mock uuid.v4:
@@ -140,7 +140,7 @@ describe('Integration tests: notifications', () => {
     );
     creators = new Creators(handler, appointmentsActions);
     handler.queueService.spyOnQueueServiceSendMessage.mockReset(); //not interested in past events
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterEach(() => {
     handler.queueService.spyOnQueueServiceSendMessage.mockReset();

@@ -2,6 +2,7 @@ import { ErrorType, Errors } from '../../src/common';
 import { AvailabilityInput } from '../../src/availability';
 import { Handler } from '../aux';
 import { generateAvailabilityInput } from '../generators';
+import { BEFORE_ALL_TIMEOUT } from '..';
 
 const stringError = `String cannot represent a non string value`;
 
@@ -10,7 +11,7 @@ describe('Validations - availability', () => {
 
   beforeAll(async () => {
     await handler.beforeAll();
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();

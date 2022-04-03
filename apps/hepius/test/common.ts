@@ -47,6 +47,8 @@ export const urls = {
   webhooks: `/${apiPrefix}/${webhooks}`,
 };
 
+export const BEFORE_ALL_TIMEOUT = 15000;
+
 export const compareUsers = (user: User, userBase) => {
   expect(user.firstName).toEqual(userBase.firstName);
   expect(user.lastName).toEqual(userBase.lastName);

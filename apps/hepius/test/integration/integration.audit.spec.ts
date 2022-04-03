@@ -48,6 +48,7 @@ import {
 import { User, UserConfigDocument, UserDocument } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
+  BEFORE_ALL_TIMEOUT,
   checkAuditValues,
   generateAddCaregiverParams,
   generateAvailabilityInput,
@@ -109,7 +110,7 @@ describe('Integration tests : Audit', () => {
     user2 = { id: userId2, ...createUserParams[1] };
     adminUser1 = { id: adminUser1Id, ...createUserParams[2] };
     adminUser2 = { id: adminUser2Id, ...createUserParams[3] };
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();

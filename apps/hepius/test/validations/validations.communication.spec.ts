@@ -1,3 +1,4 @@
+import { BEFORE_ALL_TIMEOUT } from '..';
 import { ErrorType, Errors } from '../../src/common';
 import { Handler } from '../aux';
 import { generateGetCommunicationParams } from '../generators';
@@ -9,7 +10,7 @@ describe('Validations - communication', () => {
 
   beforeAll(async () => {
     await handler.beforeAll();
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();

@@ -6,6 +6,7 @@ import { EndAppointmentParams, RequestAppointmentParams } from '../../src/appoin
 import { ErrorType, Errors } from '../../src/common';
 import { Handler } from '../aux';
 import {
+  BEFORE_ALL_TIMEOUT,
   generateEndAppointmentParams,
   generateId,
   generateRequestAppointmentParams,
@@ -24,11 +25,11 @@ describe('Validations - appointment', () => {
   beforeAll(async () => {
     await handler.beforeAll();
     server = handler.app.getHttpServer();
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();
-  }, 10000);
+  });
 
   describe('request', () => {
     test.each`

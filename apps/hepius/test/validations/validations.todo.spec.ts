@@ -8,6 +8,7 @@ import {
 } from '../../src/todo';
 import { Handler } from '../aux/handler';
 import {
+  BEFORE_ALL_TIMEOUT,
   generateCreateActionTodoParams,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
@@ -24,7 +25,7 @@ describe('Validations - todo', () => {
 
   beforeAll(async () => {
     await handler.beforeAll();
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();

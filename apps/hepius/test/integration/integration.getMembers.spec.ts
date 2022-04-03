@@ -1,7 +1,7 @@
 import { Member, MemberSummary } from '../../src/member';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import { User } from '../../src/user';
-import { generateRequestHeaders } from '../index';
+import { BEFORE_ALL_TIMEOUT, generateRequestHeaders } from '../index';
 
 describe('Integration tests : getMembers', () => {
   const handler: Handler = new Handler();
@@ -15,7 +15,7 @@ describe('Integration tests : getMembers', () => {
       handler.defaultUserRequestHeaders,
     );
     creators = new Creators(handler, appointmentsActions);
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();

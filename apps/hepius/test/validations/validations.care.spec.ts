@@ -18,6 +18,7 @@ import {
   UpdateCarePlanParams,
   UpdateRedFlagParams,
 } from '../../src/care';
+import { BEFORE_ALL_TIMEOUT } from '..';
 
 const stringError = `String cannot represent a non string value`;
 
@@ -26,7 +27,7 @@ describe('Validations - care (barriers & care plans & red flags)', () => {
 
   beforeAll(async () => {
     await handler.beforeAll();
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();

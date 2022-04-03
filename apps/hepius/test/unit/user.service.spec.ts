@@ -90,7 +90,7 @@ describe('UserService', () => {
 
       const result = await service.getUsers([UserRole.coach, UserRole.nurse]);
       expect(result.length).toBeGreaterThanOrEqual(2);
-    });
+    }, 10000);
 
     it('should get escalation group user(s)', async () => {
       const user = generateCreateUserParams();
