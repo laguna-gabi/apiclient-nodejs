@@ -3,7 +3,7 @@ import { Command, CommandRunner, Option } from 'nest-commander';
 import { GeneralScriptTypes } from './general.dto';
 import { seedLaguna } from '../../scripts/seedLagunaData';
 import { newUser } from '../../scripts/seedNewUser';
-import { generateToken } from '../../scripts/generateTokens';
+import { getTokens } from '../../scripts/getTokens';
 
 interface CommandOptions {
   type: string;
@@ -28,9 +28,9 @@ export class GeneralCommand implements CommandRunner {
         console.log(`running 'seed' script`);
         await seed();
         break;
-      case GeneralScriptTypes.createToken.toString():
-        console.log(`running 'generate token' script`);
-        await generateToken();
+      case GeneralScriptTypes.getTokens.toString():
+        console.log(`running 'get tokens' script`);
+        await getTokens();
         break;
       default:
         console.log(`command is not supported`);

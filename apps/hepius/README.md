@@ -137,7 +137,7 @@ nx command hepius --cmd=general --options='-t createUser'
 ```
 ### Create Token: 
 ```
-nx command hepius --cmd=general --options='-t createToken'
+nx command hepius --cmd=general --options='-t getTokens'
 ```
 ### Laguna Seed: 
 ```
