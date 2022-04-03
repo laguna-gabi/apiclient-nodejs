@@ -29,7 +29,7 @@ const users = [];
  */
 export async function newUser() {
   base = new SeedBase();
-  await base.init();
+  await base.init(true);
   mutations = base.mutations;
   userPoolId = aws.cognito.userPoolId;
 
