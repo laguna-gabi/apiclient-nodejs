@@ -18,6 +18,9 @@ yarn-error.log*
 /coverage
 /.nyc_output
 
+# Analytics
+/outputs
+
 # IDEs and editors
 /.idea
 .project

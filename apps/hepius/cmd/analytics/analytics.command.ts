@@ -147,6 +147,12 @@ export class AnalyticsCommand implements CommandRunner {
           timestamp,
           coachDataAggregate.map((coach) => this.analyticsService.buildCoachData(coach)),
         );
+
+        console.debug(
+          '\n----------------------------------------------------------------\n' +
+          '------ Done! The results are located on outputs directory ------\n' +
+          '----------------------------------------------------------------',
+        );
       }
     } catch (err) {
       console.error(`${AnalyticsCommand}: error: got: ${err.message} (${err.stack})`);
