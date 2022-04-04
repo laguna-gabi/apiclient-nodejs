@@ -355,6 +355,7 @@ describe('MemberService', () => {
       const memberId = await generateMember(orgId, primaryUserId);
       const result = await service.getByOrg(orgId);
       const member = await service.get(memberId);
+      const memberConfig = await service.getMemberConfig(memberId);
       const primaryUser = await modelUser.findOne({ _id: primaryUserId });
 
       expect(result.length).toEqual(1);
@@ -372,6 +373,7 @@ describe('MemberService', () => {
           primaryUser: expect.any(Object),
           nextAppointment: undefined,
           appointmentsCount: 0,
+          platform: memberConfig.platform,
         }),
       );
       expect(primaryUser['title']).toEqual(result[0].primaryUser.title);
@@ -401,6 +403,7 @@ describe('MemberService', () => {
 
       const result = await service.getByOrg(orgId);
       const member = await service.get(memberId);
+      const memberConfig = await service.getMemberConfig(memberId);
       const primaryUser = await modelUser.findById(primaryUserId);
 
       expect(result.length).toEqual(1);
@@ -418,6 +421,7 @@ describe('MemberService', () => {
           primaryUser: expect.any(Object),
           nextAppointment: undefined,
           appointmentsCount: 0,
+          platform: memberConfig.platform,
         }),
       );
 

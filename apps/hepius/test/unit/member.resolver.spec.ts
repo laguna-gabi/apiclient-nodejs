@@ -424,24 +424,28 @@ describe('MemberResolver', () => {
 
     it('should get members for a given orgId', async () => {
       const member = mockGenerateMember();
-      spyOnServiceGetByOrg.mockImplementationOnce(async () => [member]);
-
+      const getByOrgResult = [{ ...member, platform: Platform.android }];
+      spyOnServiceGetByOrg.mockImplementationOnce(async () => getByOrgResult);
       const result = await resolver.getMembers(member.org.id);
 
       expect(spyOnServiceGetByOrg).toBeCalledTimes(1);
       expect(spyOnServiceGetByOrg).toBeCalledWith(member.org.id);
-      expect(result).toEqual([member]);
+      expect(result).toEqual(getByOrgResult);
     });
 
     it('should fetch all members without filtering orgId', async () => {
       const members = [mockGenerateMember(), mockGenerateMember()];
-      spyOnServiceGetByOrg.mockImplementationOnce(async () => members);
+      const getByOrgResult = [
+        { ...members[0], platform: Platform.android },
+        { ...members[1], platform: Platform.ios },
+      ];
+      spyOnServiceGetByOrg.mockImplementationOnce(async () => getByOrgResult);
 
       const result = await resolver.getMembers();
 
       expect(spyOnServiceGetByOrg).toBeCalledTimes(1);
       expect(spyOnServiceGetByOrg).toBeCalledWith(undefined);
-      expect(result).toEqual(members);
+      expect(result).toEqual(getByOrgResult);
     });
   });
 

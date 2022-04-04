@@ -690,6 +690,9 @@ export class MemberSummary extends Identifier {
 
   @Field(() => Date, { nullable: true })
   firstLoggedInAt?: Date;
+
+  @Field(() => String)
+  platform: string;
 }
 
 @ObjectType()

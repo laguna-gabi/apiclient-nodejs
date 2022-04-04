@@ -452,6 +452,8 @@ export class Queries {
               }
               nextAppointment
               appointmentsCount
+              firstLoggedInAt
+              platform
             }
           }
         `,
