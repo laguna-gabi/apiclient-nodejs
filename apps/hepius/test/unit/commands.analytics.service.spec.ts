@@ -292,6 +292,7 @@ describe('Commands: AnalyticsService', () => {
             end: sub(now, { days: 9, hours: 23.5 }),
             status: AppointmentStatus.done,
             method: AppointmentMethod.chat,
+            noShow: false,
             notesData: app3Notes,
             recordings: [
               {
@@ -336,7 +337,7 @@ describe('Commands: AnalyticsService', () => {
           appt_status: AppointmentAttendanceStatus.missed,
           appt_day_of_week_name: 'Thursday',
           appt_hour: '3',
-          missed_appt: 'TRUE',
+          missed_appt: true,
           no_show_reason: 'no show reason',
           total_duration: 0,
           total_outreach_attempts: 0,
@@ -360,7 +361,7 @@ describe('Commands: AnalyticsService', () => {
           appt_day_of_week_name: 'Saturday',
           appt_hour: '3',
           status: 'done',
-          missed_appt: 'FALSE',
+          missed_appt: false,
           total_duration: 15,
           total_outreach_attempts: 1,
           channel_primary: RecordingType.phone,

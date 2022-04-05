@@ -111,6 +111,7 @@ export enum SlackChannel {
   testingSms = 'slack.testingSms',
   notifications = 'slack.notifications',
   escalation = 'slack.escalation',
+  analyticsAutoLoader = 'slack.analyticsAutoLoader',
 }
 
 export enum SlackIcon {

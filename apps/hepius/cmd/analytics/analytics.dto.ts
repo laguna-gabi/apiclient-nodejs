@@ -13,6 +13,14 @@ import {
 } from '../../src/member';
 import { Honorific, Language, Platform } from '@argus/pandora';
 import { hosts } from 'config';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export const DateFormat = 'yyyy-MM-dd';
 export const TimeFormat = 'HH:mm:ss';
@@ -24,6 +32,10 @@ export const HarmonyLink = hosts.harmony;
 export const InstructionsFileSuffix = 'Instructions';
 export const SummaryFileSuffix = 'Summary';
 export const GraduationPeriod = 90;
+
+export const MemberTable = 'harmony_member';
+export const CoachTable = 'harmony_coach';
+export const AppointmentTable = 'harmony_appts';
 
 export enum SheetOption {
   members = 'members',
@@ -45,113 +57,229 @@ export enum AppointmentsEventType {
 }
 
 // MemberData represent the Analytics `members` expected spreadsheet columns list
+@Entity({ name: MemberTable })
 export class MemberData {
+  @PrimaryColumn('varchar', { length: 50 })
   customer_id: string;
+  @Column('varchar', { length: 3 })
   mbr_initials: string;
+  @Column('varchar', { length: 50 })
   first_name: string;
+  @Column('varchar', { length: 50 })
   last_name: string;
+  @Column('varchar', { length: 20 })
   honorific: Honorific;
+  @Column('date')
   dob: string;
+  @Column('varchar', { length: 15 })
   phone: string;
+  @Column('varchar', { length: 15, nullable: true })
   phone_secondary?: string;
+  @Column('varchar', { length: 100, nullable: true })
   email?: string;
-  // bmi?: string; // not supported yet
+  @Column('varchar', { length: 10, nullable: true })
   readmission_risk?: ReadmissionRisk;
+  @Column('varchar', { length: 100, nullable: true })
   drg?: string;
+  @Column('varchar', { length: 100, nullable: true })
   drg_desc?: string;
+  @Column('datetime')
   created: string;
+  @Column('datetime')
   updated: string;
-  platform: Platform;
+  @Column('varchar', { length: 100, nullable: true })
+  platform?: Platform;
+  @Column('float', { nullable: true })
   app_user: boolean; // is member using Laguna app?
+  @Column('datetime', { nullable: true })
   app_first_login?: string;
+  @Column('datetime', { nullable: true })
   app_last_login?: string;
+  @Column('float', { nullable: true })
   intervention_group: boolean; // is member in control group?
-  language: Language;
+  @Column('varchar', { length: 25, nullable: true })
+  language?: Language;
+  @Column('float')
   age: number;
-  race: Race;
-  ethnicity: Ethnicity;
+  @Column('varchar', { length: 100, nullable: true })
+  race?: Race;
+  @Column('varchar', { length: 100, nullable: true })
+  ethnicity?: Ethnicity;
+  @Column('varchar', { length: 25, nullable: true })
   gender: Sex;
-  street_address: string;
-  city: string;
-  state: string;
-  zip_code: string;
+  @Column('varchar', { length: 100, nullable: true })
+  street_address?: string;
+  @Column('varchar', { length: 100, nullable: true })
+  city?: string;
+  @Column('varchar', { length: 25, nullable: true })
+  state?: string;
+  @Column('varchar', { length: 10, nullable: true })
+  zip_code?: string;
+  @Column('date', { nullable: true })
   admit_date: string;
-  discharge_date: string;
-  los: number;
-  days_since_discharge: number;
+  @Column('date', { nullable: true })
+  discharge_date?: string;
+  @Column('float', { nullable: true })
+  los?: number;
+  @Column('float', { nullable: true })
+  days_since_discharge?: number;
+  @Column('float', { nullable: true })
   active: boolean;
+  @Column('float', { nullable: true })
   graduated: boolean;
-  graduation_date: string;
-  first_activation_score: number;
+  @Column('date', { nullable: true })
+  graduation_date?: string;
+  @Column('float', { nullable: true })
+  first_activation_score?: number;
+  @Column('float', { nullable: true })
   first_wellbeing_score: number;
-  last_activation_score: number;
-  last_wellbeing_score: number;
-  fellow: string;
-  coach_name: string;
-  coach_id: string;
+  @Column('float', { nullable: true })
+  last_activation_score?: number;
+  @Column('float', { nullable: true })
+  last_wellbeing_score?: number;
+  @Column('varchar', { length: 100, nullable: true })
+  fellow?: string;
+  @Column('varchar', { length: 100, nullable: true })
+  coach_name?: string;
+  @Column('varchar', { length: 50, nullable: true })
+  coach_id?: string;
+  @Column('varchar', { length: 100, nullable: true })
   org_name: string;
+  @Column('varchar', { length: 50, nullable: true })
   org_id: string;
-  harmony_link: string;
+  @Column('varchar', { length: 100, nullable: true })
+  harmony_link?: string;
+  @Column('float', { nullable: true })
   dc_summary_received: boolean;
+  @Column('float', { nullable: true })
   dc_instructions_received: boolean;
-  dc_summary_load_date: string; // Discharge Summary document load date (in S3)
-  dc_instructions_load_date: string;
+  @Column('date', { nullable: true })
+  dc_summary_load_date?: string; // Discharge Summary document load date (in S3)
+  @Column('date', { nullable: true })
+  dc_instructions_load_date?: string;
+  @Column('blob', { nullable: true })
   general_notes?: string;
+  @Column('blob', { nullable: true })
   nurse_notes?: string;
+  @CreateDateColumn()
+  load_datetime?: Date;
+  @UpdateDateColumn()
+  last_modified_datetime?: Date;
 }
 
+@Entity({ name: CoachTable })
 export class CoachData {
-  created: string;
+  @PrimaryColumn('varchar', { length: 100 })
   user_id: string;
-  first_name: string;
-  last_name: string;
-  roles: UserRole[];
-  title?: string;
-  phone: string;
-  email: string;
-  spanish: boolean;
-  bio?: string;
-  avatar?: string;
-  max_members?: number;
-  assigned_members: string[];
-}
-// AppointmentsMemberData represent the Analytics `appointments` expected spreadsheet columns list
-export class AppointmentsMemberData {
+  @Column('datetime')
   created: string;
-  updated: string;
-  recap?: string;
-  strengths?: string;
-  member_plan?: string;
-  coach_plan?: string;
-  activation_score?: number;
-  activation_reason?: string;
-  wellbeing_score?: number;
-  wellbeing_reason?: string;
-  recorded_consent?: boolean;
-  customer_id: string;
-  mbr_initials: string;
-  appt_number: number;
+  @Column('varchar', { length: 100 })
+  first_name: string;
+  @Column('varchar', { length: 100 })
+  last_name: string;
+  @Column('simple-array')
+  roles: UserRole[];
+  @Column('varchar', { length: 100, nullable: true })
+  title?: string;
+  @Column('varchar', { length: 15 })
+  phone: string;
+  @Column('varchar', { length: 100 })
+  email: string;
+  @Column('float')
+  spanish: boolean;
+  @Column('varchar', { length: 300, nullable: true })
+  bio?: string;
+  @Column('varchar', { length: 100 })
+  avatar?: string;
+  @Column('float', { nullable: true })
+  max_members?: number;
+  @Column('simple-array', { nullable: true })
+  assigned_members?: string[];
+  @CreateDateColumn()
+  load_datetime?: Date;
+  @UpdateDateColumn()
+  last_modified_datetime?: Date;
+}
+
+// AppointmentsMemberData represent the Analytics `appointments` expected spreadsheet columns list
+@Entity({ name: AppointmentTable })
+export class AppointmentsMemberData {
+  @PrimaryGeneratedColumn()
+  id: number;
+  @Column('varchar', { length: 50, nullable: true })
   chat_id?: string;
+  @Column('datetime', { nullable: true })
+  created: string;
+  @Column('datetime', { nullable: true })
+  updated: string;
+  @Column('longtext', { nullable: true })
+  recap?: string;
+  @Column('longtext', { nullable: true })
+  strengths?: string;
+  @Column('longtext', { nullable: true })
+  member_plan?: string;
+  @Column('longtext', { nullable: true })
+  coach_plan?: string;
+  @Column('float', { nullable: true })
+  activation_score?: number;
+  @Column('varchar', { length: 100, nullable: true })
+  activation_reason?: string;
+  @Column('float', { nullable: true })
+  wellbeing_score?: number;
+  @Column('varchar', { length: 100, nullable: true })
+  wellbeing_reason?: string;
+  @Column('float', { nullable: true })
+  recorded_consent?: boolean;
+  @Column('varchar', { length: 50 })
+  customer_id: string;
+  @Column('varchar', { length: 3 })
+  mbr_initials: string;
+  @Column('float', { nullable: true })
+  appt_number?: number;
+  @Column('date', { nullable: true })
   appt_date?: string;
+  @Column('time', { nullable: true })
   appt_time_ct?: string;
+  @Column('varchar', { length: 20, nullable: true })
   appt_status?: AppointmentAttendanceStatus;
+  @Column('varchar', { length: 15, nullable: true })
   appt_day_of_week_name?: string;
+  @Column('varchar', { length: 50, nullable: true })
   appt_hour?: number;
+  @Column('varchar', { length: 20, nullable: true })
   status?: AppointmentStatus; // TODO: confirm with Alex that 'done' can replace 'closed' (consistency with our dto)
-  missed_appt?: string;
+  @Column('float', { nullable: true })
+  missed_appt?: boolean;
+  @Column('varchar', { length: 200, nullable: true })
   no_show_reason?: string;
+  @Column('float', { nullable: true })
   total_duration?: number;
+  @Column('float', { nullable: true })
   total_outreach_attempts?: number;
+  @Column('varchar', { length: 25, nullable: true })
   channel_primary?: RecordingType; // TODO: confirm with Alex that we can use the appointment method (not a 3'rd party vendor names - this coupling may not be healthy)
+  @Column('varchar', { length: 50, nullable: true })
   event_type_primary?: AppointmentsEventType; // TODO: confirm with Alex how to determine primary event
+  @Column('float', { nullable: true })
   is_video_call?: boolean;
+  @Column('float', { nullable: true })
   is_phone_call?: boolean;
+  @Column('date', { nullable: true })
   graduation_date?: string;
+  @Column('float', { nullable: true })
   graduated?: boolean;
+  @Column('float', { nullable: true })
   engaged?: boolean;
+  @Column('varchar', { length: 100, nullable: true })
   coach_name?: string;
+  @Column('varchar', { length: 50, nullable: true })
   coach_id?: string;
+  @Column('varchar', { length: 100, nullable: true })
   harmony_link?: string;
+  @CreateDateColumn()
+  load_datetime?: Date;
+  @UpdateDateColumn()
+  last_modified_datetime?: Date;
 }
 
 export type AnalyticsData = CoachData | MemberData | AppointmentsMemberData;

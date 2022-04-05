@@ -9,6 +9,7 @@ import {
   MigrationModule,
 } from '.';
 import { DbModule } from '../src/db/db.module';
+import { ProvidersModule } from '../src/providers';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { DbModule } from '../src/db/db.module';
     MigrationModule,
     GeneralModule,
     EventEmitterModule.forRoot(),
+    ProvidersModule,
   ],
   providers: [AnalyticsCommand, MigrationCommand, GeneralCommand], // add your commands here (https://docs.nestjs.com/recipes/nest-commander)
 })

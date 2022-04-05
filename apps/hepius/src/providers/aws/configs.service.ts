@@ -14,6 +14,10 @@ export const ExternalConfigs = {
   db: {
     connection: 'db.connection',
   },
+  analytics: {
+    dbUsername: 'analytics.db.username',
+    dbPassword: 'analytics.db.password',
+  },
   twilio: {
     accountSid: 'twilio.accountSid',
     appSid: 'twilio.appSid',
