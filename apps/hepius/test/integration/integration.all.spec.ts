@@ -15,6 +15,7 @@ import {
   ErrorType,
   Errors,
   EventType,
+  IEventOnUpdatedUser,
   Identifiers,
   ItemType,
   UserRole,
@@ -84,6 +85,7 @@ import {
   generateUpdateTodoParams,
   mockGenerateDispatch,
   mockGenerateQuestionnaireItem,
+  mockGenerateUser,
   submitMockCareWizard,
 } from '../index';
 
@@ -2283,6 +2285,115 @@ describe('Integration tests: all', () => {
       const res = qrs.find((qr) => qr.type === QuestionnaireType.lhp);
       expect(res.result.severity).toEqual(HealthPersona.highEffort);
     });
+  });
+
+  it('should update user related channels on updated user', async () => {
+    const { user, member: member1, org } = await creators.createMemberUserAndOptionalOrg();
+    const member2 = await handler.mutations.createMember({
+      memberParams: generateCreateMemberParams({ orgId: org.id, userId: user.id }),
+    }); //generating another member for the specific user above
+
+    handler.sendBird.spyOnSendBirdUpdateChannelName.mockReset();
+    handler.sendBird.spyOnSendBirdUpdateUser.mockReset();
+
+    const updatedUser = { ...mockGenerateUser(), id: user.id };
+    const eventParams: IEventOnUpdatedUser = {
+      user: updatedUser,
+      primaryMembers: [member1.id, member2.id],
+    };
+    handler.eventEmitter.emit(EventType.onUpdatedUser, eventParams);
+
+    await delay(500);
+    expect(handler.sendBird.spyOnSendBirdUpdateUser).toBeCalledWith({
+      nickname: `${updatedUser.firstName} ${updatedUser.lastName}`,
+      profile_url: updatedUser.avatar,
+      user_id: updatedUser.id,
+    });
+
+    const calls = [1, 2];
+    expect(handler.sendBird.spyOnSendBirdUpdateChannelName).toBeCalledTimes(calls.length);
+    calls.map((call) => {
+      expect(handler.sendBird.spyOnSendBirdUpdateChannelName).toHaveBeenNthCalledWith(
+        call,
+        expect.any(String),
+        `${updatedUser.firstName} ${updatedUser.lastName}`,
+        updatedUser.avatar,
+      );
+    });
+  });
+
+  it('should update only primary user related channels on updated user', async () => {
+    const user1 = await creators.createAndValidateUser();
+    const { user: user2, member } = await creators.createMemberUserAndOptionalOrg();
+
+    /**
+     * adding user1 to member and user2 sendbird channel
+     * after schedule app, there will be a sendbird channel with member and both user1 and user2
+     */
+    const appointmentParams = generateScheduleAppointmentParams({
+      memberId: member.id,
+      userId: user1.id,
+    });
+
+    await creators.handler.mutations.scheduleAppointment({ appointmentParams });
+
+    await delay(500);
+
+    handler.sendBird.spyOnSendBirdUpdateChannelName.mockReset();
+    handler.sendBird.spyOnSendBirdUpdateUser.mockReset();
+
+    const updatedUser = { ...mockGenerateUser(), id: user2.id };
+    const eventParams: IEventOnUpdatedUser = { user: updatedUser, primaryMembers: [member.id] };
+    handler.eventEmitter.emit(EventType.onUpdatedUser, eventParams);
+
+    await delay(500);
+
+    expect(handler.sendBird.spyOnSendBirdUpdateUser).toBeCalledWith({
+      nickname: `${updatedUser.firstName} ${updatedUser.lastName}`,
+      profile_url: updatedUser.avatar,
+      user_id: updatedUser.id,
+    });
+
+    expect(handler.sendBird.spyOnSendBirdUpdateChannelName).toBeCalledWith(
+      expect.any(String),
+      `${updatedUser.firstName} ${updatedUser.lastName}`,
+      updatedUser.avatar,
+    );
+  });
+
+  it('should not update secondary user related channels on updated user', async () => {
+    const user = await creators.createAndValidateUser();
+    const { member } = await creators.createMemberUserAndOptionalOrg();
+
+    /**
+     * adding user1 to member and user2 sendbird channel
+     * after schedule app, there will be a sendbird channel with member and both user1 and user2
+     */
+    const appointmentParams = generateScheduleAppointmentParams({
+      memberId: member.id,
+      userId: user.id,
+    });
+
+    await creators.handler.mutations.scheduleAppointment({ appointmentParams });
+
+    await delay(500);
+
+    handler.sendBird.spyOnSendBirdUpdateChannelName.mockReset();
+    handler.sendBird.spyOnSendBirdUpdateUser.mockReset();
+
+    const updatedUser = { ...mockGenerateUser(), id: user.id };
+    const eventParams: IEventOnUpdatedUser = { user: updatedUser, primaryMembers: [] };
+    handler.eventEmitter.emit(EventType.onUpdatedUser, eventParams);
+
+    await delay(500);
+
+    expect(handler.sendBird.spyOnSendBirdUpdateUser).toBeCalledWith({
+      nickname: `${updatedUser.firstName} ${updatedUser.lastName}`,
+      profile_url: updatedUser.avatar,
+      user_id: updatedUser.id,
+    });
+
+    expect(handler.sendBird.spyOnSendBirdUpdateChannelName).not.toBeCalled();
   });
 
   /************************************************************************************************

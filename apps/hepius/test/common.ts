@@ -150,6 +150,7 @@ export const mockProviders = (
 
   const spyOnFeatureFlagControlGroup = jest.spyOn(featureFlagService, 'isControlGroup');
   const spyOnSendBirdCreateUser = jest.spyOn(sendBird, 'createUser');
+  const spyOnSendBirdUpdateUser = jest.spyOn(sendBird, 'updateUser');
   const spyOnSendBirdCreateGroupChannel = jest.spyOn(sendBird, 'createGroupChannel');
   const spyOnSendBirdFreeze = jest.spyOn(sendBird, 'freezeGroupChannel');
   const spyOnSendBirdDeleteGroupChannel = jest.spyOn(sendBird, 'deleteGroupChannel');
@@ -186,6 +187,7 @@ export const mockProviders = (
   );
 
   spyOnSendBirdCreateUser.mockResolvedValue(v4());
+  spyOnSendBirdUpdateUser.mockResolvedValue(undefined);
   spyOnFeatureFlagControlGroup.mockResolvedValue(false);
   spyOnSendBirdCreateGroupChannel.mockResolvedValue(true);
   spyOnSendBirdFreeze.mockResolvedValue(undefined);
@@ -219,6 +221,7 @@ export const mockProviders = (
   return {
     sendBird: {
       spyOnSendBirdCreateUser,
+      spyOnSendBirdUpdateUser,
       spyOnSendBirdCreateGroupChannel,
       spyOnSendBirdFreeze,
       spyOnSendBirdDeleteGroupChannel,

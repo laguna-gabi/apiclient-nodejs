@@ -20,6 +20,7 @@ import {
   IEventOnNewUser,
   IEventOnReplacedUserForMember,
   IEventOnUpdatedMemberPlatform,
+  IEventOnUpdatedUser,
   IEventOnUpdatedUserCommunication,
   LoggerService,
   LoggingInterceptor,
@@ -168,6 +169,21 @@ export class CommunicationResolver {
         { memberId: params.member.id, userId: params.user.id },
         CommunicationResolver.name,
         this.handleNewMember.name,
+        formatEx(ex),
+      );
+    }
+  }
+
+  @OnEvent(EventType.onUpdatedUser, { async: true })
+  async handleUpdatedUser(params: IEventOnUpdatedUser) {
+    this.logger.info(params, CommunicationResolver.name, this.handleUpdatedUser.name);
+    try {
+      await this.communicationService.updateUser(params.user, params.primaryMembers);
+    } catch (ex) {
+      this.logger.error(
+        { userId: params.user.id },
+        CommunicationResolver.name,
+        this.handleUpdatedUser.name,
         formatEx(ex),
       );
     }

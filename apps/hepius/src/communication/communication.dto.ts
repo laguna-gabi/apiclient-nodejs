@@ -16,6 +16,12 @@ export interface RegisterSendbirdUserParams {
   metadata: { role?: string };
 }
 
+export interface UpdateSendbirdUserParams {
+  user_id: string;
+  nickname?: string;
+  profile_url?: string;
+}
+
 export interface CreateSendbirdGroupChannelParams {
   name: string;
   channel_url: string;

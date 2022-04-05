@@ -37,9 +37,10 @@ describe('live: sendbird actions', () => {
    * 10. Create another user (coach)
    * 11. replace coach in channel (leave & invite)
    * 12. replace channel name and image
+   * 13. update a user
    */
-  // 1. Create a user (coach)
   it('should do sendbird flow', async () => {
+    // 1. Create a user (coach)
     const user = {
       user_id: v4(),
       nickname: name.firstName(),
@@ -131,6 +132,15 @@ describe('live: sendbird actions', () => {
     );
     expect(JSON.parse(replaceResult.config.data).name).toEqual(newUser.nickname);
     expect(JSON.parse(replaceResult.config.data).cover_url).toEqual(newUser.profile_url);
+
+    // 13. update a user
+    const result = await sendBird.updateUser({
+      user_id: user.user_id,
+      nickname: name.firstName(),
+      profile_url: image.avatar(),
+    });
+    expect(result).not.toBeUndefined();
+    expect(result).toEqual(userResult);
   }, 30000);
 
   const validateGroupChannel = async (

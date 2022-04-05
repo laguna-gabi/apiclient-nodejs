@@ -16,6 +16,7 @@ export enum EventType {
 
   //user
   onNewUser = 'onNewUser',
+  onUpdatedUser = 'onUpdatedUser',
   onUpdatedUserCommunication = 'onUpdatedUserCommunication',
   onUpdatedUserConfig = 'onUpdatedUserConfig',
 
@@ -79,6 +80,10 @@ export interface IEventOnReplacedUserForMember {
  *************************************************************************************************/
 export interface IEventOnNewUser {
   user: User;
+}
+
+export interface IEventOnUpdatedUser extends IEventOnNewUser {
+  primaryMembers: string[];
 }
 
 export interface IEventOnUpdatedUserCommunication extends IEventMember {

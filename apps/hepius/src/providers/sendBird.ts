@@ -4,7 +4,11 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigsService, ExternalConfigs } from '.';
 import { AppointmentStatus } from '../appointment';
 import { LoggerService } from '../common';
-import { CreateSendbirdGroupChannelParams, RegisterSendbirdUserParams } from '../communication';
+import {
+  CreateSendbirdGroupChannelParams,
+  RegisterSendbirdUserParams,
+  UpdateSendbirdUserParams,
+} from '../communication';
 import { User } from '../user';
 
 @Injectable()
@@ -33,6 +37,32 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
     try {
       const result = await this.httpService
         .post(`${this.basePath}${this.suffix.users}`, params, {
+          headers: this.headers,
+        })
+        .toPromise();
+
+      if (result.status === 200) {
+        this.logger.info(params, SendBird.name, methodName);
+        return result.data.access_token;
+      } else {
+        this.logger.error(params, SendBird.name, methodName, {
+          code: result.status,
+          data: result.data,
+        });
+      }
+    } catch (ex) {
+      this.logger.error(params, SendBird.name, methodName, formatEx(ex));
+    }
+  }
+
+  async updateUser(params: UpdateSendbirdUserParams): Promise<string | undefined> {
+    const methodName = this.updateUser.name;
+    const putParams = { ...params };
+    delete putParams.user_id;
+
+    try {
+      const result = await this.httpService
+        .put(`${this.basePath}${this.suffix.users}/${params.user_id}`, putParams, {
           headers: this.headers,
         })
         .toPromise();
@@ -154,13 +184,8 @@ export class SendBird extends BaseSendBird implements OnModuleInit {
       const result = await this.httpService
         .put(
           `${this.basePath}${this.suffix.groupChannels}/${sendBirdChannelUrl}`,
-          {
-            name,
-            cover_url,
-          },
-          {
-            headers: this.headers,
-          },
+          { name, cover_url },
+          { headers: this.headers },
         )
         .toPromise();
       if (result.status === 200) {
