@@ -489,7 +489,7 @@ describe('MemberResolver', () => {
   describe('deleteMember', () => {
     let spyOnServiceDeleteMember;
     let spyOnOneSignalUnregister;
-    let spyOnCognitoServiceDeleteMember;
+    let spyOnCognitoServiceDeleteClient;
     let spyOnStorageServiceDeleteMember;
     let spyOnDeleteSchedules;
     let spyOnNotifyDeletedMemberConfig;
@@ -497,7 +497,7 @@ describe('MemberResolver', () => {
     beforeEach(() => {
       spyOnServiceDeleteMember = jest.spyOn(service, 'deleteMember');
       spyOnOneSignalUnregister = jest.spyOn(oneSignal, 'unregister');
-      spyOnCognitoServiceDeleteMember = jest.spyOn(cognitoService, 'deleteMember');
+      spyOnCognitoServiceDeleteClient = jest.spyOn(cognitoService, 'deleteClient');
       spyOnStorageServiceDeleteMember = jest.spyOn(storage, 'deleteMember');
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
@@ -507,7 +507,7 @@ describe('MemberResolver', () => {
       spyOnDeleteSchedules = jest.spyOn(resolver, 'deleteSchedules');
       spyOnServiceDeleteMember.mockImplementation(async () => undefined);
       spyOnOneSignalUnregister.mockImplementation(async () => undefined);
-      spyOnCognitoServiceDeleteMember.mockImplementation(async () => undefined);
+      spyOnCognitoServiceDeleteClient.mockImplementation(async () => undefined);
       spyOnStorageServiceDeleteMember.mockImplementation(async () => undefined);
       spyOnDeleteSchedules.mockImplementation(async () => undefined);
       spyOnNotifyDeletedMemberConfig.mockImplementation(async () => undefined);
@@ -515,7 +515,7 @@ describe('MemberResolver', () => {
 
     afterEach(() => {
       spyOnServiceDeleteMember.mockReset();
-      spyOnCognitoServiceDeleteMember.mockReset();
+      spyOnCognitoServiceDeleteClient.mockReset();
       spyOnOneSignalUnregister.mockReset();
       spyOnStorageServiceDeleteMember.mockReset();
       spyOnEventEmitter.mockReset();
@@ -548,9 +548,9 @@ describe('MemberResolver', () => {
       expect(result).toBeTruthy();
       expect(spyOnOneSignalUnregister).toBeCalledWith(memberConfig);
       if (member.deviceId) {
-        expect(spyOnCognitoServiceDeleteMember).toBeCalledWith(member.deviceId);
+        expect(spyOnCognitoServiceDeleteClient).toBeCalledWith(member.deviceId);
       } else {
-        expect(spyOnCognitoServiceDeleteMember).not.toHaveBeenCalled();
+        expect(spyOnCognitoServiceDeleteClient).not.toHaveBeenCalled();
       }
       const eventParams: IEventDeleteMember = {
         memberId: member.id,

@@ -178,8 +178,9 @@ export const mockProviders = (
   const spyOnTwilioValidateWebhook = jest.spyOn(twilioService, 'validateWebhook');
   const spyOnTwilioGetPhoneType = jest.spyOn(twilioService, 'getPhoneType');
   const spyOnSlackBotSendMessage = jest.spyOn(slackBot, 'send');
-  const spyOnCognitoServiceDisableMember = jest.spyOn(cognitoService, 'disableMember');
-  const spyOnCognitoServiceDeleteMember = jest.spyOn(cognitoService, 'deleteMember');
+  const spyOnCognitoServiceDisableClient = jest.spyOn(cognitoService, 'disableClient');
+  const spyOnCognitoServiceEnableClient = jest.spyOn(cognitoService, 'enableClient');
+  const spyOnCognitoServiceDeleteClient = jest.spyOn(cognitoService, 'deleteClient');
   const spyOnQueueServiceSendMessage = jest.spyOn(queueService, 'sendMessage');
   const spyOnNotificationServiceGetDispatchesByClientSenderId = jest.spyOn(
     notificationService,
@@ -213,8 +214,9 @@ export const mockProviders = (
   spyOnSendBirdUpdateChannelName.mockReturnValue(undefined);
   spyOnSendBirdInvite.mockResolvedValue([generateId()]);
   spyOnSendBirdLeave.mockReturnValue(undefined);
-  spyOnCognitoServiceDisableMember.mockReturnValue(undefined);
-  spyOnCognitoServiceDeleteMember.mockReturnValue(undefined);
+  spyOnCognitoServiceDisableClient.mockResolvedValue(true);
+  spyOnCognitoServiceEnableClient.mockResolvedValue(true);
+  spyOnCognitoServiceDeleteClient.mockReturnValue(undefined);
   spyOnQueueServiceSendMessage.mockReturnValue(undefined);
   spyOnNotificationServiceGetDispatchesByClientSenderId.mockResolvedValue([undefined]);
 
@@ -242,7 +244,11 @@ export const mockProviders = (
       spyOnTwilioGetPhoneType,
     },
     slackBot: { spyOnSlackBotSendMessage },
-    cognitoService: { spyOnCognitoServiceDisableMember, spyOnCognitoServiceDeleteMember },
+    cognitoService: {
+      spyOnCognitoServiceDisableClient,
+      spyOnCognitoServiceEnableClient,
+      spyOnCognitoServiceDeleteClient,
+    },
     storage: {
       spyOnStorageDownload,
       spyOnStorageUpload,

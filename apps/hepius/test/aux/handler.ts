@@ -244,8 +244,9 @@ export class Handler extends BaseHandler {
     this.twilioService.spyOnTwilioGetToken.mockReset();
     this.twilioService.spyOnTwilioValidateWebhook.mockReset();
     this.slackBot.spyOnSlackBotSendMessage.mockReset();
-    this.cognitoService.spyOnCognitoServiceDisableMember.mockReset();
-    this.cognitoService.spyOnCognitoServiceDeleteMember.mockReset();
+    this.cognitoService.spyOnCognitoServiceDisableClient.mockReset();
+    this.cognitoService.spyOnCognitoServiceEnableClient.mockReset();
+    this.cognitoService.spyOnCognitoServiceDeleteClient.mockReset();
     this.spyOnGetCommunicationService?.mockReset();
     this.queueService.spyOnQueueServiceSendMessage.mockReset();
 

@@ -32,12 +32,14 @@ import {
   generateId,
   mockGenerateUser,
 } from '../index';
+import { CognitoService } from '../../src/providers';
 
 describe('UserResolver', () => {
   let module: TestingModule;
   let resolver: UserResolver;
   let controller: UserController;
   let service: UserService;
+  let cognitoService: CognitoService;
   let eventEmitter: EventEmitter2;
   let spyOnEventEmitter;
 
@@ -50,6 +52,7 @@ describe('UserResolver', () => {
     resolver = module.get<UserResolver>(UserResolver);
     controller = module.get<UserController>(UserController);
     service = module.get<UserService>(UserService);
+    cognitoService = module.get<CognitoService>(CognitoService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
     mockLogger(module.get<LoggerService>(LoggerService));
@@ -220,6 +223,70 @@ describe('UserResolver', () => {
 
       expect(spyOnServiceGetUserConfig).toBeCalledWith(userId);
       expect(result).toEqual(userId);
+    });
+  });
+
+  describe('disableUser', () => {
+    let spyOnServiceGet;
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'get');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+    });
+
+    it('should throw error on invalid user', async () => {
+      spyOnServiceGet.mockResolvedValue(undefined);
+      await expect(resolver.disableUser(generateId())).rejects.toThrow(
+        Errors.get(ErrorType.userNotFound),
+      );
+    });
+
+    it('should disable an existing user', async () => {
+      const spyOnCognitoServiceDisableClient = jest.spyOn(cognitoService, 'disableClient');
+      const userParams = mockGenerateUser();
+      spyOnServiceGet.mockResolvedValue(userParams);
+      spyOnCognitoServiceDisableClient.mockResolvedValue(true);
+
+      const result = await resolver.disableUser(userParams.id);
+
+      expect(result).toBeTruthy();
+      expect(spyOnCognitoServiceDisableClient).toBeCalledWith(userParams.firstName.toLowerCase());
+
+      spyOnCognitoServiceDisableClient.mockReset();
+    });
+  });
+
+  describe('enableUser', () => {
+    let spyOnServiceGet;
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'get');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+    });
+
+    it('should throw error on invalid user', async () => {
+      spyOnServiceGet.mockResolvedValue(undefined);
+      await expect(resolver.enableUser(generateId())).rejects.toThrow(
+        Errors.get(ErrorType.userNotFound),
+      );
+    });
+
+    it('should enable an existing user', async () => {
+      const spyOnCognitoServiceEnableClient = jest.spyOn(cognitoService, 'enableClient');
+      const userParams = mockGenerateUser();
+      spyOnServiceGet.mockResolvedValue(userParams);
+      spyOnCognitoServiceEnableClient.mockResolvedValue(true);
+
+      const result = await resolver.enableUser(userParams.id);
+
+      expect(result).toBeTruthy();
+      expect(spyOnCognitoServiceEnableClient).toBeCalledWith(userParams.firstName.toLowerCase());
+
+      spyOnCognitoServiceEnableClient.mockReset();
     });
   });
 });

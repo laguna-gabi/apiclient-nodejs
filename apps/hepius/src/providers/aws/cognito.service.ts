@@ -13,28 +13,45 @@ export class CognitoService {
 
   constructor(private readonly logger: LoggerService) {}
 
-  async disableMember(deviceId): Promise<void> {
-    this.logger.info({ deviceId }, CognitoService.name, this.disableMember.name);
+  async disableClient(userName): Promise<boolean> {
+    this.logger.info({ userName }, CognitoService.name, this.disableClient.name);
     try {
       await this.cognito
-        .adminDisableUser({ UserPoolId: aws.cognito.userPoolId, Username: deviceId })
+        .adminDisableUser({ UserPoolId: aws.cognito.userPoolId, Username: userName })
         .promise();
+      return true;
     } catch (ex) {
       if (ex?.code !== 'UserNotFoundException') {
-        this.logger.error(deviceId, CognitoService.name, this.disableMember.name, formatEx(ex));
+        this.logger.error(userName, CognitoService.name, this.disableClient.name, formatEx(ex));
       }
+      return false;
     }
   }
 
-  async deleteMember(deviceId): Promise<void> {
-    this.logger.info({ deviceId }, CognitoService.name, this.deleteMember.name);
+  async enableClient(userName): Promise<boolean> {
+    // this.logger.info({ userName }, CognitoService.name, this.enableClient.name);
     try {
       await this.cognito
-        .adminDeleteUser({ UserPoolId: aws.cognito.userPoolId, Username: deviceId })
+        .adminEnableUser({ UserPoolId: aws.cognito.userPoolId, Username: userName })
+        .promise();
+      return true;
+    } catch (ex) {
+      if (ex?.code !== 'UserNotFoundException') {
+        this.logger.error(userName, CognitoService.name, this.enableClient.name, formatEx(ex));
+      }
+      return false;
+    }
+  }
+
+  async deleteClient(userName: string): Promise<void> {
+    this.logger.info({ userName }, CognitoService.name, this.deleteClient.name);
+    try {
+      await this.cognito
+        .adminDeleteUser({ UserPoolId: aws.cognito.userPoolId, Username: userName })
         .promise();
     } catch (ex) {
       if (ex?.code !== 'UserNotFoundException') {
-        this.logger.error(deviceId, CognitoService.name, this.deleteMember.name, formatEx(ex));
+        this.logger.error(userName, CognitoService.name, this.deleteClient.name, formatEx(ex));
       }
     }
   }

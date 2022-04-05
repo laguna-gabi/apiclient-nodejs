@@ -17,11 +17,16 @@ import {
   UserRole,
 } from '../common';
 import { ClientCategory, IUpdateClientSettings, InnerQueueTypes, QueueType } from '@argus/pandora';
+import { CognitoService } from '../providers';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => User)
 export class UserResolver {
-  constructor(private readonly userService: UserService, private eventEmitter: EventEmitter2) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly cognitoService: CognitoService,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   @Mutation(() => Identifier)
   @Roles(UserRole.coach, UserRole.nurse)
@@ -84,6 +89,34 @@ export class UserResolver {
     await this.userService.setLatestQueryAlert(userId);
 
     return true;
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async disableUser(
+    @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.userIdInvalid)))
+    id: string,
+  ): Promise<boolean> {
+    const user = await this.userService.get(id);
+    if (!user) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+
+    return this.cognitoService.disableClient(user.firstName.toLowerCase());
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async enableUser(
+    @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.userIdInvalid)))
+    id: string,
+  ): Promise<boolean> {
+    const user = await this.userService.get(id);
+    if (!user) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+
+    return this.cognitoService.enableClient(user.firstName.toLowerCase());
   }
 
   protected notifyUpdatedUserConfig(user: User) {

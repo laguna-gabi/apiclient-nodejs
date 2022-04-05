@@ -239,7 +239,7 @@ export class MemberResolver extends MemberBase {
   ) {
     await this.oneSignal.unregister(memberConfig);
     if (member.deviceId) {
-      await this.cognitoService.deleteMember(member.deviceId);
+      await this.cognitoService.deleteClient(member.deviceId);
     }
     if (hard) {
       await this.storageService.deleteMember(member.id);
