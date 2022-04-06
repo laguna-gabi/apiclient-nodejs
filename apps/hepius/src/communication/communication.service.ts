@@ -60,7 +60,7 @@ export class CommunicationService {
     this.eventEmitter.emit(EventType.onUpdatedUserConfig, eventParams);
   }
 
-  async updateUser(user: User, primaryMembers: string[]) {
+  async updateUser(user: User) {
     const params: UpdateSendbirdUserParams = {
       user_id: user.id,
       nickname: `${user.firstName} ${user.lastName}`,
@@ -69,10 +69,19 @@ export class CommunicationService {
 
     await this.sendBird.updateUser(params);
 
-    const userChannels = await this.communicationModel.find({
-      userId: new Types.ObjectId(params.user_id),
-      memberId: { $in: primaryMembers.map((memberId) => new Types.ObjectId(memberId)) },
-    });
+    const userChannels = await this.communicationModel.aggregate([
+      {
+        $lookup: {
+          from: 'members',
+          localField: 'userId',
+          foreignField: 'primaryUserId',
+          as: 'primaryUsers',
+        },
+      },
+      { $match: { 'primaryUsers.primaryUserId': new Types.ObjectId(user.id) } },
+      { $project: { sendBirdChannelUrl: 1 } },
+    ]);
+
     await Promise.all(
       userChannels.map(async (channel) => {
         await this.sendBird.updateChannelName(

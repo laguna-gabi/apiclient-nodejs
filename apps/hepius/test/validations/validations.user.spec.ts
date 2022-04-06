@@ -1,9 +1,14 @@
 import { lorem } from 'faker';
 import * as request from 'supertest';
 import { ErrorType, Errors, maxLength, minLength } from '../../src/common';
-import { CreateUserParams, GetSlotsParams, defaultUserParams } from '../../src/user';
+import {
+  CreateUserParams,
+  GetSlotsParams,
+  UpdateUserParams,
+  defaultUserParams,
+} from '../../src/user';
 import { Handler } from '../aux';
-import { generateGetSlotsParams, generateId } from '../generators';
+import { generateGetSlotsParams, generateId, generateUpdateUserParams } from '../generators';
 import {
   BEFORE_ALL_TIMEOUT,
   generateCreateUserParams,
@@ -60,6 +65,23 @@ describe('Validations - user', () => {
     });
   });
 
+  test.each`
+    length           | errorString | field
+    ${minLength - 1} | ${'short'}  | ${'firstName'}
+    ${maxLength + 1} | ${'long'}   | ${'firstName'}
+    ${minLength - 1} | ${'short'}  | ${'lastName'}
+    ${maxLength + 1} | ${'long'}   | ${'lastName'}
+  `(`should fail to update a user since $field is too $errorString`, async (params) => {
+    const updateUserParams: UpdateUserParams = generateUpdateUserParams();
+    updateUserParams[params.field] = generateRandomName(params.length);
+
+    await handler.mutations.updateUser({
+      updateUserParams,
+      invalidFieldsErrors: [Errors.get(ErrorType.userMinMaxLength)],
+      requestHeaders: handler.defaultAdminRequestHeaders,
+    });
+  });
+
   /* eslint-disable max-len */
   test.each`
     field             | input                             | errors
@@ -87,6 +109,31 @@ describe('Validations - user', () => {
       await handler.mutations.createUser({
         createUserParams,
         ...params.errors,
+      });
+    },
+  );
+
+  /* eslint-disable max-len */
+  test.each`
+    field             | input                             | errors
+    ${'avatar'}       | ${{ avatar: lorem.word() }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userAvatarFormat)] }}
+    ${'description'}  | ${{ description: 222 }}           | ${{ missingFieldError: stringError }}
+    ${'firstName'}    | ${{ firstName: 222 }}             | ${{ missingFieldError: stringError }}
+    ${'lastName'}     | ${{ lastName: 222 }}              | ${{ missingFieldError: stringError }}
+    ${'roles'}        | ${{ roles: [222] }}               | ${{ missingFieldError: 'does not exist in "UserRole" enum.' }}
+    ${'title'}        | ${{ title: 222 }}                 | ${{ missingFieldError: stringError }}
+    ${'maxCustomers'} | ${{ maxCustomers: lorem.word() }} | ${{ missingFieldError: 'Float cannot represent non numeric value' }}
+    ${'languages'}    | ${{ languages: lorem.word() }}    | ${{ missingFieldError: 'does not exist in "Language" enum.' }}
+    ${'orgs'}         | ${{ orgs: ['not-valid'] }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.orgIdInvalid)] }}
+  `(
+    /* eslint-enable max-len */
+    `should fail to update a user since $field is not valid`,
+    async (params) => {
+      const updateUserParams: UpdateUserParams = generateUpdateUserParams(params.input);
+      await handler.mutations.updateUser({
+        updateUserParams,
+        ...params.errors,
+        requestHeaders: handler.defaultAdminRequestHeaders,
       });
     },
   );

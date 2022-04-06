@@ -83,6 +83,7 @@ import {
   generateUpdateRecordingParams,
   generateUpdateRedFlagParams,
   generateUpdateTodoParams,
+  generateUpdateUserParams,
   mockGenerateDispatch,
   mockGenerateQuestionnaireItem,
   mockGenerateUser,
@@ -2288,8 +2289,8 @@ describe('Integration tests: all', () => {
   });
 
   it('should update user related channels on updated user', async () => {
-    const { user, member: member1, org } = await creators.createMemberUserAndOptionalOrg();
-    const member2 = await handler.mutations.createMember({
+    const { user, org } = await creators.createMemberUserAndOptionalOrg();
+    await handler.mutations.createMember({
       memberParams: generateCreateMemberParams({ orgId: org.id, userId: user.id }),
     }); //generating another member for the specific user above
 
@@ -2297,13 +2298,10 @@ describe('Integration tests: all', () => {
     handler.sendBird.spyOnSendBirdUpdateUser.mockReset();
 
     const updatedUser = { ...mockGenerateUser(), id: user.id };
-    const eventParams: IEventOnUpdatedUser = {
-      user: updatedUser,
-      primaryMembers: [member1.id, member2.id],
-    };
+    const eventParams: IEventOnUpdatedUser = { user: updatedUser };
     handler.eventEmitter.emit(EventType.onUpdatedUser, eventParams);
 
-    await delay(500);
+    await delay(1000);
     expect(handler.sendBird.spyOnSendBirdUpdateUser).toBeCalledWith({
       nickname: `${updatedUser.firstName} ${updatedUser.lastName}`,
       profile_url: updatedUser.avatar,
@@ -2343,10 +2341,10 @@ describe('Integration tests: all', () => {
     handler.sendBird.spyOnSendBirdUpdateUser.mockReset();
 
     const updatedUser = { ...mockGenerateUser(), id: user2.id };
-    const eventParams: IEventOnUpdatedUser = { user: updatedUser, primaryMembers: [member.id] };
+    const eventParams: IEventOnUpdatedUser = { user: updatedUser };
     handler.eventEmitter.emit(EventType.onUpdatedUser, eventParams);
 
-    await delay(500);
+    await delay(1000);
 
     expect(handler.sendBird.spyOnSendBirdUpdateUser).toBeCalledWith({
       nickname: `${updatedUser.firstName} ${updatedUser.lastName}`,
@@ -2382,7 +2380,7 @@ describe('Integration tests: all', () => {
     handler.sendBird.spyOnSendBirdUpdateUser.mockReset();
 
     const updatedUser = { ...mockGenerateUser(), id: user.id };
-    const eventParams: IEventOnUpdatedUser = { user: updatedUser, primaryMembers: [] };
+    const eventParams: IEventOnUpdatedUser = { user: updatedUser };
     handler.eventEmitter.emit(EventType.onUpdatedUser, eventParams);
 
     await delay(500);
@@ -2394,6 +2392,22 @@ describe('Integration tests: all', () => {
     });
 
     expect(handler.sendBird.spyOnSendBirdUpdateChannelName).not.toBeCalled();
+  });
+
+  it('should update a user', async () => {
+    const { id, authId } = await creators.createAndValidateUser();
+
+    const updateUserParams = generateUpdateUserParams({ id });
+    const updateUserResponse = await handler.mutations.updateUser({
+      updateUserParams,
+      requestHeaders: handler.defaultAdminRequestHeaders,
+    });
+
+    const getResponse = await handler.queries.getUser({
+      requestHeaders: generateRequestHeaders(authId),
+    });
+
+    expect(getResponse).toEqual(expect.objectContaining(updateUserResponse));
   });
 
   /************************************************************************************************

@@ -82,9 +82,7 @@ export interface IEventOnNewUser {
   user: User;
 }
 
-export interface IEventOnUpdatedUser extends IEventOnNewUser {
-  primaryMembers: string[];
-}
+export type IEventOnUpdatedUser = IEventOnNewUser;
 
 export interface IEventOnUpdatedUserCommunication extends IEventMember {
   newUserId: string;

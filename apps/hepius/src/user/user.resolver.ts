@@ -2,7 +2,15 @@ import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase, isUndefined, omitBy } from 'lodash';
-import { CreateUserParams, GetSlotsParams, Slots, User, UserConfig, UserService } from '.';
+import {
+  CreateUserParams,
+  GetSlotsParams,
+  Slots,
+  UpdateUserParams,
+  User,
+  UserConfig,
+  UserService,
+} from '.';
 import {
   Client,
   ErrorType,
@@ -10,6 +18,7 @@ import {
   EventType,
   IEventNotifyQueue,
   IEventOnNewUser,
+  IEventOnUpdatedUser,
   Identifier,
   IsValidObjectId,
   LoggingInterceptor,
@@ -41,6 +50,23 @@ export class UserResolver {
     this.notifyUpdatedUserConfig(user);
 
     return { id: user.id };
+  }
+
+  @Mutation(() => User)
+  @Roles(UserRole.admin)
+  async updateUser(
+    @Args(camelCase(UpdateUserParams.name))
+    updateUserParams: UpdateUserParams,
+  ) {
+    const user = await this.userService.update(updateUserParams);
+    this.notifyUpdatedUserConfig(user);
+
+    if (user.firstName || user.lastName || user.avatar) {
+      const eventParams: IEventOnUpdatedUser = { user };
+      this.eventEmitter.emit(EventType.onUpdatedUser, eventParams);
+    }
+
+    return user;
   }
 
   @Query(() => User, { nullable: true })

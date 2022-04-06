@@ -119,7 +119,13 @@ import {
   TodoStatus,
   UpdateTodoParams,
 } from '../src/todo';
-import { CreateUserParams, GetSlotsParams, User, defaultUserParams } from '../src/user';
+import {
+  CreateUserParams,
+  GetSlotsParams,
+  UpdateUserParams,
+  User,
+  defaultUserParams,
+} from '../src/user';
 
 export const generateCreateUserParams = ({
   authId = v4(),
@@ -144,6 +150,32 @@ export const generateCreateUserParams = ({
     avatar,
     description,
     phone,
+    title,
+    maxCustomers,
+    languages,
+    orgs,
+  };
+};
+
+export const generateUpdateUserParams = ({
+  id = generateId(),
+  roles = [UserRole.nurse],
+  firstName = name.firstName(21),
+  lastName = name.lastName(21),
+  avatar = image.imageUrl(),
+  description = lorem.sentence(),
+  title = name.title(),
+  maxCustomers = defaultUserParams.maxCustomers + 1,
+  languages = [Language.en, Language.es],
+  orgs = [generateId(), generateId()],
+}: Partial<UpdateUserParams> = {}): UpdateUserParams => {
+  return {
+    id,
+    firstName,
+    lastName,
+    roles,
+    avatar,
+    description,
     title,
     maxCustomers,
     languages,

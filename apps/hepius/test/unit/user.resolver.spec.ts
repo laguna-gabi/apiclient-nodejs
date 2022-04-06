@@ -30,6 +30,7 @@ import {
   generateCreateUserParams,
   generateGetSlotsParams,
   generateId,
+  generateUpdateUserParams,
   mockGenerateUser,
 } from '../index';
 import { CognitoService } from '../../src/providers';
@@ -121,6 +122,64 @@ describe('UserResolver', () => {
         EventType.notifyQueue,
         eventSettingsParams,
       );
+    });
+  });
+
+  describe('updateUser', () => {
+    let spyOnServiceUpdate;
+    beforeEach(() => {
+      spyOnServiceUpdate = jest.spyOn(service, 'update');
+    });
+
+    afterEach(() => {
+      spyOnServiceUpdate.mockReset();
+      spyOnEventEmitter.mockReset();
+    });
+
+    test.each([
+      [Object.values(UserRole)],
+      [[UserRole.coach, UserRole.nurse]],
+      [[UserRole.coach]],
+      [[UserRole.nurse]],
+      [[UserRole.admin]],
+    ])('should successfully update a user with role: %p', async (roles) => {
+      spyOnServiceUpdate.mockImplementationOnce(async () => mockGenerateUser());
+
+      const params = generateUpdateUserParams({ roles });
+      await resolver.updateUser(params);
+
+      expect(spyOnServiceUpdate).toBeCalledTimes(1);
+      expect(spyOnServiceUpdate).toBeCalledWith(params);
+    });
+
+    it(`should call events ${EventType.onUpdatedUser} and ${EventType.notifyQueue}`, async () => {
+      const user = generateUpdateUserParams();
+      spyOnServiceUpdate.mockImplementationOnce(async () => user);
+      await resolver.updateUser(user);
+
+      const updateClientSettings: IUpdateClientSettings = {
+        type: InnerQueueTypes.updateClientSettings,
+        id: user.id,
+        clientCategory: ClientCategory.user,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar,
+      };
+      const eventSettingsParams: IEventNotifyQueue = {
+        type: QueueType.notifications,
+        message: JSON.stringify(updateClientSettings),
+      };
+
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+        1,
+        EventType.notifyQueue,
+        eventSettingsParams,
+      );
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const eventParams: IEventOnNewUser = { user };
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.onUpdatedUser, eventParams);
     });
   });
 

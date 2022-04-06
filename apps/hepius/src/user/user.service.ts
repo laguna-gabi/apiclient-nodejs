@@ -10,6 +10,7 @@ import {
   NotNullableUserKeys,
   SlotService,
   Slots,
+  UpdateUserParams,
   User,
   UserConfig,
   UserConfigDocument,
@@ -30,6 +31,7 @@ import {
   UserRole,
 } from '../common';
 import { Environments, IEventNotifySlack, SlackChannel, SlackIcon, formatEx } from '@argus/pandora';
+import { isNil, omitBy } from 'lodash';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -69,6 +71,24 @@ export class UserService extends BaseService {
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.userIdOrEmailAlreadyExists) : ex,
       );
     }
+  }
+
+  async update(updateUserParams: UpdateUserParams): Promise<User> {
+    const { id, ...setParams } = updateUserParams;
+
+    const user = await this.userModel
+      .findByIdAndUpdate(
+        new Types.ObjectId(id),
+        { $set: omitBy(setParams, isNil) },
+        { upsert: false, new: true },
+      )
+      .lean();
+
+    if (!user) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+
+    return { ...user, id: user._id };
   }
 
   async getSlots(getSlotsParams: GetSlotsParams): Promise<Slots> {

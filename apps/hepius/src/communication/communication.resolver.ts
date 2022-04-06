@@ -178,7 +178,7 @@ export class CommunicationResolver {
   async handleUpdatedUser(params: IEventOnUpdatedUser) {
     this.logger.info(params, CommunicationResolver.name, this.handleUpdatedUser.name);
     try {
-      await this.communicationService.updateUser(params.user, params.primaryMembers);
+      await this.communicationService.updateUser(params.user);
     } catch (ex) {
       this.logger.error(
         { userId: params.user.id },
