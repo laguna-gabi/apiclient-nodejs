@@ -296,7 +296,7 @@ export class UserService extends BaseService {
       },
       { $sort: { lastMemberAssignedAt: 1 } },
       ...(process.env.NODE_ENV === Environments.production ||
-      process.env.NODE_ENV === Environments.development
+      process.env.NODE_ENV === Environments.develop
         ? []
         : [{ $limit: 10 }]),
       {

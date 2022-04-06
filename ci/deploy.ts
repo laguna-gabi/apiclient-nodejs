@@ -15,7 +15,11 @@ const DEVELOP_MAIN_BRANCH_NAME = 'develop';
 const STAGING_MAIN_BRANCH_NAME = 'staging';
 const MASTER_MAIN_BRANCH_NAME = 'master';
 
-const deployableBranches = [DEVELOP_MAIN_BRANCH_NAME, STAGING_MAIN_BRANCH_NAME, MASTER_MAIN_BRANCH_NAME];
+const deployableBranches = [
+  DEVELOP_MAIN_BRANCH_NAME,
+  STAGING_MAIN_BRANCH_NAME,
+  MASTER_MAIN_BRANCH_NAME,
+];
 
 // Attributes that are returned by DescribeTaskDefinition, but are not valid RegisterTaskDefinition inputs
 const IGNORED_TASK_DEFINITION_ATTRIBUTES = [
@@ -276,8 +280,12 @@ const deploy = async () => {
     );
   }
 
-  const nodeEnv = process.env.GITHUB_REF_NAME === DEVELOP_MAIN_BRANCH_NAME ? 'development' :
-    (process.env.GITHUB_REF_NAME === STAGING_MAIN_BRANCH_NAME ? 'staging' : 'production');
+  const nodeEnv =
+    process.env.GITHUB_REF_NAME === DEVELOP_MAIN_BRANCH_NAME
+      ? DEVELOP_MAIN_BRANCH_NAME
+      : process.env.GITHUB_REF_NAME === STAGING_MAIN_BRANCH_NAME
+      ? STAGING_MAIN_BRANCH_NAME
+      : 'production';
 
   const imageName = `${process.env.ECR_REGISTRY}/${appName}-${process.env.GITHUB_REF_NAME}`;
   const serviceName = `${appName}-${process.env.GITHUB_REF_NAME}-service`;

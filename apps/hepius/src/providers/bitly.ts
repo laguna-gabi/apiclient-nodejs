@@ -25,7 +25,7 @@ export class Bitly implements OnModuleInit {
    * When running on environments:
    * 1. test - process.env.NODE_ENV = test - not generating a link.
    * 2. localhost - process.env.NODE_ENV = undefined - not generating a link.
-   * 3. development - process.env.NODE_ENV = development - generating a link.
+   * 3. develop - process.env.NODE_ENV = develop - generating a link.
    * 4. production - process.env.NODE_ENV = production - generating a link.
    */
   async shortenLink(url): Promise<string> {

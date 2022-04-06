@@ -160,7 +160,7 @@ jobs:
           elif [ "${{ steps.branch-name.outputs.current_branch }}" = "staging" ]; then
             echo "::set-output name=env_name::staging"
           elif [ "${{ steps.branch-name.outputs.current_branch }}" = "develop" ]; then
-            echo "::set-output name=env_name::development"
+            echo "::set-output name=env_name::develop"
           fi
       - name: Migrate Db
         env:

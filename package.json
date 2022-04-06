@@ -3,14 +3,14 @@
   "private": true,
   "scripts": {
     "seed": "nx command hepius --cmd=general --options='-t seed'",
-    "seed:dev": "export NODE_ENV=development && yarn seed",
-    "seed:laguna:dev": "export NODE_ENV=development && nx command hepius --cmd=general --options='-t lagunaSeed'",
+    "seed:dev": "export NODE_ENV=develop && yarn seed",
+    "seed:laguna:dev": "export NODE_ENV=develop && nx command hepius --cmd=general --options='-t lagunaSeed'",
     "seed:create:users": "nx command hepius --cmd=general --options='-t newUser'",
-    "seed:create:users:dev": "export NODE_ENV=development && yarn seed:create:users",
+    "seed:create:users:dev": "export NODE_ENV=develop && yarn seed:create:users",
     "seed:create:users:production": "export NODE_ENV=production && yarn seed:create:users",
     "get:tokens": "nx command hepius --cmd=general --options='-t getTokens'",
     "analytics:dump": "nx command hepius --cmd=analytics",
-    "analytics:dump:dev": "export NODE_ENV=development && yarn analytics:dump",
+    "analytics:dump:dev": "export NODE_ENV=develop && yarn analytics:dump",
     "analytics:dump:prod": "export NODE_ENV=production && yarn analytics:dump",
     "migrate:up": "nx command hepius --cmd=migration --options='up'"
   },
