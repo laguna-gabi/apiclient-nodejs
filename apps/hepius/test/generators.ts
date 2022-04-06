@@ -332,7 +332,6 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
     honorific: defaultMemberParams.honorific,
     roles: [MemberRole.member],
     race: defaultMemberParams.race,
-    ethnicity: defaultMemberParams.ethnicity,
     zipCode: generateZipCode(),
     fellowName: `${name.firstName()} ${name.lastName()}`,
     address: {

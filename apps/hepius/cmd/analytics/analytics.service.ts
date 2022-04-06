@@ -286,7 +286,6 @@ export class AnalyticsService {
       language: member.memberConfig?.language,
       age: differenceInYears(this.getDateTime(), Date.parse(member.memberDetails.dateOfBirth)),
       race: member.memberDetails.race,
-      ethnicity: member.memberDetails.ethnicity,
       gender: member.memberDetails.sex,
       street_address: member.memberDetails.address?.street,
       city: member.memberDetails.address?.city,

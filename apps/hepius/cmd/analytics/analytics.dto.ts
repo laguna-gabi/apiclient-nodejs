@@ -2,15 +2,7 @@ import { Types } from 'mongoose';
 import { Appointment, AppointmentStatus, Notes } from '../../src/appointment';
 import { User } from '../../src/user';
 import { RecordingType, UserRole } from '../../src/common';
-import {
-  Ethnicity,
-  Member,
-  MemberConfig,
-  Race,
-  ReadmissionRisk,
-  Recording,
-  Sex,
-} from '../../src/member';
+import { Member, MemberConfig, Race, ReadmissionRisk, Recording, Sex } from '../../src/member';
 import { Honorific, Language, Platform } from '@argus/pandora';
 import { hosts } from 'config';
 import {
@@ -103,8 +95,6 @@ export class MemberData {
   age: number;
   @Column('varchar', { length: 100, nullable: true })
   race?: Race;
-  @Column('varchar', { length: 100, nullable: true })
-  ethnicity?: Ethnicity;
   @Column('varchar', { length: 25, nullable: true })
   gender: Sex;
   @Column('varchar', { length: 100, nullable: true })

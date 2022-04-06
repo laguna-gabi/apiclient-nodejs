@@ -60,23 +60,15 @@ registerEnumType(Sex, { name: 'Sex' });
 
 registerEnumType(Honorific, { name: 'Honorific' });
 
-export enum Race { // TBD: get requirements from product
-  white = 'white',
-  black = 'black',
-  asian = 'asian',
-  indian = 'indian',
-  hawaiian = 'hawaiian',
+export enum Race {
+  americanIndianOrAlaskaNative = 'American Indian or Alaska Native',
+  asian = 'Asian',
+  hispanicOrLatino = 'Hispanic or Latino',
+  nativeHawaiianOrOtherPacificIslander = 'Native Hawaiian or Other Pacific Islander',
+  white = 'White',
 }
 
 registerEnumType(Race, { name: 'Race' });
-
-export enum Ethnicity { // TBD: get requirements from product
-  latino = 'latino',
-  hispanic = 'hispanic',
-  other = 'other',
-}
-
-registerEnumType(Ethnicity, { name: 'Ethnicity' });
 
 export enum ReadmissionRisk {
   high = 'high',
@@ -98,7 +90,6 @@ export const defaultMemberParams = {
   language: Language.en,
   honorific: Honorific.mx,
   roles: [MemberRole.member],
-  ethnicity: Ethnicity.latino,
   race: Race.white,
 };
 
@@ -166,11 +157,6 @@ export class ExtraMemberParams {
   @IsEnum(Race) /* for rest api */
   @IsOptional()
   race?: Race;
-
-  @Field(() => Ethnicity, { nullable: true })
-  @IsEnum(Ethnicity) /* for rest api */
-  @IsOptional()
-  ethnicity?: Ethnicity;
 
   @Field(() => String, { nullable: true })
   @IsString() /* for rest api */
@@ -624,10 +610,6 @@ export class Member extends Identifier {
   @Prop({ type: String, enum: Race, isNaN: true })
   @Field(() => Race, { nullable: true })
   race?: Race;
-
-  @Prop({ type: String, enum: Ethnicity, isNaN: true })
-  @Field(() => Ethnicity, { nullable: true })
-  ethnicity?: Ethnicity;
 
   @Prop({ isNaN: true })
   @Field(() => ReadmissionRisk, { nullable: true })
