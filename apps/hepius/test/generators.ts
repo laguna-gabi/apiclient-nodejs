@@ -1091,7 +1091,7 @@ export const generateCreateCarePlanParamsWizard = ({
 };
 
 export const mockGenerateQuestionnaireItem = ({
-  code = lorem.word(),
+  code = datatype.uuid(),
   label = lorem.words(5),
   type = ItemType[randomEnum(ItemType)],
   order = 1,
