@@ -34,6 +34,7 @@ import {
   mockGenerateUser,
 } from '../index';
 import { CognitoService } from '../../src/providers';
+import { v4 } from 'uuid';
 
 describe('UserResolver', () => {
   let module: TestingModule;
@@ -66,12 +67,19 @@ describe('UserResolver', () => {
 
   describe('createUser', () => {
     let spyOnServiceInsert;
+    let spyOnServiceUpdateAuthId;
+    let spyOnCognitoAddClient;
+
     beforeEach(() => {
       spyOnServiceInsert = jest.spyOn(service, 'insert');
+      spyOnServiceUpdateAuthId = jest.spyOn(service, 'updateAuthId');
+      spyOnCognitoAddClient = jest.spyOn(cognitoService, 'addClient');
     });
 
     afterEach(() => {
       spyOnServiceInsert.mockReset();
+      spyOnServiceUpdateAuthId.mockReset();
+      spyOnCognitoAddClient.mockReset();
       spyOnEventEmitter.mockReset();
     });
 
@@ -82,7 +90,11 @@ describe('UserResolver', () => {
       [[UserRole.nurse]],
       [[UserRole.admin]],
     ])('should successfully create a user with role: %p', async (roles) => {
-      spyOnServiceInsert.mockImplementationOnce(async () => mockGenerateUser());
+      const user = mockGenerateUser();
+      const authId = v4();
+      spyOnServiceInsert.mockImplementationOnce(async () => user);
+      spyOnCognitoAddClient.mockResolvedValueOnce(authId);
+      spyOnServiceUpdateAuthId.mockResolvedValueOnce({ ...user, authId });
 
       const params = generateCreateUserParams({ roles });
       await resolver.createUser(params);
@@ -94,12 +106,17 @@ describe('UserResolver', () => {
     it(`should call events ${EventType.onNewUser} and ${EventType.notifyQueue}`, async () => {
       const params = generateCreateUserParams();
       const id = generateId();
-      spyOnServiceInsert.mockImplementationOnce(async () => ({ ...params, id }));
+      const user = { id, ...params };
+      const authId = v4();
+      spyOnServiceInsert.mockImplementationOnce(async () => user);
+      spyOnCognitoAddClient.mockResolvedValueOnce(authId);
+      spyOnServiceUpdateAuthId.mockResolvedValueOnce({ ...user, authId });
+
       await resolver.createUser(params);
 
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      const eventParams: IEventOnNewUser = { user: { ...params, id } };
+      const eventParams: IEventOnNewUser = { user: { ...user, authId } };
       /* eslint-enable */
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.onNewUser, eventParams);
 

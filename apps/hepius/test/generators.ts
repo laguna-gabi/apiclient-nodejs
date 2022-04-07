@@ -128,7 +128,6 @@ import {
 } from '../src/user';
 
 export const generateCreateUserParams = ({
-  authId = v4(),
   roles = [UserRole.coach],
   firstName = name.firstName(21),
   lastName = name.lastName(21),
@@ -142,7 +141,6 @@ export const generateCreateUserParams = ({
   orgs = [generateId(), generateId()],
 }: Partial<CreateUserParams> = {}): CreateUserParams => {
   return {
-    authId,
     firstName,
     lastName,
     email,

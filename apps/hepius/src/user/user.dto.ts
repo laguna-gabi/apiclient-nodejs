@@ -56,9 +56,6 @@ class ExtraUserParams {
 @InputType()
 export class CreateUserParams extends ExtraUserParams {
   @Field()
-  authId: string;
-
-  @Field()
   @Length(minLength, maxLength, { message: Errors.get(ErrorType.userMinMaxLength) })
   firstName: string;
 
@@ -108,7 +105,7 @@ export class UpdateUserParams extends ExtraUserParams {
 export class User extends Identifier {
   @Prop()
   @Field(() => String)
-  authId: string;
+  authId?: string;
 
   @Prop()
   @Field(() => String)

@@ -56,7 +56,7 @@ import {
   Todo,
   UpdateTodoParams,
 } from '../../src/todo';
-import { CreateUserParams, UpdateUserParams } from '../../src/user';
+import { CreateUserParams, UpdateUserParams, User } from '../../src/user';
 import { isResultValid } from '..';
 import { SubmitCareWizardParams } from '../../src/care/wizard.dto';
 
@@ -107,13 +107,14 @@ export class Mutations {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
     requestHeaders?;
-  }): Promise<Identifier> => {
+  }): Promise<User> => {
     const { createUser } = await this.client
       .request(
         gql`
           mutation CreateUser($createUserParams: CreateUserParams!) {
             createUser(createUserParams: $createUserParams) {
               id
+              authId
             }
           }
         `,

@@ -45,6 +45,7 @@ import {
   generateScheduleAppointmentParams,
   generateUpdateUserParams,
 } from '../index';
+import { v4 } from 'uuid';
 
 describe('UserService', () => {
   let module: TestingModule;
@@ -238,14 +239,12 @@ describe('UserService', () => {
 
     it('should not change anything if only id is provided', async () => {
       const createUserParams = generateCreateUserParams();
-      const { id } = await service.insert(createUserParams);
+      const user = await service.insert(createUserParams);
 
-      await service.update({ id });
+      await service.update({ id: user.id });
 
-      const result = await service.get(id);
-      expect(result).toEqual(
-        expect.objectContaining({ _id: id, firstName: createUserParams.firstName }),
-      );
+      const result = await service.get(user.id);
+      expect(result).toMatchObject(user);
     });
 
     it('should be able to update partial fields', async () => {
@@ -269,6 +268,25 @@ describe('UserService', () => {
       const result = await service.get(id);
       expect(result.orgs[0].toString()).toEqual(createUserParams.orgs[0]);
       expect(result.orgs[1].toString()).toEqual(createUserParams.orgs[1]);
+    });
+  });
+
+  describe('updateAuthId', () => {
+    it('should throw when trying to update authId for a non existing user', async () => {
+      await expect(service.updateAuthId(generateId(), v4())).rejects.toThrow(
+        Errors.get(ErrorType.userNotFound),
+      );
+    });
+
+    it('should update authId on an existing user', async () => {
+      const createUserParams = generateCreateUserParams();
+      const { id } = await service.insert(createUserParams);
+
+      const authId = v4();
+      const user = await service.updateAuthId(id, authId);
+
+      const result = await service.get(id);
+      expect(result).toMatchObject({ ...user, authId });
     });
   });
 

@@ -16,6 +16,7 @@ import {
   generateRequestHeaders,
   urls,
 } from '../index';
+import { v4 } from 'uuid';
 
 const stringError = `String cannot represent a non string value`;
 
@@ -38,7 +39,6 @@ describe('Validations - user', () => {
     ${'firstName'} | ${`Field "firstName" of required type "String!" was not provided.`}
     ${'lastName'}  | ${`Field "lastName" of required type "String!" was not provided.`}
     ${'phone'}     | ${`Field "phone" of required type "String!" was not provided.`}
-    ${'authId'}    | ${`Field "authId" of required type "String!" was not provided.`}
     ${'orgs'}      | ${`Field "orgs" of required type "[String!]!" was not provided.`}
   `(`should fail to create a user since mandatory field $field is missing`, async (params) => {
     const createUserParams: CreateUserParams = generateCreateUserParams();
@@ -149,13 +149,14 @@ describe('Validations - user', () => {
     const createUserParams: CreateUserParams = generateCreateUserParams();
     delete createUserParams[params.field];
 
-    await handler.mutations.createUser({ createUserParams });
+    handler.cognitoService.spyOnCognitoServiceAddClient.mockResolvedValueOnce(v4());
+    const { authId } = await handler.mutations.createUser({ createUserParams });
 
-    const user = await handler.queries.getUser({
-      requestHeaders: generateRequestHeaders(createUserParams.authId),
+    const response = await handler.queries.getUser({
+      requestHeaders: generateRequestHeaders(authId),
     });
-    expect(user[params.field]).not.toBeUndefined();
-    expect(user[params.field]).toEqual(params.defaultValue);
+    expect(response[params.field]).not.toBeUndefined();
+    expect(response[params.field]).toEqual(params.defaultValue);
   });
 
   /* eslint-disable max-len */

@@ -21,7 +21,7 @@
   "aws": {
     "region": "us-east-1",
     "cognito": {
-      "userPoolId": "us-east-1_EZc3XRt6s"
+      "userPoolId": "us-east-1_yI7jkbn9k"
     },
     "storage": {
       "thumbnailSize": 200,

@@ -19,7 +19,6 @@ import {
   IEventNotifyQueue,
   IEventOnNewUser,
   IEventOnUpdatedUser,
-  Identifier,
   IsValidObjectId,
   LoggingInterceptor,
   Roles,
@@ -37,19 +36,21 @@ export class UserResolver {
     private eventEmitter: EventEmitter2,
   ) {}
 
-  @Mutation(() => Identifier)
+  @Mutation(() => User)
   @Roles(UserRole.coach, UserRole.nurse)
   async createUser(
     @Args(camelCase(CreateUserParams.name))
     createUserParams: CreateUserParams,
   ) {
-    const user = await this.userService.insert(createUserParams);
+    const { id } = await this.userService.insert(createUserParams);
+    const authId = await this.cognitoService.addClient(createUserParams);
+    const user = await this.userService.updateAuthId(id, authId);
 
     const eventParams: IEventOnNewUser = { user };
     this.eventEmitter.emit(EventType.onNewUser, eventParams);
     this.notifyUpdatedUserConfig(user);
 
-    return { id: user.id };
+    return user;
   }
 
   @Mutation(() => User)
