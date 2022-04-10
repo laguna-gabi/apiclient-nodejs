@@ -68,17 +68,20 @@ describe('UserResolver', () => {
   describe('createUser', () => {
     let spyOnServiceInsert;
     let spyOnServiceUpdateAuthId;
+    let spyOnServiceDelete;
     let spyOnCognitoAddClient;
 
     beforeEach(() => {
       spyOnServiceInsert = jest.spyOn(service, 'insert');
       spyOnServiceUpdateAuthId = jest.spyOn(service, 'updateAuthId');
+      spyOnServiceDelete = jest.spyOn(service, 'delete');
       spyOnCognitoAddClient = jest.spyOn(cognitoService, 'addClient');
     });
 
     afterEach(() => {
       spyOnServiceInsert.mockReset();
       spyOnServiceUpdateAuthId.mockReset();
+      spyOnServiceDelete.mockReset();
       spyOnCognitoAddClient.mockReset();
       spyOnEventEmitter.mockReset();
     });
@@ -139,6 +142,23 @@ describe('UserResolver', () => {
         EventType.notifyQueue,
         eventSettingsParams,
       );
+    });
+
+    it('should erase created user if cognito fails to add a user', async () => {
+      const user = mockGenerateUser();
+      spyOnServiceInsert.mockImplementationOnce(async () => user);
+      spyOnCognitoAddClient.mockRejectedValue({ message: 'failed to create a user' });
+      spyOnServiceDelete.mockResolvedValueOnce(undefined);
+
+      const params = generateCreateUserParams();
+      await expect(resolver.createUser(params)).rejects.toThrow(
+        Errors.get(ErrorType.userFailedToCreateOnExternalProvider),
+      );
+
+      expect(spyOnServiceInsert).toBeCalledTimes(1);
+      expect(spyOnServiceInsert).toBeCalledWith(params);
+      expect(spyOnCognitoAddClient).toBeCalled();
+      expect(spyOnServiceDelete).toBeCalledWith(user.id);
     });
   });
 

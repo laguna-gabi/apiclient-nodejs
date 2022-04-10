@@ -104,6 +104,10 @@ export class UserService extends BaseService {
     return this.replaceId(user);
   }
 
+  async delete(id: string) {
+    await this.userModel.findByIdAndDelete(id);
+  }
+
   async getSlots(getSlotsParams: GetSlotsParams): Promise<Slots> {
     const { appointmentId, userId, defaultSlotsCount, allowEmptySlotsResponse, maxSlots } =
       this.removeNotNullable(getSlotsParams, NotNullableSlotsKeys);

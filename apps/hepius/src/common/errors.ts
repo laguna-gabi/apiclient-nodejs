@@ -14,6 +14,7 @@ export enum ErrorType {
   slotsParams = 9107,
   userCanNotBeAssignedToMembers = 9108,
   userIdInvalid = 9109,
+  userFailedToCreateOnExternalProvider = 9110,
 
   // Module member errors
   memberMinMaxLength = 9201,
@@ -175,6 +176,10 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.userPhone.valueOf(), phoneFormat],
   [ErrorType.userCanNotBeAssignedToMembers.valueOf(), 'user can not be assigned to member'],
   [ErrorType.userIdInvalid.valueOf(), `userId ${objectIdFormat}`],
+  [
+    ErrorType.userFailedToCreateOnExternalProvider.valueOf(),
+    `Failed to create a user in external provider`,
+  ],
   [ErrorType.memberMinMaxLength.valueOf(), `member ${nameFormat}`],
   [ErrorType.memberPhoneAlreadyExists.valueOf(), 'An error has occurred'],
   [ErrorType.memberPhone.valueOf(), phoneFormat],

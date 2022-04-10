@@ -20,11 +20,18 @@ import {
   IEventOnNewUser,
   IEventOnUpdatedUser,
   IsValidObjectId,
+  LoggerService,
   LoggingInterceptor,
   Roles,
   UserRole,
 } from '../common';
-import { ClientCategory, IUpdateClientSettings, InnerQueueTypes, QueueType } from '@argus/pandora';
+import {
+  ClientCategory,
+  IUpdateClientSettings,
+  InnerQueueTypes,
+  QueueType,
+  formatEx,
+} from '@argus/pandora';
 import { CognitoService } from '../providers';
 
 @UseInterceptors(LoggingInterceptor)
@@ -34,6 +41,7 @@ export class UserResolver {
     private readonly userService: UserService,
     private readonly cognitoService: CognitoService,
     private eventEmitter: EventEmitter2,
+    private readonly logger: LoggerService,
   ) {}
 
   @Mutation(() => User)
@@ -43,7 +51,15 @@ export class UserResolver {
     createUserParams: CreateUserParams,
   ) {
     const { id } = await this.userService.insert(createUserParams);
-    const authId = await this.cognitoService.addClient(createUserParams);
+    let authId;
+    try {
+      authId = await this.cognitoService.addClient(createUserParams);
+    } catch (ex) {
+      await this.userService.delete(id);
+      this.logger.error(createUserParams, UserResolver.name, this.createUser.name, formatEx(ex));
+      throw new Error(Errors.get(ErrorType.userFailedToCreateOnExternalProvider));
+    }
+
     const user = await this.userService.updateAuthId(id, authId);
 
     const eventParams: IEventOnNewUser = { user };

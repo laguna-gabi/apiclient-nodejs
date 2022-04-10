@@ -271,6 +271,22 @@ describe('UserService', () => {
     });
   });
 
+  describe('delete', () => {
+    it('should do nothing when trying to delete a on non existing userId', async () => {
+      await service.delete(generateId());
+    });
+
+    it('should delete an existing user', async () => {
+      const createUserParams = generateCreateUserParams();
+      const user = await service.insert(createUserParams);
+
+      await service.delete(user.id);
+
+      const result = await service.get(user.id);
+      expect(result).toBeNull();
+    });
+  });
+
   describe('updateAuthId', () => {
     it('should throw when trying to update authId for a non existing user', async () => {
       await expect(service.updateAuthId(generateId(), v4())).rejects.toThrow(
