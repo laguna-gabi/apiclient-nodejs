@@ -155,10 +155,10 @@ jobs:
       - name: Accumulate NODE_ENV
         id: branch_check
         run: |
-          if [ "${{ steps.branch-name.outputs.current_branch }}" = "master" ]; then
+          if [ "${{ steps.branch-name.outputs.current_branch }}" = "master"]; then
             echo "::set-output name=env_name::production"
           elif [ "${{ steps.branch-name.outputs.current_branch }}" = "staging" ]; then
-            echo "::set-output name=env_name::staging"
+            echo "::set-output name=env_name::production"
           elif [ "${{ steps.branch-name.outputs.current_branch }}" = "develop" ]; then
             echo "::set-output name=env_name::develop"
           fi

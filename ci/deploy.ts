@@ -283,8 +283,6 @@ const deploy = async () => {
   const nodeEnv =
     process.env.GITHUB_REF_NAME === DEVELOP_MAIN_BRANCH_NAME
       ? DEVELOP_MAIN_BRANCH_NAME
-      : process.env.GITHUB_REF_NAME === STAGING_MAIN_BRANCH_NAME
-      ? STAGING_MAIN_BRANCH_NAME
       : 'production';
 
   const imageName = `${process.env.ECR_REGISTRY}/${appName}-${process.env.GITHUB_REF_NAME}`;
