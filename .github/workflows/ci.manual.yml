@@ -159,7 +159,6 @@ jobs:
             echo "::set-output name=env_name::production"
           elif [ "${{ steps.branch-name.outputs.current_branch }}" = "staging" ]; then
             echo "::set-output name=env_name::production"
-          elif [ "${{ steps.branch-name.outputs.current_branch }}" = "staging" ]; then
             echo "::set-output name=env_name::staging"
           elif [ "${{ steps.branch-name.outputs.current_branch }}" = "develop" ]; then
             echo "::set-output name=env_name::develop"
