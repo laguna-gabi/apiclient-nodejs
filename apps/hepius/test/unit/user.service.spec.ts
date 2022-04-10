@@ -43,7 +43,9 @@ import {
   generateId,
   generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
+  generateUpdateUserParams,
 } from '../index';
+import { v4 } from 'uuid';
 
 describe('UserService', () => {
   let module: TestingModule;
@@ -90,7 +92,7 @@ describe('UserService', () => {
 
       const result = await service.getUsers([UserRole.coach, UserRole.nurse]);
       expect(result.length).toBeGreaterThanOrEqual(2);
-    });
+    }, 10000);
 
     it('should get escalation group user(s)', async () => {
       const user = generateCreateUserParams();
@@ -225,6 +227,82 @@ describe('UserService', () => {
       const result = await service.getAvailableUser();
       expect(result).toEqual(userId);
       jest.spyOn(mockUserModel, 'aggregate').mockRestore();
+    });
+  });
+
+  describe('update', () => {
+    it('should throw when trying to update non existing user', async () => {
+      await expect(service.update({ id: generateId() })).rejects.toThrow(
+        Errors.get(ErrorType.userNotFound),
+      );
+    });
+
+    it('should not change anything if only id is provided', async () => {
+      const createUserParams = generateCreateUserParams();
+      const user = await service.insert(createUserParams);
+
+      await service.update({ id: user.id });
+
+      const result = await service.get(user.id);
+      expect(result).toMatchObject(user);
+    });
+
+    it('should be able to update partial fields', async () => {
+      const createUserParams = generateCreateUserParams();
+      const { id } = await service.insert(createUserParams);
+      const updateUserParams = generateUpdateUserParams({ id });
+      const updatedUser = await service.update(updateUserParams);
+      delete updatedUser.id;
+
+      const result = await service.get(id);
+      expect(result).toEqual(expect.objectContaining({ _id: id, ...updatedUser }));
+    });
+
+    it('should not set null values input', async () => {
+      const createUserParams = generateCreateUserParams();
+      const { id } = await service.insert(createUserParams);
+      const updateUserParams = generateUpdateUserParams({ id });
+      updateUserParams.orgs = null;
+      await service.update(updateUserParams);
+
+      const result = await service.get(id);
+      expect(result.orgs[0].toString()).toEqual(createUserParams.orgs[0]);
+      expect(result.orgs[1].toString()).toEqual(createUserParams.orgs[1]);
+    });
+  });
+
+  describe('delete', () => {
+    it('should do nothing when trying to delete a on non existing userId', async () => {
+      await service.delete(generateId());
+    });
+
+    it('should delete an existing user', async () => {
+      const createUserParams = generateCreateUserParams();
+      const user = await service.insert(createUserParams);
+
+      await service.delete(user.id);
+
+      const result = await service.get(user.id);
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('updateAuthId', () => {
+    it('should throw when trying to update authId for a non existing user', async () => {
+      await expect(service.updateAuthId(generateId(), v4())).rejects.toThrow(
+        Errors.get(ErrorType.userNotFound),
+      );
+    });
+
+    it('should update authId on an existing user', async () => {
+      const createUserParams = generateCreateUserParams();
+      const { id } = await service.insert(createUserParams);
+
+      const authId = v4();
+      const user = await service.updateAuthId(id, authId);
+
+      const result = await service.get(id);
+      expect(result).toMatchObject({ ...user, authId });
     });
   });
 

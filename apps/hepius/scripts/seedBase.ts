@@ -1,3 +1,4 @@
+import { Environments } from '@argus/pandora';
 import { Injectable, ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -20,7 +21,10 @@ export class SeedBase extends BaseHandler {
   questionnaireService: QuestionnaireService;
   client: GraphQLClient;
 
-  async init() {
+  async init(force = false) {
+    if (process.env.NODE_ENV === Environments.production && !force) {
+      throw new Error(`running seed on ${process.env.NODE_ENV} environment is not allowed!`);
+    }
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();

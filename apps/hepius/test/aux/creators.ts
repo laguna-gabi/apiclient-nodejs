@@ -1,4 +1,3 @@
-import * as jwt from 'jsonwebtoken';
 import { camelCase, omit } from 'lodash';
 import { AppointmentsIntegrationActions, Handler } from '.';
 import {
@@ -8,13 +7,14 @@ import {
   generateCreateUserParams,
   generateEndAppointmentParams,
   generateOrgParams,
+  generateRequestHeaders,
 } from '..';
 import { Appointment, AppointmentStatus, EndAppointmentParams } from '../../src/appointment';
 import { UserRole } from '../../src/common';
 import { CreateTaskParams, Member, defaultMemberParams } from '../../src/member';
 import { Org } from '../../src/org';
 import { CreateUserParams, User } from '../../src/user';
-import { generateRequestHeaders } from '../index';
+import { v4 } from 'uuid';
 
 export class Creators {
   constructor(
@@ -30,12 +30,18 @@ export class Creators {
       roles,
       ...(orgId ? { orgs: [orgId] } : {}),
     });
-    const { id: primaryUserId } = await this.handler.mutations.createUser({ createUserParams });
+    this.handler.cognitoService.spyOnCognitoServiceAddClient.mockResolvedValue(v4());
+    const user = await this.handler.mutations.createUser({ createUserParams });
     const result = await this.handler.queries.getUser({
-      requestHeaders: generateRequestHeaders(createUserParams.authId),
+      requestHeaders: generateRequestHeaders(user.authId),
     });
 
-    const expectedUser = { ...createUserParams, id: primaryUserId, appointments: [] };
+    const expectedUser = {
+      ...createUserParams,
+      id: user.id,
+      appointments: [],
+      authId: user.authId,
+    };
 
     const resultUserNew = omit(result, 'roles');
     const expectedUserNew = omit(expectedUser, 'roles');
@@ -67,9 +73,11 @@ export class Creators {
       ? await this.handler.queries.getOrg({ id: orgId })
       : await this.createAndValidateOrg();
     const createUserParams = generateCreateUserParams();
-    await this.handler.mutations.createUser({ createUserParams });
+    const authId = v4();
+    this.handler.cognitoService.spyOnCognitoServiceAddClient.mockResolvedValue(authId);
+    const response = await this.handler.mutations.createUser({ createUserParams });
     const user: User = await this.handler.queries.getUser({
-      requestHeaders: { Authorization: jwt.sign({ sub: createUserParams.authId }, 'my-secret') },
+      requestHeaders: generateRequestHeaders(response.authId),
     });
 
     const requestHeaders = this.handler.defaultUserRequestHeaders;

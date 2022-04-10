@@ -1,0 +1,10 @@
+{
+  "db": {
+    "name": "iris"
+  },
+  "aws": {
+    "cognito": {
+      "userPoolId": "us-east-1_EZc3XRt6s"
+    }
+  }
+}

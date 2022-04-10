@@ -6,7 +6,7 @@ import { Member, MemberDocument, MemberDto } from '../src/member';
 import { ConfigsService } from '../src/providers';
 import { User, UserDocument, UserDto } from '../src/user';
 
-export async function generateToken() {
+export async function getTokens() {
   const { uri } = await new ConfigsService().createMongooseOptions();
   await connect(uri);
   const memberModel: Model<MemberDocument> = model<MemberDocument>(Member.name, MemberDto);

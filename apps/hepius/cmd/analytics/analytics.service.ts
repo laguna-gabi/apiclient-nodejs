@@ -286,7 +286,6 @@ export class AnalyticsService {
       language: member.memberConfig?.language,
       age: differenceInYears(this.getDateTime(), Date.parse(member.memberDetails.dateOfBirth)),
       race: member.memberDetails.race,
-      ethnicity: member.memberDetails.ethnicity,
       gender: member.memberDetails.sex,
       street_address: member.memberDetails.address?.street,
       city: member.memberDetails.address?.city,
@@ -429,14 +428,14 @@ export class AnalyticsService {
           customer_id,
           mbr_initials,
           appt_number: appointment.noShow ? undefined : count,
-          chat_id: appointment._id.toString(), // TODO: check with Alex where we get the chat_id - for now we set to appointment id
+          chat_id: appointment._id.toString(),
           appt_date: reformatDate(startDateTime.toString(), DateFormat),
           appt_time_ct: reformatDate(startDateTime.toString(), TimeFormat),
           appt_status: this.getAppointmentsStatus(appointment.status, appointment.noShow),
           appt_day_of_week_name: reformatDate(startDateTime.toString(), DayOfWeekFormat),
           appt_hour: reformatDate(startDateTime.toString(), HourFormat),
           status: appointment.status,
-          missed_appt: this.getAppointmentsMissedIndication(appointment.status, appointment.noShow),
+          missed_appt: appointment.noShow,
           no_show_reason: appointment.noShowReason,
           total_duration: recordingsSummary.totalDuration,
           total_outreach_attempts: appointment.recordings?.length || 0,
@@ -468,20 +467,6 @@ export class AnalyticsService {
     }
     if (status === AppointmentStatus.requested) {
       return AppointmentAttendanceStatus.requested;
-    }
-  }
-
-  // Description: determine a missed label for the appointment
-  // Note: since this value might be set to null we can not use boolean
-  getAppointmentsMissedIndication(status: AppointmentStatus, noShow: boolean): string {
-    if (noShow) {
-      return 'TRUE';
-    }
-    if (status === AppointmentStatus.done) {
-      return 'FALSE';
-    }
-    if (status === AppointmentStatus.scheduled) {
-      return ''; // missed label can not be determined
     }
   }
 

@@ -1,14 +1,25 @@
+import { ConfigsService, ExternalConfigs, StorageService } from '../../src/providers';
 import * as fs from 'fs';
 import { Command, CommandRunner, Option } from 'nest-commander';
+import { DataSource, QueryRunner } from 'typeorm';
 import {
   AnalyticsService,
+  AppointmentTable,
   AppointmentsMemberData,
+  CoachData,
   CoachDataAggregate,
+  CoachTable,
   DefaultOutputDir,
   MemberData,
   MemberDataAggregate,
+  MemberTable,
   SheetOption,
 } from '.';
+import { analytics } from 'config';
+import { Environments, IEventNotifySlack, SlackChannel, SlackIcon } from '@argus/pandora';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventType, delay } from '../../src/common';
+import * as Importer from './importer/mysql-import';
 
 interface AnalyticsCommandOptions {
   debug?: boolean;
@@ -17,15 +28,55 @@ interface AnalyticsCommandOptions {
 }
 @Command({
   name: 'analytics',
-  description: 'Collect members and coachers data and generate .csv spreadsheets for analytics',
+  description: 'Collect data from Harmony and write to relational database (mysql)',
 })
 export class AnalyticsCommand implements CommandRunner {
-  constructor(private readonly analyticsService: AnalyticsService) {}
+  queryRunner: QueryRunner;
+  constructor(
+    private readonly analyticsService: AnalyticsService,
+    private readonly configsService: ConfigsService,
+    private readonly storageService: StorageService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
   async run(_passedParam: string[], options?: AnalyticsCommandOptions): Promise<void> {
     let outFileName;
+    let criticalError;
+
     await this.analyticsService.init();
     const timestamp = this.analyticsService.getDateTime();
     this.analyticsService.init(); // loading cache data
+
+    // initialize Analytics SQL db
+    const { dbUsername, dbPassword } = ExternalConfigs.analytics;
+
+    const username = await this.configsService.getConfig(dbUsername);
+    const password = await this.configsService.getConfig(dbPassword);
+
+    const AppDataSource = new DataSource({
+      type: 'mysql',
+      host: analytics.host,
+      port: 3306,
+      username,
+      password,
+      database: analytics.database,
+      entities: [CoachData, AppointmentsMemberData, MemberData],
+      synchronize: true,
+      logging: false,
+    });
+
+    const importer = new Importer(
+      {
+        host: analytics.host,
+        user: username,
+        password,
+        database: analytics.database,
+      },
+      { delimiter: ';\n' },
+    );
+
+    await AppDataSource.initialize();
+
+    this.queryRunner = AppDataSource.createQueryRunner();
 
     try {
       /***************************** Resolve Command Options  *************************************/
@@ -44,7 +95,7 @@ export class AnalyticsCommand implements CommandRunner {
         }
       } else {
         // dump member sheet by default
-        options.sheet = SheetOption.members;
+        options.sheet = SheetOption.all;
       }
 
       if (options?.outDirName !== undefined && options?.outDirName !== null) {
@@ -99,7 +150,7 @@ export class AnalyticsCommand implements CommandRunner {
       if (options.sheet === SheetOption.members || options.sheet === SheetOption.all) {
         console.debug(
           '\n----------------------------------------------------------------\n' +
-            '--------------- Generating Member .csv Sheet -------------------\n' +
+            '--------------- Generating Member Data -------------------------\n' +
             '----------------------------------------------------------------',
         );
 
@@ -108,18 +159,24 @@ export class AnalyticsCommand implements CommandRunner {
             return this.analyticsService.buildMemberData(member);
           }),
         );
+        // Save to Analytics (MySQL) db:
+        const memberTable = await this.queryRunner.getTable(MemberTable);
 
-        this.analyticsService.dumpCSV(
-          outFileName,
-          SheetOption.members,
-          timestamp,
-          memberProcessedData,
+        if (memberTable) {
+          await this.queryRunner.clearTable(MemberTable);
+        }
+        await Promise.all(
+          memberProcessedData.map(async (member) => {
+            const memberData = new MemberData();
+            Object.assign(memberData, member);
+            await AppDataSource.manager.save(memberData);
+          }),
         );
       }
       if (options.sheet === SheetOption.appointments || options.sheet === SheetOption.all) {
         console.debug(
           '\n----------------------------------------------------------------\n' +
-            '------------ Generating Appointments .csv Sheet ----------------\n' +
+            '------------ Generating Appointments Data ----------------------\n' +
             '----------------------------------------------------------------',
         );
 
@@ -127,29 +184,70 @@ export class AnalyticsCommand implements CommandRunner {
           membersDataAggregate.map((member) =>
             this.analyticsService.buildAppointmentsMemberData(member),
           );
-        this.analyticsService.dumpCSV(
-          outFileName,
-          SheetOption.appointments,
-          timestamp,
-          [].concat(...appointmentsMemberProcessedData),
+
+        // Save to Analytics (MySQL) db:
+        const appointmentTable = await this.queryRunner.getTable(AppointmentTable);
+
+        if (appointmentTable) {
+          await this.queryRunner.clearTable(AppointmentTable);
+        }
+
+        await Promise.all(
+          [].concat(...appointmentsMemberProcessedData).map(async (appointmentMemberData) => {
+            const appointmentData = new AppointmentsMemberData();
+            Object.assign(appointmentData, appointmentMemberData);
+            await AppDataSource.manager.save(appointmentData);
+          }),
         );
       }
       if (options.sheet === SheetOption.coachers || options.sheet === SheetOption.all) {
         console.debug(
           '\n----------------------------------------------------------------\n' +
-            '------------ Generating Coachers .csv Sheet ----------------\n' +
+            '------------ Generating Coachers Data --------------------------\n' +
             '----------------------------------------------------------------',
         );
 
-        this.analyticsService.dumpCSV(
-          outFileName,
-          SheetOption.coachers,
-          timestamp,
-          coachDataAggregate.map((coach) => this.analyticsService.buildCoachData(coach)),
+        // Save to Analytics (MySQL) db:
+        const coachTable = await this.queryRunner.getTable(CoachTable);
+
+        if (coachTable) {
+          await this.queryRunner.clearTable(CoachTable);
+        }
+
+        await Promise.all(
+          coachDataAggregate.map(async (coach) => {
+            const coachData = new CoachData();
+            Object.assign(coachData, this.analyticsService.buildCoachData(coach));
+            await AppDataSource.manager.save(coachData);
+          }),
         );
       }
+
+      /***************************** Import Data Enrichment  **************************************/
+      await this.storageService.downloadFile(
+        analytics.storage,
+        analytics.dataEnrichmentKey,
+        './tmp.sql',
+      );
+      await importer.import('./tmp.sql');
+      fs.unlinkSync('./tmp.sql');
     } catch (err) {
-      console.error(`${AnalyticsCommand}: error: got: ${err.message} (${err.stack})`);
+      console.error(`${AnalyticsCommand.name}: error: got: ${err.message} (${err.stack})`);
+      criticalError = err;
+    }
+
+    // Slack channel notification (pulse OR error indication)
+    if (process.env.NODE_ENV === Environments.production) {
+      const eventSlackMessageParams: IEventNotifySlack = {
+        header: `*Analytics Auto Loader*`,
+        message: criticalError
+          ? `Auto Loader failed!\n\ngot: ${criticalError}`
+          : `Auto Loader completed successfully`,
+        icon: criticalError ? SlackIcon.critical : SlackIcon.info,
+        channel: SlackChannel.analyticsAutoLoader,
+      };
+      this.eventEmitter.emit(EventType.notifySlack, eventSlackMessageParams);
+      await delay(2000); // let the event settle before we exit
     }
 
     this.analyticsService.clean();

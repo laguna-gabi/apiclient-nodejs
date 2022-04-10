@@ -2,7 +2,6 @@ import { generateZipCode } from '@argus/pandora';
 import { date, internet, lorem } from 'faker';
 import * as jwt from 'jsonwebtoken';
 import { model } from 'mongoose';
-import { v4 } from 'uuid';
 import { createSeedBarriers, seedCarePlans, seedRedFlags } from '../cmd/static/seedCare';
 import {
   buildGAD7Questionnaire,
@@ -47,6 +46,7 @@ import {
 } from '../test';
 import { Mutations } from '../test/aux';
 import { SeedBase } from './seedBase';
+
 /**
  * This is a seed file for initial local db creation.
  * The objects we're creating are:
@@ -265,17 +265,15 @@ export async function seed() {
  *************************************************************************************************/
 
 const createUser = async (roles: UserRole[], userText: string): Promise<Identifier> => {
-  const authId = v4();
-  const { id } = await mutations.createUser({
+  const user = await mutations.createUser({
     createUserParams: generateCreateUserParams({
-      authId,
       roles,
     }),
   });
-  const token = jwt.sign({ username: id, sub: authId }, 'key-123');
-  console.log(`${id} : ${userText} of type ${roles} - valid token: ${token}`);
+  const token = jwt.sign({ username: user.id, sub: user.authId }, 'key-123');
+  console.log(`${user.id} : ${userText} of type ${roles} - valid token: ${token}`);
 
-  return { id };
+  return { id: user.id };
 };
 
 const requestAppointment = async (memberId: string, userId: string) => {

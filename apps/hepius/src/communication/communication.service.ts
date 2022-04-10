@@ -9,6 +9,7 @@ import {
   CreateSendbirdGroupChannelParams,
   GetCommunicationParams,
   RegisterSendbirdUserParams,
+  UpdateSendbirdUserParams,
 } from '.';
 import { AppointmentStatus } from '../appointment';
 import {
@@ -57,6 +58,39 @@ export class CommunicationService {
 
     const eventParams: IEventOnUpdateUserConfig = { userId: user.id, accessToken };
     this.eventEmitter.emit(EventType.onUpdatedUserConfig, eventParams);
+  }
+
+  async updateUser(user: User) {
+    const params: UpdateSendbirdUserParams = {
+      user_id: user.id,
+      nickname: `${user.firstName} ${user.lastName}`,
+      profile_url: user.avatar,
+    };
+
+    await this.sendBird.updateUser(params);
+
+    const userChannels = await this.communicationModel.aggregate([
+      {
+        $lookup: {
+          from: 'members',
+          localField: 'userId',
+          foreignField: 'primaryUserId',
+          as: 'primaryUsers',
+        },
+      },
+      { $match: { 'primaryUsers.primaryUserId': new Types.ObjectId(user.id) } },
+      { $project: { sendBirdChannelUrl: 1 } },
+    ]);
+
+    await Promise.all(
+      userChannels.map(async (channel) => {
+        await this.sendBird.updateChannelName(
+          channel.sendBirdChannelUrl,
+          params.nickname,
+          params.profile_url,
+        );
+      }),
+    );
   }
 
   async createMember(member: Member) {

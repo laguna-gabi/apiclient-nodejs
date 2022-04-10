@@ -50,8 +50,9 @@ This Monorepo contains the following:
 
 This repo contains all the projects that handles the backend logic for laguna-health.
 
-- hepius is used for all the http graphql requests
-- iris handles all the messaging
+- [hepius](./apps/hepius) is used for all the http graphql requests
+- [iris](./apps/iris) handles all the messaging
+- [pandora](./libs/pandora) is an internal library used for common code of hepius and iris.
 
 ---
 
@@ -142,7 +143,7 @@ $ nx test:cov hepius
 [Affected](https://nx.dev/using-nx/affected) is a powerful tool that helps us determine what projects were affected by any changes in the commit.
 
 ```bash
-# runnign affected
+# running affected
 nx affected --target=test:cov --base=develop --parallel=3
 ```
 

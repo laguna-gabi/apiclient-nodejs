@@ -239,6 +239,7 @@ export class MemberService extends BaseService {
           users: '$users',
           org: '$org',
           firstLoggedInAt: '$memberconfig.firstLoggedInAt',
+          platform: '$memberconfig.platform',
         },
       },
     ]);

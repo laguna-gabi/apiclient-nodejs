@@ -23,6 +23,7 @@ import {
 } from '../../src/member';
 import { Handler } from '../aux/handler';
 import {
+  BEFORE_ALL_TIMEOUT,
   generateAddCaregiverParams,
   generateCancelNotifyParams,
   generateCreateMemberParams,
@@ -68,7 +69,7 @@ describe('Validations - member', () => {
     creators = new Creators(handler, appointmentsActions);
     await handler.mutations.createUser({ createUserParams: generateCreateUserParams() });
     server = handler.app.getHttpServer();
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();

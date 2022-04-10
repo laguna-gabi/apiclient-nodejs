@@ -48,6 +48,7 @@ import {
 import { User, UserConfigDocument, UserDocument } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
+  BEFORE_ALL_TIMEOUT,
   checkAuditValues,
   generateAddCaregiverParams,
   generateAvailabilityInput,
@@ -78,10 +79,10 @@ describe('Integration tests : Audit', () => {
   const handler: Handler = new Handler();
   let creators: Creators;
   let appointmentsActions: AppointmentsIntegrationActions;
-  let user1: Partial<User>;
-  let user2: Partial<User>;
-  let adminUser1: Partial<User>;
-  let adminUser2: Partial<User>;
+  let user1: User;
+  let user2: User;
+  let adminUser1: User;
+  let adminUser2: User;
   let server;
 
   beforeAll(async () => {
@@ -92,24 +93,12 @@ describe('Integration tests : Audit', () => {
       handler.defaultUserRequestHeaders,
     );
     creators = new Creators(handler, appointmentsActions);
-    const createUserParams = [
-      generateCreateUserParams(),
-      generateCreateUserParams(),
-      generateCreateUserParams({ roles: [UserRole.admin] }),
-      generateCreateUserParams({ roles: [UserRole.admin] }),
-    ];
 
-    const [{ id: userId1 }, { id: userId2 }, { id: adminUser1Id }, { id: adminUser2Id }] =
-      await Promise.all(
-        createUserParams.map((createUserParams) =>
-          handler.mutations.createUser({ createUserParams }),
-        ),
-      );
-    user1 = { id: userId1, ...createUserParams[0] };
-    user2 = { id: userId2, ...createUserParams[1] };
-    adminUser1 = { id: adminUser1Id, ...createUserParams[2] };
-    adminUser2 = { id: adminUser2Id, ...createUserParams[3] };
-  }, 10000);
+    user1 = await creators.createAndValidateUser();
+    user2 = await creators.createAndValidateUser();
+    adminUser1 = await creators.createAndValidateUser({ roles: [UserRole.admin] });
+    adminUser2 = await creators.createAndValidateUser({ roles: [UserRole.admin] });
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();
@@ -255,10 +244,8 @@ describe('Integration tests : Audit', () => {
       const users = [];
 
       for (let i = 0; i < 5; i++) {
-        const { id } = await handler.mutations.createUser({
-          createUserParams: generateCreateUserParams(),
-        });
-        users.push(await handler.userService.get(id));
+        const user = await creators.createAndValidateUser();
+        users.push(user);
       }
 
       // run 100 tests to create and update todo's

@@ -14,6 +14,10 @@ export const ExternalConfigs = {
   db: {
     connection: 'db.connection',
   },
+  analytics: {
+    dbUsername: 'analytics.db.username',
+    dbPassword: 'analytics.db.password',
+  },
   twilio: {
     accountSid: 'twilio.accountSid',
     appSid: 'twilio.appSid',
@@ -52,7 +56,7 @@ export class ConfigsService implements MongooseOptionsFactory {
           SecretId:
             process.env.NODE_ENV === Environments.production
               ? Environments.production
-              : Environments.development,
+              : Environments.develop,
         })
         .promise();
       this.data = JSON.parse(result.SecretString);

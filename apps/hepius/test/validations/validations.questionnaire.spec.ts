@@ -11,6 +11,7 @@ import {
   generateSubmitQuestionnaireResponseParams,
   mockGenerateQuestionnaireItem,
 } from '../generators';
+import { BEFORE_ALL_TIMEOUT } from '..';
 
 const stringError = `String cannot represent a non string value`;
 
@@ -19,7 +20,7 @@ describe('Validations - questionnaire', () => {
 
   beforeAll(async () => {
     await handler.beforeAll();
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();

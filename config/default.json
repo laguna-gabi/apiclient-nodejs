@@ -21,7 +21,7 @@
   "aws": {
     "region": "us-east-1",
     "cognito": {
-      "userPoolId": "us-east-1_EZc3XRt6s"
+      "userPoolId": "us-east-1_yI7jkbn9k"
     },
     "storage": {
       "thumbnailSize": 200,
@@ -55,7 +55,8 @@
     "support": "#support-dev",
     "testingSms": "#testing-sms",
     "notifications": "#development-notifications",
-    "escalation": "#development-escalation-support"
+    "escalation": "#development-escalation-support",
+    "analyticsAutoLoader": "#analytics-auto-loader"
   },
   "oneSignal": {
     "voipRegistrationPayload": {
@@ -92,5 +93,11 @@
   "retryMax": 2,
   "gapTriggersAt": 5,
   "gapMinutes": 15,
-  "maxAlertGapInMin": 35791
+  "maxAlertGapInMin": 35791,
+  "analytics": {
+    "host": "localhost",
+    "database": "laguna",
+    "storage": "laguna-analytics",
+    "dataEnrichmentKey": "scripts/data_enrichment.sql"
+  }
 }

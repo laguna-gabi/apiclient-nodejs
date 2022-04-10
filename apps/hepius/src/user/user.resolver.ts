@@ -2,7 +2,15 @@ import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { camelCase, isUndefined, omitBy } from 'lodash';
-import { CreateUserParams, GetSlotsParams, Slots, User, UserConfig, UserService } from '.';
+import {
+  CreateUserParams,
+  GetSlotsParams,
+  Slots,
+  UpdateUserParams,
+  User,
+  UserConfig,
+  UserService,
+} from '.';
 import {
   Client,
   ErrorType,
@@ -10,32 +18,72 @@ import {
   EventType,
   IEventNotifyQueue,
   IEventOnNewUser,
-  Identifier,
+  IEventOnUpdatedUser,
   IsValidObjectId,
+  LoggerService,
   LoggingInterceptor,
   Roles,
   UserRole,
 } from '../common';
-import { ClientCategory, IUpdateClientSettings, InnerQueueTypes, QueueType } from '@argus/pandora';
+import {
+  ClientCategory,
+  IUpdateClientSettings,
+  InnerQueueTypes,
+  QueueType,
+  formatEx,
+} from '@argus/pandora';
+import { CognitoService } from '../providers';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => User)
 export class UserResolver {
-  constructor(private readonly userService: UserService, private eventEmitter: EventEmitter2) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly cognitoService: CognitoService,
+    private eventEmitter: EventEmitter2,
+    private readonly logger: LoggerService,
+  ) {}
 
-  @Mutation(() => Identifier)
+  @Mutation(() => User)
   @Roles(UserRole.coach, UserRole.nurse)
   async createUser(
     @Args(camelCase(CreateUserParams.name))
     createUserParams: CreateUserParams,
   ) {
-    const user = await this.userService.insert(createUserParams);
+    const { id } = await this.userService.insert(createUserParams);
+    let authId;
+    try {
+      authId = await this.cognitoService.addClient(createUserParams);
+    } catch (ex) {
+      await this.userService.delete(id);
+      this.logger.error(createUserParams, UserResolver.name, this.createUser.name, formatEx(ex));
+      throw new Error(Errors.get(ErrorType.userFailedToCreateOnExternalProvider));
+    }
+
+    const user = await this.userService.updateAuthId(id, authId);
 
     const eventParams: IEventOnNewUser = { user };
     this.eventEmitter.emit(EventType.onNewUser, eventParams);
     this.notifyUpdatedUserConfig(user);
 
-    return { id: user.id };
+    return user;
+  }
+
+  @Mutation(() => User)
+  @Roles(UserRole.admin)
+  async updateUser(
+    @Args(camelCase(UpdateUserParams.name))
+    updateUserParams: UpdateUserParams,
+  ) {
+    const user = await this.userService.update(updateUserParams);
+    this.notifyUpdatedUserConfig(user);
+
+    if (user.firstName || user.lastName || user.avatar) {
+      const eventParams: IEventOnUpdatedUser = { user };
+      this.eventEmitter.emit(EventType.onUpdatedUser, eventParams);
+    }
+
+    return user;
   }
 
   @Query(() => User, { nullable: true })
@@ -84,6 +132,34 @@ export class UserResolver {
     await this.userService.setLatestQueryAlert(userId);
 
     return true;
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async disableUser(
+    @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.userIdInvalid)))
+    id: string,
+  ): Promise<boolean> {
+    const user = await this.userService.get(id);
+    if (!user) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+
+    return this.cognitoService.disableClient(user.firstName.toLowerCase());
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async enableUser(
+    @Args('id', { type: () => String }, new IsValidObjectId(Errors.get(ErrorType.userIdInvalid)))
+    id: string,
+  ): Promise<boolean> {
+    const user = await this.userService.get(id);
+    if (!user) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+
+    return this.cognitoService.enableClient(user.firstName.toLowerCase());
   }
 
   protected notifyUpdatedUserConfig(user: User) {

@@ -1,7 +1,9 @@
-import { Member, MemberSummary } from '../../src/member';
+import { Member, MemberConfig, MemberSummary } from '../../src/member';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import { User } from '../../src/user';
-import { generateRequestHeaders } from '../index';
+import { BEFORE_ALL_TIMEOUT, generateRequestHeaders } from '../index';
+import { Platform } from '@argus/pandora';
+import { RegisterForNotificationParams } from '../../src/common';
 
 describe('Integration tests : getMembers', () => {
   const handler: Handler = new Handler();
@@ -15,7 +17,7 @@ describe('Integration tests : getMembers', () => {
       handler.defaultUserRequestHeaders,
     );
     creators = new Creators(handler, appointmentsActions);
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();
@@ -26,10 +28,17 @@ describe('Integration tests : getMembers', () => {
     const { member: member2 } = await creators.createMemberUserAndOptionalOrg({ orgId: org.id });
     const primaryUser1 = member1.users[0];
     const primaryUser2 = member2.users[0];
+    const memberConfig1 = await handler.queries.getMemberConfig({ id: member1.id });
+    const memberConfig2 = await handler.queries.getMemberConfig({ id: member2.id });
 
     const membersResult = await handler.queries.getMembers({ orgId: org.id });
 
-    const compareResults = (result: MemberSummary, member: Member, primaryUser: User) => {
+    const compareResults = (
+      result: MemberSummary,
+      member: Member,
+      memberConfig: MemberConfig,
+      primaryUser: User,
+    ) => {
       expect(result).toEqual(
         expect.objectContaining({
           id: member.id,
@@ -49,18 +58,29 @@ describe('Integration tests : getMembers', () => {
           }),
           nextAppointment: null,
           appointmentsCount: 0,
+          firstLoggedInAt: memberConfig.firstLoggedInAt,
+          platform: memberConfig.platform,
         }),
       );
     };
 
     expect(membersResult.members.length).toEqual(2);
-    compareResults(membersResult.members[0], member1, primaryUser1);
-    compareResults(membersResult.members[1], member2, primaryUser2);
+    compareResults(membersResult.members[0], member1, memberConfig1, primaryUser1);
+    compareResults(membersResult.members[1], member2, memberConfig2, primaryUser2);
   });
 
   it('should call with a all member parameters', async () => {
     const { member, org } = await creators.createMemberUserAndOptionalOrg();
     const primaryUser = member.users[0];
+    const registerForNotificationParams: RegisterForNotificationParams = {
+      platform: Platform.android,
+      isPushNotificationsEnabled: true,
+    };
+    await handler.mutations.registerMemberForNotifications({
+      registerForNotificationParams,
+      requestHeaders: generateRequestHeaders(member.authId),
+    });
+    const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
 
     await creators.createAndValidateAppointment({ member });
     const appointment = await appointmentsActions.scheduleAppointment({ member });
@@ -93,6 +113,8 @@ describe('Integration tests : getMembers', () => {
         }),
         nextAppointment: appointment.start,
         appointmentsCount: 2,
+        firstLoggedInAt: memberConfig.firstLoggedInAt,
+        platform: registerForNotificationParams.platform,
       }),
     );
   });

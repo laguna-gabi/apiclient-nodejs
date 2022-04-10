@@ -28,5 +28,9 @@
   },
   "db": {
     "name": "iris"
+  },
+  "analytics": {
+    "host": "ec2-44-199-251-231.compute-1.amazonaws.com",
+    "database": "laguna"
   }
 }

@@ -12,7 +12,7 @@ export abstract class BaseSlack {
 
   async send(params: IEventNotifySlack): Promise<{ text: string }> {
     if (
-      process.env.NODE_ENV === Environments.development ||
+      process.env.NODE_ENV === Environments.develop ||
       process.env.NODE_ENV === Environments.production
     ) {
       try {

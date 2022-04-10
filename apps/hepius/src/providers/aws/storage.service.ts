@@ -15,7 +15,7 @@ import {
 } from '../../common';
 import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../member/journal.dto';
 import { Environments, formatEx } from '@argus/pandora';
-
+import * as fs from 'fs';
 @Injectable()
 export class StorageService implements OnModuleInit {
   private readonly s3 = new AWS.S3({
@@ -293,6 +293,17 @@ export class StorageService implements OnModuleInit {
     } catch (ex) {
       this.logger.error(urlParams, StorageService.name, this.moveToDeleted.name, formatEx(ex));
     }
+  }
+
+  async downloadFile(bucketName: string, keyName: string, localDest: string) {
+    const data = await this.s3
+      .getObject({
+        Bucket: bucketName,
+        Key: keyName,
+      })
+      .promise();
+
+    fs.writeFileSync(localDest, data.Body.toString());
   }
 
   private async emptyDirectory(dir) {

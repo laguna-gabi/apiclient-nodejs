@@ -56,7 +56,7 @@ import {
   Todo,
   UpdateTodoParams,
 } from '../../src/todo';
-import { CreateUserParams } from '../../src/user';
+import { CreateUserParams, UpdateUserParams, User } from '../../src/user';
 import { isResultValid } from '..';
 import { SubmitCareWizardParams } from '../../src/care/wizard.dto';
 
@@ -107,13 +107,14 @@ export class Mutations {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
     requestHeaders?;
-  }): Promise<Identifier> => {
+  }): Promise<User> => {
     const { createUser } = await this.client
       .request(
         gql`
           mutation CreateUser($createUserParams: CreateUserParams!) {
             createUser(createUserParams: $createUserParams) {
               id
+              authId
             }
           }
         `,
@@ -134,6 +135,58 @@ export class Mutations {
       });
 
     return createUser;
+  };
+
+  updateUser = async ({
+    updateUserParams,
+    missingFieldError,
+    invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
+  }: {
+    updateUserParams: UpdateUserParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+    requestHeaders?;
+  }): Promise<Identifier> => {
+    const { updateUser } = await this.client
+      .request(
+        gql`
+          mutation UpdateUser($updateUserParams: UpdateUserParams!) {
+            updateUser(updateUserParams: $updateUserParams) {
+              id
+              authId
+              firstName
+              lastName
+              email
+              roles
+              avatar
+              description
+              createdAt
+              phone
+              title
+              maxCustomers
+              languages
+              orgs
+            }
+          }
+        `,
+        {
+          updateUserParams: {
+            ...updateUserParams,
+            roles: updateUserParams.roles?.map((role) => camelCase(role)),
+          },
+        },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
+
+    return updateUser;
   };
 
   createOrg = async ({

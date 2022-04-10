@@ -31,10 +31,30 @@ export const NotNullableUserKeys = ['maxCustomers', 'languages', 'roles', 'avata
  ********************************** Input params for gql methods **********************************
  *************************************************************************************************/
 @InputType()
-export class CreateUserParams {
-  @Field()
-  authId: string;
+class ExtraUserParams {
+  @Field(() => [UserRole], { nullable: true })
+  roles?: UserRole[];
 
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsUrl(undefined, { message: Errors.get(ErrorType.userAvatarFormat) })
+  avatar?: string;
+
+  @Field({ nullable: true })
+  description?: string;
+
+  @Field({ nullable: true })
+  title?: string;
+
+  @Field(() => Number, { nullable: true })
+  maxCustomers?: number;
+
+  @Field(() => [Language], { nullable: true })
+  languages?: Language[];
+}
+
+@InputType()
+export class CreateUserParams extends ExtraUserParams {
   @Field()
   @Length(minLength, maxLength, { message: Errors.get(ErrorType.userMinMaxLength) })
   firstName: string;
@@ -47,33 +67,34 @@ export class CreateUserParams {
   @IsEmail(undefined, { message: Errors.get(ErrorType.userEmailFormat) })
   email: string;
 
-  @Field(() => [UserRole], { nullable: true })
-  roles?: UserRole[];
-
-  @Field({ nullable: true })
-  @IsOptional()
-  @IsUrl(undefined, { message: Errors.get(ErrorType.userAvatarFormat) })
-  avatar?: string;
-
-  @Field({ nullable: true })
-  description?: string;
-
   @Field({ description: validPhoneExamples })
   @IsPhoneNumber(undefined, { message: Errors.get(ErrorType.userPhone) })
   phone: string;
 
-  @Field({ nullable: true })
-  title?: string;
-
-  @Field(() => Number, { nullable: true })
-  maxCustomers?: number;
-
-  @Field(() => [Language], { nullable: true })
-  languages?: Language[];
-
   @IsObjectIds({ message: Errors.get(ErrorType.orgIdInvalid) })
   @Field(() => [String])
   orgs: string[];
+}
+
+@InputType()
+export class UpdateUserParams extends ExtraUserParams {
+  @Field(() => String)
+  id: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @Length(minLength, maxLength, { message: Errors.get(ErrorType.userMinMaxLength) })
+  firstName?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @Length(minLength, maxLength, { message: Errors.get(ErrorType.userMinMaxLength) })
+  lastName?: string;
+
+  @Field(() => [String], { nullable: true })
+  @IsOptional()
+  @IsObjectIds({ message: Errors.get(ErrorType.orgIdInvalid) })
+  orgs?: string[];
 }
 
 /**************************************************************************************************
@@ -84,7 +105,7 @@ export class CreateUserParams {
 export class User extends Identifier {
   @Prop()
   @Field(() => String)
-  authId: string;
+  authId?: string;
 
   @Prop()
   @Field(() => String)

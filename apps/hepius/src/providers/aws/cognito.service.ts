@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
 import { aws } from 'config';
 import { LoggerService } from '../../common';
-import { formatEx } from '@argus/pandora';
+import { Environments, formatEx } from '@argus/pandora';
+import { CognitoIdentityServiceProvider } from 'aws-sdk';
 
 @Injectable()
 export class CognitoService {
@@ -13,29 +14,84 @@ export class CognitoService {
 
   constructor(private readonly logger: LoggerService) {}
 
-  async disableMember(deviceId): Promise<void> {
-    this.logger.info({ deviceId }, CognitoService.name, this.disableMember.name);
+  /**
+   * @param user
+   * @return authId
+   */
+  async addClient(user: { firstName: string; email: string; phone: string }): Promise<string> {
+    this.logger.info(user, CognitoService.name, this.addClient.name);
+
+    const params: CognitoIdentityServiceProvider.Types.AdminCreateUserRequest = {
+      UserPoolId: aws.cognito.userPoolId,
+      Username: user.firstName.toLowerCase(),
+      TemporaryPassword: '1qaz2wsx',
+      DesiredDeliveryMediums: ['EMAIL'],
+      UserAttributes: [
+        { Name: 'email', Value: user.email },
+        { Name: 'email_verified', Value: 'true' },
+        { Name: 'phone_number', Value: user.phone },
+        { Name: 'phone_number_verified', Value: 'true' },
+      ],
+    };
+
+    const { User } = await this.cognito.adminCreateUser(params).promise();
+    const { Value } = User.Attributes.find((att) => att.Name === 'sub');
+
+    if (process.env.NODE_ENV === Environments.production) {
+      await this.cognito
+        .adminSetUserMFAPreference({
+          SMSMfaSettings: { Enabled: true, PreferredMfa: true },
+          Username: User.Username,
+          UserPoolId: params.UserPoolId,
+        })
+        .promise();
+    }
+
+    return Value;
+  }
+
+  async disableClient(userName: string): Promise<boolean> {
+    this.logger.info({ userName }, CognitoService.name, this.disableClient.name);
     try {
       await this.cognito
-        .adminDisableUser({ UserPoolId: aws.cognito.userPoolId, Username: deviceId })
+        .adminDisableUser({ UserPoolId: aws.cognito.userPoolId, Username: userName })
         .promise();
+      return true;
     } catch (ex) {
       if (ex?.code !== 'UserNotFoundException') {
-        this.logger.error(deviceId, CognitoService.name, this.disableMember.name, formatEx(ex));
+        this.logger.error(userName, CognitoService.name, this.disableClient.name, formatEx(ex));
       }
+      return false;
     }
   }
 
-  async deleteMember(deviceId): Promise<void> {
-    this.logger.info({ deviceId }, CognitoService.name, this.deleteMember.name);
+  async enableClient(userName: string): Promise<boolean> {
+    // this.logger.info({ userName }, CognitoService.name, this.enableClient.name);
     try {
       await this.cognito
-        .adminDeleteUser({ UserPoolId: aws.cognito.userPoolId, Username: deviceId })
+        .adminEnableUser({ UserPoolId: aws.cognito.userPoolId, Username: userName })
         .promise();
+      return true;
     } catch (ex) {
       if (ex?.code !== 'UserNotFoundException') {
-        this.logger.error(deviceId, CognitoService.name, this.deleteMember.name, formatEx(ex));
+        this.logger.error(userName, CognitoService.name, this.enableClient.name, formatEx(ex));
       }
+      return false;
+    }
+  }
+
+  async deleteClient(userName: string): Promise<boolean> {
+    this.logger.info({ userName }, CognitoService.name, this.deleteClient.name);
+    try {
+      await this.cognito
+        .adminDeleteUser({ UserPoolId: aws.cognito.userPoolId, Username: userName })
+        .promise();
+      return true;
+    } catch (ex) {
+      if (ex?.code !== 'UserNotFoundException') {
+        this.logger.error(userName, CognitoService.name, this.deleteClient.name, formatEx(ex));
+      }
+      return false;
     }
   }
 }

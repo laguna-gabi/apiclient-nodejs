@@ -39,7 +39,7 @@ export class ConfigsService implements MongooseOptionsFactory {
           SecretId:
             process.env.NODE_ENV === Environments.production
               ? Environments.production
-              : Environments.development,
+              : Environments.develop,
         })
         .promise();
       this.data = JSON.parse(result.SecretString);

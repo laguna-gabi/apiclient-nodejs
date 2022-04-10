@@ -1,5 +1,5 @@
 import { Handler } from '../aux';
-import { generateRequestHeaders } from '../index';
+import { BEFORE_ALL_TIMEOUT, generateRequestHeaders } from '../index';
 
 describe('Integration tests : RBAC', () => {
   const handler: Handler = new Handler();
@@ -8,7 +8,7 @@ describe('Integration tests : RBAC', () => {
   beforeAll(async () => {
     await handler.beforeAll();
     requestHeaders = generateRequestHeaders(handler.patientZero.authId);
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();

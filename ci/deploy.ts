@@ -2,10 +2,9 @@ process.env.AWS_REGION = 'us-east-1'; // set a global default AWS_REGION
 
 import * as aws from 'aws-sdk';
 import * as core from '@actions/core';
-import { DescribeTaskDefinitionResponse } from 'aws-sdk/clients/ecs';
+import { DescribeTaskDefinitionResponse, TaskDefinition } from 'aws-sdk/clients/ecs';
 import { IncomingWebhook } from '@slack/webhook';
 import { execSync } from 'child_process';
-import { TaskDefinition } from 'aws-sdk/clients/ecs';
 
 const DEFAULT_CLUSTER = `hepius`;
 
@@ -13,9 +12,14 @@ const WAIT_MINUTES = 30;
 const WAIT_DEFAULT_DELAY_SEC = 15;
 
 const DEVELOP_MAIN_BRANCH_NAME = 'develop';
+const STAGING_MAIN_BRANCH_NAME = 'staging';
 const MASTER_MAIN_BRANCH_NAME = 'master';
 
-const deployableBranches = [DEVELOP_MAIN_BRANCH_NAME, MASTER_MAIN_BRANCH_NAME];
+const deployableBranches = [
+  DEVELOP_MAIN_BRANCH_NAME,
+  STAGING_MAIN_BRANCH_NAME,
+  MASTER_MAIN_BRANCH_NAME,
+];
 
 // Attributes that are returned by DescribeTaskDefinition, but are not valid RegisterTaskDefinition inputs
 const IGNORED_TASK_DEFINITION_ATTRIBUTES = [
@@ -276,7 +280,12 @@ const deploy = async () => {
     );
   }
 
-  const nodeEnv = process.env.GITHUB_REF_NAME === 'develop' ? 'development' : 'production';
+  const nodeEnv =
+    process.env.GITHUB_REF_NAME === DEVELOP_MAIN_BRANCH_NAME
+      ? DEVELOP_MAIN_BRANCH_NAME
+      : process.env.GITHUB_REF_NAME === STAGING_MAIN_BRANCH_NAME
+      ? STAGING_MAIN_BRANCH_NAME
+      : 'production';
 
   const imageName = `${process.env.ECR_REGISTRY}/${appName}-${process.env.GITHUB_REF_NAME}`;
   const serviceName = `${appName}-${process.env.GITHUB_REF_NAME}-service`;

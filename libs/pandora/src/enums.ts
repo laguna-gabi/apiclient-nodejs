@@ -5,7 +5,7 @@ import { v4 } from 'uuid';
  ******************************************************************************/
 export enum Environments {
   production = 'production',
-  development = 'development',
+  develop = 'develop',
   test = 'test',
   localhost = 'localhost',
 }

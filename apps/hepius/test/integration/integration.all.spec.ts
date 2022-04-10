@@ -1,5 +1,5 @@
 import { AppointmentInternalKey, Language, LogInternalKey, Platform } from '@argus/pandora';
-import { articlesByDrg, general } from 'config';
+import { articlesByDrg, general, hosts } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
 import { date, lorem } from 'faker';
 import { v4 } from 'uuid';
@@ -15,6 +15,7 @@ import {
   ErrorType,
   Errors,
   EventType,
+  IEventOnUpdatedUser,
   Identifiers,
   ItemType,
   UserRole,
@@ -49,6 +50,7 @@ import {
 import { User, defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 import {
+  BEFORE_ALL_TIMEOUT,
   generateAddCaregiverParams,
   generateAppointmentLink,
   generateAvailabilityInput,
@@ -81,8 +83,10 @@ import {
   generateUpdateRecordingParams,
   generateUpdateRedFlagParams,
   generateUpdateTodoParams,
+  generateUpdateUserParams,
   mockGenerateDispatch,
   mockGenerateQuestionnaireItem,
+  mockGenerateUser,
   submitMockCareWizard,
 } from '../index';
 
@@ -98,7 +102,7 @@ describe('Integration tests: all', () => {
       handler.defaultUserRequestHeaders,
     );
     creators = new Creators(handler, appointmentsActions);
-  }, 10000);
+  }, BEFORE_ALL_TIMEOUT);
 
   afterAll(async () => {
     await handler.afterAll();
@@ -2233,7 +2237,7 @@ describe('Integration tests: all', () => {
         message:
           `Alerting results on ${questionnaire.shortName} for ` +
           `${user.firstName} ${user.lastName}’s member - ` +
-          `<https://dev.harmony.lagunahealth.com/details/${member.id.toString()}|` +
+          `<${hosts.harmony}/details/${member.id.toString()}|` +
           `${member.firstName[0].toUpperCase() + member.lastName[0].toUpperCase()}>` +
           `. Scored a '2'`,
       });
@@ -2282,6 +2286,128 @@ describe('Integration tests: all', () => {
       const res = qrs.find((qr) => qr.type === QuestionnaireType.lhp);
       expect(res.result.severity).toEqual(HealthPersona.highEffort);
     });
+  });
+
+  it('should update user related channels on updated user', async () => {
+    const { user, org } = await creators.createMemberUserAndOptionalOrg();
+    await handler.mutations.createMember({
+      memberParams: generateCreateMemberParams({ orgId: org.id, userId: user.id }),
+    }); //generating another member for the specific user above
+
+    handler.sendBird.spyOnSendBirdUpdateChannelName.mockReset();
+    handler.sendBird.spyOnSendBirdUpdateUser.mockReset();
+
+    const updatedUser = { ...mockGenerateUser(), id: user.id };
+    const eventParams: IEventOnUpdatedUser = { user: updatedUser };
+    handler.eventEmitter.emit(EventType.onUpdatedUser, eventParams);
+
+    await delay(1000);
+    expect(handler.sendBird.spyOnSendBirdUpdateUser).toBeCalledWith({
+      nickname: `${updatedUser.firstName} ${updatedUser.lastName}`,
+      profile_url: updatedUser.avatar,
+      user_id: updatedUser.id,
+    });
+
+    const calls = [1, 2];
+    expect(handler.sendBird.spyOnSendBirdUpdateChannelName).toBeCalledTimes(calls.length);
+    calls.map((call) => {
+      expect(handler.sendBird.spyOnSendBirdUpdateChannelName).toHaveBeenNthCalledWith(
+        call,
+        expect.any(String),
+        `${updatedUser.firstName} ${updatedUser.lastName}`,
+        updatedUser.avatar,
+      );
+    });
+  });
+
+  it('should update only primary user related channels on updated user', async () => {
+    const user1 = await creators.createAndValidateUser();
+    const { user: user2, member } = await creators.createMemberUserAndOptionalOrg();
+
+    /**
+     * adding user1 to member and user2 sendbird channel
+     * after schedule app, there will be a sendbird channel with member and both user1 and user2
+     */
+    const appointmentParams = generateScheduleAppointmentParams({
+      memberId: member.id,
+      userId: user1.id,
+    });
+
+    await creators.handler.mutations.scheduleAppointment({ appointmentParams });
+
+    await delay(500);
+
+    handler.sendBird.spyOnSendBirdUpdateChannelName.mockReset();
+    handler.sendBird.spyOnSendBirdUpdateUser.mockReset();
+
+    const updatedUser = { ...mockGenerateUser(), id: user2.id };
+    const eventParams: IEventOnUpdatedUser = { user: updatedUser };
+    handler.eventEmitter.emit(EventType.onUpdatedUser, eventParams);
+
+    await delay(1000);
+
+    expect(handler.sendBird.spyOnSendBirdUpdateUser).toBeCalledWith({
+      nickname: `${updatedUser.firstName} ${updatedUser.lastName}`,
+      profile_url: updatedUser.avatar,
+      user_id: updatedUser.id,
+    });
+
+    expect(handler.sendBird.spyOnSendBirdUpdateChannelName).toBeCalledWith(
+      expect.any(String),
+      `${updatedUser.firstName} ${updatedUser.lastName}`,
+      updatedUser.avatar,
+    );
+  });
+
+  it('should not update secondary user related channels on updated user', async () => {
+    const user = await creators.createAndValidateUser();
+    const { member } = await creators.createMemberUserAndOptionalOrg();
+
+    /**
+     * adding user1 to member and user2 sendbird channel
+     * after schedule app, there will be a sendbird channel with member and both user1 and user2
+     */
+    const appointmentParams = generateScheduleAppointmentParams({
+      memberId: member.id,
+      userId: user.id,
+    });
+
+    await creators.handler.mutations.scheduleAppointment({ appointmentParams });
+
+    await delay(500);
+
+    handler.sendBird.spyOnSendBirdUpdateChannelName.mockReset();
+    handler.sendBird.spyOnSendBirdUpdateUser.mockReset();
+
+    const updatedUser = { ...mockGenerateUser(), id: user.id };
+    const eventParams: IEventOnUpdatedUser = { user: updatedUser };
+    handler.eventEmitter.emit(EventType.onUpdatedUser, eventParams);
+
+    await delay(500);
+
+    expect(handler.sendBird.spyOnSendBirdUpdateUser).toBeCalledWith({
+      nickname: `${updatedUser.firstName} ${updatedUser.lastName}`,
+      profile_url: updatedUser.avatar,
+      user_id: updatedUser.id,
+    });
+
+    expect(handler.sendBird.spyOnSendBirdUpdateChannelName).not.toBeCalled();
+  });
+
+  it('should update a user', async () => {
+    const { id, authId } = await creators.createAndValidateUser();
+
+    const updateUserParams = generateUpdateUserParams({ id });
+    const updateUserResponse = await handler.mutations.updateUser({
+      updateUserParams,
+      requestHeaders: handler.defaultAdminRequestHeaders,
+    });
+
+    const getResponse = await handler.queries.getUser({
+      requestHeaders: generateRequestHeaders(authId),
+    });
+
+    expect(getResponse).toEqual(expect.objectContaining(updateUserResponse));
   });
 
   /************************************************************************************************

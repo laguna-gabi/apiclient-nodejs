@@ -47,6 +47,8 @@ export const urls = {
   webhooks: `/${apiPrefix}/${webhooks}`,
 };
 
+export const BEFORE_ALL_TIMEOUT = 15000;
+
 export const compareUsers = (user: User, userBase) => {
   expect(user.firstName).toEqual(userBase.firstName);
   expect(user.lastName).toEqual(userBase.lastName);
@@ -148,6 +150,7 @@ export const mockProviders = (
 
   const spyOnFeatureFlagControlGroup = jest.spyOn(featureFlagService, 'isControlGroup');
   const spyOnSendBirdCreateUser = jest.spyOn(sendBird, 'createUser');
+  const spyOnSendBirdUpdateUser = jest.spyOn(sendBird, 'updateUser');
   const spyOnSendBirdCreateGroupChannel = jest.spyOn(sendBird, 'createGroupChannel');
   const spyOnSendBirdFreeze = jest.spyOn(sendBird, 'freezeGroupChannel');
   const spyOnSendBirdDeleteGroupChannel = jest.spyOn(sendBird, 'deleteGroupChannel');
@@ -175,8 +178,10 @@ export const mockProviders = (
   const spyOnTwilioValidateWebhook = jest.spyOn(twilioService, 'validateWebhook');
   const spyOnTwilioGetPhoneType = jest.spyOn(twilioService, 'getPhoneType');
   const spyOnSlackBotSendMessage = jest.spyOn(slackBot, 'send');
-  const spyOnCognitoServiceDisableMember = jest.spyOn(cognitoService, 'disableMember');
-  const spyOnCognitoServiceDeleteMember = jest.spyOn(cognitoService, 'deleteMember');
+  const spyOnCognitoServiceAddClient = jest.spyOn(cognitoService, 'addClient');
+  const spyOnCognitoServiceDisableClient = jest.spyOn(cognitoService, 'disableClient');
+  const spyOnCognitoServiceEnableClient = jest.spyOn(cognitoService, 'enableClient');
+  const spyOnCognitoServiceDeleteClient = jest.spyOn(cognitoService, 'deleteClient');
   const spyOnQueueServiceSendMessage = jest.spyOn(queueService, 'sendMessage');
   const spyOnNotificationServiceGetDispatchesByClientSenderId = jest.spyOn(
     notificationService,
@@ -184,6 +189,7 @@ export const mockProviders = (
   );
 
   spyOnSendBirdCreateUser.mockResolvedValue(v4());
+  spyOnSendBirdUpdateUser.mockResolvedValue(undefined);
   spyOnFeatureFlagControlGroup.mockResolvedValue(false);
   spyOnSendBirdCreateGroupChannel.mockResolvedValue(true);
   spyOnSendBirdFreeze.mockResolvedValue(undefined);
@@ -209,14 +215,17 @@ export const mockProviders = (
   spyOnSendBirdUpdateChannelName.mockReturnValue(undefined);
   spyOnSendBirdInvite.mockResolvedValue([generateId()]);
   spyOnSendBirdLeave.mockReturnValue(undefined);
-  spyOnCognitoServiceDisableMember.mockReturnValue(undefined);
-  spyOnCognitoServiceDeleteMember.mockReturnValue(undefined);
+  spyOnCognitoServiceAddClient.mockResolvedValue(v4());
+  spyOnCognitoServiceDisableClient.mockResolvedValue(true);
+  spyOnCognitoServiceEnableClient.mockResolvedValue(true);
+  spyOnCognitoServiceDeleteClient.mockReturnValue(undefined);
   spyOnQueueServiceSendMessage.mockReturnValue(undefined);
   spyOnNotificationServiceGetDispatchesByClientSenderId.mockResolvedValue([undefined]);
 
   return {
     sendBird: {
       spyOnSendBirdCreateUser,
+      spyOnSendBirdUpdateUser,
       spyOnSendBirdCreateGroupChannel,
       spyOnSendBirdFreeze,
       spyOnSendBirdDeleteGroupChannel,
@@ -237,7 +246,12 @@ export const mockProviders = (
       spyOnTwilioGetPhoneType,
     },
     slackBot: { spyOnSlackBotSendMessage },
-    cognitoService: { spyOnCognitoServiceDisableMember, spyOnCognitoServiceDeleteMember },
+    cognitoService: {
+      spyOnCognitoServiceAddClient,
+      spyOnCognitoServiceDisableClient,
+      spyOnCognitoServiceEnableClient,
+      spyOnCognitoServiceDeleteClient,
+    },
     storage: {
       spyOnStorageDownload,
       spyOnStorageUpload,

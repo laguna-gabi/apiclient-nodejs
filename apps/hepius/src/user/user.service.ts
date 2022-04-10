@@ -10,6 +10,7 @@ import {
   NotNullableUserKeys,
   SlotService,
   Slots,
+  UpdateUserParams,
   User,
   UserConfig,
   UserConfigDocument,
@@ -30,6 +31,7 @@ import {
   UserRole,
 } from '../common';
 import { Environments, IEventNotifySlack, SlackChannel, SlackIcon, formatEx } from '@argus/pandora';
+import { isEmpty, isNil, omitBy } from 'lodash';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -58,10 +60,7 @@ export class UserService extends BaseService {
       const newObject = this.removeNotNullable(createUserParams, NotNullableUserKeys);
 
       const object = await this.userModel.create({ ...newObject });
-
-      await this.userConfigModel.create({
-        userId: new Types.ObjectId(object._id),
-      });
+      await this.userConfigModel.create({ userId: new Types.ObjectId(object._id) });
 
       return this.replaceId(object.toObject());
     } catch (ex) {
@@ -69,6 +68,44 @@ export class UserService extends BaseService {
         ex.code === DbErrors.duplicateKey ? Errors.get(ErrorType.userIdOrEmailAlreadyExists) : ex,
       );
     }
+  }
+
+  async updateAuthId(id: string, authId: string): Promise<User> {
+    const user = await this.userModel
+      .findByIdAndUpdate(new Types.ObjectId(id), { authId }, { upsert: false, new: true })
+      .lean();
+
+    if (!user) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+
+    return this.replaceId(user);
+  }
+
+  async update(updateUserParams: UpdateUserParams): Promise<User> {
+    const { id, ...setParams } = updateUserParams;
+    let user;
+    if (isEmpty(setParams)) {
+      user = await this.userModel.findById(new Types.ObjectId(id));
+    } else {
+      user = await this.userModel
+        .findByIdAndUpdate(
+          new Types.ObjectId(id),
+          { $set: omitBy(setParams, isNil) },
+          { upsert: false, new: true },
+        )
+        .lean();
+    }
+
+    if (!user) {
+      throw new Error(Errors.get(ErrorType.userNotFound));
+    }
+
+    return this.replaceId(user);
+  }
+
+  async delete(id: string) {
+    await this.userModel.findByIdAndDelete(id);
   }
 
   async getSlots(getSlotsParams: GetSlotsParams): Promise<Slots> {
@@ -276,7 +313,7 @@ export class UserService extends BaseService {
       },
       { $sort: { lastMemberAssignedAt: 1 } },
       ...(process.env.NODE_ENV === Environments.production ||
-      process.env.NODE_ENV === Environments.development
+      process.env.NODE_ENV === Environments.develop
         ? []
         : [{ $limit: 10 }]),
       {

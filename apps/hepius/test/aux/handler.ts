@@ -110,6 +110,7 @@ import {
   UserService,
 } from '../../src/user';
 import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
+import { v4 } from 'uuid';
 
 export class Handler extends BaseHandler {
   sendBird;
@@ -192,7 +193,6 @@ export class Handler extends BaseHandler {
     this.storage = providers.storage;
     this.featureFlagService = providers.featureFlagService;
     this.queueService = providers.queueService;
-    this.cognitoService = providers.cognitoService;
     this.notificationService = providers.notificationService;
 
     await dbConnect();
@@ -217,6 +217,7 @@ export class Handler extends BaseHandler {
     this.queries = new Queries(this.client, this.defaultUserRequestHeaders);
 
     const { id: orgId } = await this.mutations.createOrg({ orgParams: generateOrgParams() });
+    this.cognitoService.spyOnCognitoServiceAddClient.mockResolvedValue(v4());
     const user = await this.mutations.createUser({ createUserParams: generateCreateUserParams() });
     const memberParams = generateCreateMemberParams({ userId: user.id, orgId });
     const { id } = await this.mutations.createMember({ memberParams });
@@ -244,8 +245,10 @@ export class Handler extends BaseHandler {
     this.twilioService.spyOnTwilioGetToken.mockReset();
     this.twilioService.spyOnTwilioValidateWebhook.mockReset();
     this.slackBot.spyOnSlackBotSendMessage.mockReset();
-    this.cognitoService.spyOnCognitoServiceDisableMember.mockReset();
-    this.cognitoService.spyOnCognitoServiceDeleteMember.mockReset();
+    this.cognitoService.spyOnCognitoServiceAddClient.mockReset();
+    this.cognitoService.spyOnCognitoServiceDisableClient.mockReset();
+    this.cognitoService.spyOnCognitoServiceEnableClient.mockReset();
+    this.cognitoService.spyOnCognitoServiceDeleteClient.mockReset();
     this.spyOnGetCommunicationService?.mockReset();
     this.queueService.spyOnQueueServiceSendMessage.mockReset();
 
@@ -326,13 +329,14 @@ export const initClients = async (
   let sub;
   if (users.length === 0) {
     const createUserParams = generateCreateUserParams({ roles });
-    const user = await userService.insert(createUserParams);
+    const { id } = await userService.insert(createUserParams);
+    const user = await userService.updateAuthId(id, v4());
     const eventParams: IEventOnNewUser = { user };
     eventEmitter.emit(EventType.onNewUser, eventParams);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     userResolver.notifyUpdatedUserConfig(user);
-    sub = createUserParams.authId;
+    sub = user.authId;
   } else {
     sub = users[0].authId;
   }

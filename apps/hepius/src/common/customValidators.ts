@@ -296,8 +296,10 @@ export function IsObjectIds(options?: ValidationOptions) {
       propertyName,
       options,
       validator: {
-        validate(values: string[]) {
-          return values.every((value) => Types.ObjectId.isValid(value) || value == undefined);
+        validate(values?: string[]) {
+          return (
+            !values || values.every((value) => Types.ObjectId.isValid(value) || value == undefined)
+          );
         },
       },
     });

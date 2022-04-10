@@ -1,6 +1,6 @@
 import { Environments, Platform, mockLogger } from '@argus/pandora';
 import axios from 'axios';
-import { hosts, services } from 'config';
+import { aws, hosts, services } from 'config';
 import { EventEmitter2 } from 'eventemitter2';
 import { lorem } from 'faker';
 import { readFileSync } from 'fs';
@@ -9,11 +9,15 @@ import { LoggerService, StorageType } from '../../src/common';
 import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../src/member';
 import { CloudMapService, ConfigsService, StorageService } from '../../src/providers';
 import { generateId, mockGenerateMember, mockGenerateUser } from '../generators';
+import * as fs from 'fs';
+import * as AWS from 'aws-sdk';
+import * as crypto from 'crypto';
 
 describe('live: aws', () => {
   describe('storage', () => {
     let storageService: StorageService;
     let bucketName;
+    let localStorage;
     const member = mockGenerateMember();
     member.id = `test-member-${new Date().getTime()}`;
 
@@ -33,6 +37,21 @@ describe('live: aws', () => {
       bucketName = storageService.bucket;
       const user = mockGenerateUser();
       await storageService.handleNewMember({ member, user, platform: Platform.android });
+
+      // create a local storage for testing
+      localStorage = new AWS.S3({
+        signatureVersion: 'v4',
+        apiVersion: '2006-03-01',
+        region: aws.region,
+        endpoint: hosts.localstack,
+        s3ForcePathStyle: true,
+      });
+
+      await localStorage
+        .createBucket({
+          Bucket: 'test-bucket',
+        })
+        .promise();
     });
 
     afterAll(async () => {
@@ -47,6 +66,30 @@ describe('live: aws', () => {
           await storageService.emptyDirectory(`public/${type}/${member.id}`);
         }),
       );
+    });
+
+    it('should be able to download a file', async () => {
+      // upload a file to our local storage
+      const filename = `lagunaIcon.png`;
+      const fileContent = readFileSync(`./apps/hepius/test/live/mocks/${filename}`);
+
+      const refHash = crypto.createHash('md5').update(fileContent.toString(), 'utf8').digest('hex');
+
+      const params = {
+        Bucket: `test-bucket`,
+        Key: filename,
+        Body: fileContent,
+      };
+
+      await localStorage.upload(params).promise();
+
+      await storageService.downloadFile(`test-bucket`, filename, filename);
+
+      expect(
+        crypto.createHash('md5').update(fs.readFileSync(filename).toString(), 'utf8').digest('hex'),
+      ).toEqual(refHash);
+
+      fs.unlinkSync(filename);
     });
 
     it('should delete given recordings for a specific member', async () => {
