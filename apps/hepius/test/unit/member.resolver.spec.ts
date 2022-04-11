@@ -672,6 +672,55 @@ describe('MemberResolver', () => {
     );
   });
 
+  describe('getMemberUploadGeneralDocumentLink', () => {
+    let spyOnServiceGet;
+    let spyOnStorageAlreadyExists;
+    let spyOnStorageUpload;
+
+    beforeEach(() => {
+      spyOnStorageAlreadyExists = jest.spyOn(storage, 'doesDocumentAlreadyExists');
+      spyOnServiceGet = jest.spyOn(service, 'get');
+      spyOnStorageUpload = jest.spyOn(storage, 'getUploadUrl');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+      spyOnStorageAlreadyExists.mockReset();
+      spyOnStorageUpload.mockReset();
+    });
+
+    it('should get upload link', async () => {
+      const member = mockGenerateMember();
+      spyOnServiceGet.mockImplementationOnce(async () => member);
+      spyOnStorageAlreadyExists.mockImplementationOnce(async () => false);
+      spyOnStorageUpload.mockImplementation(async () => 'https://aws-bucket-path/extras');
+
+      const fileName = lorem.word();
+      await resolver.getMemberUploadGeneralDocumentLink({ memberId: member.id, fileName });
+
+      expect(spyOnServiceGet).toBeCalledTimes(1);
+      expect(spyOnServiceGet).toBeCalledWith(member.id);
+      expect(spyOnStorageAlreadyExists).toBeCalledTimes(1);
+      expect(spyOnStorageUpload).toBeCalledWith({
+        storageType: StorageType.general,
+        memberId: member.id,
+        id: fileName,
+      });
+    });
+
+    it('should fail to get upload link if document already exists', async () => {
+      const member = mockGenerateMember();
+      spyOnServiceGet.mockImplementationOnce(async () => member);
+      spyOnStorageAlreadyExists.mockImplementationOnce(async () => true);
+      spyOnStorageUpload.mockImplementation(async () => 'https://aws-bucket-path/extras');
+
+      const fileName = lorem.word();
+      await expect(
+        resolver.getMemberUploadGeneralDocumentLink({ memberId: member.id, fileName }),
+      ).rejects.toThrow(Errors.get(ErrorType.memberUploadAlreadyExistingGeneralDocument));
+    });
+  });
+
   describe('getMemberUploadRecordingLink', () => {
     let spyOnServiceGet;
     let spyOnStorageUpload;

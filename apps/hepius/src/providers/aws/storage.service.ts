@@ -328,4 +328,17 @@ export class StorageService implements OnModuleInit {
       await this.emptyDirectory(dir);
     }
   }
+
+  async doesDocumentAlreadyExists(urlParams: StorageUrlParams): Promise<boolean> {
+    const { storageType, memberId, id } = urlParams;
+    const params = { Bucket: this.bucket, Key: `public/${storageType}/${memberId}/${id}` };
+    try {
+      await this.s3.headObject(params).promise();
+      return true;
+    } catch (ex) {
+      if (ex.name === 'NotFound') {
+        return false;
+      }
+    }
+  }
 }

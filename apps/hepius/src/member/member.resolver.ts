@@ -44,6 +44,7 @@ import {
   DeleteDischargeDocumentParams,
   DeleteMemberParams,
   DischargeDocumentsLinks,
+  GetMemberUploadGeneralDocumentLinkParams,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
   ImageType,
@@ -374,6 +375,38 @@ export class MemberResolver extends MemberBase {
     });
 
     return true;
+  }
+
+  /*************************************************************************************************
+   ************************************ GeneralDocumentsLinks ************************************
+   ************************************************************************************************/
+
+  @Query(() => String)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getMemberUploadGeneralDocumentLink(
+    @Args(camelCase(GetMemberUploadGeneralDocumentLinkParams.name))
+    getMemberUploadGeneralDocumentLinkParams: GetMemberUploadGeneralDocumentLinkParams,
+  ) {
+    const { memberId, fileName } = getMemberUploadGeneralDocumentLinkParams;
+
+    // Validating member exists
+    await this.memberService.get(memberId);
+
+    if (
+      await this.storageService.doesDocumentAlreadyExists({
+        storageType: StorageType.general,
+        memberId,
+        id: fileName,
+      })
+    ) {
+      throw new Error(Errors.get(ErrorType.memberUploadAlreadyExistingGeneralDocument));
+    }
+
+    return this.storageService.getUploadUrl({
+      storageType: StorageType.general,
+      memberId,
+      id: fileName,
+    });
   }
 
   /*************************************************************************************************

@@ -375,6 +375,45 @@ describe('live: aws', () => {
       });
       expect(nonExistingFile).toBeUndefined();
     });
+
+    it('should return true if document already exists', async () => {
+      //not running on production as this test is too risky for that (we're emptyDir in afterAll)
+      if (process.env.NODE_ENV === Environments.production) {
+        return;
+      }
+
+      const fileName = lorem.word();
+      const storageType = StorageType.general;
+
+      const resultBefore = await storageService.doesDocumentAlreadyExists({
+        memberId: member.id,
+        storageType,
+        id: fileName,
+      });
+      expect(resultBefore).toBeFalsy();
+
+      const params = {
+        memberId: member.id,
+        storageType,
+        id: fileName,
+      };
+      const uploadUrl = await storageService.getUploadUrl(params);
+
+      expect(uploadUrl).toMatch(
+        // eslint-disable-next-line max-len
+        `${hosts.localstack}/${bucketName}/public/${storageType}/${params.memberId}/${params.id}`,
+      );
+
+      const { status: uploadStatus } = await axios.put(uploadUrl, lorem.sentence());
+      expect(uploadStatus).toEqual(200);
+
+      const resultAfter = await storageService.doesDocumentAlreadyExists({
+        memberId: member.id,
+        storageType,
+        id: fileName,
+      });
+      expect(resultAfter).toBeTruthy();
+    });
   });
 
   describe('cloudMap', () => {

@@ -46,6 +46,7 @@ export enum ErrorType {
   memberRecordingSameUserEdit = 9228,
   memberIdMetadataMissing = 9229,
   memberNotesAndNurseNotesNotProvided = 9230,
+  memberUploadAlreadyExistingGeneralDocument = 9231,
 
   // Notifications
   notificationMetadataInvalid = 9270,
@@ -211,6 +212,10 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberRecordingSameUserEdit.valueOf(), `only user who wrote review can update it`],
   [ErrorType.memberIdMetadataMissing.valueOf(), `@MemberIdParam is missing on route`],
   [ErrorType.memberNotesAndNurseNotesNotProvided.valueOf(), `Notes or nurseNotes must be provided`],
+  [
+    ErrorType.memberUploadAlreadyExistingGeneralDocument.valueOf(),
+    `can not upload an already existing document`,
+  ],
   [
     ErrorType.notificationMetadataInvalid.valueOf(),
     `when calling type 'text' or 'textSms', 'content' in metadata is required ` +
