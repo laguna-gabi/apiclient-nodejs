@@ -217,7 +217,7 @@ export class Handler extends BaseHandler {
     this.queries = new Queries(this.client, this.defaultUserRequestHeaders);
 
     const { id: orgId } = await this.mutations.createOrg({ orgParams: generateOrgParams() });
-    this.cognitoService.spyOnCognitoServiceAddClient.mockResolvedValue(v4());
+    this.cognitoService.spyOnCognitoServiceAddClient.mockResolvedValueOnce(v4());
     const user = await this.mutations.createUser({ createUserParams: generateCreateUserParams() });
     const memberParams = generateCreateMemberParams({ userId: user.id, orgId });
     const { id } = await this.mutations.createMember({ memberParams });

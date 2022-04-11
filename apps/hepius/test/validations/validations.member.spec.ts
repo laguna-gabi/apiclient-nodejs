@@ -28,7 +28,6 @@ import {
   generateCancelNotifyParams,
   generateCreateMemberParams,
   generateCreateTaskParams,
-  generateCreateUserParams,
   generateDateOnly,
   generateDeleteDischargeDocumentParams,
   generateDeleteMemberParams,
@@ -67,7 +66,7 @@ describe('Validations - member', () => {
       handler.defaultUserRequestHeaders,
     );
     creators = new Creators(handler, appointmentsActions);
-    await handler.mutations.createUser({ createUserParams: generateCreateUserParams() });
+    await creators.createAndValidateUser();
     server = handler.app.getHttpServer();
   }, BEFORE_ALL_TIMEOUT);
 

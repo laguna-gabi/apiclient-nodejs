@@ -30,7 +30,8 @@ export class Creators {
       roles,
       ...(orgId ? { orgs: [orgId] } : {}),
     });
-    this.handler.cognitoService.spyOnCognitoServiceAddClient.mockResolvedValue(v4());
+
+    this.handler.cognitoService.spyOnCognitoServiceAddClient.mockResolvedValueOnce(v4());
     const user = await this.handler.mutations.createUser({ createUserParams });
     const result = await this.handler.queries.getUser({
       requestHeaders: generateRequestHeaders(user.authId),
@@ -73,8 +74,7 @@ export class Creators {
       ? await this.handler.queries.getOrg({ id: orgId })
       : await this.createAndValidateOrg();
     const createUserParams = generateCreateUserParams();
-    const authId = v4();
-    this.handler.cognitoService.spyOnCognitoServiceAddClient.mockResolvedValue(authId);
+    this.handler.cognitoService.spyOnCognitoServiceAddClient.mockResolvedValueOnce(v4());
     const response = await this.handler.mutations.createUser({ createUserParams });
     const user: User = await this.handler.queries.getUser({
       requestHeaders: generateRequestHeaders(response.authId),

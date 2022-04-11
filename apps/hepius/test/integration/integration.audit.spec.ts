@@ -74,6 +74,7 @@ import {
   submitMockCareWizard,
   urls,
 } from '../index';
+import { v4 } from 'uuid';
 
 describe('Integration tests : Audit', () => {
   const handler: Handler = new Handler();
@@ -564,6 +565,7 @@ describe('Integration tests : Audit', () => {
 
   describe(User.name, () => {
     it('should create a user + config with createdBy and updatedBy fields', async () => {
+      handler.cognitoService.spyOnCognitoServiceAddClient.mockResolvedValueOnce(v4());
       const { id } = await handler.mutations.createUser({
         createUserParams: generateCreateUserParams(),
         requestHeaders: generateRequestHeaders(user1.authId),
@@ -584,6 +586,7 @@ describe('Integration tests : Audit', () => {
     });
 
     it('should update on addAppointmentToUser', async () => {
+      handler.cognitoService.spyOnCognitoServiceAddClient.mockResolvedValueOnce(v4());
       const { id } = await handler.mutations.createUser({
         createUserParams: generateCreateUserParams(),
         requestHeaders: generateRequestHeaders(user1.authId),
@@ -782,9 +785,7 @@ describe('Integration tests : Audit', () => {
       'should set createdBy and updatedBy on communication ' +
         'when scheduleAppointment is invoked',
       async () => {
-        const { id: userId } = await handler.mutations.createUser({
-          createUserParams: generateCreateUserParams(),
-        });
+        const { id: userId } = await creators.createAndValidateUser();
 
         await handler.mutations.scheduleAppointment({
           appointmentParams: generateScheduleAppointmentParams({
