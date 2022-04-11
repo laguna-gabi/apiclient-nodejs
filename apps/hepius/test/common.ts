@@ -56,7 +56,7 @@ export const compareUsers = (user: User, userBase) => {
   expect(user.roles).toEqual(expect.arrayContaining(userBase.roles));
   expect(user.avatar).toEqual(userBase.avatar);
   expect(user.createdAt).toEqual(expect.any(Date));
-  expect(user.maxCustomers).toEqual(userBase.maxCustomers);
+  expect(user.maxMembers).toEqual(userBase.maxMembers);
 };
 
 export const compareMembers = (member: Member, memberBase, primaryUserId?) => {

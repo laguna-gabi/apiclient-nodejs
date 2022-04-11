@@ -164,7 +164,7 @@ export class Mutations {
               createdAt
               phone
               title
-              maxCustomers
+              maxMembers
               languages
               orgs
             }
@@ -309,7 +309,7 @@ export class Mutations {
                 createdAt
                 phone
                 title
-                maxCustomers
+                maxMembers
                 languages
                 appointments {
                   id

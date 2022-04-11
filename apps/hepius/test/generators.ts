@@ -136,7 +136,7 @@ export const generateCreateUserParams = ({
   description = lorem.sentence(),
   phone = generatePhone(),
   title = name.title(),
-  maxCustomers = defaultUserParams.maxCustomers,
+  maxMembers = defaultUserParams.maxMembers,
   languages = [Language.en, Language.es],
   orgs = [generateId(), generateId()],
 }: Partial<CreateUserParams> = {}): CreateUserParams => {
@@ -149,7 +149,7 @@ export const generateCreateUserParams = ({
     description,
     phone,
     title,
-    maxCustomers,
+    maxMembers,
     languages,
     orgs,
   };
@@ -163,7 +163,7 @@ export const generateUpdateUserParams = ({
   avatar = image.imageUrl(),
   description = lorem.sentence(),
   title = name.title(),
-  maxCustomers = defaultUserParams.maxCustomers + 1,
+  maxMembers = defaultUserParams.maxMembers + 1,
   languages = [Language.en, Language.es],
   orgs = [generateId(), generateId()],
 }: Partial<UpdateUserParams> = {}): UpdateUserParams => {
@@ -175,7 +175,7 @@ export const generateUpdateUserParams = ({
     avatar,
     description,
     title,
-    maxCustomers,
+    maxMembers,
     languages,
     orgs,
   };

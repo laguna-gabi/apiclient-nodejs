@@ -38,7 +38,7 @@ export class Queries {
             createdAt
             phone
             title
-            maxCustomers
+            maxMembers
             languages
             lastQueryAlert
             orgs
@@ -80,7 +80,7 @@ export class Queries {
             createdAt
             phone
             title
-            maxCustomers
+            maxMembers
             currentMembersCount
             languages
             orgs
@@ -192,7 +192,7 @@ export class Queries {
                 createdAt
                 phone
                 title
-                maxCustomers
+                maxMembers
                 languages
                 appointments {
                   id

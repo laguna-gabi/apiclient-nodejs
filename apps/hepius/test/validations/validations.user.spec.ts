@@ -84,23 +84,23 @@ describe('Validations - user', () => {
 
   /* eslint-disable max-len */
   test.each`
-    field             | input                             | errors
-    ${'email'}        | ${{ email: lorem.word() }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat)] }}
-    ${'avatar'}       | ${{ avatar: lorem.word() }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userAvatarFormat)] }}
+    field            | input                           | errors
+    ${'email'}       | ${{ email: lorem.word() }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat)] }}
+    ${'avatar'}      | ${{ avatar: lorem.word() }}     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userAvatarFormat)] }}
     ${'email & avatar'} | ${{
   email: lorem.word(),
   avatar: lorem.word(),
 }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userEmailFormat), Errors.get(ErrorType.userAvatarFormat)] }}
-    ${'description'}  | ${{ description: 222 }}           | ${{ missingFieldError: stringError }}
-    ${'firstName'}    | ${{ firstName: 222 }}             | ${{ missingFieldError: stringError }}
-    ${'lastName'}     | ${{ lastName: 222 }}              | ${{ missingFieldError: stringError }}
-    ${'roles'}        | ${{ roles: [222] }}               | ${{ missingFieldError: 'does not exist in "UserRole" enum.' }}
-    ${'phone'}        | ${{ phone: 222 }}                 | ${{ missingFieldError: stringError }}
-    ${'phone'}        | ${{ phone: '+410' }}              | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userPhone)] }}
-    ${'title'}        | ${{ title: 222 }}                 | ${{ missingFieldError: stringError }}
-    ${'maxCustomers'} | ${{ maxCustomers: lorem.word() }} | ${{ missingFieldError: 'Float cannot represent non numeric value' }}
-    ${'languages'}    | ${{ languages: lorem.word() }}    | ${{ missingFieldError: 'does not exist in "Language" enum.' }}
-    ${'orgs'}         | ${{ orgs: ['not-valid'] }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.orgIdInvalid)] }}
+    ${'description'} | ${{ description: 222 }}         | ${{ missingFieldError: stringError }}
+    ${'firstName'}   | ${{ firstName: 222 }}           | ${{ missingFieldError: stringError }}
+    ${'lastName'}    | ${{ lastName: 222 }}            | ${{ missingFieldError: stringError }}
+    ${'roles'}       | ${{ roles: [222] }}             | ${{ missingFieldError: 'does not exist in "UserRole" enum.' }}
+    ${'phone'}       | ${{ phone: 222 }}               | ${{ missingFieldError: stringError }}
+    ${'phone'}       | ${{ phone: '+410' }}            | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userPhone)] }}
+    ${'title'}       | ${{ title: 222 }}               | ${{ missingFieldError: stringError }}
+    ${'maxMembers'}  | ${{ maxMembers: lorem.word() }} | ${{ missingFieldError: 'Float cannot represent non numeric value' }}
+    ${'languages'}   | ${{ languages: lorem.word() }}  | ${{ missingFieldError: 'does not exist in "Language" enum.' }}
+    ${'orgs'}        | ${{ orgs: ['not-valid'] }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.orgIdInvalid)] }}
   `(
     /* eslint-enable max-len */
     `should fail to create a user since $field is not valid`,
@@ -115,16 +115,16 @@ describe('Validations - user', () => {
 
   /* eslint-disable max-len */
   test.each`
-    field             | input                             | errors
-    ${'avatar'}       | ${{ avatar: lorem.word() }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userAvatarFormat)] }}
-    ${'description'}  | ${{ description: 222 }}           | ${{ missingFieldError: stringError }}
-    ${'firstName'}    | ${{ firstName: 222 }}             | ${{ missingFieldError: stringError }}
-    ${'lastName'}     | ${{ lastName: 222 }}              | ${{ missingFieldError: stringError }}
-    ${'roles'}        | ${{ roles: [222] }}               | ${{ missingFieldError: 'does not exist in "UserRole" enum.' }}
-    ${'title'}        | ${{ title: 222 }}                 | ${{ missingFieldError: stringError }}
-    ${'maxCustomers'} | ${{ maxCustomers: lorem.word() }} | ${{ missingFieldError: 'Float cannot represent non numeric value' }}
-    ${'languages'}    | ${{ languages: lorem.word() }}    | ${{ missingFieldError: 'does not exist in "Language" enum.' }}
-    ${'orgs'}         | ${{ orgs: ['not-valid'] }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.orgIdInvalid)] }}
+    field            | input                           | errors
+    ${'avatar'}      | ${{ avatar: lorem.word() }}     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userAvatarFormat)] }}
+    ${'description'} | ${{ description: 222 }}         | ${{ missingFieldError: stringError }}
+    ${'firstName'}   | ${{ firstName: 222 }}           | ${{ missingFieldError: stringError }}
+    ${'lastName'}    | ${{ lastName: 222 }}            | ${{ missingFieldError: stringError }}
+    ${'roles'}       | ${{ roles: [222] }}             | ${{ missingFieldError: 'does not exist in "UserRole" enum.' }}
+    ${'title'}       | ${{ title: 222 }}               | ${{ missingFieldError: stringError }}
+    ${'maxMembers'}  | ${{ maxMembers: lorem.word() }} | ${{ missingFieldError: 'Float cannot represent non numeric value' }}
+    ${'languages'}   | ${{ languages: lorem.word() }}  | ${{ missingFieldError: 'does not exist in "Language" enum.' }}
+    ${'orgs'}        | ${{ orgs: ['not-valid'] }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.orgIdInvalid)] }}
   `(
     /* eslint-enable max-len */
     `should fail to update a user since $field is not valid`,
@@ -139,11 +139,11 @@ describe('Validations - user', () => {
   );
 
   test.each`
-    field             | defaultValue
-    ${'maxCustomers'} | ${defaultUserParams.maxCustomers}
-    ${'languages'}    | ${defaultUserParams.languages}
-    ${'avatar'}       | ${defaultUserParams.avatar}
-    ${'roles'}        | ${defaultUserParams.roles}
+    field           | defaultValue
+    ${'maxMembers'} | ${defaultUserParams.maxMembers}
+    ${'languages'}  | ${defaultUserParams.languages}
+    ${'avatar'}     | ${defaultUserParams.avatar}
+    ${'roles'}      | ${defaultUserParams.roles}
   `(`should set default value if exists for optional field $field`, async (params) => {
     /* eslint-enable max-len */
     const createUserParams: CreateUserParams = generateCreateUserParams();

@@ -337,7 +337,7 @@ export class UserService extends BaseService {
     const users = await this.userModel.aggregate([
       {
         $match: {
-          maxCustomers: { $ne: 0 },
+          maxMembers: { $ne: 0 },
           roles: { $in: [UserRole.coach] },
           ...(orgId ? { orgs: { $in: [new Types.ObjectId(orgId)] } } : {}),
         },
@@ -359,12 +359,12 @@ export class UserService extends BaseService {
         $project: {
           members: { $size: '$member' },
           lastMemberAssignedAt: '$lastMemberAssignedAt',
-          maxCustomers: '$maxCustomers',
+          maxMembers: '$maxMembers',
         },
       },
     ]);
     for (let index = 0; index < users.length; index++) {
-      if (users[index].maxCustomers > users[index].members) {
+      if (users[index].maxMembers > users[index].members) {
         await this.userModel.updateOne(
           { _id: users[index]._id },
           { $set: { lastMemberAssignedAt: new Date() } },

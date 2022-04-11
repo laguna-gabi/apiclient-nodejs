@@ -19,13 +19,13 @@ import { audit } from '../db';
 registerEnumType(UserRole, { name: 'UserRole' });
 
 export const defaultUserParams = {
-  maxCustomers: 7,
+  maxMembers: 7,
   languages: [Language.en],
   roles: [UserRole.coach],
   avatar: 'https://i.imgur.com/bvuKGXB.png',
 };
 
-export const NotNullableUserKeys = ['maxCustomers', 'languages', 'roles', 'avatar'];
+export const NotNullableUserKeys = ['maxMembers', 'languages', 'roles', 'avatar'];
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -47,7 +47,7 @@ class ExtraUserParams {
   title?: string;
 
   @Field(() => Number, { nullable: true })
-  maxCustomers?: number;
+  maxMembers?: number;
 
   @Field(() => [Language], { nullable: true })
   languages?: Language[];
@@ -148,9 +148,9 @@ export class User extends Identifier {
   @Field({ nullable: true })
   title?: string;
 
-  @Prop({ default: defaultUserParams.maxCustomers })
+  @Prop({ default: defaultUserParams.maxMembers })
   @Field(() => Number)
-  maxCustomers?: number;
+  maxMembers?: number;
 
   @Prop({ default: defaultUserParams.languages })
   @Field(() => [Language], { nullable: true })

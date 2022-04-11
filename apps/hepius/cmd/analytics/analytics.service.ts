@@ -354,7 +354,7 @@ export class AnalyticsService {
       spanish: data.user.languages?.includes(Language.es),
       bio: data.user.description,
       avatar: data.user.avatar,
-      max_members: data.user.maxCustomers,
+      max_members: data.user.maxMembers,
       assigned_members: this.getNonGraduatedMembers(data.members),
     };
   }

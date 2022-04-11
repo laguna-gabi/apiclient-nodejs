@@ -670,7 +670,7 @@ describe('Commands: AnalyticsService', () => {
         spanish: mockPrimaryUser.languages?.includes(Language.es),
         bio: mockPrimaryUser.description,
         avatar: mockPrimaryUser.avatar,
-        max_members: mockPrimaryUser.maxCustomers,
+        max_members: mockPrimaryUser.maxMembers,
         assigned_members: [activeMember.id],
       });
     });
