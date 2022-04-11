@@ -766,6 +766,40 @@ describe('MemberResolver', () => {
     });
   });
 
+  describe('deleteMemberGeneralDocument', () => {
+    let spyOnServiceGet;
+    let spyOnStorageDeleteFile;
+
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'get');
+      spyOnStorageDeleteFile = jest.spyOn(storage, 'deleteFile');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+      spyOnStorageDeleteFile.mockReset();
+    });
+
+    it('should get download link', async () => {
+      const member = mockGenerateMember();
+      const fileName = lorem.word();
+      spyOnServiceGet.mockImplementationOnce(async () => member);
+      spyOnStorageDeleteFile.mockImplementationOnce(async () => true);
+
+      const result = await resolver.deleteMemberGeneralDocument({ memberId: member.id, fileName });
+
+      expect(spyOnServiceGet).toBeCalledTimes(1);
+      expect(spyOnServiceGet).toBeCalledWith(member.id);
+      expect(spyOnStorageDeleteFile).toBeCalledTimes(1);
+      expect(spyOnStorageDeleteFile).toBeCalledWith({
+        storageType: StorageType.general,
+        memberId: member.id,
+        id: fileName,
+      });
+      expect(result).toBeTruthy();
+    });
+  });
+
   describe('getMemberUploadRecordingLink', () => {
     let spyOnServiceGet;
     let spyOnStorageUpload;

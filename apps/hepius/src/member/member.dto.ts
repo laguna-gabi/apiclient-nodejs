@@ -475,7 +475,7 @@ export class DeleteMemberParams {
 }
 
 @InputType()
-export class GetMemberUploadGeneralDocumentLinkParams {
+export class BaseMemberGeneralDocuments {
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
   memberId: string;
@@ -483,6 +483,12 @@ export class GetMemberUploadGeneralDocumentLinkParams {
   @Field(() => String)
   fileName: string;
 }
+
+@InputType()
+export class GetMemberUploadGeneralDocumentLinkParams extends BaseMemberGeneralDocuments {}
+
+@InputType()
+export class DeleteMemberGeneralDocumentParams extends BaseMemberGeneralDocuments {}
 
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************

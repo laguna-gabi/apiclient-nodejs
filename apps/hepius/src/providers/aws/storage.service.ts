@@ -351,10 +351,23 @@ export class StorageService implements OnModuleInit {
   }): Promise<string[]> {
     const params = { Bucket: this.bucket, Prefix: `public/${storageType}/${memberId}/` };
     const { Contents } = await this.s3.listObjectsV2(params).promise();
-    Contents.shift(); // remove first key that has only the folder name
+    /** remove first key that has only the folder name. created in @handleNewMember **/
+    Contents.shift();
     return Contents.map((content) => {
       const keyArray = content.Key.split('/');
       return keyArray[keyArray.length - 1];
     });
+  }
+
+  async deleteFile(urlParams: StorageUrlParams): Promise<boolean> {
+    const { storageType, memberId, id } = urlParams;
+    this.logger.info(urlParams, StorageService.name, this.deleteFile.name);
+    try {
+      const deleteParams = { Bucket: this.bucket, Key: `public/${storageType}/${memberId}/${id}` };
+      await this.s3.deleteObject(deleteParams).promise();
+      return true;
+    } catch (ex) {
+      this.logger.error(urlParams, StorageService.name, this.deleteFile.name, formatEx(ex));
+    }
   }
 }

@@ -458,6 +458,52 @@ describe('live: aws', () => {
       expect(resultAfter.length).toEqual(files.length);
       expect(resultAfter).toEqual(expect.arrayContaining(files));
     });
+
+    it('should delete file', async () => {
+      //not running on production as this test is too risky for that (we're emptyDir in afterAll)
+      if (process.env.NODE_ENV === Environments.production) {
+        return;
+      }
+
+      const memberId = generateId();
+      const storageType = StorageType.general;
+      const fileName = lorem.word();
+
+      // simulate `handleNewMember` create member folder object
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const params = { Bucket: storageService.bucket, Key: `public/${storageType}/${memberId}/` };
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      await storageService.s3.putObject(params).promise();
+
+      const uploadParams = {
+        memberId,
+        storageType,
+        id: fileName,
+      };
+      const uploadUrl = await storageService.getUploadUrl(uploadParams);
+      await axios.put(uploadUrl, lorem.sentence());
+
+      const resultBefore = await storageService.getFolderFiles({
+        storageType,
+        memberId,
+      });
+      expect(resultBefore.length).toEqual(1);
+      expect(resultBefore).toEqual(expect.arrayContaining([fileName]));
+
+      await storageService.deleteFile({
+        storageType,
+        memberId,
+        id: fileName,
+      });
+
+      const resultAfter = await storageService.getFolderFiles({
+        storageType,
+        memberId,
+      });
+      expect(resultAfter.length).toEqual(0);
+    });
   });
 
   describe('cloudMap', () => {

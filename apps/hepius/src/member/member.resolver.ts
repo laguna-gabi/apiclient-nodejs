@@ -42,6 +42,7 @@ import {
   CreateMemberParams,
   CreateTaskParams,
   DeleteDischargeDocumentParams,
+  DeleteMemberGeneralDocumentParams,
   DeleteMemberParams,
   DischargeDocumentsLinks,
   GetMemberUploadGeneralDocumentLinkParams,
@@ -436,6 +437,24 @@ export class MemberResolver extends MemberBase {
         });
       }),
     );
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async deleteMemberGeneralDocument(
+    @Args(camelCase(DeleteMemberGeneralDocumentParams.name))
+    deleteMemberGeneralDocumentParams: DeleteMemberGeneralDocumentParams,
+  ) {
+    const { memberId, fileName } = deleteMemberGeneralDocumentParams;
+
+    // Validating member exists
+    await this.memberService.get(memberId);
+
+    return this.storageService.deleteFile({
+      storageType: StorageType.general,
+      memberId,
+      id: fileName,
+    });
   }
 
   /*************************************************************************************************
