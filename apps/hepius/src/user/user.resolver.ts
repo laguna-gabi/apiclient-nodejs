@@ -10,6 +10,7 @@ import {
   User,
   UserConfig,
   UserService,
+  UserSummary,
 } from '.';
 import {
   Client,
@@ -96,7 +97,7 @@ export class UserResolver {
     return user;
   }
 
-  @Query(() => [User])
+  @Query(() => [UserSummary])
   @Roles(UserRole.coach, UserRole.nurse)
   async getUsers(
     @Args('roles', {
@@ -105,7 +106,7 @@ export class UserResolver {
       defaultValue: [UserRole.coach, UserRole.nurse],
     })
     roles: UserRole[] = [UserRole.coach, UserRole.nurse],
-  ): Promise<User[]> {
+  ): Promise<UserSummary[]> {
     return this.userService.getUsers(roles);
   }
 

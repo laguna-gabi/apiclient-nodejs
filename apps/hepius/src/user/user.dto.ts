@@ -104,7 +104,7 @@ export class UpdateUserParams extends ExtraUserParams {
 @Schema({ versionKey: false, timestamps: true })
 export class User extends Identifier {
   @Prop()
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   authId?: string;
 
   @Prop()
@@ -174,6 +174,12 @@ export class User extends Identifier {
    */
   @Prop()
   lastMemberAssignedAt: Date;
+}
+
+@ObjectType()
+export class UserSummary extends User {
+  @Field(() => Number)
+  currentMembersCount: number;
 }
 
 /**************************************************************************************************

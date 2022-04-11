@@ -767,6 +767,38 @@ describe('Integration tests: all', () => {
         }),
       );
     });
+
+    it('should getUsers with existing members count', async () => {
+      const { user: user1 } = await creators.createMemberUserAndOptionalOrg();
+      const { user: user2 } = await creators.createMemberUserAndOptionalOrg();
+      const { member: member1 } = await creators.createMemberUserAndOptionalOrg();
+      const { member: member2 } = await creators.createMemberUserAndOptionalOrg();
+      await handler.mutations.replaceUserForMember({
+        replaceUserForMemberParams: { memberId: member1.id, userId: user1.id },
+      });
+      await handler.mutations.replaceUserForMember({
+        replaceUserForMemberParams: { memberId: member2.id, userId: user1.id },
+      });
+
+      const noMembersUser = await creators.createAndValidateUser();
+      const primaryUser = await handler.queries.getUser({
+        requestHeaders: generateRequestHeaders(user1.authId),
+      });
+      const singlePrimaryUser = await handler.queries.getUser({
+        requestHeaders: generateRequestHeaders(user2.authId),
+      });
+
+      const users = await handler.queries.getUsers();
+      const primaryUserResult = users.filter((user) => user.id === user1.id)[0];
+      const singlePrimaryUserResult = users.filter((user) => user.id === user2.id)[0];
+      const noMembersUserResult = users.filter((user) => user.id === noMembersUser.id)[0];
+
+      expect({ currentMembersCount: 3, ...primaryUser }).toMatchObject(primaryUserResult);
+      expect({ currentMembersCount: 0, ...noMembersUser }).toMatchObject(noMembersUserResult);
+      expect({ currentMembersCount: 1, ...singlePrimaryUser }).toMatchObject(
+        singlePrimaryUserResult,
+      );
+    }, 10000);
   });
 
   describe('discharge links', () => {

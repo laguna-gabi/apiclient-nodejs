@@ -14,7 +14,7 @@ import {
 import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
 import { Dispatch } from '../../src/services';
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
-import { GetSlotsParams } from '../../src/user';
+import { GetSlotsParams, UserSummary } from '../../src/user';
 import { isResultValid } from '..';
 
 export class Queries {
@@ -60,7 +60,11 @@ export class Queries {
     return getUser;
   };
 
-  getUsers = async ({ requestHeaders = this.defaultUserRequestHeaders }: { requestHeaders? }) => {
+  getUsers = async (
+    { requestHeaders = this.defaultUserRequestHeaders }: { requestHeaders? } = {
+      requestHeaders: this.defaultUserRequestHeaders,
+    },
+  ): Promise<UserSummary[]> => {
     const { getUsers } = await this.client.request(
       gql`
         query getUsers {
@@ -77,6 +81,7 @@ export class Queries {
             phone
             title
             maxCustomers
+            currentMembersCount
             languages
             orgs
             appointments {

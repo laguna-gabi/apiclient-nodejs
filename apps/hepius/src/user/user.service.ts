@@ -15,6 +15,7 @@ import {
   UserConfig,
   UserConfigDocument,
   UserDocument,
+  UserSummary,
   defaultSlotsParams,
 } from '.';
 import {
@@ -51,8 +52,38 @@ export class UserService extends BaseService {
     return this.userModel.findById(id).populate('appointments');
   }
 
-  async getUsers(roles: UserRole[]): Promise<User[]> {
-    return this.userModel.find({ roles: { $in: roles } }).populate('appointments');
+  async getUsers(roles: UserRole[]): Promise<UserSummary[]> {
+    const result = await this.userModel.aggregate([
+      { $match: { roles: { $in: roles } } },
+      {
+        $lookup: {
+          from: 'members',
+          localField: '_id',
+          foreignField: 'primaryUserId',
+          as: 'members',
+        },
+      },
+      {
+        $lookup: {
+          from: 'appointments',
+          localField: 'appointments',
+          foreignField: '_id',
+          as: 'appointments',
+        },
+      },
+      { $addFields: { currentMembersCount: { $size: '$members' } } },
+      { $unset: 'members' },
+      { $addFields: { id: '$_id' } },
+      { $unset: '_id' },
+    ]);
+
+    return result.map((res) => {
+      const { appointments, ...rest } = res;
+      return {
+        ...rest,
+        appointments: appointments.map(({ _id, ...app }) => ({ ...app, id: _id })),
+      };
+    });
   }
 
   async insert(createUserParams: CreateUserParams): Promise<User> {
