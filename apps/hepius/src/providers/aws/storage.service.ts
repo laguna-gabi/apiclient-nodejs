@@ -341,4 +341,20 @@ export class StorageService implements OnModuleInit {
       }
     }
   }
+
+  async getFolderFiles({
+    storageType,
+    memberId,
+  }: {
+    storageType: StorageType;
+    memberId: string;
+  }): Promise<string[]> {
+    const params = { Bucket: this.bucket, Prefix: `public/${storageType}/${memberId}/` };
+    const { Contents } = await this.s3.listObjectsV2(params).promise();
+    Contents.shift(); // remove first key that has only the folder name
+    return Contents.map((content) => {
+      const keyArray = content.Key.split('/');
+      return keyArray[keyArray.length - 1];
+    });
+  }
 }

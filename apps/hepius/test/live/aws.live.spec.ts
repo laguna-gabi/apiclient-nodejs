@@ -414,6 +414,50 @@ describe('live: aws', () => {
       });
       expect(resultAfter).toBeTruthy();
     });
+
+    it('should return list of files for a given folder', async () => {
+      //not running on production as this test is too risky for that (we're emptyDir in afterAll)
+      if (process.env.NODE_ENV === Environments.production) {
+        return;
+      }
+
+      const memberId = generateId();
+      const storageType = StorageType.general;
+      const files = [lorem.word(), lorem.word(), lorem.word()];
+
+      // simulate `handleNewMember` create member folder object
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const params = { Bucket: storageService.bucket, Key: `public/${storageType}/${memberId}/` };
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      await storageService.s3.putObject(params).promise();
+
+      const resultBefore = await storageService.getFolderFiles({
+        storageType,
+        memberId,
+      });
+      expect(resultBefore.length).toEqual(0);
+
+      await Promise.all(
+        files.map(async (file) => {
+          const params = {
+            memberId,
+            storageType,
+            id: file,
+          };
+          const uploadUrl = await storageService.getUploadUrl(params);
+          await axios.put(uploadUrl, lorem.sentence());
+        }),
+      );
+
+      const resultAfter = await storageService.getFolderFiles({
+        storageType,
+        memberId,
+      });
+      expect(resultAfter.length).toEqual(files.length);
+      expect(resultAfter).toEqual(expect.arrayContaining(files));
+    });
   });
 
   describe('cloudMap', () => {

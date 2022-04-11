@@ -409,6 +409,35 @@ export class MemberResolver extends MemberBase {
     });
   }
 
+  @Query(() => [String])
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getMemberDownloadGeneralDocumentsLinks(
+    @Args(
+      'memberId',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid)),
+    )
+    memberId: string,
+  ) {
+    // Validating member exists
+    await this.memberService.get(memberId);
+
+    const files = await this.storageService.getFolderFiles({
+      storageType: StorageType.general,
+      memberId,
+    });
+
+    return Promise.all(
+      files.map(async (file) => {
+        return this.storageService.getDownloadUrl({
+          storageType: StorageType.general,
+          memberId,
+          id: file,
+        });
+      }),
+    );
+  }
+
   /*************************************************************************************************
    ******************************************* Recording *******************************************
    ************************************************************************************************/

@@ -721,6 +721,51 @@ describe('MemberResolver', () => {
     });
   });
 
+  describe('getMemberDownloadGeneralDocumentsLinks', () => {
+    let spyOnServiceGet;
+    let spyOnStorageGetFolderFiles;
+    let spyOnStorageDownload;
+
+    beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'get');
+      spyOnStorageGetFolderFiles = jest.spyOn(storage, 'getFolderFiles');
+      spyOnStorageDownload = jest.spyOn(storage, 'getDownloadUrl');
+    });
+
+    afterEach(() => {
+      spyOnServiceGet.mockReset();
+      spyOnStorageGetFolderFiles.mockReset();
+      spyOnStorageDownload.mockReset();
+    });
+
+    it('should get download link', async () => {
+      const member = mockGenerateMember();
+      const files = [lorem.word(), lorem.word(), lorem.word()];
+      spyOnServiceGet.mockImplementationOnce(async () => member);
+      spyOnStorageGetFolderFiles.mockImplementationOnce(async () => files);
+      spyOnStorageDownload.mockImplementation(
+        async (params) => `https://aws-bucket-path/extras/${params.id}`,
+      );
+
+      const result = await resolver.getMemberDownloadGeneralDocumentsLinks(member.id);
+
+      expect(spyOnServiceGet).toBeCalledTimes(1);
+      expect(spyOnServiceGet).toBeCalledWith(member.id);
+      expect(spyOnStorageGetFolderFiles).toBeCalledTimes(1);
+      expect(spyOnStorageDownload).toBeCalledTimes(files.length);
+      files.forEach((file) => {
+        expect(spyOnStorageDownload).toBeCalledWith({
+          storageType: StorageType.general,
+          memberId: member.id,
+          id: file,
+        });
+      });
+      expect(result).toEqual(
+        expect.arrayContaining(files.map((file) => `https://aws-bucket-path/extras/${file}`)),
+      );
+    });
+  });
+
   describe('getMemberUploadRecordingLink', () => {
     let spyOnServiceGet;
     let spyOnStorageUpload;
