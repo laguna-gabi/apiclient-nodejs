@@ -1,7 +1,9 @@
+import { Environments, formatEx } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import * as AWS from 'aws-sdk';
 import { aws, hosts } from 'config';
+import * as fs from 'fs';
 import * as sharp from 'sharp';
 import { ConfigsService, ExternalConfigs } from '.';
 import {
@@ -13,9 +15,6 @@ import {
   StorageType,
   StorageUrlParams,
 } from '../../common';
-import { AudioFormat, AudioType, ImageFormat, ImageType } from '../../member/journal.dto';
-import { Environments, formatEx } from '@argus/pandora';
-import * as fs from 'fs';
 @Injectable()
 export class StorageService implements OnModuleInit {
   private readonly s3 = new AWS.S3({
@@ -150,92 +149,6 @@ export class StorageService implements OnModuleInit {
       );
     } catch (ex) {
       this.logger.error(id, StorageService.name, this.deleteMember.name, formatEx(ex));
-    }
-  }
-
-  async deleteRecordings(memberId: string, recordingIds: string[]) {
-    this.logger.info({ memberId, recordingIds }, StorageService.name, this.deleteRecordings.name);
-    try {
-      const deleteParams = {
-        Bucket: this.bucket,
-        Delete: {
-          Objects: recordingIds.map((recordingId) => ({
-            Key: `public/${StorageType.recordings}/${memberId}/${recordingId}`,
-          })),
-        },
-      };
-      await this.s3.deleteObjects(deleteParams).promise();
-    } catch (ex) {
-      this.logger.error(
-        { memberId, recordingIds },
-        StorageService.name,
-        this.deleteRecordings.name,
-        formatEx(ex),
-      );
-    }
-  }
-
-  async deleteJournalImages(id: string, memberId: string, imageFormat: ImageFormat) {
-    this.logger.info(
-      { id, memberId, imageFormat },
-      StorageService.name,
-      this.deleteJournalImages.name,
-    );
-    try {
-      const deleteParams = {
-        Bucket: this.bucket,
-        Delete: {
-          Objects: [
-            {
-              // eslint-disable-next-line max-len
-              Key: `public/${StorageType.journals}/${memberId}/${id}${ImageType.NormalImage}.${imageFormat}`,
-            },
-            {
-              // eslint-disable-next-line max-len
-              Key: `public/${StorageType.journals}/${memberId}/${id}${ImageType.SmallImage}.${imageFormat}`,
-            },
-          ],
-        },
-      };
-      await this.s3.deleteObjects(deleteParams).promise();
-      return true;
-    } catch (ex) {
-      this.logger.error(
-        { id, memberId, imageFormat },
-        StorageService.name,
-        this.deleteJournalImages.name,
-        formatEx(ex),
-      );
-    }
-  }
-
-  async deleteJournalAudio(id: string, memberId: string, audioFormat: AudioFormat) {
-    this.logger.info(
-      { id, memberId, audioFormat },
-      StorageService.name,
-      this.deleteJournalAudio.name,
-    );
-    try {
-      const deleteParams = {
-        Bucket: this.bucket,
-        Delete: {
-          Objects: [
-            {
-              // eslint-disable-next-line max-len
-              Key: `public/${StorageType.journals}/${memberId}/${id}${AudioType}.${audioFormat}`,
-            },
-          ],
-        },
-      };
-      await this.s3.deleteObjects(deleteParams).promise();
-      return true;
-    } catch (ex) {
-      this.logger.error(
-        { id, memberId, audioFormat },
-        StorageService.name,
-        this.deleteJournalAudio.name,
-        formatEx(ex),
-      );
     }
   }
 

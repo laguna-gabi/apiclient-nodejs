@@ -663,10 +663,29 @@ export class MemberResolver extends MemberBase {
     if (!roles.includes(MemberRole.member)) {
       throw new Error(Errors.get(ErrorType.memberAllowedOnly));
     }
-    const { imageFormat } = await this.memberService.deleteJournal(id, memberId);
+    const { imageFormat, audioFormat } = await this.memberService.deleteJournal(id, memberId);
 
     if (imageFormat) {
-      return this.storageService.deleteJournalImages(id, memberId, imageFormat);
+      await Promise.all([
+        this.storageService.deleteFile({
+          id: `${id}${ImageType.SmallImage}.${imageFormat}`,
+          memberId,
+          storageType: StorageType.journals,
+        }),
+        this.storageService.deleteFile({
+          id: `${id}${ImageType.NormalImage}.${imageFormat}`,
+          memberId,
+          storageType: StorageType.journals,
+        }),
+      ]);
+    }
+
+    if (audioFormat) {
+      await this.storageService.deleteFile({
+        memberId,
+        storageType: StorageType.journals,
+        id: `${id}${AudioType}.${audioFormat}`,
+      });
     }
 
     return true;
@@ -740,7 +759,20 @@ export class MemberResolver extends MemberBase {
     }
 
     await this.memberService.updateJournal({ id, memberId, imageFormat: null, published: false });
-    return this.storageService.deleteJournalImages(id, memberId, imageFormat);
+    await Promise.all([
+      this.storageService.deleteFile({
+        id: `${id}${ImageType.SmallImage}.${imageFormat}`,
+        memberId,
+        storageType: StorageType.journals,
+      }),
+      this.storageService.deleteFile({
+        id: `${id}${ImageType.NormalImage}.${imageFormat}`,
+        memberId,
+        storageType: StorageType.journals,
+      }),
+    ]);
+
+    return true;
   }
 
   @Mutation(() => Boolean)
@@ -765,7 +797,11 @@ export class MemberResolver extends MemberBase {
     }
 
     await this.memberService.updateJournal({ id, memberId, audioFormat: null, published: false });
-    return this.storageService.deleteJournalAudio(id, memberId, audioFormat);
+    return this.storageService.deleteFile({
+      memberId,
+      storageType: StorageType.journals,
+      id: `${id}${AudioType}.${audioFormat}`,
+    });
   }
 
   @Mutation(() => Boolean, { nullable: true })

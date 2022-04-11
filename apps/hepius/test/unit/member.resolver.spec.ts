@@ -1127,8 +1127,7 @@ describe('MemberResolver', () => {
     let spyOnServiceDeleteJournal;
     let spyOnStorageGetDownloadUrl;
     let spyOnStorageGetUploadUrl;
-    let spyOnStorageDeleteJournalImages;
-    let spyOnStorageDeleteJournalAudio;
+    let spyOnStorageDeleteFile;
     let spyOnCommunicationServiceGet;
     let spyOnServiceGetMember;
     let spyOnServiceGetMemberConfig;
@@ -1163,8 +1162,7 @@ describe('MemberResolver', () => {
       spyOnServiceDeleteJournal = jest.spyOn(service, 'deleteJournal');
       spyOnStorageGetDownloadUrl = jest.spyOn(storage, 'getDownloadUrl');
       spyOnStorageGetUploadUrl = jest.spyOn(storage, 'getUploadUrl');
-      spyOnStorageDeleteJournalImages = jest.spyOn(storage, 'deleteJournalImages');
-      spyOnStorageDeleteJournalAudio = jest.spyOn(storage, 'deleteJournalAudio');
+      spyOnStorageDeleteFile = jest.spyOn(storage, 'deleteFile');
       spyOnCommunicationServiceGet = jest.spyOn(communicationService, 'get');
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
@@ -1180,8 +1178,7 @@ describe('MemberResolver', () => {
       spyOnServiceDeleteJournal.mockReset();
       spyOnStorageGetDownloadUrl.mockReset();
       spyOnStorageGetUploadUrl.mockReset();
-      spyOnStorageDeleteJournalImages.mockReset();
-      spyOnStorageDeleteJournalAudio.mockReset();
+      spyOnStorageDeleteFile.mockReset();
       spyOnCommunicationServiceGet.mockReset();
       spyOnServiceGetMember.mockReset();
       spyOnServiceGetMemberConfig.mockReset();
@@ -1374,36 +1371,47 @@ describe('MemberResolver', () => {
       },
     );
 
-    it('should delete Journal with image', async () => {
+    it('should delete Journal with image and audio', async () => {
       const memberId = generateId();
       const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
       spyOnServiceDeleteJournal.mockImplementationOnce(async () => journal);
-      spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
+      spyOnStorageDeleteFile.mockImplementationOnce(async () => true);
 
       const result = await resolver.deleteJournal([MemberRole.member], memberId, journal.id);
 
       expect(spyOnServiceDeleteJournal).toBeCalledTimes(1);
       expect(spyOnServiceDeleteJournal).toBeCalledWith(journal.id, memberId);
-      expect(spyOnStorageDeleteJournalImages).toBeCalledWith(
-        journal.id,
-        journal.memberId.toString(),
-        journal.imageFormat,
-      );
+      expect(spyOnStorageDeleteFile).toHaveBeenNthCalledWith(1, {
+        id: `${journal.id}${ImageType.SmallImage}.${journal.imageFormat}`,
+        memberId,
+        storageType: StorageType.journals,
+      });
+      expect(spyOnStorageDeleteFile).toHaveBeenNthCalledWith(2, {
+        id: `${journal.id}${ImageType.NormalImage}.${journal.imageFormat}`,
+        memberId,
+        storageType: StorageType.journals,
+      });
+      expect(spyOnStorageDeleteFile).toHaveBeenNthCalledWith(3, {
+        memberId,
+        storageType: StorageType.journals,
+        id: `${journal.id}${AudioType}.${journal.audioFormat}`,
+      });
       expect(result).toBeTruthy();
     });
 
-    it('should delete Journal with no image', async () => {
+    it('should delete Journal with no image and no audio', async () => {
       const memberId = generateId();
       const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
       delete journal.imageFormat;
+      delete journal.audioFormat;
       spyOnServiceDeleteJournal.mockImplementationOnce(async () => journal);
-      spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
+      spyOnStorageDeleteFile.mockImplementationOnce(async () => true);
 
       const result = await resolver.deleteJournal([MemberRole.member], memberId, journal.id);
 
       expect(spyOnServiceDeleteJournal).toBeCalledTimes(1);
       expect(spyOnServiceDeleteJournal).toBeCalledWith(journal.id, memberId);
-      expect(spyOnStorageDeleteJournalImages).toBeCalledTimes(0);
+      expect(spyOnStorageDeleteFile).toBeCalledTimes(0);
       expect(result).toBeTruthy();
     });
 
@@ -1501,7 +1509,7 @@ describe('MemberResolver', () => {
       const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
       spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
       spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
-      spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
+      spyOnStorageDeleteFile.mockImplementationOnce(async () => true);
 
       const result = await resolver.deleteJournalImage([MemberRole.member], memberId, journal.id);
 
@@ -1512,11 +1520,16 @@ describe('MemberResolver', () => {
         memberId,
         published: false,
       });
-      expect(spyOnStorageDeleteJournalImages).toBeCalledWith(
-        journal.id,
-        journal.memberId.toString(),
-        journal.imageFormat,
-      );
+      expect(spyOnStorageDeleteFile).toHaveBeenNthCalledWith(1, {
+        id: `${journal.id}${ImageType.SmallImage}.${journal.imageFormat}`,
+        memberId,
+        storageType: StorageType.journals,
+      });
+      expect(spyOnStorageDeleteFile).toHaveBeenNthCalledWith(2, {
+        id: `${journal.id}${ImageType.NormalImage}.${journal.imageFormat}`,
+        memberId,
+        storageType: StorageType.journals,
+      });
       expect(result).toEqual(true);
     });
 
@@ -1526,7 +1539,7 @@ describe('MemberResolver', () => {
       delete journal.imageFormat;
       spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
       spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
-      spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
+      spyOnStorageDeleteFile.mockImplementationOnce(async () => true);
 
       await expect(
         resolver.deleteJournalImage([MemberRole.member], generateId(), generateId()),
@@ -1547,7 +1560,7 @@ describe('MemberResolver', () => {
       const journal = generateMockJournalParams({ memberId: new Types.ObjectId(memberId) });
       spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
       spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
-      spyOnStorageDeleteJournalAudio.mockImplementationOnce(async () => true);
+      spyOnStorageDeleteFile.mockImplementationOnce(async () => true);
 
       const result = await resolver.deleteJournalAudio([MemberRole.member], memberId, journal.id);
 
@@ -1558,11 +1571,11 @@ describe('MemberResolver', () => {
         memberId,
         published: false,
       });
-      expect(spyOnStorageDeleteJournalAudio).toBeCalledWith(
-        journal.id,
-        journal.memberId.toString(),
-        journal.audioFormat,
-      );
+      expect(spyOnStorageDeleteFile).toHaveBeenNthCalledWith(1, {
+        memberId,
+        storageType: StorageType.journals,
+        id: `${journal.id}${AudioType}.${journal.audioFormat}`,
+      });
       expect(result).toEqual(true);
     });
 
@@ -1572,7 +1585,7 @@ describe('MemberResolver', () => {
       delete journal.audioFormat;
       spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
       spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
-      spyOnStorageDeleteJournalAudio.mockImplementationOnce(async () => true);
+      spyOnStorageDeleteFile.mockImplementationOnce(async () => true);
 
       await expect(
         resolver.deleteJournalAudio([MemberRole.member], generateId(), generateId()),
@@ -1598,7 +1611,7 @@ describe('MemberResolver', () => {
       const journalImageDownloadLink = generateUniqueUrl();
       const journalAudioDownloadLink = generateUniqueUrl();
       spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
-      spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
+      spyOnStorageDeleteFile.mockImplementationOnce(async () => true);
       spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
       spyOnStorageGetDownloadUrl.mockImplementationOnce(async () => journalImageDownloadLink);
       spyOnStorageGetDownloadUrl.mockImplementationOnce(async () => journalAudioDownloadLink);
@@ -1642,7 +1655,7 @@ describe('MemberResolver', () => {
       const communication = generateCommunication();
       const journalAudioDownloadLink = generateUniqueUrl();
       spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
-      spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
+      spyOnStorageDeleteFile.mockImplementationOnce(async () => true);
       spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
       spyOnStorageGetDownloadUrl.mockImplementationOnce(async () => journalAudioDownloadLink);
       spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
@@ -1669,7 +1682,7 @@ describe('MemberResolver', () => {
       const communication = generateCommunication();
       const journalImageDownloadLink = generateUniqueUrl();
       spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
-      spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
+      spyOnStorageDeleteFile.mockImplementationOnce(async () => true);
       spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
       spyOnStorageGetDownloadUrl.mockImplementationOnce(async () => journalImageDownloadLink);
       spyOnServiceGetJournal.mockImplementationOnce(async () => journal);
@@ -1697,7 +1710,7 @@ describe('MemberResolver', () => {
       const communication = generateCommunication();
       const url = generateUniqueUrl();
       spyOnServiceUpdateJournal.mockImplementationOnce(async () => journal);
-      spyOnStorageDeleteJournalImages.mockImplementationOnce(async () => true);
+      spyOnStorageDeleteFile.mockImplementationOnce(async () => true);
       spyOnCommunicationServiceGet.mockImplementationOnce(async () => communication);
       spyOnStorageGetDownloadUrl.mockImplementation(async () => url);
       spyOnServiceGetJournal.mockImplementationOnce(async () => journal);

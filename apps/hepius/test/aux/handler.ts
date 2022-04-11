@@ -239,8 +239,6 @@ export class Handler extends BaseHandler {
     this.oneSignal.spyOnOneSignalUnregister.mockReset();
     this.storage.spyOnStorageDownload.mockReset();
     this.storage.spyOnStorageUpload.mockReset();
-    this.storage.spyOnStorageDeleteRecordings.mockReset();
-    this.storage.spyOnStorageDeleteJournalImages.mockReset();
     this.storage.spyOnStorageHandleNewMember.mockReset();
     this.twilioService.spyOnTwilioGetToken.mockReset();
     this.twilioService.spyOnTwilioValidateWebhook.mockReset();

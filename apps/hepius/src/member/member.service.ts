@@ -62,6 +62,7 @@ import {
   IEventUpdateHealthPersona,
   Identifier,
   LoggerService,
+  StorageType,
   defaultTimestampsDbValues,
   deleteMemberObjects,
   extractEmbeddedSetObject,
@@ -331,7 +332,15 @@ export class MemberService extends BaseService {
       });
       const recordingIds = recordingsToDeleteMedia.map((doc) => doc.id);
       if (recordingIds.length >= 1) {
-        await this.storageService.deleteRecordings(memberId, recordingIds);
+        await Promise.all(
+          recordingIds.map(async (recordingId) =>
+            this.storageService.deleteFile({
+              memberId,
+              storageType: StorageType.recordings,
+              id: recordingId,
+            }),
+          ),
+        );
       }
       await this.recordingModel.updateMany(
         {

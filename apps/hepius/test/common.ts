@@ -169,8 +169,6 @@ export const mockProviders = (
   const spyOnStorageDownload = jest.spyOn(storage, 'getDownloadUrl');
   const spyOnStorageUpload = jest.spyOn(storage, 'getUploadUrl');
   const spyOnStorageMultipartUpload = jest.spyOn(storage, 'getMultipartUploadUrl');
-  const spyOnStorageDeleteRecordings = jest.spyOn(storage, 'deleteRecordings');
-  const spyOnStorageDeleteJournalImages = jest.spyOn(storage, 'deleteJournalImages');
   const spyOnStorageHandleNewMember = jest.spyOn(storage, 'handleNewMember');
   const spyOnOneSignalRegister = jest.spyOn(oneSignal, 'register');
   const spyOnOneSignalUnregister = jest.spyOn(oneSignal, 'unregister');
@@ -203,8 +201,6 @@ export const mockProviders = (
     url: 'https://some-url/multipartUpload',
     uploadId: 'some_upload_id',
   });
-  spyOnStorageDeleteRecordings.mockResolvedValue(undefined);
-  spyOnStorageDeleteJournalImages.mockResolvedValue(true);
   spyOnStorageHandleNewMember.mockResolvedValue(undefined);
   spyOnOneSignalRegister.mockResolvedValue(v4());
   spyOnOneSignalUnregister.mockResolvedValue(undefined);
@@ -255,8 +251,6 @@ export const mockProviders = (
     storage: {
       spyOnStorageDownload,
       spyOnStorageUpload,
-      spyOnStorageDeleteRecordings,
-      spyOnStorageDeleteJournalImages,
       spyOnStorageHandleNewMember,
     },
     featureFlagService: { spyOnFeatureFlagControlGroup },
