@@ -57,7 +57,14 @@ import {
   CreateRedFlagParamsWizard,
   SubmitCareWizardParams,
 } from '../src/care/wizard.dto';
-import { ItemType, MemberRole, RoleTypes, UserRole, reformatDate } from '../src/common';
+import {
+  ItemType,
+  MemberRole,
+  RoleTypes,
+  UserRole,
+  momentFormats,
+  reformatDate,
+} from '../src/common';
 import { Communication, GetCommunicationParams } from '../src/communication';
 import { DailyReport } from '../src/dailyReport';
 import {
@@ -686,7 +693,7 @@ export const generateGetMemberUploadJournalAudioLinkParams = ({
 };
 
 export const generateDateOnly = (date: Date): string => {
-  return format(date, 'yyyy/MM/dd');
+  return format(date, momentFormats.date);
 };
 
 export const generateNotifyParams = ({

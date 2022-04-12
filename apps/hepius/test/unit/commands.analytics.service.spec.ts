@@ -13,15 +13,13 @@ import {
   AnalyticsModule,
   AnalyticsService,
   AppointmentAttendanceStatus,
-  DateFormat,
-  DateTimeFormat,
   GraduationPeriod,
   MemberDataAggregate,
   PopulatedAppointment,
   PopulatedMember,
 } from '../../cmd';
 import { add, sub } from 'date-fns';
-import { RecordingType, reformatDate } from '../../src/common';
+import { RecordingType, momentFormats, reformatDate } from '../../src/common';
 import { MemberModule } from '../../src/member';
 import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -46,7 +44,7 @@ describe('Commands: AnalyticsService', () => {
   const mockMember = mockGenerateMember();
   const mockMemberConfig = mockGenerateMemberConfig();
   mockMember.primaryUserId = new Types.ObjectId(mockPrimaryUser.id);
-  mockMember.dateOfBirth = reformatDate(sub(now, { years: 40 }).toString(), DateFormat);
+  mockMember.dateOfBirth = reformatDate(sub(now, { years: 40 }).toString(), momentFormats.date);
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -243,7 +241,7 @@ describe('Commands: AnalyticsService', () => {
       ).toEqual([
         {
           appt_number: 0,
-          created: reformatDate(mockMember.createdAt.toString(), DateFormat),
+          created: reformatDate(mockMember.createdAt.toString(), momentFormats.date),
           customer_id: mockMember.id,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           graduated: false,
@@ -320,7 +318,7 @@ describe('Commands: AnalyticsService', () => {
 
       expect(data).toEqual([
         {
-          created: reformatDate(mockMember.createdAt.toString(), DateFormat),
+          created: reformatDate(mockMember.createdAt.toString(), momentFormats.date),
           customer_id: mockMember.id,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           appt_number: 0,
@@ -328,7 +326,7 @@ describe('Commands: AnalyticsService', () => {
           graduation_date: '2021-02-03',
         },
         {
-          created: reformatDate(sub(now, { days: 10 }).toString(), DateTimeFormat),
+          created: reformatDate(sub(now, { days: 10 }).toString(), momentFormats.dateTime),
           customer_id: mockMember.id,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           chat_id: app4Id.toString(),
@@ -350,7 +348,7 @@ describe('Commands: AnalyticsService', () => {
           coach_id: mockPrimaryUser.id,
         },
         {
-          created: reformatDate(sub(now, { days: 15 }).toString(), DateTimeFormat),
+          created: reformatDate(sub(now, { days: 15 }).toString(), momentFormats.dateTime),
           customer_id: mockMember.id,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           appt_number: 1,
@@ -382,7 +380,7 @@ describe('Commands: AnalyticsService', () => {
           strengths: app3Notes.strengths,
         },
         {
-          created: reformatDate(sub(now, { days: 10 }).toString(), DateTimeFormat),
+          created: reformatDate(sub(now, { days: 10 }).toString(), momentFormats.dateTime),
           customer_id: mockMember.id,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           appt_number: 2,
@@ -418,8 +416,8 @@ describe('Commands: AnalyticsService', () => {
         memberConfig: mockMemberConfig,
         memberDetails: {
           ...mockMember,
-          admitDate: reformatDate(sub(now, { days: 20 }).toString(), DateFormat),
-          dischargeDate: reformatDate(sub(now, { days: 10 }).toString(), DateFormat),
+          admitDate: reformatDate(sub(now, { days: 20 }).toString(), momentFormats.date),
+          dischargeDate: reformatDate(sub(now, { days: 10 }).toString(), momentFormats.date),
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
           primaryUser: mockPrimaryUser,
           org: { ...mockOrg, _id: new Types.ObjectId(mockOrg.id) },
@@ -451,7 +449,7 @@ describe('Commands: AnalyticsService', () => {
       expect(data).toEqual({
         customer_id: mockMember.id,
         mbr_initials: mockMember.firstName[0].toUpperCase() + mockMember.lastName[0].toUpperCase(),
-        created: reformatDate(mockMember.createdAt.toString(), DateTimeFormat),
+        created: reformatDate(mockMember.createdAt.toString(), momentFormats.dateTime),
         app_user: true,
         intervention_group: true,
         language: Language.en,
@@ -486,9 +484,12 @@ describe('Commands: AnalyticsService', () => {
         honorific: mockMember.honorific,
         phone: mockMember.phone,
         platform: mockMemberConfig.platform,
-        updated: reformatDate(mockMember.updatedAt.toString(), DateTimeFormat),
-        app_first_login: reformatDate(mockMemberConfig.firstLoggedInAt.toString(), DateTimeFormat),
-        app_last_login: reformatDate(mockMemberConfig.updatedAt.toString(), DateTimeFormat),
+        updated: reformatDate(mockMember.updatedAt.toString(), momentFormats.dateTime),
+        app_first_login: reformatDate(
+          mockMemberConfig.firstLoggedInAt.toString(),
+          momentFormats.dateTime,
+        ),
+        app_last_login: reformatDate(mockMemberConfig.updatedAt.toString(), momentFormats.dateTime),
         coach_id: mockPrimaryUser.id,
         org_id: mockOrg.id,
         org_name: mockOrg.name,
@@ -509,8 +510,8 @@ describe('Commands: AnalyticsService', () => {
         memberConfig: { ...mockMemberConfig, firstLoggedInAt: undefined },
         memberDetails: {
           ...mockMember,
-          admitDate: reformatDate(sub(now, { days: 20 }).toString(), DateFormat),
-          dischargeDate: reformatDate(sub(now, { days: 10 }).toString(), DateFormat),
+          admitDate: reformatDate(sub(now, { days: 20 }).toString(), momentFormats.date),
+          dischargeDate: reformatDate(sub(now, { days: 10 }).toString(), momentFormats.date),
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
           primaryUser: mockPrimaryUser,
           org: { ...mockOrg, _id: new Types.ObjectId(mockOrg.id) },
@@ -542,7 +543,7 @@ describe('Commands: AnalyticsService', () => {
       expect(data).toEqual({
         customer_id: mockMember.id,
         mbr_initials: mockMember.firstName[0].toUpperCase() + mockMember.lastName[0].toUpperCase(),
-        created: reformatDate(mockMember.createdAt.toString(), DateTimeFormat),
+        created: reformatDate(mockMember.createdAt.toString(), momentFormats.dateTime),
         app_user: true,
         intervention_group: true,
         language: Language.en,
@@ -577,7 +578,7 @@ describe('Commands: AnalyticsService', () => {
         honorific: mockMember.honorific,
         phone: mockMember.phone,
         platform: mockMemberConfig.platform,
-        updated: reformatDate(mockMember.updatedAt.toString(), DateTimeFormat),
+        updated: reformatDate(mockMember.updatedAt.toString(), momentFormats.dateTime),
         coach_id: mockPrimaryUser.id,
         org_id: mockOrg.id,
         org_name: mockOrg.name,
@@ -605,7 +606,7 @@ describe('Commands: AnalyticsService', () => {
       expect(data).toEqual({
         customer_id: mockMember.id,
         mbr_initials: mockMember.firstName[0].toUpperCase() + mockMember.lastName[0].toUpperCase(),
-        created: reformatDate(mockMember.createdAt.toString(), DateTimeFormat),
+        created: reformatDate(mockMember.createdAt.toString(), momentFormats.dateTime),
         intervention_group: false,
         age: 40,
         race: mockMember.race,
@@ -621,7 +622,7 @@ describe('Commands: AnalyticsService', () => {
         last_name: mockMember.lastName,
         honorific: mockMember.honorific,
         phone: mockMember.phone,
-        updated: reformatDate(mockMember.updatedAt.toString(), DateTimeFormat),
+        updated: reformatDate(mockMember.updatedAt.toString(), momentFormats.dateTime),
         dc_instructions_received: false,
         dc_summary_received: false,
         active: false,
@@ -639,13 +640,13 @@ describe('Commands: AnalyticsService', () => {
     const graduatedMember = mockGenerateMember();
     graduatedMember.dischargeDate = reformatDate(
       sub(now, { days: GraduationPeriod + 2 }).toString(),
-      DateFormat,
+      momentFormats.date,
     );
 
     const activeMember = mockGenerateMember();
     activeMember.dischargeDate = reformatDate(
       sub(now, { days: GraduationPeriod - 2 }).toString(),
-      DateFormat,
+      momentFormats.date,
     );
 
     it('to return a calculated coach data.', async () => {
@@ -659,7 +660,7 @@ describe('Commands: AnalyticsService', () => {
       });
 
       expect(data).toEqual({
-        created: reformatDate(mockPrimaryUser.createdAt.toString(), DateTimeFormat),
+        created: reformatDate(mockPrimaryUser.createdAt.toString(), momentFormats.dateTime),
         user_id: mockPrimaryUser.id,
         first_name: mockPrimaryUser.firstName,
         last_name: mockPrimaryUser.lastName,

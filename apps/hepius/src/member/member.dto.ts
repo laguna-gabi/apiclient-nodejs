@@ -15,6 +15,7 @@ import {
   IsPhoneNumber,
   IsString,
   Length,
+  Matches,
   ValidateIf,
 } from 'class-validator';
 import { twilio } from 'config';
@@ -36,6 +37,7 @@ import {
   PhoneType,
   maxLength,
   minLength,
+  onlyDateRegex,
   validPhoneExamples,
 } from '../common';
 import { Org } from '../org';
@@ -143,7 +145,7 @@ export class ExtraMemberParams {
   zipCode?: string;
 
   @Field(() => String, { nullable: true })
-  @IsStringDate({ message: Errors.get(ErrorType.memberDischargeDate) })
+  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberDischargeDate) })
   @IsString() /* for rest api */
   @IsOptional()
   dischargeDate?: string;
@@ -274,7 +276,7 @@ export class UpdateMemberParams extends ExtraMemberParams {
   address?: Address;
 
   @Field(() => String, { nullable: true })
-  @IsStringDate({ message: Errors.get(ErrorType.memberAdmitDate) })
+  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberAdmitDate) })
   @IsOptional()
   admitDate?: string;
 

@@ -155,7 +155,8 @@ export enum ErrorType {
 const nameFormat =
   `name must be between ${graphql.validators.name.minLength} and ` +
   `${graphql.validators.name.maxLength} characters`;
-const dateInstanceFormat = 'must be a Date instance';
+const dateTimeInstanceFormat = 'must be a DateTime instance';
+const dateInstanceFormat = 'must be an only Date instance: yyyy-mm-dd';
 const emailFormat =
   'email must be in an email format - having a @ and an extension, for example: test@gmail.com';
 const phoneFormat =
@@ -187,7 +188,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberDateOfBirth.valueOf(), `dateOfBirth ${dateInstanceFormat}`],
   [ErrorType.memberDischargeDate.valueOf(), `dischargeDate ${dateInstanceFormat}`],
   [ErrorType.memberEmailFormat.valueOf(), emailFormat],
-  [ErrorType.memberTaskDeadline.valueOf(), `deadline ${dateInstanceFormat}`],
+  [ErrorType.memberTaskDeadline.valueOf(), `deadline ${dateTimeInstanceFormat}`],
   [ErrorType.memberActionItemIdNotFound.valueOf(), 'action item id was not found'],
   [ErrorType.memberNotFound.valueOf(), 'member id was not found'],
   [ErrorType.memberPrimaryUserIdNotInUsers.valueOf(), 'primaryUserId must exists in usersIds list'],
@@ -253,10 +254,10 @@ export const Errors: Map<ErrorType, string> = new Map([
     `when calling notify content with contentType answerQuestionnaire questionnaireId must be provided in metadata`,
   ],
   [ErrorType.appointmentIdNotFound.valueOf(), 'appointment id was not found'],
-  [ErrorType.appointmentNotBeforeDate.valueOf(), `notBefore ${dateInstanceFormat}`],
+  [ErrorType.appointmentNotBeforeDate.valueOf(), `notBefore ${dateTimeInstanceFormat}`],
   [ErrorType.appointmentNotBeforeDateInThePast.valueOf(), 'notBefore must be in the future'],
-  [ErrorType.appointmentStartDate.valueOf(), `start ${dateInstanceFormat}`],
-  [ErrorType.appointmentEndDate.valueOf(), `end ${dateInstanceFormat}`],
+  [ErrorType.appointmentStartDate.valueOf(), `start ${dateTimeInstanceFormat}`],
+  [ErrorType.appointmentEndDate.valueOf(), `end ${dateTimeInstanceFormat}`],
   [
     ErrorType.appointmentStartDateOutOfRange.valueOf(),
     `appointment start date must not be over ${general.notificationRange} days in the future`,

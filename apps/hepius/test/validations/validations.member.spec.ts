@@ -192,6 +192,7 @@ describe('Validations - member', () => {
       ${{ dateOfBirth: '2021/13/1' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
       ${{ dischargeDate: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
       ${{ dischargeDate: '2021/13/1' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
+      ${{ dischargeDate: new Date() }}  | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
       ${{ honorific: 'not-valid' }}     | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
       ${{ userId: 'not-valid' }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userIdInvalid)] }}
     `(
@@ -705,8 +706,10 @@ describe('Validations - member', () => {
       ${'dischargeDate'}  | ${{ dischargeDate: lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
       ${'admitDate'}      | ${{ admitDate: lorem.word() }}     | ${[Errors.get(ErrorType.memberAdmitDate)]}
       ${'admitDate'}      | ${{ admitDate: '2021/13/1' }}      | ${[Errors.get(ErrorType.memberAdmitDate)]}
+      ${'admitDate'}      | ${{ admitDate: new Date() }}       | ${[Errors.get(ErrorType.memberAdmitDate)]}
       ${'dischargeDate'}  | ${{ dischargeDate: lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
       ${'dischargeDate'}  | ${{ dischargeDate: '2021/13/1' }}  | ${[Errors.get(ErrorType.memberDischargeDate)]}
+      ${'dischargeDate'}  | ${{ dischargeDate: new Date() }}   | ${[Errors.get(ErrorType.memberDischargeDate)]}
       ${'dateOfBirth'}    | ${{ dateOfBirth: lorem.word() }}   | ${[Errors.get(ErrorType.memberDateOfBirth)]}
       ${'dateOfBirth'}    | ${{ dateOfBirth: '2021/13/1' }}    | ${[Errors.get(ErrorType.memberDateOfBirth)]}
     `(

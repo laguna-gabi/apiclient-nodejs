@@ -25,3 +25,4 @@ export * as m20220313123619 from './20220313123619-create-red-flag-type';
 export * as m20220324120022 from './20220324120022-updateTodoLabels';
 export * as m20220328135141 from './20220328135141-update-who5-questionnaire-text';
 export * as m20220411124750 from './20220411124750-rename-maxCustomers-to-maxMembers';
+export * as m20220411171322 from './20220411171322-replace-datetime-to-only-date';
