@@ -180,6 +180,9 @@ export class User extends Identifier {
 export class UserSummary extends User {
   @Field(() => Number)
   currentMembersCount: number;
+
+  @Field(() => Boolean)
+  isEnabled: boolean;
 }
 
 /**************************************************************************************************

@@ -107,7 +107,14 @@ export class UserResolver {
     })
     roles: UserRole[] = [UserRole.coach, UserRole.nurse],
   ): Promise<UserSummary[]> {
-    return this.userService.getUsers(roles);
+    const users = await this.userService.getUsers(roles);
+
+    return Promise.all(
+      users.map(async (user) => {
+        const isEnabled = await this.cognitoService.isClientEnabled(user.firstName);
+        return { ...user, isEnabled };
+      }),
+    );
   }
 
   @Query(() => Slots)
@@ -146,7 +153,7 @@ export class UserResolver {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
 
-    return this.cognitoService.disableClient(user.firstName.toLowerCase());
+    return this.cognitoService.disableClient(user.firstName);
   }
 
   @Mutation(() => Boolean)
@@ -160,7 +167,7 @@ export class UserResolver {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
 
-    return this.cognitoService.enableClient(user.firstName.toLowerCase());
+    return this.cognitoService.enableClient(user.firstName);
   }
 
   protected notifyUpdatedUserConfig(user: User) {

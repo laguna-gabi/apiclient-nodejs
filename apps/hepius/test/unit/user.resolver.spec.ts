@@ -246,22 +246,29 @@ describe('UserResolver', () => {
 
   describe('getUsers', () => {
     let spyOnServiceGetUsers;
+    let spyOnServiceIsClientEnabled;
     beforeEach(() => {
       spyOnServiceGetUsers = jest.spyOn(service, 'getUsers');
+      spyOnServiceIsClientEnabled = jest.spyOn(cognitoService, 'isClientEnabled');
     });
 
     afterEach(() => {
       spyOnServiceGetUsers.mockReset();
+      spyOnServiceIsClientEnabled.mockReset();
     });
 
     it('should get users', async () => {
       const user1 = mockGenerateUser();
       const user2 = mockGenerateUser();
       spyOnServiceGetUsers.mockImplementationOnce(async () => [user1, user2]);
+      spyOnServiceIsClientEnabled.mockResolvedValue(true);
 
       const result = await resolver.getUsers();
 
-      expect(result).toEqual([user1, user2]);
+      expect(result).toEqual([
+        { ...user1, isEnabled: true },
+        { ...user2, isEnabled: true },
+      ]);
     });
   });
 
@@ -348,7 +355,7 @@ describe('UserResolver', () => {
       const result = await resolver.disableUser(userParams.id);
 
       expect(result).toBeTruthy();
-      expect(spyOnCognitoServiceDisableClient).toBeCalledWith(userParams.firstName.toLowerCase());
+      expect(spyOnCognitoServiceDisableClient).toBeCalledWith(userParams.firstName);
 
       spyOnCognitoServiceDisableClient.mockReset();
     });
@@ -380,7 +387,7 @@ describe('UserResolver', () => {
       const result = await resolver.enableUser(userParams.id);
 
       expect(result).toBeTruthy();
-      expect(spyOnCognitoServiceEnableClient).toBeCalledWith(userParams.firstName.toLowerCase());
+      expect(spyOnCognitoServiceEnableClient).toBeCalledWith(userParams.firstName);
 
       spyOnCognitoServiceEnableClient.mockReset();
     });

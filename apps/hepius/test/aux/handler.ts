@@ -247,6 +247,7 @@ export class Handler extends BaseHandler {
     this.cognitoService.spyOnCognitoServiceDisableClient.mockReset();
     this.cognitoService.spyOnCognitoServiceEnableClient.mockReset();
     this.cognitoService.spyOnCognitoServiceDeleteClient.mockReset();
+    this.cognitoService.spyOnCognitoServiceIsClientEnabled.mockReset();
     this.spyOnGetCommunicationService?.mockReset();
     this.queueService.spyOnQueueServiceSendMessage.mockReset();
 

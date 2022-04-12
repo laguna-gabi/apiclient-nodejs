@@ -24,7 +24,7 @@ describe('live: cognito', () => {
     cognitoService = new CognitoService(logger);
   });
 
-  it('should add, disable, enable and delete a client', async () => {
+  it('should add, disable, enable, get client enabled and delete a client', async () => {
     const user = {
       firstName: `${name.firstName()}.${v4()}`,
       email: 'hadas@lagunahealth.com',
@@ -34,7 +34,7 @@ describe('live: cognito', () => {
     const authId = await cognitoService.addClient(user);
     expect(authId).not.toBeUndefined();
 
-    let currentClient = await getClient(user.firstName);
+    const currentClient = await getClient(user.firstName);
     expect(currentClient.Enabled).toBeTruthy();
     expect(currentClient.Username).toEqual(user.firstName.toLowerCase());
     expect(currentClient.UserAttributes).toEqual([
@@ -47,17 +47,20 @@ describe('live: cognito', () => {
 
     const disableResult = await cognitoService.disableClient(user.firstName);
     expect(disableResult).toBeTruthy();
-    currentClient = await getClient(user.firstName);
-    expect(currentClient.Enabled).toBeFalsy();
+    let isEnabled = await cognitoService.isClientEnabled(user.firstName);
+    expect(isEnabled).toBeFalsy();
 
     const enableResult = await cognitoService.enableClient(user.firstName);
     expect(enableResult).toBeTruthy();
-    currentClient = await getClient(user.firstName);
-    expect(currentClient.Enabled).toBeTruthy();
+    isEnabled = await cognitoService.isClientEnabled(user.firstName);
+    expect(isEnabled).toBeTruthy();
 
     const deleteResult = await cognitoService.deleteClient(user.firstName);
     expect(deleteResult).toBeTruthy();
     await expect(getClient(user.firstName)).rejects.toThrow(new Error('User does not exist.'));
+
+    isEnabled = await cognitoService.isClientEnabled(user.firstName);
+    expect(isEnabled).toBeFalsy();
   }, 10000);
 
   const getClient = async (userName): Promise<AdminGetUserResponse> => {

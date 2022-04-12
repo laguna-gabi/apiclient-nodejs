@@ -793,9 +793,13 @@ describe('Integration tests: all', () => {
       const singlePrimaryUserResult = users.filter((user) => user.id === user2.id)[0];
       const noMembersUserResult = users.filter((user) => user.id === noMembersUser.id)[0];
 
-      expect({ currentMembersCount: 3, ...primaryUser }).toMatchObject(primaryUserResult);
-      expect({ currentMembersCount: 0, ...noMembersUser }).toMatchObject(noMembersUserResult);
-      expect({ currentMembersCount: 1, ...singlePrimaryUser }).toMatchObject(
+      expect({ currentMembersCount: 3, isEnabled: true, ...primaryUser }).toMatchObject(
+        primaryUserResult,
+      );
+      expect({ currentMembersCount: 0, isEnabled: true, ...noMembersUser }).toMatchObject(
+        noMembersUserResult,
+      );
+      expect({ currentMembersCount: 1, isEnabled: true, ...singlePrimaryUser }).toMatchObject(
         singlePrimaryUserResult,
       );
     }, 10000);
