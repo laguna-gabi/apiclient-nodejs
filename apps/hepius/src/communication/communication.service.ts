@@ -22,12 +22,14 @@ import {
   LoggerService,
   UpdatedAppointmentAction,
   UserRole,
+  delay,
 } from '../common';
 import { Member } from '../member';
 import { SendBird, TwilioService } from '../providers';
 import { User } from '../user';
 import { Platform, formatEx } from '@argus/pandora';
 import { ISoftDelete } from '../db';
+import { chunk } from 'lodash';
 
 @Injectable()
 export class CommunicationService {
@@ -66,7 +68,6 @@ export class CommunicationService {
       nickname: `${user.firstName} ${user.lastName}`,
       profile_url: user.avatar,
     };
-
     await this.sendBird.updateUser(params);
 
     const userChannels = await this.communicationModel.aggregate([
@@ -82,15 +83,25 @@ export class CommunicationService {
       { $project: { sendBirdChannelUrl: 1 } },
     ]);
 
-    await Promise.all(
-      userChannels.map(async (channel) => {
-        await this.sendBird.updateChannelName(
-          channel.sendBirdChannelUrl,
-          params.nickname,
-          params.profile_url,
-        );
-      }),
-    );
+    /**
+     * https://sendbird.com/docs/chat/v3/platform-api/application/understanding-rate-limits/rate-limits#2-plan-based-rate-limits
+     * reducing to 5 requests per seconds, since 5 is the max on PUT for our agreement with sendbird
+     */
+    const userChannelsChunks = chunk(userChannels, 5);
+    for (let i = 0; i < userChannelsChunks.length; i++) {
+      await Promise.all(
+        userChannelsChunks[i].map(async (channel) => {
+          await this.sendBird.updateChannelName(
+            channel.sendBirdChannelUrl,
+            params.nickname,
+            params.profile_url,
+          );
+        }),
+      );
+      if (i < userChannelsChunks.length - 1) {
+        await delay(1000);
+      }
+    }
   }
 
   async createMember(member: Member) {
