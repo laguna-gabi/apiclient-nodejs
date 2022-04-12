@@ -285,7 +285,7 @@ export class UserService extends BaseService {
   }
 
   async getUserConfig(userId: string): Promise<UserConfig> {
-    const object = await this.userConfigModel.findOne({ userId });
+    const object = await this.userConfigModel.findOne({ userId: new Types.ObjectId(userId) });
     if (!object) {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
