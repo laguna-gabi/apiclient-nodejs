@@ -76,10 +76,15 @@ export class UserResolver {
     @Args(camelCase(UpdateUserParams.name))
     updateUserParams: UpdateUserParams,
   ) {
+    const oldUser = await this.userService.get(updateUserParams.id);
     const user = await this.userService.update(updateUserParams);
     this.notifyUpdatedUserConfig(user);
 
-    if (user.firstName || user.lastName || user.avatar) {
+    if (
+      oldUser.firstName !== user.firstName ||
+      oldUser.lastName !== updateUserParams.lastName ||
+      oldUser.avatar !== updateUserParams.avatar
+    ) {
       const eventParams: IEventOnUpdatedUser = { user };
       this.eventEmitter.emit(EventType.onUpdatedUser, eventParams);
     }

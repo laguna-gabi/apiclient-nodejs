@@ -2,6 +2,7 @@ import {
   ClientCategory,
   IUpdateClientSettings,
   InnerQueueTypes,
+  Language,
   QueueType,
   mockLogger,
   mockProcessWarnings,
@@ -35,6 +36,7 @@ import {
 } from '../index';
 import { CognitoService } from '../../src/providers';
 import { v4 } from 'uuid';
+import { internet, lorem, name } from 'faker';
 
 describe('UserResolver', () => {
   let module: TestingModule;
@@ -163,12 +165,16 @@ describe('UserResolver', () => {
   });
 
   describe('updateUser', () => {
+    let spyOnServiceGet;
     let spyOnServiceUpdate;
+
     beforeEach(() => {
+      spyOnServiceGet = jest.spyOn(service, 'get');
       spyOnServiceUpdate = jest.spyOn(service, 'update');
     });
 
     afterEach(() => {
+      spyOnServiceGet.mockReset();
       spyOnServiceUpdate.mockReset();
       spyOnEventEmitter.mockReset();
     });
@@ -180,7 +186,9 @@ describe('UserResolver', () => {
       [[UserRole.nurse]],
       [[UserRole.admin]],
     ])('should successfully update a user with role: %p', async (roles) => {
-      spyOnServiceUpdate.mockImplementationOnce(async () => mockGenerateUser());
+      const user = mockGenerateUser();
+      spyOnServiceGet.mockImplementationOnce(async () => user);
+      spyOnServiceUpdate.mockImplementationOnce(async () => user);
 
       const params = generateUpdateUserParams({ roles });
       await resolver.updateUser(params);
@@ -189,8 +197,55 @@ describe('UserResolver', () => {
       expect(spyOnServiceUpdate).toBeCalledWith(params);
     });
 
+    const firstName = name.firstName();
+    const lastName = name.lastName();
+    const avatar = internet.avatar();
+
+    test.each`
+      field                            | updateParam
+      ${'firstName'}                   | ${{ firstName }}
+      ${'lastName'}                    | ${{ lastName }}
+      ${'avatar'}                      | ${{ avatar }}
+      ${'firstName, lastName'}         | ${{ firstName, lastName }}
+      ${'firstName, lastName, avatar'} | ${{ firstName, lastName, avatar }}
+      ${'firstName, avatar'}           | ${{ firstName, avatar }}
+      ${'lastName, avatar'}            | ${{ lastName, avatar }}
+      ${'lastName, maxMembers'}        | ${{ lastName, maxMembers: 2 }}
+    `(`should call event ${EventType.onUpdatedUser} only on update $field`, async (params) => {
+      const oldUser = mockGenerateUser();
+      const newUser = { ...oldUser, ...params.updateParam };
+      spyOnServiceGet.mockImplementationOnce(async () => oldUser);
+      spyOnServiceUpdate.mockImplementationOnce(async () => newUser);
+      await resolver.updateUser(newUser);
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const eventParams: IEventOnNewUser = { user: newUser };
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.onUpdatedUser, eventParams);
+    });
+
+    test.each`
+      field                 | updateParam
+      ${'orgs'}             | ${{ orgs: [generateId()] }}
+      ${'roles'}            | ${{ roles: [UserRole.nurse] }}
+      ${'description'}      | ${{ description: lorem.sentence() }}
+      ${'title'}            | ${{ title: lorem.word() }}
+      ${'maxMembers'}       | ${{ maxMembers: 2 }}
+      ${'title, languages'} | ${{ title: lorem.word(), languages: [Language.es] }}
+    `(`should not call event ${EventType.onUpdatedUser} on update $field`, async (params) => {
+      const oldUser = mockGenerateUser();
+      const newUser = { ...oldUser, ...params.updateParam };
+      spyOnServiceGet.mockImplementationOnce(async () => oldUser);
+      spyOnServiceUpdate.mockImplementationOnce(async () => newUser);
+      await resolver.updateUser(newUser);
+
+      expect(spyOnEventEmitter).toBeCalledTimes(1);
+    });
+
     it(`should call events ${EventType.onUpdatedUser} and ${EventType.notifyQueue}`, async () => {
-      const user = generateUpdateUserParams();
+      const oldUser = mockGenerateUser();
+      const user = generateUpdateUserParams({ id: oldUser.id });
+      spyOnServiceGet.mockImplementationOnce(async () => oldUser);
       spyOnServiceUpdate.mockImplementationOnce(async () => user);
       await resolver.updateUser(user);
 
