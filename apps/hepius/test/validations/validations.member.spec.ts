@@ -189,9 +189,10 @@ describe('Validations - member', () => {
       ${{ zipCode: 123 }}               | ${{ missingFieldError: stringError }}
       ${{ zipCode: '123' }}             | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberInvalidZipCode)] }}
       ${{ dateOfBirth: 'not-valid' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
-      ${{ dateOfBirth: '2021/13/1' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
+      ${{ dateOfBirth: '2021-13-1' }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
+      ${{ dateOfBirth: new Date() }}    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDateOfBirth)] }}
       ${{ dischargeDate: 'not-valid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
-      ${{ dischargeDate: '2021/13/1' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
+      ${{ dischargeDate: '2021-13-1' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
       ${{ dischargeDate: new Date() }}  | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
       ${{ honorific: 'not-valid' }}     | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
       ${{ userId: 'not-valid' }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userIdInvalid)] }}
@@ -705,13 +706,13 @@ describe('Validations - member', () => {
       ${'phoneSecondary'} | ${{ phoneSecondary: '+410' }}      | ${[Errors.get(ErrorType.memberPhone)]}
       ${'dischargeDate'}  | ${{ dischargeDate: lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
       ${'admitDate'}      | ${{ admitDate: lorem.word() }}     | ${[Errors.get(ErrorType.memberAdmitDate)]}
-      ${'admitDate'}      | ${{ admitDate: '2021/13/1' }}      | ${[Errors.get(ErrorType.memberAdmitDate)]}
+      ${'admitDate'}      | ${{ admitDate: '2021-13-1' }}      | ${[Errors.get(ErrorType.memberAdmitDate)]}
       ${'admitDate'}      | ${{ admitDate: new Date() }}       | ${[Errors.get(ErrorType.memberAdmitDate)]}
       ${'dischargeDate'}  | ${{ dischargeDate: lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
-      ${'dischargeDate'}  | ${{ dischargeDate: '2021/13/1' }}  | ${[Errors.get(ErrorType.memberDischargeDate)]}
+      ${'dischargeDate'}  | ${{ dischargeDate: '2021-13-1' }}  | ${[Errors.get(ErrorType.memberDischargeDate)]}
       ${'dischargeDate'}  | ${{ dischargeDate: new Date() }}   | ${[Errors.get(ErrorType.memberDischargeDate)]}
       ${'dateOfBirth'}    | ${{ dateOfBirth: lorem.word() }}   | ${[Errors.get(ErrorType.memberDateOfBirth)]}
-      ${'dateOfBirth'}    | ${{ dateOfBirth: '2021/13/1' }}    | ${[Errors.get(ErrorType.memberDateOfBirth)]}
+      ${'dateOfBirth'}    | ${{ dateOfBirth: '2021-13-1' }}    | ${[Errors.get(ErrorType.memberDateOfBirth)]}
     `(
       /* eslint-enable max-len */
       `should fail to update a member since $field is not valid`,

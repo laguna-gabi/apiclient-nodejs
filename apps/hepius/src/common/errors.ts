@@ -1,4 +1,5 @@
 import { general, graphql } from 'config';
+import { momentFormats } from './constants';
 
 export const validPhoneExamples =
   'examples for a valid phone number: +41 311111111, +41 (0)31 633 60 01, +49 9072 1111, etc..';
@@ -156,7 +157,7 @@ const nameFormat =
   `name must be between ${graphql.validators.name.minLength} and ` +
   `${graphql.validators.name.maxLength} characters`;
 const dateTimeInstanceFormat = 'must be a DateTime instance';
-const dateInstanceFormat = 'must be an only Date instance: yyyy-mm-dd';
+const dateInstanceFormat = `must be an only Date instance: ${momentFormats.date}`;
 const emailFormat =
   'email must be in an email format - having a @ and an extension, for example: test@gmail.com';
 const phoneFormat =

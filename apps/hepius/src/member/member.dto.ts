@@ -30,7 +30,6 @@ import {
   IsNotChat,
   IsNoteOrNurseNoteProvided,
   IsObjectId,
-  IsStringDate,
   IsTypeMetadataProvided,
   IsValidZipCode,
   MemberRole,
@@ -203,7 +202,7 @@ export class CreateMemberParams extends ExtraMemberParams {
   lastName: string;
 
   @Field(() => String)
-  @IsStringDate({ message: Errors.get(ErrorType.memberDateOfBirth) })
+  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberDateOfBirth) })
   @IsNotEmpty() /* for rest api */
   @IsString() /* for rest api */
   dateOfBirth: string;
@@ -281,7 +280,7 @@ export class UpdateMemberParams extends ExtraMemberParams {
   admitDate?: string;
 
   @Field(() => String, { nullable: true })
-  @IsStringDate({ message: Errors.get(ErrorType.memberDateOfBirth) })
+  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberDateOfBirth) })
   @IsOptional()
   dateOfBirth?: string;
 
