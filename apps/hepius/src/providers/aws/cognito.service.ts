@@ -81,7 +81,9 @@ export class CognitoService {
       const { Enabled } = await this.cognito.adminGetUser(this.generateParams(userName)).promise();
       return Enabled;
     } catch (ex) {
-      this.logger.error(userName, CognitoService.name, this.isClientEnabled.name, formatEx(ex));
+      if (ex?.code !== 'UserNotFoundException') {
+        this.logger.error(userName, CognitoService.name, this.isClientEnabled.name, formatEx(ex));
+      }
       return false;
     }
   }
