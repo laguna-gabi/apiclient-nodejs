@@ -87,6 +87,13 @@ jobs:
         run: npx nx localstack
       - name: Test
         run: npx nx test:cov ${{github.event.inputs.project_name}}
+      - name: Cleanup docker
+        if: ${{ always() }}
+        run: |
+          docker images
+          docker-compose down
+          docker system prune -a --volumes --force
+          docker images
 
   deploy:
     name: Deploy
