@@ -87,11 +87,6 @@ jobs:
         run: npx nx localstack
       - name: Test
         run: npx nx test:cov ${{github.event.inputs.project_name}}
-      - name: Cleanup docker
-        if: ${{ always() }}
-        run: |
-          docker-compose down
-          docker system prune -a --volumes --force
 
   deploy:
     name: Deploy
@@ -130,11 +125,6 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           CURRENT_BRANCH: ${{ steps.branch-name.outputs.current_branch }}
-      - name: Cleanup docker
-        if: ${{ always() }}
-        run: |
-          docker-compose down
-          docker system prune -a --volumes --force
 
   migrate:
     name: Migrate
@@ -176,8 +166,3 @@ jobs:
         env:
           NODE_ENV: ${{ steps.branch_check.outputs.env_name }}
         run: npx nx command hepius --cmd=migration --options=up
-      - name: Cleanup docker
-        if: ${{ always() }}
-        run: |
-          docker-compose down
-          docker system prune -a --volumes --force

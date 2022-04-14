@@ -77,11 +77,6 @@ jobs:
         uses: ./.github/actions/set-nx-affected
       - name: Test affected
         run: npx nx affected --target=test:cov --base=$NX_BASE --head=$NX_HEAD --parallel=3
-      - name: Cleanup docker
-        if: ${{ always() }}
-        run: |
-          docker-compose down
-          docker system prune -a --volumes --force
 
   deploy:
     name: Deploy
@@ -121,11 +116,6 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           CURRENT_BRANCH: ${{ steps.branch-name.outputs.current_branch }}
-      - name: Cleanup docker
-        if: ${{ always() }}
-        run: |
-          docker-compose down
-          docker system prune -a --volumes --force
 
   migrate:
     name: Migrate
@@ -169,8 +159,3 @@ jobs:
         env:
           NODE_ENV: ${{ steps.branch_check.outputs.env_name }}
         run: npx nx affected --target=command --cmd=migration --options=up --base=$NX_BASE --head=$NX_HEAD --parallel=3
-      - name: Cleanup docker
-        if: ${{ always() }}
-        run: |
-          docker-compose down
-          docker system prune -a --volumes --force
