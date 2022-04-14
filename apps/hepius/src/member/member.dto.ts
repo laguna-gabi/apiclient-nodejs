@@ -1,10 +1,4 @@
-import {
-  CancelNotificationType,
-  ExternalKey,
-  Honorific,
-  Language,
-  NotificationType,
-} from '@argus/pandora';
+import { CancelNotificationType, ExternalKey, Language, NotificationType } from '@argus/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
@@ -59,6 +53,19 @@ export enum Sex {
 
 registerEnumType(Sex, { name: 'Sex' });
 
+export enum Honorific {
+  mr = 'mr',
+  mrs = 'mrs',
+  ms = 'ms',
+  miss = 'miss',
+  mx = 'mx',
+  dr = 'dr',
+  reverend = 'reverend',
+  professor = 'professor',
+  captain = 'captain',
+  coach = 'coach',
+  father = 'father',
+}
 registerEnumType(Honorific, { name: 'Honorific' });
 
 export enum Race {

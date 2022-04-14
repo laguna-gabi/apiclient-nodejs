@@ -3,6 +3,7 @@ import { Appointment, AppointmentStatus, Notes } from '../../src/appointment';
 import { User } from '../../src/user';
 import { RecordingType, UserRole } from '../../src/common';
 import {
+  Honorific,
   Member,
   MemberConfig,
   Race,
@@ -11,7 +12,7 @@ import {
   Relationship,
   Sex,
 } from '../../src/member';
-import { Honorific, Language, Platform } from '@argus/pandora';
+import { Language, Platform } from '@argus/pandora';
 import { hosts } from 'config';
 import {
   Column,

@@ -1,4 +1,4 @@
-import { ClientCategory, Honorific, Language, Platform } from '@argus/pandora';
+import { ClientCategory, Language, Platform } from '@argus/pandora';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ISoftDelete } from '../db';
 
@@ -31,9 +31,6 @@ export class ClientSettings {
    */
   @Prop({ isNaN: true })
   orgName?: string;
-
-  @Prop({ type: String, enum: Honorific })
-  honorific?: Honorific;
 
   @Prop()
   zipCode?: string;

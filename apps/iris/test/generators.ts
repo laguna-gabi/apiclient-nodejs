@@ -1,6 +1,5 @@
 import {
   ClientCategory,
-  Honorific,
   Language,
   NotificationType,
   Platform,
@@ -46,7 +45,6 @@ export const generateUpdateMemberSettingsMock = ({
     firstName: name.firstName(),
     lastName: name.lastName(),
     orgName: name.firstName(),
-    honorific: Honorific.reverend,
     zipCode: '91210',
     language: Language.en,
     platform,

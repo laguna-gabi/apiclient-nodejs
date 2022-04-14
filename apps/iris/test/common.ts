@@ -1,4 +1,3 @@
-import { translation } from '@argus/pandora';
 import { db, hosts } from 'config';
 import { connect, disconnect } from 'mongoose';
 import { ConfigsService, ExternalConfigs } from '../src/providers';
@@ -23,7 +22,7 @@ export const replaceConfigs = ({
   senderInitials?: string;
 }): string => {
   return content
-    .replace('{{member.honorific}}', translation.honorific[memberClient.honorific])
+    .replace('{{member.firstName}}', memberClient.firstName)
     .replace('{{member.lastName}}', memberClient.lastName)
     .replace('{{user.firstName}}', userClient.firstName)
     .replace('{{user.lastName}}', userClient.lastName)

@@ -25,7 +25,6 @@ export interface IUpdateClientSettings extends IInnerQueueTypes {
   lastName?: string;
   //only member
   orgName?: string;
-  honorific?: Honorific;
   zipCode?: string;
   language?: Language;
   platform?: Platform;
@@ -239,20 +238,6 @@ export const ContentCategories: Map<ContentKey, Categories> = new Map(
 export enum Language {
   en = 'en',
   es = 'es',
-}
-
-export enum Honorific {
-  mr = 'mr',
-  mrs = 'mrs',
-  ms = 'ms',
-  miss = 'miss',
-  mx = 'mx',
-  dr = 'dr',
-  reverend = 'reverend',
-  professor = 'professor',
-  captain = 'captain',
-  coach = 'coach',
-  father = 'father',
 }
 
 export enum QueueType {

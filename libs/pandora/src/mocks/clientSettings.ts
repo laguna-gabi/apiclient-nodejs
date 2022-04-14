@@ -1,6 +1,5 @@
 import {
   ClientCategory,
-  Honorific,
   IUpdateClientSettings,
   InnerQueueTypes,
   Language,
@@ -31,7 +30,6 @@ export const generateUpdateMemberSettingsMock = ({
   firstName,
   lastName,
   orgName,
-  honorific,
   zipCode,
   language,
   platform,
@@ -47,7 +45,6 @@ export const generateUpdateMemberSettingsMock = ({
   firstName?: string;
   lastName?: string;
   orgName?: string;
-  honorific?: Honorific;
   zipCode?: string;
   language?: Language;
   platform?: Platform;
@@ -67,7 +64,6 @@ export const generateUpdateMemberSettingsMock = ({
       firstName,
       lastName,
       orgName,
-      honorific,
       zipCode,
       language,
       platform,

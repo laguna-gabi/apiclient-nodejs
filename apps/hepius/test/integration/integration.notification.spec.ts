@@ -454,7 +454,6 @@ describe('Integration tests: notifications', () => {
         id,
         firstName: memberParams.firstName,
         lastName: memberParams.lastName,
-        honorific: memberParams.honorific,
         zipCode: memberParams.zipCode,
       };
       const objectMember = new ObjectUpdateMemberSettingsClass(updateControlMemberSettingsMock);

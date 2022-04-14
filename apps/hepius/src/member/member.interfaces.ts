@@ -129,7 +129,6 @@ export class MemberBase {
         firstName: member?.firstName,
         lastName: member?.lastName,
         orgName: member?.org?.name,
-        honorific: member?.honorific,
         zipCode: member?.zipCode || member?.org?.zipCode,
         language: memberConfig?.language,
         platform: memberConfig?.platform,
