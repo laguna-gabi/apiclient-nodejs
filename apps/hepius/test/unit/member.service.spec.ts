@@ -1,7 +1,6 @@
 import {
   AppointmentInternalKey,
   ChatInternalKey,
-  Honorific,
   Language,
   Platform,
   generatePhone,
@@ -48,6 +47,7 @@ import {
   DismissedAlert,
   DismissedAlertDocument,
   DismissedAlertDto,
+  Honorific,
   ImageFormat,
   InternalCreateMemberParams,
   Journal,
