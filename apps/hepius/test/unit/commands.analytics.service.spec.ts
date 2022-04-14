@@ -4,6 +4,7 @@ import {
   generateId,
   generateNotesParams,
   generateObjectId,
+  mockGenerateCaregiver,
   mockGenerateMember,
   mockGenerateMemberConfig,
   mockGenerateOrg,
@@ -20,7 +21,7 @@ import {
 } from '../../cmd';
 import { add, sub } from 'date-fns';
 import { RecordingType, momentFormats, reformatDate } from '../../src/common';
-import { MemberModule } from '../../src/member';
+import { Caregiver, MemberModule } from '../../src/member';
 import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProvidersModule } from '../../src/providers';
@@ -34,6 +35,7 @@ describe('Commands: AnalyticsService', () => {
   let module: TestingModule;
   let analyticsService: AnalyticsService;
   let userModel: Model<User>;
+  let caregiverModel: Model<Caregiver>;
 
   const now = new Date(Date.UTC(2021, 1, 2, 3, 4, 5));
 
@@ -44,7 +46,10 @@ describe('Commands: AnalyticsService', () => {
   const mockMember = mockGenerateMember();
   const mockMemberConfig = mockGenerateMemberConfig();
   mockMember.primaryUserId = new Types.ObjectId(mockPrimaryUser.id);
-  mockMember.dateOfBirth = reformatDate(sub(now, { years: 40 }).toString(), momentFormats.date);
+  mockMember.dateOfBirth = reformatDate(
+    sub(now, { years: 40 }).toString(),
+    momentFormats.mysqlDate,
+  );
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -61,6 +66,7 @@ describe('Commands: AnalyticsService', () => {
 
     analyticsService = module.get<AnalyticsService>(AnalyticsService);
     userModel = module.get<Model<User>>(getModelToken(User.name));
+    caregiverModel = module.get<Model<Caregiver>>(getModelToken(Caregiver.name));
 
     // mock the user model to upload all actors (users) during init
     jest
@@ -241,7 +247,7 @@ describe('Commands: AnalyticsService', () => {
       ).toEqual([
         {
           appt_number: 0,
-          created: reformatDate(mockMember.createdAt.toString(), momentFormats.date),
+          created: reformatDate(mockMember.createdAt.toString(), momentFormats.mysqlDate),
           customer_id: mockMember.id,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           graduated: false,
@@ -318,19 +324,19 @@ describe('Commands: AnalyticsService', () => {
 
       expect(data).toEqual([
         {
-          created: reformatDate(mockMember.createdAt.toString(), momentFormats.date),
+          created: reformatDate(mockMember.createdAt.toString(), momentFormats.mysqlDate),
           customer_id: mockMember.id,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           appt_number: 0,
           graduated: false,
-          graduation_date: '2021/02/03',
+          graduation_date: '2021-02-03',
         },
         {
-          created: reformatDate(sub(now, { days: 10 }).toString(), momentFormats.dateTime),
+          created: reformatDate(sub(now, { days: 10 }).toString(), momentFormats.mysqlDateTime),
           customer_id: mockMember.id,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           chat_id: app4Id.toString(),
-          appt_date: '2021/01/28',
+          appt_date: '2021-01-28',
           appt_time_ct: '03:04:05',
           appt_status: AppointmentAttendanceStatus.missed,
           appt_day_of_week_name: 'Thursday',
@@ -340,7 +346,7 @@ describe('Commands: AnalyticsService', () => {
           total_duration: 0,
           total_outreach_attempts: 0,
           graduated: false,
-          graduation_date: '2021/02/03',
+          graduation_date: '2021-02-03',
           is_video_call: false,
           is_phone_call: true,
           harmony_link: generateHarmonyLink(mockMember.id),
@@ -348,12 +354,12 @@ describe('Commands: AnalyticsService', () => {
           coach_id: mockPrimaryUser.id,
         },
         {
-          created: reformatDate(sub(now, { days: 15 }).toString(), momentFormats.dateTime),
+          created: reformatDate(sub(now, { days: 15 }).toString(), momentFormats.mysqlDateTime),
           customer_id: mockMember.id,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           appt_number: 1,
           chat_id: app3Id.toString(),
-          appt_date: '2021/01/23',
+          appt_date: '2021-01-23',
           appt_time_ct: '03:04:05',
           appt_status: AppointmentAttendanceStatus.attended,
           appt_day_of_week_name: 'Saturday',
@@ -364,7 +370,7 @@ describe('Commands: AnalyticsService', () => {
           total_outreach_attempts: 1,
           channel_primary: RecordingType.phone,
           graduated: false,
-          graduation_date: '2021/02/03',
+          graduation_date: '2021-02-03',
           is_video_call: false,
           is_phone_call: false,
           harmony_link: generateHarmonyLink(mockMember.id),
@@ -380,19 +386,19 @@ describe('Commands: AnalyticsService', () => {
           strengths: app3Notes.strengths,
         },
         {
-          created: reformatDate(sub(now, { days: 10 }).toString(), momentFormats.dateTime),
+          created: reformatDate(sub(now, { days: 10 }).toString(), momentFormats.mysqlDateTime),
           customer_id: mockMember.id,
           mbr_initials: analyticsService.getMemberInitials(mockMember),
           appt_number: 2,
           chat_id: app2Id.toString(),
-          appt_date: '2021/01/28',
+          appt_date: '2021-01-28',
           appt_time_ct: '03:04:05',
           appt_day_of_week_name: 'Thursday',
           appt_hour: '3',
           total_duration: 0,
           total_outreach_attempts: 0,
           graduated: false,
-          graduation_date: '2021/02/03',
+          graduation_date: '2021-02-03',
           is_video_call: true,
           is_phone_call: false,
           harmony_link: generateHarmonyLink(mockMember.id),
@@ -416,8 +422,8 @@ describe('Commands: AnalyticsService', () => {
         memberConfig: mockMemberConfig,
         memberDetails: {
           ...mockMember,
-          admitDate: reformatDate(sub(now, { days: 20 }).toString(), momentFormats.date),
-          dischargeDate: reformatDate(sub(now, { days: 10 }).toString(), momentFormats.date),
+          admitDate: reformatDate(sub(now, { days: 20 }).toString(), momentFormats.mysqlDate),
+          dischargeDate: reformatDate(sub(now, { days: 10 }).toString(), momentFormats.mysqlDate),
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
           primaryUser: mockPrimaryUser,
           org: { ...mockOrg, _id: new Types.ObjectId(mockOrg.id) },
@@ -449,7 +455,7 @@ describe('Commands: AnalyticsService', () => {
       expect(data).toEqual({
         customer_id: mockMember.id,
         mbr_initials: mockMember.firstName[0].toUpperCase() + mockMember.lastName[0].toUpperCase(),
-        created: reformatDate(mockMember.createdAt.toString(), momentFormats.dateTime),
+        created: reformatDate(mockMember.createdAt.toString(), momentFormats.mysqlDateTime),
         app_user: true,
         intervention_group: true,
         language: Language.en,
@@ -460,16 +466,16 @@ describe('Commands: AnalyticsService', () => {
         city: mockMember.address.city,
         state: mockMember.address.state,
         zip_code: mockMember.zipCode,
-        admit_date: '2021/01/13',
-        discharge_date: '2021/01/23',
+        admit_date: '2021-01-13',
+        discharge_date: '2021-01-23',
         los: 10,
         days_since_discharge: 10,
         active: true,
         graduated: false,
-        graduation_date: '2021/04/23',
-        dc_summary_load_date: '2021/01/18',
+        graduation_date: '2021-04-23',
+        dc_summary_load_date: '2021-01-18',
         dc_summary_received: true,
-        dc_instructions_load_date: '2021/01/08',
+        dc_instructions_load_date: '2021-01-08',
         dc_instructions_received: true,
         first_activation_score: 1,
         last_activation_score: 4,
@@ -484,12 +490,15 @@ describe('Commands: AnalyticsService', () => {
         honorific: mockMember.honorific,
         phone: mockMember.phone,
         platform: mockMemberConfig.platform,
-        updated: reformatDate(mockMember.updatedAt.toString(), momentFormats.dateTime),
+        updated: reformatDate(mockMember.updatedAt.toString(), momentFormats.mysqlDateTime),
         app_first_login: reformatDate(
           mockMemberConfig.firstLoggedInAt.toString(),
-          momentFormats.dateTime,
+          momentFormats.mysqlDateTime,
         ),
-        app_last_login: reformatDate(mockMemberConfig.updatedAt.toString(), momentFormats.dateTime),
+        app_last_login: reformatDate(
+          mockMemberConfig.updatedAt.toString(),
+          momentFormats.mysqlDateTime,
+        ),
         coach_id: mockPrimaryUser.id,
         org_id: mockOrg.id,
         org_name: mockOrg.name,
@@ -510,8 +519,8 @@ describe('Commands: AnalyticsService', () => {
         memberConfig: { ...mockMemberConfig, firstLoggedInAt: undefined },
         memberDetails: {
           ...mockMember,
-          admitDate: reformatDate(sub(now, { days: 20 }).toString(), momentFormats.date),
-          dischargeDate: reformatDate(sub(now, { days: 10 }).toString(), momentFormats.date),
+          admitDate: reformatDate(sub(now, { days: 20 }).toString(), momentFormats.mysqlDate),
+          dischargeDate: reformatDate(sub(now, { days: 10 }).toString(), momentFormats.mysqlDate),
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
           primaryUser: mockPrimaryUser,
           org: { ...mockOrg, _id: new Types.ObjectId(mockOrg.id) },
@@ -543,7 +552,7 @@ describe('Commands: AnalyticsService', () => {
       expect(data).toEqual({
         customer_id: mockMember.id,
         mbr_initials: mockMember.firstName[0].toUpperCase() + mockMember.lastName[0].toUpperCase(),
-        created: reformatDate(mockMember.createdAt.toString(), momentFormats.dateTime),
+        created: reformatDate(mockMember.createdAt.toString(), momentFormats.mysqlDateTime),
         app_user: true,
         intervention_group: true,
         language: Language.en,
@@ -554,16 +563,16 @@ describe('Commands: AnalyticsService', () => {
         city: mockMember.address.city,
         state: mockMember.address.state,
         zip_code: mockMember.zipCode,
-        admit_date: '2021/01/13',
-        discharge_date: '2021/01/23',
+        admit_date: '2021-01-13',
+        discharge_date: '2021-01-23',
         los: 10,
         days_since_discharge: 10,
         active: true,
         graduated: false,
-        graduation_date: '2021/04/23',
-        dc_summary_load_date: '2021/01/18',
+        graduation_date: '2021-04-23',
+        dc_summary_load_date: '2021-01-18',
         dc_summary_received: true,
-        dc_instructions_load_date: '2021/01/08',
+        dc_instructions_load_date: '2021-01-08',
         dc_instructions_received: true,
         first_activation_score: 1,
         last_activation_score: 4,
@@ -578,7 +587,7 @@ describe('Commands: AnalyticsService', () => {
         honorific: mockMember.honorific,
         phone: mockMember.phone,
         platform: mockMemberConfig.platform,
-        updated: reformatDate(mockMember.updatedAt.toString(), momentFormats.dateTime),
+        updated: reformatDate(mockMember.updatedAt.toString(), momentFormats.mysqlDateTime),
         coach_id: mockPrimaryUser.id,
         org_id: mockOrg.id,
         org_name: mockOrg.name,
@@ -606,7 +615,7 @@ describe('Commands: AnalyticsService', () => {
       expect(data).toEqual({
         customer_id: mockMember.id,
         mbr_initials: mockMember.firstName[0].toUpperCase() + mockMember.lastName[0].toUpperCase(),
-        created: reformatDate(mockMember.createdAt.toString(), momentFormats.dateTime),
+        created: reformatDate(mockMember.createdAt.toString(), momentFormats.mysqlDateTime),
         intervention_group: false,
         age: 40,
         race: mockMember.race,
@@ -622,7 +631,7 @@ describe('Commands: AnalyticsService', () => {
         last_name: mockMember.lastName,
         honorific: mockMember.honorific,
         phone: mockMember.phone,
-        updated: reformatDate(mockMember.updatedAt.toString(), momentFormats.dateTime),
+        updated: reformatDate(mockMember.updatedAt.toString(), momentFormats.mysqlDateTime),
         dc_instructions_received: false,
         dc_summary_received: false,
         active: false,
@@ -640,13 +649,13 @@ describe('Commands: AnalyticsService', () => {
     const graduatedMember = mockGenerateMember();
     graduatedMember.dischargeDate = reformatDate(
       sub(now, { days: GraduationPeriod + 2 }).toString(),
-      momentFormats.date,
+      momentFormats.mysqlDate,
     );
 
     const activeMember = mockGenerateMember();
     activeMember.dischargeDate = reformatDate(
       sub(now, { days: GraduationPeriod - 2 }).toString(),
-      momentFormats.date,
+      momentFormats.mysqlDate,
     );
 
     it('to return a calculated coach data.', async () => {
@@ -660,7 +669,7 @@ describe('Commands: AnalyticsService', () => {
       });
 
       expect(data).toEqual({
-        created: reformatDate(mockPrimaryUser.createdAt.toString(), momentFormats.dateTime),
+        created: reformatDate(mockPrimaryUser.createdAt.toString(), momentFormats.mysqlDateTime),
         user_id: mockPrimaryUser.id,
         first_name: mockPrimaryUser.firstName,
         last_name: mockPrimaryUser.lastName,
@@ -674,6 +683,51 @@ describe('Commands: AnalyticsService', () => {
         max_members: mockPrimaryUser.maxMembers,
         assigned_members: [activeMember.id],
       });
+    });
+  });
+
+  describe('getCaregiversData', () => {
+    let caregiverModelSpy;
+
+    beforeAll(async () => {
+      caregiverModelSpy = jest.spyOn(caregiverModel, 'find');
+    });
+
+    afterEach(() => {
+      caregiverModelSpy.mockReset();
+    });
+
+    it('to return caregiver data objects', async () => {
+      const cg1 = mockGenerateCaregiver();
+      const cg2 = mockGenerateCaregiver();
+
+      caregiverModelSpy.mockReturnValue({
+        lean: () => {
+          return [
+            { ...cg1, _id: new Types.ObjectId(cg1.id) },
+            { ...cg2, _id: new Types.ObjectId(cg2.id) },
+          ];
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+      const data = await analyticsService.getCaregiversData();
+
+      expect(data?.map((entry) => ({ ...entry }))).toEqual([
+        { ...cg1, memberId: cg1.memberId.toString() },
+        { ...cg2, memberId: cg2.memberId.toString() },
+      ]);
+    });
+
+    it('to return empty list of data objects', async () => {
+      caregiverModelSpy.mockReturnValue({
+        lean: () => {
+          return;
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+      const data = await analyticsService.getCaregiversData();
+
+      expect(data).toEqual(undefined);
     });
   });
 });

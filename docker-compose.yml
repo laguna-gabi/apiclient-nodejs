@@ -30,3 +30,12 @@ services:
     volumes:
       - '${TMPDIR:-/tmp}/localstack:/tmp/localstack'
       - '/var/run/docker.sock:/var/run/docker.sock'
+  mysql:
+    image: mysql:5.7
+    container_name: analytics
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=admin
+      - MYSQL_DATABASE=laguna
+    ports:
+      - "3306:3306"

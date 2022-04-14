@@ -2,7 +2,15 @@ import { Types } from 'mongoose';
 import { Appointment, AppointmentStatus, Notes } from '../../src/appointment';
 import { User } from '../../src/user';
 import { RecordingType, UserRole } from '../../src/common';
-import { Member, MemberConfig, Race, ReadmissionRisk, Recording, Sex } from '../../src/member';
+import {
+  Member,
+  MemberConfig,
+  Race,
+  ReadmissionRisk,
+  Recording,
+  Relationship,
+  Sex,
+} from '../../src/member';
 import { Honorific, Language, Platform } from '@argus/pandora';
 import { hosts } from 'config';
 import {
@@ -22,12 +30,14 @@ export const GraduationPeriod = 90;
 
 export const MemberTable = 'harmony_member';
 export const CoachTable = 'harmony_coach';
+export const CaregiverTable = 'harmony_caregiver';
 export const AppointmentTable = 'harmony_appts';
 
 export enum SheetOption {
   members = 'members',
   appointments = 'appointments',
   coachers = 'coachers',
+  caregivers = 'caregivers',
   all = 'all',
 }
 
@@ -70,9 +80,9 @@ export class MemberData {
   drg?: string;
   @Column('varchar', { length: 100, nullable: true })
   drg_desc?: string;
-  @Column('datetime')
+  @Column('datetime', { nullable: true })
   created: string;
-  @Column('datetime')
+  @Column('datetime', { nullable: true })
   updated: string;
   @Column('varchar', { length: 100, nullable: true })
   platform?: Platform;
@@ -156,7 +166,7 @@ export class MemberData {
 export class CoachData {
   @PrimaryColumn('varchar', { length: 100 })
   user_id: string;
-  @Column('datetime')
+  @Column('datetime', { nullable: true })
   created: string;
   @Column('varchar', { length: 100 })
   first_name: string;
@@ -184,6 +194,36 @@ export class CoachData {
   load_datetime?: Date;
   @UpdateDateColumn()
   last_modified_datetime?: Date;
+}
+
+@Entity({ name: CaregiverTable })
+export class CaregiverData {
+  @PrimaryColumn('varchar', { length: 100 })
+  id: string;
+
+  @Column('varchar', { length: 50, name: 'member_id' })
+  memberId: string;
+
+  @Column('varchar', { length: 100, name: 'last_name' })
+  lastName: string;
+
+  @Column('varchar', { length: 100, name: 'first_name' })
+  firstName: string;
+
+  @Column('varchar', { length: 50 })
+  phone: string;
+
+  @Column('varchar', { length: 50, nullable: true })
+  email?: string;
+
+  @Column('varchar', { length: 50 })
+  relationship: Relationship;
+
+  @Column('float', { nullable: true })
+  deleted: boolean;
+
+  @Column('datetime', { nullable: true })
+  created: string;
 }
 
 // AppointmentsMemberData represent the Analytics `appointments` expected spreadsheet columns list

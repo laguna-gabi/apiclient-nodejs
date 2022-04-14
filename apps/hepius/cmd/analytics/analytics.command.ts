@@ -20,6 +20,7 @@ import { Environments, IEventNotifySlack, SlackChannel, SlackIcon } from '@argus
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventType, delay } from '../../src/common';
 import * as Importer from './importer/mysql-import';
+import { CaregiverData, CaregiverTable } from './index';
 
 interface AnalyticsCommandOptions {
   debug?: boolean;
@@ -49,8 +50,13 @@ export class AnalyticsCommand implements CommandRunner {
     // initialize Analytics SQL db
     const { dbUsername, dbPassword } = ExternalConfigs.analytics;
 
-    const username = await this.configsService.getConfig(dbUsername);
-    const password = await this.configsService.getConfig(dbPassword);
+    const { username, password } =
+      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
+        ? analytics
+        : {
+            username: await this.configsService.getConfig(dbUsername),
+            password: await this.configsService.getConfig(dbPassword),
+          };
 
     const AppDataSource = new DataSource({
       type: 'mysql',
@@ -59,7 +65,7 @@ export class AnalyticsCommand implements CommandRunner {
       username,
       password,
       database: analytics.database,
-      entities: [CoachData, AppointmentsMemberData, MemberData],
+      entities: [CoachData, AppointmentsMemberData, MemberData, CaregiverData],
       synchronize: true,
       logging: false,
     });
@@ -150,7 +156,7 @@ export class AnalyticsCommand implements CommandRunner {
       if (options.sheet === SheetOption.members || options.sheet === SheetOption.all) {
         console.debug(
           '\n----------------------------------------------------------------\n' +
-            '--------------- Generating Member Data -------------------------\n' +
+            '---------- Generating Member Data ------------------------------\n' +
             '----------------------------------------------------------------',
         );
 
@@ -176,7 +182,7 @@ export class AnalyticsCommand implements CommandRunner {
       if (options.sheet === SheetOption.appointments || options.sheet === SheetOption.all) {
         console.debug(
           '\n----------------------------------------------------------------\n' +
-            '------------ Generating Appointments Data ----------------------\n' +
+            '---------- Generating Appointments Data ------------------------\n' +
             '----------------------------------------------------------------',
         );
 
@@ -203,7 +209,7 @@ export class AnalyticsCommand implements CommandRunner {
       if (options.sheet === SheetOption.coachers || options.sheet === SheetOption.all) {
         console.debug(
           '\n----------------------------------------------------------------\n' +
-            '------------ Generating Coachers Data --------------------------\n' +
+            '---------- Generating Coachers Data ----------------------------\n' +
             '----------------------------------------------------------------',
         );
 
@@ -221,6 +227,23 @@ export class AnalyticsCommand implements CommandRunner {
             await AppDataSource.manager.save(coachData);
           }),
         );
+      }
+
+      if (options.sheet === SheetOption.caregivers || options.sheet === SheetOption.all) {
+        console.debug(
+          '\n----------------------------------------------------------------\n' +
+            '---------- Generating Caregiver Data ---------------------------\n' +
+            '----------------------------------------------------------------',
+        );
+
+        // Save to Analytics (MySQL) db:
+        const caregiverTable = await this.queryRunner.getTable(CaregiverTable);
+
+        if (caregiverTable) {
+          await this.queryRunner.clearTable(CaregiverTable);
+        }
+
+        await AppDataSource.manager.save(await this.analyticsService.getCaregiversData());
       }
 
       /***************************** Import Data Enrichment  **************************************/

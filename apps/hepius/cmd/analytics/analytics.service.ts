@@ -6,6 +6,7 @@ import {
   AppointmentAttendanceStatus,
   AppointmentsMemberData,
   BaseMember,
+  CaregiverData,
   CoachData,
   CoachDataAggregate,
   GraduationPeriod,
@@ -22,13 +23,21 @@ import {
 import { add, differenceInDays, differenceInSeconds, differenceInYears } from 'date-fns';
 import { Injectable } from '@nestjs/common';
 import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
-import { Member, MemberDocument, MemberService, Recording } from '../../src/member';
+import {
+  Caregiver,
+  CaregiverDocument,
+  Member,
+  MemberDocument,
+  MemberService,
+  Recording,
+} from '../../src/member';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model, Types } from 'mongoose';
 import { StorageService } from '../../src/providers';
 import { User, UserDocument } from '../../src/user';
 import * as fs from 'fs';
 import { json2csv } from 'json-2-csv';
+import { omit } from 'lodash';
 
 @Injectable()
 export class AnalyticsService {
@@ -40,6 +49,8 @@ export class AnalyticsService {
     @InjectConnection() private connection: Connection,
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
+    @InjectModel(Caregiver.name)
+    private readonly caregiverModel: Model<CaregiverDocument>,
   ) {}
 
   private userData: Map<string, string>;
@@ -189,6 +200,32 @@ export class AnalyticsService {
     ]);
   }
 
+  async getCaregiversData(): Promise<CaregiverData[]> {
+    const caregivers: (CaregiverDocument & { createdAt: Date; updatedAt: Date })[] =
+      await this.caregiverModel.find().lean();
+
+    if (caregivers) {
+      return Promise.all(
+        caregivers?.map(async (caregiver) => {
+          const caregiverData = new CaregiverData();
+          Object.assign(
+            caregiverData,
+            omit(
+              {
+                ...caregiver,
+                id: caregiver._id.toString(),
+                memberId: caregiver.memberId.toString(),
+                created: reformatDate(caregiver.createdAt?.toString(), momentFormats.mysqlDateTime),
+              },
+              ['_id'],
+            ),
+          );
+          return caregiverData;
+        }),
+      );
+    }
+  }
+
   async getCoachersDataAggregate(): Promise<CoachDataAggregate[]> {
     return this.userModel.aggregate([
       {
@@ -264,15 +301,15 @@ export class AnalyticsService {
       first_name: member.memberDetails.firstName,
       last_name: member.memberDetails.lastName,
       honorific: member.memberDetails.honorific,
-      dob: reformatDate(member.memberDetails.dateOfBirth, momentFormats.date),
+      dob: reformatDate(member.memberDetails.dateOfBirth, momentFormats.mysqlDate),
       phone: member.memberDetails.phone,
       phone_secondary: member.memberDetails.phoneSecondary,
       email: member.memberDetails.email,
       readmission_risk: member.memberDetails.readmissionRisk,
       drg: member.memberDetails.drg,
       drg_desc: member.memberDetails.drgDesc,
-      created: reformatDate(member.memberDetails.createdAt.toString(), momentFormats.dateTime),
-      updated: reformatDate(member.memberDetails.updatedAt.toString(), momentFormats.dateTime),
+      created: reformatDate(member.memberDetails.createdAt.toString(), momentFormats.mysqlDateTime),
+      updated: reformatDate(member.memberDetails.updatedAt.toString(), momentFormats.mysqlDateTime),
       app_user:
         member.memberConfig &&
         (member.memberConfig?.platform === Platform.android ||
@@ -287,10 +324,10 @@ export class AnalyticsService {
       state: member.memberDetails.address?.state,
       zip_code: member.memberDetails.zipCode,
       admit_date: member.memberDetails.admitDate
-        ? reformatDate(member.memberDetails.admitDate, momentFormats.date)
+        ? reformatDate(member.memberDetails.admitDate, momentFormats.mysqlDate)
         : undefined,
       discharge_date: member.memberDetails.dischargeDate
-        ? reformatDate(member.memberDetails.dischargeDate, momentFormats.date)
+        ? reformatDate(member.memberDetails.dischargeDate, momentFormats.mysqlDate)
         : undefined,
       los: this.calculateLos(member.memberDetails.admitDate, member.memberDetails.dischargeDate),
       days_since_discharge: daysSinceDischarge,
@@ -298,11 +335,11 @@ export class AnalyticsService {
       graduated: daysSinceDischarge >= GraduationPeriod,
       graduation_date: this.calculateGraduationDate(member.memberDetails.dischargeDate),
       dc_summary_load_date: dcSummaryLoadDate
-        ? reformatDate(dcSummaryLoadDate.toString(), momentFormats.date)
+        ? reformatDate(dcSummaryLoadDate.toString(), momentFormats.mysqlDate)
         : undefined,
       dc_summary_received: !!dcSummaryLoadDate,
       dc_instructions_load_date: dcInstructionsLoadDate
-        ? reformatDate(dcInstructionsLoadDate.toString(), momentFormats.date)
+        ? reformatDate(dcInstructionsLoadDate.toString(), momentFormats.mysqlDate)
         : undefined,
       dc_instructions_received: !!dcInstructionsLoadDate,
       first_activation_score: firstActivationScore,
@@ -316,10 +353,10 @@ export class AnalyticsService {
       platform: member.memberConfig?.platform,
       app_first_login:
         member.memberConfig?.firstLoggedInAt &&
-        reformatDate(member.memberConfig.firstLoggedInAt.toString(), momentFormats.dateTime),
+        reformatDate(member.memberConfig.firstLoggedInAt.toString(), momentFormats.mysqlDateTime),
       app_last_login:
         member.memberConfig?.firstLoggedInAt &&
-        reformatDate(member.memberConfig.updatedAt.toString(), momentFormats.dateTime),
+        reformatDate(member.memberConfig.updatedAt.toString(), momentFormats.mysqlDateTime),
       org_name: member.memberDetails.org?.name,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore
@@ -338,7 +375,7 @@ export class AnalyticsService {
   // Description: transform a coach aggregated data to a calculated CSV entry representation (`coach` sheet)
   buildCoachData(data: CoachDataAggregate): CoachData {
     return {
-      created: reformatDate(data.user.createdAt.toString(), momentFormats.dateTime),
+      created: reformatDate(data.user.createdAt.toString(), momentFormats.mysqlDateTime),
       user_id: data._id.toString(),
       first_name: data.user.firstName,
       last_name: data.user.lastName,
@@ -364,7 +401,10 @@ export class AnalyticsService {
   // Description: transform a member aggregated data to a calculated CSV entry representation (`appointments` sheet)
   buildAppointmentsMemberData(member: MemberDataAggregate): AppointmentsMemberData[] {
     // Member/General details: calculated once for all entries
-    const created = reformatDate(member.memberDetails.createdAt.toString(), momentFormats.date);
+    const created = reformatDate(
+      member.memberDetails.createdAt.toString(),
+      momentFormats.mysqlDate,
+    );
     const customer_id = member._id.toString();
     const mbr_initials = this.getMemberInitials({
       firstName: member.memberDetails.firstName,
@@ -409,8 +449,8 @@ export class AnalyticsService {
         const recordingsSummary = this.getRecordingsSummary(appointment.recordings);
 
         results.push({
-          created: reformatDate(appointment?.createdAt?.toString(), momentFormats.dateTime),
-          updated: reformatDate(appointment?.updatedAt?.toString(), momentFormats.dateTime),
+          created: reformatDate(appointment?.createdAt?.toString(), momentFormats.mysqlDateTime),
+          updated: reformatDate(appointment?.updatedAt?.toString(), momentFormats.mysqlDateTime),
           recap: appointment?.notesData?.recap,
           strengths: appointment?.notesData?.strengths,
           member_plan: appointment?.notesData?.memberActionItem,
@@ -424,7 +464,7 @@ export class AnalyticsService {
           mbr_initials,
           appt_number: appointment.noShow ? undefined : count,
           chat_id: appointment._id.toString(),
-          appt_date: reformatDate(startDateTime.toString(), momentFormats.date),
+          appt_date: reformatDate(startDateTime.toString(), momentFormats.mysqlDate),
           appt_time_ct: reformatDate(startDateTime.toString(), momentFormats.time),
           appt_status: this.getAppointmentsStatus(appointment.status, appointment.noShow),
           appt_day_of_week_name: reformatDate(startDateTime.toString(), momentFormats.dayOfWeek),
@@ -542,7 +582,7 @@ export class AnalyticsService {
     if (dischargeDate) {
       return reformatDate(
         add(Date.parse(dischargeDate), { days: GraduationPeriod }).toString(),
-        momentFormats.date,
+        momentFormats.mysqlDate,
       );
     }
   }

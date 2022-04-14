@@ -96,6 +96,8 @@
   "maxAlertGapInMin": 35791,
   "analytics": {
     "host": "localhost",
+    "username": "root",
+    "password": "admin",
     "database": "laguna",
     "storage": "laguna-analytics",
     "dataEnrichmentKey": "scripts/data_enrichment.sql"
