@@ -27,3 +27,4 @@ export * as m20220328135141 from './20220328135141-update-who5-questionnaire-tex
 export * as m20220411124750 from './20220411124750-rename-maxCustomers-to-maxMembers';
 export * as m20220411171322 from './20220411171322-replace-datetime-to-only-date';
 export * as m20220413113830 from './20220413113830-update-date-format';
+export * as m20220414144809 from './20220414144809-set-isGraduated';

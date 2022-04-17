@@ -87,6 +87,10 @@ export class MemberConfig {
   @Field(() => Language)
   language: Language;
 
+  @Prop({ type: Boolean, default: defaultMemberParams.isGraduated })
+  @Field(() => Boolean)
+  isGraduated: boolean;
+
   @Field(() => String, { nullable: false })
   articlesPath: string;
 

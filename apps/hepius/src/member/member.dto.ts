@@ -99,6 +99,7 @@ export const defaultMemberParams = {
   honorific: Honorific.mx,
   roles: [MemberRole.member],
   race: Race.white,
+  isGraduated: false,
 };
 
 export const NotNullableMemberKeys = [
@@ -497,6 +498,15 @@ export class GetMemberUploadGeneralDocumentLinkParams extends BaseMemberGeneralD
 
 @InputType()
 export class DeleteMemberGeneralDocumentParams extends BaseMemberGeneralDocuments {}
+
+@InputType()
+export class GraduateMemberParams {
+  @Field(() => String)
+  id: string;
+
+  @Field(() => Boolean)
+  isGraduated: boolean;
+}
 
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************

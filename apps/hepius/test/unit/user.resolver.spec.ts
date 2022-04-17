@@ -77,7 +77,7 @@ describe('UserResolver', () => {
       spyOnServiceInsert = jest.spyOn(service, 'insert');
       spyOnServiceUpdateAuthId = jest.spyOn(service, 'updateAuthId');
       spyOnServiceDelete = jest.spyOn(service, 'delete');
-      spyOnCognitoAddClient = jest.spyOn(cognitoService, 'addClient');
+      spyOnCognitoAddClient = jest.spyOn(cognitoService, 'addUser');
     });
 
     afterEach(() => {
@@ -410,7 +410,7 @@ describe('UserResolver', () => {
       const result = await resolver.disableUser(userParams.id);
 
       expect(result).toBeTruthy();
-      expect(spyOnCognitoServiceDisableClient).toBeCalledWith(userParams.firstName);
+      expect(spyOnCognitoServiceDisableClient).toBeCalledWith(userParams.firstName.toLowerCase());
 
       spyOnCognitoServiceDisableClient.mockReset();
     });
@@ -442,7 +442,7 @@ describe('UserResolver', () => {
       const result = await resolver.enableUser(userParams.id);
 
       expect(result).toBeTruthy();
-      expect(spyOnCognitoServiceEnableClient).toBeCalledWith(userParams.firstName);
+      expect(spyOnCognitoServiceEnableClient).toBeCalledWith(userParams.firstName.toLowerCase());
 
       spyOnCognitoServiceEnableClient.mockReset();
     });

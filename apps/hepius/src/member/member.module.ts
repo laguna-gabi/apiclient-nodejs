@@ -5,15 +5,21 @@ import * as mongooseDelete from 'mongoose-delete';
 import {
   ActionItem,
   ActionItemDto,
+  Activity,
+  ActivityDto,
   Caregiver,
   CaregiverDto,
   ControlMember,
   ControlMemberDto,
   DismissedAlert,
   DismissedAlertDto,
+  ExternalAppointment,
+  ExternalScheduledAppointmentDto,
   Journal,
   JournalDto,
   Member,
+  MemberAdmission,
+  MemberAdmissionDto,
   MemberConfig,
   MemberConfigDto,
   MemberController,
@@ -21,7 +27,11 @@ import {
   MemberRecordingDto,
   MemberResolver,
   MemberService,
+  Procedure,
+  ProcedureDto,
   Recording,
+  WoundCare,
+  WoundCareDto,
 } from '.';
 import { Appointment, AppointmentDto } from '../appointment';
 import { CommonModule } from '../common';
@@ -50,6 +60,11 @@ import { UserModule } from '../user';
       { name: Todo.name, schema: TodoDto },
       { name: ActionItem.name, schema: ActionItemDto },
       { name: Member.name, schema: MemberDto },
+      { name: Procedure.name, schema: ProcedureDto },
+      { name: ExternalAppointment.name, schema: ExternalScheduledAppointmentDto },
+      { name: Activity.name, schema: ActivityDto },
+      { name: WoundCare.name, schema: WoundCareDto },
+      { name: MemberAdmission.name, schema: MemberAdmissionDto },
     ]),
     MongooseModule.forFeatureAsync([
       {

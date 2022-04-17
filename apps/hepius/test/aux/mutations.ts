@@ -28,6 +28,7 @@ import {
   CreateTaskParams,
   DeleteDischargeDocumentParams,
   DeleteMemberParams,
+  GraduateMemberParams,
   Journal,
   Member,
   NotifyContentParams,
@@ -1960,5 +1961,34 @@ export class Mutations {
     );
 
     return deleteCarePlan;
+  };
+
+  graduateMember = async ({
+    graduateMemberParams,
+    missingFieldError,
+    invalidFieldsErrors,
+  }: {
+    graduateMemberParams: GraduateMemberParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+  }): Promise<void> => {
+    const requestHeaders = this.defaultAdminRequestHeaders;
+    await this.client
+      .request(
+        gql`
+          mutation graduateMember($graduateMemberParams: GraduateMemberParams!) {
+            graduateMember(graduateMemberParams: $graduateMemberParams)
+          }
+        `,
+        { graduateMemberParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
   };
 }

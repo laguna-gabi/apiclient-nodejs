@@ -1,7 +1,6 @@
 import {
   CancelNotificationType,
   ExternalKey,
-  Honorific,
   NotificationType,
   Platform,
   generateZipCode,
@@ -16,6 +15,7 @@ import {
   AddCaregiverParams,
   CancelNotifyParams,
   CreateMemberParams,
+  Honorific,
   NotifyParams,
   Sex,
   UpdateMemberParams,

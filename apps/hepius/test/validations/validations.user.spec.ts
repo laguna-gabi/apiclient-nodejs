@@ -149,7 +149,7 @@ describe('Validations - user', () => {
     const createUserParams: CreateUserParams = generateCreateUserParams();
     delete createUserParams[params.field];
 
-    handler.cognitoService.spyOnCognitoServiceAddClient.mockResolvedValueOnce(v4());
+    handler.cognitoService.spyOnCognitoServiceAddUser.mockResolvedValueOnce(v4());
     const { authId } = await handler.mutations.createUser({ createUserParams });
 
     const response = await handler.queries.getUser({

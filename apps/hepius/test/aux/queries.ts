@@ -632,6 +632,7 @@ export class Queries {
               articlesPath
               firstLoggedInAt
               language
+              isGraduated
               updatedAt
             }
           }

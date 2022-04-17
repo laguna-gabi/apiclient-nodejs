@@ -1,7 +1,6 @@
 import {
   AppointmentInternalKey,
   ChatInternalKey,
-  Honorific,
   Language,
   Platform,
   generatePhone,
@@ -48,6 +47,7 @@ import {
   DismissedAlert,
   DismissedAlertDocument,
   DismissedAlertDto,
+  Honorific,
   ImageFormat,
   InternalCreateMemberParams,
   Journal,
@@ -69,6 +69,7 @@ import {
   Sex,
   TaskStatus,
   UpdateMemberParams,
+  defaultMemberParams,
 } from '../../src/member';
 import { Org, OrgDocument, OrgDto } from '../../src/org';
 import { Internationalization } from '../../src/providers';
@@ -2276,6 +2277,7 @@ describe('MemberService', () => {
       expect(configs1.isTodoNotificationsEnabled).toEqual(params1.isTodoNotificationsEnabled);
       expect(configs1.platform).toEqual(params1.platform);
       expect(configs1.language).toEqual(params1.language);
+      expect(configs1.isGraduated).toEqual(defaultMemberParams.isGraduated);
 
       const params2 = await generateUpdateMemberConfigParams({
         memberId: generateId(id),
@@ -2298,6 +2300,7 @@ describe('MemberService', () => {
       expect(configs2.isRecommendationsEnabled).toEqual(params2.isRecommendationsEnabled);
       expect(configs2.isTodoNotificationsEnabled).toEqual(params2.isTodoNotificationsEnabled);
       expect(configs2.language).toEqual(params2.language);
+      expect(configs2.isGraduated).toEqual(defaultMemberParams.isGraduated);
     });
 
     it('should update only isPushNotificationsEnabled', async () => {
@@ -2684,6 +2687,21 @@ describe('MemberService', () => {
       await expect(service.replaceMemberOrg(generateReplaceMemberOrgParams())).rejects.toThrow(
         Errors.get(ErrorType.memberNotFound),
       );
+    });
+  });
+
+  describe('graduate', () => {
+    it('should set graduate on existing member', async () => {
+      const id = await generateMember();
+      await service.graduate({ id, isGraduated: true });
+
+      const result1 = await service.getMemberConfig(id);
+      expect(result1.isGraduated).toBeTruthy();
+
+      await service.graduate({ id, isGraduated: false });
+
+      const result2 = await service.getMemberConfig(id);
+      expect(result2.isGraduated).toBeFalsy();
     });
   });
 

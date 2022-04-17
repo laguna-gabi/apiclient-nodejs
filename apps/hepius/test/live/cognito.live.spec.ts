@@ -31,10 +31,10 @@ describe('live: cognito', () => {
       phone: generatePhone(),
     };
 
-    const authId = await cognitoService.addClient(user);
+    const authId = await cognitoService.addUser(user);
     expect(authId).not.toBeUndefined();
 
-    const currentClient = await getClient(user.firstName);
+    const currentClient = await getClient(user.firstName.toLowerCase());
     expect(currentClient.Enabled).toBeTruthy();
     expect(currentClient.Username).toEqual(user.firstName.toLowerCase());
     expect(currentClient.UserAttributes).toEqual([
@@ -45,21 +45,23 @@ describe('live: cognito', () => {
       { Name: 'email', Value: user.email },
     ]);
 
-    const disableResult = await cognitoService.disableClient(user.firstName);
+    const disableResult = await cognitoService.disableClient(user.firstName.toLowerCase());
     expect(disableResult).toBeTruthy();
-    let isEnabled = await cognitoService.isClientEnabled(user.firstName);
+    let isEnabled = await cognitoService.isClientEnabled(user.firstName.toLowerCase());
     expect(isEnabled).toBeFalsy();
 
-    const enableResult = await cognitoService.enableClient(user.firstName);
+    const enableResult = await cognitoService.enableClient(user.firstName.toLowerCase());
     expect(enableResult).toBeTruthy();
-    isEnabled = await cognitoService.isClientEnabled(user.firstName);
+    isEnabled = await cognitoService.isClientEnabled(user.firstName.toLowerCase());
     expect(isEnabled).toBeTruthy();
 
-    const deleteResult = await cognitoService.deleteClient(user.firstName);
+    const deleteResult = await cognitoService.deleteClient(user.firstName.toLowerCase());
     expect(deleteResult).toBeTruthy();
-    await expect(getClient(user.firstName)).rejects.toThrow(new Error('User does not exist.'));
+    await expect(getClient(user.firstName.toLowerCase())).rejects.toThrow(
+      new Error('User does not exist.'),
+    );
 
-    isEnabled = await cognitoService.isClientEnabled(user.firstName);
+    isEnabled = await cognitoService.isClientEnabled(user.firstName.toLowerCase());
     expect(isEnabled).toBeFalsy();
   }, 10000);
 

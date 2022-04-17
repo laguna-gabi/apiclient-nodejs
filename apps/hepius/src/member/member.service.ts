@@ -23,6 +23,7 @@ import {
   DismissedAlert,
   DismissedAlertDocument,
   EmbeddedMemberProperties,
+  GraduateMemberParams,
   InternalCreateMemberParams,
   Journal,
   JournalDocument,
@@ -300,6 +301,13 @@ export class MemberService extends BaseService {
         },
       },
     ]);
+  }
+
+  async graduate(graduateParams: GraduateMemberParams) {
+    await this.memberConfigModel.findOneAndUpdate(
+      { memberId: new Types.ObjectId(graduateParams.id) },
+      { $set: { isGraduated: graduateParams.isGraduated } },
+    );
   }
 
   @OnEvent(EventType.onNewAppointment, { async: true })

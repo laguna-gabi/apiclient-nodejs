@@ -18,11 +18,12 @@ export class CognitoService {
    * @param user
    * @return authId
    */
-  async addClient(user: { firstName: string; email: string; phone: string }): Promise<string> {
-    this.logger.info(user, CognitoService.name, this.addClient.name);
+  async addUser(user: { firstName: string; email: string; phone: string }): Promise<string> {
+    this.logger.info(user, CognitoService.name, this.addUser.name);
 
     const params: CognitoIdentityServiceProvider.Types.AdminCreateUserRequest = {
-      ...this.generateParams(user.firstName),
+      UserPoolId: aws.cognito.userPoolId,
+      Username: user.firstName.toLowerCase(),
       TemporaryPassword: '1qaz2wsx',
       DesiredDeliveryMediums: ['EMAIL'],
       UserAttributes: [
@@ -52,7 +53,9 @@ export class CognitoService {
   async disableClient(userName: string): Promise<boolean> {
     this.logger.info({ userName }, CognitoService.name, this.disableClient.name);
     try {
-      await this.cognito.adminDisableUser(this.generateParams(userName)).promise();
+      await this.cognito
+        .adminDisableUser({ UserPoolId: aws.cognito.userPoolId, Username: userName })
+        .promise();
       return true;
     } catch (ex) {
       if (ex?.code !== 'UserNotFoundException') {
@@ -65,7 +68,9 @@ export class CognitoService {
   async enableClient(userName: string): Promise<boolean> {
     this.logger.info({ userName }, CognitoService.name, this.enableClient.name);
     try {
-      await this.cognito.adminEnableUser(this.generateParams(userName)).promise();
+      await this.cognito
+        .adminEnableUser({ UserPoolId: aws.cognito.userPoolId, Username: userName })
+        .promise();
       return true;
     } catch (ex) {
       if (ex?.code !== 'UserNotFoundException') {
@@ -78,10 +83,14 @@ export class CognitoService {
   async isClientEnabled(userName: string): Promise<boolean> {
     this.logger.info({ userName }, CognitoService.name, this.isClientEnabled.name);
     try {
-      const { Enabled } = await this.cognito.adminGetUser(this.generateParams(userName)).promise();
+      const { Enabled } = await this.cognito
+        .adminGetUser({ UserPoolId: aws.cognito.userPoolId, Username: userName })
+        .promise();
       return Enabled;
     } catch (ex) {
-      this.logger.error(userName, CognitoService.name, this.isClientEnabled.name, formatEx(ex));
+      if (ex?.code !== 'UserNotFoundException') {
+        this.logger.error(userName, CognitoService.name, this.isClientEnabled.name, formatEx(ex));
+      }
       return false;
     }
   }
@@ -89,7 +98,9 @@ export class CognitoService {
   async deleteClient(userName: string): Promise<boolean> {
     this.logger.info({ userName }, CognitoService.name, this.deleteClient.name);
     try {
-      await this.cognito.adminDeleteUser(this.generateParams(userName)).promise();
+      await this.cognito
+        .adminDeleteUser({ UserPoolId: aws.cognito.userPoolId, Username: userName })
+        .promise();
       return true;
     } catch (ex) {
       if (ex?.code !== 'UserNotFoundException') {
@@ -97,9 +108,5 @@ export class CognitoService {
       }
       return false;
     }
-  }
-
-  private generateParams(userName: string): { UserPoolId: string; Username: string } {
-    return { UserPoolId: aws.cognito.userPoolId, Username: userName.toLowerCase() };
   }
 }
