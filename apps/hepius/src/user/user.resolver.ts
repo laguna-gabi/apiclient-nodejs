@@ -54,7 +54,7 @@ export class UserResolver {
     const { id } = await this.userService.insert(createUserParams);
     let authId;
     try {
-      authId = await this.cognitoService.addClient(createUserParams);
+      authId = await this.cognitoService.addUser(createUserParams);
     } catch (ex) {
       await this.userService.delete(id);
       this.logger.error(createUserParams, UserResolver.name, this.createUser.name, formatEx(ex));
@@ -116,7 +116,7 @@ export class UserResolver {
 
     return Promise.all(
       users.map(async (user) => {
-        const isEnabled = await this.cognitoService.isClientEnabled(user.firstName);
+        const isEnabled = await this.cognitoService.isClientEnabled(user.firstName.toLowerCase());
         return { ...user, isEnabled };
       }),
     );
@@ -158,7 +158,7 @@ export class UserResolver {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
 
-    return this.cognitoService.disableClient(user.firstName);
+    return this.cognitoService.disableClient(user.firstName.toLowerCase());
   }
 
   @Mutation(() => Boolean)
@@ -172,7 +172,7 @@ export class UserResolver {
       throw new Error(Errors.get(ErrorType.userNotFound));
     }
 
-    return this.cognitoService.enableClient(user.firstName);
+    return this.cognitoService.enableClient(user.firstName.toLowerCase());
   }
 
   protected notifyUpdatedUserConfig(user: User) {
