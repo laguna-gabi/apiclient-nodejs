@@ -4,6 +4,7 @@ export * from './actionItem.dto';
 export * from './journal.dto';
 export * from './member.dto';
 export * from './memberConfig.dto';
+export * from './memberAdmission.dto';
 export * from './member.recording.dto';
 export * from './caregiver.dto';
 export * from './alert.dto';

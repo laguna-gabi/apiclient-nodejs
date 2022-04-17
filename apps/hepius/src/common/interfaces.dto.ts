@@ -124,6 +124,13 @@ export enum MemberIdParamType {
 
 export type PhoneType = 'landline' | 'mobile' | 'voip';
 
+export enum ChangeType {
+  create = 'create',
+  update = 'update',
+  delete = 'delete',
+}
+registerEnumType(ChangeType, { name: 'ChangeType' });
+
 /**************************************************************************************************
  **************************************** Questionnaire *******************************************
  *************************************************************************************************/
