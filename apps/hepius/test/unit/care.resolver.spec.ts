@@ -122,14 +122,17 @@ describe('CareResolver', () => {
     let spyOnServiceGetMemberCarePlans;
     let spyOnServiceUpdateCarePlan;
     let spyOnServiceGetCarePlanTypes;
+    let spyOnServiceDeleteCarePlan;
 
     beforeEach(() => {
       spyOnServiceCreateCarePlan = jest.spyOn(service, 'createCarePlan');
       spyOnServiceGetMemberCarePlans = jest.spyOn(service, 'getMemberCarePlans');
       spyOnServiceUpdateCarePlan = jest.spyOn(service, 'updateCarePlan');
       spyOnServiceGetCarePlanTypes = jest.spyOn(service, 'getCarePlanTypes');
+      spyOnServiceDeleteCarePlan = jest.spyOn(service, 'deleteCarePlan');
       spyOnServiceCreateCarePlan.mockImplementationOnce(async () => undefined);
       spyOnServiceUpdateCarePlan.mockImplementationOnce(async () => true);
+      spyOnServiceDeleteCarePlan.mockImplementationOnce(async () => true);
     });
 
     afterEach(() => {
@@ -137,6 +140,7 @@ describe('CareResolver', () => {
       spyOnServiceGetMemberCarePlans.mockReset();
       spyOnServiceUpdateCarePlan.mockReset();
       spyOnServiceGetCarePlanTypes.mockReset();
+      spyOnServiceDeleteCarePlan.mockReset();
     });
 
     it('should create a care plan', async () => {
@@ -166,6 +170,18 @@ describe('CareResolver', () => {
     it('should get all carePlanTypes', async () => {
       await resolver.getCarePlanTypes();
       expect(spyOnServiceGetCarePlanTypes).toBeCalled();
+    });
+
+    it('should successfully delete a care plan', async () => {
+      spyOnServiceDeleteCarePlan.mockImplementationOnce(async () => true);
+
+      const userId = generateId();
+      const id = generateId();
+      const result = await resolver.deleteCarePlan(userId, id);
+      expect(result).toBeTruthy();
+
+      expect(spyOnServiceDeleteCarePlan).toBeCalledTimes(1);
+      expect(spyOnServiceDeleteCarePlan).toBeCalledWith(id, userId);
     });
   });
 

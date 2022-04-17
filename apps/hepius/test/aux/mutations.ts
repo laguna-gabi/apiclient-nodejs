@@ -1943,6 +1943,26 @@ export class Mutations {
     return updateRedFlag;
   };
 
+  deleteCarePlan = async ({
+    id,
+    requestHeaders = this.defaultUserRequestHeaders,
+  }: {
+    id: string;
+    requestHeaders?;
+  }): Promise<boolean> => {
+    const { deleteCarePlan } = await this.client.request(
+      gql`
+        mutation deleteCarePlan($id: String!) {
+          deleteCarePlan(id: $id)
+        }
+      `,
+      { id },
+      requestHeaders,
+    );
+
+    return deleteCarePlan;
+  };
+
   graduateMember = async ({
     graduateMemberParams,
     missingFieldError,

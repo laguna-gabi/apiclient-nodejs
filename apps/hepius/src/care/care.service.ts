@@ -173,15 +173,13 @@ export class CareService extends BaseService {
   }
 
   async getMemberBarriers(memberId: string): Promise<Barrier[]> {
-    return this.barrierModel
-      .find({ memberId: new Types.ObjectId(memberId) })
-      .populate([
-        {
-          path: 'type',
-          strictPopulate: false,
-          populate: { path: 'carePlanTypes', strictPopulate: false },
-        },
-      ]);
+    return this.barrierModel.find({ memberId: new Types.ObjectId(memberId) }).populate([
+      {
+        path: 'type',
+        strictPopulate: false,
+        populate: { path: 'carePlanTypes', strictPopulate: false },
+      },
+    ]);
   }
 
   async getBarrier(id: string): Promise<Barrier> {
@@ -311,6 +309,15 @@ export class CareService extends BaseService {
 
   async getCarePlanTypes(): Promise<CarePlanType[]> {
     return this.carePlanTypeModel.find({});
+  }
+
+  async deleteCarePlan(id: string, deletedBy: string): Promise<boolean> {
+    const result = await this.carePlanModel.findById(new Types.ObjectId(id));
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.carePlanNotFound));
+    }
+    await result.delete(new Types.ObjectId(deletedBy));
+    return true;
   }
 
   @OnEvent(EventType.onDeletedMember, { async: true })
