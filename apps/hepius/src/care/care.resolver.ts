@@ -14,6 +14,7 @@ import {
   UpdateRedFlagParams,
 } from '.';
 import {
+  Client,
   ErrorType,
   Errors,
   Identifiers,
@@ -131,6 +132,20 @@ export class CareResolver {
     memberId: string,
   ): Promise<CarePlan[]> {
     return this.careService.getMemberCarePlans(memberId);
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async deleteCarePlan(
+    @Client('_id') userId,
+    @Args(
+      'id',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.carePlanIdInvalid)),
+    )
+    id: string,
+  ) {
+    return this.careService.deleteCarePlan(id, userId);
   }
 
   @Mutation(() => Identifiers)

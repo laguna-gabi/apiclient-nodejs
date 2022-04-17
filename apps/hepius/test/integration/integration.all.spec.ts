@@ -1865,214 +1865,240 @@ describe('Integration tests: all', () => {
   });
 
   describe('Care', () => {
-    it('should get red flag types', async () => {
-      const availableRedFlagTypes = await handler.queries.getRedFlagTypes();
-      const { description, id } = handler.redFlagType;
-      expect(availableRedFlagTypes).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id,
-            description,
-          }),
-        ]),
-      );
+    describe('red flag', () => {
+      it('should get red flag types', async () => {
+        const availableRedFlagTypes = await handler.queries.getRedFlagTypes();
+        const { description, id } = handler.redFlagType;
+        expect(availableRedFlagTypes).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id,
+              description,
+            }),
+          ]),
+        );
+      });
+
+      it('should update a red flag', async () => {
+        const {
+          member: { id: memberId },
+        } = await creators.createMemberUserAndOptionalOrg();
+        await submitMockCareWizard(handler, memberId);
+        const memberRedFlags = await handler.queries.getMemberRedFlags({
+          memberId,
+        });
+        expect(memberRedFlags.length).toEqual(1);
+        const redFlagId = memberRedFlags[0].id;
+
+        const updateRedFlagParams = generateUpdateRedFlagParams({
+          id: redFlagId,
+          notes: 'new notes',
+        });
+        const result = await handler.mutations.updateRedFlag({
+          updateRedFlagParams,
+        });
+        expect(result).toBeTruthy();
+
+        // get again to verify the update
+        const updatedMemberRedFlags = await handler.queries.getMemberRedFlags({
+          memberId,
+        });
+        expect(memberRedFlags.length).toEqual(1);
+
+        expect(updatedMemberRedFlags).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              ...memberRedFlags[0],
+              notes: 'new notes',
+            }),
+          ]),
+        );
+      });
     });
 
-    it('should get barrier types', async () => {
-      const availableBarrierTypes = await handler.queries.getBarrierTypes();
-      const { description, domain, id } = handler.barrierType;
-      expect(availableBarrierTypes).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id,
-            description,
-            domain,
-            carePlanTypes: expect.arrayContaining([
-              expect.objectContaining({ id: handler.carePlanType.id }),
-            ]),
-          }),
-        ]),
-      );
+    describe('barrier', () => {
+      it('should get barrier types', async () => {
+        const availableBarrierTypes = await handler.queries.getBarrierTypes();
+        const { description, domain, id } = handler.barrierType;
+        expect(availableBarrierTypes).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id,
+              description,
+              domain,
+              carePlanTypes: expect.arrayContaining([
+                expect.objectContaining({ id: handler.carePlanType.id }),
+              ]),
+            }),
+          ]),
+        );
+      });
+
+      it('should update a barrier', async () => {
+        const {
+          member: { id: memberId },
+          user: { authId },
+        } = await creators.createMemberUserAndOptionalOrg();
+        await submitMockCareWizard(handler, memberId);
+        const memberBarriers = await handler.queries.getMemberBarriers({
+          memberId,
+          requestHeaders: generateRequestHeaders(authId),
+        });
+        expect(memberBarriers.length).toEqual(1);
+        const barrierId = memberBarriers[0].id;
+
+        const updateBarrierParams = generateUpdateBarrierParams({
+          id: barrierId,
+          notes: 'new notes',
+          status: CareStatus.completed,
+        });
+        const result = await handler.mutations.updateBarrier({
+          updateBarrierParams,
+          requestHeaders: generateRequestHeaders(authId),
+        });
+        expect(result).toBeTruthy();
+
+        // get again to verify the update
+        const updatedMemberBarriers = await handler.queries.getMemberBarriers({
+          memberId,
+          requestHeaders: generateRequestHeaders(authId),
+        });
+        expect(memberBarriers.length).toEqual(1);
+
+        expect(updatedMemberBarriers).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              ...memberBarriers[0],
+              notes: 'new notes',
+              status: CareStatus.completed,
+            }),
+          ]),
+        );
+      });
     });
 
-    it('should get care plan types', async () => {
-      const availableCarePlanTypes = await handler.queries.getCarePlanTypes();
-      const { description, isCustom, id } = handler.carePlanType;
-      expect(availableCarePlanTypes).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            description,
-            isCustom,
-            id,
-          }),
-        ]),
-      );
-    });
-
-    it('should update a red flag', async () => {
-      const {
-        member: { id: memberId },
-      } = await creators.createMemberUserAndOptionalOrg();
-      await submitMockCareWizard(handler, memberId);
-      const memberRedFlags = await handler.queries.getMemberRedFlags({
-        memberId,
-      });
-      expect(memberRedFlags.length).toEqual(1);
-      const redFlagId = memberRedFlags[0].id;
-
-      const updateRedFlagParams = generateUpdateRedFlagParams({
-        id: redFlagId,
-        notes: 'new notes',
-      });
-      const result = await handler.mutations.updateRedFlag({
-        updateRedFlagParams,
-      });
-      expect(result).toBeTruthy();
-
-      // get again to verify the update
-      const updatedMemberRedFlags = await handler.queries.getMemberRedFlags({
-        memberId,
-      });
-      expect(memberRedFlags.length).toEqual(1);
-
-      expect(updatedMemberRedFlags).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            ...memberRedFlags[0],
-            notes: 'new notes',
-          }),
-        ]),
-      );
-    });
-
-    it('should update a barrier', async () => {
-      const {
-        member: { id: memberId },
-        user: { authId },
-      } = await creators.createMemberUserAndOptionalOrg();
-      await submitMockCareWizard(handler, memberId);
-      const memberBarriers = await handler.queries.getMemberBarriers({
-        memberId,
-        requestHeaders: generateRequestHeaders(authId),
-      });
-      expect(memberBarriers.length).toEqual(1);
-      const barrierId = memberBarriers[0].id;
-
-      const updateBarrierParams = generateUpdateBarrierParams({
-        id: barrierId,
-        notes: 'new notes',
-        status: CareStatus.completed,
-      });
-      const result = await handler.mutations.updateBarrier({
-        updateBarrierParams,
-        requestHeaders: generateRequestHeaders(authId),
-      });
-      expect(result).toBeTruthy();
-
-      // get again to verify the update
-      const updatedMemberBarriers = await handler.queries.getMemberBarriers({
-        memberId,
-        requestHeaders: generateRequestHeaders(authId),
-      });
-      expect(memberBarriers.length).toEqual(1);
-
-      expect(updatedMemberBarriers).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            ...memberBarriers[0],
-            notes: 'new notes',
-            status: CareStatus.completed,
-          }),
-        ]),
-      );
-    });
-
-    it('should update a care plan', async () => {
-      const {
-        member: { id: memberId },
-        user: { authId },
-      } = await creators.createMemberUserAndOptionalOrg();
-      await submitMockCareWizard(handler, memberId);
-
-      const memberCarePlans = await handler.queries.getMemberCarePlans({
-        memberId,
-        requestHeaders: generateRequestHeaders(authId),
-      });
-      expect(memberCarePlans.length).toEqual(1);
-      const carePlanId = memberCarePlans[0].id;
-
-      const updateCarePlanParams = generateUpdateCarePlanParams({
-        id: carePlanId,
-        notes: 'new notes',
-        status: CareStatus.completed,
-      });
-      const result = await handler.mutations.updateCarePlan({
-        updateCarePlanParams,
-        requestHeaders: generateRequestHeaders(authId),
-      });
-      expect(result).toBeTruthy();
-
-      // get again to verify the update
-      const updatedMemberCarePlans = await handler.queries.getMemberCarePlans({
-        memberId,
-        requestHeaders: generateRequestHeaders(authId),
-      });
-      expect(memberCarePlans.length).toEqual(1);
-
-      expect(updatedMemberCarePlans).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            ...memberCarePlans[0],
-            notes: updateCarePlanParams.notes,
-            status: updateCarePlanParams.status,
-            dueDate: updateCarePlanParams.dueDate.toISOString(),
-          }),
-        ]),
-      );
-    });
-
-    it('should create an additional care plan to an existing barrier', async () => {
-      const {
-        member: { id: memberId },
-        user: { authId },
-      } = await creators.createMemberUserAndOptionalOrg();
-      await submitMockCareWizard(handler, memberId);
-
-      const memberBarriers = await handler.queries.getMemberBarriers({
-        memberId,
-        requestHeaders: generateRequestHeaders(authId),
-      });
-      expect(memberBarriers.length).toEqual(1);
-      const barrierId = memberBarriers[0].id;
-
-      const createCarePlanParams: CreateCarePlanParams = generateCreateCarePlanParams({
-        memberId,
-        barrierId,
-        type: generateCarePlanTypeInput({ id: handler.carePlanType.id }),
+    describe('care plan', () => {
+      it('should get care plan types', async () => {
+        const availableCarePlanTypes = await handler.queries.getCarePlanTypes();
+        const { description, isCustom, id } = handler.carePlanType;
+        expect(availableCarePlanTypes).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              description,
+              isCustom,
+              id,
+            }),
+          ]),
+        );
       });
 
-      const { id } = await handler.mutations.createCarePlan({
-        createCarePlanParams,
-        requestHeaders: generateRequestHeaders(authId),
+      it('should update a care plan', async () => {
+        const {
+          member: { id: memberId },
+          user: { authId },
+        } = await creators.createMemberUserAndOptionalOrg();
+        await submitMockCareWizard(handler, memberId);
+
+        const memberCarePlans = await handler.queries.getMemberCarePlans({
+          memberId,
+          requestHeaders: generateRequestHeaders(authId),
+        });
+        expect(memberCarePlans.length).toEqual(1);
+        const carePlanId = memberCarePlans[0].id;
+
+        const updateCarePlanParams = generateUpdateCarePlanParams({
+          id: carePlanId,
+          notes: 'new notes',
+          status: CareStatus.completed,
+        });
+        const result = await handler.mutations.updateCarePlan({
+          updateCarePlanParams,
+          requestHeaders: generateRequestHeaders(authId),
+        });
+        expect(result).toBeTruthy();
+
+        // get again to verify the update
+        const updatedMemberCarePlans = await handler.queries.getMemberCarePlans({
+          memberId,
+          requestHeaders: generateRequestHeaders(authId),
+        });
+        expect(memberCarePlans.length).toEqual(1);
+
+        expect(updatedMemberCarePlans).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              ...memberCarePlans[0],
+              notes: updateCarePlanParams.notes,
+              status: updateCarePlanParams.status,
+              dueDate: updateCarePlanParams.dueDate.toISOString(),
+            }),
+          ]),
+        );
       });
 
-      // get again to verify the update
-      const memberCarePlans = await handler.queries.getMemberCarePlans({
-        memberId,
-        requestHeaders: generateRequestHeaders(authId),
-      });
-      expect(memberCarePlans.length).toEqual(2);
+      it('should create an additional care plan to an existing barrier', async () => {
+        const {
+          member: { id: memberId },
+          user: { authId },
+        } = await creators.createMemberUserAndOptionalOrg();
+        await submitMockCareWizard(handler, memberId);
 
-      expect(memberCarePlans).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            ...createCarePlanParams,
-            dueDate: createCarePlanParams.dueDate.toISOString(),
-            type: expect.objectContaining({ id: handler.carePlanType.id }),
-            id,
-          }),
-        ]),
-      );
+        const memberBarriers = await handler.queries.getMemberBarriers({
+          memberId,
+          requestHeaders: generateRequestHeaders(authId),
+        });
+        expect(memberBarriers.length).toEqual(1);
+        const barrierId = memberBarriers[0].id;
+
+        const createCarePlanParams: CreateCarePlanParams = generateCreateCarePlanParams({
+          memberId,
+          barrierId,
+          type: generateCarePlanTypeInput({ id: handler.carePlanType.id }),
+        });
+
+        const { id } = await handler.mutations.createCarePlan({
+          createCarePlanParams,
+          requestHeaders: generateRequestHeaders(authId),
+        });
+
+        // get again to verify the update
+        const memberCarePlans = await handler.queries.getMemberCarePlans({
+          memberId,
+          requestHeaders: generateRequestHeaders(authId),
+        });
+        expect(memberCarePlans.length).toEqual(2);
+
+        expect(memberCarePlans).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              ...createCarePlanParams,
+              dueDate: createCarePlanParams.dueDate.toISOString(),
+              type: expect.objectContaining({ id: handler.carePlanType.id }),
+              id,
+            }),
+          ]),
+        );
+      });
+
+      it('should delete a care plan', async () => {
+        const {
+          member: { id: memberId },
+        } = await creators.createMemberUserAndOptionalOrg();
+        await submitMockCareWizard(handler, memberId);
+
+        const memberCarePlans = await handler.queries.getMemberCarePlans({
+          memberId,
+        });
+        expect(memberCarePlans.length).toEqual(1);
+        const carePlanId = memberCarePlans[0].id;
+
+        await handler.mutations.deleteCarePlan({ id: carePlanId });
+
+        const memberCarePlansAfter = await handler.queries.getMemberCarePlans({
+          memberId,
+        });
+        expect(memberCarePlansAfter.length).toEqual(0);
+      });
     });
 
     it("should create care wizard result and get all member's data", async () => {
