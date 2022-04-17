@@ -33,6 +33,7 @@ import {
   Task,
   TaskStatus,
   UpdateJournalTextParams,
+  defaultMemberParams,
 } from '../../src/member';
 import { Internationalization } from '../../src/providers';
 import {
@@ -372,6 +373,7 @@ describe('Integration tests: all', () => {
       isRecommendationsEnabled: true,
       isTodoNotificationsEnabled: true,
       language: Language.en,
+      isGraduated: defaultMemberParams.isGraduated,
       updatedAt: expect.any(String),
     });
 
@@ -394,6 +396,7 @@ describe('Integration tests: all', () => {
       isRecommendationsEnabled: updateMemberConfigParams.isRecommendationsEnabled,
       isTodoNotificationsEnabled: updateMemberConfigParams.isTodoNotificationsEnabled,
       language: Language.en,
+      isGraduated: defaultMemberParams.isGraduated,
       updatedAt: expect.any(String),
     });
   });
@@ -2444,6 +2447,31 @@ describe('Integration tests: all', () => {
     });
 
     expect(getResponse).toEqual(expect.objectContaining(updateUserResponse));
+  });
+
+  it('should graduate and ungraduate a member', async () => {
+    const { member } = await creators.createMemberUserAndOptionalOrg();
+    const deviceId = v4();
+    await handler.mutations.updateMember({ updateMemberParams: { id: member.id, deviceId } });
+
+    const graduate = async (isGraduated: boolean, calledMethod, notCalledMethod) => {
+      await handler.mutations.graduateMember({
+        graduateMemberParams: { id: member.id, isGraduated },
+      });
+
+      const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
+      expect(memberConfig.isGraduated).toEqual(isGraduated);
+
+      expect(calledMethod).toBeCalledWith(deviceId);
+      expect(notCalledMethod).not.toBeCalled();
+      calledMethod.mockReset();
+      notCalledMethod.mockReset();
+    };
+
+    const { spyOnCognitoServiceDisableClient, spyOnCognitoServiceEnableClient } =
+      handler.cognitoService;
+    await graduate(true, spyOnCognitoServiceDisableClient, spyOnCognitoServiceEnableClient);
+    await graduate(false, spyOnCognitoServiceEnableClient, spyOnCognitoServiceDisableClient);
   });
 
   /************************************************************************************************
