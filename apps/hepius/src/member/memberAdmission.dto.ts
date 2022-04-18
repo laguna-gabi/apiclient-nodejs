@@ -14,12 +14,29 @@ export enum ProcedureType {
 }
 registerEnumType(ProcedureType, { name: 'ProcedureType' });
 
+export enum AdmissionType {
+  diagnoses = 'diagnoses',
+  procedures = 'procedures',
+  medications = 'medications',
+  externalScheduledAppointments = 'externalScheduledAppointments',
+  externalToBeScheduledAppointments = 'externalToBeScheduledAppointments',
+  activities = 'activities',
+  woundCares = 'woundCares',
+  dietary = 'dietary',
+}
+registerEnumType(AdmissionType, { name: 'AdmissionType' });
+
 /**************************************************************************************************
  ************************************* Schemas for gql methods ************************************
  *************************************************************************************************/
+export class BaseAdmission {
+  @Field(() => String, { nullable: true })
+  id?: string;
+}
+
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
-export class Procedure extends Identifier {
+export class Procedure extends BaseAdmission {
   @Prop({ type: Date, isNan: true })
   @Field(() => Date, { nullable: true })
   date?: Date;
@@ -151,9 +168,9 @@ export class ChangeAdmissionDiagnosesParams extends ChangeAdmissionBaseParams {
 }
 
 @InputType()
-export class ChangeAdmissionProcedureParams extends ChangeAdmissionBaseParams {
-  @Field(() => Procedure)
-  procedure: Procedure;
+export class ChangeAdmissionProcedureParams extends Procedure {
+  @Field(() => ChangeType)
+  changeType: ChangeType;
 }
 
 @InputType()
@@ -219,6 +236,9 @@ export class ChangeAdmissionParams {
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class MemberAdmission extends Identifier {
+  @Prop({ type: Types.ObjectId, unique: true, index: true })
+  memberId: Types.ObjectId;
+
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   diagnoses?: string;

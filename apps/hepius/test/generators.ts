@@ -58,6 +58,7 @@ import {
   SubmitCareWizardParams,
 } from '../src/care/wizard.dto';
 import {
+  ChangeType,
   ItemType,
   MemberRole,
   RoleTypes,
@@ -75,6 +76,7 @@ import {
   AudioFormat,
   CancelNotifyParams,
   Caregiver,
+  ChangeAdmissionProcedureParams,
   CreateMemberParams,
   CreateTaskParams,
   DeleteDischargeDocumentParams,
@@ -89,6 +91,7 @@ import {
   MemberConfig,
   NotifyContentParams,
   NotifyParams,
+  ProcedureType,
   ReadmissionRisk,
   Relationship,
   ReplaceMemberOrgParams,
@@ -1235,6 +1238,26 @@ export const generateSubmitQuestionnaireResponseParams = ({
 
 export const generateRequestHeaders = (authId: string) => {
   return { Authorization: jwt.sign({ sub: authId }, 'secret') };
+};
+
+/*************************************************************************************************
+ ***************************** ChangeAdmissionParams related methods *****************************
+ ************************************************************************************************/
+export const generateProcedureParams = ({
+  changeType,
+  id,
+}: {
+  changeType: ChangeType;
+  id?: string;
+}): ChangeAdmissionProcedureParams => {
+  const attachIdParam = id ? { id } : {};
+  return {
+    changeType,
+    ...attachIdParam,
+    date: new Date(),
+    procedureType: ProcedureType.diagnostic,
+    text: lorem.sentence(),
+  };
 };
 
 /*************************************************************************************************

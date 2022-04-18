@@ -49,6 +49,9 @@ export enum ErrorType {
   memberNotesAndNurseNotesNotProvided = 9230,
   memberUploadAlreadyExistingGeneralDocument = 9231,
 
+  //member admission
+  memberAdmissionProcedureIdNotFound = 9300,
+
   // Notifications
   notificationMetadataInvalid = 9270,
   notificationMemberPlatformWeb = 9271,
@@ -165,6 +168,7 @@ const phoneFormat =
   `please make sure you've added the country code with (+) in the beginning. ` +
   `${validPhoneExamples}`;
 const objectIdFormat = 'must be a 12 characters string';
+const notFoundPrefix = 'id was not found';
 
 export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.userMinMaxLength.valueOf(), `user ${nameFormat}`],
@@ -174,7 +178,7 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.userAvatarFormat.valueOf(),
     'avatar must be an URL address, for example: www.google.com',
   ],
-  [ErrorType.userNotFound.valueOf(), 'user id was not found'],
+  [ErrorType.userNotFound.valueOf(), `user ${notFoundPrefix}`],
   [ErrorType.slotsParams.valueOf(), 'userId or appointmentId must be provided'],
   [ErrorType.userPhone.valueOf(), phoneFormat],
   [ErrorType.userCanNotBeAssignedToMembers.valueOf(), 'user can not be assigned to member'],
@@ -190,14 +194,14 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.memberDischargeDate.valueOf(), `dischargeDate ${dateInstanceFormat}`],
   [ErrorType.memberEmailFormat.valueOf(), emailFormat],
   [ErrorType.memberTaskDeadline.valueOf(), `deadline ${dateTimeInstanceFormat}`],
-  [ErrorType.memberActionItemIdNotFound.valueOf(), 'action item id was not found'],
-  [ErrorType.memberNotFound.valueOf(), 'member id was not found'],
+  [ErrorType.memberActionItemIdNotFound.valueOf(), `action item ${notFoundPrefix}`],
+  [ErrorType.memberNotFound.valueOf(), `member ${notFoundPrefix}`],
   [ErrorType.memberPrimaryUserIdNotInUsers.valueOf(), 'primaryUserId must exists in usersIds list'],
   [ErrorType.memberAdmitDate.valueOf(), `admitDate ${dateInstanceFormat}`],
   [ErrorType.memberRecordingIdAlreadyExists.valueOf(), `id already exists`],
   [ErrorType.memberRegisterWebPlatform.valueOf(), `cant register member with platform web`],
   [ErrorType.memberInvalidZipCode.valueOf(), `invalid ZIP code`],
-  [ErrorType.memberJournalNotFound.valueOf(), `journal id was not found`],
+  [ErrorType.memberJournalNotFound.valueOf(), `journal ${notFoundPrefix}`],
   [
     ErrorType.memberRegisterForNotificationToken.valueOf(),
     `token must contain only letters and numbers`,
@@ -218,6 +222,7 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.memberUploadAlreadyExistingGeneralDocument.valueOf(),
     `can not upload an already existing document`,
   ],
+  [ErrorType.memberAdmissionProcedureIdNotFound.valueOf(), `procedure ${notFoundPrefix}`],
   [
     ErrorType.notificationMetadataInvalid.valueOf(),
     `when calling type 'text' or 'textSms', 'content' in metadata is required ` +
@@ -254,7 +259,7 @@ export const Errors: Map<ErrorType, string> = new Map([
     // eslint-disable-next-line max-len
     `when calling notify content with contentType answerQuestionnaire questionnaireId must be provided in metadata`,
   ],
-  [ErrorType.appointmentIdNotFound.valueOf(), 'appointment id was not found'],
+  [ErrorType.appointmentIdNotFound.valueOf(), `appointment ${notFoundPrefix}`],
   [ErrorType.appointmentNotBeforeDate.valueOf(), `notBefore ${dateTimeInstanceFormat}`],
   [ErrorType.appointmentNotBeforeDateInThePast.valueOf(), 'notBefore must be in the future'],
   [ErrorType.appointmentStartDate.valueOf(), `start ${dateTimeInstanceFormat}`],
@@ -281,7 +286,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.appointmentIdInvalid.valueOf(), `appointment id ${objectIdFormat}`],
   [ErrorType.orgAlreadyExists.valueOf(), 'organization already exists'],
   [ErrorType.orgTrialDurationOutOfRange.valueOf(), 'trialDuration must not be less than 1'],
-  [ErrorType.availabilityNotFound.valueOf(), 'availability id was not found'],
+  [ErrorType.availabilityNotFound.valueOf(), `availability ${notFoundPrefix}`],
   [ErrorType.availabilityIdInvalid.valueOf(), `availability id ${objectIdFormat}`],
   [ErrorType.communicationMemberUserNotFound.valueOf(), 'member-user communication was not found'],
   [ErrorType.dailyReportQueryDateInvalid.valueOf(), 'daily report query - invalid date format'],
@@ -301,14 +306,14 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.invalidPhoneNumberForMessaging.valueOf(),
     'invalid phone or landline - can not send SMS',
   ],
-  [ErrorType.todoNotFound.valueOf(), 'todo id was not found'],
+  [ErrorType.todoNotFound.valueOf(), `todo ${notFoundPrefix}`],
   [ErrorType.todoIdInvalid.valueOf(), `todo id ${objectIdFormat}`],
   [ErrorType.todoDoneIdInvalid.valueOf(), `todoDone id ${objectIdFormat}`],
   [ErrorType.todoUpdateActionTodo.valueOf(), `can not update action todo`],
   [ErrorType.todoEndActionTodo.valueOf(), `member can not end action todo`],
   [ErrorType.todoInvalidCronExpression.valueOf(), 'invalid cron expression'],
   [ErrorType.todoEndAfterStart.valueOf(), 'end date must be after start date'],
-  [ErrorType.todoDoneNotFound.valueOf(), 'todoDone id was not found'],
+  [ErrorType.todoDoneNotFound.valueOf(), `todoDone ${notFoundPrefix}`],
   [
     ErrorType.todoEndOrUpdateEndedOrUpdatedTodo.valueOf(),
     'can not end or update an already ended or updated todo',
@@ -338,8 +343,8 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.redFlagIdInvalid.valueOf(), 'invalid red flag id'],
   [ErrorType.barrierIdInvalid.valueOf(), 'invalid barrier id'],
   [ErrorType.carePlanIdInvalid.valueOf(), 'invalid care plan id'],
-  [ErrorType.barrierNotFound.valueOf(), 'barrier id was not found'],
-  [ErrorType.carePlanNotFound.valueOf(), 'care plan id was not found'],
+  [ErrorType.barrierNotFound.valueOf(), `barrier ${notFoundPrefix}`],
+  [ErrorType.carePlanNotFound.valueOf(), `care plan ${notFoundPrefix}`],
   [
     ErrorType.carePlanTypeInputInvalid.valueOf(),
     'invalid care plan type input - must be either id or custom',
@@ -376,7 +381,7 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.questionnaireNotAssignableToMember.valueOf(),
     'questionnaire not assignable to member',
   ],
-  [ErrorType.redFlagNotFound.valueOf(), 'red flag id was not found'],
+  [ErrorType.redFlagNotFound.valueOf(), `red flag ${notFoundPrefix}`],
   [ErrorType.carePlanTypeInvalid.valueOf(), 'invalid care plan type'],
   [ErrorType.carePlanTypeNotFound.valueOf(), 'care plan type was not found'],
   [ErrorType.barrierTypeInvalid.valueOf(), 'invalid barrier type'],

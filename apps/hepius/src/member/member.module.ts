@@ -20,6 +20,7 @@ import {
   Member,
   MemberAdmission,
   MemberAdmissionDto,
+  MemberAdmissionService,
   MemberConfig,
   MemberConfigDto,
   MemberController,
@@ -87,7 +88,7 @@ import { UserModule } from '../user';
       },
     ]),
   ],
-  providers: [MemberResolver, MemberService, ConfigsService],
+  providers: [MemberResolver, MemberService, MemberAdmissionService, ConfigsService],
   controllers: [MemberController],
   exports: [MemberService, MongooseModule],
 })
