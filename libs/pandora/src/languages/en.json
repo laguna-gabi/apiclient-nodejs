@@ -14,7 +14,7 @@
             "appointmentRequestLink": ":\n{{scheduleLink}}",
             "newChatMessageFromUser": "Your coach, {{user.firstName}}, sent you a new message.",
             "logReminder": "Track your recovery progress, and share it with your coach.",
-            "newChatMessageFromMember": "You have one new message from your member, {{member.fistName}} {{member.lastName}}.",
+            "newChatMessageFromMember": "You have one new message from your member, {{member.firstName}} {{member.lastName}}.",
             "appointmentScheduledUser": "Hello {{user.firstName}}, an appointment has been added to your schedule on {{appointmentTime}}.",
             "memberNotFeelingWellMessage": "Your member, {{member.firstName}} {{member.lastName}}, logged a score that requires your attention.",
             "addCaregiverDetails": "Tap to add caregiver details",
