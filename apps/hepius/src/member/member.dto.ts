@@ -714,6 +714,9 @@ export class MemberSummary extends Identifier {
 
   @Field(() => String)
   platform: string;
+
+  @Field(() => Boolean)
+  isGraduated: boolean;
 }
 
 @ObjectType()

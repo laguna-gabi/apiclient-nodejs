@@ -60,6 +60,7 @@ describe('Integration tests : getMembers', () => {
           appointmentsCount: 0,
           firstLoggedInAt: memberConfig.firstLoggedInAt,
           platform: memberConfig.platform,
+          isGraduated: member.isGraduated,
         }),
       );
     };

@@ -460,6 +460,7 @@ export class Queries {
               appointmentsCount
               firstLoggedInAt
               platform
+              isGraduated
             }
           }
         `,
