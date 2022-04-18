@@ -1,10 +1,11 @@
 {
   "version": 2,
   "projects": {
+    "clinical-engine": "apps/clinical-engine",
+    "cmd": "libs/cmd",
     "hepius": "apps/hepius",
     "iris": "apps/iris",
-    "cmd": "libs/cmd",
-    "pandora": "libs/pandora",
-    "irisClient": "libs/irisClient"
+    "irisClient": "libs/irisClient",
+    "pandora": "libs/pandora"
   }
 }
