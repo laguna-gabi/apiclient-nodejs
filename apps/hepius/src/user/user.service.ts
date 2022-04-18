@@ -71,7 +71,21 @@ export class UserService extends BaseService {
           as: 'appointments',
         },
       },
-      { $addFields: { currentMembersCount: { $size: '$members' } } },
+      {
+        $addFields: {
+          membersFiltered: {
+            $filter: {
+              input: '$members',
+              as: 'members',
+              cond: {
+                $eq: ['$$members.isGraduated', false],
+              },
+            },
+          },
+        },
+      },
+      { $addFields: { currentMembersCount: { $size: '$membersFiltered' } } },
+      { $unset: 'membersFiltered' },
       { $unset: 'members' },
       { $addFields: { id: '$_id' } },
       { $unset: '_id' },
@@ -352,12 +366,27 @@ export class UserService extends BaseService {
           from: 'members',
           localField: '_id',
           foreignField: 'primaryUserId',
-          as: 'member',
+          as: 'members',
         },
       },
       {
         $project: {
-          members: { $size: '$member' },
+          members: {
+            $filter: {
+              input: '$members',
+              as: 'members',
+              cond: {
+                $eq: ['$$members.isGraduated', false],
+              },
+            },
+          },
+          lastMemberAssignedAt: '$lastMemberAssignedAt',
+          maxMembers: '$maxMembers',
+        },
+      },
+      {
+        $project: {
+          members: { $size: '$members' },
           lastMemberAssignedAt: '$lastMemberAssignedAt',
           maxMembers: '$maxMembers',
         },
