@@ -2,9 +2,9 @@ import { Environments } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { SplitFactory } from '@splitsoftware/splitio';
 import * as SplitIO from '@splitsoftware/splitio/types/splitio';
-import { ConfigsService, ExternalConfigs } from '.';
-import { v4 } from 'uuid';
 import { split } from 'config';
+import { v4 } from 'uuid';
+import { ConfigsService, ExternalConfigs } from '.';
 
 enum Treatment {
   on = 'on',

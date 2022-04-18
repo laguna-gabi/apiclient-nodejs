@@ -1,3 +1,10 @@
+import { BEFORE_ALL_TIMEOUT } from '..';
+import {
+  CreateCarePlanParams,
+  UpdateBarrierParams,
+  UpdateCarePlanParams,
+  UpdateRedFlagParams,
+} from '../../src/care';
 import { ErrorType, Errors } from '../../src/common';
 import { Handler } from '../aux';
 import {
@@ -12,13 +19,6 @@ import {
   generateUpdateCarePlanParams,
   generateUpdateRedFlagParams,
 } from '../generators';
-import {
-  CreateCarePlanParams,
-  UpdateBarrierParams,
-  UpdateCarePlanParams,
-  UpdateRedFlagParams,
-} from '../../src/care';
-import { BEFORE_ALL_TIMEOUT } from '..';
 
 const stringError = `String cannot represent a non string value`;
 

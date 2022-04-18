@@ -1,14 +1,18 @@
-import {
-  ClientCategory,
-  IUpdateClientSettings,
-  InnerQueueTypes,
-  Language,
-  QueueType,
-  mockLogger,
-  mockProcessWarnings,
-} from '@argus/pandora';
+import { ClientCategory, IUpdateClientSettings, InnerQueueTypes } from '@argus/irisClient';
+import { Language, QueueType, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import { internet, lorem, name } from 'faker';
+import { v4 } from 'uuid';
+import {
+  dbDisconnect,
+  defaultModules,
+  generateCreateUserParams,
+  generateGetSlotsParams,
+  generateId,
+  generateUpdateUserParams,
+  mockGenerateUser,
+} from '..';
 import {
   ErrorType,
   Errors,
@@ -18,6 +22,7 @@ import {
   LoggerService,
   UserRole,
 } from '../../src/common';
+import { CognitoService } from '../../src/providers';
 import {
   GetSlotsParams,
   UserController,
@@ -25,18 +30,6 @@ import {
   UserResolver,
   UserService,
 } from '../../src/user';
-import {
-  dbDisconnect,
-  defaultModules,
-  generateCreateUserParams,
-  generateGetSlotsParams,
-  generateId,
-  generateUpdateUserParams,
-  mockGenerateUser,
-} from '../index';
-import { CognitoService } from '../../src/providers';
-import { v4 } from 'uuid';
-import { internet, lorem, name } from 'faker';
 
 describe('UserResolver', () => {
   let module: TestingModule;

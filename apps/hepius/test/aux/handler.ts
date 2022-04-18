@@ -9,6 +9,7 @@ import { GraphQLClient } from 'graphql-request';
 import * as jwt from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import { Consumer } from 'sqs-consumer';
+import { v4 } from 'uuid';
 import { Mutations, Queries } from '.';
 import { generateCreateMemberParams, generateCreateUserParams, generateOrgParams } from '..';
 import { AppModule } from '../../src/app.module';
@@ -110,7 +111,6 @@ import {
   UserService,
 } from '../../src/user';
 import { BaseHandler, dbConnect, dbDisconnect, mockProviders } from '../common';
-import { v4 } from 'uuid';
 
 export class Handler extends BaseHandler {
   sendBird;

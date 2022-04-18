@@ -5,6 +5,16 @@ import { hosts } from 'config';
 import { datatype, lorem } from 'faker';
 import { v4 } from 'uuid';
 import {
+  dbDisconnect,
+  defaultModules,
+  generateCommunication,
+  generateGetCommunicationParams,
+  generateId,
+  generateUniqueUrl,
+  mockGenerateMember,
+  mockGenerateUser,
+} from '..';
+import {
   ErrorType,
   Errors,
   EventType,
@@ -19,16 +29,6 @@ import {
   CommunicationService,
 } from '../../src/communication';
 import { UserService } from '../../src/user';
-import {
-  dbDisconnect,
-  defaultModules,
-  generateCommunication,
-  generateGetCommunicationParams,
-  generateId,
-  generateUniqueUrl,
-  mockGenerateMember,
-  mockGenerateUser,
-} from '../index';
 
 describe('CommunicationResolver', () => {
   let module: TestingModule;

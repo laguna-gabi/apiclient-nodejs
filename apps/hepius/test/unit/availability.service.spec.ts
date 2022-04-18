@@ -2,6 +2,15 @@ import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, Types, model } from 'mongoose';
 import {
+  checkDelete,
+  dbConnect,
+  dbDisconnect,
+  defaultModules,
+  generateAvailabilityInput,
+  generateCreateUserParams,
+  generateId,
+} from '..';
+import {
   Availability,
   AvailabilityDocument,
   AvailabilityDto,
@@ -10,15 +19,6 @@ import {
 } from '../../src/availability';
 import { ErrorType, Errors, LoggerService, defaultTimestampsDbValues } from '../../src/common';
 import { User, UserDocument, UserDto } from '../../src/user';
-import {
-  checkDelete,
-  dbConnect,
-  dbDisconnect,
-  defaultModules,
-  generateAvailabilityInput,
-  generateCreateUserParams,
-  generateId,
-} from '../index';
 
 describe('AvailabilityService', () => {
   let module: TestingModule;

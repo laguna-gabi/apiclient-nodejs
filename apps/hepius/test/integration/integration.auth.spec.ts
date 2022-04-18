@@ -1,5 +1,5 @@
+import { BEFORE_ALL_TIMEOUT, generateRequestHeaders } from '..';
 import { Handler } from '../aux';
-import { BEFORE_ALL_TIMEOUT, generateRequestHeaders } from '../index';
 
 describe('Integration tests : RBAC', () => {
   const handler: Handler = new Handler();

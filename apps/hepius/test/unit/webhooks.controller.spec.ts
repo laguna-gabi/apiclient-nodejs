@@ -2,6 +2,7 @@ import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import { dbDisconnect, defaultModules } from '..';
 import { EventType, IEventOnReceivedChatMessage, LoggerService } from '../../src/common';
 import {
   ConfigsService,
@@ -10,7 +11,6 @@ import {
   TwilioService,
   WebhooksController,
 } from '../../src/providers';
-import { dbDisconnect, defaultModules } from '../index';
 import * as sendBirdAdminMessagePayload from './mocks/webhookSendbirdAdminMessagePayload.json';
 import * as sendBirdNewMessagePayload from './mocks/webhookSendbirdNewMessagePayload.json';
 

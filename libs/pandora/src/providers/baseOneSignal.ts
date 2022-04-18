@@ -1,4 +1,4 @@
-import { CancelNotificationType, NotificationType, Platform } from '../enums';
+import { CancelNotificationType, NotificationType, Platform } from '..';
 
 export abstract class BaseOneSignal {
   protected readonly oneSignalUrl = 'https://onesignal.com/api/v1';

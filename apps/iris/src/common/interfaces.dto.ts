@@ -1,4 +1,4 @@
-import { ContentKey } from '@argus/pandora';
+import { ContentKey } from '@argus/irisClient';
 import { ClientSettings } from '../settings';
 
 export class GetContentsParams {

@@ -1,13 +1,13 @@
 import { generatePhone, mockLogger } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import * as AWS from 'aws-sdk';
+import { AdminGetUserResponse } from 'aws-sdk/clients/cognitoidentityserviceprovider';
+import { aws } from 'config';
+import { name } from 'faker';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
+import { v4 } from 'uuid';
 import { LoggerService } from '../../src/common';
 import { CognitoService } from '../../src/providers';
-import { name } from 'faker';
-import { v4 } from 'uuid';
-import * as AWS from 'aws-sdk';
-import { aws } from 'config';
-import { AdminGetUserResponse } from 'aws-sdk/clients/cognitoidentityserviceprovider';
 
 describe('live: cognito', () => {
   let cognitoService: CognitoService;

@@ -1,13 +1,9 @@
-import {
-  LogInternalKey,
-  NotificationType,
-  generateDispatchId,
-  mockLogger,
-  mockProcessWarnings,
-} from '@argus/pandora';
+import { LogInternalKey, generateDispatchId } from '@argus/irisClient';
+import { NotificationType, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Types } from 'mongoose';
+import { dbDisconnect, defaultModules, generateId } from '..';
 import { EventType, LoggerService, MemberRole } from '../../src/common';
 import {
   DailyReport,
@@ -19,7 +15,6 @@ import {
   DailyReportResolver,
   DailyReportService,
 } from '../../src/dailyReport';
-import { dbDisconnect, defaultModules, generateId } from '../index';
 
 describe('DailyReportResolver', () => {
   let resolver: DailyReportResolver;

@@ -2,9 +2,6 @@ import { general } from 'config';
 import { addMilliseconds } from 'date-fns';
 import { date, lorem } from 'faker';
 import * as request from 'supertest';
-import { EndAppointmentParams, RequestAppointmentParams } from '../../src/appointment';
-import { ErrorType, Errors } from '../../src/common';
-import { Handler } from '../aux';
 import {
   BEFORE_ALL_TIMEOUT,
   generateEndAppointmentParams,
@@ -13,7 +10,10 @@ import {
   generateScheduleAppointmentParams,
   generateUpdateNotesParams,
   urls,
-} from '../index';
+} from '..';
+import { EndAppointmentParams, RequestAppointmentParams } from '../../src/appointment';
+import { ErrorType, Errors } from '../../src/common';
+import { Handler } from '../aux';
 
 const stringError = `String cannot represent a non string value`;
 const floatError = `Float cannot represent non numeric value`;

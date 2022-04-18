@@ -1,5 +1,13 @@
 import { lorem } from 'faker';
 import * as request from 'supertest';
+import { v4 } from 'uuid';
+import {
+  BEFORE_ALL_TIMEOUT,
+  generateCreateUserParams,
+  generateRandomName,
+  generateRequestHeaders,
+  urls,
+} from '..';
 import { ErrorType, Errors, maxLength, minLength } from '../../src/common';
 import {
   CreateUserParams,
@@ -9,14 +17,6 @@ import {
 } from '../../src/user';
 import { Handler } from '../aux';
 import { generateGetSlotsParams, generateId, generateUpdateUserParams } from '../generators';
-import {
-  BEFORE_ALL_TIMEOUT,
-  generateCreateUserParams,
-  generateRandomName,
-  generateRequestHeaders,
-  urls,
-} from '../index';
-import { v4 } from 'uuid';
 
 const stringError = `String cannot represent a non string value`;
 

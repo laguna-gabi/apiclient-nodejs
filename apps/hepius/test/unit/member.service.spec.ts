@@ -1,6 +1,5 @@
+import { AppointmentInternalKey, ChatInternalKey } from '@argus/irisClient';
 import {
-  AppointmentInternalKey,
-  ChatInternalKey,
   Language,
   Platform,
   generatePhone,
@@ -16,6 +15,42 @@ import { isNil, omitBy, pickBy } from 'lodash';
 import { Model, Types, model } from 'mongoose';
 import { performance } from 'perf_hooks';
 import { v4 } from 'uuid';
+import {
+  checkDelete,
+  compareMembers,
+  compareUsers,
+  dbConnect,
+  dbDisconnect,
+  defaultModules,
+  generateAddCaregiverParams,
+  generateCreateMemberParams,
+  generateCreateQuestionnaireParams,
+  generateCreateTaskParams,
+  generateCreateUserParams,
+  generateDateOnly,
+  generateDeleteMemberParams,
+  generateGetMemberUploadJournalImageLinkParams,
+  generateId,
+  generateInternalCreateMemberParams,
+  generateObjectId,
+  generateOrgParams,
+  generateReplaceMemberOrgParams,
+  generateRequestAppointmentParams,
+  generateScheduleAppointmentParams,
+  generateSetGeneralNotesParams,
+  generateSubmitQuestionnaireResponseParams,
+  generateUpdateCaregiverParams,
+  generateUpdateJournalTextParams,
+  generateUpdateMemberConfigParams,
+  generateUpdateMemberParams,
+  generateUpdateRecordingParams,
+  generateUpdateRecordingReviewParams,
+  generateUpdateTaskStatusParams,
+  loadSessionClient,
+  mockGenerateDispatch,
+  mockGenerateQuestionnaireItem,
+  mockGenerateTodo,
+} from '..';
 import {
   Appointment,
   AppointmentDocument,
@@ -85,42 +120,6 @@ import {
 import { NotificationService } from '../../src/services';
 import { Todo, TodoDocument, TodoDto } from '../../src/todo';
 import { User, UserDocument, UserDto } from '../../src/user';
-import {
-  checkDelete,
-  compareMembers,
-  compareUsers,
-  dbConnect,
-  dbDisconnect,
-  defaultModules,
-  generateAddCaregiverParams,
-  generateCreateMemberParams,
-  generateCreateQuestionnaireParams,
-  generateCreateTaskParams,
-  generateCreateUserParams,
-  generateDateOnly,
-  generateDeleteMemberParams,
-  generateGetMemberUploadJournalImageLinkParams,
-  generateId,
-  generateInternalCreateMemberParams,
-  generateObjectId,
-  generateOrgParams,
-  generateReplaceMemberOrgParams,
-  generateRequestAppointmentParams,
-  generateScheduleAppointmentParams,
-  generateSetGeneralNotesParams,
-  generateSubmitQuestionnaireResponseParams,
-  generateUpdateCaregiverParams,
-  generateUpdateJournalTextParams,
-  generateUpdateMemberConfigParams,
-  generateUpdateMemberParams,
-  generateUpdateRecordingParams,
-  generateUpdateRecordingReviewParams,
-  generateUpdateTaskStatusParams,
-  loadSessionClient,
-  mockGenerateDispatch,
-  mockGenerateQuestionnaireItem,
-  mockGenerateTodo,
-} from '../index';
 
 describe('MemberService', () => {
   let module: TestingModule;

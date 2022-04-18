@@ -1,17 +1,14 @@
 import {
   AppointmentInternalKey,
-  AuditType,
   ClientCategory,
   ContentCategories,
   ExternalKey,
   LogInternalKey,
-  NotificationType,
   NotifyCustomKey,
-  Platform,
-  QueueType,
   RegisterInternalKey,
   TodoInternalKey,
-} from '@argus/pandora';
+} from '@argus/irisClient';
+import { AuditType, NotificationType, Platform, QueueType } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { gapMinutes, hosts } from 'config';

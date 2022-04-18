@@ -1,10 +1,5 @@
-import {
-  CancelNotificationType,
-  Categories,
-  ContentKey,
-  NotificationType,
-  Platform,
-} from '@argus/pandora';
+import { Categories, ContentKey } from '@argus/irisClient';
+import { CancelNotificationType, NotificationType, Platform } from '@argus/pandora';
 import { Prop, Schema } from '@nestjs/mongoose';
 import { SenderClient } from '../conductor';
 

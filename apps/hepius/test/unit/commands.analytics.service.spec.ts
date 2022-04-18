@@ -1,3 +1,9 @@
+import { Language, mockProcessWarnings } from '@argus/pandora';
+import { getModelToken } from '@nestjs/mongoose';
+import { Test, TestingModule } from '@nestjs/testing';
+import { hosts } from 'config';
+import { add, sub } from 'date-fns';
+import { Model, Types } from 'mongoose';
 import {
   dbDisconnect,
   defaultModules,
@@ -9,7 +15,7 @@ import {
   mockGenerateMemberConfig,
   mockGenerateOrg,
   mockGenerateUser,
-} from '../index';
+} from '..';
 import {
   AnalyticsModule,
   AnalyticsService,
@@ -19,17 +25,11 @@ import {
   PopulatedAppointment,
   PopulatedMember,
 } from '../../cmd';
-import { add, sub } from 'date-fns';
+import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { RecordingType, momentFormats, reformatDate } from '../../src/common';
 import { Caregiver, MemberModule } from '../../src/member';
-import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
-import { Test, TestingModule } from '@nestjs/testing';
 import { ProvidersModule } from '../../src/providers';
-import { Language, mockProcessWarnings } from '@argus/pandora';
-import { hosts } from 'config';
-import { Model, Types } from 'mongoose';
 import { User, UserDocument, UserModule } from '../../src/user';
-import { getModelToken } from '@nestjs/mongoose';
 
 describe('Commands: AnalyticsService', () => {
   let module: TestingModule;

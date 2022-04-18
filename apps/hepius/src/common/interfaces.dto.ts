@@ -1,16 +1,11 @@
-import {
-  CancelNotificationType,
-  ICreateDispatch,
-  Language,
-  NotificationType,
-  Platform,
-} from '@argus/pandora';
+import { ICreateDispatch } from '@argus/irisClient';
+import { CancelNotificationType, Language, NotificationType, Platform } from '@argus/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Schema } from '@nestjs/mongoose';
 import { IsAlphanumeric, IsOptional } from 'class-validator';
+import { isNil, omitBy } from 'lodash';
 import { Types } from 'mongoose';
 import { ErrorType, Errors, IsNotPlatformWeb, IsObjectId } from '.';
-import { isNil, omitBy } from 'lodash';
 
 /**************************************************************************************************
  *************************** Enum registration for external gql methods ***************************

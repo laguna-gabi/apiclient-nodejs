@@ -1,4 +1,5 @@
-import { CancelNotificationType, ContentKey, NotificationType, ServiceName } from '@argus/pandora';
+import { ContentKey } from '@argus/irisClient';
+import { CancelNotificationType, NotificationType, ServiceName } from '@argus/pandora';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { FailureReason } from '../common';
 import { ISoftDelete } from '../db';

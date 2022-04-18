@@ -1,5 +1,6 @@
 import { add, startOfToday, startOfTomorrow } from 'date-fns';
 import * as request from 'supertest';
+import { generateRequestHeaders } from '..';
 import { AppointmentStatus } from '../../src/appointment';
 import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
@@ -9,7 +10,6 @@ import {
   generateCreateMemberParams,
   generateScheduleAppointmentParams,
 } from '../generators';
-import { generateRequestHeaders } from '../index';
 
 describe('Integration tests: rest', () => {
   const handler: Handler = new Handler();

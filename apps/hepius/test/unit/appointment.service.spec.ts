@@ -5,6 +5,19 @@ import { addDays, addMinutes, subDays } from 'date-fns';
 import { lorem } from 'faker';
 import { Model, Types, model } from 'mongoose';
 import {
+  checkDelete,
+  dbConnect,
+  dbDisconnect,
+  defaultModules,
+  generateAppointmentLink,
+  generateId,
+  generateNotesParams,
+  generateObjectId,
+  generateRequestAppointmentParams,
+  generateScheduleAppointmentParams,
+  generateUpdateNotesParams,
+} from '..';
+import {
   Appointment,
   AppointmentDocument,
   AppointmentDto,
@@ -28,19 +41,6 @@ import {
   LoggerService,
   defaultTimestampsDbValues,
 } from '../../src/common';
-import {
-  checkDelete,
-  dbConnect,
-  dbDisconnect,
-  defaultModules,
-  generateAppointmentLink,
-  generateId,
-  generateNotesParams,
-  generateObjectId,
-  generateRequestAppointmentParams,
-  generateScheduleAppointmentParams,
-  generateUpdateNotesParams,
-} from '../index';
 
 describe('AppointmentService', () => {
   let module: TestingModule;

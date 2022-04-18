@@ -5,21 +5,23 @@ import {
   ExternalKey,
   IDeleteClientSettings,
   IDeleteDispatch,
-  IEventNotifySlack,
   IUpdateSenderClientId,
   InnerQueueTypes,
   JournalCustomKey,
   LogInternalKey,
-  NotificationType,
   NotifyCustomKey,
+  RegisterInternalKey,
+  generateDispatchId,
+} from '@argus/irisClient';
+import {
+  IEventNotifySlack,
+  NotificationType,
   Platform,
   QueueType,
-  RegisterInternalKey,
   ServiceName,
   SlackChannel,
   SlackIcon,
   formatEx,
-  generateDispatchId,
 } from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
@@ -30,6 +32,47 @@ import { addDays, isAfter, millisecondsInHour } from 'date-fns';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { camelCase } from 'lodash';
 import { lookup } from 'zipcode-to-timezone';
+import { AppointmentStatus } from '../appointment';
+import {
+  Client,
+  ErrorType,
+  Errors,
+  EventType,
+  IEventDeleteMember,
+  IEventMember,
+  IEventNotifyQueue,
+  IEventOnAlertForQRSubmit,
+  IEventOnReceivedChatMessage,
+  IEventOnReceivedTextMessage,
+  IEventOnReplacedUserForMember,
+  IEventOnUpdatedMemberPlatform,
+  IInternalDispatch,
+  Identifier,
+  IsValidObjectId,
+  LoggerService,
+  LoggingInterceptor,
+  MemberIdParam,
+  MemberIdParamType,
+  MemberRole,
+  MemberUserRouteInterceptor,
+  RegisterForNotificationParams,
+  Roles,
+  StorageType,
+  UserRole,
+  generatePath,
+  getCorrelationId,
+} from '../common';
+import { Communication, CommunicationService, GetCommunicationParams } from '../communication';
+import {
+  Bitly,
+  CognitoService,
+  FeatureFlagService,
+  OneSignal,
+  StorageService,
+  TwilioService,
+} from '../providers';
+import { QuestionnaireAlerts, QuestionnaireType } from '../questionnaire';
+import { User, UserService } from '../user';
 import {
   AddCaregiverParams,
   Alert,
@@ -78,47 +121,6 @@ import {
   UpdateRecordingReviewParams,
   UpdateTaskStatusParams,
 } from './index';
-import { AppointmentStatus } from '../appointment';
-import {
-  Client,
-  ErrorType,
-  Errors,
-  EventType,
-  IEventDeleteMember,
-  IEventMember,
-  IEventNotifyQueue,
-  IEventOnAlertForQRSubmit,
-  IEventOnReceivedChatMessage,
-  IEventOnReceivedTextMessage,
-  IEventOnReplacedUserForMember,
-  IEventOnUpdatedMemberPlatform,
-  IInternalDispatch,
-  Identifier,
-  IsValidObjectId,
-  LoggerService,
-  LoggingInterceptor,
-  MemberIdParam,
-  MemberIdParamType,
-  MemberRole,
-  MemberUserRouteInterceptor,
-  RegisterForNotificationParams,
-  Roles,
-  StorageType,
-  UserRole,
-  generatePath,
-  getCorrelationId,
-} from '../common';
-import { Communication, CommunicationService, GetCommunicationParams } from '../communication';
-import {
-  Bitly,
-  CognitoService,
-  FeatureFlagService,
-  OneSignal,
-  StorageService,
-  TwilioService,
-} from '../providers';
-import { QuestionnaireAlerts, QuestionnaireType } from '../questionnaire';
-import { User, UserService } from '../user';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Member)

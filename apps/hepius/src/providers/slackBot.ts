@@ -1,10 +1,10 @@
+import { BaseSlack, IEventNotifySlack } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { IncomingWebhook } from '@slack/webhook';
+import * as config from 'config';
 import { ConfigsService, ExternalConfigs } from '.';
 import { EventType, LoggerService } from '../common';
-import { BaseSlack, IEventNotifySlack } from '@argus/pandora';
-import * as config from 'config';
 
 @Injectable()
 export class SlackBot extends BaseSlack implements OnModuleInit {

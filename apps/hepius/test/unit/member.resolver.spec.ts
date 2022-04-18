@@ -1,21 +1,55 @@
+import { AlertInternalKey, ExternalKey, generateDispatchId } from '@argus/irisClient';
 import {
-  AlertInternalKey,
-  ExternalKey,
   IEventNotifySlack,
   NotificationType,
   Platform,
   QueueType,
   SlackChannel,
   SlackIcon,
-  generateDispatchId,
   mockLogger,
   mockProcessWarnings,
 } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import { hosts } from 'config';
 import { datatype, date, lorem, system } from 'faker';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
+import {
+  dbDisconnect,
+  defaultModules,
+  generateAddCaregiverParams,
+  generateAppointmentComposeParams,
+  generateCommunication,
+  generateCreateMemberParams,
+  generateCreateTaskParams,
+  generateDeleteMemberParams,
+  generateEndAppointmentParams,
+  generateGetMemberUploadJournalAudioLinkParams,
+  generateGetMemberUploadJournalImageLinkParams,
+  generateId,
+  generateMemberConfig,
+  generateNotifyContentParams,
+  generateNotifyParams,
+  generateObjectId,
+  generateReplaceMemberOrgParams,
+  generateScheduleAppointmentParams,
+  generateSetGeneralNotesParams,
+  generateUniqueUrl,
+  generateUpdateCaregiverParams,
+  generateUpdateClientSettings,
+  generateUpdateJournalTextParams,
+  generateUpdateMemberConfigParams,
+  generateUpdateMemberParams,
+  generateUpdateRecordingParams,
+  generateUpdateTaskStatusParams,
+  mockGenerateAlert,
+  mockGenerateMember,
+  mockGenerateMemberConfig,
+  mockGenerateOrg,
+  mockGenerateUser,
+  randomEnum,
+} from '..';
 import {
   ErrorType,
   Errors,
@@ -64,42 +98,6 @@ import {
 } from '../../src/providers';
 import { QuestionnaireAlerts, QuestionnaireType } from '../../src/questionnaire';
 import { UserService } from '../../src/user';
-import {
-  dbDisconnect,
-  defaultModules,
-  generateAddCaregiverParams,
-  generateAppointmentComposeParams,
-  generateCommunication,
-  generateCreateMemberParams,
-  generateCreateTaskParams,
-  generateDeleteMemberParams,
-  generateEndAppointmentParams,
-  generateGetMemberUploadJournalAudioLinkParams,
-  generateGetMemberUploadJournalImageLinkParams,
-  generateId,
-  generateMemberConfig,
-  generateNotifyContentParams,
-  generateNotifyParams,
-  generateObjectId,
-  generateReplaceMemberOrgParams,
-  generateScheduleAppointmentParams,
-  generateSetGeneralNotesParams,
-  generateUniqueUrl,
-  generateUpdateCaregiverParams,
-  generateUpdateClientSettings,
-  generateUpdateJournalTextParams,
-  generateUpdateMemberConfigParams,
-  generateUpdateMemberParams,
-  generateUpdateRecordingParams,
-  generateUpdateTaskStatusParams,
-  mockGenerateAlert,
-  mockGenerateMember,
-  mockGenerateMemberConfig,
-  mockGenerateOrg,
-  mockGenerateUser,
-  randomEnum,
-} from '../index';
-import { hosts } from 'config';
 
 describe('MemberResolver', () => {
   let module: TestingModule;

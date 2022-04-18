@@ -1,6 +1,7 @@
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ErrorType, Errors, LoggerService } from '../../src/common';
+import { lorem } from 'faker';
+import { Model, Types, model } from 'mongoose';
 import {
   checkDelete,
   dbConnect,
@@ -16,7 +17,7 @@ import {
   generateUpdateRedFlagParams,
   loadSessionClient,
   randomEnum,
-} from '../index';
+} from '..';
 import {
   Barrier,
   BarrierDocument,
@@ -30,8 +31,7 @@ import {
   RedFlagDocument,
   RedFlagDto,
 } from '../../src/care';
-import { Model, Types, model } from 'mongoose';
-import { lorem } from 'faker';
+import { ErrorType, Errors, LoggerService } from '../../src/common';
 
 describe('CareService', () => {
   let module: TestingModule;

@@ -1,4 +1,5 @@
-import { CancelNotificationType, ExternalKey, NotificationType, Platform } from '@argus/pandora';
+import { ExternalKey } from '@argus/irisClient';
+import { CancelNotificationType, NotificationType, Platform } from '@argus/pandora';
 import { ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
 import { general } from 'config';
 import { isValidCron } from 'cron-validator';

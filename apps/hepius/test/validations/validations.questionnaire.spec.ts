@@ -1,4 +1,5 @@
 /* eslint-disable max-len */
+import { BEFORE_ALL_TIMEOUT } from '..';
 import { ErrorType, Errors, ItemType } from '../../src/common';
 import {
   CreateQuestionnaireParams,
@@ -11,7 +12,6 @@ import {
   generateSubmitQuestionnaireResponseParams,
   mockGenerateQuestionnaireItem,
 } from '../generators';
-import { BEFORE_ALL_TIMEOUT } from '..';
 
 const stringError = `String cannot represent a non string value`;
 

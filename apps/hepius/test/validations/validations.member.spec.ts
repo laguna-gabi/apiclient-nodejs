@@ -1,6 +1,6 @@
+import { ExternalKey } from '@argus/irisClient';
 import {
   CancelNotificationType,
-  ExternalKey,
   NotificationType,
   Platform,
   generateZipCode,
@@ -8,20 +8,7 @@ import {
 import { subSeconds } from 'date-fns';
 import { date, internet, lorem } from 'faker';
 import * as request from 'supertest';
-import { AppointmentsIntegrationActions, Creators } from '../aux';
 import { v4 } from 'uuid';
-import { ErrorType, Errors, maxLength, minLength } from '../../src/common';
-import {
-  AddCaregiverParams,
-  CancelNotifyParams,
-  CreateMemberParams,
-  Honorific,
-  NotifyParams,
-  Sex,
-  UpdateMemberParams,
-  defaultMemberParams,
-} from '../../src/member';
-import { Handler } from '../aux/handler';
 import {
   BEFORE_ALL_TIMEOUT,
   generateAddCaregiverParams,
@@ -48,7 +35,20 @@ import {
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
   urls,
-} from '../index';
+} from '..';
+import { ErrorType, Errors, maxLength, minLength } from '../../src/common';
+import {
+  AddCaregiverParams,
+  CancelNotifyParams,
+  CreateMemberParams,
+  Honorific,
+  NotifyParams,
+  Sex,
+  UpdateMemberParams,
+  defaultMemberParams,
+} from '../../src/member';
+import { AppointmentsIntegrationActions, Creators } from '../aux';
+import { Handler } from '../aux/handler';
 
 const stringError = `String cannot represent a non string value`;
 const BooleanError = `Boolean cannot represent a non boolean value`;

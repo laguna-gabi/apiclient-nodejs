@@ -2,6 +2,7 @@ import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, Types } from 'mongoose';
+import { checkDelete, dbDisconnect, defaultModules, generateId, generateObjectId } from '..';
 import { IEventDeleteMember, LoggerService } from '../../src/common';
 import {
   DailyReport,
@@ -11,7 +12,6 @@ import {
   DailyReportModule,
   DailyReportService,
 } from '../../src/dailyReport';
-import { checkDelete, dbDisconnect, defaultModules, generateId, generateObjectId } from '../index';
 
 describe('DailyReportCategoryService', () => {
   let service: DailyReportService;

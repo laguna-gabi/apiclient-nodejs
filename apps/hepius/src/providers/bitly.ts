@@ -1,7 +1,7 @@
+import { Environments } from '@argus/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigsService, ExternalConfigs } from '.';
-import { Environments } from '@argus/pandora';
 
 @Injectable()
 export class Bitly implements OnModuleInit {

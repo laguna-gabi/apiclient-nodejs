@@ -1,11 +1,5 @@
-import {
-  CancelNotificationType,
-  Categories,
-  NotificationType,
-  NotifyCustomKey,
-  Platform,
-  mockLogger,
-} from '@argus/pandora';
+import { Categories, NotifyCustomKey } from '@argus/irisClient';
+import { CancelNotificationType, NotificationType, Platform, mockLogger } from '@argus/pandora';
 import { HttpService } from '@nestjs/axios';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { datatype, image, lorem, name } from 'faker';

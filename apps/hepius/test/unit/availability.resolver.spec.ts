@@ -1,12 +1,12 @@
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
+import { dbDisconnect, defaultModules, generateAvailabilityInput, generateId } from '..';
 import {
   AvailabilityModule,
   AvailabilityResolver,
   AvailabilityService,
 } from '../../src/availability';
 import { LoggerService } from '../../src/common';
-import { dbDisconnect, defaultModules, generateAvailabilityInput, generateId } from '../index';
 
 describe('AvailabilityResolver', () => {
   let module: TestingModule;

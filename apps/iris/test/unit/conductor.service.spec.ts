@@ -1,14 +1,11 @@
-import {
-  IUpdateSenderClientId,
-  InnerQueueTypes,
-  mockLogger,
-  mockProcessWarnings,
-} from '@argus/pandora';
+import { IUpdateSenderClientId, InnerQueueTypes } from '@argus/irisClient';
+import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { gapTriggersAt } from 'config';
 import { addDays, addHours, addSeconds, subSeconds } from 'date-fns';
 import { animal, lorem } from 'faker';
+import { v4 } from 'uuid';
 import { CommonModule, ErrorType, Errors, FailureReason, LoggerService } from '../../src/common';
 import {
   ConductorModule,
@@ -32,7 +29,6 @@ import {
   generateUpdateMemberSettingsMock,
   generateUpdateUserSettingsMock,
 } from '../generators';
-import { v4 } from 'uuid';
 import SpyInstance = jest.SpyInstance;
 
 describe(ConductorService.name, () => {

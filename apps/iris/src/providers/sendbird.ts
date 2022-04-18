@@ -1,4 +1,5 @@
-import { BaseSendBird, FailureReason, JournalCustomKey, formatEx } from '@argus/pandora';
+import { JournalCustomKey } from '@argus/irisClient';
+import { BaseSendBird, FailureReason, formatEx } from '@argus/pandora';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as FormData from 'form-data';

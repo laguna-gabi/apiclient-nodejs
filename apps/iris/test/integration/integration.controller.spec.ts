@@ -1,6 +1,12 @@
-import * as request from 'supertest';
+import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { INestApplication } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { MongooseModule } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
+import { disconnect } from 'mongoose';
+import * as request from 'supertest';
+import { generateDispatch, generateId } from '../.';
+import { LoggerService } from '../../src/common';
 import {
   Dispatch,
   DispatchDto,
@@ -8,14 +14,8 @@ import {
   DispatchesController,
   DispatchesService,
 } from '../../src/conductor';
-import { generateDispatch, generateId } from '../.';
-import { disconnect } from 'mongoose';
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
-import { LoggerService } from '../../src/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { ProvidersModule } from '../../src/providers';
 import { DbModule } from '../../src/db';
-import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ProvidersModule } from '../../src/providers';
 import { SettingsModule } from '../../src/settings';
 
 describe('Controllers', () => {

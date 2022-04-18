@@ -4,6 +4,34 @@ import * as faker from 'faker';
 import { date as fakerDate, lorem } from 'faker';
 import { Types } from 'mongoose';
 import * as request from 'supertest';
+import { v4 } from 'uuid';
+import {
+  BEFORE_ALL_TIMEOUT,
+  checkAuditValues,
+  generateAddCaregiverParams,
+  generateAvailabilityInput,
+  generateCarePlanTypeInput,
+  generateCreateCarePlanParams,
+  generateCreateMemberParams,
+  generateCreateTaskParams,
+  generateCreateTodoDoneParams,
+  generateCreateTodoParams,
+  generateCreateUserParams,
+  generateEndAppointmentParams,
+  generateOrgParams,
+  generateRequestAppointmentParams,
+  generateRequestHeaders,
+  generateScheduleAppointmentParams,
+  generateSetGeneralNotesParams,
+  generateUpdateBarrierParams,
+  generateUpdateCarePlanParams,
+  generateUpdateCaregiverParams,
+  generateUpdateMemberParams,
+  generateUpdateRedFlagParams,
+  generateUpdateTodoParams,
+  submitMockCareWizard,
+  urls,
+} from '..';
 import { buildNPSQuestionnaire } from '../../cmd/static';
 import { Appointment, AppointmentDocument } from '../../src/appointment';
 import { Availability, AvailabilityDocument } from '../../src/availability';
@@ -47,34 +75,6 @@ import {
 } from '../../src/todo';
 import { User, UserConfigDocument, UserDocument } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
-import {
-  BEFORE_ALL_TIMEOUT,
-  checkAuditValues,
-  generateAddCaregiverParams,
-  generateAvailabilityInput,
-  generateCarePlanTypeInput,
-  generateCreateCarePlanParams,
-  generateCreateMemberParams,
-  generateCreateTaskParams,
-  generateCreateTodoDoneParams,
-  generateCreateTodoParams,
-  generateCreateUserParams,
-  generateEndAppointmentParams,
-  generateOrgParams,
-  generateRequestAppointmentParams,
-  generateRequestHeaders,
-  generateScheduleAppointmentParams,
-  generateSetGeneralNotesParams,
-  generateUpdateBarrierParams,
-  generateUpdateCarePlanParams,
-  generateUpdateCaregiverParams,
-  generateUpdateMemberParams,
-  generateUpdateRedFlagParams,
-  generateUpdateTodoParams,
-  submitMockCareWizard,
-  urls,
-} from '../index';
-import { v4 } from 'uuid';
 
 describe('Integration tests : Audit', () => {
   const handler: Handler = new Handler();

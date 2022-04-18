@@ -1,9 +1,5 @@
-import {
-  AppointmentInternalKey,
-  NotificationType,
-  RegisterInternalKey,
-  generateDispatchId,
-} from '@argus/pandora';
+import { AppointmentInternalKey, RegisterInternalKey, generateDispatchId } from '@argus/irisClient';
+import { NotificationType } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { scheduler } from 'config';
 import { addDays, addMinutes, isBefore, subDays, subMinutes } from 'date-fns';

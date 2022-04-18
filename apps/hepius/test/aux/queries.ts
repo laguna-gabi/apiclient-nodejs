@@ -1,5 +1,6 @@
 import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
+import { isResultValid } from '..';
 import { Barrier, BarrierType, CarePlan, CarePlanType, RedFlag, RedFlagType } from '../../src/care';
 import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
@@ -15,7 +16,6 @@ import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
 import { Dispatch } from '../../src/services';
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
 import { GetSlotsParams, UserSummary } from '../../src/user';
-import { isResultValid } from '..';
 
 export class Queries {
   constructor(private readonly client: GraphQLClient, private readonly defaultUserRequestHeaders) {}

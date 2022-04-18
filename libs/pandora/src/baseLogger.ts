@@ -1,10 +1,32 @@
 import { Inject } from '@nestjs/common';
 import { PARAMS_PROVIDER_TOKEN, Params, PinoLogger } from 'nestjs-pino';
-import { AuditType, Client, FailureReason, LogType, ServiceName, generateOrgNamePrefix } from '.';
+import { v4 } from 'uuid';
+import { AuditType, Environments, ServiceName } from '.';
 
 export const internalLogs = {
   lastCommit: 'Last commit hash on this branch is: @hash@',
 };
+
+export class Client {
+  id?: string;
+  authId?: string;
+  roles?: string[];
+}
+
+export class FailureReason {
+  message?: string;
+  code?: number;
+  stack?: string;
+  data?: string;
+}
+
+export enum LogType {
+  log = 'log',
+  info = 'info',
+  warn = 'warn',
+  error = 'error',
+  debug = 'debug',
+}
 export class BaseLogger extends PinoLogger {
   constructor(
     @Inject(PARAMS_PROVIDER_TOKEN) params: Params,
@@ -88,7 +110,7 @@ export class BaseLogger extends PinoLogger {
     orgName?: string,
   ): string {
     const now = new Date();
-    return `${now.toLocaleString()}    [${this.source}] [${logType}] ${generateOrgNamePrefix(
+    return `${now.toLocaleString()}    [${this.source}] [${logType}] ${this.generateOrgNamePrefix(
       orgName,
     )} [${className}] ${methodName} ${text}`;
   }
@@ -118,4 +140,27 @@ export class BaseLogger extends PinoLogger {
     }
     return `was called with params ${JSON.stringify(params)}`;
   }
+
+  private generateOrgNamePrefix = (orgName?: string): string => {
+    return `${orgName ? ` [${orgName}] ` : ''}`;
+  };
 }
+
+export const PinoHttpConfig = {
+  genReqId: () => v4(), // correlation id
+  autoLogging: false,
+  quietReqLogger: true,
+  level: LogType.debug,
+  prettyPrint:
+    !process.env.NODE_ENV ||
+    process.env.NODE_ENV === Environments.test ||
+    process.env.NODE_ENV === Environments.localhost
+      ? {
+          colorize: true,
+          translateTime: 'SYS:dd/mm/yyyy, H:M:ss',
+          singleLine: true,
+          messageFormat: '[{className}] [{methodName}] {failureReason.message}',
+          ignore: 'pid,hostname,className,methodName',
+        }
+      : false,
+};

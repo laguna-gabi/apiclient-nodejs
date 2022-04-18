@@ -1,6 +1,15 @@
+import { Language, Platform } from '@argus/pandora';
+import { hosts } from 'config';
 import { Types } from 'mongoose';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Appointment, AppointmentStatus, Notes } from '../../src/appointment';
-import { User } from '../../src/user';
 import { RecordingType, UserRole } from '../../src/common';
 import {
   Honorific,
@@ -12,16 +21,7 @@ import {
   Relationship,
   Sex,
 } from '../../src/member';
-import { Language, Platform } from '@argus/pandora';
-import { hosts } from 'config';
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryColumn,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { User } from '../../src/user';
 
 export const DefaultOutputDir = './outputs';
 export const HarmonyLink = hosts.harmony;

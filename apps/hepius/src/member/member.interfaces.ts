@@ -1,14 +1,16 @@
 import {
   ClientCategory,
-  IEventNotifySlack,
   IUpdateClientSettings,
   InnerQueueTypes,
+  RegisterInternalKey,
+  generateDispatchId,
+} from '@argus/irisClient';
+import {
+  IEventNotifySlack,
   NotificationType,
   QueueType,
-  RegisterInternalKey,
   SlackChannel,
   SlackIcon,
-  generateDispatchId,
 } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { isUndefined, omitBy } from 'lodash';

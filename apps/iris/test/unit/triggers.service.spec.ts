@@ -1,11 +1,11 @@
+import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { v4 } from 'uuid';
 import { generateId, generateTriggers } from '../';
-import { DbModule } from '../../src/db';
-import { ConductorModule, Trigger, TriggersService } from '../../src/conductor';
 import { LoggerService } from '../../src/common';
-import { mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { ConductorModule, Trigger, TriggersService } from '../../src/conductor';
+import { DbModule } from '../../src/db';
 
 describe(TriggersService.name, () => {
   let module: TestingModule;

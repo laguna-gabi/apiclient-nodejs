@@ -1,3 +1,4 @@
+import { IEventNotifySlack, SlackChannel, SlackIcon } from '@argus/pandora';
 import {
   Body,
   Controller,
@@ -8,8 +9,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { SendBird, TwilioService } from '.';
 import * as crypto from 'crypto';
+import { SendBird, TwilioService } from '.';
 import {
   EventType,
   IEventOnReceivedChatMessage,
@@ -20,7 +21,6 @@ import {
   apiPrefix,
   webhooks,
 } from '../common';
-import { IEventNotifySlack, SlackChannel, SlackIcon } from '@argus/pandora';
 
 /**
  * Go to '../../test/unit/mocks/webhookSendbirdNewMessagePayload.json' for a payload example

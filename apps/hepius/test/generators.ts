@@ -1,14 +1,16 @@
 import {
-  CancelNotificationType,
   ClientCategory,
   ContentKey,
   ExternalKey,
   IUpdateClientSettings,
   InnerQueueTypes,
+  RegisterInternalKey,
+} from '@argus/irisClient';
+import {
+  CancelNotificationType,
   Language,
   NotificationType,
   Platform,
-  RegisterInternalKey,
   ServiceName,
   generatePhone,
   generateZipCode,

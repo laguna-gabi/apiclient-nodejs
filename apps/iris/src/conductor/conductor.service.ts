@@ -1,12 +1,11 @@
 import {
-  CancelNotificationType,
   ICreateDispatch,
   IDeleteClientSettings,
   IDeleteDispatch,
   IUpdateClientSettings,
   IUpdateSenderClientId,
-  formatEx,
-} from '@argus/pandora';
+} from '@argus/irisClient';
+import { CancelNotificationType, formatEx } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { gapTriggersAt, retryMax } from 'config';
 import { differenceInSeconds } from 'date-fns';

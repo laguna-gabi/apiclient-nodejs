@@ -1,11 +1,5 @@
-import {
-  AppointmentInternalKey,
-  Platform,
-  TodoInternalKey,
-  mockLogger,
-  mockProcessWarnings,
-  translation,
-} from '@argus/pandora';
+import { AppointmentInternalKey, TodoInternalKey } from '@argus/irisClient';
+import { Platform, mockLogger, mockProcessWarnings, translation } from '@argus/pandora';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { hosts } from 'config';

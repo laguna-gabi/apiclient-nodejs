@@ -1,7 +1,7 @@
+import { BEFORE_ALL_TIMEOUT, generateId, generateOrgParams } from '..';
 import { ErrorType, Errors } from '../../src/common';
 import { CreateOrgParams } from '../../src/org';
 import { Handler } from '../aux';
-import { BEFORE_ALL_TIMEOUT, generateId, generateOrgParams } from '../index';
 
 const stringError = `String cannot represent a non string value`;
 

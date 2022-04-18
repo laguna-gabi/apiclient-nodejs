@@ -1,6 +1,6 @@
-import { Language } from '../';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as i18next from 'i18next';
+import { Language } from '..';
 import * as en from '../languages/en.json';
 import * as es from '../languages/es.json';
 import * as NorthshoreBeta from '../languages/NorthshoreBeta.json';

@@ -1,7 +1,31 @@
 import { BaseLogger } from '../baseLogger';
 import { IncomingWebhook } from '@slack/webhook';
-import { Environments } from '../enums';
-import { IEventNotifySlack } from '../interfaces';
+import { Environments } from '..';
+
+export enum SlackChannel {
+  support = 'slack.support',
+  testingSms = 'slack.testingSms',
+  notifications = 'slack.notifications',
+  escalation = 'slack.escalation',
+  analyticsAutoLoader = 'slack.analyticsAutoLoader',
+}
+
+export enum SlackIcon {
+  phone = ':telephone_receiver:',
+  info = ':information_source:',
+  warning = ':warning:',
+  critical = ':no_entry:',
+  exclamationPoint = ':exclamation:',
+  questionMark = ':question:',
+}
+
+export interface IEventNotifySlack {
+  header: string;
+  message: string;
+  icon: SlackIcon;
+  channel: SlackChannel;
+  orgName?: string;
+}
 
 export abstract class BaseSlack {
   protected webhook: IncomingWebhook;

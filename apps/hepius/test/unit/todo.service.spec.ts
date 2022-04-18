@@ -3,6 +3,20 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { add } from 'date-fns';
 import { cloneDeep } from 'lodash';
 import { Model, Types, model } from 'mongoose';
+import {
+  checkDelete,
+  dbConnect,
+  dbDisconnect,
+  defaultModules,
+  generateCreateActionTodoParams,
+  generateCreateTodoDoneParams,
+  generateCreateTodoParams,
+  generateGetTodoDonesParams,
+  generateId,
+  generateObjectId,
+  generateUpdateTodoParams,
+  loadSessionClient,
+} from '..';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
 import {
   CreateActionTodoParams,
@@ -20,20 +34,6 @@ import {
   TodoStatus,
   UpdateTodoParams,
 } from '../../src/todo';
-import {
-  checkDelete,
-  dbConnect,
-  dbDisconnect,
-  defaultModules,
-  generateCreateActionTodoParams,
-  generateCreateTodoDoneParams,
-  generateCreateTodoParams,
-  generateGetTodoDonesParams,
-  generateId,
-  generateObjectId,
-  generateUpdateTodoParams,
-  loadSessionClient,
-} from '../index';
 
 describe('TodoService', () => {
   let module: TestingModule;

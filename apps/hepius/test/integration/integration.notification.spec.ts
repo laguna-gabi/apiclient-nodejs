@@ -1,7 +1,6 @@
 import {
   AlertInternalKey,
   AppointmentInternalKey,
-  CancelNotificationType,
   ChatInternalKey,
   ClientCategory,
   ContentKey,
@@ -9,7 +8,6 @@ import {
   InnerQueueTypes,
   JournalCustomKey,
   LogInternalKey,
-  NotificationType,
   NotifyCustomKey,
   ObjectAppointmentScheduledClass,
   ObjectAssessmentSubmitAlertClass,
@@ -28,8 +26,6 @@ import {
   ObjectRegisterMemberWithTriggeredClass,
   ObjectUpdateMemberSettingsClass,
   ObjectUpdateSenderClientIdClass,
-  Platform,
-  QueueType,
   RegisterInternalKey,
   TodoInternalKey,
   generateAppointmentScheduleLongReminderMock,
@@ -66,11 +62,13 @@ import {
   generateUpdateTodoMedsMock,
   generateUpdateTodoTodoMock,
   generateUpdateUserSettingsMock,
-} from '@argus/pandora';
+} from '@argus/irisClient';
+import { CancelNotificationType, NotificationType, Platform, QueueType } from '@argus/pandora';
 import { general, hosts, scheduler } from 'config';
 import { addDays, addSeconds, subDays, subMinutes } from 'date-fns';
 import { datatype, date as fakerDate, internet, lorem } from 'faker';
 import { v4 } from 'uuid';
+import { BEFORE_ALL_TIMEOUT, generateRequestHeaders } from '..';
 import { Appointment } from '../../src/appointment';
 import {
   ItemType,
@@ -114,7 +112,6 @@ import {
   generateUpdateTodoParams,
   mockGenerateQuestionnaireItem,
 } from '../generators';
-import { BEFORE_ALL_TIMEOUT, generateRequestHeaders } from '../index';
 import * as sendbirdPayload from '../unit/mocks/webhookSendbirdNewMessagePayload.json';
 
 // mock uuid.v4:

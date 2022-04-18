@@ -1,7 +1,7 @@
+import { ChatInternalKey } from '@argus/irisClient';
 import {
   BaseOneSignal,
   CancelNotificationType,
-  ChatInternalKey,
   NotificationType,
   Platform,
   formatEx,

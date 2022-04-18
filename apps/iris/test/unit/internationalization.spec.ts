@@ -1,4 +1,5 @@
-import { LogInternalKey, RegisterInternalKey, TranslationNs, translation } from '@argus/pandora';
+import { LogInternalKey, RegisterInternalKey } from '@argus/irisClient';
+import { TranslationNs, translation } from '@argus/pandora';
 import { hosts } from 'config';
 import { Internationalization } from '../../src/providers';
 import { replaceConfigs } from '../common';

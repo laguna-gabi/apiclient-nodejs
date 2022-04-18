@@ -1,0 +1,29 @@
+{
+  "root": "libs/irisClient",
+  "sourceRoot": "libs/irisClient/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/irisClient/**/*.ts"]
+      }
+    },
+    "test:cov": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/irisClient"],
+      "options": {
+        "jestConfig": "libs/irisClient/test/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "cov-badges": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "jest-coverage-badges input coverage/libs/irisClient/coverage-summary.json output coverage/libs/irisClient"
+      }
+    }
+  },
+  "tags": []
+}

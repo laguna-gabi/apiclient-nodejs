@@ -1,10 +1,5 @@
-import {
-  AppointmentInternalKey,
-  NotificationType,
-  RegisterInternalKey,
-  formatEx,
-  generateDispatchId,
-} from '@argus/pandora';
+import { AppointmentInternalKey, RegisterInternalKey, generateDispatchId } from '@argus/irisClient';
+import { NotificationType, formatEx } from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';

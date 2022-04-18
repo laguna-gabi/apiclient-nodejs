@@ -1,4 +1,5 @@
 import { camelCase, omit } from 'lodash';
+import { v4 } from 'uuid';
 import { AppointmentsIntegrationActions, Handler } from '.';
 import {
   generateAppointmentLink,
@@ -14,7 +15,6 @@ import { UserRole } from '../../src/common';
 import { CreateTaskParams, Member, defaultMemberParams } from '../../src/member';
 import { Org } from '../../src/org';
 import { CreateUserParams, User } from '../../src/user';
-import { v4 } from 'uuid';
 
 export class Creators {
   constructor(

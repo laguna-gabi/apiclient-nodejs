@@ -1,9 +1,9 @@
+import { Environments, formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
+import { CognitoIdentityServiceProvider } from 'aws-sdk';
 import { aws } from 'config';
 import { LoggerService } from '../../common';
-import { Environments, formatEx } from '@argus/pandora';
-import { CognitoIdentityServiceProvider } from 'aws-sdk';
 
 @Injectable()
 export class CognitoService {

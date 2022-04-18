@@ -1,3 +1,5 @@
+import { ClientCategory, IUpdateClientSettings, InnerQueueTypes } from '@argus/irisClient';
+import { QueueType, formatEx } from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -26,13 +28,6 @@ import {
   Roles,
   UserRole,
 } from '../common';
-import {
-  ClientCategory,
-  IUpdateClientSettings,
-  InnerQueueTypes,
-  QueueType,
-  formatEx,
-} from '@argus/pandora';
 import { CognitoService } from '../providers';
 
 @UseInterceptors(LoggingInterceptor)

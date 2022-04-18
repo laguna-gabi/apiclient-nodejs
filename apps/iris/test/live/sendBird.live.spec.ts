@@ -1,12 +1,13 @@
-import * as pandora from '@argus/pandora';
+import { Categories, JournalCustomKey, NotifyCustomKey } from '@argus/irisClient';
+import { Environments, NotificationType, mockLogger } from '@argus/pandora';
 import { HttpService } from '@nestjs/axios';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { v4 } from 'uuid';
 import * as AWS from 'aws-sdk';
 import { aws } from 'config';
 import { lorem } from 'faker';
 import { existsSync, unlinkSync } from 'fs';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
+import { v4 } from 'uuid';
 import { LoggerService } from '../../src/common';
 import {
   ConfigsService,
@@ -17,7 +18,6 @@ import {
   SendBird,
   SendSendBirdNotification,
 } from '../../src/providers';
-import { Categories, JournalCustomKey, NotificationType, NotifyCustomKey } from '@argus/pandora';
 
 describe(`live: ${SendBird.name}`, () => {
   let basePath;
@@ -33,9 +33,7 @@ describe(`live: ${SendBird.name}`, () => {
 
   beforeAll(async () => {
     const secretsManager = new AWS.SecretsManager({ region: aws.region });
-    const result = await secretsManager
-      .getSecretValue({ SecretId: pandora.Environments.test })
-      .promise();
+    const result = await secretsManager.getSecretValue({ SecretId: Environments.test }).promise();
     const data = JSON.parse(result.SecretString);
 
     const appId = data[ExternalConfigs.sendbird.apiId];
@@ -47,7 +45,7 @@ describe(`live: ${SendBird.name}`, () => {
     const configService = new ConfigsService();
     const httpService = new HttpService();
     const logger = new LoggerService(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
-    pandora.mockLogger(logger);
+    mockLogger(logger);
 
     sendBird = new SendBird(configService, httpService, logger);
 

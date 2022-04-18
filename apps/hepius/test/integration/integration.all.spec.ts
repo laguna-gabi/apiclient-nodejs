@@ -1,8 +1,49 @@
-import { AppointmentInternalKey, Language, LogInternalKey, Platform } from '@argus/pandora';
+import { AppointmentInternalKey, LogInternalKey } from '@argus/irisClient';
+import { Language, Platform } from '@argus/pandora';
 import { articlesByDrg, general, hosts } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
 import { date, lorem } from 'faker';
 import { v4 } from 'uuid';
+import {
+  BEFORE_ALL_TIMEOUT,
+  generateAddCaregiverParams,
+  generateAppointmentLink,
+  generateAvailabilityInput,
+  generateCarePlanTypeInput,
+  generateCreateBarrierParamsWizard,
+  generateCreateCarePlanParams,
+  generateCreateCarePlanParamsWizard,
+  generateCreateMemberParams,
+  generateCreateQuestionnaireParams,
+  generateCreateRedFlagParamsWizard,
+  generateCreateTodoDoneParams,
+  generateCreateTodoParams,
+  generateDeleteMemberParams,
+  generateGetTodoDonesParams,
+  generateId,
+  generateOrgParams,
+  generateRequestAppointmentParams,
+  generateRequestHeaders,
+  generateScheduleAppointmentParams,
+  generateSetGeneralNotesParams,
+  generateSubmitCareWizardParams,
+  generateSubmitQuestionnaireResponseParams,
+  generateUpdateBarrierParams,
+  generateUpdateCarePlanParams,
+  generateUpdateCaregiverParams,
+  generateUpdateJournalTextParams,
+  generateUpdateMemberConfigParams,
+  generateUpdateMemberParams,
+  generateUpdateNotesParams,
+  generateUpdateRecordingParams,
+  generateUpdateRedFlagParams,
+  generateUpdateTodoParams,
+  generateUpdateUserParams,
+  mockGenerateDispatch,
+  mockGenerateQuestionnaireItem,
+  mockGenerateUser,
+  submitMockCareWizard,
+} from '..';
 import { buildLHPQuestionnaire } from '../../cmd/static';
 import {
   Appointment,
@@ -50,46 +91,6 @@ import {
 } from '../../src/todo';
 import { User, defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
-import {
-  BEFORE_ALL_TIMEOUT,
-  generateAddCaregiverParams,
-  generateAppointmentLink,
-  generateAvailabilityInput,
-  generateCarePlanTypeInput,
-  generateCreateBarrierParamsWizard,
-  generateCreateCarePlanParams,
-  generateCreateCarePlanParamsWizard,
-  generateCreateMemberParams,
-  generateCreateQuestionnaireParams,
-  generateCreateRedFlagParamsWizard,
-  generateCreateTodoDoneParams,
-  generateCreateTodoParams,
-  generateDeleteMemberParams,
-  generateGetTodoDonesParams,
-  generateId,
-  generateOrgParams,
-  generateRequestAppointmentParams,
-  generateRequestHeaders,
-  generateScheduleAppointmentParams,
-  generateSetGeneralNotesParams,
-  generateSubmitCareWizardParams,
-  generateSubmitQuestionnaireResponseParams,
-  generateUpdateBarrierParams,
-  generateUpdateCarePlanParams,
-  generateUpdateCaregiverParams,
-  generateUpdateJournalTextParams,
-  generateUpdateMemberConfigParams,
-  generateUpdateMemberParams,
-  generateUpdateNotesParams,
-  generateUpdateRecordingParams,
-  generateUpdateRedFlagParams,
-  generateUpdateTodoParams,
-  generateUpdateUserParams,
-  mockGenerateDispatch,
-  mockGenerateQuestionnaireItem,
-  mockGenerateUser,
-  submitMockCareWizard,
-} from '../index';
 
 describe('Integration tests: all', () => {
   const handler: Handler = new Handler();

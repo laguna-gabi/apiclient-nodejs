@@ -1,12 +1,21 @@
-import {
-  NotificationType,
-  TodoInternalKey,
-  generateDispatchId,
-  mockLogger,
-  mockProcessWarnings,
-} from '@argus/pandora';
+import { TodoInternalKey, generateDispatchId } from '@argus/irisClient';
+import { NotificationType, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
+import {
+  dbDisconnect,
+  defaultModules,
+  generateCreateTodoDoneParams,
+  generateCreateTodoParams,
+  generateGetTodoDonesParams,
+  generateId,
+  generateObjectId,
+  generateUpdateTodoParams,
+  mockGenerateActionTodo,
+  mockGenerateMember,
+  mockGenerateTodo,
+  mockGenerateTodoDone,
+} from '..';
 import {
   ErrorType,
   Errors,
@@ -25,20 +34,6 @@ import {
   TodoStatus,
   UpdateTodoParams,
 } from '../../src/todo';
-import {
-  dbDisconnect,
-  defaultModules,
-  generateCreateTodoDoneParams,
-  generateCreateTodoParams,
-  generateGetTodoDonesParams,
-  generateId,
-  generateObjectId,
-  generateUpdateTodoParams,
-  mockGenerateActionTodo,
-  mockGenerateMember,
-  mockGenerateTodo,
-  mockGenerateTodoDone,
-} from '../index';
 
 describe('TodoResolver', () => {
   let module: TestingModule;

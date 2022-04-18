@@ -1,8 +1,8 @@
+import { formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
-import { LoggerService } from '../../common';
-import { formatEx } from '@argus/pandora';
 import { aws } from 'config';
+import { LoggerService } from '../../common';
 
 @Injectable()
 export class CloudMapService {

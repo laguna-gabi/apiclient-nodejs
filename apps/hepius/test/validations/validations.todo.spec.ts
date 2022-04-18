@@ -1,12 +1,4 @@
 import { date } from 'faker';
-import { ErrorType, Errors } from '../../src/common';
-import {
-  CreateActionTodoParams,
-  CreateTodoDoneParams,
-  CreateTodoParams,
-  UpdateTodoParams,
-} from '../../src/todo';
-import { Handler } from '../aux/handler';
 import {
   BEFORE_ALL_TIMEOUT,
   generateCreateActionTodoParams,
@@ -16,7 +8,15 @@ import {
   generateId,
   generateRequestHeaders,
   generateUpdateTodoParams,
-} from '../index';
+} from '..';
+import { ErrorType, Errors } from '../../src/common';
+import {
+  CreateActionTodoParams,
+  CreateTodoDoneParams,
+  CreateTodoParams,
+  UpdateTodoParams,
+} from '../../src/todo';
+import { Handler } from '../aux/handler';
 
 const stringError = `String cannot represent a non string value`;
 

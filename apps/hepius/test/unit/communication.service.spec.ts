@@ -4,6 +4,18 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { date, internet } from 'faker';
 import { Model, Types, model } from 'mongoose';
 import { v4 } from 'uuid';
+import {
+  checkDelete,
+  dbConnect,
+  dbDisconnect,
+  defaultModules,
+  generateCommunication,
+  generateId,
+  generateUniqueUrl,
+  mockGenerateMember,
+  mockGenerateUser,
+  mockProviders,
+} from '..';
 import { AppointmentStatus } from '../../src/appointment';
 import {
   ErrorType,
@@ -24,18 +36,6 @@ import {
   CommunicationService,
 } from '../../src/communication';
 import { ServiceModule } from '../../src/services';
-import {
-  checkDelete,
-  dbConnect,
-  dbDisconnect,
-  defaultModules,
-  generateCommunication,
-  generateId,
-  generateUniqueUrl,
-  mockGenerateMember,
-  mockGenerateUser,
-  mockProviders,
-} from '../index';
 
 describe('CommunicationService', () => {
   let module: TestingModule;

@@ -1,5 +1,4 @@
 import {
-  Environments,
   ICreateDispatch,
   IDeleteClientSettings,
   IDeleteDispatch,
@@ -7,10 +6,8 @@ import {
   IUpdateClientSettings,
   IUpdateSenderClientId,
   InnerQueueTypes,
-  QueueType,
-  ServiceName,
-  formatEx,
-} from '@argus/pandora';
+} from '@argus/irisClient';
+import { Environments, QueueType, ServiceName, formatEx } from '@argus/pandora';
 import { Injectable, NotImplementedException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';

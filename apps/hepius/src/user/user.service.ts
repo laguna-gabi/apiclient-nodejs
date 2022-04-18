@@ -1,7 +1,9 @@
+import { Environments, IEventNotifySlack, SlackChannel, SlackIcon, formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { add, differenceInDays, getHours, startOfDay } from 'date-fns';
+import { isEmpty, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
 import {
   CreateUserParams,
@@ -31,8 +33,6 @@ import {
   LoggerService,
   UserRole,
 } from '../common';
-import { Environments, IEventNotifySlack, SlackChannel, SlackIcon, formatEx } from '@argus/pandora';
-import { isEmpty, isNil, omitBy } from 'lodash';
 
 @Injectable()
 export class UserService extends BaseService {

@@ -1,4 +1,5 @@
-import { Environments, InnerQueueTypes, mockLogger, mockProcessWarnings } from '@argus/pandora';
+import { InnerQueueTypes } from '@argus/irisClient';
+import { Environments, mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { NotImplementedException } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';

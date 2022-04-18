@@ -1,37 +1,23 @@
-import { RegisterInternalKey, generateDispatchId, generateOrgNamePrefix } from '../src';
 import { lorem } from 'faker';
+import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
+import { BaseLogger } from '../src/baseLogger';
+import { ServiceName } from '../src/interfaces';
 
 describe('Utils', () => {
   describe('generateOrgNamePrefix', () => {
     it('should return empty string generateOrgNamePrefix on no orgName', () => {
-      expect(generateOrgNamePrefix()).toEqual('');
+      const logger = new BaseLogger(PARAMS_PROVIDER_TOKEN as Params, ServiceName.hepius);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      expect(logger.generateOrgNamePrefix()).toEqual('');
     });
 
     it('should return org string generateOrgNamePrefix when orgName provided', () => {
       const orgName = lorem.word();
-      expect(generateOrgNamePrefix(orgName)).toEqual(` [${orgName}] `);
-    });
-  });
-
-  describe('generateDispatchId', () => {
-    it('should return just contentKey on no options', () => {
-      expect(generateDispatchId(RegisterInternalKey.newMember)).toEqual(
-        RegisterInternalKey.newMember,
-      );
-    });
-
-    it('should return contentKey and array with 1 item as inputs', () => {
-      const item = lorem.word();
-      expect(generateDispatchId(RegisterInternalKey.newMember, item)).toEqual(
-        `${RegisterInternalKey.newMember}_${item}`,
-      );
-    });
-
-    it('should return contentKey and sorted array with multiple items as inputs', () => {
-      const items = ['b', 'a'];
-      expect(generateDispatchId(RegisterInternalKey.newMember, ...items)).toEqual(
-        `${RegisterInternalKey.newMember}_${items[1]}_${items[0]}`,
-      );
+      const logger = new BaseLogger(PARAMS_PROVIDER_TOKEN as Params, ServiceName.hepius);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      expect(logger.generateOrgNamePrefix(orgName)).toEqual(` [${orgName}] `);
     });
   });
 });

@@ -1,8 +1,8 @@
-import { ErrorType, Errors } from '../../src/common';
+import { BEFORE_ALL_TIMEOUT } from '..';
 import { AvailabilityInput } from '../../src/availability';
+import { ErrorType, Errors } from '../../src/common';
 import { Handler } from '../aux';
 import { generateAvailabilityInput } from '../generators';
-import { BEFORE_ALL_TIMEOUT } from '..';
 
 const stringError = `String cannot represent a non string value`;
 

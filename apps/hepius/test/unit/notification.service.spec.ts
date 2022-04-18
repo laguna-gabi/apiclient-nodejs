@@ -1,9 +1,9 @@
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
-import { Test, TestingModule } from '@nestjs/testing';
-import { LoggerService } from '../../src/common';
-import { dbDisconnect, defaultModules, generateId, mockGenerateDispatch } from '../index';
-import { NotificationService, ServiceModule } from '../../src/services';
 import { HttpService } from '@nestjs/axios';
+import { Test, TestingModule } from '@nestjs/testing';
+import { dbDisconnect, defaultModules, generateId, mockGenerateDispatch } from '..';
+import { LoggerService } from '../../src/common';
+import { NotificationService, ServiceModule } from '../../src/services';
 
 describe('NotificationService', () => {
   let module: TestingModule;

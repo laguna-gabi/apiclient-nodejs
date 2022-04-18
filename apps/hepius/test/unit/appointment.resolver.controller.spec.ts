@@ -1,15 +1,21 @@
-import {
-  AppointmentInternalKey,
-  RegisterInternalKey,
-  generateDispatchId,
-  mockLogger,
-  mockProcessWarnings,
-} from '@argus/pandora';
+import { AppointmentInternalKey, RegisterInternalKey, generateDispatchId } from '@argus/irisClient';
+import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { addMinutes } from 'date-fns';
 import { datatype } from 'faker';
 import { v4 } from 'uuid';
+import {
+  dbDisconnect,
+  defaultModules,
+  generateAppointmentLink,
+  generateId,
+  generateNotesParams,
+  generateObjectId,
+  generateRequestAppointmentParams,
+  generateScheduleAppointmentParams,
+  generateUpdateNotesParams,
+} from '..';
 import {
   Appointment,
   AppointmentController,
@@ -29,17 +35,6 @@ import {
   LoggerService,
   UpdatedAppointmentAction,
 } from '../../src/common';
-import {
-  dbDisconnect,
-  defaultModules,
-  generateAppointmentLink,
-  generateId,
-  generateNotesParams,
-  generateObjectId,
-  generateRequestAppointmentParams,
-  generateScheduleAppointmentParams,
-  generateUpdateNotesParams,
-} from '../index';
 
 // mock uuid.v4
 jest.mock('uuid', () => {

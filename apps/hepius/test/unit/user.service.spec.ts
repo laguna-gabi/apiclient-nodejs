@@ -11,6 +11,19 @@ import {
   startOfTomorrow,
 } from 'date-fns';
 import { Model, Types, model } from 'mongoose';
+import { v4 } from 'uuid';
+import {
+  compareUsers,
+  dbConnect,
+  dbDisconnect,
+  defaultModules,
+  generateAvailabilityInput,
+  generateCreateUserParams,
+  generateId,
+  generateRequestAppointmentParams,
+  generateScheduleAppointmentParams,
+  generateUpdateUserParams,
+} from '..';
 import { Appointment, AppointmentModule, AppointmentResolver } from '../../src/appointment';
 import { AvailabilityModule, AvailabilityResolver } from '../../src/availability';
 import {
@@ -33,19 +46,6 @@ import {
   defaultSlotsParams,
   defaultUserParams,
 } from '../../src/user';
-import {
-  compareUsers,
-  dbConnect,
-  dbDisconnect,
-  defaultModules,
-  generateAvailabilityInput,
-  generateCreateUserParams,
-  generateId,
-  generateRequestAppointmentParams,
-  generateScheduleAppointmentParams,
-  generateUpdateUserParams,
-} from '../index';
-import { v4 } from 'uuid';
 
 describe('UserService', () => {
   let module: TestingModule;

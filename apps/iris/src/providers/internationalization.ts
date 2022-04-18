@@ -1,11 +1,10 @@
 import {
   AlertInternalKey,
   AppointmentInternalKey,
-  BaseInternationalization,
   ChatInternalKey,
-  Language,
   LogInternalKey,
-} from '@argus/pandora';
+} from '@argus/irisClient';
+import { BaseInternationalization, Language } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { GetContentsParams } from '../common';
 

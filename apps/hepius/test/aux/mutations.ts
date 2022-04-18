@@ -1,6 +1,7 @@
 import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
 import { camelCase } from 'lodash';
+import { isResultValid } from '..';
 import {
   Appointment,
   EndAppointmentParams,
@@ -17,6 +18,7 @@ import {
   UpdateCarePlanParams,
   UpdateRedFlagParams,
 } from '../../src/care';
+import { SubmitCareWizardParams } from '../../src/care/wizard.dto';
 import { Identifier, Identifiers, RegisterForNotificationParams } from '../../src/common';
 import { DailyReportCategoriesInput } from '../../src/dailyReport';
 import {
@@ -58,8 +60,6 @@ import {
   UpdateTodoParams,
 } from '../../src/todo';
 import { CreateUserParams, UpdateUserParams, User } from '../../src/user';
-import { isResultValid } from '..';
-import { SubmitCareWizardParams } from '../../src/care/wizard.dto';
 
 const FRAGMENT_APPOINTMENT = gql`
   fragment appointmentFragment on Appointment {

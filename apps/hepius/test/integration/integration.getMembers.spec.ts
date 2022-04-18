@@ -1,9 +1,9 @@
-import { Member, MemberConfig, MemberSummary } from '../../src/member';
-import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
-import { User } from '../../src/user';
-import { BEFORE_ALL_TIMEOUT, generateRequestHeaders } from '../index';
 import { Platform } from '@argus/pandora';
+import { BEFORE_ALL_TIMEOUT, generateRequestHeaders } from '..';
 import { RegisterForNotificationParams } from '../../src/common';
+import { Member, MemberConfig, MemberSummary } from '../../src/member';
+import { User } from '../../src/user';
+import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 
 describe('Integration tests : getMembers', () => {
   const handler: Handler = new Handler();

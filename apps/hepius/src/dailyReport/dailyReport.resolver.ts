@@ -1,4 +1,5 @@
-import { LogInternalKey, NotificationType, generateDispatchId } from '@argus/pandora';
+import { LogInternalKey, generateDispatchId } from '@argus/irisClient';
+import { NotificationType } from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';

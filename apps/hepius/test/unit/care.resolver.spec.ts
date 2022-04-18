@@ -1,6 +1,5 @@
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import { LoggerService } from '../../src/common';
 import {
   dbDisconnect,
   defaultModules,
@@ -13,8 +12,9 @@ import {
   generateUpdateBarrierParams,
   generateUpdateCarePlanParams,
   generateUpdateRedFlagParams,
-} from '../index';
+} from '..';
 import { CareModule, CareResolver, CareService } from '../../src/care';
+import { LoggerService } from '../../src/common';
 
 describe('CareResolver', () => {
   let module: TestingModule;
