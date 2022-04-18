@@ -199,7 +199,6 @@ export const generateMemberConfig = ({
   firstLoggedInAt = fakerDate.past(2),
   articlesPath = system.directoryPath(),
   language = defaultMemberParams.language,
-  isGraduated = defaultMemberParams.isGraduated,
   updatedAt = fakerDate.past(2),
 }: Partial<MemberConfig> = {}): MemberConfig => {
   return {
@@ -211,7 +210,6 @@ export const generateMemberConfig = ({
     firstLoggedInAt,
     articlesPath,
     language,
-    isGraduated,
     updatedAt,
   };
 };
@@ -350,6 +348,7 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
     },
     nurse_notes: lorem.sentence(),
     general_notes: lorem.sentence(),
+    isGraduated: defaultMemberParams.isGraduated,
   };
 };
 
@@ -435,7 +434,6 @@ export const mockGenerateMemberConfig = ({
     firstLoggedInAt: fakerDate.past(2),
     articlesPath: system.directoryPath(),
     language: defaultMemberParams.language,
-    isGraduated: defaultMemberParams.isGraduated,
     updatedAt: fakerDate.past(1),
   };
 };

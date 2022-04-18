@@ -28,3 +28,4 @@ export * as m20220411124750 from './20220411124750-rename-maxCustomers-to-maxMem
 export * as m20220411171322 from './20220411171322-replace-datetime-to-only-date';
 export * as m20220413113830 from './20220413113830-update-date-format';
 export * as m20220414144809 from './20220414144809-set-isGraduated';
+export * as m20220418094757 from './20220418094757-moveIsGraduatedToMember';

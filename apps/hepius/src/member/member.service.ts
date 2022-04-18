@@ -304,8 +304,8 @@ export class MemberService extends BaseService {
   }
 
   async graduate(graduateParams: GraduateMemberParams) {
-    await this.memberConfigModel.findOneAndUpdate(
-      { memberId: new Types.ObjectId(graduateParams.id) },
+    await this.memberModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(graduateParams.id) },
       { $set: { isGraduated: graduateParams.isGraduated } },
     );
   }

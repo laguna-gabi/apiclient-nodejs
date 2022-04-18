@@ -664,6 +664,10 @@ export class Member extends Identifier {
   @Prop({ type: String, enum: HealthPersona, isNaN: true })
   @Field(() => HealthPersona, { nullable: true })
   healthPersona?: HealthPersona;
+
+  @Prop({ type: Boolean, default: defaultMemberParams.isGraduated })
+  @Field(() => Boolean)
+  isGraduated: boolean;
 }
 
 @ObjectType()

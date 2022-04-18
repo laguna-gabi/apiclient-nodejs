@@ -2095,14 +2095,12 @@ describe('MemberResolver', () => {
 
   describe('graduateMember', () => {
     let spyOnServiceGet;
-    let spyOnServiceGetMemberConfig;
     let spyOnServiceGraduate;
     let spyOnCognitoServiceEnableClient;
     let spyOnCognitoServiceDisableClient;
 
     beforeEach(() => {
       spyOnServiceGet = jest.spyOn(service, 'get');
-      spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnServiceGraduate = jest.spyOn(service, 'graduate');
       spyOnCognitoServiceEnableClient = jest.spyOn(cognitoService, 'enableClient');
       spyOnCognitoServiceDisableClient = jest.spyOn(cognitoService, 'disableClient');
@@ -2110,7 +2108,6 @@ describe('MemberResolver', () => {
 
     afterEach(() => {
       spyOnServiceGet.mockReset();
-      spyOnServiceGetMemberConfig.mockReset();
       spyOnServiceGraduate.mockReset();
       spyOnCognitoServiceEnableClient.mockReset();
       spyOnCognitoServiceDisableClient.mockReset();
@@ -2118,8 +2115,8 @@ describe('MemberResolver', () => {
 
     it('should graduate an existing member(true)', async () => {
       const memberParams = mockGenerateMember();
+      memberParams.isGraduated = false;
       spyOnServiceGet.mockResolvedValue(memberParams);
-      spyOnServiceGetMemberConfig.mockResolvedValue({ isGraduated: false });
       spyOnServiceGraduate.mockResolvedValue(undefined);
       spyOnCognitoServiceDisableClient.mockResolvedValue(true);
 
@@ -2132,8 +2129,8 @@ describe('MemberResolver', () => {
 
     it('should graduate an existing member(false)', async () => {
       const memberParams = mockGenerateMember();
+      memberParams.isGraduated = true;
       spyOnServiceGet.mockResolvedValue(memberParams);
-      spyOnServiceGetMemberConfig.mockResolvedValue({ isGraduated: true });
       spyOnServiceGraduate.mockResolvedValue(undefined);
       spyOnCognitoServiceDisableClient.mockResolvedValue(true);
 
@@ -2151,13 +2148,13 @@ describe('MemberResolver', () => {
       'should not update isGraduated to %p since it is already %p',
       async (isGraduated) => {
         const memberParams = mockGenerateMember();
-        spyOnServiceGetMemberConfig.mockResolvedValue({ isGraduated });
+        memberParams.isGraduated = isGraduated;
+        spyOnServiceGet.mockResolvedValue(memberParams);
         spyOnServiceGraduate.mockResolvedValue(undefined);
         spyOnCognitoServiceDisableClient.mockResolvedValue(true);
 
         const graduateMemberParams: GraduateMemberParams = { id: memberParams.id, isGraduated };
         await resolver.graduateMember(graduateMemberParams);
-        expect(spyOnServiceGet).not.toBeCalled();
         expect(spyOnServiceGraduate).not.toBeCalled();
         expect(spyOnCognitoServiceDisableClient).not.toBeCalled();
         expect(spyOnCognitoServiceEnableClient).not.toBeCalled();
@@ -2451,7 +2448,6 @@ describe('MemberResolver', () => {
         firstLoggedInAt: date.past(1),
         articlesPath: system.directoryPath(),
         language: defaultMemberParams.language,
-        isGraduated: defaultMemberParams.isGraduated,
         updatedAt: date.past(1),
       };
       const communication: Communication = {

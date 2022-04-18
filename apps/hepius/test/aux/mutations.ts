@@ -359,6 +359,7 @@ export class Mutations {
                 readmissionRisk
                 date
               }
+              isGraduated
             }
           }
         `,

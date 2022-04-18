@@ -351,7 +351,12 @@ describe('Integration tests: all', () => {
     await handler.mutations.updateMember({ updateMemberParams });
 
     const memberAfter = await handler.queries.getMember({ id: member.id });
-    expect(memberAfter).toEqual(expect.objectContaining({ ...updateMemberParams }));
+    expect(memberAfter).toEqual(
+      expect.objectContaining({
+        ...updateMemberParams,
+        isGraduated: defaultMemberParams.isGraduated,
+      }),
+    );
   });
 
   it('should update and get member configs', async () => {
@@ -373,7 +378,6 @@ describe('Integration tests: all', () => {
       isRecommendationsEnabled: true,
       isTodoNotificationsEnabled: true,
       language: Language.en,
-      isGraduated: defaultMemberParams.isGraduated,
       updatedAt: expect.any(String),
     });
 
@@ -396,7 +400,6 @@ describe('Integration tests: all', () => {
       isRecommendationsEnabled: updateMemberConfigParams.isRecommendationsEnabled,
       isTodoNotificationsEnabled: updateMemberConfigParams.isTodoNotificationsEnabled,
       language: Language.en,
-      isGraduated: defaultMemberParams.isGraduated,
       updatedAt: expect.any(String),
     });
   });
@@ -2485,8 +2488,8 @@ describe('Integration tests: all', () => {
         graduateMemberParams: { id: member.id, isGraduated },
       });
 
-      const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
-      expect(memberConfig.isGraduated).toEqual(isGraduated);
+      const memberAfter = await handler.queries.getMember({ id: member.id });
+      expect(memberAfter.isGraduated).toEqual(isGraduated);
 
       expect(calledMethod).toBeCalledWith(deviceId);
       expect(notCalledMethod).not.toBeCalled();

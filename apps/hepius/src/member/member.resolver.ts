@@ -302,9 +302,8 @@ export class MemberResolver extends MemberBase {
     @Args(camelCase(GraduateMemberParams.name))
     graduateMemberParams: GraduateMemberParams,
   ) {
-    const memberConfig = await this.memberService.getMemberConfig(graduateMemberParams.id);
-    if (memberConfig.isGraduated !== graduateMemberParams.isGraduated) {
-      const member = await this.memberService.get(graduateMemberParams.id);
+    const member = await this.memberService.get(graduateMemberParams.id);
+    if (member.isGraduated !== graduateMemberParams.isGraduated) {
       if (graduateMemberParams.isGraduated) {
         await this.cognitoService.disableClient(member.deviceId);
       } else {
