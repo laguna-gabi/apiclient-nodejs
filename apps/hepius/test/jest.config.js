@@ -17,4 +17,5 @@ module.exports = {
   globalSetup: './test/global-setup.ts',
   coverageReporters: ['json-summary', 'lcov'],
   collectCoverage: true,
+  coveragePathIgnorePatterns: ['<rootDir>/cmd/', '<rootDir>/scripts/'],
 };
