@@ -14,7 +14,7 @@ export enum ProcedureType {
 }
 registerEnumType(ProcedureType, { name: 'ProcedureType' });
 
-export enum AdmissionType {
+export enum AdmissionCategory {
   diagnoses = 'diagnoses',
   procedures = 'procedures',
   medications = 'medications',
@@ -24,7 +24,7 @@ export enum AdmissionType {
   woundCares = 'woundCares',
   dietary = 'dietary',
 }
-registerEnumType(AdmissionType, { name: 'AdmissionType' });
+registerEnumType(AdmissionCategory, { name: 'AdmissionCategory' });
 
 /**************************************************************************************************
  ************************************* Schemas for gql methods ************************************

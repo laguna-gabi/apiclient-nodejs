@@ -9,6 +9,7 @@ import {
   defaultTimestampsDbValues,
 } from '../../src/common';
 import {
+  AdmissionCategory,
   Medication,
   MedicationDocument,
   MedicationDto,
@@ -60,7 +61,7 @@ describe(MemberAdmissionService.name, () => {
   });
 
   describe('changeAdmission', () => {
-    describe('procedure', () => {
+    describe(AdmissionCategory.procedures, () => {
       it('should create 2 procedures for a member, and 1 procedure for other member', async () => {
         const memberId1 = generateId();
         const procedure1a = generateProcedureParams({ changeType: ChangeType.create });
@@ -196,7 +197,7 @@ describe(MemberAdmissionService.name, () => {
       });
     });
 
-    describe('medication', () => {
+    describe(AdmissionCategory.medications, () => {
       // eslint-disable-next-line max-len
       it('should create 2 medications for a member, and 1 medication for other member', async () => {
         const memberId1 = generateId();

@@ -1,5 +1,5 @@
 import {
-  AdmissionType,
+  AdmissionCategory,
   BaseAdmission,
   ChangeAdmissionMedicationParams,
   ChangeAdmissionParams,
@@ -25,7 +25,7 @@ class InternalValue {
 
 @Injectable()
 export class MemberAdmissionService extends BaseService {
-  private readonly matchMap: Map<AdmissionType, InternalValue> = new Map();
+  private readonly matchMap: Map<AdmissionCategory, InternalValue> = new Map();
 
   constructor(
     @InjectModel(Procedure.name)
@@ -38,11 +38,11 @@ export class MemberAdmissionService extends BaseService {
     readonly logger: LoggerService,
   ) {
     super();
-    this.matchMap[AdmissionType.procedures] = {
+    this.matchMap[AdmissionCategory.procedures] = {
       model: this.procedureModel,
       errorType: ErrorType.memberAdmissionProcedureIdNotFound,
     };
-    this.matchMap[AdmissionType.medications] = {
+    this.matchMap[AdmissionCategory.medications] = {
       model: this.medicationModel,
       errorType: ErrorType.memberAdmissionMedicationIdNotFound,
     };
@@ -57,13 +57,13 @@ export class MemberAdmissionService extends BaseService {
     let result;
     if (setParams.procedure) {
       const { changeType, ...procedure }: ChangeAdmissionProcedureParams = setParams.procedure;
-      const admissionType = AdmissionType.procedures;
-      result = await this.changeInternal(procedure, changeType, admissionType, memberId);
+      const admissionCategory = AdmissionCategory.procedures;
+      result = await this.changeInternal(procedure, changeType, admissionCategory, memberId);
     }
     if (setParams.medication) {
       const { changeType, ...medication }: ChangeAdmissionMedicationParams = setParams.medication;
-      const admissionType = AdmissionType.medications;
-      result = await this.changeInternal(medication, changeType, admissionType, memberId);
+      const admissionCategory = AdmissionCategory.medications;
+      result = await this.changeInternal(medication, changeType, admissionCategory, memberId);
     }
 
     return result;
@@ -75,42 +75,42 @@ export class MemberAdmissionService extends BaseService {
   private async changeInternal(
     element: BaseAdmission,
     changeType: ChangeType,
-    admissionType: AdmissionType,
+    admissionCategory: AdmissionCategory,
     memberId: string,
   ): Promise<MemberAdmission> {
     switch (changeType) {
       case ChangeType.create:
-        return this.createRefObjects(element, admissionType, memberId);
+        return this.createRefObjects(element, admissionCategory, memberId);
       case ChangeType.update:
-        return this.updateRefObjects(element, admissionType, memberId);
+        return this.updateRefObjects(element, admissionCategory, memberId);
       case ChangeType.delete:
-        return this.deleteRefObjects(element.id, admissionType, memberId);
+        return this.deleteRefObjects(element.id, admissionCategory, memberId);
     }
   }
 
   private async createRefObjects(
     element: BaseAdmission,
-    admissionType: AdmissionType,
+    admissionCategory: AdmissionCategory,
     memberId: string,
   ): Promise<MemberAdmission> {
-    const internalValue: InternalValue = this.matchMap[admissionType];
+    const internalValue: InternalValue = this.matchMap[admissionCategory];
     const { _id } = await internalValue.model.create(omitBy(element, isNil));
     const addRes = await this.admissionModel
       .findOneAndUpdate(
         { memberId: new Types.ObjectId(memberId) },
-        { $addToSet: { [`${admissionType}`]: _id } },
+        { $addToSet: { [`${admissionCategory}`]: _id } },
         { upsert: true, new: true },
       )
-      .populate(admissionType);
+      .populate(admissionCategory);
     return this.replaceId(addRes);
   }
 
   private async updateRefObjects(
     element: BaseAdmission,
-    admissionType: AdmissionType,
+    admissionCategory: AdmissionCategory,
     memberId: string,
   ): Promise<MemberAdmission> {
-    const internalValue: InternalValue = this.matchMap[admissionType];
+    const internalValue: InternalValue = this.matchMap[admissionCategory];
     const result = await internalValue.model.findByIdAndUpdate(new Types.ObjectId(element.id), {
       $set: { ...omitBy(element, isNil) },
     });
@@ -122,10 +122,10 @@ export class MemberAdmissionService extends BaseService {
 
   private async deleteRefObjects(
     id: string,
-    admissionType: AdmissionType,
+    admissionCategory: AdmissionCategory,
     memberId: string,
   ): Promise<MemberAdmission> {
-    const internalValue: InternalValue = this.matchMap[admissionType];
+    const internalValue: InternalValue = this.matchMap[admissionCategory];
     const deleteRes = await internalValue.model.findByIdAndDelete(new Types.ObjectId(id));
     if (!deleteRes) {
       throw new Error(Errors.get(internalValue.errorType));
@@ -134,10 +134,10 @@ export class MemberAdmissionService extends BaseService {
     const removeRes = await this.admissionModel
       .findOneAndUpdate(
         { memberId: new Types.ObjectId(memberId) },
-        { $pull: { [`${admissionType}`]: new Types.ObjectId(id) } },
+        { $pull: { [`${admissionCategory}`]: new Types.ObjectId(id) } },
         { upsert: true, new: true },
       )
-      .populate(admissionType);
+      .populate(admissionCategory);
     return this.replaceId(removeRes);
   }
 }
