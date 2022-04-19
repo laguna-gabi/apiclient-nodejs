@@ -1,5 +1,5 @@
 module.exports = {
-  displayName: 'hepius',
+  displayName: 'pandora',
   rootDir: '../',
   preset: '../../jest.preset.js',
   globals: {

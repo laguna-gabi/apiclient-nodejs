@@ -5,15 +5,15 @@
      alt="Iris" />
   </a><br/>
   <b>Total coverage:</b>
-  <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="lines">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-lines.svg?branch=develop" />
+  <a href="" alt="lines">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/badge-lines.svg?branch=develop" />
   </a>
   <b>Other coverage:</b>
-  <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="functions">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-functions.svg?branch=develop" />
+  <a href="" alt="functions">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/badge-functions.svg?branch=develop" />
   </a>
-  <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="statements">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-statements.svg?branch=develop" />
+  <a href="" alt="statements">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/iris/badge-statements.svg?branch=develop" />
   </a>
 </p>
 
