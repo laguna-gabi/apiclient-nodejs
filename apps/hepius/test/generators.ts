@@ -1248,7 +1248,7 @@ export const generateRequestHeaders = (authId: string) => {
 /*************************************************************************************************
  ***************************** ChangeAdmissionParams related methods *****************************
  ************************************************************************************************/
-export const generateProcedureParams = ({
+export const generateAdmissionProcedureParams = ({
   changeType,
   id,
 }: {
@@ -1265,7 +1265,7 @@ export const generateProcedureParams = ({
   };
 };
 
-export const generateMedicationParams = ({
+export const generateAdmissionMedicationParams = ({
   changeType,
   id,
 }: {

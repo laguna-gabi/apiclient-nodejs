@@ -33,9 +33,9 @@ import {
   defaultModules,
   generateAdmissionActivityParams,
   generateAdmissionExternalAppointmentParams,
+  generateAdmissionMedicationParams,
+  generateAdmissionProcedureParams,
   generateId,
-  generateMedicationParams,
-  generateProcedureParams,
 } from '../index';
 
 describe(MemberAdmissionService.name, () => {
@@ -282,13 +282,13 @@ describe(MemberAdmissionService.name, () => {
     mapAdmissionCategoryToParamField.set(AdmissionCategory.diagnoses, { field: 'diagnoses' });
     mapAdmissionCategoryToParamField.set(AdmissionCategory.procedures, {
       field: 'procedure',
-      method: generateProcedureParams,
+      method: generateAdmissionProcedureParams,
       model: procedureModel,
       errorNotFound: ErrorType.memberAdmissionProcedureIdNotFound,
     });
     mapAdmissionCategoryToParamField.set(AdmissionCategory.medications, {
       field: 'medication',
-      method: generateMedicationParams,
+      method: generateAdmissionMedicationParams,
       model: medicationModel,
       errorNotFound: ErrorType.memberAdmissionMedicationIdNotFound,
     });
