@@ -78,6 +78,7 @@ import {
   AudioFormat,
   CancelNotifyParams,
   Caregiver,
+  ChangeAdmissionExternalAppointmentParams,
   ChangeAdmissionMedicationParams,
   ChangeAdmissionProcedureParams,
   CreateMemberParams,
@@ -1286,6 +1287,30 @@ export const generateMedicationParams = ({
     coachNote: lorem.words(),
   };
 };
+
+export const generateAdmissionExternalAppointmentParams = ({
+  changeType,
+  id,
+  isScheduled,
+}: {
+  changeType: ChangeType;
+  id?: string;
+  isScheduled?: boolean;
+}): ChangeAdmissionExternalAppointmentParams => {
+  const attachIdParam = id ? { id } : {};
+  return {
+    changeType,
+    ...attachIdParam,
+    isScheduled: isScheduled !== undefined || Math.random() < 0.5,
+    drName: `dr ${name.lastName()}`,
+    instituteOrHospitalName: lorem.word(),
+    date: new Date(),
+    phone: generatePhone(),
+    description: lorem.sentence(),
+    address: lorem.sentence(),
+  };
+};
+
 /*************************************************************************************************
  ******************************************** Helpers ********************************************
  ************************************************************************************************/

@@ -52,6 +52,7 @@ export enum ErrorType {
   //member admission
   memberAdmissionProcedureIdNotFound = 9300,
   memberAdmissionMedicationIdNotFound = 9301,
+  memberAdmissionExternalAppointmentIdNotFound = 9302,
 
   // Notifications
   notificationMetadataInvalid = 9270,
@@ -225,6 +226,10 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [ErrorType.memberAdmissionProcedureIdNotFound.valueOf(), `procedure ${notFoundPrefix}`],
   [ErrorType.memberAdmissionMedicationIdNotFound.valueOf(), `medication ${notFoundPrefix}`],
+  [
+    ErrorType.memberAdmissionExternalAppointmentIdNotFound.valueOf(),
+    `external appointment ${notFoundPrefix}`,
+  ],
   [
     ErrorType.notificationMetadataInvalid.valueOf(),
     `when calling type 'text' or 'textSms', 'content' in metadata is required ` +

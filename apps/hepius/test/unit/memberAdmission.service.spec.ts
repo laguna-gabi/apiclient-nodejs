@@ -10,6 +10,9 @@ import {
 } from '../../src/common';
 import {
   AdmissionCategory,
+  ExternalAppointment,
+  ExternalAppointmentDocument,
+  ExternalAppointmentDto,
   Medication,
   MedicationDocument,
   MedicationDto,
@@ -23,6 +26,7 @@ import {
   dbConnect,
   dbDisconnect,
   defaultModules,
+  generateAdmissionExternalAppointmentParams,
   generateId,
   generateMedicationParams,
   generateProcedureParams,
@@ -33,6 +37,7 @@ describe(MemberAdmissionService.name, () => {
   let service: MemberAdmissionService;
   let procedureModel: Model<ProcedureDocument & defaultTimestampsDbValues>;
   let medicationModel: Model<MedicationDocument & defaultTimestampsDbValues>;
+  let externalAppointmentModel: Model<ExternalAppointmentDocument & defaultTimestampsDbValues>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -50,6 +55,10 @@ describe(MemberAdmissionService.name, () => {
     medicationModel = model<MedicationDocument & defaultTimestampsDbValues>(
       Medication.name,
       MedicationDto,
+    );
+    externalAppointmentModel = model<ExternalAppointmentDocument & defaultTimestampsDbValues>(
+      ExternalAppointment.name,
+      ExternalAppointmentDto,
     );
 
     await dbConnect();
@@ -336,6 +345,206 @@ describe(MemberAdmissionService.name, () => {
           new Types.ObjectId(admission.medications[0].id),
         );
         expect(medicationRes.name).toEqual(createMedication.name);
+      });
+    });
+
+    describe(AdmissionCategory.externalAppointments, () => {
+      // eslint-disable-next-line max-len
+      it('should create 2 externalAppointment for a member, and 1 externalAppointment for other member', async () => {
+        const memberId1 = generateId();
+        const external1a = generateAdmissionExternalAppointmentParams({
+          changeType: ChangeType.create,
+        });
+        const external1b = generateAdmissionExternalAppointmentParams({
+          changeType: ChangeType.create,
+        });
+        await service.changeAdmission({ externalAppointment: external1a }, memberId1);
+        const result1 = await service.changeAdmission(
+          { externalAppointment: external1b },
+          memberId1,
+        );
+
+        const memberId2 = generateId();
+        const external2 = generateAdmissionExternalAppointmentParams({
+          changeType: ChangeType.create,
+        });
+        const result2 = await service.changeAdmission(
+          { externalAppointment: external2 },
+          memberId2,
+        );
+
+        const { _id: externalId1a } = await externalAppointmentModel.findOne(
+          { date: external1a.date },
+          { _id: 1 },
+        );
+        const { _id: externalId1b } = await externalAppointmentModel.findOne(
+          { date: external1b.date },
+          { _id: 1 },
+        );
+        const { _id: externalId2 } = await externalAppointmentModel.findOne(
+          { date: external2.date },
+          { _id: 1 },
+        );
+
+        expect(result1).toMatchObject({
+          memberId: new Types.ObjectId(memberId1),
+          externalAppointments: [
+            new Types.ObjectId(externalId1a),
+            new Types.ObjectId(externalId1b),
+          ],
+        });
+        expect(result2).toMatchObject({
+          memberId: new Types.ObjectId(memberId2),
+          externalAppointments: [new Types.ObjectId(externalId2)],
+        });
+      });
+
+      it('should create and update a member externalAppointment', async () => {
+        const memberId = generateId();
+        const externalAppointment = generateAdmissionExternalAppointmentParams({
+          changeType: ChangeType.create,
+        });
+
+        const result = await service.changeAdmission({ externalAppointment }, memberId);
+
+        const external1Update = generateAdmissionExternalAppointmentParams({
+          changeType: ChangeType.update,
+          id: result.externalAppointments[0].id,
+          isScheduled: !externalAppointment.isScheduled,
+        });
+
+        await service.changeAdmission({ externalAppointment: external1Update }, memberId);
+
+        const updatedExternalResult: ExternalAppointment = await externalAppointmentModel.findById(
+          new Types.ObjectId(external1Update.id),
+          {
+            updatedAt: 0,
+            createdAt: 0,
+            _id: 0,
+            deleted: 0,
+          },
+        );
+
+        expect(updatedExternalResult.isScheduled).toEqual(external1Update.isScheduled);
+        expect(updatedExternalResult.drName).toEqual(external1Update.drName);
+        expect(updatedExternalResult.instituteOrHospitalName).toEqual(
+          external1Update.instituteOrHospitalName,
+        );
+        expect(updatedExternalResult.date).toEqual(external1Update.date);
+        expect(updatedExternalResult.phone).toEqual(external1Update.phone);
+        expect(updatedExternalResult.description).toEqual(external1Update.description);
+        expect(updatedExternalResult.address).toEqual(external1Update.address);
+
+        expect(result).toMatchObject({
+          memberId: new Types.ObjectId(memberId),
+          externalAppointments: [new Types.ObjectId(updatedExternalResult.id)],
+        });
+      });
+
+      it('should create and delete a member externalAppointment', async () => {
+        const memberId = generateId();
+        const externalAppointment = generateAdmissionExternalAppointmentParams({
+          changeType: ChangeType.create,
+        });
+
+        await service.changeAdmission({ externalAppointment }, memberId);
+
+        const { _id: extrenalId } = await externalAppointmentModel.findOne(
+          { date: externalAppointment.date },
+          { _id: 1 },
+        );
+
+        const result = await service.changeAdmission(
+          { externalAppointment: { changeType: ChangeType.delete, id: extrenalId } },
+          memberId,
+        );
+
+        expect(result).toMatchObject({
+          memberId: new Types.ObjectId(memberId),
+          externalAppointments: [],
+        });
+      });
+
+      // eslint-disable-next-line max-len
+      it('should throw error on update externalAppointment with id not found', async () => {
+        const memberId = generateId();
+        const externalAppointment = generateAdmissionExternalAppointmentParams({
+          changeType: ChangeType.update,
+          id: generateId(),
+        });
+        await expect(service.changeAdmission({ externalAppointment }, memberId)).rejects.toThrow(
+          Errors.get(ErrorType.memberAdmissionExternalAppointmentIdNotFound),
+        );
+      });
+
+      // eslint-disable-next-line max-len
+      it('should throw error on delete externalAppointment with id not found', async () => {
+        const memberId = generateId();
+        const externalAppointment = generateAdmissionExternalAppointmentParams({
+          changeType: ChangeType.delete,
+          id: generateId(),
+        });
+        await expect(service.changeAdmission({ externalAppointment }, memberId)).rejects.toThrow(
+          Errors.get(ErrorType.memberAdmissionExternalAppointmentIdNotFound),
+        );
+      });
+
+      it('should remove null fields from create externalAppointment params', async () => {
+        const memberId = generateId();
+        const externalAppointment = generateAdmissionExternalAppointmentParams({
+          changeType: ChangeType.create,
+        });
+        externalAppointment.address = null;
+
+        await service.changeAdmission({ externalAppointment }, memberId);
+
+        const externalAppointmentRes = await externalAppointmentModel.findOne({
+          address: externalAppointment.address,
+        });
+        expect(externalAppointmentRes.address).not.toBeDefined();
+      });
+
+      // eslint-disable-next-line max-len
+      it('should not override externalAppointment null input field on update', async () => {
+        const memberId = generateId();
+        const createExternal = generateAdmissionExternalAppointmentParams({
+          changeType: ChangeType.create,
+        });
+
+        const admission = await service.changeAdmission(
+          { externalAppointment: createExternal },
+          memberId,
+        );
+
+        const updateExternal = generateAdmissionExternalAppointmentParams({
+          changeType: ChangeType.update,
+          id: admission.externalAppointments[0].id,
+        });
+        updateExternal.address = null;
+
+        await service.changeAdmission({ externalAppointment: updateExternal }, memberId);
+
+        const externalRes = await externalAppointmentModel.findById(
+          new Types.ObjectId(admission.externalAppointments[0].id),
+        );
+        expect(externalRes.address).toEqual(createExternal.address);
+      });
+
+      it('should set default isScheduled to true when not in input params', async () => {
+        const memberId = generateId();
+        const externalAppointment = generateAdmissionExternalAppointmentParams({
+          changeType: ChangeType.create,
+        });
+        delete externalAppointment.isScheduled;
+
+        await service.changeAdmission({ externalAppointment }, memberId);
+
+        const { isScheduled } = await externalAppointmentModel.findOne(
+          { date: externalAppointment.date },
+          { isScheduled: 1 },
+        );
+
+        expect(isScheduled).toBeTruthy();
       });
     });
   });
