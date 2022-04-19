@@ -7,7 +7,6 @@ const FILES_TO_UPLOAD = [
   'badge-functions.svg',
   'badge-lines.svg',
   'badge-statements.svg',
-  'coverage-summary.json',
 ];
 
 const s3 = new S3({ signatureVersion: 'v4', apiVersion: '2006-03-01', region: 'us-east-1' });
@@ -38,6 +37,7 @@ const uploadCoverage = async () => {
       Bucket: COVERAGE_BUCKET,
       Key: `${appName}/${fileName}`,
       Body: fileContent,
+      ContentType: 'image/svg+xml',
     };
 
     await s3.upload(params).promise();
