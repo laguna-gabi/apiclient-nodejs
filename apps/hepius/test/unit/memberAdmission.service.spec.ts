@@ -9,6 +9,9 @@ import {
   defaultTimestampsDbValues,
 } from '../../src/common';
 import {
+  Medication,
+  MedicationDocument,
+  MedicationDto,
   MemberAdmissionService,
   MemberModule,
   Procedure,
@@ -20,6 +23,7 @@ import {
   dbDisconnect,
   defaultModules,
   generateId,
+  generateMedicationParams,
   generateProcedureParams,
 } from '../index';
 
@@ -27,6 +31,7 @@ describe(MemberAdmissionService.name, () => {
   let module: TestingModule;
   let service: MemberAdmissionService;
   let procedureModel: Model<ProcedureDocument & defaultTimestampsDbValues>;
+  let medicationModel: Model<MedicationDocument & defaultTimestampsDbValues>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -40,6 +45,10 @@ describe(MemberAdmissionService.name, () => {
     procedureModel = model<ProcedureDocument & defaultTimestampsDbValues>(
       Procedure.name,
       ProcedureDto,
+    );
+    medicationModel = model<MedicationDocument & defaultTimestampsDbValues>(
+      Medication.name,
+      MedicationDto,
     );
 
     await dbConnect();
@@ -184,6 +193,148 @@ describe(MemberAdmissionService.name, () => {
           new Types.ObjectId(admission.procedures[0].id),
         );
         expect(procedureRes.text).toEqual(createProcedure.text);
+      });
+    });
+
+    describe('medication', () => {
+      // eslint-disable-next-line max-len
+      it('should create 2 medications for a member, and 1 medication for other member', async () => {
+        const memberId1 = generateId();
+        const medication1a = generateMedicationParams({ changeType: ChangeType.create });
+        const medication1b = generateMedicationParams({ changeType: ChangeType.create });
+        await service.changeAdmission({ medication: medication1a }, memberId1);
+        const result1 = await service.changeAdmission({ medication: medication1b }, memberId1);
+
+        const memberId2 = generateId();
+        const medication2 = generateMedicationParams({ changeType: ChangeType.create });
+        const result2 = await service.changeAdmission({ medication: medication2 }, memberId2);
+
+        const { _id: medicationId1a } = await medicationModel.findOne(
+          { startDate: medication1a.startDate },
+          { _id: 1 },
+        );
+        const { _id: medicationId1b } = await medicationModel.findOne(
+          { startDate: medication1b.startDate },
+          { _id: 1 },
+        );
+        const { _id: medicationId2 } = await medicationModel.findOne(
+          { startDate: medication1b.startDate },
+          { _id: 1 },
+        );
+
+        expect(result1).toMatchObject({
+          memberId: new Types.ObjectId(memberId1),
+          medications: [new Types.ObjectId(medicationId1a), new Types.ObjectId(medicationId1b)],
+        });
+        expect(result2).toMatchObject({
+          memberId: new Types.ObjectId(memberId2),
+          medications: [new Types.ObjectId(medicationId2)],
+        });
+      });
+
+      it('should create and update a member medication', async () => {
+        const memberId = generateId();
+        const medication = generateMedicationParams({ changeType: ChangeType.create });
+
+        const result = await service.changeAdmission({ medication }, memberId);
+
+        const medication1Update = generateMedicationParams({
+          changeType: ChangeType.update,
+          id: result.medications[0].id,
+        });
+
+        await service.changeAdmission({ medication: medication1Update }, memberId);
+
+        const updatedMedicationResult: Medication = await medicationModel.findById(
+          new Types.ObjectId(medication1Update.id),
+          { updatedAt: 0, createdAt: 0, _id: 0, deleted: 0 },
+        );
+
+        expect(updatedMedicationResult.name).toEqual(medication1Update.name);
+        expect(updatedMedicationResult.frequency).toEqual(medication1Update.frequency);
+        expect(updatedMedicationResult.type).toEqual(medication1Update.type);
+        expect(updatedMedicationResult.amount).toMatchObject(medication1Update.amount);
+        expect(updatedMedicationResult.startDate).toEqual(medication1Update.startDate);
+        expect(updatedMedicationResult.endDate).toEqual(medication1Update.endDate);
+        expect(updatedMedicationResult.memberNote).toEqual(medication1Update.memberNote);
+        expect(updatedMedicationResult.coachNote).toEqual(medication1Update.coachNote);
+
+        expect(result).toMatchObject({
+          memberId: new Types.ObjectId(memberId),
+          medications: [new Types.ObjectId(updatedMedicationResult.id)],
+        });
+      });
+
+      it('should create and delete a member medication', async () => {
+        const memberId = generateId();
+        const medication = generateMedicationParams({ changeType: ChangeType.create });
+
+        await service.changeAdmission({ medication }, memberId);
+
+        const { _id: medicationId } = await medicationModel.findOne(
+          { startDate: medication.startDate },
+          { _id: 1 },
+        );
+
+        const result = await service.changeAdmission(
+          { medication: { changeType: ChangeType.delete, id: medicationId } },
+          memberId,
+        );
+
+        expect(result).toMatchObject({ memberId: new Types.ObjectId(memberId), medications: [] });
+      });
+
+      it('should throw error on update medication with id not found', async () => {
+        const memberId = generateId();
+        const medication = generateMedicationParams({
+          changeType: ChangeType.update,
+          id: generateId(),
+        });
+        await expect(service.changeAdmission({ medication }, memberId)).rejects.toThrow(
+          Errors.get(ErrorType.memberAdmissionMedicationIdNotFound),
+        );
+      });
+
+      it('should throw error on delete procedure with id not found', async () => {
+        const memberId = generateId();
+        const medication = generateMedicationParams({
+          changeType: ChangeType.delete,
+          id: generateId(),
+        });
+        await expect(service.changeAdmission({ medication }, memberId)).rejects.toThrow(
+          Errors.get(ErrorType.memberAdmissionMedicationIdNotFound),
+        );
+      });
+
+      it('should remove null fields from create medication params', async () => {
+        const memberId = generateId();
+        const medication = generateMedicationParams({ changeType: ChangeType.create });
+        medication.name = null;
+
+        await service.changeAdmission({ medication }, memberId);
+
+        const medicationRes = await medicationModel.findOne({ startDate: medication.startDate });
+        expect(medicationRes.name).not.toBeDefined();
+      });
+
+      it('should not override medication null input field on update', async () => {
+        const memberId = generateId();
+        const createMedication = generateMedicationParams({ changeType: ChangeType.create });
+
+        const admission = await service.changeAdmission({ medication: createMedication }, memberId);
+
+        const updateMedication = generateMedicationParams({
+          changeType: ChangeType.update,
+          id: admission.medications[0].id,
+        });
+        updateMedication.name = null;
+
+        await service.changeAdmission({ medication: updateMedication }, memberId);
+
+        const medicationRes = await medicationModel.findById(
+          new Types.ObjectId(admission.medications[0].id),
+        );
+        expect(medicationRes.name).toEqual(createMedication.name);
       });
     });
   });

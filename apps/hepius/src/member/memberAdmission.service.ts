@@ -1,8 +1,11 @@
 import {
   AdmissionType,
   BaseAdmission,
+  ChangeAdmissionMedicationParams,
   ChangeAdmissionParams,
   ChangeAdmissionProcedureParams,
+  Medication,
+  MedicationDocument,
   MemberAdmission,
   MemberAdmissionDocument,
   Procedure,
@@ -27,6 +30,8 @@ export class MemberAdmissionService extends BaseService {
   constructor(
     @InjectModel(Procedure.name)
     private readonly procedureModel: Model<ProcedureDocument> & ISoftDelete<ProcedureDocument>,
+    @InjectModel(Medication.name)
+    private readonly medicationModel: Model<MedicationDocument> & ISoftDelete<MedicationDocument>,
     @InjectModel(MemberAdmission.name)
     private readonly admissionModel: Model<MemberAdmissionDocument> &
       ISoftDelete<MemberAdmissionDocument>,
@@ -36,6 +41,10 @@ export class MemberAdmissionService extends BaseService {
     this.matchMap[AdmissionType.procedures] = {
       model: this.procedureModel,
       errorType: ErrorType.memberAdmissionProcedureIdNotFound,
+    };
+    this.matchMap[AdmissionType.medications] = {
+      model: this.medicationModel,
+      errorType: ErrorType.memberAdmissionMedicationIdNotFound,
     };
   }
 
@@ -50,6 +59,11 @@ export class MemberAdmissionService extends BaseService {
       const { changeType, ...procedure }: ChangeAdmissionProcedureParams = setParams.procedure;
       const admissionType = AdmissionType.procedures;
       result = await this.changeInternal(procedure, changeType, admissionType, memberId);
+    }
+    if (setParams.medication) {
+      const { changeType, ...medication }: ChangeAdmissionMedicationParams = setParams.medication;
+      const admissionType = AdmissionType.medications;
+      result = await this.changeInternal(medication, changeType, admissionType, memberId);
     }
 
     return result;

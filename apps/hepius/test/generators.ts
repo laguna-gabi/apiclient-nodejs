@@ -78,6 +78,7 @@ import {
   AudioFormat,
   CancelNotifyParams,
   Caregiver,
+  ChangeAdmissionMedicationParams,
   ChangeAdmissionProcedureParams,
   CreateMemberParams,
   CreateTaskParams,
@@ -1262,6 +1263,29 @@ export const generateProcedureParams = ({
   };
 };
 
+export const generateMedicationParams = ({
+  changeType,
+  id,
+}: {
+  changeType: ChangeType;
+  id?: string;
+}): ChangeAdmissionMedicationParams => {
+  const attachIdParam = id ? { id } : {};
+  const startDate = new Date();
+  const endDate = add(startDate, { days: 3 });
+  return {
+    changeType,
+    ...attachIdParam,
+    name: lorem.word(),
+    frequency: lorem.word(),
+    type: lorem.word(),
+    amount: { amount: datatype.number(), unitType: lorem.word() },
+    startDate,
+    endDate,
+    memberNote: lorem.words(),
+    coachNote: lorem.words(),
+  };
+};
 /*************************************************************************************************
  ******************************************** Helpers ********************************************
  ************************************************************************************************/

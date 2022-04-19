@@ -64,14 +64,14 @@ export class Amount {
 
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
-export class Medication extends Identifier {
+export class Medication extends BaseAdmission {
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
   name?: string;
 
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
-  Frequency?: string;
+  frequency?: string;
 
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
@@ -89,11 +89,11 @@ export class Medication extends Identifier {
   @Field(() => Date, { nullable: true })
   endDate?: Date;
 
-  @Prop({ type: Date, isNan: true })
+  @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
   memberNote?: string;
 
-  @Prop({ type: Date, isNan: true })
+  @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
   coachNote?: string;
 }
@@ -174,9 +174,9 @@ export class ChangeAdmissionProcedureParams extends Procedure {
 }
 
 @InputType()
-export class ChangeAdmissionMedicationParams extends ChangeAdmissionBaseParams {
-  @Field(() => Procedure)
-  medication: Medication;
+export class ChangeAdmissionMedicationParams extends Medication {
+  @Field(() => ChangeType)
+  changeType: ChangeType;
 }
 
 @InputType()
@@ -283,6 +283,11 @@ export const MemberAdmissionDto = audit(
 export type ProcedureDocument = Procedure & Document & ISoftDelete<Procedure>;
 export const ProcedureDto = audit(
   SchemaFactory.createForClass(Procedure).plugin(mongooseDelete, useFactoryOptions),
+);
+
+export type MedicationDocument = Medication & Document & ISoftDelete<Medication>;
+export const MedicationDto = audit(
+  SchemaFactory.createForClass(Medication).plugin(mongooseDelete, useFactoryOptions),
 );
 
 export type ExternalScheduledAppointmentDocument = ExternalAppointment &
