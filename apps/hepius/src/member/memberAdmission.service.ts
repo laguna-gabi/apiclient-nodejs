@@ -13,7 +13,7 @@ import {
   MemberAdmissionDocument,
   Procedure,
   ProcedureDocument,
-} from './memberAdmission.dto';
+} from '.';
 import { BaseService, ChangeType, ErrorType, Errors, LoggerService } from '../common';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -87,7 +87,7 @@ export class MemberAdmissionService extends BaseService {
       );
     }
 
-    return result;
+    return this.replaceId(result);
   }
 
   /*************************************************************************************************
@@ -123,7 +123,7 @@ export class MemberAdmissionService extends BaseService {
         { upsert: true, new: true },
       )
       .populate(admissionCategory);
-    return this.replaceId(addRes);
+    return this.replaceId(addRes.toObject());
   }
 
   private async updateRefObjects(
@@ -138,7 +138,8 @@ export class MemberAdmissionService extends BaseService {
     if (!result) {
       throw new Error(Errors.get(internalValue.errorType));
     }
-    return this.admissionModel.findById(memberId);
+    const object = await this.admissionModel.findOne({ memberId: new Types.ObjectId(memberId) });
+    return this.replaceId(object);
   }
 
   private async deleteRefObjects(
@@ -159,6 +160,6 @@ export class MemberAdmissionService extends BaseService {
         { upsert: true, new: true },
       )
       .populate(admissionCategory);
-    return this.replaceId(removeRes);
+    return this.replaceId(removeRes.toObject());
   }
 }
