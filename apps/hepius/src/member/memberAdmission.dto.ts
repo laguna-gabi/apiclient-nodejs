@@ -131,13 +131,13 @@ export class ExternalAppointment extends BaseAdmission {
 
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
-export class Activity {
+export class Activity extends BaseAdmission {
   @Prop({ isNan: true })
   @Field(() => String)
   text?: string;
 
-  @Prop({ type: Boolean, isNan: true })
-  @Field(() => Boolean)
+  @Prop({ default: true })
+  @Field(() => Boolean, { nullable: true })
   isTodo?: boolean;
 }
 
@@ -189,9 +189,9 @@ export class ChangeAdmissionExternalAppointmentParams extends ExternalAppointmen
 }
 
 @InputType()
-export class ChangeAdmissionActivityParams extends ChangeAdmissionBaseParams {
-  @Field(() => Activity)
-  activity: Activity;
+export class ChangeAdmissionActivityParams extends Activity {
+  @Field(() => ChangeType)
+  changeType: ChangeType;
 }
 
 @InputType()

@@ -78,6 +78,7 @@ import {
   AudioFormat,
   CancelNotifyParams,
   Caregiver,
+  ChangeAdmissionActivityParams,
   ChangeAdmissionExternalAppointmentParams,
   ChangeAdmissionMedicationParams,
   ChangeAdmissionProcedureParams,
@@ -1308,6 +1309,24 @@ export const generateAdmissionExternalAppointmentParams = ({
     phone: generatePhone(),
     description: lorem.sentence(),
     address: lorem.sentence(),
+  };
+};
+
+export const generateAdmissionActivityParams = ({
+  changeType,
+  id,
+  isTodo,
+}: {
+  changeType: ChangeType;
+  id?: string;
+  isTodo?: boolean;
+}): ChangeAdmissionActivityParams => {
+  const attachIdParam = id ? { id } : {};
+  return {
+    changeType,
+    ...attachIdParam,
+    text: lorem.sentence(),
+    isTodo: isTodo !== undefined || Math.random() < 0.5,
   };
 };
 

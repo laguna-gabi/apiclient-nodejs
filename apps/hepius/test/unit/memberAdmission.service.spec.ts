@@ -9,6 +9,9 @@ import {
   defaultTimestampsDbValues,
 } from '../../src/common';
 import {
+  Activity,
+  ActivityDocument,
+  ActivityDto,
   AdmissionCategory,
   BaseAdmission,
   ExternalAppointment,
@@ -28,6 +31,7 @@ import {
   dbConnect,
   dbDisconnect,
   defaultModules,
+  generateAdmissionActivityParams,
   generateAdmissionExternalAppointmentParams,
   generateId,
   generateMedicationParams,
@@ -44,6 +48,7 @@ describe(MemberAdmissionService.name, () => {
   let procedureModel: Model<ProcedureDocument & defaultTimestampsDbValues>;
   let medicationModel: Model<MedicationDocument & defaultTimestampsDbValues>;
   let externalAppointmentModel: Model<ExternalAppointmentDocument & defaultTimestampsDbValues>;
+  let activityModel: Model<ActivityDocument & defaultTimestampsDbValues>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -54,41 +59,8 @@ describe(MemberAdmissionService.name, () => {
     service = module.get<MemberAdmissionService>(MemberAdmissionService);
     mockLogger(module.get<LoggerService>(LoggerService));
 
-    procedureModel = model<ProcedureDocument & defaultTimestampsDbValues>(
-      Procedure.name,
-      ProcedureDto,
-    );
-    medicationModel = model<MedicationDocument & defaultTimestampsDbValues>(
-      Medication.name,
-      MedicationDto,
-    );
-    externalAppointmentModel = model<ExternalAppointmentDocument & defaultTimestampsDbValues>(
-      ExternalAppointment.name,
-      ExternalAppointmentDto,
-    );
-
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.diagnoses, { field: 'diagnoses' });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.procedures, {
-      field: 'procedure',
-      method: generateProcedureParams,
-      model: procedureModel,
-      errorNotFound: ErrorType.memberAdmissionProcedureIdNotFound,
-    });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.medications, {
-      field: 'medication',
-      method: generateMedicationParams,
-      model: medicationModel,
-      errorNotFound: ErrorType.memberAdmissionMedicationIdNotFound,
-    });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.externalAppointments, {
-      field: 'externalAppointment',
-      method: generateAdmissionExternalAppointmentParams,
-      model: externalAppointmentModel,
-      errorNotFound: ErrorType.memberAdmissionExternalAppointmentIdNotFound,
-    });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.activities, { field: 'activity' });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.woundCares, { field: 'woundCare' });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.dietary, { field: 'dietary' });
+    initModels();
+    initMap();
 
     await dbConnect();
   });
@@ -102,6 +74,7 @@ describe(MemberAdmissionService.name, () => {
     AdmissionCategory.procedures,
     AdmissionCategory.medications,
     AdmissionCategory.externalAppointments,
+    AdmissionCategory.activities,
   ])(
     'should create 2 %p for a member, and 1 for other member',
     async (admissionCategory: AdmissionCategory) => {
@@ -137,6 +110,7 @@ describe(MemberAdmissionService.name, () => {
     AdmissionCategory.procedures,
     AdmissionCategory.medications,
     AdmissionCategory.externalAppointments,
+    AdmissionCategory.activities,
   ])('should create and update a member %p', async (admissionCategory: AdmissionCategory) => {
     const { field, method, model } = mapAdmissionCategoryToParamField.get(admissionCategory);
     const memberId = generateId();
@@ -164,6 +138,7 @@ describe(MemberAdmissionService.name, () => {
     AdmissionCategory.procedures,
     AdmissionCategory.medications,
     AdmissionCategory.externalAppointments,
+    AdmissionCategory.activities,
   ])('should create and update a member %p', async (admissionCategory: AdmissionCategory) => {
     const { field, method, model } = mapAdmissionCategoryToParamField.get(admissionCategory);
     const memberId = generateId();
@@ -196,6 +171,8 @@ describe(MemberAdmissionService.name, () => {
     ${AdmissionCategory.medications}          | ${ChangeType.delete}
     ${AdmissionCategory.externalAppointments} | ${ChangeType.update}
     ${AdmissionCategory.externalAppointments} | ${ChangeType.delete}
+    ${AdmissionCategory.activities}           | ${ChangeType.update}
+    ${AdmissionCategory.activities}           | ${ChangeType.delete}
   `(
     `should throw error on $changeType $admissionCategory with id not found`,
     async ({ admissionCategory, changeType }) => {
@@ -217,6 +194,7 @@ describe(MemberAdmissionService.name, () => {
     ${AdmissionCategory.procedures}           | ${'text'}
     ${AdmissionCategory.medications}          | ${'name'}
     ${AdmissionCategory.externalAppointments} | ${'date'}
+    ${AdmissionCategory.activities}           | ${'text'}
   `(
     `should remove null fields from create $admissionCategory params`,
     async ({ admissionCategory, key }) => {
@@ -238,6 +216,7 @@ describe(MemberAdmissionService.name, () => {
     ${AdmissionCategory.procedures}           | ${'text'}
     ${AdmissionCategory.medications}          | ${'name'}
     ${AdmissionCategory.externalAppointments} | ${'date'}
+    ${AdmissionCategory.activities}           | ${'text'}
   `(
     `should remove null fields from update $admissionCategory params`,
     async ({ admissionCategory, key }) => {
@@ -281,5 +260,51 @@ describe(MemberAdmissionService.name, () => {
     memberId: string,
   ): Promise<MemberAdmission> => {
     return service.changeAdmission({ [`${field}`]: params }, memberId);
+  };
+
+  const initModels = () => {
+    procedureModel = model<ProcedureDocument & defaultTimestampsDbValues>(
+      Procedure.name,
+      ProcedureDto,
+    );
+    medicationModel = model<MedicationDocument & defaultTimestampsDbValues>(
+      Medication.name,
+      MedicationDto,
+    );
+    externalAppointmentModel = model<ExternalAppointmentDocument & defaultTimestampsDbValues>(
+      ExternalAppointment.name,
+      ExternalAppointmentDto,
+    );
+    activityModel = model<ActivityDocument & defaultTimestampsDbValues>(Activity.name, ActivityDto);
+  };
+
+  const initMap = () => {
+    mapAdmissionCategoryToParamField.set(AdmissionCategory.diagnoses, { field: 'diagnoses' });
+    mapAdmissionCategoryToParamField.set(AdmissionCategory.procedures, {
+      field: 'procedure',
+      method: generateProcedureParams,
+      model: procedureModel,
+      errorNotFound: ErrorType.memberAdmissionProcedureIdNotFound,
+    });
+    mapAdmissionCategoryToParamField.set(AdmissionCategory.medications, {
+      field: 'medication',
+      method: generateMedicationParams,
+      model: medicationModel,
+      errorNotFound: ErrorType.memberAdmissionMedicationIdNotFound,
+    });
+    mapAdmissionCategoryToParamField.set(AdmissionCategory.externalAppointments, {
+      field: 'externalAppointment',
+      method: generateAdmissionExternalAppointmentParams,
+      model: externalAppointmentModel,
+      errorNotFound: ErrorType.memberAdmissionExternalAppointmentIdNotFound,
+    });
+    mapAdmissionCategoryToParamField.set(AdmissionCategory.activities, {
+      field: 'activity',
+      method: generateAdmissionActivityParams,
+      model: activityModel,
+      errorNotFound: ErrorType.memberAdmissionActivityIdNotFound,
+    });
+    mapAdmissionCategoryToParamField.set(AdmissionCategory.woundCares, { field: 'woundCare' });
+    mapAdmissionCategoryToParamField.set(AdmissionCategory.dietary, { field: 'dietary' });
   };
 });

@@ -1,6 +1,9 @@
 import {
+  Activity,
+  ActivityDocument,
   AdmissionCategory,
   BaseAdmission,
+  ChangeAdmissionActivityParams,
   ChangeAdmissionExternalAppointmentParams,
   ChangeAdmissionMedicationParams,
   ChangeAdmissionParams,
@@ -41,6 +44,8 @@ export class MemberAdmissionService extends BaseService {
     @InjectModel(ExternalAppointment.name)
     private readonly externalAppointmentModel: Model<ExternalAppointmentDocument> &
       ISoftDelete<ExternalAppointmentDocument>,
+    @InjectModel(Activity.name)
+    private readonly activityModel: Model<ActivityDocument> & ISoftDelete<ActivityDocument>,
     readonly logger: LoggerService,
   ) {
     super();
@@ -55,6 +60,10 @@ export class MemberAdmissionService extends BaseService {
     this.matchMap[AdmissionCategory.externalAppointments] = {
       model: this.externalAppointmentModel,
       errorType: ErrorType.memberAdmissionExternalAppointmentIdNotFound,
+    };
+    this.matchMap[AdmissionCategory.activities] = {
+      model: this.activityModel,
+      errorType: ErrorType.memberAdmissionActivityIdNotFound,
     };
   }
 
@@ -85,6 +94,11 @@ export class MemberAdmissionService extends BaseService {
         admissionCategory,
         memberId,
       );
+    }
+    if (setParams.activity) {
+      const { changeType, ...activity }: ChangeAdmissionActivityParams = setParams.activity;
+      const admissionCategory = AdmissionCategory.activities;
+      result = await this.changeInternal(activity, changeType, admissionCategory, memberId);
     }
 
     return this.replaceId(result);
