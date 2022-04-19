@@ -83,7 +83,7 @@ jobs:
         run: npx nx affected --target=cov-badges --base=$NX_BASE --head=$NX_HEAD --parallel=3
       - name: Upload coverage
         if: github.ref == 'refs/heads/develop'
-        run: npx nx affected --target=uploadCoverage --base=develop --parallel=3
+        run: npx nx affected --target=uploadCoverage --base=$NX_BASE --head=$NX_HEAD --parallel=3
       - name: Zip lcov-report
         uses: vimtor/action-zip@v1
         with:
