@@ -1,0 +1,76 @@
+{
+  "decisions": {
+    "barriers": [
+      {
+        "name": "appointment-follow-up-unclear",
+        "conditions": {
+          "all": [
+            {
+              "fact": "memberInfo",
+              "operator": "equal",
+              "value": 0,
+              "path": "$.scheduledAppointments"
+            },
+            {
+              "fact": "memberInfo",
+              "operator": "equal",
+              "value": 0,
+              "path": "$.appointmentsToBeScheduled"
+            }
+          ]
+        },
+        "event": {
+          "type": "create-barrier",
+          "params": {
+            "type": "appointment-follow-up-unclear"
+          }
+        }
+      },
+      {
+        "name": "loneliness",
+        "conditions": {
+          "any": [
+            {
+              "fact": "memberInfo",
+              "operator": "equal",
+              "value": true,
+              "path": "$.livesAlone"
+            },
+            {
+              "fact": "caregiversCount",
+              "operator": "lessThan",
+              "value": 2
+            }
+          ]
+        },
+        "event": {
+          "type": "create-barrier",
+          "params": {
+            "type": "loneliness"
+          }
+        }
+      }
+    ],
+    "carePlans": [
+      {
+        "name": "content-about-combating-loneliness",
+        "conditions": {
+          "all": [
+            {
+              "fact": "newBarriers",
+              "operator": "contains",
+              "value": "loneliness"
+            }
+          ]
+        },
+        "event": {
+          "type": "create-poc",
+          "params": {
+            "type": "content-about-combating-loneliness",
+            "barrierType": "loneliness"
+          }
+        }
+      }
+    ]
+  }
+}
