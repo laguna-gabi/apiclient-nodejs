@@ -25,7 +25,7 @@ export enum RefAdmissionCategory {
   medications = 'medications',
   externalAppointments = 'externalAppointments',
   activities = 'activities',
-  // woundCares = 'woundCares', //for now, not supported - waiting for pr to be merged
+  woundCares = 'woundCares',
 }
 registerEnumType(RefAdmissionCategory, { name: 'RefAdmissionCategory' });
 
@@ -137,7 +137,7 @@ export class ExternalAppointment extends BaseAdmission {
 @Schema({ versionKey: false, timestamps: true })
 export class Activity extends BaseAdmission {
   @Prop({ isNan: true })
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   text?: string;
 
   @Prop({ default: true })
@@ -145,8 +145,10 @@ export class Activity extends BaseAdmission {
   isTodo?: boolean;
 }
 
-@InputType()
-export class WoundCare {
+@ObjectType()
+@Schema({ versionKey: false, timestamps: true })
+export class WoundCare extends BaseAdmission {
+  @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
   text?: string;
 }
@@ -199,9 +201,9 @@ export class ChangeAdmissionActivityParams extends Activity {
 }
 
 @InputType()
-export class ChangeAdmissionWoundCareParams extends ChangeAdmissionBaseParams {
-  @Field(() => WoundCare)
-  woundCare: WoundCare;
+export class ChangeAdmissionWoundCareParams extends WoundCare {
+  @Field(() => ChangeType)
+  changeType: ChangeType;
 }
 
 @InputType()
