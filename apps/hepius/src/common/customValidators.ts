@@ -104,21 +104,6 @@ export function IsUserIdOrAppointmentId(options: ValidationOptions) {
   };
 }
 
-export function IsStringDate(options: ValidationOptions) {
-  return (object, propertyName: string) => {
-    registerDecorator({
-      target: object.constructor,
-      propertyName,
-      options,
-      validator: {
-        validate(date) {
-          return !!Date.parse(date);
-        },
-      },
-    });
-  };
-}
-
 export function IsValidZipCode(options: ValidationOptions) {
   return (object, propertyName: string) => {
     registerDecorator({
