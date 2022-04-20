@@ -14,16 +14,20 @@ export enum ProcedureType {
 }
 registerEnumType(ProcedureType, { name: 'ProcedureType' });
 
-export enum AdmissionCategory {
+export enum SingleValueAdmissionCategory {
   diagnoses = 'diagnoses',
+  dietary = 'dietary',
+}
+registerEnumType(SingleValueAdmissionCategory, { name: 'SingleValueAdmissionCategory' });
+
+export enum RefAdmissionCategory {
   procedures = 'procedures',
   medications = 'medications',
   externalAppointments = 'externalAppointments',
   activities = 'activities',
-  woundCares = 'woundCares',
-  dietary = 'dietary',
+  // woundCares = 'woundCares', //for now, not supported - waiting for pr to be merged
 }
-registerEnumType(AdmissionCategory, { name: 'AdmissionCategory' });
+registerEnumType(RefAdmissionCategory, { name: 'RefAdmissionCategory' });
 
 /**************************************************************************************************
  ************************************* Schemas for gql methods ************************************

@@ -1,7 +1,6 @@
 import {
   Activity,
   ActivityDocument,
-  AdmissionCategory,
   BaseAdmission,
   ChangeAdmissionActivityParams,
   ChangeAdmissionExternalAppointmentParams,
@@ -16,14 +15,14 @@ import {
   MemberAdmissionDocument,
   Procedure,
   ProcedureDocument,
+  RefAdmissionCategory,
 } from '.';
 import { BaseService, ChangeType, ErrorType, Errors, LoggerService } from '../common';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ISoftDelete } from '../db';
-import { isNil, omitBy } from 'lodash';
-
+import { cloneDeep, isNil, omitBy } from 'lodash';
 class InternalValue {
   model: typeof Model;
   errorType: ErrorType;
@@ -31,7 +30,7 @@ class InternalValue {
 
 @Injectable()
 export class MemberAdmissionService extends BaseService {
-  private readonly matchMap: Map<AdmissionCategory, InternalValue> = new Map();
+  private readonly matchMap: Map<RefAdmissionCategory, InternalValue> = new Map();
 
   constructor(
     @InjectModel(Procedure.name)
@@ -49,19 +48,19 @@ export class MemberAdmissionService extends BaseService {
     readonly logger: LoggerService,
   ) {
     super();
-    this.matchMap[AdmissionCategory.procedures] = {
+    this.matchMap[RefAdmissionCategory.procedures] = {
       model: this.procedureModel,
       errorType: ErrorType.memberAdmissionProcedureIdNotFound,
     };
-    this.matchMap[AdmissionCategory.medications] = {
+    this.matchMap[RefAdmissionCategory.medications] = {
       model: this.medicationModel,
       errorType: ErrorType.memberAdmissionMedicationIdNotFound,
     };
-    this.matchMap[AdmissionCategory.externalAppointments] = {
+    this.matchMap[RefAdmissionCategory.externalAppointments] = {
       model: this.externalAppointmentModel,
       errorType: ErrorType.memberAdmissionExternalAppointmentIdNotFound,
     };
-    this.matchMap[AdmissionCategory.activities] = {
+    this.matchMap[RefAdmissionCategory.activities] = {
       model: this.activityModel,
       errorType: ErrorType.memberAdmissionActivityIdNotFound,
     };
@@ -76,18 +75,18 @@ export class MemberAdmissionService extends BaseService {
     let result;
     if (setParams.procedure) {
       const { changeType, ...procedure }: ChangeAdmissionProcedureParams = setParams.procedure;
-      const admissionCategory = AdmissionCategory.procedures;
+      const admissionCategory = RefAdmissionCategory.procedures;
       result = await this.changeInternal(procedure, changeType, admissionCategory, memberId);
     }
     if (setParams.medication) {
       const { changeType, ...medication }: ChangeAdmissionMedicationParams = setParams.medication;
-      const admissionCategory = AdmissionCategory.medications;
+      const admissionCategory = RefAdmissionCategory.medications;
       result = await this.changeInternal(medication, changeType, admissionCategory, memberId);
     }
     if (setParams.externalAppointment) {
       const { changeType, ...externalAppointment }: ChangeAdmissionExternalAppointmentParams =
         setParams.externalAppointment;
-      const admissionCategory = AdmissionCategory.externalAppointments;
+      const admissionCategory = RefAdmissionCategory.externalAppointments;
       result = await this.changeInternal(
         externalAppointment,
         changeType,
@@ -97,7 +96,7 @@ export class MemberAdmissionService extends BaseService {
     }
     if (setParams.activity) {
       const { changeType, ...activity }: ChangeAdmissionActivityParams = setParams.activity;
-      const admissionCategory = AdmissionCategory.activities;
+      const admissionCategory = RefAdmissionCategory.activities;
       result = await this.changeInternal(activity, changeType, admissionCategory, memberId);
     }
 
@@ -110,7 +109,7 @@ export class MemberAdmissionService extends BaseService {
   private async changeInternal(
     element: BaseAdmission,
     changeType: ChangeType,
-    admissionCategory: AdmissionCategory,
+    admissionCategory: RefAdmissionCategory,
     memberId: string,
   ): Promise<MemberAdmission> {
     switch (changeType) {
@@ -125,24 +124,23 @@ export class MemberAdmissionService extends BaseService {
 
   private async createRefObjects(
     element: BaseAdmission,
-    admissionCategory: AdmissionCategory,
+    admissionCategory: RefAdmissionCategory,
     memberId: string,
   ): Promise<MemberAdmission> {
     const internalValue: InternalValue = this.matchMap[admissionCategory];
     const { _id } = await internalValue.model.create(omitBy(element, isNil));
-    const addRes = await this.admissionModel
-      .findOneAndUpdate(
-        { memberId: new Types.ObjectId(memberId) },
-        { $addToSet: { [`${admissionCategory}`]: _id } },
-        { upsert: true, new: true },
-      )
-      .populate(admissionCategory);
-    return this.replaceId(addRes.toObject());
+    const addRes = await this.admissionModel.findOneAndUpdate(
+      { memberId: new Types.ObjectId(memberId) },
+      { $addToSet: { [`${admissionCategory}`]: _id } },
+      { upsert: true, new: true },
+    );
+
+    return this.populateAll(addRes);
   }
 
   private async updateRefObjects(
     element: BaseAdmission,
-    admissionCategory: AdmissionCategory,
+    admissionCategory: RefAdmissionCategory,
     memberId: string,
   ): Promise<MemberAdmission> {
     const internalValue: InternalValue = this.matchMap[admissionCategory];
@@ -153,12 +151,12 @@ export class MemberAdmissionService extends BaseService {
       throw new Error(Errors.get(internalValue.errorType));
     }
     const object = await this.admissionModel.findOne({ memberId: new Types.ObjectId(memberId) });
-    return this.replaceId(object);
+    return this.populateAll(object);
   }
 
   private async deleteRefObjects(
     id: string,
-    admissionCategory: AdmissionCategory,
+    admissionCategory: RefAdmissionCategory,
     memberId: string,
   ): Promise<MemberAdmission> {
     const internalValue: InternalValue = this.matchMap[admissionCategory];
@@ -174,6 +172,16 @@ export class MemberAdmissionService extends BaseService {
         { upsert: true, new: true },
       )
       .populate(admissionCategory);
-    return this.replaceId(removeRes.toObject());
+    return this.populateAll(removeRes);
+  }
+
+  private async populateAll(object): Promise<MemberAdmission> {
+    let addRes = cloneDeep(object);
+    await Promise.all(
+      Object.values(RefAdmissionCategory).map(async (admissionCategory) => {
+        addRes = await addRes.populate(admissionCategory);
+      }),
+    );
+    return this.replaceId(addRes.toObject());
   }
 }

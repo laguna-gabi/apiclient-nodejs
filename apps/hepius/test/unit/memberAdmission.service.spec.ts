@@ -12,7 +12,6 @@ import {
   Activity,
   ActivityDocument,
   ActivityDto,
-  AdmissionCategory,
   BaseAdmission,
   ExternalAppointment,
   ExternalAppointmentDocument,
@@ -26,6 +25,7 @@ import {
   Procedure,
   ProcedureDocument,
   ProcedureDto,
+  RefAdmissionCategory,
 } from '../../src/member';
 import {
   dbConnect,
@@ -42,7 +42,7 @@ describe(MemberAdmissionService.name, () => {
   let module: TestingModule;
   let service: MemberAdmissionService;
   const mapAdmissionCategoryToParamField: Map<
-    AdmissionCategory,
+    RefAdmissionCategory,
     { field: string; method?; model?: typeof Model; errorNotFound?: ErrorType }
   > = new Map();
   let procedureModel: Model<ProcedureDocument & defaultTimestampsDbValues>;
@@ -70,14 +70,9 @@ describe(MemberAdmissionService.name, () => {
     await dbDisconnect();
   });
 
-  test.each([
-    AdmissionCategory.procedures,
-    AdmissionCategory.medications,
-    AdmissionCategory.externalAppointments,
-    AdmissionCategory.activities,
-  ])(
+  test.each(Object.values(RefAdmissionCategory))(
     'should create 2 %p for a member, and 1 for other member',
-    async (admissionCategory: AdmissionCategory) => {
+    async (admissionCategory: RefAdmissionCategory) => {
       const { field, method, model } = mapAdmissionCategoryToParamField.get(admissionCategory);
 
       const changeParams1a = method({ changeType: ChangeType.create });
@@ -106,73 +101,69 @@ describe(MemberAdmissionService.name, () => {
     },
   );
 
-  test.each([
-    AdmissionCategory.procedures,
-    AdmissionCategory.medications,
-    AdmissionCategory.externalAppointments,
-    AdmissionCategory.activities,
-  ])('should create and update a member %p', async (admissionCategory: AdmissionCategory) => {
-    const { field, method, model } = mapAdmissionCategoryToParamField.get(admissionCategory);
-    const memberId = generateId();
+  test.each(Object.values(RefAdmissionCategory))(
+    'should create and update a member %p',
+    async (admissionCategory: RefAdmissionCategory) => {
+      const { field, method, model } = mapAdmissionCategoryToParamField.get(admissionCategory);
+      const memberId = generateId();
 
-    const changeParams = method({ changeType: ChangeType.create });
-    let result = await changeAdmission(field, changeParams, memberId);
+      const changeParams = method({ changeType: ChangeType.create });
+      let result = await changeAdmission(field, changeParams, memberId);
 
-    const { id } = await model.findById(result[admissionCategory][0]);
+      const { id } = await model.findById(result[admissionCategory][0]);
 
-    const changeParamsUpdate = method({ changeType: ChangeType.update, id });
-    result = await changeAdmission(field, changeParamsUpdate, memberId);
-    const updatedCategoryResult = await model.findById(result[admissionCategory][0]);
+      const changeParamsUpdate = method({ changeType: ChangeType.update, id });
+      result = await changeAdmission(field, changeParamsUpdate, memberId);
+      const updatedCategoryResult = await model.findById(result[admissionCategory][0]);
 
-    expect(updatedCategoryResult.toObject()).toEqual(
-      expect.objectContaining(updatedCategoryResult.toObject()),
-    );
+      expect(updatedCategoryResult.toObject()).toEqual(
+        expect.objectContaining(updatedCategoryResult.toObject()),
+      );
 
-    expect(result).toMatchObject({
-      memberId: new Types.ObjectId(memberId),
-      [`${admissionCategory}`]: [new Types.ObjectId(id)],
-    });
-  });
+      expect(result).toMatchObject({
+        memberId: new Types.ObjectId(memberId),
+        [`${admissionCategory}`]: [new Types.ObjectId(id)],
+      });
+    },
+  );
 
-  test.each([
-    AdmissionCategory.procedures,
-    AdmissionCategory.medications,
-    AdmissionCategory.externalAppointments,
-    AdmissionCategory.activities,
-  ])('should create and update a member %p', async (admissionCategory: AdmissionCategory) => {
-    const { field, method, model } = mapAdmissionCategoryToParamField.get(admissionCategory);
-    const memberId = generateId();
-    const changeParams = method({ changeType: ChangeType.create });
+  test.each(Object.values(RefAdmissionCategory))(
+    'should create and delete a member %p',
+    async (admissionCategory: RefAdmissionCategory) => {
+      const { field, method, model } = mapAdmissionCategoryToParamField.get(admissionCategory);
+      const memberId = generateId();
+      const changeParams = method({ changeType: ChangeType.create });
 
-    const result = await changeAdmission(field, changeParams, memberId);
+      const result = await changeAdmission(field, changeParams, memberId);
 
-    const { id } = await model.findById(result[admissionCategory][0]);
+      const { id } = await model.findById(result[admissionCategory][0]);
 
-    const deleteResult = await changeAdmission(
-      field,
-      method({ changeType: ChangeType.delete, id }),
-      memberId,
-    );
-    const afterDeleteResult = await model.findById(result[admissionCategory][0]);
-    expect(afterDeleteResult).toBeNull();
+      const deleteResult = await changeAdmission(
+        field,
+        method({ changeType: ChangeType.delete, id }),
+        memberId,
+      );
+      const afterDeleteResult = await model.findById(result[admissionCategory][0]);
+      expect(afterDeleteResult).toBeNull();
 
-    expect(deleteResult).toMatchObject({
-      id: result.id,
-      memberId: new Types.ObjectId(memberId),
-      [`${admissionCategory}`]: [],
-    });
-  });
+      expect(deleteResult).toMatchObject({
+        id: result.id,
+        memberId: new Types.ObjectId(memberId),
+        [`${admissionCategory}`]: [],
+      });
+    },
+  );
 
   test.each`
-    admissionCategory                         | changeType
-    ${AdmissionCategory.procedures}           | ${ChangeType.update}
-    ${AdmissionCategory.procedures}           | ${ChangeType.delete}
-    ${AdmissionCategory.medications}          | ${ChangeType.update}
-    ${AdmissionCategory.medications}          | ${ChangeType.delete}
-    ${AdmissionCategory.externalAppointments} | ${ChangeType.update}
-    ${AdmissionCategory.externalAppointments} | ${ChangeType.delete}
-    ${AdmissionCategory.activities}           | ${ChangeType.update}
-    ${AdmissionCategory.activities}           | ${ChangeType.delete}
+    admissionCategory                            | changeType
+    ${RefAdmissionCategory.procedures}           | ${ChangeType.update}
+    ${RefAdmissionCategory.procedures}           | ${ChangeType.delete}
+    ${RefAdmissionCategory.medications}          | ${ChangeType.update}
+    ${RefAdmissionCategory.medications}          | ${ChangeType.delete}
+    ${RefAdmissionCategory.externalAppointments} | ${ChangeType.update}
+    ${RefAdmissionCategory.externalAppointments} | ${ChangeType.delete}
+    ${RefAdmissionCategory.activities}           | ${ChangeType.update}
+    ${RefAdmissionCategory.activities}           | ${ChangeType.delete}
   `(
     `should throw error on $changeType $admissionCategory with id not found`,
     async ({ admissionCategory, changeType }) => {
@@ -190,11 +181,11 @@ describe(MemberAdmissionService.name, () => {
   );
 
   test.each`
-    admissionCategory                         | key
-    ${AdmissionCategory.procedures}           | ${'text'}
-    ${AdmissionCategory.medications}          | ${'name'}
-    ${AdmissionCategory.externalAppointments} | ${'date'}
-    ${AdmissionCategory.activities}           | ${'text'}
+    admissionCategory                            | key
+    ${RefAdmissionCategory.procedures}           | ${'text'}
+    ${RefAdmissionCategory.medications}          | ${'name'}
+    ${RefAdmissionCategory.externalAppointments} | ${'date'}
+    ${RefAdmissionCategory.activities}           | ${'text'}
   `(
     `should remove null fields from create $admissionCategory params`,
     async ({ admissionCategory, key }) => {
@@ -212,11 +203,11 @@ describe(MemberAdmissionService.name, () => {
   );
 
   test.each`
-    admissionCategory                         | key
-    ${AdmissionCategory.procedures}           | ${'text'}
-    ${AdmissionCategory.medications}          | ${'name'}
-    ${AdmissionCategory.externalAppointments} | ${'date'}
-    ${AdmissionCategory.activities}           | ${'text'}
+    admissionCategory                            | key
+    ${RefAdmissionCategory.procedures}           | ${'text'}
+    ${RefAdmissionCategory.medications}          | ${'name'}
+    ${RefAdmissionCategory.externalAppointments} | ${'date'}
+    ${RefAdmissionCategory.activities}           | ${'text'}
   `(
     `should remove null fields from update $admissionCategory params`,
     async ({ admissionCategory, key }) => {
@@ -254,6 +245,106 @@ describe(MemberAdmissionService.name, () => {
     expect(isScheduled).toBeTruthy();
   });
 
+  it('should set activity default isTodo=true when not provided in params', async () => {
+    const memberId = generateId();
+    const activity = generateAdmissionActivityParams({
+      changeType: ChangeType.create,
+    });
+    delete activity.isTodo;
+
+    await service.changeAdmission({ activity }, memberId);
+
+    const { isTodo } = await activityModel.findOne({ text: activity.text }, { isTodo: 1 });
+    expect(isTodo).toBeTruthy();
+  });
+
+  it('should return all populated existing values on create', async () => {
+    const memberId = generateId();
+
+    //create synchronous categories(test fails on unique mongodb error for field memberId on async Promise.all)
+    for (const admissionCategory of Object.values(RefAdmissionCategory)) {
+      const { field, method } = mapAdmissionCategoryToParamField.get(admissionCategory);
+      const createParams = method({ changeType: ChangeType.create });
+      await changeAdmission(field, createParams, memberId);
+    }
+
+    //create another one and make sure it returns all the existing created values above
+    const { field, method } = mapAdmissionCategoryToParamField.get(RefAdmissionCategory.procedures);
+    const createParams = method({ changeType: ChangeType.create });
+    const result = await changeAdmission(field, createParams, memberId);
+
+    expect(result[RefAdmissionCategory.procedures]).toEqual([
+      expect.objectContaining({ date: expect.any(Date) }),
+      expect.objectContaining({ date: expect.any(Date) }),
+    ]);
+    checkPopulatedValues(result);
+  });
+
+  it('should return all populated existing values on update', async () => {
+    const memberId = generateId();
+
+    let result;
+    //create synchronous categories(test fails on unique mongodb error for field memberId on async Promise.all)
+    for (const admissionCategory of Object.values(RefAdmissionCategory)) {
+      const { field, method } = mapAdmissionCategoryToParamField.get(admissionCategory);
+      const createParams = method({ changeType: ChangeType.create });
+      result = await changeAdmission(field, createParams, memberId);
+    }
+
+    //update one and make sure it returns all the existing created values above
+    const { field, method, model } = mapAdmissionCategoryToParamField.get(
+      RefAdmissionCategory.procedures,
+    );
+    const { id } = await model.findById(result[RefAdmissionCategory.procedures][0]);
+    const updateParams = method({ changeType: ChangeType.update, id });
+    result = await changeAdmission(field, updateParams, memberId);
+
+    expect(result[RefAdmissionCategory.procedures]).toEqual([
+      expect.objectContaining({ date: updateParams.date }),
+    ]);
+    checkPopulatedValues(result);
+  });
+
+  it('should return all populated existing values on delete', async () => {
+    const memberId = generateId();
+    const result = await createAllCategories(memberId);
+
+    //update one and make sure it returns all the existing created values above
+    const { field, method, model } = mapAdmissionCategoryToParamField.get(
+      RefAdmissionCategory.procedures,
+    );
+    const { id } = await model.findById(result[RefAdmissionCategory.procedures][0]);
+    const deleteParams = method({ changeType: ChangeType.delete, id });
+    const deleteResult = await changeAdmission(field, deleteParams, memberId);
+
+    expect(deleteResult[RefAdmissionCategory.procedures]).toEqual([]);
+    checkPopulatedValues(deleteResult);
+  });
+
+  const createAllCategories = async (memberId: string): Promise<MemberAdmission> => {
+    let result;
+    //create synchronous categories(test fails on unique mongodb error for field memberId on async Promise.all)
+    for (const admissionCategory of Object.values(RefAdmissionCategory)) {
+      const { field, method } = mapAdmissionCategoryToParamField.get(admissionCategory);
+      const createParams = method({ changeType: ChangeType.create });
+      result = await changeAdmission(field, createParams, memberId);
+    }
+
+    return result;
+  };
+
+  const checkPopulatedValues = (result: MemberAdmission) => {
+    expect(result[RefAdmissionCategory.medications]).toEqual([
+      expect.objectContaining({ coachNote: expect.any(String) }),
+    ]);
+    expect(result[RefAdmissionCategory.externalAppointments]).toEqual([
+      expect.objectContaining({ date: expect.any(Date) }),
+    ]);
+    expect(result[RefAdmissionCategory.activities]).toEqual([
+      expect.objectContaining({ text: expect.any(String) }),
+    ]);
+  };
+
   const changeAdmission = async (
     field: string,
     params: BaseAdmission,
@@ -279,32 +370,29 @@ describe(MemberAdmissionService.name, () => {
   };
 
   const initMap = () => {
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.diagnoses, { field: 'diagnoses' });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.procedures, {
+    mapAdmissionCategoryToParamField.set(RefAdmissionCategory.procedures, {
       field: 'procedure',
       method: generateAdmissionProcedureParams,
       model: procedureModel,
       errorNotFound: ErrorType.memberAdmissionProcedureIdNotFound,
     });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.medications, {
+    mapAdmissionCategoryToParamField.set(RefAdmissionCategory.medications, {
       field: 'medication',
       method: generateAdmissionMedicationParams,
       model: medicationModel,
       errorNotFound: ErrorType.memberAdmissionMedicationIdNotFound,
     });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.externalAppointments, {
+    mapAdmissionCategoryToParamField.set(RefAdmissionCategory.externalAppointments, {
       field: 'externalAppointment',
       method: generateAdmissionExternalAppointmentParams,
       model: externalAppointmentModel,
       errorNotFound: ErrorType.memberAdmissionExternalAppointmentIdNotFound,
     });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.activities, {
+    mapAdmissionCategoryToParamField.set(RefAdmissionCategory.activities, {
       field: 'activity',
       method: generateAdmissionActivityParams,
       model: activityModel,
       errorNotFound: ErrorType.memberAdmissionActivityIdNotFound,
     });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.woundCares, { field: 'woundCare' });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.dietary, { field: 'dietary' });
   };
 });
