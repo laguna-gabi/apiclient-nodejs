@@ -78,6 +78,22 @@ jobs:
         uses: ./.github/actions/set-nx-affected
       - name: Test affected
         run: npx nx affected --target=test:cov --base=$NX_BASE --head=$NX_HEAD --parallel=3
+      - name: Create coverage badges
+        if: github.ref == 'refs/heads/develop'
+        run: npx nx affected --target=cov-badges --base=$NX_BASE --head=$NX_HEAD --parallel=3
+      - name: Upload coverage
+        if: github.ref == 'refs/heads/develop'
+        run: npx nx affected --target=uploadCoverage --base=$NX_BASE --head=$NX_HEAD --parallel=3
+      - name: Zip lcov-report
+        uses: vimtor/action-zip@v1
+        with:
+          files: coverage
+          dest: coverage.zip
+      - name: Upload coverage zip
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage
+          path: coverage.zip
       - name: Cleanup docker
         if: ${{ always() }}
         run: |

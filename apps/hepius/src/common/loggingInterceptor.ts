@@ -2,8 +2,8 @@ import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nes
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { AuditType, Client, Environments, QueueType } from '@argus/pandora';
-import { EventType, IEventNotifyQueue, LoggerService } from '.';
+import { AuditType, Client, Environments, EventType, QueueType } from '@argus/pandora';
+import { IEventNotifyQueue, LoggerService } from '.';
 import { GqlExecutionContext } from '@nestjs/graphql';
 
 @Injectable()

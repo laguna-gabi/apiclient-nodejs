@@ -31,8 +31,6 @@ export enum EventType {
   //notifications
   onReceivedChatMessage = 'onReceivedChatMessage',
   onReceivedTextMessage = 'onReceivedTextMessage',
-  notifySlack = 'notifySlack',
-  notifyQueue = 'notifyQueue',
   notifyDispatch = 'notifyDispatch',
   notifyDeleteDispatch = 'notifyDeleteDispatch',
 

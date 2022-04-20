@@ -1,5 +1,5 @@
 import { general } from 'config';
-import { Environments } from '../src/interfaces';
+import { Environments } from './libs/pandora/src';
 
 module.exports = async () => {
   process.env.TZ = general.timezone;

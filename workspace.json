@@ -1,7 +1,7 @@
 {
   "version": 2,
   "projects": {
-    "clinical-engine": "apps/clinical-engine",
+    "clinicalEngine": "apps/clinicalEngine",
     "cmd": "libs/cmd",
     "hepius": "apps/hepius",
     "iris": "apps/iris",

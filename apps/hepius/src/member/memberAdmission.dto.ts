@@ -14,17 +14,20 @@ export enum ProcedureType {
 }
 registerEnumType(ProcedureType, { name: 'ProcedureType' });
 
-export enum AdmissionType {
+export enum SingleValueAdmissionCategory {
   diagnoses = 'diagnoses',
-  procedures = 'procedures',
-  medications = 'medications',
-  externalScheduledAppointments = 'externalScheduledAppointments',
-  externalToBeScheduledAppointments = 'externalToBeScheduledAppointments',
-  activities = 'activities',
-  woundCares = 'woundCares',
   dietary = 'dietary',
 }
-registerEnumType(AdmissionType, { name: 'AdmissionType' });
+registerEnumType(SingleValueAdmissionCategory, { name: 'SingleValueAdmissionCategory' });
+
+export enum RefAdmissionCategory {
+  procedures = 'procedures',
+  medications = 'medications',
+  externalAppointments = 'externalAppointments',
+  activities = 'activities',
+  // woundCares = 'woundCares', //for now, not supported - waiting for pr to be merged
+}
+registerEnumType(RefAdmissionCategory, { name: 'RefAdmissionCategory' });
 
 /**************************************************************************************************
  ************************************* Schemas for gql methods ************************************
@@ -64,14 +67,14 @@ export class Amount {
 
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
-export class Medication extends Identifier {
+export class Medication extends BaseAdmission {
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
   name?: string;
 
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
-  Frequency?: string;
+  frequency?: string;
 
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
@@ -89,25 +92,29 @@ export class Medication extends Identifier {
   @Field(() => Date, { nullable: true })
   endDate?: Date;
 
-  @Prop({ type: Date, isNan: true })
+  @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
   memberNote?: string;
 
-  @Prop({ type: Date, isNan: true })
+  @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
   coachNote?: string;
 }
 
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
-export class ExternalAppointment {
+export class ExternalAppointment extends BaseAdmission {
+  @Prop({ default: true })
+  @Field(() => Boolean, { nullable: true })
+  isScheduled?: boolean;
+
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
   drName?: string;
 
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
-  instituteOrHospital?: string;
+  instituteOrHospitalName?: string;
 
   @Prop({ type: Date, isNan: true })
   @Field(() => Date, { nullable: true })
@@ -128,13 +135,13 @@ export class ExternalAppointment {
 
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
-export class Activity {
+export class Activity extends BaseAdmission {
   @Prop({ isNan: true })
   @Field(() => String)
   text?: string;
 
-  @Prop({ type: Boolean, isNan: true })
-  @Field(() => Boolean)
+  @Prop({ default: true })
+  @Field(() => Boolean, { nullable: true })
   isTodo?: boolean;
 }
 
@@ -174,21 +181,21 @@ export class ChangeAdmissionProcedureParams extends Procedure {
 }
 
 @InputType()
-export class ChangeAdmissionMedicationParams extends ChangeAdmissionBaseParams {
-  @Field(() => Procedure)
-  medication: Medication;
+export class ChangeAdmissionMedicationParams extends Medication {
+  @Field(() => ChangeType)
+  changeType: ChangeType;
 }
 
 @InputType()
-export class ChangeAdmissionExternalAppointmentParams extends ChangeAdmissionBaseParams {
-  @Field(() => ExternalAppointment)
-  externalAppointment: ExternalAppointment;
+export class ChangeAdmissionExternalAppointmentParams extends ExternalAppointment {
+  @Field(() => ChangeType)
+  changeType: ChangeType;
 }
 
 @InputType()
-export class ChangeAdmissionActivityParams extends ChangeAdmissionBaseParams {
-  @Field(() => Activity)
-  activity: Activity;
+export class ChangeAdmissionActivityParams extends Activity {
+  @Field(() => ChangeType)
+  changeType: ChangeType;
 }
 
 @InputType()
@@ -215,10 +222,7 @@ export class ChangeAdmissionParams {
   medication?: ChangeAdmissionMedicationParams;
 
   @Field(() => ChangeAdmissionExternalAppointmentParams, { nullable: true })
-  externalScheduledAppointment?: ChangeAdmissionExternalAppointmentParams;
-
-  @Field(() => ChangeAdmissionExternalAppointmentParams, { nullable: true })
-  externalToBeScheduledAppointment?: ChangeAdmissionExternalAppointmentParams;
+  externalAppointment?: ChangeAdmissionExternalAppointmentParams;
 
   @Field(() => ChangeAdmissionActivityParams, { nullable: true })
   activity?: ChangeAdmissionActivityParams;
@@ -253,11 +257,7 @@ export class MemberAdmission extends Identifier {
 
   @Prop({ type: [{ type: Types.ObjectId, ref: ExternalAppointment.name }], isNaN: true })
   @Field(() => [ExternalAppointment], { nullable: true })
-  externalScheduledAppointments?: ExternalAppointment[];
-
-  @Prop({ type: [{ type: Types.ObjectId, ref: ExternalAppointment.name }], isNaN: true })
-  @Field(() => [ExternalAppointment], { nullable: true })
-  externalToBeScheduledAppointments?: ExternalAppointment[];
+  externalAppointments?: ExternalAppointment[];
 
   @Prop({ type: [{ type: Types.ObjectId, ref: Activity.name }], isNaN: true })
   @Field(() => [Activity], { nullable: true })
@@ -285,10 +285,15 @@ export const ProcedureDto = audit(
   SchemaFactory.createForClass(Procedure).plugin(mongooseDelete, useFactoryOptions),
 );
 
-export type ExternalScheduledAppointmentDocument = ExternalAppointment &
+export type MedicationDocument = Medication & Document & ISoftDelete<Medication>;
+export const MedicationDto = audit(
+  SchemaFactory.createForClass(Medication).plugin(mongooseDelete, useFactoryOptions),
+);
+
+export type ExternalAppointmentDocument = ExternalAppointment &
   Document &
   ISoftDelete<ExternalAppointment>;
-export const ExternalScheduledAppointmentDto = audit(
+export const ExternalAppointmentDto = audit(
   SchemaFactory.createForClass(ExternalAppointment).plugin(mongooseDelete, useFactoryOptions),
 );
 

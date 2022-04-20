@@ -14,7 +14,8 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   coverageDirectory: '../../coverage/apps/hepius',
   maxWorkers: 1,
-  globalSetup: './test/global-setup.ts',
+  globalSetup: '../../global-setup.ts',
   coverageReporters: ['json-summary', 'lcov'],
   collectCoverage: true,
+  coveragePathIgnorePatterns: ['<rootDir>/cmd/', '<rootDir>/scripts/'],
 };

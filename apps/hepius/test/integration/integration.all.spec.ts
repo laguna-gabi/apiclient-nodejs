@@ -1,5 +1,5 @@
 import { AppointmentInternalKey, LogInternalKey } from '@argus/irisClient';
-import { Language, Platform } from '@argus/pandora';
+import { EventType as GlobalEventType, Language, Platform } from '@argus/pandora';
 import { articlesByDrg, general, hosts } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
 import { date, lorem } from 'faker';
@@ -2298,7 +2298,7 @@ describe('Integration tests: all', () => {
 
       await delay(500); // wait for the last emit to complete (sending alert to slack channel)
 
-      expect(spyOnEventEmitter).toHaveBeenLastCalledWith(EventType.notifySlack, {
+      expect(spyOnEventEmitter).toHaveBeenLastCalledWith(GlobalEventType.notifySlack, {
         channel: 'slack.escalation',
         header: `*High Assessment Score [${org.name}]*`,
         icon: ':warning:',

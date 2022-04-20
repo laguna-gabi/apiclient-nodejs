@@ -1,5 +1,5 @@
 import { ClientCategory, IUpdateClientSettings, InnerQueueTypes } from '@argus/irisClient';
-import { QueueType, formatEx } from '@argus/pandora';
+import { EventType as GlobalEventType, QueueType, formatEx } from '@argus/pandora';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -187,6 +187,6 @@ export class UserResolver {
       type: QueueType.notifications,
       message: JSON.stringify(settings),
     };
-    this.eventEmitter.emit(EventType.notifyQueue, eventSettingsParams);
+    this.eventEmitter.emit(GlobalEventType.notifyQueue, eventSettingsParams);
   }
 }

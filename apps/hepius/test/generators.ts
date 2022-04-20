@@ -78,6 +78,9 @@ import {
   AudioFormat,
   CancelNotifyParams,
   Caregiver,
+  ChangeAdmissionActivityParams,
+  ChangeAdmissionExternalAppointmentParams,
+  ChangeAdmissionMedicationParams,
   ChangeAdmissionProcedureParams,
   CreateMemberParams,
   CreateTaskParams,
@@ -1245,7 +1248,7 @@ export const generateRequestHeaders = (authId: string) => {
 /*************************************************************************************************
  ***************************** ChangeAdmissionParams related methods *****************************
  ************************************************************************************************/
-export const generateProcedureParams = ({
+export const generateAdmissionProcedureParams = ({
   changeType,
   id,
 }: {
@@ -1259,6 +1262,71 @@ export const generateProcedureParams = ({
     date: new Date(),
     procedureType: ProcedureType.diagnostic,
     text: lorem.sentence(),
+  };
+};
+
+export const generateAdmissionMedicationParams = ({
+  changeType,
+  id,
+}: {
+  changeType: ChangeType;
+  id?: string;
+}): ChangeAdmissionMedicationParams => {
+  const attachIdParam = id ? { id } : {};
+  const startDate = new Date();
+  const endDate = add(startDate, { days: 3 });
+  return {
+    changeType,
+    ...attachIdParam,
+    name: lorem.word(),
+    frequency: lorem.word(),
+    type: lorem.word(),
+    amount: { amount: datatype.number(), unitType: lorem.word() },
+    startDate,
+    endDate,
+    memberNote: lorem.words(),
+    coachNote: lorem.words(),
+  };
+};
+
+export const generateAdmissionExternalAppointmentParams = ({
+  changeType,
+  id,
+  isScheduled,
+}: {
+  changeType: ChangeType;
+  id?: string;
+  isScheduled?: boolean;
+}): ChangeAdmissionExternalAppointmentParams => {
+  const attachIdParam = id ? { id } : {};
+  return {
+    changeType,
+    ...attachIdParam,
+    isScheduled: isScheduled !== undefined || Math.random() < 0.5,
+    drName: `dr ${name.lastName()}`,
+    instituteOrHospitalName: lorem.word(),
+    date: new Date(),
+    phone: generatePhone(),
+    description: lorem.sentence(),
+    address: lorem.sentence(),
+  };
+};
+
+export const generateAdmissionActivityParams = ({
+  changeType,
+  id,
+  isTodo,
+}: {
+  changeType: ChangeType;
+  id?: string;
+  isTodo?: boolean;
+}): ChangeAdmissionActivityParams => {
+  const attachIdParam = id ? { id } : {};
+  return {
+    changeType,
+    ...attachIdParam,
+    text: lorem.sentence(),
+    isTodo: isTodo !== undefined || Math.random() < 0.5,
   };
 };
 

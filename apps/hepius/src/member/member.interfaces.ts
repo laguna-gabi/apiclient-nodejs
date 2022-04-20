@@ -6,6 +6,7 @@ import {
   generateDispatchId,
 } from '@argus/irisClient';
 import {
+  EventType as GlobalEventType,
   IEventNotifySlack,
   NotificationType,
   QueueType,
@@ -83,7 +84,7 @@ export class MemberBase {
       channel: SlackChannel.support,
       orgName: member.org.name,
     };
-    this.eventEmitter.emit(EventType.notifySlack, eventSlackMessageParams);
+    this.eventEmitter.emit(GlobalEventType.notifySlack, eventSlackMessageParams);
 
     return member;
   }
@@ -110,7 +111,7 @@ export class MemberBase {
       channel: SlackChannel.support,
       orgName: controlMember.org.name,
     };
-    this.eventEmitter.emit(EventType.notifySlack, eventSlackMessageParams);
+    this.eventEmitter.emit(GlobalEventType.notifySlack, eventSlackMessageParams);
 
     return controlMember;
   }
@@ -148,6 +149,6 @@ export class MemberBase {
       type: QueueType.notifications,
       message: JSON.stringify(settings),
     };
-    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
+    this.eventEmitter.emit(GlobalEventType.notifyQueue, eventParams);
   }
 }

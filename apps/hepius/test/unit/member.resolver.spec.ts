@@ -1,5 +1,6 @@
 import { AlertInternalKey, ExternalKey, generateDispatchId } from '@argus/irisClient';
 import {
+  EventType as GlobalEventType,
   IEventNotifySlack,
   NotificationType,
   Platform,
@@ -209,7 +210,11 @@ describe('MemberResolver', () => {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ member, memberConfig })),
       };
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifyQueue, eventNotifyQueue);
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
+        1,
+        GlobalEventType.notifyQueue,
+        eventNotifyQueue,
+      );
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
         2,
         EventType.onNewMember,
@@ -225,7 +230,7 @@ describe('MemberResolver', () => {
       };
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
         3,
-        EventType.notifySlack,
+        GlobalEventType.notifySlack,
         eventSlackMessageParams,
       );
     });
@@ -271,7 +276,10 @@ describe('MemberResolver', () => {
         channel: SlackChannel.support,
         orgName: member.org.name,
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifySlack, eventSlackMessageParams);
+      expect(spyOnEventEmitter).toBeCalledWith(
+        GlobalEventType.notifySlack,
+        eventSlackMessageParams,
+      );
     });
 
     it('should create a control member', async () => {
@@ -290,7 +298,7 @@ describe('MemberResolver', () => {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ member })),
       };
-      expect(spyOnEventEmitter).toHaveBeenCalledWith(EventType.notifyQueue, eventNotifyQueue);
+      expect(spyOnEventEmitter).toHaveBeenCalledWith(GlobalEventType.notifyQueue, eventNotifyQueue);
 
       const eventSlackMessageParams: IEventNotifySlack = {
         /* eslint-disable-next-line max-len */
@@ -301,7 +309,7 @@ describe('MemberResolver', () => {
         orgName: member.org.name,
       };
       expect(spyOnEventEmitter).toHaveBeenCalledWith(
-        EventType.notifySlack,
+        GlobalEventType.notifySlack,
         eventSlackMessageParams,
       );
     });
@@ -340,7 +348,7 @@ describe('MemberResolver', () => {
           type: QueueType.notifications,
           message: JSON.stringify(generateUpdateClientSettings({ member })),
         };
-        expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyQueue, eventParams);
+        expect(spyOnEventEmitter).toBeCalledWith(GlobalEventType.notifyQueue, eventParams);
       },
     );
 
@@ -1783,7 +1791,7 @@ describe('MemberResolver', () => {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyQueue, eventParams);
+      expect(spyOnEventEmitter).toBeCalledWith(GlobalEventType.notifyQueue, eventParams);
     });
   });
 
@@ -1850,7 +1858,7 @@ describe('MemberResolver', () => {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyQueue, eventParams);
+      expect(spyOnEventEmitter).toBeCalledWith(GlobalEventType.notifyQueue, eventParams);
     });
 
     it('should call notificationsService on platform=ios', async () => {
@@ -1900,7 +1908,7 @@ describe('MemberResolver', () => {
         EventType.onUpdatedMemberPlatform,
         eventParams,
       );
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, EventType.notifyQueue, notify);
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, GlobalEventType.notifyQueue, notify);
     });
 
     it('should not call updateMemberConfigRegisteredAt if firstLoggedInAt exists', async () => {
@@ -1928,7 +1936,7 @@ describe('MemberResolver', () => {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyQueue, eventParams);
+      expect(spyOnEventEmitter).toBeCalledWith(GlobalEventType.notifyQueue, eventParams);
     });
 
     /* eslint-disable-next-line max-len */
@@ -2087,7 +2095,7 @@ describe('MemberResolver', () => {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ member })),
       };
-      expect(spyOnEventEmitter).toBeCalledWith(EventType.notifyQueue, eventParams);
+      expect(spyOnEventEmitter).toBeCalledWith(GlobalEventType.notifyQueue, eventParams);
     });
   });
 
@@ -2578,7 +2586,7 @@ describe('MemberResolver', () => {
       };
 
       await resolver.handleAlertForQRSubmit(params);
-      expect(spyOnEventEmitter).toHaveBeenCalledWith(EventType.notifySlack, {
+      expect(spyOnEventEmitter).toHaveBeenCalledWith(GlobalEventType.notifySlack, {
         channel: 'slack.escalation',
         header: `*High Assessment Score [${member.org.name}]*`,
         icon: ':warning:',
@@ -2608,7 +2616,7 @@ describe('MemberResolver', () => {
       };
 
       await resolver.handleAlertForQRSubmit(params);
-      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, EventType.notifySlack, {
+      expect(spyOnEventEmitter).toHaveBeenNthCalledWith(1, GlobalEventType.notifySlack, {
         channel: 'slack.escalation',
         header: `*High Assessment Score [${member.org.name}]*`,
         icon: ':warning:',

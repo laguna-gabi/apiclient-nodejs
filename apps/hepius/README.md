@@ -5,15 +5,15 @@
       alt="Hepius" />
   </a><br/>
   <b>Total coverage:</b>
-  <a href="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/lcov-report/index.html" alt="lines">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/badge-lines.svg?branch=develop" />
+  <a href="" alt="lines">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/badge-lines.svg?branch=develop&kill_cache=1" />
   </a>
   <b>Other coverage:</b>
-  <a href="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/lcov-report/index.html" alt="functions">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/badge-functions.svg?branch=develop" />
+  <a href="" alt="functions">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/badge-functions.svg?branch=develop&kill_cache=1" />
   </a>
-  <a href="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/lcov-report/index.html" alt="statements">
-    <img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/badge-statements.svg?branch=develop" />
+  <a href="" alt="statements">
+    <img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/badge-statements.svg?branch=develop&kill_cache=1" />
   </a>
 </p>
 
@@ -125,27 +125,37 @@ yarn generate:tokens:production
 ```
 
 ## ⛽️ Utility Scripts/Commands
+
 Seed and other support scripts will run via the `command` target of `hepius`
 
-### Application Seed: 
+### Application Seed:
+
 ```
 nx command hepius --cmd=general --options='-t seed'
 ```
-### Create user: 
+
+### Create user:
+
 ```
 nx command hepius --cmd=general --options='-t createUser'
 ```
-### Create Token: 
+
+### Create Token:
+
 ```
 nx command hepius --cmd=general --options='-t getTokens'
 ```
-### Laguna Seed: 
+
+### Laguna Seed:
+
 ```
 nx command hepius --cmd=general --options='-t lagunaSeed'
 ```
 
 ## 🏗️ Analytics
+
 Running analytics will generate output csv files for analytics team - here's how to generate all csv files (members, coach and appointments data)
+
 ```
 nx command hepius --cmd=analytics --options='-s all'
 ```
@@ -180,11 +190,11 @@ Migration is supported via `Argus` ci/cd manual flow under the same restrictions
 ### Migration Support: guide
 
 ---
+
 - **Step 0**: get help...
   ```
   nx command hepius --cmd=migration --options='-h'
   ```
-  
 - **Step 1**: create a new migration script (template):
 
   ```

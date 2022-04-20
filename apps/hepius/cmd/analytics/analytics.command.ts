@@ -16,9 +16,15 @@ import {
   SheetOption,
 } from '.';
 import { analytics } from 'config';
-import { Environments, IEventNotifySlack, SlackChannel, SlackIcon } from '@argus/pandora';
+import {
+  Environments,
+  EventType,
+  IEventNotifySlack,
+  SlackChannel,
+  SlackIcon,
+} from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EventType, delay } from '../../src/common';
+import { delay } from '../../src/common';
 import * as Importer from './importer/mysql-import';
 import { CaregiverData, CaregiverTable } from './index';
 

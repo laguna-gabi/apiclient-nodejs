@@ -63,7 +63,7 @@
     },
     "test:cov": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/apps/hepius"],
+      "outputs": ["coverage/apps/iris"],
       "options": {
         "jestConfig": "apps/iris/test/jest.config.js",
         "passWithNoTests": true
@@ -73,6 +73,12 @@
       "executor": "@nrwl/workspace:run-commands",
       "options": {
         "command": "jest-coverage-badges input coverage/apps/iris/coverage-summary.json output coverage/apps/iris"
+      }
+    },
+    "uploadCoverage": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "ts-node -P ./tsconfig.base.json ./ci/uploadCoverage.ts iris coverage/apps/iris/"
       }
     },
     "deploy": {

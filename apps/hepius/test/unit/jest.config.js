@@ -2,7 +2,7 @@ module.exports = {
   displayName: 'hepius',
   rootDir: '../unit',
   preset: '../../../../jest.preset.js',
-  globalSetup: '../global-setup.ts',
+  globalSetup: '../../../../global-setup.ts',
   globals: {
     'ts-jest': {
       tsconfig: 'apps/hepius/tsconfig.spec.json',

@@ -20,11 +20,12 @@ This Monorepo contains the following:
 
 <div align=“center”>
 
-|          Name           | Type |                                                                                                          Coverage                                                                                                           |
-| :---------------------: | :--: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-|  [Hepius](apps/hepius)  | app  | <a href="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/lcov-report/index.html" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/develop/badge-lines.svg?branch=develop" /></a> |
-|    [Iris](apps/iris)    | app  |   <a href="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/lcov-report/index.html" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/iris/develop/badge-lines.svg?branch=develop" /></a>   |
-| [Pandora](libs/pandora) | lib  | <a href="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/lcov-report/index.html" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/master/badge-lines.svg?branch=master" /></a>  |
+|             Name              | Type |                                                                    Coverage                                                                     |
+| :---------------------------: | :--: | :---------------------------------------------------------------------------------------------------------------------------------------------: |
+|     [Hepius](apps/hepius)     | app  |   <a href="" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/badge-lines.svg?branch=develop&kill_cache=1" /></a>   |
+|       [Iris](apps/iris)       | app  |    <a href="" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/iris/badge-lines.svg?branch=develop&kill_cache=1" /></a>    |
+| [IrisClient](libs/irisClient) | lib  | <a href="" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/irisClient/badge-lines.svg?branch=develop&kill_cache=1" /></a> |
+|    [Pandora](libs/pandora)    | lib  |  <a href="" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/badge-lines.svg?branch=develop&kill_cache=1" /></a>   |
 
 </div>
 
@@ -119,6 +120,7 @@ Your IDE probably has extensions to help you with those tools
 ---
 
 ## 🔄 ci/cd
+
 `Argus` supports a manual workflow by which developers can trigger a manual flow.
 The flow can be triggered for any branch however, only `develop` and `master` branches will allow deployment and migration phase to run under the restriction that `test` and `lint` where enabled.
 

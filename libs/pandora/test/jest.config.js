@@ -1,5 +1,5 @@
 module.exports = {
-  displayName: 'hepius',
+  displayName: 'pandora',
   rootDir: '../',
   preset: '../../jest.preset.js',
   globals: {
@@ -14,7 +14,7 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   coverageDirectory: '../../coverage/libs/pandora',
   maxWorkers: 1,
-  globalSetup: './test/global-setup.ts',
+  globalSetup: '../../global-setup.ts',
   coverageReporters: ['json-summary', 'lcov'],
   collectCoverage: true,
 };

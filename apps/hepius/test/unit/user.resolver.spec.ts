@@ -1,5 +1,11 @@
 import { ClientCategory, IUpdateClientSettings, InnerQueueTypes } from '@argus/irisClient';
-import { Language, QueueType, mockLogger, mockProcessWarnings } from '@argus/pandora';
+import {
+  EventType as GlobalEventType,
+  Language,
+  QueueType,
+  mockLogger,
+  mockProcessWarnings,
+} from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { internet, lorem, name } from 'faker';
@@ -101,7 +107,7 @@ describe('UserResolver', () => {
       expect(spyOnServiceInsert).toBeCalledWith(params);
     });
 
-    it(`should call events ${EventType.onNewUser} and ${EventType.notifyQueue}`, async () => {
+    it(`should call events ${EventType.onNewUser} and ${GlobalEventType.notifyQueue}`, async () => {
       const params = generateCreateUserParams();
       const id = generateId();
       const user = { id, ...params };
@@ -134,7 +140,7 @@ describe('UserResolver', () => {
 
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
         2,
-        EventType.notifyQueue,
+        GlobalEventType.notifyQueue,
         eventSettingsParams,
       );
     });
@@ -235,7 +241,8 @@ describe('UserResolver', () => {
       expect(spyOnEventEmitter).toBeCalledTimes(1);
     });
 
-    it(`should call events ${EventType.onUpdatedUser} and ${EventType.notifyQueue}`, async () => {
+    // eslint-disable-next-line max-len
+    it(`should call events ${EventType.onUpdatedUser} and ${GlobalEventType.notifyQueue}`, async () => {
       const oldUser = mockGenerateUser();
       const user = generateUpdateUserParams({ id: oldUser.id });
       spyOnServiceGet.mockImplementationOnce(async () => oldUser);
@@ -257,7 +264,7 @@ describe('UserResolver', () => {
 
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(
         1,
-        EventType.notifyQueue,
+        GlobalEventType.notifyQueue,
         eventSettingsParams,
       );
 

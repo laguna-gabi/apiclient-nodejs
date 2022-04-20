@@ -2,7 +2,7 @@ module.exports = {
   displayName: 'iris',
   rootDir: '../integration',
   preset: '../../../../jest.preset.js',
-  globalSetup: '../global-setup.ts',
+  globalSetup: '../../../../global-setup.ts',
   globals: {
     'ts-jest': {
       tsconfig: 'apps/iris/tsconfig.spec.json',

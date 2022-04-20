@@ -50,7 +50,7 @@ export class Dispatch {
   @Prop()
   recipientClientId: string;
 
-  @Prop({ isNan: true })
+  @Prop({ isNan: true, index: true })
   senderClientId?: string;
 
   @Prop({ isNan: true })

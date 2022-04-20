@@ -1,5 +1,6 @@
 import {
   BaseLogger,
+  EventType,
   FailureReason,
   ServiceName,
   SlackChannel,
@@ -9,7 +10,6 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
-import { EventType } from './events';
 
 @Injectable()
 export class LoggerService extends BaseLogger {
