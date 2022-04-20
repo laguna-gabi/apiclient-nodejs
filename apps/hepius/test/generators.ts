@@ -82,6 +82,7 @@ import {
   ChangeAdmissionExternalAppointmentParams,
   ChangeAdmissionMedicationParams,
   ChangeAdmissionProcedureParams,
+  ChangeAdmissionWoundCareParams,
   CreateMemberParams,
   CreateTaskParams,
   DeleteDischargeDocumentParams,
@@ -1327,6 +1328,21 @@ export const generateAdmissionActivityParams = ({
     ...attachIdParam,
     text: lorem.sentence(),
     isTodo: isTodo !== undefined || Math.random() < 0.5,
+  };
+};
+
+export const generateAdmissionWoundCareParams = ({
+  changeType,
+  id,
+}: {
+  changeType: ChangeType;
+  id?: string;
+}): ChangeAdmissionWoundCareParams => {
+  const attachIdParam = id ? { id } : {};
+  return {
+    changeType,
+    ...attachIdParam,
+    text: lorem.sentence(),
   };
 };
 

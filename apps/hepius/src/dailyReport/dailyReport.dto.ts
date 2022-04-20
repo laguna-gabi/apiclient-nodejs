@@ -1,9 +1,9 @@
 import { Field, InputType, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { IsOptional } from 'class-validator';
+import { IsOptional, Matches } from 'class-validator';
 import { Document, Types } from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
-import { ErrorType, Errors, IsObjectId, IsStringDate } from '../common';
+import { ErrorType, Errors, IsObjectId, onlyDateRegex } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 
 /**************************************************************************************************
@@ -26,7 +26,7 @@ export class DailyReportCategoriesInput {
   memberId?: string;
 
   @Field()
-  @IsStringDate({ message: Errors.get(ErrorType.dailyReportMutationDateInvalid) })
+  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.dailyReportMutationDateInvalid) })
   date: string;
 
   @Field(() => [DailyReportCategories])
@@ -41,11 +41,11 @@ export class DailyReportQueryInput {
   memberId?: string;
 
   @Field()
-  @IsStringDate({ message: Errors.get(ErrorType.dailyReportQueryDateInvalid) })
+  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.dailyReportQueryDateInvalid) })
   startDate: string;
 
   @Field()
-  @IsStringDate({ message: Errors.get(ErrorType.dailyReportQueryDateInvalid) })
+  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.dailyReportQueryDateInvalid) })
   endDate: string;
 }
 @InputType()

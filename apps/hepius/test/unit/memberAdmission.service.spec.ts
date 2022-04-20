@@ -26,6 +26,9 @@ import {
   ProcedureDocument,
   ProcedureDto,
   RefAdmissionCategory,
+  WoundCare,
+  WoundCareDocument,
+  WoundCareDto,
 } from '../../src/member';
 import {
   dbConnect,
@@ -35,6 +38,7 @@ import {
   generateAdmissionExternalAppointmentParams,
   generateAdmissionMedicationParams,
   generateAdmissionProcedureParams,
+  generateAdmissionWoundCareParams,
   generateId,
 } from '../index';
 
@@ -49,6 +53,7 @@ describe(MemberAdmissionService.name, () => {
   let medicationModel: Model<MedicationDocument & defaultTimestampsDbValues>;
   let externalAppointmentModel: Model<ExternalAppointmentDocument & defaultTimestampsDbValues>;
   let activityModel: Model<ActivityDocument & defaultTimestampsDbValues>;
+  let woundCareModel: Model<WoundCareDocument & defaultTimestampsDbValues>;
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -164,6 +169,8 @@ describe(MemberAdmissionService.name, () => {
     ${RefAdmissionCategory.externalAppointments} | ${ChangeType.delete}
     ${RefAdmissionCategory.activities}           | ${ChangeType.update}
     ${RefAdmissionCategory.activities}           | ${ChangeType.delete}
+    ${RefAdmissionCategory.woundCares}           | ${ChangeType.update}
+    ${RefAdmissionCategory.woundCares}           | ${ChangeType.delete}
   `(
     `should throw error on $changeType $admissionCategory with id not found`,
     async ({ admissionCategory, changeType }) => {
@@ -186,6 +193,7 @@ describe(MemberAdmissionService.name, () => {
     ${RefAdmissionCategory.medications}          | ${'name'}
     ${RefAdmissionCategory.externalAppointments} | ${'date'}
     ${RefAdmissionCategory.activities}           | ${'text'}
+    ${RefAdmissionCategory.woundCares}           | ${'text'}
   `(
     `should remove null fields from create $admissionCategory params`,
     async ({ admissionCategory, key }) => {
@@ -208,6 +216,7 @@ describe(MemberAdmissionService.name, () => {
     ${RefAdmissionCategory.medications}          | ${'name'}
     ${RefAdmissionCategory.externalAppointments} | ${'date'}
     ${RefAdmissionCategory.activities}           | ${'text'}
+    ${RefAdmissionCategory.woundCares}           | ${'text'}
   `(
     `should remove null fields from update $admissionCategory params`,
     async ({ admissionCategory, key }) => {
@@ -367,6 +376,10 @@ describe(MemberAdmissionService.name, () => {
       ExternalAppointmentDto,
     );
     activityModel = model<ActivityDocument & defaultTimestampsDbValues>(Activity.name, ActivityDto);
+    woundCareModel = model<WoundCareDocument & defaultTimestampsDbValues>(
+      WoundCare.name,
+      WoundCareDto,
+    );
   };
 
   const initMap = () => {
@@ -393,6 +406,12 @@ describe(MemberAdmissionService.name, () => {
       method: generateAdmissionActivityParams,
       model: activityModel,
       errorNotFound: ErrorType.memberAdmissionActivityIdNotFound,
+    });
+    mapAdmissionCategoryToParamField.set(RefAdmissionCategory.woundCares, {
+      field: 'woundCare',
+      method: generateAdmissionWoundCareParams,
+      model: woundCareModel,
+      errorNotFound: ErrorType.memberAdmissionWoundCareIdNotFound,
     });
   };
 });

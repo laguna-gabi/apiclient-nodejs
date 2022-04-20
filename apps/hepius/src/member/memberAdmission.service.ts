@@ -7,6 +7,7 @@ import {
   ChangeAdmissionMedicationParams,
   ChangeAdmissionParams,
   ChangeAdmissionProcedureParams,
+  ChangeAdmissionWoundCareParams,
   ExternalAppointment,
   ExternalAppointmentDocument,
   Medication,
@@ -16,6 +17,8 @@ import {
   Procedure,
   ProcedureDocument,
   RefAdmissionCategory,
+  WoundCare,
+  WoundCareDocument,
 } from '.';
 import { BaseService, ChangeType, ErrorType, Errors, LoggerService } from '../common';
 import { Injectable } from '@nestjs/common';
@@ -45,6 +48,8 @@ export class MemberAdmissionService extends BaseService {
       ISoftDelete<ExternalAppointmentDocument>,
     @InjectModel(Activity.name)
     private readonly activityModel: Model<ActivityDocument> & ISoftDelete<ActivityDocument>,
+    @InjectModel(WoundCare.name)
+    private readonly woundCareModel: Model<WoundCareDocument> & ISoftDelete<WoundCareDocument>,
     readonly logger: LoggerService,
   ) {
     super();
@@ -63,6 +68,10 @@ export class MemberAdmissionService extends BaseService {
     this.matchMap[RefAdmissionCategory.activities] = {
       model: this.activityModel,
       errorType: ErrorType.memberAdmissionActivityIdNotFound,
+    };
+    this.matchMap[RefAdmissionCategory.woundCares] = {
+      model: this.woundCareModel,
+      errorType: ErrorType.memberAdmissionWoundCareIdNotFound,
     };
   }
 
@@ -98,6 +107,11 @@ export class MemberAdmissionService extends BaseService {
       const { changeType, ...activity }: ChangeAdmissionActivityParams = setParams.activity;
       const admissionCategory = RefAdmissionCategory.activities;
       result = await this.changeInternal(activity, changeType, admissionCategory, memberId);
+    }
+    if (setParams.woundCare) {
+      const { changeType, ...woundCare }: ChangeAdmissionWoundCareParams = setParams.woundCare;
+      const admissionCategory = RefAdmissionCategory.woundCares;
+      result = await this.changeInternal(woundCare, changeType, admissionCategory, memberId);
     }
 
     return this.replaceId(result);
