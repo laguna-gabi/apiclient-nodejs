@@ -1,11 +1,11 @@
 module.exports = {
-  displayName: 'hepius',
+  displayName: 'clinicalEngine',
   rootDir: '../unit',
   preset: '../../../../jest.preset.js',
   globalSetup: '../../../../global-setup.ts',
   globals: {
     'ts-jest': {
-      tsconfig: 'apps/hepius/tsconfig.spec.json',
+      tsconfig: 'apps/clinicalEngine/tsconfig.spec.json',
     },
   },
   testEnvironment: 'node',

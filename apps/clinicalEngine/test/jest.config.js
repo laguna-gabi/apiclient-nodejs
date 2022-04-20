@@ -1,10 +1,10 @@
 module.exports = {
-  displayName: 'pandora',
+  displayName: 'clinicalEngine',
   rootDir: '../',
   preset: '../../jest.preset.js',
   globals: {
     'ts-jest': {
-      tsconfig: 'libs/pandora/tsconfig.spec.json',
+      tsconfig: 'apps/clinicalEngine/tsconfig.spec.json',
     },
   },
   testEnvironment: 'node',
@@ -12,7 +12,7 @@ module.exports = {
     '^.+\\.[tj]s$': 'ts-jest',
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
-  coverageDirectory: '../../coverage/libs/pandora',
+  coverageDirectory: '../../coverage/apps/clinicalEngine',
   maxWorkers: 1,
   globalSetup: '../../global-setup.ts',
   coverageReporters: ['json-summary', 'lcov'],

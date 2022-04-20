@@ -1,4 +1,11 @@
-import { Environments, IEventNotifySlack, SlackChannel, SlackIcon, formatEx } from '@argus/pandora';
+import {
+  Environments,
+  EventType as GlobalEventType,
+  IEventNotifySlack,
+  SlackChannel,
+  SlackIcon,
+  formatEx,
+} from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
@@ -272,7 +279,7 @@ export class UserService extends BaseService {
         icon: SlackIcon.warning,
         channel: SlackChannel.notifications,
       };
-      this.eventEmitter.emit(EventType.notifySlack, params);
+      this.eventEmitter.emit(GlobalEventType.notifySlack, params);
     }
 
     return slotsObject;
@@ -407,7 +414,7 @@ export class UserService extends BaseService {
       icon: SlackIcon.warning,
       channel: SlackChannel.notifications,
     };
-    this.eventEmitter.emit(EventType.notifySlack, params);
+    this.eventEmitter.emit(GlobalEventType.notifySlack, params);
     await this.userModel.updateOne(
       { _id: users[0]._id },
       { $set: { lastMemberAssignedAt: new Date() } },

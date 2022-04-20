@@ -7,7 +7,7 @@ import {
   IUpdateSenderClientId,
   InnerQueueTypes,
 } from '@argus/irisClient';
-import { Environments, QueueType, ServiceName, formatEx } from '@argus/pandora';
+import { Environments, EventType, QueueType, ServiceName, formatEx } from '@argus/pandora';
 import { Injectable, NotImplementedException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
@@ -16,7 +16,7 @@ import { aws } from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { ConductorService } from '.';
-import { EventType, LoggerService } from '../common';
+import { LoggerService } from '../common';
 import { ConfigsService, ExternalConfigs } from '../providers';
 
 @Injectable()

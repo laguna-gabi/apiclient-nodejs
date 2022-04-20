@@ -11,6 +11,7 @@ export enum Environments {
 export enum ServiceName {
   hepius = 'hepius',
   iris = 'iris',
+  clinicalEngine = 'clinicalEngine',
 }
 
 export enum Language {
@@ -30,6 +31,11 @@ export enum AuditType {
   delete = 'delete',
   message = 'message',
   userReplaced = 'userReplaced',
+}
+
+export enum EventType {
+  notifySlack = 'notifySlack',
+  notifyQueue = 'notifyQueue',
 }
 
 /*******************************************************************************

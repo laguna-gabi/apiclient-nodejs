@@ -14,6 +14,7 @@ import {
   generateDispatchId,
 } from '@argus/irisClient';
 import {
+  EventType as GlobalEventType,
   IEventNotifySlack,
   NotificationType,
   Platform,
@@ -282,7 +283,7 @@ export class MemberResolver extends MemberBase {
       type: QueueType.notifications,
       message: JSON.stringify(updateSenderClientId),
     };
-    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
+    this.eventEmitter.emit(GlobalEventType.notifyQueue, eventParams);
 
     return true;
   }
@@ -1261,7 +1262,7 @@ export class MemberResolver extends MemberBase {
       type: QueueType.notifications,
       message: JSON.stringify(dispatch, Object.keys(dispatch).sort()),
     };
-    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
+    this.eventEmitter.emit(GlobalEventType.notifyQueue, eventParams);
   }
 
   @OnEvent(EventType.notifyDeleteDispatch, { async: true })
@@ -1276,7 +1277,7 @@ export class MemberResolver extends MemberBase {
       type: QueueType.notifications,
       message: JSON.stringify(deleteDispatch),
     };
-    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
+    this.eventEmitter.emit(GlobalEventType.notifyQueue, eventParams);
   }
 
   /**
@@ -1335,7 +1336,7 @@ export class MemberResolver extends MemberBase {
         icon: SlackIcon.warning,
         channel: SlackChannel.escalation,
       };
-      this.eventEmitter.emit(EventType.notifySlack, notificationParams);
+      this.eventEmitter.emit(GlobalEventType.notifySlack, notificationParams);
 
       // if phq-9 alert raised we should notify the escalation team members in person (text message)
       if (
@@ -1479,7 +1480,7 @@ export class MemberResolver extends MemberBase {
       type: QueueType.notifications,
       message: JSON.stringify(settings),
     };
-    this.eventEmitter.emit(EventType.notifyQueue, eventNotifyQueueParams);
+    this.eventEmitter.emit(GlobalEventType.notifyQueue, eventNotifyQueueParams);
   }
 
   private generateMobileRegistrationDispatch(

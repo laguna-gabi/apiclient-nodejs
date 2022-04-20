@@ -8,7 +8,7 @@ import {
   RegisterInternalKey,
   TodoInternalKey,
 } from '@argus/irisClient';
-import { AuditType, NotificationType, Platform, QueueType } from '@argus/pandora';
+import { AuditType, EventType, NotificationType, Platform, QueueType } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { gapMinutes, hosts } from 'config';
@@ -25,7 +25,7 @@ import {
   SendTwilioNotification,
   Twilio,
 } from '.';
-import { EventType, LoggerService } from '../common';
+import { LoggerService } from '../common';
 import { Dispatch } from '../conductor';
 import { ClientSettings } from '../settings';
 

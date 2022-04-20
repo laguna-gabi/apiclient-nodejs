@@ -1,4 +1,9 @@
-import { IEventNotifySlack, SlackChannel, SlackIcon } from '@argus/pandora';
+import {
+  EventType as GlobalEventType,
+  IEventNotifySlack,
+  SlackChannel,
+  SlackIcon,
+} from '@argus/pandora';
 import {
   Body,
   Controller,
@@ -79,7 +84,7 @@ export class WebhooksController {
         icon: SlackIcon.warning,
         channel: SlackChannel.notifications,
       };
-      this.eventEmitter.emit(EventType.notifySlack, params);
+      this.eventEmitter.emit(GlobalEventType.notifySlack, params);
       throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
     }
   }
