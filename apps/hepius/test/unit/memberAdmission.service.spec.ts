@@ -417,7 +417,7 @@ describe(MemberAdmissionService.name, () => {
     params,
     memberId: string,
   ): Promise<MemberAdmission> => {
-    return service.changeAdmission({ [`${field}`]: params }, memberId);
+    return service.changeAdmission({ [`${field}`]: params, memberId });
   };
 
   const initModels = () => {

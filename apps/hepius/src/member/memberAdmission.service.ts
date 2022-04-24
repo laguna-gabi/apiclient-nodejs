@@ -76,11 +76,9 @@ export class MemberAdmissionService extends BaseService {
     };
   }
 
-  async changeAdmission(
-    changeAdmissionParams: ChangeAdmissionParams,
-    memberId: string,
-  ): Promise<MemberAdmission> {
+  async changeAdmission(changeAdmissionParams: ChangeAdmissionParams): Promise<MemberAdmission> {
     const setParams: ChangeAdmissionParams = omitBy(changeAdmissionParams, isNil);
+    const { memberId } = changeAdmissionParams;
 
     let result;
     if (setParams.diagnoses) {

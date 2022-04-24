@@ -203,6 +203,9 @@ export class ChangeAdmissionWoundCareParams extends WoundCare {
 
 @InputType()
 export class ChangeAdmissionParams {
+  @Field()
+  memberId: string;
+
   @Field({ nullable: true })
   diagnoses?: string;
 
