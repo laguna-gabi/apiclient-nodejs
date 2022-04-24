@@ -3,7 +3,7 @@ import { PARAMS_PROVIDER_TOKEN, Params, PinoLogger } from 'nestjs-pino';
 import { v4 } from 'uuid';
 import { BaseLogger, Client, FailureReason, ServiceName } from '../src';
 
-const VALID_KEYS = new Set([
+const validKeys = new Set([
   'fieldWithString',
   'fieldWithNumber',
   'fieldWithTrue',
@@ -13,7 +13,7 @@ const VALID_KEYS = new Set([
 ]);
 
 describe(BaseLogger.name, () => {
-  const logger = new BaseLogger(PARAMS_PROVIDER_TOKEN as Params, ServiceName.iris, VALID_KEYS);
+  const logger = new BaseLogger(PARAMS_PROVIDER_TOKEN as Params, ServiceName.iris, validKeys);
   const methodName = 'testLogger';
 
   describe('should log params', () => {
@@ -142,7 +142,7 @@ describe(BaseLogger.name, () => {
       });
     });
 
-    it('should not log params for field not in VALID_KEYS', () => {
+    it('should not log params for field not in validKeys', () => {
       const params = { fieldNotExists: datatype.number() };
 
       logger.info(params, BaseLogger.name, methodName);
