@@ -87,6 +87,7 @@ import {
   CreateTaskParams,
   DeleteDischargeDocumentParams,
   DeleteMemberParams,
+  Dietary,
   DischargeDocumentType,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
@@ -1362,6 +1363,10 @@ export const generateAdmissionWoundCareParams = ({
     ...attachIdParam,
     text: lorem.sentence(),
   };
+};
+
+export const generateAdmissionDietaryParams = (): Dietary => {
+  return { text: lorem.sentence(), bmi: lorem.word() };
 };
 
 /*************************************************************************************************

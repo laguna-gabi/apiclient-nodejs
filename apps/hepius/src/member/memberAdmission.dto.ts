@@ -171,11 +171,6 @@ export class ChangeAdmissionBaseParams {
   changeType: ChangeType;
 }
 
-export class ChangeAdmissionDiagnosesParams extends ChangeAdmissionBaseParams {
-  @Field(() => String)
-  diagnoses: string;
-}
-
 @InputType()
 export class ChangeAdmissionProcedureParams extends Procedure {
   @Field(() => ChangeType)
@@ -207,15 +202,9 @@ export class ChangeAdmissionWoundCareParams extends WoundCare {
 }
 
 @InputType()
-export class ChangeAdmissionDietaryParams extends ChangeAdmissionBaseParams {
-  @Field(() => Dietary)
-  dietary: Dietary;
-}
-
-@InputType()
 export class ChangeAdmissionParams {
-  @Field(() => ChangeAdmissionDiagnosesParams, { nullable: true })
-  diagnoses?: ChangeAdmissionDiagnosesParams;
+  @Field({ nullable: true })
+  diagnoses?: string;
 
   @Field(() => ChangeAdmissionProcedureParams, { nullable: true })
   procedure?: ChangeAdmissionProcedureParams;
@@ -232,8 +221,8 @@ export class ChangeAdmissionParams {
   @Field(() => ChangeAdmissionWoundCareParams, { nullable: true })
   woundCare?: ChangeAdmissionWoundCareParams;
 
-  @Field(() => ChangeAdmissionDietaryParams, { nullable: true })
-  dietary?: ChangeAdmissionDietaryParams;
+  @Field(() => Dietary, { nullable: true })
+  dietary?: Dietary;
 }
 
 /**************************************************************************************************
