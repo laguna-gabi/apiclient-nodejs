@@ -742,7 +742,7 @@ describe('Commands: AnalyticsService', () => {
     });
   });
 
-  describe.only('getQuestionnaireResponseData', () => {
+  describe('getQuestionnaireResponseData', () => {
     let qrModelSpy;
 
     beforeAll(async () => {
