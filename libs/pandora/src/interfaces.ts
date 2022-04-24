@@ -12,6 +12,7 @@ export enum ServiceName {
   hepius = 'hepius',
   iris = 'iris',
   clinicalEngine = 'clinicalEngine',
+  poseidon = 'poseidon',
 }
 
 export enum Language {
