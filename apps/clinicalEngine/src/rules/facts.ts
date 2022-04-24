@@ -1,8 +1,14 @@
-import { Fact } from 'json-rules-engine';
+import { DynamicFact } from './types';
 
-export const dynamicFacts: Partial<Fact>[] = [
+export enum DynamicFacts {
+  caregiversCount = 'caregiversCount',
+  barrierTypes = 'barrierTypes',
+  newBarriers = 'newBarriers',
+}
+
+export const dynamicFacts: DynamicFact[] = [
   {
-    id: 'caregiversCount',
+    id: DynamicFacts.caregiversCount,
     calculationMethod: async (params, almanac) => {
       const memberCaregivers = await almanac.factValue('caregivers');
       // todo: remove when defining types
@@ -12,7 +18,7 @@ export const dynamicFacts: Partial<Fact>[] = [
     },
   },
   {
-    id: 'barrierTypes',
+    id: DynamicFacts.barrierTypes,
     calculationMethod: async (params, almanac) => {
       const barriers = await almanac.factValue('barriers');
       // todo: remove when defining types

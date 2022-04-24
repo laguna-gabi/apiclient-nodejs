@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { MemberFacts } from '../rules/types';
 
-const mockFactsObject = {
-  memberInfo: { scheduledAppointments: 0, appointmentsToBeScheduled: 0, livesAlone: true },
+const mockFactsObject: MemberFacts = {
+  memberInfo: {
+    scheduledAppointments: 0,
+    appointmentsToBeScheduled: 0,
+    livesAlone: true,
+    nested: { example: 1 },
+  },
   caregivers: ['x', 'y'],
   barriers: [{ type: 'appointment-follow-up-unclear' }, { type: 'loneliness' }],
 };
