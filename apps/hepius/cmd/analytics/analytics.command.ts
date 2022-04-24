@@ -13,6 +13,7 @@ import {
   MemberData,
   MemberDataAggregate,
   MemberTable,
+  QuestionnaireResponseData,
   SheetOption,
 } from '.';
 import { analytics } from 'config';
@@ -26,7 +27,7 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { delay } from '../../src/common';
 import * as Importer from './importer/mysql-import';
-import { CaregiverData, CaregiverTable } from './index';
+import { CaregiverData, CaregiverTable, QuestionnaireResponseTable } from './index';
 
 interface AnalyticsCommandOptions {
   debug?: boolean;
@@ -71,7 +72,13 @@ export class AnalyticsCommand implements CommandRunner {
       username,
       password,
       database: analytics.database,
-      entities: [CoachData, AppointmentsMemberData, MemberData, CaregiverData],
+      entities: [
+        CoachData,
+        AppointmentsMemberData,
+        MemberData,
+        CaregiverData,
+        QuestionnaireResponseData,
+      ],
       synchronize: true,
       logging: false,
     });
@@ -250,6 +257,25 @@ export class AnalyticsCommand implements CommandRunner {
         }
 
         await AppDataSource.manager.save(await this.analyticsService.getCaregiversData());
+      }
+
+      if (options.sheet === SheetOption.qrs || options.sheet === SheetOption.all) {
+        console.debug(
+          '\n----------------------------------------------------------------\n' +
+            '---------- Generating Questionnaire Response Data --------------\n' +
+            '----------------------------------------------------------------',
+        );
+
+        // Save to Analytics (MySQL) db:
+        const qrTable = await this.queryRunner.getTable(QuestionnaireResponseTable);
+
+        if (qrTable) {
+          await this.queryRunner.clearTable(QuestionnaireResponseTable);
+        }
+
+        await AppDataSource.manager.save(
+          await this.analyticsService.getQuestionnaireResponseData(),
+        );
       }
 
       /***************************** Import Data Enrichment  **************************************/

@@ -14,6 +14,8 @@ import {
   mockGenerateMember,
   mockGenerateMemberConfig,
   mockGenerateOrg,
+  mockGenerateQuestionnaireAnswer,
+  mockGenerateQuestionnaireResponse,
   mockGenerateUser,
 } from '..';
 import {
@@ -30,12 +32,14 @@ import { RecordingType, momentFormats, reformatDate } from '../../src/common';
 import { Caregiver, MemberModule } from '../../src/member';
 import { ProvidersModule } from '../../src/providers';
 import { User, UserDocument, UserModule } from '../../src/user';
+import { QuestionnaireModule, QuestionnaireResponse } from '../../src/questionnaire';
 
 describe('Commands: AnalyticsService', () => {
   let module: TestingModule;
   let analyticsService: AnalyticsService;
   let userModel: Model<User>;
   let caregiverModel: Model<Caregiver>;
+  let qrModel: Model<QuestionnaireResponse>;
 
   const now = new Date(Date.UTC(2021, 1, 2, 3, 4, 5));
 
@@ -54,7 +58,13 @@ describe('Commands: AnalyticsService', () => {
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
     module = await Test.createTestingModule({
-      imports: defaultModules().concat(MemberModule, UserModule, ProvidersModule, AnalyticsModule),
+      imports: defaultModules().concat(
+        MemberModule,
+        UserModule,
+        QuestionnaireModule,
+        ProvidersModule,
+        AnalyticsModule,
+      ),
       providers: [
         AnalyticsService,
         {
@@ -67,6 +77,7 @@ describe('Commands: AnalyticsService', () => {
     analyticsService = module.get<AnalyticsService>(AnalyticsService);
     userModel = module.get<Model<User>>(getModelToken(User.name));
     caregiverModel = module.get<Model<Caregiver>>(getModelToken(Caregiver.name));
+    qrModel = module.get<Model<QuestionnaireResponse>>(getModelToken(QuestionnaireResponse.name));
 
     // mock the user model to upload all actors (users) during init
     jest
@@ -728,6 +739,58 @@ describe('Commands: AnalyticsService', () => {
       const data = await analyticsService.getCaregiversData();
 
       expect(data).toEqual(undefined);
+    });
+  });
+
+  describe.only('getQuestionnaireResponseData', () => {
+    let qrModelSpy;
+
+    beforeAll(async () => {
+      qrModelSpy = jest.spyOn(qrModel, 'find');
+    });
+
+    afterEach(() => {
+      qrModelSpy.mockReset();
+    });
+
+    it('to return an empty list of QR data entries', async () => {
+      qrModelSpy.mockResolvedValue();
+      const data = await analyticsService.getQuestionnaireResponseData();
+
+      expect(data).toEqual([]);
+    });
+
+    it('to return non-empty QR data entries', async () => {
+      const answer1 = mockGenerateQuestionnaireAnswer();
+      const answer2 = mockGenerateQuestionnaireAnswer();
+      const questionnaireResponse = mockGenerateQuestionnaireResponse({
+        answers: [answer1, answer2],
+      });
+
+      qrModelSpy.mockResolvedValue([
+        { ...questionnaireResponse, _id: new Types.ObjectId(questionnaireResponse.id) },
+      ]);
+
+      const data = await analyticsService.getQuestionnaireResponseData();
+
+      expect(data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            answer_code: answer1.code,
+            answer_value: answer1.value,
+            member_id: questionnaireResponse.memberId.toString(),
+            qr_id: questionnaireResponse.id,
+            questionnaire_id: questionnaireResponse.questionnaireId.toString(),
+          }),
+          expect.objectContaining({
+            answer_code: answer2.code,
+            answer_value: answer2.value,
+            member_id: questionnaireResponse.memberId.toString(),
+            qr_id: questionnaireResponse.id,
+            questionnaire_id: questionnaireResponse.questionnaireId.toString(),
+          }),
+        ]),
+      );
     });
   });
 });

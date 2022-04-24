@@ -16,6 +16,8 @@ import {
   MemberDataAggregate,
   PopulatedAppointment,
   PopulatedMember,
+  QuestionnaireResponseData,
+  QuestionnaireResponseWithTimestamp,
   RecordingSummary,
   SheetOption,
   SummaryFileSuffix,
@@ -38,6 +40,12 @@ import { User, UserDocument } from '../../src/user';
 import * as fs from 'fs';
 import { json2csv } from 'json-2-csv';
 import { omit } from 'lodash';
+import {
+  Questionnaire,
+  QuestionnaireDocument,
+  QuestionnaireResponse,
+  QuestionnaireResponseDocument,
+} from '../../src/questionnaire';
 
 @Injectable()
 export class AnalyticsService {
@@ -51,13 +59,19 @@ export class AnalyticsService {
     private readonly userModel: Model<UserDocument>,
     @InjectModel(Caregiver.name)
     private readonly caregiverModel: Model<CaregiverDocument>,
+    @InjectModel(QuestionnaireResponse.name)
+    private readonly questionnaireResponseModel: Model<QuestionnaireResponseDocument>,
+    @InjectModel(Questionnaire.name)
+    private readonly questionnaireModel: Model<QuestionnaireDocument>,
   ) {}
 
   private userData: Map<string, string>;
+  private questionnaireData: Map<string, string>;
 
   async init() {
     // upload users - full name is required for the appointment entry
     await this.uploadUserData();
+    await this.uploadQuestionnaireData();
   }
 
   async clean() {
@@ -76,6 +90,16 @@ export class AnalyticsService {
           isControlMember: true,
         } as MemberDataAggregate),
     );
+  }
+
+  async uploadQuestionnaireData(): Promise<void> {
+    this.questionnaireData = new Map<string, string>();
+
+    const questionnaires = await this.questionnaireModel.find({}, { _id: 1, type: 1 });
+
+    questionnaires.forEach((questionnaire) => {
+      this.questionnaireData.set(questionnaire._id.toString(), questionnaire.type);
+    });
   }
 
   async uploadUserData(): Promise<void> {
@@ -204,26 +228,50 @@ export class AnalyticsService {
     const caregivers: (CaregiverDocument & { createdAt: Date; updatedAt: Date })[] =
       await this.caregiverModel.find().lean();
 
+    const caregiverDataArray = [];
     if (caregivers) {
-      return Promise.all(
-        caregivers?.map(async (caregiver) => {
-          const caregiverData = new CaregiverData();
-          Object.assign(
-            caregiverData,
-            omit(
-              {
-                ...caregiver,
-                id: caregiver._id.toString(),
-                memberId: caregiver.memberId.toString(),
-                created: reformatDate(caregiver.createdAt?.toString(), momentFormats.mysqlDateTime),
-              },
-              ['_id'],
-            ),
-          );
-          return caregiverData;
-        }),
-      );
+      caregivers?.forEach((caregiver) => {
+        const caregiverData = new CaregiverData();
+        Object.assign(
+          caregiverData,
+          omit(
+            {
+              ...caregiver,
+              id: caregiver._id.toString(),
+              memberId: caregiver.memberId.toString(),
+              created: reformatDate(caregiver.createdAt?.toString(), momentFormats.mysqlDateTime),
+            },
+            ['_id'],
+          ),
+        );
+        caregiverDataArray.push(caregiverData);
+      });
+
+      return caregiverDataArray;
     }
+  }
+
+  async getQuestionnaireResponseData(): Promise<QuestionnaireResponseData[]> {
+    const qrs: QuestionnaireResponseWithTimestamp[] = await this.questionnaireResponseModel.find();
+
+    const qrDataSet = [];
+    if (qrs) {
+      qrs.forEach((qr) => {
+        qr.answers?.forEach((answer) => {
+          const qrData = new QuestionnaireResponseData();
+          qrData.member_id = qr.memberId.toString();
+          qrData.qr_id = qr._id.toString();
+          qrData.questionnaire_id = qr.questionnaireId.toString();
+          qrData.questionnaire_type = this.questionnaireData.get(qrData.questionnaire_id);
+          qrData.answer_code = answer.code;
+          qrData.answer_value = answer.value;
+          qrData.created = reformatDate(qr.createdAt?.toString(), momentFormats.mysqlDateTime);
+          qrDataSet.push(qrData);
+        });
+      });
+    }
+
+    return qrDataSet;
   }
 
   async getCoachersDataAggregate(): Promise<CoachDataAggregate[]> {
