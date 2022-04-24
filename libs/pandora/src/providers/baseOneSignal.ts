@@ -1,13 +1,14 @@
 import { CancelNotificationType, NotificationType, Platform } from '..';
+import { OnModuleInit } from '@nestjs/common';
 
-export abstract class BaseOneSignal {
+export abstract class BaseOneSignal implements OnModuleInit {
   protected readonly oneSignalUrl = 'https://onesignal.com/api/v1';
   protected defaultApiId: string;
   protected defaultApiKey: string;
   protected voipApiId: string;
   protected voipApiKey: string;
 
-  abstract onModuleInit();
+  abstract onModuleInit(): Promise<void>;
 
   protected async getApiId(
     platform: Platform,

@@ -19,6 +19,6 @@ import { CommonModule } from '../common';
     CommonModule,
   ],
   providers: [QuestionnaireResolver, QuestionnaireService],
-  exports: [QuestionnaireService],
+  exports: [QuestionnaireService, MongooseModule],
 })
 export class QuestionnaireModule {}

@@ -87,6 +87,7 @@ import {
   CreateTaskParams,
   DeleteDischargeDocumentParams,
   DeleteMemberParams,
+  Dietary,
   DischargeDocumentType,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
@@ -120,6 +121,7 @@ import {
   CreateQuestionnaireParams,
   Item,
   Questionnaire,
+  QuestionnaireResponse,
   QuestionnaireType,
   SubmitQuestionnaireResponseParams,
 } from '../src/questionnaire';
@@ -1242,6 +1244,23 @@ export const generateSubmitQuestionnaireResponseParams = ({
   };
 };
 
+export const mockGenerateQuestionnaireResponse = ({
+  id = generateId(),
+  questionnaireId = generateObjectId(),
+  memberId = generateObjectId(),
+  answers = [mockGenerateQuestionnaireAnswer(), mockGenerateQuestionnaireAnswer()],
+  createdAt = new Date(),
+  createdBy = generateObjectId(),
+}: Partial<QuestionnaireResponse> = {}): QuestionnaireResponse => {
+  return {
+    id,
+    questionnaireId,
+    memberId,
+    answers,
+    createdAt,
+    createdBy,
+  };
+};
 export const generateRequestHeaders = (authId: string) => {
   return { Authorization: jwt.sign({ sub: authId }, 'secret') };
 };
@@ -1344,6 +1363,10 @@ export const generateAdmissionWoundCareParams = ({
     ...attachIdParam,
     text: lorem.sentence(),
   };
+};
+
+export const generateAdmissionDietaryParams = (): Dietary => {
+  return { text: lorem.sentence(), bmi: lorem.word() };
 };
 
 /*************************************************************************************************

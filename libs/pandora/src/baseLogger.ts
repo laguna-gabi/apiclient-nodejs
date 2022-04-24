@@ -27,13 +27,25 @@ export enum LogType {
   error = 'error',
   debug = 'debug',
 }
+
 export class BaseLogger extends PinoLogger {
+  private baseValidKeys = new Set([
+    'id',
+    'memberId',
+    'userId',
+    'orgId',
+    'sub',
+    'externalUserId',
+    'lastCommit',
+  ]);
+
   constructor(
     @Inject(PARAMS_PROVIDER_TOKEN) params: Params,
     private source: ServiceName,
     private validKeys: Set<string> = new Set<string>(),
   ) {
     super(params);
+    this.validKeys = new Set([...validKeys, ...this.baseValidKeys]);
   }
 
   log(params = {}, className: string, methodName: string): string | void {

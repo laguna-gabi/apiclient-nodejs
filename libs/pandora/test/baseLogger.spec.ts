@@ -157,7 +157,7 @@ describe(BaseLogger.name, () => {
       const logger = new BaseLogger(PARAMS_PROVIDER_TOKEN as Params, ServiceName.hepius);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      expect(logger.validKeys).toEqual(new Set<string>());
+      expect(logger.validKeys).toEqual(new Set<string>([...logger.baseValidKeys]));
     });
   });
 });

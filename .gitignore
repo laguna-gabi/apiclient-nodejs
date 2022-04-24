@@ -38,5 +38,5 @@ yarn-error.log*
 !.vscode/extensions.json
 
 # Graphql
-schema.gql
-/gql
+**/schema.gql
+**/gql

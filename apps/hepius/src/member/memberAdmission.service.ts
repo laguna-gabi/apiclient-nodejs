@@ -17,6 +17,7 @@ import {
   Procedure,
   ProcedureDocument,
   RefAdmissionCategory,
+  SingleValueAdmissionCategory,
   WoundCare,
   WoundCareDocument,
 } from '.';
@@ -82,6 +83,12 @@ export class MemberAdmissionService extends BaseService {
     const setParams: ChangeAdmissionParams = omitBy(changeAdmissionParams, isNil);
 
     let result;
+    if (setParams.diagnoses) {
+      result = await this.updateSingleObject(
+        { [`${SingleValueAdmissionCategory.diagnoses}`]: setParams.diagnoses },
+        memberId,
+      );
+    }
     if (setParams.procedure) {
       const { changeType, ...procedure }: ChangeAdmissionProcedureParams = setParams.procedure;
       const admissionCategory = RefAdmissionCategory.procedures;
@@ -112,6 +119,13 @@ export class MemberAdmissionService extends BaseService {
       const { changeType, ...woundCare }: ChangeAdmissionWoundCareParams = setParams.woundCare;
       const admissionCategory = RefAdmissionCategory.woundCares;
       result = await this.changeInternal(woundCare, changeType, admissionCategory, memberId);
+    }
+    if (setParams.dietary) {
+      const values = { ...omitBy(setParams.dietary, isNil) };
+      const parse = Object.keys(values).map((key) => ({
+        [`${SingleValueAdmissionCategory.dietary}.${key}`]: values[key],
+      }));
+      result = await this.updateSingleObject(Object.assign({}, ...parse), memberId);
     }
 
     return this.replaceId(result);
@@ -168,6 +182,15 @@ export class MemberAdmissionService extends BaseService {
     return this.populateAll(object);
   }
 
+  private async updateSingleObject(value, memberId: string): Promise<MemberAdmission> {
+    const updateRes = await this.admissionModel.findOneAndUpdate(
+      { memberId: new Types.ObjectId(memberId) },
+      { $set: value },
+      { new: true, upsert: true },
+    );
+    return this.populateAll(updateRes);
+  }
+
   private async deleteRefObjects(
     id: string,
     admissionCategory: RefAdmissionCategory,
@@ -179,23 +202,21 @@ export class MemberAdmissionService extends BaseService {
       throw new Error(Errors.get(internalValue.errorType));
     }
     await internalValue.model.deleteOne({ _id: new Types.ObjectId(id) });
-    const removeRes = await this.admissionModel
-      .findOneAndUpdate(
-        { memberId: new Types.ObjectId(memberId) },
-        { $pull: { [`${admissionCategory}`]: new Types.ObjectId(id) } },
-        { upsert: true, new: true },
-      )
-      .populate(admissionCategory);
+    const removeRes = await this.admissionModel.findOneAndUpdate(
+      { memberId: new Types.ObjectId(memberId) },
+      { $pull: { [`${admissionCategory}`]: new Types.ObjectId(id) } },
+      { upsert: true, new: true },
+    );
     return this.populateAll(removeRes);
   }
 
   private async populateAll(object): Promise<MemberAdmission> {
-    let addRes = cloneDeep(object);
+    let result = cloneDeep(object);
     await Promise.all(
       Object.values(RefAdmissionCategory).map(async (admissionCategory) => {
-        addRes = await addRes.populate(admissionCategory);
+        result = await result.populate(admissionCategory);
       }),
     );
-    return this.replaceId(addRes.toObject());
+    return this.replaceId(result.toObject());
   }
 }

@@ -1,4 +1,5 @@
 import { Language, Platform } from '@argus/pandora';
+import { QuestionnaireResponseDocument } from '../../src//questionnaire';
 import { hosts } from 'config';
 import { Types } from 'mongoose';
 import {
@@ -33,12 +34,14 @@ export const MemberTable = 'harmony_member';
 export const CoachTable = 'harmony_coach';
 export const CaregiverTable = 'harmony_caregiver';
 export const AppointmentTable = 'harmony_appts';
+export const QuestionnaireResponseTable = 'harmony_qrs';
 
 export enum SheetOption {
   members = 'members',
   appointments = 'appointments',
   coachers = 'coachers',
   caregivers = 'caregivers',
+  qrs = 'qrs',
   all = 'all',
 }
 
@@ -197,6 +200,33 @@ export class CoachData {
   last_modified_datetime?: Date;
 }
 
+@Entity({ name: QuestionnaireResponseTable })
+export class QuestionnaireResponseData {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @PrimaryColumn('varchar', { length: 100 })
+  member_id: string;
+
+  @Column('varchar', { length: 50, name: 'qr_id' })
+  qr_id: string;
+
+  @Column('varchar', { length: 50, name: 'questionnaire_id' })
+  questionnaire_id: string;
+
+  @Column('varchar', { length: 50, name: 'questionnaire_type' })
+  questionnaire_type: string;
+
+  @Column('varchar', { length: 50, name: 'answer_name' })
+  answer_code: string;
+
+  @Column('varchar', { length: 50, name: 'answer_value' })
+  answer_value: string;
+
+  @Column('datetime', { nullable: true })
+  created: string;
+}
+
 @Entity({ name: CaregiverTable })
 export class CaregiverData {
   @PrimaryColumn('varchar', { length: 100 })
@@ -337,6 +367,11 @@ export type CoachDataAggregate = {
 };
 
 export type AnalyticsDataAggregate = CoachDataAggregate | MemberDataAggregate;
+
+export type QuestionnaireResponseWithTimestamp = QuestionnaireResponseDocument & {
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 export interface RecordingSummary {
   totalDuration: number;
