@@ -1,5 +1,6 @@
 import { BaseLogger } from '../baseLogger';
 import { IncomingWebhook } from '@slack/webhook';
+import { OnModuleInit } from '@nestjs/common';
 import { Environments } from '..';
 
 export enum SlackChannel {
@@ -27,7 +28,7 @@ export interface IEventNotifySlack {
   orgName?: string;
 }
 
-export abstract class BaseSlack {
+export abstract class BaseSlack implements OnModuleInit {
   protected webhook: IncomingWebhook;
 
   constructor(readonly logger: BaseLogger) {}

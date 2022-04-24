@@ -5,7 +5,6 @@ import {
   ServiceName,
   SlackChannel,
   SlackIcon,
-  internalLogs,
 } from '@argus/pandora';
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -40,12 +39,6 @@ export class LoggerService extends BaseLogger {
     'deliveredAt',
     'failureReasons',
     'retryCount',
-    //settings data
-    'id',
-    'externalUserId',
-    'userId',
-    // internal
-    ...Object.keys(internalLogs),
   ]);
 
   constructor(

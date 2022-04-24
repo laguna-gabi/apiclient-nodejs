@@ -6,7 +6,6 @@ import {
   ServiceName,
   SlackChannel,
   SlackIcon,
-  internalLogs,
 } from '@argus/pandora';
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -15,11 +14,6 @@ import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 @Injectable()
 export class LoggerService extends BaseLogger {
   private static VALID_KEYS = new Set([
-    'id',
-    'memberId',
-    'userId',
-    'orgId',
-    'sub',
     // member
     'platform',
     'externalUserId',
@@ -90,8 +84,6 @@ export class LoggerService extends BaseLogger {
     'dueDate',
     'redFlagId',
     'barrierId',
-    // internal
-    ...Object.keys(internalLogs),
   ]);
 
   constructor(
