@@ -2350,6 +2350,25 @@ describe('MemberService', () => {
     });
   });
 
+  describe('updateMemberConfigLoggedInAt', () => {
+    it('should update member config login time and not update firstLogin on 2nd time', async () => {
+      const id = await generateMember();
+      const currentTime1 = new Date().getTime();
+      await service.updateMemberConfigLoggedInAt(new Types.ObjectId(id));
+
+      const config1 = await service.getMemberConfig(id);
+      expect(config1.firstLoggedInAt.getTime()).toBeGreaterThanOrEqual(currentTime1);
+      expect(config1.lastLoggedInAt.getTime()).toBeGreaterThanOrEqual(currentTime1);
+
+      const currentTime2 = new Date().getTime();
+      await service.updateMemberConfigLoggedInAt(new Types.ObjectId(id));
+
+      const config2 = await service.getMemberConfig(id);
+      expect(config2.firstLoggedInAt.getTime()).toEqual(config1.firstLoggedInAt.getTime());
+      expect(config2.lastLoggedInAt.getTime()).toBeGreaterThanOrEqual(currentTime2);
+    });
+  });
+
   describe('getMemberConfig', () => {
     it('should create memberConfig on memberCreate', async () => {
       const id = await generateMember();

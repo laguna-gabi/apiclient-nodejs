@@ -1800,16 +1800,16 @@ describe('MemberResolver', () => {
     let spyOnServiceGetMember;
     let spyOnServiceGetMemberConfig;
     let spyOnServiceUpdateMemberConfig;
-    let spyOnServiceUpdateMemberConfigRegisteredAt;
+    let spyOnServiceUpdateMemberConfigLoggedInAt;
 
     beforeEach(() => {
       spyOnOneSignalRegister = jest.spyOn(oneSignal, 'register');
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnServiceUpdateMemberConfig = jest.spyOn(service, 'updateMemberConfig');
-      spyOnServiceUpdateMemberConfigRegisteredAt = jest.spyOn(
+      spyOnServiceUpdateMemberConfigLoggedInAt = jest.spyOn(
         service,
-        'updateMemberConfigRegisteredAt',
+        'updateMemberConfigLoggedInAt',
       );
     });
 
@@ -1818,7 +1818,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockReset();
       spyOnServiceGetMemberConfig.mockReset();
       spyOnServiceUpdateMemberConfig.mockReset();
-      spyOnServiceUpdateMemberConfigRegisteredAt.mockReset();
+      spyOnServiceUpdateMemberConfigLoggedInAt.mockReset();
       spyOnEventEmitter.mockReset();
       spyOnEventEmitter.mockClear();
     });
@@ -1853,7 +1853,7 @@ describe('MemberResolver', () => {
         platform: params.platform,
         isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       });
-      expect(spyOnServiceUpdateMemberConfigRegisteredAt).toBeCalledWith(memberConfig.memberId);
+      expect(spyOnServiceUpdateMemberConfigLoggedInAt).toBeCalledWith(memberConfig.memberId);
       const eventParams: IEventNotifyQueue = {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
@@ -1929,8 +1929,6 @@ describe('MemberResolver', () => {
       });
       spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
       await resolver.registerMemberForNotifications([MemberRole.member], member.id, params);
-
-      expect(spyOnServiceUpdateMemberConfigRegisteredAt).not.toBeCalled();
 
       const eventParams: IEventNotifyQueue = {
         type: QueueType.notifications,
@@ -2452,9 +2450,9 @@ describe('MemberResolver', () => {
         isPushNotificationsEnabled: true,
         accessToken: '123-abc',
         firstLoggedInAt: date.past(1),
+        lastLoggedInAt: date.past(1),
         articlesPath: system.directoryPath(),
         language: defaultMemberParams.language,
-        updatedAt: date.past(1),
       };
       const communication: Communication = {
         memberId: new Types.ObjectId(member.id),

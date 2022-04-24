@@ -373,13 +373,13 @@ describe('Integration tests: all', () => {
       articlesPath: articlesByDrg.default,
       externalUserId: expect.any(String),
       firstLoggedInAt: null,
+      lastLoggedInAt: null,
       platform: Platform.web,
       isPushNotificationsEnabled: true,
       isAppointmentsReminderEnabled: true,
       isRecommendationsEnabled: true,
       isTodoNotificationsEnabled: true,
       language: Language.en,
-      updatedAt: expect.any(String),
     });
 
     const updateMemberConfigParams = generateUpdateMemberConfigParams();
@@ -394,6 +394,7 @@ describe('Integration tests: all', () => {
       memberId: member.id,
       externalUserId: memberConfigBefore.externalUserId,
       firstLoggedInAt: null,
+      lastLoggedInAt: null,
       articlesPath: memberConfigBefore.articlesPath,
       platform: Platform.web,
       isPushNotificationsEnabled: updateMemberConfigParams.isPushNotificationsEnabled,
@@ -401,7 +402,6 @@ describe('Integration tests: all', () => {
       isRecommendationsEnabled: updateMemberConfigParams.isRecommendationsEnabled,
       isTodoNotificationsEnabled: updateMemberConfigParams.isTodoNotificationsEnabled,
       language: Language.en,
-      updatedAt: expect.any(String),
     });
   });
 

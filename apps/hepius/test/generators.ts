@@ -210,7 +210,7 @@ export const generateMemberConfig = ({
   firstLoggedInAt = fakerDate.past(2),
   articlesPath = system.directoryPath(),
   language = defaultMemberParams.language,
-  updatedAt = fakerDate.past(2),
+  lastLoggedInAt = fakerDate.past(2),
 }: Partial<MemberConfig> = {}): MemberConfig => {
   return {
     memberId,
@@ -221,7 +221,7 @@ export const generateMemberConfig = ({
     firstLoggedInAt,
     articlesPath,
     language,
-    updatedAt,
+    lastLoggedInAt,
   };
 };
 
@@ -443,9 +443,9 @@ export const mockGenerateMemberConfig = ({
     isAppointmentsReminderEnabled: true,
     accessToken: generateId(),
     firstLoggedInAt: fakerDate.past(2),
+    lastLoggedInAt: fakerDate.past(1),
     articlesPath: system.directoryPath(),
     language: defaultMemberParams.language,
-    updatedAt: fakerDate.past(1),
   };
 };
 

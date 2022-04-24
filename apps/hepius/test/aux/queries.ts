@@ -633,8 +633,8 @@ export class Queries {
               isTodoNotificationsEnabled
               articlesPath
               firstLoggedInAt
+              lastLoggedInAt
               language
-              updatedAt
             }
           }
         `,

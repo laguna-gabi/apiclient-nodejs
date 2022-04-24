@@ -606,14 +606,14 @@ export class MemberService extends BaseService {
     return memberConfig;
   }
 
-  async updateMemberConfigRegisteredAt(memberId: Types.ObjectId) {
-    this.logger.info({ memberId }, MemberService.name, this.updateMemberConfigRegisteredAt.name);
-    const result = await this.memberConfigModel.updateOne(
-      { memberId },
-      { $set: { firstLoggedInAt: new Date() } },
+  async updateMemberConfigLoggedInAt(memberId: Types.ObjectId) {
+    this.logger.info({ memberId }, MemberService.name, this.updateMemberConfigLoggedInAt.name);
+    const date = new Date();
+    await this.memberConfigModel.updateOne(
+      { memberId, firstLoggedInAt: null },
+      { $set: { firstLoggedInAt: date } },
     );
-
-    return result.modifiedCount === 1;
+    await this.memberConfigModel.updateOne({ memberId }, { $set: { lastLoggedInAt: date } });
   }
 
   async getMemberConfig(id: string): Promise<MemberConfig> {

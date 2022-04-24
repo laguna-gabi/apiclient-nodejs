@@ -1022,9 +1022,8 @@ export class MemberResolver extends MemberBase {
       await this.oneSignal.register({ token, externalUserId: currentMemberConfig.externalUserId });
     }
 
-    if (!currentMemberConfig.firstLoggedInAt) {
-      await this.memberService.updateMemberConfigRegisteredAt(currentMemberConfig.memberId);
-    }
+    await this.memberService.updateMemberConfigLoggedInAt(currentMemberConfig.memberId);
+
     const memberConfig = await this.memberService.updateMemberConfig({
       memberId: currentMemberConfig.memberId.toString(),
       platform: registerForNotificationParams.platform,

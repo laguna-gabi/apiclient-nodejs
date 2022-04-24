@@ -79,9 +79,13 @@ export class MemberConfig {
   @Field(() => Boolean)
   isTodoNotificationsEnabled?: boolean;
 
-  @Prop()
+  @Prop({ type: Date })
   @Field(() => Date, { nullable: true })
   firstLoggedInAt: Date;
+
+  @Prop({ type: Date })
+  @Field(() => Date, { nullable: true })
+  lastLoggedInAt: Date;
 
   @Prop({ type: String, enum: Language, default: defaultMemberParams.language })
   @Field(() => Language)
@@ -89,9 +93,6 @@ export class MemberConfig {
 
   @Field(() => String, { nullable: false })
   articlesPath: string;
-
-  @Field(() => Date)
-  updatedAt: Date;
 }
 
 /**************************************************************************************************
