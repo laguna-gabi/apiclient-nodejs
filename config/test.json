@@ -1,6 +1,6 @@
 {
   "db": {
-    "connection": "mongodb://localhost:27018/test",
+    "connection": "mongodb://localhost:27018",
     "name": "iris-test"
   },
   "articlesByDrg": {

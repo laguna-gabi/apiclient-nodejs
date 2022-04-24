@@ -1,3 +1,4 @@
+import { ServiceName } from '@argus/pandora';
 import { INestApplication } from '@nestjs/common';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -114,7 +115,7 @@ export const submitMockCareWizard = async (handler: Handler, memberId: string, r
 };
 
 export const dbConnect = async () => {
-  await connect(db.connection);
+  await connect(`${db.connection}/${ServiceName.hepius}`);
 };
 
 export const dbDisconnect = async () => {

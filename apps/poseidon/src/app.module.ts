@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { CommonModule } from './common';
+import { DbModule } from './db';
+import { ProvidersModule } from './providers';
 
 @Module({
-  imports: [EventEmitterModule.forRoot(), CommonModule],
+  imports: [ProvidersModule, DbModule, EventEmitterModule.forRoot()],
   controllers: [],
 })
 export class AppModule {}
