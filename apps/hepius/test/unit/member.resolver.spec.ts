@@ -83,6 +83,7 @@ import {
   ImageType,
   Journal,
   Member,
+  MemberAdmissionService,
   MemberConfig,
   MemberModule,
   MemberResolver,
@@ -104,6 +105,7 @@ describe('MemberResolver', () => {
   let module: TestingModule;
   let resolver: MemberResolver;
   let service: MemberService;
+  let admissionService: MemberAdmissionService;
   let userService: UserService;
   let storage: StorageService;
   let cognitoService: CognitoService;
@@ -123,6 +125,7 @@ describe('MemberResolver', () => {
 
     resolver = module.get<MemberResolver>(MemberResolver);
     service = module.get<MemberService>(MemberService);
+    admissionService = module.get<MemberAdmissionService>(MemberAdmissionService);
     userService = module.get<UserService>(UserService);
     storage = module.get<StorageService>(StorageService);
     cognitoService = module.get<CognitoService>(CognitoService);
@@ -1800,16 +1803,16 @@ describe('MemberResolver', () => {
     let spyOnServiceGetMember;
     let spyOnServiceGetMemberConfig;
     let spyOnServiceUpdateMemberConfig;
-    let spyOnServiceUpdateMemberConfigRegisteredAt;
+    let spyOnServiceUpdateMemberConfigLoggedInAt;
 
     beforeEach(() => {
       spyOnOneSignalRegister = jest.spyOn(oneSignal, 'register');
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnServiceUpdateMemberConfig = jest.spyOn(service, 'updateMemberConfig');
-      spyOnServiceUpdateMemberConfigRegisteredAt = jest.spyOn(
+      spyOnServiceUpdateMemberConfigLoggedInAt = jest.spyOn(
         service,
-        'updateMemberConfigRegisteredAt',
+        'updateMemberConfigLoggedInAt',
       );
     });
 
@@ -1818,7 +1821,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockReset();
       spyOnServiceGetMemberConfig.mockReset();
       spyOnServiceUpdateMemberConfig.mockReset();
-      spyOnServiceUpdateMemberConfigRegisteredAt.mockReset();
+      spyOnServiceUpdateMemberConfigLoggedInAt.mockReset();
       spyOnEventEmitter.mockReset();
       spyOnEventEmitter.mockClear();
     });
@@ -1853,7 +1856,7 @@ describe('MemberResolver', () => {
         platform: params.platform,
         isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       });
-      expect(spyOnServiceUpdateMemberConfigRegisteredAt).toBeCalledWith(memberConfig.memberId);
+      expect(spyOnServiceUpdateMemberConfigLoggedInAt).toBeCalledWith(memberConfig.memberId);
       const eventParams: IEventNotifyQueue = {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
@@ -1929,8 +1932,6 @@ describe('MemberResolver', () => {
       });
       spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
       await resolver.registerMemberForNotifications([MemberRole.member], member.id, params);
-
-      expect(spyOnServiceUpdateMemberConfigRegisteredAt).not.toBeCalled();
 
       const eventParams: IEventNotifyQueue = {
         type: QueueType.notifications,
@@ -2452,9 +2453,9 @@ describe('MemberResolver', () => {
         isPushNotificationsEnabled: true,
         accessToken: '123-abc',
         firstLoggedInAt: date.past(1),
+        lastLoggedInAt: date.past(1),
         articlesPath: system.directoryPath(),
         language: defaultMemberParams.language,
-        updatedAt: date.past(1),
       };
       const communication: Communication = {
         memberId: new Types.ObjectId(member.id),
@@ -2640,6 +2641,39 @@ describe('MemberResolver', () => {
         assessmentName: params.questionnaireName,
         assessmentScore: params.score.toString(),
       });
+    });
+  });
+
+  describe('MemberAdmission', () => {
+    let spyOnServiceGetMemberAdmission: jest.SpyInstance;
+    let spyOnServiceChangeMemberAdmission: jest.SpyInstance;
+
+    beforeEach(() => {
+      spyOnServiceGetMemberAdmission = jest.spyOn(admissionService, 'get');
+      spyOnServiceChangeMemberAdmission = jest.spyOn(admissionService, 'change');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetMemberAdmission.mockReset();
+      spyOnServiceChangeMemberAdmission.mockReset();
+    });
+
+    it('should call get member admission', async () => {
+      spyOnServiceGetMemberAdmission.mockResolvedValueOnce(undefined);
+
+      const memberId = generateId();
+      await resolver.getMemberAdmission(memberId);
+
+      expect(spyOnServiceGetMemberAdmission).toBeCalledWith(memberId);
+    });
+
+    it('should call change member admission', async () => {
+      spyOnServiceChangeMemberAdmission.mockResolvedValueOnce(undefined);
+
+      const memberId = generateId();
+      await resolver.changeMemberAdmission([], { memberId });
+
+      expect(spyOnServiceChangeMemberAdmission).toBeCalledWith({ memberId });
     });
   });
 

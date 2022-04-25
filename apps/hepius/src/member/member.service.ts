@@ -263,6 +263,9 @@ export class MemberService extends BaseService {
   }
 
   async getMembersAppointments(orgId?: string): Promise<AppointmentCompose[]> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 14);
+
     return this.memberModel.aggregate([
       {
         $project: {
@@ -280,7 +283,7 @@ export class MemberService extends BaseService {
         },
       },
       { $unwind: { path: '$a' } },
-      { $match: { 'a.status': AppointmentStatus.scheduled, 'a.deleted': false } },
+      { $match: { 'a.deleted': false, 'a.start': { $gt: startDate } } },
       {
         $lookup: {
           localField: 'a.userId',
@@ -299,6 +302,7 @@ export class MemberService extends BaseService {
           userName: { $concat: ['$u.firstName', ' ', '$u.lastName'] },
           start: '$a.start',
           end: '$a.end',
+          status: '$a.status',
         },
       },
     ]);
@@ -606,14 +610,14 @@ export class MemberService extends BaseService {
     return memberConfig;
   }
 
-  async updateMemberConfigRegisteredAt(memberId: Types.ObjectId) {
-    this.logger.info({ memberId }, MemberService.name, this.updateMemberConfigRegisteredAt.name);
-    const result = await this.memberConfigModel.updateOne(
-      { memberId },
-      { $set: { firstLoggedInAt: new Date() } },
+  async updateMemberConfigLoggedInAt(memberId: Types.ObjectId) {
+    this.logger.info({ memberId }, MemberService.name, this.updateMemberConfigLoggedInAt.name);
+    const date = new Date();
+    await this.memberConfigModel.updateOne(
+      { memberId, firstLoggedInAt: null },
+      { $set: { firstLoggedInAt: date } },
     );
-
-    return result.modifiedCount === 1;
+    await this.memberConfigModel.updateOne({ memberId }, { $set: { lastLoggedInAt: date } });
   }
 
   async getMemberConfig(id: string): Promise<MemberConfig> {

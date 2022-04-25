@@ -1,4 +1,4 @@
-import { BaseConfigs, BaseExternalConfigs, Environments } from '@argus/pandora';
+import { BaseConfigs, BaseExternalConfigs, Environments, ServiceName } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { MongooseModuleOptions } from '@nestjs/mongoose';
 import { aws, db } from 'config';
@@ -9,9 +9,6 @@ export const ExternalConfigs = {
     ...BaseExternalConfigs.aws,
     memberBucketName: 'aws.storage.memberBucketName',
     queueNameImage: 'aws.sqs.queueNameImage',
-  },
-  db: {
-    connection: 'db.connection',
   },
   analytics: {
     dbUsername: 'analytics.db.username',
@@ -39,8 +36,8 @@ export class ConfigsService extends BaseConfigs {
   async createMongooseOptions(): Promise<MongooseModuleOptions> {
     const uri =
       !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? db.connection
-        : await this.getConfig(ExternalConfigs.db.connection);
+        ? `${db.connection}/${ServiceName.hepius}`
+        : `${await this.getConfig(ExternalConfigs.db.connection)}/laguna`;
     return { uri };
   }
 }

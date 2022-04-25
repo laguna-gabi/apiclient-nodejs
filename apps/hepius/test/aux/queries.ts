@@ -487,6 +487,7 @@ export class Queries {
               userName
               start
               end
+              status
             }
           }
         `,
@@ -633,8 +634,8 @@ export class Queries {
               isTodoNotificationsEnabled
               articlesPath
               firstLoggedInAt
+              lastLoggedInAt
               language
-              updatedAt
             }
           }
         `,

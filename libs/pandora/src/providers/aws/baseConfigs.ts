@@ -3,6 +3,9 @@ import { SecretsManager } from 'aws-sdk';
 import { Environments } from '../../interfaces';
 
 export const BaseExternalConfigs = {
+  db: {
+    connection: 'db.connection',
+  },
   aws: {
     queueNameNotifications: 'aws.sqs.queueNameNotifications',
     queueNameAudit: 'aws.sqs.queueNameAudit',

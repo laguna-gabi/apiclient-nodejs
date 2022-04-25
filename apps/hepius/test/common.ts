@@ -1,3 +1,4 @@
+import { ServiceName } from '@argus/pandora';
 import { INestApplication } from '@nestjs/common';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -7,7 +8,7 @@ import { Document, Model, Types, connect, disconnect } from 'mongoose';
 import { v4 } from 'uuid';
 import { AppRequestContext, RequestContext, apiPrefix, webhooks } from '../src/common';
 import { Audit, DbModule } from '../src/db';
-import { Member, defaultMemberParams } from '../src/member';
+import { BaseAdmission, Member, defaultMemberParams } from '../src/member';
 import {
   CognitoService,
   FeatureFlagService,
@@ -114,7 +115,7 @@ export const submitMockCareWizard = async (handler: Handler, memberId: string, r
 };
 
 export const dbConnect = async () => {
-  await connect(db.connection);
+  await connect(`${db.connection}/${ServiceName.hepius}`);
 };
 
 export const dbDisconnect = async () => {
@@ -303,4 +304,10 @@ export const isResultValid = ({
   }
 
   return false;
+};
+
+export const removeChangeType = (changeParams): BaseAdmission => {
+  const dupParams = { ...changeParams };
+  delete dupParams.changeType;
+  return dupParams;
 };

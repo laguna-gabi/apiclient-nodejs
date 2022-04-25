@@ -25,6 +25,7 @@ import {
   AddCaregiverParams,
   CancelNotifyParams,
   Caregiver,
+  ChangeAdmissionParams,
   CompleteMultipartUploadParams,
   CreateMemberParams,
   CreateTaskParams,
@@ -33,6 +34,7 @@ import {
   GraduateMemberParams,
   Journal,
   Member,
+  MemberAdmission,
   NotifyContentParams,
   NotifyParams,
   Recording,
@@ -1991,5 +1993,82 @@ export class Mutations {
           invalidFieldsErrors,
         });
       });
+  };
+
+  changeMemberAdmission = async ({
+    changeAdmissionParams,
+    missingFieldError,
+    invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
+  }: {
+    changeAdmissionParams: ChangeAdmissionParams;
+    missingFieldError?: string;
+    invalidFieldsErrors?: string[];
+    requestHeaders?;
+  }): Promise<MemberAdmission> => {
+    const { changeMemberAdmission } = await this.client
+      .request(
+        gql`
+          mutation changeMemberAdmission($changeAdmissionParams: ChangeAdmissionParams!) {
+            changeMemberAdmission(changeAdmissionParams: $changeAdmissionParams) {
+              diagnoses
+              procedures {
+                id
+                date
+                procedureType
+                text
+              }
+              medications {
+                id
+                name
+                frequency
+                type
+                amount {
+                  amount
+                  unitType
+                }
+                startDate
+                endDate
+                memberNote
+                coachNote
+              }
+              externalAppointments {
+                id
+                isScheduled
+                drName
+                instituteOrHospitalName
+                date
+                phone
+                description
+                address
+              }
+              activities {
+                id
+                text
+                isTodo
+              }
+              woundCares {
+                id
+                text
+              }
+              dietary {
+                text
+                bmi
+              }
+            }
+          }
+        `,
+        { changeAdmissionParams },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        return isResultValid({
+          errors: ex.response.errors,
+          missingFieldError,
+          invalidFieldsErrors,
+        });
+      });
+
+    return changeMemberAdmission;
   };
 }

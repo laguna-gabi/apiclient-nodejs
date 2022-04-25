@@ -35,7 +35,6 @@ import {
   generateObjectId,
   generateOrgParams,
   generateReplaceMemberOrgParams,
-  generateRequestAppointmentParams,
   generateScheduleAppointmentParams,
   generateSetGeneralNotesParams,
   generateSubmitQuestionnaireResponseParams,
@@ -610,6 +609,7 @@ describe('MemberService', () => {
             userName: `${primaryUserParams.firstName} ${primaryUserParams.lastName}`,
             start: expect.any(Date),
             end: expect.any(Date),
+            status: AppointmentStatus.scheduled,
           },
           {
             memberId: member2.id,
@@ -618,6 +618,7 @@ describe('MemberService', () => {
             userName: `${primaryUserParams.firstName} ${primaryUserParams.lastName}`,
             start: expect.any(Date),
             end: expect.any(Date),
+            status: AppointmentStatus.scheduled,
           },
         ]),
       );
@@ -657,6 +658,7 @@ describe('MemberService', () => {
             userName: `${primaryUserParams.firstName} ${primaryUserParams.lastName}`,
             start: expect.any(Date),
             end: expect.any(Date),
+            status: AppointmentStatus.scheduled,
           },
         ]),
       );
@@ -693,29 +695,35 @@ describe('MemberService', () => {
       expect(isSorted).toBeTruthy();
     });
 
-    it('should include only scheduled appointments', async () => {
+    it('should not include appointments older that 14 days ago', async () => {
       const orgId = await generateOrg();
-      const { _id: primaryUserId } = await modelUser.create(
-        generateCreateUserParams({
-          firstName: name.firstName(),
-          lastName: name.lastName(),
-        }),
-      );
+      const memberId = await generateMember(orgId);
+      const member = await service.get(memberId);
 
-      const numberOfAppointments = 1;
-      const { id } = await generateMemberAndAppointment({
-        primaryUserId,
-        orgId,
-        numberOfAppointments,
+      const startDate1 = new Date();
+      startDate1.setDate(startDate1.getDate() - 15);
+      // create a `scheduled` appointment for the member (and primary user)
+      await generateAppointment({
+        memberId,
+        userId: member.primaryUserId.toString(),
+        status: AppointmentStatus.scheduled,
+        start: startDate1,
       });
 
-      await modelAppointment.create({
-        ...generateRequestAppointmentParams({ memberId: id, userId: primaryUserId }),
+      const startDate2 = new Date();
+      startDate2.setDate(startDate2.getDate() - 10);
+      await generateAppointment({
+        memberId,
+        userId: member.primaryUserId.toString(),
+        status: AppointmentStatus.scheduled,
+        start: startDate2,
       });
 
       const result = await service.getMembersAppointments(orgId);
-      expect(result.length).toEqual(numberOfAppointments);
-      expect(result[0]).toEqual(expect.objectContaining({ memberId: id, userId: primaryUserId }));
+      expect(result.length).toEqual(1);
+      expect(result[0]).toEqual(
+        expect.objectContaining({ memberId, userId: member.primaryUserId, start: startDate2 }),
+      );
     });
 
     const generateMemberAndAppointment = async ({ primaryUserId, orgId, numberOfAppointments }) => {
@@ -2350,6 +2358,25 @@ describe('MemberService', () => {
     });
   });
 
+  describe('updateMemberConfigLoggedInAt', () => {
+    it('should update member config login time and not update firstLogin on 2nd time', async () => {
+      const id = await generateMember();
+      const currentTime1 = new Date().getTime();
+      await service.updateMemberConfigLoggedInAt(new Types.ObjectId(id));
+
+      const config1 = await service.getMemberConfig(id);
+      expect(config1.firstLoggedInAt.getTime()).toBeGreaterThanOrEqual(currentTime1);
+      expect(config1.lastLoggedInAt.getTime()).toBeGreaterThanOrEqual(currentTime1);
+
+      const currentTime2 = new Date().getTime();
+      await service.updateMemberConfigLoggedInAt(new Types.ObjectId(id));
+
+      const config2 = await service.getMemberConfig(id);
+      expect(config2.firstLoggedInAt.getTime()).toEqual(config1.firstLoggedInAt.getTime());
+      expect(config2.lastLoggedInAt.getTime()).toBeGreaterThanOrEqual(currentTime2);
+    });
+  });
+
   describe('getMemberConfig', () => {
     it('should create memberConfig on memberCreate', async () => {
       const id = await generateMember();
@@ -2733,19 +2760,22 @@ describe('MemberService', () => {
     start?: Date;
     status?: AppointmentStatus;
   }): Promise<AppointmentDocument> => {
+    const scheduleParams = generateScheduleAppointmentParams({ memberId, userId, start });
     const appointment = await modelAppointment.create({
       deleted: false,
-      ...generateScheduleAppointmentParams({ memberId, userId, start }),
+      ...scheduleParams,
+      memberId: new Types.ObjectId(scheduleParams.memberId),
+      userId: new Types.ObjectId(scheduleParams.userId),
       status,
     });
     await modelUser.updateOne(
-      { _id: userId },
+      { _id: new Types.ObjectId(userId) },
       { $push: { appointments: new Types.ObjectId(appointment.id) } },
       { new: true },
     );
     await memberModel.updateOne(
       { _id: new Types.ObjectId(memberId) },
-      { $addToSet: { users: userId } },
+      { $addToSet: { users: new Types.ObjectId(userId) } },
     );
     return appointment;
   };

@@ -1,0 +1,45 @@
+{
+  "root": "apps/poseidon",
+  "sourceRoot": "apps/poseidon/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/node:webpack",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/poseidon",
+        "main": "apps/poseidon/src/main.ts",
+        "tsConfig": "apps/poseidon/tsconfig.app.json",
+        "webpackConfig": "./webpackConfig.js",
+        "generatePackageJson": true
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false,
+          "fileReplacements": [
+            {
+              "replace": "apps/poseidon/src/environments/environment.ts",
+              "with": "apps/poseidon/src/environments/environment.prod.ts"
+            }
+          ]
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/node:node",
+      "options": {
+        "buildTarget": "poseidon:build"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/poseidon/**/*.ts"]
+      }
+    }
+  },
+  "tags": []
+}

@@ -81,6 +81,7 @@ import {
   AudioType,
   CancelNotifyParams,
   Caregiver,
+  ChangeAdmissionParams,
   ChatMessageOrigin,
   CompleteMultipartUploadParams,
   CreateMemberParams,
@@ -98,6 +99,8 @@ import {
   JournalUploadAudioLink,
   JournalUploadImageLink,
   Member,
+  MemberAdmission,
+  MemberAdmissionService,
   MemberBase,
   MemberConfig,
   MemberService,
@@ -128,6 +131,7 @@ import {
 export class MemberResolver extends MemberBase {
   constructor(
     readonly memberService: MemberService,
+    readonly memberAdmissionService: MemberAdmissionService,
     readonly eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
     private readonly cognitoService: CognitoService,
@@ -1022,9 +1026,8 @@ export class MemberResolver extends MemberBase {
       await this.oneSignal.register({ token, externalUserId: currentMemberConfig.externalUserId });
     }
 
-    if (!currentMemberConfig.firstLoggedInAt) {
-      await this.memberService.updateMemberConfigRegisteredAt(currentMemberConfig.memberId);
-    }
+    await this.memberService.updateMemberConfigLoggedInAt(currentMemberConfig.memberId);
+
     const memberConfig = await this.memberService.updateMemberConfig({
       memberId: currentMemberConfig.memberId.toString(),
       platform: registerForNotificationParams.platform,
@@ -1390,6 +1393,34 @@ export class MemberResolver extends MemberBase {
     } catch (ex) {
       this.logger.error(params, MemberResolver.name, this.deleteSchedules.name, formatEx(ex));
     }
+  }
+
+  /************************************************************************************************
+   *************************************** Member Admission ***************************************
+   ************************************************************************************************/
+  @Mutation(() => MemberAdmission)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async changeMemberAdmission(
+    @Client('roles') roles,
+    @Args(camelCase(ChangeAdmissionParams.name))
+    changeAdmissionParams: ChangeAdmissionParams,
+  ): Promise<MemberAdmission> {
+    return this.memberAdmissionService.change(changeAdmissionParams);
+  }
+
+  @Query(() => MemberAdmission)
+  @MemberIdParam(MemberIdParamType.id)
+  @UseInterceptors(MemberUserRouteInterceptor)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getMemberAdmission(
+    @Args(
+      'id',
+      { type: () => String, nullable: true },
+      new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid), { nullable: true }),
+    )
+    id?: string,
+  ) {
+    return this.memberAdmissionService.get(id);
   }
 
   /************************************************************************************************

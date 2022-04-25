@@ -24,6 +24,7 @@ This Monorepo contains the following:
 | :---------------------------: | :--: | :---------------------------------------------------------------------------------------------------------------------------------------------: |
 |     [Hepius](apps/hepius)     | app  |   <a href="" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/hepius/badge-lines.svg?branch=develop&kill_cache=1" /></a>   |
 |       [Iris](apps/iris)       | app  |    <a href="" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/iris/badge-lines.svg?branch=develop&kill_cache=1" /></a>    |
+|   [Poseidon](apps/poseidon)   | app  |  <a href="" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/poseidon/badge-lines.svg?branch=develop&kill_cache=1" /></a>  |
 | [IrisClient](libs/irisClient) | lib  | <a href="" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/irisClient/badge-lines.svg?branch=develop&kill_cache=1" /></a> |
 |    [Pandora](libs/pandora)    | lib  |  <a href="" alt="lines"><img src="https://laguna-health-coverage.s3.amazonaws.com/pandora/badge-lines.svg?branch=develop&kill_cache=1" /></a>   |
 

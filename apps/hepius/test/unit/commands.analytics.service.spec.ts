@@ -421,10 +421,18 @@ describe('Commands: AnalyticsService', () => {
   });
 
   describe('buildMemberData', () => {
+    let spyOnGetDCFileLoadDate;
+    beforeEach(() => {
+      spyOnGetDCFileLoadDate = jest.spyOn(analyticsService, 'getDCFileLoadDate');
+    });
+
+    afterEach(() => {
+      spyOnGetDCFileLoadDate.mockReset();
+    });
+
     // eslint-disable-next-line max-len
     it('to return a calculated member data for analytics for a member in intervention group.', async () => {
-      jest
-        .spyOn(analyticsService, 'getDCFileLoadDate')
+      spyOnGetDCFileLoadDate
         .mockImplementationOnce(async () => sub(now, { days: 25 }))
         .mockImplementationOnce(async () => sub(now, { days: 15 }));
 
@@ -507,7 +515,7 @@ describe('Commands: AnalyticsService', () => {
           momentFormats.mysqlDateTime,
         ),
         app_last_login: reformatDate(
-          mockMemberConfig.updatedAt.toString(),
+          mockMemberConfig.lastLoggedInAt.toString(),
           momentFormats.mysqlDateTime,
         ),
         coach_id: mockPrimaryUser.id,
@@ -520,8 +528,7 @@ describe('Commands: AnalyticsService', () => {
 
     // eslint-disable-next-line max-len
     it('to return a calculated member data for analytics for a member in intervention group (not logged in).', async () => {
-      jest
-        .spyOn(analyticsService, 'getDCFileLoadDate')
+      spyOnGetDCFileLoadDate
         .mockImplementationOnce(async () => sub(now, { days: 25 }))
         .mockImplementationOnce(async () => sub(now, { days: 15 }));
 
@@ -560,7 +567,7 @@ describe('Commands: AnalyticsService', () => {
         ],
       } as MemberDataAggregate);
 
-      expect(data).toEqual({
+      expect(data).toMatchObject({
         customer_id: mockMember.id,
         mbr_initials: mockMember.firstName[0].toUpperCase() + mockMember.lastName[0].toUpperCase(),
         created: reformatDate(mockMember.createdAt.toString(), momentFormats.mysqlDateTime),
@@ -608,8 +615,7 @@ describe('Commands: AnalyticsService', () => {
     });
 
     it('to return a calculated member data for analytics for a control member.', async () => {
-      jest
-        .spyOn(analyticsService, 'getDCFileLoadDate')
+      spyOnGetDCFileLoadDate
         .mockImplementationOnce(async () => undefined)
         .mockImplementationOnce(async () => undefined);
 
@@ -742,7 +748,7 @@ describe('Commands: AnalyticsService', () => {
     });
   });
 
-  describe.only('getQuestionnaireResponseData', () => {
+  describe('getQuestionnaireResponseData', () => {
     let qrModelSpy;
 
     beforeAll(async () => {
