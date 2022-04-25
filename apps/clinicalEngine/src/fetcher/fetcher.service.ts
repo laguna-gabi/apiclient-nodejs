@@ -14,12 +14,14 @@ const mockFactsObject: MemberFacts = {
 
 @Injectable()
 export class FetcherService {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async fetchData(memberId: string) {
     // todo: get data from server (hepius)
     // for now - fake data
     return mockFactsObject;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async applyChanges(changes) {
     // todo: create new entities
     // delete not satisfied entities
