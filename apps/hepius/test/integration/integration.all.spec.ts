@@ -55,6 +55,7 @@ import { buildLHPQuestionnaire } from '../../cmd/static';
 import {
   Appointment,
   AppointmentMethod,
+  AppointmentStatus,
   RequestAppointmentParams,
   ScheduleAppointmentParams,
 } from '../../src/appointment';
@@ -302,6 +303,7 @@ describe('Integration tests: all', () => {
           userName: `${primaryUser1.firstName} ${primaryUser1.lastName}`,
           start: expect.any(String),
           end: expect.any(String),
+          status: AppointmentStatus.scheduled,
         },
         {
           memberId: member1.id,
@@ -310,6 +312,7 @@ describe('Integration tests: all', () => {
           userName: `${primaryUser1.firstName} ${primaryUser1.lastName}`,
           start: expect.any(String),
           end: expect.any(String),
+          status: AppointmentStatus.scheduled,
         },
         {
           memberId: member2.id,
@@ -318,6 +321,7 @@ describe('Integration tests: all', () => {
           userName: `${primaryUser2.firstName} ${primaryUser2.lastName}`,
           start: expect.any(String),
           end: expect.any(String),
+          status: AppointmentStatus.scheduled,
         },
       ]),
     );

@@ -263,6 +263,9 @@ export class MemberService extends BaseService {
   }
 
   async getMembersAppointments(orgId?: string): Promise<AppointmentCompose[]> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 14);
+
     return this.memberModel.aggregate([
       {
         $project: {
@@ -280,7 +283,7 @@ export class MemberService extends BaseService {
         },
       },
       { $unwind: { path: '$a' } },
-      { $match: { 'a.status': AppointmentStatus.scheduled, 'a.deleted': false } },
+      { $match: { 'a.deleted': false, 'a.start': { $gt: startDate } } },
       {
         $lookup: {
           localField: 'a.userId',
@@ -299,6 +302,7 @@ export class MemberService extends BaseService {
           userName: { $concat: ['$u.firstName', ' ', '$u.lastName'] },
           start: '$a.start',
           end: '$a.end',
+          status: '$a.status',
         },
       },
     ]);
