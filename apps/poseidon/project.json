@@ -39,6 +39,33 @@
       "options": {
         "lintFilePatterns": ["apps/poseidon/**/*.ts"]
       }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "apps/poseidon/test/unit/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "test:cov": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/apps/poseidon"],
+      "options": {
+        "jestConfig": "apps/poseidon/test/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "cov-badges": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "jest-coverage-badges input coverage/apps/poseidon/coverage-summary.json output coverage/apps/poseidon"
+      }
+    },
+    "uploadCoverage": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "ts-node -P ./tsconfig.base.json ./ci/uploadCoverage.ts poseidon coverage/apps/poseidon/"
+      }
     }
   },
   "tags": []

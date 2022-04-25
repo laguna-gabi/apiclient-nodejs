@@ -4,9 +4,16 @@ import { TerminusModule } from '@nestjs/terminus';
 import { DbModule } from './db';
 import { HealthController } from './health/health.controller';
 import { ProvidersModule } from './providers';
+import { TranscriptModule } from './transcript';
 
 @Module({
-  imports: [ProvidersModule, DbModule, EventEmitterModule.forRoot(), TerminusModule],
+  imports: [
+    EventEmitterModule.forRoot(),
+    TerminusModule,
+    DbModule,
+    ProvidersModule,
+    TranscriptModule,
+  ],
   controllers: [HealthController],
 })
 export class AppModule {}
