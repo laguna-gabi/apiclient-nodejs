@@ -152,6 +152,13 @@ nx command hepius --cmd=general --options='-t getTokens'
 nx command hepius --cmd=general --options='-t lagunaSeed'
 ```
 
+### Set up the DB:
+sets up the docker, runs seed and generated tokens  
+
+```
+yarn setup
+```
+
 ## 🏗️ Analytics
 
 Running analytics will generate output csv files for analytics team - here's how to generate all csv files (members, coach and appointments data)
