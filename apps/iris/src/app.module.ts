@@ -4,7 +4,7 @@ import { DbModule } from './db';
 import { ProvidersModule } from './providers';
 import { SettingsModule } from './settings';
 import { ConductorModule, DispatchesController } from './conductor';
-import { HealthController } from './health.controller';
+import { HealthController } from './health/health.controller';
 import { TerminusModule } from '@nestjs/terminus';
 
 @Module({

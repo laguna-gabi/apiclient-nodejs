@@ -3,7 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { LoggerService } from '../../src/common';
-import { HealthController } from '../../src/health.controller';
+import { HealthController } from '../../src/health/health.controller';
 
 describe('HealthController', () => {
   let controller: HealthController;
