@@ -7,7 +7,7 @@
     "dynamicLink": "https://links.lagunahealth.com/app"
   },
   "db": {
-    "connection": "mongodb://localhost:27017/laguna",
+    "connection": "mongodb://localhost:27017",
     "name": "iris-localhost"
   },
   "graphql": {

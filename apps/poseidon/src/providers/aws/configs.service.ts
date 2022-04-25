@@ -1,18 +1,10 @@
-import { BaseConfigs, BaseExternalConfigs } from '@argus/pandora';
+import { BaseConfigs, BaseExternalConfigs, Environments, ServiceName } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { MongooseModuleOptions } from '@nestjs/mongoose';
 import { aws, db } from 'config';
 
 export const ExternalConfigs = {
   ...BaseExternalConfigs,
-  aws: {
-    ...BaseExternalConfigs.aws,
-    queueNameNotificationsDLQ: `aws.sqs.queueNameNotificationsDLQ`,
-  },
-  twilio: {
-    accountSid: 'twilio.accountSid',
-    authToken: 'twilio.authToken',
-  },
 };
 
 @Injectable()
@@ -22,7 +14,10 @@ export class ConfigsService extends BaseConfigs {
   }
 
   async createMongooseOptions(): Promise<MongooseModuleOptions> {
-    const uri = `${await this.getConfig(ExternalConfigs.db.connection)}/${db.name}`;
+    const uri =
+      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
+        ? `${db.connection}/${ServiceName.poseidon}`
+        : `${await this.getConfig(ExternalConfigs.db.connection)}/${ServiceName.poseidon}`;
     return { uri };
   }
 }
