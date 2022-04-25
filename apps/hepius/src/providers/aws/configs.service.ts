@@ -37,7 +37,7 @@ export class ConfigsService extends BaseConfigs {
     const uri =
       !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
         ? `${db.connection}/${ServiceName.hepius}`
-        : `${await this.getConfig(ExternalConfigs.db.connection)}/${ServiceName.hepius}`;
+        : `${await this.getConfig(ExternalConfigs.db.connection)}/laguna`;
     return { uri };
   }
 }
