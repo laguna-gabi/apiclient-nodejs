@@ -7,6 +7,12 @@ import { v4 } from 'uuid';
 import {
   BEFORE_ALL_TIMEOUT,
   generateAddCaregiverParams,
+  generateAdmissionActivityParams,
+  generateAdmissionDietaryParams,
+  generateAdmissionExternalAppointmentParams,
+  generateAdmissionMedicationParams,
+  generateAdmissionProcedureParams,
+  generateAdmissionWoundCareParams,
   generateAppointmentLink,
   generateAvailabilityInput,
   generateCarePlanTypeInput,
@@ -42,6 +48,7 @@ import {
   mockGenerateDispatch,
   mockGenerateQuestionnaireItem,
   mockGenerateUser,
+  removeChangeType,
   submitMockCareWizard,
 } from '..';
 import { buildLHPQuestionnaire } from '../../cmd/static';
@@ -53,6 +60,7 @@ import {
 } from '../../src/appointment';
 import { CareStatus, CreateCarePlanParams } from '../../src/care';
 import {
+  ChangeType,
   ErrorType,
   Errors,
   EventType,
@@ -66,8 +74,10 @@ import {
 import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
 import {
   AlertType,
+  ChangeAdmissionParams,
   CreateTaskParams,
   Member,
+  MemberAdmission,
   Recording,
   RecordingOutput,
   ReplaceUserForMemberParams,
@@ -2504,6 +2514,92 @@ describe('Integration tests: all', () => {
     await graduate(false, spyOnCognitoServiceEnableClient, spyOnCognitoServiceDisableClient);
   });
 
+  it('should create, update and get member admission', async () => {
+    const { member } = await creators.createMemberUserAndOptionalOrg();
+
+    //create all admission params
+    const { changeAdmissionParams: createAdmissionParams, result: createResult } =
+      await changeMemberAdmission(ChangeType.create, member.id);
+
+    const procedures = [
+      {
+        id: createResult.procedures[0].id,
+        ...removeChangeType(createAdmissionParams.procedure),
+        date: createAdmissionParams.procedure.date.toISOString(),
+      },
+    ];
+    const medications = [
+      {
+        id: createResult.medications[0].id,
+        ...removeChangeType(createAdmissionParams.medication),
+        startDate: createAdmissionParams.medication.startDate.toISOString(),
+        endDate: createAdmissionParams.medication.endDate.toISOString(),
+      },
+    ];
+    const externalAppointments = [
+      {
+        id: createResult.externalAppointments[0].id,
+        ...removeChangeType(createAdmissionParams.externalAppointment),
+        date: createAdmissionParams.externalAppointment.date.toISOString(),
+      },
+    ];
+    const activities = [
+      { ...removeChangeType(createAdmissionParams.activity), id: createResult.activities[0].id },
+    ];
+    const woundCares = [
+      { ...removeChangeType(createAdmissionParams.woundCare), id: createResult.woundCares[0].id },
+    ];
+
+    expect(createResult).toEqual(
+      expect.objectContaining({
+        diagnoses: createAdmissionParams.diagnoses,
+        procedures,
+        medications,
+        externalAppointments,
+        activities,
+        woundCares,
+        dietary: createAdmissionParams.dietary,
+      }),
+    );
+
+    //update/delete some admission params
+    const changeAdmissionParams: ChangeAdmissionParams = {
+      memberId: member.id,
+      procedure: generateAdmissionProcedureParams({
+        changeType: ChangeType.update,
+        id: createResult.procedures[0].id,
+      }),
+      medication: generateAdmissionMedicationParams({
+        changeType: ChangeType.delete,
+        id: createResult.medications[0].id,
+      }),
+      activity: generateAdmissionActivityParams({ changeType: ChangeType.create }),
+    };
+    const changeResult = await handler.mutations.changeMemberAdmission({ changeAdmissionParams });
+
+    procedures[0] = {
+      id: createResult.procedures[0].id,
+      ...removeChangeType(changeAdmissionParams.procedure),
+      date: changeAdmissionParams.procedure.date.toISOString(),
+    };
+    activities[1] = {
+      id: changeResult.activities[1].id,
+      ...removeChangeType(changeAdmissionParams.activity),
+    };
+
+    expect(changeResult).toEqual(
+      expect.objectContaining({
+        diagnoses: createAdmissionParams.diagnoses,
+        procedures,
+        medications: [],
+        externalAppointments,
+        activities,
+        woundCares,
+        dietary: createAdmissionParams.dietary,
+      }),
+    );
+  });
+
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/
@@ -2593,5 +2689,33 @@ describe('Integration tests: all', () => {
           answers: [{ code: 'q1', value: '2' }],
         }),
       });
+  };
+
+  const changeMemberAdmission = async (
+    changeType: ChangeType,
+    memberId: string,
+  ): Promise<{ changeAdmissionParams: ChangeAdmissionParams; result: MemberAdmission }> => {
+    const createProcedure = generateAdmissionProcedureParams({ changeType });
+    const createMedication = generateAdmissionMedicationParams({ changeType });
+    const createExternalAppointment = generateAdmissionExternalAppointmentParams({ changeType });
+    const createActivity = generateAdmissionActivityParams({ changeType });
+    const createWoundCare = generateAdmissionWoundCareParams({ changeType });
+
+    const changeAdmissionParams: ChangeAdmissionParams = {
+      memberId,
+      diagnoses: lorem.sentence(),
+      procedure: createProcedure,
+      medication: createMedication,
+      externalAppointment: createExternalAppointment,
+      activity: createActivity,
+      woundCare: createWoundCare,
+      dietary: generateAdmissionDietaryParams(),
+    };
+
+    const result = await handler.mutations.changeMemberAdmission({
+      changeAdmissionParams,
+    });
+
+    return { changeAdmissionParams, result };
   };
 });

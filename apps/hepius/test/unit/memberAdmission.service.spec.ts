@@ -41,6 +41,7 @@ import {
   generateAdmissionProcedureParams,
   generateAdmissionWoundCareParams,
   generateId,
+  removeChangeType,
 } from '../index';
 import { lorem } from 'faker';
 
@@ -89,23 +90,26 @@ describe(MemberAdmissionService.name, () => {
       const changeParams2 = method({ changeType: ChangeType.create });
 
       const memberId1 = generateId();
-      await changeAdmission(field, changeParams1a, memberId1);
-      const result1 = await changeAdmission(field, changeParams1b, memberId1);
+      await change(field, changeParams1a, memberId1);
+      const res1 = await change(field, changeParams1b, memberId1);
 
       const memberId2 = generateId();
-      const result2 = await changeAdmission(field, changeParams2, memberId2);
+      const res2 = await change(field, changeParams2, memberId2);
 
-      const { _id: id1a } = await model.findById(result1[admissionCategory][0], { _id: 1 });
-      const { _id: id1b } = await model.findById(result1[admissionCategory][1], { _id: 1 });
-      const { _id: id2 } = await model.findById(result2[admissionCategory][0], { _id: 1 });
+      const { _id: id1a } = await model.findById(new Types.ObjectId(res1[admissionCategory][0].id));
+      const { _id: id1b } = await model.findById(new Types.ObjectId(res1[admissionCategory][1].id));
+      const { _id: id2 } = await model.findById(new Types.ObjectId(res2[admissionCategory][0].id));
 
-      expect(result1).toMatchObject({
+      expect(res1).toMatchObject({
         memberId: new Types.ObjectId(memberId1),
-        [`${admissionCategory}`]: [new Types.ObjectId(id1a), new Types.ObjectId(id1b)],
+        [`${admissionCategory}`]: [
+          { ...removeChangeType(changeParams1a), id: id1a },
+          { ...removeChangeType(changeParams1b), id: id1b },
+        ],
       });
-      expect(result2).toMatchObject({
+      expect(res2).toMatchObject({
         memberId: new Types.ObjectId(memberId2),
-        [`${admissionCategory}`]: [new Types.ObjectId(id2)],
+        [`${admissionCategory}`]: [{ ...removeChangeType(changeParams2), id: id2 }],
       });
     },
   );
@@ -119,14 +123,14 @@ describe(MemberAdmissionService.name, () => {
       const changeParams2 = method();
 
       const memberId1 = generateId();
-      const result1a = await changeAdmission(admissionCategory, changeParams1a, memberId1);
+      const result1a = await change(admissionCategory, changeParams1a, memberId1);
       expect(result1a[admissionCategory]).toEqual(changeParams1a);
 
       const memberId2 = generateId();
-      const result2 = await changeAdmission(admissionCategory, changeParams2, memberId2);
+      const result2 = await change(admissionCategory, changeParams2, memberId2);
       expect(result2[admissionCategory]).toEqual(changeParams2);
 
-      const result1b = await changeAdmission(admissionCategory, changeParams1b, memberId1);
+      const result1b = await change(admissionCategory, changeParams1b, memberId1);
       expect(result1b[admissionCategory]).toEqual(changeParams1b);
     },
   );
@@ -138,21 +142,18 @@ describe(MemberAdmissionService.name, () => {
       const memberId = generateId();
 
       const changeParams = method({ changeType: ChangeType.create });
-      let result = await changeAdmission(field, changeParams, memberId);
+      let result = await change(field, changeParams, memberId);
 
-      const { id } = await model.findById(result[admissionCategory][0]);
+      const { id } = await model.findById(new Types.ObjectId(result[admissionCategory][0].id));
 
       const changeParamsUpdate = method({ changeType: ChangeType.update, id });
-      result = await changeAdmission(field, changeParamsUpdate, memberId);
-      const updatedCategoryResult = await model.findById(result[admissionCategory][0]);
-
-      expect(updatedCategoryResult.toObject()).toEqual(
-        expect.objectContaining(updatedCategoryResult.toObject()),
-      );
+      result = await change(field, changeParamsUpdate, memberId);
 
       expect(result).toMatchObject({
         memberId: new Types.ObjectId(memberId),
-        [`${admissionCategory}`]: [new Types.ObjectId(id)],
+        [`${admissionCategory}`]: [
+          { ...removeChangeType(changeParamsUpdate), id: new Types.ObjectId(id) },
+        ],
       });
     },
   );
@@ -164,16 +165,15 @@ describe(MemberAdmissionService.name, () => {
       const memberId = generateId();
       const changeParams = method({ changeType: ChangeType.create });
 
-      const result = await changeAdmission(field, changeParams, memberId);
+      const result = await change(field, changeParams, memberId);
+      const { id } = await model.findById(new Types.ObjectId(result[admissionCategory][0].id));
 
-      const { id } = await model.findById(result[admissionCategory][0]);
-
-      const deleteResult = await changeAdmission(
+      const deleteResult = await change(
         field,
         method({ changeType: ChangeType.delete, id }),
         memberId,
       );
-      const afterDeleteResult = await model.findById(result[admissionCategory][0]);
+      const afterDeleteResult = await model.findById(new Types.ObjectId(id));
       expect(afterDeleteResult).toBeNull();
 
       expect(deleteResult).toMatchObject({
@@ -204,7 +204,7 @@ describe(MemberAdmissionService.name, () => {
       const memberId = generateId();
 
       await expect(
-        changeAdmission(field, method({ changeType, id: generateId() }), memberId),
+        change(field, method({ changeType, id: generateId() }), memberId),
       ).rejects.toThrow(Errors.get(errorNotFound));
     },
   );
@@ -225,9 +225,9 @@ describe(MemberAdmissionService.name, () => {
       const changeParams = method({ changeType: ChangeType.create });
       changeParams[key] = null;
 
-      const result = await changeAdmission(field, changeParams, memberId);
+      const result = await change(field, changeParams, memberId);
 
-      const categoryRes = await model.findById(result[admissionCategory][0]);
+      const categoryRes = await model.findById(new Types.ObjectId(result[admissionCategory][0].id));
       expect(categoryRes.text).not.toBeDefined();
     },
   );
@@ -246,13 +246,13 @@ describe(MemberAdmissionService.name, () => {
       const memberId = generateId();
 
       const createParams = method({ changeType: ChangeType.create });
-      const result = await changeAdmission(field, createParams, memberId);
+      const result = await change(field, createParams, memberId);
 
-      const { id } = await model.findById(result[admissionCategory][0]);
+      const { id } = await model.findById(new Types.ObjectId(result[admissionCategory][0].id));
       const updateParams = method({ changeType: ChangeType.update, id });
       updateParams[key] = null;
 
-      await changeAdmission(field, updateParams, memberId);
+      await change(field, updateParams, memberId);
 
       const categoryRes = await model.findById(new Types.ObjectId(id));
       expect(categoryRes[key]).toEqual(createParams[key]);
@@ -267,12 +267,12 @@ describe(MemberAdmissionService.name, () => {
 
     const createParams = method();
 
-    await changeAdmission(admissionCategory, createParams, memberId);
+    await change(admissionCategory, createParams, memberId);
 
     const updateParams = method();
     updateParams.text = null;
 
-    const resultUpdate = await changeAdmission(admissionCategory, updateParams, memberId);
+    const resultUpdate = await change(admissionCategory, updateParams, memberId);
     expect(resultUpdate[admissionCategory].text).toEqual(createParams.text);
     expect(resultUpdate[admissionCategory].bmi).toEqual(updateParams.bmi);
   });
@@ -286,7 +286,7 @@ describe(MemberAdmissionService.name, () => {
     const externalAppointment = method({ changeType: ChangeType.create });
     delete externalAppointment.isScheduled;
 
-    await changeAdmission(field, externalAppointment, memberId);
+    await change(field, externalAppointment, memberId);
 
     const { isScheduled } = await externalAppointmentModel.findOne(
       { date: externalAppointment.date },
@@ -304,7 +304,7 @@ describe(MemberAdmissionService.name, () => {
     const activity = method({ changeType: ChangeType.create });
     delete activity.isTodo;
 
-    await changeAdmission(field, activity, memberId);
+    await change(field, activity, memberId);
 
     const { isTodo } = await model.findOne({ text: activity.text }, { isTodo: 1 });
     expect(isTodo).toBeTruthy();
@@ -319,7 +319,7 @@ describe(MemberAdmissionService.name, () => {
       RefAdmissionCategory.procedures,
     );
     const createParams = method({ changeType: ChangeType.create });
-    const result = await changeAdmission(field, createParams, memberId);
+    const result = await change(field, createParams, memberId);
 
     expect(result[RefAdmissionCategory.procedures]).toEqual([
       expect.objectContaining({ date: expect.any(Date) }),
@@ -335,11 +335,7 @@ describe(MemberAdmissionService.name, () => {
     //create another one and make sure it returns all the existing created values above
     const method = mapSingleAdmissionCategoryToParamField.get(SingleValueAdmissionCategory.dietary);
     const createParams = method();
-    const result = await changeAdmission(
-      SingleValueAdmissionCategory.dietary,
-      createParams,
-      memberId,
-    );
+    const result = await change(SingleValueAdmissionCategory.dietary, createParams, memberId);
 
     checkAllCategories(result);
   });
@@ -352,9 +348,11 @@ describe(MemberAdmissionService.name, () => {
     const { field, method, model } = mapRefAdmissionCategoryToParamField.get(
       RefAdmissionCategory.procedures,
     );
-    const { id } = await model.findById(result[RefAdmissionCategory.procedures][0]);
+    const { id } = await model.findById(
+      new Types.ObjectId(result[RefAdmissionCategory.procedures][0].id),
+    );
     const updateParams = method({ changeType: ChangeType.update, id });
-    result = await changeAdmission(field, updateParams, memberId);
+    result = await change(field, updateParams, memberId);
 
     expect(result[RefAdmissionCategory.procedures]).toEqual([
       expect.objectContaining({ date: updateParams.date }),
@@ -370,12 +368,26 @@ describe(MemberAdmissionService.name, () => {
     const { field, method, model } = mapRefAdmissionCategoryToParamField.get(
       RefAdmissionCategory.procedures,
     );
-    const { id } = await model.findById(result[RefAdmissionCategory.procedures][0]);
+    const { id } = await model.findById(
+      new Types.ObjectId(result[RefAdmissionCategory.procedures][0].id),
+    );
     const deleteParams = method({ changeType: ChangeType.delete, id });
-    const deleteResult = await changeAdmission(field, deleteParams, memberId);
+    const deleteResult = await change(field, deleteParams, memberId);
 
     expect(deleteResult[RefAdmissionCategory.procedures]).toEqual([]);
     checkAllCategories(deleteResult);
+  });
+
+  it('should return all populated existing values', async () => {
+    const memberId = generateId();
+    await createAllCategories(memberId);
+
+    const getResult = await service.get(memberId);
+    checkAllCategories(getResult);
+  });
+
+  it('should throw error on member not found when calling getAdmission', async () => {
+    await expect(service.get(generateId())).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
   });
 
   const createAllCategories = async (memberId: string): Promise<MemberAdmission> => {
@@ -384,13 +396,13 @@ describe(MemberAdmissionService.name, () => {
     for (const admissionCategory of Object.values(RefAdmissionCategory)) {
       const { field, method } = mapRefAdmissionCategoryToParamField.get(admissionCategory);
       const createParams = method({ changeType: ChangeType.create });
-      result = await changeAdmission(field, createParams, memberId);
+      result = await change(field, createParams, memberId);
     }
 
     for (const admissionCategory of Object.values(SingleValueAdmissionCategory)) {
       const method = mapSingleAdmissionCategoryToParamField.get(admissionCategory);
       const params = method();
-      result = await changeAdmission(admissionCategory, params, memberId);
+      result = await change(admissionCategory, params, memberId);
     }
 
     return result;
@@ -412,12 +424,8 @@ describe(MemberAdmissionService.name, () => {
     );
   };
 
-  const changeAdmission = async (
-    field: string,
-    params,
-    memberId: string,
-  ): Promise<MemberAdmission> => {
-    return service.changeAdmission({ [`${field}`]: params, memberId });
+  const change = async (field: string, params, memberId: string): Promise<MemberAdmission> => {
+    return service.change({ [`${field}`]: params, memberId });
   };
 
   const initModels = () => {

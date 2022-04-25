@@ -32,12 +32,15 @@ registerEnumType(RefAdmissionCategory, { name: 'RefAdmissionCategory' });
 /**************************************************************************************************
  ************************************* Schemas for gql methods ************************************
  *************************************************************************************************/
+@ObjectType()
+@InputType('BaseAdmissionInput')
 export class BaseAdmission {
   @Field(() => String, { nullable: true })
   id?: string;
 }
 
 @ObjectType()
+@InputType('ProcedureInput')
 @Schema({ versionKey: false, timestamps: true })
 export class Procedure extends BaseAdmission {
   @Prop({ type: Date, isNan: true })
@@ -54,6 +57,7 @@ export class Procedure extends BaseAdmission {
 }
 
 @ObjectType()
+@InputType('AmountInput')
 @Schema({ versionKey: false, timestamps: true })
 export class Amount {
   @Prop({ type: Number, isNan: true })
@@ -66,6 +70,7 @@ export class Amount {
 }
 
 @ObjectType()
+@InputType('MedicationInput')
 @Schema({ versionKey: false, timestamps: true })
 export class Medication extends BaseAdmission {
   @Prop({ isNan: true })
@@ -102,6 +107,7 @@ export class Medication extends BaseAdmission {
 }
 
 @ObjectType()
+@InputType('ExternalAppointmentInput')
 @Schema({ versionKey: false, timestamps: true })
 export class ExternalAppointment extends BaseAdmission {
   @Prop({ default: true })
@@ -134,6 +140,7 @@ export class ExternalAppointment extends BaseAdmission {
 }
 
 @ObjectType()
+@InputType('ActivityInput')
 @Schema({ versionKey: false, timestamps: true })
 export class Activity extends BaseAdmission {
   @Prop({ isNan: true })
@@ -146,6 +153,7 @@ export class Activity extends BaseAdmission {
 }
 
 @ObjectType()
+@InputType('WoundCareInput')
 @Schema({ versionKey: false, timestamps: true })
 export class WoundCare extends BaseAdmission {
   @Prop({ isNan: true })
@@ -153,7 +161,8 @@ export class WoundCare extends BaseAdmission {
   text?: string;
 }
 
-@InputType()
+@ObjectType()
+@InputType('DietaryInput')
 export class Dietary {
   @Field(() => String, { nullable: true })
   text?: string;

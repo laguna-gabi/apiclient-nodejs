@@ -76,7 +76,15 @@ export class MemberAdmissionService extends BaseService {
     };
   }
 
-  async changeAdmission(changeAdmissionParams: ChangeAdmissionParams): Promise<MemberAdmission> {
+  async get(memberId: string): Promise<MemberAdmission> {
+    const result = await this.admissionModel.findOne({ memberId: new Types.ObjectId(memberId) });
+    if (!result) {
+      throw new Error(Errors.get(ErrorType.memberNotFound));
+    }
+    return this.populateAll(result);
+  }
+
+  async change(changeAdmissionParams: ChangeAdmissionParams): Promise<MemberAdmission> {
     const setParams: ChangeAdmissionParams = omitBy(changeAdmissionParams, isNil);
     const { memberId } = changeAdmissionParams;
 
@@ -126,7 +134,7 @@ export class MemberAdmissionService extends BaseService {
       result = await this.updateSingleObject(Object.assign({}, ...parse), memberId);
     }
 
-    return this.replaceId(result);
+    return this.replaceSubIds(result);
   }
 
   /*************************************************************************************************
@@ -215,6 +223,28 @@ export class MemberAdmissionService extends BaseService {
         result = await result.populate(admissionCategory);
       }),
     );
-    return this.replaceId(result.toObject());
+    return this.replaceSubIds(result.toObject());
+  }
+
+  /**
+   * @param object any db object
+   * changing internal _id on sub array objects, for example :
+   * {memberId, procedures: [{_id: "some_id"}]} will be {memberId, procedures: [{id: "some_id"}]}
+   */
+  private replaceSubIds(object) {
+    object = this.replaceId(object);
+
+    Object.keys(object).map((key) => {
+      if (object[key] instanceof Array) {
+        object[key].map((item) => {
+          if (item._id) {
+            item.id = new Types.ObjectId(item._id);
+            delete item._id;
+          }
+        });
+      }
+    });
+
+    return object;
   }
 }
