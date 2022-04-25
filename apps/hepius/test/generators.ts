@@ -35,6 +35,7 @@ import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import {
   AppointmentMethod,
+  AppointmentStatus,
   EndAppointmentParams,
   Notes,
   RequestAppointmentParams,
@@ -612,6 +613,7 @@ export const generateAppointmentComposeParams = (): AppointmentCompose => {
     userName: `${name.firstName()} ${name.lastName()}`,
     start,
     end,
+    status: AppointmentStatus.scheduled,
   };
 };
 

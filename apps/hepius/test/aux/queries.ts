@@ -487,6 +487,7 @@ export class Queries {
               userName
               start
               end
+              status
             }
           }
         `,

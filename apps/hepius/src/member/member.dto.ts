@@ -17,7 +17,7 @@ import { twilio } from 'config';
 import { Document, Types } from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
 import { ActionItem } from '.';
-import { Scores } from '../appointment';
+import { AppointmentStatus, Scores } from '../appointment';
 import {
   ErrorType,
   Errors,
@@ -738,6 +738,9 @@ export class AppointmentCompose {
 
   @Field(() => Date)
   end: Date;
+
+  @Field(() => AppointmentStatus)
+  status: AppointmentStatus;
 }
 
 @ObjectType()
