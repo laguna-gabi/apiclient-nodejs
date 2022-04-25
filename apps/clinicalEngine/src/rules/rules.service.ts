@@ -6,7 +6,7 @@ import engineFactory, {
   RuleProperties,
 } from 'json-rules-engine';
 import { DynamicFacts, dynamicFacts } from './facts';
-import { DynamicFact, EngineRule } from './types';
+import { DynamicFact, EngineRule, Priority } from './types';
 import { engineRules } from './rules';
 
 @Injectable()
@@ -57,8 +57,7 @@ export class RulesService implements OnModuleInit {
           : [event.params.type];
         almanac.addRuntimeFact(DynamicFacts.newBarriers, updatedBarriers);
       };
-      // todo: fix priority enum
-      rule.priority = 10;
+      rule.priority = Priority.barrier;
       return rule;
     });
   }
