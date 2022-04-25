@@ -30,6 +30,8 @@ export const BaseExternalConfigs = {
   },
 };
 
+export const mongoConnectionStringSettings = '?retryWrites=true&w=majority';
+
 export abstract class BaseConfigs implements MongooseOptionsFactory {
   protected data;
 

@@ -1,4 +1,10 @@
-import { BaseConfigs, BaseExternalConfigs, Environments, ServiceName } from '@argus/pandora';
+import {
+  BaseConfigs,
+  BaseExternalConfigs,
+  Environments,
+  ServiceName,
+  mongoConnectionStringSettings,
+} from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { MongooseModuleOptions } from '@nestjs/mongoose';
 import { aws, db } from 'config';
@@ -37,7 +43,9 @@ export class ConfigsService extends BaseConfigs {
     const uri =
       !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
         ? `${db.connection}/${ServiceName.hepius}`
-        : `${await this.getConfig(ExternalConfigs.db.connection)}/laguna`;
+        : `${await this.getConfig(
+            ExternalConfigs.db.connection,
+          )}/laguna${mongoConnectionStringSettings}`;
     return { uri };
   }
 }

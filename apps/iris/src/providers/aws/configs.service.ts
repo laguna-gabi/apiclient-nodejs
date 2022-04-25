@@ -1,4 +1,4 @@
-import { BaseConfigs, BaseExternalConfigs } from '@argus/pandora';
+import { BaseConfigs, BaseExternalConfigs, mongoConnectionStringSettings } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { MongooseModuleOptions } from '@nestjs/mongoose';
 import { aws, db } from 'config';
@@ -22,7 +22,9 @@ export class ConfigsService extends BaseConfigs {
   }
 
   async createMongooseOptions(): Promise<MongooseModuleOptions> {
-    const uri = `${await this.getConfig(ExternalConfigs.db.connection)}/${db.name}`;
+    const uri = `${await this.getConfig(ExternalConfigs.db.connection)}/${
+      db.name
+    }${mongoConnectionStringSettings}`;
     return { uri };
   }
 }
