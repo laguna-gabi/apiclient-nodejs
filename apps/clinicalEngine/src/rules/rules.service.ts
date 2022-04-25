@@ -5,7 +5,7 @@ import engineFactory, {
   EngineResult,
   RuleProperties,
 } from 'json-rules-engine';
-import { DynamicFacts, dynamicFacts } from './facts';
+import { dynamicFacts, updateNewBarriersFact } from './facts';
 import { DynamicFact, EngineRule, Priority } from './types';
 import { engineRules } from './rules';
 
@@ -47,16 +47,7 @@ export class RulesService implements OnModuleInit {
 
   async setupBarrierRules(rules: EngineRule[]) {
     return rules.map((rule) => {
-      rule.onSuccess = async (event, almanac) => {
-        const newBarriers = await almanac.factValue(DynamicFacts.newBarriers);
-        const updatedBarriers = newBarriers
-          ? // todo: remove when defining types
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            newBarriers.push(event.params.type)
-          : [event.params.type];
-        almanac.addRuntimeFact(DynamicFacts.newBarriers, updatedBarriers);
-      };
+      rule.onSuccess = updateNewBarriersFact;
       rule.priority = Priority.barrier;
       return rule;
     });
