@@ -29,8 +29,9 @@
     },
     "queue": {
       "notification": "NotificationsQ-local",
+      "notificationDLQ": "NotificationsDLQ-local",
       "image": "ImageQ-local",
-      "notificationDLQ": "NotificationsDLQ-local"
+      "transcript": "TranscriptQ-local"
     },
     "cloudMap": {
       "namespace": "LagunaCloudMap-develop"

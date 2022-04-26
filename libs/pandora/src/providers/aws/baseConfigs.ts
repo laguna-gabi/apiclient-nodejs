@@ -9,6 +9,7 @@ export const BaseExternalConfigs = {
   aws: {
     queueNameNotifications: 'aws.sqs.queueNameNotifications',
     queueNameAudit: 'aws.sqs.queueNameAudit',
+    queueNameTranscript: 'aws.sqs.queueNameTranscript',
   },
   oneSignal: {
     defaultApiId: 'onesignal.default.apiId',

@@ -11,7 +11,7 @@ import { Environments, EventType, QueueType, ServiceName, formatEx } from '@argu
 import { Injectable, NotImplementedException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
-import * as AWS from 'aws-sdk';
+import { SQS } from 'aws-sdk';
 import { aws } from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
@@ -21,7 +21,7 @@ import { ConfigsService, ExternalConfigs } from '../providers';
 
 @Injectable()
 export class QueueService extends HealthIndicator implements OnModuleInit, OnModuleDestroy {
-  private readonly sqs = new AWS.SQS({
+  private readonly sqs = new SQS({
     region: aws.region,
     apiVersion: '2012-11-05',
     ...(!process.env.NODE_ENV ||

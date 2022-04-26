@@ -1,12 +1,12 @@
 import { Environments, EventType, QueueType, ServiceName, formatEx } from '@argus/pandora';
-import { Injectable, NotImplementedException, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { SQS } from 'aws-sdk';
 import { aws, hosts } from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
-import { ConfigsService, ExternalConfigs, StorageService } from '.';
-import { IEventNotifyQueue, LoggerService, StorageType } from '../../common';
+import { ConfigsService, ExternalConfigs } from '.';
+import { LoggerService } from '../../common';
 
 @Injectable()
 export class QueueService implements OnModuleInit {
@@ -18,20 +18,16 @@ export class QueueService implements OnModuleInit {
       : {}),
   });
   private auditQueueUrl;
-  private notificationsQueueUrl;
   private transcriptQueueUrl;
-  private imageQueueUrl;
   private consumer;
 
   constructor(
     private readonly configsService: ConfigsService,
     private readonly logger: LoggerService,
-    private readonly storageService: StorageService,
   ) {}
 
   async onModuleInit(): Promise<void> {
-    const { queueNameAudit, queueNameNotifications, queueNameTranscript, queueNameImage } =
-      ExternalConfigs.aws;
+    const { queueNameAudit, queueNameTranscript } = ExternalConfigs.aws;
 
     if (process.env.NODE_ENV === Environments.production) {
       const auditName = await this.configsService.getConfig(queueNameAudit);
@@ -39,37 +35,17 @@ export class QueueService implements OnModuleInit {
       this.auditQueueUrl = QueueUrl;
     }
 
-    const notificationsName =
-      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? aws.queue.notification
-        : await this.configsService.getConfig(queueNameNotifications);
-    const { QueueUrl: notificationsQueueUrl } = await this.sqs
-      .getQueueUrl({ QueueName: notificationsName })
-      .promise();
-    this.notificationsQueueUrl = notificationsQueueUrl;
-
-    const imageName =
-      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? aws.queue.image
-        : await this.configsService.getConfig(queueNameImage);
-    const { QueueUrl: imageQueueUrl } = await this.sqs
-      .getQueueUrl({ QueueName: imageName })
-      .promise();
-    this.imageQueueUrl = imageQueueUrl;
-
     const transcriptName =
       !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
         ? aws.queue.transcript
         : await this.configsService.getConfig(queueNameTranscript);
-    const { QueueUrl: transcriptQueueUrl } = await this.sqs
-      .getQueueUrl({ QueueName: transcriptName })
-      .promise();
-    this.transcriptQueueUrl = transcriptQueueUrl;
+    const { QueueUrl } = await this.sqs.getQueueUrl({ QueueName: transcriptName }).promise();
+    this.transcriptQueueUrl = QueueUrl;
 
-    // register and start consumer for ImageQ
+    // register and start consumer for TranscriptQ
     this.consumer = Consumer.create({
       region: aws.region,
-      queueUrl: this.imageQueueUrl,
+      queueUrl: this.transcriptQueueUrl,
       handleMessage: async (message) => {
         /**
          * we need to always catch exceptions coming from message, since if we don't, it'll
@@ -93,7 +69,7 @@ export class QueueService implements OnModuleInit {
   }
 
   @OnEvent(EventType.notifyQueue, { async: true })
-  async sendMessage(params: IEventNotifyQueue) {
+  async sendMessage(params: { type: QueueType; message: string }) {
     if (params.type === QueueType.audit && process.env.NODE_ENV !== Environments.production) {
       //audit log only exists in production
       this.logger.info(params, QueueService.name, this.sendMessage.name);
@@ -104,40 +80,18 @@ export class QueueService implements OnModuleInit {
       const { MessageId } = await this.sqs
         .sendMessage({
           MessageBody: params.message,
-          ...this.getQueueConfigs(params.type),
+          MessageGroupId: ServiceName.poseidon,
+          MessageDeduplicationId: v4(),
+          QueueUrl: this.auditQueueUrl,
         })
         .promise();
       this.logger.info({ ...params, MessageId }, QueueService.name, this.sendMessage.name);
     } catch (ex) {
-      this.logger.error(params, QueueService.name, this.sendMessage.name, formatEx(ex));
-    }
-  }
-
-  getQueueConfigs(type: QueueType) {
-    switch (type) {
-      case QueueType.audit:
-        return {
-          MessageGroupId: ServiceName.hepius,
-          MessageDeduplicationId: v4(),
-          QueueUrl: this.auditQueueUrl,
-        };
-      case QueueType.notifications:
-        return { QueueUrl: this.notificationsQueueUrl };
-      case QueueType.transcript:
-        return { QueueUrl: this.transcriptQueueUrl };
-      default:
-        throw new NotImplementedException();
+      this.logger.error(params, QueueService.name, this.sendMessage.name, ex);
     }
   }
 
   private async handleMessage(message: SQSMessage): Promise<void> {
-    const normalImageKey = JSON.parse(message.Body).Records[0].s3.object.key;
-    const memberId = normalImageKey.split('/')[2];
-    const journalId = normalImageKey.split('/')[3].split('_')[0];
-    const imageFormat = normalImageKey.split('/')[3].split('.')[1];
-    // eslint-disable-next-line max-len
-    const smallImageKey = `public/${StorageType.journals}/${memberId}/${journalId}_SmallImage.${imageFormat}`;
-
-    await this.storageService.createJournalImageThumbnail(normalImageKey, smallImageKey);
+    console.log(message);
   }
 }
