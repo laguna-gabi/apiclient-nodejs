@@ -8,6 +8,7 @@ import {
   BEFORE_ALL_TIMEOUT,
   generateAddCaregiverParams,
   generateAdmissionActivityParams,
+  generateAdmissionDiagnosisParams,
   generateAdmissionDietaryParams,
   generateAdmissionExternalAppointmentParams,
   generateAdmissionMedicationParams,
@@ -2525,6 +2526,9 @@ describe('Integration tests: all', () => {
     const { changeAdmissionParams: createAdmissionParams, result: createResult } =
       await changeMemberAdmission(ChangeType.create, member.id);
 
+    const diagnoses = [
+      { id: createResult.diagnoses[0].id, ...removeChangeType(createAdmissionParams.diagnosis) },
+    ];
     const procedures = [
       {
         id: createResult.procedures[0].id,
@@ -2548,15 +2552,15 @@ describe('Integration tests: all', () => {
       },
     ];
     const activities = [
-      { ...removeChangeType(createAdmissionParams.activity), id: createResult.activities[0].id },
+      { id: createResult.activities[0].id, ...removeChangeType(createAdmissionParams.activity) },
     ];
     const woundCares = [
-      { ...removeChangeType(createAdmissionParams.woundCare), id: createResult.woundCares[0].id },
+      { id: createResult.woundCares[0].id, ...removeChangeType(createAdmissionParams.woundCare) },
     ];
 
     expect(createResult).toEqual(
       expect.objectContaining({
-        diagnoses: createAdmissionParams.diagnoses,
+        diagnoses,
         procedures,
         medications,
         externalAppointments,
@@ -2593,7 +2597,7 @@ describe('Integration tests: all', () => {
 
     expect(changeResult).toEqual(
       expect.objectContaining({
-        diagnoses: createAdmissionParams.diagnoses,
+        diagnoses,
         procedures,
         medications: [],
         externalAppointments,
@@ -2699,6 +2703,7 @@ describe('Integration tests: all', () => {
     changeType: ChangeType,
     memberId: string,
   ): Promise<{ changeAdmissionParams: ChangeAdmissionParams; result: MemberAdmission }> => {
+    const createDiagnosis = generateAdmissionDiagnosisParams({ changeType });
     const createProcedure = generateAdmissionProcedureParams({ changeType });
     const createMedication = generateAdmissionMedicationParams({ changeType });
     const createExternalAppointment = generateAdmissionExternalAppointmentParams({ changeType });
@@ -2707,7 +2712,7 @@ describe('Integration tests: all', () => {
 
     const changeAdmissionParams: ChangeAdmissionParams = {
       memberId,
-      diagnoses: lorem.sentence(),
+      diagnosis: createDiagnosis,
       procedure: createProcedure,
       medication: createMedication,
       externalAppointment: createExternalAppointment,

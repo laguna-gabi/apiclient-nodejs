@@ -80,6 +80,7 @@ import {
   CancelNotifyParams,
   Caregiver,
   ChangeAdmissionActivityParams,
+  ChangeAdmissionDiagnosisParams,
   ChangeAdmissionExternalAppointmentParams,
   ChangeAdmissionMedicationParams,
   ChangeAdmissionProcedureParams,
@@ -1270,6 +1271,22 @@ export const generateRequestHeaders = (authId: string) => {
 /*************************************************************************************************
  ***************************** ChangeAdmissionParams related methods *****************************
  ************************************************************************************************/
+export const generateAdmissionDiagnosisParams = ({
+  changeType,
+  id,
+}: {
+  changeType: ChangeType;
+  id?: string;
+}): ChangeAdmissionDiagnosisParams => {
+  const attachIdParam = id ? { id } : {};
+  return {
+    changeType,
+    ...attachIdParam,
+    icdCode: datatype.uuid(),
+    description: lorem.sentence(),
+  };
+};
+
 export const generateAdmissionProcedureParams = ({
   changeType,
   id,

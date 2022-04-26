@@ -3,11 +3,14 @@ import {
   ActivityDocument,
   BaseAdmission,
   ChangeAdmissionActivityParams,
+  ChangeAdmissionDiagnosisParams,
   ChangeAdmissionExternalAppointmentParams,
   ChangeAdmissionMedicationParams,
   ChangeAdmissionParams,
   ChangeAdmissionProcedureParams,
   ChangeAdmissionWoundCareParams,
+  Diagnosis,
+  DiagnosisDocument,
   ExternalAppointment,
   ExternalAppointmentDocument,
   Medication,
@@ -37,6 +40,8 @@ export class MemberAdmissionService extends BaseService {
   private readonly matchMap: Map<RefAdmissionCategory, InternalValue> = new Map();
 
   constructor(
+    @InjectModel(Diagnosis.name)
+    private readonly diagnosisModel: Model<DiagnosisDocument> & ISoftDelete<DiagnosisDocument>,
     @InjectModel(Procedure.name)
     private readonly procedureModel: Model<ProcedureDocument> & ISoftDelete<ProcedureDocument>,
     @InjectModel(Medication.name)
@@ -54,6 +59,10 @@ export class MemberAdmissionService extends BaseService {
     readonly logger: LoggerService,
   ) {
     super();
+    this.matchMap[RefAdmissionCategory.diagnoses] = {
+      model: this.diagnosisModel,
+      errorType: ErrorType.memberAdmissionDiagnosisIdNotFound,
+    };
     this.matchMap[RefAdmissionCategory.procedures] = {
       model: this.procedureModel,
       errorType: ErrorType.memberAdmissionProcedureIdNotFound,
@@ -89,11 +98,10 @@ export class MemberAdmissionService extends BaseService {
     const { memberId } = changeAdmissionParams;
 
     let result;
-    if (setParams.diagnoses) {
-      result = await this.updateSingleObject(
-        { [`${SingleValueAdmissionCategory.diagnoses}`]: setParams.diagnoses },
-        memberId,
-      );
+    if (setParams.diagnosis) {
+      const { changeType, ...diagnoses }: ChangeAdmissionDiagnosisParams = setParams.diagnosis;
+      const admissionCategory = RefAdmissionCategory.diagnoses;
+      result = await this.changeInternal(diagnoses, changeType, admissionCategory, memberId);
     }
     if (setParams.procedure) {
       const { changeType, ...procedure }: ChangeAdmissionProcedureParams = setParams.procedure;

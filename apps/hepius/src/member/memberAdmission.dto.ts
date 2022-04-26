@@ -15,12 +15,12 @@ export enum ProcedureType {
 registerEnumType(ProcedureType, { name: 'ProcedureType' });
 
 export enum SingleValueAdmissionCategory {
-  diagnoses = 'diagnoses',
   dietary = 'dietary',
 }
 registerEnumType(SingleValueAdmissionCategory, { name: 'SingleValueAdmissionCategory' });
 
 export enum RefAdmissionCategory {
+  diagnoses = 'diagnoses',
   procedures = 'procedures',
   medications = 'medications',
   externalAppointments = 'externalAppointments',
@@ -37,6 +37,19 @@ registerEnumType(RefAdmissionCategory, { name: 'RefAdmissionCategory' });
 export class BaseAdmission {
   @Field(() => String, { nullable: true })
   id?: string;
+}
+
+@ObjectType()
+@InputType('DiagnosisInput')
+@Schema({ versionKey: false, timestamps: true })
+export class Diagnosis extends BaseAdmission {
+  @Prop({ isNan: true })
+  @Field({ nullable: true })
+  icdCode?: string;
+
+  @Prop({ isNan: true })
+  @Field({ nullable: true })
+  description?: string;
 }
 
 @ObjectType()
@@ -181,6 +194,12 @@ export class ChangeAdmissionBaseParams {
 }
 
 @InputType()
+export class ChangeAdmissionDiagnosisParams extends Diagnosis {
+  @Field(() => ChangeType)
+  changeType: ChangeType;
+}
+
+@InputType()
 export class ChangeAdmissionProcedureParams extends Procedure {
   @Field(() => ChangeType)
   changeType: ChangeType;
@@ -215,8 +234,8 @@ export class ChangeAdmissionParams {
   @Field()
   memberId: string;
 
-  @Field({ nullable: true })
-  diagnoses?: string;
+  @Field(() => ChangeAdmissionDiagnosisParams, { nullable: true })
+  diagnosis?: ChangeAdmissionDiagnosisParams;
 
   @Field(() => ChangeAdmissionProcedureParams, { nullable: true })
   procedure?: ChangeAdmissionProcedureParams;
@@ -246,9 +265,9 @@ export class MemberAdmission extends Identifier {
   @Prop({ type: Types.ObjectId, unique: true, index: true })
   memberId: Types.ObjectId;
 
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  diagnoses?: string;
+  @Prop({ type: [{ type: Types.ObjectId, ref: Diagnosis.name }], isNaN: true })
+  @Field(() => [Diagnosis], { nullable: true })
+  diagnoses?: Diagnosis[];
 
   @Prop({ type: [{ type: Types.ObjectId, ref: Procedure.name }], isNaN: true })
   @Field(() => [Procedure], { nullable: true })
@@ -281,6 +300,11 @@ export class MemberAdmission extends Identifier {
 export type MemberAdmissionDocument = MemberAdmission & Document & ISoftDelete<MemberAdmission>;
 export const MemberAdmissionDto = audit(
   SchemaFactory.createForClass(MemberAdmission).plugin(mongooseDelete, useFactoryOptions),
+);
+
+export type DiagnosisDocument = Diagnosis & Document & ISoftDelete<Diagnosis>;
+export const DiagnosisDto = audit(
+  SchemaFactory.createForClass(Diagnosis).plugin(mongooseDelete, useFactoryOptions),
 );
 
 export type ProcedureDocument = Procedure & Document & ISoftDelete<Procedure>;

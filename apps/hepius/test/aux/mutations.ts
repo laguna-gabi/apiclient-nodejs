@@ -2011,7 +2011,10 @@ export class Mutations {
         gql`
           mutation changeMemberAdmission($changeAdmissionParams: ChangeAdmissionParams!) {
             changeMemberAdmission(changeAdmissionParams: $changeAdmissionParams) {
-              diagnoses
+              diagnoses {
+                icdCode
+                description
+              }
               procedures {
                 id
                 date

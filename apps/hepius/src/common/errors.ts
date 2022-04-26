@@ -50,11 +50,12 @@ export enum ErrorType {
   memberUploadAlreadyExistingGeneralDocument = 9231,
 
   //member admission
-  memberAdmissionProcedureIdNotFound = 9300,
-  memberAdmissionMedicationIdNotFound = 9301,
-  memberAdmissionExternalAppointmentIdNotFound = 9302,
-  memberAdmissionActivityIdNotFound = 9303,
-  memberAdmissionWoundCareIdNotFound = 9304,
+  memberAdmissionDiagnosisIdNotFound = 9300,
+  memberAdmissionProcedureIdNotFound = 9301,
+  memberAdmissionMedicationIdNotFound = 9302,
+  memberAdmissionExternalAppointmentIdNotFound = 9303,
+  memberAdmissionActivityIdNotFound = 9304,
+  memberAdmissionWoundCareIdNotFound = 9305,
 
   // Notifications
   notificationMetadataInvalid = 9270,
@@ -226,6 +227,7 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.memberUploadAlreadyExistingGeneralDocument.valueOf(),
     `can not upload an already existing document`,
   ],
+  [ErrorType.memberAdmissionDiagnosisIdNotFound.valueOf(), `diagnosis ${notFoundPrefix}`],
   [ErrorType.memberAdmissionProcedureIdNotFound.valueOf(), `procedure ${notFoundPrefix}`],
   [ErrorType.memberAdmissionMedicationIdNotFound.valueOf(), `medication ${notFoundPrefix}`],
   [

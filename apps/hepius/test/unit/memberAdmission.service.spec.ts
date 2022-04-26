@@ -12,6 +12,9 @@ import {
   Activity,
   ActivityDocument,
   ActivityDto,
+  Diagnosis,
+  DiagnosisDocument,
+  DiagnosisDto,
   ExternalAppointment,
   ExternalAppointmentDocument,
   ExternalAppointmentDto,
@@ -35,6 +38,7 @@ import {
   dbDisconnect,
   defaultModules,
   generateAdmissionActivityParams,
+  generateAdmissionDiagnosisParams,
   generateAdmissionDietaryParams,
   generateAdmissionExternalAppointmentParams,
   generateAdmissionMedicationParams,
@@ -43,7 +47,6 @@ import {
   generateId,
   removeChangeType,
 } from '../index';
-import { lorem } from 'faker';
 
 describe(MemberAdmissionService.name, () => {
   let module: TestingModule;
@@ -54,6 +57,7 @@ describe(MemberAdmissionService.name, () => {
   > = new Map();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapSingleAdmissionCategoryToParamField: Map<SingleValueAdmissionCategory, any> = new Map();
+  let diagnosisModel: Model<DiagnosisDocument & defaultTimestampsDbValues>;
   let procedureModel: Model<ProcedureDocument & defaultTimestampsDbValues>;
   let medicationModel: Model<MedicationDocument & defaultTimestampsDbValues>;
   let externalAppointmentModel: Model<ExternalAppointmentDocument & defaultTimestampsDbValues>;
@@ -409,7 +413,9 @@ describe(MemberAdmissionService.name, () => {
   };
 
   const checkAllCategories = (result: MemberAdmission) => {
-    expect(result[SingleValueAdmissionCategory.diagnoses]).toEqual(expect.any(String));
+    expect(result[RefAdmissionCategory.diagnoses]).toEqual([
+      expect.objectContaining({ description: expect.any(String) }),
+    ]);
     expect(result[RefAdmissionCategory.medications]).toEqual([
       expect.objectContaining({ coachNote: expect.any(String) }),
     ]);
@@ -429,6 +435,10 @@ describe(MemberAdmissionService.name, () => {
   };
 
   const initModels = () => {
+    diagnosisModel = model<DiagnosisDocument & defaultTimestampsDbValues>(
+      Diagnosis.name,
+      DiagnosisDto,
+    );
     procedureModel = model<ProcedureDocument & defaultTimestampsDbValues>(
       Procedure.name,
       ProcedureDto,
@@ -449,6 +459,12 @@ describe(MemberAdmissionService.name, () => {
   };
 
   const initMaps = () => {
+    mapRefAdmissionCategoryToParamField.set(RefAdmissionCategory.diagnoses, {
+      field: 'diagnosis',
+      method: generateAdmissionDiagnosisParams,
+      model: diagnosisModel,
+      errorNotFound: ErrorType.memberAdmissionDiagnosisIdNotFound,
+    });
     mapRefAdmissionCategoryToParamField.set(RefAdmissionCategory.procedures, {
       field: 'procedure',
       method: generateAdmissionProcedureParams,
@@ -480,9 +496,6 @@ describe(MemberAdmissionService.name, () => {
       errorNotFound: ErrorType.memberAdmissionWoundCareIdNotFound,
     });
 
-    mapSingleAdmissionCategoryToParamField.set(SingleValueAdmissionCategory.diagnoses, () => {
-      return lorem.sentence();
-    });
     mapSingleAdmissionCategoryToParamField.set(
       SingleValueAdmissionCategory.dietary,
       generateAdmissionDietaryParams,
