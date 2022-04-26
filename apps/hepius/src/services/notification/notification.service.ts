@@ -3,7 +3,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { services } from 'config';
 import { LoggerService } from '../../common';
-import { CloudMapService } from '../../providers/aws';
+import { ConfigsService, ExternalConfigs } from '../../providers/aws';
 import { Dispatch } from './notification.dto';
 
 @Injectable()
@@ -11,17 +11,15 @@ export class NotificationService implements OnModuleInit {
   private namespace: string;
   constructor(
     private readonly logger: LoggerService,
-    private readonly serviceDiscovery: CloudMapService,
     private readonly httpService: HttpService,
+    private readonly configsService: ConfigsService,
   ) {}
 
   async onModuleInit(): Promise<void> {
     this.namespace =
       !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
         ? `http://localhost:${services.notification.port}`
-        : `http://${await this.serviceDiscovery.discoverInstance(services.notification.taskName)}:${
-            services.notification.port
-          }`;
+        : `http://${await this.configsService.getConfig(ExternalConfigs.host.iris)}`;
   }
 
   async getDispatchesByClientSenderId(

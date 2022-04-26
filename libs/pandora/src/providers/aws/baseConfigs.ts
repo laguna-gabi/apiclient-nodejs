@@ -29,6 +29,10 @@ export const BaseExternalConfigs = {
     apiToken: 'bitly.apiToken',
     groupGuid: 'bitly.groupGuid',
   },
+  host: {
+    iris: 'host.iris',
+    hepius: 'host.hepius',
+  },
 };
 
 export const mongoConnectionStringSettings = '?retryWrites=true&w=majority';
