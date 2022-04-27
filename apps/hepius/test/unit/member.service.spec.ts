@@ -696,7 +696,7 @@ describe('MemberService', () => {
       expect(isSorted).toBeTruthy();
     });
 
-    it('should not include appointments older that X days ago', async () => {
+    it(`should not include appointments older that ${queryDaysLimit.getMembersAppointments} days ago`, async () => {
       const orgId = await generateOrg();
       const memberId = await generateMember(orgId);
       const member = await service.get(memberId);
