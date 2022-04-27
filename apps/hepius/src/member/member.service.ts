@@ -67,6 +67,7 @@ import {
   defaultTimestampsDbValues,
   deleteMemberObjects,
   extractEmbeddedSetObject,
+  queryDaysLimit,
 } from '../common';
 import { ISoftDelete } from '../db';
 import { Internationalization, StorageService } from '../providers';
@@ -264,7 +265,7 @@ export class MemberService extends BaseService {
 
   async getMembersAppointments(orgId?: string): Promise<AppointmentCompose[]> {
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 14);
+    startDate.setDate(startDate.getDate() - queryDaysLimit.getMembersAppointments);
 
     return this.memberModel.aggregate([
       {

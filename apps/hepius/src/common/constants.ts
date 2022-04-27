@@ -11,3 +11,8 @@ export const momentFormats = {
   dayOfWeek: 'EEEE',
   hour: 'H',
 };
+
+export const queryDaysLimit = {
+  getMembersAppointments: 14,
+  getAvailabilities: 30,
+};

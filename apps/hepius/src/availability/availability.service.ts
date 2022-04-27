@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Availability, AvailabilityDocument, AvailabilityInput, AvailabilitySlot } from '.';
-import { ErrorType, Errors, Identifiers } from '../common';
+import { ErrorType, Errors, Identifiers, queryDaysLimit } from '../common';
 
 @Injectable()
 export class AvailabilityService {
@@ -29,6 +29,9 @@ export class AvailabilityService {
   }
 
   async get(): Promise<AvailabilitySlot[]> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - queryDaysLimit.getAvailabilities);
+
     return this.availabilityModel.aggregate([
       {
         $project: {
@@ -36,6 +39,7 @@ export class AvailabilityService {
           availabilities: '$$ROOT',
         },
       },
+      { $match: { 'availabilities.start': { $gt: startDate } } },
       {
         $lookup: {
           localField: 'availabilities.userId',

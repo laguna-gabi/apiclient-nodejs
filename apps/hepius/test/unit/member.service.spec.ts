@@ -65,6 +65,7 @@ import {
   PhoneType,
   RecordingType,
   defaultTimestampsDbValues,
+  queryDaysLimit,
 } from '../../src/common';
 import { Audit } from '../../src/db';
 import {
@@ -695,13 +696,13 @@ describe('MemberService', () => {
       expect(isSorted).toBeTruthy();
     });
 
-    it('should not include appointments older that 14 days ago', async () => {
+    it('should not include appointments older that X days ago', async () => {
       const orgId = await generateOrg();
       const memberId = await generateMember(orgId);
       const member = await service.get(memberId);
 
       const startDate1 = new Date();
-      startDate1.setDate(startDate1.getDate() - 15);
+      startDate1.setDate(startDate1.getDate() - (queryDaysLimit.getMembersAppointments + 1));
       // create a `scheduled` appointment for the member (and primary user)
       await generateAppointment({
         memberId,
@@ -711,7 +712,7 @@ describe('MemberService', () => {
       });
 
       const startDate2 = new Date();
-      startDate2.setDate(startDate2.getDate() - 10);
+      startDate2.setDate(startDate2.getDate() - (queryDaysLimit.getMembersAppointments - 1));
       await generateAppointment({
         memberId,
         userId: member.primaryUserId.toString(),
