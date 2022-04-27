@@ -5,6 +5,7 @@
     "iris": "apps/iris",
     "irisClient": "libs/irisClient",
     "poseidon": "apps/poseidon",
+    "poseidonClient": "libs/poseidonClient",
     "clinicalEngine": "apps/clinicalEngine",
     "pandora": "libs/pandora",
     "cmd": "libs/cmd"
