@@ -2,7 +2,7 @@ import { formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import { articlesByDrg } from 'config';
+import { articlesByDrg, queryDaysLimit } from 'config';
 import { add, differenceInMilliseconds, sub } from 'date-fns';
 import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
@@ -264,7 +264,7 @@ export class MemberService extends BaseService {
 
   async getMembersAppointments(orgId?: string): Promise<AppointmentCompose[]> {
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 14);
+    startDate.setDate(startDate.getDate() - queryDaysLimit.getMembersAppointments);
 
     return this.memberModel.aggregate([
       {

@@ -18,6 +18,8 @@ import {
   AvailabilityService,
 } from '../../src/availability';
 import { ErrorType, Errors, LoggerService, defaultTimestampsDbValues } from '../../src/common';
+import { queryDaysLimit } from 'config';
+
 import { User, UserDocument, UserDto } from '../../src/user';
 
 describe('AvailabilityService', () => {
@@ -142,6 +144,28 @@ describe('AvailabilityService', () => {
     it('should not take longer than 0.5 seconds to fetch availabilities', async () => {
       await service.get();
     }, 500);
+
+    // eslint-disable-next-line max-len
+    it(`should not include availabilities older that ${queryDaysLimit.getAvailabilities} days ago`, async () => {
+      const user = await modelUser.create(generateCreateUserParams());
+
+      const startDate1 = new Date();
+      startDate1.setDate(startDate1.getDate() - (queryDaysLimit.getAvailabilities + 1));
+
+      const startDate2 = new Date();
+      startDate2.setDate(startDate2.getDate() - (queryDaysLimit.getAvailabilities - 1));
+      const params = [
+        generateAvailabilityInput({ start: startDate1 }),
+        generateAvailabilityInput({ start: startDate2 }),
+      ];
+      await service.create(params, user.id);
+
+      const allResult = await service.get();
+
+      const filtered = allResult.filter((result) => result.userId.toString() === user.id);
+      expect(filtered.length).toEqual(1);
+      expect(filtered[0]).toEqual(expect.objectContaining({ start: startDate2 }));
+    });
   });
 
   describe('delete', () => {

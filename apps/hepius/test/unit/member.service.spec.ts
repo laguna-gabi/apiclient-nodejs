@@ -8,7 +8,7 @@ import {
   mockProcessWarnings,
 } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import { articlesByDrg } from 'config';
+import { articlesByDrg, queryDaysLimit } from 'config';
 import { add, sub } from 'date-fns';
 import { address, datatype, date, internet, lorem, name } from 'faker';
 import { isNil, omitBy, pickBy } from 'lodash';
@@ -695,13 +695,14 @@ describe('MemberService', () => {
       expect(isSorted).toBeTruthy();
     });
 
-    it('should not include appointments older that 14 days ago', async () => {
+    // eslint-disable-next-line max-len
+    it(`should not include appointments older that ${queryDaysLimit.getMembersAppointments} days ago`, async () => {
       const orgId = await generateOrg();
       const memberId = await generateMember(orgId);
       const member = await service.get(memberId);
 
       const startDate1 = new Date();
-      startDate1.setDate(startDate1.getDate() - 15);
+      startDate1.setDate(startDate1.getDate() - (queryDaysLimit.getMembersAppointments + 1));
       // create a `scheduled` appointment for the member (and primary user)
       await generateAppointment({
         memberId,
@@ -711,7 +712,7 @@ describe('MemberService', () => {
       });
 
       const startDate2 = new Date();
-      startDate2.setDate(startDate2.getDate() - 10);
+      startDate2.setDate(startDate2.getDate() - (queryDaysLimit.getMembersAppointments - 1));
       await generateAppointment({
         memberId,
         userId: member.primaryUserId.toString(),
