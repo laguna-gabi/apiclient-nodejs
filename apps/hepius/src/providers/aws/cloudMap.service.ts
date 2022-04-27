@@ -1,12 +1,12 @@
 import { formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
-import * as AWS from 'aws-sdk';
+import { ServiceDiscovery } from 'aws-sdk';
 import { aws } from 'config';
 import { LoggerService } from '../../common';
 
 @Injectable()
 export class CloudMapService {
-  private readonly serviceDiscovery = new AWS.ServiceDiscovery({
+  private readonly serviceDiscovery = new ServiceDiscovery({
     region: aws.region,
   });
 

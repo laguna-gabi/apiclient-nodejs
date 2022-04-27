@@ -2,7 +2,7 @@ import { Categories, JournalCustomKey, NotifyCustomKey } from '@argus/irisClient
 import { Environments, NotificationType, mockLogger } from '@argus/pandora';
 import { HttpService } from '@nestjs/axios';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import * as AWS from 'aws-sdk';
+import { SecretsManager } from 'aws-sdk';
 import { aws } from 'config';
 import { lorem } from 'faker';
 import { existsSync, unlinkSync } from 'fs';
@@ -32,7 +32,7 @@ describe(`live: ${SendBird.name}`, () => {
   const userId = 'test1';
 
   beforeAll(async () => {
-    const secretsManager = new AWS.SecretsManager({ region: aws.region });
+    const secretsManager = new SecretsManager({ region: aws.region });
     const result = await secretsManager.getSecretValue({ SecretId: Environments.test }).promise();
     const data = JSON.parse(result.SecretString);
 

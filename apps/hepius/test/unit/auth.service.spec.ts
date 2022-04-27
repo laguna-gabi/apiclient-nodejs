@@ -1,7 +1,7 @@
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Request } from 'express';
-import * as jwt from 'jsonwebtoken';
+import { sign } from 'jsonwebtoken';
 import { dbDisconnect, defaultModules, mockGenerateMember, mockGenerateUser } from '..';
 import { AuthModule, AuthService, UserSecurityService } from '../../src/auth';
 import { LoggerService } from '../../src/common';
@@ -40,7 +40,7 @@ describe('AuthService', () => {
     });
 
     it('to return anonymous when authorization header is missing sub', async () => {
-      const token = jwt.sign({ email: 'john@doe.com' }, 'my-secret');
+      const token = sign({ email: 'john@doe.com' }, 'my-secret');
 
       expect(
         await service.validateUser({ headers: { authorization: `Bearer ${token}` } } as Request),
@@ -49,7 +49,7 @@ describe('AuthService', () => {
 
     /* eslint-disable-next-line max-len */
     it('to return a user when authorization header has a valid sub associated with a user', async () => {
-      const token = jwt.sign({ email: 'john@doe.com', sub: 'my-sub' }, 'my-secret');
+      const token = sign({ email: 'john@doe.com', sub: 'my-sub' }, 'my-secret');
 
       const spyOnSecurityService = jest.spyOn(securityService, 'getUserByAuthId');
 
@@ -69,7 +69,7 @@ describe('AuthService', () => {
 
     /* eslint-disable-next-line max-len */
     it('to return a member when authorization header has a valid sub associated with a member', async () => {
-      const token = jwt.sign({ email: 'john@doe.com', sub: 'my-sub' }, 'my-secret');
+      const token = sign({ email: 'john@doe.com', sub: 'my-sub' }, 'my-secret');
 
       const spyOnSecurityServiceGetUser = jest.spyOn(securityService, 'getUserByAuthId');
       const spyOnSecurityServiceGetMember = jest.spyOn(securityService, 'getMemberByAuthId');
@@ -92,7 +92,7 @@ describe('AuthService', () => {
 
     /* eslint-disable-next-line max-len */
     it('to return anonymous when authorization header has a sub which is NOT associated with either a member or a user', async () => {
-      const token = jwt.sign({ email: 'john@doe.com', sub: 'my-sub' }, 'my-secret');
+      const token = sign({ email: 'john@doe.com', sub: 'my-sub' }, 'my-secret');
 
       const spyOnSecurityServiceGetUser = jest.spyOn(securityService, 'getUserByAuthId');
       const spyOnSecurityServiceGetMember = jest.spyOn(securityService, 'getMemberByAuthId');

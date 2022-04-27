@@ -6,7 +6,7 @@ import { add } from 'date-fns';
 import { datatype, date, lorem, system } from 'faker';
 import { appendFileSync, readdirSync, unlinkSync } from 'fs';
 import { Model } from 'mongoose';
-import * as path from 'path';
+import { join } from 'path';
 import { dbDisconnect, defaultModules } from '../.';
 import { Changelog, ChangelogDocument, MigrationModule, MigrationService } from '../../cmd';
 import { delay } from '../../src/common';
@@ -187,7 +187,7 @@ describe('Commands: MigrationService', () => {
     afterAll(async () => {
       // Delete our test migration files
       testMigrationDir.forEach((file) => {
-        unlinkSync(path.join(process.cwd(), migration.get('migrationDir'), file));
+        unlinkSync(join(process.cwd(), migration.get('migrationDir'), file));
       });
     });
 

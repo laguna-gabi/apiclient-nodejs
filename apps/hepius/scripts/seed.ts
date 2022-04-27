@@ -1,6 +1,6 @@
 import { generateZipCode } from '@argus/pandora';
 import { date, internet, lorem } from 'faker';
-import * as jwt from 'jsonwebtoken';
+import { sign } from 'jsonwebtoken';
 import { model } from 'mongoose';
 import { createSeedBarriers, seedCarePlans, seedRedFlags } from '../cmd/static/seedCare';
 import {
@@ -127,7 +127,7 @@ export async function seed() {
   //we need to wait a while for the register of group chat to be finished.
   await delay(4000);
 
-  const signed = jwt.sign({ username: member.deviceId, sub: member.authId }, 'key-123');
+  const signed = sign({ username: member.deviceId, sub: member.authId }, 'key-123');
 
   console.debug(
     `If you wish to call getMember this header should be added:\n` +
@@ -270,7 +270,7 @@ const createUser = async (roles: UserRole[], userText: string): Promise<Identifi
       roles,
     }),
   });
-  const token = jwt.sign({ username: user.id, sub: user.authId }, 'key-123');
+  const token = sign({ username: user.id, sub: user.authId }, 'key-123');
   console.log(`${user.id} : ${userText} of type ${roles} - valid token: ${token}`);
 
   return { id: user.id };

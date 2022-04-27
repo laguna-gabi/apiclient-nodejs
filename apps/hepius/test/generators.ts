@@ -30,7 +30,7 @@ import {
   random,
   system,
 } from 'faker';
-import * as jwt from 'jsonwebtoken';
+import { sign } from 'jsonwebtoken';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import {
@@ -1265,7 +1265,7 @@ export const mockGenerateQuestionnaireResponse = ({
   };
 };
 export const generateRequestHeaders = (authId: string) => {
-  return { Authorization: jwt.sign({ sub: authId }, 'secret') };
+  return { Authorization: sign({ sub: authId }, 'secret') };
 };
 
 /*************************************************************************************************

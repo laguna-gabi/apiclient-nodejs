@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Request } from 'express';
-import * as jwt from 'jsonwebtoken';
+import { decode } from 'jsonwebtoken';
 import { UserSecurityService } from '.';
 import { bearerToken } from '../common';
 
@@ -14,7 +14,7 @@ export class AuthService {
       return {};
     }
 
-    const decodedToken = jwt.decode(authorizationHeader);
+    const decodedToken = decode(authorizationHeader);
 
     if (typeof decodedToken === 'object' && decodedToken?.sub) {
       const user = await this.userSecurityService.getUserByAuthId(decodedToken.sub);

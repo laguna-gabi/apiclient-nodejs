@@ -1,5 +1,11 @@
 import { Language, Platform } from '@argus/pandora';
-import { RecordingType, StorageType, momentFormats, reformatDate } from '../../src/common';
+import { Injectable } from '@nestjs/common';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { add, differenceInDays, differenceInSeconds, differenceInYears } from 'date-fns';
+import { writeFile, writeFileSync } from 'fs';
+import { json2csv } from 'json-2-csv';
+import { omit } from 'lodash';
+import { Connection, Model, Types } from 'mongoose';
 import {
   AnalyticsData,
   AnalyticsDataAggregate,
@@ -22,9 +28,8 @@ import {
   SheetOption,
   SummaryFileSuffix,
 } from '.';
-import { add, differenceInDays, differenceInSeconds, differenceInYears } from 'date-fns';
-import { Injectable } from '@nestjs/common';
 import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
+import { RecordingType, StorageType, momentFormats, reformatDate } from '../../src/common';
 import {
   Caregiver,
   CaregiverDocument,
@@ -33,19 +38,14 @@ import {
   MemberService,
   Recording,
 } from '../../src/member';
-import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Connection, Model, Types } from 'mongoose';
 import { StorageService } from '../../src/providers';
-import { User, UserDocument } from '../../src/user';
-import * as fs from 'fs';
-import { json2csv } from 'json-2-csv';
-import { omit } from 'lodash';
 import {
   Questionnaire,
   QuestionnaireDocument,
   QuestionnaireResponse,
   QuestionnaireResponseDocument,
 } from '../../src/questionnaire';
+import { User, UserDocument } from '../../src/user';
 
 @Injectable()
 export class AnalyticsService {
@@ -686,7 +686,7 @@ export class AnalyticsService {
         if (err) {
           throw err;
         } else {
-          fs.writeFileSync(
+          writeFileSync(
             `${outFileName}/${timestamp}.${sheetName}.${
               process.env.NODE_ENV ? process.env.NODE_ENV : 'test'
             }.csv`,
@@ -704,7 +704,7 @@ export class AnalyticsService {
     timestamp: number,
     data: AnalyticsDataAggregate[],
   ) {
-    fs.writeFile(
+    writeFile(
       `${outFileName}/${timestamp}.${sheetName}.${
         process.env.NODE_ENV ? process.env.NODE_ENV : 'test'
       }.json`,

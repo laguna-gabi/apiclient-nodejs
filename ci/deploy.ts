@@ -1,9 +1,9 @@
 process.env.AWS_REGION = 'us-east-1'; // set a global default AWS_REGION
 
-import * as aws from 'aws-sdk';
-import * as core from '@actions/core';
-import { DescribeTaskDefinitionResponse, TaskDefinition } from 'aws-sdk/clients/ecs';
+import { debug, error, info, warning } from '@actions/core';
 import { IncomingWebhook } from '@slack/webhook';
+import { DescribeTaskDefinitionResponse, TaskDefinition } from 'aws-sdk/clients/ecs';
+import { ECS, config } from 'aws-sdk';
 import { execSync } from 'child_process';
 
 const DEFAULT_CLUSTER = `hepius`;
@@ -34,13 +34,13 @@ const IGNORED_TASK_DEFINITION_ATTRIBUTES = [
 ];
 
 function logAndThrow(message: string) {
-  core.error(message);
+  error(message);
   throw new Error(message);
 }
 
 // Deploy to a service that uses the 'ECS' deployment controller
 async function updateEcsService(
-  ecs: aws.ECS,
+  ecs: ECS,
   clusterName: string,
   service: string,
   taskDefArn: string,
@@ -57,14 +57,14 @@ async function updateEcsService(
     })
     .promise();
 
-  core.info(
+  info(
     // eslint-disable-next-line max-len
-    `Deployment started. Watch this deployment's progress in the Amazon ECS console: https://console.aws.amazon.com/ecs/home?region=${aws.config.region}#/clusters/${clusterName}/services/${service}/events`,
+    `Deployment started. Watch this deployment's progress in the Amazon ECS console: https://console.aws.amazon.com/ecs/home?region=${config.region}#/clusters/${clusterName}/services/${service}/events`,
   );
 
   // Wait for service stability
   if (waitForService) {
-    core.info(`Waiting for the service to become stable. Will wait for ${waitForMinutes} minutes`);
+    info(`Waiting for the service to become stable. Will wait for ${waitForMinutes} minutes`);
     const maxAttempts = (waitForMinutes * 60) / WAIT_DEFAULT_DELAY_SEC;
     await ecs
       .waitFor('servicesStable', {
@@ -77,14 +77,14 @@ async function updateEcsService(
       })
       .promise();
   } else {
-    core.info('Not waiting for the service to become stable');
+    info('Not waiting for the service to become stable');
   }
 }
 
 function removeIgnoredAttributes(taskDef) {
   for (const attribute of IGNORED_TASK_DEFINITION_ATTRIBUTES) {
     if (taskDef[attribute]) {
-      core.debug(
+      debug(
         `Ignoring property '${attribute}' in the task definition file. ` +
           // eslint-disable-next-line max-len
           'This property is returned by the Amazon ECS DescribeTaskDefinition API and may be shown in the ECS console, ' +
@@ -135,7 +135,7 @@ function validateProxyConfigurations(taskDef) {
 }
 
 export async function deployTaskDefinition(
-  awsClient: aws.ECS,
+  awsClient: ECS,
   taskDefinition: TaskDefinition,
   service: string,
   cluster: string,
@@ -152,9 +152,9 @@ export async function deployTaskDefinition(
     try {
       registerResponse = await awsClient.registerTaskDefinition(taskDefContents).promise();
     } catch (error) {
-      core.error('Failed to register task definition in ECS: ' + error.message);
-      core.info('Task definition contents:');
-      core.info(JSON.stringify(taskDefContents, undefined, 4));
+      error('Failed to register task definition in ECS: ' + error.message);
+      info('Task definition contents:');
+      info(JSON.stringify(taskDefContents, undefined, 4));
       throw error;
     }
     const taskDefArn = registerResponse.taskDefinition.taskDefinitionArn;
@@ -198,7 +198,7 @@ export async function deployTaskDefinition(
         );
       }
     } else {
-      core.warning('Service was not specified, no service updated');
+      warning('Service was not specified, no service updated');
     }
   } catch (error) {
     throw new Error(
@@ -210,11 +210,11 @@ export async function deployTaskDefinition(
 // Description: read (describe) task definition, update a new image name and
 // register a new (updated) task definition
 const renderTaskDefinition = async (
-  awsClient: aws.ECS,
+  awsClient: ECS,
   taskDefinition: string,
   imageName: string,
   appName: string,
-): Promise<aws.ECS.TaskDefinition> => {
+): Promise<ECS.TaskDefinition> => {
   const describeTaskResponse: DescribeTaskDefinitionResponse = await awsClient
     .describeTaskDefinition({
       taskDefinition,
@@ -291,7 +291,7 @@ const deploy = async () => {
   const clusterName = `cluster-${DEFAULT_CLUSTER}-${process.env.GITHUB_REF_NAME}`;
 
   try {
-    core.info(
+    info(
       `\u001b[38;5;6mStart building image (${imageName}:${process.env.GITHUB_SHA}) for app ${appName}`,
     );
     execSync(
@@ -300,7 +300,7 @@ const deploy = async () => {
         ` --build-arg GIT_COMMIT=${process.env.GITHUB_SHA} --build-arg NODE_ENV=${nodeEnv}`,
     );
 
-    core.info(`\u001b[38;5;6mTagging and pushing image to registry...`);
+    info(`\u001b[38;5;6mTagging and pushing image to registry...`);
     execSync(`docker tag ${imageName}:${process.env.GITHUB_SHA} ${imageName}:latest`);
     execSync(`docker push ${imageName}:${process.env.GITHUB_SHA}`);
     execSync(`docker push ${imageName}:latest`);
@@ -308,11 +308,11 @@ const deploy = async () => {
     logAndThrow(`failed to build and push docker images for ${appName} application. got ${ex}`);
   }
 
-  const awsClient = new aws.ECS({
+  const awsClient = new ECS({
     customUserAgent: 'amazon-ecs-deploy-task-definition-for-github-actions',
   });
 
-  core.info(`\u001b[38;5;6mStart rendering task definition (name: ${taskDefinitionName})...`);
+  info(`\u001b[38;5;6mStart rendering task definition (name: ${taskDefinitionName})...`);
   let taskDefinition;
   try {
     taskDefinition = await renderTaskDefinition(awsClient, taskDefinitionName, imageName, appName);
@@ -320,7 +320,7 @@ const deploy = async () => {
     logAndThrow(`failed to render task definition. got: ${ex}`);
   }
 
-  core.info(
+  info(
     `\u001b[38;5;6mStart deploying task definition (name: ${taskDefinitionName}) for service (name: ${serviceName}) using cluster (name: ${clusterName})...`,
   );
 

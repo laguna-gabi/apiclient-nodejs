@@ -1,6 +1,6 @@
 import { generatePhone, mockLogger } from '@argus/pandora';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import * as AWS from 'aws-sdk';
+import { CognitoIdentityServiceProvider } from 'aws-sdk';
 import { AdminGetUserResponse } from 'aws-sdk/clients/cognitoidentityserviceprovider';
 import { aws } from 'config';
 import { name } from 'faker';
@@ -12,7 +12,7 @@ import { CognitoService } from '../../src/providers';
 describe('live: cognito', () => {
   let cognitoService: CognitoService;
 
-  const cognito = new AWS.CognitoIdentityServiceProvider({
+  const cognito = new CognitoIdentityServiceProvider({
     region: aws.region,
     apiVersion: '2016-04-18',
   });

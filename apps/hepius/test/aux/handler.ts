@@ -6,7 +6,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { Test, TestingModule } from '@nestjs/testing';
 import { datatype, lorem } from 'faker';
 import { GraphQLClient } from 'graphql-request';
-import * as jwt from 'jsonwebtoken';
+import { sign } from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import { Consumer } from 'sqs-consumer';
 import { v4 } from 'uuid';
@@ -341,6 +341,6 @@ export const initClients = async (
   }
 
   return {
-    Authorization: jwt.sign({ sub }, 'secret'),
+    Authorization: sign({ sub }, 'secret'),
   };
 };

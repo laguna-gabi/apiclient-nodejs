@@ -8,7 +8,7 @@ import {
 import { CancelNotificationType, NotificationType, formatEx } from '@argus/pandora';
 import { graphql } from 'config';
 import { format } from 'date-fns';
-import * as jwt from 'jsonwebtoken';
+import { decode } from 'jsonwebtoken';
 import { Model, Types } from 'mongoose';
 import { v4 } from 'uuid';
 import { IEventDeleteMember, LoggerService } from '.';
@@ -49,7 +49,7 @@ export function extractEmbeddedSetObject(object, prop: string): SetObject {
 
 export const extractAuthorizationHeader = (context) => {
   const authorizationHeader = context.req?.headers?.authorization?.replace('Bearer ', '');
-  return jwt.decode(authorizationHeader);
+  return decode(authorizationHeader);
 };
 
 export const delay = async (milliseconds: number) => {

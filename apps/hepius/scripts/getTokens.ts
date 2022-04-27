@@ -1,5 +1,5 @@
 import { Environments } from '@argus/pandora';
-import * as jwt from 'jsonwebtoken';
+import { sign } from 'jsonwebtoken';
 import { Model, connect, disconnect, model } from 'mongoose';
 import { v4 } from 'uuid';
 import { Member, MemberDocument, MemberDto } from '../src/member';
@@ -37,7 +37,7 @@ export async function getTokens() {
     return {
       id: member._id,
       authId: member.authId,
-      token: jwt.sign({ sub: member.authId }, 'key-123'),
+      token: sign({ sub: member.authId }, 'key-123'),
     };
   });
   console.log(
@@ -53,7 +53,7 @@ export async function getTokens() {
     return {
       id: user._id,
       authId: user.authId,
-      token: jwt.sign({ sub: user.authId }, 'key-123'),
+      token: sign({ sub: user.authId }, 'key-123'),
     };
   });
   console.log(

@@ -1,5 +1,13 @@
-import { ConfigsService, ExternalConfigs, StorageService } from '../../src/providers';
-import * as fs from 'fs';
+import {
+  Environments,
+  EventType,
+  IEventNotifySlack,
+  SlackChannel,
+  SlackIcon,
+} from '@argus/pandora';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { analytics } from 'config';
+import { existsSync, mkdirSync, unlinkSync } from 'fs';
 import { Command, CommandRunner, Option } from 'nest-commander';
 import { DataSource, QueryRunner } from 'typeorm';
 import {
@@ -16,16 +24,8 @@ import {
   QuestionnaireResponseData,
   SheetOption,
 } from '.';
-import { analytics } from 'config';
-import {
-  Environments,
-  EventType,
-  IEventNotifySlack,
-  SlackChannel,
-  SlackIcon,
-} from '@argus/pandora';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { delay } from '../../src/common';
+import { ConfigsService, ExternalConfigs, StorageService } from '../../src/providers';
 import * as Importer from './importer/mysql-import';
 import { CaregiverData, CaregiverTable, QuestionnaireResponseTable } from './index';
 
@@ -125,8 +125,8 @@ export class AnalyticsCommand implements CommandRunner {
       }
 
       // create directory structure for outputs if needed
-      if (!fs.existsSync(outFileName)) {
-        fs.mkdirSync(outFileName, { recursive: true });
+      if (!existsSync(outFileName)) {
+        mkdirSync(outFileName, { recursive: true });
       }
 
       /***************************** Aggregate Data for Analytics  ********************************/
@@ -285,7 +285,7 @@ export class AnalyticsCommand implements CommandRunner {
         './tmp.sql',
       );
       await importer.import('./tmp.sql');
-      fs.unlinkSync('./tmp.sql');
+      unlinkSync('./tmp.sql');
     } catch (err) {
       console.error(`${AnalyticsCommand.name}: error: got: ${err.message} (${err.stack})`);
       criticalError = err;

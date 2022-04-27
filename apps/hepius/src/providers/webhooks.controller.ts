@@ -14,7 +14,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import * as crypto from 'crypto';
+import { createHmac } from 'crypto';
 import { SendBird, TwilioService } from '.';
 import {
   EventType,
@@ -97,8 +97,7 @@ export class WebhooksController {
   validateMessageSentFromSendbird(@Body() payload, @Headers() headers) {
     const signature = headers['x-sendbird-signature'];
 
-    const hash = crypto
-      .createHmac('sha256', this.sendbirdService.getMasterAppToken())
+    const hash = createHmac('sha256', this.sendbirdService.getMasterAppToken())
       .update(payload.toString())
       .digest('hex');
 

@@ -1,13 +1,12 @@
 import { Environments, formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
-import * as AWS from 'aws-sdk';
 import { CognitoIdentityServiceProvider } from 'aws-sdk';
 import { aws } from 'config';
 import { LoggerService } from '../../common';
 
 @Injectable()
 export class CognitoService {
-  private readonly cognito = new AWS.CognitoIdentityServiceProvider({
+  private readonly cognito = new CognitoIdentityServiceProvider({
     region: aws.region,
     apiVersion: '2016-04-18',
   });

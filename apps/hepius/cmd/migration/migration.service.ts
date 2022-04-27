@@ -1,13 +1,13 @@
-import * as path from 'path';
-import * as fs from 'fs';
-import * as Table from 'cli-table3';
-import { find, now, values } from 'lodash';
 import { Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Changelog, ChangelogDocument, Command, InfoColoring, Item } from '.';
-import { Connection, Model } from 'mongoose';
+import * as Table from 'cli-table3';
 import { migration } from 'config';
 import { format } from 'date-fns';
+import { appendFileSync, copyFileSync, readdirSync } from 'fs';
+import { find, now, values } from 'lodash';
+import { Connection, Model } from 'mongoose';
+import { basename, extname, join } from 'path';
+import { Changelog, ChangelogDocument, Command, InfoColoring, Item } from '.';
 import * as migrationFiles from './scripts';
 
 @Injectable()
@@ -32,14 +32,14 @@ export class MigrationService {
   }
 
   async getMigrationFiles() {
-    const files = fs.readdirSync(path.join(process.cwd(), migration.get('migrationDir')));
+    const files = readdirSync(join(process.cwd(), migration.get('migrationDir')));
 
     return files
       .filter(
         (file) =>
-          path.extname(file) === migration.get('extension') &&
-          path.basename(file) !== migration.get('sample') + migration.get('extension') &&
-          path.basename(file) !== migration.get('index') + migration.get('extension'),
+          extname(file) === migration.get('extension') &&
+          basename(file) !== migration.get('sample') + migration.get('extension') &&
+          basename(file) !== migration.get('index') + migration.get('extension'),
       )
       .sort();
   }
@@ -69,7 +69,7 @@ export class MigrationService {
 
   // Description: migrate `create` - generate a new migration file from sample
   create(description: string): string {
-    const source = path.join(
+    const source = join(
       process.cwd(),
       migration.get('migrationDir'),
       migration.get('sample') + migration.get('extension'),
@@ -79,19 +79,19 @@ export class MigrationService {
     const suffix = description.split(' ').join('_');
 
     const filename = `${timestamp}-${suffix}${migration.get('extension')}`;
-    const destination = path.join(process.cwd(), migration.get('migrationDir'), filename);
-    fs.copyFileSync(source, destination);
+    const destination = join(process.cwd(), migration.get('migrationDir'), filename);
+    copyFileSync(source, destination);
 
     // export new migration in index file:
-    const index = path.join(process.cwd(), migration.get('migrationDir'), 'index.ts');
-    fs.appendFileSync(index, `export * as m${timestamp} from './${timestamp}-${suffix}';\n`);
+    const index = join(process.cwd(), migration.get('migrationDir'), 'index.ts');
+    appendFileSync(index, `export * as m${timestamp} from './${timestamp}-${suffix}';\n`);
 
     return filename;
   }
 
   // Description: migrate `up` - run all pending migration files (sorted by datetime)
   async up(dryRun?: boolean, fileName?: string): Promise<void> {
-    if (fileName && path.extname(fileName) !== migration.get('extension')) {
+    if (fileName && extname(fileName) !== migration.get('extension')) {
       throw new Error('invalid file name - invalid extension');
     }
     const items = await this.getStatusItems();

@@ -1,6 +1,5 @@
 import { general } from 'config';
 import { addDays, addHours } from 'date-fns';
-import * as faker from 'faker';
 import { date as fakerDate, lorem } from 'faker';
 import { Types } from 'mongoose';
 import * as request from 'supertest';
@@ -752,7 +751,7 @@ describe('Integration tests : Audit', () => {
       });
       const barrierId = memberBarriers[0].id;
 
-      const customDescription = faker.lorem.words(4);
+      const customDescription = lorem.words(4);
       const createCarePlanParams: CreateCarePlanParams = generateCreateCarePlanParams({
         memberId,
         barrierId,

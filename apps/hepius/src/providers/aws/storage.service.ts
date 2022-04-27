@@ -1,9 +1,9 @@
 import { Environments, formatEx } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import * as AWS from 'aws-sdk';
+import { S3 } from 'aws-sdk';
 import { aws, hosts } from 'config';
-import * as fs from 'fs';
+import { writeFileSync } from 'fs';
 import * as sharp from 'sharp';
 import { ConfigsService, ExternalConfigs } from '.';
 import {
@@ -17,7 +17,7 @@ import {
 } from '../../common';
 @Injectable()
 export class StorageService implements OnModuleInit {
-  private readonly s3 = new AWS.S3({
+  private readonly s3 = new S3({
     signatureVersion: 'v4',
     apiVersion: '2006-03-01',
     region: aws.region,
@@ -120,7 +120,7 @@ export class StorageService implements OnModuleInit {
     const Bucket = this.bucket;
     const Key = `public/${storageType}/${memberId}/${id}`;
     const UploadId = uploadId;
-    const listPartsParams: AWS.S3.Types.ListPartsRequest = {
+    const listPartsParams: S3.Types.ListPartsRequest = {
       Bucket,
       Key,
       UploadId,
@@ -128,7 +128,7 @@ export class StorageService implements OnModuleInit {
     const partsList = await this.s3.listParts(listPartsParams).promise();
     const Parts = partsList.Parts.map((part) => ({ ETag: part.ETag, PartNumber: part.PartNumber }));
 
-    const params: AWS.S3.Types.CompleteMultipartUploadRequest = {
+    const params: S3.Types.CompleteMultipartUploadRequest = {
       ...listPartsParams,
       MultipartUpload: {
         Parts,
@@ -216,7 +216,7 @@ export class StorageService implements OnModuleInit {
       })
       .promise();
 
-    fs.writeFileSync(localDest, data.Body.toString());
+    writeFileSync(localDest, data.Body.toString());
   }
 
   private async emptyDirectory(dir) {

@@ -1,12 +1,11 @@
 import { Environments, Platform, mockLogger } from '@argus/pandora';
-import * as AWS from 'aws-sdk';
+import { S3 } from 'aws-sdk';
 import axios from 'axios';
 import { aws, hosts, services } from 'config';
-import * as crypto from 'crypto';
+import { createHash } from 'crypto';
 import { EventEmitter2 } from 'eventemitter2';
 import { lorem } from 'faker';
-import * as fs from 'fs';
-import { readFileSync } from 'fs';
+import { readFileSync, unlinkSync } from 'fs';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 import { LoggerService, StorageType } from '../../src/common';
 import { CloudMapService, ConfigsService, StorageService } from '../../src/providers';
@@ -38,7 +37,7 @@ describe('live: aws', () => {
       await storageService.handleNewMember({ member, user, platform: Platform.android });
 
       // create a local storage for testing
-      localStorage = new AWS.S3({
+      localStorage = new S3({
         signatureVersion: 'v4',
         apiVersion: '2006-03-01',
         region: aws.region,
@@ -72,7 +71,7 @@ describe('live: aws', () => {
       const filename = `lagunaIcon.png`;
       const fileContent = readFileSync(`./apps/hepius/test/live/mocks/${filename}`);
 
-      const refHash = crypto.createHash('md5').update(fileContent.toString(), 'utf8').digest('hex');
+      const refHash = createHash('md5').update(fileContent.toString(), 'utf8').digest('hex');
 
       const params = {
         Bucket: `test-bucket`,
@@ -85,10 +84,10 @@ describe('live: aws', () => {
       await storageService.downloadFile(`test-bucket`, filename, filename);
 
       expect(
-        crypto.createHash('md5').update(fs.readFileSync(filename).toString(), 'utf8').digest('hex'),
+        createHash('md5').update(readFileSync(filename).toString(), 'utf8').digest('hex'),
       ).toEqual(refHash);
 
-      fs.unlinkSync(filename);
+      unlinkSync(filename);
     });
 
     test.each(Object.values(StorageType))(
