@@ -38,9 +38,13 @@
     }
   },
   "services": {
-    "notification": {
+    "iris": {
       "port": 3001,
       "taskName": "iris"
+    },
+    "hepius": {
+      "port": 3000,
+      "taskName": "hepius"
     },
     "timeout": 2000,
     "retries": 3

@@ -375,15 +375,15 @@ describe('live: aws', () => {
     });
 
     it('should be able to find a service by name', async () => {
-      const service = await cloudMapService.discoverInstance(services.notification.taskName);
+      const service = await cloudMapService.discoverInstance(services.iris.taskName);
       expect(service).toBeTruthy();
     });
 
     it('should throw an exception id service is not found', async () => {
       await expect(
-        cloudMapService.discoverInstance(services.notification.taskName + `+invalid`),
+        cloudMapService.discoverInstance(services.iris.taskName + `+invalid`),
       ).rejects.toThrow(
-        new Error(`could not find instance ${services.notification.taskName + `+invalid`}`),
+        new Error(`could not find instance ${services.iris.taskName + `+invalid`}`),
       );
     });
   });

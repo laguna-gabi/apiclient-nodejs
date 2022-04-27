@@ -1,7 +1,7 @@
 import { internalLogs } from '@argus/pandora';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
-import { general } from 'config';
+import { general, services } from 'config';
 import { AppModule } from './app.module';
 import { GlobalAuthGuard, RolesGuard } from './auth';
 import {
@@ -29,7 +29,7 @@ async function bootstrap() {
 
   process.env.TZ = general.get('timezone');
 
-  await app.listen(3000);
+  await app.listen(services.hepius.port);
 
   logger.info(
     { lastCommit: internalLogs.lastCommit.replace('@hash@', process.env.COMMIT_SHA) },

@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { dbDisconnect, defaultModules, generateId, mockGenerateDispatch } from '..';
 import { LoggerService } from '../../src/common';
 import { NotificationService, ServiceModule } from '../../src/services';
+import { services } from 'config';
 
 describe('NotificationService', () => {
   let module: TestingModule;
@@ -55,7 +56,7 @@ describe('NotificationService', () => {
       ]);
       expect(spyOnHttpServiceGet).toBeCalledTimes(1);
       expect(spyOnHttpServiceGet).toBeCalledWith(
-        `http://localhost:3001/dispatches/${senderClientId}`,
+        `http://localhost:${services.iris.port}/dispatches/${senderClientId}`,
         {
           params: { projection: 'field1,field2', status: 'done' },
           timeout: 2000,
@@ -77,7 +78,7 @@ describe('NotificationService', () => {
 
       expect(spyOnHttpServiceGet).toBeCalledTimes(1);
       expect(spyOnHttpServiceGet).toBeCalledWith(
-        `http://localhost:3001/dispatches/${senderClientId}`,
+        `http://localhost:${services.iris.port}/dispatches/${senderClientId}`,
         {
           params: { projection: 'field1,field2', status: 'done' },
           timeout: 2000,
@@ -101,7 +102,7 @@ describe('NotificationService', () => {
       expect(spyOnHttpServiceGet).toBeCalledTimes(4);
       expect(spyOnServiceOnModuleInit).toBeCalledTimes(3);
       expect(spyOnHttpServiceGet).toBeCalledWith(
-        `http://localhost:3001/dispatches/${senderClientId}`,
+        `http://localhost:${services.iris.port}/dispatches/${senderClientId}`,
         {
           params: { projection: 'field1,field2', status: 'done' },
           timeout: 2000,

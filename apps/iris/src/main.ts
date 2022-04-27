@@ -1,7 +1,7 @@
 import { internalLogs } from '@argus/pandora';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { general } from 'config';
+import { general, services } from 'config';
 import { AppModule } from './app.module';
 import { LoggerService } from './common';
 
@@ -20,7 +20,7 @@ async function bootstrap() {
 
   const logger = app.get(LoggerService);
 
-  await app.listen(3001);
+  await app.listen(services.iris.port);
 
   logger.info(
     { lastCommit: internalLogs.lastCommit.replace('@hash@', process.env.COMMIT_SHA) },

@@ -18,8 +18,10 @@ export class NotificationService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     this.namespace =
       !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? `http://localhost:${services.notification.port}`
-        : `http://${await this.configsService.getConfig(ExternalConfigs.host.iris)}`;
+        ? `http://localhost:${services.iris.port}`
+        : `http://${await this.configsService.getConfig(ExternalConfigs.host.iris)}:${
+            services.iris.port
+          }`;
   }
 
   async getDispatchesByClientSenderId(
