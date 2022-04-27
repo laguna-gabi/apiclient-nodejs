@@ -1,7 +1,7 @@
 import {
   BaseLogger,
-  EventType,
   FailureReason,
+  GlobalEventType,
   ServiceName,
   SlackChannel,
   SlackIcon,
@@ -51,7 +51,7 @@ export class LoggerService extends BaseLogger {
   error(params = {}, className: string, methodName: string, failureReason?: FailureReason): void {
     const log = super.error(params, className, methodName, failureReason);
 
-    this.eventEmitter.emit(EventType.notifySlack, {
+    this.eventEmitter.emit(GlobalEventType.notifySlack, {
       message: log,
       icon: SlackIcon.critical,
       channel: SlackChannel.notifications,

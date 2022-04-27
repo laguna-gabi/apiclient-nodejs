@@ -10,6 +10,7 @@ import {
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
   MemberAdmission,
+  MultipartUploadInfo,
   MultipartUploadRecordingLinkParams,
   RecordingLinkParams,
 } from '../../src/member';
@@ -370,7 +371,7 @@ export class Queries {
     multipartUploadRecordingLinkParams?: MultipartUploadRecordingLinkParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
-  } = {}): Promise<string> => {
+  } = {}): Promise<MultipartUploadInfo> => {
     const { getMemberMultipartUploadRecordingLink } = await this.client
       .request(
         gql`

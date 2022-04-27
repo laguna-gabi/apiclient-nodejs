@@ -1,6 +1,6 @@
 import { AlertInternalKey, ExternalKey, generateDispatchId } from '@argus/irisClient';
 import {
-  EventType as GlobalEventType,
+  GlobalEventType,
   IEventNotifySlack,
   NotificationType,
   Platform,
@@ -924,15 +924,19 @@ describe('MemberResolver', () => {
 
     it('should get a member multipart upload recording link', async () => {
       const member = mockGenerateMember();
+      const user = mockGenerateUser();
       spyOnServiceGet.mockImplementationOnce(async () => member);
       spyOnStorageComplete.mockImplementation(async () => true);
 
       const id = generateId();
-      await resolver.completeMultipartUpload({
-        id,
-        memberId: member.id,
-        uploadId: 'SOME_ID',
-      });
+      await resolver.completeMultipartUpload(
+        {
+          id,
+          memberId: member.id,
+          uploadId: 'SOME_ID',
+        },
+        user.id,
+      );
 
       expect(spyOnServiceGet).toBeCalledTimes(1);
       expect(spyOnServiceGet).toBeCalledWith(member.id);
@@ -942,20 +946,6 @@ describe('MemberResolver', () => {
         id,
         uploadId: 'SOME_ID',
       });
-    });
-
-    it('should throw exception on a non valid member', async () => {
-      spyOnServiceGet.mockImplementationOnce(async () => {
-        throw Error(Errors.get(ErrorType.memberNotFound));
-      });
-
-      await expect(
-        resolver.completeMultipartUpload({
-          id: generateId(),
-          memberId: generateId(),
-          uploadId: 'SOME_ID',
-        }),
-      ).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
     });
   });
 

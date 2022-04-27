@@ -1,6 +1,6 @@
 import { ClientCategory, IUpdateClientSettings, InnerQueueTypes } from '@argus/irisClient';
 import {
-  EventType as GlobalEventType,
+  GlobalEventType,
   Language,
   QueueType,
   mockLogger,

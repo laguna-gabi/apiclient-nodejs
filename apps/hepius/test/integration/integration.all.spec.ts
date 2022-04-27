@@ -1,5 +1,5 @@
 import { AppointmentInternalKey, LogInternalKey } from '@argus/irisClient';
-import { EventType as GlobalEventType, Language, Platform } from '@argus/pandora';
+import { GlobalEventType, Language, Platform } from '@argus/pandora';
 import { articlesByDrg, general, hosts } from 'config';
 import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
 import { date, lorem } from 'faker';

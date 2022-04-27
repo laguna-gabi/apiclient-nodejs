@@ -2,7 +2,7 @@ import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nes
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { AuditType, Client, Environments, EventType, QueueType } from '@argus/pandora';
+import { AuditType, Client, Environments, GlobalEventType, QueueType } from '@argus/pandora';
 import { IEventNotifyQueue, LoggerService } from '.';
 import { GqlExecutionContext } from '@nestjs/graphql';
 
@@ -44,7 +44,7 @@ export class LoggingInterceptor implements NestInterceptor {
 
     const message = this.logger.formatAuditMessage(type, params, methodName, client?.authId);
     const eventParams: IEventNotifyQueue = { type: QueueType.audit, message };
-    this.eventEmitter.emit(EventType.notifyQueue, eventParams);
+    this.eventEmitter.emit(GlobalEventType.notifyQueue, eventParams);
 
     const now = Date.now();
     return next

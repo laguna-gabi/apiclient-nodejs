@@ -240,6 +240,8 @@ export class Handler extends BaseHandler {
     this.storage.spyOnStorageDownload.mockReset();
     this.storage.spyOnStorageUpload.mockReset();
     this.storage.spyOnStorageHandleNewMember.mockReset();
+    this.storage.spyOnStorageMultipartUpload.mockReset();
+    this.storage.spyOnStorageCompleteMultipartUpload.mockReset();
     this.twilioService.spyOnTwilioGetToken.mockReset();
     this.twilioService.spyOnTwilioValidateWebhook.mockReset();
     this.slackBot.spyOnSlackBotSendMessage.mockReset();

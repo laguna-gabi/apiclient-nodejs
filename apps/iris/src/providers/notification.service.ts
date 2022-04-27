@@ -8,7 +8,7 @@ import {
   RegisterInternalKey,
   TodoInternalKey,
 } from '@argus/irisClient';
-import { AuditType, EventType, NotificationType, Platform, QueueType } from '@argus/pandora';
+import { AuditType, GlobalEventType, NotificationType, Platform, QueueType } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { gapMinutes, hosts } from 'config';
@@ -263,7 +263,7 @@ export class NotificationsService {
 
   private logAudit(payload, method: string) {
     const message = this.logger.formatAuditMessage(AuditType.message, payload, method);
-    this.eventEmitter.emit(EventType.notifyQueue, { type: QueueType.audit, message });
+    this.eventEmitter.emit(GlobalEventType.notifyQueue, { type: QueueType.audit, message });
   }
 
   private getClientInitials(client: ClientSettings): string {

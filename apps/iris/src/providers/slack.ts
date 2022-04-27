@@ -1,4 +1,4 @@
-import { BaseSlack, EventType, IEventNotifySlack } from '@argus/pandora';
+import { BaseSlack, GlobalEventType, IEventNotifySlack } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { IncomingWebhook } from '@slack/webhook';
@@ -17,7 +17,7 @@ export class Slack extends BaseSlack implements OnModuleInit {
     this.webhook = new IncomingWebhook(url);
   }
 
-  @OnEvent(EventType.notifySlack, { async: true })
+  @OnEvent(GlobalEventType.notifySlack, { async: true })
   async send(params: IEventNotifySlack) {
     return super.send({ ...params, channel: config.get(params.channel) });
   }

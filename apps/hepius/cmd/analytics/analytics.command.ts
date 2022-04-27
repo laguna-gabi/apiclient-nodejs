@@ -1,6 +1,6 @@
 import {
   Environments,
-  EventType,
+  GlobalEventType,
   IEventNotifySlack,
   SlackChannel,
   SlackIcon,
@@ -301,7 +301,7 @@ export class AnalyticsCommand implements CommandRunner {
         icon: criticalError ? SlackIcon.critical : SlackIcon.info,
         channel: SlackChannel.analyticsAutoLoader,
       };
-      this.eventEmitter.emit(EventType.notifySlack, eventSlackMessageParams);
+      this.eventEmitter.emit(GlobalEventType.notifySlack, eventSlackMessageParams);
       await delay(2000); // let the event settle before we exit
     }
 

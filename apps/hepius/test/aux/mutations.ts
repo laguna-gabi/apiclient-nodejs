@@ -1404,11 +1404,13 @@ export class Mutations {
     completeMultipartUploadParams,
     missingFieldError,
     invalidFieldsErrors,
+    requestHeaders = this.defaultUserRequestHeaders,
   }: {
     completeMultipartUploadParams?: CompleteMultipartUploadParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
-  }): Promise<string> => {
+    requestHeaders?;
+  }): Promise<boolean> => {
     const { completeMultipartUpload } = await this.client
       .request(
         gql`
@@ -1419,7 +1421,7 @@ export class Mutations {
           }
         `,
         { completeMultipartUploadParams },
-        this.defaultUserRequestHeaders,
+        requestHeaders,
       )
       .catch((ex) => {
         return isResultValid({

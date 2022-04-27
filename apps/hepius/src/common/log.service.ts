@@ -1,7 +1,7 @@
 import {
   BaseLogger,
-  EventType,
   FailureReason,
+  GlobalEventType,
   IEventNotifySlack,
   ServiceName,
   SlackChannel,
@@ -102,6 +102,6 @@ export class LoggerService extends BaseLogger {
       icon: SlackIcon.critical,
       channel: SlackChannel.notifications,
     };
-    this.eventEmitter.emit(EventType.notifySlack, slackParams);
+    this.eventEmitter.emit(GlobalEventType.notifySlack, slackParams);
   }
 }

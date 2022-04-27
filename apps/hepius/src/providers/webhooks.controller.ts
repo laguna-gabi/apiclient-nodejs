@@ -1,9 +1,4 @@
-import {
-  EventType as GlobalEventType,
-  IEventNotifySlack,
-  SlackChannel,
-  SlackIcon,
-} from '@argus/pandora';
+import { GlobalEventType, IEventNotifySlack, SlackChannel, SlackIcon } from '@argus/pandora';
 import {
   Body,
   Controller,

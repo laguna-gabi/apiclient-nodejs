@@ -6,7 +6,7 @@ import {
   generateDispatchId,
 } from '@argus/irisClient';
 import {
-  EventType as GlobalEventType,
+  GlobalEventType,
   IEventNotifySlack,
   NotificationType,
   QueueType,

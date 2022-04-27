@@ -35,7 +35,7 @@ export enum AuditType {
   userReplaced = 'userReplaced',
 }
 
-export enum EventType {
+export enum GlobalEventType {
   notifySlack = 'notifySlack',
   notifyQueue = 'notifyQueue',
 }

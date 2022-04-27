@@ -1,6 +1,6 @@
 import {
   Environments,
-  EventType as GlobalEventType,
+  GlobalEventType,
   IEventNotifySlack,
   SlackChannel,
   SlackIcon,

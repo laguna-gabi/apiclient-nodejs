@@ -1,4 +1,4 @@
-import { Environments, EventType, QueueType, ServiceName, formatEx } from '@argus/pandora';
+import { Environments, GlobalEventType, QueueType, ServiceName, formatEx } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { SQS } from 'aws-sdk';
@@ -68,7 +68,7 @@ export class QueueService implements OnModuleInit {
     this.consumer.start();
   }
 
-  @OnEvent(EventType.notifyQueue, { async: true })
+  @OnEvent(GlobalEventType.notifyQueue, { async: true })
   async sendMessage(params: { type: QueueType; message: string }) {
     if (params.type === QueueType.audit && process.env.NODE_ENV !== Environments.production) {
       //audit log only exists in production

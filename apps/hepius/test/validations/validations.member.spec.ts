@@ -76,7 +76,7 @@ describe('Validations - member', () => {
 
   const checkNoneExistingMemberAndWrongMemberID = <T>(
     title: string,
-    getFunction: () => (props: T) => Promise<string>,
+    getFunction: () => (props: T) => Promise<unknown>,
     getMainInput: (memberId: string) => T,
   ) => {
     describe(title, () => {
