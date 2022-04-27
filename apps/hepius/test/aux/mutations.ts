@@ -2012,6 +2012,7 @@ export class Mutations {
           mutation changeMemberAdmission($changeAdmissionParams: ChangeAdmissionParams!) {
             changeMemberAdmission(changeAdmissionParams: $changeAdmissionParams) {
               diagnoses {
+                id
                 icdCode
                 description
               }
@@ -2054,7 +2055,8 @@ export class Mutations {
                 id
                 text
               }
-              dietary {
+              dietaries {
+                id
                 text
                 bmi
               }

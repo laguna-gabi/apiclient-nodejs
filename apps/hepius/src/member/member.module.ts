@@ -13,6 +13,8 @@ import {
   ControlMemberDto,
   Diagnosis,
   DiagnosisDto,
+  Dietary,
+  DietaryDto,
   DismissedAlert,
   DismissedAlertDto,
   ExternalAppointment,
@@ -71,6 +73,7 @@ import { UserModule } from '../user';
       { name: ExternalAppointment.name, schema: ExternalAppointmentDto },
       { name: Activity.name, schema: ActivityDto },
       { name: WoundCare.name, schema: WoundCareDto },
+      { name: Dietary.name, schema: DietaryDto },
       { name: MemberAdmission.name, schema: MemberAdmissionDto },
     ]),
     MongooseModule.forFeatureAsync([

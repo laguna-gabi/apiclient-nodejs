@@ -14,20 +14,16 @@ export enum ProcedureType {
 }
 registerEnumType(ProcedureType, { name: 'ProcedureType' });
 
-export enum SingleValueAdmissionCategory {
-  dietary = 'dietary',
-}
-registerEnumType(SingleValueAdmissionCategory, { name: 'SingleValueAdmissionCategory' });
-
-export enum RefAdmissionCategory {
+export enum AdmissionCategory {
   diagnoses = 'diagnoses',
   procedures = 'procedures',
   medications = 'medications',
   externalAppointments = 'externalAppointments',
   activities = 'activities',
   woundCares = 'woundCares',
+  dietaries = 'dietaries',
 }
-registerEnumType(RefAdmissionCategory, { name: 'RefAdmissionCategory' });
+registerEnumType(AdmissionCategory, { name: 'AdmissionCategory' });
 
 /**************************************************************************************************
  ************************************* Schemas for gql methods ************************************
@@ -176,10 +172,13 @@ export class WoundCare extends BaseAdmission {
 
 @ObjectType()
 @InputType('DietaryInput')
-export class Dietary {
+@Schema({ versionKey: false, timestamps: true })
+export class Dietary extends BaseAdmission {
+  @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
   text?: string;
 
+  @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
   bmi?: string;
 }
@@ -230,6 +229,12 @@ export class ChangeAdmissionWoundCareParams extends WoundCare {
 }
 
 @InputType()
+export class ChangeAdmissionDietaryParams extends Dietary {
+  @Field(() => ChangeType)
+  changeType: ChangeType;
+}
+
+@InputType()
 export class ChangeAdmissionParams {
   @Field()
   memberId: string;
@@ -252,8 +257,8 @@ export class ChangeAdmissionParams {
   @Field(() => ChangeAdmissionWoundCareParams, { nullable: true })
   woundCare?: ChangeAdmissionWoundCareParams;
 
-  @Field(() => Dietary, { nullable: true })
-  dietary?: Dietary;
+  @Field(() => ChangeAdmissionDietaryParams, { nullable: true })
+  dietary?: ChangeAdmissionDietaryParams;
 }
 
 /**************************************************************************************************
@@ -289,9 +294,9 @@ export class MemberAdmission extends Identifier {
   @Field(() => [WoundCare], { nullable: true })
   woundCares?: WoundCare[];
 
-  @Prop({ type: Dietary, isNaN: true })
-  @Field(() => Dietary, { nullable: true })
-  dietary?: Dietary;
+  @Prop({ type: [{ type: Types.ObjectId, ref: Dietary.name }], isNaN: true })
+  @Field(() => [Dietary], { nullable: true })
+  dietaries?: Dietary[];
 }
 
 /**************************************************************************************************
@@ -332,4 +337,9 @@ export const ActivityDto = audit(
 export type WoundCareDocument = WoundCare & Document & ISoftDelete<WoundCare>;
 export const WoundCareDto = audit(
   SchemaFactory.createForClass(WoundCare).plugin(mongooseDelete, useFactoryOptions),
+);
+
+export type DietaryDocument = Dietary & Document & ISoftDelete<Dietary>;
+export const DietaryDto = audit(
+  SchemaFactory.createForClass(Dietary).plugin(mongooseDelete, useFactoryOptions),
 );

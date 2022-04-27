@@ -81,6 +81,7 @@ import {
   Caregiver,
   ChangeAdmissionActivityParams,
   ChangeAdmissionDiagnosisParams,
+  ChangeAdmissionDietaryParams,
   ChangeAdmissionExternalAppointmentParams,
   ChangeAdmissionMedicationParams,
   ChangeAdmissionProcedureParams,
@@ -89,7 +90,6 @@ import {
   CreateTaskParams,
   DeleteDischargeDocumentParams,
   DeleteMemberParams,
-  Dietary,
   DischargeDocumentType,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
@@ -1384,8 +1384,20 @@ export const generateAdmissionWoundCareParams = ({
   };
 };
 
-export const generateAdmissionDietaryParams = (): Dietary => {
-  return { text: lorem.sentence(), bmi: lorem.word() };
+export const generateAdmissionDietaryParams = ({
+  changeType,
+  id,
+}: {
+  changeType: ChangeType;
+  id?: string;
+}): ChangeAdmissionDietaryParams => {
+  const attachIdParam = id ? { id } : {};
+  return {
+    changeType,
+    ...attachIdParam,
+    text: lorem.sentence(),
+    bmi: lorem.word(),
+  };
 };
 
 /*************************************************************************************************

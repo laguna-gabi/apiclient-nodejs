@@ -2557,6 +2557,9 @@ describe('Integration tests: all', () => {
     const woundCares = [
       { id: createResult.woundCares[0].id, ...removeChangeType(createAdmissionParams.woundCare) },
     ];
+    const dietaries = [
+      { id: createResult.dietaries[0].id, ...removeChangeType(createAdmissionParams.dietary) },
+    ];
 
     expect(createResult).toEqual(
       expect.objectContaining({
@@ -2566,7 +2569,7 @@ describe('Integration tests: all', () => {
         externalAppointments,
         activities,
         woundCares,
-        dietary: createAdmissionParams.dietary,
+        dietaries,
       }),
     );
 
@@ -2603,7 +2606,7 @@ describe('Integration tests: all', () => {
         externalAppointments,
         activities,
         woundCares,
-        dietary: createAdmissionParams.dietary,
+        dietaries,
       }),
     );
   });
@@ -2709,6 +2712,7 @@ describe('Integration tests: all', () => {
     const createExternalAppointment = generateAdmissionExternalAppointmentParams({ changeType });
     const createActivity = generateAdmissionActivityParams({ changeType });
     const createWoundCare = generateAdmissionWoundCareParams({ changeType });
+    const createDietary = generateAdmissionDietaryParams({ changeType });
 
     const changeAdmissionParams: ChangeAdmissionParams = {
       memberId,
@@ -2718,7 +2722,7 @@ describe('Integration tests: all', () => {
       externalAppointment: createExternalAppointment,
       activity: createActivity,
       woundCare: createWoundCare,
-      dietary: generateAdmissionDietaryParams(),
+      dietary: createDietary,
     };
 
     const result = await handler.mutations.changeMemberAdmission({
