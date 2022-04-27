@@ -1,5 +1,6 @@
-import { DynamicFact } from './types';
+import { DynamicFact, EventType } from './types';
 import { DynamicFactCallback } from 'json-rules-engine';
+import { generateFactName } from './utils';
 
 export enum DynamicFacts {
   caregiversCount = 'caregiversCount',
@@ -31,12 +32,6 @@ export const dynamicFacts: DynamicFact[] = [
 ];
 
 export const updateNewBarriersFact: DynamicFactCallback = async (event, almanac) => {
-  const newBarriers = await almanac.factValue(DynamicFacts.newBarriers);
-  const updatedBarriers = newBarriers
-    ? // todo: remove when defining types
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      newBarriers.push(event.params.type)
-    : [event.params.type];
-  almanac.addRuntimeFact(DynamicFacts.newBarriers, updatedBarriers);
+  const factId = generateFactName(EventType.createBarrier, event.params.type, true);
+  await almanac.addRuntimeFact(factId, true);
 };

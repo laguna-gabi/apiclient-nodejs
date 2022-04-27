@@ -36,10 +36,23 @@ export interface EngineRule {
   onFailure?: EventHandler;
 }
 
+type Params = createCarePlanParams | createBarrierParams;
+
 export interface Event {
   type: EventType;
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
-  params?: Record<string, any>;
+  params?: Params;
+}
+
+export interface createBarrierParams {
+  // todo: change to object ID (barrier type)
+  type: string;
+}
+
+export interface createCarePlanParams {
+  // todo: change to object ID (barrier type)
+  type: string;
+  barrierType: string;
 }
 
 interface ConditionProperties {
@@ -70,4 +83,11 @@ export interface MemberInfo {
   appointmentsToBeScheduled: number;
   livesAlone: boolean;
   nested: { example: number };
+}
+
+// todo: get the real statuses from common
+export enum BarrierStatus {
+  active,
+  overcome,
+  suspended,
 }

@@ -6,11 +6,14 @@ import engineFactory, {
   RuleProperties,
 } from 'json-rules-engine';
 import { dynamicFacts, updateNewBarriersFact } from './facts';
-import { DynamicFact, EngineRule, Priority } from './types';
+import { DynamicFact, EngineRule, MemberFacts, Priority } from './types';
 import { engineRules } from './rules';
+import { LoggerService } from '../common';
 
 @Injectable()
 export class RulesService implements OnModuleInit {
+  constructor(private logger: LoggerService) {}
+
   private engine: Engine;
 
   async onModuleInit() {
@@ -29,8 +32,10 @@ export class RulesService implements OnModuleInit {
     await this.loadDynamicFacts(dynamicFacts);
   }
 
-  async run(facts): Promise<EngineResult> {
-    return this.engine.run(facts);
+  async run(facts: MemberFacts): Promise<EngineResult> {
+    const engineResult = await this.engine.run(facts);
+    this.logger.info({ events: engineResult.events }, RulesService.name, this.run.name);
+    return engineResult;
   }
 
   /*************************************************************************************************

@@ -1,5 +1,6 @@
 import { EngineRule, EventType, Operator } from './types';
 import { DynamicFacts } from './facts';
+import { generateFactName } from './utils';
 
 interface ClinicalEngineRules {
   barriers: EngineRule[];
@@ -7,6 +8,31 @@ interface ClinicalEngineRules {
 }
 
 const barrierRules: EngineRule[] = [
+  {
+    name: 'loneliness',
+    active: true,
+    conditions: {
+      any: [
+        {
+          fact: 'memberInfo',
+          operator: Operator.equal,
+          value: true,
+          path: '$.livesAlone',
+        },
+        {
+          fact: DynamicFacts.caregiversCount,
+          operator: Operator.lessThan,
+          value: 2,
+        },
+      ],
+    },
+    event: {
+      type: EventType.createBarrier,
+      params: {
+        type: 'loneliness',
+      },
+    },
+  },
   {
     name: 'appointment-follow-up-unclear',
     active: true,
@@ -40,7 +66,7 @@ const barrierRules: EngineRule[] = [
     },
   },
   {
-    name: 'loneliness',
+    name: 'loneliness2',
     active: true,
     conditions: {
       any: [
@@ -60,7 +86,7 @@ const barrierRules: EngineRule[] = [
     event: {
       type: EventType.createBarrier,
       params: {
-        type: 'loneliness',
+        type: 'loneliness2',
       },
     },
   },
@@ -73,9 +99,12 @@ const carePlanRules: EngineRule[] = [
     conditions: {
       all: [
         {
-          fact: DynamicFacts.newBarriers,
-          operator: Operator.contains,
-          value: 'loneliness',
+          // todo: figure out how to make it static
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          fact: generateFactName(EventType.createBarrier, 'loneliness', true),
+          operator: Operator.equal,
+          value: true,
         },
       ],
     },

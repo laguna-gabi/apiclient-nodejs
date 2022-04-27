@@ -9,7 +9,11 @@ const mockFactsObject: MemberFacts = {
     nested: { example: 1 },
   },
   caregivers: ['x', 'y'],
-  barriers: [{ type: 'appointment-follow-up-unclear' }, { type: 'loneliness' }],
+  barriers: [
+    { type: 'appointment-follow-up-unclear' },
+    { type: 'loneliness2' },
+    { type: 'not-satisfied' },
+  ],
 };
 
 @Injectable()
