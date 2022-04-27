@@ -17,13 +17,9 @@ import {
   AvailabilityModule,
   AvailabilityService,
 } from '../../src/availability';
-import {
-  ErrorType,
-  Errors,
-  LoggerService,
-  defaultTimestampsDbValues,
-  queryDaysLimit,
-} from '../../src/common';
+import { ErrorType, Errors, LoggerService, defaultTimestampsDbValues } from '../../src/common';
+import { queryDaysLimit } from 'config';
+
 import { User, UserDocument, UserDto } from '../../src/user';
 
 describe('AvailabilityService', () => {
@@ -149,7 +145,8 @@ describe('AvailabilityService', () => {
       await service.get();
     }, 500);
 
-    it('should not include availabilities older that X days ago', async () => {
+    // eslint-disable-next-line max-len
+    it(`should not include availabilities older that ${queryDaysLimit.getAvailabilities} days ago`, async () => {
       const user = await modelUser.create(generateCreateUserParams());
 
       const startDate1 = new Date();

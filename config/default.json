@@ -106,5 +106,9 @@
     "database": "laguna",
     "storage": "laguna-analytics",
     "dataEnrichmentKey": "scripts/data_enrichment.sql"
+  },
+  "queryDaysLimit": {
+    "getMembersAppointments": 14,
+    "getAvailabilities": 30
   }
 }

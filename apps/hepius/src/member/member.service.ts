@@ -2,7 +2,7 @@ import { formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import { articlesByDrg } from 'config';
+import { articlesByDrg, queryDaysLimit } from 'config';
 import { add, differenceInMilliseconds, sub } from 'date-fns';
 import { cloneDeep, isNil, omitBy } from 'lodash';
 import { Model, Types } from 'mongoose';
@@ -67,7 +67,6 @@ import {
   defaultTimestampsDbValues,
   deleteMemberObjects,
   extractEmbeddedSetObject,
-  queryDaysLimit,
 } from '../common';
 import { ISoftDelete } from '../db';
 import { Internationalization, StorageService } from '../providers';

@@ -8,7 +8,7 @@ import {
   mockProcessWarnings,
 } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import { articlesByDrg } from 'config';
+import { articlesByDrg, queryDaysLimit } from 'config';
 import { add, sub } from 'date-fns';
 import { address, datatype, date, internet, lorem, name } from 'faker';
 import { isNil, omitBy, pickBy } from 'lodash';
@@ -65,7 +65,6 @@ import {
   PhoneType,
   RecordingType,
   defaultTimestampsDbValues,
-  queryDaysLimit,
 } from '../../src/common';
 import { Audit } from '../../src/db';
 import {
@@ -696,7 +695,8 @@ describe('MemberService', () => {
       expect(isSorted).toBeTruthy();
     });
 
-    it('should not include appointments older that X days ago', async () => {
+    // eslint-disable-next-line max-len
+    it(`should not include appointments older that ${queryDaysLimit.getMembersAppointments} days ago`, async () => {
       const orgId = await generateOrg();
       const memberId = await generateMember(orgId);
       const member = await service.get(memberId);

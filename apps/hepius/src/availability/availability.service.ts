@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Availability, AvailabilityDocument, AvailabilityInput, AvailabilitySlot } from '.';
-import { ErrorType, Errors, Identifiers, queryDaysLimit } from '../common';
+import { ErrorType, Errors, Identifiers } from '../common';
+import { queryDaysLimit } from 'config';
 
 @Injectable()
 export class AvailabilityService {
