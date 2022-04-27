@@ -2519,7 +2519,38 @@ describe('Integration tests: all', () => {
     await graduate(false, spyOnCognitoServiceEnableClient, spyOnCognitoServiceDisableClient);
   });
 
-  it('should create, update and get member admission', async () => {
+  it('should create 2 member admissions and get them', async () => {
+    const { member } = await creators.createMemberUserAndOptionalOrg();
+
+    const { result: result1 } = await changeMemberAdmission(ChangeType.create, member.id);
+    const { result: result2 } = await changeMemberAdmission(ChangeType.create, member.id);
+
+    const memberAdmissions = await handler.queries.getMemberAdmissions({
+      memberId: member.id.toString(),
+    });
+
+    const checkInternals = {
+      diagnoses: expect.arrayContaining([
+        expect.objectContaining({ description: expect.any(String) }),
+      ]),
+      procedures: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
+      medications: expect.arrayContaining([expect.objectContaining({ name: expect.any(String) })]),
+      externalAppointments: expect.arrayContaining([
+        expect.objectContaining({ description: expect.any(String) }),
+      ]),
+      activities: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
+      woundCares: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
+      dietaries: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
+    };
+
+    expect(memberAdmissions.length).toEqual(2);
+    expect(memberAdmissions).toEqual([
+      expect.objectContaining({ id: result1.id, ...checkInternals }),
+      expect.objectContaining({ id: result2.id, ...checkInternals }),
+    ]);
+  });
+
+  it('should create and update member admission', async () => {
     const { member } = await creators.createMemberUserAndOptionalOrg();
 
     //create all admission params
@@ -2563,6 +2594,7 @@ describe('Integration tests: all', () => {
 
     expect(createResult).toEqual(
       expect.objectContaining({
+        id: createResult.id,
         diagnoses,
         procedures,
         medications,
@@ -2575,6 +2607,7 @@ describe('Integration tests: all', () => {
 
     //update/delete some admission params
     const changeAdmissionParams: ChangeAdmissionParams = {
+      id: createResult.id.toString(),
       memberId: member.id,
       procedure: generateAdmissionProcedureParams({
         changeType: ChangeType.update,
@@ -2600,6 +2633,7 @@ describe('Integration tests: all', () => {
 
     expect(changeResult).toEqual(
       expect.objectContaining({
+        id: createResult.id,
         diagnoses,
         procedures,
         medications: [],

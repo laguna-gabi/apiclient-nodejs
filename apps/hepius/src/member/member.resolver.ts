@@ -1408,19 +1408,17 @@ export class MemberResolver extends MemberBase {
     return this.memberAdmissionService.change(changeAdmissionParams);
   }
 
-  @Query(() => MemberAdmission)
-  @MemberIdParam(MemberIdParamType.id)
-  @UseInterceptors(MemberUserRouteInterceptor)
+  @Query(() => [MemberAdmission])
   @Roles(UserRole.coach, UserRole.nurse)
-  async getMemberAdmission(
+  async getMemberAdmissions(
     @Args(
-      'id',
-      { type: () => String, nullable: true },
+      'memberId',
+      { type: () => String, nullable: false },
       new IsValidObjectId(Errors.get(ErrorType.memberIdInvalid), { nullable: true }),
     )
-    id?: string,
+    memberId: string,
   ) {
-    return this.memberAdmissionService.get(id);
+    return this.memberAdmissionService.get(memberId);
   }
 
   /************************************************************************************************

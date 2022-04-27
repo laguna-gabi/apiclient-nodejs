@@ -26,6 +26,8 @@ import {
   MedicationDocument,
   MedicationDto,
   MemberAdmission,
+  MemberAdmissionDocument,
+  MemberAdmissionDto,
   MemberAdmissionService,
   MemberModule,
   Procedure,
@@ -58,6 +60,7 @@ describe(MemberAdmissionService.name, () => {
     { field: string; method; model?: typeof Model; errorNotFound?: ErrorType }
   > = new Map();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let memberAdmissionModel: Model<MemberAdmissionDocument & defaultTimestampsDbValues>;
   let diagnosisModel: Model<DiagnosisDocument & defaultTimestampsDbValues>;
   let procedureModel: Model<ProcedureDocument & defaultTimestampsDbValues>;
   let medicationModel: Model<MedicationDocument & defaultTimestampsDbValues>;
@@ -87,7 +90,7 @@ describe(MemberAdmissionService.name, () => {
   });
 
   test.each(Object.values(AdmissionCategory))(
-    'should create 2 %p for a member, and 1 for other member',
+    'should create 2 admissions entries with %p for a member, and 1 for other member',
     async (admissionCategory: AdmissionCategory) => {
       const { field, method, model } = mapAdmissionCategoryToParamField.get(admissionCategory);
 
@@ -96,27 +99,33 @@ describe(MemberAdmissionService.name, () => {
       const changeParams2 = method({ changeType: ChangeType.create });
 
       const memberId1 = generateId();
-      await change(field, changeParams1a, memberId1);
-      const res1 = await change(field, changeParams1b, memberId1);
+      const ad1a = await change(field, changeParams1a, memberId1);
+      const ad1b = await change(field, changeParams1b, memberId1);
 
       const memberId2 = generateId();
       const res2 = await change(field, changeParams2, memberId2);
 
-      const { _id: id1a } = await model.findById(new Types.ObjectId(res1[admissionCategory][0].id));
-      const { _id: id1b } = await model.findById(new Types.ObjectId(res1[admissionCategory][1].id));
+      const { _id: id1a } = await model.findById(new Types.ObjectId(ad1a[admissionCategory][0].id));
+      const { _id: id1b } = await model.findById(new Types.ObjectId(ad1b[admissionCategory][0].id));
       const { _id: id2 } = await model.findById(new Types.ObjectId(res2[admissionCategory][0].id));
 
-      expect(res1).toMatchObject({
+      expect(ad1a).toMatchObject({
         memberId: new Types.ObjectId(memberId1),
-        [`${admissionCategory}`]: [
-          { ...removeChangeType(changeParams1a), id: id1a },
-          { ...removeChangeType(changeParams1b), id: id1b },
-        ],
+        [`${admissionCategory}`]: [{ ...removeChangeType(changeParams1a), id: id1a }],
+      });
+      expect(ad1b).toMatchObject({
+        memberId: new Types.ObjectId(memberId1),
+        [`${admissionCategory}`]: [{ ...removeChangeType(changeParams1b), id: id1b }],
       });
       expect(res2).toMatchObject({
         memberId: new Types.ObjectId(memberId2),
         [`${admissionCategory}`]: [{ ...removeChangeType(changeParams2), id: id2 }],
       });
+
+      const count1 = await memberAdmissionModel.count({ memberId: new Types.ObjectId(memberId1) });
+      expect(count1).toEqual(2);
+      const count2 = await memberAdmissionModel.count({ memberId: new Types.ObjectId(memberId2) });
+      expect(count2).toEqual(1);
     },
   );
 
@@ -132,7 +141,7 @@ describe(MemberAdmissionService.name, () => {
       const { id } = await model.findById(new Types.ObjectId(result[admissionCategory][0].id));
 
       const changeParamsUpdate = method({ changeType: ChangeType.update, id });
-      result = await change(field, changeParamsUpdate, memberId);
+      result = await change(field, changeParamsUpdate, memberId, result.id.toString());
 
       expect(result).toMatchObject({
         memberId: new Types.ObjectId(memberId),
@@ -140,6 +149,9 @@ describe(MemberAdmissionService.name, () => {
           { ...removeChangeType(changeParamsUpdate), id: new Types.ObjectId(id) },
         ],
       });
+
+      const records = await memberAdmissionModel.count({ memberId: new Types.ObjectId(memberId) });
+      expect(records).toEqual(1);
     },
   );
 
@@ -157,6 +169,7 @@ describe(MemberAdmissionService.name, () => {
         field,
         method({ changeType: ChangeType.delete, id }),
         memberId,
+        result.id.toString(),
       );
       const afterDeleteResult = await model.findById(new Types.ObjectId(id));
       expect(afterDeleteResult).toBeNull();
@@ -240,7 +253,7 @@ describe(MemberAdmissionService.name, () => {
       const updateParams = method({ changeType: ChangeType.update, id });
       updateParams[key] = null;
 
-      await change(field, updateParams, memberId);
+      await change(field, updateParams, memberId, result.id.toString());
 
       const categoryRes = await model.findById(new Types.ObjectId(id));
       expect(categoryRes[key]).toEqual(createParams[key]);
@@ -280,23 +293,23 @@ describe(MemberAdmissionService.name, () => {
     expect(isTodo).toBeTruthy();
   });
 
-  it('should return all populated existing values on create', async () => {
+  it(`should return all populated existing values on ${ChangeType.create}`, async () => {
     const memberId = generateId();
-    await createAllCategories(memberId);
+    const createResult = await createAllCategories(memberId);
 
     //create another one and make sure it returns all the existing created values above
     const { field, method } = mapAdmissionCategoryToParamField.get(AdmissionCategory.procedures);
     const createParams = method({ changeType: ChangeType.create });
-    const result = await change(field, createParams, memberId);
+    const changeResult = await change(field, createParams, memberId, createResult.id);
 
-    expect(result[AdmissionCategory.procedures]).toEqual([
+    expect(changeResult[AdmissionCategory.procedures]).toEqual([
       expect.objectContaining({ date: expect.any(Date) }),
       expect.objectContaining({ date: expect.any(Date) }),
     ]);
-    checkAllCategories(result);
+    checkAllCategories(changeResult);
   });
 
-  it('should return all populated existing values on update', async () => {
+  it(`should return all populated existing values on ${ChangeType.update}`, async () => {
     const memberId = generateId();
     let result = await createAllCategories(memberId);
 
@@ -308,7 +321,7 @@ describe(MemberAdmissionService.name, () => {
       new Types.ObjectId(result[AdmissionCategory.procedures][0].id),
     );
     const updateParams = method({ changeType: ChangeType.update, id });
-    result = await change(field, updateParams, memberId);
+    result = await change(field, updateParams, memberId, result.id.toString());
 
     expect(result[AdmissionCategory.procedures]).toEqual([
       expect.objectContaining({ date: updateParams.date }),
@@ -316,7 +329,7 @@ describe(MemberAdmissionService.name, () => {
     checkAllCategories(result);
   });
 
-  it('should return all populated existing values on delete', async () => {
+  it(`should return all populated existing values on ${ChangeType.delete}`, async () => {
     const memberId = generateId();
     const result = await createAllCategories(memberId);
 
@@ -328,18 +341,20 @@ describe(MemberAdmissionService.name, () => {
       new Types.ObjectId(result[AdmissionCategory.procedures][0].id),
     );
     const deleteParams = method({ changeType: ChangeType.delete, id });
-    const deleteResult = await change(field, deleteParams, memberId);
+    const deleteResult = await change(field, deleteParams, memberId, result.id.toString());
 
     expect(deleteResult[AdmissionCategory.procedures]).toEqual([]);
     checkAllCategories(deleteResult);
   });
 
-  it('should return all populated existing values', async () => {
+  it('should return all 2 admissions for member with populated existing values', async () => {
     const memberId = generateId();
+    await createAllCategories(memberId);
     await createAllCategories(memberId);
 
     const getResult = await service.get(memberId);
-    checkAllCategories(getResult);
+    checkAllCategories(getResult[0]);
+    checkAllCategories(getResult[1]);
   });
 
   it('should throw error on member not found when calling getAdmission', async () => {
@@ -351,8 +366,8 @@ describe(MemberAdmissionService.name, () => {
     //create synchronous categories(test fails on unique mongodb error for field memberId on async Promise.all)
     for (const admissionCategory of Object.values(AdmissionCategory)) {
       const { field, method } = mapAdmissionCategoryToParamField.get(admissionCategory);
-      const createParams = method({ changeType: ChangeType.create });
-      result = await change(field, createParams, memberId);
+      const createParams1 = method({ changeType: ChangeType.create });
+      result = await change(field, createParams1, memberId, result?.id.toString());
     }
 
     return result;
@@ -376,11 +391,20 @@ describe(MemberAdmissionService.name, () => {
     ]);
   };
 
-  const change = async (field: string, params, memberId: string): Promise<MemberAdmission> => {
-    return service.change({ [`${field}`]: params, memberId });
+  const change = async (
+    field: string,
+    params,
+    memberId: string,
+    id?: string,
+  ): Promise<MemberAdmission> => {
+    return service.change({ [`${field}`]: params, memberId, id });
   };
 
   const initModels = () => {
+    memberAdmissionModel = model<MemberAdmissionDocument & defaultTimestampsDbValues>(
+      MemberAdmission.name,
+      MemberAdmissionDto,
+    );
     diagnosisModel = model<DiagnosisDocument & defaultTimestampsDbValues>(
       Diagnosis.name,
       DiagnosisDto,

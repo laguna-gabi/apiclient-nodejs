@@ -9,6 +9,7 @@ import {
   DischargeDocumentsLinks,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
+  MemberAdmission,
   MultipartUploadRecordingLinkParams,
   RecordingLinkParams,
 } from '../../src/member';
@@ -16,6 +17,7 @@ import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
 import { Dispatch } from '../../src/services';
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
 import { GetSlotsParams, UserSummary } from '../../src/user';
+import { FRAGMENT_MEMBER_ADMISSION } from './fragments';
 
 export class Queries {
   constructor(private readonly client: GraphQLClient, private readonly defaultUserRequestHeaders) {}
@@ -1383,5 +1385,36 @@ export class Queries {
     );
 
     return getRedFlagTypes;
+  };
+
+  getMemberAdmissions = async ({
+    memberId,
+    invalidFieldsError,
+    requestHeaders = this.defaultUserRequestHeaders,
+  }: {
+    memberId: string;
+    invalidFieldsError?: string;
+    requestHeaders?;
+  }): Promise<MemberAdmission[]> => {
+    const result = await this.client
+      .request(
+        gql`
+          query getMemberAdmissions($memberId: String!) {
+            getMemberAdmissions(memberId: $memberId) {
+              ...memberAdmissionFragment
+            }
+          }
+          ${FRAGMENT_MEMBER_ADMISSION}
+        `,
+        { memberId },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        console.log({ ex });
+        expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
+        return;
+      });
+
+    return result?.getMemberAdmissions;
   };
 }

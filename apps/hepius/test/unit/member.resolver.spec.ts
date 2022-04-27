@@ -2662,7 +2662,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberAdmission.mockResolvedValueOnce(undefined);
 
       const memberId = generateId();
-      await resolver.getMemberAdmission(memberId);
+      await resolver.getMemberAdmissions(memberId);
 
       expect(spyOnServiceGetMemberAdmission).toBeCalledWith(memberId);
     });

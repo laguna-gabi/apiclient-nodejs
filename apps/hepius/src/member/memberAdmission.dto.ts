@@ -239,6 +239,13 @@ export class ChangeAdmissionParams {
   @Field()
   memberId: string;
 
+  /**
+   * if id is provided, we're changing an existing admission entity.
+   * if id is NOT provided, we're creating a new admission entity.
+   */
+  @Field({ nullable: true })
+  id?: string;
+
   @Field(() => ChangeAdmissionDiagnosisParams, { nullable: true })
   diagnosis?: ChangeAdmissionDiagnosisParams;
 
@@ -267,7 +274,7 @@ export class ChangeAdmissionParams {
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class MemberAdmission extends Identifier {
-  @Prop({ type: Types.ObjectId, unique: true, index: true })
+  @Prop({ type: Types.ObjectId, index: true })
   memberId: Types.ObjectId;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: Diagnosis.name }], isNaN: true })

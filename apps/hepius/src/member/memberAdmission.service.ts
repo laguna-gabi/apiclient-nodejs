@@ -92,33 +92,42 @@ export class MemberAdmissionService extends BaseService {
     };
   }
 
-  async get(memberId: string): Promise<MemberAdmission> {
-    const result = await this.admissionModel.findOne({ memberId: new Types.ObjectId(memberId) });
-    if (!result) {
+  async get(memberId: string): Promise<MemberAdmission[]> {
+    const result = await this.admissionModel.find({ memberId: new Types.ObjectId(memberId) });
+    if (result.length === 0) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }
-    return this.populateAll(result);
+    return Promise.all(
+      result.map(async (item) => {
+        const populateAllRes = await this.populateAll(item);
+        return this.replaceId(this.replaceSubIds(populateAllRes));
+      }),
+    );
   }
 
   async change(changeAdmissionParams: ChangeAdmissionParams): Promise<MemberAdmission> {
     const setParams: ChangeAdmissionParams = omitBy(changeAdmissionParams, isNil);
     const { memberId } = changeAdmissionParams;
+    let { id } = changeAdmissionParams;
 
     let result;
     if (setParams.diagnosis) {
       const { changeType, ...diagnoses }: ChangeAdmissionDiagnosisParams = setParams.diagnosis;
       const admissionCategory = AdmissionCategory.diagnoses;
-      result = await this.changeInternal(diagnoses, changeType, admissionCategory, memberId);
+      result = await this.changeInternal(diagnoses, changeType, admissionCategory, memberId, id);
+      id = result._id.toString();
     }
     if (setParams.procedure) {
       const { changeType, ...procedure }: ChangeAdmissionProcedureParams = setParams.procedure;
       const admissionCategory = AdmissionCategory.procedures;
-      result = await this.changeInternal(procedure, changeType, admissionCategory, memberId);
+      result = await this.changeInternal(procedure, changeType, admissionCategory, memberId, id);
+      id = result._id.toString();
     }
     if (setParams.medication) {
       const { changeType, ...medication }: ChangeAdmissionMedicationParams = setParams.medication;
       const admissionCategory = AdmissionCategory.medications;
-      result = await this.changeInternal(medication, changeType, admissionCategory, memberId);
+      result = await this.changeInternal(medication, changeType, admissionCategory, memberId, id);
+      id = result._id.toString();
     }
     if (setParams.externalAppointment) {
       const { changeType, ...externalAppointment }: ChangeAdmissionExternalAppointmentParams =
@@ -129,25 +138,29 @@ export class MemberAdmissionService extends BaseService {
         changeType,
         admissionCategory,
         memberId,
+        id,
       );
+      id = result._id.toString();
     }
     if (setParams.activity) {
       const { changeType, ...activity }: ChangeAdmissionActivityParams = setParams.activity;
       const admissionCategory = AdmissionCategory.activities;
-      result = await this.changeInternal(activity, changeType, admissionCategory, memberId);
+      result = await this.changeInternal(activity, changeType, admissionCategory, memberId, id);
+      id = result._id.toString();
     }
     if (setParams.woundCare) {
       const { changeType, ...woundCare }: ChangeAdmissionWoundCareParams = setParams.woundCare;
       const admissionCategory = AdmissionCategory.woundCares;
-      result = await this.changeInternal(woundCare, changeType, admissionCategory, memberId);
+      result = await this.changeInternal(woundCare, changeType, admissionCategory, memberId, id);
+      id = result._id.toString();
     }
     if (setParams.dietary) {
       const { changeType, ...dietary }: ChangeAdmissionWoundCareParams = setParams.dietary;
       const admissionCategory = AdmissionCategory.dietaries;
-      result = await this.changeInternal(dietary, changeType, admissionCategory, memberId);
+      result = await this.changeInternal(dietary, changeType, admissionCategory, memberId, id);
     }
 
-    return this.replaceSubIds(result);
+    return this.replaceId(this.replaceSubIds(result));
   }
 
   /*************************************************************************************************
@@ -158,14 +171,15 @@ export class MemberAdmissionService extends BaseService {
     changeType: ChangeType,
     admissionCategory: AdmissionCategory,
     memberId: string,
+    id: string,
   ): Promise<MemberAdmission> {
     switch (changeType) {
       case ChangeType.create:
-        return this.createRefObjects(element, admissionCategory, memberId);
+        return this.createRefObjects(element, admissionCategory, memberId, id);
       case ChangeType.update:
-        return this.updateRefObjects(element, admissionCategory, memberId);
+        return this.updateRefObjects(element, admissionCategory, id);
       case ChangeType.delete:
-        return this.deleteRefObjects(element.id, admissionCategory, memberId);
+        return this.deleteRefObjects(element.id, admissionCategory, id);
     }
   }
 
@@ -173,22 +187,30 @@ export class MemberAdmissionService extends BaseService {
     element: BaseAdmission,
     admissionCategory: AdmissionCategory,
     memberId: string,
+    id?: string,
   ): Promise<MemberAdmission> {
     const internalValue: InternalValue = this.matchMap[admissionCategory];
     const { _id } = await internalValue.model.create(omitBy(element, isNil));
-    const addRes = await this.admissionModel.findOneAndUpdate(
-      { memberId: new Types.ObjectId(memberId) },
-      { $addToSet: { [`${admissionCategory}`]: _id } },
-      { upsert: true, new: true },
-    );
-
-    return this.populateAll(addRes);
+    if (id) {
+      const result = await this.admissionModel.findByIdAndUpdate(
+        new Types.ObjectId(id),
+        { $addToSet: { [`${admissionCategory}`]: _id } },
+        { upsert: false, new: true },
+      );
+      return this.populateAll(result);
+    } else {
+      const result = await this.admissionModel.create({
+        memberId: new Types.ObjectId(memberId),
+        [`${admissionCategory}`]: _id,
+      });
+      return this.populateAll(result);
+    }
   }
 
   private async updateRefObjects(
     element: BaseAdmission,
     admissionCategory: AdmissionCategory,
-    memberId: string,
+    id: string,
   ): Promise<MemberAdmission> {
     const internalValue: InternalValue = this.matchMap[admissionCategory];
     const result = await internalValue.model.findByIdAndUpdate(new Types.ObjectId(element.id), {
@@ -197,25 +219,25 @@ export class MemberAdmissionService extends BaseService {
     if (!result) {
       throw new Error(Errors.get(internalValue.errorType));
     }
-    const object = await this.admissionModel.findOne({ memberId: new Types.ObjectId(memberId) });
+    const object = await this.admissionModel.findById(new Types.ObjectId(id));
     return this.populateAll(object);
   }
 
   private async deleteRefObjects(
-    id: string,
+    internalId: string,
     admissionCategory: AdmissionCategory,
-    memberId: string,
+    id?: string,
   ): Promise<MemberAdmission> {
     const internalValue: InternalValue = this.matchMap[admissionCategory];
-    const deleteRes = await internalValue.model.findByIdAndDelete(new Types.ObjectId(id));
+    const deleteRes = await internalValue.model.findByIdAndDelete(new Types.ObjectId(internalId));
     if (!deleteRes) {
       throw new Error(Errors.get(internalValue.errorType));
     }
-    await internalValue.model.deleteOne({ _id: new Types.ObjectId(id) });
-    const removeRes = await this.admissionModel.findOneAndUpdate(
-      { memberId: new Types.ObjectId(memberId) },
-      { $pull: { [`${admissionCategory}`]: new Types.ObjectId(id) } },
-      { upsert: true, new: true },
+    await internalValue.model.deleteOne({ _id: new Types.ObjectId(internalId) });
+    const removeRes = await this.admissionModel.findByIdAndUpdate(
+      new Types.ObjectId(id),
+      { $pull: { [`${admissionCategory}`]: new Types.ObjectId(internalId) } },
+      { upsert: false, new: true },
     );
     return this.populateAll(removeRes);
   }
@@ -236,8 +258,6 @@ export class MemberAdmissionService extends BaseService {
    * {memberId, procedures: [{_id: "some_id"}]} will be {memberId, procedures: [{id: "some_id"}]}
    */
   private replaceSubIds(object) {
-    object = this.replaceId(object);
-
     Object.keys(object).map((key) => {
       if (object[key] instanceof Array) {
         object[key].map((item) => {
