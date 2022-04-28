@@ -11,6 +11,8 @@ import {
   AnalyticsDataAggregate,
   AppointmentAttendanceStatus,
   AppointmentsMemberData,
+  BarrierData,
+  BarrierTypeData,
   BaseMember,
   CaregiverData,
   CoachData,
@@ -46,6 +48,7 @@ import {
   QuestionnaireResponseDocument,
 } from '../../src/questionnaire';
 import { User, UserDocument } from '../../src/user';
+import { Barrier, BarrierDocument, BarrierType, BarrierTypeDocument } from '../../src/care';
 
 @Injectable()
 export class AnalyticsService {
@@ -63,6 +66,10 @@ export class AnalyticsService {
     private readonly questionnaireResponseModel: Model<QuestionnaireResponseDocument>,
     @InjectModel(Questionnaire.name)
     private readonly questionnaireModel: Model<QuestionnaireDocument>,
+    @InjectModel(Barrier.name)
+    private readonly barrierModel: Model<BarrierDocument>,
+    @InjectModel(BarrierType.name)
+    private readonly barrierTypeModel: Model<BarrierTypeDocument>,
   ) {}
 
   private userData: Map<string, string>;
@@ -272,6 +279,40 @@ export class AnalyticsService {
     }
 
     return qrDataSet;
+  }
+
+  async getBarrierTypesData(): Promise<BarrierTypeData[]> {
+    const barrierTypes: BarrierType[] = await this.barrierTypeModel.find();
+    return barrierTypes.map((input: BarrierType) => {
+      const barrierType = new BarrierTypeData();
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      barrierType.id = input._id.toString();
+      barrierType.description = input.description;
+      barrierType.domain = input.domain;
+      barrierType.carePlanTypes = input.carePlanTypes.map((item) => item.toString());
+      return barrierType;
+    });
+  }
+
+  async getBarriersData(): Promise<BarrierData[]> {
+    const barriers: Barrier[] = await this.barrierModel.find();
+
+    return barriers.map((input: Barrier) => {
+      const barrier = new BarrierData();
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      barrier.id = input._id.toString();
+      barrier.member_id = input.memberId.toString();
+      barrier.created = reformatDate(input.createdAt.toString(), momentFormats.mysqlDateTime);
+      barrier.updated = reformatDate(input.updatedAt.toString(), momentFormats.mysqlDateTime);
+      barrier.status = input.status;
+      barrier.notes = input.notes;
+      barrier.completed = reformatDate(input.completedAt?.toString(), momentFormats.mysqlDateTime);
+      barrier.type = input.type.toString();
+      barrier.redFlagId = input.redFlagId.toString();
+      return barrier;
+    });
   }
 
   async getCoachersDataAggregate(): Promise<CoachDataAggregate[]> {

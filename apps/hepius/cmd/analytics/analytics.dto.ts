@@ -23,6 +23,7 @@ import {
   Sex,
 } from '../../src/member';
 import { User } from '../../src/user';
+import { BarrierDomain, CareStatus } from '../../src/care';
 
 export const DefaultOutputDir = './outputs';
 export const HarmonyLink = hosts.harmony;
@@ -35,6 +36,8 @@ export const CoachTable = 'harmony_coach';
 export const CaregiverTable = 'harmony_caregiver';
 export const AppointmentTable = 'harmony_appts';
 export const QuestionnaireResponseTable = 'harmony_qrs';
+export const BarrierTable = 'harmony_barriers';
+export const BarrierTypeTable = 'harmony_barrier_types';
 
 export enum SheetOption {
   members = 'members',
@@ -42,6 +45,7 @@ export enum SheetOption {
   coachers = 'coachers',
   caregivers = 'caregivers',
   qrs = 'qrs',
+  barriers = 'barriers',
   all = 'all',
 }
 
@@ -336,6 +340,43 @@ export class AppointmentsMemberData {
   load_datetime?: Date;
   @UpdateDateColumn()
   last_modified_datetime?: Date;
+}
+
+export class BaseCare {
+  @PrimaryColumn('varchar', { length: 100 })
+  id: string;
+  @Column('varchar', { length: 50, name: 'member_id' })
+  member_id: string;
+  @Column('datetime')
+  created: string;
+  @Column('datetime')
+  updated: string;
+  @Column('varchar', { length: 50 })
+  status: CareStatus;
+  @Column('varchar', { length: 200, nullable: true })
+  notes: string;
+  @Column('datetime', { nullable: true })
+  completed: string;
+}
+
+@Entity({ name: BarrierTypeTable })
+export class BarrierTypeData {
+  @PrimaryColumn('varchar', { length: 100 })
+  id: string;
+  @Column('varchar', { length: 200 })
+  description: string;
+  @Column('varchar', { length: 20 })
+  domain: BarrierDomain;
+  @Column('simple-array')
+  carePlanTypes: string[];
+}
+
+@Entity({ name: BarrierTable })
+export class BarrierData extends BaseCare {
+  @Column('varchar', { length: 50 })
+  type: string;
+  @Column('varchar', { length: 50 })
+  redFlagId: string;
 }
 
 export type AnalyticsData = CoachData | MemberData | AppointmentsMemberData;

@@ -31,5 +31,6 @@ import { CommonModule } from '../common';
     ]),
   ],
   providers: [CareService, CareResolver],
+  exports: [MongooseModule],
 })
 export class CareModule {}

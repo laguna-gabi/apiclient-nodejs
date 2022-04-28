@@ -16,7 +16,7 @@ import {
   generateZipCode,
 } from '@argus/pandora';
 import { general, hosts } from 'config';
-import { add, format, sub } from 'date-fns';
+import { add, addDays, format, sub } from 'date-fns';
 import {
   company,
   datatype,
@@ -45,6 +45,7 @@ import {
 } from '../src/appointment';
 import { AvailabilityInput } from '../src/availability';
 import {
+  BarrierDomain,
   BaseCarePlanParams,
   CarePlanTypeInput,
   CareStatus,
@@ -1128,6 +1129,32 @@ export const generateCreateCarePlanParamsWizard = ({
     type,
     notes,
     dueDate,
+  };
+};
+
+export const mockDbBarrierType = () => {
+  return {
+    _id: generateObjectId(),
+    description: lorem.sentence(),
+    domain: BarrierDomain.emotional,
+    carePlanTypes: [generateObjectId(), generateObjectId()],
+  };
+};
+
+export const mockDbBarrier = () => {
+  const createdAt = fakerDate.past(1);
+  const updatedAt = addDays(createdAt, 1);
+
+  return {
+    _id: generateObjectId(),
+    memberId: generateObjectId(),
+    createdAt,
+    updatedAt,
+    status: CareStatus.active,
+    notes: lorem.words(),
+    completedAt: updatedAt,
+    type: generateObjectId(),
+    redFlagId: generateObjectId(),
   };
 };
 

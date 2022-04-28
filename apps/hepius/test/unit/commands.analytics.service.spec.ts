@@ -10,6 +10,8 @@ import {
   generateId,
   generateNotesParams,
   generateObjectId,
+  mockDbBarrier,
+  mockDbBarrierType,
   mockGenerateCaregiver,
   mockGenerateMember,
   mockGenerateMemberConfig,
@@ -33,6 +35,7 @@ import { Caregiver, MemberModule } from '../../src/member';
 import { ProvidersModule } from '../../src/providers';
 import { User, UserDocument, UserModule } from '../../src/user';
 import { QuestionnaireModule, QuestionnaireResponse } from '../../src/questionnaire';
+import { Barrier, BarrierType, CareModule } from '../../src/care';
 
 describe('Commands: AnalyticsService', () => {
   let module: TestingModule;
@@ -40,6 +43,8 @@ describe('Commands: AnalyticsService', () => {
   let userModel: Model<User>;
   let caregiverModel: Model<Caregiver>;
   let qrModel: Model<QuestionnaireResponse>;
+  let barrierTypesModel: Model<BarrierType>;
+  let barriersModel: Model<Barrier>;
 
   const now = new Date(Date.UTC(2021, 1, 2, 3, 4, 5));
 
@@ -64,6 +69,7 @@ describe('Commands: AnalyticsService', () => {
         QuestionnaireModule,
         ProvidersModule,
         AnalyticsModule,
+        CareModule,
       ),
       providers: [
         AnalyticsService,
@@ -78,6 +84,8 @@ describe('Commands: AnalyticsService', () => {
     userModel = module.get<Model<User>>(getModelToken(User.name));
     caregiverModel = module.get<Model<Caregiver>>(getModelToken(Caregiver.name));
     qrModel = module.get<Model<QuestionnaireResponse>>(getModelToken(QuestionnaireResponse.name));
+    barrierTypesModel = module.get<Model<BarrierType>>(getModelToken(BarrierType.name));
+    barriersModel = module.get<Model<Barrier>>(getModelToken(Barrier.name));
 
     // mock the user model to upload all actors (users) during init
     jest
@@ -796,6 +804,72 @@ describe('Commands: AnalyticsService', () => {
             questionnaire_id: questionnaireResponse.questionnaireId.toString(),
           }),
         ]),
+      );
+    });
+  });
+
+  describe('barriers', () => {
+    let barrierTypesModelSpy;
+    let barriersModelSpy;
+
+    beforeAll(async () => {
+      barrierTypesModelSpy = jest.spyOn(barrierTypesModel, 'find');
+      barriersModelSpy = jest.spyOn(barriersModel, 'find');
+    });
+
+    afterEach(() => {
+      barrierTypesModelSpy.mockReset();
+      barriersModelSpy.mockReset();
+    });
+
+    it('should return an empty list of barrier types data entries', async () => {
+      barrierTypesModelSpy.mockReturnValueOnce([]);
+      const data = await analyticsService.getBarrierTypesData();
+      expect(data).toEqual([]);
+    });
+
+    it('should return an empty list of barriers data entries', async () => {
+      barriersModelSpy.mockReturnValueOnce([]);
+      const data = await analyticsService.getBarriersData();
+      expect(data).toEqual([]);
+    });
+
+    it('should return non-empty barrier types data entries', async () => {
+      const barrierTypes = [mockDbBarrierType(), mockDbBarrierType()];
+      barrierTypesModelSpy.mockReturnValue(barrierTypes);
+      const data = await analyticsService.getBarrierTypesData();
+
+      expect(data).toEqual(
+        expect.arrayContaining(
+          barrierTypes.map((barrier) => ({
+            id: barrier._id.toString(),
+            description: barrier.description,
+            domain: barrier.domain,
+            carePlanTypes: barrier.carePlanTypes.map((item) => item.toString()),
+          })),
+        ),
+      );
+    });
+
+    it('should return non-empty barriers data entries', async () => {
+      const barriers = [mockDbBarrier(), mockDbBarrier()];
+      barriersModelSpy.mockReturnValue(barriers);
+      const data = await analyticsService.getBarriersData();
+
+      expect(data).toEqual(
+        expect.arrayContaining(
+          barriers.map((barrier) => ({
+            id: barrier._id.toString(),
+            member_id: barrier.memberId.toString(),
+            created: reformatDate(barrier.createdAt.toString(), momentFormats.mysqlDateTime),
+            updated: reformatDate(barrier.updatedAt.toString(), momentFormats.mysqlDateTime),
+            status: barrier.status,
+            notes: barrier.notes,
+            completed: reformatDate(barrier.completedAt?.toString(), momentFormats.mysqlDateTime),
+            type: barrier.type.toString(),
+            redFlagId: barrier.redFlagId.toString(),
+          })),
+        ),
       );
     });
   });

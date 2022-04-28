@@ -14,6 +14,10 @@ import {
   AnalyticsService,
   AppointmentTable,
   AppointmentsMemberData,
+  BarrierData,
+  BarrierTable,
+  BarrierTypeData,
+  BarrierTypeTable,
   CoachData,
   CoachDataAggregate,
   CoachTable,
@@ -78,6 +82,8 @@ export class AnalyticsCommand implements CommandRunner {
         MemberData,
         CaregiverData,
         QuestionnaireResponseData,
+        BarrierTypeData,
+        BarrierData,
       ],
       synchronize: true,
       logging: false,
@@ -276,6 +282,26 @@ export class AnalyticsCommand implements CommandRunner {
         await AppDataSource.manager.save(
           await this.analyticsService.getQuestionnaireResponseData(),
         );
+      }
+
+      if (options.sheet === SheetOption.barriers || options.sheet === SheetOption.all) {
+        console.debug(
+          '\n----------------------------------------------------------------\n' +
+            '------------------- Generating Barriers Data -------------------\n' +
+            '----------------------------------------------------------------',
+        );
+
+        const barrierTypesTable = await this.queryRunner.getTable(BarrierTypeTable);
+        if (barrierTypesTable) {
+          await this.queryRunner.clearTable(BarrierTypeTable);
+        }
+        await AppDataSource.manager.save(await this.analyticsService.getBarrierTypesData());
+
+        const barriersTable = await this.queryRunner.getTable(BarrierTable);
+        if (barriersTable) {
+          await this.queryRunner.clearTable(BarrierTable);
+        }
+        await AppDataSource.manager.save(await this.analyticsService.getBarriersData());
       }
 
       /***************************** Import Data Enrichment  **************************************/
