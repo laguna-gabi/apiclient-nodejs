@@ -22,6 +22,7 @@ import {
   ServiceName,
   SlackChannel,
   SlackIcon,
+  StorageType,
   formatEx,
 } from '@argus/pandora';
 import {
@@ -62,7 +63,6 @@ import {
   MemberUserRouteInterceptor,
   RegisterForNotificationParams,
   Roles,
-  StorageType,
   UserRole,
   generatePath,
   getCorrelationId,

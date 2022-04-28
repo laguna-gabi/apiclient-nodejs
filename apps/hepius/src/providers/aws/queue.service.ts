@@ -1,4 +1,11 @@
-import { Environments, GlobalEventType, QueueType, ServiceName, formatEx } from '@argus/pandora';
+import {
+  Environments,
+  GlobalEventType,
+  QueueType,
+  ServiceName,
+  StorageType,
+  formatEx,
+} from '@argus/pandora';
 import { Injectable, NotImplementedException, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { SQS } from 'aws-sdk';
@@ -6,7 +13,7 @@ import { aws, hosts } from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { ConfigsService, ExternalConfigs, StorageService } from '.';
-import { IEventNotifyQueue, LoggerService, StorageType } from '../../common';
+import { IEventNotifyQueue, LoggerService } from '../../common';
 
 @Injectable()
 export class QueueService implements OnModuleInit {

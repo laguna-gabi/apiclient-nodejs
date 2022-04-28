@@ -1,4 +1,4 @@
-import { formatEx } from '@argus/pandora';
+import { StorageType, formatEx } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
@@ -63,7 +63,6 @@ import {
   IEventUpdateHealthPersona,
   Identifier,
   LoggerService,
-  StorageType,
   defaultTimestampsDbValues,
   deleteMemberObjects,
   extractEmbeddedSetObject,

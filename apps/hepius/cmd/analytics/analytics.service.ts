@@ -1,4 +1,4 @@
-import { Language, Platform } from '@argus/pandora';
+import { Language, Platform, StorageType } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { add, differenceInDays, differenceInSeconds, differenceInYears } from 'date-fns';
@@ -31,7 +31,7 @@ import {
   SummaryFileSuffix,
 } from '.';
 import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
-import { RecordingType, StorageType, momentFormats, reformatDate } from '../../src/common';
+import { RecordingType, momentFormats, reformatDate } from '../../src/common';
 import {
   Caregiver,
   CaregiverDocument,

@@ -1,8 +1,8 @@
-import { Environments, formatEx } from '@argus/pandora';
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { BaseStorage, Environments, StorageType, StorageUrlParams, formatEx } from '@argus/pandora';
+import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { S3 } from 'aws-sdk';
-import { aws, hosts } from 'config';
+import { aws } from 'config';
 import { writeFileSync } from 'fs';
 import * as sharp from 'sharp';
 import { ConfigsService, ExternalConfigs } from '.';
@@ -12,25 +12,13 @@ import {
   IEventOnNewMember,
   LoggerService,
   MultipartUploadUrlParams,
-  StorageType,
-  StorageUrlParams,
 } from '../../common';
-@Injectable()
-export class StorageService implements OnModuleInit {
-  private readonly s3 = new S3({
-    signatureVersion: 'v4',
-    apiVersion: '2006-03-01',
-    region: aws.region,
-    ...(!process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-      ? {
-          endpoint: hosts.localstack,
-          s3ForcePathStyle: true,
-        }
-      : {}),
-  });
-  private bucket: string;
 
-  constructor(readonly logger: LoggerService, private readonly configsService: ConfigsService) {}
+@Injectable()
+export class StorageService extends BaseStorage {
+  constructor(readonly logger: LoggerService, private readonly configsService: ConfigsService) {
+    super(aws.region);
+  }
 
   async onModuleInit(): Promise<void> {
     this.bucket =
@@ -69,29 +57,6 @@ export class StorageService implements OnModuleInit {
     } catch (ex) {
       return; // file doesn't exist
     }
-  }
-
-  async getDownloadUrl(urlParams: StorageUrlParams): Promise<string | undefined> {
-    const { storageType, memberId, id } = urlParams;
-    const params = { Bucket: this.bucket, Key: `public/${storageType}/${memberId}/${id}` };
-
-    try {
-      await this.s3.headObject(params).promise();
-    } catch (ex) {
-      //file doesn't exist
-      return undefined;
-    }
-
-    //Expires in 3 hours
-    return this.s3.getSignedUrlPromise('getObject', { ...params, Expires: 3 * 60 * 60 });
-  }
-
-  async getUploadUrl(urlParams: StorageUrlParams): Promise<string> {
-    const { storageType, memberId, id } = urlParams;
-    const params = { Bucket: this.bucket, Key: `public/${storageType}/${memberId}/${id}` };
-
-    //expires in 30 minutes
-    return this.s3.getSignedUrlPromise('putObject', { ...params, Expires: 0.5 * 60 * 60 });
   }
 
   async getMultipartUploadUrl(

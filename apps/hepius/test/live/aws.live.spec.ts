@@ -1,4 +1,4 @@
-import { Environments, Platform, mockLogger } from '@argus/pandora';
+import { Environments, Platform, StorageType, mockLogger } from '@argus/pandora';
 import { S3 } from 'aws-sdk';
 import axios from 'axios';
 import { aws, hosts, services } from 'config';
@@ -7,7 +7,7 @@ import { EventEmitter2 } from 'eventemitter2';
 import { lorem } from 'faker';
 import { readFileSync, unlinkSync } from 'fs';
 import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
-import { LoggerService, StorageType } from '../../src/common';
+import { LoggerService } from '../../src/common';
 import { CloudMapService, ConfigsService, StorageService } from '../../src/providers';
 import { generateId, mockGenerateMember, mockGenerateUser } from '../generators';
 

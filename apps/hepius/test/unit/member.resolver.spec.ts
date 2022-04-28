@@ -7,6 +7,7 @@ import {
   QueueType,
   SlackChannel,
   SlackIcon,
+  StorageType,
   mockLogger,
   mockProcessWarnings,
 } from '@argus/pandora';
@@ -65,7 +66,6 @@ import {
   MemberRole,
   PhoneType,
   RegisterForNotificationParams,
-  StorageType,
   UserRole,
   delay,
 } from '../../src/common';

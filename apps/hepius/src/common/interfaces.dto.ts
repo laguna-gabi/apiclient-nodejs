@@ -1,5 +1,11 @@
 import { ICreateDispatch } from '@argus/irisClient';
-import { CancelNotificationType, Language, NotificationType, Platform } from '@argus/pandora';
+import {
+  CancelNotificationType,
+  Language,
+  NotificationType,
+  Platform,
+  StorageUrlParams,
+} from '@argus/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Schema } from '@nestjs/mongoose';
 import { IsAlphanumeric, IsOptional } from 'class-validator';
@@ -83,18 +89,6 @@ export enum UpdatedAppointmentAction {
   delete = 'delete',
 }
 
-export enum StorageType {
-  documents = 'documents',
-  recordings = 'recordings',
-  journals = 'journals',
-  general = 'general',
-}
-
-export interface StorageUrlParams {
-  storageType: StorageType;
-  memberId: string;
-  id: string;
-}
 export interface MultipartUploadUrlParams extends StorageUrlParams {
   partNumber: number;
   uploadId?: string;
