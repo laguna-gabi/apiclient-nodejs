@@ -1,6 +1,5 @@
 import { EngineRule, EventType, Operator } from './types';
 import { DynamicFacts } from './facts';
-import { generateFactName } from './utils';
 
 interface ClinicalEngineRules {
   barriers: EngineRule[];
@@ -99,10 +98,7 @@ const carePlanRules: EngineRule[] = [
     conditions: {
       all: [
         {
-          // todo: figure out how to make it static
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          fact: generateFactName(EventType.createBarrier, 'loneliness', true),
+          fact: DynamicFacts.satisfiedBarriers,
           operator: Operator.equal,
           value: true,
         },

@@ -3,7 +3,7 @@ import { general } from 'config';
 import { AppModule } from './app.module';
 import { LoggerService } from './common';
 import { internalLogs } from '@argus/pandora';
-import { EngineService } from './engine/engine.service';
+import { EngineService } from './engine';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

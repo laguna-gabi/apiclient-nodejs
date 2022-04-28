@@ -1,11 +1,11 @@
-import { DynamicFact, EventType } from './types';
+import { DynamicFact } from './types';
 import { DynamicFactCallback } from 'json-rules-engine';
-import { generateFactName } from './utils';
+import { RulesService } from './rules.service';
 
 export enum DynamicFacts {
   caregiversCount = 'caregiversCount',
   barrierTypes = 'barrierTypes',
-  newBarriers = 'newBarriers',
+  satisfiedBarriers = 'satisfiedBarriers',
 }
 
 export const dynamicFacts: DynamicFact[] = [
@@ -29,9 +29,23 @@ export const dynamicFacts: DynamicFact[] = [
       return barriers.map((barrier) => barrier.type);
     },
   },
+  {
+    id: DynamicFacts.satisfiedBarriers,
+  },
 ];
 
 export const updateNewBarriersFact: DynamicFactCallback = async (event, almanac) => {
-  const factId = generateFactName(EventType.createBarrier, event.params.type, true);
-  await almanac.addRuntimeFact(factId, true);
+  // using lock in order to prevent concurrent changes to the satisfiedBarriers fact
+  const lock = RulesService.lock;
+  lock.use(async () => {
+    const currentBarrierType = event.params.type;
+    const barriersSatisfied = await almanac.factValue(DynamicFacts.satisfiedBarriers);
+    const updatedBarriers = barriersSatisfied
+      ? // todo: remove when defining types
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        newBarriers.push(currentBarrierType)
+      : [currentBarrierType];
+    await almanac.addRuntimeFact(DynamicFacts.satisfiedBarriers, updatedBarriers);
+  });
 };

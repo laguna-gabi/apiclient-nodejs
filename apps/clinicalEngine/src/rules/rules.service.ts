@@ -9,9 +9,11 @@ import { dynamicFacts, updateNewBarriersFact } from './facts';
 import { DynamicFact, EngineRule, MemberFacts, Priority } from './types';
 import { engineRules } from './rules';
 import { LoggerService } from '../common';
+import Mutex = require('ts-mutex');
 
 @Injectable()
 export class RulesService implements OnModuleInit {
+  static lock = new Mutex();
   constructor(private logger: LoggerService) {}
 
   private engine: Engine;
@@ -60,7 +62,7 @@ export class RulesService implements OnModuleInit {
 
   async loadDynamicFacts(facts: DynamicFact[]) {
     facts.forEach((fact) => {
-      this.engine.addFact(fact.id, fact.calculationMethod);
+      this.engine.addFact(fact.id, fact.calculationMethod || fact.value);
     });
   }
 }

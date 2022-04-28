@@ -9128,6 +9128,11 @@ ts-morph@^13.0.3:
     "@ts-morph/common" "~0.12.3"
     code-block-writer "^11.0.0"
 
+ts-mutex@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/ts-mutex/-/ts-mutex-1.0.0.tgz#0a06fabf2eb5812bde42f5e977b10083f7bf606a"
+  integrity sha512-D+YehFaXHIPShGernhNKQ3saE8vBmDz4tV4KReH6gtPlkkT25rV1VhEjxSypqKVMpysEBjR71I6OCXauat1W4g==
+
 ts-node@^10.0.0:
   version "10.7.0"
   resolved "https://registry.npmjs.org/ts-node/-/ts-node-10.7.0.tgz#35d503d0fab3e2baa672a0e94f4b40653c2463f5"
