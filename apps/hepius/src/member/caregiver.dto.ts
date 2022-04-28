@@ -1,9 +1,9 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { IsEmail, IsOptional, IsPhoneNumber } from 'class-validator';
+import { IsEmail, IsOptional, IsPhoneNumber, Length } from 'class-validator';
 import { Document, Types } from 'mongoose';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
-import { ErrorType, Errors, Identifier, IsObjectId } from '../common';
+import { ErrorType, Errors, Identifier, IsObjectId, maxLength, minLength } from '../common';
 import * as mongooseDelete from 'mongoose-delete';
 
 /**************************************************************************************************
@@ -33,9 +33,11 @@ export class BaseCaregiverMutationParams {
   relationship: Relationship;
 
   @Field(() => String)
+  @Length(minLength, maxLength, { message: Errors.get(ErrorType.caregiverMinMaxLength) })
   lastName: string;
 
   @Field(() => String)
+  @Length(minLength, maxLength, { message: Errors.get(ErrorType.caregiverMinMaxLength) })
   firstName: string;
 
   @Field(() => String)

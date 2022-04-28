@@ -1209,9 +1209,12 @@ describe('Validations - member', () => {
       });
 
       test.each`
-        input                   | error
-        ${{ email: 'invalid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverEmailInvalid)] }}
-        ${{ phone: 'invalid' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverPhoneInvalid)] }}
+        input                                                                      | error
+        ${{ email: 'invalid' }}                                                    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverEmailInvalid)] }}
+        ${{ phone: 'invalid' }}                                                    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverPhoneInvalid)] }}
+        ${{ firstName: 'a' }}                                                      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverMinMaxLength)] }}
+        ${{ lastName: 'a' }}                                                       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverMinMaxLength)] }}
+        ${{ lastName: 'nameistoolong-nameistoolong-nameistoolong-nameistoolong' }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.caregiverMinMaxLength)] }}
       `(
         /* eslint-enable max-len */
         `should fail to add a caregiver due to invalid $input field`,
@@ -1220,7 +1223,6 @@ describe('Validations - member', () => {
             memberId: generateId(),
             ...params.input,
           });
-
           await handler.mutations.addCaregiver({
             addCaregiverParams,
             ...params.error,

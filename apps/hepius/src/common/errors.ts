@@ -108,6 +108,7 @@ export enum ErrorType {
   caregiverEmailInvalid = 9902,
   caregiverIdInvalid = 9903,
   caregiverDeleteNotAllowed = 9904,
+  caregiverMinMaxLength = 9905,
 
   // To do's
   todoNotFound = 10001,
@@ -321,6 +322,7 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.invalidPhoneNumberForMessaging.valueOf(),
     'invalid phone or landline - can not send SMS',
   ],
+  [ErrorType.caregiverMinMaxLength.valueOf(), `caregiver ${nameFormat}`],
   [ErrorType.todoNotFound.valueOf(), `todo ${notFoundPrefix}`],
   [ErrorType.todoIdInvalid.valueOf(), `todo id ${objectIdFormat}`],
   [ErrorType.todoDoneIdInvalid.valueOf(), `todoDone id ${objectIdFormat}`],
