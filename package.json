@@ -55,6 +55,7 @@
     "passport-custom": "^1.1.1",
     "pino-http": "^6.6.0",
     "reflect-metadata": "^0.1.13",
+    "revai-node-sdk": "^3.1.0",
     "rimraf": "^3.0.2",
     "rxjs": "^7.5.4",
     "sharp": "^0.30.1",

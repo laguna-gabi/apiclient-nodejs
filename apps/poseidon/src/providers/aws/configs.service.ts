@@ -11,6 +11,9 @@ import { aws, db } from 'config';
 
 export const ExternalConfigs = {
   ...BaseExternalConfigs,
+  revAI: {
+    accessToken: 'revAI.accessToken',
+  },
 };
 
 @Injectable()
