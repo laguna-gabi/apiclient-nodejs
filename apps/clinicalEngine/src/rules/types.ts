@@ -29,27 +29,35 @@ export interface DynamicFact {
 export interface EngineRule {
   active: boolean;
   conditions: TopLevelCondition;
-  event: Event;
+  event: EngineEvent;
   name?: string;
   priority?: Priority;
   onSuccess?: EventHandler;
   onFailure?: EventHandler;
 }
 
-type Params = createCarePlanParams | createBarrierParams;
-
-export interface Event {
+export interface EngineEvent {
   type: EventType;
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
-  params?: Params;
+  params?: any;
 }
 
-export interface createBarrierParams {
+export class CreateCarePlanEvent implements EngineEvent {
+  type = EventType.createCarePlan;
+  params: CreateCarePlanParams;
+}
+
+export class CreateBarrierEvent implements EngineEvent {
+  type = EventType.createBarrier;
+  params: CreateBarrierParams;
+}
+
+export interface CreateBarrierParams {
   // todo: change to object ID (barrier type)
   type: string;
 }
 
-export interface createCarePlanParams {
+export interface CreateCarePlanParams {
   // todo: change to object ID (barrier type)
   type: string;
   barrierType: string;
@@ -75,7 +83,7 @@ export type TopLevelCondition = AllConditions | AnyConditions;
 export interface MemberFacts {
   memberInfo: MemberInfo;
   caregivers: string[];
-  barriers: { type: string }[];
+  barriers: { type: string; status: BarrierStatus }[];
 }
 
 export interface MemberInfo {
