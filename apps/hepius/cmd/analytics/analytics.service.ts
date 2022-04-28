@@ -82,7 +82,7 @@ export class AnalyticsService {
   }
 
   async clean() {
-    this.connection.close();
+    await this.connection.close();
   }
 
   // Description: get all control members

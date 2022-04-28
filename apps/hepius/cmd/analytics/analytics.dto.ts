@@ -1,5 +1,5 @@
 import { Language, Platform } from '@argus/pandora';
-import { QuestionnaireResponseDocument } from '../../src//questionnaire';
+import { QuestionnaireResponseDocument } from '../../src/questionnaire';
 import { hosts } from 'config';
 import { Types } from 'mongoose';
 import {

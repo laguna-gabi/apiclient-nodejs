@@ -256,7 +256,7 @@ describe('Commands: AnalyticsService', () => {
   describe('buildAppointmentsMemberData', () => {
     it('to return only appointment 0 even when there are no appointments', async () => {
       expect(
-        await analyticsService.buildAppointmentsMemberData({
+        analyticsService.buildAppointmentsMemberData({
           _id: new Types.ObjectId(mockMember.id),
           memberDetails: {
             ...mockMember,
@@ -285,7 +285,7 @@ describe('Commands: AnalyticsService', () => {
 
       const app3Notes = generateNotesParams();
 
-      const data = await analyticsService.buildAppointmentsMemberData({
+      const data = analyticsService.buildAppointmentsMemberData({
         _id: new Types.ObjectId(mockMember.id),
         memberDetails: {
           ...mockMember,

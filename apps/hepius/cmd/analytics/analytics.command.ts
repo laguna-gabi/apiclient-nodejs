@@ -56,7 +56,7 @@ export class AnalyticsCommand implements CommandRunner {
 
     await this.analyticsService.init();
     const timestamp = this.analyticsService.getDateTime();
-    this.analyticsService.init(); // loading cache data
+    await this.analyticsService.init(); // loading cache data
 
     // initialize Analytics SQL db
     const { dbUsername, dbPassword } = ExternalConfigs.analytics;
@@ -331,7 +331,7 @@ export class AnalyticsCommand implements CommandRunner {
       await delay(2000); // let the event settle before we exit
     }
 
-    this.analyticsService.clean();
+    await this.analyticsService.clean();
   }
 
   /**************************************** Command Options  **************************************/
