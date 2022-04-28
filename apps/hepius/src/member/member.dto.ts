@@ -16,7 +16,7 @@ import {
 import { twilio } from 'config';
 import { Document, Types } from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
-import { ActionItem } from '.';
+import { ActionItem } from './index';
 import { AppointmentStatus, Scores } from '../appointment';
 import {
   ErrorType,

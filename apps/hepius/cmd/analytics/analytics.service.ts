@@ -1,7 +1,7 @@
 import { Language, Platform, StorageType } from '@argus/pandora';
 import { Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { add, differenceInDays, differenceInSeconds, differenceInYears } from 'date-fns';
+import { differenceInDays, differenceInSeconds, differenceInYears } from 'date-fns';
 import { writeFile, writeFileSync } from 'fs';
 import { json2csv } from 'json-2-csv';
 import { omit } from 'lodash';
@@ -421,8 +421,10 @@ export class AnalyticsService {
       los: this.calculateLos(member.memberDetails.admitDate, member.memberDetails.dischargeDate),
       days_since_discharge: daysSinceDischarge,
       active: daysSinceDischarge < GraduationPeriod,
-      graduated: daysSinceDischarge >= GraduationPeriod,
-      graduation_date: this.calculateGraduationDate(member.memberDetails.dischargeDate),
+      graduated: member.memberDetails.isGraduated,
+      graduation_date:
+        member.memberDetails.graduationDate &&
+        reformatDate(member.memberDetails.graduationDate.toString(), momentFormats.mysqlDate),
       dc_summary_load_date: dcSummaryLoadDate
         ? reformatDate(dcSummaryLoadDate.toString(), momentFormats.mysqlDate)
         : undefined,
@@ -504,7 +506,9 @@ export class AnalyticsService {
       ? `${HarmonyLink}/details/${member._id.toString()}`
       : undefined;
     // eslint-disable-next-line max-len
-    const graduation_date = this.calculateGraduationDate(member.memberDetails.dischargeDate);
+    const graduation_date =
+      member.memberDetails.graduationDate &&
+      reformatDate(member.memberDetails.graduationDate.toString(), momentFormats.mysqlDate);
     const results = [];
 
     // load appointment 0: (according to example excel spreadsheet we have appointment 0 also for engaged members)
@@ -513,7 +517,7 @@ export class AnalyticsService {
       customer_id: member._id.toString(),
       mbr_initials,
       appt_number: 0,
-      graduated: this.isGraduated(member.memberDetails.dischargeDate),
+      graduated: member.memberDetails.isGraduated,
       graduation_date,
     });
 
@@ -663,16 +667,6 @@ export class AnalyticsService {
   calculateDaysSinceDischarge(dischargeDate: string): number {
     if (dischargeDate) {
       return differenceInDays(this.getDateTime(), Date.parse(dischargeDate));
-    }
-  }
-
-  // Description: calculated graduation date for discharge date
-  calculateGraduationDate(dischargeDate: string): string {
-    if (dischargeDate) {
-      return reformatDate(
-        add(Date.parse(dischargeDate), { days: GraduationPeriod }).toString(),
-        momentFormats.mysqlDate,
-      );
     }
   }
 
