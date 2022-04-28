@@ -2500,12 +2500,22 @@ describe('Integration tests: all', () => {
     await handler.mutations.updateMember({ updateMemberParams: { id: member.id, deviceId } });
 
     const graduate = async (isGraduated: boolean, calledMethod, notCalledMethod) => {
+      const currentTime = new Date();
+
       await handler.mutations.graduateMember({
         graduateMemberParams: { id: member.id, isGraduated },
       });
 
       const memberAfter = await handler.queries.getMember({ id: member.id });
       expect(memberAfter.isGraduated).toEqual(isGraduated);
+
+      if (isGraduated) {
+        expect(Date.parse(memberAfter.graduationDate)).toBeGreaterThanOrEqual(
+          currentTime.getTime(),
+        );
+      } else {
+        expect(memberAfter.graduationDate).toBeFalsy();
+      }
 
       expect(calledMethod).toBeCalledWith(deviceId);
       expect(notCalledMethod).not.toBeCalled();

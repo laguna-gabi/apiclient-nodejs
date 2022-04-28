@@ -243,6 +243,7 @@ export class MemberService extends BaseService {
           firstLoggedInAt: '$memberconfig.firstLoggedInAt',
           platform: '$memberconfig.platform',
           isGraduated: '$isGraduated',
+          graduationDate: '$graduationDate',
         },
       },
     ]);
@@ -311,7 +312,12 @@ export class MemberService extends BaseService {
   async graduate(graduateParams: GraduateMemberParams) {
     await this.memberModel.findOneAndUpdate(
       { _id: new Types.ObjectId(graduateParams.id) },
-      { $set: { isGraduated: graduateParams.isGraduated } },
+      {
+        $set: {
+          isGraduated: graduateParams.isGraduated,
+          graduationDate: graduateParams.isGraduated ? Date.now() : null,
+        },
+      },
     );
   }
 

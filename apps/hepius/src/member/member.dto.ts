@@ -669,6 +669,10 @@ export class Member extends Identifier {
   @Prop({ type: Boolean, default: defaultMemberParams.isGraduated })
   @Field(() => Boolean)
   isGraduated: boolean;
+
+  @Prop({ type: Date, isNaN: true })
+  @Field(() => Date, { nullable: true })
+  graduationDate?: Date;
 }
 
 @ObjectType()
@@ -717,6 +721,9 @@ export class MemberSummary extends Identifier {
 
   @Field(() => Boolean)
   isGraduated: boolean;
+
+  @Field(() => Date, { nullable: true })
+  graduationDate?: Date;
 }
 
 @ObjectType()

@@ -252,6 +252,7 @@ export class Queries {
                 date
               }
               isGraduated
+              graduationDate
             }
           }
         `,
@@ -464,6 +465,7 @@ export class Queries {
               firstLoggedInAt
               platform
               isGraduated
+              graduationDate
             }
           }
         `,
