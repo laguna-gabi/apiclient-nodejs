@@ -12,6 +12,8 @@ import {
   generateObjectId,
   mockDbBarrier,
   mockDbBarrierType,
+  mockDbCarePlan,
+  mockDbCarePlanType,
   mockDbRedFlag,
   mockDbRedFlagType,
   mockGenerateCaregiver,
@@ -37,7 +39,15 @@ import { Caregiver, MemberModule } from '../../src/member';
 import { ProvidersModule } from '../../src/providers';
 import { User, UserDocument, UserModule } from '../../src/user';
 import { QuestionnaireModule, QuestionnaireResponse } from '../../src/questionnaire';
-import { Barrier, BarrierType, CareModule, RedFlag, RedFlagType } from '../../src/care';
+import {
+  Barrier,
+  BarrierType,
+  CareModule,
+  CarePlan,
+  CarePlanType,
+  RedFlag,
+  RedFlagType,
+} from '../../src/care';
 
 describe('Commands: AnalyticsService', () => {
   let module: TestingModule;
@@ -49,6 +59,8 @@ describe('Commands: AnalyticsService', () => {
   let barriersModel: Model<Barrier>;
   let redFlagTypesModel: Model<RedFlagType>;
   let redFlagsModel: Model<RedFlag>;
+  let carePlanTypesModel: Model<CarePlanType>;
+  let carePlansModel: Model<CarePlan>;
 
   const now = new Date(Date.UTC(2021, 1, 2, 3, 4, 5));
 
@@ -92,6 +104,8 @@ describe('Commands: AnalyticsService', () => {
     barriersModel = module.get<Model<Barrier>>(getModelToken(Barrier.name));
     redFlagTypesModel = module.get<Model<RedFlagType>>(getModelToken(RedFlagType.name));
     redFlagsModel = module.get<Model<RedFlag>>(getModelToken(RedFlag.name));
+    carePlanTypesModel = module.get<Model<CarePlanType>>(getModelToken(CarePlanType.name));
+    carePlansModel = module.get<Model<CarePlan>>(getModelToken(CarePlan.name));
 
     // mock the user model to upload all actors (users) during init
     jest
@@ -933,6 +947,72 @@ describe('Commands: AnalyticsService', () => {
             updated: reformatDate(redFlag.updatedAt.toString(), momentFormats.mysqlDateTime),
             type: redFlag.type.toString(),
             notes: redFlag.notes,
+          })),
+        ),
+      );
+    });
+  });
+
+  describe('care plans', () => {
+    let carePlanTypesModelSpy;
+    let carePlansModelSpy;
+
+    beforeAll(async () => {
+      carePlanTypesModelSpy = jest.spyOn(carePlanTypesModel, 'find');
+      carePlansModelSpy = jest.spyOn(carePlansModel, 'find');
+    });
+
+    afterEach(() => {
+      carePlanTypesModelSpy.mockReset();
+      carePlansModelSpy.mockReset();
+    });
+
+    it('should return an empty list of care plan types data entries', async () => {
+      carePlanTypesModelSpy.mockReturnValueOnce([]);
+      const data = await analyticsService.getCarePlanTypesData();
+      expect(data).toEqual([]);
+    });
+
+    it('should return an empty list of care plan data entries', async () => {
+      carePlansModelSpy.mockReturnValueOnce([]);
+      const data = await analyticsService.getCarePlansData();
+      expect(data).toEqual([]);
+    });
+
+    it('should return non-empty care plan types data entries', async () => {
+      const carePlanTypes = [mockDbCarePlanType(), mockDbCarePlanType()];
+      carePlanTypesModelSpy.mockReturnValue(carePlanTypes);
+      const data = await analyticsService.getCarePlanTypesData();
+
+      expect(data).toEqual(
+        expect.arrayContaining(
+          carePlanTypes.map((barrier) => ({
+            id: barrier._id.toString(),
+            description: barrier.description,
+            isCustom: barrier.isCustom,
+          })),
+        ),
+      );
+    });
+
+    it('should return non-empty care plans data entries', async () => {
+      const carePlans = [mockDbCarePlan(), mockDbCarePlan()];
+      carePlansModelSpy.mockReturnValue(carePlans);
+      const data = await analyticsService.getCarePlansData();
+
+      expect(data).toEqual(
+        expect.arrayContaining(
+          carePlans.map((carePlan) => ({
+            id: carePlan._id.toString(),
+            member_id: carePlan.memberId.toString(),
+            created: reformatDate(carePlan.createdAt.toString(), momentFormats.mysqlDateTime),
+            updated: reformatDate(carePlan.updatedAt.toString(), momentFormats.mysqlDateTime),
+            status: carePlan.status,
+            notes: carePlan.notes,
+            completed: reformatDate(carePlan.completedAt?.toString(), momentFormats.mysqlDateTime),
+            type: carePlan.type.toString(),
+            barrierId: carePlan.barrierId.toString(),
+            dueDate: reformatDate(carePlan.dueDate.toString(), momentFormats.mysqlDateTime),
           })),
         ),
       );

@@ -40,6 +40,8 @@ export const BarrierTable = 'harmony_barriers';
 export const BarrierTypeTable = 'harmony_barrier_types';
 export const RedFlagTypeTable = 'harmony_red_flag_type';
 export const RedFlagTable = 'harmony_red_flag';
+export const CarePlanTypeTable = 'harmony_care_plan_type';
+export const CarePlanTable = 'harmony_care_plan';
 
 export enum SheetOption {
   members = 'members',
@@ -49,6 +51,7 @@ export enum SheetOption {
   qrs = 'qrs',
   barriers = 'barriers',
   redflags = 'redflags',
+  careplans = 'careplans',
   all = 'all',
 }
 
@@ -345,11 +348,13 @@ export class AppointmentsMemberData {
   last_modified_datetime?: Date;
 }
 
-export class BaseCare {
+export class BaseCareData {
   @PrimaryColumn('varchar', { length: 100 })
   id: string;
   @Column('varchar', { length: 50, name: 'member_id' })
   member_id: string;
+  @Column('varchar', { length: 50 })
+  type: string;
   @Column('datetime')
   created: string;
   @Column('datetime')
@@ -375,9 +380,7 @@ export class BarrierTypeData {
 }
 
 @Entity({ name: BarrierTable })
-export class BarrierData extends BaseCare {
-  @Column('varchar', { length: 50 })
-  type: string;
+export class BarrierData extends BaseCareData {
   @Column('varchar', { length: 50 })
   redFlagId: string;
 }
@@ -404,6 +407,24 @@ export class RedFlagData {
   type: string;
   @Column('varchar', { nullable: true })
   notes?: string;
+}
+
+@Entity({ name: CarePlanTypeTable })
+export class CarePlanTypeData {
+  @PrimaryColumn('varchar', { length: 100 })
+  id: string;
+  @Column('varchar')
+  description: string;
+  @Column('float')
+  isCustom: boolean;
+}
+
+@Entity({ name: CarePlanTable })
+export class CarePlanData extends BaseCareData {
+  @Column('varchar', { length: 50 })
+  barrierId: string;
+  @Column('datetime', { nullable: true })
+  dueDate?: string;
 }
 
 export type AnalyticsData = CoachData | MemberData | AppointmentsMemberData;

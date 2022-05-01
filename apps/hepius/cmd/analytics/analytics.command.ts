@@ -18,6 +18,10 @@ import {
   BarrierTable,
   BarrierTypeData,
   BarrierTypeTable,
+  CarePlanData,
+  CarePlanTable,
+  CarePlanTypeData,
+  CarePlanTypeTable,
   CoachData,
   CoachDataAggregate,
   CoachTable,
@@ -90,6 +94,8 @@ export class AnalyticsCommand implements CommandRunner {
         BarrierData,
         RedFlagTypeData,
         RedFlagData,
+        CarePlanTypeData,
+        CarePlanData,
       ],
       synchronize: true,
       logging: false,
@@ -327,6 +333,25 @@ export class AnalyticsCommand implements CommandRunner {
           await this.queryRunner.clearTable(RedFlagTable);
         }
         await AppDataSource.manager.save(await this.analyticsService.getRedFlagData());
+      }
+
+      if (options.sheet === SheetOption.careplans || options.sheet === SheetOption.all) {
+        console.debug(
+          '\n----------------------------------------------------------------\n' +
+            '------------------- Generating CarePlans Data ------------------\n' +
+            '----------------------------------------------------------------',
+        );
+        const carePansTypeTable = await this.queryRunner.getTable(CarePlanTypeTable);
+        if (carePansTypeTable) {
+          await this.queryRunner.clearTable(CarePlanTypeTable);
+        }
+        await AppDataSource.manager.save(await this.analyticsService.getCarePlanTypesData());
+
+        const carePansTable = await this.queryRunner.getTable(CarePlanTable);
+        if (carePansTable) {
+          await this.queryRunner.clearTable(CarePlanTable);
+        }
+        await AppDataSource.manager.save(await this.analyticsService.getCarePlansData());
       }
 
       /***************************** Import Data Enrichment  **************************************/

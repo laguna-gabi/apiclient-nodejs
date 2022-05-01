@@ -1158,6 +1158,33 @@ export const mockDbBarrier = () => {
   };
 };
 
+export const mockDbCarePlanType = () => {
+  return {
+    _id: generateObjectId(),
+    description: lorem.sentence(),
+    isCustom: false,
+  };
+};
+
+export const mockDbCarePlan = () => {
+  const createdAt = fakerDate.past(1);
+  const updatedAt = addDays(createdAt, 1);
+  const dueDate = addDays(createdAt, 3);
+
+  return {
+    _id: generateObjectId(),
+    memberId: generateObjectId(),
+    createdAt,
+    updatedAt,
+    status: CareStatus.active,
+    notes: lorem.words(),
+    completedAt: updatedAt,
+    type: generateObjectId(),
+    barrierId: generateObjectId(),
+    dueDate,
+  };
+};
+
 export const mockGenerateQuestionnaireItem = ({
   code = datatype.uuid(),
   label = lorem.words(5),

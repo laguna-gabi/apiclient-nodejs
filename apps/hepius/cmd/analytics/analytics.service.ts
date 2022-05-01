@@ -13,7 +13,10 @@ import {
   AppointmentsMemberData,
   BarrierData,
   BarrierTypeData,
+  BaseCareData,
   BaseMember,
+  CarePlanData,
+  CarePlanTypeData,
   CaregiverData,
   CoachData,
   CoachDataAggregate,
@@ -55,6 +58,11 @@ import {
   BarrierDocument,
   BarrierType,
   BarrierTypeDocument,
+  BaseCare,
+  CarePlan,
+  CarePlanDocument,
+  CarePlanType,
+  CarePlanTypeDocument,
   RedFlag,
   RedFlagDocument,
   RedFlagType,
@@ -85,6 +93,10 @@ export class AnalyticsService {
     private readonly redFlagTypeModel: Model<RedFlagTypeDocument>,
     @InjectModel(RedFlag.name)
     private readonly redFlagModel: Model<RedFlagDocument>,
+    @InjectModel(CarePlanType.name)
+    private readonly carePlanTypeModel: Model<CarePlanTypeDocument>,
+    @InjectModel(CarePlan.name)
+    private readonly carePlanModel: Model<CarePlanDocument>,
   ) {}
 
   private userData: Map<string, string>;
@@ -315,15 +327,7 @@ export class AnalyticsService {
 
     return barriers.map((input: Barrier) => {
       const barrier = new BarrierData();
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      barrier.id = input._id.toString();
-      barrier.member_id = input.memberId.toString();
-      barrier.created = reformatDate(input.createdAt.toString(), momentFormats.mysqlDateTime);
-      barrier.updated = reformatDate(input.updatedAt.toString(), momentFormats.mysqlDateTime);
-      barrier.status = input.status;
-      barrier.notes = input.notes;
-      barrier.completed = reformatDate(input.completedAt?.toString(), momentFormats.mysqlDateTime);
+      this.initBaseFields(barrier, input);
       barrier.type = input.type.toString();
       barrier.redFlagId = input.redFlagId.toString();
       return barrier;
@@ -358,6 +362,45 @@ export class AnalyticsService {
       redFlag.notes = input.notes;
       return redFlag;
     });
+  }
+
+  async getCarePlanTypesData(): Promise<CarePlanTypeData[]> {
+    const carePlanTypes: CarePlanType[] = await this.carePlanTypeModel.find();
+    return carePlanTypes.map((input: CarePlanType) => {
+      const carePlanType = new CarePlanTypeData();
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      carePlanType.id = input._id.toString();
+      carePlanType.description = input.description;
+      carePlanType.isCustom = input.isCustom;
+      return carePlanType;
+    });
+  }
+
+  async getCarePlansData(): Promise<CarePlanData[]> {
+    const carePlans: CarePlan[] = await this.carePlanModel.find();
+
+    return carePlans.map((input: CarePlan) => {
+      const carePlan = new CarePlanData();
+      this.initBaseFields(carePlan, input);
+      carePlan.type = input.type.toString();
+      carePlan.barrierId = input.barrierId.toString();
+      carePlan.dueDate = reformatDate(input.dueDate.toString(), momentFormats.mysqlDateTime);
+      return carePlan;
+    });
+  }
+
+  private initBaseFields(data: BaseCareData, baseCare: BaseCare): BaseCareData {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    data.id = baseCare._id.toString();
+    data.member_id = baseCare.memberId.toString();
+    data.created = reformatDate(baseCare.createdAt.toString(), momentFormats.mysqlDateTime);
+    data.updated = reformatDate(baseCare.updatedAt.toString(), momentFormats.mysqlDateTime);
+    data.status = baseCare.status;
+    data.notes = baseCare.notes;
+    data.completed = reformatDate(baseCare.completedAt?.toString(), momentFormats.mysqlDateTime);
+    return data;
   }
 
   async getCoachersDataAggregate(): Promise<CoachDataAggregate[]> {
