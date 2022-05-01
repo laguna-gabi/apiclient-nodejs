@@ -76,7 +76,7 @@ import {
 import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
 import {
   AlertType,
-  ChangeAdmissionParams,
+  ChangeMemberDnaParams,
   CreateTaskParams,
   Member,
   MemberAdmission,
@@ -2534,8 +2534,8 @@ describe('Integration tests: all', () => {
   it('should create 2 member admissions and get them', async () => {
     const { member } = await creators.createMemberUserAndOptionalOrg();
 
-    const { result: result1 } = await changeMemberAdmission(ChangeType.create, member.id);
-    const { result: result2 } = await changeMemberAdmission(ChangeType.create, member.id);
+    const { result: result1 } = await changeMemberDna(ChangeType.create, member.id);
+    const { result: result2 } = await changeMemberDna(ChangeType.create, member.id);
 
     const memberAdmissions = await handler.queries.getMemberAdmissions({
       memberId: member.id.toString(),
@@ -2566,42 +2566,42 @@ describe('Integration tests: all', () => {
     const { member } = await creators.createMemberUserAndOptionalOrg();
 
     //create all admission params
-    const { changeAdmissionParams: createAdmissionParams, result: createResult } =
-      await changeMemberAdmission(ChangeType.create, member.id);
+    const { changeMemberDnaParams: createMemberDnaParams, result: createResult } =
+      await changeMemberDna(ChangeType.create, member.id);
 
     const diagnoses = [
-      { id: createResult.diagnoses[0].id, ...removeChangeType(createAdmissionParams.diagnosis) },
+      { id: createResult.diagnoses[0].id, ...removeChangeType(createMemberDnaParams.diagnosis) },
     ];
     const procedures = [
       {
         id: createResult.procedures[0].id,
-        ...removeChangeType(createAdmissionParams.procedure),
-        date: createAdmissionParams.procedure.date.toISOString(),
+        ...removeChangeType(createMemberDnaParams.procedure),
+        date: createMemberDnaParams.procedure.date.toISOString(),
       },
     ];
     const medications = [
       {
         id: createResult.medications[0].id,
-        ...removeChangeType(createAdmissionParams.medication),
-        startDate: createAdmissionParams.medication.startDate.toISOString(),
-        endDate: createAdmissionParams.medication.endDate.toISOString(),
+        ...removeChangeType(createMemberDnaParams.medication),
+        startDate: createMemberDnaParams.medication.startDate.toISOString(),
+        endDate: createMemberDnaParams.medication.endDate.toISOString(),
       },
     ];
     const externalAppointments = [
       {
         id: createResult.externalAppointments[0].id,
-        ...removeChangeType(createAdmissionParams.externalAppointment),
-        date: createAdmissionParams.externalAppointment.date.toISOString(),
+        ...removeChangeType(createMemberDnaParams.externalAppointment),
+        date: createMemberDnaParams.externalAppointment.date.toISOString(),
       },
     ];
     const activities = [
-      { id: createResult.activities[0].id, ...removeChangeType(createAdmissionParams.activity) },
+      { id: createResult.activities[0].id, ...removeChangeType(createMemberDnaParams.activity) },
     ];
     const woundCares = [
-      { id: createResult.woundCares[0].id, ...removeChangeType(createAdmissionParams.woundCare) },
+      { id: createResult.woundCares[0].id, ...removeChangeType(createMemberDnaParams.woundCare) },
     ];
     const dietaries = [
-      { id: createResult.dietaries[0].id, ...removeChangeType(createAdmissionParams.dietary) },
+      { id: createResult.dietaries[0].id, ...removeChangeType(createMemberDnaParams.dietary) },
     ];
 
     expect(createResult).toEqual(
@@ -2618,7 +2618,7 @@ describe('Integration tests: all', () => {
     );
 
     //update/delete some admission params
-    const changeAdmissionParams: ChangeAdmissionParams = {
+    const changeMemberDnaParams: ChangeMemberDnaParams = {
       id: createResult.id.toString(),
       memberId: member.id,
       procedure: generateAdmissionProcedureParams({
@@ -2631,16 +2631,16 @@ describe('Integration tests: all', () => {
       }),
       activity: generateAdmissionActivityParams({ changeType: ChangeType.create }),
     };
-    const changeResult = await handler.mutations.changeMemberAdmission({ changeAdmissionParams });
+    const changeResult = await handler.mutations.changeMemberDna({ changeMemberDnaParams });
 
     procedures[0] = {
       id: createResult.procedures[0].id,
-      ...removeChangeType(changeAdmissionParams.procedure),
-      date: changeAdmissionParams.procedure.date.toISOString(),
+      ...removeChangeType(changeMemberDnaParams.procedure),
+      date: changeMemberDnaParams.procedure.date.toISOString(),
     };
     activities[1] = {
       id: changeResult.activities[1].id,
-      ...removeChangeType(changeAdmissionParams.activity),
+      ...removeChangeType(changeMemberDnaParams.activity),
     };
 
     expect(changeResult).toEqual(
@@ -2748,10 +2748,10 @@ describe('Integration tests: all', () => {
       });
   };
 
-  const changeMemberAdmission = async (
+  const changeMemberDna = async (
     changeType: ChangeType,
     memberId: string,
-  ): Promise<{ changeAdmissionParams: ChangeAdmissionParams; result: MemberAdmission }> => {
+  ): Promise<{ changeMemberDnaParams: ChangeMemberDnaParams; result: MemberAdmission }> => {
     const createDiagnosis = generateAdmissionDiagnosisParams({ changeType });
     const createProcedure = generateAdmissionProcedureParams({ changeType });
     const createMedication = generateAdmissionMedicationParams({ changeType });
@@ -2760,7 +2760,7 @@ describe('Integration tests: all', () => {
     const createWoundCare = generateAdmissionWoundCareParams({ changeType });
     const createDietary = generateAdmissionDietaryParams({ changeType });
 
-    const changeAdmissionParams: ChangeAdmissionParams = {
+    const changeMemberDnaParams: ChangeMemberDnaParams = {
       memberId,
       diagnosis: createDiagnosis,
       procedure: createProcedure,
@@ -2771,10 +2771,10 @@ describe('Integration tests: all', () => {
       dietary: createDietary,
     };
 
-    const result = await handler.mutations.changeMemberAdmission({
-      changeAdmissionParams,
+    const result = await handler.mutations.changeMemberDna({
+      changeMemberDnaParams,
     });
 
-    return { changeAdmissionParams, result };
+    return { changeMemberDnaParams, result };
   };
 });

@@ -25,7 +25,7 @@ import {
   AddCaregiverParams,
   CancelNotifyParams,
   Caregiver,
-  ChangeAdmissionParams,
+  ChangeMemberDnaParams,
   CompleteMultipartUploadParams,
   CreateMemberParams,
   CreateTaskParams,
@@ -1884,28 +1884,28 @@ export class Mutations {
       });
   };
 
-  changeMemberAdmission = async ({
-    changeAdmissionParams,
+  changeMemberDna = async ({
+    changeMemberDnaParams,
     missingFieldError,
     invalidFieldsErrors,
     requestHeaders = this.defaultUserRequestHeaders,
   }: {
-    changeAdmissionParams: ChangeAdmissionParams;
+    changeMemberDnaParams: ChangeMemberDnaParams;
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
     requestHeaders?;
   }): Promise<MemberAdmission> => {
-    const { changeMemberAdmission } = await this.client
+    const { changeMemberDna } = await this.client
       .request(
         gql`
-          mutation changeMemberAdmission($changeAdmissionParams: ChangeAdmissionParams!) {
-            changeMemberAdmission(changeAdmissionParams: $changeAdmissionParams) {
+          mutation changeMemberDna($changeMemberDnaParams: ChangeMemberDnaParams!) {
+            changeMemberDna(changeMemberDnaParams: $changeMemberDnaParams) {
               ...memberAdmissionFragment
             }
           }
           ${FRAGMENT_MEMBER_ADMISSION}
         `,
-        { changeAdmissionParams },
+        { changeMemberDnaParams },
         requestHeaders,
       )
       .catch((ex) => {
@@ -1916,6 +1916,6 @@ export class Mutations {
         });
       });
 
-    return changeMemberAdmission;
+    return changeMemberDna;
   };
 }

@@ -85,7 +85,7 @@ import {
   AudioType,
   CancelNotifyParams,
   Caregiver,
-  ChangeAdmissionParams,
+  ChangeMemberDnaParams,
   ChatMessageOrigin,
   CompleteMultipartUploadParams,
   CreateMemberParams,
@@ -1423,12 +1423,12 @@ export class MemberResolver extends MemberBase {
    ************************************************************************************************/
   @Mutation(() => MemberAdmission)
   @Roles(UserRole.coach, UserRole.nurse)
-  async changeMemberAdmission(
+  async changeMemberDna(
     @Client('roles') roles,
-    @Args(camelCase(ChangeAdmissionParams.name))
-    changeAdmissionParams: ChangeAdmissionParams,
+    @Args(camelCase(ChangeMemberDnaParams.name))
+    changeMemberDnaParams: ChangeMemberDnaParams,
   ): Promise<MemberAdmission> {
-    return this.memberAdmissionService.change(changeAdmissionParams);
+    return this.memberAdmissionService.change(changeMemberDnaParams);
   }
 
   @Query(() => [MemberAdmission])

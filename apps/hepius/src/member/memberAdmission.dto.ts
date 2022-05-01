@@ -29,8 +29,8 @@ registerEnumType(AdmissionCategory, { name: 'AdmissionCategory' });
  ************************************* Schemas for gql methods ************************************
  *************************************************************************************************/
 @ObjectType()
-@InputType('BaseAdmissionInput')
-export class BaseAdmission {
+@InputType('BaseCategoryInput')
+export class BaseCategory {
   @Field(() => String, { nullable: true })
   id?: string;
 }
@@ -38,7 +38,7 @@ export class BaseAdmission {
 @ObjectType()
 @InputType('DiagnosisInput')
 @Schema({ versionKey: false, timestamps: true })
-export class Diagnosis extends BaseAdmission {
+export class Diagnosis extends BaseCategory {
   @Prop({ isNan: true })
   @Field({ nullable: true })
   icdCode?: string;
@@ -51,7 +51,7 @@ export class Diagnosis extends BaseAdmission {
 @ObjectType()
 @InputType('ProcedureInput')
 @Schema({ versionKey: false, timestamps: true })
-export class Procedure extends BaseAdmission {
+export class Procedure extends BaseCategory {
   @Prop({ type: Date, isNan: true })
   @Field(() => Date, { nullable: true })
   date?: Date;
@@ -81,7 +81,7 @@ export class Amount {
 @ObjectType()
 @InputType('MedicationInput')
 @Schema({ versionKey: false, timestamps: true })
-export class Medication extends BaseAdmission {
+export class Medication extends BaseCategory {
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
   name?: string;
@@ -118,7 +118,7 @@ export class Medication extends BaseAdmission {
 @ObjectType()
 @InputType('ExternalAppointmentInput')
 @Schema({ versionKey: false, timestamps: true })
-export class ExternalAppointment extends BaseAdmission {
+export class ExternalAppointment extends BaseCategory {
   @Prop({ default: true })
   @Field(() => Boolean, { nullable: true })
   isScheduled?: boolean;
@@ -151,7 +151,7 @@ export class ExternalAppointment extends BaseAdmission {
 @ObjectType()
 @InputType('ActivityInput')
 @Schema({ versionKey: false, timestamps: true })
-export class Activity extends BaseAdmission {
+export class Activity extends BaseCategory {
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
   text?: string;
@@ -164,7 +164,7 @@ export class Activity extends BaseAdmission {
 @ObjectType()
 @InputType('WoundCareInput')
 @Schema({ versionKey: false, timestamps: true })
-export class WoundCare extends BaseAdmission {
+export class WoundCare extends BaseCategory {
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
   text?: string;
@@ -173,7 +173,7 @@ export class WoundCare extends BaseAdmission {
 @ObjectType()
 @InputType('DietaryInput')
 @Schema({ versionKey: false, timestamps: true })
-export class Dietary extends BaseAdmission {
+export class Dietary extends BaseCategory {
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
   text?: string;
@@ -235,7 +235,7 @@ export class ChangeAdmissionDietaryParams extends Dietary {
 }
 
 @InputType()
-export class ChangeAdmissionParams {
+export class ChangeMemberDnaParams {
   @Field()
   memberId: string;
 

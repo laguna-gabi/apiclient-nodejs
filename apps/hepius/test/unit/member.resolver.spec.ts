@@ -2636,16 +2636,16 @@ describe('MemberResolver', () => {
 
   describe('MemberAdmission', () => {
     let spyOnServiceGetMemberAdmission: jest.SpyInstance;
-    let spyOnServiceChangeMemberAdmission: jest.SpyInstance;
+    let spyOnServiceChangeMemberDna: jest.SpyInstance;
 
     beforeEach(() => {
       spyOnServiceGetMemberAdmission = jest.spyOn(admissionService, 'get');
-      spyOnServiceChangeMemberAdmission = jest.spyOn(admissionService, 'change');
+      spyOnServiceChangeMemberDna = jest.spyOn(admissionService, 'change');
     });
 
     afterEach(() => {
       spyOnServiceGetMemberAdmission.mockReset();
-      spyOnServiceChangeMemberAdmission.mockReset();
+      spyOnServiceChangeMemberDna.mockReset();
     });
 
     it('should call get member admission', async () => {
@@ -2658,12 +2658,12 @@ describe('MemberResolver', () => {
     });
 
     it('should call change member admission', async () => {
-      spyOnServiceChangeMemberAdmission.mockResolvedValueOnce(undefined);
+      spyOnServiceChangeMemberDna.mockResolvedValueOnce(undefined);
 
       const memberId = generateId();
-      await resolver.changeMemberAdmission([], { memberId });
+      await resolver.changeMemberDna([], { memberId });
 
-      expect(spyOnServiceChangeMemberAdmission).toBeCalledWith({ memberId });
+      expect(spyOnServiceChangeMemberDna).toBeCalledWith({ memberId });
     });
   });
 

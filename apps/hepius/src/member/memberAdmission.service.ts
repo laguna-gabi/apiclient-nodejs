@@ -2,14 +2,14 @@ import {
   Activity,
   ActivityDocument,
   AdmissionCategory,
-  BaseAdmission,
+  BaseCategory,
   ChangeAdmissionActivityParams,
   ChangeAdmissionDiagnosisParams,
   ChangeAdmissionExternalAppointmentParams,
   ChangeAdmissionMedicationParams,
-  ChangeAdmissionParams,
   ChangeAdmissionProcedureParams,
   ChangeAdmissionWoundCareParams,
+  ChangeMemberDnaParams,
   Diagnosis,
   DiagnosisDocument,
   Dietary,
@@ -105,10 +105,10 @@ export class MemberAdmissionService extends BaseService {
     );
   }
 
-  async change(changeAdmissionParams: ChangeAdmissionParams): Promise<MemberAdmission> {
-    const setParams: ChangeAdmissionParams = omitBy(changeAdmissionParams, isNil);
-    const { memberId } = changeAdmissionParams;
-    let { id } = changeAdmissionParams;
+  async change(changeMemberDnaParams: ChangeMemberDnaParams): Promise<MemberAdmission> {
+    const setParams: ChangeMemberDnaParams = omitBy(changeMemberDnaParams, isNil);
+    const { memberId } = changeMemberDnaParams;
+    let { id } = changeMemberDnaParams;
 
     let result;
     if (setParams.diagnosis) {
@@ -167,7 +167,7 @@ export class MemberAdmissionService extends BaseService {
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
   private async changeInternal(
-    element: BaseAdmission,
+    element: BaseCategory,
     changeType: ChangeType,
     admissionCategory: AdmissionCategory,
     memberId: string,
@@ -184,7 +184,7 @@ export class MemberAdmissionService extends BaseService {
   }
 
   private async createRefObjects(
-    element: BaseAdmission,
+    element: BaseCategory,
     admissionCategory: AdmissionCategory,
     memberId: string,
     id?: string,
@@ -208,7 +208,7 @@ export class MemberAdmissionService extends BaseService {
   }
 
   private async updateRefObjects(
-    element: BaseAdmission,
+    element: BaseCategory,
     admissionCategory: AdmissionCategory,
     id: string,
   ): Promise<MemberAdmission> {

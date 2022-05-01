@@ -8,7 +8,7 @@ import { Document, Model, Types, connect, disconnect } from 'mongoose';
 import { v4 } from 'uuid';
 import { AppRequestContext, RequestContext, apiPrefix } from '../src/common';
 import { Audit, DbModule } from '../src/db';
-import { BaseAdmission, Member, defaultMemberParams } from '../src/member';
+import { BaseCategory, Member, defaultMemberParams } from '../src/member';
 import {
   CognitoService,
   FeatureFlagService,
@@ -310,7 +310,7 @@ export const isResultValid = ({
   return false;
 };
 
-export const removeChangeType = (changeParams): BaseAdmission => {
+export const removeChangeType = (changeParams): BaseCategory => {
   const dupParams = { ...changeParams };
   delete dupParams.changeType;
   return dupParams;
