@@ -1295,6 +1295,24 @@ export const generateRequestHeaders = (authId: string) => {
   return { Authorization: sign({ sub: authId }, 'secret') };
 };
 
+export const mockDbRedFlagType = () => ({
+  _id: generateObjectId(),
+  description: lorem.sentence(),
+});
+
+export const mockDbRedFlag = () => {
+  const createdAt = fakerDate.past(1);
+  const updatedAt = addDays(createdAt, 1);
+
+  return {
+    _id: generateObjectId(),
+    memberId: generateObjectId(),
+    type: generateObjectId(),
+    createdAt,
+    updatedAt,
+    notes: lorem.sentence(),
+  };
+};
 /*************************************************************************************************
  ***************************** ChangeAdmissionParams related methods *****************************
  ************************************************************************************************/

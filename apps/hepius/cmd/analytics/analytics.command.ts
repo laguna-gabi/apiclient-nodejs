@@ -26,6 +26,10 @@ import {
   MemberDataAggregate,
   MemberTable,
   QuestionnaireResponseData,
+  RedFlagData,
+  RedFlagTable,
+  RedFlagTypeData,
+  RedFlagTypeTable,
   SheetOption,
 } from '.';
 import { delay } from '../../src/common';
@@ -84,6 +88,8 @@ export class AnalyticsCommand implements CommandRunner {
         QuestionnaireResponseData,
         BarrierTypeData,
         BarrierData,
+        RedFlagTypeData,
+        RedFlagData,
       ],
       synchronize: true,
       logging: false,
@@ -302,6 +308,25 @@ export class AnalyticsCommand implements CommandRunner {
           await this.queryRunner.clearTable(BarrierTable);
         }
         await AppDataSource.manager.save(await this.analyticsService.getBarriersData());
+      }
+
+      if (options.sheet === SheetOption.redflags || options.sheet === SheetOption.all) {
+        console.debug(
+          '\n----------------------------------------------------------------\n' +
+            '------------------- Generating RedFlags Data -------------------\n' +
+            '----------------------------------------------------------------',
+        );
+        const redFlagTypeTable = await this.queryRunner.getTable(RedFlagTypeTable);
+        if (redFlagTypeTable) {
+          await this.queryRunner.clearTable(RedFlagTypeTable);
+        }
+        await AppDataSource.manager.save(await this.analyticsService.getRedFlagTypeData());
+
+        const redFlagTable = await this.queryRunner.getTable(RedFlagTable);
+        if (redFlagTable) {
+          await this.queryRunner.clearTable(RedFlagTable);
+        }
+        await AppDataSource.manager.save(await this.analyticsService.getRedFlagData());
       }
 
       /***************************** Import Data Enrichment  **************************************/

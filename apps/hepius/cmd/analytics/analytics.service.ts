@@ -27,6 +27,8 @@ import {
   QuestionnaireResponseData,
   QuestionnaireResponseWithTimestamp,
   RecordingSummary,
+  RedFlagData,
+  RedFlagTypeData,
   SheetOption,
   SummaryFileSuffix,
 } from '.';
@@ -48,7 +50,16 @@ import {
   QuestionnaireResponseDocument,
 } from '../../src/questionnaire';
 import { User, UserDocument } from '../../src/user';
-import { Barrier, BarrierDocument, BarrierType, BarrierTypeDocument } from '../../src/care';
+import {
+  Barrier,
+  BarrierDocument,
+  BarrierType,
+  BarrierTypeDocument,
+  RedFlag,
+  RedFlagDocument,
+  RedFlagType,
+  RedFlagTypeDocument,
+} from '../../src/care';
 
 @Injectable()
 export class AnalyticsService {
@@ -70,6 +81,10 @@ export class AnalyticsService {
     private readonly barrierModel: Model<BarrierDocument>,
     @InjectModel(BarrierType.name)
     private readonly barrierTypeModel: Model<BarrierTypeDocument>,
+    @InjectModel(RedFlagType.name)
+    private readonly redFlagTypeModel: Model<RedFlagTypeDocument>,
+    @InjectModel(RedFlag.name)
+    private readonly redFlagModel: Model<RedFlagDocument>,
   ) {}
 
   private userData: Map<string, string>;
@@ -312,6 +327,36 @@ export class AnalyticsService {
       barrier.type = input.type.toString();
       barrier.redFlagId = input.redFlagId.toString();
       return barrier;
+    });
+  }
+
+  async getRedFlagTypeData(): Promise<RedFlagType[]> {
+    const redFlagTypes: RedFlagType[] = await this.redFlagTypeModel.find();
+
+    return redFlagTypes.map((input: RedFlagType) => {
+      const redFlagType = new RedFlagTypeData();
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      redFlagType.id = input._id.toString();
+      redFlagType.description = input.description;
+      return redFlagType;
+    });
+  }
+
+  async getRedFlagData(): Promise<RedFlagData[]> {
+    const redFlags: RedFlag[] = await this.redFlagModel.find();
+
+    return redFlags.map((input: RedFlag) => {
+      const redFlag = new RedFlagData();
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      redFlag.id = input._id.toString();
+      redFlag.member_id = input.memberId.toString();
+      redFlag.created = reformatDate(input.createdAt.toString(), momentFormats.mysqlDateTime);
+      redFlag.updated = reformatDate(input.updatedAt.toString(), momentFormats.mysqlDateTime);
+      redFlag.type = input.type.toString();
+      redFlag.notes = input.notes;
+      return redFlag;
     });
   }
 

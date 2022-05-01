@@ -38,6 +38,8 @@ export const AppointmentTable = 'harmony_appts';
 export const QuestionnaireResponseTable = 'harmony_qrs';
 export const BarrierTable = 'harmony_barriers';
 export const BarrierTypeTable = 'harmony_barrier_types';
+export const RedFlagTypeTable = 'harmony_red_flag_type';
+export const RedFlagTable = 'harmony_red_flag';
 
 export enum SheetOption {
   members = 'members',
@@ -46,6 +48,7 @@ export enum SheetOption {
   caregivers = 'caregivers',
   qrs = 'qrs',
   barriers = 'barriers',
+  redflags = 'redflags',
   all = 'all',
 }
 
@@ -377,6 +380,30 @@ export class BarrierData extends BaseCare {
   type: string;
   @Column('varchar', { length: 50 })
   redFlagId: string;
+}
+
+@Entity({ name: RedFlagTypeTable })
+export class RedFlagTypeData {
+  @PrimaryColumn('varchar', { length: 100 })
+  id: string;
+  @Column('varchar')
+  description: string;
+}
+
+@Entity({ name: RedFlagTable })
+export class RedFlagData {
+  @PrimaryColumn('varchar', { length: 100 })
+  id: string;
+  @Column('varchar', { length: 100 })
+  member_id: string;
+  @Column('datetime')
+  created: string;
+  @Column('datetime')
+  updated: string;
+  @Column('varchar')
+  type: string;
+  @Column('varchar', { nullable: true })
+  notes?: string;
 }
 
 export type AnalyticsData = CoachData | MemberData | AppointmentsMemberData;

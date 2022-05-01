@@ -12,6 +12,8 @@ import {
   generateObjectId,
   mockDbBarrier,
   mockDbBarrierType,
+  mockDbRedFlag,
+  mockDbRedFlagType,
   mockGenerateCaregiver,
   mockGenerateMember,
   mockGenerateMemberConfig,
@@ -35,7 +37,7 @@ import { Caregiver, MemberModule } from '../../src/member';
 import { ProvidersModule } from '../../src/providers';
 import { User, UserDocument, UserModule } from '../../src/user';
 import { QuestionnaireModule, QuestionnaireResponse } from '../../src/questionnaire';
-import { Barrier, BarrierType, CareModule } from '../../src/care';
+import { Barrier, BarrierType, CareModule, RedFlag, RedFlagType } from '../../src/care';
 
 describe('Commands: AnalyticsService', () => {
   let module: TestingModule;
@@ -45,6 +47,8 @@ describe('Commands: AnalyticsService', () => {
   let qrModel: Model<QuestionnaireResponse>;
   let barrierTypesModel: Model<BarrierType>;
   let barriersModel: Model<Barrier>;
+  let redFlagTypesModel: Model<RedFlagType>;
+  let redFlagsModel: Model<RedFlag>;
 
   const now = new Date(Date.UTC(2021, 1, 2, 3, 4, 5));
 
@@ -86,6 +90,8 @@ describe('Commands: AnalyticsService', () => {
     qrModel = module.get<Model<QuestionnaireResponse>>(getModelToken(QuestionnaireResponse.name));
     barrierTypesModel = module.get<Model<BarrierType>>(getModelToken(BarrierType.name));
     barriersModel = module.get<Model<Barrier>>(getModelToken(Barrier.name));
+    redFlagTypesModel = module.get<Model<RedFlagType>>(getModelToken(RedFlagType.name));
+    redFlagsModel = module.get<Model<RedFlag>>(getModelToken(RedFlag.name));
 
     // mock the user model to upload all actors (users) during init
     jest
@@ -866,6 +872,67 @@ describe('Commands: AnalyticsService', () => {
             completed: reformatDate(barrier.completedAt?.toString(), momentFormats.mysqlDateTime),
             type: barrier.type.toString(),
             redFlagId: barrier.redFlagId.toString(),
+          })),
+        ),
+      );
+    });
+  });
+
+  describe('red flags', () => {
+    let redFlagTypesModelSpy;
+    let redFlagsModelSpy;
+
+    beforeAll(async () => {
+      redFlagTypesModelSpy = jest.spyOn(redFlagTypesModel, 'find');
+      redFlagsModelSpy = jest.spyOn(redFlagsModel, 'find');
+    });
+
+    afterEach(() => {
+      redFlagTypesModelSpy.mockReset();
+      redFlagsModelSpy.mockReset();
+    });
+
+    it('should return an empty list of barriers types data entries', async () => {
+      redFlagTypesModelSpy.mockReturnValueOnce([]);
+      const data = await analyticsService.getRedFlagTypeData();
+      expect(data).toEqual([]);
+    });
+
+    it('should return an empty list of barrier data entries', async () => {
+      redFlagsModelSpy.mockReturnValueOnce([]);
+      const data = await analyticsService.getRedFlagData();
+      expect(data).toEqual([]);
+    });
+
+    it('should return non-empty red flag types data entries', async () => {
+      const redFlagsTypes = [mockDbRedFlagType(), mockDbRedFlagType()];
+      redFlagTypesModelSpy.mockReturnValue(redFlagsTypes);
+      const data = await analyticsService.getRedFlagTypeData();
+
+      expect(data).toEqual(
+        expect.arrayContaining(
+          redFlagsTypes.map((input) => ({
+            id: input._id.toString(),
+            description: input.description,
+          })),
+        ),
+      );
+    });
+
+    it('should return non-empty red flag data entries', async () => {
+      const redFlags = [mockDbRedFlag(), mockDbRedFlag()];
+      redFlagsModelSpy.mockReturnValue(redFlags);
+      const data = await analyticsService.getRedFlagData();
+
+      expect(data).toEqual(
+        expect.arrayContaining(
+          redFlags.map((redFlag) => ({
+            id: redFlag._id.toString(),
+            member_id: redFlag.memberId.toString(),
+            created: reformatDate(redFlag.createdAt.toString(), momentFormats.mysqlDateTime),
+            updated: reformatDate(redFlag.updatedAt.toString(), momentFormats.mysqlDateTime),
+            type: redFlag.type.toString(),
+            notes: redFlag.notes,
           })),
         ),
       );
