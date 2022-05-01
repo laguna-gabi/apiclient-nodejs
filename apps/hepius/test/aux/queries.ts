@@ -9,6 +9,7 @@ import {
   DischargeDocumentsLinks,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
+  Member,
   MemberAdmission,
   MultipartUploadInfo,
   MultipartUploadRecordingLinkParams,
@@ -18,7 +19,7 @@ import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
 import { Dispatch } from '../../src/services';
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
 import { GetSlotsParams, UserSummary } from '../../src/user';
-import { FRAGMENT_MEMBER_ADMISSION } from './fragments';
+import { FRAGMENT_MEMBER, FRAGMENT_MEMBER_ADMISSION } from './fragments';
 
 export class Queries {
   constructor(private readonly client: GraphQLClient, private readonly defaultUserRequestHeaders) {}
@@ -151,110 +152,16 @@ export class Queries {
     id,
     requestHeaders = this.defaultUserRequestHeaders,
     invalidFieldsError,
-  }: { id?: string; requestHeaders?; invalidFieldsError? } = {}) => {
+  }: { id?: string; requestHeaders?; invalidFieldsError? } = {}): Promise<Member> => {
     const result = await this.client
       .request(
         gql`
           query getMember($id: String) {
             getMember(id: $id) {
-              id
-              authId
-              phone
-              phoneType
-              deviceId
-              firstName
-              lastName
-              dateOfBirth
-              address {
-                street
-                city
-                state
-              }
-              scores {
-                adherence
-                adherenceText
-                wellbeing
-                wellbeingText
-              }
-              org {
-                id
-                name
-                type
-                trialDuration
-                zipCode
-              }
-              primaryUserId
-              users {
-                id
-                firstName
-                lastName
-                email
-                roles
-                avatar
-                description
-                createdAt
-                phone
-                title
-                maxMembers
-                languages
-                appointments {
-                  id
-                  notBefore
-                  method
-                  status
-                  start
-                  end
-                  link
-                  noShow
-                  noShowReason
-                  notes {
-                    recap
-                    strengths
-                    userActionItem
-                    memberActionItem
-                    scores {
-                      adherence
-                      adherenceText
-                      wellbeing
-                      wellbeingText
-                    }
-                  }
-                }
-              }
-              sex
-              email
-              zipCode
-              utcDelta
-              dischargeDate
-              actionItems {
-                id
-                title
-                status
-                deadline
-              }
-              fellowName
-              drg
-              authId
-              healthPlan
-              preferredGenderPronoun
-              drgDesc
-              phoneSecondary
-              phoneSecondaryType
-              generalNotes
-              nurseNotes
-              admitDate
-              createdAt
-              honorific
-              healthPersona
-              readmissionRisk
-              readmissionRiskHistory {
-                readmissionRisk
-                date
-              }
-              isGraduated
-              graduationDate
+              ...memberFragment
             }
           }
+          ${FRAGMENT_MEMBER}
         `,
         { id },
         requestHeaders,

@@ -544,7 +544,7 @@ describe('Validations - member', () => {
 
         const notifyParams: NotifyParams = generateNotifyParams({
           memberId: member.id,
-          userId: member.primaryUserId,
+          userId: member.primaryUserId.toString(),
           type,
           metadata: { peerId: v4(), content: 'test', when: subSeconds(new Date(), 1) },
         });

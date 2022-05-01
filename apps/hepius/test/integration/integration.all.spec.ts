@@ -2510,6 +2510,8 @@ describe('Integration tests: all', () => {
       expect(memberAfter.isGraduated).toEqual(isGraduated);
 
       if (isGraduated) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         expect(Date.parse(memberAfter.graduationDate)).toBeGreaterThanOrEqual(
           currentTime.getTime(),
         );

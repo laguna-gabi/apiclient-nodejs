@@ -62,7 +62,7 @@ import {
   UpdateTodoParams,
 } from '../../src/todo';
 import { CreateUserParams, UpdateUserParams, User } from '../../src/user';
-import { FRAGMENT_APPOINTMENT, FRAGMENT_MEMBER_ADMISSION } from './fragments';
+import { FRAGMENT_APPOINTMENT, FRAGMENT_MEMBER, FRAGMENT_MEMBER_ADMISSION } from './fragments';
 
 export class Mutations {
   constructor(
@@ -247,95 +247,10 @@ export class Mutations {
         gql`
           mutation UpdateMember($updateMemberParams: UpdateMemberParams!) {
             updateMember(updateMemberParams: $updateMemberParams) {
-              id
-              phone
-              deviceId
-              firstName
-              lastName
-              dateOfBirth
-              address {
-                street
-                city
-                state
-              }
-              scores {
-                adherence
-                adherenceText
-                wellbeing
-                wellbeingText
-              }
-              org {
-                id
-                name
-                type
-                trialDuration
-                zipCode
-              }
-              primaryUserId
-              users {
-                id
-                firstName
-                lastName
-                email
-                roles
-                avatar
-                description
-                createdAt
-                phone
-                title
-                maxMembers
-                languages
-                appointments {
-                  id
-                  notBefore
-                  method
-                  status
-                  start
-                  end
-                  link
-                  noShow
-                  noShowReason
-                  notes {
-                    recap
-                    strengths
-                    userActionItem
-                    memberActionItem
-                    scores {
-                      adherence
-                      adherenceText
-                      wellbeing
-                      wellbeingText
-                    }
-                  }
-                }
-              }
-              sex
-              email
-              zipCode
-              utcDelta
-              dischargeDate
-              actionItems {
-                id
-                title
-                status
-                deadline
-              }
-              fellowName
-              drgDesc
-              phoneSecondary
-              generalNotes
-              admitDate
-              createdAt
-              honorific
-              readmissionRisk
-              readmissionRiskHistory {
-                readmissionRisk
-                date
-              }
-              isGraduated
-              graduationDate
+              ...memberFragment
             }
           }
+          ${FRAGMENT_MEMBER}
         `,
         { updateMemberParams },
         requestHeaders,

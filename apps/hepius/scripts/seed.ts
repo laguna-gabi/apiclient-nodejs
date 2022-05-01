@@ -152,12 +152,12 @@ export async function seed() {
       '-------- Scheduling appointments with users and member ---------\n' +
       '----------------------------------------------------------------',
   );
-  await requestAppointment(memberId, primaryUserId);
-  const appointmentId = await scheduleAppointment(memberId, primaryUserId);
+  await requestAppointment(memberId, primaryUserId.toString());
+  const appointmentId = await scheduleAppointment(memberId, primaryUserId.toString());
   await delay(2000); //pending sendbird post events actions
   await endAppointment(appointmentId);
   await delay(2000); //pending sendbird post events actions
-  await scheduleAppointment(memberId, primaryUserId);
+  await scheduleAppointment(memberId, primaryUserId.toString());
   await delay(2000); //pending sendbird post events actions
 
   console.debug(
