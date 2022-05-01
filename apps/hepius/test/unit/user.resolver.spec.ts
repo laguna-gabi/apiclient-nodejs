@@ -362,6 +362,29 @@ describe('UserResolver', () => {
     });
   });
 
+  describe('getUserSlotsByAppointmentId', () => {
+    let spyOnServiceGetSlots;
+    beforeEach(() => {
+      spyOnServiceGetSlots = jest.spyOn(service, 'getSlots');
+    });
+
+    afterEach(() => {
+      spyOnServiceGetSlots.mockReset();
+    });
+
+    it('should get free slots of a user given an appointmentId', async () => {
+      const getSlotsParams: GetSlotsParams = generateGetSlotsParams();
+      const appointmentId = generateId();
+
+      spyOnServiceGetSlots.mockImplementationOnce(async () => getSlotsParams);
+
+      const result = await resolver.getUserSlotsByAppointmentId(appointmentId);
+
+      expect(spyOnServiceGetSlots).toBeCalledWith({ appointmentId });
+      expect(result).toEqual(getSlotsParams);
+    });
+  });
+
   describe('getUserConfig', () => {
     let spyOnServiceGetUserConfig;
     beforeEach(() => {

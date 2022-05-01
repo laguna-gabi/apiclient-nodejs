@@ -181,6 +181,14 @@ describe('Validations - user', () => {
     await handler.queries.getUserSlots(getSlotsParams, params.errors);
   });
 
+  test.each`
+    field              | input                       | errors
+    ${'appointmentId'} | ${{ appointmentId: 123 }}   | ${stringError}
+    ${'appointmentId'} | ${{ appointmentId: '123' }} | ${Errors.get(ErrorType.appointmentIdInvalid)}
+  `(`should fail to request slots since $field is not valid`, async (params) => {
+    await handler.queries.getUserSlotsByAppointmentId(params.input, params.errors);
+  });
+
   it('should throw error on non existing userConfig', async () => {
     await handler.queries.getUserConfig({
       id: generateId(),

@@ -148,6 +148,52 @@ export class Queries {
     return result?.getUserSlots;
   };
 
+  getUserSlotsByAppointmentId = async (
+    appointmentId,
+    requestHeaders,
+    invalidFieldsError?: string,
+  ) => {
+    const result = await this.client
+      .request(
+        gql`
+          query getUserSlotsByAppointmentId($appointmentId: string!) {
+            getUserSlotsByAppointmentId(appointmentId: $appointmentId) {
+              slots
+              user {
+                id
+                firstName
+                roles
+                avatar
+                description
+              }
+              member {
+                id
+                firstName
+              }
+              appointment {
+                id
+                start
+                method
+                duration
+              }
+            }
+          }
+        `,
+        { appointmentId },
+        requestHeaders,
+      )
+      .catch((ex) => {
+        if (invalidFieldsError) {
+          expect(ex.response.errors[0]?.message || ex.response.errors[0][0]?.message).toContain(
+            invalidFieldsError,
+          );
+          return;
+        }
+      });
+
+    return result?.getUserSlotsByAppointmentId;
+  };
+
   getMember = async ({
     id,
     requestHeaders = this.defaultUserRequestHeaders,

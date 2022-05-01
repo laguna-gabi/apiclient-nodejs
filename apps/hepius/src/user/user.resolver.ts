@@ -25,6 +25,7 @@ import {
   IsValidObjectId,
   LoggerService,
   LoggingInterceptor,
+  MemberRole,
   Roles,
   UserRole,
 } from '../common';
@@ -123,6 +124,19 @@ export class UserResolver {
     @Args(camelCase(GetSlotsParams.name)) getSlotsParams: GetSlotsParams,
   ): Promise<Slots> {
     return this.userService.getSlots(getSlotsParams);
+  }
+
+  @Query(() => Slots)
+  @Roles(MemberRole.member)
+  async getUserSlotsByAppointmentId(
+    @Args(
+      'appointmentId',
+      { type: () => String },
+      new IsValidObjectId(Errors.get(ErrorType.appointmentIdInvalid)),
+    )
+    appointmentId: string,
+  ): Promise<Slots> {
+    return this.userService.getSlots({ appointmentId });
   }
 
   @Query(() => UserConfig)
