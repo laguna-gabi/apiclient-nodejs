@@ -304,6 +304,14 @@ export class MemberAdmission extends Identifier {
   @Prop({ type: [{ type: Types.ObjectId, ref: Dietary.name }], isNaN: true })
   @Field(() => [Dietary], { nullable: true })
   dietaries?: Dietary[];
+
+  @Prop({ isNaN: true })
+  @Field({ nullable: true })
+  primaryCareProviderName?: string;
+
+  @Prop({ isNaN: true })
+  @Field({ nullable: true })
+  medicalRecordNumber?: string;
 }
 
 /**************************************************************************************************
