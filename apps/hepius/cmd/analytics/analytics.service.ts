@@ -549,6 +549,8 @@ export class AnalyticsService {
       general_notes: member.memberDetails.generalNotes,
       nurse_notes: member.memberDetails.nurseNotes,
       marital_status: member.memberDetails.maritalStatus,
+      height: member.memberDetails.height,
+      weight: member.memberDetails.weight,
     };
   }
 

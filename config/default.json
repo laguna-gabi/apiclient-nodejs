@@ -15,6 +15,14 @@
       "name": {
         "minLength": 2,
         "maxLength": 50
+      },
+      "height": {
+        "min": 10,
+        "max": 280
+      },
+      "weight": {
+        "min": 0.1,
+        "max": 450
       }
     }
   },

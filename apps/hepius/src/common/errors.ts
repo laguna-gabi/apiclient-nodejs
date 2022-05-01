@@ -48,6 +48,8 @@ export enum ErrorType {
   memberIdMetadataMissing = 9229,
   memberNotesAndNurseNotesNotProvided = 9230,
   memberUploadAlreadyExistingGeneralDocument = 9231,
+  memberHeightNotInRange = 9232,
+  memberWeightNotInRange = 9233,
 
   //member admission
   memberAdmissionDiagnosisIdNotFound = 9300,
@@ -163,9 +165,9 @@ export enum ErrorType {
   orgIdInvalid = 10401,
 }
 
-const nameFormat =
-  `name must be between ${graphql.validators.name.minLength} and ` +
-  `${graphql.validators.name.maxLength} characters`;
+const { name, height, weight } = graphql.validators;
+
+const nameFormat = `name must be between ${name.minLength} and ${name.maxLength} characters`;
 const dateTimeInstanceFormat = 'must be a DateTime instance';
 const dateInstanceFormat = `must be an only Date instance: ${momentFormats.date}`;
 const emailFormat =
@@ -228,6 +230,14 @@ export const Errors: Map<ErrorType, string> = new Map([
   [
     ErrorType.memberUploadAlreadyExistingGeneralDocument.valueOf(),
     `can not upload an already existing document`,
+  ],
+  [
+    ErrorType.memberHeightNotInRange.valueOf(),
+    `height must be between ${height.min} and ${height.max} cm`,
+  ],
+  [
+    ErrorType.memberWeightNotInRange.valueOf(),
+    `weight must be between ${weight.min} and ${weight.max} kg`,
   ],
   [ErrorType.memberAdmissionDiagnosisIdNotFound.valueOf(), `diagnosis ${notFoundPrefix}`],
   [ErrorType.memberAdmissionProcedureIdNotFound.valueOf(), `procedure ${notFoundPrefix}`],

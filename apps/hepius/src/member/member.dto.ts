@@ -6,14 +6,17 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsPhoneNumber,
   IsString,
   Length,
   Matches,
+  Max,
+  Min,
   ValidateIf,
 } from 'class-validator';
-import { twilio } from 'config';
+import { graphql, twilio } from 'config';
 import { Document, Types } from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
 import { ActionItem } from './index';
@@ -191,6 +194,20 @@ export class ExtraMemberParams {
   @IsEnum(MaritalStatus) /* for rest api */
   @IsOptional()
   maritalStatus?: MaritalStatus;
+
+  @Field(() => Number, { nullable: true })
+  @IsNumber() /* for rest api */
+  @IsOptional()
+  @Min(graphql.validators.height.min, { message: Errors.get(ErrorType.memberHeightNotInRange) })
+  @Max(graphql.validators.height.max, { message: Errors.get(ErrorType.memberHeightNotInRange) })
+  height?: number;
+
+  @Field(() => Number, { nullable: true })
+  @IsNumber() /* for rest api */
+  @IsOptional()
+  @Min(graphql.validators.weight.min, { message: Errors.get(ErrorType.memberWeightNotInRange) })
+  @Max(graphql.validators.weight.max, { message: Errors.get(ErrorType.memberWeightNotInRange) })
+  weight?: number;
 }
 
 @InputType()
@@ -691,6 +708,14 @@ export class Member extends Identifier {
   @Prop({ type: String, enum: MaritalStatus, isNaN: true })
   @Field(() => MaritalStatus, { nullable: true })
   maritalStatus?: MaritalStatus;
+
+  @Prop({ type: Number, isNaN: true })
+  @Field(() => Number, { nullable: true })
+  height?: number;
+
+  @Prop({ type: Number, isNaN: true })
+  @Field(() => Number, { nullable: true })
+  weight?: number;
 }
 
 @ObjectType()

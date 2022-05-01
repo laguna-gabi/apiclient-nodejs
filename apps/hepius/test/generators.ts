@@ -15,7 +15,7 @@ import {
   generatePhone,
   generateZipCode,
 } from '@argus/pandora';
-import { general, hosts } from 'config';
+import { general, graphql, hosts } from 'config';
 import { add, addDays, format, sub } from 'date-fns';
 import {
   company,
@@ -277,6 +277,8 @@ export const generateCreateMemberParams = ({
   honorific = defaultMemberParams.honorific,
   userId,
   maritalStatus = MaritalStatus.single,
+  height = generateRandomHeight(),
+  weight = generateRandomWeight(),
 }: Partial<CreateMemberParams> & { orgId: string }): CreateMemberParams & { orgId: string } => {
   return {
     authId,
@@ -293,6 +295,8 @@ export const generateCreateMemberParams = ({
     honorific,
     userId,
     maritalStatus,
+    height,
+    weight,
   };
 };
 
@@ -1477,6 +1481,12 @@ export const generateAdmissionDietaryParams = ({
     bmi: lorem.word(),
   };
 };
+
+export const generateRandomHeight = () =>
+  datatype.number({ min: graphql.validators.height.min, max: graphql.validators.height.max });
+
+export const generateRandomWeight = () =>
+  datatype.number({ min: graphql.validators.weight.min, max: graphql.validators.weight.max });
 
 /*************************************************************************************************
  ******************************************** Helpers ********************************************

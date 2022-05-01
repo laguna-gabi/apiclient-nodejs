@@ -177,6 +177,10 @@ export class MemberData {
   last_modified_datetime?: Date;
   @Column('varchar', { length: 50, nullable: true })
   marital_status?: MaritalStatus;
+  @Column('float', { nullable: true })
+  height?: number;
+  @Column('float', { nullable: true })
+  weight?: number;
 }
 
 @Entity({ name: CoachTable })

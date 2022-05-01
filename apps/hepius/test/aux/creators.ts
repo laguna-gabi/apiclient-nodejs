@@ -99,6 +99,8 @@ export class Creators {
     expect(member.dischargeDate).toBeNull();
     expect(member.maritalStatus).toEqual(memberParams.maritalStatus);
     expect(new Date(member.createdAt)).toEqual(expect.any(Date));
+    expect(member.height).toEqual(memberParams.height);
+    expect(member.weight).toEqual(memberParams.weight);
 
     return { member, user, org };
   };

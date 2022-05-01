@@ -24,6 +24,7 @@ import {
   generateNotifyContentParams,
   generateNotifyParams,
   generateOrgParams,
+  generateRandomHeight,
   generateRandomName,
   generateReplaceMemberOrgParams,
   generateReplaceUserForMemberParams,
@@ -50,6 +51,7 @@ import {
 } from '../../src/member';
 import { AppointmentsIntegrationActions, Creators } from '../aux';
 import { Handler } from '../aux/handler';
+import { graphql } from 'config';
 
 const stringError = `String cannot represent a non string value`;
 const BooleanError = `Boolean cannot represent a non boolean value`;
@@ -144,6 +146,7 @@ describe('Validations - member', () => {
       ${'zipCode'}       | ${generateZipCode()}
       ${'honorific'}     | ${Honorific.dr}
       ${'maritalStatus'} | ${MaritalStatus.widowed}
+      ${'height'}    | ${generateRandomHeight()}
     `(`should be able to set value for optional field $field`, async (params) => {
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
       await creators.createAndValidateUser({ orgId });
@@ -199,6 +202,7 @@ describe('Validations - member', () => {
       ${{ honorific: 'not-valid' }}     | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
       ${{ userId: 'not-valid' }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userIdInvalid)] }}
       ${{ maritalStatus: 'not-valid' }} | ${{ missingFieldError: 'does not exist in "MaritalStatus" enum' }}
+      ${{ height: 'not-valid' }}        | ${{ missingFieldError: `Float cannot represent non numeric value` }}
     `(
       /* eslint-enable max-len */
       `should fail to create a member since setting $input is not a valid`,
@@ -224,6 +228,19 @@ describe('Validations - member', () => {
       await handler.mutations.createMember({
         memberParams,
         invalidFieldsErrors: [Errors.get(ErrorType.memberMinMaxLength)],
+      });
+    });
+
+    test.each`
+      height                               | errorString
+      ${graphql.validators.height.max + 1} | ${'high'}
+      ${graphql.validators.height.min - 1} | ${'low'}
+    `(`should fail to create a member since $field is too $errorString`, async (params) => {
+      const memberParams: CreateMemberParams = generateCreateMemberParams({ orgId: generateId() });
+      memberParams.height = params.height;
+      await handler.mutations.createMember({
+        memberParams,
+        invalidFieldsErrors: [Errors.get(ErrorType.memberHeightNotInRange)],
       });
     });
 
