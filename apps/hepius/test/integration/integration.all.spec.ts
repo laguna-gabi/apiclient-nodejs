@@ -75,11 +75,11 @@ import {
 } from '../../src/common';
 import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
 import {
+  Admission,
   AlertType,
   ChangeMemberDnaParams,
   CreateTaskParams,
   Member,
-  MemberAdmission,
   Recording,
   RecordingOutput,
   ReplaceUserForMemberParams,
@@ -2751,7 +2751,7 @@ describe('Integration tests: all', () => {
   const changeMemberDna = async (
     changeType: ChangeType,
     memberId: string,
-  ): Promise<{ changeMemberDnaParams: ChangeMemberDnaParams; result: MemberAdmission }> => {
+  ): Promise<{ changeMemberDnaParams: ChangeMemberDnaParams; result: Admission }> => {
     const createDiagnosis = generateAdmissionDiagnosisParams({ changeType });
     const createProcedure = generateAdmissionProcedureParams({ changeType });
     const createMedication = generateAdmissionMedicationParams({ changeType });

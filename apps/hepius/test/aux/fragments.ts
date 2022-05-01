@@ -134,8 +134,8 @@ export const FRAGMENT_APPOINTMENT = gql`
   }
 `;
 
-export const FRAGMENT_MEMBER_ADMISSION = gql`
-  fragment memberAdmissionFragment on MemberAdmission {
+export const FRAGMENT_ADMISSION = gql`
+  fragment admissionFragment on Admission {
     id
     diagnoses {
       id

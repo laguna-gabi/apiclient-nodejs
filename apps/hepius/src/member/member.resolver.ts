@@ -80,6 +80,8 @@ import { QuestionnaireAlerts, QuestionnaireType } from '../questionnaire';
 import { User, UserService } from '../user';
 import {
   AddCaregiverParams,
+  Admission,
+  AdmissionService,
   Alert,
   AppointmentCompose,
   AudioType,
@@ -103,8 +105,6 @@ import {
   JournalUploadAudioLink,
   JournalUploadImageLink,
   Member,
-  MemberAdmission,
-  MemberAdmissionService,
   MemberBase,
   MemberConfig,
   MemberService,
@@ -135,7 +135,7 @@ import {
 export class MemberResolver extends MemberBase {
   constructor(
     readonly memberService: MemberService,
-    readonly memberAdmissionService: MemberAdmissionService,
+    readonly admissionService: AdmissionService,
     readonly eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
     private readonly cognitoService: CognitoService,
@@ -1421,17 +1421,17 @@ export class MemberResolver extends MemberBase {
   /************************************************************************************************
    *************************************** Member Admission ***************************************
    ************************************************************************************************/
-  @Mutation(() => MemberAdmission)
+  @Mutation(() => Admission)
   @Roles(UserRole.coach, UserRole.nurse)
   async changeMemberDna(
     @Client('roles') roles,
     @Args(camelCase(ChangeMemberDnaParams.name))
     changeMemberDnaParams: ChangeMemberDnaParams,
-  ): Promise<MemberAdmission> {
-    return this.memberAdmissionService.change(changeMemberDnaParams);
+  ): Promise<Admission> {
+    return this.admissionService.change(changeMemberDnaParams);
   }
 
-  @Query(() => [MemberAdmission])
+  @Query(() => [Admission])
   @Roles(UserRole.coach, UserRole.nurse)
   async getMemberAdmissions(
     @Args(
@@ -1441,7 +1441,7 @@ export class MemberResolver extends MemberBase {
     )
     memberId: string,
   ) {
-    return this.memberAdmissionService.get(memberId);
+    return this.admissionService.get(memberId);
   }
 
   /************************************************************************************************

@@ -7,6 +7,9 @@ import {
   ActionItemDto,
   Activity,
   ActivityDto,
+  Admission,
+  AdmissionDto,
+  AdmissionService,
   Caregiver,
   CaregiverDto,
   ControlMember,
@@ -24,9 +27,6 @@ import {
   Medication,
   MedicationDto,
   Member,
-  MemberAdmission,
-  MemberAdmissionDto,
-  MemberAdmissionService,
   MemberConfig,
   MemberConfigDto,
   MemberController,
@@ -74,7 +74,7 @@ import { UserModule } from '../user';
       { name: Activity.name, schema: ActivityDto },
       { name: WoundCare.name, schema: WoundCareDto },
       { name: Dietary.name, schema: DietaryDto },
-      { name: MemberAdmission.name, schema: MemberAdmissionDto },
+      { name: Admission.name, schema: AdmissionDto },
     ]),
     MongooseModule.forFeatureAsync([
       {
@@ -97,7 +97,7 @@ import { UserModule } from '../user';
       },
     ]),
   ],
-  providers: [MemberResolver, MemberService, MemberAdmissionService, ConfigsService],
+  providers: [MemberResolver, MemberService, AdmissionService, ConfigsService],
   controllers: [MemberController],
   exports: [MemberService, MongooseModule],
 })

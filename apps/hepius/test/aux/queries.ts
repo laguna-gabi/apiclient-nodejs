@@ -5,12 +5,12 @@ import { Barrier, BarrierType, CarePlan, CarePlanType, RedFlag, RedFlagType } fr
 import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
 import {
+  Admission,
   Caregiver,
   DischargeDocumentsLinks,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
   Member,
-  MemberAdmission,
   MultipartUploadInfo,
   MultipartUploadRecordingLinkParams,
   RecordingLinkParams,
@@ -19,7 +19,7 @@ import { Questionnaire, QuestionnaireResponse } from '../../src/questionnaire';
 import { Dispatch } from '../../src/services';
 import { GetTodoDonesParams, Todo, TodoDone } from '../../src/todo';
 import { GetSlotsParams, UserSummary } from '../../src/user';
-import { FRAGMENT_MEMBER, FRAGMENT_MEMBER_ADMISSION } from './fragments';
+import { FRAGMENT_ADMISSION, FRAGMENT_MEMBER } from './fragments';
 
 export class Queries {
   constructor(private readonly client: GraphQLClient, private readonly defaultUserRequestHeaders) {}
@@ -1305,16 +1305,16 @@ export class Queries {
     memberId: string;
     invalidFieldsError?: string;
     requestHeaders?;
-  }): Promise<MemberAdmission[]> => {
+  }): Promise<Admission[]> => {
     const result = await this.client
       .request(
         gql`
           query getMemberAdmissions($memberId: String!) {
             getMemberAdmissions(memberId: $memberId) {
-              ...memberAdmissionFragment
+              ...admissionFragment
             }
           }
-          ${FRAGMENT_MEMBER_ADMISSION}
+          ${FRAGMENT_ADMISSION}
         `,
         { memberId },
         requestHeaders,

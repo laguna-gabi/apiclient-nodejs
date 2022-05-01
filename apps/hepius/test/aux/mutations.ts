@@ -23,6 +23,7 @@ import { Identifier, Identifiers, RegisterForNotificationParams } from '../../sr
 import { DailyReportCategoriesInput } from '../../src/dailyReport';
 import {
   AddCaregiverParams,
+  Admission,
   CancelNotifyParams,
   Caregiver,
   ChangeMemberDnaParams,
@@ -34,7 +35,6 @@ import {
   GraduateMemberParams,
   Journal,
   Member,
-  MemberAdmission,
   NotifyContentParams,
   NotifyParams,
   Recording,
@@ -62,7 +62,7 @@ import {
   UpdateTodoParams,
 } from '../../src/todo';
 import { CreateUserParams, UpdateUserParams, User } from '../../src/user';
-import { FRAGMENT_APPOINTMENT, FRAGMENT_MEMBER, FRAGMENT_MEMBER_ADMISSION } from './fragments';
+import { FRAGMENT_ADMISSION, FRAGMENT_APPOINTMENT, FRAGMENT_MEMBER } from './fragments';
 
 export class Mutations {
   constructor(
@@ -1894,16 +1894,16 @@ export class Mutations {
     missingFieldError?: string;
     invalidFieldsErrors?: string[];
     requestHeaders?;
-  }): Promise<MemberAdmission> => {
+  }): Promise<Admission> => {
     const { changeMemberDna } = await this.client
       .request(
         gql`
           mutation changeMemberDna($changeMemberDnaParams: ChangeMemberDnaParams!) {
             changeMemberDna(changeMemberDnaParams: $changeMemberDnaParams) {
-              ...memberAdmissionFragment
+              ...admissionFragment
             }
           }
-          ${FRAGMENT_MEMBER_ADMISSION}
+          ${FRAGMENT_ADMISSION}
         `,
         { changeMemberDnaParams },
         requestHeaders,

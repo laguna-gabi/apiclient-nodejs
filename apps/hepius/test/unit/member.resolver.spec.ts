@@ -75,6 +75,7 @@ import {
   CommunicationService,
 } from '../../src/communication';
 import {
+  AdmissionService,
   AudioFormat,
   AudioType,
   DischargeDocumentType,
@@ -83,7 +84,6 @@ import {
   ImageType,
   Journal,
   Member,
-  MemberAdmissionService,
   MemberConfig,
   MemberModule,
   MemberResolver,
@@ -105,7 +105,7 @@ describe('MemberResolver', () => {
   let module: TestingModule;
   let resolver: MemberResolver;
   let service: MemberService;
-  let admissionService: MemberAdmissionService;
+  let admissionService: AdmissionService;
   let userService: UserService;
   let storage: StorageService;
   let cognitoService: CognitoService;
@@ -125,7 +125,7 @@ describe('MemberResolver', () => {
 
     resolver = module.get<MemberResolver>(MemberResolver);
     service = module.get<MemberService>(MemberService);
-    admissionService = module.get<MemberAdmissionService>(MemberAdmissionService);
+    admissionService = module.get<AdmissionService>(AdmissionService);
     userService = module.get<UserService>(UserService);
     storage = module.get<StorageService>(StorageService);
     cognitoService = module.get<CognitoService>(CognitoService);

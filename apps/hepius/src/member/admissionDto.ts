@@ -273,7 +273,7 @@ export class ChangeMemberDnaParams {
  *************************************************************************************************/
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
-export class MemberAdmission extends Identifier {
+export class Admission extends Identifier {
   @Prop({ type: Types.ObjectId, index: true })
   memberId: Types.ObjectId;
 
@@ -317,9 +317,9 @@ export class MemberAdmission extends Identifier {
 /**************************************************************************************************
  **************************************** Exported Schemas ****************************************
  *************************************************************************************************/
-export type MemberAdmissionDocument = MemberAdmission & Document & ISoftDelete<MemberAdmission>;
-export const MemberAdmissionDto = audit(
-  SchemaFactory.createForClass(MemberAdmission).plugin(mongooseDelete, useFactoryOptions),
+export type AdmissionDocument = Admission & Document & ISoftDelete<Admission>;
+export const AdmissionDto = audit(
+  SchemaFactory.createForClass(Admission).plugin(mongooseDelete, useFactoryOptions),
 );
 
 export type DiagnosisDocument = Diagnosis & Document & ISoftDelete<Diagnosis>;

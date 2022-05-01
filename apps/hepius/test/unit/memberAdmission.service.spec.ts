@@ -12,7 +12,11 @@ import {
   Activity,
   ActivityDocument,
   ActivityDto,
+  Admission,
   AdmissionCategory,
+  AdmissionDocument,
+  AdmissionDto,
+  AdmissionService,
   Diagnosis,
   DiagnosisDocument,
   DiagnosisDto,
@@ -25,10 +29,6 @@ import {
   Medication,
   MedicationDocument,
   MedicationDto,
-  MemberAdmission,
-  MemberAdmissionDocument,
-  MemberAdmissionDto,
-  MemberAdmissionService,
   MemberModule,
   Procedure,
   ProcedureDocument,
@@ -52,15 +52,15 @@ import {
   removeChangeType,
 } from '../index';
 
-describe(MemberAdmissionService.name, () => {
+describe(AdmissionService.name, () => {
   let module: TestingModule;
-  let service: MemberAdmissionService;
+  let service: AdmissionService;
   const mapAdmissionCategoryToParamField: Map<
     AdmissionCategory,
     { field: string; method; model?: typeof Model; errorNotFound?: ErrorType }
   > = new Map();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let memberAdmissionModel: Model<MemberAdmissionDocument & defaultTimestampsDbValues>;
+  let admissionModel: Model<AdmissionDocument & defaultTimestampsDbValues>;
   let diagnosisModel: Model<DiagnosisDocument & defaultTimestampsDbValues>;
   let procedureModel: Model<ProcedureDocument & defaultTimestampsDbValues>;
   let medicationModel: Model<MedicationDocument & defaultTimestampsDbValues>;
@@ -75,7 +75,7 @@ describe(MemberAdmissionService.name, () => {
       imports: defaultModules().concat(MemberModule),
     }).compile();
 
-    service = module.get<MemberAdmissionService>(MemberAdmissionService);
+    service = module.get<AdmissionService>(AdmissionService);
     mockLogger(module.get<LoggerService>(LoggerService));
 
     initModels();
@@ -122,9 +122,9 @@ describe(MemberAdmissionService.name, () => {
         [`${admissionCategory}`]: [{ ...removeChangeType(changeParams2), id: id2 }],
       });
 
-      const count1 = await memberAdmissionModel.count({ memberId: new Types.ObjectId(memberId1) });
+      const count1 = await admissionModel.count({ memberId: new Types.ObjectId(memberId1) });
       expect(count1).toEqual(2);
-      const count2 = await memberAdmissionModel.count({ memberId: new Types.ObjectId(memberId2) });
+      const count2 = await admissionModel.count({ memberId: new Types.ObjectId(memberId2) });
       expect(count2).toEqual(1);
     },
   );
@@ -150,7 +150,7 @@ describe(MemberAdmissionService.name, () => {
         ],
       });
 
-      const records = await memberAdmissionModel.count({ memberId: new Types.ObjectId(memberId) });
+      const records = await admissionModel.count({ memberId: new Types.ObjectId(memberId) });
       expect(records).toEqual(1);
     },
   );
@@ -361,7 +361,7 @@ describe(MemberAdmissionService.name, () => {
     await expect(service.get(generateId())).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
   });
 
-  const createAllCategories = async (memberId: string): Promise<MemberAdmission> => {
+  const createAllCategories = async (memberId: string): Promise<Admission> => {
     let result;
     //create synchronous categories(test fails on unique mongodb error for field memberId on async Promise.all)
     for (const admissionCategory of Object.values(AdmissionCategory)) {
@@ -373,7 +373,7 @@ describe(MemberAdmissionService.name, () => {
     return result;
   };
 
-  const checkAllCategories = (result: MemberAdmission) => {
+  const checkAllCategories = (result: Admission) => {
     expect(result[AdmissionCategory.diagnoses]).toEqual([
       expect.objectContaining({ description: expect.any(String) }),
     ]);
@@ -396,14 +396,14 @@ describe(MemberAdmissionService.name, () => {
     params,
     memberId: string,
     id?: string,
-  ): Promise<MemberAdmission> => {
+  ): Promise<Admission> => {
     return service.change({ [`${field}`]: params, memberId, id });
   };
 
   const initModels = () => {
-    memberAdmissionModel = model<MemberAdmissionDocument & defaultTimestampsDbValues>(
-      MemberAdmission.name,
-      MemberAdmissionDto,
+    admissionModel = model<AdmissionDocument & defaultTimestampsDbValues>(
+      Admission.name,
+      AdmissionDto,
     );
     diagnosisModel = model<DiagnosisDocument & defaultTimestampsDbValues>(
       Diagnosis.name,
@@ -434,43 +434,43 @@ describe(MemberAdmissionService.name, () => {
       field: 'diagnosis',
       method: generateAdmissionDiagnosisParams,
       model: diagnosisModel,
-      errorNotFound: ErrorType.memberAdmissionDiagnosisIdNotFound,
+      errorNotFound: ErrorType.admissionDiagnosisIdNotFound,
     });
     mapAdmissionCategoryToParamField.set(AdmissionCategory.procedures, {
       field: 'procedure',
       method: generateAdmissionProcedureParams,
       model: procedureModel,
-      errorNotFound: ErrorType.memberAdmissionProcedureIdNotFound,
+      errorNotFound: ErrorType.admissionProcedureIdNotFound,
     });
     mapAdmissionCategoryToParamField.set(AdmissionCategory.medications, {
       field: 'medication',
       method: generateAdmissionMedicationParams,
       model: medicationModel,
-      errorNotFound: ErrorType.memberAdmissionMedicationIdNotFound,
+      errorNotFound: ErrorType.admissionMedicationIdNotFound,
     });
     mapAdmissionCategoryToParamField.set(AdmissionCategory.externalAppointments, {
       field: 'externalAppointment',
       method: generateAdmissionExternalAppointmentParams,
       model: externalAppointmentModel,
-      errorNotFound: ErrorType.memberAdmissionExternalAppointmentIdNotFound,
+      errorNotFound: ErrorType.admissionExternalAppointmentIdNotFound,
     });
     mapAdmissionCategoryToParamField.set(AdmissionCategory.activities, {
       field: 'activity',
       method: generateAdmissionActivityParams,
       model: activityModel,
-      errorNotFound: ErrorType.memberAdmissionActivityIdNotFound,
+      errorNotFound: ErrorType.admissionActivityIdNotFound,
     });
     mapAdmissionCategoryToParamField.set(AdmissionCategory.woundCares, {
       field: 'woundCare',
       method: generateAdmissionWoundCareParams,
       model: woundCareModel,
-      errorNotFound: ErrorType.memberAdmissionWoundCareIdNotFound,
+      errorNotFound: ErrorType.admissionWoundCareIdNotFound,
     });
     mapAdmissionCategoryToParamField.set(AdmissionCategory.dietaries, {
       field: 'dietary',
       method: generateAdmissionDietaryParams,
       model: dietaryModel,
-      errorNotFound: ErrorType.memberAdmissionDietaryIdNotFound,
+      errorNotFound: ErrorType.admissionDietaryIdNotFound,
     });
   };
 });

@@ -52,13 +52,13 @@ export enum ErrorType {
   memberWeightNotInRange = 9233,
 
   //member admission
-  memberAdmissionDiagnosisIdNotFound = 9300,
-  memberAdmissionProcedureIdNotFound = 9301,
-  memberAdmissionMedicationIdNotFound = 9302,
-  memberAdmissionExternalAppointmentIdNotFound = 9303,
-  memberAdmissionActivityIdNotFound = 9304,
-  memberAdmissionWoundCareIdNotFound = 9305,
-  memberAdmissionDietaryIdNotFound = 9306,
+  admissionDiagnosisIdNotFound = 9300,
+  admissionProcedureIdNotFound = 9301,
+  admissionMedicationIdNotFound = 9302,
+  admissionExternalAppointmentIdNotFound = 9303,
+  admissionActivityIdNotFound = 9304,
+  admissionWoundCareIdNotFound = 9305,
+  admissionDietaryIdNotFound = 9306,
 
   // Notifications
   notificationMetadataInvalid = 9270,
@@ -239,16 +239,16 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.memberWeightNotInRange.valueOf(),
     `weight must be between ${weight.min} and ${weight.max} kg`,
   ],
-  [ErrorType.memberAdmissionDiagnosisIdNotFound.valueOf(), `diagnosis ${notFoundPrefix}`],
-  [ErrorType.memberAdmissionProcedureIdNotFound.valueOf(), `procedure ${notFoundPrefix}`],
-  [ErrorType.memberAdmissionMedicationIdNotFound.valueOf(), `medication ${notFoundPrefix}`],
+  [ErrorType.admissionDiagnosisIdNotFound.valueOf(), `diagnosis ${notFoundPrefix}`],
+  [ErrorType.admissionProcedureIdNotFound.valueOf(), `procedure ${notFoundPrefix}`],
+  [ErrorType.admissionMedicationIdNotFound.valueOf(), `medication ${notFoundPrefix}`],
   [
-    ErrorType.memberAdmissionExternalAppointmentIdNotFound.valueOf(),
+    ErrorType.admissionExternalAppointmentIdNotFound.valueOf(),
     `external appointment ${notFoundPrefix}`,
   ],
-  [ErrorType.memberAdmissionActivityIdNotFound.valueOf(), `activity ${notFoundPrefix}`],
-  [ErrorType.memberAdmissionWoundCareIdNotFound.valueOf(), `wound care ${notFoundPrefix}`],
-  [ErrorType.memberAdmissionDietaryIdNotFound.valueOf(), `dietary ${notFoundPrefix}`],
+  [ErrorType.admissionActivityIdNotFound.valueOf(), `activity ${notFoundPrefix}`],
+  [ErrorType.admissionWoundCareIdNotFound.valueOf(), `wound care ${notFoundPrefix}`],
+  [ErrorType.admissionDietaryIdNotFound.valueOf(), `dietary ${notFoundPrefix}`],
   [
     ErrorType.notificationMetadataInvalid.valueOf(),
     `when calling type 'text' or 'textSms', 'content' in metadata is required ` +
