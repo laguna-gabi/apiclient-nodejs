@@ -49,10 +49,9 @@ export class NotificationService implements OnModuleInit {
       }
     } catch (ex) {
       if (
-        ['ECONNREFUSED', 'ECONNABORTED', 'ENOTFOUND'].includes(ex.code) &&
+        ['ECONNREFUSED', 'ECONNABORTED', 'ENOTFOUND', 'ECONNRESET'].includes(ex.code) &&
         retryAttempt < services.retries
       ) {
-        await this.onModuleInit(); // re-discover instance
         return this.getDispatchesByClientSenderId(clientSenderId, projection, ++retryAttempt);
       }
 

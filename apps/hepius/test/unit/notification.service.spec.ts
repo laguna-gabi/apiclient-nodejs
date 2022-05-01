@@ -86,28 +86,30 @@ describe('NotificationService', () => {
       );
     });
 
-    it('should fail after 4 retries due to ENOTFOUND', async () => {
-      const senderClientId = generateId();
+    test.each(['ECONNREFUSED', 'ECONNABORTED', 'ENOTFOUND', 'ECONNRESET'])(
+      'should fail after 4 retries due to %p error code',
+      async (code) => {
+        const senderClientId = generateId();
 
-      spyOnHttpServiceGet.mockImplementation(() => {
-        throw { code: 'ENOTFOUND' };
-      });
+        spyOnHttpServiceGet.mockImplementation(() => {
+          throw { code };
+        });
 
-      try {
-        await service.getDispatchesByClientSenderId(senderClientId, ['field1', 'field2']);
-      } catch (ex) {
-        expect(ex).toEqual({ code: 'ENOTFOUND' });
-      }
+        try {
+          await service.getDispatchesByClientSenderId(senderClientId, ['field1', 'field2']);
+        } catch (ex) {
+          expect(ex).toEqual({ code });
+        }
 
-      expect(spyOnHttpServiceGet).toBeCalledTimes(4);
-      expect(spyOnServiceOnModuleInit).toBeCalledTimes(3);
-      expect(spyOnHttpServiceGet).toBeCalledWith(
-        `http://localhost:${services.iris.port}/dispatches/${senderClientId}`,
-        {
-          params: { projection: 'field1,field2', status: 'done' },
-          timeout: 2000,
-        },
-      );
-    });
+        expect(spyOnHttpServiceGet).toBeCalledTimes(4);
+        expect(spyOnHttpServiceGet).toBeCalledWith(
+          `http://localhost:${services.iris.port}/dispatches/${senderClientId}`,
+          {
+            params: { projection: 'field1,field2', status: 'done' },
+            timeout: 2000,
+          },
+        );
+      },
+    );
   });
 });
