@@ -35,7 +35,9 @@ Laguna health backend infrastructure.
     - [Create user:](#create-user)
     - [Create Token:](#create-token)
     - [Laguna Seed:](#laguna-seed)
+    - [Set up the DB:](#set-up-the-db)
   - [🏗️ Analytics](#️-analytics)
+    - [Uploading a new version to EC2 auto loader](#uploading-a-new-version-to-ec2-auto-loader)
   - [🏗️ Migration](#️-migration)
     - [Overview](#overview)
     - [What's new in our latest release?](#whats-new-in-our-latest-release)
@@ -164,8 +166,26 @@ yarn setup
 Running analytics will generate output csv files for analytics team - here's how to generate all csv files (members, coach and appointments data)
 
 ```
-nx command hepius --cmd=analytics --options='-s all'
+nx command hepius --cmd=analytics'
 ```
+
+OR 
+```
+yarn analytics:dump:<env>
+```
+
+### Uploading a new version to EC2 auto loader
+1. in AWS console navigate to the EC2 machine list 
+2. select the `Data Analytics` machine and `connect` to it (via console)
+3. switch to `ec2-user` , cd to the auto loader directory and pull latest version and run it
+```
+su - ec2-user
+cd Projects/DataAnalytics/argus
+git pull
+yarn analytics:dump:prod
+```
+
+**Note**: after you run the command once it will generate a main.js in dist which will be used for the nightly runs.. 
 
 ## 🏗️ Migration
 
