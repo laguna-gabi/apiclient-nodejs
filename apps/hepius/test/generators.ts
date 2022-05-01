@@ -97,6 +97,7 @@ import {
   Honorific,
   ImageFormat,
   InternalCreateMemberParams,
+  MaritalStatus,
   Member,
   MemberConfig,
   NotifyContentParams,
@@ -275,6 +276,7 @@ export const generateCreateMemberParams = ({
   dischargeDate,
   honorific = defaultMemberParams.honorific,
   userId,
+  maritalStatus = MaritalStatus.single,
 }: Partial<CreateMemberParams> & { orgId: string }): CreateMemberParams & { orgId: string } => {
   return {
     authId,
@@ -290,6 +292,7 @@ export const generateCreateMemberParams = ({
     dischargeDate,
     honorific,
     userId,
+    maritalStatus,
   };
 };
 
@@ -353,6 +356,7 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
     honorific: defaultMemberParams.honorific,
     roles: [MemberRole.member],
     race: defaultMemberParams.race,
+    maritalStatus: MaritalStatus.single,
     zipCode: generateZipCode(),
     fellowName: `${name.firstName()} ${name.lastName()}`,
     address: {
@@ -405,6 +409,7 @@ export const generateUpdateMemberParams = ({
   honorific = Honorific.mr,
   deviceId = datatype.uuid(),
   readmissionRisk = ReadmissionRisk.medium,
+  maritalStatus = MaritalStatus.married,
   healthPlan = datatype.string(10),
   preferredGenderPronoun = datatype.string(10),
 }: Partial<UpdateMemberParams> = {}): UpdateMemberParams => {
@@ -429,6 +434,7 @@ export const generateUpdateMemberParams = ({
     readmissionRisk,
     healthPlan,
     preferredGenderPronoun,
+    maritalStatus,
   };
 };
 

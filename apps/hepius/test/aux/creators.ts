@@ -97,6 +97,7 @@ export class Creators {
     expect(member.email).toBeNull();
     expect(member.zipCode).toEqual(memberParams.zipCode);
     expect(member.dischargeDate).toBeNull();
+    expect(member.maritalStatus).toEqual(memberParams.maritalStatus);
     expect(new Date(member.createdAt)).toEqual(expect.any(Date));
 
     return { member, user, org };

@@ -548,6 +548,7 @@ export class AnalyticsService {
       coach_id: member.memberDetails.primaryUserId?.toString(),
       general_notes: member.memberDetails.generalNotes,
       nurse_notes: member.memberDetails.nurseNotes,
+      marital_status: member.memberDetails.maritalStatus,
     };
   }
 

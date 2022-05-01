@@ -94,6 +94,15 @@ export enum DischargeDocumentType {
 
 registerEnumType(DischargeDocumentType, { name: 'DischargeDocumentType' });
 
+export enum MaritalStatus {
+  married = 'married',
+  single = 'single',
+  divorced = 'divorced',
+  widowed = 'widowed',
+  lifePartnership = 'life partnership',
+}
+registerEnumType(MaritalStatus, { name: 'MaritalStatus' });
+
 export const defaultMemberParams = {
   sex: Sex.male,
   language: Language.en,
@@ -177,6 +186,11 @@ export class ExtraMemberParams {
   @IsString() /* for rest api */
   @IsOptional()
   preferredGenderPronoun?: string;
+
+  @Field(() => MaritalStatus, { nullable: true })
+  @IsEnum(MaritalStatus) /* for rest api */
+  @IsOptional()
+  maritalStatus?: MaritalStatus;
 }
 
 @InputType()
@@ -673,6 +687,10 @@ export class Member extends Identifier {
   @Prop({ type: Date, isNaN: true })
   @Field(() => Date, { nullable: true })
   graduationDate?: Date;
+
+  @Prop({ type: String, enum: MaritalStatus, isNaN: true })
+  @Field(() => MaritalStatus, { nullable: true })
+  maritalStatus?: MaritalStatus;
 }
 
 @ObjectType()

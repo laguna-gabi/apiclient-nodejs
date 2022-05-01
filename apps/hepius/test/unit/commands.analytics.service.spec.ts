@@ -550,6 +550,7 @@ describe('Commands: AnalyticsService', () => {
         org_name: mockOrg.name,
         general_notes: mockMember.generalNotes,
         nurse_notes: mockMember.nurseNotes,
+        marital_status: mockMember.maritalStatus,
       });
     });
 
@@ -637,6 +638,7 @@ describe('Commands: AnalyticsService', () => {
         org_name: mockOrg.name,
         general_notes: mockMember.generalNotes,
         nurse_notes: mockMember.nurseNotes,
+        marital_status: mockMember.maritalStatus,
       });
     });
 
@@ -680,6 +682,7 @@ describe('Commands: AnalyticsService', () => {
         active: false,
         org_id: mockOrg.id,
         org_name: mockOrg.name,
+        marital_status: mockMember.maritalStatus,
       });
     });
   });

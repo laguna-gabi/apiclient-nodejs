@@ -14,6 +14,7 @@ import { Appointment, AppointmentStatus, Notes } from '../../src/appointment';
 import { RecordingType, UserRole } from '../../src/common';
 import {
   Honorific,
+  MaritalStatus,
   Member,
   MemberConfig,
   Race,
@@ -174,6 +175,8 @@ export class MemberData {
   load_datetime?: Date;
   @UpdateDateColumn()
   last_modified_datetime?: Date;
+  @Column('varchar', { length: 50, nullable: true })
+  marital_status?: MaritalStatus;
 }
 
 @Entity({ name: CoachTable })

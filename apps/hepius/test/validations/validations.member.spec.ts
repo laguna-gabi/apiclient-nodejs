@@ -42,6 +42,7 @@ import {
   CancelNotifyParams,
   CreateMemberParams,
   Honorific,
+  MaritalStatus,
   NotifyParams,
   Sex,
   UpdateMemberParams,
@@ -137,11 +138,12 @@ describe('Validations - member', () => {
     });
 
     test.each`
-      field          | value
-      ${'sex'}       | ${Sex.female}
-      ${'email'}     | ${internet.email()}
-      ${'zipCode'}   | ${generateZipCode()}
-      ${'honorific'} | ${Honorific.dr}
+      field              | value
+      ${'sex'}           | ${Sex.female}
+      ${'email'}         | ${internet.email()}
+      ${'zipCode'}       | ${generateZipCode()}
+      ${'honorific'}     | ${Honorific.dr}
+      ${'maritalStatus'} | ${MaritalStatus.widowed}
     `(`should be able to set value for optional field $field`, async (params) => {
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
       await creators.createAndValidateUser({ orgId });
@@ -196,6 +198,7 @@ describe('Validations - member', () => {
       ${{ dischargeDate: new Date() }}  | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
       ${{ honorific: 'not-valid' }}     | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
       ${{ userId: 'not-valid' }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.userIdInvalid)] }}
+      ${{ maritalStatus: 'not-valid' }} | ${{ missingFieldError: 'does not exist in "MaritalStatus" enum' }}
     `(
       /* eslint-enable max-len */
       `should fail to create a member since setting $input is not a valid`,

@@ -98,6 +98,7 @@ export const FRAGMENT_MEMBER = gql`
     }
     isGraduated
     graduationDate
+    maritalStatus
   }
 `;
 

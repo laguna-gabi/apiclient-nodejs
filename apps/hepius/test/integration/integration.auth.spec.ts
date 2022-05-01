@@ -24,6 +24,8 @@ describe('Integration tests : RBAC', () => {
   });
 
   it('expecting `member` to be granted access to an endpoint', async () => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     const { errors } = await handler.queries.getMember({
       id: handler.patientZero.id.toString(),
       requestHeaders,
