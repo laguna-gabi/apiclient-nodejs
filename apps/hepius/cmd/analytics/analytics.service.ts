@@ -384,8 +384,8 @@ export class AnalyticsService {
       const carePlan = new CarePlanData();
       this.initBaseFields(carePlan, input);
       carePlan.type = input.type.toString();
-      carePlan.barrierId = input.barrierId.toString();
-      carePlan.dueDate = reformatDate(input.dueDate.toString(), momentFormats.mysqlDateTime);
+      carePlan.barrierId = input.barrierId?.toString();
+      carePlan.dueDate = reformatDate(input.dueDate?.toString(), momentFormats.mysqlDateTime);
       return carePlan;
     });
   }
