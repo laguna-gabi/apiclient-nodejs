@@ -263,7 +263,7 @@ export const Errors: Map<ErrorType, string> = new Map([
   ],
   [
     ErrorType.notificationNotAllowedForMobileMember.valueOf(),
-    `web notification is not allowed if member login to the app`,
+    `web notification is not allowed if member is using the app`,
   ],
   [
     ErrorType.notificationNotAllowedNoRequestedAppointment.valueOf(),
