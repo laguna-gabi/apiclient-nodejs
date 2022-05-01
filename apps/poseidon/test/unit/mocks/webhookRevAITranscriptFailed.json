@@ -1,0 +1,16 @@
+{
+  "job": {
+    "id": "T6tEQtndnTt6",
+    "created_on": "2022-04-27T14:08:20.719Z",
+    "completed_on": "2022-04-27T14:08:46.818Z",
+    "name": "speech_to_text_test_2_min.mp3",
+    "callback_url": "https://webhook.site/1504df23-1aa8-43ab-97a6-cdad477c1358",
+    "speaker_channels_count": 2,
+    "failure": "invalid_media",
+    "failure_detail": "An invalid audio channel was found. Please check that the specified number of speaker channels matches the number in the source audio",
+    "status": "failed",
+    "duration_seconds": 98.35,
+    "type": "async",
+    "language": "en"
+  }
+}

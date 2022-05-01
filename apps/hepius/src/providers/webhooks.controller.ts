@@ -1,4 +1,10 @@
-import { GlobalEventType, IEventNotifySlack, SlackChannel, SlackIcon } from '@argus/pandora';
+import {
+  GlobalEventType,
+  IEventNotifySlack,
+  SlackChannel,
+  SlackIcon,
+  webhooks,
+} from '@argus/pandora';
 import {
   Body,
   Controller,
@@ -19,7 +25,6 @@ import {
   LoggingInterceptor,
   Public,
   apiPrefix,
-  webhooks,
 } from '../common';
 
 /**

@@ -1,4 +1,4 @@
-import { ServiceName } from '@argus/pandora';
+import { ServiceName, webhooks } from '@argus/pandora';
 import { INestApplication } from '@nestjs/common';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -6,7 +6,7 @@ import { TestingModule } from '@nestjs/testing';
 import { db } from 'config';
 import { Document, Model, Types, connect, disconnect } from 'mongoose';
 import { v4 } from 'uuid';
-import { AppRequestContext, RequestContext, apiPrefix, webhooks } from '../src/common';
+import { AppRequestContext, RequestContext, apiPrefix } from '../src/common';
 import { Audit, DbModule } from '../src/db';
 import { BaseAdmission, Member, defaultMemberParams } from '../src/member';
 import {

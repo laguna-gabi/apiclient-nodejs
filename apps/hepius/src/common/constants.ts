@@ -1,5 +1,4 @@
 export const apiPrefix = 'api';
-export const webhooks = 'webhooks';
 export const bearerToken = 'Bearer ';
 export const onlyDateRegex = /^\d{4}(\/)(((0)[0-9])|((1)[0-2]))(\/)([0-2][0-9]|(3)[0-1])$/i;
 export const momentFormats = {
