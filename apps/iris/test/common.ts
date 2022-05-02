@@ -1,4 +1,3 @@
-import { mongoConnectionStringSettings } from '@argus/pandora';
 import { db, hosts } from 'config';
 import { connect, disconnect } from 'mongoose';
 import { ConfigsService, ExternalConfigs } from '../src/providers';
@@ -38,9 +37,9 @@ export const replaceConfigs = ({
 export const dbConnect = async () => {
   const config = new ConfigsService();
   await connect(
-    `${await config.getConfig(ExternalConfigs.db.connection)}/${
+    `${await config.getConfig(ExternalConfigs.db.connection.iris)}/${
       db.name
-    }${mongoConnectionStringSettings}`,
+    }?retryWrites=true&w=majority`,
   );
 };
 

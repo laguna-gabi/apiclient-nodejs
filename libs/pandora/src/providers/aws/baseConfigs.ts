@@ -3,9 +3,6 @@ import { SecretsManager } from 'aws-sdk';
 import { Environments } from '../../interfaces';
 
 export const BaseExternalConfigs = {
-  db: {
-    connection: 'db.connection',
-  },
   aws: {
     queueNameNotifications: 'aws.sqs.queueNameNotifications',
     queueNameAudit: 'aws.sqs.queueNameAudit',
@@ -35,8 +32,6 @@ export const BaseExternalConfigs = {
     hepius: 'host.hepius',
   },
 };
-
-export const mongoConnectionStringSettings = '?retryWrites=true&w=majority';
 
 export abstract class BaseConfigs implements MongooseOptionsFactory {
   protected data;
