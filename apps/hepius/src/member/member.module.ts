@@ -24,6 +24,9 @@ import {
   ExternalAppointmentDto,
   Journal,
   JournalDto,
+  Journey,
+  JourneyDto,
+  JourneyService,
   Medication,
   MedicationDto,
   Member,
@@ -74,6 +77,7 @@ import { UserModule } from '../user';
       { name: Activity.name, schema: ActivityDto },
       { name: WoundCare.name, schema: WoundCareDto },
       { name: Dietary.name, schema: DietaryDto },
+      { name: Journey.name, schema: JourneyDto },
       { name: Admission.name, schema: AdmissionDto },
     ]),
     MongooseModule.forFeatureAsync([
@@ -97,7 +101,7 @@ import { UserModule } from '../user';
       },
     ]),
   ],
-  providers: [MemberResolver, MemberService, AdmissionService, ConfigsService],
+  providers: [MemberResolver, MemberService, AdmissionService, ConfigsService, JourneyService],
   controllers: [MemberController],
   exports: [MemberService, MongooseModule],
 })

@@ -1,7 +1,7 @@
 import { Body, Controller, HttpException, HttpStatus, Post, UseInterceptors } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { LoggerService, LoggingInterceptor, Public, apiPrefix } from '../common';
-import { CreateMemberParams, Member, MemberBase, MemberService } from '.';
+import { CreateMemberParams, JourneyService, Member, MemberBase, MemberService } from '.';
 import { UserService } from '../user';
 import { FeatureFlagService, TwilioService } from '../providers';
 
@@ -13,10 +13,19 @@ export class MemberController extends MemberBase {
     readonly eventEmitter: EventEmitter2,
     readonly userService: UserService,
     readonly featureFlagService: FeatureFlagService,
+    readonly journeyService: JourneyService,
     readonly twilio: TwilioService,
     readonly logger: LoggerService,
   ) {
-    super(memberService, eventEmitter, userService, featureFlagService, twilio, logger);
+    super(
+      memberService,
+      eventEmitter,
+      userService,
+      featureFlagService,
+      journeyService,
+      twilio,
+      logger,
+    );
   }
 
   @Public()

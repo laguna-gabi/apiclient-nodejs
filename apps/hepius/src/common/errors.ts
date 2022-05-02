@@ -51,15 +51,6 @@ export enum ErrorType {
   memberHeightNotInRange = 9232,
   memberWeightNotInRange = 9233,
 
-  //member admission
-  admissionDiagnosisIdNotFound = 9300,
-  admissionProcedureIdNotFound = 9301,
-  admissionMedicationIdNotFound = 9302,
-  admissionExternalAppointmentIdNotFound = 9303,
-  admissionActivityIdNotFound = 9304,
-  admissionWoundCareIdNotFound = 9305,
-  admissionDietaryIdNotFound = 9306,
-
   // Notifications
   notificationMetadataInvalid = 9270,
   notificationMemberPlatformWeb = 9271,
@@ -163,6 +154,19 @@ export enum ErrorType {
 
   // Module Org
   orgIdInvalid = 10401,
+
+  // member journey
+  journeyNotFound = 10501,
+  journeyForMemberNotFound = 10502,
+
+  //member admission
+  admissionDiagnosisIdNotFound = 10601,
+  admissionProcedureIdNotFound = 10602,
+  admissionMedicationIdNotFound = 10603,
+  admissionExternalAppointmentIdNotFound = 10604,
+  admissionActivityIdNotFound = 10605,
+  admissionWoundCareIdNotFound = 10606,
+  admissionDietaryIdNotFound = 10607,
 }
 
 const { name, height, weight } = graphql.validators;
@@ -239,16 +243,6 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.memberWeightNotInRange.valueOf(),
     `weight must be between ${weight.min} and ${weight.max} kg`,
   ],
-  [ErrorType.admissionDiagnosisIdNotFound.valueOf(), `diagnosis ${notFoundPrefix}`],
-  [ErrorType.admissionProcedureIdNotFound.valueOf(), `procedure ${notFoundPrefix}`],
-  [ErrorType.admissionMedicationIdNotFound.valueOf(), `medication ${notFoundPrefix}`],
-  [
-    ErrorType.admissionExternalAppointmentIdNotFound.valueOf(),
-    `external appointment ${notFoundPrefix}`,
-  ],
-  [ErrorType.admissionActivityIdNotFound.valueOf(), `activity ${notFoundPrefix}`],
-  [ErrorType.admissionWoundCareIdNotFound.valueOf(), `wound care ${notFoundPrefix}`],
-  [ErrorType.admissionDietaryIdNotFound.valueOf(), `dietary ${notFoundPrefix}`],
   [
     ErrorType.notificationMetadataInvalid.valueOf(),
     `when calling type 'text' or 'textSms', 'content' in metadata is required ` +
@@ -417,6 +411,18 @@ export const Errors: Map<ErrorType, string> = new Map([
   [ErrorType.orgIdInvalid.valueOf(), `orgId ${objectIdFormat}`],
   [ErrorType.redFlagTypeInvalid.valueOf(), 'invalid red flag type'],
   [ErrorType.redFlagTypeNotFound.valueOf(), 'red flag type was not found'],
+  [ErrorType.admissionDiagnosisIdNotFound.valueOf(), `diagnosis ${notFoundPrefix}`],
+  [ErrorType.admissionProcedureIdNotFound.valueOf(), `procedure ${notFoundPrefix}`],
+  [ErrorType.admissionMedicationIdNotFound.valueOf(), `medication ${notFoundPrefix}`],
+  [
+    ErrorType.admissionExternalAppointmentIdNotFound.valueOf(),
+    `external appointment ${notFoundPrefix}`,
+  ],
+  [ErrorType.admissionActivityIdNotFound.valueOf(), `activity ${notFoundPrefix}`],
+  [ErrorType.admissionWoundCareIdNotFound.valueOf(), `wound care ${notFoundPrefix}`],
+  [ErrorType.admissionDietaryIdNotFound.valueOf(), `dietary ${notFoundPrefix}`],
+  [ErrorType.journeyNotFound.valueOf(), `journey ${notFoundPrefix}`],
+  [ErrorType.journeyForMemberNotFound.valueOf(), `journey for member ${notFoundPrefix}`],
 ]);
 
 export const DbErrors = {

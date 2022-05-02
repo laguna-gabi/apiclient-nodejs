@@ -29,3 +29,4 @@ export * as m20220411171322 from './20220411171322-replace-datetime-to-only-date
 export * as m20220413113830 from './20220413113830-update-date-format';
 export * as m20220414144809 from './20220414144809-set-isGraduated';
 export * as m20220418094757 from './20220418094757-moveIsGraduatedToMember';
+export * as m20220502090824 from './20220502090824-create-journeys';

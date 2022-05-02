@@ -104,6 +104,7 @@ import {
   Journal,
   JournalUploadAudioLink,
   JournalUploadImageLink,
+  JourneyService,
   Member,
   MemberBase,
   MemberConfig,
@@ -143,11 +144,20 @@ export class MemberResolver extends MemberBase {
     readonly userService: UserService,
     readonly communicationService: CommunicationService,
     protected readonly bitly: Bitly,
-    readonly logger: LoggerService,
     readonly featureFlagService: FeatureFlagService,
+    readonly journeyService: JourneyService,
     readonly twilio: TwilioService,
+    readonly logger: LoggerService,
   ) {
-    super(memberService, eventEmitter, userService, featureFlagService, twilio, logger);
+    super(
+      memberService,
+      eventEmitter,
+      userService,
+      featureFlagService,
+      journeyService,
+      twilio,
+      logger,
+    );
   }
 
   @Mutation(() => Identifier)

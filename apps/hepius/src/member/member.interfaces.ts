@@ -19,6 +19,7 @@ import { Types } from 'mongoose';
 import {
   CreateMemberParams,
   InternalCreateMemberParams,
+  JourneyService,
   Member,
   MemberConfig,
   MemberService,
@@ -42,6 +43,7 @@ export class MemberBase {
     readonly eventEmitter: EventEmitter2,
     readonly userService: UserService,
     readonly featureFlagService: FeatureFlagService,
+    readonly journeyService: JourneyService,
     readonly twilio: TwilioService,
     readonly logger: LoggerService,
   ) {}
@@ -76,6 +78,8 @@ export class MemberBase {
 
     const eventNewMemberParams: IEventOnNewMember = { member, user, platform };
     this.eventEmitter.emit(EventType.onNewMember, eventNewMemberParams);
+
+    await this.journeyService.create({ memberId: member.id });
 
     const eventSlackMessageParams: IEventNotifySlack = {
       header: `*New _real_ member*`,

@@ -83,6 +83,7 @@ import {
   ImageFormat,
   ImageType,
   Journal,
+  JourneyService,
   Member,
   MemberConfig,
   MemberModule,
@@ -115,6 +116,7 @@ describe('MemberResolver', () => {
   let eventEmitter: EventEmitter2;
   let featureFlagService: FeatureFlagService;
   let twilioService: TwilioService;
+  let journeyService: JourneyService;
   let spyOnEventEmitter;
 
   beforeAll(async () => {
@@ -136,6 +138,7 @@ describe('MemberResolver', () => {
     spyOnEventEmitter = jest.spyOn(eventEmitter, 'emit');
     featureFlagService = module.get<FeatureFlagService>(FeatureFlagService);
     twilioService = module.get<TwilioService>(TwilioService);
+    journeyService = module.get<JourneyService>(JourneyService);
     mockLogger(module.get<LoggerService>(LoggerService));
   });
 
@@ -156,6 +159,7 @@ describe('MemberResolver', () => {
     let spyOnServiceGetMemberConfig;
     let spyOnFeatureFlagControlGroup;
     let spyOnTwilioGetPhoneType;
+    let spyOnJourneyCreate;
 
     beforeEach(() => {
       spyOnServiceInsert = jest.spyOn(service, 'insert');
@@ -165,6 +169,7 @@ describe('MemberResolver', () => {
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnFeatureFlagControlGroup = jest.spyOn(featureFlagService, 'isControlGroup');
       spyOnTwilioGetPhoneType = jest.spyOn(twilioService, 'getPhoneType');
+      spyOnJourneyCreate = jest.spyOn(journeyService, 'create');
     });
 
     afterEach(() => {
@@ -176,6 +181,7 @@ describe('MemberResolver', () => {
       spyOnEventEmitter.mockReset();
       spyOnFeatureFlagControlGroup.mockReset();
       spyOnTwilioGetPhoneType.mockReset();
+      spyOnJourneyCreate.mockReset();
     });
 
     it('should create a member', async () => {
@@ -192,6 +198,7 @@ describe('MemberResolver', () => {
       spyOnUserServiceGetUser.mockImplementationOnce(async () => user);
       spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => false);
       spyOnTwilioGetPhoneType.mockResolvedValueOnce(phoneType);
+      spyOnJourneyCreate.mockResolvedValueOnce(generateId());
 
       const params = generateCreateMemberParams({ orgId: generateId() });
       await resolver.createMember(params);
@@ -202,6 +209,7 @@ describe('MemberResolver', () => {
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(member.id);
       expect(spyOnTwilioGetPhoneType).toBeCalledWith(params.phone);
+      expect(spyOnJourneyCreate).toBeCalledWith({ memberId: member.id });
       const eventNewMemberParams: IEventOnNewMember = {
         member,
         user,
@@ -254,6 +262,7 @@ describe('MemberResolver', () => {
       //forcing true to be sure it won't be control member, even if control rolled true.
       spyOnFeatureFlagControlGroup.mockImplementationOnce(async () => true);
       spyOnTwilioGetPhoneType.mockResolvedValueOnce(phoneType);
+      spyOnJourneyCreate.mockResolvedValueOnce(generateId());
 
       const params = generateCreateMemberParams({ orgId: generateId(), userId: user.id });
       await resolver.createMember(params);
@@ -270,6 +279,7 @@ describe('MemberResolver', () => {
         user,
         platform: memberConfig.platform,
       };
+      expect(spyOnJourneyCreate).toBeCalledWith({ memberId: member.id });
       expect(spyOnEventEmitter).toBeCalledWith(EventType.onNewMember, eventNewMemberParams);
       const eventSlackMessageParams: IEventNotifySlack = {
         /* eslint-disable-next-line max-len */
@@ -302,6 +312,7 @@ describe('MemberResolver', () => {
         message: JSON.stringify(generateUpdateClientSettings({ member })),
       };
       expect(spyOnEventEmitter).toHaveBeenCalledWith(GlobalEventType.notifyQueue, eventNotifyQueue);
+      expect(spyOnJourneyCreate).not.toBeCalled();
 
       const eventSlackMessageParams: IEventNotifySlack = {
         /* eslint-disable-next-line max-len */
