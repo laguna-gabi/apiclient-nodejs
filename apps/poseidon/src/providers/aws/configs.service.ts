@@ -5,6 +5,10 @@ import { aws, db } from 'config';
 
 export const ExternalConfigs = {
   ...BaseExternalConfigs,
+  aws: {
+    ...BaseExternalConfigs.aws,
+    queueNameTranscript: 'aws.sqs.queueNameTranscript',
+  },
   db: {
     connection: { poseidon: 'db.connection.poseidon' },
   },

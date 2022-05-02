@@ -23,7 +23,6 @@ export enum Language {
 export enum QueueType {
   audit = 'audit',
   notifications = 'notifications',
-  transcript = 'transcript',
 }
 
 export enum AuditType {

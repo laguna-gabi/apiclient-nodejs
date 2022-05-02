@@ -25,10 +25,6 @@ import {
   StorageType,
   formatEx,
 } from '@argus/pandora';
-import {
-  ICreateTranscript,
-  InnerQueueTypes as PoseidonInnerQueueTypes,
-} from '@argus/poseidonClient';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -533,32 +529,13 @@ export class MemberResolver extends MemberBase {
   async completeMultipartUpload(
     @Args(camelCase(CompleteMultipartUploadParams.name))
     completeMultipartUploadParams: CompleteMultipartUploadParams,
-    @Client('_id') userId,
   ) {
-    const { id, memberId } = completeMultipartUploadParams;
-
     // Validating member exists
-    await this.memberService.get(memberId);
-    await this.storageService.completeMultipartUpload({
+    await this.memberService.get(completeMultipartUploadParams.memberId);
+    return this.storageService.completeMultipartUpload({
       ...completeMultipartUploadParams,
       storageType: StorageType.recordings,
     });
-
-    const createTranscript: ICreateTranscript = {
-      type: PoseidonInnerQueueTypes.createTranscript,
-      serviceName: ServiceName.hepius,
-      correlationId: getCorrelationId(this.logger),
-      recordingId: id,
-      memberId,
-      userId,
-    };
-    const eventParams: IEventNotifyQueue = {
-      type: QueueType.transcript,
-      message: JSON.stringify(createTranscript),
-    };
-    this.eventEmitter.emit(GlobalEventType.notifyQueue, eventParams);
-
-    return true;
   }
 
   @Query(() => String)

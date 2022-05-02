@@ -26,7 +26,6 @@ export class QueueService implements OnModuleInit {
   });
   private auditQueueUrl;
   private notificationsQueueUrl;
-  private transcriptQueueUrl;
   private imageQueueUrl;
   private consumer;
 
@@ -37,8 +36,7 @@ export class QueueService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    const { queueNameAudit, queueNameNotifications, queueNameTranscript, queueNameImage } =
-      ExternalConfigs.aws;
+    const { queueNameAudit, queueNameNotifications, queueNameImage } = ExternalConfigs.aws;
 
     if (process.env.NODE_ENV === Environments.production) {
       const auditName = await this.configsService.getConfig(queueNameAudit);
@@ -63,15 +61,6 @@ export class QueueService implements OnModuleInit {
       .getQueueUrl({ QueueName: imageName })
       .promise();
     this.imageQueueUrl = imageQueueUrl;
-
-    const transcriptName =
-      !process.env.NODE_ENV || process.env.NODE_ENV === Environments.test
-        ? aws.queue.transcript
-        : await this.configsService.getConfig(queueNameTranscript);
-    const { QueueUrl: transcriptQueueUrl } = await this.sqs
-      .getQueueUrl({ QueueName: transcriptName })
-      .promise();
-    this.transcriptQueueUrl = transcriptQueueUrl;
 
     // register and start consumer for ImageQ
     this.consumer = Consumer.create({
@@ -130,8 +119,6 @@ export class QueueService implements OnModuleInit {
         };
       case QueueType.notifications:
         return { QueueUrl: this.notificationsQueueUrl };
-      case QueueType.transcript:
-        return { QueueUrl: this.transcriptQueueUrl };
       default:
         throw new NotImplementedException();
     }

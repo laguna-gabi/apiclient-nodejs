@@ -6,7 +6,6 @@ export const BaseExternalConfigs = {
   aws: {
     queueNameNotifications: 'aws.sqs.queueNameNotifications',
     queueNameAudit: 'aws.sqs.queueNameAudit',
-    queueNameTranscript: 'aws.sqs.queueNameTranscript',
     memberBucketName: 'aws.storage.memberBucketName',
   },
   oneSignal: {
