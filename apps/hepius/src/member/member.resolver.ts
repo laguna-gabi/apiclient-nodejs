@@ -320,11 +320,14 @@ export class MemberResolver extends MemberBase {
     graduateMemberParams: GraduateMemberParams,
   ) {
     const member = await this.memberService.get(graduateMemberParams.id);
+    const memberConfig = await this.memberService.getMemberConfig(graduateMemberParams.id);
     if (member.isGraduated !== graduateMemberParams.isGraduated) {
-      if (graduateMemberParams.isGraduated) {
-        await this.cognitoService.disableClient(member.deviceId);
-      } else {
-        await this.cognitoService.enableClient(member.deviceId);
+      if (memberConfig.platform !== Platform.web) {
+        if (graduateMemberParams.isGraduated) {
+          await this.cognitoService.disableClient(member.deviceId);
+        } else {
+          await this.cognitoService.enableClient(member.deviceId);
+        }
       }
       await this.memberService.graduate(graduateMemberParams);
     }

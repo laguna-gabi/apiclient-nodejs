@@ -2499,6 +2499,15 @@ describe('Integration tests: all', () => {
     const deviceId = v4();
     await handler.mutations.updateMember({ updateMemberParams: { id: member.id, deviceId } });
 
+    const updateMemberConfigParams = generateUpdateMemberConfigParams({
+      platform: Platform.android,
+    });
+    delete updateMemberConfigParams.memberId;
+    await handler.mutations.updateMemberConfig({
+      updateMemberConfigParams,
+      requestHeaders: generateRequestHeaders(member.authId),
+    });
+
     const graduate = async (isGraduated: boolean, calledMethod, notCalledMethod) => {
       const currentTime = new Date();
 
