@@ -304,7 +304,7 @@ Migration is supported via `Argus` ci/cd manual flow under the same restrictions
 
 - **Step 3.1**: test the code on your local mongo db - apply your new migration script:
   ```
-  nx command hepius --cmd=migration --option='up [<file-name>] [-d]'
+  nx command hepius --cmd=migration --options='up [<file-name>] [-d]'
   ```
   (file name and -d for dry run are optional)
   Note: name field is optional and you can add a specific migration file to migrate `up` (could be out of order and not necessarily `PENDING`)

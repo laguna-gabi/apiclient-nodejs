@@ -206,23 +206,23 @@ export const buildNPSQuestionnaire = (): CreateQuestionnaireParams => {
 export const buildLHPQuestionnaire = (): CreateQuestionnaireParams => {
   /* eslint-disable max-len */
   const question1 =
-    'Skills - How confident are you that you can identify when it is necessary for you to get medical care?';
+    'Skills: How confident are you in identifying when it is necessary to get medical care? (Not at all confident, Somewhat confident, Confident, Very Confident)';
   const question2 =
-    'Motivation – How often do you bring a (written or mental) list of questions you want to cover with you to your doctor visits';
+    "Motivation: How often do you bring a written or mental list of questions to your doctors' visits? (Never, Sometimes, Usually, Always)";
   /* eslint-enable max-len */
 
   const options1: OptionInterface[] = [
-    { label: 'Very confident', value: 4 },
-    { label: 'Confident', value: 3 },
-    { label: 'Somewhat confident', value: 2 },
     { label: 'Not at all confident', value: 1 },
+    { label: 'Somewhat confident', value: 2 },
+    { label: 'Confident', value: 3 },
+    { label: 'Very confident', value: 4 },
   ];
 
   const options2: OptionInterface[] = [
-    { label: 'Always', value: 4 },
-    { label: 'Usually', value: 3 },
-    { label: 'Sometimes', value: 2 },
     { label: 'Never', value: 1 },
+    { label: 'Sometimes', value: 2 },
+    { label: 'Usually', value: 3 },
+    { label: 'Always', value: 4 },
   ];
 
   const groupItems: Item[] = [
