@@ -12,7 +12,8 @@ import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 
 @Injectable()
 export class LoggerService extends BaseLogger {
-  private static validKeys = new Set([]);
+  // todo: do we need to log only certain properties under events? will there be any hipaa there?
+  private static validKeys = new Set(['events']);
 
   constructor(
     @Inject(PARAMS_PROVIDER_TOKEN) params: Params,
