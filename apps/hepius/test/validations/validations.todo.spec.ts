@@ -131,7 +131,7 @@ describe('Validations - todo', () => {
     });
   });
 
-  describe.only('createActionTodo', () => {
+  describe('createActionTodo', () => {
     test.each`
       field         | error
       ${'memberId'} | ${`Field "memberId" of required type "String!" was not provided.`}
