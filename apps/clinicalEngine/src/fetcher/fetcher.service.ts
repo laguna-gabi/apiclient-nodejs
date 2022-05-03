@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MemberFacts } from '../rules/types';
+import { BarrierStatus, MemberFacts } from '../rules/types';
 
 const mockFactsObject: MemberFacts = {
   memberInfo: {
@@ -10,9 +10,9 @@ const mockFactsObject: MemberFacts = {
   },
   caregivers: ['x', 'y'],
   barriers: [
-    { type: 'appointment-follow-up-unclear' },
-    { type: 'loneliness2' },
-    { type: 'not-satisfied' },
+    { type: 'appointment-follow-up-unclear', status: BarrierStatus.active },
+    { type: 'loneliness2', status: BarrierStatus.active },
+    { type: 'not-satisfied', status: BarrierStatus.active },
   ],
 };
 

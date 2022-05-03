@@ -1,14 +1,37 @@
-import { EngineRule, EventType, Operator } from './types';
+import { EngineRule, EventType, Operator, RuleType } from './types';
 import { DynamicFacts } from './facts';
+import { DynamicFactCallback } from 'json-rules-engine';
+import { RulesService } from './rules.service';
 
-interface ClinicalEngineRules {
-  barriers: EngineRule[];
-  carePlans: EngineRule[];
-}
+export const Priorities = new Map<RuleType, number>([
+  [RuleType.barrier, 10],
+  [RuleType.carePlan, 1],
+]);
 
-const barrierRules: EngineRule[] = [
+export const Callbacks = new Map<RuleType, DynamicFactCallback>([
+  [
+    RuleType.barrier,
+    async (event, almanac) => {
+      // using lock in order to prevent concurrent changes to the satisfiedBarriers fact
+      const lock = RulesService.lock;
+      lock.use(async () => {
+        const currentBarrierType = event.params.type;
+        const satisfiedBarriers = await almanac.factValue(DynamicFacts.satisfiedBarriers);
+        // todo: remove when defining types
+        // eslint-disable-next-line
+        // @ts-ignore
+        satisfiedBarriers.push(currentBarrierType);
+
+        await almanac.addRuntimeFact(DynamicFacts.satisfiedBarriers, satisfiedBarriers);
+      });
+    },
+  ],
+]);
+
+export const engineRules: EngineRule[] = [
   {
     name: 'loneliness',
+    type: RuleType.barrier,
     active: true,
     conditions: {
       any: [
@@ -34,6 +57,7 @@ const barrierRules: EngineRule[] = [
   },
   {
     name: 'appointment-follow-up-unclear',
+    type: RuleType.barrier,
     active: true,
     conditions: {
       all: [
@@ -66,6 +90,7 @@ const barrierRules: EngineRule[] = [
   },
   {
     name: 'loneliness2',
+    type: RuleType.barrier,
     active: true,
     conditions: {
       any: [
@@ -89,18 +114,16 @@ const barrierRules: EngineRule[] = [
       },
     },
   },
-];
-
-const carePlanRules: EngineRule[] = [
   {
     name: 'content-about-combating-loneliness',
+    type: RuleType.carePlan,
     active: true,
     conditions: {
       all: [
         {
           fact: DynamicFacts.satisfiedBarriers,
-          operator: Operator.equal,
-          value: true,
+          operator: Operator.contains,
+          value: 'loneliness',
         },
       ],
     },
@@ -113,8 +136,3 @@ const carePlanRules: EngineRule[] = [
     },
   },
 ];
-
-export const engineRules: ClinicalEngineRules = {
-  barriers: barrierRules,
-  carePlans: carePlanRules,
-};

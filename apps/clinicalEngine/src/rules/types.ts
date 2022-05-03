@@ -8,14 +8,15 @@ export enum EventType {
   createCarePlan = 'createCarePlan',
 }
 
+export enum RuleType {
+  barrier = 'barrier',
+  carePlan = 'carePlan',
+}
+
 export enum Operator {
   equal = 'equal',
   lessThan = 'lessThan',
   contains = 'contains',
-}
-
-export enum Priority {
-  barrier = 10,
 }
 
 export interface DynamicFact {
@@ -30,8 +31,9 @@ export interface EngineRule {
   active: boolean;
   conditions: TopLevelCondition;
   event: EngineEvent;
+  type: RuleType;
   name?: string;
-  priority?: Priority;
+  priority?: number;
   onSuccess?: EventHandler;
   onFailure?: EventHandler;
 }

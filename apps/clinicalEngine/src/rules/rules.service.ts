@@ -5,10 +5,10 @@ import engineFactory, {
   EngineResult,
   RuleProperties,
 } from 'json-rules-engine';
-import { dynamicFacts, updateNewBarriersFact } from './facts';
-import { DynamicFact, EngineRule, MemberFacts, Priority } from './types';
-import { engineRules } from './rules';
+import { DynamicFact, EngineRule, MemberFacts } from './types';
+import { Callbacks, Priorities, engineRules } from './rules';
 import { LoggerService } from '../common';
+import { dynamicFacts } from './facts';
 import Mutex = require('ts-mutex');
 
 @Injectable()
@@ -44,23 +44,21 @@ export class RulesService implements OnModuleInit {
    ******************************************** Helpers ********************************************
    ************************************************************************************************/
 
-  async getRules() {
-    const barrierRules = await this.setupBarrierRules(engineRules.barriers);
-    const carePlanRules = engineRules.carePlans;
-    const rules = [...barrierRules, ...carePlanRules].filter((rule) => rule.active);
-    // todo: is there a better solution?
-    return rules as RuleProperties[];
+  private async getRules() {
+    const rules = await this.setupRules(engineRules);
+    const activeRules = rules.filter((rule) => rule.active);
+    return activeRules as RuleProperties[];
   }
 
-  async setupBarrierRules(rules: EngineRule[]) {
+  private async setupRules(rules: EngineRule[]) {
     return rules.map((rule) => {
-      rule.onSuccess = updateNewBarriersFact;
-      rule.priority = Priority.barrier;
+      rule.onSuccess = rule.onSuccess || Callbacks.get(rule.type);
+      rule.priority = rule.priority || Priorities.get(rule.type);
       return rule;
     });
   }
 
-  async loadDynamicFacts(facts: DynamicFact[]) {
+  private async loadDynamicFacts(facts: DynamicFact[]) {
     facts.forEach((fact) => {
       this.engine.addFact(fact.id, fact.calculationMethod || fact.value);
     });
