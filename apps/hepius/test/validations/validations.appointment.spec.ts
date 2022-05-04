@@ -97,12 +97,11 @@ describe('Validations - appointment', () => {
 
   describe('schedule', () => {
     test.each`
-      field         | error
-      ${'memberId'} | ${`Field "memberId" of required type "String!" was not provided.`}
-      ${'userId'}   | ${`Field "userId" of required type "String!" was not provided.`}
-      ${'method'}   | ${`Field "method" of required type "AppointmentMethod!" was not provided.`}
-      ${'start'}    | ${`Field "start" of required type "DateTime!" was not provided.`}
-      ${'end'}      | ${`Field "end" of required type "DateTime!" was not provided.`}
+      field       | error
+      ${'userId'} | ${`Field "userId" of required type "String!" was not provided.`}
+      ${'method'} | ${`Field "method" of required type "AppointmentMethod!" was not provided.`}
+      ${'start'}  | ${`Field "start" of required type "DateTime!" was not provided.`}
+      ${'end'}    | ${`Field "end" of required type "DateTime!" was not provided.`}
     `(
       `graphql: should fail to create an appointment since mandatory field $field is missing`,
       async (params) => {

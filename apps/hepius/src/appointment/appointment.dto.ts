@@ -64,11 +64,11 @@ export class RequestAppointmentParams {
 
 @InputType()
 export class ScheduleAppointmentParams {
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   @IsNotEmpty() /* for rest api */
   @IsString() /* for rest api */
   @IsObjectId({ message: Errors.get(ErrorType.memberIdInvalid) })
-  memberId: string;
+  memberId?: string;
 
   @Field(() => String)
   @IsNotEmpty() /* for rest api */

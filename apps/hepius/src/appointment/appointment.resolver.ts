@@ -30,6 +30,10 @@ import {
   IsValidObjectId,
   LoggerService,
   LoggingInterceptor,
+  MemberIdParam,
+  MemberIdParamType,
+  MemberRole,
+  MemberUserRouteInterceptor,
   Roles,
   UpdatedAppointmentAction,
   UserRole,
@@ -80,7 +84,9 @@ export class AppointmentResolver extends AppointmentBase {
   }
 
   @Mutation(() => Appointment)
-  @Roles(UserRole.coach, UserRole.nurse)
+  @MemberIdParam(MemberIdParamType.memberId)
+  @UseInterceptors(MemberUserRouteInterceptor)
+  @Roles(MemberRole.member, UserRole.coach, UserRole.nurse)
   async scheduleAppointment(
     @Args(camelCase(ScheduleAppointmentParams.name))
     scheduleAppointmentParams: ScheduleAppointmentParams,

@@ -1565,6 +1565,26 @@ describe('Integration tests: all', () => {
 
       expect(await handler.queries.getAppointment({ id: appointment.id })).toBeFalsy();
     }, 10000);
+
+    it('should schedule a new appointment by member', async () => {
+      const { member } = await creators.createMemberUserAndOptionalOrg();
+
+      const appointmentParams = generateScheduleAppointmentParams({
+        userId: member.primaryUserId.toString(),
+      });
+      delete appointmentParams.memberId;
+
+      const appointmentResult = await creators.handler.mutations.scheduleAppointment({
+        appointmentParams,
+        requestHeaders: generateRequestHeaders(member.authId),
+      });
+
+      expect(appointmentResult.userId).toEqual(appointmentParams.userId);
+      expect(appointmentResult.memberId).toEqual(member.id.toString());
+      expect(appointmentResult.method).toEqual(appointmentParams.method);
+      expect(appointmentResult.start).toEqual(appointmentParams.start.toISOString());
+      expect(appointmentResult.end).toEqual(appointmentParams.end.toISOString());
+    });
   });
 
   describe('Todos', () => {
