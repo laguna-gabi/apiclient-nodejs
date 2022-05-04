@@ -14,7 +14,6 @@ import {
   Alert,
   AlertType,
   AppointmentCompose,
-  Caregiver,
   CaregiverDocument,
   ControlMember,
   ControlMemberDocument,
@@ -61,7 +60,6 @@ import {
   IEventOnUpdatedAppointmentScores,
   IEventUnconsentedAppointmentEnded,
   IEventUpdateHealthPersona,
-  Identifier,
   LoggerService,
   defaultTimestampsDbValues,
   deleteMemberObjects,
@@ -72,6 +70,7 @@ import { Internationalization, StorageService } from '../providers';
 import { Questionnaire, QuestionnaireAlerts, QuestionnaireService } from '../questionnaire';
 import { NotificationService } from '../services';
 import { Todo, TodoDocument, TodoStatus } from '../todo';
+import { Caregiver, Identifier } from '@argus/hepiusClient';
 
 @Injectable()
 export class MemberService extends BaseService {

@@ -22,11 +22,11 @@ import {
   Errors,
   EventType,
   IEventDeleteMember,
-  Identifier,
   LoggerService,
   deleteMemberObjects,
 } from '../common';
 import { ISoftDelete } from '../db';
+import { Identifier } from '@argus/hepiusClient';
 
 @Injectable()
 export class TodoService extends BaseService {

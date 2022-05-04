@@ -1,3 +1,4 @@
+import { Caregiver, Relationship } from '@argus/hepiusClient';
 import {
   ClientCategory,
   ContentKey,
@@ -79,7 +80,6 @@ import {
   AppointmentCompose,
   AudioFormat,
   CancelNotifyParams,
-  Caregiver,
   ChangeAdmissionActivityParams,
   ChangeAdmissionDiagnosisParams,
   ChangeAdmissionDietaryParams,
@@ -104,7 +104,6 @@ import {
   NotifyParams,
   ProcedureType,
   ReadmissionRisk,
-  Relationship,
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
   SetGeneralNotesParams,

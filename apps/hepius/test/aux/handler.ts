@@ -1,8 +1,10 @@
+import { Caregiver } from '@argus/hepiusClient';
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
+import { ClientProxy, ClientsModule, MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { Test, TestingModule } from '@nestjs/testing';
 import { datatype, lorem } from 'faker';
 import { GraphQLClient } from 'graphql-request';
@@ -68,7 +70,6 @@ import {
   ActionItem,
   ActionItemDocument,
   ActionItemDto,
-  Caregiver,
   CaregiverDocument,
   CaregiverDto,
   ControlMember,
@@ -162,11 +163,26 @@ export class Handler extends BaseHandler {
 
   async beforeAll() {
     mockProcessWarnings(); // to hide pino prettyPrint warning
+
+    const tcpPort = datatype.number({ min: 1000, max: 3000 });
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [
+        AppModule,
+        ClientsModule.register([
+          { name: 'TCP_TEST_CLIENT', transport: Transport.TCP, options: { port: tcpPort } },
+        ]),
+      ],
     }).compile();
 
     this.app = moduleFixture.createNestApplication();
+
+    this.app.connectMicroservice<MicroserviceOptions>({
+      transport: Transport.TCP,
+      options: {
+        port: tcpPort,
+      },
+    });
+
     this.app.useGlobalPipes(new ValidationPipe());
 
     const reflector = this.app.get(Reflector);
@@ -181,6 +197,7 @@ export class Handler extends BaseHandler {
 
     await this.app.init();
 
+    this.tcpClient = moduleFixture.get<ClientProxy>('TCP_TEST_CLIENT');
     this.module = moduleFixture.get<GraphQLModule>(GraphQLModule);
     this.eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
     this.dailyReportService = moduleFixture.get<DailyReportService>(DailyReportService);
@@ -206,6 +223,9 @@ export class Handler extends BaseHandler {
 
     this.initModels();
     await this.buildFixtures();
+
+    await this.app.startAllMicroservices();
+
     await this.app.listen(datatype.number({ min: 4000, max: 9000 }));
     this.client = new GraphQLClient(`${await this.app.getUrl()}/graphql`);
 

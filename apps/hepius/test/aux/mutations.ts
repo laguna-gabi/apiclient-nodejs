@@ -1,3 +1,4 @@
+import { Caregiver, Identifier } from '@argus/hepiusClient';
 import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
 import { camelCase } from 'lodash';
@@ -19,13 +20,12 @@ import {
   UpdateRedFlagParams,
 } from '../../src/care';
 import { SubmitCareWizardParams } from '../../src/care/wizard.dto';
-import { Identifier, Identifiers, RegisterForNotificationParams } from '../../src/common';
+import { Identifiers, RegisterForNotificationParams } from '../../src/common';
 import { DailyReportCategoriesInput } from '../../src/dailyReport';
 import {
   AddCaregiverParams,
   Admission,
   CancelNotifyParams,
-  Caregiver,
   ChangeMemberDnaParams,
   CompleteMultipartUploadParams,
   CreateMemberParams,

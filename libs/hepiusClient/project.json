@@ -1,0 +1,35 @@
+{
+  "root": "libs/hepiusClient",
+  "sourceRoot": "libs/hepiusClient/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/hepiusClient/**/*.ts"]
+      }
+    },
+    "test:cov": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/hepiusClient"],
+      "options": {
+        "jestConfig": "libs/hepiusClient/test/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "cov-badges": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "jest-coverage-badges input coverage/libs/hepiusClient/coverage-summary.json output coverage/libs/hepiusClient"
+      }
+    },
+    "uploadCoverage": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "ts-node -P ./tsconfig.base.json ./ci/uploadCoverage.ts hepiusClient coverage/libs/hepiusClient/"
+      }
+    }
+  },
+  "tags": []
+}

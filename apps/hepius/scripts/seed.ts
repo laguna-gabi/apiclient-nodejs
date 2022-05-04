@@ -21,7 +21,7 @@ import {
   RedFlagTypeDocument,
   RedFlagTypeDto,
 } from '../src/care';
-import { Identifier, UserRole, delay } from '../src/common';
+import { UserRole, delay } from '../src/common';
 import { UpdateJournalTextParams } from '../src/member';
 import { UserService } from '../src/user';
 import {
@@ -46,6 +46,7 @@ import {
 } from '../test';
 import { Mutations } from '../test/aux';
 import { SeedBase } from './seedBase';
+import { Identifier } from '@argus/hepiusClient';
 
 /**
  * This is a seed file for initial local db creation.

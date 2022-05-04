@@ -1,3 +1,4 @@
+import { Identifier } from '@argus/hepiusClient';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ArrayNotEmpty } from 'class-validator';
@@ -6,7 +7,6 @@ import * as mongooseDelete from 'mongoose-delete';
 import {
   ErrorType,
   Errors,
-  Identifier,
   IsDuplicateCodeInItemList,
   IsMissingOptionsInChoiceTypeItem,
   IsMissingRangeInRangeTypeItem,

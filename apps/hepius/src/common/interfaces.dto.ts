@@ -7,7 +7,6 @@ import {
   StorageUrlParams,
 } from '@argus/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
-import { Schema } from '@nestjs/mongoose';
 import { IsAlphanumeric, IsOptional } from 'class-validator';
 import { isNil, omitBy } from 'lodash';
 import { Types } from 'mongoose';
@@ -16,6 +15,7 @@ import { ErrorType, Errors, IsNotPlatformWeb, IsObjectId } from '.';
 /**************************************************************************************************
  *************************** Enum registration for external gql methods ***************************
  *************************************************************************************************/
+
 registerEnumType(CancelNotificationType, { name: 'CancelNotificationType' });
 registerEnumType(NotificationType, { name: 'NotificationType' });
 registerEnumType(Platform, { name: 'Platform' });
@@ -24,13 +24,6 @@ registerEnumType(Language, { name: 'Language' });
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
  *************************************************************************************************/
-
-@ObjectType()
-@Schema()
-export class Identifier {
-  @Field(() => String)
-  id: string;
-}
 
 @ObjectType()
 export class Identifiers {

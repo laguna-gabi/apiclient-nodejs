@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import * as mongooseDelete from 'mongoose-delete';
-import { Identifier } from '../common';
+import { Identifier } from '@argus/hepiusClient';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 
 /**************************************************************************************************

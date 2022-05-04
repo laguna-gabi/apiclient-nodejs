@@ -20,10 +20,10 @@ import {
   Race,
   ReadmissionRisk,
   Recording,
-  Relationship,
   Sex,
 } from '../../src/member';
 import { User } from '../../src/user';
+import { Relationship } from '@argus/hepiusClient';
 import { BarrierDomain, CareStatus } from '../../src/care';
 
 export const DefaultOutputDir = './outputs';

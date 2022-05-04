@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateOrgParams, Org, OrgDocument } from '.';
-import { BaseService, DbErrors, ErrorType, Errors, Identifier } from '../common';
+import { BaseService, DbErrors, ErrorType, Errors } from '../common';
+import { Identifier } from '@argus/hepiusClient';
 
 @Injectable()
 export class OrgService extends BaseService {

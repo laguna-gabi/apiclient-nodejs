@@ -1,9 +1,10 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { ChangeType, Identifier } from '../common';
+import { ChangeType } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
+import { Identifier } from '@argus/hepiusClient';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************

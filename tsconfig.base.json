@@ -14,6 +14,7 @@
     "paths": {
       "@argus/pandora": ["libs/pandora/src/index.ts"],
       "@argus/irisClient": ["libs/irisClient/src/index.ts"],
+      "@argus/hepiusClient": ["libs/hepiusClient/src/index.ts"],
       "@argus/poseidonClient": ["libs/poseidonClient/src/index.ts"]
     },
     "target": "es2019",

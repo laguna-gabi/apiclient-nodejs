@@ -25,7 +25,6 @@ import {
   Errors,
   EventType,
   IInternalDispatch,
-  Identifier,
   IsValidObjectId,
   LoggerService,
   LoggingInterceptor,
@@ -39,6 +38,7 @@ import {
   generatePath,
   getCorrelationId,
 } from '../common';
+import { Identifier } from '@argus/hepiusClient';
 
 @UseInterceptors(LoggingInterceptor)
 @Resolver(() => Todo)

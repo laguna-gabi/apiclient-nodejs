@@ -2,9 +2,9 @@
 import { Db } from 'mongodb';
 import { getModelToken } from '@nestjs/mongoose';
 import { AppModule } from '../../../src/app.module';
-import { Caregiver } from '../../../src/member/caregiver.dto';
 import { Model } from 'mongoose';
 import { NestFactory } from '@nestjs/core';
+import { Caregiver } from '@argus/hepiusClient';
 // ------------------------------------------------------------------------------------------------
 // Description: migrate `up`
 // ------------------------------------------------------------------------------------------------

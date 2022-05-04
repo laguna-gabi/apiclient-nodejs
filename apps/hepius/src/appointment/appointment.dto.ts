@@ -6,7 +6,6 @@ import { Document, Types } from 'mongoose';
 import {
   ErrorType,
   Errors,
-  Identifier,
   IsDateAfter,
   IsDateInNotificationRange,
   IsFutureDate,
@@ -15,6 +14,7 @@ import {
 import { Notes } from '.';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
+import { Identifier } from '@argus/hepiusClient';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************

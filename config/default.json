@@ -52,6 +52,7 @@
     },
     "hepius": {
       "port": 3000,
+      "tcpPort": 4000,
       "taskName": "hepius"
     },
     "timeout": 2000,

@@ -4,6 +4,8 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { general, services } from 'config';
 import { AppModule } from './app.module';
 import { GlobalAuthGuard, RolesGuard } from './auth';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+
 import {
   AllExceptionsFilter,
   AppRequestContext,
@@ -13,6 +15,13 @@ import {
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: ['log'], bodyParser: false });
+
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.TCP,
+    options: {
+      port: services.hepius.tcpPort,
+    },
+  });
 
   app.enableCors();
 
@@ -28,6 +37,8 @@ async function bootstrap() {
   app.use(requestContextMiddleware(AppRequestContext));
 
   process.env.TZ = general.get('timezone');
+
+  await app.startAllMicroservices();
 
   await app.listen(services.hepius.port);
 

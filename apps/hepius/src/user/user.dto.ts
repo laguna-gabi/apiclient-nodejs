@@ -1,3 +1,4 @@
+import { Identifier } from '@argus/hepiusClient';
 import { Language } from '@argus/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
@@ -7,7 +8,6 @@ import { Appointment, AppointmentData } from '../appointment';
 import {
   ErrorType,
   Errors,
-  Identifier,
   IsObjectIds,
   UserRole,
   maxLength,

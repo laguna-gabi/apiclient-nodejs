@@ -2,8 +2,8 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
-import { Identifier } from '../common';
 import * as mongooseDelete from 'mongoose-delete';
+import { Identifier } from '@argus/hepiusClient';
 
 /********∏******************************************************************************************
  ********************************* Return params for gql methods **********************************

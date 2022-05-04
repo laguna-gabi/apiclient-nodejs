@@ -38,7 +38,6 @@ import {
 import { AppointmentMethod, AppointmentStatus } from '../../src/appointment';
 import { RecordingType, momentFormats, reformatDate } from '../../src/common';
 import {
-  Caregiver,
   CaregiverDocument,
   Member,
   MemberDocument,
@@ -52,6 +51,7 @@ import {
   QuestionnaireResponse,
   QuestionnaireResponseDocument,
 } from '../../src/questionnaire';
+import { Caregiver } from '@argus/hepiusClient';
 import { User, UserDocument } from '../../src/user';
 import {
   Barrier,

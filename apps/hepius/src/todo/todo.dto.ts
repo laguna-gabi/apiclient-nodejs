@@ -5,7 +5,6 @@ import { Document, Types } from 'mongoose';
 import {
   ErrorType,
   Errors,
-  Identifier,
   IsCronExpression,
   IsDateAfter,
   IsFutureDate,
@@ -15,6 +14,7 @@ import {
 } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
+import { Identifier } from '@argus/hepiusClient';
 
 export const NotNullableTodoKeys = ['label', 'cronExpressions', 'start', 'end'];
 

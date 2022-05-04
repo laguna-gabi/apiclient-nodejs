@@ -1,3 +1,4 @@
+import { Caregiver, Identifier } from '@argus/hepiusClient';
 import {
   AlertInternalKey,
   ChatInternalKey,
@@ -49,7 +50,6 @@ import {
   IEventOnReplacedUserForMember,
   IEventOnUpdatedMemberPlatform,
   IInternalDispatch,
-  Identifier,
   IsValidObjectId,
   LoggerService,
   LoggingInterceptor,
@@ -82,7 +82,6 @@ import {
   AppointmentCompose,
   AudioType,
   CancelNotifyParams,
-  Caregiver,
   ChangeMemberDnaParams,
   ChatMessageOrigin,
   CompleteMultipartUploadParams,

@@ -1,3 +1,4 @@
+import { Caregiver, MemberCommands } from '@argus/hepiusClient';
 import { AppointmentInternalKey, LogInternalKey } from '@argus/irisClient';
 import { GlobalEventType, Language, Platform } from '@argus/pandora';
 import { articlesByDrg, general, hosts } from 'config';
@@ -1509,6 +1510,12 @@ describe('Integration tests: all', () => {
       });
 
       expect(caregiver).toMatchObject(addCaregiverParams);
+
+      expect(
+        await handler.tcpClient
+          .send<Caregiver[]>({ cmd: MemberCommands.getCaregiversByMemberId }, member.id)
+          .toPromise(),
+      ).toMatchObject([addCaregiverParams]);
 
       // Get:
       let persistedCaregivers = await handler.queries.getCaregivers({

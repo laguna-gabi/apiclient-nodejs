@@ -1,25 +1,11 @@
-import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Field, InputType, registerEnumType } from '@nestjs/graphql';
+import { Prop, SchemaFactory } from '@nestjs/mongoose';
 import { IsEmail, IsOptional, IsPhoneNumber, Length } from 'class-validator';
-import { Document, Types } from 'mongoose';
+import { Document } from 'mongoose';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
-import { ErrorType, Errors, Identifier, IsObjectId, maxLength, minLength } from '../common';
+import { ErrorType, Errors, IsObjectId, maxLength, minLength } from '../common';
 import * as mongooseDelete from 'mongoose-delete';
-
-/**************************************************************************************************
- ******************************* Enum registration for gql methods ********************************
- *************************************************************************************************/
-export enum Relationship {
-  spouse = 'spouse',
-  partner = 'partner',
-  parent = 'parent',
-  child = 'child',
-  sibling = 'sibling',
-  friend = 'friend',
-  neighbour = 'neighbour',
-  professionalCaregiver = 'professional caregiver',
-  other = 'other',
-}
+import { Caregiver, Relationship } from '@argus/hepiusClient';
 
 registerEnumType(Relationship, { name: 'Relationship' });
 
@@ -63,38 +49,6 @@ export class UpdateCaregiverParams extends BaseCaregiverMutationParams {
   @Field(() => String)
   @IsObjectId({ message: Errors.get(ErrorType.caregiverIdInvalid) })
   id: string;
-}
-
-/********∏******************************************************************************************
- ********************************* Return params for gql methods **********************************
- *************************************************************************************************/
-
-@ObjectType()
-@Schema({ versionKey: false, timestamps: true })
-export class Caregiver extends Identifier {
-  @Prop({ index: true, type: Types.ObjectId })
-  @Field(() => String)
-  memberId: Types.ObjectId;
-
-  @Prop()
-  @Field(() => String)
-  lastName: string;
-
-  @Prop()
-  @Field(() => String)
-  firstName: string;
-
-  @Prop()
-  @Field(() => String)
-  phone: string;
-
-  @Prop()
-  @Field(() => String, { nullable: true })
-  email?: string;
-
-  @Prop({ type: String, enum: Relationship })
-  @Field(() => Relationship)
-  relationship: Relationship;
 }
 
 /**************************************************************************************************

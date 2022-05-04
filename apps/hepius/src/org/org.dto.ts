@@ -1,7 +1,8 @@
+import { Identifier } from '@argus/hepiusClient';
 import { Field, InputType, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Min } from 'class-validator';
-import { ErrorType, Errors, Identifier } from '../common';
+import { ErrorType, Errors } from '../common';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************

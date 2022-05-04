@@ -1,3 +1,4 @@
+import { Caregiver } from '@argus/hepiusClient';
 import { AppointmentInternalKey, ChatInternalKey } from '@argus/irisClient';
 import {
   Language,
@@ -72,7 +73,6 @@ import {
   ActionItemDocument,
   ActionItemDto,
   AlertType,
-  Caregiver,
   CaregiverDocument,
   CaregiverDto,
   ControlMember,

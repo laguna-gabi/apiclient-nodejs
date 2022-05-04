@@ -1,11 +1,12 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { ErrorType, Errors, Identifier, IsObjectId, IsValidCarePlanTypeInput } from '../common';
+import { ErrorType, Errors, IsObjectId, IsValidCarePlanTypeInput } from '../common';
 import { CareStatus } from '.';
 import { IsDate, IsOptional } from 'class-validator';
 import * as mongooseDelete from 'mongoose-delete';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
+import { Identifier } from '@argus/hepiusClient';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************

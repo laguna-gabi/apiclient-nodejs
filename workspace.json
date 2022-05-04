@@ -4,6 +4,7 @@
     "hepius": "apps/hepius",
     "iris": "apps/iris",
     "irisClient": "libs/irisClient",
+    "hepiusClient": "libs/hepiusClient",
     "poseidon": "apps/poseidon",
     "poseidonClient": "libs/poseidonClient",
     "clinicalEngine": "apps/clinicalEngine",

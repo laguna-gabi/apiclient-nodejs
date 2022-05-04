@@ -1,3 +1,4 @@
+import { Caregiver } from '@argus/hepiusClient';
 import { general } from 'config';
 import { addDays, addHours } from 'date-fns';
 import { date as fakerDate, lorem } from 'faker';
@@ -47,7 +48,6 @@ import { DailyReport, DailyReportCategoryTypes } from '../../src/dailyReport';
 import {
   ActionItem,
   ActionItemDocument,
-  Caregiver,
   CaregiverDocument,
   ControlMember,
   ControlMemberDocument,

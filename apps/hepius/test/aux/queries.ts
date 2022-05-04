@@ -1,3 +1,4 @@
+import { Caregiver } from '@argus/hepiusClient';
 import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
 import { isResultValid } from '..';
@@ -6,7 +7,6 @@ import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
 import {
   Admission,
-  Caregiver,
   DischargeDocumentsLinks,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,

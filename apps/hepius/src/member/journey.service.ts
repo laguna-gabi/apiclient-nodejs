@@ -1,9 +1,10 @@
-import { BaseService, ErrorType, Errors, Identifier, LoggerService } from '../common';
+import { BaseService, ErrorType, Errors, LoggerService } from '../common';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ISoftDelete } from '../db';
 import { Journey, JourneyDocument } from '.';
+import { Identifier } from '@argus/hepiusClient';
 
 @Injectable()
 export class JourneyService extends BaseService {

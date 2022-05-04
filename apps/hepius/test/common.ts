@@ -2,6 +2,7 @@ import { ServiceName, webhooks } from '@argus/pandora';
 import { INestApplication } from '@nestjs/common';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
+import { ClientProxy } from '@nestjs/microservices';
 import { TestingModule } from '@nestjs/testing';
 import { db } from 'config';
 import { Document, Model, Types, connect, disconnect } from 'mongoose';
@@ -39,6 +40,7 @@ export class BaseHandler {
   userService: UserService;
   userResolver: UserResolver;
   eventEmitter: EventEmitter2;
+  tcpClient: ClientProxy;
 }
 
 export const urls = {
