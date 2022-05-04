@@ -93,9 +93,6 @@ export class AdmissionService extends BaseService {
 
   async get(memberId: string): Promise<Admission[]> {
     const result = await this.admissionModel.find({ memberId: new Types.ObjectId(memberId) });
-    if (result.length === 0) {
-      throw new Error(Errors.get(ErrorType.memberNotFound));
-    }
     return Promise.all(
       result.map(async (item) => {
         const populateAllRes = await this.populateAll(item);

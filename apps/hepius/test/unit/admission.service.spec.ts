@@ -357,8 +357,9 @@ describe(AdmissionService.name, () => {
     checkAllCategories(getResult[1]);
   });
 
-  it('should throw error on member not found when calling getAdmission', async () => {
-    await expect(service.get(generateId())).rejects.toThrow(Errors.get(ErrorType.memberNotFound));
+  it('should return empty result for no admissions per member', async () => {
+    const result = await service.get(generateId());
+    expect(result).toEqual([]);
   });
 
   const createAllCategories = async (memberId: string): Promise<Admission> => {
