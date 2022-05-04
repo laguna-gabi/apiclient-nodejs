@@ -11,15 +11,25 @@ import { generatePath, generatePhone } from '../generators';
 
 describe(`live: ${OneSignal.name}`, () => {
   let oneSignal: OneSignal;
+  let logger: LoggerService;
+  let spyOnLoggerWarn;
 
   beforeAll(async () => {
     const configService = new ConfigsService();
     const httpService = new HttpService();
-    const logger = new LoggerService(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
+    logger = new LoggerService(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
     mockLogger(logger);
 
     oneSignal = new OneSignal(configService, httpService, logger);
     await oneSignal.onModuleInit();
+  });
+
+  beforeEach(async () => {
+    spyOnLoggerWarn = jest.spyOn(logger, 'warn').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    spyOnLoggerWarn.mockReset();
   });
 
   /**
@@ -33,8 +43,8 @@ describe(`live: ${OneSignal.name}`, () => {
       isPushNotificationsEnabled: true,
     };
 
-    await expect(
-      oneSignal.send(
+    expect(
+      await oneSignal.send(
         {
           platform: params.platform,
           externalUserId: params.externalUserId,
@@ -55,10 +65,10 @@ describe(`live: ${OneSignal.name}`, () => {
         },
         v4(),
       ),
-    ).rejects.toThrowError();
+    ).toBeUndefined();
 
-    await expect(
-      oneSignal.cancel({
+    expect(
+      await oneSignal.cancel({
         externalUserId: params.externalUserId,
         platform: params.platform,
         data: {
@@ -67,6 +77,8 @@ describe(`live: ${OneSignal.name}`, () => {
           notificationId: datatype.uuid(),
         },
       }),
-    ).rejects.toThrowError();
+    ).toBeUndefined();
   });
+
+  expect(spyOnLoggerWarn).toHaveBeenCalledTimes(2);
 });

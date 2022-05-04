@@ -111,10 +111,15 @@ export class OneSignal extends BaseOneSignal implements OnModuleInit {
 
     try {
       const result = await this.httpService.post(this.notificationsUrl, body, config).toPromise();
-      if (result.status === 200 && result.data.recipients >= 1) {
+      if (result.status !== 200) {
+        throw new Error(generateCustomErrorMessage(OneSignal.name, this.cancel.name, result));
+      }
+      if (result.data.recipients >= 1) {
         return { provider: Provider.oneSignal, content: data.peerId, id: result.data.id };
       } else {
-        throw new Error(generateCustomErrorMessage(OneSignal.name, this.cancel.name, result));
+        this.logger.warn(cancelNotificationParams, OneSignal.name, this.send.name, {
+          message: generateCustomErrorMessage(OneSignal.name, this.send.name, result),
+        });
       }
     } catch (ex) {
       this.logger.error(cancelNotificationParams, OneSignal.name, this.cancel.name, formatEx(ex));
