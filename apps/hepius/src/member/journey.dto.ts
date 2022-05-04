@@ -23,6 +23,14 @@ export class Journey extends Identifier {
   @Prop({ type: [{ type: Types.ObjectId }], default: [] })
   @Field(() => [String])
   admissions: Types.ObjectId[];
+
+  @Prop({ type: Date })
+  @Field(() => Date, { nullable: true })
+  firstLoggedInAt?: Date;
+
+  @Prop({ type: Date })
+  @Field(() => Date, { nullable: true })
+  lastLoggedInAt?: Date;
 }
 
 /**************************************************************************************************

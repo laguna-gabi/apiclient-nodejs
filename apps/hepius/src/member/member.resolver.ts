@@ -1032,13 +1032,12 @@ export class MemberResolver extends MemberBase {
     // ignoring the id from the params - replacing it with the id from the context
     const member = await this.memberService.get(memberId);
     const currentMemberConfig = await this.memberService.getMemberConfig(memberId);
+    const currentJourney = await this.journeyService.getActive(memberId);
 
     if (registerForNotificationParams.platform === Platform.ios) {
       const { token } = registerForNotificationParams;
       await this.oneSignal.register({ token, externalUserId: currentMemberConfig.externalUserId });
     }
-
-    await this.memberService.updateMemberConfigLoggedInAt(currentMemberConfig.memberId);
 
     const memberConfig = await this.memberService.updateMemberConfig({
       memberId: currentMemberConfig.memberId.toString(),
@@ -1053,14 +1052,15 @@ export class MemberResolver extends MemberBase {
     };
     this.eventEmitter.emit(EventType.onUpdatedMemberPlatform, eventParams);
 
-    this.notifyUpdatedMemberConfig({ memberConfig });
+    const journey = await this.journeyService.updateLoggedInAt(currentMemberConfig.memberId);
+    this.notifyUpdatedMemberConfig({ memberConfig, firstLoggedInAt: journey.firstLoggedInAt });
 
-    if (!currentMemberConfig.firstLoggedInAt) {
+    if (!currentJourney.firstLoggedInAt) {
       const correlationId = getCorrelationId(this.logger);
       await this.notifyCreateDispatch(
         this.generateMobileRegistrationDispatch(
           member,
-          memberConfig.firstLoggedInAt,
+          journey.firstLoggedInAt,
           correlationId,
           RegisterInternalKey.newRegisteredMember,
           1,
@@ -1069,7 +1069,7 @@ export class MemberResolver extends MemberBase {
       await this.notifyCreateDispatch(
         this.generateMobileRegistrationDispatch(
           member,
-          memberConfig.firstLoggedInAt,
+          journey.firstLoggedInAt,
           correlationId,
           RegisterInternalKey.newRegisteredMemberNudge,
           2,
@@ -1078,7 +1078,7 @@ export class MemberResolver extends MemberBase {
       await this.notifyCreateDispatch(
         this.generateMobileRegistrationDispatch(
           member,
-          memberConfig.firstLoggedInAt,
+          journey.firstLoggedInAt,
           correlationId,
           LogInternalKey.logReminder,
           3,
@@ -1448,7 +1448,9 @@ export class MemberResolver extends MemberBase {
     )
     id?: string,
   ) {
-    return this.memberService.getMemberConfig(id);
+    const baseMemberConfig = await this.memberService.getMemberConfig(id);
+    const { firstLoggedInAt, lastLoggedInAt } = await this.journeyService.getActive(id);
+    return { ...baseMemberConfig, firstLoggedInAt, lastLoggedInAt };
   }
 
   @Mutation(() => Boolean)

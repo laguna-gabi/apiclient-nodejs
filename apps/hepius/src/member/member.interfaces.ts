@@ -123,9 +123,11 @@ export class MemberBase {
   protected notifyUpdatedMemberConfig({
     member,
     memberConfig,
+    firstLoggedInAt,
   }: {
     member?: Member;
     memberConfig?: MemberConfig;
+    firstLoggedInAt?: Date;
   }) {
     const settings: Partial<IUpdateClientSettings> = omitBy(
       {
@@ -144,7 +146,7 @@ export class MemberBase {
         isRecommendationsEnabled: memberConfig?.isRecommendationsEnabled,
         isTodoNotificationsEnabled: memberConfig?.isTodoNotificationsEnabled,
         externalUserId: memberConfig?.externalUserId,
-        firstLoggedInAt: memberConfig?.firstLoggedInAt,
+        firstLoggedInAt,
       },
       isUndefined,
     );

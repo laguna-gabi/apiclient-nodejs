@@ -48,6 +48,7 @@ import {
   generateUpdateTaskStatusParams,
   loadSessionClient,
   mockGenerateDispatch,
+  mockGenerateJourney,
   mockGenerateQuestionnaireItem,
   mockGenerateTodo,
 } from '..';
@@ -87,6 +88,9 @@ import {
   Journal,
   JournalDocument,
   JournalDto,
+  Journey,
+  JourneyDocument,
+  JourneyDto,
   Member,
   MemberConfig,
   MemberConfigDocument,
@@ -137,6 +141,7 @@ describe('MemberService', () => {
   let modelQuestionnaire: Model<QuestionnaireDocument>;
   let modelQuestionnaireResponse: Model<QuestionnaireResponseDocument>;
   let modelTodo: Model<TodoDocument & defaultTimestampsDbValues>;
+  let modelJourney: Model<JourneyDocument & defaultTimestampsDbValues>;
   let i18nService: Internationalization;
 
   beforeAll(async () => {
@@ -171,6 +176,7 @@ describe('MemberService', () => {
       QuestionnaireResponseDto,
     );
     modelTodo = model<TodoDocument & defaultTimestampsDbValues>(Todo.name, TodoDto);
+    modelJourney = model<JourneyDocument & defaultTimestampsDbValues>(Journey.name, JourneyDto);
 
     await dbConnect();
   });
@@ -389,6 +395,7 @@ describe('MemberService', () => {
         new Types.ObjectId(primaryUserId),
       );
       const memberId = createdMember.id;
+      await modelJourney.create(mockGenerateJourney({ memberId }));
 
       await service.insertActionItem({
         createTaskParams: generateCreateTaskParams({ memberId }),
@@ -2359,25 +2366,6 @@ describe('MemberService', () => {
     });
   });
 
-  describe('updateMemberConfigLoggedInAt', () => {
-    it('should update member config login time and not update firstLogin on 2nd time', async () => {
-      const id = await generateMember();
-      const currentTime1 = new Date().getTime();
-      await service.updateMemberConfigLoggedInAt(new Types.ObjectId(id));
-
-      const config1 = await service.getMemberConfig(id);
-      expect(config1.firstLoggedInAt.getTime()).toBeGreaterThanOrEqual(currentTime1);
-      expect(config1.lastLoggedInAt.getTime()).toBeGreaterThanOrEqual(currentTime1);
-
-      const currentTime2 = new Date().getTime();
-      await service.updateMemberConfigLoggedInAt(new Types.ObjectId(id));
-
-      const config2 = await service.getMemberConfig(id);
-      expect(config2.firstLoggedInAt.getTime()).toEqual(config1.firstLoggedInAt.getTime());
-      expect(config2.lastLoggedInAt.getTime()).toBeGreaterThanOrEqual(currentTime2);
-    });
-  });
-
   describe('getMemberConfig', () => {
     it('should create memberConfig on memberCreate', async () => {
       const id = await generateMember();
@@ -2740,6 +2728,7 @@ describe('MemberService', () => {
       { ...createMemberParams, phoneType: 'mobile' },
       new Types.ObjectId(userId),
     );
+    await modelJourney.create(mockGenerateJourney({ memberId: member.id }));
     return member.id;
   };
 

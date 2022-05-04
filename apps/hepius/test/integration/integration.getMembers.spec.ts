@@ -81,7 +81,7 @@ describe('Integration tests : getMembers', () => {
       registerForNotificationParams,
       requestHeaders: generateRequestHeaders(member.authId),
     });
-    const memberConfig = await handler.queries.getMemberConfig({ id: member.id });
+    const journey = await handler.journeyService.getActive(member.id);
 
     await creators.createAndValidateAppointment({ member });
     const appointment = await appointmentsActions.scheduleAppointment({ member });
@@ -95,6 +95,7 @@ describe('Integration tests : getMembers', () => {
     const { errors, members } = await handler.queries.getMembers({ orgId: org.id });
     expect(errors).toEqual(undefined);
     expect(members.length).toEqual(1);
+    expect(Date.parse(members[0].firstLoggedInAt)).toEqual(journey.firstLoggedInAt.getTime());
     expect(members[0]).toEqual(
       expect.objectContaining({
         id: memberResult.id,
@@ -114,7 +115,6 @@ describe('Integration tests : getMembers', () => {
         }),
         nextAppointment: appointment.start,
         appointmentsCount: 2,
-        firstLoggedInAt: memberConfig.firstLoggedInAt,
         platform: registerForNotificationParams.platform,
       }),
     );

@@ -97,6 +97,7 @@ import {
   Honorific,
   ImageFormat,
   InternalCreateMemberParams,
+  Journey,
   MaritalStatus,
   Member,
   MemberConfig,
@@ -210,21 +211,19 @@ export const generateMemberConfig = ({
   platform = Platform.ios,
   isPushNotificationsEnabled = true,
   accessToken = generateId(),
-  firstLoggedInAt = fakerDate.past(2),
   articlesPath = system.directoryPath(),
   language = defaultMemberParams.language,
-  lastLoggedInAt = fakerDate.past(2),
 }: Partial<MemberConfig> = {}): MemberConfig => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   return {
     memberId,
     externalUserId,
     platform,
     accessToken,
     isPushNotificationsEnabled,
-    firstLoggedInAt,
     articlesPath,
     language,
-    lastLoggedInAt,
   };
 };
 
@@ -445,6 +444,8 @@ export const mockGenerateMemberConfig = ({
   platform = Platform.ios,
   isPushNotificationsEnabled = true,
 }: Partial<MemberConfig> = {}): MemberConfig => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   return {
     memberId: generateObjectId(),
     externalUserId: v4(),
@@ -454,12 +455,19 @@ export const mockGenerateMemberConfig = ({
     isTodoNotificationsEnabled: true,
     isAppointmentsReminderEnabled: true,
     accessToken: generateId(),
-    firstLoggedInAt: fakerDate.past(2),
-    lastLoggedInAt: fakerDate.past(1),
     articlesPath: system.directoryPath(),
     language: defaultMemberParams.language,
   };
 };
+
+export const mockGenerateJourney = ({ memberId }: { memberId: string }): Journey => ({
+  id: generateId(),
+  memberId: new Types.ObjectId(memberId),
+  firstLoggedInAt: fakerDate.past(2),
+  lastLoggedInAt: fakerDate.past(1),
+  isActive: true,
+  admissions: [],
+});
 
 export const generateUpdateMemberConfigParams = ({
   memberId = generateId(),
@@ -792,9 +800,11 @@ export const generateDailyReport = ({
 export const generateUpdateClientSettings = ({
   member,
   memberConfig,
+  journey,
 }: {
   member?: Member;
   memberConfig?: MemberConfig;
+  journey?: Journey;
 }): IUpdateClientSettings => {
   return {
     type: InnerQueueTypes.updateClientSettings,
@@ -812,7 +822,7 @@ export const generateUpdateClientSettings = ({
     isRecommendationsEnabled: memberConfig?.isRecommendationsEnabled,
     isTodoNotificationsEnabled: memberConfig?.isTodoNotificationsEnabled,
     externalUserId: memberConfig?.externalUserId,
-    firstLoggedInAt: memberConfig?.firstLoggedInAt,
+    firstLoggedInAt: journey?.firstLoggedInAt,
   };
 };
 

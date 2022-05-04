@@ -376,6 +376,31 @@ describe('Integration tests: all', () => {
     );
   });
 
+  it('should register member and get configs with firstLoggedInAt and lastLoggedInAt', async () => {
+    const { member } = await creators.createMemberUserAndOptionalOrg();
+    const requestHeaders = generateRequestHeaders(member.authId);
+    const startTime = new Date().getTime();
+    await handler.mutations.registerMemberForNotifications({
+      requestHeaders,
+      registerForNotificationParams: { platform: Platform.android },
+    });
+    const betweenTime = new Date().getTime();
+
+    await handler.mutations.registerMemberForNotifications({
+      requestHeaders,
+      registerForNotificationParams: { platform: Platform.ios },
+    });
+    const finalTime = new Date().getTime();
+
+    const configs = await handler.queries.getMemberConfig({ id: member.id, requestHeaders });
+
+    expect(Date.parse(configs.firstLoggedInAt)).toBeGreaterThanOrEqual(startTime);
+    expect(Date.parse(configs.firstLoggedInAt)).toBeLessThanOrEqual(betweenTime);
+    expect(Date.parse(configs.lastLoggedInAt)).toBeGreaterThanOrEqual(startTime);
+    expect(Date.parse(configs.lastLoggedInAt)).toBeGreaterThanOrEqual(betweenTime);
+    expect(Date.parse(configs.lastLoggedInAt)).toBeLessThanOrEqual(finalTime);
+  });
+
   it('should update and get member configs', async () => {
     const { member } = await creators.createMemberUserAndOptionalOrg();
     const requestHeaders = generateRequestHeaders(member.authId);

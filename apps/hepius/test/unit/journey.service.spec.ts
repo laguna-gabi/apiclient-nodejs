@@ -62,4 +62,25 @@ describe(JourneyService.name, () => {
       Errors.get(ErrorType.journeyForMemberNotFound),
     );
   });
+
+  describe('updateMemberConfigLoggedInAt', () => {
+    it('should update member config login time and not update firstLogin on 2nd time', async () => {
+      const memberId = generateId();
+      await service.create({ memberId });
+
+      const currentTime1 = new Date().getTime();
+      await service.updateLoggedInAt(new Types.ObjectId(memberId));
+
+      const journey1 = await service.getActive(memberId);
+      expect(journey1.firstLoggedInAt.getTime()).toBeGreaterThanOrEqual(currentTime1);
+      expect(journey1.lastLoggedInAt.getTime()).toBeGreaterThanOrEqual(currentTime1);
+
+      const currentTime2 = new Date().getTime();
+      await service.updateLoggedInAt(new Types.ObjectId(memberId));
+
+      const journey2 = await service.getActive(memberId);
+      expect(journey2.firstLoggedInAt.getTime()).toEqual(journey1.firstLoggedInAt.getTime());
+      expect(journey2.lastLoggedInAt.getTime()).toBeGreaterThanOrEqual(currentTime2);
+    });
+  });
 });

@@ -14,7 +14,7 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { hosts } from 'config';
-import { datatype, date, lorem, system } from 'faker';
+import { datatype, date, lorem } from 'faker';
 import { Types } from 'mongoose';
 import { v4 } from 'uuid';
 import {
@@ -46,6 +46,7 @@ import {
   generateUpdateRecordingParams,
   generateUpdateTaskStatusParams,
   mockGenerateAlert,
+  mockGenerateJourney,
   mockGenerateMember,
   mockGenerateMemberConfig,
   mockGenerateOrg,
@@ -85,12 +86,10 @@ import {
   Journal,
   JourneyService,
   Member,
-  MemberConfig,
   MemberModule,
   MemberResolver,
   MemberService,
   TaskStatus,
-  defaultMemberParams,
 } from '../../src/member';
 import {
   CognitoService,
@@ -1746,21 +1745,28 @@ describe('MemberResolver', () => {
 
   describe('getMemberConfig', () => {
     let spyOnServiceGetMemberConfig;
+    let spyOnServiceGetActiveJourney;
     beforeEach(() => {
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
+      spyOnServiceGetActiveJourney = jest.spyOn(journeyService, 'getActive');
     });
 
     afterEach(() => {
       spyOnServiceGetMemberConfig.mockReset();
+      spyOnServiceGetActiveJourney.mockReset();
     });
 
     it('should call MemberConfig', async () => {
       const memberConfig = mockGenerateMemberConfig();
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnServiceGetActiveJourney.mockResolvedValueOnce(
+        mockGenerateJourney({ memberId: memberConfig.memberId.toString() }),
+      );
       await resolver.getMemberConfig(memberConfig.memberId.toString());
 
       expect(spyOnServiceGetMemberConfig).toBeCalledTimes(1);
       expect(spyOnServiceGetMemberConfig).toBeCalledWith(memberConfig.memberId.toString());
+      expect(spyOnServiceGetActiveJourney).toBeCalledWith(memberConfig.memberId.toString());
     });
   });
 
@@ -1802,17 +1808,16 @@ describe('MemberResolver', () => {
     let spyOnServiceGetMember;
     let spyOnServiceGetMemberConfig;
     let spyOnServiceUpdateMemberConfig;
-    let spyOnServiceUpdateMemberConfigLoggedInAt;
+    let spyOnServiceUpdateJourneyLoggedInAt;
+    let spyOnServiceGetActiveJourney;
 
     beforeEach(() => {
       spyOnOneSignalRegister = jest.spyOn(oneSignal, 'register');
       spyOnServiceGetMember = jest.spyOn(service, 'get');
       spyOnServiceGetMemberConfig = jest.spyOn(service, 'getMemberConfig');
       spyOnServiceUpdateMemberConfig = jest.spyOn(service, 'updateMemberConfig');
-      spyOnServiceUpdateMemberConfigLoggedInAt = jest.spyOn(
-        service,
-        'updateMemberConfigLoggedInAt',
-      );
+      spyOnServiceUpdateJourneyLoggedInAt = jest.spyOn(journeyService, 'updateLoggedInAt');
+      spyOnServiceGetActiveJourney = jest.spyOn(journeyService, 'getActive');
     });
 
     afterEach(() => {
@@ -1820,7 +1825,8 @@ describe('MemberResolver', () => {
       spyOnServiceGetMember.mockReset();
       spyOnServiceGetMemberConfig.mockReset();
       spyOnServiceUpdateMemberConfig.mockReset();
-      spyOnServiceUpdateMemberConfigLoggedInAt.mockReset();
+      spyOnServiceUpdateJourneyLoggedInAt.mockReset();
+      spyOnServiceGetActiveJourney.mockReset();
       spyOnEventEmitter.mockReset();
       spyOnEventEmitter.mockClear();
     });
@@ -1828,9 +1834,10 @@ describe('MemberResolver', () => {
     it('should not call notificationsService on platform=android', async () => {
       spyOnOneSignalRegister.mockImplementationOnce(async () => undefined);
       const currentMemberConfig = mockGenerateMemberConfig();
-      delete currentMemberConfig.firstLoggedInAt;
       const member = mockGenerateMember();
       member.id = currentMemberConfig.memberId.toString();
+      const journey = mockGenerateJourney({ memberId: member.id });
+      delete journey.firstLoggedInAt;
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => currentMemberConfig);
 
@@ -1844,6 +1851,8 @@ describe('MemberResolver', () => {
         ...updateFields,
       });
       spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnServiceUpdateJourneyLoggedInAt.mockResolvedValueOnce(journey);
+      spyOnServiceGetActiveJourney.mockResolvedValueOnce(journey);
       await resolver.registerMemberForNotifications([MemberRole.member], member.id, params);
 
       expect(spyOnOneSignalRegister).not.toBeCalled();
@@ -1855,7 +1864,7 @@ describe('MemberResolver', () => {
         platform: params.platform,
         isPushNotificationsEnabled: memberConfig.isPushNotificationsEnabled,
       });
-      expect(spyOnServiceUpdateMemberConfigLoggedInAt).toBeCalledWith(memberConfig.memberId);
+      expect(spyOnServiceUpdateJourneyLoggedInAt).toBeCalledWith(memberConfig.memberId);
       const eventParams: IEventNotifyQueue = {
         type: QueueType.notifications,
         message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
@@ -1865,9 +1874,10 @@ describe('MemberResolver', () => {
 
     it('should call notificationsService on platform=ios', async () => {
       const currentMemberConfig = mockGenerateMemberConfig();
-      delete currentMemberConfig.firstLoggedInAt;
       const member = mockGenerateMember();
       member.id = currentMemberConfig.memberId.toString();
+      const journey = mockGenerateJourney({ memberId: member.id });
+      delete journey.firstLoggedInAt;
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => currentMemberConfig);
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
 
@@ -1882,6 +1892,8 @@ describe('MemberResolver', () => {
         ...updateFields,
       });
       spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
+      spyOnServiceUpdateJourneyLoggedInAt.mockResolvedValueOnce(journey);
+      spyOnServiceGetActiveJourney.mockResolvedValueOnce(journey);
       await resolver.registerMemberForNotifications([MemberRole.member], member.id, params);
 
       expect(spyOnOneSignalRegister).toBeCalledTimes(1);
@@ -1913,12 +1925,16 @@ describe('MemberResolver', () => {
       expect(spyOnEventEmitter).toHaveBeenNthCalledWith(2, GlobalEventType.notifyQueue, notify);
     });
 
-    it('should not call updateMemberConfigRegisteredAt if firstLoggedInAt exists', async () => {
+    it('should not call updateLoggedInAt if firstLoggedInAt exists', async () => {
       const currentMemberConfig = mockGenerateMemberConfig();
       const member = mockGenerateMember();
       member.id = currentMemberConfig.memberId.toString();
+      const journey = mockGenerateJourney({ memberId: member.id });
       spyOnServiceGetMember.mockImplementationOnce(async () => member);
       spyOnServiceGetMemberConfig.mockImplementationOnce(async () => currentMemberConfig);
+      spyOnServiceGetActiveJourney.mockResolvedValueOnce(journey);
+      spyOnServiceUpdateJourneyLoggedInAt.mockResolvedValueOnce(journey);
+      spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
 
       const updateFields = {
         platform: Platform.android,
@@ -1929,12 +1945,12 @@ describe('MemberResolver', () => {
         memberId: currentMemberConfig.memberId,
         ...updateFields,
       });
-      spyOnServiceUpdateMemberConfig.mockImplementationOnce(async () => memberConfig);
+
       await resolver.registerMemberForNotifications([MemberRole.member], member.id, params);
 
       const eventParams: IEventNotifyQueue = {
         type: QueueType.notifications,
-        message: JSON.stringify(generateUpdateClientSettings({ memberConfig })),
+        message: JSON.stringify(generateUpdateClientSettings({ memberConfig, journey })),
       };
       expect(spyOnEventEmitter).toBeCalledWith(GlobalEventType.notifyQueue, eventParams);
     });
@@ -2377,22 +2393,43 @@ describe('MemberResolver', () => {
 
     /* eslint-disable max-len */
     test.each`
-      memberConfig                                                         | contentKey                         | error
-      ${{ platform: Platform.web }}                                        | ${ExternalKey.addCaregiverDetails} | ${ErrorType.notificationNotAllowedForWebMember}
-      ${{ platform: Platform.web }}                                        | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
-      ${{ platform: Platform.web }}                                        | ${ExternalKey.answerQuestionnaire} | ${ErrorType.notificationNotAllowedForWebMember}
-      ${{ isPushNotificationsEnabled: false }}                             | ${ExternalKey.addCaregiverDetails} | ${ErrorType.notificationNotAllowedForWebMember}
-      ${{ isPushNotificationsEnabled: false }}                             | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
-      ${{ isPushNotificationsEnabled: false }}                             | ${ExternalKey.answerQuestionnaire} | ${ErrorType.notificationNotAllowedForWebMember}
-      ${{ platform: Platform.web, isPushNotificationsEnabled: true }}      | ${ExternalKey.addCaregiverDetails} | ${ErrorType.notificationNotAllowedForWebMember}
-      ${{ platform: Platform.web, isPushNotificationsEnabled: true }}      | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
-      ${{ platform: Platform.web, isPushNotificationsEnabled: true }}      | ${ExternalKey.answerQuestionnaire} | ${ErrorType.notificationNotAllowedForWebMember}
-      ${{ platform: Platform.android, isPushNotificationsEnabled: false }} | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
-      ${{ platform: Platform.ios, isPushNotificationsEnabled: false }}     | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
-      ${{ platform: Platform.android, isPushNotificationsEnabled: false }} | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
-      ${{ platform: Platform.ios, isPushNotificationsEnabled: false }}     | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
-      ${{ platform: Platform.android }}                                    | ${ExternalKey.scheduleAppointment} | ${ErrorType.notificationNotAllowedForMobileMember}
-      ${{ platform: Platform.ios }}                                        | ${ExternalKey.scheduleAppointment} | ${ErrorType.notificationNotAllowedForMobileMember}
+      memberConfig                             | contentKey                         | error
+      ${{ platform: Platform.web }}            | ${ExternalKey.addCaregiverDetails} | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ platform: Platform.web }}            | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ platform: Platform.web }}            | ${ExternalKey.answerQuestionnaire} | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ isPushNotificationsEnabled: false }} | ${ExternalKey.addCaregiverDetails} | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ isPushNotificationsEnabled: false }} | ${ExternalKey.setCallPermissions}  | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ isPushNotificationsEnabled: false }} | ${ExternalKey.answerQuestionnaire} | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{
+  platform: Platform.web,
+  isPushNotificationsEnabled: true,
+}} | ${ExternalKey.addCaregiverDetails} | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{
+  platform: Platform.web,
+  isPushNotificationsEnabled: true,
+}} | ${ExternalKey.setCallPermissions} | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{
+  platform: Platform.web,
+  isPushNotificationsEnabled: true,
+}} | ${ExternalKey.answerQuestionnaire} | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{
+  platform: Platform.android,
+  isPushNotificationsEnabled: false,
+}} | ${ExternalKey.setCallPermissions} | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{
+  platform: Platform.ios,
+  isPushNotificationsEnabled: false,
+}} | ${ExternalKey.setCallPermissions} | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{
+  platform: Platform.android,
+  isPushNotificationsEnabled: false,
+}} | ${ExternalKey.setCallPermissions} | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{
+  platform: Platform.ios,
+  isPushNotificationsEnabled: false,
+}} | ${ExternalKey.setCallPermissions} | ${ErrorType.notificationNotAllowedForWebMember}
+      ${{ platform: Platform.android }}        | ${ExternalKey.scheduleAppointment} | ${ErrorType.notificationNotAllowedForMobileMember}
+      ${{ platform: Platform.ios }}            | ${ExternalKey.scheduleAppointment} | ${ErrorType.notificationNotAllowedForMobileMember}
     `(
       `should throw an error when memberConfig=$memberConfig and contentKey=$contentKey`,
       async (params) => {
@@ -2473,17 +2510,7 @@ describe('MemberResolver', () => {
     it('should handle notify chat message sent from user', async () => {
       const member = mockGenerateMember();
       const user = mockGenerateUser();
-      const memberConfig: MemberConfig = {
-        memberId: new Types.ObjectId(member.id),
-        externalUserId: v4(),
-        platform: Platform.android,
-        isPushNotificationsEnabled: true,
-        accessToken: '123-abc',
-        firstLoggedInAt: date.past(1),
-        lastLoggedInAt: date.past(1),
-        articlesPath: system.directoryPath(),
-        language: defaultMemberParams.language,
-      };
+      const memberConfig = mockGenerateMemberConfig();
       const communication: Communication = {
         memberId: new Types.ObjectId(member.id),
         userId: new Types.ObjectId(user.id),

@@ -225,6 +225,15 @@ export class MemberService extends BaseService {
       },
       { $unwind: { path: '$memberconfig' } },
       {
+        $lookup: {
+          from: 'journeys',
+          localField: '_id',
+          foreignField: 'memberId',
+          as: 'journey',
+        },
+      },
+      { $unwind: { path: '$journey' } },
+      {
         $project: {
           id: '$_id',
           name: { $concat: ['$firstName', ' ', '$lastName'] },
@@ -238,7 +247,7 @@ export class MemberService extends BaseService {
           primaryUserId: '$primaryUserId',
           users: '$users',
           org: '$org',
-          firstLoggedInAt: '$memberconfig.firstLoggedInAt',
+          firstLoggedInAt: '$journey.firstLoggedInAt',
           platform: '$memberconfig.platform',
           isGraduated: '$isGraduated',
           graduationDate: '$graduationDate',
@@ -539,18 +548,10 @@ export class MemberService extends BaseService {
     return memberConfig;
   }
 
-  async updateMemberConfigLoggedInAt(memberId: Types.ObjectId) {
-    this.logger.info({ memberId }, MemberService.name, this.updateMemberConfigLoggedInAt.name);
-    const date = new Date();
-    await this.memberConfigModel.updateOne(
-      { memberId, firstLoggedInAt: null },
-      { $set: { firstLoggedInAt: date } },
-    );
-    await this.memberConfigModel.updateOne({ memberId }, { $set: { lastLoggedInAt: date } });
-  }
-
   async getMemberConfig(id: string): Promise<MemberConfig> {
-    const memberConfig = await this.memberConfigModel.findOne({ memberId: new Types.ObjectId(id) });
+    const memberConfig = await this.memberConfigModel
+      .findOne({ memberId: new Types.ObjectId(id) })
+      .lean();
     if (!memberConfig) {
       throw new Error(Errors.get(ErrorType.memberNotFound));
     }

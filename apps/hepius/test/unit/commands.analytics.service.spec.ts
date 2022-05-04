@@ -17,6 +17,7 @@ import {
   mockDbRedFlag,
   mockDbRedFlagType,
   mockGenerateCaregiver,
+  mockGenerateJourney,
   mockGenerateMember,
   mockGenerateMemberConfig,
   mockGenerateOrg,
@@ -71,6 +72,7 @@ describe('Commands: AnalyticsService', () => {
   const mockFellowUser = mockGenerateUser();
   const mockMember = mockGenerateMember();
   const mockMemberConfig = mockGenerateMemberConfig();
+  const mockActiveJourney = mockGenerateJourney({ memberId: mockMember.id });
   mockMember.primaryUserId = new Types.ObjectId(mockPrimaryUser.id);
   mockMember.dateOfBirth = reformatDate(
     sub(now, { years: 40 }).toString(),
@@ -497,6 +499,7 @@ describe('Commands: AnalyticsService', () => {
             },
           } as PopulatedAppointment,
         ],
+        activeJourney: mockActiveJourney,
       } as MemberDataAggregate);
 
       expect(data).toEqual({
@@ -539,11 +542,11 @@ describe('Commands: AnalyticsService', () => {
         platform: mockMemberConfig.platform,
         updated: reformatDate(mockMember.updatedAt.toString(), momentFormats.mysqlDateTime),
         app_first_login: reformatDate(
-          mockMemberConfig.firstLoggedInAt.toString(),
+          mockActiveJourney.firstLoggedInAt.toString(),
           momentFormats.mysqlDateTime,
         ),
         app_last_login: reformatDate(
-          mockMemberConfig.lastLoggedInAt.toString(),
+          mockActiveJourney.lastLoggedInAt.toString(),
           momentFormats.mysqlDateTime,
         ),
         coach_id: mockPrimaryUser.id,
@@ -565,7 +568,8 @@ describe('Commands: AnalyticsService', () => {
 
       const data = await analyticsService.buildMemberData({
         _id: new Types.ObjectId(mockMember.id),
-        memberConfig: { ...mockMemberConfig, firstLoggedInAt: undefined },
+        memberConfig: { ...mockMemberConfig },
+        activeJourney: { ...mockActiveJourney, firstLoggedInAt: undefined },
         memberDetails: {
           ...mockMember,
           admitDate: reformatDate(sub(now, { days: 20 }).toString(), momentFormats.mysqlDate),

@@ -52,4 +52,18 @@ export class JourneyService extends BaseService {
     const results = await this.journeyModel.find({ memberId: new Types.ObjectId(memberId) });
     return results.map((result) => this.replaceId(result));
   }
+
+  async updateLoggedInAt(memberId: Types.ObjectId): Promise<Journey> {
+    this.logger.info({ memberId }, JourneyService.name, this.updateLoggedInAt.name);
+    const date = new Date();
+    await this.journeyModel.updateOne(
+      { memberId, firstLoggedInAt: null },
+      { $set: { firstLoggedInAt: date } },
+    );
+    return this.journeyModel.findOneAndUpdate(
+      { memberId, isActive: true },
+      { $set: { lastLoggedInAt: date } },
+      { upsert: false, new: true },
+    );
+  }
 }

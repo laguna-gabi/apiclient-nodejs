@@ -228,6 +228,16 @@ export class AnalyticsService {
       },
       {
         $lookup: {
+          from: 'journeys',
+          localField: '_id',
+          foreignField: 'memberId',
+          as: 'activeJourney',
+        },
+      },
+      { $match: { 'activeJourney.isActive': true } },
+      { $unwind: { path: '$activeJourney', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
           from: 'users',
           localField: 'memberDetails.primaryUserId',
           foreignField: '_id',
@@ -531,11 +541,11 @@ export class AnalyticsService {
         : undefined,
       platform: member.memberConfig?.platform,
       app_first_login:
-        member.memberConfig?.firstLoggedInAt &&
-        reformatDate(member.memberConfig.firstLoggedInAt.toString(), momentFormats.mysqlDateTime),
+        member.activeJourney?.firstLoggedInAt &&
+        reformatDate(member.activeJourney.firstLoggedInAt.toString(), momentFormats.mysqlDateTime),
       app_last_login:
-        member.memberConfig?.lastLoggedInAt &&
-        reformatDate(member.memberConfig.lastLoggedInAt.toString(), momentFormats.mysqlDateTime),
+        member.activeJourney?.lastLoggedInAt &&
+        reformatDate(member.activeJourney.lastLoggedInAt.toString(), momentFormats.mysqlDateTime),
       org_name: member.memberDetails.org?.name,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore

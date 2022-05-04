@@ -14,6 +14,7 @@ import { Appointment, AppointmentStatus, Notes } from '../../src/appointment';
 import { RecordingType, UserRole } from '../../src/common';
 import {
   Honorific,
+  Journey,
   MaritalStatus,
   Member,
   MemberConfig,
@@ -449,6 +450,7 @@ export type PopulatedMember = Member & {
 export type MemberDataAggregate = BaseMember & {
   memberDetails: PopulatedMember;
   memberConfig?: MemberConfig;
+  activeJourney?: Journey;
   appointments?: PopulatedAppointment[];
   primaryUser?: User;
   isControlMember?: boolean;

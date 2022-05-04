@@ -78,6 +78,7 @@ import {
   Journal,
   JournalDocument,
   JournalDto,
+  JourneyService,
   Member,
   MemberDocument,
   MemberDto,
@@ -135,6 +136,7 @@ export class Handler extends BaseHandler {
   carePlanType: CarePlanType;
   lagunaOrg: Org | null;
   dailyReportService: DailyReportService;
+  journeyService: JourneyService;
   client: GraphQLClient;
   defaultUserRequestHeaders;
   defaultAdminRequestHeaders;
@@ -201,6 +203,7 @@ export class Handler extends BaseHandler {
     this.module = moduleFixture.get<GraphQLModule>(GraphQLModule);
     this.eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
     this.dailyReportService = moduleFixture.get<DailyReportService>(DailyReportService);
+    this.journeyService = moduleFixture.get<JourneyService>(JourneyService);
     const providers = mockProviders(moduleFixture);
     this.sendBird = providers.sendBird;
     this.oneSignal = providers.oneSignal;
