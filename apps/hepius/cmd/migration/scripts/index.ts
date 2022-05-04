@@ -31,3 +31,4 @@ export * as m20220414144809 from './20220414144809-set-isGraduated';
 export * as m20220418094757 from './20220418094757-moveIsGraduatedToMember';
 export * as m20220502090824 from './20220502090824-create-journeys';
 export * as m20220503154719 from './20220503154719-tweak-lhp-questionnaire';
+export * as m20220504085736 from './20220504085736-add-csat-questionnaire';

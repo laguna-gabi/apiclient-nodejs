@@ -31,6 +31,7 @@ export enum QuestionnaireType {
   who5 = 'who5',
   nps = 'nps',
   lhp = 'lhp',
+  csat = 'csat',
 }
 
 export const QuestionnaireAlerts: Map<QuestionnaireType, string> = new Map([
@@ -46,6 +47,7 @@ registerEnumType(QuestionnaireType, {
     who5: { description: 'World Health Organization 5 (well being index)' },
     nps: { description: 'Net Promoter Score' },
     lhp: { description: 'Healthcare Persona' },
+    csat: { description: 'Customer Satisfaction' },
   },
 });
 

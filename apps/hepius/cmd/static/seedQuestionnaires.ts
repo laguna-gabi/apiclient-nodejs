@@ -252,3 +252,28 @@ export const buildLHPQuestionnaire = (): CreateQuestionnaireParams => {
     isAssignableToMember: false,
   };
 };
+
+export const buildCSATQuestionnaire = (): CreateQuestionnaireParams => {
+  return {
+    name: `Customer Satisfaction`,
+    shortName: upperCase(QuestionnaireType.csat),
+    type: QuestionnaireType.csat,
+    items: [
+      {
+        code: `q1`,
+        label: 'How would you rate your overall satisfaction with the experience you received?',
+        type: ItemType.choice,
+        order: 1,
+        required: true,
+        options: [
+          { label: 'Very unsatisfied', value: 1 },
+          { label: 'Unsatisfied', value: 2 },
+          { label: 'Neutral', value: 3 },
+          { label: 'Satisfied', value: 4 },
+          { label: 'Very satisfied', value: 5 },
+        ],
+      },
+    ],
+    isAssignableToMember: false,
+  };
+};
