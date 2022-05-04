@@ -25,7 +25,8 @@ describe(`live: ${OneSignal.name}`, () => {
   });
 
   beforeEach(async () => {
-    spyOnLoggerWarn = jest.spyOn(logger, 'warn').mockImplementation(() => undefined);
+    spyOnLoggerWarn = jest.spyOn(logger, 'warn');
+    spyOnLoggerWarn.mockImplementation(() => undefined);
   });
 
   afterEach(() => {
