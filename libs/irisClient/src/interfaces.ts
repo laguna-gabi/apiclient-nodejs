@@ -1,15 +1,11 @@
 import {
   CancelNotificationType,
+  ClientCategory,
   Language,
   NotificationType,
   Platform,
   ServiceName,
 } from '@argus/pandora';
-
-export enum ClientCategory {
-  member = 'member',
-  user = 'user',
-}
 
 export enum InnerQueueTypes {
   updateClientSettings = 'updateClientSettings',

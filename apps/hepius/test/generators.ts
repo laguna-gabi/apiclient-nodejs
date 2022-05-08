@@ -1,6 +1,5 @@
 import { Caregiver, Relationship } from '@argus/hepiusClient';
 import {
-  ClientCategory,
   ContentKey,
   ExternalKey,
   IUpdateClientSettings,
@@ -9,6 +8,7 @@ import {
 } from '@argus/irisClient';
 import {
   CancelNotificationType,
+  ClientCategory,
   Language,
   NotificationType,
   Platform,

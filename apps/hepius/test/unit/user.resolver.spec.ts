@@ -1,5 +1,6 @@
-import { ClientCategory, IUpdateClientSettings, InnerQueueTypes } from '@argus/irisClient';
+import { IUpdateClientSettings, InnerQueueTypes } from '@argus/irisClient';
 import {
+  ClientCategory,
   GlobalEventType,
   Language,
   QueueType,

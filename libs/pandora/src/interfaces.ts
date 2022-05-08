@@ -15,6 +15,11 @@ export enum ServiceName {
   poseidon = 'poseidon',
 }
 
+export enum ClientCategory {
+  member = 'member',
+  user = 'user',
+}
+
 export enum Language {
   en = 'en',
   es = 'es',

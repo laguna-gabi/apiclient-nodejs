@@ -15,6 +15,7 @@ import {
   generateDispatchId,
 } from '@argus/irisClient';
 import {
+  ClientCategory,
   GlobalEventType,
   IEventNotifySlack,
   NotificationType,
@@ -26,6 +27,7 @@ import {
   StorageType,
   formatEx,
 } from '@argus/pandora';
+import { TranscriptData, TranscriptStatus } from '@argus/poseidonClient';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -584,6 +586,21 @@ export class MemberResolver extends MemberBase {
     memberId: string,
   ) {
     return this.memberService.getRecordings(memberId);
+  }
+
+  @Query(() => TranscriptData)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getTranscript(
+    @Args('recordingId', { type: () => String }) // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    recordingId: string,
+  ) {
+    return {
+      transcriptLink:
+        'https://d1ic17v34w4spl.cloudfront.net/public/dischargeInstructions/transcriptMock.json',
+      conversationPercentage: { speakerA: 34, speakerB: 53, silence: 13 },
+      speakerA: ClientCategory.member,
+      status: TranscriptStatus.done,
+    };
   }
 
   /*************************************************************************************************

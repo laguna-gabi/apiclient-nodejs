@@ -1,11 +1,11 @@
 import {
-  ClientCategory,
   IUpdateClientSettings,
   InnerQueueTypes,
   RegisterInternalKey,
   generateDispatchId,
 } from '@argus/irisClient';
 import {
+  ClientCategory,
   GlobalEventType,
   IEventNotifySlack,
   NotificationType,

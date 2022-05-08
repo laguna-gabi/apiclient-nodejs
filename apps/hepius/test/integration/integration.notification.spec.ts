@@ -2,7 +2,6 @@ import {
   AlertInternalKey,
   AppointmentInternalKey,
   ChatInternalKey,
-  ClientCategory,
   ContentKey,
   ExternalKey,
   InnerQueueTypes,
@@ -63,7 +62,13 @@ import {
   generateUpdateTodoTodoMock,
   generateUpdateUserSettingsMock,
 } from '@argus/irisClient';
-import { CancelNotificationType, NotificationType, Platform, QueueType } from '@argus/pandora';
+import {
+  CancelNotificationType,
+  ClientCategory,
+  NotificationType,
+  Platform,
+  QueueType,
+} from '@argus/pandora';
 import { general, hosts, scheduler } from 'config';
 import { addDays, addSeconds, subDays, subMinutes } from 'date-fns';
 import { datatype, date as fakerDate, internet, lorem } from 'faker';
