@@ -143,8 +143,12 @@ export const FRAGMENT_ADMISSION = gql`
     id
     diagnoses {
       id
-      icdCode
+      code
       description
+      primaryType
+      secondaryType
+      clinicalStatus
+      severity
     }
     procedures {
       id

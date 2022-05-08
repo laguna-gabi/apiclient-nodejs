@@ -87,10 +87,12 @@ import {
   ChangeAdmissionMedicationParams,
   ChangeAdmissionProcedureParams,
   ChangeAdmissionWoundCareParams,
+  ClinicalStatus,
   CreateMemberParams,
   CreateTaskParams,
   DeleteDischargeDocumentParams,
   DeleteMemberParams,
+  DiagnosisSeverity,
   DischargeDocumentType,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
@@ -103,10 +105,12 @@ import {
   MemberConfig,
   NotifyContentParams,
   NotifyParams,
+  PrimaryDiagnosisType,
   ProcedureType,
   ReadmissionRisk,
   ReplaceMemberOrgParams,
   ReplaceUserForMemberParams,
+  SecondaryDiagnosisType,
   SetGeneralNotesParams,
   Sex,
   TaskStatus,
@@ -1376,16 +1380,32 @@ export const mockDbRedFlag = () => {
 export const generateAdmissionDiagnosisParams = ({
   changeType,
   id,
+  code,
+  description,
+  primaryType,
+  secondaryType,
+  clinicalStatus,
+  severity,
 }: {
   changeType: ChangeType;
   id?: string;
+  code?: string;
+  description?: string;
+  primaryType?: PrimaryDiagnosisType;
+  secondaryType?: SecondaryDiagnosisType;
+  clinicalStatus?: ClinicalStatus;
+  severity?: DiagnosisSeverity;
 }): ChangeAdmissionDiagnosisParams => {
   const attachIdParam = id ? { id } : {};
   return {
     changeType,
     ...attachIdParam,
-    icdCode: datatype.uuid(),
-    description: lorem.sentence(),
+    code: code || datatype.uuid(),
+    description: description || lorem.sentence(),
+    primaryType: primaryType || PrimaryDiagnosisType.self,
+    secondaryType: secondaryType || SecondaryDiagnosisType.radiology,
+    clinicalStatus: clinicalStatus || ClinicalStatus.inactive,
+    severity: severity || DiagnosisSeverity.mild,
   };
 };
 

@@ -1,73 +1,21 @@
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Model, Types, model } from 'mongoose';
+import { Types } from 'mongoose';
+import { ChangeType, Errors, LoggerService } from '../../src/common';
 import {
-  ChangeType,
-  ErrorType,
-  Errors,
-  LoggerService,
-  defaultTimestampsDbValues,
-} from '../../src/common';
-import {
-  Activity,
-  ActivityDocument,
-  ActivityDto,
   Admission,
   AdmissionCategory,
-  AdmissionDocument,
-  AdmissionDto,
   AdmissionService,
-  Diagnosis,
-  DiagnosisDocument,
-  DiagnosisDto,
-  Dietary,
-  DietaryDocument,
-  DietaryDto,
-  ExternalAppointment,
-  ExternalAppointmentDocument,
-  ExternalAppointmentDto,
-  Medication,
-  MedicationDocument,
-  MedicationDto,
   MemberModule,
-  Procedure,
-  ProcedureDocument,
-  ProcedureDto,
-  WoundCare,
-  WoundCareDocument,
-  WoundCareDto,
+  PrimaryDiagnosisType,
 } from '../../src/member';
-import {
-  dbConnect,
-  dbDisconnect,
-  defaultModules,
-  generateAdmissionActivityParams,
-  generateAdmissionDiagnosisParams,
-  generateAdmissionDietaryParams,
-  generateAdmissionExternalAppointmentParams,
-  generateAdmissionMedicationParams,
-  generateAdmissionProcedureParams,
-  generateAdmissionWoundCareParams,
-  generateId,
-  removeChangeType,
-} from '../index';
+import { dbConnect, dbDisconnect, defaultModules, generateId, removeChangeType } from '../index';
+import { AdmissionHelper } from '../aux';
 
 describe(AdmissionService.name, () => {
   let module: TestingModule;
   let service: AdmissionService;
-  const mapAdmissionCategoryToParamField: Map<
-    AdmissionCategory,
-    { field: string; method; model?: typeof Model; errorNotFound?: ErrorType }
-  > = new Map();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let admissionModel: Model<AdmissionDocument & defaultTimestampsDbValues>;
-  let diagnosisModel: Model<DiagnosisDocument & defaultTimestampsDbValues>;
-  let procedureModel: Model<ProcedureDocument & defaultTimestampsDbValues>;
-  let medicationModel: Model<MedicationDocument & defaultTimestampsDbValues>;
-  let externalAppointmentModel: Model<ExternalAppointmentDocument & defaultTimestampsDbValues>;
-  let activityModel: Model<ActivityDocument & defaultTimestampsDbValues>;
-  let woundCareModel: Model<WoundCareDocument & defaultTimestampsDbValues>;
-  let dietaryModel: Model<DietaryDocument & defaultTimestampsDbValues>;
+  const admissionHelper: AdmissionHelper = new AdmissionHelper();
 
   beforeAll(async () => {
     mockProcessWarnings(); // to hide pino prettyPrint warning
@@ -77,9 +25,6 @@ describe(AdmissionService.name, () => {
 
     service = module.get<AdmissionService>(AdmissionService);
     mockLogger(module.get<LoggerService>(LoggerService));
-
-    initModels();
-    initMaps();
 
     await dbConnect();
   });
@@ -92,7 +37,7 @@ describe(AdmissionService.name, () => {
   test.each(Object.values(AdmissionCategory))(
     'should create 2 admissions entries with %p for a member, and 1 for other member',
     async (admissionCategory: AdmissionCategory) => {
-      const { field, method, model } = mapAdmissionCategoryToParamField.get(admissionCategory);
+      const { field, method, model } = admissionHelper.mapper.get(admissionCategory);
 
       const changeParams1a = method({ changeType: ChangeType.create });
       const changeParams1b = method({ changeType: ChangeType.create });
@@ -122,9 +67,13 @@ describe(AdmissionService.name, () => {
         [`${admissionCategory}`]: [{ ...removeChangeType(changeParams2), id: id2 }],
       });
 
-      const count1 = await admissionModel.count({ memberId: new Types.ObjectId(memberId1) });
+      const count1 = await admissionHelper.admissionModel.count({
+        memberId: new Types.ObjectId(memberId1),
+      });
       expect(count1).toEqual(2);
-      const count2 = await admissionModel.count({ memberId: new Types.ObjectId(memberId2) });
+      const count2 = await admissionHelper.admissionModel.count({
+        memberId: new Types.ObjectId(memberId2),
+      });
       expect(count2).toEqual(1);
     },
   );
@@ -132,7 +81,7 @@ describe(AdmissionService.name, () => {
   test.each(Object.values(AdmissionCategory))(
     'should create and update a member %p',
     async (admissionCategory: AdmissionCategory) => {
-      const { field, method, model } = mapAdmissionCategoryToParamField.get(admissionCategory);
+      const { field, method, model } = admissionHelper.mapper.get(admissionCategory);
       const memberId = generateId();
 
       const changeParams = method({ changeType: ChangeType.create });
@@ -150,7 +99,9 @@ describe(AdmissionService.name, () => {
         ],
       });
 
-      const records = await admissionModel.count({ memberId: new Types.ObjectId(memberId) });
+      const records = await admissionHelper.admissionModel.count({
+        memberId: new Types.ObjectId(memberId),
+      });
       expect(records).toEqual(1);
     },
   );
@@ -158,7 +109,7 @@ describe(AdmissionService.name, () => {
   test.each(Object.values(AdmissionCategory))(
     'should create and delete a member %p',
     async (admissionCategory: AdmissionCategory) => {
-      const { field, method, model } = mapAdmissionCategoryToParamField.get(admissionCategory);
+      const { field, method, model } = admissionHelper.mapper.get(admissionCategory);
       const memberId = generateId();
       const changeParams = method({ changeType: ChangeType.create });
 
@@ -197,8 +148,7 @@ describe(AdmissionService.name, () => {
   );
 
   const checkThrowError = async (admissionCategory: AdmissionCategory, changeType: ChangeType) => {
-    const { field, method, errorNotFound } =
-      mapAdmissionCategoryToParamField.get(admissionCategory);
+    const { field, method, errorNotFound } = admissionHelper.mapper.get(admissionCategory);
     const memberId = generateId();
 
     await expect(change(field, method({ changeType, id: generateId() }), memberId)).rejects.toThrow(
@@ -218,7 +168,7 @@ describe(AdmissionService.name, () => {
   `(
     `should remove null fields from create $admissionCategory params`,
     async ({ admissionCategory, key }) => {
-      const { field, method, model } = mapAdmissionCategoryToParamField.get(admissionCategory);
+      const { field, method, model } = admissionHelper.mapper.get(admissionCategory);
       const memberId = generateId();
 
       const changeParams = method({ changeType: ChangeType.create });
@@ -243,7 +193,7 @@ describe(AdmissionService.name, () => {
   `(
     `should remove null fields from update $admissionCategory params`,
     async ({ admissionCategory, key }) => {
-      const { field, method, model } = mapAdmissionCategoryToParamField.get(admissionCategory);
+      const { field, method, model } = admissionHelper.mapper.get(admissionCategory);
       const memberId = generateId();
 
       const createParams = method({ changeType: ChangeType.create });
@@ -260,29 +210,30 @@ describe(AdmissionService.name, () => {
     },
   );
 
-  it('should set appointment default isScheduled=true when not provided in params', async () => {
-    const memberId = generateId();
+  test.each`
+    admissionCategory                         | key              | defaultValue
+    ${AdmissionCategory.externalAppointments} | ${'isScheduled'} | ${true}
+    ${AdmissionCategory.diagnoses}            | ${'primaryType'} | ${PrimaryDiagnosisType.clinical}
+  `(
+    'should set $admissionCategory default $key when not provided in params',
+    async ({ admissionCategory, key, defaultValue }) => {
+      const memberId = generateId();
+      const { field, method, model } = admissionHelper.mapper.get(admissionCategory);
 
-    const admissionCategory = AdmissionCategory.externalAppointments;
-    const { field, method } = mapAdmissionCategoryToParamField.get(admissionCategory);
+      const createParams = method({ changeType: ChangeType.create });
+      delete createParams[key];
 
-    const externalAppointment = method({ changeType: ChangeType.create });
-    delete externalAppointment.isScheduled;
+      await change(field, createParams, memberId);
 
-    await change(field, externalAppointment, memberId);
-
-    const { isScheduled } = await externalAppointmentModel.findOne(
-      { date: externalAppointment.date },
-      { isScheduled: 1 },
-    );
-
-    expect(isScheduled).toBeTruthy();
-  });
+      const result = await model.findOne({}, {}, { sort: { _id: -1 } });
+      expect(result[key]).toEqual(defaultValue);
+    },
+  );
 
   it('should set activity default isTodo=true when not provided in params', async () => {
     const memberId = generateId();
     const admissionCategory = AdmissionCategory.activities;
-    const { field, method, model } = mapAdmissionCategoryToParamField.get(admissionCategory);
+    const { field, method, model } = admissionHelper.mapper.get(admissionCategory);
 
     const activity = method({ changeType: ChangeType.create });
     delete activity.isTodo;
@@ -298,7 +249,7 @@ describe(AdmissionService.name, () => {
     const createResult = await createAllCategories(memberId);
 
     //create another one and make sure it returns all the existing created values above
-    const { field, method } = mapAdmissionCategoryToParamField.get(AdmissionCategory.procedures);
+    const { field, method } = admissionHelper.mapper.get(AdmissionCategory.procedures);
     const createParams = method({ changeType: ChangeType.create });
     const changeResult = await change(field, createParams, memberId, createResult.id);
 
@@ -314,9 +265,7 @@ describe(AdmissionService.name, () => {
     let result = await createAllCategories(memberId);
 
     //update one and make sure it returns all the existing created values above
-    const { field, method, model } = mapAdmissionCategoryToParamField.get(
-      AdmissionCategory.procedures,
-    );
+    const { field, method, model } = admissionHelper.mapper.get(AdmissionCategory.procedures);
     const { id } = await model.findById(
       new Types.ObjectId(result[AdmissionCategory.procedures][0].id),
     );
@@ -334,9 +283,7 @@ describe(AdmissionService.name, () => {
     const result = await createAllCategories(memberId);
 
     //update one and make sure it returns all the existing created values above
-    const { field, method, model } = mapAdmissionCategoryToParamField.get(
-      AdmissionCategory.procedures,
-    );
+    const { field, method, model } = admissionHelper.mapper.get(AdmissionCategory.procedures);
     const { id } = await model.findById(
       new Types.ObjectId(result[AdmissionCategory.procedures][0].id),
     );
@@ -366,7 +313,7 @@ describe(AdmissionService.name, () => {
     let result;
     //create synchronous categories(test fails on unique mongodb error for field memberId on async Promise.all)
     for (const admissionCategory of Object.values(AdmissionCategory)) {
-      const { field, method } = mapAdmissionCategoryToParamField.get(admissionCategory);
+      const { field, method } = admissionHelper.mapper.get(admissionCategory);
       const createParams1 = method({ changeType: ChangeType.create });
       result = await change(field, createParams1, memberId, result?.id.toString());
     }
@@ -399,79 +346,5 @@ describe(AdmissionService.name, () => {
     id?: string,
   ): Promise<Admission> => {
     return service.change({ [`${field}`]: params, memberId, id });
-  };
-
-  const initModels = () => {
-    admissionModel = model<AdmissionDocument & defaultTimestampsDbValues>(
-      Admission.name,
-      AdmissionDto,
-    );
-    diagnosisModel = model<DiagnosisDocument & defaultTimestampsDbValues>(
-      Diagnosis.name,
-      DiagnosisDto,
-    );
-    procedureModel = model<ProcedureDocument & defaultTimestampsDbValues>(
-      Procedure.name,
-      ProcedureDto,
-    );
-    medicationModel = model<MedicationDocument & defaultTimestampsDbValues>(
-      Medication.name,
-      MedicationDto,
-    );
-    externalAppointmentModel = model<ExternalAppointmentDocument & defaultTimestampsDbValues>(
-      ExternalAppointment.name,
-      ExternalAppointmentDto,
-    );
-    activityModel = model<ActivityDocument & defaultTimestampsDbValues>(Activity.name, ActivityDto);
-    woundCareModel = model<WoundCareDocument & defaultTimestampsDbValues>(
-      WoundCare.name,
-      WoundCareDto,
-    );
-    dietaryModel = model<DietaryDocument & defaultTimestampsDbValues>(Dietary.name, DietaryDto);
-  };
-
-  const initMaps = () => {
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.diagnoses, {
-      field: 'diagnosis',
-      method: generateAdmissionDiagnosisParams,
-      model: diagnosisModel,
-      errorNotFound: ErrorType.admissionDiagnosisIdNotFound,
-    });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.procedures, {
-      field: 'procedure',
-      method: generateAdmissionProcedureParams,
-      model: procedureModel,
-      errorNotFound: ErrorType.admissionProcedureIdNotFound,
-    });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.medications, {
-      field: 'medication',
-      method: generateAdmissionMedicationParams,
-      model: medicationModel,
-      errorNotFound: ErrorType.admissionMedicationIdNotFound,
-    });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.externalAppointments, {
-      field: 'externalAppointment',
-      method: generateAdmissionExternalAppointmentParams,
-      model: externalAppointmentModel,
-      errorNotFound: ErrorType.admissionExternalAppointmentIdNotFound,
-    });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.activities, {
-      field: 'activity',
-      method: generateAdmissionActivityParams,
-      model: activityModel,
-      errorNotFound: ErrorType.admissionActivityIdNotFound,
-    });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.woundCares, {
-      field: 'woundCare',
-      method: generateAdmissionWoundCareParams,
-      model: woundCareModel,
-      errorNotFound: ErrorType.admissionWoundCareIdNotFound,
-    });
-    mapAdmissionCategoryToParamField.set(AdmissionCategory.dietaries, {
-      field: 'dietary',
-      method: generateAdmissionDietaryParams,
-      model: dietaryModel,
-      errorNotFound: ErrorType.admissionDietaryIdNotFound,
-    });
   };
 });

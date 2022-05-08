@@ -7,7 +7,7 @@ import { differenceInMilliseconds } from 'date-fns';
 import { isNil } from 'lodash';
 import { Types } from 'mongoose';
 import { lookup } from 'zipcode-to-timezone';
-import { ItemInterface, ItemType, SeverityLevelInterface, onlyDateRegex } from '.';
+import { ChangeType, ItemInterface, ItemType, SeverityLevelInterface, onlyDateRegex } from '.';
 
 /**
  * When there are 2 params of dates, and we want to make sure that one param is
@@ -417,6 +417,30 @@ export function IsValidCarePlanTypeInput(options: ValidationOptions) {
       validator: {
         validate(carePlanType: string, args: ValidationArguments) {
           return Boolean(args.object['type']['id']) !== Boolean(args.object['type']['custom']);
+        },
+      },
+    });
+  };
+}
+
+export function IsIdAndChangeTypeAligned(options: ValidationOptions) {
+  return (object, propertyName: string) => {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      options,
+      validator: {
+        validate(params, args: ValidationArguments) {
+          if (isNil(params)) {
+            return true;
+          }
+          const { changeType } = params;
+          const { id } = args.object[args.property];
+          return (
+            (isNil(id) && changeType === ChangeType.create) ||
+            (!isNil(id) && (changeType === ChangeType.update || changeType === ChangeType.delete))
+          );
+          return true;
         },
       },
     });

@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { ChangeType } from '../common';
+import { ChangeType, ErrorType, Errors, IsIdAndChangeTypeAligned } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
 import { Identifier } from '@argus/hepiusClient';
@@ -14,6 +14,43 @@ export enum ProcedureType {
   diagnostic = 'diagnostic',
 }
 registerEnumType(ProcedureType, { name: 'ProcedureType' });
+
+export enum PrimaryDiagnosisType {
+  principal = 'principal',
+  admitting = 'admitting',
+  clinical = 'clinical',
+  discharge = 'discharge',
+  retrospective = 'retrospective',
+  self = 'self',
+  differential = 'differential',
+}
+registerEnumType(PrimaryDiagnosisType, { name: 'PrimaryDiagnosisType' });
+
+export enum SecondaryDiagnosisType {
+  laboratory = 'laboratory',
+  nursing = 'nursing',
+  prenatal = 'prenatal',
+  radiology = 'radiology',
+  remote = 'remote',
+}
+registerEnumType(SecondaryDiagnosisType, { name: 'SecondaryDiagnosisType' });
+
+export enum ClinicalStatus {
+  active = 'active',
+  recurrence = 'recurrence',
+  relapse = 'relapse',
+  inactive = 'inactive',
+  remission = 'remission',
+  resolved = 'resolved',
+}
+registerEnumType(ClinicalStatus, { name: 'ClinicalStatus' });
+
+export enum DiagnosisSeverity {
+  severe = 'severe',
+  moderate = 'moderate',
+  mild = 'mild',
+}
+registerEnumType(DiagnosisSeverity, { name: 'DiagnosisSeverity' });
 
 export enum AdmissionCategory {
   diagnoses = 'diagnoses',
@@ -42,11 +79,27 @@ export class BaseCategory {
 export class Diagnosis extends BaseCategory {
   @Prop({ isNan: true })
   @Field({ nullable: true })
-  icdCode?: string;
+  code?: string;
 
   @Prop({ isNan: true })
   @Field({ nullable: true })
   description?: string;
+
+  @Prop({ type: String, enum: PrimaryDiagnosisType, default: PrimaryDiagnosisType.clinical })
+  @Field(() => PrimaryDiagnosisType, { nullable: true })
+  primaryType?: PrimaryDiagnosisType;
+
+  @Prop({ type: String, enum: SecondaryDiagnosisType, isNan: true })
+  @Field(() => SecondaryDiagnosisType, { nullable: true })
+  secondaryType?: SecondaryDiagnosisType;
+
+  @Prop({ type: String, enum: ClinicalStatus, isNan: true })
+  @Field(() => ClinicalStatus, { nullable: true })
+  clinicalStatus?: ClinicalStatus;
+
+  @Prop({ type: String, enum: DiagnosisSeverity, isNan: true })
+  @Field(() => DiagnosisSeverity, { nullable: true })
+  severity?: DiagnosisSeverity;
 }
 
 @ObjectType()
@@ -248,24 +301,31 @@ export class ChangeMemberDnaParams {
   id?: string;
 
   @Field(() => ChangeAdmissionDiagnosisParams, { nullable: true })
+  @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
   diagnosis?: ChangeAdmissionDiagnosisParams;
 
   @Field(() => ChangeAdmissionProcedureParams, { nullable: true })
+  @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
   procedure?: ChangeAdmissionProcedureParams;
 
   @Field(() => ChangeAdmissionMedicationParams, { nullable: true })
+  @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
   medication?: ChangeAdmissionMedicationParams;
 
   @Field(() => ChangeAdmissionExternalAppointmentParams, { nullable: true })
+  @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
   externalAppointment?: ChangeAdmissionExternalAppointmentParams;
 
   @Field(() => ChangeAdmissionActivityParams, { nullable: true })
+  @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
   activity?: ChangeAdmissionActivityParams;
 
   @Field(() => ChangeAdmissionWoundCareParams, { nullable: true })
+  @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
   woundCare?: ChangeAdmissionWoundCareParams;
 
   @Field(() => ChangeAdmissionDietaryParams, { nullable: true })
+  @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
   dietary?: ChangeAdmissionDietaryParams;
 }
 
