@@ -29,6 +29,8 @@ import {
   IsNotChat,
   IsNoteOrNurseNoteProvided,
   IsObjectId,
+  IsOnlyDate,
+  IsPastDate,
   IsTypeMetadataProvided,
   IsValidZipCode,
   MemberRole,
@@ -125,7 +127,7 @@ export const NotNullableMemberKeys = [
   'honorific',
 ];
 
-export const EmbeddedMemberProperties = ['address'];
+export const EmbeddedMemberProperties = ['address', 'deceased'];
 
 @InputType('AddressInput')
 @ObjectType()
@@ -138,6 +140,16 @@ export class Address {
 
   @Field(() => String, { nullable: true })
   state?: string;
+}
+
+@InputType('DeceasedInput')
+@ObjectType()
+export class Deceased {
+  @Field(() => String, { nullable: true })
+  cause?: string;
+
+  @Field(() => String, { nullable: true })
+  date?: string;
 }
 
 /**************************************************************************************************
@@ -327,6 +339,12 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @Field(() => String, { nullable: true })
   @IsOptional()
   deviceId?: string;
+
+  @Field(() => Deceased, { nullable: true })
+  @IsOptional()
+  @IsOnlyDate({ message: Errors.get(ErrorType.memberDeceasedDate) })
+  @IsPastDate({ message: Errors.get(ErrorType.memberDeceasedDateInTheFuture) })
+  deceased?: Deceased;
 }
 
 @InputType()
@@ -716,6 +734,10 @@ export class Member extends Identifier {
   @Prop({ type: Number, isNaN: true })
   @Field(() => Number, { nullable: true })
   weight?: number;
+
+  @Prop({ type: Deceased, isNaN: true })
+  @Field(() => Deceased, { nullable: true })
+  deceased?: Deceased;
 }
 
 @ObjectType()

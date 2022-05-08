@@ -2,7 +2,7 @@ import { Language, mockProcessWarnings } from '@argus/pandora';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { hosts } from 'config';
-import { add, sub } from 'date-fns';
+import { add, differenceInDays, sub } from 'date-fns';
 import { Model, Types } from 'mongoose';
 import {
   dbDisconnect,
@@ -312,7 +312,6 @@ describe('Commands: AnalyticsService', () => {
         _id: new Types.ObjectId(mockMember.id),
         memberDetails: {
           ...mockMember,
-          dischargeDate: sub(now, { days: 89 }).toString(),
           isGraduated: false,
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
           primaryUser: mockPrimaryUser,
@@ -469,8 +468,6 @@ describe('Commands: AnalyticsService', () => {
         memberConfig: mockMemberConfig,
         memberDetails: {
           ...mockMember,
-          admitDate: reformatDate(sub(now, { days: 20 }).toString(), momentFormats.mysqlDate),
-          dischargeDate: reformatDate(sub(now, { days: 10 }).toString(), momentFormats.mysqlDate),
           isGraduated: true,
           graduationDate: sub(now, { days: 20 }),
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
@@ -481,28 +478,18 @@ describe('Commands: AnalyticsService', () => {
           {
             start: sub(now, { days: 10 }),
             end: sub(now, { days: 9, hours: 23.5 }),
-            notesData: {
-              scores: {
-                adherence: 4,
-                wellbeing: 5,
-              },
-            },
+            notesData: { scores: { adherence: 4, wellbeing: 5 } },
           } as PopulatedAppointment,
           {
             start: sub(now, { days: 20 }),
             end: sub(now, { days: 20, hours: 23.5 }),
-            notesData: {
-              scores: {
-                adherence: 1,
-                wellbeing: 2,
-              },
-            },
+            notesData: { scores: { adherence: 1, wellbeing: 2 } },
           } as PopulatedAppointment,
         ],
         activeJourney: mockActiveJourney,
       } as MemberDataAggregate);
 
-      expect(data).toEqual({
+      expect(data).toMatchObject({
         customer_id: mockMember.id,
         mbr_initials: mockMember.firstName[0].toUpperCase() + mockMember.lastName[0].toUpperCase(),
         created: reformatDate(mockMember.createdAt.toString(), momentFormats.mysqlDateTime),
@@ -516,10 +503,13 @@ describe('Commands: AnalyticsService', () => {
         city: mockMember.address.city,
         state: mockMember.address.state,
         zip_code: mockMember.zipCode,
-        admit_date: '2021-01-13',
-        discharge_date: '2021-01-23',
-        los: 10,
-        days_since_discharge: 10,
+        admit_date: reformatDate(mockMember.admitDate, momentFormats.mysqlDate),
+        discharge_date: reformatDate(mockMember.dischargeDate, momentFormats.mysqlDate),
+        los: differenceInDays(
+          Date.parse(mockMember.dischargeDate),
+          Date.parse(mockMember.admitDate),
+        ),
+        days_since_discharge: differenceInDays(new Date(), Date.parse(mockMember.dischargeDate)),
         active: true,
         graduated: true,
         graduation_date: reformatDate(sub(now, { days: 20 }).toString(), momentFormats.mysqlDate),
@@ -557,6 +547,18 @@ describe('Commands: AnalyticsService', () => {
         marital_status: mockMember.maritalStatus,
         height: mockMember.height,
         weight: mockMember.weight,
+        deceased_cause: mockMember.deceased.cause,
+        deceased_date: reformatDate(
+          mockMember.deceased.date.toString(),
+          momentFormats.mysqlDateTime,
+        ),
+        deceased_days_from_dc: mockMember.dischargeDate
+          ? differenceInDays(
+              Date.parse(mockMember.deceased.date),
+              Date.parse(mockMember.dischargeDate),
+            )
+          : undefined,
+        deceased_flag: true,
       });
     });
 
@@ -572,8 +574,6 @@ describe('Commands: AnalyticsService', () => {
         activeJourney: { ...mockActiveJourney, firstLoggedInAt: undefined },
         memberDetails: {
           ...mockMember,
-          admitDate: reformatDate(sub(now, { days: 20 }).toString(), momentFormats.mysqlDate),
-          dischargeDate: reformatDate(sub(now, { days: 10 }).toString(), momentFormats.mysqlDate),
           primaryUserId: new Types.ObjectId(mockPrimaryUser.id),
           primaryUser: mockPrimaryUser,
           org: { ...mockOrg, _id: new Types.ObjectId(mockOrg.id) },
@@ -582,22 +582,12 @@ describe('Commands: AnalyticsService', () => {
           {
             start: sub(now, { days: 10 }),
             end: sub(now, { days: 9, hours: 23.5 }),
-            notesData: {
-              scores: {
-                adherence: 4,
-                wellbeing: 5,
-              },
-            },
+            notesData: { scores: { adherence: 4, wellbeing: 5 } },
           } as PopulatedAppointment,
           {
             start: sub(now, { days: 20 }),
             end: sub(now, { days: 20, hours: 23.5 }),
-            notesData: {
-              scores: {
-                adherence: 1,
-                wellbeing: 2,
-              },
-            },
+            notesData: { scores: { adherence: 1, wellbeing: 2 } },
           } as PopulatedAppointment,
         ],
       } as MemberDataAggregate);
@@ -616,10 +606,13 @@ describe('Commands: AnalyticsService', () => {
         city: mockMember.address.city,
         state: mockMember.address.state,
         zip_code: mockMember.zipCode,
-        admit_date: '2021-01-13',
-        discharge_date: '2021-01-23',
-        los: 10,
-        days_since_discharge: 10,
+        admit_date: reformatDate(mockMember.admitDate, momentFormats.mysqlDate),
+        discharge_date: reformatDate(mockMember.dischargeDate, momentFormats.mysqlDate),
+        los: differenceInDays(
+          Date.parse(mockMember.dischargeDate),
+          Date.parse(mockMember.admitDate),
+        ),
+        days_since_discharge: differenceInDays(new Date(), Date.parse(mockMember.dischargeDate)),
         active: true,
         graduated: false,
         dc_summary_load_date: '2021-01-18',
@@ -648,6 +641,18 @@ describe('Commands: AnalyticsService', () => {
         marital_status: mockMember.maritalStatus,
         height: mockMember.height,
         weight: mockMember.weight,
+        deceased_cause: mockMember.deceased.cause,
+        deceased_date: reformatDate(
+          mockMember.deceased.date.toString(),
+          momentFormats.mysqlDateTime,
+        ),
+        deceased_days_from_dc: mockMember.dischargeDate
+          ? differenceInDays(
+              Date.parse(mockMember.deceased.date),
+              Date.parse(mockMember.dischargeDate),
+            )
+          : undefined,
+        deceased_flag: true,
       });
     });
 
@@ -660,13 +665,14 @@ describe('Commands: AnalyticsService', () => {
         _id: new Types.ObjectId(mockMember.id),
         memberDetails: {
           ...mockMember,
+          deceased: null,
           primaryUserId: undefined,
           org: { ...mockOrg, _id: new Types.ObjectId(mockOrg.id) },
         } as PopulatedMember,
         isControlMember: true,
       } as MemberDataAggregate);
 
-      expect(data).toEqual({
+      expect(data).toMatchObject({
         customer_id: mockMember.id,
         mbr_initials: mockMember.firstName[0].toUpperCase() + mockMember.lastName[0].toUpperCase(),
         created: reformatDate(mockMember.createdAt.toString(), momentFormats.mysqlDateTime),
@@ -688,12 +694,16 @@ describe('Commands: AnalyticsService', () => {
         updated: reformatDate(mockMember.updatedAt.toString(), momentFormats.mysqlDateTime),
         dc_instructions_received: false,
         dc_summary_received: false,
-        active: false,
+        active: true,
         org_id: mockOrg.id,
         org_name: mockOrg.name,
         marital_status: mockMember.maritalStatus,
         height: mockMember.height,
         weight: mockMember.weight,
+        deceased_cause: undefined,
+        deceased_date: undefined,
+        deceased_days_from_dc: undefined,
+        deceased_flag: false,
       });
     });
   });

@@ -50,6 +50,8 @@ export enum ErrorType {
   memberUploadAlreadyExistingGeneralDocument = 9231,
   memberHeightNotInRange = 9232,
   memberWeightNotInRange = 9233,
+  memberDeceasedDate = 9234,
+  memberDeceasedDateInTheFuture = 9235,
 
   // Notifications
   notificationMetadataInvalid = 9270,
@@ -243,6 +245,8 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.memberWeightNotInRange.valueOf(),
     `weight must be between ${weight.min} and ${weight.max} kg`,
   ],
+  [ErrorType.memberDeceasedDate.valueOf(), `deceased date ${dateInstanceFormat}`],
+  [ErrorType.memberDeceasedDateInTheFuture.valueOf(), `deceased date must be in the past`],
   [
     ErrorType.notificationMetadataInvalid.valueOf(),
     `when calling type 'text' or 'textSms', 'content' in metadata is required ` +

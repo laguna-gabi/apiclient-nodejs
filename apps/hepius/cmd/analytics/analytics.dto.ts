@@ -182,6 +182,14 @@ export class MemberData {
   height?: number;
   @Column('float', { nullable: true })
   weight?: number;
+  @Column('varchar', { length: 100, nullable: true })
+  deceased_cause?: string;
+  @Column('date', { nullable: true })
+  deceased_date?: string;
+  @Column('float', { nullable: true })
+  deceased_days_from_dc?: number;
+  @Column('float')
+  deceased_flag: boolean;
 }
 
 @Entity({ name: CoachTable })

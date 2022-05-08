@@ -5,7 +5,7 @@ import {
   Platform,
   generateZipCode,
 } from '@argus/pandora';
-import { subSeconds } from 'date-fns';
+import { addDays, subSeconds } from 'date-fns';
 import { date, internet, lorem } from 'faker';
 import * as request from 'supertest';
 import { v4 } from 'uuid';
@@ -146,7 +146,7 @@ describe('Validations - member', () => {
       ${'zipCode'}       | ${generateZipCode()}
       ${'honorific'}     | ${Honorific.dr}
       ${'maritalStatus'} | ${MaritalStatus.widowed}
-      ${'height'}    | ${generateRandomHeight()}
+      ${'height'}        | ${generateRandomHeight()}
     `(`should be able to set value for optional field $field`, async (params) => {
       const { id: orgId } = await handler.mutations.createOrg({ orgParams: generateOrgParams() });
       await creators.createAndValidateUser({ orgId });
@@ -713,6 +713,9 @@ describe('Validations - member', () => {
       ${{ address: { state: 123 } }}      | ${{ missingFieldError: stringError }}
       ${{ honorific: 'not-valid' }}       | ${{ missingFieldError: 'does not exist in "Honorific" enum' }}
       ${{ deviceId: 123 }}                | ${{ missingFieldError: stringError }}
+      ${{ deceased: 123 }}                | ${{ missingFieldError: 'Expected type "DeceasedInput" to be an object.' }}
+      ${{ deceased: { cause: 123 } }}     | ${{ missingFieldError: stringError }}
+      ${{ deceased: { date: 123 } }}      | ${{ missingFieldError: stringError }}
     `(`should fail to update a member since setting $input is not a valid`, async (params) => {
       /* eslint-enable max-len */
       const updateMemberParams = generateUpdateMemberParams({ ...params.input });
@@ -720,19 +723,25 @@ describe('Validations - member', () => {
       await handler.mutations.updateMember({ updateMemberParams, ...params.error });
     });
 
+    const futureDate = generateDateOnly(addDays(new Date(), 1));
+
     /* eslint-disable max-len */
     test.each`
-      field               | input                              | errors
-      ${'phoneSecondary'} | ${{ phoneSecondary: '+410' }}      | ${[Errors.get(ErrorType.memberPhone)]}
-      ${'dischargeDate'}  | ${{ dischargeDate: lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
-      ${'admitDate'}      | ${{ admitDate: lorem.word() }}     | ${[Errors.get(ErrorType.memberAdmitDate)]}
-      ${'admitDate'}      | ${{ admitDate: '2021-13-1' }}      | ${[Errors.get(ErrorType.memberAdmitDate)]}
-      ${'admitDate'}      | ${{ admitDate: new Date() }}       | ${[Errors.get(ErrorType.memberAdmitDate)]}
-      ${'dischargeDate'}  | ${{ dischargeDate: lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
-      ${'dischargeDate'}  | ${{ dischargeDate: '2021-13-1' }}  | ${[Errors.get(ErrorType.memberDischargeDate)]}
-      ${'dischargeDate'}  | ${{ dischargeDate: new Date() }}   | ${[Errors.get(ErrorType.memberDischargeDate)]}
-      ${'dateOfBirth'}    | ${{ dateOfBirth: lorem.word() }}   | ${[Errors.get(ErrorType.memberDateOfBirth)]}
-      ${'dateOfBirth'}    | ${{ dateOfBirth: '2021-13-1' }}    | ${[Errors.get(ErrorType.memberDateOfBirth)]}
+      field               | input                                                  | errors
+      ${'phoneSecondary'} | ${{ phoneSecondary: '+410' }}                          | ${[Errors.get(ErrorType.memberPhone)]}
+      ${'dischargeDate'}  | ${{ dischargeDate: lorem.word() }}                     | ${[Errors.get(ErrorType.memberDischargeDate)]}
+      ${'admitDate'}      | ${{ admitDate: lorem.word() }}                         | ${[Errors.get(ErrorType.memberAdmitDate)]}
+      ${'admitDate'}      | ${{ admitDate: '2021-13-1' }}                          | ${[Errors.get(ErrorType.memberAdmitDate)]}
+      ${'admitDate'}      | ${{ admitDate: new Date() }}                           | ${[Errors.get(ErrorType.memberAdmitDate)]}
+      ${'dischargeDate'}  | ${{ dischargeDate: lorem.word() }}                     | ${[Errors.get(ErrorType.memberDischargeDate)]}
+      ${'dischargeDate'}  | ${{ dischargeDate: '2021-13-1' }}                      | ${[Errors.get(ErrorType.memberDischargeDate)]}
+      ${'dischargeDate'}  | ${{ dischargeDate: new Date() }}                       | ${[Errors.get(ErrorType.memberDischargeDate)]}
+      ${'dateOfBirth'}    | ${{ dateOfBirth: lorem.word() }}                       | ${[Errors.get(ErrorType.memberDateOfBirth)]}
+      ${'dateOfBirth'}    | ${{ dateOfBirth: '2021-13-1' }}                        | ${[Errors.get(ErrorType.memberDateOfBirth)]}
+      ${'deceased'}       | ${{ deceased: { date: futureDate } }}                  | ${[Errors.get(ErrorType.memberDeceasedDateInTheFuture)]}
+      ${'deceased'}       | ${{ deceased: { date: '2021-13-1' } }}                 | ${[Errors.get(ErrorType.memberDeceasedDate)]}
+      ${'deceased'}       | ${{ deceased: { date: '2021/13/1' } }}                 | ${[Errors.get(ErrorType.memberDeceasedDate)]}
+      ${'deceased'}       | ${{ deceased: { date: '2021/07/26T17:30:15+05:30' } }} | ${[Errors.get(ErrorType.memberDeceasedDate)]}
     `(
       /* eslint-enable max-len */
       `should fail to update a member since $field is not valid`,

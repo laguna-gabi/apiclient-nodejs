@@ -101,6 +101,10 @@ export const FRAGMENT_MEMBER = gql`
     maritalStatus
     height
     weight
+    deceased {
+      cause
+      date
+    }
   }
 `;
 

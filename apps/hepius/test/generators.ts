@@ -17,7 +17,7 @@ import {
   generateZipCode,
 } from '@argus/pandora';
 import { general, graphql, hosts } from 'config';
-import { add, addDays, format, sub } from 'date-fns';
+import { add, addDays, format, sub, subDays } from 'date-fns';
 import {
   company,
   datatype,
@@ -338,6 +338,9 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
   const firstName = name.firstName();
   const lastName = name.lastName();
   const user = primaryUser || mockGenerateUser();
+  const admitDate = subDays(new Date(), 7);
+  const dischargeDate = addDays(admitDate, 2);
+  const deceasedDate = addDays(admitDate, 3);
   return {
     id: generateId(),
     authId: v4(),
@@ -345,6 +348,8 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
     phone: generatePhone(),
     phoneType: 'mobile',
     deviceId: datatype.uuid(),
+    admitDate: generateDateOnly(admitDate),
+    dischargeDate: generateDateOnly(dischargeDate),
     firstName,
     lastName,
     dateOfBirth: generateDateOnly(fakerDate.past()),
@@ -369,6 +374,7 @@ export const mockGenerateMember = (primaryUser?: User): Member => {
     nurse_notes: lorem.sentence(),
     general_notes: lorem.sentence(),
     isGraduated: defaultMemberParams.isGraduated,
+    deceased: { cause: lorem.sentence(), date: generateDateOnly(deceasedDate) },
   };
 };
 
@@ -414,6 +420,10 @@ export const generateUpdateMemberParams = ({
   maritalStatus = MaritalStatus.married,
   healthPlan = datatype.string(10),
   preferredGenderPronoun = datatype.string(10),
+  deceased = {
+    cause: lorem.sentence(),
+    date: generateDateOnly(fakerDate.past()),
+  },
 }: Partial<UpdateMemberParams> = {}): UpdateMemberParams => {
   return {
     id,
@@ -437,6 +447,7 @@ export const generateUpdateMemberParams = ({
     healthPlan,
     preferredGenderPronoun,
     maritalStatus,
+    deceased,
   };
 };
 
