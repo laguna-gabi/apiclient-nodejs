@@ -1,4 +1,4 @@
-import { EngineRule, EventType, Operator } from './types';
+import { EngineRule, Operator, TargetEntity } from './types';
 import { DynamicFacts } from './facts';
 
 export const engineRules: EngineRule[] = [
@@ -21,7 +21,7 @@ export const engineRules: EngineRule[] = [
       ],
     },
     event: {
-      type: EventType.createBarrier,
+      type: TargetEntity.barrier,
       params: {
         type: 'loneliness',
       },
@@ -53,7 +53,7 @@ export const engineRules: EngineRule[] = [
       ],
     },
     event: {
-      type: EventType.createBarrier,
+      type: TargetEntity.barrier,
       params: {
         type: 'appointment-follow-up-unclear',
       },
@@ -78,7 +78,7 @@ export const engineRules: EngineRule[] = [
       ],
     },
     event: {
-      type: EventType.createBarrier,
+      type: TargetEntity.barrier,
       params: {
         type: 'loneliness2',
       },
@@ -97,10 +97,11 @@ export const engineRules: EngineRule[] = [
       ],
     },
     event: {
-      type: EventType.createCarePlan,
+      type: TargetEntity.carePlan,
       params: {
         type: 'content-about-combating-loneliness',
-        barrierType: 'loneliness',
+        parentEntity: TargetEntity.barrier,
+        parentEntityType: 'loneliness',
       },
     },
   },

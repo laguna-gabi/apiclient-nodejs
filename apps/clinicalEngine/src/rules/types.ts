@@ -2,22 +2,16 @@ import { DynamicFactCallback, EventHandler, FactOptions } from 'json-rules-engin
 import { DynamicFacts } from './facts';
 
 // todo: fix "any"
-
-export enum EventType {
-  createBarrier = 'createBarrier',
-  createCarePlan = 'createCarePlan',
-}
-
-export enum EntityType {
+export enum TargetEntity {
   barrier = 'barrier',
   carePlan = 'carePlan',
   assessment = 'assessment',
   task = 'task',
 }
 
-export enum RuleType {
-  barrier = 'barrier',
-  carePlan = 'carePlan',
+export enum Action {
+  create = 'create',
+  delete = 'delete',
 }
 
 export enum Operator {
@@ -45,32 +39,23 @@ export interface EngineRule {
 }
 
 export interface EngineEvent {
-  type: EventType;
-  //eslint-disable-next-line @typescript-eslint/no-explicit-any
-  params?: CreateCarePlanParams | CreateBarrierParams | CreateAssessmentParams | CreateTaskParams;
+  type: TargetEntity;
+  params?: EventParams;
 }
 
-export interface CreateBarrierParams {
-  // todo: change to object ID (barrier type)
+export interface EventParams {
   type: string;
+  parentEntity?: TargetEntity;
+  parentEntityType?: string;
 }
 
-export interface CreateCarePlanParams {
-  // todo: change to object ID (barrier type)
-  type: string;
-  barrierType: string;
-}
-
-export interface CreateAssessmentParams {
-  // todo: change to object ID (barrier type)
-  type: string;
-}
-
-export interface CreateTaskParams {
-  // todo: change to object ID (barrier type)
-  type: string;
-  parentEntityType: EntityType;
-  parentType: string;
+export interface ActionEvent {
+  action: Action;
+  id?: string;
+  targetEntity: TargetEntity;
+  entityType: string;
+  parentEntity?: TargetEntity;
+  parentEntityType?: string;
 }
 
 interface ConditionProperties {
@@ -93,7 +78,8 @@ export type TopLevelCondition = AllConditions | AnyConditions;
 export interface MemberFacts {
   memberInfo: MemberInfo;
   caregivers: string[];
-  barriers: { type: string; status: BarrierStatus }[];
+  barriers: CarePlan[];
+  carePlans: Barrier[];
 }
 
 export interface MemberInfo {
@@ -108,4 +94,16 @@ export enum BarrierStatus {
   active,
   overcome,
   suspended,
+}
+
+// todo: get the real statuses from common
+export interface Barrier {
+  type: string;
+  status: BarrierStatus;
+}
+
+// todo: get the real statuses from common
+export interface CarePlan {
+  type: string;
+  status: BarrierStatus;
 }
