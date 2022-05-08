@@ -45,7 +45,7 @@ jobs:
       - name: Init Nx BASE and HEAD
         uses: ./.github/actions/set-nx-affected
       - name: Lint affected
-        run: npx nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=1
+        run: npx nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=4
 
   build-and-test:
     name: Build and Test
@@ -77,15 +77,15 @@ jobs:
       - name: Init Nx BASE and HEAD
         uses: ./.github/actions/set-nx-affected
       - name: Build affected
-        run: npx nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3
+        run: npx nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=4
       - name: Test affected
-        run: npx nx affected --target=test:cov --base=$NX_BASE --head=$NX_HEAD --parallel=3
+        run: npx nx affected --target=test:cov --base=$NX_BASE --head=$NX_HEAD --parallel=4
       - name: Create coverage badges
         if: github.ref == 'refs/heads/develop'
-        run: npx nx affected --target=cov-badges --base=$NX_BASE --head=$NX_HEAD --parallel=3
+        run: npx nx affected --target=cov-badges --base=$NX_BASE --head=$NX_HEAD --parallel=4
       - name: Upload coverage
         if: github.ref == 'refs/heads/develop'
-        run: npx nx affected --target=uploadCoverage --base=$NX_BASE --head=$NX_HEAD --parallel=3
+        run: npx nx affected --target=uploadCoverage --base=$NX_BASE --head=$NX_HEAD --parallel=4
       - name: Zip lcov-report
         uses: vimtor/action-zip@v1
         with:
@@ -133,12 +133,12 @@ jobs:
       - name: Init Nx BASE and HEAD
         uses: ./.github/actions/set-nx-affected
       - name: Build affected
-        run: npx nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3
+        run: npx nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=4
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
       - name: Deploy affected
-        run: npx nx affected --target=deploy --base=$NX_BASE --head=$NX_HEAD --parallel=3 --slackChannel=${{secrets.SLACK_URL_MESSAGES}}
+        run: npx nx affected --target=deploy --base=$NX_BASE --head=$NX_HEAD --parallel=4 --slackChannel=${{secrets.SLACK_URL_MESSAGES}}
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           CURRENT_BRANCH: ${{ steps.branch-name.outputs.current_branch }}
@@ -192,7 +192,7 @@ jobs:
       - name: Migrate Db
         env:
           NODE_ENV: ${{ steps.branch_check.outputs.env_name }}
-        run: npx nx affected --target=command --cmd=migration --options=up --base=$NX_BASE --head=$NX_HEAD --parallel=3
+        run: npx nx affected --target=command --cmd=migration --options=up --base=$NX_BASE --head=$NX_HEAD --parallel=4
 
   sync-languages:
     name: Sync Languages With PoEditor
