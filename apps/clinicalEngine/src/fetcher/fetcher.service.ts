@@ -14,6 +14,7 @@ const mockFactsObject: MemberFacts = {
     { type: 'loneliness', status: BarrierStatus.active },
     { type: 'not-satisfied', status: BarrierStatus.active },
   ],
+  carePlans: [],
 };
 
 @Injectable()
