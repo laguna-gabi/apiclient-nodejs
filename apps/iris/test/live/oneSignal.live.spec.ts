@@ -33,8 +33,8 @@ describe(`live: ${OneSignal.name}`, () => {
       isPushNotificationsEnabled: true,
     };
 
-    await expect(
-      oneSignal.send(
+    expect(
+      await oneSignal.send(
         {
           platform: params.platform,
           externalUserId: params.externalUserId,
@@ -55,10 +55,10 @@ describe(`live: ${OneSignal.name}`, () => {
         },
         v4(),
       ),
-    ).rejects.toThrowError();
+    ).toBeUndefined();
 
-    await expect(
-      oneSignal.cancel({
+    expect(
+      await oneSignal.cancel({
         externalUserId: params.externalUserId,
         platform: params.platform,
         data: {
@@ -67,6 +67,6 @@ describe(`live: ${OneSignal.name}`, () => {
           notificationId: datatype.uuid(),
         },
       }),
-    ).rejects.toThrowError();
+    ).toBeUndefined();
   });
 });
