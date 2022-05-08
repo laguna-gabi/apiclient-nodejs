@@ -78,8 +78,8 @@ export type TopLevelCondition = AllConditions | AnyConditions;
 export interface MemberFacts {
   memberInfo: MemberInfo;
   caregivers: string[];
-  barriers: CarePlan[];
-  carePlans: Barrier[];
+  barriers: Barrier[];
+  carePlans: CarePlan[];
 }
 
 export interface MemberInfo {
@@ -96,13 +96,13 @@ export enum BarrierStatus {
   suspended,
 }
 
-// todo: get the real statuses from common
+// todo: get the real types from common
 export interface Barrier {
   type: string;
   status: BarrierStatus;
 }
 
-// todo: get the real statuses from common
+// todo: get the real types from common
 export interface CarePlan {
   type: string;
   status: BarrierStatus;
