@@ -11,26 +11,15 @@ import { generatePath, generatePhone } from '../generators';
 
 describe(`live: ${OneSignal.name}`, () => {
   let oneSignal: OneSignal;
-  let logger: LoggerService;
-  let spyOnLoggerWarn;
 
   beforeAll(async () => {
     const configService = new ConfigsService();
     const httpService = new HttpService();
-    logger = new LoggerService(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
+    const logger = new LoggerService(PARAMS_PROVIDER_TOKEN as Params, new EventEmitter2());
     mockLogger(logger);
 
     oneSignal = new OneSignal(configService, httpService, logger);
     await oneSignal.onModuleInit();
-  });
-
-  beforeEach(async () => {
-    spyOnLoggerWarn = jest.spyOn(logger, 'warn');
-    spyOnLoggerWarn.mockImplementation(() => undefined);
-  });
-
-  afterEach(() => {
-    spyOnLoggerWarn.mockReset();
   });
 
   /**
@@ -80,6 +69,4 @@ describe(`live: ${OneSignal.name}`, () => {
       }),
     ).toBeUndefined();
   });
-
-  expect(spyOnLoggerWarn).toHaveBeenCalledTimes(2);
 });
