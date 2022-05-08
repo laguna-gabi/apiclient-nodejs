@@ -11,7 +11,7 @@ const mockFactsObject: MemberFacts = {
   caregivers: ['x', 'y'],
   barriers: [
     { type: 'appointment-follow-up-unclear', status: BarrierStatus.active },
-    { type: 'loneliness2', status: BarrierStatus.active },
+    { type: 'loneliness', status: BarrierStatus.active },
     { type: 'not-satisfied', status: BarrierStatus.active },
   ],
 };

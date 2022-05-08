@@ -8,6 +8,13 @@ export enum EventType {
   createCarePlan = 'createCarePlan',
 }
 
+export enum EntityType {
+  barrier = 'barrier',
+  carePlan = 'carePlan',
+  assessment = 'assessment',
+  task = 'task',
+}
+
 export enum RuleType {
   barrier = 'barrier',
   carePlan = 'carePlan',
@@ -31,7 +38,6 @@ export interface EngineRule {
   active: boolean;
   conditions: TopLevelCondition;
   event: EngineEvent;
-  type: RuleType;
   name?: string;
   priority?: number;
   onSuccess?: EventHandler;
@@ -41,17 +47,7 @@ export interface EngineRule {
 export interface EngineEvent {
   type: EventType;
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
-  params?: any;
-}
-
-export class CreateCarePlanEvent implements EngineEvent {
-  type = EventType.createCarePlan;
-  params: CreateCarePlanParams;
-}
-
-export class CreateBarrierEvent implements EngineEvent {
-  type = EventType.createBarrier;
-  params: CreateBarrierParams;
+  params?: CreateCarePlanParams | CreateBarrierParams | CreateAssessmentParams | CreateTaskParams;
 }
 
 export interface CreateBarrierParams {
@@ -63,6 +59,18 @@ export interface CreateCarePlanParams {
   // todo: change to object ID (barrier type)
   type: string;
   barrierType: string;
+}
+
+export interface CreateAssessmentParams {
+  // todo: change to object ID (barrier type)
+  type: string;
+}
+
+export interface CreateTaskParams {
+  // todo: change to object ID (barrier type)
+  type: string;
+  parentEntityType: EntityType;
+  parentType: string;
 }
 
 interface ConditionProperties {
