@@ -199,7 +199,7 @@ export class ExternalAppointment extends BaseCategory {
 
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
-  instituteOrHospitalName?: string;
+  clinic?: string;
 
   @Prop({ type: Date, isNan: true })
   @Field(() => Date, { nullable: true })
@@ -207,15 +207,23 @@ export class ExternalAppointment extends BaseCategory {
 
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
+  type?: string;
+
+  @Prop({ isNan: true })
+  @Field(() => String, { nullable: true })
+  specialInstructions?: string;
+
+  @Prop({ isNan: true })
+  @Field(() => String, { nullable: true })
+  fullAddress?: string;
+
+  @Prop({ isNan: true })
+  @Field(() => String, { nullable: true })
   phone?: string;
 
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
-  description?: string;
-
-  @Prop({ isNan: true })
-  @Field(() => String, { nullable: true })
-  address?: string;
+  fax?: string;
 }
 
 @ObjectType()

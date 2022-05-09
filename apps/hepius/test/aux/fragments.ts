@@ -178,11 +178,13 @@ export const FRAGMENT_ADMISSION = gql`
       id
       isScheduled
       drName
-      instituteOrHospitalName
+      clinic
       date
+      type
+      specialInstructions
+      fullAddress
       phone
-      description
-      address
+      fax
     }
     activities {
       id

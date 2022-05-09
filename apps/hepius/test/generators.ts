@@ -1471,11 +1471,13 @@ export const generateAdmissionExternalAppointmentParams = ({
     ...attachIdParam,
     isScheduled: isScheduled !== undefined || Math.random() < 0.5,
     drName: `dr ${name.lastName()}`,
-    instituteOrHospitalName: lorem.word(),
+    clinic: lorem.word(),
     date: new Date(),
+    type: lorem.word(),
+    specialInstructions: lorem.sentences(),
+    fullAddress: lorem.sentence(),
     phone: generatePhone(),
-    description: lorem.sentence(),
-    address: lorem.sentence(),
+    fax: generatePhone(),
   };
 };
 

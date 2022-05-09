@@ -2610,7 +2610,7 @@ describe('Integration tests: all', () => {
       procedures: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
       medications: expect.arrayContaining([expect.objectContaining({ name: expect.any(String) })]),
       externalAppointments: expect.arrayContaining([
-        expect.objectContaining({ description: expect.any(String) }),
+        expect.objectContaining({ clinic: expect.any(String) }),
       ]),
       activities: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
       woundCares: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
