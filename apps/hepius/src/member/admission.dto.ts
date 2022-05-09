@@ -1,7 +1,13 @@
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { ChangeType, ErrorType, Errors, IsIdAndChangeTypeAligned } from '../common';
+import {
+  ChangeType,
+  ErrorType,
+  Errors,
+  IsIdAndChangeTypeAligned,
+  IsOnlyDateInSub,
+} from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
 import { Identifier } from '@argus/hepiusClient';
@@ -100,6 +106,14 @@ export class Diagnosis extends BaseCategory {
   @Prop({ type: String, enum: DiagnosisSeverity, isNan: true })
   @Field(() => DiagnosisSeverity, { nullable: true })
   severity?: DiagnosisSeverity;
+
+  @Prop({ isNan: true })
+  @Field({ nullable: true })
+  onsetStart?: string;
+
+  @Prop({ isNan: true })
+  @Field({ nullable: true })
+  onsetEnd?: string;
 }
 
 @ObjectType()
@@ -302,6 +316,8 @@ export class ChangeMemberDnaParams {
 
   @Field(() => ChangeAdmissionDiagnosisParams, { nullable: true })
   @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
+  @IsOnlyDateInSub('onsetStart', { message: Errors.get(ErrorType.admissionDiagnosisOnsetStart) })
+  @IsOnlyDateInSub('onsetEnd', { message: Errors.get(ErrorType.admissionDiagnosisOnsetEnd) })
   diagnosis?: ChangeAdmissionDiagnosisParams;
 
   @Field(() => ChangeAdmissionProcedureParams, { nullable: true })

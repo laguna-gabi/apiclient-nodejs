@@ -3,6 +3,7 @@ import { ChangeType, ErrorType, Errors } from '../../src/common';
 import { AdmissionCategory, ChangeMemberDnaParams } from '../../src/member';
 import { AdmissionHelper, AppointmentsIntegrationActions, Creators } from '../aux';
 import { Handler } from '../aux/handler';
+import { lorem } from 'faker';
 
 const stringError = `String cannot represent a non string value`;
 
@@ -61,14 +62,20 @@ describe('Validations - DNA', () => {
     /* eslint-disable max-len */
     test.each`
       admissionCategory              | input                              | error
-      ${AdmissionCategory.diagnoses} | ${{ code: 123 }}                   | ${stringError}
-      ${AdmissionCategory.diagnoses} | ${{ description: 123 }}            | ${stringError}
-      ${AdmissionCategory.diagnoses} | ${{ primaryType: 'not-valid' }}    | ${'does not exist in "PrimaryDiagnosisType" enum'}
-      ${AdmissionCategory.diagnoses} | ${{ secondaryType: 'not-valid' }}  | ${'does not exist in "SecondaryDiagnosisType" enum'}
-      ${AdmissionCategory.diagnoses} | ${{ clinicalStatus: 'not-valid' }} | ${'does not exist in "ClinicalStatus" enum'}
-      ${AdmissionCategory.diagnoses} | ${{ severity: 'not-valid' }}       | ${'does not exist in "DiagnosisSeverity" enum'}
+      ${AdmissionCategory.diagnoses} | ${{ code: 123 }}                   | ${{ missingFieldError: stringError }}
+      ${AdmissionCategory.diagnoses} | ${{ description: 123 }}            | ${{ missingFieldError: stringError }}
+      ${AdmissionCategory.diagnoses} | ${{ primaryType: 'not-valid' }}    | ${{ missingFieldError: 'does not exist in "PrimaryDiagnosisType" enum' }}
+      ${AdmissionCategory.diagnoses} | ${{ secondaryType: 'not-valid' }}  | ${{ missingFieldError: 'does not exist in "SecondaryDiagnosisType" enum' }}
+      ${AdmissionCategory.diagnoses} | ${{ clinicalStatus: 'not-valid' }} | ${{ missingFieldError: 'does not exist in "ClinicalStatus" enum' }}
+      ${AdmissionCategory.diagnoses} | ${{ severity: 'not-valid' }}       | ${{ missingFieldError: 'does not exist in "DiagnosisSeverity" enum' }}
+      ${AdmissionCategory.diagnoses} | ${{ onsetStart: lorem.word() }}    | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetStart)] }}
+      ${AdmissionCategory.diagnoses} | ${{ onsetStart: '2021-13-1' }}     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetStart)] }}
+      ${AdmissionCategory.diagnoses} | ${{ onsetStart: new Date() }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetStart)] }}
+      ${AdmissionCategory.diagnoses} | ${{ onsetEnd: lorem.word() }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetEnd)] }}
+      ${AdmissionCategory.diagnoses} | ${{ onsetEnd: '2021-13-1' }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetEnd)] }}
+      ${AdmissionCategory.diagnoses} | ${{ onsetEnd: new Date() }}        | ${{ invalidFieldsErrors: [Errors.get(ErrorType.admissionDiagnosisOnsetEnd)] }}
     `(
-      `should fail to change dna since $input is not valid`,
+      `should fail to change ${AdmissionCategory.diagnoses} dna since $input is not valid`,
       async ({ admissionCategory, input, error }) => {
         /* eslint-enable max-len */
         const { field, method } = admissionHelper.mapper.get(admissionCategory);
@@ -76,10 +83,28 @@ describe('Validations - DNA', () => {
           memberId: generateId(),
           [`${field}`]: method({ changeType: ChangeType.create, ...input }),
         };
-        await handler.mutations.changeMemberDna({
-          changeMemberDnaParams,
-          missingFieldError: error,
-        });
+        await handler.mutations.changeMemberDna({ changeMemberDnaParams, ...error });
+      },
+    );
+
+    test.each(Object.values(AdmissionCategory))(
+      `should not fail to ${ChangeType.create} $admissionCategory on missing optional keys`,
+      async (admissionCategory) => {
+        const { field, method } = admissionHelper.mapper.get(admissionCategory);
+        const data = method({ changeType: ChangeType.create });
+        const names = Object.getOwnPropertyNames(data).filter((name) => name !== 'changeType');
+
+        await Promise.all(
+          names.map(async (name) => {
+            const newData = { ...data };
+            delete newData[name];
+            const changeMemberDnaParams: ChangeMemberDnaParams = {
+              memberId: generateId(),
+              [`${field}`]: newData,
+            };
+            await handler.mutations.changeMemberDna({ changeMemberDnaParams });
+          }),
+        );
       },
     );
   });

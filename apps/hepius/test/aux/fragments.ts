@@ -149,6 +149,8 @@ export const FRAGMENT_ADMISSION = gql`
       secondaryType
       clinicalStatus
       severity
+      onsetStart
+      onsetEnd
     }
     procedures {
       id

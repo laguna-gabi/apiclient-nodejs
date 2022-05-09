@@ -1386,6 +1386,8 @@ export const generateAdmissionDiagnosisParams = ({
   secondaryType,
   clinicalStatus,
   severity,
+  onsetStart,
+  onsetEnd,
 }: {
   changeType: ChangeType;
   id?: string;
@@ -1395,6 +1397,8 @@ export const generateAdmissionDiagnosisParams = ({
   secondaryType?: SecondaryDiagnosisType;
   clinicalStatus?: ClinicalStatus;
   severity?: DiagnosisSeverity;
+  onsetStart?: string;
+  onsetEnd?: string;
 }): ChangeAdmissionDiagnosisParams => {
   const attachIdParam = id ? { id } : {};
   return {
@@ -1406,6 +1410,8 @@ export const generateAdmissionDiagnosisParams = ({
     secondaryType: secondaryType || SecondaryDiagnosisType.radiology,
     clinicalStatus: clinicalStatus || ClinicalStatus.inactive,
     severity: severity || DiagnosisSeverity.mild,
+    onsetStart: onsetStart || generateDateOnly(subDays(new Date(), 2)),
+    onsetEnd: onsetEnd || generateDateOnly(subDays(new Date(), 1)),
   };
 };
 
