@@ -49,9 +49,9 @@ export interface EventParams {
   parentEntityType?: string;
 }
 
-export interface ActionEvent {
+export interface EngineAction {
   action: Action;
-  id?: string;
+  id?: string; // for delete
   targetEntity: TargetEntity;
   entityType: string;
   parentEntity?: TargetEntity;
