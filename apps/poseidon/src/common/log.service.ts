@@ -12,7 +12,7 @@ import { PARAMS_PROVIDER_TOKEN, Params } from 'nestjs-pino';
 
 @Injectable()
 export class LoggerService extends BaseLogger {
-  private static validKeys = new Set([]);
+  private static validKeys = new Set(['recordingId', 'transcriptionId', 'status']);
 
   constructor(
     @Inject(PARAMS_PROVIDER_TOKEN) params: Params,

@@ -1,6 +1,12 @@
 export enum EventType {
+  onCreateTranscript = 'onCreateTranscript',
   onTranscriptTranscribed = 'onTranscriptTranscribed',
   onTranscriptFailed = 'onTranscriptFailed',
+}
+
+export interface IEventOnCreateTranscript {
+  memberId: string;
+  recordingId: string;
 }
 
 export interface IEventOnTranscriptTranscribed {

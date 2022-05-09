@@ -47,6 +47,13 @@
         "passWithNoTests": true
       }
     },
+    "test:live": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "apps/poseidon/test/live/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
     "test:cov": {
       "executor": "@nrwl/jest:jest",
       "outputs": ["coverage/apps/poseidon"],

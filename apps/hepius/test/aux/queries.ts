@@ -1366,7 +1366,6 @@ export class Queries {
         requestHeaders,
       )
       .catch((ex) => {
-        console.log({ ex });
         expect(ex.response.errors[0].message).toMatch(invalidFieldsError);
         return;
       });

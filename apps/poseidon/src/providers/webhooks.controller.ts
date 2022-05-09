@@ -17,14 +17,13 @@ export class WebhooksController {
 
   @Post(`revAI`)
   async revAI(@Body('job') body) {
-    const { id, status, failure, failure_detail } = body;
+    const { id, status, failure_detail } = body;
 
     if (status === 'transcribed') {
       const params: IEventOnTranscriptTranscribed = { transcriptionId: id };
       this.eventEmitter.emit(EventType.onTranscriptTranscribed, params);
     } else {
       this.logger.error(body, WebhooksController.name, this.revAI.name, {
-        code: failure,
         message: failure_detail,
       });
 

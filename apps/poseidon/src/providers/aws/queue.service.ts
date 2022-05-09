@@ -1,12 +1,12 @@
 import { Environments, GlobalEventType, QueueType, ServiceName, formatEx } from '@argus/pandora';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { SQS } from 'aws-sdk';
 import { aws, hosts } from 'config';
 import { Consumer, SQSMessage } from 'sqs-consumer';
 import { v4 } from 'uuid';
 import { ConfigsService, ExternalConfigs } from '.';
-import { LoggerService } from '../../common';
+import { EventType, IEventOnCreateTranscript, LoggerService } from '../../common';
 
 @Injectable()
 export class QueueService implements OnModuleInit {
@@ -22,6 +22,7 @@ export class QueueService implements OnModuleInit {
   private consumer;
 
   constructor(
+    protected readonly eventEmitter: EventEmitter2,
     private readonly configsService: ConfigsService,
     private readonly logger: LoggerService,
   ) {}
@@ -91,7 +92,17 @@ export class QueueService implements OnModuleInit {
     }
   }
 
+  /**  we are checking the size of the object to filter the creation
+  of a new member. from the event @handleNewMember in hepius that comes with
+  size 0 because its just a folder **/
   private async handleMessage(message: SQSMessage): Promise<void> {
-    console.log(message);
+    const objectSize = JSON.parse(message.Body).Records[0].s3.object.size;
+    if (objectSize > 0) {
+      const objectKey = JSON.parse(message.Body).Records[0].s3.object.key;
+      const memberId = objectKey.split('/')[2];
+      const recordingId = objectKey.split('/')[3];
+      const params: IEventOnCreateTranscript = { memberId, recordingId };
+      this.eventEmitter.emit(EventType.onCreateTranscript, params);
+    }
   }
 }
