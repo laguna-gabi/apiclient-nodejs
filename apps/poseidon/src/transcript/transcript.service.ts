@@ -1,8 +1,8 @@
+import { Transcript, TranscriptDocument } from '@argus/poseidonClient';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Transcript, TranscriptDocument } from '.';
 import { EventType, IEventOnTranscriptFailed, IEventOnTranscriptTranscribed } from '../common';
 
 @Injectable()

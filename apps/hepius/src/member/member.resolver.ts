@@ -27,7 +27,7 @@ import {
   StorageType,
   formatEx,
 } from '@argus/pandora';
-import { TranscriptData, TranscriptStatus } from '@argus/poseidonClient';
+import { Transcript, TranscriptStatus } from '@argus/poseidonClient';
 import { UseInterceptors } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
@@ -588,7 +588,7 @@ export class MemberResolver extends MemberBase {
     return this.memberService.getRecordings(memberId);
   }
 
-  @Query(() => TranscriptData)
+  @Query(() => Transcript)
   @Roles(UserRole.coach, UserRole.nurse)
   async getTranscript(
     @Args('recordingId', { type: () => String }) // eslint-disable-next-line @typescript-eslint/no-unused-vars

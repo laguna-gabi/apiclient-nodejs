@@ -1,16 +1,11 @@
 import { mockProcessWarnings } from '@argus/pandora';
+import { Transcript, TranscriptDocument, TranscriptDto } from '@argus/poseidonClient';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
-import { dbConnect, generateId, generateTranscriptMock } from '..';
 import { Model, model } from 'mongoose';
+import { dbConnect, generateId, generateTranscriptMock } from '..';
 import { DbModule } from '../../src/db';
-import {
-  Transcript,
-  TranscriptDocument,
-  TranscriptDto,
-  TranscriptModule,
-  TranscriptService,
-} from '../../src/transcript';
+import { TranscriptModule, TranscriptService } from '../../src/transcript';
 
 describe(TranscriptService.name, () => {
   let module: TestingModule;
