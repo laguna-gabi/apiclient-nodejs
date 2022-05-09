@@ -30,7 +30,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ISoftDelete } from '../db';
-import { cloneDeep, isNil, omitBy } from 'lodash';
+import { cloneDeep, isEmpty, isNil, omitBy } from 'lodash';
 
 class InternalValue {
   model: typeof Model;
@@ -160,6 +160,18 @@ export class AdmissionService extends BaseService {
       result = await this.changeInternal(dietary, changeType, admissionCategory, memberId, id);
     }
 
+    const singleItems = { admitDate: undefined, dischargeDate: undefined };
+    if (setParams.admitDate) {
+      singleItems.admitDate = setParams.admitDate;
+    }
+    if (setParams.dischargeDate) {
+      singleItems.dischargeDate = setParams.dischargeDate;
+    }
+    const noNilSingleItems = omitBy(singleItems, isNil);
+    if (!isEmpty(noNilSingleItems)) {
+      result = await this.updateSingleItem(noNilSingleItems, id);
+    }
+
     return this.replaceId(this.replaceSubIds(result));
   }
 
@@ -252,6 +264,18 @@ export class AdmissionService extends BaseService {
       }),
     );
     return this.replaceSubIds(result.toObject());
+  }
+
+  private async updateSingleItem(object, id?: string): Promise<Admission> {
+    let result;
+    if (id) {
+      result = await this.admissionModel.findByIdAndUpdate(new Types.ObjectId(id), object, {
+        new: true,
+      });
+    } else {
+      result = await this.admissionModel.create(object);
+    }
+    return this.populateAll(result);
   }
 
   /**

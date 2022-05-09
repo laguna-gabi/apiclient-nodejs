@@ -176,6 +176,11 @@ export class ExtraMemberParams {
   @IsOptional()
   zipCode?: string;
 
+  /**
+   * will be @deprecated soon
+   * use admission.dto.ts instead
+   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   */
   @Field(() => String, { nullable: true })
   @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberDischargeDate) })
   @IsString() /* for rest api */
@@ -326,6 +331,11 @@ export class UpdateMemberParams extends ExtraMemberParams {
   @IsOptional()
   address?: Address;
 
+  /**
+   * will be @deprecated soon
+   * use admission.dto.ts instead
+   * https://app.shortcut.com/laguna-health/story/5129/remove-deprecations-from-the-api
+   */
   @Field(() => String, { nullable: true })
   @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberAdmitDate) })
   @IsOptional()

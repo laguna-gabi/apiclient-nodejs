@@ -2,7 +2,7 @@ import { Caregiver, MemberCommands } from '@argus/hepiusClient';
 import { AppointmentInternalKey, LogInternalKey } from '@argus/irisClient';
 import { GlobalEventType, Language, Platform } from '@argus/pandora';
 import { articlesByDrg, general, hosts } from 'config';
-import { add, addDays, startOfToday, startOfTomorrow, sub } from 'date-fns';
+import { add, addDays, startOfToday, startOfTomorrow, sub, subDays } from 'date-fns';
 import { date, lorem } from 'faker';
 import { v4 } from 'uuid';
 import {
@@ -26,6 +26,7 @@ import {
   generateCreateRedFlagParamsWizard,
   generateCreateTodoDoneParams,
   generateCreateTodoParams,
+  generateDateOnly,
   generateDeleteMemberParams,
   generateGetTodoDonesParams,
   generateId,
@@ -2614,6 +2615,8 @@ describe('Integration tests: all', () => {
       activities: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
       woundCares: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
       dietaries: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
+      admitDate: expect.any(String),
+      dischargeDate: expect.any(String),
     };
 
     expect(memberAdmissions.length).toEqual(2);
@@ -2664,6 +2667,7 @@ describe('Integration tests: all', () => {
     const dietaries = [
       { id: createResult.dietaries[0].id, ...removeChangeType(createMemberDnaParams.dietary) },
     ];
+    const { admitDate, dischargeDate } = createResult;
 
     expect(createResult).toEqual(
       expect.objectContaining({
@@ -2675,8 +2679,12 @@ describe('Integration tests: all', () => {
         activities,
         woundCares,
         dietaries,
+        admitDate,
+        dischargeDate,
       }),
     );
+
+    const newAdmitDate = generateDateOnly(subDays(new Date(), 1));
 
     //update/delete some admission params
     const changeMemberDnaParams: ChangeMemberDnaParams = {
@@ -2691,6 +2699,8 @@ describe('Integration tests: all', () => {
         id: createResult.medications[0].id,
       }),
       activity: generateAdmissionActivityParams({ changeType: ChangeType.create }),
+      admitDate: newAdmitDate,
+      dischargeDate: null,
     };
     const changeResult = await handler.mutations.changeMemberDna({ changeMemberDnaParams });
 
@@ -2714,6 +2724,8 @@ describe('Integration tests: all', () => {
         activities,
         woundCares,
         dietaries,
+        admitDate: newAdmitDate,
+        dischargeDate: expect.any(String),
       }),
     );
   });
@@ -2830,6 +2842,8 @@ describe('Integration tests: all', () => {
       activity: createActivity,
       woundCare: createWoundCare,
       dietary: createDietary,
+      admitDate: generateDateOnly(subDays(new Date(), 5)),
+      dischargeDate: generateDateOnly(subDays(new Date(), 2)),
     };
 
     const result = await handler.mutations.changeMemberDna({

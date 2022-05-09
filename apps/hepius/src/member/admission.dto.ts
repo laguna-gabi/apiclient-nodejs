@@ -7,10 +7,12 @@ import {
   Errors,
   IsIdAndChangeTypeAligned,
   IsOnlyDateInSub,
+  onlyDateRegex,
 } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
 import { Identifier } from '@argus/hepiusClient';
+import { IsOptional, Matches } from 'class-validator';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -343,6 +345,19 @@ export class ChangeMemberDnaParams {
   @Field(() => ChangeAdmissionDietaryParams, { nullable: true })
   @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
   dietary?: ChangeAdmissionDietaryParams;
+
+  /**
+   * Single fields on change admission
+   */
+  @Field(() => String, { nullable: true })
+  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberAdmitDate) })
+  @IsOptional()
+  admitDate?: string;
+
+  @Field(() => String, { nullable: true })
+  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberDischargeDate) })
+  @IsOptional()
+  dischargeDate?: string;
 }
 
 /**************************************************************************************************
@@ -382,13 +397,16 @@ export class Admission extends Identifier {
   @Field(() => [Dietary], { nullable: true })
   dietaries?: Dietary[];
 
+  /**
+   * Single fields on admission
+   */
   @Prop({ isNaN: true })
-  @Field({ nullable: true })
-  primaryCareProviderName?: string;
+  @Field(() => String, { nullable: true })
+  admitDate?: string;
 
   @Prop({ isNaN: true })
-  @Field({ nullable: true })
-  medicalRecordNumber?: string;
+  @Field(() => String, { nullable: true })
+  dischargeDate?: string;
 }
 
 /**************************************************************************************************

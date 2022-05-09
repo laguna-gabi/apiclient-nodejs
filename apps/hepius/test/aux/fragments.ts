@@ -141,6 +141,8 @@ export const FRAGMENT_APPOINTMENT = gql`
 export const FRAGMENT_ADMISSION = gql`
   fragment admissionFragment on Admission {
     id
+    admitDate
+    dischargeDate
     diagnoses {
       id
       code

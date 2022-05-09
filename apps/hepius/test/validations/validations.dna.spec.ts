@@ -108,4 +108,17 @@ describe('Validations - DNA', () => {
       },
     );
   });
+
+  test.each`
+    input                              | errors
+    ${{ admitDate: lorem.word() }}     | ${[Errors.get(ErrorType.memberAdmitDate)]}
+    ${{ admitDate: '2021-13-1' }}      | ${[Errors.get(ErrorType.memberAdmitDate)]}
+    ${{ admitDate: new Date() }}       | ${[Errors.get(ErrorType.memberAdmitDate)]}
+    ${{ dischargeDate: lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
+    ${{ dischargeDate: '2021-13-1' }}  | ${[Errors.get(ErrorType.memberDischargeDate)]}
+    ${{ dischargeDate: new Date() }}   | ${[Errors.get(ErrorType.memberDischargeDate)]}
+  `(`should fail to change dna since $input is not valid`, async ({ input, errors }) => {
+    const changeMemberDnaParams: ChangeMemberDnaParams = { ...input, memberId: generateId() };
+    await handler.mutations.changeMemberDna({ changeMemberDnaParams, invalidFieldsErrors: errors });
+  });
 });
