@@ -31,6 +31,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ISoftDelete } from '../db';
 import { cloneDeep, isNil, omitBy } from 'lodash';
+
 class InternalValue {
   model: typeof Model;
   errorType: ErrorType;
@@ -173,9 +174,9 @@ export class AdmissionService extends BaseService {
       case ChangeType.create:
         return this.createRefObjects(element, admissionCategory, memberId, id);
       case ChangeType.update:
-        return this.updateRefObjects(element, admissionCategory, id);
+        return this.updateRefObjects(element, admissionCategory);
       case ChangeType.delete:
-        return this.deleteRefObjects(element.id, admissionCategory, id);
+        return this.deleteRefObjects(element.id, admissionCategory);
     }
   }
 
@@ -206,32 +207,34 @@ export class AdmissionService extends BaseService {
   private async updateRefObjects(
     element: BaseCategory,
     admissionCategory: AdmissionCategory,
-    id: string,
   ): Promise<Admission> {
     const internalValue: InternalValue = this.matchMap[admissionCategory];
-    const result = await internalValue.model.findByIdAndUpdate(new Types.ObjectId(element.id), {
+    const objectId = new Types.ObjectId(element.id);
+    const result = await internalValue.model.findByIdAndUpdate(objectId, {
       $set: { ...omitBy(element, isNil) },
     });
     if (!result) {
       throw new Error(Errors.get(internalValue.errorType));
     }
-    const object = await this.admissionModel.findById(new Types.ObjectId(id));
+    const admission = await this.admissionModel.findOne({ [`${admissionCategory}`]: objectId });
+    const object = await this.admissionModel.findById(admission._id);
     return this.populateAll(object);
   }
 
   private async deleteRefObjects(
     internalId: string,
     admissionCategory: AdmissionCategory,
-    id?: string,
   ): Promise<Admission> {
     const internalValue: InternalValue = this.matchMap[admissionCategory];
-    const deleteRes = await internalValue.model.findByIdAndDelete(new Types.ObjectId(internalId));
+    const objectId = new Types.ObjectId(internalId);
+    const deleteRes = await internalValue.model.findByIdAndDelete(objectId);
     if (!deleteRes) {
       throw new Error(Errors.get(internalValue.errorType));
     }
     await internalValue.model.deleteOne({ _id: new Types.ObjectId(internalId) });
+    const admission = await this.admissionModel.findOne({ [`${admissionCategory}`]: objectId });
     const removeRes = await this.admissionModel.findByIdAndUpdate(
-      new Types.ObjectId(id),
+      admission._id,
       { $pull: { [`${admissionCategory}`]: new Types.ObjectId(internalId) } },
       { upsert: false, new: true },
     );
