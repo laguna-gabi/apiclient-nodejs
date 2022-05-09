@@ -158,7 +158,7 @@ export const FRAGMENT_ADMISSION = gql`
       id
       date
       procedureType
-      text
+      description
     }
     medications {
       id

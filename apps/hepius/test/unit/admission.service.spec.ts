@@ -222,7 +222,7 @@ describe(AdmissionService.name, () => {
   test.each`
     admissionCategory                         | key
     ${AdmissionCategory.diagnoses}            | ${'description'}
-    ${AdmissionCategory.procedures}           | ${'text'}
+    ${AdmissionCategory.procedures}           | ${'description'}
     ${AdmissionCategory.medications}          | ${'name'}
     ${AdmissionCategory.externalAppointments} | ${'date'}
     ${AdmissionCategory.activities}           | ${'text'}
@@ -317,8 +317,8 @@ describe(AdmissionService.name, () => {
     const changeResult = await change(field, createParams, memberId, createResult.id);
 
     expect(changeResult[AdmissionCategory.procedures]).toEqual([
-      expect.objectContaining({ date: expect.any(Date) }),
-      expect.objectContaining({ date: expect.any(Date) }),
+      expect.objectContaining({ description: expect.any(String) }),
+      expect.objectContaining({ description: expect.any(String) }),
     ]);
     checkAllCategories(changeResult);
   });

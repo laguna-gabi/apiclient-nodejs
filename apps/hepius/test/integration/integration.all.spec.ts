@@ -2607,7 +2607,9 @@ describe('Integration tests: all', () => {
       diagnoses: expect.arrayContaining([
         expect.objectContaining({ description: expect.any(String) }),
       ]),
-      procedures: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
+      procedures: expect.arrayContaining([
+        expect.objectContaining({ description: expect.any(String) }),
+      ]),
       medications: expect.arrayContaining([expect.objectContaining({ name: expect.any(String) })]),
       externalAppointments: expect.arrayContaining([
         expect.objectContaining({ clinic: expect.any(String) }),
@@ -2640,7 +2642,6 @@ describe('Integration tests: all', () => {
       {
         id: createResult.procedures[0].id,
         ...removeChangeType(createMemberDnaParams.procedure),
-        date: createMemberDnaParams.procedure.date.toISOString(),
       },
     ];
     const medications = [
@@ -2707,7 +2708,6 @@ describe('Integration tests: all', () => {
     procedures[0] = {
       id: createResult.procedures[0].id,
       ...removeChangeType(changeMemberDnaParams.procedure),
-      date: changeMemberDnaParams.procedure.date.toISOString(),
     };
     activities[1] = {
       id: changeResult.activities[1].id,

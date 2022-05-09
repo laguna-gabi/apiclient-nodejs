@@ -1426,9 +1426,9 @@ export const generateAdmissionProcedureParams = ({
   return {
     changeType,
     ...attachIdParam,
-    date: new Date(),
+    date: generateDateOnly(new Date()),
     procedureType: ProcedureType.diagnostic,
-    text: lorem.sentence(),
+    description: lorem.sentence(),
   };
 };
 

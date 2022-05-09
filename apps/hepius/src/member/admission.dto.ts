@@ -6,13 +6,14 @@ import {
   ErrorType,
   Errors,
   IsIdAndChangeTypeAligned,
+  IsOnlyDate,
   IsOnlyDateInSub,
   onlyDateRegex,
 } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import * as mongooseDelete from 'mongoose-delete';
 import { Identifier } from '@argus/hepiusClient';
-import { IsOptional, Matches } from 'class-validator';
+import { IsOptional, Matches, ValidateNested } from 'class-validator';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************
@@ -20,6 +21,7 @@ import { IsOptional, Matches } from 'class-validator';
 export enum ProcedureType {
   treatment = 'treatment',
   diagnostic = 'diagnostic',
+  other = 'other',
 }
 registerEnumType(ProcedureType, { name: 'ProcedureType' });
 
@@ -122,9 +124,10 @@ export class Diagnosis extends BaseCategory {
 @InputType('ProcedureInput')
 @Schema({ versionKey: false, timestamps: true })
 export class Procedure extends BaseCategory {
-  @Prop({ type: Date, isNan: true })
-  @Field(() => Date, { nullable: true })
-  date?: Date;
+  @Prop({ isNan: true })
+  @Field({ nullable: true })
+  @IsOnlyDate({ message: Errors.get(ErrorType.admissionProcedureDate) })
+  date?: string;
 
   @Prop({ type: String, enum: ProcedureType, isNan: true })
   @Field(() => ProcedureType, { nullable: true })
@@ -132,7 +135,7 @@ export class Procedure extends BaseCategory {
 
   @Prop({ isNan: true })
   @Field(() => String, { nullable: true })
-  text?: string;
+  description?: string;
 }
 
 @ObjectType()
@@ -332,6 +335,7 @@ export class ChangeMemberDnaParams {
 
   @Field(() => ChangeAdmissionProcedureParams, { nullable: true })
   @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
+  @ValidateNested()
   procedure?: ChangeAdmissionProcedureParams;
 
   @Field(() => ChangeAdmissionMedicationParams, { nullable: true })
