@@ -1,4 +1,4 @@
-import { BEFORE_ALL_TIMEOUT, generateAdmissionDiagnosisParams, generateId } from '..';
+import { BEFORE_ALL_TIMEOUT, generateId } from '..';
 import { ChangeType, ErrorType, Errors } from '../../src/common';
 import { AdmissionCategory, ChangeMemberDnaParams } from '../../src/member';
 import { AdmissionHelper, AppointmentsIntegrationActions, Creators } from '../aux';
@@ -26,27 +26,15 @@ describe('Validations - DNA', () => {
   });
 
   describe('changeMemberDna', () => {
-    Object.values(AdmissionCategory).forEach((admissionCategory: AdmissionCategory) => {
-      test.each`
-        field           | error
-        ${'memberId'}   | ${`Field "memberId" of required type "String!" was not provided.`}
-        ${'changeType'} | ${`Field "changeType" of required type "ChangeType!" was not provided.`}
-      `(
-        /* eslint-enable max-len */
-        `should fail to $changeType ${admissionCategory} since mandatory field $field is missing`,
-        async (params) => {
-          const changeMemberDnaParams: ChangeMemberDnaParams = {
-            memberId: generateId(),
-            diagnosis: generateAdmissionDiagnosisParams({ changeType: ChangeType.create }),
-          };
-          delete changeMemberDnaParams.diagnosis[params.field];
-          await handler.mutations.changeMemberDna({
-            changeMemberDnaParams,
-            missingFieldError: params.error,
-          });
-        },
-      );
-    });
+    test.each([{ memberId: generateId() }, { memberId: generateId(), id: generateId() }])(
+      'should fail as only %p is provided',
+      async (changeMemberDnaParams) => {
+        await handler.mutations.changeMemberDna({
+          changeMemberDnaParams,
+          invalidFieldsErrors: [Errors.get(ErrorType.admissionDataNotProvidedOnChangeDna)],
+        });
+      },
+    );
 
     Object.values(AdmissionCategory).forEach((admissionCategory: AdmissionCategory) => {
       test.each`

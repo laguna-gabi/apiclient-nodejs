@@ -106,6 +106,9 @@ export class AdmissionService extends BaseService {
     const setParams: ChangeMemberDnaParams = omitBy(changeMemberDnaParams, isNil);
     const { memberId } = changeMemberDnaParams;
     let { id } = changeMemberDnaParams;
+    if (!Object.keys(setParams).some((key) => key !== 'memberId' && key !== 'id')) {
+      throw new Error(Errors.get(ErrorType.admissionDataNotProvidedOnChangeDna));
+    }
 
     let result;
     if (setParams.diagnosis) {

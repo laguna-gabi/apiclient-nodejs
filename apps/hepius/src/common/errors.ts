@@ -170,6 +170,7 @@ export enum ErrorType {
   admissionWoundCareIdNotFound = 10606,
   admissionDietaryIdNotFound = 10607,
   admissionIdAndChangeTypeAligned = 10608,
+  admissionDataNotProvidedOnChangeDna = 10609,
 }
 
 const { name, height, weight } = graphql.validators;
@@ -430,6 +431,10 @@ export const Errors: Map<ErrorType, string> = new Map([
     ErrorType.admissionIdAndChangeTypeAligned.valueOf(),
     `id is not allowed on changeType='create',` +
       `id is mandatory on changeType='update' or changeType='delete'`,
+  ],
+  [
+    ErrorType.admissionDataNotProvidedOnChangeDna.valueOf(),
+    `nothing to update: only memberId and id was provided`,
   ],
   [ErrorType.journeyNotFound.valueOf(), `journey ${notFoundPrefix}`],
   [ErrorType.journeyForMemberNotFound.valueOf(), `journey for member ${notFoundPrefix}`],
