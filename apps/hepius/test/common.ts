@@ -1,4 +1,4 @@
-import { ServiceName, webhooks } from '@argus/pandora';
+import { GlobalEventType, IChangeEvent, QueueType, ServiceName, webhooks } from '@argus/pandora';
 import { INestApplication } from '@nestjs/common';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -316,4 +316,21 @@ export const removeChangeType = (changeParams): BaseCategory => {
   const dupParams = { ...changeParams };
   delete dupParams.changeType;
   return dupParams;
+};
+
+export const confirmEmittedChangeSetEvent = (
+  mockEventEmitterEmit: jest.SpyInstance,
+  expectedChangeEvent: IChangeEvent,
+) => {
+  Object.keys(expectedChangeEvent).forEach((key) => {
+    expect(mockEventEmitterEmit).toHaveBeenLastCalledWith(
+      GlobalEventType.notifyQueue,
+      expect.objectContaining({
+        type: QueueType.entityChange,
+        message: expect.stringContaining(
+          key === 'correlationId' ? key : `"${key}":"${expectedChangeEvent[key]}"`,
+        ),
+      }),
+    );
+  });
 };

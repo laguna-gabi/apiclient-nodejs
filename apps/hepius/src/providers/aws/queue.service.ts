@@ -90,7 +90,10 @@ export class QueueService implements OnModuleInit {
 
   @OnEvent(GlobalEventType.notifyQueue, { async: true })
   async sendMessage(params: IEventNotifyQueue) {
-    if (params.type === QueueType.audit && process.env.NODE_ENV !== Environments.production) {
+    if (
+      (params.type === QueueType.audit && process.env.NODE_ENV !== Environments.production) ||
+      params.type === QueueType.entityChange
+    ) {
       //audit log only exists in production
       this.logger.info(params, QueueService.name, this.sendMessage.name);
       return;

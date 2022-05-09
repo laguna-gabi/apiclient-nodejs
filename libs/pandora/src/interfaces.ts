@@ -28,6 +28,8 @@ export enum Language {
 export enum QueueType {
   audit = 'audit',
   notifications = 'notifications',
+  transcript = 'transcript',
+  entityChange = 'entityChange',
 }
 
 export enum AuditType {
@@ -68,4 +70,24 @@ export enum CancelNotificationType {
   cancelVideo = 'cancelVideo',
   cancelCall = 'cancelCall',
   cancelText = 'cancelText',
+}
+
+/*******************************************************************************
+ ***************************** Change Events ***********************************
+ ******************************************************************************/
+export enum ChangeEventType {
+  created = 'created',
+  updated = 'updated',
+  deleted = 'deleted',
+}
+
+export enum EntityName {
+  caregiver = 'caregiver',
+}
+
+export interface IChangeEvent {
+  action: ChangeEventType;
+  entity: EntityName;
+  memberId: string;
+  correlationId: string;
 }

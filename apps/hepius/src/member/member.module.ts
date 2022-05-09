@@ -1,6 +1,8 @@
+import { EntityName } from '@argus/pandora';
 import { Caregiver } from '@argus/hepiusClient';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
 import * as mongooseDelete from 'mongoose-delete';
 import {
@@ -44,15 +46,14 @@ import {
   WoundCareDto,
 } from '.';
 import { Appointment, AppointmentDto } from '../appointment';
-import { CommonModule } from '../common';
+import { CommonModule, LoggerService } from '../common';
 import { CommunicationModule } from '../communication';
-import { useFactoryOptions } from '../db';
+import { ChangeEventFactoryProvider, useFactoryOptions } from '../db';
 import { ConfigsService, ProvidersModule } from '../providers';
 import { QuestionnaireModule } from '../questionnaire';
 import { ServiceModule } from '../services';
 import { Todo, TodoDto } from '../todo';
 import { UserModule } from '../user';
-
 @Module({
   imports: [
     CommunicationModule,
@@ -65,7 +66,6 @@ import { UserModule } from '../user';
     MongooseModule.forFeature([
       { name: ControlMember.name, schema: ControlMemberDto },
       { name: DismissedAlert.name, schema: DismissedAlertDto },
-      { name: Caregiver.name, schema: CaregiverDto },
       { name: Journal.name, schema: JournalDto },
       { name: Todo.name, schema: TodoDto },
       { name: ActionItem.name, schema: ActionItemDto },
@@ -98,6 +98,12 @@ import { UserModule } from '../user';
         useFactory: () => {
           return MemberRecordingDto.plugin(mongooseDelete, useFactoryOptions);
         },
+      },
+      {
+        name: Caregiver.name,
+        imports: [CommonModule],
+        useFactory: ChangeEventFactoryProvider(EntityName.caregiver, CaregiverDto, 'memberId'),
+        inject: [EventEmitter2, LoggerService],
       },
     ]),
   ],
