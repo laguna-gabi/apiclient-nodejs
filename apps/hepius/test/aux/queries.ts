@@ -1,8 +1,8 @@
-import { Caregiver } from '@argus/hepiusClient';
+import { Barrier, BarrierType, CarePlan, CarePlanType, Caregiver } from '@argus/hepiusClient';
 import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
 import { isResultValid } from '..';
-import { Barrier, BarrierType, CarePlan, CarePlanType, RedFlag, RedFlagType } from '../../src/care';
+import { RedFlag, RedFlagType } from '../../src/care';
 import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
 import {

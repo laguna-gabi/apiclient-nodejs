@@ -2,6 +2,7 @@ import {
   Appointment,
   AppointmentMethod,
   AppointmentStatus,
+  CareStatus,
   Caregiver,
   MemberCommands,
 } from '@argus/hepiusClient';
@@ -62,7 +63,7 @@ import {
 } from '..';
 import { buildLHPQuestionnaire } from '../../cmd/static';
 import { RequestAppointmentParams, ScheduleAppointmentParams } from '../../src/appointment';
-import { CareStatus, CreateCarePlanParams } from '../../src/care';
+import { CreateCarePlanParams } from '../../src/care';
 import {
   ChangeType,
   ErrorType,

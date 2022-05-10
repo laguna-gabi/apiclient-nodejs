@@ -39,16 +39,16 @@ import { MemberModule } from '../../src/member';
 import { ProvidersModule } from '../../src/providers';
 import { User, UserDocument, UserModule } from '../../src/user';
 import { QuestionnaireModule, QuestionnaireResponse } from '../../src/questionnaire';
-import { AppointmentMethod, AppointmentStatus, Caregiver } from '@argus/hepiusClient';
+import { CareModule, RedFlag, RedFlagType } from '../../src/care';
 import {
+  AppointmentMethod,
+  AppointmentStatus,
   Barrier,
   BarrierType,
-  CareModule,
   CarePlan,
   CarePlanType,
-  RedFlag,
-  RedFlagType,
-} from '../../src/care';
+  Caregiver,
+} from '@argus/hepiusClient';
 
 describe('Commands: AnalyticsService', () => {
   let module: TestingModule;

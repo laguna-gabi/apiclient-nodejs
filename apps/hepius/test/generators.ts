@@ -1,6 +1,8 @@
 import {
   AppointmentMethod,
   AppointmentStatus,
+  BarrierDomain,
+  CareStatus,
   Caregiver,
   Notes,
   Relationship,
@@ -49,10 +51,8 @@ import {
 } from '../src/appointment';
 import { AvailabilityInput } from '../src/availability';
 import {
-  BarrierDomain,
   BaseCarePlanParams,
   CarePlanTypeInput,
-  CareStatus,
   CreateBarrierParams,
   CreateCarePlanParams,
   CreateRedFlagParams,

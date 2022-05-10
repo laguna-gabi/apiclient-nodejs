@@ -23,8 +23,14 @@ import {
   Sex,
 } from '../../src/member';
 import { User } from '../../src/user';
-import { Appointment, AppointmentStatus, Notes, Relationship } from '@argus/hepiusClient';
-import { BarrierDomain, CareStatus } from '../../src/care';
+import {
+  Appointment,
+  AppointmentStatus,
+  BarrierDomain,
+  CareStatus,
+  Notes,
+  Relationship,
+} from '@argus/hepiusClient';
 
 export const DefaultOutputDir = './outputs';
 export const HarmonyLink = hosts.harmony;

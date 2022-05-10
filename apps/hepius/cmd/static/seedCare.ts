@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 
 import { Model } from 'mongoose';
-import { BarrierType, CarePlanType } from '../../src/care';
+import { BarrierType, CarePlanType } from '@argus/hepiusClient';
 
 export const seedCarePlans = [
   {

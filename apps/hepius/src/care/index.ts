@@ -1,4 +1,3 @@
-export * from './care.types';
 export * from './redFlag.dto';
 export * from './carePlan.dto';
 export * from './barrier.dto';
