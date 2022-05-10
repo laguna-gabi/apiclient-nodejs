@@ -2,16 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
-  Barrier,
   BarrierDocument,
-  BarrierDomain,
-  BarrierType,
-  CarePlan,
   CarePlanDocument,
-  CarePlanType,
   CarePlanTypeDocument,
   CarePlanTypeInput,
-  CareStatus,
   CreateBarrierParams,
   CreateCarePlanParams,
   CreateRedFlagParams,
@@ -35,6 +29,14 @@ import {
 import { isNil, omitBy } from 'lodash';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ISoftDelete } from '../db';
+import {
+  Barrier,
+  BarrierDomain,
+  BarrierType,
+  CarePlan,
+  CarePlanType,
+  CareStatus,
+} from '@argus/hepiusClient';
 
 @Injectable()
 export class CareService extends BaseService {

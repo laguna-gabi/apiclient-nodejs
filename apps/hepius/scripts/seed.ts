@@ -2,19 +2,19 @@ import { generateZipCode } from '@argus/pandora';
 import { date, internet, lorem } from 'faker';
 import { sign } from 'jsonwebtoken';
 import { model } from 'mongoose';
-import { createSeedBarriers, seedCarePlans, seedRedFlags } from '../cmd/static/seedCare';
 import {
   buildGAD7Questionnaire,
   buildLHPQuestionnaire,
   buildNPSQuestionnaire,
   buildPHQ9Questionnaire,
   buildWHO5Questionnaire,
+  createSeedBarriers,
+  seedCarePlans,
+  seedRedFlags,
 } from '../cmd/static';
 import {
-  BarrierType,
   BarrierTypeDocument,
   BarrierTypeDto,
-  CarePlanType,
   CarePlanTypeDocument,
   CarePlanTypeDto,
   RedFlagType,
@@ -46,7 +46,7 @@ import {
 } from '../test';
 import { Mutations } from '../test/aux';
 import { SeedBase } from './seedBase';
-import { Identifier } from '@argus/hepiusClient';
+import { BarrierType, CarePlanType, Identifier } from '@argus/hepiusClient';
 
 /**
  * This is a seed file for initial local db creation.

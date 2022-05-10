@@ -1,4 +1,4 @@
-import { Caregiver, Relationship } from '@argus/hepiusClient';
+import { BarrierDomain, CareStatus, Caregiver, Relationship } from '@argus/hepiusClient';
 import {
   ContentKey,
   ExternalKey,
@@ -46,10 +46,8 @@ import {
 } from '../src/appointment';
 import { AvailabilityInput } from '../src/availability';
 import {
-  BarrierDomain,
   BaseCarePlanParams,
   CarePlanTypeInput,
-  CareStatus,
   CreateBarrierParams,
   CreateCarePlanParams,
   CreateRedFlagParams,

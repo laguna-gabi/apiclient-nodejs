@@ -1,12 +1,11 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Field, InputType } from '@nestjs/graphql';
+import { SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
 import { ErrorType, Errors, IsObjectId, IsValidCarePlanTypeInput } from '../common';
-import { CareStatus } from '.';
 import { IsDate, IsOptional } from 'class-validator';
 import * as mongooseDelete from 'mongoose-delete';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
-import { Identifier } from '@argus/hepiusClient';
+import { CarePlan, CarePlanType, CareStatus } from '@argus/hepiusClient';
 
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
@@ -69,68 +68,6 @@ export class UpdateCarePlanParams {
 
   @IsOptional()
   @IsDate()
-  @Field(() => Date, { nullable: true })
-  dueDate?: Date;
-}
-
-/**************************************************************************************************
- ********************************* Return params for gql methods **********************************
- *************************************************************************************************/
-
-@ObjectType()
-@Schema({ versionKey: false, timestamps: true })
-export class CarePlanType extends Identifier {
-  @Prop()
-  @Field(() => String)
-  description: string;
-
-  @Prop()
-  @Field(() => Boolean)
-  isCustom: boolean;
-}
-
-@ObjectType()
-@Schema({ versionKey: false, timestamps: true })
-export class BaseCare extends Identifier {
-  @Prop({ index: true, type: Types.ObjectId })
-  @Field(() => String)
-  memberId: Types.ObjectId;
-
-  @Prop({ type: Types.ObjectId })
-  @Field(() => String)
-  createdBy: Types.ObjectId;
-
-  @Field(() => Date)
-  createdAt: Date;
-
-  @Field(() => Date)
-  updatedAt: Date;
-
-  @Prop({ index: true, type: String, enum: CareStatus, default: CareStatus.active })
-  @Field(() => CareStatus)
-  status: CareStatus;
-
-  @Prop()
-  @Field(() => String, { nullable: true })
-  notes?: string;
-
-  @Prop()
-  @Field(() => Date, { nullable: true })
-  completedAt?: Date;
-}
-
-@ObjectType()
-@Schema({ versionKey: false, timestamps: true })
-export class CarePlan extends BaseCare {
-  @Prop({ type: Types.ObjectId, ref: CarePlanType.name, index: true })
-  @Field(() => CarePlanType)
-  type: CarePlanType;
-
-  @Prop({ index: true, type: Types.ObjectId })
-  @Field(() => String)
-  barrierId?: Types.ObjectId;
-
-  @Prop({ type: Date })
   @Field(() => Date, { nullable: true })
   dueDate?: Date;
 }
