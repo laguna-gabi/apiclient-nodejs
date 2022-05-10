@@ -20,6 +20,7 @@ import {
   DiagnosisDto,
   Dietary,
   DietaryDto,
+  DietaryHelper,
   DismissedAlert,
   DismissedAlertDto,
   ExternalAppointment,
@@ -107,7 +108,14 @@ import { UserModule } from '../user';
       },
     ]),
   ],
-  providers: [MemberResolver, MemberService, AdmissionService, ConfigsService, JourneyService],
+  providers: [
+    MemberResolver,
+    MemberService,
+    AdmissionService,
+    ConfigsService,
+    JourneyService,
+    DietaryHelper,
+  ],
   controllers: [MemberController],
   exports: [MemberService, MongooseModule],
 })

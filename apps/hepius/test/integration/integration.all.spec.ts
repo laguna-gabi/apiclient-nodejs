@@ -2730,6 +2730,11 @@ describe('Integration tests: all', () => {
     );
   });
 
+  it('should return dietary matcher', async () => {
+    const matcher = await handler.queries.getAdmissionsDietaryMatcher();
+    expect(matcher.map.length).toEqual(17);
+  });
+
   /************************************************************************************************
    *************************************** Internal methods ***************************************
    ***********************************************************************************************/

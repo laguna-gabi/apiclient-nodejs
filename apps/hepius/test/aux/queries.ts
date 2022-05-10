@@ -7,6 +7,7 @@ import { GetCommunicationParams } from '../../src/communication';
 import { DailyReportQueryInput } from '../../src/dailyReport';
 import {
   Admission,
+  DietaryMatcher,
   DischargeDocumentsLinks,
   GetMemberUploadJournalAudioLinkParams,
   GetMemberUploadJournalImageLinkParams,
@@ -1371,5 +1372,24 @@ export class Queries {
       });
 
     return result?.getMemberAdmissions;
+  };
+
+  getAdmissionsDietaryMatcher = async (): Promise<DietaryMatcher> => {
+    const { getAdmissionsDietaryMatcher } = await this.client.request(
+      gql`
+        query getAdmissionsDietaryMatcher {
+          getAdmissionsDietaryMatcher {
+            map {
+              key
+              values
+            }
+          }
+        }
+      `,
+      undefined,
+      this.defaultUserRequestHeaders,
+    );
+
+    return getAdmissionsDietaryMatcher;
   };
 }

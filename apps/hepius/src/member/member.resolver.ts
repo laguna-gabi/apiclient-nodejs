@@ -92,6 +92,8 @@ import {
   DeleteDischargeDocumentParams,
   DeleteMemberGeneralDocumentParams,
   DeleteMemberParams,
+  DietaryHelper,
+  DietaryMatcher,
   DischargeDocumentsLinks,
   GetMemberUploadGeneralDocumentLinkParams,
   GetMemberUploadJournalAudioLinkParams,
@@ -143,6 +145,7 @@ export class MemberResolver extends MemberBase {
     protected readonly bitly: Bitly,
     readonly featureFlagService: FeatureFlagService,
     readonly journeyService: JourneyService,
+    readonly dietaryMatcher: DietaryHelper,
     readonly twilio: TwilioService,
     readonly logger: LoggerService,
   ) {
@@ -1448,6 +1451,12 @@ export class MemberResolver extends MemberBase {
     memberId: string,
   ) {
     return this.admissionService.get(memberId);
+  }
+
+  @Query(() => DietaryMatcher)
+  @Roles(UserRole.coach, UserRole.nurse)
+  async getAdmissionsDietaryMatcher() {
+    return this.dietaryMatcher.get();
   }
 
   /************************************************************************************************

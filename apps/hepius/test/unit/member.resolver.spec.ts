@@ -2729,6 +2729,11 @@ describe('MemberResolver', () => {
 
       expect(spyOnServiceChangeMemberDna).toBeCalledWith({ memberId });
     });
+
+    it('should return dietary matcher', async () => {
+      const result = await resolver.getAdmissionsDietaryMatcher();
+      expect(result.map.length).toEqual(17);
+    });
   });
 
   /**************************************************************************************************

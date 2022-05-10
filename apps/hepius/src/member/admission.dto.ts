@@ -61,6 +61,79 @@ export enum DiagnosisSeverity {
 }
 registerEnumType(DiagnosisSeverity, { name: 'DiagnosisSeverity' });
 
+export enum DietaryCategory {
+  adverseReaction = 'adverse reaction diets',
+  cultural = 'cultural diets',
+  diabetic = 'diabetic diets',
+  fiber = 'fiber diets',
+  fluidRestrictions = 'fluid restrictions diets',
+  fluid = 'fluid diets',
+  heartHealthy = 'heart healthy diets',
+  house = 'house diets',
+  medication = 'medication diets',
+  mineral = 'mineral diets',
+  other = 'other',
+  renal = 'renal diets',
+  sodiumRestricted = 'sodium restricted diets',
+  surgery = 'surgery',
+  textureModified = 'texture modified diets',
+  therapeutic = 'therapeutic diets',
+  weightReduction = 'weight reduction diets',
+}
+registerEnumType(DietaryCategory, { name: 'DietaryCategory' });
+
+export enum DietaryName {
+  lowLactose = 'low lactose diet',
+  glutenFree = 'gluten free diet',
+  lactoseFree = 'lactose free diet',
+  cantonese = 'cantonese diet',
+  hindu = 'hindu diet',
+  kosher = 'kosher diet',
+  halalMeat = 'halal meat diet',
+  diabetic = 'diabetic diet',
+  maternalDiabetic = 'maternal diabetic diet',
+  highFiber = 'high fiber diet',
+  lowFiber = 'low fiber diet',
+  fluidRestriction1500ml = '1500 ml fluid restriction diet',
+  fluidRestriction = 'fluid restriction diet',
+  fluidIncreased = 'fluid increased diet',
+  clearFluids = 'clear fluids diet',
+  fullFluids = 'full fluids diet',
+  cardiac = 'cardiac diet',
+  lowCholesterol = 'low cholesterol diet',
+  dietaryApproachesToStopHypertension = 'dietary approaches to stop hypertension (DASH) diet',
+  lowFat = 'low fat diet',
+  regularMaternal = 'regular maternal diet',
+  vegetarian = 'vegetarian diet',
+  vegan = 'vegan',
+  decreasedTyramine = 'decreased tyramine diet',
+  VitaminKRestriction = 'vitamin k restriction diet',
+  increasedIron = 'increased iron diet',
+  decreasedCalcium = 'decreased calcium diet',
+  increasedCalcium = 'increased calcium diet',
+  decreasedIron = 'decreased iron diet',
+  lowCarbohydrate = 'low carbohydrate diet',
+  lowProtein = 'low protein diet',
+  fasting = 'fasting',
+  lowPotassium = 'low potassium diet',
+  chronicKidneyDiseaseHemodialysis = 'chronic kidney disease hemodialysis',
+  // eslint-disable-next-line max-len
+  acuteRenalFailurePeritonealDialysisRenalTransplant = 'acute renal failure peritoneal dialysis renal transplant',
+  lowSodium = 'low sodium diet',
+  bariatricSurgery = 'bariatric surgery diet',
+  easyToChew = 'easy to chew diet',
+  mechanicallyAltered = 'mechanically altered diet',
+  pureed = 'pureed diet',
+  antiReflux = 'anti-reflux diet',
+  lowCalorie = 'low calorie diet',
+  dietaryTreatmentForDisorder = 'dietary treatment for disorder',
+  highCalorieAndHighProtein = 'high calorie and high protein',
+  atkins = 'atkins diet',
+  keto = 'keto diet',
+  paleo = 'paleo diet',
+}
+registerEnumType(DietaryName, { name: 'DietaryName' });
+
 export enum AdmissionCategory {
   diagnoses = 'diagnoses',
   procedures = 'procedures',
@@ -418,6 +491,21 @@ export class Admission extends Identifier {
   @Prop({ isNaN: true })
   @Field(() => String, { nullable: true })
   dischargeDate?: string;
+}
+
+@ObjectType()
+export class DietaryMapTuple {
+  @Field(() => DietaryCategory)
+  key: DietaryCategory;
+
+  @Field(() => [DietaryName])
+  values: DietaryName[];
+}
+
+@ObjectType()
+export class DietaryMatcher {
+  @Field(() => [DietaryMapTuple])
+  map: DietaryMapTuple[];
 }
 
 /**************************************************************************************************
