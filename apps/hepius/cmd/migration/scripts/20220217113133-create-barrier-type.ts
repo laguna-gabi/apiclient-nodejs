@@ -4,8 +4,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../../../src/app.module';
 import { Model } from 'mongoose';
 import { getModelToken } from '@nestjs/mongoose';
-import { BarrierType, CarePlanType } from '../../../src/care';
-import { createSeedBarriers } from '../../static/seedCare';
+import { createSeedBarriers } from '../../static';
+import { BarrierType, CarePlanType } from '@argus/hepiusClient';
 // ------------------------------------------------------------------------------------------------
 // Description: migrate `up`
 // ------------------------------------------------------------------------------------------------

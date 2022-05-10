@@ -1,4 +1,11 @@
-import { Caregiver } from '@argus/hepiusClient';
+import {
+  Barrier,
+  BarrierDomain,
+  BarrierType,
+  CarePlan,
+  CarePlanType,
+  Caregiver,
+} from '@argus/hepiusClient';
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -26,17 +33,12 @@ import {
 import { GlobalAuthGuard, RolesGuard } from '../../src/auth';
 import { Availability, AvailabilityDocument, AvailabilityDto } from '../../src/availability';
 import {
-  Barrier,
   BarrierDocument,
-  BarrierDomain,
   BarrierDto,
-  BarrierType,
   BarrierTypeDocument,
   BarrierTypeDto,
-  CarePlan,
   CarePlanDocument,
   CarePlanDto,
-  CarePlanType,
   CarePlanTypeDocument,
   CarePlanTypeDto,
   CareService,

@@ -19,19 +19,16 @@ import {
   randomEnum,
 } from '..';
 import {
-  Barrier,
   BarrierDocument,
-  BarrierDomain,
   CareModule,
-  CarePlan,
   CarePlanDocument,
   CareService,
-  CareStatus,
   RedFlag,
   RedFlagDocument,
   RedFlagDto,
 } from '../../src/care';
 import { ErrorType, Errors, LoggerService } from '../../src/common';
+import { Barrier, BarrierDomain, CarePlan, CareStatus } from '@argus/hepiusClient';
 
 describe('CareService', () => {
   let module: TestingModule;

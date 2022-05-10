@@ -1,12 +1,13 @@
-import { BarrierDomain, BaseCare, CarePlanType, CareStatus } from '.';
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Field, InputType, registerEnumType } from '@nestjs/graphql';
+import { SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
 import { ErrorType, Errors, IsObjectId } from '../common';
 import * as mongooseDelete from 'mongoose-delete';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
-import { Identifier } from '@argus/hepiusClient';
+import { Barrier, BarrierDomain, BarrierType, CareStatus } from '@argus/hepiusClient';
 
+registerEnumType(CareStatus, { name: 'CareStatus' });
+registerEnumType(BarrierDomain, { name: 'BarrierCategory' });
 /**************************************************************************************************
  ********************************** Input params for gql methods **********************************
  *************************************************************************************************/
@@ -47,38 +48,6 @@ export class UpdateBarrierParams {
   @Field(() => String, { nullable: true })
   @IsObjectId({ message: Errors.get(ErrorType.barrierTypeInvalid) })
   type?: string;
-}
-
-/**************************************************************************************************
- ********************************* Return params for gql methods **********************************
- *************************************************************************************************/
-
-@ObjectType()
-@Schema({ versionKey: false, timestamps: true })
-export class BarrierType extends Identifier {
-  @Prop()
-  @Field(() => String)
-  description: string;
-
-  @Prop({ type: String, enum: BarrierDomain })
-  @Field(() => BarrierDomain)
-  domain: BarrierDomain;
-
-  @Prop({ type: [{ type: Types.ObjectId, ref: CarePlanType.name }] })
-  @Field(() => [CarePlanType])
-  carePlanTypes: CarePlanType[];
-}
-
-@ObjectType()
-@Schema({ versionKey: false, timestamps: true })
-export class Barrier extends BaseCare {
-  @Prop({ type: Types.ObjectId, ref: BarrierType.name, index: true })
-  @Field(() => BarrierType)
-  type: BarrierType;
-
-  @Prop({ index: true, type: Types.ObjectId })
-  @Field(() => String)
-  redFlagId: Types.ObjectId;
 }
 
 /**************************************************************************************************

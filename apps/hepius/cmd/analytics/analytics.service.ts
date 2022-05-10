@@ -51,17 +51,19 @@ import {
   QuestionnaireResponse,
   QuestionnaireResponseDocument,
 } from '../../src/questionnaire';
-import { Caregiver } from '@argus/hepiusClient';
-import { User, UserDocument } from '../../src/user';
 import {
   Barrier,
-  BarrierDocument,
   BarrierType,
-  BarrierTypeDocument,
   BaseCare,
   CarePlan,
-  CarePlanDocument,
   CarePlanType,
+  Caregiver,
+} from '@argus/hepiusClient';
+import { User, UserDocument } from '../../src/user';
+import {
+  BarrierDocument,
+  BarrierTypeDocument,
+  CarePlanDocument,
   CarePlanTypeDocument,
   RedFlag,
   RedFlagDocument,
