@@ -24,6 +24,7 @@ import {
   ProcedureDocument,
   WoundCare,
   WoundCareDocument,
+  singleAdmissionItems,
 } from '.';
 import { BaseService, ChangeType, ErrorType, Errors, LoggerService } from '../common';
 import { Injectable } from '@nestjs/common';
@@ -160,13 +161,12 @@ export class AdmissionService extends BaseService {
       result = await this.changeInternal(dietary, changeType, admissionCategory, memberId, id);
     }
 
-    const singleItems = { admitDate: undefined, dischargeDate: undefined };
-    if (setParams.admitDate) {
-      singleItems.admitDate = setParams.admitDate;
-    }
-    if (setParams.dischargeDate) {
-      singleItems.dischargeDate = setParams.dischargeDate;
-    }
+    const singleItems = {};
+    Object.values(singleAdmissionItems).forEach((item) => {
+      if (setParams[item]) {
+        singleItems[item] = setParams[item];
+      }
+    });
     const noNilSingleItems = omitBy(singleItems, isNil);
     if (!isEmpty(noNilSingleItems)) {
       result = await this.updateSingleItem(noNilSingleItems, id);

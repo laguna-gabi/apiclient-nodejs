@@ -91,7 +91,7 @@ describe('Validations - DNA', () => {
     );
 
     test.each(Object.values(AdmissionCategory))(
-      `should not fail to ${ChangeType.create} $admissionCategory on missing optional keys`,
+      `should not fail to ${ChangeType.create} %p on missing optional keys`,
       async (admissionCategory) => {
         const { field, method } = admissionHelper.mapper.get(admissionCategory);
         const data = method({ changeType: ChangeType.create });
@@ -112,16 +112,26 @@ describe('Validations - DNA', () => {
     );
   });
 
+  /* eslint-disable max-len */
   test.each`
     input                              | errors
-    ${{ admitDate: lorem.word() }}     | ${[Errors.get(ErrorType.memberAdmitDate)]}
-    ${{ admitDate: '2021-13-1' }}      | ${[Errors.get(ErrorType.memberAdmitDate)]}
-    ${{ admitDate: new Date() }}       | ${[Errors.get(ErrorType.memberAdmitDate)]}
-    ${{ dischargeDate: lorem.word() }} | ${[Errors.get(ErrorType.memberDischargeDate)]}
-    ${{ dischargeDate: '2021-13-1' }}  | ${[Errors.get(ErrorType.memberDischargeDate)]}
-    ${{ dischargeDate: new Date() }}   | ${[Errors.get(ErrorType.memberDischargeDate)]}
+    ${{ admitDate: lorem.word() }}     | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberAdmitDate)] }}
+    ${{ admitDate: '2021-13-1' }}      | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberAdmitDate)] }}
+    ${{ admitDate: new Date() }}       | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberAdmitDate)] }}
+    ${{ admitType: lorem.word() }}     | ${{ missingFieldError: 'does not exist in "AdmitType" enum' }}
+    ${{ admitSource: lorem.word() }}   | ${{ missingFieldError: 'does not exist in "AdmitSource" enum' }}
+    ${{ dischargeDate: lorem.word() }} | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
+    ${{ dischargeDate: '2021-13-1' }}  | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
+    ${{ dischargeDate: new Date() }}   | ${{ invalidFieldsErrors: [Errors.get(ErrorType.memberDischargeDate)] }}
+    ${{ dischargeTo: lorem.word() }}   | ${{ missingFieldError: 'does not exist in "DischargeTo" enum' }}
+    ${{ facility: 123 }}               | ${{ missingFieldError: stringError }}
+    ${{ specialInstructions: 123 }}    | ${{ missingFieldError: stringError }}
+    ${{ reasonForAdmission: 123 }}     | ${{ missingFieldError: stringError }}
+    ${{ hospitalCourse: 123 }}         | ${{ missingFieldError: stringError }}
+    ${{ warningSigns: lorem.word() }}  | ${{ missingFieldError: 'does not exist in "WarningSigns" enum' }}
   `(`should fail to change dna since $input is not valid`, async ({ input, errors }) => {
+    /* eslint-enable max-len */
     const changeMemberDnaParams: ChangeMemberDnaParams = { ...input, memberId: generateId() };
-    await handler.mutations.changeMemberDna({ changeMemberDnaParams, invalidFieldsErrors: errors });
+    await handler.mutations.changeMemberDna({ changeMemberDnaParams, ...errors });
   });
 });

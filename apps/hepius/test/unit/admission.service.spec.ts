@@ -6,9 +6,13 @@ import {
   Admission,
   AdmissionCategory,
   AdmissionService,
+  AdmitSource,
+  AdmitType,
   ChangeMemberDnaParams,
+  DischargeTo,
   MemberModule,
   PrimaryDiagnosisType,
+  WarningSigns,
 } from '../../src/member';
 import {
   dbConnect,
@@ -21,6 +25,7 @@ import {
 } from '../index';
 import { AdmissionHelper } from '../aux';
 import { subDays } from 'date-fns';
+import { date, lorem } from 'faker';
 
 describe(AdmissionService.name, () => {
   let module: TestingModule;
@@ -90,10 +95,26 @@ describe(AdmissionService.name, () => {
 
   test.each([
     { admitDate: generateDateOnly(subDays(new Date(), 5)) },
+    { admitType: AdmitType.urgent },
+    { admitSource: AdmitSource.hmoReferral },
     { dischargeDate: generateDateOnly(subDays(new Date(), 5)) },
+    { dischargeTo: DischargeTo.anotherTypeOfInstitutionForInpatientCare },
+    { facility: lorem.sentence() },
+    { specialInstructions: lorem.sentences() },
+    { reasonForAdmission: lorem.sentences() },
+    { hospitalCourse: lorem.sentences() },
+    { warningSigns: WarningSigns.difficultyBreathingOrShortnessOfBreath },
     {
       admitDate: generateDateOnly(subDays(new Date(), 5)),
+      admitType: AdmitType.urgent,
+      admitSource: AdmitSource.hmoReferral,
       dischargeDate: generateDateOnly(subDays(new Date(), 5)),
+      dischargeTo: DischargeTo.anotherTypeOfInstitutionForInpatientCare,
+      facility: lorem.sentence(),
+      specialInstructions: lorem.sentences(),
+      reasonForAdmission: lorem.sentences(),
+      hospitalCourse: lorem.sentences(),
+      warningSigns: WarningSigns.difficultyBreathingOrShortnessOfBreath,
     },
   ])(`should create a single element in admission`, async (object) => {
     const changeMemberDnaParams: ChangeMemberDnaParams = { ...object, memberId: generateId() };
@@ -103,31 +124,46 @@ describe(AdmissionService.name, () => {
     expect(result).toMatchObject(changeMemberDnaParams);
   });
 
-  test.each(['admitDate', 'dischargeDate'])(
-    `should create and update $field element in admission`,
-    async (field) => {
+  test.each`
+    field                    | input1                           | input2
+    ${'admitDate'}           | ${generateDateOnly(date.soon())} | ${generateDateOnly(date.soon())}
+    ${'admitType'}           | ${AdmitType.snf}                 | ${AdmitType.psych}
+    ${'admitSource'}         | ${AdmitSource.hmoReferral}       | ${AdmitSource.clinicReferral}
+    ${'dischargeDate'}       | ${generateDateOnly(date.soon())} | ${generateDateOnly(date.soon())}
+    ${'dischargeTo'}         | ${DischargeTo.snf}               | ${DischargeTo.expired}
+    ${'facility'}            | ${lorem.sentence()}              | ${lorem.sentence()}
+    ${'specialInstructions'} | ${lorem.sentences()}             | ${lorem.sentences()}
+    ${'reasonForAdmission'}  | ${lorem.sentences()}             | ${lorem.sentences()}
+    ${'hospitalCourse'}      | ${lorem.sentences()}             | ${lorem.sentences()}
+    ${'warningSigns'}        | ${WarningSigns.confusion}        | ${WarningSigns.passingOut}
+  `(
+    `should create and update only date $field element in admission`,
+    async ({ field, input1, input2 }) => {
       const memberId = generateId();
-      const changeMemberDnaParams: ChangeMemberDnaParams = {
-        [`${field}`]: generateDateOnly(subDays(new Date(), 5)),
-        memberId,
-      };
+      const changeMemberDnaParams: ChangeMemberDnaParams = { [`${field}`]: input1, memberId };
       const result = await service.change(changeMemberDnaParams);
 
-      const before2Days = generateDateOnly(subDays(new Date(), 2));
-      const updatedResult = await service.change({
-        [`${field}`]: before2Days,
-        id: result.id,
-        memberId,
-      });
-      expect(updatedResult[field]).toEqual(before2Days);
+      const updatedResult = await service.change({ [`${field}`]: input2, id: result.id, memberId });
+      expect(updatedResult[field]).toEqual(input2);
       expect(updatedResult.id).toEqual(result.id);
     },
   );
 
-  test.each(['admitDate', 'dischargeDate'])(`should not update %p when its null`, async (field) => {
+  test.each`
+    field                    | input
+    ${'admitDate'}           | ${generateDateOnly(date.soon())}
+    ${'admitType'}           | ${AdmitType.snf}
+    ${'admitSource'}         | ${AdmitSource.hmoReferral}
+    ${'dischargeDate'}       | ${generateDateOnly(date.soon())}
+    ${'dischargeTo'}         | ${DischargeTo.hospiceHome}
+    ${'facility'}            | ${lorem.sentence()}
+    ${'specialInstructions'} | ${lorem.sentences()}
+    ${'reasonForAdmission'}  | ${lorem.sentences()}
+    ${'hospitalCourse'}      | ${lorem.sentences()}
+    ${'warningSigns'}        | ${WarningSigns.confusion}
+  `(`should not update $field when its null`, async ({ field, input }) => {
     const memberId = generateId();
-    const date = generateDateOnly(subDays(new Date(), 5));
-    const changeMemberDnaParams: ChangeMemberDnaParams = { [`${field}`]: date, memberId };
+    const changeMemberDnaParams: ChangeMemberDnaParams = { [`${field}`]: input, memberId };
     const result = await service.change(changeMemberDnaParams);
 
     const newChange = {
@@ -137,7 +173,7 @@ describe(AdmissionService.name, () => {
       memberId,
     };
     const updatedResult = await service.change(newChange);
-    expect(updatedResult[field]).toEqual(date);
+    expect(updatedResult[field]).toEqual(input);
     expect(updatedResult.id).toEqual(result.id);
   });
 

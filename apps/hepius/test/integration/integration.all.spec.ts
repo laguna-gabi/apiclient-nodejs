@@ -78,9 +78,11 @@ import {
 import { DailyReportCategoryTypes, DailyReportQueryInput } from '../../src/dailyReport';
 import {
   Admission,
+  AdmitType,
   AlertType,
   ChangeMemberDnaParams,
   CreateTaskParams,
+  DischargeTo,
   Member,
   Recording,
   RecordingOutput,
@@ -88,6 +90,7 @@ import {
   Task,
   TaskStatus,
   UpdateJournalTextParams,
+  WarningSigns,
   defaultMemberParams,
 } from '../../src/member';
 import { Internationalization } from '../../src/providers';
@@ -2618,7 +2621,15 @@ describe('Integration tests: all', () => {
       woundCares: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
       dietaries: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]),
       admitDate: expect.any(String),
+      admitType: expect.any(String),
+      admitSource: expect.any(String),
       dischargeDate: expect.any(String),
+      dischargeTo: expect.any(String),
+      facility: expect.any(String),
+      specialInstructions: expect.any(String),
+      reasonForAdmission: expect.any(String),
+      hospitalCourse: expect.any(String),
+      warningSigns: expect.any(String),
     };
 
     expect(memberAdmissions.length).toEqual(2);
@@ -2668,7 +2679,18 @@ describe('Integration tests: all', () => {
     const dietaries = [
       { id: createResult.dietaries[0].id, ...removeChangeType(createMemberDnaParams.dietary) },
     ];
-    const { admitDate, dischargeDate } = createResult;
+    const {
+      admitDate,
+      admitType,
+      admitSource,
+      dischargeDate,
+      dischargeTo,
+      facility,
+      specialInstructions,
+      reasonForAdmission,
+      hospitalCourse,
+      warningSigns,
+    } = createResult;
 
     expect(createResult).toEqual(
       expect.objectContaining({
@@ -2681,7 +2703,15 @@ describe('Integration tests: all', () => {
         woundCares,
         dietaries,
         admitDate,
+        admitType,
+        admitSource,
         dischargeDate,
+        dischargeTo,
+        facility,
+        specialInstructions,
+        reasonForAdmission,
+        hospitalCourse,
+        warningSigns,
       }),
     );
 
@@ -2701,7 +2731,15 @@ describe('Integration tests: all', () => {
       }),
       activity: generateAdmissionActivityParams({ changeType: ChangeType.create }),
       admitDate: newAdmitDate,
+      admitType: null,
+      admitSource: null,
       dischargeDate: null,
+      dischargeTo: DischargeTo.snf,
+      facility: lorem.sentence(),
+      specialInstructions: lorem.sentences(),
+      reasonForAdmission: lorem.sentences(),
+      hospitalCourse: null,
+      warningSigns: null,
     };
     const changeResult = await handler.mutations.changeMemberDna({ changeMemberDnaParams });
 
@@ -2725,7 +2763,15 @@ describe('Integration tests: all', () => {
         woundCares,
         dietaries,
         admitDate: newAdmitDate,
+        admitType: expect.any(String),
+        admitSource: expect.any(String),
         dischargeDate: expect.any(String),
+        dischargeTo: changeMemberDnaParams.dischargeTo,
+        facility: changeMemberDnaParams.facility,
+        specialInstructions: changeMemberDnaParams.specialInstructions,
+        reasonForAdmission: changeMemberDnaParams.reasonForAdmission,
+        hospitalCourse: expect.any(String),
+        warningSigns: expect.any(String),
       }),
     );
   });
@@ -2848,7 +2894,17 @@ describe('Integration tests: all', () => {
       woundCare: createWoundCare,
       dietary: createDietary,
       admitDate: generateDateOnly(subDays(new Date(), 5)),
+      admitType: AdmitType.emergency,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
+      admitSource: 'physicianReferral',
       dischargeDate: generateDateOnly(subDays(new Date(), 2)),
+      dischargeTo: DischargeTo.snf,
+      facility: lorem.sentence(),
+      specialInstructions: lorem.sentences(),
+      reasonForAdmission: lorem.sentences(),
+      hospitalCourse: lorem.sentences(),
+      warningSigns: WarningSigns.confusion,
     };
 
     const result = await handler.mutations.changeMemberDna({

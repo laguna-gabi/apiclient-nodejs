@@ -61,6 +61,59 @@ export enum DiagnosisSeverity {
 }
 registerEnumType(DiagnosisSeverity, { name: 'DiagnosisSeverity' });
 
+export enum AdmitType {
+  emergency = 'emergency',
+  urgent = 'urgent',
+  elective = 'elective',
+  newborn = 'newborn',
+  snf = 'snf',
+  psych = 'psych',
+  rehab = 'rehab',
+}
+registerEnumType(AdmitType, { name: 'AdmitType' });
+
+export enum AdmitSource {
+  physicianReferral = 'physician referral',
+  clinicReferral = 'clinic referral',
+  hmoReferral = 'hmo referral',
+  transferFromHospital = 'transfer from a hospital',
+  transferredFromSkilledNursing = 'transferred from skilled nursing',
+  transferredFromAnotherFacility = 'transferred from another facility',
+  emergencyRoom = 'emergency room',
+  ecourtLowEnforcement = 'ecourt/law enforcement',
+  infoNotAvailable = 'info not available',
+}
+registerEnumType(AdmitSource, { name: 'AdmitSource' });
+
+export enum DischargeTo {
+  home = 'home',
+  hospital = 'hospital',
+  snf = 'snf',
+  icf = 'icf',
+  anotherTypeOfInstitutionForInpatientCare = 'another type of institution for inpatient care',
+  homeHealth = 'home health',
+  leftAgainstMedicalAdviceOrDiscontinuedCare = 'left against medical advice or discontinued care',
+  expired = 'expired',
+  stillPatient = 'still patient',
+  hospiceHome = 'hospice - home',
+  hospiceMedicalFacility = 'hospice - medical facility',
+}
+registerEnumType(DischargeTo, { name: 'DischargeTo' });
+
+export enum WarningSigns {
+  confusion = 'confusion',
+  difficultyBreathingOrShortnessOfBreath = 'difficulty breathing or shortness of breath',
+  // eslint-disable-next-line max-len
+  nauseaVomitingAndOrDiarrheaThatWillNotStop = 'nausea, vomiting and/or diarrhea that will not stop',
+  passingOut = 'Passing out (Syncope)',
+  severeDizziness = 'severe dizziness',
+  significantIncreaseOrStartOfPain = 'significant increase or start of pain',
+  tempOf101FOrHigher = 'temp of 101 F or higher',
+  // eslint-disable-next-line max-len
+  woundIncisionIsWorsening = 'wound/incision is worsening (increasing redness, swelling, tenderness, warmth, change in appearance, or increased drainage)',
+}
+registerEnumType(WarningSigns, { name: 'WarningSigns' });
+
 export enum DietaryCategory {
   adverseReaction = 'adverse reaction diets',
   cultural = 'cultural diets',
@@ -401,6 +454,46 @@ export class ChangeMemberDnaParams {
   @Field({ nullable: true })
   id?: string;
 
+  /**
+   * Single fields on change admission
+   */
+  @Field(() => String, { nullable: true })
+  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberAdmitDate) })
+  @IsOptional()
+  admitDate?: string;
+
+  @Field(() => AdmitType, { nullable: true })
+  admitType?: AdmitType;
+
+  @Field(() => AdmitSource, { nullable: true })
+  admitSource?: AdmitSource;
+
+  @Field(() => String, { nullable: true })
+  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberDischargeDate) })
+  @IsOptional()
+  dischargeDate?: string;
+
+  @Field(() => DischargeTo, { nullable: true })
+  dischargeTo?: DischargeTo;
+
+  @Field(() => String, { nullable: true })
+  facility?: string;
+
+  @Field(() => String, { nullable: true })
+  specialInstructions?: string;
+
+  @Field(() => String, { nullable: true })
+  reasonForAdmission?: string;
+
+  @Field(() => String, { nullable: true })
+  hospitalCourse?: string;
+
+  @Field(() => WarningSigns, { nullable: true })
+  warningSigns?: WarningSigns;
+
+  /**
+   * Lists on change admission
+   */
   @Field(() => ChangeAdmissionDiagnosisParams, { nullable: true })
   @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
   diagnosis?: ChangeAdmissionDiagnosisParams;
@@ -429,30 +522,76 @@ export class ChangeMemberDnaParams {
   @Field(() => ChangeAdmissionDietaryParams, { nullable: true })
   @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
   dietary?: ChangeAdmissionDietaryParams;
-
-  /**
-   * Single fields on change admission
-   */
-  @Field(() => String, { nullable: true })
-  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberAdmitDate) })
-  @IsOptional()
-  admitDate?: string;
-
-  @Field(() => String, { nullable: true })
-  @Matches(onlyDateRegex, { message: Errors.get(ErrorType.memberDischargeDate) })
-  @IsOptional()
-  dischargeDate?: string;
 }
 
 /**************************************************************************************************
  ********************************* Return params for gql methods **********************************
  *************************************************************************************************/
+export const singleAdmissionItems = [
+  'admitDate',
+  'admitType',
+  'admitSource',
+  'dischargeDate',
+  'dischargeTo',
+  'facility',
+  'specialInstructions',
+  'reasonForAdmission',
+  'hospitalCourse',
+  'warningSigns',
+];
+
 @ObjectType()
 @Schema({ versionKey: false, timestamps: true })
 export class Admission extends Identifier {
   @Prop({ type: Types.ObjectId, index: true })
   memberId: Types.ObjectId;
 
+  /**
+   * Single fields on admission
+   */
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  admitDate?: string;
+
+  @Prop({ type: String, enum: AdmitType, isNan: true })
+  @Field(() => AdmitType, { nullable: true })
+  admitType?: AdmitType;
+
+  @Prop({ type: String, enum: AdmitSource, isNan: true })
+  @Field(() => AdmitSource, { nullable: true })
+  admitSource?: AdmitSource;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  dischargeDate?: string;
+
+  @Prop({ type: String, enum: DischargeTo, isNan: true })
+  @Field(() => DischargeTo, { nullable: true })
+  dischargeTo?: DischargeTo;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  facility?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  specialInstructions?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  reasonForAdmission?: string;
+
+  @Prop({ isNaN: true })
+  @Field(() => String, { nullable: true })
+  hospitalCourse?: string;
+
+  @Prop({ type: String, enum: WarningSigns, isNan: true })
+  @Field(() => WarningSigns, { nullable: true })
+  warningSigns?: WarningSigns;
+
+  /**
+   * Lists on admission
+   */
   @Prop({ type: [{ type: Types.ObjectId, ref: Diagnosis.name }], isNaN: true })
   @Field(() => [Diagnosis], { nullable: true })
   diagnoses?: Diagnosis[];
@@ -480,17 +619,6 @@ export class Admission extends Identifier {
   @Prop({ type: [{ type: Types.ObjectId, ref: Dietary.name }], isNaN: true })
   @Field(() => [Dietary], { nullable: true })
   dietaries?: Dietary[];
-
-  /**
-   * Single fields on admission
-   */
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  admitDate?: string;
-
-  @Prop({ isNaN: true })
-  @Field(() => String, { nullable: true })
-  dischargeDate?: string;
 }
 
 @ObjectType()
