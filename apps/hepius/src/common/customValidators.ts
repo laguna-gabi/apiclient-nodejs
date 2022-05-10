@@ -447,22 +447,6 @@ export function IsIdAndChangeTypeAligned(options: ValidationOptions) {
   };
 }
 
-export function IsOnlyDateInSub(property: string, options?: ValidationOptions) {
-  return (object, propertyName: string) => {
-    registerDecorator({
-      target: object.constructor,
-      propertyName,
-      constraints: [property],
-      options,
-      validator: {
-        validate(params) {
-          return params && params[property] ? onlyDateRegex.test(params[property]) : true;
-        },
-      },
-    });
-  };
-}
-
 /**************************************************************************************************
  ******************************************** Helpers *********************************************
  *************************************************************************************************/

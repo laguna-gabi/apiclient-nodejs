@@ -7,7 +7,6 @@ import {
   Errors,
   IsIdAndChangeTypeAligned,
   IsOnlyDate,
-  IsOnlyDateInSub,
   onlyDateRegex,
 } from '../common';
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
@@ -113,10 +112,12 @@ export class Diagnosis extends BaseCategory {
 
   @Prop({ isNan: true })
   @Field({ nullable: true })
+  @IsOnlyDate({ message: Errors.get(ErrorType.admissionDiagnosisOnsetStart) })
   onsetStart?: string;
 
   @Prop({ isNan: true })
   @Field({ nullable: true })
+  @IsOnlyDate({ message: Errors.get(ErrorType.admissionDiagnosisOnsetEnd) })
   onsetEnd?: string;
 }
 
@@ -329,8 +330,6 @@ export class ChangeMemberDnaParams {
 
   @Field(() => ChangeAdmissionDiagnosisParams, { nullable: true })
   @IsIdAndChangeTypeAligned({ message: Errors.get(ErrorType.admissionIdAndChangeTypeAligned) })
-  @IsOnlyDateInSub('onsetStart', { message: Errors.get(ErrorType.admissionDiagnosisOnsetStart) })
-  @IsOnlyDateInSub('onsetEnd', { message: Errors.get(ErrorType.admissionDiagnosisOnsetEnd) })
   diagnosis?: ChangeAdmissionDiagnosisParams;
 
   @Field(() => ChangeAdmissionProcedureParams, { nullable: true })
