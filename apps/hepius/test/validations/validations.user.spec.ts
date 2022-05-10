@@ -1,3 +1,4 @@
+import { defaultUserParams } from '@argus/hepiusClient';
 import { lorem } from 'faker';
 import * as request from 'supertest';
 import { v4 } from 'uuid';
@@ -9,12 +10,7 @@ import {
   urls,
 } from '..';
 import { ErrorType, Errors, maxLength, minLength } from '../../src/common';
-import {
-  CreateUserParams,
-  GetSlotsParams,
-  UpdateUserParams,
-  defaultUserParams,
-} from '../../src/user';
+import { CreateUserParams, GetSlotsParams, UpdateUserParams } from '../../src/user';
 import { Handler } from '../aux';
 import { generateGetSlotsParams, generateId, generateUpdateUserParams } from '../generators';
 

@@ -8,8 +8,7 @@ import {
   RegisterSendbirdUserParams,
   UpdateSendbirdUserParams,
 } from '../communication';
-import { User } from '../user';
-import { AppointmentStatus } from '@argus/hepiusClient';
+import { AppointmentStatus, User } from '@argus/hepiusClient';
 
 @Injectable()
 export class SendBird extends BaseSendBird implements OnModuleInit {

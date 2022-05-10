@@ -1,3 +1,4 @@
+import { User } from '@argus/hepiusClient';
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Request } from 'express';
@@ -5,7 +6,6 @@ import { sign } from 'jsonwebtoken';
 import { dbDisconnect, defaultModules, mockGenerateMember, mockGenerateUser } from '..';
 import { AuthModule, AuthService, UserSecurityService } from '../../src/auth';
 import { LoggerService } from '../../src/common';
-import { User } from '../../src/user';
 
 describe('AuthService', () => {
   let service: AuthService;

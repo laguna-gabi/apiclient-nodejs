@@ -1,4 +1,4 @@
-import { Appointment, Caregiver } from '@argus/hepiusClient';
+import { Appointment, Caregiver, User } from '@argus/hepiusClient';
 import { general } from 'config';
 import { addDays, addHours } from 'date-fns';
 import { date as fakerDate, lorem } from 'faker';
@@ -72,7 +72,7 @@ import {
   TodoDoneDocument,
   UpdateTodoParams,
 } from '../../src/todo';
-import { User, UserConfigDocument, UserDocument } from '../../src/user';
+import { UserConfigDocument, UserDocument } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 
 describe('Integration tests : Audit', () => {

@@ -5,6 +5,7 @@ import {
   CareStatus,
   Caregiver,
   MemberCommands,
+  User,
 } from '@argus/hepiusClient';
 import { AppointmentInternalKey, LogInternalKey } from '@argus/irisClient';
 import { GlobalEventType, Language, Platform } from '@argus/pandora';
@@ -107,7 +108,7 @@ import {
   TodoStatus,
   UpdateTodoParams,
 } from '../../src/todo';
-import { User, defaultSlotsParams } from '../../src/user';
+import { defaultSlotsParams } from '../../src/user';
 import { AppointmentsIntegrationActions, Creators, Handler } from '../aux';
 
 describe('Integration tests: all', () => {

@@ -37,7 +37,7 @@ import {
 import { RecordingType, momentFormats, reformatDate } from '../../src/common';
 import { MemberModule } from '../../src/member';
 import { ProvidersModule } from '../../src/providers';
-import { User, UserDocument, UserModule } from '../../src/user';
+import { UserDocument, UserModule } from '../../src/user';
 import { QuestionnaireModule, QuestionnaireResponse } from '../../src/questionnaire';
 import { CareModule, RedFlag, RedFlagType } from '../../src/care';
 import {
@@ -48,6 +48,7 @@ import {
   CarePlan,
   CarePlanType,
   Caregiver,
+  User,
 } from '@argus/hepiusClient';
 
 describe('Commands: AnalyticsService', () => {

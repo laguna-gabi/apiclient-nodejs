@@ -1,4 +1,4 @@
-import { AppointmentStatus, Identifier, Scores } from '@argus/hepiusClient';
+import { AppointmentStatus, Identifier, Scores, User } from '@argus/hepiusClient';
 import { ExternalKey } from '@argus/irisClient';
 import { CancelNotificationType, Language, NotificationType } from '@argus/pandora';
 import { Field, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
@@ -42,7 +42,6 @@ import {
 import { ISoftDelete, audit, useFactoryOptions } from '../db';
 import { Org } from '../org';
 import { HealthPersona } from '../questionnaire';
-import { User } from '../user';
 
 /**************************************************************************************************
  ******************************* Enum registration for gql methods ********************************

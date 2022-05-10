@@ -1,4 +1,4 @@
-import { Appointment, AppointmentStatus, Caregiver } from '@argus/hepiusClient';
+import { Appointment, AppointmentStatus, Caregiver, User } from '@argus/hepiusClient';
 import { AppointmentInternalKey, ChatInternalKey } from '@argus/irisClient';
 import {
   ChangeEventType,
@@ -120,7 +120,7 @@ import {
 } from '../../src/questionnaire';
 import { NotificationService } from '../../src/services';
 import { Todo, TodoDocument, TodoDto } from '../../src/todo';
-import { User, UserDocument, UserDto } from '../../src/user';
+import { UserDocument, UserDto } from '../../src/user';
 import { confirmEmittedChangeSetEvent } from '../common';
 
 describe('MemberService', () => {

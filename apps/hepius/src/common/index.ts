@@ -3,7 +3,6 @@ export * from './events';
 export * from './customValidators';
 export * from './interfaces.dto';
 export * from './decorators';
-export * from './roles';
 export * from './constants';
 export * from './exception.filter';
 export * from './log.service';

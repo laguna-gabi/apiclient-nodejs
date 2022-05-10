@@ -7,6 +7,7 @@ import {
   CarePlanType,
   Caregiver,
   Notes,
+  User,
 } from '@argus/hepiusClient';
 import { mockLogger, mockProcessWarnings } from '@argus/pandora';
 import { ValidationPipe } from '@nestjs/common';
@@ -105,7 +106,6 @@ import {
   TodoDto,
 } from '../../src/todo';
 import {
-  User,
   UserConfig,
   UserConfigDocument,
   UserConfigDto,

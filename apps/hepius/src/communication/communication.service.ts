@@ -25,11 +25,10 @@ import {
 } from '../common';
 import { Member } from '../member';
 import { SendBird, TwilioService } from '../providers';
-import { User } from '../user';
 import { Platform, formatEx } from '@argus/pandora';
 import { ISoftDelete } from '../db';
 import { chunk } from 'lodash';
-import { AppointmentStatus } from '@argus/hepiusClient';
+import { AppointmentStatus, User } from '@argus/hepiusClient';
 
 @Injectable()
 export class CommunicationService {

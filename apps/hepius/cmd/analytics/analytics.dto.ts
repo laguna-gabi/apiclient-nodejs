@@ -22,7 +22,6 @@ import {
   Recording,
   Sex,
 } from '../../src/member';
-import { User } from '../../src/user';
 import {
   Appointment,
   AppointmentStatus,
@@ -30,6 +29,7 @@ import {
   CareStatus,
   Notes,
   Relationship,
+  User,
 } from '@argus/hepiusClient';
 
 export const DefaultOutputDir = './outputs';

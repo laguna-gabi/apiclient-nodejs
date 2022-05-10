@@ -1,4 +1,4 @@
-import { Appointment, Caregiver, Identifier, Notes } from '@argus/hepiusClient';
+import { Appointment, Caregiver, Identifier, Notes, User } from '@argus/hepiusClient';
 import { GraphQLClient } from 'graphql-request';
 import gql from 'graphql-tag';
 import { camelCase } from 'lodash';
@@ -59,7 +59,7 @@ import {
   Todo,
   UpdateTodoParams,
 } from '../../src/todo';
-import { CreateUserParams, UpdateUserParams, User } from '../../src/user';
+import { CreateUserParams, UpdateUserParams } from '../../src/user';
 import { FRAGMENT_ADMISSION, FRAGMENT_APPOINTMENT, FRAGMENT_MEMBER } from './fragments';
 
 export class Mutations {

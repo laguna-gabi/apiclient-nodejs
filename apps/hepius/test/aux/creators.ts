@@ -14,8 +14,8 @@ import { EndAppointmentParams } from '../../src/appointment';
 import { UserRole } from '../../src/common';
 import { CreateTaskParams, Member, defaultMemberParams } from '../../src/member';
 import { Org } from '../../src/org';
-import { CreateUserParams, User } from '../../src/user';
-import { Appointment, AppointmentStatus } from '@argus/hepiusClient';
+import { CreateUserParams } from '../../src/user';
+import { Appointment, AppointmentStatus, User } from '@argus/hepiusClient';
 
 export class Creators {
   constructor(

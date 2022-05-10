@@ -1,4 +1,4 @@
-import { AppointmentStatus, Caregiver, Identifier } from '@argus/hepiusClient';
+import { AppointmentStatus, Caregiver, Identifier, User } from '@argus/hepiusClient';
 import {
   AlertInternalKey,
   ChatInternalKey,
@@ -74,7 +74,7 @@ import {
   TwilioService,
 } from '../providers';
 import { QuestionnaireAlerts, QuestionnaireType } from '../questionnaire';
-import { User, UserService } from '../user';
+import { UserService } from '../user';
 import {
   AddCaregiverParams,
   Admission,

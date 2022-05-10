@@ -38,15 +38,13 @@ import {
 import {
   GetSlotsParams,
   NotNullableUserKeys,
-  User,
   UserDocument,
   UserDto,
   UserModule,
   UserService,
   defaultSlotsParams,
-  defaultUserParams,
 } from '../../src/user';
-import { Appointment } from '@argus/hepiusClient';
+import { Appointment, User, defaultUserParams } from '@argus/hepiusClient';
 
 describe('UserService', () => {
   let module: TestingModule;

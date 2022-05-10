@@ -7,6 +7,8 @@ import {
   Notes,
   Relationship,
   Scores,
+  User,
+  defaultUserParams,
 } from '@argus/hepiusClient';
 import {
   ContentKey,
@@ -150,13 +152,7 @@ import {
   TodoStatus,
   UpdateTodoParams,
 } from '../src/todo';
-import {
-  CreateUserParams,
-  GetSlotsParams,
-  UpdateUserParams,
-  User,
-  defaultUserParams,
-} from '../src/user';
+import { CreateUserParams, GetSlotsParams, UpdateUserParams } from '../src/user';
 
 export const generateCreateUserParams = ({
   roles = [UserRole.coach],
